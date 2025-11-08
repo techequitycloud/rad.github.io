@@ -22,6 +22,16 @@ const config: Config = {
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
 
+  // Custom fields for additional metadata
+  customFields: {
+    metadata: [
+      {name: 'keywords', content: 'RAD Platform, infrastructure deployment, Terraform, multi-cloud, AWS, Azure, GCP, DevOps, infrastructure as code'},
+      {name: 'description', content: 'RAD Platform technical documentation for enterprise-grade infrastructure deployment across AWS, Azure, and Google Cloud Platform'},
+      {name: 'og:type', content: 'website'},
+      {name: 'twitter:card', content: 'summary_large_image'},
+    ],
+  },
+
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
@@ -34,6 +44,16 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           routeBasePath: 'docs',
+          // SEO settings for docs
+          editUrl: 'https://github.com/techequitycloud/rad.github.io/edit/main/',
+          showLastUpdateTime: true,
+          showLastUpdateAuthor: true,
+        },
+        sitemap: {
+          changefreq: 'weekly',
+          priority: 0.5,
+          ignorePatterns: ['/tags/**'],
+          filename: 'sitemap.xml',
         },
         blog: false, // Disable blog
         theme: {
@@ -44,7 +64,8 @@ const config: Config = {
   ],
 
   themeConfig: {
-    image: 'img/rad-social-card.jpg',
+    // Social card image for Open Graph and Twitter
+    image: 'img/rad-social-preview.png',
     colorMode: {
       defaultMode: 'light',
       respectPrefersColorScheme: true,

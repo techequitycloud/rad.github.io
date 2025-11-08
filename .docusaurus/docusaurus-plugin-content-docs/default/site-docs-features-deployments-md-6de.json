@@ -1,0 +1,38 @@
+{
+  "id": "features/deployments",
+  "title": "Deployments",
+  "description": "Manage infrastructure deployments on RAD Platform - deploy, monitor, update, and delete cloud resources across AWS, Azure, and GCP",
+  "source": "@site/docs/features/deployments.md",
+  "sourceDirName": "features",
+  "slug": "/features/deployments",
+  "permalink": "/rad.github.io/docs/features/deployments",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/features/deployments.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "shiyghannavti",
+  "lastUpdatedAt": 1762612723000,
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "title": "Deployments",
+    "sidebar_position": 1,
+    "description": "Manage infrastructure deployments on RAD Platform - deploy, monitor, update, and delete cloud resources across AWS, Azure, and GCP",
+    "keywords": [
+      "deployments",
+      "infrastructure management",
+      "cloud deployments",
+      "Terraform deployments",
+      "deployment monitoring"
+    ]
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "User Guide",
+    "permalink": "/rad.github.io/docs/guides/user"
+  },
+  "next": {
+    "title": "Modules",
+    "permalink": "/rad.github.io/docs/features/modules"
+  }
+}

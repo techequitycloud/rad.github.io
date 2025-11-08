@@ -1,6 +1,8 @@
 ---
 title: Deployments
 sidebar_position: 1
+description: Manage infrastructure deployments on RAD Platform - deploy, monitor, update, and delete cloud resources across AWS, Azure, and GCP
+keywords: ['deployments', 'infrastructure management', 'cloud deployments', 'Terraform deployments', 'deployment monitoring']
 ---
 
 # Deployments

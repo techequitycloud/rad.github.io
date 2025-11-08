@@ -1,6 +1,8 @@
 ---
 title: Credits System
 sidebar_position: 1
+description: Understanding RAD Platform credits system - how credits work, pricing, purchasing, and managing your infrastructure budget
+keywords: ['credits', 'billing', 'pricing', 'cost management', 'infrastructure costs']
 ---
 
 # Credits System

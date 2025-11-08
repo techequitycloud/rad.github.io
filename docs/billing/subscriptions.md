@@ -1,6 +1,8 @@
 ---
 title: Subscriptions
 sidebar_position: 2
+description: RAD Platform subscription tiers and recurring billing - choose the right plan for your infrastructure deployment needs
+keywords: ['subscriptions', 'pricing plans', 'recurring billing', 'subscription management', 'platform tiers']
 ---
 
 # Subscriptions

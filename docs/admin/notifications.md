@@ -1,6 +1,8 @@
 ---
 title: Notification System
 sidebar_position: 2
+description: Configure RAD Platform email notifications - deployment alerts, billing notifications, and system messages
+keywords: ['notifications', 'email notifications', 'alerts', 'notification system', 'email configuration']
 ---
 
 # Notification System

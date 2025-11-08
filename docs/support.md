@@ -1,6 +1,8 @@
 ---
 title: Support & Resources
 sidebar_position: 10
+description: Get help with RAD Platform - troubleshooting guides, support resources, and documentation assistance
+keywords: ['support', 'help', 'troubleshooting', 'documentation', 'resources']
 ---
 
 # Support & Resources

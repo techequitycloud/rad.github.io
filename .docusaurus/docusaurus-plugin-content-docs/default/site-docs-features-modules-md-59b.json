@@ -1,0 +1,38 @@
+{
+  "id": "features/modules",
+  "title": "Modules",
+  "description": "Browse and deploy infrastructure modules from RAD Platform catalog - pre-configured Terraform modules for AWS, Azure, and Google Cloud",
+  "source": "@site/docs/features/modules.md",
+  "sourceDirName": "features",
+  "slug": "/features/modules",
+  "permalink": "/rad.github.io/docs/features/modules",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/features/modules.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "shiyghannavti",
+  "lastUpdatedAt": 1762612723000,
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "title": "Modules",
+    "sidebar_position": 3,
+    "description": "Browse and deploy infrastructure modules from RAD Platform catalog - pre-configured Terraform modules for AWS, Azure, and Google Cloud",
+    "keywords": [
+      "modules",
+      "module catalog",
+      "Terraform modules",
+      "infrastructure templates",
+      "cloud modules"
+    ]
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Deployments",
+    "permalink": "/rad.github.io/docs/features/deployments"
+  },
+  "next": {
+    "title": "Publishing Modules",
+    "permalink": "/rad.github.io/docs/features/publishing"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "guides/user",
+  "title": "User Guide",
+  "description": "User guide for deploying multi-cloud infrastructure using RAD Platform modules across AWS, Azure, and Google Cloud",
+  "source": "@site/docs/guides/user.md",
+  "sourceDirName": "guides",
+  "slug": "/guides/user",
+  "permalink": "/rad.github.io/docs/guides/user",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/guides/user.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "shiyghannavti",
+  "lastUpdatedAt": 1762612723000,
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "title": "User Guide",
+    "sidebar_position": 4,
+    "description": "User guide for deploying multi-cloud infrastructure using RAD Platform modules across AWS, Azure, and Google Cloud",
+    "keywords": [
+      "user guide",
+      "infrastructure deployment",
+      "cloud deployment",
+      "getting started",
+      "RAD Platform usage"
+    ]
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Agent Guide",
+    "permalink": "/rad.github.io/docs/guides/agent"
+  },
+  "next": {
+    "title": "Deployments",
+    "permalink": "/rad.github.io/docs/features/deployments"
+  }
+}

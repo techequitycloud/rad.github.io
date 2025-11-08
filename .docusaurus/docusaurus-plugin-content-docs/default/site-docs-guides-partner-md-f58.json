@@ -1,0 +1,38 @@
+{
+  "id": "guides/partner",
+  "title": "Partner Guide",
+  "description": "Partner guide for building and publishing custom infrastructure modules on RAD Platform using Terraform and GitHub integration",
+  "source": "@site/docs/guides/partner.md",
+  "sourceDirName": "guides",
+  "slug": "/guides/partner",
+  "permalink": "/rad.github.io/docs/guides/partner",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/guides/partner.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "shiyghannavti",
+  "lastUpdatedAt": 1762612723000,
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "title": "Partner Guide",
+    "sidebar_position": 2,
+    "description": "Partner guide for building and publishing custom infrastructure modules on RAD Platform using Terraform and GitHub integration",
+    "keywords": [
+      "partner guide",
+      "module development",
+      "custom modules",
+      "Terraform modules",
+      "infrastructure as code"
+    ]
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Administrator Guide",
+    "permalink": "/rad.github.io/docs/guides/admin"
+  },
+  "next": {
+    "title": "Agent Guide",
+    "permalink": "/rad.github.io/docs/guides/agent"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "admin/settings",
+  "title": "Global Settings",
+  "description": "Configure RAD Platform global settings - platform-wide configuration, policies, and administrative controls",
+  "source": "@site/docs/admin/settings.md",
+  "sourceDirName": "admin",
+  "slug": "/admin/settings",
+  "permalink": "/rad.github.io/docs/admin/settings",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/admin/settings.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "shiyghannavti",
+  "lastUpdatedAt": 1762612723000,
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "title": "Global Settings",
+    "sidebar_position": 1,
+    "description": "Configure RAD Platform global settings - platform-wide configuration, policies, and administrative controls",
+    "keywords": [
+      "settings",
+      "configuration",
+      "platform settings",
+      "admin settings",
+      "global configuration"
+    ]
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Transactions",
+    "permalink": "/rad.github.io/docs/billing/transactions"
+  },
+  "next": {
+    "title": "User Management",
+    "permalink": "/rad.github.io/docs/admin/users"
+  }
+}

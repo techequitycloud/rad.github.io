@@ -1,0 +1,38 @@
+{
+  "id": "admin/users",
+  "title": "User Management",
+  "description": "Manage users on RAD Platform - assign roles, manage credits, monitor activity, and control access",
+  "source": "@site/docs/admin/users.md",
+  "sourceDirName": "admin",
+  "slug": "/admin/users",
+  "permalink": "/rad.github.io/docs/admin/users",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/admin/users.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "shiyghannavti",
+  "lastUpdatedAt": 1762612723000,
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "title": "User Management",
+    "sidebar_position": 3,
+    "description": "Manage users on RAD Platform - assign roles, manage credits, monitor activity, and control access",
+    "keywords": [
+      "user management",
+      "user administration",
+      "role management",
+      "access control",
+      "user permissions"
+    ]
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Global Settings",
+    "permalink": "/rad.github.io/docs/admin/settings"
+  },
+  "next": {
+    "title": "Notification System",
+    "permalink": "/rad.github.io/docs/admin/notifications"
+  }
+}

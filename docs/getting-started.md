@@ -1,5 +1,8 @@
 ---
 sidebar_position: 1
+title: Getting Started with RAD Platform
+description: Get started with RAD Platform - enterprise-grade infrastructure deployment for AWS, Azure, and Google Cloud Platform using Terraform automation
+keywords: [getting started, RAD Platform, infrastructure deployment, multi-cloud, Terraform, AWS, Azure, GCP, DevOps]
 ---
 
 # Getting Started

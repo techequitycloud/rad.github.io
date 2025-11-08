@@ -1,6 +1,8 @@
 ---
 title: Administrator Guide
 sidebar_position: 1
+description: Complete administrator guide for RAD Platform - manage users, configure settings, monitor deployments, and control platform operations
+keywords: ['administrator guide', 'platform management', 'user management', 'RAD admin', 'infrastructure administration']
 ---
 
 # Administrator Guide

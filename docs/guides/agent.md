@@ -1,6 +1,8 @@
 ---
 title: Agent Guide
 sidebar_position: 3
+description: Agent guide for deploying and managing infrastructure on behalf of users in RAD Platform
+keywords: ['agent guide', 'deployment management', 'infrastructure deployment', 'multi-user deployment']
 ---
 
 # Agent Guide

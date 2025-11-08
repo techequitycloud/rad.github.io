@@ -1,0 +1,38 @@
+{
+  "id": "admin/notifications",
+  "title": "Notification System",
+  "description": "Configure RAD Platform email notifications - deployment alerts, billing notifications, and system messages",
+  "source": "@site/docs/admin/notifications.md",
+  "sourceDirName": "admin",
+  "slug": "/admin/notifications",
+  "permalink": "/rad.github.io/docs/admin/notifications",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/admin/notifications.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "shiyghannavti",
+  "lastUpdatedAt": 1762612723000,
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "title": "Notification System",
+    "sidebar_position": 2,
+    "description": "Configure RAD Platform email notifications - deployment alerts, billing notifications, and system messages",
+    "keywords": [
+      "notifications",
+      "email notifications",
+      "alerts",
+      "notification system",
+      "email configuration"
+    ]
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "User Management",
+    "permalink": "/rad.github.io/docs/admin/users"
+  },
+  "next": {
+    "title": "Support & Resources",
+    "permalink": "/rad.github.io/docs/support"
+  }
+}

@@ -1,6 +1,8 @@
 ---
 title: Partner Guide
 sidebar_position: 2
+description: Partner guide for building and publishing custom infrastructure modules on RAD Platform using Terraform and GitHub integration
+keywords: ['partner guide', 'module development', 'custom modules', 'Terraform modules', 'infrastructure as code']
 ---
 
 # Partner Guide

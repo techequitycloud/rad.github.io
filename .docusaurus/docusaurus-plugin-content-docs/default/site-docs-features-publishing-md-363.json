@@ -1,0 +1,38 @@
+{
+  "id": "features/publishing",
+  "title": "Publishing Modules",
+  "description": "Publish custom infrastructure modules to RAD Platform - create, version, and share Terraform modules with your organization",
+  "source": "@site/docs/features/publishing.md",
+  "sourceDirName": "features",
+  "slug": "/features/publishing",
+  "permalink": "/rad.github.io/docs/features/publishing",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/features/publishing.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "shiyghannavti",
+  "lastUpdatedAt": 1762612723000,
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "title": "Publishing Modules",
+    "sidebar_position": 2,
+    "description": "Publish custom infrastructure modules to RAD Platform - create, version, and share Terraform modules with your organization",
+    "keywords": [
+      "module publishing",
+      "custom modules",
+      "module development",
+      "Terraform publishing",
+      "infrastructure sharing"
+    ]
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Modules",
+    "permalink": "/rad.github.io/docs/features/modules"
+  },
+  "next": {
+    "title": "Credits System",
+    "permalink": "/rad.github.io/docs/billing/credits"
+  }
+}

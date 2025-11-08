@@ -1,6 +1,8 @@
 ---
 title: User Guide
 sidebar_position: 4
+description: User guide for deploying multi-cloud infrastructure using RAD Platform modules across AWS, Azure, and Google Cloud
+keywords: ['user guide', 'infrastructure deployment', 'cloud deployment', 'getting started', 'RAD Platform usage']
 ---
 
 # User Guide

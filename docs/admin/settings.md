@@ -1,6 +1,8 @@
 ---
 title: Global Settings
 sidebar_position: 1
+description: Configure RAD Platform global settings - platform-wide configuration, policies, and administrative controls
+keywords: ['settings', 'configuration', 'platform settings', 'admin settings', 'global configuration']
 ---
 
 # Global Settings

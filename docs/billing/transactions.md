@@ -1,6 +1,8 @@
 ---
 title: Transactions
 sidebar_position: 3
+description: View and audit RAD Platform transaction history - track credit purchases, usage, and billing records
+keywords: ['transactions', 'transaction history', 'billing history', 'credit usage', 'audit trail']
 ---
 
 # Transactions

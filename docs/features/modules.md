@@ -1,6 +1,8 @@
 ---
 title: Modules
 sidebar_position: 3
+description: Browse and deploy infrastructure modules from RAD Platform catalog - pre-configured Terraform modules for AWS, Azure, and Google Cloud
+keywords: ['modules', 'module catalog', 'Terraform modules', 'infrastructure templates', 'cloud modules']
 ---
 
 # Modules

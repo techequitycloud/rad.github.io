@@ -1,0 +1,13 @@
+# robots.txt for RAD Platform Documentation
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://techequitycloud.github.io/rad.github.io/sitemap.xml
+
+# Disallow search results
+Disallow: /search
+
+# Allow all documentation
+Allow: /docs/

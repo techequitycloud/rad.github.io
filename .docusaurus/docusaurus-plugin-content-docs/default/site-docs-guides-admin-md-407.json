@@ -1,0 +1,38 @@
+{
+  "id": "guides/admin",
+  "title": "Administrator Guide",
+  "description": "Complete administrator guide for RAD Platform - manage users, configure settings, monitor deployments, and control platform operations",
+  "source": "@site/docs/guides/admin.md",
+  "sourceDirName": "guides",
+  "slug": "/guides/admin",
+  "permalink": "/rad.github.io/docs/guides/admin",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/guides/admin.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "shiyghannavti",
+  "lastUpdatedAt": 1762612723000,
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "title": "Administrator Guide",
+    "sidebar_position": 1,
+    "description": "Complete administrator guide for RAD Platform - manage users, configure settings, monitor deployments, and control platform operations",
+    "keywords": [
+      "administrator guide",
+      "platform management",
+      "user management",
+      "RAD admin",
+      "infrastructure administration"
+    ]
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Getting Started with RAD Platform",
+    "permalink": "/rad.github.io/docs/getting-started"
+  },
+  "next": {
+    "title": "Partner Guide",
+    "permalink": "/rad.github.io/docs/guides/partner"
+  }
+}

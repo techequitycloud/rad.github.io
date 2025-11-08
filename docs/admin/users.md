@@ -1,6 +1,8 @@
 ---
 title: User Management
 sidebar_position: 3
+description: Manage users on RAD Platform - assign roles, manage credits, monitor activity, and control access
+keywords: ['user management', 'user administration', 'role management', 'access control', 'user permissions']
 ---
 
 # User Management

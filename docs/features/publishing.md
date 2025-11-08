@@ -1,6 +1,8 @@
 ---
 title: Publishing Modules
 sidebar_position: 2
+description: Publish custom infrastructure modules to RAD Platform - create, version, and share Terraform modules with your organization
+keywords: ['module publishing', 'custom modules', 'module development', 'Terraform publishing', 'infrastructure sharing']
 ---
 
 # Publishing Modules

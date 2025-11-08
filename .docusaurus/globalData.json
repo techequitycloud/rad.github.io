@@ -1,0 +1,103 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/rad.github.io/docs",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/rad.github.io/docs",
+          "mainDocId": "getting-started",
+          "docs": [
+            {
+              "id": "admin/notifications",
+              "path": "/rad.github.io/docs/admin/notifications",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "admin/settings",
+              "path": "/rad.github.io/docs/admin/settings",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "admin/users",
+              "path": "/rad.github.io/docs/admin/users",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "billing/credits",
+              "path": "/rad.github.io/docs/billing/credits",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "billing/subscriptions",
+              "path": "/rad.github.io/docs/billing/subscriptions",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "billing/transactions",
+              "path": "/rad.github.io/docs/billing/transactions",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "features/deployments",
+              "path": "/rad.github.io/docs/features/deployments",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "features/modules",
+              "path": "/rad.github.io/docs/features/modules",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "features/publishing",
+              "path": "/rad.github.io/docs/features/publishing",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "getting-started",
+              "path": "/rad.github.io/docs/getting-started",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "guides/admin",
+              "path": "/rad.github.io/docs/guides/admin",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "guides/agent",
+              "path": "/rad.github.io/docs/guides/agent",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "guides/partner",
+              "path": "/rad.github.io/docs/guides/partner",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "guides/user",
+              "path": "/rad.github.io/docs/guides/user",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "support",
+              "path": "/rad.github.io/docs/support",
+              "sidebar": "docsSidebar"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "docsSidebar": {
+              "link": {
+                "path": "/rad.github.io/docs/getting-started",
+                "label": "getting-started"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    }
+  }
+}
