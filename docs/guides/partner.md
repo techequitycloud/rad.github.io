@@ -7,9 +7,11 @@ keywords: ['partner guide', 'module development', 'custom modules', 'Terraform m
 
 # Partner Guide
 
+Partners can build, publish, and manage custom infrastructure modules through the [RAD Console](https://rad.techequity.cloud). This guide covers module development, repository configuration, and publishing workflows.
+
 ## 1. Partner Modules
 
-As a partner, you can deploy modules from the public "Platform Modules" catalog as well as from your own private GitHub repository. Your exclusive modules will appear under the "Partner Modules" tab on the module selection page.
+As a partner, you can deploy modules from the public "Platform Modules" catalog as well as from your own private GitHub repository in the [RAD Console](https://rad.techequity.cloud). Your exclusive modules will appear under the "Partner Modules" tab on the module selection page.
 
 ### 1.1. Deploying a Module
 

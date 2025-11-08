@@ -7,9 +7,11 @@ keywords: ['administrator guide', 'platform management', 'user management', 'RAD
 
 # Administrator Guide
 
+This guide covers administrative functions available in the [RAD Console](https://rad.techequity.cloud). Administrators have full platform access including user management, billing configuration, deployment monitoring, and global settings.
+
 ## 1. Managing Deployments
 
-As an administrator, you have an expanded view of the **Deployments** page. In addition to the "My Deployments" tab, which shows the modules you have personally deployed, you also have access to the "All Deployments" tab, which shows a list of every module deployed by all users across the platform.
+As an administrator, you have an expanded view of the **Deployments** page in the [RAD Console](https://rad.techequity.cloud). In addition to the "My Deployments" tab, which shows the modules you have personally deployed, you also have access to the "All Deployments" tab, which shows a list of every module deployed by all users across the platform.
 
 ### 1.1. Navigating the Dashboard
 

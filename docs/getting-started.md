@@ -13,6 +13,8 @@ Welcome to the RAD Platform technical documentation. This comprehensive guide pr
 
 The RAD Platform is an enterprise-grade infrastructure deployment solution that enables teams to deploy multi-cloud infrastructure using Terraform-based automation. The platform provides comprehensive monitoring, role-based access control, credit-based resource allocation, and enterprise-grade management capabilities.
 
+**Access the Platform**: Log in to the [RAD Console](https://rad.techequity.cloud) to start deploying infrastructure, managing modules, and monitoring your deployments.
+
 ## Key Features
 
 ### Multi-Cloud Infrastructure as Code

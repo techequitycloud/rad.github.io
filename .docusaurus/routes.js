@@ -9,15 +9,15 @@ export default [
   },
   {
     path: '/rad.github.io/docs',
-    component: ComponentCreator('/rad.github.io/docs', '147'),
+    component: ComponentCreator('/rad.github.io/docs', '67a'),
     routes: [
       {
         path: '/rad.github.io/docs',
-        component: ComponentCreator('/rad.github.io/docs', 'e6d'),
+        component: ComponentCreator('/rad.github.io/docs', 'a77'),
         routes: [
           {
             path: '/rad.github.io/docs',
-            component: ComponentCreator('/rad.github.io/docs', 'eea'),
+            component: ComponentCreator('/rad.github.io/docs', '353'),
             routes: [
               {
                 path: '/rad.github.io/docs/admin/notifications',
@@ -33,13 +33,13 @@ export default [
               },
               {
                 path: '/rad.github.io/docs/admin/users',
-                component: ComponentCreator('/rad.github.io/docs/admin/users', 'd2b'),
+                component: ComponentCreator('/rad.github.io/docs/admin/users', '558'),
                 exact: true,
                 sidebar: "docsSidebar"
               },
               {
                 path: '/rad.github.io/docs/billing/credits',
-                component: ComponentCreator('/rad.github.io/docs/billing/credits', 'aaa'),
+                component: ComponentCreator('/rad.github.io/docs/billing/credits', 'cf6'),
                 exact: true,
                 sidebar: "docsSidebar"
               },
@@ -81,7 +81,7 @@ export default [
               },
               {
                 path: '/rad.github.io/docs/guides/admin',
-                component: ComponentCreator('/rad.github.io/docs/guides/admin', '7eb'),
+                component: ComponentCreator('/rad.github.io/docs/guides/admin', 'cf6'),
                 exact: true,
                 sidebar: "docsSidebar"
               },

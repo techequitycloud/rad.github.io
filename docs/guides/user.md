@@ -9,11 +9,11 @@ keywords: ['user guide', 'infrastructure deployment', 'cloud deployment', 'getti
 
 ## 1. Getting Started
 
-Welcome to the Rapid Application Deployment documentation. This document will guide you through key features and functionalities of the platform.
+Welcome to the RAD Platform documentation. This guide covers the key features and functionalities available in the [RAD Console](https://rad.techequity.cloud).
 
 ### 1.1. Logging In
 
-Access to the application is handled through a secure sign-on system. Upon your first visit, you will be prompted to log in with your Google credentials.
+Access the [RAD Console](https://rad.techequity.cloud) to begin. Authentication is handled through a secure sign-on system. Upon your first visit, you will be prompted to log in with your Google credentials.
 
 ### 1.2. The Main Dashboard
 

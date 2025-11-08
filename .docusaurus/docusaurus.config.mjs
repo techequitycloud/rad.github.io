@@ -110,6 +110,13 @@ export default {
           "label": "Documentation"
         },
         {
+          "href": "https://rad.techequity.cloud",
+          "label": "RAD Console",
+          "position": "left",
+          "target": "_blank",
+          "rel": "noopener noreferrer"
+        },
+        {
           "href": "https://github.com/techequitycloud/rad.github.io",
           "label": "GitHub",
           "position": "right"
@@ -165,6 +172,10 @@ export default {
         {
           "title": "Resources",
           "items": [
+            {
+              "label": "RAD Console",
+              "href": "https://rad.techequity.cloud"
+            },
             {
               "label": "GitHub",
               "href": "https://github.com/techequitycloud/rad.github.io"
