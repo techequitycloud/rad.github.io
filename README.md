@@ -1,114 +1,41 @@
-# RAD Platform Technical Documentation
+# Website
 
-Enterprise-grade infrastructure deployment platform documentation for technical teams and partners.
+This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
 
-## Overview
-
-This repository contains comprehensive technical documentation for the RAD Platform, organized for technical users, partners, and administrators seeking in-depth understanding of the platform's capabilities.
-
-## Documentation Structure
-
-- **Getting Started**: Introduction and quick start guide
-- **User Roles & Guides**: Role-specific guides for Administrators, Partners, Agents, and Users
-- **Core Features**: Detailed documentation on Deployments, Modules, and Publishing
-- **Billing & Credits**: Credit system, subscriptions, and transaction management
-- **Administration**: Global settings, user management, and notifications
-- **Support & Resources**: Help resources and troubleshooting guides
-
-## Live Documentation
-
-Visit the live documentation site at: [https://techequitycloud.github.io/rad.github.io/](https://techequitycloud.github.io/rad.github.io/)
-
-## Development
-
-This site is built with:
-- **React 19** - UI framework
-- **Vite** - Build tool and dev server
-- **Tailwind CSS 4** - Styling
-- **TypeScript** - Type safety
-- **Wouter** - Client-side routing
-- **Streamdown** - Markdown rendering
-
-### Local Development
+## Installation
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Start development server
-pnpm run dev
-
-# Build for production
-pnpm run build
+yarn
 ```
 
-### Project Structure
+## Local Development
 
+```bash
+yarn start
 ```
-client/
-  src/
-    pages/          # Page components
-      docs/         # Documentation pages
-        guides/     # Role-specific guides
-        features/   # Feature documentation
-        billing/    # Billing documentation
-        admin/      # Administration documentation
-    components/     # Reusable components
-    contexts/       # React contexts
-  public/           # Static assets
+
+This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+
+## Build
+
+```bash
+yarn build
 ```
+
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
 
 ## Deployment
 
-The site is automatically deployed to GitHub Pages when changes are pushed to the `main` branch using GitHub Actions.
+Using SSH:
 
-### Manual Deployment
+```bash
+USE_SSH=true yarn deploy
+```
 
-To manually trigger a deployment:
+Not using SSH:
 
-1. Go to the **Actions** tab in GitHub
-2. Select the "Deploy to GitHub Pages" workflow
-3. Click "Run workflow"
+```bash
+GIT_USER=<Your GitHub username> yarn deploy
+```
 
-### GitHub Pages Configuration
-
-The site is configured to deploy from GitHub Actions:
-
-1. Repository Settings → Pages
-2. Source: GitHub Actions
-3. The workflow file is located at `.github/workflows/deploy.yml`
-
-## Contributing
-
-Contributions to improve the documentation are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-### Content Guidelines
-
-- Use clear, professional language
-- Include code examples where applicable
-- Add screenshots for UI-related documentation
-- Keep content up-to-date with platform changes
-- Follow the existing documentation structure
-
-## Related Resources
-
-- **RAD Platform**: Main platform repository
-- **RAD Lab**: [https://googlecloudplatform.github.io/rad-lab/](https://googlecloudplatform.github.io/rad-lab/)
-- **Original Documentation**: [https://github.com/techequitycloud/rad.github.io](https://github.com/techequitycloud/rad.github.io)
-
-## License
-
-© 2025 Tech Equity Cloud. All rights reserved.
-
-## Support
-
-For questions or issues with the documentation:
-
-- Open an issue in this repository
-- Contact the RAD Platform support team
-- Submit pull requests for corrections or improvements
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
