@@ -37,6 +37,22 @@ Click the Edit button next to any user to access their management interface.
 
 Administrators can manually adjust user credit balances for both awarded and purchased credits. Add credits for promotional purposes, error corrections, or compensation. Deduct credits if necessary for policy violations or billing corrections. All manual adjustments are logged in the transaction history with the administrator's name and reason.
 
+#### Partner Credits Allowance
+
+Administrators can set a monthly credit allowance for users through the Partner Credits feature. This is particularly useful for users who cannot access the standard subscription payment system due to regional restrictions, partnership agreements, or special programs.
+
+To configure Partner Credits:
+
+1. Navigate to **Billing → User Credits** tab
+2. Locate the "Partner" column in the user table
+3. Click "Edit" for the target user
+4. Enter the monthly credit allowance amount
+5. Save the configuration
+
+The system automatically grants the specified amount on the 1st of each month at midnight UTC. These credits are added to the user's purchased credits balance and can be used without restriction for any deployment, including modules requiring purchased credits. Partner Credits do not expire and accumulate monthly until spent.
+
+Common use cases for Partner Credits include international users in regions without payment processing, partner organizations receiving credits per partnership agreements, testing and demonstration accounts, educational initiatives, and users with payment restrictions requiring full platform access.
+
 ### Role Assignment
 
 Change a user's role to grant or revoke specific capabilities. Promote users to partner status to enable module publishing. Assign agent role for deployment management across users. Grant administrator privileges for platform management. Role changes take effect immediately.
@@ -68,6 +84,8 @@ Track individual user activity including deployment history and success rates, c
 Administrators configure global credit policies that affect all users:
 
 **Signup Credits**: Number of free credits awarded to new users upon account creation. Encourages initial platform exploration and testing.
+
+**Partner Credits**: Monthly credit allowances for individual users who cannot purchase credits through standard subscription services. Configured per-user in the User Credits interface and granted automatically on the 1st of each month.
 
 **Low Balance Threshold**: Credit level at which users receive low balance warning emails. Helps users avoid service interruptions.
 

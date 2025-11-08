@@ -34,12 +34,15 @@ This tab provides a simple interface for making one-time credit purchases throug
 
 This tab provides a list of all users on the platform. Administrators can:
 
-- **View User Information:** See each user's email, their balance of both awarded and purchased credits, and their partner status.
+- **View User Information:** See each user's email, their balance of both awarded and purchased credits, partner status, and monthly Partner Credits allowance.
 - **Edit User Details:** Click the **Edit** button next to a user to:
     - **Adjust Credit Balance:** Manually add or remove credits from a user's "Awarded" or "Purchased" balance.
+    - **Set Partner Credits Allowance:** Configure a monthly credit allowance in the "Partner" field for users who cannot purchase credits through standard subscription services. This amount is automatically granted on the 1st of each month.
     - **Change Partner Status:** Grant or revoke partner status for a user.
     - **Activate/Deactivate Account:** Toggle a user's account status.
 - **Search:** Find specific users by searching for their email address.
+
+**Partner Credits Feature:** The Partner Credits column allows administrators to set monthly credit allowances for users in regions without payment processing, partnership agreements, or special programs. Credits are granted automatically each month and function identically to purchased credits with no restrictions or expiration. See the [Credits System](/docs/billing/credits#4-partner-credits-detailed-overview) documentation for complete details.
 
 ### 2.4. Project Costs and Revenue
 
