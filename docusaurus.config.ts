@@ -11,8 +11,8 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://techequitycloud.github.io',
-  baseUrl: '/rad.github.io/',
+  url: 'https://docs.techequity.cloud',
+  baseUrl: '/',
 
   organizationName: 'techequitycloud',
   projectName: 'rad.github.io',
