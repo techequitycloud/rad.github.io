@@ -1,6 +1,6 @@
 {
   "id": "tutorials/administrators/initial-setup",
-  "title": "Initial Platform Setup for Organizations",
+  "title": "Initial Platform Setup",
   "description": "A guide for administrators on how to perform the initial setup and configuration of the RAD Platform for their organization.",
   "source": "@site/docs/tutorials/administrators/initial-setup.md",
   "sourceDirName": "tutorials/administrators",
@@ -11,11 +11,11 @@
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/tutorials/administrators/initial-setup.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762647969000,
+  "lastUpdatedBy": "google-labs-jules[bot]",
+  "lastUpdatedAt": 1762711088000,
   "sidebarPosition": 1,
   "frontMatter": {
-    "title": "Initial Platform Setup for Organizations",
+    "title": "Initial Platform Setup",
     "sidebar_position": 1,
     "description": "A guide for administrators on how to perform the initial setup and configuration of the RAD Platform for their organization.",
     "keywords": [
@@ -32,7 +32,7 @@
     "permalink": "/docs/tutorials/partners/module-versions"
   },
   "next": {
-    "title": "User and Credit Management",
+    "title": "User Management",
     "permalink": "/docs/tutorials/administrators/user-management"
   }
 }

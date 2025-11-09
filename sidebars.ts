@@ -77,18 +77,17 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: 'category',
-          label: 'Administrator Tutorials',
+          label: 'Agent Tutorials',
           items: [
-            'tutorials/administrators/initial-setup',
-            'tutorials/administrators/user-management',
+            'tutorials/agents/agent-revenue',
           ],
         },
         {
           type: 'category',
-          label: 'Advanced Tutorials',
+          label: 'Administrator Tutorials',
           items: [
-            'tutorials/advanced/platform-architecture',
-            'tutorials/advanced/multi-cloud-strategies',
+            'tutorials/administrators/initial-setup',
+            'tutorials/administrators/user-management',
           ],
         },
       ],

@@ -11,8 +11,8 @@
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/tutorials/users/troubleshooting-deployments.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": "Tech Equity",
-  "lastUpdatedAt": 1762647575000,
+  "lastUpdatedBy": "google-labs-jules[bot]",
+  "lastUpdatedAt": 1762711088000,
   "sidebarPosition": 3,
   "frontMatter": {
     "title": "Troubleshooting Failed Deployments",
@@ -28,7 +28,7 @@
   },
   "sidebar": "docsSidebar",
   "previous": {
-    "title": "Managing Your Credits and Subscriptions",
+    "title": "Managing Your Credits",
     "permalink": "/docs/tutorials/users/managing-credits"
   },
   "next": {

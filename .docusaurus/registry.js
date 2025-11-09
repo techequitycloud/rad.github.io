@@ -13,6 +13,7 @@ export default {
   "59b3cbb5": [() => import(/* webpackChunkName: "59b3cbb5" */ "@site/docs/features/modules.md"), "@site/docs/features/modules.md", require.resolveWeak("@site/docs/features/modules.md")],
   "5e95c892": [() => import(/* webpackChunkName: "5e95c892" */ "@theme/DocsRoot"), "@theme/DocsRoot", require.resolveWeak("@theme/DocsRoot")],
   "5e9f5e1a": [() => import(/* webpackChunkName: "5e9f5e1a" */ "@generated/docusaurus.config"), "@generated/docusaurus.config", require.resolveWeak("@generated/docusaurus.config")],
+  "5fe92721": [() => import(/* webpackChunkName: "5fe92721" */ "@site/docs/tutorials/agents/agent-revenue.md"), "@site/docs/tutorials/agents/agent-revenue.md", require.resolveWeak("@site/docs/tutorials/agents/agent-revenue.md")],
   "625bc1a7": [() => import(/* webpackChunkName: "625bc1a7" */ "@site/docs/guides/user.md"), "@site/docs/guides/user.md", require.resolveWeak("@site/docs/guides/user.md")],
   "666f96d3": [() => import(/* webpackChunkName: "666f96d3" */ "@site/docs/admin/notifications.md"), "@site/docs/admin/notifications.md", require.resolveWeak("@site/docs/admin/notifications.md")],
   "6deb01d5": [() => import(/* webpackChunkName: "6deb01d5" */ "@site/docs/features/deployments.md"), "@site/docs/features/deployments.md", require.resolveWeak("@site/docs/features/deployments.md")],

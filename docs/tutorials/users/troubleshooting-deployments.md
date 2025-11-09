@@ -34,20 +34,18 @@ When a deployment fails, the RAD Platform makes it easy to spot.
 1.  Navigate to the **Deployments** page from the main menu.
 2.  In the list of your deployments, look at the **Status** column. A failed deployment will have a red **`FAILURE`** status.
 
-    [SCREENSHOT: Deployments list with a deployment showing a "FAILURE" status]
+    ![Deployments list with a deployment showing a "FAILURE" status](/img/site/3.1.4-user-deployments-deployment-builds-failure.png)
 
 ## Step 2: Access and Analyze Deployment Logs
 
 The deployment logs are the most important tool for understanding why a deployment failed.
 
-1.  Click on the **Deployment ID** of the failed deployment.
+1.  Click on the failed deployment.
 2.  This will take you to the deployment details page, which features a comprehensive log viewer.
 
-    [SCREENSHOT: Deployment details page with the log viewer visible]
+    ![Deployment details page with the log viewer visible](/img/site/3.1.5-user-deployments-deployment-build-status-failure.png)
 
 3.  Scroll through the logs to find error messages. Errors are often highlighted in red or accompanied by terms like `Error`, `Failed`, or `FATAL`.
-
-    [SCREENSHOT: Log viewer with a specific error message highlighted]
 
 ## Step 3: Common Error Patterns and Solutions
 
@@ -97,6 +95,8 @@ Once you have identified and addressed the root cause of the failure, you can tr
 ## Verification
 
 After applying the fix and re-launching the deployment, monitor it on the **Deployments** page. If the status changes to **`SUCCESS`**, you have successfully resolved the issue.
+
+![Deployment with "SUCCESS" status](/img/site/3.1.6-user-deployments-deployment-build-status-success.png)
 
 ## Next Steps
 

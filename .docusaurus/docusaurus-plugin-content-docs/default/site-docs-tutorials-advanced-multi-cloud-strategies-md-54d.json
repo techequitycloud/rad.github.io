@@ -11,8 +11,8 @@
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/tutorials/advanced/multi-cloud-strategies.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762647969000,
+  "lastUpdatedBy": "Tech Equity",
+  "lastUpdatedAt": 1762710595000,
   "sidebarPosition": 2,
   "frontMatter": {
     "title": "Multi-Cloud Deployment Strategies",
@@ -31,5 +31,9 @@
   "previous": {
     "title": "Understanding the RAD Platform Architecture",
     "permalink": "/docs/tutorials/advanced/platform-architecture"
+  },
+  "next": {
+    "title": "Support & Resources",
+    "permalink": "/docs/support"
   }
 }

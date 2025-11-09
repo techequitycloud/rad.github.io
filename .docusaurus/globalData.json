@@ -106,6 +106,10 @@
               "sidebar": "docsSidebar"
             },
             {
+              "id": "tutorials/agents/agent-revenue",
+              "path": "/docs/tutorials/agents/agent-revenue"
+            },
+            {
               "id": "tutorials/index",
               "path": "/docs/tutorials/",
               "sidebar": "docsSidebar"
