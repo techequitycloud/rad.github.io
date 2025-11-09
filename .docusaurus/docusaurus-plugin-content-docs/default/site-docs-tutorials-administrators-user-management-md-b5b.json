@@ -1,7 +1,7 @@
 {
   "id": "tutorials/administrators/user-management",
-  "title": "User and Credit Management",
-  "description": "Learn how to manage users, assign roles, and control credit allocations as a RAD Platform administrator.",
+  "title": "User Management",
+  "description": "Learn how to manage users and assign roles as a RAD Platform administrator.",
   "source": "@site/docs/tutorials/administrators/user-management.md",
   "sourceDirName": "tutorials/administrators",
   "slug": "/tutorials/administrators/user-management",
@@ -11,24 +11,23 @@
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/tutorials/administrators/user-management.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762647969000,
+  "lastUpdatedBy": "google-labs-jules[bot]",
+  "lastUpdatedAt": 1762711088000,
   "sidebarPosition": 2,
   "frontMatter": {
-    "title": "User and Credit Management",
+    "title": "User Management",
     "sidebar_position": 2,
-    "description": "Learn how to manage users, assign roles, and control credit allocations as a RAD Platform administrator.",
+    "description": "Learn how to manage users and assign roles as a RAD Platform administrator.",
     "keywords": [
       "tutorial",
       "administrator",
       "user management",
-      "credit management",
       "roles"
     ]
   },
   "sidebar": "docsSidebar",
   "previous": {
-    "title": "Initial Platform Setup for Organizations",
+    "title": "Initial Platform Setup",
     "permalink": "/docs/tutorials/administrators/initial-setup"
   },
   "next": {

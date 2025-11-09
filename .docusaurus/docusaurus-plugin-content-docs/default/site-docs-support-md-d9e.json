@@ -11,8 +11,8 @@
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/support.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762616422000,
+  "lastUpdatedBy": "Tech Equity",
+  "lastUpdatedAt": 1762710595000,
   "sidebarPosition": 10,
   "frontMatter": {
     "title": "Support & Resources",
@@ -28,11 +28,7 @@
   },
   "sidebar": "docsSidebar",
   "previous": {
-    "title": "Notification System",
-    "permalink": "/docs/admin/notifications"
-  },
-  "next": {
-    "title": "Tutorials",
-    "permalink": "/docs/tutorials/"
+    "title": "Multi-Cloud Deployment Strategies",
+    "permalink": "/docs/tutorials/advanced/multi-cloud-strategies"
   }
 }

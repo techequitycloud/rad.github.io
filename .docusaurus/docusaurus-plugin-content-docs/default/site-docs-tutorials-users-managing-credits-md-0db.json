@@ -1,7 +1,7 @@
 {
   "id": "tutorials/users/managing-credits",
-  "title": "Managing Your Credits and Subscriptions",
-  "description": "Learn how to manage your credits, subscribe to a plan, and monitor your spending on the RAD Platform.",
+  "title": "Managing Your Credits",
+  "description": "Learn how to manage your credits, and monitor your spending on the RAD Platform.",
   "source": "@site/docs/tutorials/users/managing-credits.md",
   "sourceDirName": "tutorials/users",
   "slug": "/tutorials/users/managing-credits",
@@ -11,13 +11,13 @@
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/tutorials/users/managing-credits.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": "Tech Equity",
-  "lastUpdatedAt": 1762647575000,
+  "lastUpdatedBy": "google-labs-jules[bot]",
+  "lastUpdatedAt": 1762711088000,
   "sidebarPosition": 2,
   "frontMatter": {
-    "title": "Managing Your Credits and Subscriptions",
+    "title": "Managing Your Credits",
     "sidebar_position": 2,
-    "description": "Learn how to manage your credits, subscribe to a plan, and monitor your spending on the RAD Platform.",
+    "description": "Learn how to manage your credits, and monitor your spending on the RAD Platform.",
     "keywords": [
       "tutorial",
       "billing",

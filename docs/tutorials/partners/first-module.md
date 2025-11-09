@@ -38,8 +38,6 @@ The RAD Platform needs access to your GitHub repository to read your modules. Yo
 4.  Set the **Expiration** for the token.
 5.  Under **Scopes**, select the `repo` scope. This grants read access to your repositories.
 
-    ![GitHub new personal access token page with `repo` scope selected](/img/tutorials/partners/github-token-creation.png)
-
 6.  Click **"Generate token"** and copy the token value. You will not be able to see it again.
 
 ## Step 2: Connect Your GitHub Repository
@@ -47,14 +45,10 @@ The RAD Platform needs access to your GitHub repository to read your modules. Yo
 Now, you need to add the GitHub token and repository to your RAD Platform profile.
 
 1.  In the RAD Console, go to your **Profile** page.
+    ![Partner Profile Page](/img/site/6.2-partner-profile.png)
 2.  Scroll down to the **"Partner Settings"** section.
-3.  Paste your GitHub PAT into the **"GitHub Token"** field and click **"Save"**.
+3.  Paste your GitHub PAT into the **"GitHub Token"** field and select the repository where you will store your modules, then click **"Save"**.
 
-    ![Partner Settings section in the RAD profile with GitHub token field](/img/tutorials/partners/partner-settings-token.png)
-
-4.  Once the token is saved, a dropdown list of your GitHub repositories will appear. Select the repository where you will store your modules and click **"Save"**.
-
-    ![Repository selection dropdown in Partner Settings](/img/tutorials/partners/partner-settings-token.png)
 
 ## Step 3: Structure Your Module
 
@@ -116,22 +110,19 @@ This module creates a simple Google Cloud Storage bucket.
 Once your module is pushed to your GitHub repository, you can publish it to the RAD Platform.
 
 1.  In the RAD Console, navigate to the **"Publish"** tab in the main menu.
+    ![Publish menu item](/img/site/8-partner-publish-menu.png)
 2.  You will see a list of modules found in your connected GitHub repository.
-
-    ![Publish tab showing the new `simple-gcs-bucket` module](/img/tutorials/partners/publish-tab-new-module.png)
-
-3.  Select your new module by clicking on it.
-4.  Click the **"Publish"** button.
+    ![Publish tab showing the new `simple-gcs-bucket` module](/img/site/8.1-partner-publish-partner_modules.png)
+3.  Select your new module and click the **"Publish"** button.
 
 ## Step 5: Test Your Module
 
 Now that your module is published, you can deploy it just like any other platform module.
 
-1.  Go to the **"Deploy"** page and click **"Create New"**.
+1.  Go to the **"Deploy"** page.
+    ![Deploy menu item](/img/site/9-partner-deploy-menu.png)
 2.  Select the **"Partner Modules"** tab. You should see your new module.
-
-    ![Partner Modules tab showing the newly published module](/img/tutorials/partners/partner-modules-catalog.png)
-
+    ![Partner Modules tab showing the newly published module](/img/site/9.1-partner-deploy-partner_modules.png)
 3.  Click on your module and configure the deployment by providing a `bucket_name`.
 4.  Launch the deployment and monitor its progress.
 

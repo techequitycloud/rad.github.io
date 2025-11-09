@@ -6,120 +6,124 @@
     },
     "content": "393be207"
   },
-  "/docs-565": {
+  "/docs-b32": {
     "__comp": "5e95c892",
     "__context": {
       "plugin": "aba21aa0"
     }
   },
-  "/docs-993": {
+  "/docs-165": {
     "__comp": "a7bd4aaa",
     "__props": "0058b4c6"
   },
-  "/docs-b1a": {
+  "/docs-c4f": {
     "__comp": "a94703ab"
   },
-  "/docs/admin/notifications-c21": {
+  "/docs/admin/notifications-62b": {
     "__comp": "17896441",
     "content": "666f96d3"
   },
-  "/docs/admin/settings-036": {
+  "/docs/admin/settings-9b4": {
     "__comp": "17896441",
     "content": "e0843b1c"
   },
-  "/docs/admin/users-b86": {
+  "/docs/admin/users-afa": {
     "__comp": "17896441",
     "content": "751a3bff"
   },
-  "/docs/billing/credits-04e": {
+  "/docs/billing/credits-916": {
     "__comp": "17896441",
     "content": "a4683219"
   },
-  "/docs/billing/subscriptions-c5c": {
+  "/docs/billing/subscriptions-11b": {
     "__comp": "17896441",
     "content": "eb1b747b"
   },
-  "/docs/billing/transactions-e17": {
+  "/docs/billing/transactions-1d3": {
     "__comp": "17896441",
     "content": "013851be"
   },
-  "/docs/features/deployments-6f9": {
+  "/docs/features/deployments-fd0": {
     "__comp": "17896441",
     "content": "6deb01d5"
   },
-  "/docs/features/modules-d89": {
+  "/docs/features/modules-c16": {
     "__comp": "17896441",
     "content": "59b3cbb5"
   },
-  "/docs/features/publishing-afc": {
+  "/docs/features/publishing-ba5": {
     "__comp": "17896441",
     "content": "3637ef39"
   },
-  "/docs/getting-started-c6c": {
+  "/docs/getting-started-f8a": {
     "__comp": "17896441",
     "content": "d589d3a7"
   },
-  "/docs/guides/admin-cf0": {
+  "/docs/guides/admin-936": {
     "__comp": "17896441",
     "content": "407ca5f9"
   },
-  "/docs/guides/agent-c6e": {
+  "/docs/guides/agent-960": {
     "__comp": "17896441",
     "content": "e9f5d379"
   },
-  "/docs/guides/partner-e4d": {
+  "/docs/guides/partner-6e9": {
     "__comp": "17896441",
     "content": "f58a7069"
   },
-  "/docs/guides/user-bc3": {
+  "/docs/guides/user-4e9": {
     "__comp": "17896441",
     "content": "625bc1a7"
   },
-  "/docs/support-275": {
+  "/docs/support-f20": {
     "__comp": "17896441",
     "content": "d9e16301"
   },
-  "/docs/tutorials-1e5": {
+  "/docs/tutorials-b73": {
     "__comp": "17896441",
     "content": "fea1970e"
   },
-  "/docs/tutorials/administrators/initial-setup-5f2": {
+  "/docs/tutorials/administrators/initial-setup-ac6": {
     "__comp": "17896441",
     "content": "30a634a8"
   },
-  "/docs/tutorials/administrators/user-management-1b5": {
+  "/docs/tutorials/administrators/user-management-61a": {
     "__comp": "17896441",
     "content": "b5b065ff"
   },
-  "/docs/tutorials/advanced/multi-cloud-strategies-3c6": {
+  "/docs/tutorials/advanced/multi-cloud-strategies-184": {
     "__comp": "17896441",
     "content": "54d28ba3"
   },
-  "/docs/tutorials/advanced/platform-architecture-107": {
+  "/docs/tutorials/advanced/platform-architecture-72b": {
     "__comp": "17896441",
     "content": "e4380ea1"
   },
-  "/docs/tutorials/partners/first-module-8b2": {
+  "/docs/tutorials/agents/agent-revenue-2bd": {
+    "__comp": "17896441",
+    "content": "5fe92721"
+  },
+  "/docs/tutorials/partners/first-module-88f": {
     "__comp": "17896441",
     "content": "8ca936ff"
   },
-  "/docs/tutorials/partners/module-versions-4d0": {
+  "/docs/tutorials/partners/module-versions-af5": {
     "__comp": "17896441",
     "content": "854a28e9"
   },
-  "/docs/tutorials/partners/production-module-0dd": {
+  "/docs/tutorials/partners/production-module-20d": {
     "__comp": "17896441",
     "content": "cb4ded4b"
   },
-  "/docs/tutorials/users/first-deployment-d8b": {
+  "/docs/tutorials/users/first-deployment-f95": {
     "__comp": "17896441",
     "content": "97e037b8"
   },
-  "/docs/tutorials/users/managing-credits-07a": {
+  "/docs/tutorials/users/managing-credits-5f2": {
     "__comp": "17896441",
     "content": "0db17e96"
   },
-  "/docs/tutorials/users/troubleshooting-deployments-87c": {
+  "/docs/tutorials/users/troubleshooting-deployments-f6b": {
     "__comp": "17896441",
     "content": "e488e8f0"
   },

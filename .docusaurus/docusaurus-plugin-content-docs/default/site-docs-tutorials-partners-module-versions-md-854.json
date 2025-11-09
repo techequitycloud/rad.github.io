@@ -11,8 +11,8 @@
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/tutorials/partners/module-versions.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762647969000,
+  "lastUpdatedBy": "google-labs-jules[bot]",
+  "lastUpdatedAt": 1762711088000,
   "sidebarPosition": 3,
   "frontMatter": {
     "title": "Managing Module Versions and Updates",
@@ -32,7 +32,7 @@
     "permalink": "/docs/tutorials/partners/production-module"
   },
   "next": {
-    "title": "Initial Platform Setup for Organizations",
+    "title": "Initial Platform Setup",
     "permalink": "/docs/tutorials/administrators/initial-setup"
   }
 }

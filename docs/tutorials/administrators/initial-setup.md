@@ -1,91 +1,68 @@
 ---
-title: "Initial Platform Setup for Organizations"
+title: "Initial Platform Setup"
 sidebar_position: 1
 description: "A guide for administrators on how to perform the initial setup and configuration of the RAD Platform for their organization."
 keywords: ["tutorial", "administrator", "initial setup", "configuration", "platform setup"]
 ---
 
-# Initial Platform Setup for Organizations
+# Initial Platform Setup
 
-This tutorial is for new administrators who are setting up the RAD Platform for their organization for the first time. It covers the essential steps to configure the platform, set up the module repository, and prepare for user onboarding.
+This tutorial is for new administrators who are setting up the RAD Platform for their organization for the first time. It covers the essential steps to configure the platform and prepare for user onboarding.
 
 ## What You'll Learn
 
-- How to configure global platform settings.
-- How to set up the Platform Modules repository.
+- How to navigate the admin setup process.
 - How to configure the credit system.
-- How to set up email notifications.
+- How to set up email and payment processing.
+- How to configure cloud providers.
 
 ### Prerequisites
 
 - A RAD Platform account with **Administrator** privileges.
-- A GitHub repository to host your organization's platform modules.
 
 ### Estimated Time
 
-- **40 minutes**
+- **20 minutes**
 
 ---
 
-## Step 1: Configure Global Settings
+## Step 1: Navigate to the Setup Page
 
-Global settings control the overall behavior of the platform.
+All initial platform configuration is handled on the **Setup** page.
 
-1.  Navigate to the **Admin** page from the main menu.
-2.  Under the **"Admin Settings"** tab, you can configure:
+1.  From the main navigation menu, click on **"Setup"**.
+    ![Setup Menu](/img/site/11-admin-setup-menu.png)
 
-    -   **Mailbox Credentials:** Set up the email service for sending platform notifications.
-    -   **Deployment Retention:** Define how long to keep deployment history.
-    -   **Cleanup Schedule:** Schedule automated cleanup of old deployment records.
+## Step 2: Complete the Setup Form
 
-    ![Admin Settings page with global configuration options](/img/tutorials/administrators/admin-settings-page.png)
+The setup process is a multi-step form that guides you through the essential configurations.
 
-## Step 2: Set Up the Platform Modules Repository
+### Step 2.1: Credit and Subscription Settings
 
-This repository will be the source for the modules available to all users in your organization.
+1.  Configure the initial credit allocation for new users and set up your subscription tiers.
+    ![Setup Form - Page 1](/img/site/11.1-admin-setup-form1.png)
 
-1.  Go to your **Profile** page and find the **"Admin Settings"** section.
-2.  Create a GitHub Personal Access Token with `repo` scope, as described in the [partner tutorial](./../partners/first-module.md).
-3.  Paste the token into the **"GitHub Token"** field and save.
-4.  Select your organization's module repository from the dropdown list and save.
+### Step 2.2: Email and Payment Configuration
 
-    ![Admin Settings in the profile for configuring the platform module repository](/img/tutorials/administrators/admin-profile-settings.png)
+1.  Enter your SMTP server details for sending email notifications.
+2.  Connect your Stripe account to enable payment processing for credit purchases.
+    ![Setup Form - Page 2](/img/site/11.1-admin-setup-form2.png)
 
-## Step 3: Configure the Credit System
+### Step 2.3: Cloud Provider Setup
 
-Administrators have full control over the platform's economy.
-
-1.  Go to the **Billing** page and select the **"Credit Settings"** tab.
-2.  Here you can configure:
-
-    -   **Price Per Credit:** The conversion rate from currency to credits.
-    -   **Sign Up Credits:** The number of free credits new users receive.
-    -   **Low Credit Alerts:** The threshold for sending low-balance notifications.
-
-    ![Credit Settings tab on the Billing page](/img/tutorials/administrators/credit-settings.png)
-
-3.  Under the **"Subscription Tiers Management"** tab, you can create and manage the subscription plans available to your users.
-
-    ![Subscription Tiers Management tab](/img/tutorials/administrators/subscription-tiers-management.png)
-
-## Step 4: Set Up Email Notifications
-
-Reliable email notifications are crucial for user communication.
-
-1.  On the **Admin** page, ensure you have correctly configured the **Mailbox Credentials**.
-2.  On your **Profile** page, under **"Email Notification Settings"**, you can control which notifications you, as an admin, receive.
-3.  Users can configure their own notification preferences in their profiles.
+1.  Configure the cloud providers that will be available for deployments. This includes setting up service accounts and credentials.
+    ![Setup Form - Page 3](/img/site/11.1-admin-setup-form3.png)
+    ![Setup Form - Page 4](/img/site/11.1-admin-setup-form4.png)
 
 ## Verification
 
 Your platform is set up correctly if:
 
--   You can see the modules from your configured repository on the **Deploy** page.
+-   You can save the setup form without errors.
 -   New users receive the correct number of sign-up credits.
--   You can create a new subscription tier.
+-   You can see the configured cloud providers on the deployment pages.
 
 ## Next Steps
 
--   [User and Credit Management](./user-management.md)
--   Begin onboarding users to the platform
--   Monitor platform health and usage through the Admin Dashboard
+-   [User Management](./user-management.md)
+-   Begin onboarding users to the platform.

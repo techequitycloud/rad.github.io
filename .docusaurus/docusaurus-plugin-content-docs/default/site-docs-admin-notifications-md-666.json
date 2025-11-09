@@ -11,8 +11,8 @@
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/admin/notifications.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762616422000,
+  "lastUpdatedBy": "Tech Equity",
+  "lastUpdatedAt": 1762710595000,
   "sidebarPosition": 2,
   "frontMatter": {
     "title": "Notification System",
@@ -32,7 +32,7 @@
     "permalink": "/docs/admin/users"
   },
   "next": {
-    "title": "Support & Resources",
-    "permalink": "/docs/support"
+    "title": "Tutorials",
+    "permalink": "/docs/tutorials/"
   }
 }

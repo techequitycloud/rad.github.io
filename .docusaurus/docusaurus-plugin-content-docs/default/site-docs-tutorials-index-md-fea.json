@@ -12,7 +12,7 @@
   "tags": [],
   "version": "current",
   "lastUpdatedBy": "Tech Equity",
-  "lastUpdatedAt": 1762647575000,
+  "lastUpdatedAt": 1762710595000,
   "sidebarPosition": 2,
   "frontMatter": {
     "sidebar_position": 2,
@@ -28,8 +28,8 @@
   },
   "sidebar": "docsSidebar",
   "previous": {
-    "title": "Support & Resources",
-    "permalink": "/docs/support"
+    "title": "Notification System",
+    "permalink": "/docs/admin/notifications"
   },
   "next": {
     "title": "Your First Deployment: A Step-by-Step Guide",

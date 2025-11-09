@@ -39,8 +39,6 @@ A consistent structure makes modules easier to understand and maintain. A produc
 -   `versions.tf`: Specifies provider version constraints.
 -   `examples/`: A subdirectory containing example usage of your module.
 
-![A file tree showing the standard module structure in a code editor](/img/tutorials/partners/module-file-structure.png)
-
 **`versions.tf` Example:**
 
 It's crucial to lock your module to specific provider versions to avoid unexpected breaking changes.
@@ -123,8 +121,6 @@ Your `README.md` is the user manual for your module. It should include:
 -   A simple usage example.
 -   A detailed description of all input variables and outputs.
 -   Any important considerations or limitations.
-
-![A well-written README.md file for a Terraform module](/img/tutorials/partners/module-readme-example.png)
 
 ## Step 5: Provide Usage Examples
 
