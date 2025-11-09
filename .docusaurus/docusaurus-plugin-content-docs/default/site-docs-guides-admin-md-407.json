@@ -5,14 +5,14 @@
   "source": "@site/docs/guides/admin.md",
   "sourceDirName": "guides",
   "slug": "/guides/admin",
-  "permalink": "/rad.github.io/docs/guides/admin",
+  "permalink": "/docs/guides/admin",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/guides/admin.md",
   "tags": [],
   "version": "current",
   "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762617232000,
+  "lastUpdatedAt": 1762618712000,
   "sidebarPosition": 1,
   "frontMatter": {
     "title": "Administrator Guide",
@@ -29,10 +29,10 @@
   "sidebar": "docsSidebar",
   "previous": {
     "title": "Getting Started with RAD Platform",
-    "permalink": "/rad.github.io/docs/getting-started"
+    "permalink": "/docs/getting-started"
   },
   "next": {
     "title": "Partner Guide",
-    "permalink": "/rad.github.io/docs/guides/partner"
+    "permalink": "/docs/guides/partner"
   }
 }

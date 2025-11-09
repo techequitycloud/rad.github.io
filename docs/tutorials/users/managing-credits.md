@@ -33,7 +33,7 @@ All billing-related activities are managed from the **Billing** page.
 
 1.  From the main navigation menu on the left, click on **"Billing"**.
 
-    [SCREENSHOT: Main navigation menu with "Billing" highlighted]
+    ![Main navigation menu with "Billing" highlighted](/img/tutorials/users/nav-menu-billing.png)
 
 2.  The **Billing** page has several tabs: **Subscription Tiers**, **Buy Credits**, **Credit Transactions**, **Project Costs**, and **Monthly Invoices**.
 

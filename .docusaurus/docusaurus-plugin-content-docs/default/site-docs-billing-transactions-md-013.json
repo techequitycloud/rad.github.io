@@ -5,7 +5,7 @@
   "source": "@site/docs/billing/transactions.md",
   "sourceDirName": "billing",
   "slug": "/billing/transactions",
-  "permalink": "/rad.github.io/docs/billing/transactions",
+  "permalink": "/docs/billing/transactions",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/billing/transactions.md",
@@ -29,10 +29,10 @@
   "sidebar": "docsSidebar",
   "previous": {
     "title": "Subscriptions",
-    "permalink": "/rad.github.io/docs/billing/subscriptions"
+    "permalink": "/docs/billing/subscriptions"
   },
   "next": {
     "title": "Global Settings",
-    "permalink": "/rad.github.io/docs/admin/settings"
+    "permalink": "/docs/admin/settings"
   }
 }

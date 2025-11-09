@@ -13,8 +13,8 @@
       "calendar": "gregory",
       "path": "en",
       "translate": false,
-      "url": "https://techequitycloud.github.io",
-      "baseUrl": "/rad.github.io/"
+      "url": "https://docs.techequity.cloud",
+      "baseUrl": "/"
     }
   }
 }

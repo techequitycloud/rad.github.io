@@ -5,7 +5,7 @@
   "source": "@site/docs/features/modules.md",
   "sourceDirName": "features",
   "slug": "/features/modules",
-  "permalink": "/rad.github.io/docs/features/modules",
+  "permalink": "/docs/features/modules",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/features/modules.md",
@@ -29,10 +29,10 @@
   "sidebar": "docsSidebar",
   "previous": {
     "title": "Deployments",
-    "permalink": "/rad.github.io/docs/features/deployments"
+    "permalink": "/docs/features/deployments"
   },
   "next": {
     "title": "Publishing Modules",
-    "permalink": "/rad.github.io/docs/features/publishing"
+    "permalink": "/docs/features/publishing"
   }
 }

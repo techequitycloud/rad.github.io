@@ -1,0 +1,38 @@
+{
+  "id": "tutorials/partners/production-module",
+  "title": "Creating a Production-Ready Module",
+  "description": "Learn best practices for building high-quality, maintainable, and secure custom modules for the RAD Platform.",
+  "source": "@site/docs/tutorials/partners/production-module.md",
+  "sourceDirName": "tutorials/partners",
+  "slug": "/tutorials/partners/production-module",
+  "permalink": "/docs/tutorials/partners/production-module",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/tutorials/partners/production-module.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Tech Equity",
+  "lastUpdatedAt": 1762647575000,
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "title": "Creating a Production-Ready Module",
+    "sidebar_position": 2,
+    "description": "Learn best practices for building high-quality, maintainable, and secure custom modules for the RAD Platform.",
+    "keywords": [
+      "tutorial",
+      "partner",
+      "production module",
+      "best practices",
+      "Terraform"
+    ]
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Publishing Your First Custom Module",
+    "permalink": "/docs/tutorials/partners/first-module"
+  },
+  "next": {
+    "title": "Managing Module Versions and Updates",
+    "permalink": "/docs/tutorials/partners/module-versions"
+  }
+}

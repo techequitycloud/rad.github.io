@@ -1,0 +1,38 @@
+{
+  "id": "tutorials/administrators/initial-setup",
+  "title": "Initial Platform Setup for Organizations",
+  "description": "A guide for administrators on how to perform the initial setup and configuration of the RAD Platform for their organization.",
+  "source": "@site/docs/tutorials/administrators/initial-setup.md",
+  "sourceDirName": "tutorials/administrators",
+  "slug": "/tutorials/administrators/initial-setup",
+  "permalink": "/docs/tutorials/administrators/initial-setup",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/tutorials/administrators/initial-setup.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "shiyghannavti",
+  "lastUpdatedAt": 1762647969000,
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "title": "Initial Platform Setup for Organizations",
+    "sidebar_position": 1,
+    "description": "A guide for administrators on how to perform the initial setup and configuration of the RAD Platform for their organization.",
+    "keywords": [
+      "tutorial",
+      "administrator",
+      "initial setup",
+      "configuration",
+      "platform setup"
+    ]
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Managing Module Versions and Updates",
+    "permalink": "/docs/tutorials/partners/module-versions"
+  },
+  "next": {
+    "title": "User and Credit Management",
+    "permalink": "/docs/tutorials/administrators/user-management"
+  }
+}

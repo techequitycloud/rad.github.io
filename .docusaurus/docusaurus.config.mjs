@@ -28,8 +28,8 @@ export default {
     },
     "experimental_router": "browser"
   },
-  "url": "https://techequitycloud.github.io",
-  "baseUrl": "/rad.github.io/",
+  "url": "https://docs.techequity.cloud",
+  "baseUrl": "/",
   "organizationName": "techequitycloud",
   "projectName": "rad.github.io",
   "deploymentBranch": "gh-pages",

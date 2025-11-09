@@ -5,7 +5,7 @@
   "source": "@site/docs/admin/settings.md",
   "sourceDirName": "admin",
   "slug": "/admin/settings",
-  "permalink": "/rad.github.io/docs/admin/settings",
+  "permalink": "/docs/admin/settings",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/admin/settings.md",
@@ -29,10 +29,10 @@
   "sidebar": "docsSidebar",
   "previous": {
     "title": "Transactions",
-    "permalink": "/rad.github.io/docs/billing/transactions"
+    "permalink": "/docs/billing/transactions"
   },
   "next": {
     "title": "User Management",
-    "permalink": "/rad.github.io/docs/admin/users"
+    "permalink": "/docs/admin/users"
   }
 }

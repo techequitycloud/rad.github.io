@@ -52,7 +52,6 @@ const sidebars: SidebarsConfig = {
         'admin/notifications',
       ],
     },
-    'support',
     {
       type: 'category',
       label: 'Tutorials',
@@ -94,6 +93,7 @@ const sidebars: SidebarsConfig = {
         },
       ],
     },
+    'support',
   ],
 };
 

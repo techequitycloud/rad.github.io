@@ -5,7 +5,7 @@
   "source": "@site/docs/support.md",
   "sourceDirName": ".",
   "slug": "/support",
-  "permalink": "/rad.github.io/docs/support",
+  "permalink": "/docs/support",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/support.md",
@@ -29,6 +29,10 @@
   "sidebar": "docsSidebar",
   "previous": {
     "title": "Notification System",
-    "permalink": "/rad.github.io/docs/admin/notifications"
+    "permalink": "/docs/admin/notifications"
+  },
+  "next": {
+    "title": "Tutorials",
+    "permalink": "/docs/tutorials/"
   }
 }

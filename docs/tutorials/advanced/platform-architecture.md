@@ -87,5 +87,3 @@ By understanding this architecture, you can better diagnose issues, create more 
 
 ## Next Steps
 
--   [Security Best Practices on RAD Platform](./security-best-practices.md)
--   Review the `cloudbuild.yaml` file in a module repository to see the pipeline definition in action.

@@ -38,7 +38,7 @@ The RAD Platform needs access to your GitHub repository to read your modules. Yo
 4.  Set the **Expiration** for the token.
 5.  Under **Scopes**, select the `repo` scope. This grants read access to your repositories.
 
-    [SCREENSHOT: GitHub new personal access token page with `repo` scope selected]
+    ![GitHub new personal access token page with `repo` scope selected](/img/tutorials/partners/github-token-creation.png)
 
 6.  Click **"Generate token"** and copy the token value. You will not be able to see it again.
 
@@ -50,11 +50,11 @@ Now, you need to add the GitHub token and repository to your RAD Platform profil
 2.  Scroll down to the **"Partner Settings"** section.
 3.  Paste your GitHub PAT into the **"GitHub Token"** field and click **"Save"**.
 
-    [SCREENSHOT: Partner Settings section in the RAD profile with GitHub token field]
+    ![Partner Settings section in the RAD profile with GitHub token field](/img/tutorials/partners/partner-settings-token.png)
 
 4.  Once the token is saved, a dropdown list of your GitHub repositories will appear. Select the repository where you will store your modules and click **"Save"**.
 
-    [SCREENSHOT: Repository selection dropdown in Partner Settings]
+    ![Repository selection dropdown in Partner Settings](/img/tutorials/partners/partner-settings-token.png)
 
 ## Step 3: Structure Your Module
 
@@ -118,7 +118,7 @@ Once your module is pushed to your GitHub repository, you can publish it to the 
 1.  In the RAD Console, navigate to the **"Publish"** tab in the main menu.
 2.  You will see a list of modules found in your connected GitHub repository.
 
-    [SCREENSHOT: Publish tab showing the new `simple-gcs-bucket` module]
+    ![Publish tab showing the new `simple-gcs-bucket` module](/img/tutorials/partners/publish-tab-new-module.png)
 
 3.  Select your new module by clicking on it.
 4.  Click the **"Publish"** button.
@@ -130,7 +130,7 @@ Now that your module is published, you can deploy it just like any other platfor
 1.  Go to the **"Deploy"** page and click **"Create New"**.
 2.  Select the **"Partner Modules"** tab. You should see your new module.
 
-    [SCREENSHOT: Partner Modules tab showing the newly published module]
+    ![Partner Modules tab showing the newly published module](/img/tutorials/partners/partner-modules-catalog.png)
 
 3.  Click on your module and configure the deployment by providing a `bucket_name`.
 4.  Launch the deployment and monitor its progress.

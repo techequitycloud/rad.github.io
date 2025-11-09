@@ -38,7 +38,7 @@ Global settings control the overall behavior of the platform.
     -   **Deployment Retention:** Define how long to keep deployment history.
     -   **Cleanup Schedule:** Schedule automated cleanup of old deployment records.
 
-    [SCREENSHOT: Admin Settings page with global configuration options]
+    ![Admin Settings page with global configuration options](/img/tutorials/administrators/admin-settings-page.png)
 
 ## Step 2: Set Up the Platform Modules Repository
 
@@ -49,7 +49,7 @@ This repository will be the source for the modules available to all users in you
 3.  Paste the token into the **"GitHub Token"** field and save.
 4.  Select your organization's module repository from the dropdown list and save.
 
-    [SCREENSHOT: Admin Settings in the profile for configuring the platform module repository]
+    ![Admin Settings in the profile for configuring the platform module repository](/img/tutorials/administrators/admin-profile-settings.png)
 
 ## Step 3: Configure the Credit System
 
@@ -62,11 +62,11 @@ Administrators have full control over the platform's economy.
     -   **Sign Up Credits:** The number of free credits new users receive.
     -   **Low Credit Alerts:** The threshold for sending low-balance notifications.
 
-    [SCREENSHOT: Credit Settings tab on the Billing page]
+    ![Credit Settings tab on the Billing page](/img/tutorials/administrators/credit-settings.png)
 
 3.  Under the **"Subscription Tiers Management"** tab, you can create and manage the subscription plans available to your users.
 
-    [SCREENSHOT: Subscription Tiers Management tab]
+    ![Subscription Tiers Management tab](/img/tutorials/administrators/subscription-tiers-management.png)
 
 ## Step 4: Set Up Email Notifications
 
@@ -87,5 +87,5 @@ Your platform is set up correctly if:
 ## Next Steps
 
 -   [User and Credit Management](./user-management.md)
--   [Monitoring Platform Health and Usage](./platform-monitoring.md)
--   Begin onboarding users to the platform.
+-   Begin onboarding users to the platform
+-   Monitor platform health and usage through the Admin Dashboard

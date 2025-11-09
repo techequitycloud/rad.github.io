@@ -1,0 +1,38 @@
+{
+  "id": "tutorials/partners/module-versions",
+  "title": "Managing Module Versions and Updates",
+  "description": "Learn how to manage the lifecycle of your custom modules, including versioning, updating, and handling breaking changes.",
+  "source": "@site/docs/tutorials/partners/module-versions.md",
+  "sourceDirName": "tutorials/partners",
+  "slug": "/tutorials/partners/module-versions",
+  "permalink": "/docs/tutorials/partners/module-versions",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/tutorials/partners/module-versions.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "shiyghannavti",
+  "lastUpdatedAt": 1762647969000,
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "title": "Managing Module Versions and Updates",
+    "sidebar_position": 3,
+    "description": "Learn how to manage the lifecycle of your custom modules, including versioning, updating, and handling breaking changes.",
+    "keywords": [
+      "tutorial",
+      "partner",
+      "module versioning",
+      "updates",
+      "breaking changes"
+    ]
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Creating a Production-Ready Module",
+    "permalink": "/docs/tutorials/partners/production-module"
+  },
+  "next": {
+    "title": "Initial Platform Setup for Organizations",
+    "permalink": "/docs/tutorials/administrators/initial-setup"
+  }
+}
