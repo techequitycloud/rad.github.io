@@ -1,0 +1,33 @@
+sequenceDiagram
+    participant User as User (RAD UI)
+    participant API as RAD Backend API
+    participant FS as Firestore
+    participant PS as Pub/Sub
+    participant CF as Cloud Function
+    participant CB as Cloud Build
+    participant TF as Terraform
+    participant GCP as GCP Resources
+
+    User->>API: Submit Deployment Request
+    API->>FS: Create Deployment Document (QUEUED)
+    FS-->>API: Document Created
+    API->>PS: Publish Deployment Message
+    PS-->>API: Message Published
+    API-->>User: Deployment Queued
+    
+    PS->>CF: Trigger Cloud Function
+    CF->>CB: Start Cloud Build Pipeline
+    CB->>FS: Update Status (PROVISIONING)
+    FS-->>User: Real-time Status Update
+    
+    CB->>CB: Clone Git Repository
+    CB->>TF: terraform init
+    CB->>TF: terraform apply
+    TF->>GCP: Create Resources
+    GCP-->>TF: Resources Created
+    TF-->>CB: Deployment Complete
+    
+    CB->>FS: Update Status (SUCCESS)
+    FS-->>User: Real-time Status Update
+    User->>FS: View Deployment Logs
+    FS-->>User: Display Logs

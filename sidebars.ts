@@ -53,6 +53,47 @@ const sidebars: SidebarsConfig = {
       ],
     },
     'support',
+    {
+      type: 'category',
+      label: 'Tutorials',
+      items: [
+        'tutorials/index',
+        {
+          type: 'category',
+          label: 'User Tutorials',
+          items: [
+            'tutorials/users/first-deployment',
+            'tutorials/users/managing-credits',
+            'tutorials/users/troubleshooting-deployments',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Partner Tutorials',
+          items: [
+            'tutorials/partners/first-module',
+            'tutorials/partners/production-module',
+            'tutorials/partners/module-versions',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Administrator Tutorials',
+          items: [
+            'tutorials/administrators/initial-setup',
+            'tutorials/administrators/user-management',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Advanced Tutorials',
+          items: [
+            'tutorials/advanced/platform-architecture',
+            'tutorials/advanced/multi-cloud-strategies',
+          ],
+        },
+      ],
+    },
   ],
 };
 

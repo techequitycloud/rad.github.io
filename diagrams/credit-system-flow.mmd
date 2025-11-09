@@ -1,0 +1,48 @@
+graph LR
+    subgraph "Credit Sources"
+        SIGNUP[Sign-up Credits]
+        SUB[Subscription]
+        PURCHASE[One-time Purchase]
+        PARTNER[Partner Credits<br/>Monthly Allowance]
+        AWARDED[Admin Awarded]
+    end
+    
+    subgraph "User Credit Balance"
+        TOTAL[Total Available Credits]
+        PURCHASED_BAL[Purchased Credits]
+        AWARDED_BAL[Awarded Credits]
+    end
+    
+    subgraph "Credit Usage"
+        DEPLOY[Module Deployment]
+        PROJECT[Project Costs]
+    end
+    
+    subgraph "Tracking"
+        TRANS[Transaction History]
+        INVOICE[Monthly Invoices]
+    end
+    
+    SIGNUP -->|Initial Grant| AWARDED_BAL
+    SUB -->|Monthly| PURCHASED_BAL
+    PURCHASE -->|Immediate| PURCHASED_BAL
+    PARTNER -->|1st of Month| PURCHASED_BAL
+    AWARDED -->|Manual| AWARDED_BAL
+    
+    PURCHASED_BAL --> TOTAL
+    AWARDED_BAL --> TOTAL
+    
+    TOTAL -->|Deduct| DEPLOY
+    TOTAL -->|Deduct| PROJECT
+    
+    DEPLOY --> TRANS
+    PROJECT --> TRANS
+    SUB --> TRANS
+    PURCHASE --> TRANS
+    
+    TRANS --> INVOICE
+    
+    style TOTAL fill:#4285f4,color:#fff
+    style DEPLOY fill:#ea4335,color:#fff
+    style PROJECT fill:#ea4335,color:#fff
+    style TRANS fill:#34a853,color:#fff

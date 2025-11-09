@@ -1,0 +1,48 @@
+graph TD
+    ADMIN[Administrator]
+    PARTNER[Partner]
+    AGENT[Agent]
+    USER[User]
+    
+    ADMIN -->|Has all permissions of| PARTNER
+    ADMIN -->|Has all permissions of| AGENT
+    ADMIN -->|Has all permissions of| USER
+    
+    subgraph "Administrator Permissions"
+        A1[View All Deployments]
+        A2[Manage All Users]
+        A3[Configure Global Settings]
+        A4[Manage Credit System]
+        A5[View Platform Analytics]
+        A6[Configure Platform Modules]
+    end
+    
+    subgraph "Partner Permissions"
+        P1[Deploy Platform Modules]
+        P2[Create Custom Modules]
+        P3[Publish Modules]
+        P4[View Partner Modules]
+        P5[Manage Own Modules]
+    end
+    
+    subgraph "Agent Permissions"
+        AG1[Deploy on Behalf of Users]
+        AG2[View Assigned Deployments]
+    end
+    
+    subgraph "User Permissions"
+        U1[Deploy Platform Modules]
+        U2[View Own Deployments]
+        U3[Manage Billing]
+        U4[Manage Profile]
+    end
+    
+    ADMIN -.-> A1 & A2 & A3 & A4 & A5 & A6
+    PARTNER -.-> P1 & P2 & P3 & P4 & P5
+    AGENT -.-> AG1 & AG2
+    USER -.-> U1 & U2 & U3 & U4
+    
+    style ADMIN fill:#ea4335,color:#fff
+    style PARTNER fill:#fbbc04,color:#000
+    style AGENT fill:#34a853,color:#fff
+    style USER fill:#4285f4,color:#fff

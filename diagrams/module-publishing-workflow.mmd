@@ -1,0 +1,32 @@
+graph TD
+    START([Partner Starts]) --> CREATE[Create Module in GitHub]
+    CREATE --> STRUCT{Module Structure<br/>Correct?}
+    STRUCT -->|No| FIX[Fix Structure]
+    FIX --> STRUCT
+    STRUCT -->|Yes| COMMIT[Commit and Push to GitHub]
+    
+    COMMIT --> CONNECT[Connect GitHub Repo<br/>in RAD Profile]
+    CONNECT --> TOKEN[Create GitHub PAT<br/>with repo scope]
+    TOKEN --> SAVE[Save Token in<br/>Partner Settings]
+    
+    SAVE --> PUBLISH[Navigate to Publish Tab]
+    PUBLISH --> SELECT[Select Module]
+    SELECT --> CLICK[Click Publish Button]
+    
+    CLICK --> SYNC[RAD Syncs from GitHub]
+    SYNC --> VALIDATE{Module<br/>Valid?}
+    VALIDATE -->|No| ERROR[Show Error Message]
+    ERROR --> FIX
+    VALIDATE -->|Yes| STORE[Store in Firestore]
+    
+    STORE --> AVAILABLE[Module Available<br/>in Partner Catalog]
+    AVAILABLE --> TEST[Test Deployment]
+    TEST --> SUCCESS{Deployment<br/>Successful?}
+    SUCCESS -->|No| DEBUG[Debug Issues]
+    DEBUG --> FIX
+    SUCCESS -->|Yes| END([Module Published])
+    
+    style START fill:#4285f4,color:#fff
+    style END fill:#34a853,color:#fff
+    style ERROR fill:#ea4335,color:#fff
+    style AVAILABLE fill:#fbbc04,color:#000

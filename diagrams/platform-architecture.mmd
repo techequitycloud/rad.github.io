@@ -1,0 +1,55 @@
+graph TB
+    subgraph "User Interface"
+        UI[RAD UI - Next.js Web App]
+    end
+    
+    subgraph "Backend Services"
+        API[RAD Backend API]
+        AUTH[Google Cloud Identity]
+    end
+    
+    subgraph "Data Layer"
+        FS[Firestore Database]
+        CS[Cloud Storage]
+    end
+    
+    subgraph "Deployment Pipeline"
+        PS[Pub/Sub]
+        CF[Cloud Function]
+        CB[Cloud Build]
+    end
+    
+    subgraph "External Services"
+        GH[GitHub Repositories]
+        STRIPE[Stripe Payment]
+    end
+    
+    subgraph "Cloud Resources"
+        GCP[Google Cloud Platform]
+        AWS[Amazon Web Services]
+        AZURE[Microsoft Azure]
+    end
+    
+    UI -->|API Requests| API
+    API -->|Authentication| AUTH
+    API -->|Store Data| FS
+    API -->|Store Artifacts| CS
+    API -->|Trigger Deployment| PS
+    API -->|Process Payment| STRIPE
+    
+    PS -->|Message| CF
+    CF -->|Start Build| CB
+    CB -->|Read Modules| GH
+    CB -->|Logs & Status| FS
+    CB -->|Deploy| GCP
+    CB -->|Deploy| AWS
+    CB -->|Deploy| AZURE
+    
+    UI -->|Real-time Updates| FS
+    
+    style UI fill:#4285f4,color:#fff
+    style API fill:#34a853,color:#fff
+    style CB fill:#fbbc04,color:#000
+    style GCP fill:#ea4335,color:#fff
+    style AWS fill:#ff9900,color:#000
+    style AZURE fill:#0078d4,color:#fff
