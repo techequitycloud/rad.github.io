@@ -47,11 +47,11 @@ Many modules in the RAD Platform catalog are designed for a specific cloud provi
 
 1.  When you select a module, pay close attention to the **"Cloud Provider"** tag.
 
-    [SCREENSHOT: A module card with a clear "GCP" tag]
+    ![A module card with a clear "GCP" tag](/img/tutorials/advanced/module-cloud-provider-tag.png)
 
 2.  The configuration variables for a module are specific to its cloud provider. For example, a GCP module will require a `project_id`, while an AWS module will require an `aws_region`.
 
-    [SCREENSHOT: Side-by-side comparison of configuration forms for a GCP and an AWS module]
+    ![Side-by-side comparison of configuration forms for a GCP and an AWS module](/img/tutorials/advanced/gcp-aws-config-comparison.png)
 
 ## Best Practices for Multi-Cloud Architecture
 

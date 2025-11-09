@@ -33,7 +33,7 @@ User management is centralized on the **Billing** page.
 1.  Navigate to the **Billing** page and select the **"User Credits"** tab.
 2.  This tab displays a list of all users on the platform, along with their credit balances and partner status.
 
-    [SCREENSHOT: User Credits tab showing a list of users]
+    ![User Credits tab showing a list of users](/img/tutorials/administrators/user-credits-tab.png)
 
 3.  To add a new user, you can invite them through the **Help** page.
 
@@ -47,7 +47,7 @@ Roles determine what a user can see and do on the platform.
     -   **Partner Status:** Grant or revoke partner privileges.
     -   **Activate/Deactivate Account:** Temporarily disable or enable a user's account.
 
-    [SCREENSHOT: User edit modal showing options for partner status and account activation]
+    ![User edit modal showing options for partner status and account activation](/img/tutorials/administrators/user-edit-modal.png)
 
 ## Step 3: Adjust Credit Balances
 
@@ -60,7 +60,7 @@ You can manually add or remove credits from a user's balance.
 
 2.  Enter the new credit amount and click **"Save"**.
 
-    [SCREENSHOT: User edit modal with fields for adjusting credit balances]
+    ![User edit modal with fields for adjusting credit balances](/img/tutorials/administrators/user-credit-adjustment.png)
 
 ## Step 4: Use the Partner Credits Feature
 
@@ -70,7 +70,7 @@ The Partner Credits feature allows you to grant a recurring monthly credit allow
 2.  Enter the number of credits you want to grant this user each month.
 3.  This amount will be automatically added to the user's balance on the 1st of every month.
 
-    [SCREENSHOT: User edit modal highlighting the Partner Credits allowance field]
+    ![User edit modal highlighting the Partner Credits allowance field](/img/tutorials/administrators/partner-credits-allowance.png)
 
 ## Verification
 

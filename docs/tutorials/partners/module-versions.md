@@ -50,7 +50,7 @@ Once a new version of your module is ready, create a Git tag and a GitHub releas
 
 3.  On GitHub, create a new **Release** from this tag. Use the release notes to document what has changed.
 
-    [SCREENSHOT: GitHub release creation page with tag and release notes]
+    ![GitHub release creation page with tag and release notes](/img/tutorials/partners/github-release-creation.png)
 
 ## Step 2: Updating a Published Module
 
@@ -60,7 +60,7 @@ When you update the code in your GitHub repository, you need to re-publish the m
 2.  Navigate to the **"Publish"** tab in the RAD Console.
 3.  The platform will detect that your module has been updated. The button will now say **"Update"** instead of "Publish".
 
-    [SCREENSHOT: Publish tab showing a module with an "Update" button]
+    ![Publish tab showing a module with an "Update" button](/img/tutorials/partners/publish-tab-update.png)
 
 4.  Select the module and click **"Update"**.
 

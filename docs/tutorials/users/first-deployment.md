@@ -34,11 +34,11 @@ First, you need to log in to the RAD Platform. The platform uses a secure single
 1.  Open your web browser and navigate to the [RAD Console](https://rad.techequity.cloud).
 2.  You will be prompted to log in with your Google account. Click the **"Sign in with Google"** button and follow the authentication prompts.
 
-[SCREENSHOT: RAD Console login page]
+![RAD Console login page](/img/tutorials/users/login-page.png)
 
 Once you have successfully logged in, you will be redirected to the main dashboard, which is the **Deployments** page.
 
-[SCREENSHOT: Main dashboard after login]
+![Main dashboard after login](/img/tutorials/users/main-dashboard.png)
 
 ## Step 2: Select a Module to Deploy
 
@@ -46,15 +46,15 @@ Now that you are logged in, you can choose a pre-built module to deploy. For thi
 
 1.  On the **Deployments** page, click the **"Create New"** button located at the top right of the page.
 
-    [SCREENSHOT: "Create New" button on the Deployments page]
+    !["Create New" button on the Deployments page](/img/tutorials/users/create-new-button.png)
 
 2.  You will be taken to the module selection screen. Here, you can browse the available **Platform Modules**. Each module is displayed as a card with its name, description, and the credit cost for deployment.
 
-    [SCREENSHOT: Platform Modules catalog with various module cards]
+    ![Platform Modules catalog with various module cards](/img/tutorials/users/platform-modules-catalog.png)
 
 3.  Locate the **"Simple Web Server"** module and click on its card to select it.
 
-    [SCREENSHOT: "Simple Web Server" module card highlighted]
+    !["Simple Web Server" module card highlighted](/img/tutorials/users/simple-web-server-module.png)
 
 ## Step 3: Configure Your Deployment
 
@@ -62,7 +62,7 @@ After selecting a module, you need to provide some configuration details. This t
 
 1.  You will be taken to the provisioning page, which displays a form with the required configuration variables for the module.
 
-    [SCREENSHOT: Deployment configuration form for the web server module]
+    ![Deployment configuration form for the web server module](/img/tutorials/users/deployment-config-form.png)
 
 2.  Fill in the form with the following details:
 
@@ -77,7 +77,7 @@ After selecting a module, you need to provide some configuration details. This t
 
 4.  A confirmation modal will appear, showing the credit cost for the deployment and your available credit balance. Click **"Confirm"** to proceed.
 
-    [SCREENSHOT: Deployment confirmation modal showing credit cost]
+    ![Deployment confirmation modal showing credit cost](/img/tutorials/users/deployment-confirmation-modal.png)
 
 ## Step 4: Monitor Your Deployment
 
@@ -85,15 +85,15 @@ After confirming, your deployment will begin. You can monitor its progress in re
 
 1.  You will be redirected back to the **Deployments** page. Your new deployment will appear at the top of the list with a **`PROVISIONING`** status.
 
-    [SCREENSHOT: Deployments list showing the new deployment with "PROVISIONING" status]
+    ![Deployments list showing the new deployment with "PROVISIONING" status](/img/tutorials/users/deployment-provisioning-status.png)
 
 2.  The status will automatically update as the deployment progresses. A successful deployment will show a **`SUCCESS`** status.
 
-    [SCREENSHOT: Deployment with "SUCCESS" status]
+    ![Deployment with "SUCCESS" status](/img/tutorials/users/deployment-success-status.png)
 
 3.  To view the detailed logs, click on the **Deployment ID** of your new deployment. This will take you to the deployment details page.
 
-    [SCREENSHOT: Deployment details page with log viewer]
+    ![Deployment details page with log viewer](/img/tutorials/users/deployment-details-logs.png)
 
 4.  The log viewer shows a step-by-step record of the entire deployment process. This is useful for understanding what the platform is doing and for troubleshooting if something goes wrong.
 

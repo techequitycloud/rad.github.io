@@ -9,15 +9,15 @@ export default [
   },
   {
     path: '/docs',
-    component: ComponentCreator('/docs', 'ec9'),
+    component: ComponentCreator('/docs', '565'),
     routes: [
       {
         path: '/docs',
-        component: ComponentCreator('/docs', '050'),
+        component: ComponentCreator('/docs', '993'),
         routes: [
           {
             path: '/docs',
-            component: ComponentCreator('/docs', 'f8d'),
+            component: ComponentCreator('/docs', 'b1a'),
             routes: [
               {
                 path: '/docs/admin/notifications',
@@ -117,25 +117,25 @@ export default [
               },
               {
                 path: '/docs/tutorials/administrators/initial-setup',
-                component: ComponentCreator('/docs/tutorials/administrators/initial-setup', 'a19'),
+                component: ComponentCreator('/docs/tutorials/administrators/initial-setup', '5f2'),
                 exact: true,
                 sidebar: "docsSidebar"
               },
               {
                 path: '/docs/tutorials/administrators/user-management',
-                component: ComponentCreator('/docs/tutorials/administrators/user-management', 'b72'),
+                component: ComponentCreator('/docs/tutorials/administrators/user-management', '1b5'),
                 exact: true,
                 sidebar: "docsSidebar"
               },
               {
                 path: '/docs/tutorials/advanced/multi-cloud-strategies',
-                component: ComponentCreator('/docs/tutorials/advanced/multi-cloud-strategies', 'd17'),
+                component: ComponentCreator('/docs/tutorials/advanced/multi-cloud-strategies', '3c6'),
                 exact: true,
                 sidebar: "docsSidebar"
               },
               {
                 path: '/docs/tutorials/advanced/platform-architecture',
-                component: ComponentCreator('/docs/tutorials/advanced/platform-architecture', '886'),
+                component: ComponentCreator('/docs/tutorials/advanced/platform-architecture', '107'),
                 exact: true,
                 sidebar: "docsSidebar"
               },
@@ -147,7 +147,7 @@ export default [
               },
               {
                 path: '/docs/tutorials/partners/module-versions',
-                component: ComponentCreator('/docs/tutorials/partners/module-versions', '587'),
+                component: ComponentCreator('/docs/tutorials/partners/module-versions', '4d0'),
                 exact: true,
                 sidebar: "docsSidebar"
               },
