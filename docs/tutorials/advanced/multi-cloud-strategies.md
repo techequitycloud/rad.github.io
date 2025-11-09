@@ -73,5 +73,9 @@ Many modules in the RAD Platform catalog are designed for a specific cloud provi
 
 ## Next Steps
 
-- [Security Best Practices on RAD Platform](./security-best-practices.md)
+## Next Steps
+
+- Try deploying a similar application (e.g., a web server) on two different cloud providers and compare the process
+- Review security best practices in the RAD Platform documentation
+- Explore cost optimization strategies for multi-cloud deployments
 - Try deploying a similar application (e.g., a web server) on two different cloud providers and compare the process.

@@ -5,7 +5,7 @@
   "source": "@site/docs/billing/credits.md",
   "sourceDirName": "billing",
   "slug": "/billing/credits",
-  "permalink": "/rad.github.io/docs/billing/credits",
+  "permalink": "/docs/billing/credits",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/billing/credits.md",
@@ -29,10 +29,10 @@
   "sidebar": "docsSidebar",
   "previous": {
     "title": "Publishing Modules",
-    "permalink": "/rad.github.io/docs/features/publishing"
+    "permalink": "/docs/features/publishing"
   },
   "next": {
     "title": "Subscriptions",
-    "permalink": "/rad.github.io/docs/billing/subscriptions"
+    "permalink": "/docs/billing/subscriptions"
   }
 }

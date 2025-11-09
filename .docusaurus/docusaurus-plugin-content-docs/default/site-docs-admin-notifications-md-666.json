@@ -5,7 +5,7 @@
   "source": "@site/docs/admin/notifications.md",
   "sourceDirName": "admin",
   "slug": "/admin/notifications",
-  "permalink": "/rad.github.io/docs/admin/notifications",
+  "permalink": "/docs/admin/notifications",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/admin/notifications.md",
@@ -29,10 +29,10 @@
   "sidebar": "docsSidebar",
   "previous": {
     "title": "User Management",
-    "permalink": "/rad.github.io/docs/admin/users"
+    "permalink": "/docs/admin/users"
   },
   "next": {
     "title": "Support & Resources",
-    "permalink": "/rad.github.io/docs/support"
+    "permalink": "/docs/support"
   }
 }

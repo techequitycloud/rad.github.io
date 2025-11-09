@@ -87,5 +87,5 @@ Your platform is set up correctly if:
 ## Next Steps
 
 -   [User and Credit Management](./user-management.md)
--   [Monitoring Platform Health and Usage](./platform-monitoring.md)
--   Begin onboarding users to the platform.
+-   Begin onboarding users to the platform
+-   Monitor platform health and usage through the Admin Dashboard

@@ -79,5 +79,6 @@ The Partner Credits feature allows you to grant a recurring monthly credit allow
 
 ## Next Steps
 
--   [Monitoring Platform Health and Usage](./platform-monitoring.md)
--   Set up a process for onboarding new users to your organization.
+-   Set up a process for onboarding new users to your organization
+-   Monitor platform health and usage through the Admin Dashboard
+-   Review user activity and deployment patterns regularly

@@ -5,7 +5,7 @@
   "source": "@site/docs/features/deployments.md",
   "sourceDirName": "features",
   "slug": "/features/deployments",
-  "permalink": "/rad.github.io/docs/features/deployments",
+  "permalink": "/docs/features/deployments",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/features/deployments.md",
@@ -29,10 +29,10 @@
   "sidebar": "docsSidebar",
   "previous": {
     "title": "User Guide",
-    "permalink": "/rad.github.io/docs/guides/user"
+    "permalink": "/docs/guides/user"
   },
   "next": {
     "title": "Modules",
-    "permalink": "/rad.github.io/docs/features/modules"
+    "permalink": "/docs/features/modules"
   }
 }

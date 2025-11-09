@@ -5,14 +5,14 @@
   "source": "@site/docs/guides/agent.md",
   "sourceDirName": "guides",
   "slug": "/guides/agent",
-  "permalink": "/rad.github.io/docs/guides/agent",
+  "permalink": "/docs/guides/agent",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/guides/agent.md",
   "tags": [],
   "version": "current",
   "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762616422000,
+  "lastUpdatedAt": 1762618712000,
   "sidebarPosition": 3,
   "frontMatter": {
     "title": "Agent Guide",
@@ -28,10 +28,10 @@
   "sidebar": "docsSidebar",
   "previous": {
     "title": "Partner Guide",
-    "permalink": "/rad.github.io/docs/guides/partner"
+    "permalink": "/docs/guides/partner"
   },
   "next": {
     "title": "User Guide",
-    "permalink": "/rad.github.io/docs/guides/user"
+    "permalink": "/docs/guides/user"
   }
 }

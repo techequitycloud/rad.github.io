@@ -1,0 +1,38 @@
+{
+  "id": "tutorials/advanced/platform-architecture",
+  "title": "Understanding the RAD Platform Architecture",
+  "description": "A technical deep dive into the architecture of the RAD Platform, explaining how it integrates with Google Cloud services to automate infrastructure deployment.",
+  "source": "@site/docs/tutorials/advanced/platform-architecture.md",
+  "sourceDirName": "tutorials/advanced",
+  "slug": "/tutorials/advanced/platform-architecture",
+  "permalink": "/docs/tutorials/advanced/platform-architecture",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/tutorials/advanced/platform-architecture.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Tech Equity",
+  "lastUpdatedAt": 1762647575000,
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "title": "Understanding the RAD Platform Architecture",
+    "sidebar_position": 1,
+    "description": "A technical deep dive into the architecture of the RAD Platform, explaining how it integrates with Google Cloud services to automate infrastructure deployment.",
+    "keywords": [
+      "tutorial",
+      "architecture",
+      "technical overview",
+      "GCP",
+      "Cloud Build"
+    ]
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "User and Credit Management",
+    "permalink": "/docs/tutorials/administrators/user-management"
+  },
+  "next": {
+    "title": "Multi-Cloud Deployment Strategies",
+    "permalink": "/docs/tutorials/advanced/multi-cloud-strategies"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "tutorials/index",
+  "title": "Tutorials",
+  "description": "Hands-on tutorials for learning the RAD Platform through practical examples and step-by-step guides",
+  "source": "@site/docs/tutorials/index.md",
+  "sourceDirName": "tutorials",
+  "slug": "/tutorials/",
+  "permalink": "/docs/tutorials/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/tutorials/index.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Tech Equity",
+  "lastUpdatedAt": 1762647575000,
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "title": "Tutorials",
+    "description": "Hands-on tutorials for learning the RAD Platform through practical examples and step-by-step guides",
+    "keywords": [
+      "tutorials",
+      "guides",
+      "how-to",
+      "learning",
+      "RAD Platform"
+    ]
+  },
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Support & Resources",
+    "permalink": "/docs/support"
+  },
+  "next": {
+    "title": "Your First Deployment: A Step-by-Step Guide",
+    "permalink": "/docs/tutorials/users/first-deployment"
+  }
+}

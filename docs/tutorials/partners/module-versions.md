@@ -137,5 +137,6 @@ Your versioning and update process is working well if:
 
 ## Next Steps
 
--   [Advanced Module Development](./advanced-modules.md)
--   Consider setting up a CI/CD pipeline to automate the testing and release process for your modules.
+-   Consider setting up a CI/CD pipeline to automate the testing and release process for your modules
+-   Explore advanced module development techniques in the documentation
+-   Review the [Production-Ready Module](./production-module.md) tutorial for best practices
