@@ -149,27 +149,6 @@ export default {
           ]
         },
         {
-          "title": "Features",
-          "items": [
-            {
-              "label": "Deployments",
-              "to": "/docs/features/deployments"
-            },
-            {
-              "label": "Modules",
-              "to": "/docs/features/modules"
-            },
-            {
-              "label": "Billing & Credits",
-              "to": "/docs/billing/credits"
-            },
-            {
-              "label": "Administration",
-              "to": "/docs/admin/settings"
-            }
-          ]
-        },
-        {
           "title": "Resources",
           "items": [
             {

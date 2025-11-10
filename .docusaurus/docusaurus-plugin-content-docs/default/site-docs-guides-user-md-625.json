@@ -12,7 +12,7 @@
   "tags": [],
   "version": "current",
   "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762712976000,
+  "lastUpdatedAt": 1762757807000,
   "sidebarPosition": 4,
   "frontMatter": {
     "title": "User Guide",
@@ -32,7 +32,7 @@
     "permalink": "/docs/guides/agent"
   },
   "next": {
-    "title": "Deployments",
-    "permalink": "/docs/features/deployments"
+    "title": "Tutorials",
+    "permalink": "/docs/tutorials/"
   }
 }

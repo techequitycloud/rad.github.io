@@ -12,7 +12,7 @@
   "tags": [],
   "version": "current",
   "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762712976000,
+  "lastUpdatedAt": 1762757807000,
   "sidebarPosition": 3,
   "frontMatter": {
     "title": "Transactions",
@@ -25,14 +25,5 @@
       "credit usage",
       "audit trail"
     ]
-  },
-  "sidebar": "docsSidebar",
-  "previous": {
-    "title": "Subscriptions",
-    "permalink": "/docs/billing/subscriptions"
-  },
-  "next": {
-    "title": "Global Settings",
-    "permalink": "/docs/admin/settings"
   }
 }
