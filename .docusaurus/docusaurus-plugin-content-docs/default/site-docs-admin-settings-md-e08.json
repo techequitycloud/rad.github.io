@@ -12,7 +12,7 @@
   "tags": [],
   "version": "current",
   "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762712976000,
+  "lastUpdatedAt": 1762757807000,
   "sidebarPosition": 1,
   "frontMatter": {
     "title": "Global Settings",
@@ -25,14 +25,5 @@
       "admin settings",
       "global configuration"
     ]
-  },
-  "sidebar": "docsSidebar",
-  "previous": {
-    "title": "Transactions",
-    "permalink": "/docs/billing/transactions"
-  },
-  "next": {
-    "title": "User Management",
-    "permalink": "/docs/admin/users"
   }
 }

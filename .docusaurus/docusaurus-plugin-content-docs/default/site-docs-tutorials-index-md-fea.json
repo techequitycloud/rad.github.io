@@ -12,7 +12,7 @@
   "tags": [],
   "version": "current",
   "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762712976000,
+  "lastUpdatedAt": 1762757807000,
   "sidebarPosition": 2,
   "frontMatter": {
     "sidebar_position": 2,
@@ -28,8 +28,8 @@
   },
   "sidebar": "docsSidebar",
   "previous": {
-    "title": "Notification System",
-    "permalink": "/docs/admin/notifications"
+    "title": "User Guide",
+    "permalink": "/docs/guides/user"
   },
   "next": {
     "title": "Your First Deployment: A Step-by-Step Guide",
