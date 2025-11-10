@@ -31,6 +31,7 @@ export default {
   "d589d3a7": [() => import(/* webpackChunkName: "d589d3a7" */ "@site/docs/getting-started.md"), "@site/docs/getting-started.md", require.resolveWeak("@site/docs/getting-started.md")],
   "d9e16301": [() => import(/* webpackChunkName: "d9e16301" */ "@site/docs/support.md"), "@site/docs/support.md", require.resolveWeak("@site/docs/support.md")],
   "e0843b1c": [() => import(/* webpackChunkName: "e0843b1c" */ "@site/docs/admin/settings.md"), "@site/docs/admin/settings.md", require.resolveWeak("@site/docs/admin/settings.md")],
+  "e3e083f8": [() => import(/* webpackChunkName: "e3e083f8" */ "@site/docs/features/roi-calculator.md"), "@site/docs/features/roi-calculator.md", require.resolveWeak("@site/docs/features/roi-calculator.md")],
   "e4380ea1": [() => import(/* webpackChunkName: "e4380ea1" */ "@site/docs/tutorials/advanced/platform-architecture.md"), "@site/docs/tutorials/advanced/platform-architecture.md", require.resolveWeak("@site/docs/tutorials/advanced/platform-architecture.md")],
   "e488e8f0": [() => import(/* webpackChunkName: "e488e8f0" */ "@site/docs/tutorials/users/troubleshooting-deployments.md"), "@site/docs/tutorials/users/troubleshooting-deployments.md", require.resolveWeak("@site/docs/tutorials/users/troubleshooting-deployments.md")],
   "e9f5d379": [() => import(/* webpackChunkName: "e9f5d379" */ "@site/docs/guides/agent.md"), "@site/docs/guides/agent.md", require.resolveWeak("@site/docs/guides/agent.md")],

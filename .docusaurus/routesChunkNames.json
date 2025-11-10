@@ -6,124 +6,128 @@
     },
     "content": "393be207"
   },
-  "/docs-b32": {
+  "/docs-d93": {
     "__comp": "5e95c892",
     "__context": {
       "plugin": "aba21aa0"
     }
   },
-  "/docs-165": {
+  "/docs-60e": {
     "__comp": "a7bd4aaa",
     "__props": "0058b4c6"
   },
-  "/docs-c4f": {
+  "/docs-97f": {
     "__comp": "a94703ab"
   },
-  "/docs/admin/notifications-62b": {
+  "/docs/admin/notifications-fe5": {
     "__comp": "17896441",
     "content": "666f96d3"
   },
-  "/docs/admin/settings-9b4": {
+  "/docs/admin/settings-36d": {
     "__comp": "17896441",
     "content": "e0843b1c"
   },
-  "/docs/admin/users-afa": {
+  "/docs/admin/users-fd2": {
     "__comp": "17896441",
     "content": "751a3bff"
   },
-  "/docs/billing/credits-916": {
+  "/docs/billing/credits-fa9": {
     "__comp": "17896441",
     "content": "a4683219"
   },
-  "/docs/billing/subscriptions-11b": {
+  "/docs/billing/subscriptions-df1": {
     "__comp": "17896441",
     "content": "eb1b747b"
   },
-  "/docs/billing/transactions-1d3": {
+  "/docs/billing/transactions-e92": {
     "__comp": "17896441",
     "content": "013851be"
   },
-  "/docs/features/deployments-fd0": {
+  "/docs/features/deployments-2fb": {
     "__comp": "17896441",
     "content": "6deb01d5"
   },
-  "/docs/features/modules-c16": {
+  "/docs/features/modules-a4c": {
     "__comp": "17896441",
     "content": "59b3cbb5"
   },
-  "/docs/features/publishing-ba5": {
+  "/docs/features/publishing-6e1": {
     "__comp": "17896441",
     "content": "3637ef39"
   },
-  "/docs/getting-started-f8a": {
+  "/docs/features/roi-calculator-132": {
+    "__comp": "17896441",
+    "content": "e3e083f8"
+  },
+  "/docs/getting-started-310": {
     "__comp": "17896441",
     "content": "d589d3a7"
   },
-  "/docs/guides/admin-936": {
+  "/docs/guides/admin-834": {
     "__comp": "17896441",
     "content": "407ca5f9"
   },
-  "/docs/guides/agent-960": {
+  "/docs/guides/agent-ba0": {
     "__comp": "17896441",
     "content": "e9f5d379"
   },
-  "/docs/guides/partner-6e9": {
+  "/docs/guides/partner-f3a": {
     "__comp": "17896441",
     "content": "f58a7069"
   },
-  "/docs/guides/user-4e9": {
+  "/docs/guides/user-ea2": {
     "__comp": "17896441",
     "content": "625bc1a7"
   },
-  "/docs/support-f20": {
+  "/docs/support-7a7": {
     "__comp": "17896441",
     "content": "d9e16301"
   },
-  "/docs/tutorials-b73": {
+  "/docs/tutorials-73c": {
     "__comp": "17896441",
     "content": "fea1970e"
   },
-  "/docs/tutorials/administrators/initial-setup-ac6": {
+  "/docs/tutorials/administrators/initial-setup-6b1": {
     "__comp": "17896441",
     "content": "30a634a8"
   },
-  "/docs/tutorials/administrators/user-management-61a": {
+  "/docs/tutorials/administrators/user-management-29c": {
     "__comp": "17896441",
     "content": "b5b065ff"
   },
-  "/docs/tutorials/advanced/multi-cloud-strategies-184": {
+  "/docs/tutorials/advanced/multi-cloud-strategies-233": {
     "__comp": "17896441",
     "content": "54d28ba3"
   },
-  "/docs/tutorials/advanced/platform-architecture-72b": {
+  "/docs/tutorials/advanced/platform-architecture-590": {
     "__comp": "17896441",
     "content": "e4380ea1"
   },
-  "/docs/tutorials/agents/agent-revenue-2bd": {
+  "/docs/tutorials/agents/agent-revenue-2f1": {
     "__comp": "17896441",
     "content": "5fe92721"
   },
-  "/docs/tutorials/partners/first-module-88f": {
+  "/docs/tutorials/partners/first-module-0f1": {
     "__comp": "17896441",
     "content": "8ca936ff"
   },
-  "/docs/tutorials/partners/module-versions-af5": {
+  "/docs/tutorials/partners/module-versions-58b": {
     "__comp": "17896441",
     "content": "854a28e9"
   },
-  "/docs/tutorials/partners/production-module-20d": {
+  "/docs/tutorials/partners/production-module-faa": {
     "__comp": "17896441",
     "content": "cb4ded4b"
   },
-  "/docs/tutorials/users/first-deployment-f95": {
+  "/docs/tutorials/users/first-deployment-94e": {
     "__comp": "17896441",
     "content": "97e037b8"
   },
-  "/docs/tutorials/users/managing-credits-5f2": {
+  "/docs/tutorials/users/managing-credits-a5d": {
     "__comp": "17896441",
     "content": "0db17e96"
   },
-  "/docs/tutorials/users/troubleshooting-deployments-f6b": {
+  "/docs/tutorials/users/troubleshooting-deployments-5b5": {
     "__comp": "17896441",
     "content": "e488e8f0"
   },

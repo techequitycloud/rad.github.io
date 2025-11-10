@@ -92,6 +92,7 @@ const sidebars: SidebarsConfig = {
         },
       ],
     },
+    'features/roi-calculator',
     'support',
   ],
 };

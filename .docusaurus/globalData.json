@@ -56,6 +56,11 @@
               "sidebar": "docsSidebar"
             },
             {
+              "id": "features/roi-calculator",
+              "path": "/docs/features/roi-calculator",
+              "sidebar": "docsSidebar"
+            },
+            {
               "id": "getting-started",
               "path": "/docs/getting-started",
               "sidebar": "docsSidebar"
@@ -97,17 +102,16 @@
             },
             {
               "id": "tutorials/advanced/multi-cloud-strategies",
-              "path": "/docs/tutorials/advanced/multi-cloud-strategies",
-              "sidebar": "docsSidebar"
+              "path": "/docs/tutorials/advanced/multi-cloud-strategies"
             },
             {
               "id": "tutorials/advanced/platform-architecture",
-              "path": "/docs/tutorials/advanced/platform-architecture",
-              "sidebar": "docsSidebar"
+              "path": "/docs/tutorials/advanced/platform-architecture"
             },
             {
               "id": "tutorials/agents/agent-revenue",
-              "path": "/docs/tutorials/agents/agent-revenue"
+              "path": "/docs/tutorials/agents/agent-revenue",
+              "sidebar": "docsSidebar"
             },
             {
               "id": "tutorials/index",
