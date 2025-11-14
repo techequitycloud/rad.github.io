@@ -1,17 +1,6 @@
----
-title: Partner Guide
-sidebar_position: 2
-description: Partner guide for building and publishing custom infrastructure modules on RAD Platform using Terraform and GitHub integration
-keywords: ['partner guide', 'module development', 'custom modules', 'Terraform modules', 'infrastructure as code']
----
-
-# Partner Guide
-
-Partners can build, publish, and manage custom infrastructure modules through the [RAD Console](https://rad.techequity.cloud). This guide covers module development, repository configuration, and publishing workflows.
-
 ## 1. Partner Modules
 
-As a partner, you can deploy modules from the public "Platform Modules" catalog as well as from your own private GitHub repository in the [RAD Console](https://rad.techequity.cloud). Your exclusive modules will appear under the "Partner Modules" tab on the module selection page.
+As a partner, you can deploy modules from the public "Platform Modules" catalog as well as from your own private GitHub repository. Your exclusive modules will appear under the "Partner Modules" tab on the module selection page.
 
 ### 1.1. Deploying a Module
 
@@ -59,9 +48,9 @@ The selected modules will now be available for deployment under the "Partner Mod
 
 The system includes a safeguard to ensure that any modules that no longer exist in your Git repository are removed from the "Deploy" tab. This is particularly important when you change your configured repository URL.
 
-## 4. Billing
+## 4. Credits
 
-As a partner, you have access to the **Billing** page to manage your credits and subscriptions.
+As a partner, you have access to the **Credits** page to manage your credits and subscriptions. In addition to purchasing credits, you may also be eligible to receive a monthly credit allowance directly from a platform administrator. These "Partner Credits" are added directly to your "Purchased" credit balance at the beginning of each month.
 
 ### 4.1. Subscription Tiers
 
@@ -83,13 +72,30 @@ This tab shows you the ongoing costs associated with your deployed projects.
 
 Here you can view and download your monthly invoices.
 
-## 5. Help and Support
+## 5. ROI Calculator
+
+The **ROI (Return on Investment) Calculator** is a tool designed to help you estimate the potential financial benefits of using the platform. By inputting data about your current deployment processes, you can see a projection of your savings and efficiency gains.
+
+### 5.1. How to Use the Calculator
+
+- **Navigate to the ROI page:** You can find this in the main navigation.
+- **Adjust the sliders:** Modify the inputs to match your team's specific data:
+    - **Projected Monthly Deployments:** The number of deployments you anticipate performing each month.
+    - **Current Manual Deployment Time (hours):** The average time it takes to complete a deployment manually.
+    - **Average Engineer Hourly Cost:** The average hourly cost of an engineer.
+- **View the Results:** The calculator will automatically update with your estimated savings, including:
+    - **Potential Annual Savings:** The total estimated savings per year.
+    - **Net Monthly Savings:** The difference between your manual deployment costs and the costs of deploying with the platform.
+    - **Annual ROI:** The percentage return on your investment in the platform.
+    - **Payback (Months):** The time it will take for your savings to cover your initial investment.
+
+## 6. Help and Support
 
 The **Help** page is your central resource for documentation and support. It contains:
 
 - **User Guides:** Access to the Admin, Partner, Agent, and User guides.
 - **Support Form:** A form to send a message directly to the support team.
 
-## 6. Theme Customization
+## 7. Theme Customization
 
 You can switch between light and dark themes to suit your preference. The theme selector is located in the user menu in the top-right corner of the navigation bar.

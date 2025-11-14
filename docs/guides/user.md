@@ -1,19 +1,10 @@
----
-title: User Guide
-sidebar_position: 4
-description: User guide for deploying multi-cloud infrastructure using RAD Platform modules across AWS, Azure, and Google Cloud
-keywords: ['user guide', 'infrastructure deployment', 'cloud deployment', 'getting started', 'RAD Platform usage']
----
-
-# User Guide
-
 ## 1. Getting Started
 
-Welcome to the RAD Platform documentation. This guide covers the key features and functionalities available in the [RAD Console](https://rad.techequity.cloud).
+Welcome to the Rapid Application Deployment documentation. This document will guide you through key features and functionalities of the platform.
 
 ### 1.1. Logging In
 
-Access the [RAD Console](https://rad.techequity.cloud) to begin. Authentication is handled through a secure sign-on system. Upon your first visit, you will be prompted to log in with your Google credentials.
+Access to the application is handled through a secure sign-on system. Upon your first visit, you will be prompted to log in with your Google credentials.
 
 ### 1.2. The Main Dashboard
 
@@ -109,11 +100,42 @@ The **Help** page is your central resource for documentation and support. It con
 
 You can switch between light and dark themes to suit your preference. The theme selector is located in the user menu in the top-right corner of the navigation bar.
 
-## 7. Deployment Analysis
+## 7. ROI Calculator
+
+The ROI (Return on Investment) Calculator is a powerful tool designed to help you understand the potential financial benefits of using the RAD platform. By inputting data about your current deployment processes, you can receive an estimate of your potential savings in terms of time and money.
+
+### 7.1. How to Use the Calculator
+
+The calculator is interactive and straightforward to use. It is divided into two main sections: the form where you input your data and the results section where you see the estimated savings.
+
+To get started, adjust the sliders on the left-hand side of the page to match your organization's profile. The following inputs are available:
+
+- **Projected Monthly Deployments:** Estimate the number of deployments your team performs each month.
+- **Current Manual Deployment Time (hours):** Enter the average number of hours it currently takes to complete a single deployment manually.
+- **Average Engineer Hourly Cost:** Provide the average hourly cost of an engineer in your organization.
+
+### 7.2. Understanding the Assumptions
+
+The calculator's estimates are based on a set of assumptions that you can also customize. To view and modify these, click on the **Calculation Assumptions & Methodology** dropdown. Here you can adjust:
+
+- **Time Savings with RAD:** This is the percentage of time you expect to save on each deployment by using the RAD platform.
+- **Projection Years:** This allows you to see the cumulative savings projected over a period of one to ten years.
+
+### 7.3. Interpreting the Results
+
+Once you have configured the inputs, the results will be displayed on the right-hand side of the page. The key metrics include:
+
+- **Potential Annual Savings:** This is the headline figure, showing the total estimated savings your organization could achieve in a single year.
+- **Savings Breakdown:** This section provides a detailed comparison of your monthly costs, both with and without the RAD platform.
+- **Annual ROI:** The Return on Investment (ROI) percentage gives you a clear indication of the efficiency of your investment in the platform.
+- **Payback Period (Months):** This metric estimates the number of months it will take for the platform to pay for itself through cost savings.
+- **Cumulative Savings:** Based on the number of projection years you selected, this shows the total cumulative savings over that period.
+
+## 8. Deployment Analysis
 
 The "My Deployments" tab is part of the Deployments page, which is accessible from the main navigation menu. This page provides a centralized view for tracking and analyzing all module deployments.
 
-### 5.1. Deployments Table View
+### 8.1. Deployments Table View
 
 The "My Deployments" tab presents a table with a list of deployments. This table provides a high-level summary of each deployment, including:
 
@@ -124,11 +146,11 @@ The "My Deployments" tab presents a table with a list of deployments. This table
 - **Created At:** The timestamp of when the deployment was initiated.
 - **Actions:** A set of actions that can be performed on the deployment.
 
-### 5.2. Detailed Deployment Analysis
+### 8.2. Detailed Deployment Analysis
 
 The primary analysis feature is triggered when a user clicks on the Deployment ID of a specific deployment in the table. This action opens a detailed view, which contains several key features for in-depth analysis and troubleshooting.
 
-#### 5.2.1. Deployment Details
+#### 8.2.1. Deployment Details
 
 The first thing you see is a summary of the deployment's core information, including:
 
@@ -137,7 +159,7 @@ The first thing you see is a summary of the deployment's core information, inclu
 - **Creation and Completion Times:** Timestamps for when the deployment was started and when it finished, allowing users to understand the total duration.
 - **Configuration Parameters:** A key-value list of all the variables and parameters that were used for this specific deployment instance. This is crucial for reproducing the deployment or debugging issues related to incorrect configuration.
 
-#### 5.2.2. Tracking Deployment Stages and Progress
+#### 8.2.2. Tracking Deployment Stages and Progress
 
 The platform provides a real-time, step-by-step log of the entire deployment process. This is the most critical feature for tracking progress and diagnosing issues.
 
@@ -145,7 +167,7 @@ The platform provides a real-time, step-by-step log of the entire deployment pro
 - **Step-by-Step Execution:** The logs are structured to show the distinct stages of the deployment pipeline, including cloning the Git repository, running Terraform to provision infrastructure, executing any custom scripts, and cleaning up resources.
 - **Timestamps:** Every log line is timestamped, allowing for precise analysis of how long each step took to complete.
 
-#### 5.2.3. Tracking Errors and Bugs
+#### 8.2.3. Tracking Errors and Bugs
 
 The log viewer is the primary tool for identifying and understanding errors.
 
