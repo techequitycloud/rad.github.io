@@ -1,6 +1,10 @@
+# User Guide
+
+Welcome to the User Guide. This guide provides an overview of the platform features available to you.
+
 ## 1. Getting Started
 
-Welcome to the Rapid Application Deployment documentation. This document will guide you through key features and functionalities of the platform.
+This Rapid Application Deployment documentation will guide you through key features and functionalities of the platform.
 
 ### 1.1. Logging In
 

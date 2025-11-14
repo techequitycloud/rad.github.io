@@ -1,3 +1,7 @@
+# Admin Guide
+
+Welcome to the Admin Guide. This guide provides an overview of the platform administration features available to you.
+
 ## 1. Managing Deployments
 
 As an administrator, you have an expanded view of the **Deployments** page. In addition to the "My Deployments" tab, which shows the modules you have personally deployed, you also have access to the "All Deployments" tab, which shows a list of every module deployed by all users across the platform.

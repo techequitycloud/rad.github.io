@@ -1,3 +1,7 @@
+# Partner Guide
+
+Welcome to the Partner Guide. This guide provides an overview of the extended features available to partners.
+
 ## 1. Partner Modules
 
 As a partner, you can deploy modules from the public "Platform Modules" catalog as well as from your own private GitHub repository. Your exclusive modules will appear under the "Partner Modules" tab on the module selection page.
