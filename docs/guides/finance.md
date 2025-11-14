@@ -3,15 +3,7 @@ sidebar_label: 'finance'
 ---
 # Finance Guide
 
-Welcome to the Finance Guide. This guide provides an overview of the billing and finance-related features available to you.
-
-## Accessing Finance Features
-
-As a member of the finance group, you have access to the **Billing** tab, which contains several reports and tools for managing the platform's finances.
-
-## Billing Tab Overview
-
-The Billing tab is organized into the following sections:
+Welcome to the Finance Guide. This guide provides an overview of the billing and finance-related features available to you. As a member of the finance group, you have access to the **Billing** tab, which contains several reports and tools for managing the platform's finances. The Billing tab is organized into the following sections:
 
 ### 1. Subscription Tiers
 
