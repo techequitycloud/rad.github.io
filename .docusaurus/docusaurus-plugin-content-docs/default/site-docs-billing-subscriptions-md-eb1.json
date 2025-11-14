@@ -12,7 +12,7 @@
   "tags": [],
   "version": "current",
   "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762712976000,
+  "lastUpdatedAt": 1762757807000,
   "sidebarPosition": 2,
   "frontMatter": {
     "title": "Subscriptions",
@@ -25,14 +25,5 @@
       "subscription management",
       "platform tiers"
     ]
-  },
-  "sidebar": "docsSidebar",
-  "previous": {
-    "title": "Credits System",
-    "permalink": "/docs/billing/credits"
-  },
-  "next": {
-    "title": "Transactions",
-    "permalink": "/docs/billing/transactions"
   }
 }

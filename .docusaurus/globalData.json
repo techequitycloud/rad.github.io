@@ -12,48 +12,39 @@
           "docs": [
             {
               "id": "admin/notifications",
-              "path": "/docs/admin/notifications",
-              "sidebar": "docsSidebar"
+              "path": "/docs/admin/notifications"
             },
             {
               "id": "admin/settings",
-              "path": "/docs/admin/settings",
-              "sidebar": "docsSidebar"
+              "path": "/docs/admin/settings"
             },
             {
               "id": "admin/users",
-              "path": "/docs/admin/users",
-              "sidebar": "docsSidebar"
+              "path": "/docs/admin/users"
             },
             {
               "id": "billing/credits",
-              "path": "/docs/billing/credits",
-              "sidebar": "docsSidebar"
+              "path": "/docs/billing/credits"
             },
             {
               "id": "billing/subscriptions",
-              "path": "/docs/billing/subscriptions",
-              "sidebar": "docsSidebar"
+              "path": "/docs/billing/subscriptions"
             },
             {
               "id": "billing/transactions",
-              "path": "/docs/billing/transactions",
-              "sidebar": "docsSidebar"
+              "path": "/docs/billing/transactions"
             },
             {
               "id": "features/deployments",
-              "path": "/docs/features/deployments",
-              "sidebar": "docsSidebar"
+              "path": "/docs/features/deployments"
             },
             {
               "id": "features/modules",
-              "path": "/docs/features/modules",
-              "sidebar": "docsSidebar"
+              "path": "/docs/features/modules"
             },
             {
               "id": "features/publishing",
-              "path": "/docs/features/publishing",
-              "sidebar": "docsSidebar"
+              "path": "/docs/features/publishing"
             },
             {
               "id": "features/roi-calculator",

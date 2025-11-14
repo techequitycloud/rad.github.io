@@ -12,7 +12,7 @@
   "tags": [],
   "version": "current",
   "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762712976000,
+  "lastUpdatedAt": 1762757807000,
   "sidebarPosition": 2,
   "frontMatter": {
     "title": "Publishing Modules",
@@ -25,14 +25,5 @@
       "Terraform publishing",
       "infrastructure sharing"
     ]
-  },
-  "sidebar": "docsSidebar",
-  "previous": {
-    "title": "Modules",
-    "permalink": "/docs/features/modules"
-  },
-  "next": {
-    "title": "Credits System",
-    "permalink": "/docs/billing/credits"
   }
 }

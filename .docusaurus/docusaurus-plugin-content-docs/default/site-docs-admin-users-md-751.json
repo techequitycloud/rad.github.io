@@ -12,7 +12,7 @@
   "tags": [],
   "version": "current",
   "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762712976000,
+  "lastUpdatedAt": 1762757807000,
   "sidebarPosition": 3,
   "frontMatter": {
     "title": "User Management",
@@ -25,14 +25,5 @@
       "access control",
       "user permissions"
     ]
-  },
-  "sidebar": "docsSidebar",
-  "previous": {
-    "title": "Global Settings",
-    "permalink": "/docs/admin/settings"
-  },
-  "next": {
-    "title": "Notification System",
-    "permalink": "/docs/admin/notifications"
   }
 }

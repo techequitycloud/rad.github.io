@@ -27,33 +27,6 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Core Features',
-      items: [
-        'features/deployments',
-        'features/modules',
-        'features/publishing',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Billing & Credits',
-      items: [
-        'billing/credits',
-        'billing/subscriptions',
-        'billing/transactions',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Administration',
-      items: [
-        'admin/settings',
-        'admin/users',
-        'admin/notifications',
-      ],
-    },
-    {
-      type: 'category',
       label: 'Tutorials',
       items: [
         'tutorials/index',
