@@ -1,7 +1,7 @@
 {
   "id": "guides/agent",
-  "title": "Agent Guide",
-  "description": "Agent guide for deploying and managing infrastructure on behalf of users in RAD Platform",
+  "title": "agent",
+  "description": "1. Introduction to the Agent Program",
   "source": "@site/docs/guides/agent.md",
   "sourceDirName": "guides",
   "slug": "/guides/agent",
@@ -11,27 +11,16 @@
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/guides/agent.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762757807000,
-  "sidebarPosition": 3,
-  "frontMatter": {
-    "title": "Agent Guide",
-    "sidebar_position": 3,
-    "description": "Agent guide for deploying and managing infrastructure on behalf of users in RAD Platform",
-    "keywords": [
-      "agent guide",
-      "deployment management",
-      "infrastructure deployment",
-      "multi-user deployment"
-    ]
-  },
+  "lastUpdatedBy": "Shiyghan Navti",
+  "lastUpdatedAt": 1763084396000,
+  "frontMatter": {},
   "sidebar": "docsSidebar",
   "previous": {
-    "title": "Partner Guide",
+    "title": "partner",
     "permalink": "/docs/guides/partner"
   },
   "next": {
-    "title": "User Guide",
+    "title": "user",
     "permalink": "/docs/guides/user"
   }
 }

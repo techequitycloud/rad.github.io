@@ -28,6 +28,7 @@ export default {
   "aba21aa0": [() => import(/* webpackChunkName: "aba21aa0" */ "@generated/docusaurus-plugin-content-docs/default/__plugin.json"), "@generated/docusaurus-plugin-content-docs/default/__plugin.json", require.resolveWeak("@generated/docusaurus-plugin-content-docs/default/__plugin.json")],
   "b5b065ff": [() => import(/* webpackChunkName: "b5b065ff" */ "@site/docs/tutorials/administrators/user-management.md"), "@site/docs/tutorials/administrators/user-management.md", require.resolveWeak("@site/docs/tutorials/administrators/user-management.md")],
   "cb4ded4b": [() => import(/* webpackChunkName: "cb4ded4b" */ "@site/docs/tutorials/partners/production-module.md"), "@site/docs/tutorials/partners/production-module.md", require.resolveWeak("@site/docs/tutorials/partners/production-module.md")],
+  "cff65df8": [() => import(/* webpackChunkName: "cff65df8" */ "@site/docs/guides/finance.md"), "@site/docs/guides/finance.md", require.resolveWeak("@site/docs/guides/finance.md")],
   "d589d3a7": [() => import(/* webpackChunkName: "d589d3a7" */ "@site/docs/getting-started.md"), "@site/docs/getting-started.md", require.resolveWeak("@site/docs/getting-started.md")],
   "d9e16301": [() => import(/* webpackChunkName: "d9e16301" */ "@site/docs/support.md"), "@site/docs/support.md", require.resolveWeak("@site/docs/support.md")],
   "e0843b1c": [() => import(/* webpackChunkName: "e0843b1c" */ "@site/docs/admin/settings.md"), "@site/docs/admin/settings.md", require.resolveWeak("@site/docs/admin/settings.md")],

@@ -1,3 +1,6 @@
+---
+sidebar_label: 'finance'
+---
 # Finance Guide
 
 Welcome to the Finance Guide. This guide provides an overview of the billing and finance-related features available to you.

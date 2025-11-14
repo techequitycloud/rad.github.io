@@ -11,8 +11,8 @@
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/tutorials/index.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762757807000,
+  "lastUpdatedBy": "Shiyghan Navti",
+  "lastUpdatedAt": 1763084396000,
   "sidebarPosition": 2,
   "frontMatter": {
     "sidebar_position": 2,
@@ -28,8 +28,8 @@
   },
   "sidebar": "docsSidebar",
   "previous": {
-    "title": "User Guide",
-    "permalink": "/docs/guides/user"
+    "title": "finance",
+    "permalink": "/docs/guides/finance"
   },
   "next": {
     "title": "Your First Deployment: A Step-by-Step Guide",

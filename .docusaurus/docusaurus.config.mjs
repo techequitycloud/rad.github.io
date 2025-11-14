@@ -145,6 +145,10 @@ export default {
             {
               "label": "User Guide",
               "to": "/docs/guides/user"
+            },
+            {
+              "label": "Finance Guide",
+              "to": "/docs/guides/finance"
             }
           ]
         },

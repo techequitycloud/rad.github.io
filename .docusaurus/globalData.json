@@ -67,6 +67,11 @@
               "sidebar": "docsSidebar"
             },
             {
+              "id": "guides/finance",
+              "path": "/docs/guides/finance",
+              "sidebar": "docsSidebar"
+            },
+            {
               "id": "guides/partner",
               "path": "/docs/guides/partner",
               "sidebar": "docsSidebar"
