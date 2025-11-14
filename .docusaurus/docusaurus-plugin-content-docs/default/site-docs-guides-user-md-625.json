@@ -1,7 +1,7 @@
 {
   "id": "guides/user",
-  "title": "User Guide",
-  "description": "User guide for deploying multi-cloud infrastructure using RAD Platform modules across AWS, Azure, and Google Cloud",
+  "title": "user",
+  "description": "1. Getting Started",
   "source": "@site/docs/guides/user.md",
   "sourceDirName": "guides",
   "slug": "/guides/user",
@@ -11,28 +11,16 @@
   "editUrl": "https://github.com/techequitycloud/rad.github.io/edit/main/docs/guides/user.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": "shiyghannavti",
-  "lastUpdatedAt": 1762757807000,
-  "sidebarPosition": 4,
-  "frontMatter": {
-    "title": "User Guide",
-    "sidebar_position": 4,
-    "description": "User guide for deploying multi-cloud infrastructure using RAD Platform modules across AWS, Azure, and Google Cloud",
-    "keywords": [
-      "user guide",
-      "infrastructure deployment",
-      "cloud deployment",
-      "getting started",
-      "RAD Platform usage"
-    ]
-  },
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055000,
+  "frontMatter": {},
   "sidebar": "docsSidebar",
   "previous": {
-    "title": "Agent Guide",
+    "title": "agent",
     "permalink": "/docs/guides/agent"
   },
   "next": {
-    "title": "Tutorials",
-    "permalink": "/docs/tutorials/"
+    "title": "Finance Guide",
+    "permalink": "/docs/guides/finance"
   }
 }

@@ -1,141 +1,188 @@
 {
-  "/markdown-page-3d7": {
-    "__comp": "1f391b9e",
+  "/__docusaurus/debug-5ff": {
+    "__comp": "__comp---theme-debug-config-23-a-2ff",
     "__context": {
-      "plugin": "a7456010"
-    },
-    "content": "393be207"
-  },
-  "/docs-d74": {
-    "__comp": "5e95c892",
-    "__context": {
-      "plugin": "aba21aa0"
+      "plugin": "plugin---docusaurus-debugb-38-ad3"
     }
   },
-  "/docs-0d8": {
-    "__comp": "a7bd4aaa",
-    "__props": "0058b4c6"
+  "/__docusaurus/debug/config-5ba": {
+    "__comp": "__comp---theme-debug-config-23-a-2ff",
+    "__context": {
+      "plugin": "plugin---docusaurus-debugb-38-ad3"
+    }
   },
-  "/docs-138": {
-    "__comp": "a94703ab"
+  "/__docusaurus/debug/content-a2b": {
+    "__comp": "__comp---theme-debug-contentba-8-ce7",
+    "__context": {
+      "plugin": "plugin---docusaurus-debugb-38-ad3"
+    },
+    "__props": "__props---docusaurus-debug-content-3-c-0-be2"
   },
-  "/docs/admin/notifications-a94": {
-    "__comp": "17896441",
-    "content": "666f96d3"
+  "/__docusaurus/debug/globalData-c3c": {
+    "__comp": "__comp---theme-debug-global-dataede-0fa",
+    "__context": {
+      "plugin": "plugin---docusaurus-debugb-38-ad3"
+    }
   },
-  "/docs/admin/settings-ae0": {
-    "__comp": "17896441",
-    "content": "e0843b1c"
+  "/__docusaurus/debug/metadata-156": {
+    "__comp": "__comp---theme-debug-site-metadata-68-e-3d4",
+    "__context": {
+      "plugin": "plugin---docusaurus-debugb-38-ad3"
+    }
   },
-  "/docs/admin/users-13d": {
-    "__comp": "17896441",
-    "content": "751a3bff"
+  "/__docusaurus/debug/registry-88c": {
+    "__comp": "__comp---theme-debug-registry-679-501",
+    "__context": {
+      "plugin": "plugin---docusaurus-debugb-38-ad3"
+    }
   },
-  "/docs/billing/credits-1ec": {
-    "__comp": "17896441",
-    "content": "a4683219"
+  "/__docusaurus/debug/routes-000": {
+    "__comp": "__comp---theme-debug-routes-946-699",
+    "__context": {
+      "plugin": "plugin---docusaurus-debugb-38-ad3"
+    }
   },
-  "/docs/billing/subscriptions-09e": {
-    "__comp": "17896441",
-    "content": "eb1b747b"
+  "/markdown-page-3d7": {
+    "__comp": "__comp---theme-mdx-page-1-f-3-b90",
+    "__context": {
+      "plugin": "plugin---markdown-pagea-74-7b5"
+    },
+    "content": "content---markdown-page-393-028"
   },
-  "/docs/billing/transactions-78d": {
-    "__comp": "17896441",
-    "content": "013851be"
+  "/docs-371": {
+    "__comp": "__comp---theme-docs-root-5-e-9-0b6",
+    "__context": {
+      "plugin": "plugin---docsaba-d7c"
+    }
   },
-  "/docs/features/deployments-6a2": {
-    "__comp": "17896441",
-    "content": "6deb01d5"
+  "/docs-b73": {
+    "__comp": "__comp---theme-doc-version-roota-7-b-5de",
+    "__props": "__props---docs-005-788"
   },
-  "/docs/features/modules-2b2": {
-    "__comp": "17896441",
-    "content": "59b3cbb5"
+  "/docs-3b5": {
+    "__comp": "__comp---theme-doc-roota-94-67a"
   },
-  "/docs/features/publishing-664": {
-    "__comp": "17896441",
-    "content": "3637ef39"
+  "/docs/admin/notifications-fca": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-admin-notifications-666-743"
   },
-  "/docs/features/roi-calculator-a2d": {
-    "__comp": "17896441",
-    "content": "e3e083f8"
+  "/docs/admin/settings-3c7": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-admin-settingse-08-544"
   },
-  "/docs/getting-started-0c6": {
-    "__comp": "17896441",
-    "content": "d589d3a7"
+  "/docs/admin/users-757": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-admin-users-751-ebf"
   },
-  "/docs/guides/admin-faf": {
-    "__comp": "17896441",
-    "content": "407ca5f9"
+  "/docs/billing/credits-079": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-billing-creditsa-46-e98"
   },
-  "/docs/guides/agent-516": {
-    "__comp": "17896441",
-    "content": "e9f5d379"
+  "/docs/billing/subscriptions-e03": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-billing-subscriptionseb-1-5a4"
   },
-  "/docs/guides/partner-25e": {
-    "__comp": "17896441",
-    "content": "f58a7069"
+  "/docs/billing/transactions-d96": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-billing-transactions-013-bf2"
   },
-  "/docs/guides/user-c20": {
-    "__comp": "17896441",
-    "content": "625bc1a7"
+  "/docs/features/deployments-b8c": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-features-deployments-6-de-fd6"
   },
-  "/docs/support-648": {
-    "__comp": "17896441",
-    "content": "d9e16301"
+  "/docs/features/modules-bc2": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-features-modules-59-b-526"
   },
-  "/docs/tutorials-941": {
-    "__comp": "17896441",
-    "content": "fea1970e"
+  "/docs/features/publishing-874": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-features-publishing-363-e55"
   },
-  "/docs/tutorials/administrators/initial-setup-783": {
-    "__comp": "17896441",
-    "content": "30a634a8"
+  "/docs/features/roi-calculator-f1f": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-features-roi-calculatore-3-e-50f"
   },
-  "/docs/tutorials/administrators/user-management-cec": {
-    "__comp": "17896441",
-    "content": "b5b065ff"
+  "/docs/getting-started-8b7": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-getting-startedd-58-f94"
   },
-  "/docs/tutorials/advanced/multi-cloud-strategies-4dd": {
-    "__comp": "17896441",
-    "content": "54d28ba3"
+  "/docs/guides/admin-f73": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-guides-admin-407-45f"
   },
-  "/docs/tutorials/advanced/platform-architecture-32a": {
-    "__comp": "17896441",
-    "content": "e4380ea1"
+  "/docs/guides/agent-d04": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-guides-agente-9-f-8a2"
   },
-  "/docs/tutorials/agents/agent-revenue-0ea": {
-    "__comp": "17896441",
-    "content": "5fe92721"
+  "/docs/guides/finance-16a": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-guides-financecff-ead"
   },
-  "/docs/tutorials/partners/first-module-619": {
-    "__comp": "17896441",
-    "content": "8ca936ff"
+  "/docs/guides/partner-e84": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-guides-partnerf-58-6ab"
   },
-  "/docs/tutorials/partners/module-versions-bed": {
-    "__comp": "17896441",
-    "content": "854a28e9"
+  "/docs/guides/user-f31": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-guides-user-625-0cd"
   },
-  "/docs/tutorials/partners/production-module-2c1": {
-    "__comp": "17896441",
-    "content": "cb4ded4b"
+  "/docs/support-835": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-supportd-9-e-f36"
   },
-  "/docs/tutorials/users/first-deployment-cd5": {
-    "__comp": "17896441",
-    "content": "97e037b8"
+  "/docs/tutorials-558": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-tutorialsfea-ae6"
   },
-  "/docs/tutorials/users/managing-credits-38d": {
-    "__comp": "17896441",
-    "content": "0db17e96"
+  "/docs/tutorials/administrators/initial-setup-dc8": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-tutorials-administrators-initial-setup-30-a-1e3"
   },
-  "/docs/tutorials/users/troubleshooting-deployments-13a": {
-    "__comp": "17896441",
-    "content": "e488e8f0"
+  "/docs/tutorials/administrators/user-management-812": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-tutorials-administrators-user-managementb-5-b-1ee"
+  },
+  "/docs/tutorials/advanced/multi-cloud-strategies-204": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-tutorials-advanced-multi-cloud-strategies-54-d-4c0"
+  },
+  "/docs/tutorials/advanced/platform-architecture-fa1": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-tutorials-advanced-platform-architecturee-43-918"
+  },
+  "/docs/tutorials/agents/agent-revenue-3d9": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-tutorials-agents-agent-revenue-5-fe-0cc"
+  },
+  "/docs/tutorials/partners/first-module-560": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-tutorials-partners-first-module-8-ca-06c"
+  },
+  "/docs/tutorials/partners/module-versions-72a": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-tutorials-partners-module-versions-854-02c"
+  },
+  "/docs/tutorials/partners/production-module-e04": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-tutorials-partners-production-modulecb-4-d1f"
+  },
+  "/docs/tutorials/users/first-deployment-8c3": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-tutorials-users-first-deployment-97-e-53a"
+  },
+  "/docs/tutorials/users/managing-credits-e82": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-tutorials-users-managing-credits-0-db-de5"
+  },
+  "/docs/tutorials/users/troubleshooting-deployments-c10": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---docs-tutorials-users-troubleshooting-deploymentse-48-7fd"
   },
   "/-e5f": {
-    "__comp": "1df93b7f",
+    "__comp": "__comp---site-src-pages-index-tsx-1-df-d3e",
     "__context": {
-      "plugin": "a7456010"
+      "plugin": "plugin---markdown-pagea-74-7b5"
     },
-    "config": "5e9f5e1a"
+    "config": "config---5-e-9-4f3"
   }
 }

@@ -23,6 +23,7 @@ const sidebars: SidebarsConfig = {
         'guides/partner',
         'guides/agent',
         'guides/user',
+        'guides/finance',
       ],
     },
     {
