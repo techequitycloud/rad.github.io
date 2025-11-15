@@ -1,5 +1,4 @@
 ## 1. Subscription Tiers
-
 This section allows you to manage the subscription tiers for the platform. You can:
 
 *   **View existing tiers:** See a list of all current subscription tiers, including their price, features, and credit allocation.
