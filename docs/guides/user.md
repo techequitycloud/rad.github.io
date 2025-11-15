@@ -41,19 +41,14 @@ You will be redirected back to the **Deployments** page, where you can monitor t
 
 The **Billing** page allows you to manage your credits, subscriptions, and view your spending history. You can access it from the main navigation menu.
 
-### 3.1. Subscription Tiers
+### 3.1. Buy Credits
 
-This tab displays all available subscription tiers. You can subscribe to a tier to receive a recurring amount of credits.
+This tab is your hub for acquiring more credits. It displays all available subscription tiers and also provides an option for making one-time credit purchases.
 
-- **Subscribing:** Click the **Subscribe** button on your desired tier to be redirected to a secure payment page.
-- **Active Subscriptions:** If you have an active subscription, it will be highlighted, and the other tiers will be disabled.
-- **Managing Subscriptions:** You can manage your active subscription, such as canceling the auto-renewal, from this tab.
+- **Subscribing to a Tier:** You can subscribe to a tier to receive a recurring amount of credits. Click the **Subscribe** button on your desired tier to be redirected to a secure payment page. If you have an active subscription, it will be highlighted.
+- **One-Time Purchases:** The page also includes a simple interface for making one-time credit purchases through Stripe, which is useful if you need more credits than your subscription provides.
 
-### 3.2. Buy Credits
-
-This tab provides a simple interface for making one-time credit purchases through Stripe. This is useful if you need more credits than your subscription provides.
-
-### 3.3. Credit Transactions
+### 3.2. Credit Transactions
 
 This tab provides a detailed history of all your credit transactions.
 
@@ -113,23 +108,16 @@ To get started, adjust the sliders on the left-hand side of the page to match yo
 - **Projected Monthly Deployments:** Estimate the number of deployments your team performs each month.
 - **Current Manual Deployment Time (hours):** Enter the average number of hours it currently takes to complete a single deployment manually.
 - **Average Engineer Hourly Cost:** Provide the average hourly cost of an engineer in your organization.
+- **Time Savings with RAD:** The percentage time difference between manual deployments and deploying with the platform.
 
-### 7.2. Understanding the Assumptions
+### 7.2. Interpreting the Results
 
-The calculator's estimates are based on a set of assumptions that you can also customize. To view and modify these, click on the **Calculation Assumptions & Methodology** dropdown. Here you can adjust:
+Once you have configured the inputs, your estimated savings will be displayed in the results panel. The calculator provides a detailed breakdown of your potential savings:
 
-- **Time Savings with RAD:** This is the percentage of time you expect to save on each deployment by using the RAD platform.
-- **Projection Years:** This allows you to see the cumulative savings projected over a period of one to ten years.
-
-### 7.3. Interpreting the Results
-
-Once you have configured the inputs, the results will be displayed on the right-hand side of the page. The key metrics include:
-
-- **Potential Annual Savings:** This is the headline figure, showing the total estimated savings your organization could achieve in a single year.
-- **Savings Breakdown:** This section provides a detailed comparison of your monthly costs, both with and without the RAD platform.
-- **Annual ROI:** The Return on Investment (ROI) percentage gives you a clear indication of the efficiency of your investment in the platform.
-- **Payback Period (Months):** This metric estimates the number of months it will take for the platform to pay for itself through cost savings.
-- **Cumulative Savings:** Based on the number of projection years you selected, this shows the total cumulative savings over that period.
+- **Manual Labor Cost (Monthly):** The estimated monthly cost of performing deployments manually, based on your inputs.
+- **RAD Labor Cost (Monthly):** The new, lower labor cost when using the RAD platform, factoring in the time savings.
+- **RAD Platform Cost (Monthly):** The cost associated with using the RAD platform for the projected number of deployments.
+- **Net Monthly Savings:** The final estimated amount you could save each month by using the platform, calculated by subtracting the RAD labor and platform costs from the original manual labor cost.
 
 ## 8. Deployment Analysis
 

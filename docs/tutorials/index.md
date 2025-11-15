@@ -61,6 +61,14 @@ The [Initial Platform Setup for Organizations](./administrators/initial-setup.md
 
 The [User and Credit Management](./administrators/user-management.md) tutorial covers ongoing user administration tasks. You will learn how to add users, assign roles, adjust credit balances, and use the Partner Credits feature. This tutorial takes approximately 25 minutes and is essential for day-to-day platform management.
 
+### Finance Tutorials
+
+These tutorials are for finance users who manage billing and revenue on the RAD Platform. Finance privileges are required.
+
+**Billing and Invoicing**
+
+The [Managing Billing and Invoicing](./finance/managing-billing.md) tutorial covers the financial features of the platform. You will learn how to access reports, manage invoices, and track revenue. This tutorial takes approximately 25 minutes.
+
 ### Advanced Tutorials
 
 These tutorials cover advanced topics relevant to multiple user types. They provide deeper technical insights into the platform.
