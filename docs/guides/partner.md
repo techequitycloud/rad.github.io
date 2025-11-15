@@ -1,7 +1,3 @@
-# Partner Guide
-
-Welcome to the Partner Guide. This guide provides an overview of the extended features available to partners.
-
 ## 1. Partner Modules
 
 As a partner, you can deploy modules from the public "Platform Modules" catalog as well as from your own private GitHub repository. Your exclusive modules will appear under the "Partner Modules" tab on the module selection page.
@@ -56,23 +52,22 @@ The system includes a safeguard to ensure that any modules that no longer exist 
 
 As a partner, you have access to the **Credits** page to manage your credits and subscriptions. In addition to purchasing credits, you may also be eligible to receive a monthly credit allowance directly from a platform administrator. These "Partner Credits" are added directly to your "Purchased" credit balance at the beginning of each month.
 
-### 4.1. Subscription Tiers
+### 4.1. Buy Credits
 
-This tab displays all available subscription tiers. You can subscribe to a tier to receive a recurring amount of credits.
+This tab is your hub for acquiring more credits. It displays all available subscription tiers and also provides an option for making one-time credit purchases.
 
-### 4.2. Buy Credits
+- **Subscribing to a Tier:** You can subscribe to a tier to receive a recurring amount of credits. Click the **Subscribe** button on your desired tier to be redirected to a secure payment page. If you have an active subscription, it will be highlighted.
+- **One-Time Purchases:** The page also includes a simple interface for making one-time credit purchases through Stripe, which is useful if you need more credits than your subscription provides.
 
-This tab provides a simple interface for making one-time credit purchases through Stripe.
-
-### 4.3. Credit Transactions
+### 4.2. Credit Transactions
 
 This tab provides a detailed history of all your credit transactions, including additions from subscriptions or purchases, and deductions from module deployments.
 
-### 4.4. Project Costs
+### 4.3. Project Costs
 
 This tab shows you the ongoing costs associated with your deployed projects.
 
-### 4.5. Monthly Invoices
+### 4.4. Monthly Invoices
 
 Here you can view and download your monthly invoices.
 
@@ -87,11 +82,12 @@ The **ROI (Return on Investment) Calculator** is a tool designed to help you est
     - **Projected Monthly Deployments:** The number of deployments you anticipate performing each month.
     - **Current Manual Deployment Time (hours):** The average time it takes to complete a deployment manually.
     - **Average Engineer Hourly Cost:** The average hourly cost of an engineer.
-- **View the Results:** The calculator will automatically update with your estimated savings, including:
-    - **Potential Annual Savings:** The total estimated savings per year.
-    - **Net Monthly Savings:** The difference between your manual deployment costs and the costs of deploying with the platform.
-    - **Annual ROI:** The percentage return on your investment in the platform.
-    - **Payback (Months):** The time it will take for your savings to cover your initial investment.
+    - **Time Savings with RAD:** The percentage time difference between manual deployments and deploying with the platform.
+- **View the Results:** The calculator will automatically update with a detailed breakdown of your estimated savings:
+    - **Manual Labor Cost (Monthly):** The estimated monthly cost of performing deployments manually.
+    - **RAD Labor Cost (Monthly):** The new, lower labor cost when using the RAD platform.
+    - **RAD Platform Cost (Monthly):** The cost associated with using the RAD platform.
+    - **Net Monthly Savings:** The final estimated monthly savings after subtracting all RAD-related costs from the original manual labor cost.
 
 ## 6. Help and Support
 

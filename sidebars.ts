@@ -17,7 +17,7 @@ const sidebars: SidebarsConfig = {
     'getting-started',
     {
       type: 'category',
-      label: 'User Roles & Guides',
+      label: 'Platform Guides',
       items: [
         'guides/admin',
         'guides/partner',
