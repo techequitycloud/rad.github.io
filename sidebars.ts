@@ -19,21 +19,21 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Platform Guides',
       items: [
-        'guides/admin',
-        'guides/partner',
-        'guides/agent',
-        'guides/user',
-        'guides/finance',
+        { type: 'doc', id: 'guides/admin', label: 'Admin' },
+        { type: 'doc', id: 'guides/partner', label: 'Partner' },
+        { type: 'doc', id: 'guides/agent', label: 'Agent' },
+        { type: 'doc', id: 'guides/user', label: 'User' },
+        { type: 'doc', id: 'guides/finance', label: 'Finance' },
       ],
     },
     {
       type: 'category',
       label: 'Tutorials',
       items: [
-        'tutorials/index',
+        { type: 'doc', id: 'tutorials/index', label: 'Overview' },
         {
           type: 'category',
-          label: 'User Tutorials',
+          label: 'User',
           items: [
             'tutorials/users/first-deployment',
             'tutorials/users/managing-credits',
@@ -42,7 +42,7 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: 'category',
-          label: 'Partner Tutorials',
+          label: 'Partner',
           items: [
             'tutorials/partners/first-module',
             'tutorials/partners/production-module',
@@ -51,23 +51,30 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: 'category',
-          label: 'Agent Tutorials',
+          label: 'Agent',
           items: [
             'tutorials/agents/agent-revenue',
           ],
         },
         {
           type: 'category',
-          label: 'Administrator Tutorials',
+          label: 'Admin',
           items: [
             'tutorials/administrators/initial-setup',
             'tutorials/administrators/user-management',
           ],
         },
+        {
+          type: 'category',
+          label: 'Finance',
+          items: [
+            'tutorials/finance/managing-billing',
+          ],
+        },
       ],
     },
-    'features/roi-calculator',
-    'support',
+    { type: 'doc', id: 'features/roi-calculator', label: 'ROI Calculator' },
+    { type: 'doc', id: 'support', label: 'Support' },
   ],
 };
 
