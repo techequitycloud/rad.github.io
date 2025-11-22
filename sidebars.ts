@@ -36,21 +36,6 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'tutorials/agent', label: 'Agent' },
       ],
     },
-    {
-      type: 'category',
-      label: 'Implementation',
-      items: [
-        { type: 'doc', id: 'implementation/rad-documentation', label: 'Overview' },
-        { type: 'doc', id: 'implementation/credit-and-billing-feature', label: 'Billing & Credits' },
-        { type: 'doc', id: 'implementation/deployments-feature', label: 'Deployments' },
-        { type: 'doc', id: 'implementation/publishing-feature', label: 'Publishing' },
-        { type: 'doc', id: 'implementation/user-feature', label: 'Users' },
-        { type: 'doc', id: 'implementation/settings-feature', label: 'Settings' },
-        { type: 'doc', id: 'implementation/notification-feature', label: 'Notifications' },
-        { type: 'doc', id: 'implementation/help-feature', label: 'Help' },
-        { type: 'doc', id: 'implementation/delete-feature', label: 'Delete' },
-      ],
-    },
     { type: 'doc', id: 'support', label: 'Support' },
   ],
 };
