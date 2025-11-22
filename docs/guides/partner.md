@@ -1,101 +1,52 @@
-## 1. Partner Modules
+---
+title: Partner Guide
+description: Partner Guide for the Rapid Application Deployment (RAD) platform
+---
 
-As a partner, you can deploy modules from the public "Platform Modules" catalog as well as from your own private GitHub repository. Your exclusive modules will appear under the "Partner Modules" tab on the module selection page.
+# Partner Guide
 
-### 1.1. Deploying a Module
+## 1. Introduction
 
-- From the **Deployments** page, click the **Create New** button.
-- Select the **Partner Modules** tab.
-- Browse the available modules. Each module card displays its name, a brief description, and the credit cost to deploy it.
-- Click on the card of the module you wish to deploy.
+Welcome to the Partner Guide. As a Partner, you play a special role in the ecosystem. You have the ability to publish your own **Private Modules** and deploy them, in addition to the standard platform modules available to everyone.
 
-### 1.2. Configuring the Deployment
+## 2. Setting Up Your Repository
 
-After selecting a module, you will be taken to the provisioning page, where you need to configure the deployment.
+Before you can publish modules, you need to connect your Git repository.
 
-- **Configuration Form:** A form will be displayed with a series of fields. These are the variables required to deploy the module, such as project IDs, regions, or other specific settings.
-- **Fill out the Form:** Complete all the required fields with the appropriate information for your deployment.
-- **Submit:** Once you have filled out the form, click the **Submit** button. The application will display module dependencies and validate your inputs and, if your credit balance is sufficient, begin the deployment process.
-
-You will be redirected back to the **Deployments** page, where you can monitor the status of your new deployment.
-
-## 2. Configuring Your GitHub Repository
-
-To make your private modules available for deployment, you must first configure your GitHub repository in your profile.
-
-- **Navigate to Profile:** Go to your profile page.
-- **Provide a GitHub Token:** In the "Partner Settings" section, enter a GitHub Personal Access Token with `repo` scope.
-- **Select the Repository:** Once the token is saved, you can select your private repository from the dropdown list.
-
-The modules from this repository will now appear under the "Partner Modules" tab on the deployment page, visible only to you.
+1.  **Navigate to Profile:** Click your avatar in the top right and select "Profile".
+2.  **Partner Settings:** Look for the "GitHub Configuration" section.
+3.  **Access Token:** Enter a GitHub Personal Access Token. It must have `repo` scope so the platform can read your private repositories.
+4.  **Select Repository:** After saving the token, select the repository that contains your Terraform modules from the dropdown list.
 
 ## 3. Publishing Modules
 
-The "Publish" tab allows you to select and publish modules from your configured GitHub repository, making them available for deployment.
+Once your repo is connected, you can manage your module catalog.
 
-### 3.1. The Publish Tab
+1.  **Go to "Publish":** Click the **Publish** link in the main navigation.
+2.  **View Modules:** You will see a list of all valid modules found in the root of your connected repository.
+3.  **Select:** Check the boxes for the modules you want to make available for deployment.
+4.  **Publish/Update:** Click the button to save your selection.
+    *   **Create:** New modules will be added to the system.
+    *   **Update:** Existing modules will be updated with any changes you've made to their code or variables in GitHub.
+    *   **Remove:** Unchecking a module and clicking Update will remove it from the deployment list.
 
-The publish tab displays a list of modules available for publishing from your configured GitHub repository. It also shows a list of modules that have already been published.
+## 4. Deploying Partner Modules
 
-### 3.2. Publishing a Module
+Your modules are exclusive to you (unless the Admin has enabled "Private Mode").
 
-- Select the modules you wish to publish by clicking on their names.
-- Click the **Publish** (or **Update**) button.
+1.  **Go to "Deploy":** Navigate to the deployment page.
+2.  **Partner Modules Tab:** You will see a dedicated tab for "Partner Modules".
+3.  **Deploy:** Select and deploy your modules just like any other platform module.
 
-The selected modules will now be available for deployment under the "Partner Modules" tab.
+## 5. Private Mode & Data Visibility
 
-### 3.3. Syncing Logic
+The platform has a global setting called **Private Mode** that affects what you can see.
 
-The system includes a safeguard to ensure that any modules that no longer exist in your Git repository are removed from the "Deploy" tab. This is particularly important when you change your configured repository URL.
+*   **Private Mode DISABLED (Default):** You operate in a silo. You only see *your* deployments, *your* revenue, and *your* modules.
+*   **Private Mode ENABLED:** You are elevated to an Admin-like view. You can see **All Deployments** from all users, **All Invoices**, and **All Costs** across the organization.
 
-## 4. Credits
+## 6. Partner Credits
 
-As a partner, you have access to the **Credits** page to manage your credits and subscriptions. In addition to purchasing credits, you may also be eligible to receive a monthly credit allowance directly from a platform administrator. These "Partner Credits" are added directly to your "Purchased" credit balance at the beginning of each month.
-
-### 4.1. Buy Credits
-
-This tab is your hub for acquiring more credits. It displays all available subscription tiers and also provides an option for making one-time credit purchases.
-
-- **Subscribing to a Tier:** You can subscribe to a tier to receive a recurring amount of credits. Click the **Subscribe** button on your desired tier to be redirected to a secure payment page. If you have an active subscription, it will be highlighted.
-- **One-Time Purchases:** The page also includes a simple interface for making one-time credit purchases through Stripe, which is useful if you need more credits than your subscription provides.
-
-### 4.2. Credit Transactions
-
-This tab provides a detailed history of all your credit transactions, including additions from subscriptions or purchases, and deductions from module deployments.
-
-### 4.3. Project Costs
-
-This tab shows you the ongoing costs associated with your deployed projects.
-
-### 4.4. Monthly Invoices
-
-Here you can view and download your monthly invoices.
-
-## 5. ROI Calculator
-
-The **ROI (Return on Investment) Calculator** is a tool designed to help you estimate the potential financial benefits of using the platform. By inputting data about your current deployment processes, you can see a projection of your savings and efficiency gains.
-
-### 5.1. How to Use the Calculator
-
-- **Navigate to the ROI page:** You can find this in the main navigation.
-- **Adjust the sliders:** Modify the inputs to match your team's specific data:
-    - **Projected Monthly Deployments:** The number of deployments you anticipate performing each month.
-    - **Current Manual Deployment Time (hours):** The average time it takes to complete a deployment manually.
-    - **Average Engineer Hourly Cost:** The average hourly cost of an engineer.
-    - **Time Savings with RAD:** The percentage time difference between manual deployments and deploying with the platform.
-- **View the Results:** The calculator will automatically update with a detailed breakdown of your estimated savings:
-    - **Manual Labor Cost (Monthly):** The estimated monthly cost of performing deployments manually.
-    - **RAD Labor Cost (Monthly):** The new, lower labor cost when using the RAD platform.
-    - **RAD Platform Cost (Monthly):** The cost associated with using the RAD platform.
-    - **Net Monthly Savings:** The final estimated monthly savings after subtracting all RAD-related costs from the original manual labor cost.
-
-## 6. Help and Support
-
-The **Help** page is your central resource for documentation and support. It contains:
-
-- **User Guides:** Access to the Admin, Partner, Agent, and User guides.
-- **Support Form:** A form to send a message directly to the support team.
-
-## 7. Theme Customization
-
-You can switch between light and dark themes to suit your preference. The theme selector is located in the user menu in the top-right corner of the navigation bar.
+You may be eligible for a monthly credit allowance.
+*   **Automatic Grant:** If an admin has configured it, you will receive a set amount of "Purchased" credits automatically at the start of each month.
+*   **Check Balance:** View your "Purchased" balance on the **Billing** page to see your available funds.

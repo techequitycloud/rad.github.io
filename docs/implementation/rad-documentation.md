@@ -350,7 +350,7 @@ This workflow introduces cost management and credit validation.
 
 ### DEPLOYMENT ANALYSIS
 
-For a detailed technical breakdown of this feature, see the [All/My Deployments Feature Analysis](./all-my-deployments-feature.md).
+For a detailed technical breakdown of this feature, see the [All/My Deployments Feature Analysis](./deployments-feature.md).
 
 The "My Deployments" and "All Deployments" tabs are part of the Deployments page, which is accessible from the main navigation menu. This page provides a centralized view for tracking and analyzing all module deployments.
 
