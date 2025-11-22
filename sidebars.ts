@@ -30,50 +30,27 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Tutorials',
       items: [
-        { type: 'doc', id: 'tutorials/index', label: 'Overview' },
-        {
-          type: 'category',
-          label: 'User',
-          items: [
-            'tutorials/users/first-deployment',
-            'tutorials/users/managing-credits',
-            'tutorials/users/troubleshooting-deployments',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Partner',
-          items: [
-            'tutorials/partners/first-module',
-            'tutorials/partners/production-module',
-            'tutorials/partners/module-versions',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Agent',
-          items: [
-            'tutorials/agents/agent-revenue',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Admin',
-          items: [
-            'tutorials/administrators/initial-setup',
-            'tutorials/administrators/user-management',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Finance',
-          items: [
-            'tutorials/finance/managing-billing',
-          ],
-        },
+        { type: 'doc', id: 'tutorials/admin', label: 'Admin' },
+        { type: 'doc', id: 'tutorials/partner', label: 'Partner' },
+        { type: 'doc', id: 'tutorials/user', label: 'User' },
+        { type: 'doc', id: 'tutorials/agent', label: 'Agent' },
       ],
     },
-    { type: 'doc', id: 'features/roi-calculator', label: 'ROI Calculator' },
+    {
+      type: 'category',
+      label: 'Implementation',
+      items: [
+        { type: 'doc', id: 'implementation/rad-documentation', label: 'Overview' },
+        { type: 'doc', id: 'implementation/credit-and-billing-feature', label: 'Billing & Credits' },
+        { type: 'doc', id: 'implementation/deployments-feature', label: 'Deployments' },
+        { type: 'doc', id: 'implementation/publishing-feature', label: 'Publishing' },
+        { type: 'doc', id: 'implementation/user-feature', label: 'Users' },
+        { type: 'doc', id: 'implementation/settings-feature', label: 'Settings' },
+        { type: 'doc', id: 'implementation/notification-feature', label: 'Notifications' },
+        { type: 'doc', id: 'implementation/help-feature', label: 'Help' },
+        { type: 'doc', id: 'implementation/delete-feature', label: 'Delete' },
+      ],
+    },
     { type: 'doc', id: 'support', label: 'Support' },
   ],
 };
