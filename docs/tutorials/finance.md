@@ -5,7 +5,11 @@ sidebar_label: Finance
 description: Tutorial for Finance Management
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Tutorial: Finance Management
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflow/finance_workflow.m4a" title="Listen to the Finance Workflow" />
 
 ## 1. Introduction
 This tutorial covers the key responsibilities of the Finance team. You will learn how to manage subscription plans, configure credit rates, distribute credits to users, and analyze the platform's revenue and costs.
