@@ -1,3 +1,10 @@
+---
+id: finance
+title: Finance Management
+sidebar_label: Finance
+description: Tutorial for Finance Management
+---
+
 # Tutorial: Finance Management
 
 ## 1. Introduction
