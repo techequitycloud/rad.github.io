@@ -1,4 +1,8 @@
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Tutorial: Agent Revenue
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflow/agent_workflow.m4a" title="Listen to the Agent Workflow" />
 
 ## 1. Introduction
 This tutorial is for Agents. Learn how to invite users and track the commissions you earn from their activity.

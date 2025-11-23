@@ -3,7 +3,11 @@ title: User Guide
 description: User Guide for the Rapid Application Deployment (RAD) platform
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # User Guide
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/user_guide.m4a" title="Listen to the User Guide" />
 
 ## 1. Introduction
 

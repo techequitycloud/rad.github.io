@@ -1,4 +1,8 @@
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Tutorial: Partner Workflow
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflow/partner_workflow.m4a" title="Listen to the Partner Workflow" />
 
 ## 1. Introduction
 This tutorial is for Partners. You will learn how to connect your own Git repository and publish a private module for deployment.

@@ -84,7 +84,7 @@ const config: Config = {
           label: 'Documentation',
         },
         {
-          href: 'https://rad.techequity.cloud',
+          href: 'https://techequity.cloud',
           label: 'RAD Console',
           position: 'left',
           target: '_blank',
@@ -130,7 +130,7 @@ const config: Config = {
           items: [
             {
               label: 'RAD Console',
-              href: 'https://rad.techequity.cloud',
+              href: 'https://techequity.cloud',
             },
             {
               label: 'GitHub',

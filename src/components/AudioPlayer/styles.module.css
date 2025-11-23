@@ -1,0 +1,31 @@
+.container {
+  border: 1px solid var(--ifm-color-primary);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  background-color: var(--ifm-background-surface-color);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.icon {
+  font-size: 1.5rem;
+  margin-right: 0.8rem;
+}
+
+.title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ifm-color-primary-darkest);
+  margin: 0;
+}
+
+.audio {
+  width: 100%;
+  outline: none;
+}

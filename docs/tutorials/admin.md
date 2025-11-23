@@ -1,4 +1,8 @@
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Tutorial: Administrator Setup
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflow/admin_workflow.m4a" title="Listen to the Admin Workflow" />
 
 ## 1. Introduction
 This tutorial covers the essential tasks for setting up a new RAD platform instance. You will configure global settings, create a subscription tier, and manage user credits.

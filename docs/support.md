@@ -5,7 +5,11 @@ description: Get help with RAD Platform - troubleshooting guides, support resour
 keywords: ['support', 'help', 'troubleshooting', 'documentation', 'resources']
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Support & Resources
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflow/support_workflow.m4a" title="Listen to the Support Workflow" />
 
 Welcome to the RAD Platform support resources. This page provides information on how to get help, report issues, and access additional resources.
 
