@@ -1,4 +1,8 @@
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Tutorial: Managing Credits & Costs
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflow/user_workflow.m4a" title="Listen to the User Workflow" />
 
 ## 1. Introduction
 As a user, it's important to manage your budget. This tutorial shows you how to buy credits and track your spending.

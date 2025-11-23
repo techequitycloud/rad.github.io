@@ -3,7 +3,11 @@ title: Admin Guide
 description: Administrator Guide for the Rapid Application Deployment (RAD) platform
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Admin User Guide
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/admin_guide.m4a" title="Listen to the Admin Guide" />
 
 ## 1. Introduction
 

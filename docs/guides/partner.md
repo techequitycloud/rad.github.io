@@ -3,7 +3,11 @@ title: Partner Guide
 description: Partner Guide for the Rapid Application Deployment (RAD) platform
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Partner Guide
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/partner_guide.m4a" title="Listen to the Partner Guide" />
 
 ## 1. Introduction
 

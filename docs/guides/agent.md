@@ -3,7 +3,11 @@ title: Agent Guide
 description: Agent Guide for the Rapid Application Deployment (RAD) platform
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Agent Guide
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/agent_guide.m4a" title="Listen to the Agent Guide" />
 
 ## 1. Introduction
 

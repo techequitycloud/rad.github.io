@@ -3,7 +3,11 @@ title: Finance Guide
 description: Finance Guide for the Rapid Application Deployment (RAD) platform
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Finance User Guide
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.m4a" title="Listen to the Finance Guide" />
 
 ## 1. Introduction
 
