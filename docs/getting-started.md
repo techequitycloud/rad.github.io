@@ -44,7 +44,7 @@ Let's launch your first application.
 ## 5. Step 4: Monitor Progress
 You are now back on the **Deployments** page.
 1.  Find your new deployment in the list.
-2.  The status should be `QUEUED` or `PROVISIONING`.
+2.  The status should be `QUEUED` or `WORKING`.
 3.  **Click the ID:** Open the details view to see more information.
 4.  **Watch Logs:** You can view real-time logs as the system builds your app.
 5.  Wait for the status to turn green: **`SUCCESS`**.
