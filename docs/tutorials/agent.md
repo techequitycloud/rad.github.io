@@ -1,30 +1,33 @@
+---
+title: Agent Tutorial
+description: Agent Tutorial for the Rapid Application Deployment (RAD) platform
+---
+
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Tutorial: Agent Revenue
+# Tutorial: Agent Guide
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflow/agent_workflow.m4a" title="Listen to the Agent Workflow" />
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/tutorials/agent_tutorial.m4a" title="Listen to the Agent Tutorial" />
 
 ## 1. Introduction
-This tutorial is for Agents. Learn how to invite users and track the commissions you earn from their activity.
+This tutorial explains how to use the Agent dashboard to track referrals and earnings.
 
-## 2. Step 1: Invite a User
-1.  Go to the **Help** page.
-2.  Find the **Invite User** section.
-3.  **Copy Link:** Click the copy button to grab your unique URL (e.g., `.../?ref=12345`).
-4.  Send this link to a friend or colleague.
-5.  When they sign up, they are permanently linked to you.
+## 2. Prerequisites
+*   An account with the **Agent** role.
+*   The admin must have enabled the Agent/Commission features.
 
-## 3. Step 2: Track Revenue
-Your friend deployed a paid module! Let's check your stats.
+## 3. Step 1: Get Referral Link
+1.  Go to **Help** -> **Support**.
+2.  Locate your **Referral Link** or QR code.
+3.  Copy and share it with potential users.
 
-1.  Go to the **Billing** page.
+## 4. Step 2: Track User Revenue
+1.  Go to **Revenue**.
 2.  Click the **User Revenue** tab.
-3.  **Filter:** Select your friend's email from the dropdown.
-4.  **View:** You see a table row showing their deployment, the cost they paid, and the revenue generated.
+3.  Review the table to see which referred users are generating sales.
+4.  Use the date picker to check specific months.
 
-## 4. Step 3: Analyze Performance
-Which modules are making you the most money?
-
+## 5. Step 3: Track Module Revenue
 1.  Click the **Module Revenue** tab.
-2.  Review the chart/table.
-3.  If you see "Advanced Database" is generating 80% of your revenue, you might want to recommend that module to more people!
+2.  See which specific modules are being deployed by your referrals.
+3.  This helps you understand what products are popular.
