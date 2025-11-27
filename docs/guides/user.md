@@ -21,7 +21,7 @@ Access the platform using your Google credentials. If it's your first time, an a
 ### 2.2. The Dashboard
 After logging in, you'll see the **Deployments** page. This is your home base.
 *   **My Deployments:** Lists all the applications you have deployed.
-*   **Status:** Quickly check if your deployments are `SUCCESS`, `FAILURE`, or `PROVISIONING`.
+*   **Status:** Quickly check if your deployments are `SUCCESS`, `FAILURE`, or `WORKING`.
 
 ## 3. Deploying Applications
 
