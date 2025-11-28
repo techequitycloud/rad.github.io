@@ -37,6 +37,27 @@ For credit or billing problems, review your transaction history, verify payments
 
 For platform bugs or technical problems, try to reproduce the issue consistently, document the exact steps that cause the problem, and collect information including browser and version, operating system, screenshots or screen recordings, and console error messages (F12 in most browsers).
 
+## Troubleshooting
+
+### Common Error Messages
+
+#### Missing Tables in Billing Tab
+
+**Symptom**: When navigating to the Project Costs tab (or other tabs) in the Billing section, the data table is missing or fails to load.
+
+**Possible Cause**: This issue often occurs when the user's session data is not fully synchronized with the frontend component, resulting in a missing User ID.
+
+**Diagnosis**:
+1. Open your browser's Developer Tools (F12).
+2. Navigate to the **Console** tab.
+3. Look for a debug message similar to: `BillingTabContent - Tab Changed {activeTab: 1, ..., userId: undefined}`.
+4. If `userId` is `undefined`, the component cannot fetch the necessary data.
+
+**Resolution**:
+1. Try refreshing the page to force a reload of the user session.
+2. Log out and log back in to refresh the authentication token and user profile.
+3. If the issue persists, please report it to the support team with the console logs attached.
+
 ## Community Resources
 
 ### GitHub Repository
