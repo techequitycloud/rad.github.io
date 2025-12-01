@@ -14,8 +14,9 @@ Welcome to the Rapid Application Deployment (RAD) platform! This tutorial will g
 The **Deployments** page is your main hub.
 *   **My Deployments:** This list is currently empty. It will show your apps once you deploy them.
 *   **Navigation Bar:**
-    *   **Deploy:** Go here to launch new apps.
     *   **Credits:** View your credit balance and transaction history.
+    *   **Deployments:** Manage your running applications and view logs.
+    *   **Deploy:** Go here to launch new apps.
     *   **Help:** Find guides, tutorials, and support.
 
 ## 4. Step 3: Deploy a Module
@@ -35,7 +36,7 @@ Let's launch your first application.
 ## 5. Step 4: Monitor Progress
 You are now back on the **Deployments** page.
 1.  Find your new deployment in the list.
-2.  The status should be `QUEUED` or `PROVISIONING`.
+2.  The status should be `QUEUED` or `WORKING`.
 3.  **Click the ID:** Open the details view to see more information.
 4.  **Watch Logs:** You can view real-time logs as the system builds your app.
 5.  Wait for the status to turn green: **`SUCCESS`**.

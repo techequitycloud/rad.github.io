@@ -38,7 +38,7 @@ If you have configured your Jules API Key, you can use the AI agent to improve y
 
 ## 5. Deploying Partner Modules
 
-Your modules are exclusive to you (unless the Admin has enabled "Private Mode" or you are deploying Platform modules).
+Your modules are exclusive to you.
 
 1.  **Go to "Deploy":** Navigate to the deployment page.
 2.  **Partner Modules Tab:** Click on the "Partner Modules" tab to see your published modules.
@@ -51,11 +51,13 @@ You can track your credit usage and project costs.
 1.  **Go to "Credits":** Click the **Credits** link in the main navigation.
 2.  **Credit Transactions:** View a history of your credit awards and usage.
 3.  **Project Costs:** See a detailed breakdown of costs associated with your running projects.
-4.  **Buy Credits:** If enabled, you can purchase additional credits here.
+4.  **Project Invoices:** Download PDF invoices for your project costs (if subscriptions are enabled).
+5.  **Buy Credits:** If enabled, you can purchase additional credits here.
 
-## 7. Private Mode & Data Visibility
+## 7. Data Visibility
 
-The platform has a global setting called **Private Mode** that affects what you can see.
+As a Partner, you have a focused view of the platform.
 
-*   **Private Mode DISABLED (Default):** You operate in a silo. You only see *your* deployments and *your* modules.
-*   **Private Mode ENABLED:** You are elevated to an Admin-like view. You can see **All Deployments** from all users across the organization.
+*   **Your Data:** You can see your own deployments and the modules you have published.
+*   **Platform Data:** You can see public platform modules available to everyone.
+*   **Privacy:** Other partners cannot see your private modules or deployments. Only System Administrators have access to view all deployments across the organization.

@@ -23,7 +23,7 @@ To deploy a new application, click the **Deploy** link in the top navigation bar
 *   **Browse:** Explore "Platform Modules" (available to everyone) or "Partner Modules" (if you have specific access).
 *   **Search:** Use the search bar to find modules by name.
 *   **Pinning:** Click the **Pin** icon on any module card to save it to the top of your list for quick access.
-*   **Stats:** View how many times a module has been deployed and its average star rating.
+*   **Stats:** View deployment counts, your current credit balance (if enabled), and the retention period for deployment history.
 
 ### 3.2. Refining with Jules (AI Assistant)
 If enabled, you will see a **Sparkles** icon on the module card.
@@ -63,6 +63,7 @@ Need assistance? Visit the **Help** page.
 *   **Documentation:** Access user guides and tutorials.
 *   **Audio Tutorials:** Listen to step-by-step walkthroughs for common tasks.
 *   **Contact Support:** Use the built-in form to send a message directly to the support team.
+*   **Invite Users:** (If enabled) Share your unique referral link or QR code to invite friends to the platform. You can track your monthly referral usage directly on the card.
 *   **ROI Calculator:** Estimate your cost savings by using the platform's automation compared to manual deployment.
 
 ## 7. Profile & Settings

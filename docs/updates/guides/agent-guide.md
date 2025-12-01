@@ -27,5 +27,5 @@ This report gives you a view of *what* is selling across your referrals.
 *   **Data Points:** View Module Name, Created At date, Credit Cost, and Revenue.
 *   **Insight:** Use this to understand which products are most popular among your referrals so you can focus your marketing efforts.
 
-### 3.3. Additive Role
-Note that your Agent role is **additive**. You still have all the features of a standard user (deploying modules, buying credits) plus these extra reporting tools.
+### 3.3. Accessing Features
+As an Agent, your primary workspace is the **Revenue** dashboard. If you are also a registered **User** or **Partner**, you will see additional tabs (like Deployments or Publish) in your navigation bar alongside your agent tools.

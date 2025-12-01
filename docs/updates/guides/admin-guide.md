@@ -6,10 +6,10 @@ Welcome to the Administrator Guide for the Rapid Application Deployment (RAD) pl
 
 ## 2. Platform Setup & Global Configuration
 
-The **Setup Menu** is your command center for configuring the platform's behavior. It is a one-time setup wizard that can be revisited whenever you need to change global settings.
+The **Setup** page is your command center for configuring the platform's behavior. It is a one-time setup wizard that can be revisited whenever you need to change global settings.
 
 ### 2.1. Accessing Settings
-Navigate to the **Setup Menu** link in the main navigation bar.
+Navigate to the **Setup** link in the main navigation bar. Alternatively, you can access these settings by clicking the **Admin Settings** button on the "All Deployments" tab of the Deployments page.
 
 ### 2.2. Key Configurations
 
@@ -18,10 +18,10 @@ Navigate to the **Setup Menu** link in the main navigation bar.
     *   **Enable Credits:** Turns on the credit-based cost management system.
     *   **Enable Subscription:** (Requires Credits) Activates the subscription tier system and Stripe integration.
     *   **Private Mode:**
-        *   **Enabled:** Partners see *all* deployment data (like an admin). New users must be manually added to the Google Group.
-        *   **Disabled (Default):** Partners only see their own data. New users can self-register.
+        *   **Enabled:** Access is restricted to authorized users only. New users cannot self-register and must be manually added by an administrator.
+        *   **Disabled (Default):** Public registration is open. New users can sign up and access the platform automatically.
 *   **Notification Settings:** Configure the SMTP server settings and the "Support Email" address to enable email notifications for system events.
-*   **Cleanup & Retention:** Set a **Retention Period** (e.g., 90 days) and a **Cleanup Schedule** (e.g., Daily) to automatically delete old deployment records and artifacts, helping you manage storage costs.
+*   **Cleanup & Retention:** Set a **Retention Period** (e.g., 90 days) to automatically delete old deployment records and artifacts. The cleanup job runs daily automatically to help you manage storage costs.
 
 ### 2.3. Jules AI Configuration
 To enable the AI-powered module refinement features for yourself and the platform:
@@ -46,12 +46,13 @@ Manage your platform's users from the **Users** page (accessible via the main na
     *   **User:** Standard access to deploy platform modules.
     *   **Partner:** Grants access to the "Publish" tab for deploying private modules.
     *   **Agent:** Grants access to revenue reporting tools for referred users.
-    *   **Finance:** Grants access to financial reports and invoices in the Billing section.
-*   **Note:** Admin accounts are marked with a badge and cannot be modified or deactivated through this interface to prevent accidental lockouts.
+    *   **Finance:** Grants access to the "Billing" page for financial settings, subscription tiers, and reports.
+    *   **Support:** Grants access to view "All Deployments" across the platform to assist with troubleshooting, but restricts access to sensitive settings.
+*   **Note:** Admin accounts are marked with a badge. Use caution when modifying Admin accounts to prevent accidental lockouts.
 
 ## 4. Credit & Billing Management
 
-The **Billing** page is your financial hub. As an admin (or Finance user), you see comprehensive data for the entire platform.
+The **Billing** page is your financial hub. **Note:** Access to the Billing page requires the **Finance** role. As an admin, you can assign this role to yourself or others via the Users page.
 
 ### 4.1. Subscription Tiers
 *   Go to the **Subscription Tiers** tab.
@@ -63,6 +64,8 @@ The **Billing** page is your financial hub. As an admin (or Finance user), you s
     *   **Price Per Credit:** Exchange rate (e.g., 100 credits = $1).
     *   **Sign-up Credits:** Free credits for new users.
     *   **Global Adjustments:** Grant/remove credits from *all* users.
+    *   **Low Credit Notification Threshold:** Set a credit balance amount (e.g., 100). Users with a balance below this amount will receive an automated email notification (sent at most once every 24 hours).
+    *   **Monthly Credit Top-up:** Enable a recurring monthly credit grant for all users. You can configure the specific amount of credits to be awarded on the 1st of each month.
 *   **Credit Management:** A dedicated table to manually adjust the "Awarded" or "Purchased" credit balance for individual users.
 
 ### 4.3. Financial Reports
@@ -77,6 +80,7 @@ The **Billing** page is your financial hub. As an admin (or Finance user), you s
 You have complete visibility into all activity on the platform.
 
 *   **All vs. My Deployments:** The **Deployments** page has tabs to view "All Deployments" (everyone's activity) or just "My Deployments" (your own).
+*   **Admin Settings:** The "Admin Settings" button in the "All Deployments" view provides quick access to global platform configuration.
 *   **Search:** Use the search bar to find deployments by Name, Deployment ID, or User Email.
 *   **Ratings:** View the 1-5 star ratings given by users to gauge user satisfaction with specific modules.
 *   **Logs & Debugging:** Click on any Deployment ID to view its full build logs, status history, and configuration variables.

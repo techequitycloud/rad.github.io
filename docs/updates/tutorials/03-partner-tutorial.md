@@ -28,4 +28,4 @@ This tutorial is for Partners. You will learn how to connect your own Git reposi
 1.  On the **Deploy** page, click the **Partner Modules** tab.
 2.  You should see `my-custom-app` listed there.
 3.  Click it, configure it, and deploy it just like a standard module.
-4.  Remember: Only **you** can see this module (unless Private Mode is on).
+4.  Remember: Only **you** and **Administrators** can see this module.

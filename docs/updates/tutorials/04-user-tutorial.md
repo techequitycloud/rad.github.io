@@ -51,4 +51,5 @@ Need assistance or more detailed guides?
 3.  **Contact Support:**
     *   Click the **Support** tab.
     *   Fill out the support form to send a message directly to the admin team.
+    *   **Invite Friends:** (If enabled) Use the "Invite Friends" card to copy your referral link or scan the QR code to invite new users.
     *   If enabled, use the **ROI Calculator** to estimate your savings.
