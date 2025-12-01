@@ -1,3 +1,12 @@
+---
+title: User Tutorial
+description: Learn how to deploy applications and manage credits
+---
+
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
+<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/user-tutorial.mp3" title="User Tutorial Audio" />
+
 # Tutorial: User Guide
 
 ## 1. Introduction

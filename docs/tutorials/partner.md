@@ -1,3 +1,12 @@
+---
+title: Partner Tutorial
+description: Learn how to publish and deploy private modules
+---
+
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
+<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/partner-tutorial.mp3" title="Partner Tutorial Audio" />
+
 # Tutorial: Partner Workflow
 
 ## 1. Introduction

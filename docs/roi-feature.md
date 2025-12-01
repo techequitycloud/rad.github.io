@@ -31,22 +31,26 @@ The calculator uses the following formulas to determine your estimated savings:
 
 ### 1. Manual Labor Cost
 The cost of doing deployments the "old way" without automation.
-$$ \text{Manual Cost} = \text{Monthly Deployments} \times \text{Manual Time per Deployment} \times \text{Hourly Engineer Cost} $$
+
+`Manual Cost = Monthly Deployments * Manual Time per Deployment * Hourly Engineer Cost`
 
 ### 2. RAD Labor Cost
 The reduced labor cost when using the RAD platform, factoring in the time savings.
-$$ \text{New Deployment Time} = \text{Manual Time} \times (1 - \text{Time Savings \%}) $$
-$$ \text{RAD Labor Cost} = \text{Monthly Deployments} \times \text{New Deployment Time} \times \text{Hourly Engineer Cost} $$
+
+`New Deployment Time = Manual Time * (1 - Time Savings %)`
+`RAD Labor Cost = Monthly Deployments * New Deployment Time * Hourly Engineer Cost`
 
 ### 3. Total RAD Cost
 The sum of the reduced labor cost and the platform fees.
-$$ \text{Total RAD Cost} = \text{RAD Labor Cost} + \text{Monthly RAD Platform Cost} $$
+
+`Total RAD Cost = RAD Labor Cost + Monthly RAD Platform Cost`
 *(Note: Monthly RAD Platform Cost is fetched from your actual usage history)*
 
 ### 4. Net Savings & ROI
 The final estimated financial benefit.
-$$ \text{Net Monthly Savings} = \text{Manual Cost} - \text{Total RAD Cost} $$
-$$ \text{ROI \%} = \left( \frac{\text{Net Monthly Savings}}{\text{Manual Cost}} \right) \times 100 $$
+
+`Net Monthly Savings = Manual Cost - Total RAD Cost`
+`ROI % = (Net Monthly Savings / Manual Cost) * 100`
 
 ## Technical Implementation details
 

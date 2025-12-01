@@ -1,3 +1,12 @@
+---
+title: User Guide
+description: Essential guide for all platform users
+---
+
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
+<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/user-guide.mp3" title="User Guide Audio" />
+
 # User Guide
 
 ## 1. Introduction
