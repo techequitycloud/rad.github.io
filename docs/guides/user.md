@@ -1,13 +1,13 @@
 ---
 title: User Guide
-description: User Guide for the Rapid Application Deployment (RAD) platform
+description: Essential guide for all platform users
 ---
 
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# User Guide
+<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/user-guide.mp3" title="User Guide Audio" />
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/user_guide.m4a" title="Listen to the User Guide" />
+# User Guide
 
 ## 1. Introduction
 
@@ -16,56 +16,66 @@ Welcome to the User Guide for the Rapid Application Deployment (RAD) platform. T
 ## 2. Getting Started
 
 ### 2.1. Logging In
-Access the platform using your Google credentials. If it's your first time, an account will be created for you automatically, and you may receive some initial "Sign-up Credits" to get you started.
+Access the platform using your Google credentials. If it's your first time, an account will be created for you automatically. Depending on the platform settings, you may receive initial "Sign-up Credits" to get you started.
 
 ### 2.2. The Dashboard
 After logging in, you'll see the **Deployments** page. This is your home base.
 *   **My Deployments:** Lists all the applications you have deployed.
 *   **Status:** Quickly check if your deployments are `SUCCESS`, `FAILURE`, or `WORKING`.
+*   **View Details:** Click on a deployment ID to see detailed logs and configuration variables.
 
 ## 3. Deploying Applications
 
+To deploy a new application, click the **Deploy** link in the top navigation bar.
+
 ### 3.1. Finding a Module
-1.  Click the **Deploy** link in the navigation bar.
-2.  Browse the catalog of available modules.
-3.  **Search:** Use the search bar to find modules by name.
-4.  **Credit Cost:** If credits are enabled, each card displays the cost to deploy that module.
+*   **Browse:** Explore "Platform Modules" (available to everyone) or "Partner Modules" (if you have specific access).
+*   **Search:** Use the search bar to find modules by name.
+*   **Pinning:** Click the **Pin** icon on any module card to save it to the top of your list for quick access.
+*   **Stats:** View deployment counts, your current credit balance (if enabled), and the retention period for deployment history.
 
-### 3.2. Launching a Deployment
-1.  Click on a module card.
-2.  **Configure:** Fill out the form with the required settings (e.g., Project ID, Region).
-3.  **Confirm:** Click "Submit". If the module costs credits, you'll see a confirmation screen showing your current balance and the cost.
-4.  **Wait:** You'll be redirected to your dashboard. You can watch the status change from `QUEUED` to `WORKING` and finally `SUCCESS`.
+### 3.2. Refining with Jules (AI Assistant)
+If enabled, you will see a **Sparkles** icon on the module card.
+1.  Click the sparkles icon to open the **Refine with Jules** window.
+2.  Chat with Jules to customize the module's configuration to your specific needs before deploying.
 
-### 3.3. Managing Deployments
-*   **View Details:** Click the **Deployment ID** of any deployment to see:
-    *   **Logs:** Real-time logs of the build process. Great for understanding why a deployment failed.
-    *   **Variables:** The settings you used to create it.
-*   **Delete:** Click the trash icon to delete a deployment and remove its resources from the cloud.
+### 3.3. Launching a Deployment
+1.  Click on any module card to start the provisioning process.
+2.  **Configure:** Fill out the required variables (e.g., Project ID, Region).
+3.  **Confirm:** Review your settings. If the module has a credit cost, you will see the amount that will be deducted from your balance.
+4.  **Deploy:** Submit the form. You will be redirected to the status page where you can watch the deployment progress in real-time.
 
-## 4. Billing & Credits
+## 4. Managing Deployments
 
-Manage your finances on the **Billing** page.
+### 4.1. Monitoring & Actions
+*   **Logs:** Click on a deployment to view real-time build logs. This is essential for troubleshooting if a deployment fails.
+*   **Rating:** After a successful deployment, you can rate the module (1-5 stars) to help others identify high-quality modules.
+*   **Delete:** To remove a deployment and destroy its resources, click the **Trash** icon. **Warning:** This action is irreversible.
 
-### 4.1. Buying Credits
-*   **Subscriptions:** Subscribe to a monthly plan to get a steady stream of credits.
-*   **One-Time Purchase:** Need a top-up? Buy a specific amount of credits instantly.
-*   *Note: Payments are securely handled by Stripe.*
+## 5. Billing & Credits
 
-### 4.2. Tracking Usage
-*   **Credit Transactions:** View a history of every credit you've bought, been awarded, or spent on a deployment.
-*   **Project Invoices:** (If enabled) View monthly invoices for your deployed projects.
+Manage your platform credits and costs on the **Credits** page.
 
-## 5. Help & Support
+### 5.1. Dashboard Tabs
+*   **Credit Transactions:** A detailed history of every credit awarded, purchased, or spent. You can filter by date or deployment ID and export the data to CSV.
+*   **Project Costs:** (If enabled) View a breakdown of cloud infrastructure costs associated with your projects.
+*   **Project Invoices:** (If enabled) Access monthly invoices for your usage.
+*   **Buy Credits:** (If enabled) Purchase additional credits via one-time payments or manage your subscription tier.
+
+### 5.2. Subscriptions
+If subscription tiers are available, you can upgrade your plan to receive a monthly allowance of credits and access to premium features.
+
+## 6. Help & Support
 
 Need assistance? Visit the **Help** page.
 
-*   **Documentation:** Access guides like this one.
-*   **Contact Support:** Use the support form to send a message to the admin team.
-*   **ROI Calculator:** Use the built-in calculator to estimate how much time and money you're saving by using the platform compared to manual deployments.
-*   **Invite Colleagues:** Use the referral tool to generate a link or QR code to invite others to the platform.
+*   **Documentation:** Access user guides and tutorials.
+*   **Audio Tutorials:** Listen to step-by-step walkthroughs for common tasks.
+*   **Contact Support:** Use the built-in form to send a message directly to the support team.
+*   **Invite Users:** (If enabled) Share your unique referral link or QR code to invite friends to the platform. You can track your monthly referral usage directly on the card.
+*   **ROI Calculator:** Estimate your cost savings by using the platform's automation compared to manual deployment.
 
-## 6. Profile & Settings
+## 7. Profile & Settings
 
-*   **Theme:** Toggle between Light and Dark mode using the icon in the top navigation.
-*   **Profile:** Update your notification preferences or delete your account from the Profile menu.
+*   **Theme:** Toggle between Light and Dark mode using the sun/moon icon in the navigation bar.
+*   **Profile:** Click your avatar to access your profile settings or sign out.

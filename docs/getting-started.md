@@ -1,13 +1,14 @@
 ---
+id: getting-started
 title: Getting Started
-description: Getting started tutorial for the Rapid Application Deployment (RAD) platform
+description: Your first steps on the RAD platform
 ---
 
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Tutorial: Getting Started
+<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/getting-started.mp3" title="Getting Started Audio" />
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/tutorials/getting_started.m4a" title="Listen to the Getting Started Tutorial" />
+# Tutorial: Getting Started
 
 ## 1. Introduction
 Welcome to the Rapid Application Deployment (RAD) platform! This tutorial will guide you through your first steps: logging in, exploring the dashboard, and deploying your first module.
@@ -23,8 +24,9 @@ Welcome to the Rapid Application Deployment (RAD) platform! This tutorial will g
 The **Deployments** page is your main hub.
 *   **My Deployments:** This list is currently empty. It will show your apps once you deploy them.
 *   **Navigation Bar:**
-    *   **Deploy:** Go here to launch new apps.
     *   **Credits:** View your credit balance and transaction history.
+    *   **Deployments:** Manage your running applications and view logs.
+    *   **Deploy:** Go here to launch new apps.
     *   **Help:** Find guides, tutorials, and support.
 
 ## 4. Step 3: Deploy a Module

@@ -1,126 +1,56 @@
 ---
-title: Support & Resources
-sidebar_position: 10
-description: Get help with RAD Platform - troubleshooting guides, support resources, and documentation assistance
-keywords: ['support', 'help', 'troubleshooting', 'documentation', 'resources']
+id: support
+title: Support Guide
+description: Documentation for the Support role and troubleshooting
 ---
 
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Support & Resources
+<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/support-guide.mp3" title="Support Guide Audio" />
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflow/support_workflow.m4a" title="Listen to the Support Workflow" />
+# Support User Guide
 
-Welcome to the RAD Platform support resources. This page provides information on how to get help, report issues, and access additional resources.
+## 1. Introduction
 
-## Getting Help
+Welcome to the Support User Guide. As a member of the Support team, you have enhanced visibility into the platform's operations to assist users effectively. You possess all the capabilities of a Partner, with the additional privilege of viewing **All Deployments** made by any user on the platform.
 
-### Documentation
+## 2. Your Role & Privileges
 
-This comprehensive documentation site is your first resource for understanding platform features, learning how to perform specific tasks, troubleshooting common issues, and following best practices. Use the navigation menu to browse by topic or use the search functionality to find specific information.
+The Support role is designed to help you troubleshoot user issues and manage the module catalog.
 
-### Platform Help Page
+*   **View All Deployments:** Unlike standard users or partners (in default mode), you can see the deployment history for *every* user. This is critical for diagnosing failed builds or stuck deployments.
+*   **Partner Capabilities:** You have full access to the **Publish** feature, allowing you to connect your own repository and publish/update modules.
+*   **Credit Visibility:** You can view your own credit history and transaction logs.
 
-The platform includes a built-in Help page accessible from the main navigation with user guides providing quick access to role-specific guides, a support form to send messages directly to the support team, and user invitation capabilities for partners and admins.
+## 3. Managing Deployments
 
-## Reporting Issues
+Your primary workspace for support activities is the **Deployments** page.
 
-### Deployment Issues
+1.  **Navigate to Deployments:** Click the **Deployments** link in the main navigation bar.
+2.  **All Deployments Tab:** By default, or by clicking the tab, you will see the **All Deployments** view. This table lists every deployment on the platform.
+3.  **Search & Filter:** Use the search bar to find a specific deployment by:
+    *   **Deployment ID:** The unique identifier for the deployment.
+    *   **User Email:** Filter to see all deployments made by a specific user you are helping.
+    *   **Module Name:** Find all instances of a specific module.
+4.  **Inspect Logs:** Click on any **Deployment ID** to open the detailed view. Here you can see:
+    *   **Build Logs:** Raw output from the Cloud Build and Terraform processes. Look here for error messages (e.g., "Permissions denied", "Invalid variable").
+    *   **Status History:** The timeline of the deployment's lifecycle.
+    *   **Configuration:** The specific variables the user provided.
 
-If you encounter problems with a deployment, check deployment logs by clicking on the deployment ID, review your configuration parameters, ensure required resources and permissions exist, and copy exact error messages. Contact support with the deployment ID, module name, error message, configuration parameters (remove sensitive data), and screenshots if applicable.
+## 4. Publishing & Updating Modules
 
-### Billing Issues
+You can assist in maintaining the module catalog or testing fixes.
 
-For credit or billing problems, review your transaction history, verify payments were processed through Stripe, check your current credit balance, and contact support with transaction IDs, payment confirmation numbers, screenshots, and a description of expected vs. actual behavior.
+1.  **Configure Your Repo:** Go to your **Profile** and set up your GitHub token and repository (see the *Partner Guide* for detailed steps).
+2.  **Publish:** Go to the **Publish** page to scan your repo and update module definitions.
+3.  **Refining with Jules:** You can use the AI agent (if your API key is configured) to help debug or improve module code before publishing updates.
 
-### Technical Issues
+## 5. Troubleshooting Workflow
 
-For platform bugs or technical problems, try to reproduce the issue consistently, document the exact steps that cause the problem, and collect information including browser and version, operating system, screenshots or screen recordings, and console error messages (F12 in most browsers).
+When a user reports an issue:
 
-## Troubleshooting
-
-### Common Error Messages
-
-#### Missing Tables in Billing Tab
-
-**Symptom**: When navigating to the Project Costs tab (or other tabs) in the Billing section, the data table is missing or fails to load.
-
-**Possible Cause**: This issue often occurs when the user's session data is not fully synchronized with the frontend component, resulting in a missing User ID.
-
-**Diagnosis**:
-1. Open your browser's Developer Tools (F12).
-2. Navigate to the **Console** tab.
-3. Look for a debug message similar to: `BillingTabContent - Tab Changed {activeTab: 1, ..., userId: undefined}`.
-4. If `userId` is `undefined`, the component cannot fetch the necessary data.
-
-**Resolution**:
-1. Try refreshing the page to force a reload of the user session.
-2. Log out and log back in to refresh the authentication token and user profile.
-3. If the issue persists, please report it to the support team with the console logs attached.
-
-## Community Resources
-
-### GitHub Repository
-
-The RAD Platform documentation is open source at [https://github.com/techequitycloud/rad.github.io](https://github.com/techequitycloud/rad.github.io). You can submit pull requests to improve documentation, report documentation issues or suggest improvements, and participate in community discussions.
-
-## Frequently Asked Questions
-
-**How do I get started with the platform?**
-
-Begin with the Getting Started guide, then review the guide for your specific role (Admin, Partner, Agent, or User).
-
-**What cloud providers are supported?**
-
-The platform supports AWS, Azure, and Google Cloud Platform through Terraform-based modules.
-
-**Can I create custom modules?**
-
-Yes, if you have partner role. Configure your GitHub repository in your profile and publish custom modules.
-
-**How do I get more credits?**
-
-Purchase credits through the Billing page using one-time purchases or subscribe to a recurring tier.
-
-**What happens if I run out of credits?**
-
-You won't be able to deploy new modules until you purchase more credits. Existing deployments continue running.
-
-**Do credits expire?**
-
-No, credits do not expire. They remain in your account until used.
-
-**How long does a deployment take?**
-
-Deployment time varies by module complexity and cloud provider, typically ranging from 5-30 minutes.
-
-**Can I cancel a deployment in progress?**
-
-Yes, you can cancel a deployment from the Deployments page. Note that partially created resources may need manual cleanup.
-
-**How do I become a partner?**
-
-Contact an administrator to request partner status. They can grant partner privileges through the User Management interface.
-
-## Additional Resources
-
-### Terraform Documentation
-
-Since the platform uses Terraform for infrastructure provisioning:
-
-- **Terraform Registry**: [https://registry.terraform.io/](https://registry.terraform.io/)
-- **Terraform Tutorials**: [https://learn.hashicorp.com/terraform](https://learn.hashicorp.com/terraform)
-- **Provider Documentation**: Specific documentation for AWS, Azure, and GCP providers
-
-### Cloud Provider Documentation
-
-- **AWS**: [https://docs.aws.amazon.com/](https://docs.aws.amazon.com/)
-- **Azure**: [https://docs.microsoft.com/azure/](https://docs.microsoft.com/azure/)
-- **Google Cloud**: [https://cloud.google.com/docs](https://cloud.google.com/docs)
-
-## Contact Information
-
-- **GitHub Issues**: [https://github.com/techequitycloud/rad.github.io/issues](https://github.com/techequitycloud/rad.github.io/issues)
-- **Documentation**: [https://techequitycloud.github.io/rad.github.io/](https://techequitycloud.github.io/rad.github.io/)
-
-For urgent issues or security concerns, contact your platform administrator directly.
+1.  **Ask for the Deployment ID:** This is the fastest way to locate their specific problem.
+2.  **Search in "All Deployments":** Locate the record.
+3.  **Check the Status:** Is it `FAILURE`, `TIMEOUT`, or stuck in `WORKING`?
+4.  **Review Logs:** Identify the root cause (e.g., quota exceeded, bad configuration, API error).
+5.  **Advise the User:** Based on your findings, guide the user to retry with different variables or escalate the issue to Engineering/Admin if it's a platform bug.

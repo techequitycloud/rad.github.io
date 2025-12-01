@@ -1,13 +1,13 @@
 ---
 title: Agent Guide
-description: Agent Guide for the Rapid Application Deployment (RAD) platform
+description: Guide for agents to manage referrals and revenue
 ---
 
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Agent Guide
+<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/agent-guide.mp3" title="Agent Guide Audio" />
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/agent_guide.m4a" title="Listen to the Agent Guide" />
+# Agent Guide
 
 ## 1. Introduction
 
@@ -36,5 +36,5 @@ This report gives you a view of *what* is selling across your referrals.
 *   **Data Points:** View Module Name, Created At date, Credit Cost, and Revenue.
 *   **Insight:** Use this to understand which products are most popular among your referrals so you can focus your marketing efforts.
 
-### 3.3. Additive Role
-Note that your Agent role is **additive**. You still have all the features of a standard user (deploying modules, buying credits) plus these extra reporting tools.
+### 3.3. Accessing Features
+As an Agent, your primary workspace is the **Revenue** dashboard. If you are also a registered **User** or **Partner**, you will see additional tabs (like Deployments or Publish) in your navigation bar alongside your agent tools.

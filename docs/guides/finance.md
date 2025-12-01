@@ -1,51 +1,53 @@
 ---
 title: Finance Guide
-description: Finance Guide for the Rapid Application Deployment (RAD) platform
+description: Financial oversight, billing management, and revenue reporting
 ---
 
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Finance User Guide
-
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.m4a" title="Listen to the Finance Guide" />
+<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/finance-guide.mp3" title="Finance Guide Audio" />
 
 ## 1. Introduction
 
-Welcome to the Finance Guide. This documentation is intended for users with the **Finance** role. This role provides specialized access to financial data, invoices, and revenue reports without necessarily granting full administrative control over the platform configuration.
+Welcome to the Finance Guide. This guide details the tools available for financial oversight, including billing management, subscription configuration, and revenue tracking.
 
-## 2. Access & Permissions
+## 2. Accessing the Finance Dashboard
 
-As a Finance user, you have elevated access to the **Billing** section of the application. Your view includes data for **all users** and **all projects** across the organization, allowing for comprehensive auditing and financial reporting.
+To access financial tools, you must have the **Finance** role.
+1.  Navigate to the **Billing** page via the main navigation bar.
+2.  If you do not see this link, ensure your account has the correct permissions.
 
-## 3. Financial Reporting Tools
+## 3. Subscription Management
 
-Navigate to the **Billing** page to access your toolset.
+Finance users can manage the subscription tiers available to users.
 
-### 3.1. Project Invoices
-This is your primary tool for monthly reconciliation.
-*   **View:** Select a month to see a line-item breakdown of costs for every project.
-*   **Details:** See the Project Name, ID, Total Cost (in currency), and the Credit equivalent.
-*   **Export:** Download the invoice data as a CSV file for import into your external accounting software.
+*   **Create Tier:** Navigate to the **Subscription Tiers** tab and click **Add New Tier**. Define the name, price, credit allocation, and features.
+*   **Edit Tier:** Modify existing tiers to adjust pricing or credit amounts.
+*   **Delete Tier:** Remove discontinued tiers.
 
-### 3.2. Project Costs
-Analyze historical spending trends.
-*   **Date Range:** Select any custom date range to view costs.
-*   **Filter:** Drill down by Module type to see which applications are driving costs.
-*   **Source:** This data is pulled directly from the Google Cloud Billing export in BigQuery, ensuring it matches your cloud invoice.
+## 4. Credit Economy Configuration
 
-### 3.3. Revenue Reports
-Track the platform's incoming value ("True Revenue"), defined as deployment costs paid for with purchased credits.
+Control the platform's virtual currency settings under the **Credit Settings** tab.
 
-*   **Module Revenue:** See which products are generating the most revenue.
-*   **User Revenue:** Audit revenue generation by specific users or groups.
-*   **Agent Revenue:** Track commissions and revenue driven by the Agent program.
+*   **Exchange Rate:** Set the "Price Per Credit" to determine how much users pay for credits.
+*   **Sign-up Bonuses:** Configure the amount of free credits awarded to new users.
+*   **Monthly Top-ups:** Set recurring credit grants for all users.
+*   **Low Balance Alerts:** Configure thresholds for automated low-balance email notifications.
 
-### 3.4. User Credit Management
-You have read-access to the **User Credits** table (or write-access if also an Admin), allowing you to audit user balances:
-*   **Awarded Credits:** Free credits given by the platform.
-*   **Purchased Credits:** Credits bought via Stripe.
-*   **Partner Credits:** Monthly allowances.
+## 5. Revenue & Cost Reporting
 
-## 4. Subscription Management
+The platform provides detailed reports to track financial health.
 
-You can view the **Subscription Tiers** configuration to understand the current pricing models and credit packages being offered to customers.
+*   **Project Costs:** View infrastructure costs incurred by user deployments.
+*   **Project Invoices:** Download monthly PDF invoices for record-keeping.
+*   **Module Revenue:** Track which modules are generating the most revenue.
+*   **User Revenue:** Monitor revenue generation on a per-user basis.
+*   **Agent Revenue:** (If applicable) Track commissions and revenue driven by agents.
+
+## 6. User Credit Management
+
+Manually adjust user credit balances when necessary.
+
+1.  Go to the **Credit Management** tab.
+2.  Search for a user by email.
+3.  Update their **Awarded** or **Purchased** credit balance.

@@ -1,36 +1,64 @@
+---
+title: User Tutorial
+description: Learn how to deploy applications and manage credits
+---
+
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Tutorial: Managing Credits & Costs
+<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/user-tutorial.mp3" title="User Tutorial Audio" />
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflow/user_workflow.m4a" title="Listen to the User Workflow" />
+# Tutorial: User Guide
 
 ## 1. Introduction
-As a user, it's important to manage your budget. This tutorial shows you how to buy credits and track your spending.
+Welcome to the platform! This tutorial covers the core actions you'll perform as a user: deploying applications, managing them, and tracking your credits.
 
-## 2. Step 1: Check Your Balance
-1.  Look at the top right of the navigation bar.
-2.  Your current **Credit Balance** is always displayed there.
+## 2. Step 1: Deploy a Module
+The core feature of the platform is deploying pre-configured software modules.
 
-## 3. Step 2: Buy Credits
-You're running low! Let's top up.
+1.  Click **Deploy** in the top navigation bar.
+2.  **Find a Module:**
+    *   Browse the **Platform Modules** tab for public modules.
+    *   Use the search bar to find modules by name.
+    *   If you have access to partner-specific modules, click the **Partner Modules** tab.
+3.  **Start Deployment:**
+    *   Click on a module card to start the configuration process.
+    *   Fill in the required variables (e.g., project name, region).
+    *   Review the estimated cost (if credits are enabled).
+    *   Click **Deploy** to launch your application.
 
-1.  Click **Billing**.
-2.  On the **Buy Credits** tab, look at the Subscription Tiers.
-3.  **Option A (Subscribe):** Click **Subscribe** on the "Pro Plan". Follow the Stripe prompts.
-4.  **Option B (One-Time):** Enter "1000" in the custom amount box and click **Buy**.
-5.  After payment, you are redirected back. Your balance updates immediately.
+## 3. Step 2: Manage Your Deployments
+Once you've deployed a module, you can monitor and manage it.
 
-## 4. Step 3: Review Transactions
-Where did your credits go?
+1.  Click **Deployments** in the navigation bar.
+2.  **View Status:**
+    *   You will see a list of your deployments with their current status (e.g., `CREATING`, `ACTIVE`, `FAILED`).
+    *   Use the search bar to find specific deployments by name or ID.
+3.  **View Details & Logs:**
+    *   Click on any deployment row to expand it.
+    *   You can view detailed build logs to troubleshoot issues or verify success.
+4.  **Delete a Deployment:**
+    *   If you no longer need an application, click the trash icon (Delete) to remove it and stop any associated costs.
 
-1.  Click the **Credit Transactions** tab.
-2.  Review the list.
-    *   You should see a **PURCHASE** entry for the credits you just bought.
-    *   You should see **DEPLOYMENT** entries for the apps you launched.
-    *   Click a **Deployment ID** to see exactly which app spent the money.
+## 4. Step 3: Manage Credits & Costs
+If your platform uses a credit system, you'll need to manage your balance.
 
-## 5. Step 4: Export Data
-Need this for your expense report?
+1.  Click **Credits** in the navigation bar.
+2.  **Check Balance:** Your current balance is displayed in the top header stats or on this page.
+3.  **Buy Credits (if enabled):**
+    *   Click the **Buy Credits** tab (only visible if subscriptions are enabled).
+    *   Choose a subscription plan or purchase a one-time credit bundle.
+4.  **Review Transactions:**
+    *   The **Credit Transactions** tab shows a history of your spending.
+    *   You can see exactly how many credits were spent on each deployment.
+    *   Click **Export CSV** to download a report for your records.
 
-1.  Click the **Export to CSV** button on the transaction table.
-2.  A `.csv` file will download to your computer containing your full history.
+## 5. Step 4: Get Help
+Need assistance or more detailed guides?
+
+1.  Click **Help** in the navigation bar.
+2.  **Read Guides:** Access the **User Guide** tab for detailed documentation.
+3.  **Contact Support:**
+    *   Click the **Support** tab.
+    *   Fill out the support form to send a message directly to the admin team.
+    *   **Invite Friends:** (If enabled) Use the "Invite Friends" card to copy your referral link or scan the QR code to invite new users.
+    *   If enabled, use the **ROI Calculator** to estimate your savings.
