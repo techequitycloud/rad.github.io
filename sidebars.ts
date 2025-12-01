@@ -35,6 +35,7 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'tutorials/user', label: 'User' },
         { type: 'doc', id: 'tutorials/agent', label: 'Agent' },
         { type: 'doc', id: 'tutorials/finance', label: 'Finance' },
+        { type: 'doc', id: 'tutorials/support', label: 'Support' },
       ],
     },
     { type: 'doc', id: 'support', label: 'Support' },

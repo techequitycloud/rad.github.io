@@ -1,3 +1,12 @@
+---
+title: Support Tutorial
+description: Learn how to troubleshoot user deployments
+---
+
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
+<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/support-tutorial.mp3" title="Support Tutorial Audio" />
+
 # Tutorial: Support Workflow
 
 ## 1. Introduction

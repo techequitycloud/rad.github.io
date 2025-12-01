@@ -1,3 +1,12 @@
+---
+title: Agent Guide
+description: Guide for agents to manage referrals and revenue
+---
+
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
+<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/agent-guide.mp3" title="Agent Guide Audio" />
+
 # Agent Guide
 
 ## 1. Introduction

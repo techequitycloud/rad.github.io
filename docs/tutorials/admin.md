@@ -1,3 +1,12 @@
+---
+title: Admin Tutorial
+description: Step-by-step setup for platform administrators
+---
+
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
+<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/admin-tutorial.mp3" title="Admin Tutorial Audio" />
+
 # Tutorial: Administrator Setup
 
 ## 1. Introduction

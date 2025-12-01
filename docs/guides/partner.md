@@ -1,3 +1,12 @@
+---
+title: Partner Guide
+description: Guide for partners to publish and manage private modules
+---
+
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
+<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/partner-guide.mp3" title="Partner Guide Audio" />
+
 # Partner Guide
 
 ## 1. Introduction
