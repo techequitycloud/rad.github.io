@@ -1,13 +1,13 @@
 # Settings Configuration and Management
 
-This document provides a technical deep-dive into the implementation of the settings configuration and management feature, accessible via the "Setup Menu" navigation link in the web application. It is intended for technical professionals responsible for maintaining and extending the system.
+This document provides a technical deep-dive into the implementation of the global settings configuration feature, accessible via the "Setup" navigation link in the web application (often referred to as the "Setup Menu"). It is intended for technical professionals responsible for maintaining and extending the system.
 
 ## 1. Overview
 
 The settings configuration feature provides a centralized interface for administrators to manage the platform's core operational parameters. It is implemented as a multi-step form that guides the administrator through various configuration sections. The system is designed to be robust, secure, and developer-friendly, separating general configuration from sensitive data.
 
 - **Purpose**: To provide a user-friendly interface for administrators to configure the platform's behavior without needing to modify code or infrastructure directly.
-- **Trigger**: The feature is triggered by an administrator navigating to the "Setup Menu". The form is pre-populated with existing settings from the database. The final submission is triggered when the admin clicks the "Submit" button on the last step of the form.
+- **Trigger**: The feature is triggered by an administrator navigating to the "Setup" page (`/setup`). The form is pre-populated with existing settings from the database. The final submission is triggered when the admin clicks the "Submit" button on the last step of the form.
 - **Interactions**:
     - **Frontend**: The UI is built with React, using Formik for state management and Yup for validation.
     - **Backend**: It interacts with two primary backend services:
@@ -30,10 +30,10 @@ The settings configuration feature provides a centralized interface for administ
 
 The frontend is composed of three main React components that work together to render the settings form.
 
-- **`Admin.tsx` (`/src/routes/Admin.tsx`)**: This is the entry point and container component for the settings page. Its primary responsibilities are:
+- **`Setup.tsx` (`/src/routes/Setup.tsx`)**: This is the entry point and container component for the settings page. Its primary responsibilities are:
     - Fetching the current application settings and secret status using the `useSettings` and `useSecret` hooks.
     - Providing the top-level layout and navigation (e.g., the "Back" button).
-    - Rendering the `DefaultCreateForm` component and passing the fetched data and necessary callback functions to it.
+    - Rendering the `DefaultCreateForm` component and passing the fetched data, the `DEFAULT_ADMIN_VARS_JSON` schema, and necessary callback functions to it.
 
 - **`DefaultCreateForm.tsx` (`/src/components/forms/DefaultCreateForm.tsx`)**: This component orchestrates the form logic.
     - It uses the `FormikStepper` component to create a multi-step form experience.
@@ -52,11 +52,17 @@ The frontend is composed of three main React components that work together to re
 The backend consists of two API endpoints that handle the persistence of settings and secrets.
 
 - **`/api/settings.ts`**: This endpoint manages the lifecycle of the main application settings.
-    - **`GET`**: Fetches the current settings document from the "settings" collection in Firestore, scoped by the `gcpProjectId`. If no settings document exists, it returns a default configuration object. It also masks the mail server password if one is set.
+    - **`GET`**: Fetches the current settings document from the "settings" collection in Firestore, scoped by the `gcpProjectId`.
+        - **Defaults**: If no settings document exists, it returns a hardcoded default configuration object (e.g., `creditsPerUnit: 1`, `refreshInterval: 300`).
+        - **Security**: It always masks the `mail_server_password` if one is set, ensuring it is never exposed to the client.
     - **`POST`**: This is an idempotent "upsert" operation. It checks if a settings document already exists.
-        - If yes, it updates the existing document with the new values.
-        - If no, it creates a new document.
-    - After successfully saving the data, it clears the global settings cache (`clearSettingsCache`) and publishes a message to a Pub/Sub topic to notify other parts of the system about the change.
+        - **Validation**: It enforces specific validation rules, such as ensuring `maximumReferrals` is a non-negative integer under 1000.
+        - **Singleton Pattern**: It enforces a single settings document per `gcpProjectId`, updating the existing one if found.
+        - **Tracking**: It tracks changes to critical fields (e.g., `signupCreditAmount`, `private_mode`) and logs them for audit purposes.
+    - **Notifications & Caching**: After successfully saving the data, it:
+        - Clears the global settings cache (`clearSettingsCache`) to ensure immediate consistency.
+        - Publishes a "SETTINGS" action message to the Pub/Sub topic.
+        - Sends an "admin-notification" Pub/Sub message detailing exactly which fields changed.
 
 - **`/api/secret.ts`**: This endpoint provides a secure mechanism for storing sensitive data.
     - It is protected by the `withAuth` middleware, ensuring only authenticated administrators can access it.
@@ -65,40 +71,45 @@ The backend consists of two API endpoints that handle the persistence of setting
 
 ## 4. Feature Breakdown
 
-### 4.1. Organisation, Folder ID, and Scope
+The configuration fields are defined in `DEFAULT_ADMIN_VARS_JSON` (`/src/utils/data.ts`) and are grouped logically in the UI.
 
-- **Fields**: `gcp_organization_domain`, `folder_id`, `enable_folder_scope`
+### 4.1. Organisation and Scope (Step 1)
+
+- **Fields**: `organization_id`, `folder_id`, `enable_folder_scope`
 - **Purpose**: These settings define the scope within Google Cloud Platform where the application will operate and query for resources.
-- **`gcp_organization_domain`**: Specifies the GCP organization domain (e.g., `techequity.cloud`). This is used as the top-level scope for BigQuery queries.
-- **`folder_id`**: The ID of a specific GCP folder.
+- **`organization_id`**: Specifies the GCP organization domain (e.g., `techequity.cloud`). Corresponds to `gcp_organization_domain` in the backend type definition. Used as the top-level scope for BigQuery queries when folder scope is disabled.
+- **`folder_id`**: The ID of a specific GCP folder (corresponds to `gcp_client_folder_id`).
 - **`enable_folder_scope`**: A boolean toggle.
     - If **true**, the `folder_id` is used as the primary scope for BigQuery queries, narrowing the focus of cost and usage reports.
-    - If **false**, the `gcp_organization_domain` is used, providing an organization-wide view.
-- **Implementation**: The `getBigQueryScope` function in `/src/utils/Api_SeverSideCon.ts` reads these settings to construct the appropriate BigQuery query clauses.
+    - If **false**, the `organization_id` is used, providing an organization-wide view.
 
-### 4.2. Billing Account ID, Credit, and Subscription Enablement
+### 4.2. Billing and Credits (Step 2)
 
 - **Fields**: `billing_account_id`, `enable_credits`, `enable_subscription`
-- **Purpose**: To control the platform's monetization features.
+- **Purpose**: To control the platform's monetization and cost tracking features.
 - **`billing_account_id`**: The ID of the GCP billing account to associate with deployed projects.
 - **`enable_credits`**: A master switch for the credits system.
     - If **true**, the platform tracks user credit balances, deducts credits for deployments, and displays credit-related information in the UI. The "Credits" navigation link becomes visible.
     - If **false**, all credit-related functionality is disabled.
 - **`enable_subscription`**: A switch for the subscription tier feature. This field is only visible and can only be enabled if `enable_credits` is true.
     - If **true**, users can subscribe to tiers to receive recurring credits. The "Buy Credits" and subscription management UIs are enabled.
-    - If **false**, the subscription system is disabled.
+    - If **false**, the subscription system is disabled, and `require_credit_purchases` is automatically set to false in the backend.
 
-### 4.3. Private Mode, Cleanup, and Retention
+### 4.3. Data Management and Privacy (Step 3)
 
-- **Fields**: `private_mode`, `cleanupSchedule`, `retentionPeriod`
-- **Purpose**: To manage data visibility, privacy, and automated cleanup.
+- **Fields**: `private_mode`, `cleanupSchedule`, `retentionPeriod`, `enableSoftDelete`, `enableOrphanCleanup`, `notifyBeforeDelete`, `softDeleteGracePeriod`
+- **Purpose**: To manage data visibility, privacy, and automated cleanup policies.
 - **`private_mode`**: A boolean toggle affecting data visibility for 'partner' roles.
-    - If **true**, partners can see all deployment data across the platform, similar to an admin.
+    - If **true**, partners can see all deployment data across the platform.
     - If **false**, partners can only see their own deployment data.
-- **`cleanupSchedule`**: A dropdown (`Daily`, `Weekly`, `Monthly`) that configures the frequency of the automated deployment cleanup job. This setting is used by a Cloud Scheduler job to trigger the cleanup Cloud Function.
-- **`retentionPeriod`**: An integer representing the number of days to retain deployment history. The cleanup job, when triggered, will delete any deployment records (and their associated GCS artifacts) older than this period. A null or zero value disables cleanup.
+- **`cleanupSchedule`**: A dropdown (`Daily`, `Weekly`, `Monthly`) that configures the frequency of automated cleanup jobs.
+- **`retentionPeriod`**: An integer (options: 30, 90, 180, 365) representing the days to retain deployment history. Records older than this are deleted.
+- **`enableSoftDelete`**: Enables a grace period before records are permanently deleted.
+- **`softDeleteGracePeriod`**: The number of days (default: 7) a record remains in the "soft deleted" state before being permanently removed.
+- **`enableOrphanCleanup`**: Enables the deletion of orphaned records in the cloud storage bucket that no longer have a corresponding database entry.
+- **`notifyBeforeDelete`**: If enabled, users are notified before their records are permanently deleted.
 
-### 4.4. Notification Configuration
+### 4.4. Notifications (Step 4)
 
 - **Fields**: `email_notifications`, `mail_server_email`, `mail_server_password`, `support_email`
 - **Purpose**: To configure the platform's ability to send email notifications.
@@ -108,3 +119,6 @@ The backend consists of two API endpoints that handle the persistence of setting
 - **`mail_server_email`**: The username/email address for the SMTP server.
 - **`mail_server_password`**: The password for the SMTP server. This value is **never** stored in Firestore. It is sent directly to the `/api/secret` endpoint and stored securely in Google Cloud Secret Manager under the key `mailBoxCred`.
 - **`support_email`**: The email address to be used as the "from" or "reply-to" address in outgoing support and notification emails.
+
+### Note on Credit Values
+While the `/api/settings` endpoint supports fields like `signupCreditAmount`, `referralCreditAmount`, and `creditsPerUnit`, these are **not** managed via the main "Setup" form described here. Instead, they are managed via the "Credits" or "Billing" interface (using the `AdminCreditForms` component), which allows for granular control over credit economics without cluttering the global infrastructure setup.
