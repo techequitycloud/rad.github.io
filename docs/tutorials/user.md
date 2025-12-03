@@ -63,13 +63,3 @@ Need assistance or more detailed guides?
     *   **Invite Friends:** (If enabled) Use the "Invite Friends" card to copy your referral link or scan the QR code to invite new users.
     *   If enabled, use the **ROI Calculator** to estimate your savings.
 
-## 6. Workflow Resources
-
-<img src="https://storage.googleapis.com/rad-public-2b65/guides/user_workflow.png" alt="User Workflow" style={{marginBottom: '20px'}} />
-
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/user_workflow.m4a" title="User Workflow Audio" />
-
-<video width="100%" controls style={{marginTop: '20px'}}>
-  <source src="https://storage.googleapis.com/rad-public-2b65/guides/user_workflow.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>

@@ -33,13 +33,3 @@ This tutorial is for Agents. You will learn how to find your referral link and t
 2.  See which modules your referred users are deploying most frequently.
 3.  Use this data to tailor your marketing or recommendations.
 
-## 5. Workflow Resources
-
-<img src="https://storage.googleapis.com/rad-public-2b65/guides/agent_workflow.png" alt="Agent Workflow" style={{marginBottom: '20px'}} />
-
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/agent_workflow.m4a" title="Agent Workflow Audio" />
-
-<video width="100%" controls style={{marginTop: '20px'}}>
-  <source src="https://storage.googleapis.com/rad-public-2b65/guides/agent_workflow.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>

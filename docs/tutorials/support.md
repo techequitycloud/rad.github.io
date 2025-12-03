@@ -45,13 +45,3 @@ If you have configured your **Jules API Key** in your Profile:
 3.  Click the **Sparkles Icon** (✨).
 4.  Ask Jules to analyze the code or suggest a fix for the error you found in the logs.
 
-## 6. Workflow Resources
-
-<img src="https://storage.googleapis.com/rad-public-2b65/guides/support_workflow.png" alt="Support Workflow" style={{marginBottom: '20px'}} />
-
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/support_workflow.m4a" title="Support Workflow Audio" />
-
-<video width="100%" controls style={{marginTop: '20px'}}>
-  <source src="https://storage.googleapis.com/rad-public-2b65/guides/support_workflow.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>

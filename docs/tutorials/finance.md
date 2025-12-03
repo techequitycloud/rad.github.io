@@ -46,13 +46,3 @@ This tutorial guides you through the key responsibilities of a Finance user: cre
 4.  Add `500` credits to the **Awarded** field as a goodwill gesture.
 5.  Click **Save**.
 
-## 6. Workflow Resources
-
-<img src="https://storage.googleapis.com/rad-public-2b65/guides/finance_workflow.png" alt="Finance Workflow" style={{marginBottom: '20px'}} />
-
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/finance_workflow.m4a" title="Finance Workflow Audio" />
-
-<video width="100%" controls style={{marginTop: '20px'}}>
-  <source src="https://storage.googleapis.com/rad-public-2b65/guides/finance_workflow.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
