@@ -7,7 +7,7 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 
 <AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/support-tutorial.mp3" title="Support Workflow Audio" />
 
-# Workflow: Support
+# Support Workflow
 
 ## 1. Introduction
 This tutorial is designed for **Support** users. You will learn how to use your enhanced permissions to troubleshoot user deployments and manage the module catalog.

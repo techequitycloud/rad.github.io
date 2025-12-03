@@ -7,7 +7,7 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 
 <AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/support-guide.mp3" title="Support Guide Audio" />
 
-# Support User Guide
+# Support Guide
 
 ## 1. Introduction
 
