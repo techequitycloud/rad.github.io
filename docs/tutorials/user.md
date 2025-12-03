@@ -7,7 +7,7 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 
 <AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/user-tutorial.mp3" title="User Workflow Audio" />
 
-# Workflow: User Guide
+# User Workflow
 
 ## 1. Introduction
 Welcome to the platform! This tutorial covers the core actions you'll perform as a user: deploying applications, managing them, and tracking your credits.

@@ -7,6 +7,8 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 
 <AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/finance-tutorial.mp3" title="Finance Workflow Audio" />
 
+# Finance Workflow
+
 ## 1. Introduction
 
 This tutorial guides you through the key responsibilities of a Finance user: creating subscription plans, setting credit rates, and generating financial reports.
