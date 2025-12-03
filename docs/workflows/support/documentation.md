@@ -1,13 +1,17 @@
 ---
 title: Support Tutorial
 description: Learn how to troubleshoot user deployments
+sidebar_label: Documentation
 ---
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
-<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/support-tutorial.mp3" title="Support Tutorial Audio" />
 
 # Tutorial: Support Workflow
+
+## Overview
+
+![Support Workflow Overview](https://storage.cloud.google.com/rad-public-2b65/guides/support_workflow.png)
+
 
 ## 1. Introduction
 This tutorial is designed for **Support** users. You will learn how to use your enhanced permissions to troubleshoot user deployments and manage the module catalog.

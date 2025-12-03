@@ -104,24 +104,24 @@ const config: Config = {
           title: 'Documentation',
           items: [
             {
-              label: 'Getting Started',
+              label: 'Quick Start',
               to: '/docs/getting-started',
             },
             {
               label: 'Administrator Guide',
-              to: '/docs/guides/admin',
+              to: '/docs/guides/admin/documentation',
             },
             {
               label: 'Partner Guide',
-              to: '/docs/guides/partner',
+              to: '/docs/guides/partner/documentation',
             },
             {
               label: 'User Guide',
-              to: '/docs/guides/user',
+              to: '/docs/guides/user/documentation',
             },
             {
               label: 'Finance Guide',
-              to: '/docs/guides/finance',
+              to: '/docs/guides/finance/documentation',
             },
           ],
         },
@@ -138,7 +138,7 @@ const config: Config = {
             },
             {
               label: 'Support',
-              to: '/docs/support',
+              to: '/docs/guides/support/documentation',
             },
           ],
         },

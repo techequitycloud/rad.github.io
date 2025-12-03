@@ -1,11 +1,12 @@
 ---
 title: Agent Tutorial
 description: Learn how to refer users and track commissions
+sidebar_label: Documentation
 ---
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
+## Overview
 
-<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/agent-tutorial.mp3" title="Agent Tutorial Audio" />
+![Agent Workflow Overview](https://storage.cloud.google.com/rad-public-2b65/guides/agent_workflow.png)
 
 ## 1. Introduction
 

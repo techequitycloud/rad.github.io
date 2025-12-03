@@ -1,14 +1,17 @@
 ---
-id: support
 title: Support Guide
 description: Documentation for the Support role and troubleshooting
+sidebar_label: Documentation
 ---
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
-<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/support-guide.mp3" title="Support Guide Audio" />
 
 # Support User Guide
+
+## Overview
+
+![Support Guide Overview](https://storage.cloud.google.com/rad-public-2b65/guides/support_guide.png)
+
 
 ## 1. Introduction
 

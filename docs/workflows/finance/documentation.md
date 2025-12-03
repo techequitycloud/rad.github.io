@@ -1,11 +1,12 @@
 ---
 title: Finance Tutorial
 description: Learn how to manage billing, subscriptions, and credits
+sidebar_label: Documentation
 ---
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
+## Overview
 
-<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/finance-tutorial.mp3" title="Finance Tutorial Audio" />
+![Finance Workflow Overview](https://storage.cloud.google.com/rad-public-2b65/guides/finance_workflow.png)
 
 ## 1. Introduction
 

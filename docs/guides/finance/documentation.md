@@ -1,11 +1,12 @@
 ---
 title: Finance Guide
 description: Financial oversight, billing management, and revenue reporting
+sidebar_label: Documentation
 ---
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
+## Overview
 
-<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/finance-guide.mp3" title="Finance Guide Audio" />
+![Finance Guide Overview](https://storage.cloud.google.com/rad-public-2b65/guides/finance_guide.png)
 
 ## 1. Introduction
 

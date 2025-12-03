@@ -1,13 +1,17 @@
 ---
 title: User Tutorial
 description: Learn how to deploy applications and manage credits
+sidebar_label: Documentation
 ---
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
-<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/user-tutorial.mp3" title="User Tutorial Audio" />
 
 # Tutorial: User Guide
+
+## Overview
+
+![User Workflow Overview](https://storage.cloud.google.com/rad-public-2b65/guides/user_workflow.png)
+
 
 ## 1. Introduction
 Welcome to the platform! This tutorial covers the core actions you'll perform as a user: deploying applications, managing them, and tracking your credits.

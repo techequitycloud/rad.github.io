@@ -1,13 +1,17 @@
 ---
 title: Admin Tutorial
 description: Step-by-step setup for platform administrators
+sidebar_label: Documentation
 ---
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
-<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/admin-tutorial.mp3" title="Admin Tutorial Audio" />
 
 # Tutorial: Administrator Setup
+
+## Overview
+
+![Admin Workflow Overview](https://storage.cloud.google.com/rad-public-2b65/guides/admin_workflow.png)
+
 
 ## 1. Introduction
 This tutorial covers the essential tasks for setting up a new RAD platform instance. You will configure global settings, connect the platform repository, publish modules, and configure monetization settings like subscription tiers and user credits.

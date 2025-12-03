@@ -14,31 +14,119 @@ import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
  */
 const sidebars: SidebarsConfig = {
   docsSidebar: [
-    'getting-started',
+    {
+      type: 'doc',
+      id: 'getting-started',
+      label: 'Quick Start',
+    },
     {
       type: 'category',
-      label: 'Platform Guides',
+      label: 'Guides',
       items: [
-        { type: 'doc', id: 'guides/admin', label: 'Admin' },
-        { type: 'doc', id: 'guides/partner', label: 'Partner' },
-        { type: 'doc', id: 'guides/agent', label: 'Agent' },
-        { type: 'doc', id: 'guides/user', label: 'User' },
-        { type: 'doc', id: 'guides/finance', label: 'Finance' },
+        {
+          type: 'category',
+          label: 'Admin',
+          items: [
+            'guides/admin/documentation',
+            'guides/admin/audio_video',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Partner',
+          items: [
+            'guides/partner/documentation',
+            'guides/partner/audio_video',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Agent',
+          items: [
+            'guides/agent/documentation',
+            'guides/agent/audio_video',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'User',
+          items: [
+            'guides/user/documentation',
+            'guides/user/audio_video',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Finance',
+          items: [
+            'guides/finance/documentation',
+            'guides/finance/audio_video',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Support',
+          items: [
+            'guides/support/documentation',
+            'guides/support/audio_video',
+          ],
+        },
       ],
     },
     {
       type: 'category',
-      label: 'Tutorials',
+      label: 'Workflow',
       items: [
-        { type: 'doc', id: 'tutorials/admin', label: 'Admin' },
-        { type: 'doc', id: 'tutorials/partner', label: 'Partner' },
-        { type: 'doc', id: 'tutorials/user', label: 'User' },
-        { type: 'doc', id: 'tutorials/agent', label: 'Agent' },
-        { type: 'doc', id: 'tutorials/finance', label: 'Finance' },
-        { type: 'doc', id: 'tutorials/support', label: 'Support' },
+        {
+          type: 'category',
+          label: 'Admin',
+          items: [
+            'workflows/admin/documentation',
+            'workflows/admin/audio_video',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Partner',
+          items: [
+            'workflows/partner/documentation',
+            'workflows/partner/audio_video',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'User',
+          items: [
+            'workflows/user/documentation',
+            'workflows/user/audio_video',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Agent',
+          items: [
+            'workflows/agent/documentation',
+            'workflows/agent/audio_video',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Finance',
+          items: [
+            'workflows/finance/documentation',
+            'workflows/finance/audio_video',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Support',
+          items: [
+            'workflows/support/documentation',
+            'workflows/support/audio_video',
+          ],
+        },
       ],
     },
-    { type: 'doc', id: 'support', label: 'Support' },
   ],
 };
 

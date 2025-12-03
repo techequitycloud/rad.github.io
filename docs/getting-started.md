@@ -1,6 +1,6 @@
 ---
 id: getting-started
-title: Getting Started
+title: Quick Start
 description: Your first steps on the RAD platform
 ---
 
@@ -8,7 +8,7 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 
 <AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/getting-started.mp3" title="Getting Started Audio" />
 
-# Tutorial: Getting Started
+# Tutorial: Quick Start
 
 ## 1. Introduction
 Welcome to the Rapid Application Deployment (RAD) platform! This tutorial will guide you through your first steps: logging in, exploring the dashboard, and deploying your first module.

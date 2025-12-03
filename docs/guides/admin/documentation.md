@@ -1,13 +1,17 @@
 ---
 title: Admin Guide
 description: Comprehensive guide for platform administrators
+sidebar_label: Documentation
 ---
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
-<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/admin-guide.mp3" title="Admin Guide Audio" />
 
 # Admin User Guide
+
+## Overview
+
+![Admin Guide Overview](https://storage.cloud.google.com/rad-public-2b65/guides/admin_guide.png)
+
 
 ## 1. Introduction
 
