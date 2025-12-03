@@ -7,7 +7,7 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 
 <AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/admin-guide.mp3" title="Admin Guide Audio" />
 
-# Admin User Guide
+# Admin Guide
 
 ## 1. Introduction
 

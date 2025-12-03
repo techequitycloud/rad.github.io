@@ -7,6 +7,8 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 
 <AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/finance-guide.mp3" title="Finance Guide Audio" />
 
+# Finance Guide
+
 ## 1. Introduction
 
 Welcome to the Finance Guide. This guide details the tools available for financial oversight, including billing management, subscription configuration, and revenue tracking.

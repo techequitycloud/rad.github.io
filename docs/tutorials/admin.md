@@ -7,7 +7,7 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 
 <AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/admin-tutorial.mp3" title="Admin Workflow Audio" />
 
-# Workflow: Administrator Setup
+# Admin Workflow
 
 ## 1. Introduction
 This tutorial covers the essential tasks for setting up a new RAD platform instance. You will configure global settings, connect the platform repository, publish modules, and configure monetization settings like subscription tiers and user credits.
@@ -74,13 +74,3 @@ If a user needs extra credits or adjustments:
 5.  Click **Save**.
 6.  The user receives the credits instantly!
 
-## 8. Workflow Resources
-
-<img src="https://storage.googleapis.com/rad-public-2b65/guides/admin_workflow.png" alt="Admin Workflow" style={{marginBottom: '20px'}} />
-
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/admin_workflow.m4a" title="Admin Workflow Audio" />
-
-<video width="100%" controls style={{marginTop: '20px'}}>
-  <source src="https://storage.googleapis.com/rad-public-2b65/guides/admin_workflow.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
