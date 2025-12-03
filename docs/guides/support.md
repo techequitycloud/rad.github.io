@@ -1,5 +1,4 @@
 ---
-id: support
 title: Support Guide
 description: Documentation for the Support role and troubleshooting
 ---
