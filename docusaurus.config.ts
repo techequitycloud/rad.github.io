@@ -104,8 +104,8 @@ const config: Config = {
           title: 'Documentation',
           items: [
             {
-              label: 'Getting Started',
-              to: '/docs/getting-started',
+              label: 'Quick Start',
+              to: '/docs/quick-start/user',
             },
             {
               label: 'Administrator Guide',
@@ -138,7 +138,7 @@ const config: Config = {
             },
             {
               label: 'Support',
-              to: '/docs/support',
+              to: '/docs/guides/support',
             },
           ],
         },

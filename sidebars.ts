@@ -14,31 +14,42 @@ import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
  */
 const sidebars: SidebarsConfig = {
   docsSidebar: [
-    'getting-started',
     {
       type: 'category',
-      label: 'Platform Guides',
+      label: 'Quick Start',
+      items: [
+        { type: 'doc', id: 'quick-start/admin', label: 'Admin' },
+        { type: 'doc', id: 'quick-start/agent', label: 'Agent' },
+        { type: 'doc', id: 'quick-start/finance', label: 'Finance' },
+        { type: 'doc', id: 'quick-start/partner', label: 'Partner' },
+        { type: 'doc', id: 'quick-start/support', label: 'Support' },
+        { type: 'doc', id: 'quick-start/user', label: 'User' },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Guides',
       items: [
         { type: 'doc', id: 'guides/admin', label: 'Admin' },
-        { type: 'doc', id: 'guides/partner', label: 'Partner' },
         { type: 'doc', id: 'guides/agent', label: 'Agent' },
-        { type: 'doc', id: 'guides/user', label: 'User' },
         { type: 'doc', id: 'guides/finance', label: 'Finance' },
+        { type: 'doc', id: 'guides/partner', label: 'Partner' },
+        { type: 'doc', id: 'guides/support', label: 'Support' },
+        { type: 'doc', id: 'guides/user', label: 'User' },
       ],
     },
     {
       type: 'category',
-      label: 'Tutorials',
+      label: 'Workflow',
       items: [
         { type: 'doc', id: 'tutorials/admin', label: 'Admin' },
-        { type: 'doc', id: 'tutorials/partner', label: 'Partner' },
-        { type: 'doc', id: 'tutorials/user', label: 'User' },
         { type: 'doc', id: 'tutorials/agent', label: 'Agent' },
         { type: 'doc', id: 'tutorials/finance', label: 'Finance' },
+        { type: 'doc', id: 'tutorials/partner', label: 'Partner' },
         { type: 'doc', id: 'tutorials/support', label: 'Support' },
+        { type: 'doc', id: 'tutorials/user', label: 'User' },
       ],
     },
-    { type: 'doc', id: 'support', label: 'Support' },
   ],
 };
 
