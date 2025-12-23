@@ -19,7 +19,7 @@ The Help section provides the following user guides:
 
 ### 2.2. Content Source
 
-The content for these guides is stored in markdown files located in the `rad-ui/webapp/public/docs/` directory:
+The content for these guides is stored in markdown files located in the `rad-ui/webapp/public/docs/guides/` directory:
 
 -   `user-guide.md`
 -   `partner-guide.md`

@@ -1,13 +1,4 @@
----
-title: Support Guide
-description: Documentation for the Support role and troubleshooting
----
-
-import AudioPlayer from '@site/src/components/AudioPlayer';
-
-<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/support-guide.mp3" title="Support Guide Audio" />
-
-# Support Guide
+# Support User Guide
 
 ## 1. Introduction
 
@@ -17,7 +8,7 @@ Welcome to the Support User Guide. As a member of the Support team, you have enh
 
 The Support role is designed to help you troubleshoot user issues and manage the module catalog.
 
-*   **View All Deployments:** Unlike standard users or partners (in default mode), you can see the deployment history for *every* user. This is critical for diagnosing failed builds or stuck deployments.
+*   **View All Deployments:** Unlike standard users or partners, you see the deployment history for *every* user by default. This is critical for diagnosing failed builds or stuck deployments.
 *   **Partner Capabilities:** You have full access to the **Publish** feature, allowing you to connect your own repository and publish/update modules.
 *   **Credit Visibility:** You can view your own credit history and transaction logs.
 
@@ -26,7 +17,7 @@ The Support role is designed to help you troubleshoot user issues and manage the
 Your primary workspace for support activities is the **Deployments** page.
 
 1.  **Navigate to Deployments:** Click the **Deployments** link in the main navigation bar.
-2.  **All Deployments Tab:** By default, or by clicking the tab, you will see the **All Deployments** view. This table lists every deployment on the platform.
+2.  **All Deployments View:** You will automatically see the **All Deployments** list. This table lists every deployment on the platform. Note that unlike Admins, you do not have a separate "My Deployments" tab.
 3.  **Search & Filter:** Use the search bar to find a specific deployment by:
     *   **Deployment ID:** The unique identifier for the deployment.
     *   **User Email:** Filter to see all deployments made by a specific user you are helping.

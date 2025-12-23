@@ -1,13 +1,4 @@
----
-title: Partner Workflow
-description: Learn how to publish and deploy private modules
----
-
-import AudioPlayer from '@site/src/components/AudioPlayer';
-
-<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/partner-tutorial.mp3" title="Partner Workflow Audio" />
-
-# Partner Workflow
+# Tutorial: Partner Workflow
 
 ## 1. Introduction
 This tutorial is for Partners. You will learn how to connect your own Git repository and publish a private module for deployment.
@@ -38,4 +29,3 @@ This tutorial is for Partners. You will learn how to connect your own Git reposi
 2.  You should see `my-custom-app` listed there.
 3.  Click it, configure it, and deploy it just like a standard module.
 4.  Remember: Only **you** and **Administrators** can see this module.
-

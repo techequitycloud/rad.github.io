@@ -1,13 +1,4 @@
----
-title: User Workflow
-description: Learn how to deploy applications and manage credits
----
-
-import AudioPlayer from '@site/src/components/AudioPlayer';
-
-<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/user-tutorial.mp3" title="User Workflow Audio" />
-
-# User Workflow
+# Tutorial: User Guide
 
 ## 1. Introduction
 Welcome to the platform! This tutorial covers the core actions you'll perform as a user: deploying applications, managing them, and tracking your credits.
@@ -62,4 +53,3 @@ Need assistance or more detailed guides?
     *   Fill out the support form to send a message directly to the admin team.
     *   **Invite Friends:** (If enabled) Use the "Invite Friends" card to copy your referral link or scan the QR code to invite new users.
     *   If enabled, use the **ROI Calculator** to estimate your savings.
-

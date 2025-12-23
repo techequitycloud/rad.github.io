@@ -16,8 +16,11 @@ Partners can access a dedicated **Module Revenue** view (located under the Reven
 
 ### 2. "True Revenue" Calculation
 The system distinguishes between **Free/Awarded Credits** and **Purchased Credits**. Revenue is only counted when a deployment consumes *purchased* credits.
-*   Deployments covered by free credits generate **0 revenue**.
-*   Deployments partially covered by free credits generate revenue only for the portion paid with purchased credits.
+
+*   **Logic**: The backend (`/api/revenue`) reconstructs the credit history for each user deployment. It determines exactly how many purchased credits were deducted at the time of the transaction, rather than relying on a simple balance check.
+*   **Outcome**:
+    *   Deployments covered by free credits generate **0 revenue**.
+    *   Deployments partially covered by free credits generate revenue only for the portion paid with purchased credits.
 
 ### 3. Revenue Share Calculation
 The revenue displayed to the partner is calculated based on the global **Partner Revenue Share** percentage configured by administrators.

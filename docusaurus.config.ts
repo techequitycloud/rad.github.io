@@ -109,19 +109,19 @@ const config: Config = {
             },
             {
               label: 'Administrator Guide',
-              to: '/docs/guides/admin',
+              to: '/docs/guides/admin-guide',
             },
             {
               label: 'Partner Guide',
-              to: '/docs/guides/partner',
+              to: '/docs/guides/partner-guide',
             },
             {
               label: 'User Guide',
-              to: '/docs/guides/user',
+              to: '/docs/guides/user-guide',
             },
             {
               label: 'Finance Guide',
-              to: '/docs/guides/finance',
+              to: '/docs/guides/finance-guide',
             },
           ],
         },
@@ -138,7 +138,7 @@ const config: Config = {
             },
             {
               label: 'Support',
-              to: '/docs/guides/support',
+              to: '/docs/guides/support-guide',
             },
           ],
         },
