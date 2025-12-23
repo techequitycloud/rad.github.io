@@ -36,6 +36,7 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'guides/support-guide', label: 'Support' },
         { type: 'doc', id: 'guides/finance-guide', label: 'Finance' },
         { type: 'doc', id: 'guides/admin-guide', label: 'Admin' },
+        { type: 'doc', id: 'guides/roi-guide', label: 'ROI Calculator' },
       ],
     },
     {
@@ -49,6 +50,7 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'workflows/support-tutorial', label: 'Support' },
         { type: 'doc', id: 'workflows/finance-tutorial', label: 'Finance' },
         { type: 'doc', id: 'workflows/admin-tutorial', label: 'Admin' },
+        { type: 'doc', id: 'workflows/roi-tutorial', label: 'ROI Tutorial' },
       ],
     },
   ],
