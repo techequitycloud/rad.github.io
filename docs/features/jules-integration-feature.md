@@ -26,12 +26,12 @@ For the feature to be available, the following conditions must be met:
 
 3.  **Session Management:**
     -   **Start Session:** Clicking "Start Session" initializes a new conversation. A default prompt is sent to Jules to analyze the module's features and variables.
-    -   **Resume Session:** If a previous session exists (checked via local storage and API), the user can resume exactly where they left off.
+    -   **Resume Session:** If a previous session exists, the user can resume exactly where they left off. The system uses a secure session manager (`SecureSessionManager`) backed by `sessionStorage` and server-side verification to handle session persistence.
     -   **End Session:** Users can manually end the session, which clears the conversation history and local state.
 
 4.  **Interaction:**
     -   **Chat:** Users can send natural language messages to Jules to ask for explanations, refactoring suggestions, or new features.
-    -   **Activities:** The interface displays a log of activities, including:
+    -   **Activities:** The interface displays a log of activities, which updates every 30 seconds. Activities include:
         -   Messages (User and Agent)
         -   Progress Updates
         -   Generated Plans
@@ -45,7 +45,7 @@ For the feature to be available, the following conditions must be met:
 
 ### Frontend
 -   **`ModuleCard.tsx`:** Renders the entry point (Sparkles icon) conditionally based on `isJulesConfigured`.
--   **`JulesRefineModal.tsx`:** The core component managing the UI state, polling for updates, and displaying the chat interface. It uses `axios` to communicate with the backend API.
+-   **`JulesRefineModal.tsx`:** The core component managing the UI state, polling (30s interval) for updates, and displaying the chat interface. It uses `axios` to communicate with the backend API.
 
 ### Backend (Next.js API Routes)
 The application acts as a proxy to the Jules API to secure credentials and manage session state.

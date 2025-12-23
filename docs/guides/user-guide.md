@@ -1,12 +1,3 @@
----
-title: User Guide
-description: Essential guide for all platform users
----
-
-import AudioPlayer from '@site/src/components/AudioPlayer';
-
-<AudioPlayer url="https://storage.googleapis.com/rad-docs-assets/audio/user-guide.mp3" title="User Guide Audio" />
-
 # User Guide
 
 ## 1. Introduction
@@ -19,10 +10,9 @@ Welcome to the User Guide for the Rapid Application Deployment (RAD) platform. T
 Access the platform using your Google credentials. If it's your first time, an account will be created for you automatically. Depending on the platform settings, you may receive initial "Sign-up Credits" to get you started.
 
 ### 2.2. The Dashboard
-After logging in, you'll see the **Deployments** page. This is your home base.
-*   **My Deployments:** Lists all the applications you have deployed.
-*   **Status:** Quickly check if your deployments are `SUCCESS`, `FAILURE`, or `WORKING`.
-*   **View Details:** Click on a deployment ID to see detailed logs and configuration variables.
+After logging in, you'll see the **Credits** page or **Deployments** page depending on your role.
+*   **Credits:** Manage your balance, view transactions, and buy credits.
+*   **Deployments:** Manage your running applications.
 
 ## 3. Deploying Applications
 
@@ -54,10 +44,12 @@ If enabled, you will see a **Sparkles** icon on the module card.
 
 ## 5. Billing & Credits
 
-Manage your platform credits and costs on the **Credits** page.
+Manage your platform credits and costs on the **Credits** page. This is the first link in your navigation bar.
 
 ### 5.1. Dashboard Tabs
-*   **Credit Transactions:** A detailed history of every credit awarded, purchased, or spent. You can filter by date or deployment ID and export the data to CSV.
+*   **Credit Transactions:** A detailed history of your credit balance.
+    *   **Awarded Credits:** Free credits granted by the platform (e.g., sign-up bonus, referrals). These are used first but cannot be cashed out or used for revenue calculation.
+    *   **Purchased Credits:** Credits you have bought via Stripe. Deployment costs paid with these credits contribute to the "True Revenue" calculation for agents and partners.
 *   **Project Costs:** (If enabled) View a breakdown of cloud infrastructure costs associated with your projects.
 *   **Project Invoices:** (If enabled) Access monthly invoices for your usage.
 *   **Buy Credits:** (If enabled) Purchase additional credits via one-time payments or manage your subscription tier.

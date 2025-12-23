@@ -51,7 +51,7 @@ If the platform is configured to allow referrals (`maximumReferrals > 0`), the `
 
 ### 3.4. Interactive Documentation
 
-The platform renders documentation from Markdown files stored in `public/docs/`.
+The platform renders documentation from Markdown files stored in `public/docs/guides/`.
 
 *   **Audio Tutorials:** The `AudioTutorialSection` component embeds audio players for "Guide Audio" and "Workflow Audio," offering an alternative way to consume the documentation.
 *   **Rich Text:** Markdown is rendered with `react-markdown` and `remark-gfm`, supporting tables, lists, and code blocks.
