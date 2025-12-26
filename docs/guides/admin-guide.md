@@ -1,6 +1,6 @@
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Admin User Guide
+# Admin Guide
 
 <img src="https://storage.googleapis.com/rad-public-2b65/guides/admin_guide.png" alt="Admin Guide" style={{marginBottom: '20px'}} />
 
