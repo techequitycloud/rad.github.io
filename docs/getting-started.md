@@ -1,7 +1,18 @@
-# Tutorial: Getting Started
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
+# Guide: Getting Started
+
+<img src="https://storage.googleapis.com/rad-public-2b65/guides/start_guide.png" alt="Getting Started Guide" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/start_guide.m4a" title="Getting Started Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/guides/start_guide.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 ## 1. Introduction
-Welcome to the Rapid Application Deployment (RAD) platform! This tutorial will guide you through your first steps: logging in, exploring the dashboard, and deploying your first module.
+Welcome to the Rapid Application Deployment (RAD) platform! This guide will walk you through your first steps: logging in, exploring the dashboard, and deploying your first module.
 
 ## 2. Step 1: Login
 1.  Navigate to the application URL.
