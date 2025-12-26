@@ -1,6 +1,6 @@
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Tutorial: Agent Workflow
+# Agent Workflow
 
 <img src="https://storage.googleapis.com/rad-public-2b65/workflows/agent_workflow.png" alt="Agent Workflow" style={{marginBottom: '20px'}} />
 
