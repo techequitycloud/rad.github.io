@@ -15,6 +15,11 @@ import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 const sidebars: SidebarsConfig = {
   docsSidebar: [
     {
+      type: 'doc',
+      id: 'getting-started',
+      label: 'Getting Started',
+    },
+    {
       type: 'category',
       label: 'Guides',
       items: [
@@ -29,9 +34,8 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Workflows',
+      label: 'Workflow',
       items: [
-        { type: 'doc', id: 'workflows/getting-started', label: 'Getting Started' },
         { type: 'doc', id: 'workflows/user-tutorial', label: 'User' },
         { type: 'doc', id: 'workflows/partner-tutorial', label: 'Partner' },
         { type: 'doc', id: 'workflows/agent-tutorial', label: 'Agent' },
