@@ -1,6 +1,6 @@
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Guide: Getting Started
+# Getting Started
 
 <img src="https://storage.googleapis.com/rad-public-2b65/guides/start_guide.png" alt="Getting Started Guide" style={{marginBottom: '20px'}} />
 
