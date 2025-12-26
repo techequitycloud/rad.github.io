@@ -1,6 +1,6 @@
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Tutorial: User Guide
+# Tutorial: User Workflow
 
 <img src="https://storage.googleapis.com/rad-public-2b65/workflows/user_workflow.png" alt="User Workflow" style={{marginBottom: '20px'}} />
 
