@@ -104,8 +104,8 @@ const config: Config = {
           title: 'Documentation',
           items: [
             {
-              label: 'Quick Start',
-              to: '/docs/quick-start/user',
+              label: 'Guides',
+              to: '/docs/guides/user-guide',
             },
             {
               label: 'Administrator Guide',
