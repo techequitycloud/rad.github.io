@@ -1,6 +1,6 @@
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Tutorial: ROI Workflow
+# ROI Workflow
 
 <img src="https://storage.googleapis.com/rad-public-2b65/workflows/roi_workflow.png" alt="ROI Workflow" style={{marginBottom: '20px'}} />
 
