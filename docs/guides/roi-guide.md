@@ -1,6 +1,6 @@
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# ROI Calculator Guide
+# ROI Guide
 
 <img src="https://storage.googleapis.com/rad-public-2b65/guides/roi_guide.png" alt="ROI Guide" style={{marginBottom: '20px'}} />
 
