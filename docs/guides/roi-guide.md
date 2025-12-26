@@ -1,4 +1,15 @@
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # ROI Calculator Guide
+
+<img src="https://storage.googleapis.com/rad-public-2b65/guides/roi_guide.png" alt="ROI Guide" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/roi_guide.m4a" title="ROI Guide Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/guides/roi_guide.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 ## 1. Introduction
 

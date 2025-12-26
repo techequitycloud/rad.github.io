@@ -16,18 +16,6 @@ const sidebars: SidebarsConfig = {
   docsSidebar: [
     {
       type: 'category',
-      label: 'Quick Start',
-      items: [
-        { type: 'doc', id: 'quick-start/user', label: 'User' },
-        { type: 'doc', id: 'quick-start/partner', label: 'Partner' },
-        { type: 'doc', id: 'quick-start/agent', label: 'Agent' },
-        { type: 'doc', id: 'quick-start/support', label: 'Support' },
-        { type: 'doc', id: 'quick-start/finance', label: 'Finance' },
-        { type: 'doc', id: 'quick-start/admin', label: 'Admin' },
-      ],
-    },
-    {
-      type: 'category',
       label: 'Guides',
       items: [
         { type: 'doc', id: 'guides/user-guide', label: 'User' },

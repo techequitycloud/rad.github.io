@@ -1,4 +1,15 @@
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Tutorial: ROI Calculator
+
+<img src="https://storage.googleapis.com/rad-public-2b65/workflows/roi_workflow.png" alt="ROI Workflow" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflows/roi_workflow.m4a" title="ROI Workflow Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/workflows/roi_workflow.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 ## 1. Introduction
 This tutorial will guide you through using the ROI Calculator to build a business case for the RAD platform. You will learn how to input your specific data to see exactly how much time and money you can save.
