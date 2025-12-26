@@ -1,6 +1,6 @@
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Tutorial: Finance Dashboard
+# Tutorial: Finance Workflow
 
 <img src="https://storage.googleapis.com/rad-public-2b65/workflows/finance_workflow.png" alt="Finance Workflow" style={{marginBottom: '20px'}} />
 
