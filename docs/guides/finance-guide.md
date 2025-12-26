@@ -1,6 +1,6 @@
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Finance User Guide
+# Finance Guide
 
 <img src="https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.png" alt="Finance Guide" style={{marginBottom: '20px'}} />
 
