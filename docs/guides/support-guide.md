@@ -1,6 +1,6 @@
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Support User Guide
+# Support Guide
 
 <img src="https://storage.googleapis.com/rad-public-2b65/guides/support_guide.png" alt="Support Guide" style={{marginBottom: '20px'}} />
 
