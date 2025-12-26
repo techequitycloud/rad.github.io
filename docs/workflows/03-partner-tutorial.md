@@ -1,6 +1,6 @@
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Tutorial: Partner Workflow
+# Partner Workflow
 
 <img src="https://storage.googleapis.com/rad-public-2b65/workflows/partner_workflow.png" alt="Partner Workflow" style={{marginBottom: '20px'}} />
 
