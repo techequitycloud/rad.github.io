@@ -52,6 +52,7 @@ const sidebars: SidebarsConfig = {
         {
           type: 'category',
           label: 'Users',
+          link: {type: 'doc', id: 'features/users'},
           items: [
             { type: 'doc', id: 'features/deploy', label: 'Deploy' },
             { type: 'doc', id: 'features/deployments', label: 'Deployments' },
@@ -84,6 +85,7 @@ const sidebars: SidebarsConfig = {
         {
           type: 'category',
           label: 'Partners',
+          link: {type: 'doc', id: 'features/partners'},
           items: [
             { type: 'doc', id: 'features/publish', label: 'Publish' },
             { type: 'doc', id: 'features/revenue-module-revenue', label: 'Module Revenue' },
@@ -95,6 +97,7 @@ const sidebars: SidebarsConfig = {
         {
           type: 'category',
           label: 'Agents',
+          link: {type: 'doc', id: 'features/agents'},
           items: [
             { type: 'doc', id: 'features/revenue-my-referral-revenue', label: 'My Referral Revenue' },
             { type: 'doc', id: 'features/billing-user-revenue', label: 'User Revenue Dashboard' },
@@ -105,6 +108,7 @@ const sidebars: SidebarsConfig = {
         {
           type: 'category',
           label: 'Finance',
+          link: {type: 'doc', id: 'features/finance'},
           items: [
             { type: 'doc', id: 'features/billing-credit-management', label: 'Credit Management' },
             { type: 'doc', id: 'features/billing-project-invoices', label: 'Project Invoices (All)' },
@@ -118,6 +122,7 @@ const sidebars: SidebarsConfig = {
         {
           type: 'category',
           label: 'Support',
+          link: {type: 'doc', id: 'features/support'},
           items: [
             { type: 'doc', id: 'features/help-support', label: 'Help & Support' },
             { type: 'doc', id: 'features/deployments', label: 'Deployments' },
@@ -127,9 +132,10 @@ const sidebars: SidebarsConfig = {
         {
           type: 'category',
           label: 'Admins',
+          link: {type: 'doc', id: 'features/admins'},
           items: [
             { type: 'doc', id: 'features/setup', label: 'Setup' },
-            { type: 'doc', id: 'features/users', label: 'User Management' },
+            { type: 'doc', id: 'features/admin-user-management', label: 'User Management' },
             { type: 'doc', id: 'features/billing-credit-settings', label: 'Credit Settings' },
             { type: 'doc', id: 'features/billing-subscription-tiers', label: 'Subscription Tiers' },
             { type: 'doc', id: 'features/billing-credit-management', label: 'Credit Management' },
