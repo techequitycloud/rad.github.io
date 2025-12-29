@@ -14,7 +14,7 @@ The Module Exploration feature allows you to:
 
 To use the AI-Powered Module Exploration feature, ensure the following are configured:
 
-1.  **GitHub Repository:** You must have a GitHub repository configured in your [User Profile](/profile).
+1.  **GitHub Repository:** You must have a GitHub repository configured in your [User Profile](./your-profile.md).
 2.  **Jules Source:** The repository must be added as a valid **Source** in the Jules AI dashboard.
 3.  **API Access:** Your account must be provisioned with the necessary API keys for Jules AI access.
 
