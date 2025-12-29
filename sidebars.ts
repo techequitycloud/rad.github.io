@@ -34,6 +34,19 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Workflow',
+      items: [
+        { type: 'doc', id: 'workflows/user-tutorial', label: 'User' },
+        { type: 'doc', id: 'workflows/partner-tutorial', label: 'Partner' },
+        { type: 'doc', id: 'workflows/agent-tutorial', label: 'Agent' },
+        { type: 'doc', id: 'workflows/support-tutorial', label: 'Support' },
+        { type: 'doc', id: 'workflows/finance-tutorial', label: 'Finance' },
+        { type: 'doc', id: 'workflows/admin-tutorial', label: 'Admin' },
+        { type: 'doc', id: 'workflows/roi-tutorial', label: 'ROI' },
+      ],
+    },
+    {
+      type: 'category',
       label: 'Features',
       items: [
         {
@@ -126,19 +139,6 @@ const sidebars: SidebarsConfig = {
             { type: 'doc', id: 'guides/admin-guide', label: 'Admin Guide' },
           ]
         },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Workflow',
-      items: [
-        { type: 'doc', id: 'workflows/user-tutorial', label: 'User' },
-        { type: 'doc', id: 'workflows/partner-tutorial', label: 'Partner' },
-        { type: 'doc', id: 'workflows/agent-tutorial', label: 'Agent' },
-        { type: 'doc', id: 'workflows/support-tutorial', label: 'Support' },
-        { type: 'doc', id: 'workflows/finance-tutorial', label: 'Finance' },
-        { type: 'doc', id: 'workflows/admin-tutorial', label: 'Admin' },
-        { type: 'doc', id: 'workflows/roi-tutorial', label: 'ROI' },
       ],
     },
   ],
