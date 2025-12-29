@@ -1,3 +1,8 @@
+---
+title: User Management
+slug: /features/admin-user-management
+---
+
 # Users
 
 This guide provides a comprehensive overview of how to manage users and roles within the platform. Management responsibilities are split between the **Platform UI** (for specific operational tasks) and **Google Groups** (for high-level access control).
