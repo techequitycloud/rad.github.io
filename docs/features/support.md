@@ -1,5 +1,4 @@
 ---
-id: support
 title: Support Features
 slug: /features/support
 ---

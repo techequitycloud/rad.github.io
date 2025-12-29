@@ -1,5 +1,4 @@
 ---
-id: finance
 title: Finance Features
 slug: /features/finance
 ---

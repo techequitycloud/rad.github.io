@@ -1,5 +1,4 @@
 ---
-id: agents
 title: Agent Features
 slug: /features/agents
 ---

@@ -1,5 +1,4 @@
 ---
-id: partners
 title: Partner Features
 slug: /features/partners
 ---

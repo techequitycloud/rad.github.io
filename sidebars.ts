@@ -52,7 +52,7 @@ const sidebars: SidebarsConfig = {
         {
           type: 'category',
           label: 'Users',
-          link: {type: 'doc', id: 'features/users'},
+          link: {type: 'doc', id: 'features/users-overview'},
           items: [
             { type: 'doc', id: 'features/deploy', label: 'Deploy' },
             { type: 'doc', id: 'features/deployments', label: 'Deployments' },
@@ -135,7 +135,7 @@ const sidebars: SidebarsConfig = {
           link: {type: 'doc', id: 'features/admins'},
           items: [
             { type: 'doc', id: 'features/setup', label: 'Setup' },
-            { type: 'doc', id: 'features/admin-user-management', label: 'User Management' },
+            { type: 'doc', id: 'features/users', label: 'User Management' },
             { type: 'doc', id: 'features/billing-credit-settings', label: 'Credit Settings' },
             { type: 'doc', id: 'features/billing-subscription-tiers', label: 'Subscription Tiers' },
             { type: 'doc', id: 'features/billing-credit-management', label: 'Credit Management' },

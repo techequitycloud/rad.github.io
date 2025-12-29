@@ -1,5 +1,4 @@
 ---
-id: admins
 title: Admin Features
 slug: /features/admins
 ---
