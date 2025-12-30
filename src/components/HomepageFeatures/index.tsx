@@ -15,8 +15,8 @@ const FeatureList: FeatureItem[] = [
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Deploy infrastructure across AWS, Azure, and Google Cloud Platform using
-        Terraform-based automation with pre-configured secure landing zones.
+        Deploy infrastructure across multi-cloud and on-premises platforms using
+        Terraform-based automation.
       </>
     ),
   },
