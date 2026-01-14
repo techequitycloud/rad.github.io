@@ -3,7 +3,6 @@ import React from 'react';
 export interface VideoItem {
   title: string;
   url: string;
-  thumbnail: string;
 }
 
 interface VideoGalleryProps {
@@ -32,7 +31,6 @@ export default function VideoGallery({videos}: VideoGalleryProps): JSX.Element {
             <video
               controls
               preload="metadata"
-              poster={video.thumbnail}
               style={{
                 position: 'absolute',
                 top: 0,
