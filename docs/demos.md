@@ -1,0 +1,47 @@
+---
+id: demos
+title: Demos
+sidebar_label: Demos
+---
+
+import VideoGallery from '@site/src/components/VideoGallery';
+
+export const videos = [
+  { title: "User: Landing Page", url: "https://storage.googleapis.com/rad-public-2b65/demos/1-user-landing_page.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/1-user-landing_page.jpg" },
+  { title: "User: Documentation", url: "https://storage.googleapis.com/rad-public-2b65/demos/2-user-documentation.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/2-user-documentation.jpg" },
+  { title: "User: Sign In", url: "https://storage.googleapis.com/rad-public-2b65/demos/3-user-sign_in.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/3-user-sign_in.jpg" },
+  { title: "User: Theme", url: "https://storage.googleapis.com/rad-public-2b65/demos/4-user-theme.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/4-user-theme.jpg" },
+  { title: "User: Your Profile", url: "https://storage.googleapis.com/rad-public-2b65/demos/5-user-your_profile.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/5-user-your_profile.jpg" },
+  { title: "User: Help", url: "https://storage.googleapis.com/rad-public-2b65/demos/6-user-help.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/6-user-help.jpg" },
+  { title: "User: Buy Credits", url: "https://storage.googleapis.com/rad-public-2b65/demos/7-user-credits-buy_credits.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/7-user-credits-buy_credits.jpg" },
+  { title: "User: Credits - Subscription", url: "https://storage.googleapis.com/rad-public-2b65/demos/8-user-credits-subscription.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/8-user-credits-subscription.jpg" },
+  { title: "User: Credit Transactions", url: "https://storage.googleapis.com/rad-public-2b65/demos/9-user-credits-credit_transactions.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/9-user-credits-credit_transactions.jpg" },
+  { title: "User: Module Costs", url: "https://storage.googleapis.com/rad-public-2b65/demos/10-user-credits-module_costs.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/10-user-credits-module_costs.jpg" },
+  { title: "User: Project Costs", url: "https://storage.googleapis.com/rad-public-2b65/demos/11-user-credits-project_costs.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/11-user-credits-project_costs.jpg" },
+  { title: "User: Project Invoices", url: "https://storage.googleapis.com/rad-public-2b65/demos/12-user-credits-project_invoices.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/12-user-credits-project_invoices.jpg" },
+  { title: "User: Deploy Module (GCP Project)", url: "https://storage.googleapis.com/rad-public-2b65/demos/13-user-deploy-module-gcp_project.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/13-user-deploy-module-gcp_project.jpg" },
+  { title: "User: Deploy Module (GCP Services)", url: "https://storage.googleapis.com/rad-public-2b65/demos/14-user-deploy-module-gcp_services.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/14-user-deploy-module-gcp_services.jpg" },
+  { title: "User: Deploy Application Module", url: "https://storage.googleapis.com/rad-public-2b65/demos/15-user-deploy-application_module.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/15-user-deploy-application_module.jpg" },
+  { title: "User: Deployments Module", url: "https://storage.googleapis.com/rad-public-2b65/demos/16-user-deployments-module.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/16-user-deployments-module.jpg" },
+  { title: "User: Deployments - Delete/Purge", url: "https://storage.googleapis.com/rad-public-2b65/demos/17-user-deployments_delete_purge.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/17-user-deployments_delete_purge.jpg" },
+  { title: "User: ROI", url: "https://storage.googleapis.com/rad-public-2b65/demos/18-user-roi.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/18-user-roi.jpg" },
+  { title: "Partner: GitHub API Integration", url: "https://storage.googleapis.com/rad-public-2b65/demos/19-partner-github_api_integration.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/19-partner-github_api_integration.jpg" },
+  { title: "Partner: Explore Jules AI Agent", url: "https://storage.googleapis.com/rad-public-2b65/demos/20-partner-explore-jules_ai_agent.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/20-partner-explore-jules_ai_agent.jpg" },
+  { title: "Partner: Create Module", url: "https://storage.googleapis.com/rad-public-2b65/demos/21-partner-module-create.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/21-partner-module-create.jpg" },
+  { title: "Partner: Publish Module", url: "https://storage.googleapis.com/rad-public-2b65/demos/22-partner-publish_module.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/22-partner-publish_module.jpg" },
+  { title: "Partner: Revenue - Referral Module", url: "https://storage.googleapis.com/rad-public-2b65/demos/23-partner-revenue_referral_module.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/23-partner-revenue_referral_module.jpg" },
+  { title: "Support: Deployments", url: "https://storage.googleapis.com/rad-public-2b65/demos/24-support-deployments.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/24-support-deployments.jpg" },
+  { title: "Agent: Revenue - Referral Module", url: "https://storage.googleapis.com/rad-public-2b65/demos/25-agent-revenue_referral_module.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/25-agent-revenue_referral_module.jpg" },
+  { title: "Finance: Billing - Subscription Tiers", url: "https://storage.googleapis.com/rad-public-2b65/demos/26-finance-billing-subscription_tiers.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/26-finance-billing-subscription_tiers.jpg" },
+  { title: "Finance: Billing - Credit Settings", url: "https://storage.googleapis.com/rad-public-2b65/demos/27-finance-billing_credit_settings.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/27-finance-billing_credit_settings.jpg" },
+  { title: "Finance: Billing - Credit Management", url: "https://storage.googleapis.com/rad-public-2b65/demos/28-finance-billing-credit_management.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/28-finance-billing-credit_management.jpg" },
+  { title: "Finance: Billing - Agent Revenue", url: "https://storage.googleapis.com/rad-public-2b65/demos/29-finance-billing-agent_revenue.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/29-finance-billing-agent_revenue.jpg" },
+  { title: "Finance: Billing - Partner Revenue", url: "https://storage.googleapis.com/rad-public-2b65/demos/30-finance-billing-partner_revenue.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/30-finance-billing-partner_revenue.jpg" },
+  { title: "Finance: Billing - Project Invoices", url: "https://storage.googleapis.com/rad-public-2b65/demos/31-finance-billing-project_invoices.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/31-finance-billing-project_invoices.jpg" },
+  { title: "Admin: Your Profile", url: "https://storage.googleapis.com/rad-public-2b65/demos/32-admin-your_profile.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/32-admin-your_profile.jpg" },
+  { title: "Admin: Setup", url: "https://storage.googleapis.com/rad-public-2b65/demos/33-admin-setup.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/33-admin-setup.jpg" },
+  { title: "Admin: User Management", url: "https://storage.googleapis.com/rad-public-2b65/demos/34-admin-user-management.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/34-admin-user-management.jpg" },
+  { title: "Admin: Publish Module", url: "https://storage.googleapis.com/rad-public-2b65/demos/35-admin-publish-module.mp4", thumbnail: "https://storage.googleapis.com/rad-public-2b65/demos/35-admin-publish-module.jpg" },
+];
+
+<VideoGallery videos={videos} />
