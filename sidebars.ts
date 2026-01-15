@@ -148,9 +148,16 @@ const sidebars: SidebarsConfig = {
       ],
     },
     {
-      type: 'doc',
-      id: 'demos',
+      type: 'category',
       label: 'Demos',
+      items: [
+        { type: 'doc', id: 'demos/user', label: 'User' },
+        { type: 'doc', id: 'demos/partner', label: 'Partner' },
+        { type: 'doc', id: 'demos/agent', label: 'Agent' },
+        { type: 'doc', id: 'demos/support', label: 'Support' },
+        { type: 'doc', id: 'demos/finance', label: 'Finance' },
+        { type: 'doc', id: 'demos/admin', label: 'Admin' },
+      ],
     },
   ],
 };
