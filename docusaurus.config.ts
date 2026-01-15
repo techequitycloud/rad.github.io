@@ -4,7 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'RAD Platform',
-  tagline: 'Enterprise-grade infrastructure deployment platform for technical teams and partners',
+  tagline: 'Enterprise-grade infrastructure deployment platform for technical teams and business partners',
   favicon: 'img/favicon.ico',
 
   future: {
