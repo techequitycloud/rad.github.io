@@ -1,4 +1,10 @@
-# Deep Dive Analysis: modules/Wordpress
+---
+title: Wordpress
+sidebar_label: Wordpress
+slug: /applications/wordpress
+---
+
+# Wordpress on Google Cloud Platform
 
 ## Executive Summary
 The `modules/Wordpress` module deploys a scalable, containerized WordPress application on **Google Cloud Run (v2)**, backed by **Cloud SQL (MySQL 8.0)** and **Cloud Storage (GCS)** for media assets. It leverages a wrapper architecture around `modules/CloudRunApp` to inherit standardized infrastructure practices while defining application-specific configurations, such as custom Docker builds and initialization jobs.

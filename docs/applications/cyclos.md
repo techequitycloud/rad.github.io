@@ -1,3 +1,9 @@
+---
+title: Cyclos
+sidebar_label: Cyclos
+slug: /applications/cyclos
+---
+
 # Cyclos on Google Cloud Platform
 
 This document details the implementation of the Cyclos module, covering IAM, services, configurations, existing features, and potential enhancements.

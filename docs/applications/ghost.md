@@ -1,3 +1,9 @@
+---
+title: Ghost
+sidebar_label: Ghost
+slug: /applications/ghost
+---
+
 # Ghost on Google Cloud Platform
 
 This document provides a comprehensive overview of the `modules/Ghost` implementation, covering its architecture, IAM and access control, service configuration, and potential enhancements.
@@ -114,11 +120,11 @@ To further harden and improve the deployment, consider the following enhancement
 ### 4. Observability & Logging
 *   **Current State:** Logs to stdout.
 *   **Enhancement:**
-    *   Configure Ghost to output **JSON formatted logs** (`logging__level="info"`, `logging__format="json"`). This allows Cloud Logging to parse severity levels and payload fields automatically.
-    *   Add a **Cloud Monitoring Dashboard** terraform resource specific to Ghost metrics (latency, error rate, active connections).
+    *   **JSON formatted logs:** Configure Ghost to output JSON logs.
+    *   **Cloud Monitoring Dashboard:** Add a dashboard for Ghost metrics.
 
 ### 5. Security Hardening
 *   **Current State:** Public access enabled.
 *   **Enhancement:**
-    *   **Cloud Armor:** Attach a security policy to the Load Balancer to prevent SQL injection and DDoS attacks.
-    *   **Identity-Aware Proxy (IAP):** If this is an internal blog, put it behind IAP so only authenticated org users can access it.
+    *   **Cloud Armor:** Attach a security policy to the Load Balancer.
+    *   **Identity-Aware Proxy (IAP):** Use IAP for internal access.

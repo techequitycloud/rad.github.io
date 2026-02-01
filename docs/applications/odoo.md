@@ -1,3 +1,9 @@
+---
+title: Odoo
+sidebar_label: Odoo
+slug: /applications/odoo
+---
+
 # Odoo on Google Cloud Platform
 
 This analysis details the implementation of the `modules/Odoo` module, covering architecture, IAM, services, configuration, features, and the implemented enhancements.
@@ -79,4 +85,3 @@ The Cloud Run service overrides the container's default command:
     *   Includes `python3-redis` for Redis support.
     *   Includes `wkhtmltopdf` (patched).
     *   Flexible SHA verification for nightly builds.
-

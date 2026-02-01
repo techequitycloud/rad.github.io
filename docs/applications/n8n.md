@@ -1,3 +1,9 @@
+---
+title: N8N
+sidebar_label: N8N
+slug: /applications/n8n
+---
+
 # N8N on Google Cloud Platform
 
 This document provides a comprehensive analysis of the `modules/N8N` implementation, detailing its architecture, IAM configuration, services, and potential enhancements.

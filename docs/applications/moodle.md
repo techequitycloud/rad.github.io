@@ -1,3 +1,9 @@
+---
+title: Moodle
+sidebar_label: Moodle
+slug: /applications/moodle
+---
+
 # Moodle on Google Cloud Platform
 
 ## 1. Executive Summary

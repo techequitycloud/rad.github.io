@@ -1,3 +1,9 @@
+---
+title: Strapi
+sidebar_label: Strapi
+slug: /applications/strapi
+---
+
 # Strapi on the Google Cloud Platform
 
 This document provides a comprehensive analysis of the `modules/Strapi` implementation on the Google Cloud Platform. It covers the architectural design, IAM and access control, service configurations, existing features, and potential enhancements.
