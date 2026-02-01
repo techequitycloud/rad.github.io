@@ -1,4 +1,4 @@
-# Deep Dive Analysis: `modules/CloudRunApp`
+# CloudRunApp on Google Cloud Platform
 
 This document provides a comprehensive analysis of the `modules/CloudRunApp` Terraform module on Google Cloud Platform. It details the architecture, IAM configuration, service integrations, and potential enhancements.
 
