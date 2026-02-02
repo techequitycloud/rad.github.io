@@ -8,7 +8,7 @@ slug: /applications/gcp-services
 
 ## 1. Executive Summary
 
-The `modules/GCP_Services` module serves as the foundational infrastructure layer for the platform. It is designed to provision a shared environment that hosts core networking, database, caching, and file storage services. This module effectively acts as a "Shared Services" or "Foundation" layer upon which application modules (like `CloudRunApp`) depend.
+The `GCP_Services` module serves as the foundational infrastructure layer for the platform. It is designed to provision a shared environment that hosts core networking, database, caching, and file storage services. This module effectively acts as a "Shared Services" or "Foundation" layer upon which application modules (like `CloudRunApp`) depend.
 
 It offers flexibility through toggleable features (managed vs. custom services) to balance cost (for development) and reliability (for production).
 
