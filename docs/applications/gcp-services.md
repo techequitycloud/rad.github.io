@@ -6,6 +6,15 @@ slug: /applications/gcp-services
 
 # GCP Services Module
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/gcpservices_module.png" alt="GCP Services Module Deep Dive Analysis" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/gcpservices_module.m4a" title="GCP Services Module Deep Dive Analysis Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/gcpservices_module.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
 ## 1. Executive Summary
 
 The `GCP_Services` module serves as the foundational infrastructure layer for the platform. It is designed to provision a shared environment that hosts core networking, database, caching, and file storage services. This module effectively acts as a "Shared Services" or "Foundation" layer upon which application modules (like `CloudRunApp`) depend.

@@ -4,9 +4,20 @@ sidebar_label: Cloud Run App
 slug: /applications/cloud-run-app
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # CloudRunApp on Google Cloud Platform
 
-This document provides a comprehensive analysis of the `CloudRunApp` Terraform module on Google Cloud Platform. It details the architecture, IAM configuration, service integrations, and potential enhancements.
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/cloudrunapp_module.png" alt="CloudRunApp on Google Cloud Platform" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/cloudrunapp_module.m4a" title="CloudRunApp on Google Cloud Platform Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/cloudrunapp_module.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+This document provides a comprehensive analysis of the `CloudRunApp` module on Google Cloud Platform. It details the architecture, IAM configuration, service integrations, and potential enhancements.
 
 ---
 
