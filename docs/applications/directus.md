@@ -6,7 +6,7 @@ slug: /applications/directus
 
 # Directus on Google Cloud Platform
 
-This document provides a comprehensive analysis of the `modules/Directus` implementation. It details the architecture, IAM security model, service configurations, and opportunities for enhancement.
+This document provides a comprehensive analysis of the `Directus` implementation. It details the architecture, IAM security model, service configurations, and opportunities for enhancement.
 
 ## 1. Architectural Overview
 
