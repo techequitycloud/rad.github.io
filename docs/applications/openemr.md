@@ -6,7 +6,7 @@ slug: /applications/openemr
 
 # OpenEMR on Google Cloud Platform
 
-This document provides an analysis of the OpenEMR implementation within the `modules/OpenEMR` directory. It details the architecture, IAM configurations, service specifications, and available features, along with recommendations for enhancement.
+This document provides an analysis of the `OpenEMR` module. It details the architecture, IAM configurations, service specifications, and available features, along with recommendations for enhancement.
 
 ## 1. Executive Summary
 
