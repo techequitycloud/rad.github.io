@@ -12,7 +12,7 @@ This document provides a comprehensive analysis of the `modules/CloudRunApp` Ter
 
 ## 1. Module Overview
 
-The `modules/CloudRunApp` module is a foundational building block for deploying containerized applications on Google Cloud Run (v2). It is designed to be highly configurable and orchestrates not just the compute layer, but also the surrounding ecosystem of networking, storage, databases, and observability.
+The `CloudRunApp` module is a foundational building block for deploying containerized applications on Google Cloud Run (v2). It is designed to be highly configurable and orchestrates not just the compute layer, but also the surrounding ecosystem of networking, storage, databases, and observability.
 
 **Key Capabilities:**
 *   **Compute**: Deploys Cloud Run v2 Services (Gen2 execution environment).
