@@ -4,7 +4,7 @@ sidebar_label: GCP Services
 slug: /applications/gcp-services
 ---
 
-# GCP Services Module Deep Dive Analysis
+# GCP Services Module
 
 ## 1. Executive Summary
 
