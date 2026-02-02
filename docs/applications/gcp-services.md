@@ -4,6 +4,8 @@ sidebar_label: GCP Services
 slug: /applications/gcp-services
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # GCP Services Module
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/gcpservices_module.png" alt="GCP Services Module Deep Dive Analysis" style={{marginBottom: '20px'}} />
