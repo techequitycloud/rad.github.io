@@ -6,7 +6,7 @@ slug: /applications/n8n
 
 # N8N on Google Cloud Platform
 
-This document provides a comprehensive analysis of the `modules/N8N` implementation, detailing its architecture, IAM configuration, services, and potential enhancements.
+This document provides a comprehensive analysis of the `N8N` implementation, detailing its architecture, IAM configuration, services, and potential enhancements.
 
 ## 1. Overview
 
