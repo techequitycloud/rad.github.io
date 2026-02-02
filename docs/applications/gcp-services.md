@@ -1,10 +1,10 @@
 ---
-title: GCS Services
-sidebar_label: GCS Services
-slug: /applications/gcs-services
+title: GCP Services
+sidebar_label: GCP Services
+slug: /applications/gcp-services
 ---
 
-# GCS Services Module Deep Dive Analysis
+# GCP Services Module Deep Dive Analysis
 
 ## 1. Executive Summary
 
