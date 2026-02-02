@@ -159,6 +159,26 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'demos/admin', label: 'Admin' },
       ],
     },
+    {
+      type: 'category',
+      label: 'Applications',
+      items: [
+        { type: 'doc', id: 'applications/gcs-services', label: 'GCS Services' },
+        { type: 'doc', id: 'applications/cloud-run-app', label: 'Cloud Run App' },
+        { type: 'doc', id: 'applications/cyclos', label: 'Cyclos' },
+        { type: 'doc', id: 'applications/directus', label: 'Directus' },
+        { type: 'doc', id: 'applications/django', label: 'Django' },
+        { type: 'doc', id: 'applications/ghost', label: 'Ghost' },
+        { type: 'doc', id: 'applications/moodle', label: 'Moodle' },
+        { type: 'doc', id: 'applications/n8n', label: 'N8N' },
+        { type: 'doc', id: 'applications/odoo', label: 'Odoo' },
+        { type: 'doc', id: 'applications/openemr', label: 'OpenEMR' },
+        { type: 'doc', id: 'applications/sample', label: 'Sample' },
+        { type: 'doc', id: 'applications/strapi', label: 'Strapi' },
+        { type: 'doc', id: 'applications/wiki-js', label: 'Wiki.js' },
+        { type: 'doc', id: 'applications/wordpress', label: 'Wordpress' },
+      ],
+    },
   ],
 };
 

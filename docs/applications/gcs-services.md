@@ -1,4 +1,10 @@
-# GCP_Services Module Deep Dive Analysis
+---
+title: GCS Services
+sidebar_label: GCS Services
+slug: /applications/gcs-services
+---
+
+# GCS Services Module Deep Dive Analysis
 
 ## 1. Executive Summary
 
@@ -139,4 +145,3 @@ To further mature the platform, the following enhancements are recommended:
 1.  **Multi-Region config:** While subnets are multi-region, the resources (SQL, NFS) default to `local.region` (index 0). Adding logic to deploy Read Replicas for SQL in a secondary region would improve DR.
 2.  **Filestore Enterprise:** Add support for `ENTERPRISE` tier Filestore for critical workloads requiring regional availability (current config supports BASIC tiers).
 3.  **Memorystore for Redis:** Add support for `STABDARD` tier for a highly available Redis instance that includes automatically enabled cross-zone replication and automatic failover..
-

@@ -1,4 +1,10 @@
-# DWiki.js on Google Cloud Platform
+---
+title: Wiki.js
+sidebar_label: Wiki.js
+slug: /applications/wiki-js
+---
+
+# Wiki.js on Google Cloud Platform
 
 This document details the implementation of the `modules/Wikijs` module, covering its architecture, security posture, configuration, and potential enhancements.
 

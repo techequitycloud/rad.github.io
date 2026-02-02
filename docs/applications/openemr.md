@@ -1,3 +1,9 @@
+---
+title: OpenEMR
+sidebar_label: OpenEMR
+slug: /applications/openemr
+---
+
 # OpenEMR on Google Cloud Platform
 
 This document provides an analysis of the OpenEMR implementation within the `modules/OpenEMR` directory. It details the architecture, IAM configurations, service specifications, and available features, along with recommendations for enhancement.
@@ -58,7 +64,7 @@ The module implements the Principle of Least Privilege through dedicated Service
 *   **Connection:**
     *   Primary: Unix Socket (mounted at `/cloudsql`).
     *   Secondary: Internal IP (`DB_HOST` env var).
-*   **Credentials:** Rotated automatically via Secret Manager (`google_secret_manager_secret`).
+    *   **Credentials:** Rotated automatically via Secret Manager (`google_secret_manager_secret`).
 
 ### Storage: NFS & Volumes
 *   **Mount Point:** `/var/www/localhost/htdocs/openemr/sites`.

@@ -1,3 +1,9 @@
+---
+title: Django
+sidebar_label: Django
+slug: /applications/django
+---
+
 # Django on Google Cloud Platform
 
 ## 1. Executive Summary

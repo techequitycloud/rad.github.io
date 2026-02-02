@@ -1,3 +1,9 @@
+---
+title: Sample
+sidebar_label: Sample
+slug: /applications/sample
+---
+
 # Sample web application on Google Cloud Platform
 
 ## 1. Executive Summary
@@ -76,7 +82,7 @@ The core service is a Cloud Run v2 service.
 1.  **Wrapper Architecture:** Seamlessly inherits platform best practices while allowing custom application logic.
 2.  **Automated DB Init:** "Day 0" operations (DB creation, User creation) are automated via Cloud Run Jobs.
 3.  **Secure Secrets:** No hardcoded passwords; all sensitive data is in Secret Manager.
-4.  **Custom Builds:** Integrated support for building containers from source (`Dockerfile`) or using upstream images.
+4.  **Custom Builds:** Integrated support for building containers from source (`Dockerfile`) or uses upstream images.
 5.  **Observability:** Built-in support for Startup/Liveness probes.
 6.  **CI/CD Hooks:** Infrastructure-as-Code includes triggers for Cloud Build (`trigger.tf`).
 
