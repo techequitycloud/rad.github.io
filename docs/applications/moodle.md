@@ -4,7 +4,18 @@ sidebar_label: Moodle
 slug: /applications/moodle
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Moodle on Google Cloud Platform
+
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/moodle_module.png" alt="Moodle on Google Cloud Platform" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/moodle_module.m4a" title="Moodle on Google Cloud Platform Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/moodle_module.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 ## 1. Executive Summary
 The Moodle module is a containerized deployment leveraging **Google Cloud Run** for serverless compute, **Cloud SQL (PostgreSQL)** for the database, and **Google Cloud Storage (GCS) FUSE** for the shared data directory (`moodledata`). It is wrapped by the `CloudRunApp` foundation module, inheriting standardized networking, IAM, and secret management patterns.

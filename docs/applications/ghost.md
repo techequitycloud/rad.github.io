@@ -4,7 +4,18 @@ sidebar_label: Ghost
 slug: /applications/ghost
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Ghost on Google Cloud Platform
+
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/ghost_module.png" alt="Ghost on Google Cloud Platform" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/ghost_module.m4a" title="Ghost on Google Cloud Platform Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/ghost_module.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 This document provides a comprehensive overview of the `modules/Ghost` implementation, covering its architecture, IAM and access control, service configuration, and potential enhancements.
 

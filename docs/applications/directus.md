@@ -4,7 +4,18 @@ sidebar_label: Directus
 slug: /applications/directus
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Directus on Google Cloud Platform
+
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/directus_module.png" alt="Directus on Google Cloud Platform" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/directus_module.m4a" title="Directus on Google Cloud Platform Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/directus_module.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 This document provides a comprehensive analysis of the `modules/Directus` implementation. It details the architecture, IAM security model, service configurations, and opportunities for enhancement.
 
