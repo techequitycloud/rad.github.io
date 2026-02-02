@@ -6,7 +6,7 @@ slug: /applications/wiki-js
 
 # Wiki.js on Google Cloud Platform
 
-This document details the implementation of the `modules/Wikijs` module, covering its architecture, security posture, configuration, and potential enhancements.
+This document details the implementation of the `Wiki.js` module, covering its architecture, security posture, configuration, and potential enhancements.
 
 ## 1. Architecture & Services
 The module deploys Wiki.js as a containerized application on Google Cloud Run, backed by managed Cloud SQL (PostgreSQL) and Cloud Storage.
