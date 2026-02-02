@@ -4,7 +4,18 @@ sidebar_label: Odoo
 slug: /applications/odoo
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Odoo on Google Cloud Platform
+
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/odoo_module.png" alt="Odoo on Google Cloud Platform" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/odoo_module.m4a" title="Odoo on Google Cloud Platform Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/odoo_module.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 This analysis details the implementation of the `Odoo` module, covering architecture, IAM, services, configuration, features, and the implemented enhancements.
 

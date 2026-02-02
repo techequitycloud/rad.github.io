@@ -4,7 +4,18 @@ sidebar_label: Sample
 slug: /applications/sample
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Sample web application on Google Cloud Platform
+
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/sample_module.png" alt="Sample web application on Google Cloud Platform" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/sample_module.m4a" title="Sample web application on Google Cloud Platform Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/sample_module.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 ## 1. Executive Summary
 The `Sample` module acts as a reference implementation for deploying custom web applications on the Google Cloud Platform (GCP) using the platform's wrapper module architecture. It leverages the foundation `CloudRunApp` module to deploy a Python Flask application connected to a Cloud SQL PostgreSQL database. It demonstrates best practices for containerization, database initialization, secrets management, and secure networking.

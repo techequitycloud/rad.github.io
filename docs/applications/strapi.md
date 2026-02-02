@@ -4,7 +4,18 @@ sidebar_label: Strapi
 slug: /applications/strapi
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # Strapi on the Google Cloud Platform
+
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/strapi_module.png" alt="Strapi on the Google Cloud Platform" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/strapi_module.m4a" title="Strapi on the Google Cloud Platform Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/strapi_module.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 This document provides a comprehensive analysis of the `Strapi` implementation on the Google Cloud Platform. It covers the architectural design, IAM and access control, service configurations, existing features, and potential enhancements.
 
