@@ -163,10 +163,11 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Applications',
       items: [
+        { type: 'doc', id: 'applications/gcs-services', label: 'GCS Services' },
+        { type: 'doc', id: 'applications/cloud-run-app', label: 'Cloud Run App' },
         { type: 'doc', id: 'applications/cyclos', label: 'Cyclos' },
         { type: 'doc', id: 'applications/directus', label: 'Directus' },
         { type: 'doc', id: 'applications/django', label: 'Django' },
-        { type: 'doc', id: 'applications/gcs-services', label: 'GCS Services' },
         { type: 'doc', id: 'applications/ghost', label: 'Ghost' },
         { type: 'doc', id: 'applications/moodle', label: 'Moodle' },
         { type: 'doc', id: 'applications/n8n', label: 'N8N' },
