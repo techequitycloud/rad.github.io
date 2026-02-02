@@ -7,7 +7,7 @@ slug: /applications/moodle
 # Moodle on Google Cloud Platform
 
 ## 1. Executive Summary
-The Moodle module is a containerized deployment leveraging **Google Cloud Run** for serverless compute, **Cloud SQL (PostgreSQL)** for the database, and **Google Cloud Storage (GCS) FUSE** for the shared data directory (`moodledata`). It is wrapped by the `CloudRunApp` foundation module, inheriting standardized networking, IAM, and secret management patterns.
+The `Moodle`  module is a containerized deployment leveraging **Google Cloud Run** for serverless compute, **Cloud SQL (PostgreSQL)** for the database, and **Google Cloud Storage (GCS) FUSE** for the shared data directory (`moodledata`). It is wrapped by the `CloudRunApp` foundation module, inheriting standardized networking, IAM, and secret management patterns.
 
 ## 2. Architecture & Services
 
