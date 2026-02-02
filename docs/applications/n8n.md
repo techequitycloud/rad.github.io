@@ -4,7 +4,18 @@ sidebar_label: N8N
 slug: /applications/n8n
 ---
 
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # N8N on Google Cloud Platform
+
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/n8n_module.png" alt="N8N on Google Cloud Platform" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/n8n_module.m4a" title="N8N on Google Cloud Platform Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/n8n_module.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 This document provides a comprehensive analysis of the `N8N` implementation, detailing its architecture, IAM configuration, services, and potential enhancements.
 
