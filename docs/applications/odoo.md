@@ -6,7 +6,7 @@ slug: /applications/odoo
 
 # Odoo on Google Cloud Platform
 
-This analysis details the implementation of the `modules/Odoo` module, covering architecture, IAM, services, configuration, features, and the implemented enhancements.
+This analysis details the implementation of the `Odoo` module, covering architecture, IAM, services, configuration, features, and the implemented enhancements.
 
 ## 1. Executive Summary
 

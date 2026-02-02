@@ -17,7 +17,7 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
-This document provides a comprehensive analysis of the `modules/Directus` implementation. It details the architecture, IAM security model, service configurations, and opportunities for enhancement.
+This document provides a comprehensive analysis of the `Directus` module implementation. It details the architecture, IAM security model, service configurations, and opportunities for enhancement.
 
 ## 1. Architectural Overview
 

@@ -18,7 +18,7 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 </video>
 
 ## 1. Executive Summary
-The `modules/Django` module is a specialized wrapper around the platform's core `CloudRunApp` module. It is designed to deploy a production-ready Django application on Google Cloud Run, backed by Cloud SQL (PostgreSQL) and Cloud Storage (GCS) for media files. The architecture emphasizes statelessness for the application server while ensuring persistence for data and media through managed services.
+The `Django` module is a specialized wrapper around the platform's core `CloudRunApp` module. It is designed to deploy a production-ready Django application on Google Cloud Run, backed by Cloud SQL (PostgreSQL) and Cloud Storage (GCS) for media files. The architecture emphasizes statelessness for the application server while ensuring persistence for data and media through managed services.
 
 ## 2. IAM and Access Control Configuration
 

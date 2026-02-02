@@ -17,7 +17,7 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
-This document details the implementation of the Cyclos module, covering IAM, services, configurations, existing features, and potential enhancements.
+This document details the implementation of the `Cyclos`  module, covering IAM, services, configurations, existing features, and potential enhancements.
 
 ## 1. IAM and Access Control
 
