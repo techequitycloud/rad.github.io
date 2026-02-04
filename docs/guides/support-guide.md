@@ -11,6 +11,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/guides/support_guide.pdf)
+
 ## 1. Introduction
 
 Welcome to the Support User Guide. As a member of the Support team, you have enhanced visibility into the platform's operations to assist users effectively. You possess all the capabilities of a Partner, with the additional privilege of viewing **All Deployments** made by any user on the platform.

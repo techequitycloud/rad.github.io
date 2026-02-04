@@ -17,6 +17,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/django_module.pdf)
+
 ## Overview
 The **Django** module is a rapid deployment accelerator for Python web applications. It provides a standardized, best-practice environment for hosting Django-based projects on Google Cloud. Whether you are building a CMS, a custom business app, or an API backend, this module gets you up and running in minutes.
 

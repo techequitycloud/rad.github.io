@@ -11,6 +11,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/guides/agent_guide.pdf)
+
 ## 1. Introduction
 
 Welcome to the Agent Program! As an Agent, you earn commissions by referring new users to the platform. This guide explains how to track your referrals and monitor the revenue they generate.

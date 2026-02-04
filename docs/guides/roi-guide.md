@@ -11,6 +11,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/guides/roi_guide.pdf)
+
 ## 1. Introduction
 
 The Return on Investment (ROI) Calculator is a powerful tool designed to help you quantify the value of the RAD platform. By inputting your team's specific metrics—such as engineering costs and manual deployment times—you can visualize the potential time and cost savings RAD brings to your organization.

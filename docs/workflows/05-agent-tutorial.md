@@ -11,6 +11,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/workflows/agent_workflow.pdf)
+
 ## 1. Introduction
 The Agent Program allows you to earn revenue by referring new users. This tutorial explains how to find your referral code and track your earnings.
 

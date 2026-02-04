@@ -17,6 +17,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/gcpservices_module.pdf)
+
 ## Overview
 The **GCP Services** module acts as the foundation builder for your applications. Once your project is created, this module lays down the necessary infrastructure "plumbing"—networks, databases, and shared storage—that your applications need to run. It ensures that all services are connected securely and efficiently.
 
