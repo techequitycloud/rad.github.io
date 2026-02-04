@@ -1,14 +1,38 @@
+---
+title: CloudRunApp on Google Cloud Platform
+sidebar_label: Cloud Run App
+slug: /applications/cloud-run-app
+---
+
+
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 # CloudRunApp on Google Cloud Platform
 
-This document provides a comprehensive analysis of the `modules/CloudRunApp` Terraform module on Google Cloud Platform. It details the architecture, IAM configuration, service integrations, and potential enhancements.
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/cloudrunapp_module.png" alt="CloudRunApp on Google Cloud Platform" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/cloudrunapp_module.m4a" title="CloudRunApp on Google Cloud Platform Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/cloudrunapp_module.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+This document provides a comprehensive analysis of the `CloudRunApp` module on Google Cloud Platform. It details the architecture, IAM configuration, service integrations, and potential enhancements.
 
 ---
 
-## 1. Module Overview
+## Overview
 
-The `modules/CloudRunApp` module is a foundational building block for deploying containerized applications on Google Cloud Run (v2). It is designed to be highly configurable and orchestrates not just the compute layer, but also the surrounding ecosystem of networking, storage, databases, and observability.
+The `CloudRunApp` module is a foundational building block for deploying containerized applications on Google Cloud Run (v2). It is designed to be highly configurable and orchestrates not just the compute layer, but also the surrounding ecosystem of networking, storage, databases, and observability.
 
-**Key Capabilities:**
+## Key Benefits
+*   **Accelerated Deployment**: Reduces weeks of infrastructure boilerplate work into a single module instantiation.
+*   **Security by Design**: Implements least-privilege IAM, VPC egress controls, and Secret Manager integration out of the box.
+*   **Serverless Scalability**: Leverages Cloud Run to automatically scale from zero to N instances based on demand, optimizing costs.
+*   **Production Ready**: Includes built-in support for observability (logging/monitoring), database connectivity (Cloud SQL Auth Proxy), and persistent storage (NFS/GCS).
+
+## Functionality
 *   **Compute**: Deploys Cloud Run v2 Services (Gen2 execution environment).
 *   **Data Persistence**: Integrates with Cloud SQL, NFS, and GCS (including GCS Fuse).
 *   **Lifecycle Management**: Supports initialization jobs (DB migrations, backups, setup).
@@ -96,3 +120,5 @@ To improve the platform's security, flexibility, and observability, the followin
 
 ### 4. Developer Experience
 *   **Buildpacks**: The module supports custom Dockerfiles. Adding support for **Google Cloud Buildpacks** would allow deploying source code directly without needing to write/maintain a `Dockerfile`.
+
+---

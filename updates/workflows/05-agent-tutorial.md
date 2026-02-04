@@ -1,4 +1,15 @@
-# Tutorial: Agent Program
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
+# Agent Workflow
+
+<img src="https://storage.googleapis.com/rad-public-2b65/workflows/agent_workflow.png" alt="Agent Workflow" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflows/agent_workflow.m4a" title="Agent Workflow Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/workflows/agent_workflow.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 ## 1. Introduction
 The Agent Program allows you to earn revenue by referring new users. This tutorial explains how to find your referral code and track your earnings.
