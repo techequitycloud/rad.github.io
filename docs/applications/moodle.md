@@ -17,7 +17,23 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
-## 1. Executive Summary
+## Overview
+The **Moodle** module enables educational institutions and training organizations to launch a powerful Learning Management System (LMS) on Google Cloud. It transforms the complex task of setting up Moodle servers into a simple automated process, providing a robust platform for online learning.
+
+## Key Benefits
+- **Scalable Learning**: Capable of supporting thousands of concurrent students by leveraging Google Cloud's auto-scaling infrastructure.
+- **High Performance**: Optimized configuration for fast page loads and reliable video/content delivery.
+- **Data Safety**: Automated backups for course data and student records ensuring you never lose critical information.
+- **Global Reach**: Can be deployed in regions closest to your students for the best user experience.
+
+## Functionality
+- Installs the Moodle LMS software on Cloud Run.
+- Configures a high-performance database connection.
+- Sets up a massive shared file system (`moodledata`) for storing course materials, assignments, and videos.
+- Automates the "Cron" jobs required for Moodle's background tasks (e.g., sending forum emails, grading).
+
+---
+
 The `Moodle`  module is a containerized deployment leveraging **Google Cloud Run** for serverless compute, **Cloud SQL (PostgreSQL)** for the database, and **Google Cloud Storage (GCS) FUSE** for the shared data directory (`moodledata`). It is wrapped by the `CloudRunApp` foundation module, inheriting standardized networking, IAM, and secret management patterns.
 
 ## 2. Architecture & Services

@@ -17,9 +17,26 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+## Overview
+The **OpenEMR** module deploys a leading open-source electronic health records (EHR) and medical practice management solution. It is designed for healthcare providers who need a secure, HIPAA-compliant-ready environment to manage patient data, scheduling, and billing.
+
+## Key Benefits
+- **Patient Data Sovereignty**: Keep full control and ownership of your patient records by hosting them on your own cloud instance.
+- **Secure & Compliant**: Built on Google Cloud's secure foundation, with encrypted databases and private networking to help meet compliance requirements.
+- **High Availability**: Ensures patient records are always accessible when needed by clinicians.
+- **Disaster Recovery**: Integrated backup solutions to protect against data loss.
+
+## Functionality
+- Deploys OpenEMR application.
+- Configures a secure MySQL/MariaDB database.
+- Sets up encrypted storage for patient documents and certificates.
+- Automates certificate management (SSL) for secure web access.
+
+---
+
 This document provides an analysis of the `OpenEMR` module. It details the architecture, IAM configurations, service specifications, and available features, along with recommendations for enhancement.
 
-## 1. Executive Summary
+
 
 The OpenEMR module deploys a scalable, containerized instance of OpenEMR on Google Cloud Run. It utilizes a wrapper architecture (`CloudRunApp`) to provision standard infrastructure components while defining OpenEMR-specific configurations. Key architectural decisions include using Cloud SQL for the database, an external NFS server (GCE instance) for shared file storage (sites directory), and Redis for session management (hosted on the same NFS infrastructure).
 
