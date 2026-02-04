@@ -82,3 +82,5 @@ Need assistance? Visit the **Help** page.
 
 *   **Theme:** Toggle between Light and Dark mode using the sun/moon icon in the navigation bar.
 *   **Profile:** Click your avatar to access your profile settings or sign out.
+
+<!-- Updated from updates/guides -->

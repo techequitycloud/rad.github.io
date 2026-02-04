@@ -55,3 +55,5 @@ When a user reports an issue:
 3.  **Check the Status:** Is it `FAILURE`, `TIMEOUT`, or stuck in `WORKING`?
 4.  **Review Logs:** Identify the root cause (e.g., quota exceeded, bad configuration, API error).
 5.  **Advise the User:** Based on your findings, guide the user to retry with different variables or escalate the issue to Engineering/Admin if it's a platform bug.
+
+<!-- Updated from updates/guides -->

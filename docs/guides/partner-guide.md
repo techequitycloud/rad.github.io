@@ -80,3 +80,5 @@ As a Partner, you have a focused view of the platform.
 *   **Your Data:** You can see your own deployments and the modules you have published.
 *   **Platform Data:** You can see public platform modules available to everyone.
 *   **Privacy:** Other partners cannot see your private modules or deployments. Only System Administrators have access to view all deployments across the organization.
+
+<!-- Updated from updates/guides -->

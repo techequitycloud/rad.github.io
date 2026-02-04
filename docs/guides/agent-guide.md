@@ -46,3 +46,5 @@ This report gives you a view of *what* is selling across your referrals.
 
 ### 3.4. Accessing Features
 As an Agent, your primary workspace is the **Revenue** dashboard. If you are also a registered **User** or **Partner**, you will see additional tabs (like Deployments or Publish) in your navigation bar alongside your agent tools.
+
+<!-- Updated from updates/guides -->

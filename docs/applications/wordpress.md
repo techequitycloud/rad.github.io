@@ -17,6 +17,22 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+## Overview
+The **Wordpress** module deploys the world's most popular Content Management System (CMS) on Google Cloud's modern serverless platform. It is perfect for corporate websites, blogs, and marketing landing pages that need to be fast, secure, and auto-scalable.
+
+## Key Benefits
+- **Traffic Spikes? No Problem**: Automatically scales up to handle viral traffic or marketing campaigns, and scales down to save money when traffic is low.
+- **Fast Performance**: Optimized environment for fast page load times, essential for SEO and user experience.
+- **Security**: Removes the attack surface of traditional servers (no OS to patch).
+- **Media Management**: Integrates with Cloud Storage to store unlimited images and media files.
+
+## Functionality
+- Deploys WordPress container.
+- Connects to a managed MySQL database.
+- Configures a "Stateless" plugin mechanism (using Cloud Storage) so media uploads work across multiple server instances.
+
+---
+
 ## Executive Summary
 The `Wordpress` module deploys a scalable, containerized WordPress application on **Google Cloud Run (v2)**, backed by **Cloud SQL (MySQL 8.0)** and **Cloud Storage (GCS)** for media assets. It leverages a wrapper architecture around the `CloudRunApp` module to inherit standardized infrastructure practices while defining application-specific configurations, such as custom Docker builds and initialization jobs.
 
