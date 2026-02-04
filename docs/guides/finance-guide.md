@@ -69,3 +69,5 @@ This is your primary tool for monthly reconciliation.
 *   **View:** Select a month to see a line-item breakdown of costs for every project.
 *   **Details:** See the Project Name, ID, Total Cost (in currency), and the Credit equivalent.
 *   **Export:** Download the invoice data as a CSV file for import into your external accounting software.
+
+<!-- Updated from updates/guides -->
