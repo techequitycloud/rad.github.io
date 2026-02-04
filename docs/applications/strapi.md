@@ -18,6 +18,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/strapi_module.pdf)
+
 ## Overview
 The **Strapi** module deploys the leading open-source Headless CMS on Google Cloud. It empowers developers to build performant, customizable APIs while giving content editors a user-friendly interface.
 

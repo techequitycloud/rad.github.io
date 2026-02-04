@@ -17,6 +17,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/moodle_module.pdf)
+
 ## Overview
 The **Moodle** module enables educational institutions and training organizations to launch a powerful Learning Management System (LMS) on Google Cloud. It transforms the complex task of setting up Moodle servers into a simple automated process, providing a robust platform for online learning.
 

@@ -17,6 +17,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/gcpproject_module.pdf)
+
 ## Overview
 The **GCP Project** module is the starting point for your cloud journey. It automates the creation and configuration of a new Google Cloud Platform project, ensuring that your environment is set up with best practices from day one. This module handles the administrative overhead of project provisioning, allowing your team to focus on building applications rather than managing cloud settings.
 

@@ -18,6 +18,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/ghost_module.pdf)
+
 ## Overview
 The **Ghost** module deploys the Ghost publishing platform on Google Cloud. Ghost is a powerful app for professional publishers to create, share, and grow a business around their content.
 

@@ -17,6 +17,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/odoo_module.pdf)
+
 ## Overview
 The **Odoo** module deploys a comprehensive Enterprise Resource Planning (ERP) suite. Odoo offers a single platform for CRM, Accounting, Inventory, Manufacturing, eCommerce, and more. This module provides a turnkey solution to host Odoo Enterprise or Community on Google Cloud, ensuring it is secure, backed up, and scalable.
 

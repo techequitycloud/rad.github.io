@@ -11,6 +11,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/guides/admin_guide.pdf)
+
 ## 1. Introduction
 
 Welcome to the Administrator Guide for the Rapid Application Deployment (RAD) platform. As an administrator, you have full control over the platform's configuration, user management, billing, and deployment oversight. This guide will walk you through your key responsibilities and the tools available to you.
