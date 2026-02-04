@@ -8,12 +8,12 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # N8N AI on Google Cloud Platform
 
-<img src="https://storage.googleapis.com/rad-public-2b65/modules/n8nai_module.png" alt="N8N AI on Google Cloud Platform" style={{marginBottom: '20px'}} />
+<img src="https://storage.googleapis.com/rad-public-2b65/guides/n8nai_module.png" alt="N8N AI on Google Cloud Platform" style={{marginBottom: '20px'}} />
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/n8nai_module.m4a" title="N8N AI on Google Cloud Platform Audio" />
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/n8nai_module.m4a" title="N8N AI on Google Cloud Platform Audio" />
 
 <video width="100%" controls style={{marginTop: '20px'}}>
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/n8nai_module.mp4" type="video/mp4" />
+  <source src="https://storage.googleapis.com/rad-public-2b65/guides/n8nai_module.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
 
