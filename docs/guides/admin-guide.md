@@ -118,3 +118,5 @@ Use the **Help** page to:
 *   **Send Messages:** Broadcast messages to all users or specific groups via the "Send Message" form.
 *   **Invite Users:** Send email invitations to new users via the "Invite User" form.
 *   **Manage Documentation:** Ensure your users have access to the latest guides.
+
+<!-- Updated from updates/guides -->

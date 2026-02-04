@@ -60,3 +60,5 @@ For logged-in users with history, the calculator displays a "Actual Deployment S
 *   Average deployment duration on the platform.
 
 Use these actuals to refine your inputs and make your ROI projection as accurate as possible.
+
+<!-- Updated from updates/guides -->
