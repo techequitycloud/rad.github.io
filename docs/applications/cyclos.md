@@ -17,6 +17,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/cyclos_module.pdf)
+
 ## Overview
 The **Cyclos** module creates a complete, secure environment for hosting the Cyclos Banking System on Google Cloud. Cyclos is a payment and banking software for microfinance institutions, local banks, and complementary currency systems. This module takes the complexity out of deploying Cyclos by automating the setup of its web servers, database, and storage.
 

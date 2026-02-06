@@ -18,6 +18,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/wikijs_module.pdf)
+
 ## Overview
 The **Wiki.js** module deploys the most powerful and extensible open-source wiki software on Google Cloud. It is designed to make knowledge management beautiful and intuitive for teams of all sizes.
 
