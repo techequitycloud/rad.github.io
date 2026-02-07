@@ -11,26 +11,22 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
-<br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.pdf)
-
 ## 1. Introduction
 
 Welcome to the Finance Guide. This documentation is intended for users with the **Finance** role. This role provides specialized access to the **Billing** section of the application, as well as revenue reports and management capabilities for the platform's credit economy and subscription products.
 
 ## 2. Access & Permissions
 
-As a Finance user, you have elevated access to the **Billing** section of the application. Your view includes data for **all users** and **all projects** across the organization, allowing for comprehensive auditing, financial reporting, and configuration of billing parameters.
+As a Finance user, you have elevated access to the **Billing** section of the application. Your view includes data for **all users** and **all projects** across the organization, allowing for comprehensive auditing, financial reporting, and configuration of billing parameters. Your navigation bar shows **Billing** and **Help**.
 
 ## 3. Financial Management & Reporting
 
-Navigate to the **Billing** page to access your toolset.
+Navigate to the **Billing** page to access your toolset. The Billing page is organized into the following tabs. *Note: The Subscription Tiers tab is only visible when subscriptions are enabled by the administrator.*
 
 ### 3.1. Subscription Tiers
 Manage the subscription products available to your users.
 *   **Create & Edit:** Define new subscription tiers with specific pricing, credit allocations, and features.
-*   **Stripe Integration:** Monitor the connection status with Stripe.
+*   **Payment Provider Integration:** Monitor the connection status with Stripe and Flutterwave.
 *   **Management:** Update existing tiers or remove obsolete ones to keep your offerings current.
 
 ### 3.2. Credit Settings
@@ -44,13 +40,14 @@ Configure the global parameters of the platform's credit economy.
 *   **Low Balance Alerts:** Set the threshold for notifying users when their balance is low.
 *   **Agent Revenue Share:** The percentage of revenue shared with referring agents.
 *   **Partner Revenue Share:** The percentage of revenue shared with module partners.
+*   **Dry Run Modes:** Admins can configure the system to run in "Dry Run" mode for critical financial operations (like monthly credit resets or partner payouts). This allows you to verify calculations and system behavior without affecting actual user balances.
 
 ### 3.3. Credit Management
 Audit and adjust individual user credit balances.
 *   **Search & Filter:** Quickly locate users by email.
-*   **Edit Balances:** Manually award or deduct credits across three categories:
+*   **Edit Balances:** Manually award or deduct credits across these categories:
     *   **Awarded Credits:** Free credits given by the platform.
-    *   **Purchased Credits:** Credits bought via Stripe.
+    *   **Purchased Credits:** Credits bought via Stripe or Flutterwave.
     *   **Partner Credits:** Monthly allowances for partners.
 *   **Status Indicators:** View user roles (Admin, Partner) directly in the table.
 
@@ -63,10 +60,8 @@ Analyze historical spending trends.
 ### 3.5. Revenue Reports
 Track the platform's incoming value ("True Revenue"), defined as deployment costs paid for with purchased credits.
 
-*   **Module Revenue:** See which products are generating the most revenue.
-*   **User Revenue:** Audit revenue generation by specific users.
-*   **Agent Revenue:** Track commissions and revenue driven by the Agent referral program.
-*   **Partner Revenue:** Monitor the revenue share allocated to partners for their module usage.
+*   **Partner Revenue:** See which partner-published modules are generating the most revenue and the revenue share allocated to partners.
+*   **Agent Revenue:** Track commissions and revenue driven by the Agent referral program based on their referred users' deployments.
 
 ### 3.6. Project Invoices
 This is your primary tool for monthly reconciliation.
@@ -74,4 +69,12 @@ This is your primary tool for monthly reconciliation.
 *   **Details:** See the Project Name, ID, Total Cost (in currency), and the Credit equivalent.
 *   **Export:** Download the invoice data as a CSV file for import into your external accounting software.
 
-<!-- Updated from updates/guides -->
+## 4. Help & Support
+
+Visit the **Help** page for additional resources:
+
+*   **Support Tab:** Contact support if you need assistance.
+*   **Platform Demos Tab:** View demonstrations of platform features.
+*   **Platform Workflows Tab:** Browse documented platform workflows.
+*   **Platform Guides Tab:** Access user guides and documentation.
+*   **Platform Features Tab:** Explore the platform's feature catalog.

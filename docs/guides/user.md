@@ -11,10 +11,6 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
-<br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/guides/user_guide.pdf)
-
 ## 1. Introduction
 
 Welcome to the User Guide for the Rapid Application Deployment (RAD) platform. This guide will help you navigate the platform, deploy modules, and manage your account.
@@ -25,9 +21,7 @@ Welcome to the User Guide for the Rapid Application Deployment (RAD) platform. T
 Access the platform using your Google credentials. If it's your first time, an account will be created for you automatically. Depending on the platform settings, you may receive initial "Sign-up Credits" to get you started.
 
 ### 2.2. The Dashboard
-After logging in, you'll see the **Credits** page or **Deployments** page depending on your role.
-*   **Credits:** Manage your balance, view transactions, and buy credits.
-*   **Deployments:** Manage your running applications.
+After logging in, you'll be taken to the **Deployments** page, which is your home base for managing your deployed applications. Your navigation bar includes **Credits** (if credits are enabled), **Deployments**, **Deploy**, **ROI**, and **Help**.
 
 ## 3. Deploying Applications
 
@@ -39,12 +33,7 @@ To deploy a new application, click the **Deploy** link in the top navigation bar
 *   **Pinning:** Click the **Pin** icon on any module card to save it to the top of your list for quick access.
 *   **Stats:** View deployment counts, your current credit balance (if enabled), and the retention period for deployment history.
 
-### 3.2. Refining with Jules (AI Assistant)
-If enabled, you will see a **Sparkles** icon on the module card.
-1.  Click the sparkles icon to open the **Refine with Jules** window.
-2.  Chat with Jules to customize the module's configuration to your specific needs before deploying.
-
-### 3.3. Launching a Deployment
+### 3.2. Launching a Deployment
 1.  Click on any module card to start the provisioning process.
 2.  **Configure:** Fill out the required variables (e.g., Project ID, Region).
 3.  **Confirm:** Review your settings. If the module has a credit cost, you will see the amount that will be deducted from your balance.
@@ -56,35 +45,43 @@ If enabled, you will see a **Sparkles** icon on the module card.
 *   **Logs:** Click on a deployment to view real-time build logs. This is essential for troubleshooting if a deployment fails.
 *   **Rating:** After a successful deployment, you can rate the module (1-5 stars) to help others identify high-quality modules.
 *   **Delete:** To remove a deployment and destroy its resources, click the **Trash** icon. **Warning:** This action is irreversible.
+*   **Purge:** For deployments that are stuck or require immediate, aggressive cleanup, use the **Purge** option. This forces a hard deletion of all resources and removes the deployment record immediately upon completion.
 
 ## 5. Billing & Credits
 
-Manage your platform credits and costs on the **Credits** page. This is the first link in your navigation bar.
+Manage your platform credits and costs on the **Credits** page.
 
 ### 5.1. Dashboard Tabs
-*   **Credit Transactions:** A detailed history of your credit balance.
+*   **Buy Credits Tab:** (If enabled) Purchase additional credits via one-time payments through Stripe or Flutterwave.
+*   **Credit Transactions Tab:** A detailed, searchable history of your credit balance. Filter by date range and export your transaction history as a CSV file.
     *   **Awarded Credits:** Free credits granted by the platform (e.g., sign-up bonus, referrals). These are used first but cannot be cashed out or used for revenue calculation.
-    *   **Purchased Credits:** Credits you have bought via Stripe. Deployment costs paid with these credits contribute to the "True Revenue" calculation for agents and partners.
-*   **Project Costs:** (If enabled) View a breakdown of cloud infrastructure costs associated with your projects.
-*   **Project Invoices:** (If enabled) Access monthly invoices for your usage.
-*   **Buy Credits:** (If enabled) Purchase additional credits via one-time payments or manage your subscription tier.
+    *   **Purchased Credits:** Credits you have bought via Stripe or Flutterwave. Deployment costs paid with these credits contribute to the "True Revenue" calculation for agents and partners.
+*   **Module Costs Tab:** (If enabled) View a breakdown of costs by module across your deployments.
+*   **Project Costs Tab:** (If enabled) View a breakdown of cloud infrastructure costs associated with your projects.
+*   **Project Invoices Tab:** (If enabled) Access monthly invoices for your usage.
+*   **Subscriptions Tab:** (If enabled) View available subscription tiers and manage your subscription to receive monthly credit allowances.
 
 ### 5.2. Subscriptions
 If subscription tiers are available, you can upgrade your plan to receive a monthly allowance of credits and access to premium features.
 
-## 6. Help & Support
+## 6. ROI Calculator
 
-Need assistance? Visit the **Help** page.
+Access the **ROI** page from your navigation bar to use the interactive Return on Investment calculator. This tool helps you estimate your cost and time savings by comparing RAD's automation against manual deployment workflows.
 
-*   **Documentation:** Access user guides and tutorials.
-*   **Audio Tutorials:** Listen to step-by-step walkthroughs for common tasks.
-*   **Contact Support:** Use the built-in form to send a message directly to the support team.
-*   **Invite Users:** (If enabled) Share your unique referral link or QR code to invite friends to the platform. You can track your monthly referral usage directly on the card.
-*   **ROI Calculator:** Estimate your cost savings by using the platform's automation compared to manual deployment.
+## 7. Help & Support
 
-## 7. Profile & Settings
+Need assistance? Visit the **Help** page, which is organized into multiple tabs:
 
+*   **Support Tab:** Submit a support request by filling out the form with a Subject, Category (Technical, Billing, Feature, Bug, Account, or Other), Priority level, and a detailed message. If referrals are enabled, this tab also includes your unique **Referral Link** and **QR Code** for inviting new users to the platform. You can track your referral usage and share your link via the copy or share buttons.
+*   **Platform Demos Tab:** View demonstration videos and showcases for platform features.
+*   **Platform Workflows Tab:** Browse documented platform workflows.
+*   **Platform Guides Tab:** Access user guides and documentation.
+*   **Platform Features Tab:** Explore the platform's feature catalog.
+
+## 8. Profile & Settings
+
+Click your avatar in the top right to access your **Profile** page:
+
+*   **Notification Settings:** Toggle **Deployment Notifications** and **Billing Notifications** on or off to control which email alerts you receive.
+*   **Account Management:** View your account email. If needed, you can delete your account from this page (requires email confirmation).
 *   **Theme:** Toggle between Light and Dark mode using the sun/moon icon in the navigation bar.
-*   **Profile:** Click your avatar to access your profile settings or sign out.
-
-<!-- Updated from updates/guides -->
