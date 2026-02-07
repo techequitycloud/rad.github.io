@@ -11,6 +11,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/guides/partner_guide.pdf)
+
 ## 1. Introduction
 
 Welcome to the Partner Guide. As a Partner, you play a special role in the ecosystem. You have the ability to publish your own **Private Modules** and deploy them, in addition to the standard platform modules available to everyone. Your navigation bar includes **Credits**, **Explore** (if Jules AI is configured), **Publish** (once your repository is connected), **Deployments**, **Deploy**, **ROI**, and **Help**.

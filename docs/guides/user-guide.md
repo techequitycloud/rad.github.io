@@ -11,6 +11,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/guides/user_guide.pdf)
+
 ## 1. Introduction
 
 Welcome to the User Guide for the Rapid Application Deployment (RAD) platform. This guide will help you navigate the platform, deploy modules, and manage your account.

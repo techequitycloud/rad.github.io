@@ -11,6 +11,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+[Download PDF](https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.pdf)
+
 ## 1. Introduction
 
 Welcome to the Finance Guide. This documentation is intended for users with the **Finance** role. This role provides specialized access to the **Billing** section of the application, as well as revenue reports and management capabilities for the platform's credit economy and subscription products.
