@@ -18,7 +18,6 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 <br/>
 
 [Download PDF](https://storage.googleapis.com/rad-public-2b65/guides/start_guide.pdf)
-
 ## 1. Introduction
 Welcome to the Rapid Application Deployment (RAD) platform! This tutorial will guide you through your first steps: logging in, exploring the dashboard, and deploying your first module.
 

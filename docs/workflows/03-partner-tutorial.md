@@ -14,7 +14,6 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 <br/>
 
 [Download PDF](https://storage.googleapis.com/rad-public-2b65/workflows/partner_workflow.pdf)
-
 ## 1. Introduction
 This tutorial is for Partners. You will learn how to connect your own Git repository and publish a private module for deployment.
 

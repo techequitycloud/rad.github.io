@@ -14,7 +14,6 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 <br/>
 
 [Download PDF](https://storage.googleapis.com/rad-public-2b65/workflows/finance_workflow.pdf)
-
 ## 1. Introduction
 The Finance role provides deep visibility into the platform's economics.
 
