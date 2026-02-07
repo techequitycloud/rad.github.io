@@ -71,7 +71,6 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Applications',
       items: [
-        { type: 'doc', id: 'applications/gcp-project', label: 'GCP Project' },
         { type: 'doc', id: 'applications/gcp-services', label: 'GCP Services' },
         { type: 'doc', id: 'applications/cloud-run-app', label: 'Cloud Run App' },
         { type: 'doc', id: 'applications/cyclos', label: 'Cyclos' },
