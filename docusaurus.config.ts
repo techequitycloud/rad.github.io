@@ -104,23 +104,23 @@ const config: Config = {
           items: [
             {
               label: 'Guides',
-              to: '/docs/guides/user-guide',
+              to: '/docs/guides/user',
             },
             {
               label: 'Administrator Guide',
-              to: '/docs/guides/admin-guide',
+              to: '/docs/guides/admin',
             },
             {
               label: 'Partner Guide',
-              to: '/docs/guides/partner-guide',
+              to: '/docs/guides/partner',
             },
             {
               label: 'User Guide',
-              to: '/docs/guides/user-guide',
+              to: '/docs/guides/user',
             },
             {
               label: 'Finance Guide',
-              to: '/docs/guides/finance-guide',
+              to: '/docs/guides/finance',
             },
           ],
         },
@@ -137,7 +137,7 @@ const config: Config = {
             },
             {
               label: 'Support',
-              to: '/docs/guides/support-guide',
+              to: '/docs/guides/support',
             },
           ],
         },
