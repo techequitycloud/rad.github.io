@@ -11,10 +11,6 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
-<br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/guides/admin_guide.pdf)
-
 ## 1. Introduction
 
 Welcome to the Administrator Guide for the Rapid Application Deployment (RAD) platform. As an administrator, you have full control over the platform's configuration, user management, billing, and deployment oversight. This guide will walk you through your key responsibilities and the tools available to you.
@@ -31,12 +27,22 @@ Navigate to the **Setup** link in the main navigation bar. Alternatively, you ca
 *   **Deployment Scope:** Decide whether the platform operates at the Google Cloud **Organization** level or within a specific **Folder**. This determines the scope of data visible in reports and the target for deployments.
 *   **Features:** Enable or disable major modules:
     *   **Enable Credits:** Turns on the credit-based cost management system.
-    *   **Enable Subscription:** (Requires Credits) Activates the subscription tier system and Stripe integration.
+    *   **Enable Subscription:** (Requires Credits) Activates the subscription tier system and payment provider integration (Stripe and Flutterwave).
+    *   **Enable Partner Modules:** Allows the platform to support "Partner Modules" from a separate GitHub organization (`partner_github_org`).
     *   **Private Mode:**
         *   **Enabled:** Access is restricted to authorized users only. New users cannot self-register and must be manually added by an administrator.
         *   **Disabled (Default):** Public registration is open. New users can sign up and access the platform automatically.
-*   **Notification Settings:** Configure the SMTP server settings and the "Support Email" address to enable email notifications for system events.
-*   **Cleanup & Retention:** Set a **Retention Period** (e.g., 90 days) to automatically delete old deployment records and artifacts. The cleanup job runs daily automatically to help you manage storage costs.
+*   **Notification Settings:**
+    *   **Email Configuration:** Configure the `email_service` (default: gmail), `smtp_host`, `smtp_port`, and the `mail_secret_name` (Secret Manager secret containing credentials) for system emails.
+    *   **Slack Integration:** Set the `slack_webhook_url` to receive system alerts in a Slack channel.
+    *   **Alert Emails:** Configure `alert_email` and `alert_from_email` for critical system notifications (e.g., via SendGrid using `sendgrid_api_key`).
+*   **Cleanup & Retention:**
+    *   **Retention Period:** Set a period (e.g., 90 days) to automatically delete old deployment records.
+    *   **Grace Period:** The `deployment_cleanup_grace_period` (default: 7 days) determines how long a "deleted" deployment remains in a soft-delete state before permanent removal.
+*   **Dry Run Modes (Testing):**
+    *   **Monthly Credit Reset:** `credit_monthly_dry_run` simulates monthly credit resets without applying changes.
+    *   **Partner Credit Awards:** `credit_partner_dry_run` simulates partner payouts.
+    *   **Low Credit Notifications:** `credit_low_dry_run` simulates sending low balance alerts.
 
 ### 2.3. Jules AI Configuration
 To enable the AI-powered module refinement features for yourself and the platform:
@@ -57,11 +63,11 @@ Manage your platform's users from the **Users** page (accessible via the main na
 ### 3.1. Managing Users
 *   **View Users:** See a searchable, paginated list of all registered users.
 *   **Activate/Deactivate:** Toggle the "Active" checkbox to grant or revoke login access. Deactivating a user removes them from all access groups.
-*   **Assign Roles:**
+*   **Assign Roles:** Click the **Edit** button on a user row to toggle the following role checkboxes, then click **Save**:
     *   **User:** Standard access to deploy platform modules.
     *   **Partner:** Grants access to the "Publish" tab for deploying private modules and viewing "Partner Revenue".
-    *   **Agent:** Grants access to "Agent Revenue" reporting for their referred users.
-    *   **Finance:** Grants access to the "Billing" page for financial settings, subscription tiers, and reports.
+    *   **Agent:** Grants access to "Agent Revenue" reporting for their referred users. *Note: This role checkbox is only visible when subscriptions are enabled.*
+    *   **Finance:** Grants access to the "Billing" page for financial settings, subscription tiers, and reports. *Note: This role checkbox is only visible when subscriptions are enabled.*
     *   **Support:** Grants access to view "All Deployments" across the platform to assist with troubleshooting, but restricts access to sensitive settings.
 *   **Note:** Admin accounts are marked with a badge. Use caution when modifying Admin accounts to prevent accidental lockouts.
 
@@ -72,7 +78,7 @@ The **Billing** page is your financial hub. **Note:** Access to the Billing page
 ### 4.1. Subscription Tiers
 *   Go to the **Subscription Tiers** tab.
 *   **Create**, **Edit**, and **Delete** subscription packages.
-*   Define the Name, Price, Stripe Price ID, and Credit amount for each tier.
+*   Define the Name, Price, Payment Provider Price ID (Stripe or Flutterwave), and Credit amount for each tier.
 
 ### 4.2. Credit Settings
 *   **Credit Settings:** Configure the economic model:
@@ -90,9 +96,8 @@ The **Billing** page is your financial hub. **Note:** Access to the Billing page
 
 ### 4.3. Financial Reports
 *   **Project Costs:** Analyze historical spending trends across all deployments.
-*   **Module Revenue:** See which modules are generating the most "True Revenue". True Revenue is defined as the deployment costs that are paid for specifically with **Purchased Credits** (real money), excluding costs covered by free Awarded Credits.
-*   **User Revenue:** Track revenue generated by specific users.
-*   **Agent Revenue:** Monitor commissions and revenue driven by your Agents.
+*   **Partner Revenue:** See which partner-published modules are generating the most "True Revenue". True Revenue is defined as the deployment costs that are paid for specifically with **Purchased Credits** (real money), excluding costs covered by free Awarded Credits.
+*   **Agent Revenue:** Monitor commissions and revenue driven by your Agents based on their referred users' deployments.
 *   **Project Invoices:** View and export monthly cost breakdowns for every project.
 
 **True Revenue Calculation:** Revenue is calculated based on "True Revenue," which counts only deployments paid for with **Purchased Credits**. Deployments covered by free "Awarded Credits" (e.g., sign-up bonuses) are excluded from revenue totals to ensure accurate financial reporting.
@@ -101,11 +106,14 @@ The **Billing** page is your financial hub. **Note:** Access to the Billing page
 
 You have complete visibility into all activity on the platform.
 
-*   **All vs. My Deployments:** The **Deployments** page has tabs to view "All Deployments" (everyone's activity) or just "My Deployments" (your own).
+*   **All vs. My Deployments:** The **Deployments** page has tabs to view "All Deployments" (everyone's activity) or just "My Deployments" (your own). Only admins can switch between both tabs.
 *   **Admin Settings:** The "Admin Settings" button in the "All Deployments" view provides quick access to global platform configuration.
-*   **Search:** Use the search bar to find deployments by Name, Deployment ID, or User Email.
+*   **Search:** Use the search bar to find deployments by Module Name, Deployment ID, or User Email.
 *   **Ratings:** View the 1-5 star ratings given by users to gauge user satisfaction with specific modules.
 *   **Logs & Debugging:** Click on any Deployment ID to view its full build logs, status history, and configuration variables.
+*   **Purge vs. Delete:**
+    *   **Delete (Soft Delete):** This is the standard action. It marks the deployment for deletion, triggers a resource cleanup, but retains the record for the defined retention period.
+    *   **Purge (Hard Delete):** This is a force-cleanup action. It immediately triggers an aggressive resource removal pipeline (`DEPLOYMENT_ACTIONS.PURGE`) and removes the deployment record once complete. Use this for stuck deployments or when immediate cleanup is required.
 
 ## 6. Publishing Platform Modules
 
@@ -116,11 +124,21 @@ You are responsible for the catalog of standard modules available to all users.
 3.  **Refining Modules with Jules:** Click the **Sparkles** icon on any module card to open the Jules AI Refinement tool. Jules can help you improve code, add documentation, or fix bugs before publishing.
 4.  **Select & Save:** Select the modules you want to make public and click "Publish" (or "Update"). These will immediately appear on the "Deploy" page for all users.
 
-## 7. Support
+## 7. Help & Communication
 
-Use the **Help** page to:
-*   **Send Messages:** Broadcast messages to all users or specific groups via the "Send Message" form.
-*   **Invite Users:** Send email invitations to new users via the "Invite User" form.
-*   **Manage Documentation:** Ensure your users have access to the latest guides.
+The **Help** page provides tools for communication and platform documentation, organized across multiple tabs:
 
-<!-- Updated from updates/guides -->
+*   **Support Tab:** As an admin, you can broadcast messages to all users or specific groups via the "Send Message" form.
+*   **Platform Demos Tab:** View demonstration videos and showcases for platform features.
+*   **Platform Workflows Tab:** Browse documented platform workflows.
+*   **Platform Guides Tab:** Access user guides and documentation for each role.
+*   **Platform Features Tab:** Explore and review the platform's feature catalog.
+
+## 8. Profile & Notifications
+
+Click your avatar in the top right to access your **Profile** page, where you can manage:
+
+*   **Notification Settings:** Toggle **Deployment Notifications** and **Billing Notifications** on or off to control which email alerts you receive.
+*   **Admin Settings:** Configure your Platform GitHub Token, Repository, and Jules API Key (see sections 2.3 and 2.4).
+*   **Account Management:** View your account email. If needed, you can delete your account from this page (requires email confirmation).
+*   **Theme:** Toggle between Light and Dark mode using the sun/moon icon in the navigation bar.
