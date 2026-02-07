@@ -1,100 +1,98 @@
 ---
-title: User Management
-slug: /features/admin-user-management
+title: User Features
+slug: /features/users
 ---
 
-# Users
+import AudioPlayer from '@site/src/components/AudioPlayer';
 
-This guide provides a comprehensive overview of how to manage users and roles within the platform. Management responsibilities are split between the **Platform UI** (for specific operational tasks) and **Google Groups** (for high-level access control).
+<img src="https://storage.googleapis.com/rad-public-2b65/features/user_features.png" alt="User Features Infographic" />
 
-## User Roles & Permissions
+<br/>
 
-The platform utilizes a Role-Based Access Control (RBAC) system. The available roles and their capabilities are:
+<AudioPlayer src="https://storage.googleapis.com/rad-public-2b65/features/user_features.m4a" />
 
-| Role | Description | Key Capabilities |
-|------|-------------|------------------|
-| **Admin** | System Administrator | Full access to all settings, global configuration, and user management. |
-| **Finance** | Financial Controller | Access to the Billing dashboard, including Revenue, Costs, Invoices, and Credit Management. |
-| **Support** | Customer Support | Ability to view all deployments and logs to assist users with troubleshooting. |
-| **Partner** | Module Publisher | Ability to publish, update, and manage software modules. Access to partner-specific analytics. |
-| **Agent** | Referral Partner | Access to referral codes and revenue tracking for referred users. |
-| **User** | Standard User | Basic access to deploy modules and manage their own deployments. |
+<br/>
 
----
+<video controls width="100%">
+  <source src="https://storage.googleapis.com/rad-public-2b65/features/user_features.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
-## Method 1: Managing Roles via Google Groups (Recommended)
+<br/>
 
-For organizational security and ease of management, high-privilege roles (**Admin, Finance, Support, Agent, Partner**) are designed to be managed via your organization's Google Cloud Identity / Workspace Groups.
+[Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/user_features.pdf)
 
-### How it Works
-When a user logs in, the platform checks their membership in specific Google Groups. If they are a member, they are automatically granted the corresponding role for that session.
+## 1. Introduction
 
-### Configuration Options
-The platform checks for membership in the following default groups (configured via your system's environment variables):
+Welcome to the User Guide for the Rapid Application Deployment (RAD) platform. This guide will help you navigate the platform, deploy modules, and manage your account.
 
-*   **Admins:** `rad-admins@<your-domain>`
-*   **Finance Team:** `rad-finance@<your-domain>`
-*   **Support Team:** `rad-support@<your-domain>`
-*   **Agents:** `rad-agents@<your-domain>`
-*   **Partners:** `rad-partners@<your-domain>`
-*   **General Users:** `rad-users@<your-domain>` (New users are added here automatically)
+## 2. Getting Started
 
-### Implementation Steps
-To grant a role to a user:
-1.  Navigate to your **Google Admin Console** (admin.google.com).
-2.  Go to **Directory > Groups**.
-3.  Select the group corresponding to the role (e.g., `rad-finance`).
-4.  Add the user's email address as a member.
-5.  **Outcome:** The user will have the new role immediately upon their next login.
+### 2.1. Logging In
+Access the platform using your Google credentials. If it's your first time, an account will be created for you automatically. Depending on the platform settings, you may receive initial "Sign-up Credits" to get you started.
 
----
+### 2.2. The Dashboard
+After logging in, you'll be taken to the **Deployments** page, which is your home base for managing your deployed applications. Your navigation bar includes **Credits** (if credits are enabled), **Deployments**, **Deploy**, **ROI**, and **Help**.
 
-## Method 2: Managing Users via the Platform UI
+## 3. Deploying Applications
 
-For day-to-day operations, specifically for managing **Partners** and **User Credits**, you can use the built-in **Credit Management** interface.
+To deploy a new application, click the **Deploy** link in the top navigation bar.
 
-**Prerequisites:** You must have the **Admin** or **Finance** role to access this area.
+### 3.1. Finding a Module
+*   **Browse:** Explore "Free Modules" (available to everyone) or "Premium Modules" (if you have specific access).
+*   **Search:** Use the search bar to find modules by name.
+*   **Pinning:** Click the **Pin** icon on any module card to save it to the top of your list for quick access.
+*   **Stats:** View deployment counts, your current credit balance (if enabled), and the retention period for deployment history.
 
-### Accessing the Interface
-1.  Log in to the platform.
-2.  Click on **Billing** in the main navigation menu.
-3.  Select the **Credit Management** tab.
+### 3.2. Launching a Deployment
+1.  Click on any module card to start the provisioning process.
+2.  **Configure:** Fill out the required variables (e.g., Project ID, Region).
+3.  **Confirm:** Review your settings. If the module has a credit cost, you will see the amount that will be deducted from your balance.
+4.  **Deploy:** Submit the form. You will be redirected to the status page where you can watch the deployment progress in real-time.
 
-### Available Actions
+## 4. Managing Deployments
 
-#### 1. Managing Partner Access
-While Partner access can be granted via groups, it can also be toggled individually within the UI. This is useful for external partners who may not be in your organization's Google Groups.
+### 4.1. Monitoring & Actions
+*   **Logs:** Click on a deployment to view real-time build logs. This is essential for troubleshooting if a deployment fails.
+*   **Rating:** After a successful deployment, you can rate the module (1-5 stars) to help others identify high-quality modules.
+*   **Delete:** To remove a deployment and destroy its resources, click the **Trash** icon. **Warning:** This action is irreversible.
+*   **Purge:** For deployments that are stuck or require immediate, aggressive cleanup, use the **Purge** option. This forces a hard deletion of all resources and removes the deployment record immediately upon completion.
 
-*   **Steps:**
-    1.  Use the **Search** bar to find the user by email.
-    2.  Click the **Edit** button on the user's row.
-    3.  Toggle the **Is Partner?** checkbox.
-    4.  Click **Save**.
-*   **Outcome:**
-    *   **Checked:** The user is granted the **Partner** role. They will see the "Publish" tab in their navigation bar and can begin publishing modules.
-    *   **Unchecked:** The user loses publishing privileges.
+## 5. Billing & Credits
 
-#### 2. Managing User Credits
-You can manually adjust the credit balance for any user. This is often used for resolving billing disputes, granting goodwill credits, or setting up test accounts.
+Manage your platform credits and costs on the **Credits** page.
 
-*   **Fields:**
-    *   **Awards:** The balance of "free" or granted credits. These are typically consumed first.
-    *   **Purchases:** The balance of credits the user has paid for.
-    *   **Monthly Credits:** (Partners only) A recurring monthly credit allowance for partners to test their own modules without incurring costs.
-*   **Steps:**
-    1.  Click **Edit** on the user's row.
-    2.  Enter the new values in the respective fields.
-    3.  Click **Save**.
-*   **Outcome:** The user's balance is updated instantly. They can immediately use these credits to deploy modules.
+### 5.1. Dashboard Tabs
+*   **Buy Credits Tab:** (If enabled) Purchase additional credits via one-time payments through Stripe or Flutterwave.
+*   **Credit Transactions Tab:** A detailed, searchable history of your credit balance. Filter by date range and export your transaction history as a CSV file.
+    *   **Awarded Credits:** Free credits granted by the platform (e.g., sign-up bonus, referrals). These are used first but cannot be cashed out or used for revenue calculation.
+    *   **Purchased Credits:** Credits you have bought via Stripe or Flutterwave. Deployment costs paid with these credits contribute to the "True Revenue" calculation for agents and partners.
+*   **Module Costs Tab:** (If enabled) View a breakdown of costs by module across your deployments.
+*   **Project Costs Tab:** (If enabled) View a breakdown of cloud infrastructure costs associated with your projects.
+*   **Project Invoices Tab:** (If enabled) Access monthly invoices for your usage.
+*   **Subscriptions Tab:** (If enabled) View available subscription tiers and manage your subscription to receive monthly credit allowances.
 
----
+### 5.2. Subscriptions
+If subscription tiers are available, you can upgrade your plan to receive a monthly allowance of credits and access to premium features.
 
-## Summary of Configuration Outcomes
+## 6. ROI Calculator
 
-| Action | Configuration Method | Outcome |
-|--------|----------------------|---------|
-| **Grant Admin Access** | Google Group (`rad-admins`) | User gains full system control. |
-| **Grant Finance Access** | Google Group (`rad-finance`) | User gains access to Billing & Revenue dashboards. |
-| **Grant Support Access** | Google Group (`rad-support`) | User can view all global deployments for debugging. |
-| **Enable Partner Mode** | UI or Google Group | User can publish modules to the marketplace. |
-| **Adjust Credits** | UI (Credit Management) | User's deployable balance is increased or decreased. |
+Access the **ROI** page from your navigation bar to use the interactive Return on Investment calculator. This tool helps you estimate your cost and time savings by comparing RAD's automation against manual deployment workflows.
+
+## 7. Help & Support
+
+Need assistance? Visit the **Help** page, which is organized into multiple tabs:
+
+*   **Support Tab:** Submit a support request by filling out the form with a Subject, Category (Technical, Billing, Feature, Bug, Account, or Other), Priority level, and a detailed message. If referrals are enabled, this tab also includes your unique **Referral Link** and **QR Code** for inviting new users to the platform. You can track your referral usage and share your link via the copy or share buttons.
+*   **Platform Demos Tab:** View demonstration videos and showcases for platform features.
+*   **Platform Workflows Tab:** Browse documented platform workflows.
+*   **Platform Guides Tab:** Access user guides and documentation.
+*   **Platform Features Tab:** Explore the platform's feature catalog.
+
+## 8. Profile & Settings
+
+Click your avatar in the top right to access your **Profile** page:
+
+*   **Notification Settings:** Toggle **Deployment Notifications** and **Billing Notifications** on or off to control which email alerts you receive.
+*   **Account Management:** View your account email. If needed, you can delete your account from this page (requires email confirmation).
+*   **Theme:** Toggle between Light and Dark mode using the sun/moon icon in the navigation bar.
