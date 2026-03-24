@@ -4,7 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'RAD Platform',
-  tagline: 'Enterprise-grade infrastructure deployment platform for technical teams and business partners',
+  tagline: 'From theoretical concepts to hands-on mastery for Google Cloud certifications',
   favicon: 'img/favicon.ico',
 
   future: {
@@ -130,10 +130,6 @@ const config: Config = {
             {
               label: 'RAD Console',
               href: 'https://techequity.cloud',
-            },
-            {
-              label: 'GitHub',
-              href: 'https://github.com/techequitycloud/rad.github.io',
             },
           ],
         },
