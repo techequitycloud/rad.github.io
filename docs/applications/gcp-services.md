@@ -8,11 +8,9 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # GCP Services on Google Cloud Platform
 
-<img src="https://storage.googleapis.com/rad-public-2b65/modules/gcpservices_module.png" alt="GCP Services Module Deep Dive Analysis" style={{marginBottom: '20px'}} />
-
 <AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/gcpservices_module.m4a" title="GCP Services Module Deep Dive Analysis Audio" />
 
-<video width="100%" controls style={{marginTop: '20px'}}>
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/gcpservices_module.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/gcpservices_module.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>

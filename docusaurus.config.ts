@@ -89,11 +89,6 @@ const config: Config = {
           target: '_blank',
           rel: 'noopener noreferrer',
         },
-        {
-          href: 'https://github.com/techequitycloud/rad.github.io',
-          label: 'GitHub',
-          position: 'right',
-        },
       ],
     },
     footer: {
