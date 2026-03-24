@@ -11,32 +11,32 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Multi-Cloud Infrastructure',
+    title: 'Certification Aligned Modules',
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Deploy infrastructure across multi-cloud and on-premises platforms using
-        Terraform-based automation.
+        Deploy pre-configured Google Cloud platform modules that map infrastructure
+        components to five specific professional certification exams.
       </>
     ),
   },
   {
-    title: 'Enterprise Management',
+    title: 'Real-World Implementations',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Role-based access control, credit-based billing, and comprehensive audit
-        trails provide complete oversight of infrastructure operations.
+        Utilize Terraform modules for Cloud Run and GKE to implement solutions
+        involving compute, storage, networking, and security.
       </>
     ),
   },
   {
-    title: 'Extensible Modules',
+    title: 'From Theory to Mastery',
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        Leverage platform and partner module catalogs, or publish your own
-        custom modules through GitHub integration.
+        Bridge the gap between Infrastructure as Code and the architectural requirements
+        of certified Cloud Engineers, Architects, Developers, DevOps Engineers, and Security Engineers.
       </>
     ),
   },
