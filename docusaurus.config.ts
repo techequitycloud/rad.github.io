@@ -103,24 +103,24 @@ const config: Config = {
           title: 'Documentation',
           items: [
             {
-              label: 'Guides',
-              to: '/docs/guides/user',
+              label: 'Associate Cloud Engineer',
+              to: '/docs/ace/section1',
             },
             {
-              label: 'Administrator Guide',
-              to: '/docs/guides/admin',
+              label: 'Professional Cloud Architect',
+              to: '/docs/pca/section1',
             },
             {
-              label: 'Partner Guide',
-              to: '/docs/guides/partner',
+              label: 'Professional Cloud Developer',
+              to: '/docs/pcd/section1',
             },
             {
-              label: 'User Guide',
-              to: '/docs/guides/user',
+              label: 'Professional DevOps Engineer',
+              to: '/docs/pde/section1',
             },
             {
-              label: 'Finance Guide',
-              to: '/docs/guides/finance',
+              label: 'Professional Security Engineer',
+              to: '/docs/pse/section1',
             },
           ],
         },
@@ -134,10 +134,6 @@ const config: Config = {
             {
               label: 'GitHub',
               href: 'https://github.com/techequitycloud/rad.github.io',
-            },
-            {
-              label: 'Support',
-              to: '/docs/guides/support',
             },
           ],
         },
