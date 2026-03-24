@@ -15,32 +15,6 @@ import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 const sidebars: SidebarsConfig = {
   docsSidebar: [
     {
-      type: 'doc',
-      id: 'workflows/getting-started',
-      label: 'Getting Started',
-    },
-    {
-      type: 'category',
-      label: 'Enterprise Applications',
-      items: [
-        { type: 'doc', id: 'applications/gcp-services', label: 'GCP Services' },
-        { type: 'doc', id: 'applications/cloud-run-app', label: 'Cloud Run App' },
-        { type: 'doc', id: 'applications/cyclos', label: 'Cyclos' },
-        { type: 'doc', id: 'applications/directus', label: 'Directus' },
-        { type: 'doc', id: 'applications/django', label: 'Django' },
-        { type: 'doc', id: 'applications/ghost', label: 'Ghost' },
-        { type: 'doc', id: 'applications/moodle', label: 'Moodle' },
-        { type: 'doc', id: 'applications/n8n', label: 'N8N' },
-        { type: 'doc', id: 'applications/n8n-ai', label: 'N8N AI' },
-        { type: 'doc', id: 'applications/odoo', label: 'Odoo' },
-        { type: 'doc', id: 'applications/openemr', label: 'OpenEMR' },
-        { type: 'doc', id: 'applications/sample', label: 'Sample' },
-        { type: 'doc', id: 'applications/strapi', label: 'Strapi' },
-        { type: 'doc', id: 'applications/wiki-js', label: 'Wiki.js' },
-        { type: 'doc', id: 'applications/wordpress', label: 'Wordpress' },
-      ],
-    },
-    {
       type: 'category',
       label: 'Associate Cloud Engineer',
       items: [
@@ -93,6 +67,32 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'pse/section4', label: 'Section 4' },
         { type: 'doc', id: 'pse/section5', label: 'Section 5' },
       ],
+    },
+    {
+      type: 'category',
+      label: 'Enterprise Applications',
+      items: [
+        { type: 'doc', id: 'applications/gcp-services', label: 'GCP Services' },
+        { type: 'doc', id: 'applications/cloud-run-app', label: 'Cloud Run App' },
+        { type: 'doc', id: 'applications/cyclos', label: 'Cyclos' },
+        { type: 'doc', id: 'applications/directus', label: 'Directus' },
+        { type: 'doc', id: 'applications/django', label: 'Django' },
+        { type: 'doc', id: 'applications/ghost', label: 'Ghost' },
+        { type: 'doc', id: 'applications/moodle', label: 'Moodle' },
+        { type: 'doc', id: 'applications/n8n', label: 'N8N' },
+        { type: 'doc', id: 'applications/n8n-ai', label: 'N8N AI' },
+        { type: 'doc', id: 'applications/odoo', label: 'Odoo' },
+        { type: 'doc', id: 'applications/openemr', label: 'OpenEMR' },
+        { type: 'doc', id: 'applications/sample', label: 'Sample' },
+        { type: 'doc', id: 'applications/strapi', label: 'Strapi' },
+        { type: 'doc', id: 'applications/wiki-js', label: 'Wiki.js' },
+        { type: 'doc', id: 'applications/wordpress', label: 'Wordpress' },
+      ],
+    },
+    {
+      type: 'doc',
+      id: 'workflows/getting-started',
+      label: 'Getting Started',
     },
   ],
 };
