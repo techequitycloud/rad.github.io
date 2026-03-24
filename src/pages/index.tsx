@@ -31,11 +31,11 @@ function HomepageHeader() {
 
 function HomepageVideo() {
   return (
-    <section className={styles.videoSection}>
+    <section>
       <div className="container" style={{textAlign: 'center', margin: '2rem auto'}}>
         <video
           controls
-          style={{maxWidth: '100%', height: 'auto', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'}}
+          style={{maxWidth: '50%', height: 'auto', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'}}
           poster="https://storage.googleapis.com/rad-public-2b65/gcp/gcp_cert_accelerator.png"
         >
           <source src="https://storage.googleapis.com/rad-public-2b65/gcp/gcp_cert_accelerator.mp4" type="video/mp4" />
@@ -54,8 +54,8 @@ export default function Home(): ReactNode {
       description="Description will go into a meta tag in <head />">
       <HomepageHeader />
       <main>
-        <HomepageVideo />
         <HomepageFeatures />
+        <HomepageVideo />
       </main>
     </Layout>
   );

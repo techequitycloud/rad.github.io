@@ -4,11 +4,9 @@ sidebar_label: Odoo
 slug: /applications/odoo
 ---
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Odoo on Google Cloud Platform
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/odoo_module.m4a" title="Odoo on Google Cloud Platform Audio" />
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/odoo_module.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/odoo_module.mp4" type="video/mp4" />

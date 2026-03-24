@@ -16,7 +16,7 @@ const FeatureList: FeatureItem[] = [
     description: (
       <>
         Deploy pre-configured Google Cloud platform modules that map infrastructure
-        components to five specific Google Cloud professional certification exams.
+        components to five specific Google Cloud associate and professional certification exams.
       </>
     ),
   },

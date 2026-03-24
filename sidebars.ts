@@ -74,7 +74,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Professional DevOps Engineer',
+      label: 'Professional Cloud DevOps Engineer',
       items: [
         { type: 'doc', id: 'pde/section1', label: 'Section 1' },
         { type: 'doc', id: 'pde/section2', label: 'Section 2' },
@@ -85,7 +85,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Professional Security Engineer',
+      label: 'Professional Cloud Security Engineer',
       items: [
         { type: 'doc', id: 'pse/section1', label: 'Section 1' },
         { type: 'doc', id: 'pse/section2', label: 'Section 2' },
