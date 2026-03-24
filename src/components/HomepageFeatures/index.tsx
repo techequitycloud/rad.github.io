@@ -11,7 +11,7 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Certification Aligned Modules',
+    title: 'Certification Aligned',
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
@@ -21,22 +21,22 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    title: 'Real-World Implementations',
+    title: 'Industry Solutions',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Utilize Terraform modules for Cloud Run and GKE to implement solutions
-        involving compute, storage, networking, and security.
+        Go beyond certification by developing in-depth expertise on architecture principles
+        and implementation options for real world industry solutions.
       </>
     ),
   },
   {
-    title: 'From Theory to Mastery',
+    title: 'Theory to Mastery',
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        Bridge the gap between Infrastructure as Code and the architectural requirements
-        of certified Cloud Engineers, Architects, Developers, DevOps Engineers, and Security Engineers.
+        Build hands-on experience by implementing the competencies required for
+        Cloud Architect, Developer, Security, and DevOps Engineer certifications.
       </>
     ),
   },
