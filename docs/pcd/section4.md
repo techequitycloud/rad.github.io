@@ -1,5 +1,4 @@
-# Section 4
-
+# Integrating applications with Google Cloud services
 <video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pcd_section4.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/gcp/pcd_section4.mp4" type="video/mp4" />
   Your browser does not support the video tag.

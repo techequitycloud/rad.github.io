@@ -4,11 +4,9 @@ sidebar_label: N8N
 slug: /applications/n8n
 ---
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # N8N on Google Cloud Platform
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/n8n_module.m4a" title="N8N on Google Cloud Platform Audio" />
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/n8n_module.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/n8n_module.mp4" type="video/mp4" />

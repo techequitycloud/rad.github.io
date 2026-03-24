@@ -44,9 +44,8 @@ const config: Config = {
           sidebarPath: './sidebars.ts',
           routeBasePath: 'docs',
           // SEO settings for docs
-          editUrl: 'https://github.com/techequitycloud/rad.github.io/edit/main/',
-          showLastUpdateTime: true,
-          showLastUpdateAuthor: true,
+          showLastUpdateTime: false,
+          showLastUpdateAuthor: false,
         },
         sitemap: {
           changefreq: 'weekly',
@@ -93,42 +92,6 @@ const config: Config = {
     },
     footer: {
       style: 'light',
-      links: [
-        {
-          title: 'Documentation',
-          items: [
-            {
-              label: 'Associate Cloud Engineer',
-              to: '/docs/ace/section1',
-            },
-            {
-              label: 'Professional Cloud Architect',
-              to: '/docs/pca/section1',
-            },
-            {
-              label: 'Professional Cloud Developer',
-              to: '/docs/pcd/section1',
-            },
-            {
-              label: 'Professional DevOps Engineer',
-              to: '/docs/pde/section1',
-            },
-            {
-              label: 'Professional Security Engineer',
-              to: '/docs/pse/section1',
-            },
-          ],
-        },
-        {
-          title: 'Resources',
-          items: [
-            {
-              label: 'RAD Console',
-              href: 'https://techequity.cloud',
-            },
-          ],
-        },
-      ],
       copyright: `© ${new Date().getFullYear()} Tech Equity Cloud. All rights reserved.`,
     },
     prism: {

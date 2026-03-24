@@ -1,8 +1,6 @@
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Tutorial: Getting Started
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/start_guide.m4a" />
 
 <br/>
 

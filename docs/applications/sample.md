@@ -5,11 +5,9 @@ slug: /applications/sample
 ---
 
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Sample web application on Google Cloud Platform
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/sample_module.m4a" title="Sample web application on Google Cloud Platform Audio" />
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/sample_module.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/sample_module.mp4" type="video/mp4" />
