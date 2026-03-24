@@ -2,15 +2,11 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Tutorial: Getting Started
 
-<img src="https://storage.googleapis.com/rad-public-2b65/guides/start_guide.png" alt="Getting Started Guide" />
-
-<br/>
-
 <AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/start_guide.m4a" />
 
 <br/>
 
-<video controls width="100%">
+<video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/guides/start_guide.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/guides/start_guide.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>

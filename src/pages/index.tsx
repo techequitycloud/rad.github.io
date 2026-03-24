@@ -29,6 +29,23 @@ function HomepageHeader() {
   );
 }
 
+function HomepageVideo() {
+  return (
+    <section className={styles.videoSection}>
+      <div className="container" style={{textAlign: 'center', margin: '2rem auto'}}>
+        <video
+          controls
+          style={{maxWidth: '100%', height: 'auto', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'}}
+          poster="https://storage.googleapis.com/rad-public-2b65/gcp/gcp_cert_accelerator.png"
+        >
+          <source src="https://storage.googleapis.com/rad-public-2b65/gcp/gcp_cert_accelerator.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </section>
+  );
+}
+
 export default function Home(): ReactNode {
   const {siteConfig} = useDocusaurusContext();
   return (
@@ -37,6 +54,7 @@ export default function Home(): ReactNode {
       description="Description will go into a meta tag in <head />">
       <HomepageHeader />
       <main>
+        <HomepageVideo />
         <HomepageFeatures />
       </main>
     </Layout>

@@ -9,11 +9,9 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Sample web application on Google Cloud Platform
 
-<img src="https://storage.googleapis.com/rad-public-2b65/modules/sample_module.png" alt="Sample web application on Google Cloud Platform" style={{marginBottom: '20px'}} />
-
 <AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/modules/sample_module.m4a" title="Sample web application on Google Cloud Platform Audio" />
 
-<video width="100%" controls style={{marginTop: '20px'}}>
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/sample_module.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/sample_module.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
