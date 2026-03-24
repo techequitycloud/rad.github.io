@@ -63,7 +63,7 @@ const config: Config = {
 
   themeConfig: {
     // Social card image for Open Graph and Twitter
-    image: 'img/rad-social-preview.png',
+    image: 'https://storage.googleapis.com/rad-public-2b65/gcp/gcp_cert_accelerator.png',
     colorMode: {
       defaultMode: 'light',
       respectPrefersColorScheme: true,
