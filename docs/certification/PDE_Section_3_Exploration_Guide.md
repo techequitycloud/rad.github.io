@@ -17,5 +17,5 @@ This guide is designed to help candidates preparing for the Google Cloud Profess
 
 ## 3.3 Mitigating incident impact on users
 **Concept:** Reducing the impact of incidents through strategies such as traffic draining/redirecting, adding capacity, and rolling back to previous known-good states.
-*   **Implementation Context:** In `App_CloudRun/service.tf`, the `traffic` block supports traffic splitting and canary deployments, allowing operators to gradually shift traffic to new revisions or instantly redirect (drain) traffic away from a problematic revision. 
+*   **Implementation Context:** The platform supports traffic splitting and canary deployments, allowing operators to gradually shift traffic to new revisions or instantly redirect (drain) traffic away from a problematic revision.
 *   **Exploration:** Navigate to **Cloud Run** in the GCP console, select a service, and explore the **Revisions** tab to see how traffic is distributed or redirected between revisions. Navigate to **Cloud Deploy > Delivery pipelines**, select your pipeline, and inspect a specific rollout to observe the **Rollback** functionality in action.

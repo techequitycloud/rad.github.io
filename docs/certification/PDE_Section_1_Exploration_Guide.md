@@ -21,7 +21,7 @@ The repository leverages **Terraform** extensively. The `App_CloudRun` and `App_
 Designing robust pipelines for continuous integration and delivery.
 
 ### Implementation Context
-The codebase shows a complete CI/CD lifecycle using Cloud Build for continuous integration to build images and Cloud Deploy for continuous delivery to automate release deployments. Review `trigger.tf` in either module. It configures a Cloud Build trigger (`google_cloudbuild_trigger`) that reacts to source code changes, builds container images using Kaniko, and pushes them to Artifact Registry. Review `skaffold.tf`. It sets up Google Cloud Deploy (`google_clouddeploy_delivery_pipeline` and `google_clouddeploy_target`), integrating with Skaffold to manage progressive rollouts across environments (e.g., staging to production).
+The platform configures a complete CI/CD lifecycle using Cloud Build for continuous integration to build images and Cloud Deploy for continuous delivery to automate release deployments. Review `trigger.tf` in either module. It configures a Cloud Build trigger (`google_cloudbuild_trigger`) that reacts to source code changes, builds container images using Kaniko, and pushes them to Artifact Registry. Review `skaffold.tf`. It sets up Google Cloud Deploy (`google_clouddeploy_delivery_pipeline` and `google_clouddeploy_target`), integrating with Skaffold to manage progressive rollouts across environments (e.g., staging to production).
 
 ### Exploration
 *   Open the GCP console and navigate to **Cloud Build > Triggers** to inspect how the repository triggers builds.

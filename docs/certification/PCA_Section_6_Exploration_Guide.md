@@ -23,7 +23,7 @@ This guide is designed to help candidates preparing for the Google Cloud Profess
 
 ### Alerting Strategies
 **Concept:** Proactively notifying operations teams when service levels degrade, before end-users are significantly impacted.
-*   **Threshold-based Alerts:** Explore the `monitoring.tf` file. The codebase provisions specific alert conditions based on critical thresholds (e.g., elevated HTTP 5xx error rates, CPU starvation, or memory exhaustion). In `App_GKE`, alerting focuses on `k8s_container` resource types, whereas `App_CloudRun` monitors `cloud_run_revision`.
+*   **Threshold-based Alerts:** Explore the `monitoring.tf` file. The codebase provisions specific alert conditions based on critical thresholds (e.g., elevated HTTP 5xx error rates, CPU starvation, or memory exhaustion). Alerting focuses on relevant container and revision metrics.
 *   **Exploration:** In the GCP Console, go to **Monitoring > Alerting**. Review the generated alerting policies, inspect the MQL (Monitoring Query Language) filters driving the conditions, and view the notification channels.
 
 ---
