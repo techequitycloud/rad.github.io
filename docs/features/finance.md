@@ -22,30 +22,6 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 
 [Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/finance_features.pdf)
 
----
-title: Finance Features
-slug: /features/finance
----
-
-import AudioPlayer from '@site/src/components/AudioPlayer';
-
-<img src="https://storage.googleapis.com/rad-public-2b65/features/finance_features.png" alt="Finance Features Infographic" />
-
-<br/>
-
-<AudioPlayer src="https://storage.googleapis.com/rad-public-2b65/features/finance_features.m4a" />
-
-<br/>
-
-<video controls width="100%">
-  <source src="https://storage.googleapis.com/rad-public-2b65/features/finance_features.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
-<br/>
-
-[Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/finance_features.pdf)
-
 ## 1. Introduction
 
 Welcome to the Finance Guide. This documentation is intended for users with the **Finance** role. This role provides specialized access to the **Billing** section of the application, as well as revenue reports and management capabilities for the platform's credit economy and subscription products.
