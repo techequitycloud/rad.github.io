@@ -22,30 +22,6 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 
 [Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/support_features.pdf)
 
----
-title: Support Features
-slug: /features/support
----
-
-import AudioPlayer from '@site/src/components/AudioPlayer';
-
-<img src="https://storage.googleapis.com/rad-public-2b65/features/support_features.png" alt="Support Features Infographic" />
-
-<br/>
-
-<AudioPlayer src="https://storage.googleapis.com/rad-public-2b65/features/support_features.m4a" />
-
-<br/>
-
-<video controls width="100%">
-  <source src="https://storage.googleapis.com/rad-public-2b65/features/support_features.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
-<br/>
-
-[Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/support_features.pdf)
-
 ## 1. Introduction
 
 Welcome to the Support User Guide. As a member of the Support team, you have enhanced visibility into the platform's operations to assist users effectively. Your primary capability is the ability to view **All Deployments** made by any user on the platform, which is essential for troubleshooting and user assistance. You also have access to the module publishing tools if your repository and Jules AI are configured.
