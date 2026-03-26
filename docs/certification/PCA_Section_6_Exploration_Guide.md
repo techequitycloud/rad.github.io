@@ -1,37 +1,57 @@
-# PCA Certification Preparation Guide: Exploring Section 6 (Ensuring Solution and Operations Excellence)
+# PCA Certification Preparation Guide: Section 6 — Ensuring solution and operations excellence (~12.5% of the exam)
 
-This guide is designed to help candidates preparing for the Google Cloud Professional Cloud Architect (PCA) certification. It focuses specifically on Section 6 of the exam guide (which covers ~12.5% of the exam) by walking you through how these concepts are practically implemented in the provided Terraform codebases (`modules/App_CloudRun` and `modules/App_GKE`). By exploring the Google Cloud Platform (GCP) console and corresponding code, you will gain hands-on context for these critical architectural topics.
+This guide helps candidates preparing for the Google Cloud Professional Cloud Architect (PCA) certification explore Section 6 of the exam through the lens of the Tech Equity RAD platform at [https://techequity.cloud](https://techequity.cloud). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
+
+You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCA objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
 
 ---
 
-## 6.1 Understanding the principles and recommendations of operational excellence
-
-### Well-Architected Framework: Operational Excellence Pillar
-**Concept:** Designing workloads that are observable, automatable, and capable of recovering from failure to deliver business value efficiently.
-*   **Automated Deployments & IaC:** The entire lifecycle of this solution is defined in Terraform and automated via Cloud Build/Cloud Deploy. By treating infrastructure as code and removing manual "click-ops," the architecture inherently minimizes human error and enables rapid, reliable environment recreation.
-*   **Integrated Monitoring:** Operations teams cannot manage what they cannot see. Integrating comprehensive monitoring (dashboards, alerts, and structured logging) by default ensures the system is observable from day one.
-*   **Exploration:** Review the root `README.md` and the module's organizational structure to see how IaC is logically separated. This modularity is a core principle of operational excellence, allowing components to be maintained, scaled, and tested independently.
+## 6.1 Operational Excellence Pillar (Well-Architected Framework)
+### 💡 Additional Operational Excellence Objectives & Learning Guidelines
+*   **Principles and Recommendations:** Study the Google Cloud Well-Architected Framework's Operational Excellence pillar. Understand its focus on automating deployments, responding to events, monitoring systems, and continually refining processes to improve service reliability and velocity.
 
 ---
 
 ## 6.2 Familiarity with Google Cloud Observability solutions
 
-### Monitoring and Logging
-**Concept:** Gaining deep visibility into system performance, health, and user experience using integrated cloud-native tools.
-*   **Dashboards:** Review the `dashboard.tf` files. These configurations automatically provision custom Cloud Monitoring dashboards containing visualizations for request counts, latencies, and CPU/memory utilization tailored to the specific platform (Cloud Run container metrics vs. GKE pod/node metrics).
-*   **Exploration:** In the GCP Console, navigate to **Monitoring > Dashboards** and open the custom dashboard generated for the application. Additionally, navigate to **Logging > Logs Explorer** to query structured JSON logs emitted natively by Cloud Run containers or GKE Pods.
+### Monitoring, Logging, and Alerting Strategies
+**Concept:** Implementing systems to detect, troubleshoot, and resolve incidents rapidly.
 
-### Alerting Strategies
-**Concept:** Proactively notifying operations teams when service levels degrade, before end-users are significantly impacted.
-*   **Threshold-based Alerts:** Explore the `monitoring.tf` file. The codebase provisions specific alert conditions based on critical thresholds (e.g., elevated HTTP 5xx error rates, CPU starvation, or memory exhaustion). In `App_GKE`, alerting focuses on `k8s_container` resource types, whereas `App_CloudRun` monitors `cloud_run_revision`.
-*   **Exploration:** In the GCP Console, go to **Monitoring > Alerting**. Review the generated alerting policies, inspect the MQL (Monitoring Query Language) filters driving the conditions, and view the notification channels.
+**In the RAD UI:**
+*   **Alert Policies:** The platform automatically configures custom alerting. In **GCP Services**, `alert_cpu_threshold` (Group 17), `alert_memory_threshold` (Group 17), and `alert_disk_threshold` (Group 17) monitor base infrastructure.
+*   **Synthetic Monitoring:** Uptime checks are automatically configured to hit the external Load Balancer IP, verifying that the entire stack is operational.
+*   **Notification Channels:** `support_users` (Group 1) and `notification_alert_emails` (Group 17 in GCP Services) map to Cloud Monitoring Notification Channels to page operators during degradation.
+
+**Console Exploration:**
+Navigate to **Monitoring > Alerting** to review MQL-based alert policies. Navigate to **Monitoring > Uptime checks** to review global synthetic monitors. Navigate to **Logging > Logs Explorer** to view aggregated container stdout/stderr streams.
+
+**Real-world example:** A SaaS provider configures an MQL-based alert policy that fires when the 95th-percentile request latency for the Cloud Run service exceeds 2 seconds over a 5-minute rolling window. The notification channel routes the alert to a Google Chat webhook in the on-call team's incident channel, and a second alert fires when the Cloud SQL CPU utilization exceeds 80% for 10 consecutive minutes — giving the team both application-layer and database-layer visibility in a single pane of glass through a custom Cloud Monitoring dashboard.
+
+### 💡 Additional Profiling and Benchmarking Objectives & Learning Guidelines
+*   **Profiling and Benchmarking:** Research Cloud Profiler to understand continuous CPU and memory profiling across your fleet to optimize code performance. Study Cloud Trace to visualize latency across distributed microservices.
 
 ---
 
 ## 6.3 Deployment and release management
+### 💡 Additional Deployment Objectives & Learning Guidelines
+*   While Cloud Deploy handles the infrastructure rollout, study how to manage database schema migrations concurrently with application rollouts without causing downtime. A common Google Cloud–native pattern is to add a pre-deploy step in the Cloud Build pipeline that runs a containerized migration script as a Cloud Run Job against Cloud SQL before the new application revision is promoted — ensuring the schema is updated in a backwards-compatible way before any traffic is cut over. For Cloud Spanner, use the Spanner Schema Update API which applies DDL changes without locking the table, enabling zero-downtime migrations on globally distributed databases.
 
-### Release Management
-**Concept:** Safely deploying code changes to production with minimal risk, utilizing advanced rollout strategies to limit blast radius.
-*   **Progressive Rollouts (Cloud Deploy):** Review the `skaffold.tf` and `cloud_deploy_stages` configurations. Google Cloud Deploy acts as the central release management plane, orchestrating the movement of container artifacts across sequential environments regardless of whether the target is Cloud Run or GKE.
-*   **Traffic Splitting & Canary Rollouts:** Cloud Run natively supports canary deployments by splitting HTTP traffic (configurable via `traffic_split`). For GKE, Cloud Deploy implements canary rollouts via Kubernetes Gateway API integration or phased pod replacement.
-*   **Exploration:** In the Console, navigate to **Cloud Deploy > Delivery pipelines** to observe pipeline stages and release strategies (Standard, Canary, etc.).
+---
+
+## 6.4 Assisting with the support of deployed solutions
+### 💡 Additional Support Objectives & Learning Guidelines
+*   Understand Google Cloud Support plans (Standard, Enhanced, Premium) and how to interact with Google Cloud Customer Care or Technical Account Managers (TAMs) during Sev-1 incidents. Premium support provides a TAM for proactive guidance and a 15-minute initial response SLA for P1 cases, which is a key architectural consideration for mission-critical production workloads.
+
+---
+
+## 6.5 Evaluating quality control measures
+### 💡 Additional Quality Control Objectives & Learning Guidelines
+*   Study how to implement code reviews and integrate static application security testing (SAST) into Cloud Build pipelines. Google Cloud–native options include Artifact Registry's built-in container vulnerability scanning (powered by Container Analysis), Security Command Center's Web Security Scanner for detecting XSS and mixed-content issues in deployed web applications, and Cloud Build steps that invoke the gcloud CLI to audit IAM policies or validate Terraform plans before applying them. Cloud Source Repositories also integrates with Cloud Build triggers for automated policy-as-code gate checks on every push.
+
+---
+
+## 6.6 Ensuring the reliability of solutions in production
+### 💡 Additional Reliability Objectives & Learning Guidelines
+*   **Chaos Engineering:** Understand the concept of intentionally injecting faults (e.g., terminating random pods or blocking network ports) to verify that the high-availability architecture functions as designed.
+*   **Penetration Testing:** Review Google Cloud's acceptable use policy regarding penetration testing.
+*   **Load Testing:** Practice generating synthetic load to validate autoscaling boundaries configured in Cloud Run and GKE. Google Cloud's Distributed Load Testing reference architecture deploys load-generation agents as Cloud Run Jobs or GKE pods that scale horizontally, enabling thousands of concurrent simulated users without managing load-generator infrastructure. Use Cloud Monitoring dashboards to observe how Cloud Run instance count and GKE HPA scale in response, and confirm that alerting policies trigger appropriately when latency thresholds are breached.
