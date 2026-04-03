@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cloud Transformation Accelerator — Investment Proposition</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+:root {
+  --primary: #1a73e8; --accent: #0d47a1; --dark: #1c2b3a;
+  --mid: #4a6274; --light: #f0f4f8; --border: #d0dce8;
+  --white: #ffffff; --gold: #f9ab00; --green: #1e8e3e; --red: #d93025;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter','Helvetica Neue',Arial,sans-serif; font-size: 10pt; line-height: 1.6; color: var(--dark); background: var(--white); }
+.page-break { page-break-before: always; }
+
+/* ── COVER ── */
+.cover { background: linear-gradient(150deg, var(--accent) 0%, var(--primary) 55%, #42a5f5 100%); min-height: 297mm; display: flex; flex-direction: column; justify-content: space-between; padding: 0; }
+.cover-top { padding: 56px 60px 40px; }
+.cover-brand { font-size: 10pt; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.65); margin-bottom: 48px; }
+.cover h1 { font-size: 38pt; font-weight: 700; color: #fff; line-height: 1.1; letter-spacing: -1px; margin-bottom: 12px; }
+.cover-sub { font-size: 16pt; font-weight: 300; color: rgba(255,255,255,0.85); margin-bottom: 40px; }
+.cover-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+.cover-tag { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 20px; padding: 5px 16px; font-size: 9pt; color: #fff; }
+.cover-metrics { background: rgba(0,0,0,0.25); padding: 24px 60px; display: flex; gap: 48px; }
+.cm { color: #fff; }
+.cm-val { font-size: 22pt; font-weight: 700; color: var(--gold); display: block; line-height: 1; }
+.cm-lbl { font-size: 7.5pt; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
+.cover-footer { background: rgba(0,0,0,0.35); padding: 20px 60px; display: flex; justify-content: space-between; align-items: center; }
+.cover-footer-left { color: rgba(255,255,255,0.7); font-size: 9pt; }
+.cover-footer-right { color: rgba(255,255,255,0.5); font-size: 8.5pt; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* ── INNER PAGES ── */
+.inner { padding: 44px 56px; }
+.section { margin-bottom: 36px; }
+.sh { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.sh-title { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--primary); white-space: nowrap; }
+.sh-line { flex: 1; height: 2px; background: var(--border); }
+.page-title { font-size: 20pt; font-weight: 700; color: var(--dark); margin-bottom: 6px; line-height: 1.2; }
+.page-sub { font-size: 10.5pt; color: var(--mid); margin-bottom: 28px; }
+
+/* ── TEXT ── */
+p { margin-bottom: 12px; color: var(--dark); }
+p:last-child { margin-bottom: 0; }
+strong { font-weight: 600; color: var(--accent); }
+.lead { font-size: 11pt; line-height: 1.7; color: var(--dark); }
+
+/* ── METRIC CARDS ── */
+.metrics-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 28px; }
+.metrics-row-3 { grid-template-columns: repeat(3,1fr); }
+.mc { background: var(--light); border-radius: 10px; padding: 18px 16px; border-top: 3px solid var(--primary); text-align: center; }
+.mc-val { font-size: 18pt; font-weight: 700; color: var(--primary); display: block; line-height: 1; }
+.mc-sub { font-size: 7.5pt; color: var(--mid); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 5px; display: block; }
+.mc-gold { border-top-color: var(--gold); }
+.mc-gold .mc-val { color: var(--gold); }
+.mc-green { border-top-color: var(--green); }
+.mc-green .mc-val { color: var(--green); }
+
+/* ── TWO COL ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+/* ── CARDS ── */
+.card { border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; background: var(--white); }
+.card-accent { border-left: 3px solid var(--primary); background: var(--light); }
+.card-gold { border-left: 3px solid var(--gold); background: #fffdf0; }
+.card-green { border-left: 3px solid var(--green); background: #f0faf3; }
+.card h4 { font-size: 9.5pt; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
+.card p { font-size: 8.5pt; color: var(--mid); margin: 0; }
+.card-num { font-size: 7pt; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+
+/* ── HIGHLIGHT BOX ── */
+.highlight { background: linear-gradient(135deg, var(--accent), var(--primary)); border-radius: 10px; padding: 24px 28px; color: #fff; margin-bottom: 20px; }
+.highlight h3 { font-size: 13pt; font-weight: 700; margin-bottom: 8px; }
+.highlight p { color: rgba(255,255,255,0.85); margin: 0; font-size: 9.5pt; }
+
+/* ── BAR CHART ── */
+.bar-row { margin-bottom: 14px; }
+.bar-label { font-size: 8.5pt; font-weight: 500; color: var(--dark); margin-bottom: 4px; display: flex; justify-content: space-between; }
+.bar-track { background: var(--border); border-radius: 4px; height: 10px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; background: var(--primary); }
+.bar-fill-gold { background: var(--gold); }
+.bar-fill-green { background: var(--green); }
+
+/* ── TABLE ── */
+table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+th { background: var(--dark); color: #fff; padding: 8px 12px; text-align: left; font-weight: 600; font-size: 7.5pt; letter-spacing: 0.04em; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) td { background: var(--light); }
+.td-highlight { font-weight: 600; color: var(--primary); }
+.td-gold { font-weight: 700; color: var(--gold); }
+
+/* ── LIST ── */
+.bullet-list { list-style: none; }
+.bullet-list li { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 9pt; display: flex; align-items: flex-start; gap: 10px; }
+.bullet-list li:last-child { border-bottom: none; }
+.dot { width: 7px; height: 7px; min-width: 7px; border-radius: 50%; background: var(--gold); margin-top: 4px; }
+.dot-blue { background: var(--primary); }
+
+/* ── DORA CLUSTER ── */
+.cluster-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+.cluster { border-radius: 8px; padding: 12px; text-align: center; }
+.cluster-elite { background: #e6f4ea; border: 2px solid var(--green); }
+.cluster-high { background: #e8f0fe; border: 2px solid var(--primary); }
+.cluster-mid { background: #fff8e1; border: 2px solid var(--gold); }
+.cluster-low { background: #fce8e6; border: 2px solid var(--red); }
+.cluster-pct { font-size: 16pt; font-weight: 700; display: block; line-height: 1; }
+.cluster-elite .cluster-pct { color: var(--green); }
+.cluster-high .cluster-pct { color: var(--primary); }
+.cluster-mid .cluster-pct { color: #b06000; }
+.cluster-low .cluster-pct { color: var(--red); }
+.cluster-name { font-size: 8pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; display: block; }
+
+/* ── FOOTER BAR ── */
+.footer-bar { background: var(--dark); padding: 14px 56px; display: flex; justify-content: space-between; align-items: center; }
+.fb-left { color: rgba(255,255,255,0.6); font-size: 8pt; }
+.fb-right { color: rgba(255,255,255,0.35); font-size: 7.5pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ── VALUATION ── */
+.val-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+.val-cell { padding: 10px 14px; border-right: 1px solid var(--border); font-size: 8.5pt; }
+.val-cell:last-child { border-right: none; }
+.val-header { background: var(--dark); color: #fff; font-weight: 600; font-size: 7.5pt; }
+.val-total { background: var(--light); font-weight: 700; }
+.val-grand { background: var(--accent); color: #fff; font-weight: 700; }
+
+/* ── SOURCE CITE ── */
+.cite { font-size: 7pt; color: var(--mid); font-style: italic; margin-top: 8px; }
+
+.cover{background:linear-gradient(150deg,#0d3b2e 0%,#1e6b50 50%,#2d9e73 100%);}
+.sh-title{color:#1e6b50;}
+.mc{border-top-color:#1e6b50;}.mc .mc-val{color:#1e6b50;}
+.mc-gold{border-top-color:var(--gold);}.mc-gold .mc-val{color:var(--gold);}
+.highlight{background:linear-gradient(135deg,#0d3b2e,#1e6b50);}
+.card-accent{border-left-color:#1e6b50;}
+.td-hl{color:#1e6b50;}
+.dot-blue{background:#1e6b50;}
+.footer-bar{background:#0d3b2e;}
+.val-row:last-child{background:var(--accent);}
+.cluster-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.cluster{border-radius:7px;padding:11px;text-align:center;}
+.cluster-elite{background:#e6f4ea;border:2px solid var(--green);}
+.cluster-high{background:#e8f0fe;border:2px solid var(--primary);}
+.cluster-mid{background:#fff8e1;border:2px solid var(--gold);}
+.cluster-low{background:#fce8e6;border:2px solid var(--red);}
+.cluster-pct{font-size:15pt;font-weight:700;display:block;line-height:1;}
+.cluster-elite .cluster-pct{color:var(--green);}.cluster-high .cluster-pct{color:var(--primary);}
+.cluster-mid .cluster-pct{color:#b06000;}.cluster-low .cluster-pct{color:var(--red);}
+.cluster-name{font-size:7.5pt;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:3px;display:block;}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-top">
+    <div class="cover-brand">Tech Equity Cloud &nbsp;&middot;&nbsp; Investment Opportunity 2 of 2 &nbsp;&middot;&nbsp; Confidential</div>
+    <h1>Cloud Transformation<br>Accelerator</h1>
+    <div class="cover-sub">A Six-Program, Evidence-Based Digital Transformation Curriculum<br>Grounded in Google&rsquo;s DORA Research &amp; 11 Global Frameworks</div>
+    <div class="cover-tags">
+      <span class="cover-tag">DORA 2024 Research-Backed</span>
+      <span class="cover-tag">6 Programs &times; 4 Sessions = 48 Hours</span>
+      <span class="cover-tag">11 Industry Frameworks</span>
+      <span class="cover-tag">5 GCP Certifications</span>
+      <span class="cover-tag">Hands-On RAD Labs</span>
+      <span class="cover-tag">Measurable Outcomes</span>
+    </div>
+  </div>
+  <div class="cover-metrics">
+    <div class="cm"><span class="cm-val">48 hrs</span><span class="cm-lbl">Total Program Curriculum</span></div>
+    <div class="cm"><span class="cm-val">11</span><span class="cm-lbl">Industry Frameworks</span></div>
+    <div class="cm"><span class="cm-val">182&times;</span><span class="cm-lbl">Elite vs Low Deployment Freq.</span></div>
+    <div class="cm"><span class="cm-val">$911B</span><span class="cm-lbl">Digital Transformation Market</span></div>
+    <div class="cm"><span class="cm-val">$144K</span><span class="cm-lbl">Curriculum IP Replacement Cost</span></div>
+  </div>
+  <div class="cover-footer">
+    <div class="cf-left">Shiyghan Navti &nbsp;&middot;&nbsp; shiyghan.navti@techequity.cloud &nbsp;&middot;&nbsp; techequity.cloud &nbsp;&middot;&nbsp; April 2026</div>
+    <div class="cf-right">Strictly Confidential</div>
+  </div>
+</div>
+
+<!-- PAGE 2: EXECUTIVE SUMMARY -->
+<div class="page-break"><div class="inner">
+  <div class="sh"><div class="sh-title">Executive Summary</div><div class="sh-line"></div></div>
+  <div class="page-title">The Evidence-Based Transformation Program No One Else Can Deliver</div>
+  <div class="page-sub">A structured, research-backed, hands-on transformation curriculum that simultaneously improves DORA metrics, builds GCP certifications, and produces real infrastructure &mdash; delivered by a Google Cloud Authorised Trainer with a 4.8/5 CSAT across 500+ engagements</div>
+
+  <div class="highlight">
+    <h3>81% of digital transformation initiatives fail to meet their objectives. The Cloud Transformation Accelerator is built on the research that explains why &mdash; and a platform that fixes it.</h3>
+    <p>Grounded in Google&rsquo;s DORA 2024 research (39,000+ respondents), the Google Cloud Adoption Framework, and 10 additional global frameworks, the Accelerator gives organisations a measurable, structured path from low performer to elite &mdash; with every session producing real infrastructure, not just slides.</p>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="sh"><div class="sh-title">What the Program Is</div><div class="sh-line"></div></div>
+      <ul class="bullet-list">
+        <li><span class="dot dot-blue"></span><strong>Six programs, 24 sessions, 48 hours</strong> of structured transformation delivery &mdash; each session 60 mins framework + 60 mins hands-on RAD lab</li>
+        <li><span class="dot dot-blue"></span>Grounded in <strong>11 globally recognised frameworks</strong>: DORA, Google CAF, CCoE, Team Topologies, Platform Engineering/IDP, DevSecOps, SRE, FinOps, NIST CSF 2.0, Value Stream Management, OKRs</li>
+        <li><span class="dot dot-blue"></span>Maps to <strong>five Google Cloud professional certifications</strong> (ACE, PCA, PCD, PDE, PSE) &mdash; participants earn credentials while transforming their organisation</li>
+        <li><span class="dot dot-blue"></span>Delivered using the <strong>RAD Internal Developer Platform</strong> &mdash; every lab produces real, production-grade GCP infrastructure in the client&rsquo;s own environment</li>
+        <li><span class="dot dot-blue"></span>Designed by a <strong>Google Cloud Authorised Trainer</strong> with 500+ engagements, 10,000+ professionals trained, and 4.8/5 CSAT across Google&rsquo;s own surveys</li>
+      </ul>
+    </div>
+    <div>
+      <div class="sh"><div class="sh-title">The Investment Basis</div><div class="sh-line"></div></div>
+      <ul class="bullet-list">
+        <li><span class="dot"></span>Curriculum IP replacement cost: <strong>~$144,000</strong></li>
+        <li><span class="dot"></span>Framework research &amp; synthesis: <strong>~$30,000</strong></li>
+        <li><span class="dot"></span>Total curriculum IP consideration: <strong>~$174,000</strong></li>
+        <li><span class="dot"></span>Year 1 program revenue potential: <strong>$290,000+</strong></li>
+        <li><span class="dot"></span>Year 3 program revenue at scale: <strong>$3,100,000+</strong></li>
+      </ul>
+      <div class="card card-gold" style="margin-top:14px;">
+        <h4>Separate from the RAD Platform</h4>
+        <p>This opportunity covers the transformation curriculum and delivery methodology only. The RAD platform (Opportunity 1) is the preferred hands-on delivery vehicle, but the program methodology can also be delivered in client GCP environments. Partners may invest in one or both opportunities independently.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="footer-bar"><div class="fb-left">Cloud Transformation Accelerator &mdash; Opportunity 2 &nbsp;&middot;&nbsp; Tech Equity Cloud &nbsp;&middot;&nbsp; Confidential</div><div class="fb-right">Page 2</div></div>
+</div>
+
+<!-- PAGE 3: THE EVIDENCE BASE — DORA -->
+<div class="page-break"><div class="inner">
+  <div class="sh"><div class="sh-title">The Evidence Base</div><div class="sh-line"></div></div>
+  <div class="page-title">Why Organisations Need This: DORA 2024 Research</div>
+  <div class="page-sub">The DORA State of DevOps Report 2024 &mdash; based on 39,000+ respondents globally (10th anniversary edition) &mdash; provides the most comprehensive evidence base in the industry for what separates high-performing organisations from the rest</div>
+
+  <div class="section">
+    <div class="sh"><div class="sh-title">Performance Distribution: Only 19% of Teams Operate at Elite Level</div><div class="sh-line"></div></div>
+    <div class="cluster-row" style="margin-bottom:14px;">
+      <div class="cluster cluster-elite"><span class="cluster-pct">19%</span><span class="cluster-name">Elite</span></div>
+      <div class="cluster cluster-high"><span class="cluster-pct">22%</span><span class="cluster-name">High</span></div>
+      <div class="cluster cluster-mid"><span class="cluster-pct">35%</span><span class="cluster-name">Medium</span></div>
+      <div class="cluster cluster-low"><span class="cluster-pct">25%</span><span class="cluster-name">Low</span></div>
+    </div>
+    <div class="cite">Source: DORA Accelerate State of DevOps 2024. dora.dev/research/2024/dora-report/. High performer share declined from 31% (2023) to 22% (2024) &mdash; the middle is hollowing out.</div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="sh"><div class="sh-title">The Elite vs Low Performance Gap</div><div class="sh-line"></div></div>
+      <div style="margin-bottom:16px;">
+        <div class="bar-row">
+          <div class="bar-label"><span>Deployment Frequency</span><span style="color:var(--green);font-weight:700">182&times; faster</span></div>
+          <div class="bar-track"><div class="bar-fill bar-fill-green" style="width:100%"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span>Lead Time for Changes</span><span style="color:var(--primary);font-weight:700">127&times; faster</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:70%"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span>Mean Time to Recovery</span><span style="color:var(--primary);font-weight:700">2,293&times; faster</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:90%"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span>Change Failure Rate</span><span style="color:var(--green);font-weight:700">8&times; lower (&sim;5% vs &sim;40%)</span></div>
+          <div class="bar-track"><div class="bar-fill bar-fill-green" style="width:55%"></div></div>
+        </div>
+      </div>
+      <div class="cite">Source: DORA 2024. Elite thresholds: deploy on demand, lead time &lt;1 day, MTTR &lt;1 hour, change failure rate &sim;5%.</div>
+
+      <div class="card card-gold" style="margin-top:14px;">
+        <h4>The Business Case (Accelerate Research)</h4>
+        <p>Nicole Forsgren, Jez Humble &amp; Gene Kim establish in <em>Accelerate</em> (2018) that high software delivery performance <strong>causally predicts</strong> commercial outcomes. High performers are <strong>twice as likely to exceed their profitability, market share, and productivity goals</strong>. This gives every transformation program a board-level business case.</p>
+      </div>
+    </div>
+    <div>
+      <div class="sh"><div class="sh-title">What DORA Tells Us Organisations Need to Build</div><div class="sh-line"></div></div>
+      <p>DORA identifies 24 technical, process and cultural <strong>capabilities</strong> that statistically predict performance. The Cloud Transformation Accelerator is structured to build exactly these capabilities, grouped by program:</p>
+      <table>
+        <tr><th>Program</th><th>DORA Capabilities Targeted</th></tr>
+        <tr><td>1 &mdash; Strategy</td><td>Transformational leadership, generative culture, learning culture</td></tr>
+        <tr><td>2 &mdash; Foundation</td><td>Version control, infrastructure as code, loosely coupled architecture</td></tr>
+        <tr><td>3 &mdash; DevSecOps</td><td>Continuous integration, shift-left security, trunk-based development</td></tr>
+        <tr><td>4 &mdash; SRE</td><td>Monitoring &amp; observability, proactive failure notification, deployment automation</td></tr>
+        <tr><td>5 &mdash; FinOps</td><td>Work visibility, working in small batches, team experimentation</td></tr>
+        <tr><td>6 &mdash; AI</td><td>Continuous delivery, test automation, customer feedback</td></tr>
+      </table>
+
+      <div class="sh" style="margin-top:16px;"><div class="sh-title">2024 AI Finding</div><div class="sh-line"></div></div>
+      <div class="card card-accent">
+        <h4>Strong Foundations Before AI</h4>
+        <p>DORA 2024 found that AI adoption in isolation correlates with worse delivery metrics. Teams that benefit most from AI are those with <strong>strong technical foundations already in place</strong>. The Accelerator builds those foundations first &mdash; making Program 6 (AI &amp; GenAI) more effective and positioning the sequence as the correct order of investment.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="footer-bar"><div class="fb-left">Cloud Transformation Accelerator &mdash; Opportunity 2 &nbsp;&middot;&nbsp; Tech Equity Cloud &nbsp;&middot;&nbsp; Confidential</div><div class="fb-right">Page 3</div></div>
+</div>
+
+<!-- PAGE 4: PROGRAM PORTFOLIO -->
+<div class="page-break"><div class="inner">
+  <div class="sh"><div class="sh-title">Program Portfolio</div><div class="sh-line"></div></div>
+  <div class="page-title">Six Programs. 24 Sessions. 48 Hours. Measurable Outcomes.</div>
+  <div class="page-sub">Each program targets a distinct audience and transformation theme, produces real GCP infrastructure, and aligns to specific Google Cloud certification pathways</div>
+
+  <table style="margin-bottom:20px;">
+    <tr><th>#</th><th>Program</th><th>Audience</th><th>Key Frameworks</th><th>Certification</th><th>Engagement Price</th></tr>
+    <tr><td class="td-hl">1</td><td><strong>Transformation Strategy &amp; Organisation Design</strong></td><td>CTO, VP Eng, IT Directors</td><td>DORA, Google CAF, Team Topologies, OKRs</td><td>PCA</td><td class="td-gold">$15K&ndash;$40K</td></tr>
+    <tr><td class="td-hl">2</td><td><strong>Cloud Foundation &amp; Platform Engineering</strong></td><td>Platform Engineers, Architects, CCoE</td><td>Platform Eng/IDP, CCoE, Well-Architected, CNCF</td><td>ACE, PCA</td><td class="td-gold">$15K&ndash;$40K</td></tr>
+    <tr><td class="td-hl">3</td><td><strong>DevSecOps &amp; Zero Trust Security</strong></td><td>DevOps, Security, Compliance</td><td>DevSecOps, BeyondCorp, NIST CSF 2.0</td><td>PSE, PDE</td><td class="td-gold">$15K&ndash;$40K</td></tr>
+    <tr><td class="td-hl">4</td><td><strong>SRE &amp; Operational Excellence</strong></td><td>SREs, DevOps, Platform Eng</td><td>SRE (sre.google), DORA ops, ITIL 4</td><td>PDE</td><td class="td-gold">$15K&ndash;$40K</td></tr>
+    <tr><td class="td-hl">5</td><td><strong>FinOps &amp; Continuous Improvement</strong></td><td>Finance Partners, Eng Managers</td><td>FinOps Framework, VSM, Lean/Kanban</td><td>PCA, ACE</td><td class="td-gold">$15K&ndash;$40K</td></tr>
+    <tr><td class="td-hl">6</td><td><strong>AI &amp; Generative AI on Google Cloud</strong></td><td>ML Engineers, Data Eng, AI PMs</td><td>MLOps/LLMOps, Responsible AI, NIST CSF AI</td><td>PML Engineer</td><td class="td-gold">$15K&ndash;$40K</td></tr>
+  </table>
+
+  <div class="two-col">
+    <div>
+      <div class="sh"><div class="sh-title">The 11-Framework Backbone</div><div class="sh-line"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="card" style="padding:9px 11px;font-size:8pt;"><strong>DORA / Accelerate</strong><br><span style="color:var(--mid);font-size:7.5pt;">Measurement foundation</span></div>
+        <div class="card" style="padding:9px 11px;font-size:8pt;"><strong>Google Cloud Adoption Framework</strong><br><span style="color:var(--mid);font-size:7.5pt;">Maturity ladder</span></div>
+        <div class="card" style="padding:9px 11px;font-size:8pt;"><strong>Cloud Centre of Excellence</strong><br><span style="color:var(--mid);font-size:7.5pt;">Governance model</span></div>
+        <div class="card" style="padding:9px 11px;font-size:8pt;"><strong>Team Topologies</strong><br><span style="color:var(--mid);font-size:7.5pt;">Org design</span></div>
+        <div class="card" style="padding:9px 11px;font-size:8pt;"><strong>Platform Engineering / IDP</strong><br><span style="color:var(--mid);font-size:7.5pt;">Technical structure</span></div>
+        <div class="card" style="padding:9px 11px;font-size:8pt;"><strong>DevSecOps &amp; BeyondCorp</strong><br><span style="color:var(--mid);font-size:7.5pt;">Security practice</span></div>
+        <div class="card" style="padding:9px 11px;font-size:8pt;"><strong>SRE (sre.google)</strong><br><span style="color:var(--mid);font-size:7.5pt;">Operating model</span></div>
+        <div class="card" style="padding:9px 11px;font-size:8pt;"><strong>FinOps Framework</strong><br><span style="color:var(--mid);font-size:7.5pt;">Financial governance</span></div>
+        <div class="card" style="padding:9px 11px;font-size:8pt;"><strong>NIST CSF 2.0</strong><br><span style="color:var(--mid);font-size:7.5pt;">Compliance language</span></div>
+        <div class="card" style="padding:9px 11px;font-size:8pt;"><strong>Value Stream Management</strong><br><span style="color:var(--mid);font-size:7.5pt;">Flow metrics</span></div>
+        <div class="card" style="padding:9px 11px;font-size:8pt;"><strong>OKRs</strong><br><span style="color:var(--mid);font-size:7.5pt;">Executive governance</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="sh"><div class="sh-title">Session Design: 60 + 60 Format</div><div class="sh-line"></div></div>
+      <div class="card card-accent" style="margin-bottom:10px;">
+        <div class="card-num">First 60 Minutes &mdash; Framework &amp; Evidence</div>
+        <h4>Theory, Research &amp; Case Study Discussion</h4>
+        <p>Each session opens with the research evidence (DORA data, Gartner forecasts, Google best practice), a framework explanation, and a facilitated discussion mapping the concepts to the organisation&rsquo;s current state. Participants understand the &ldquo;why&rdquo; before the &ldquo;how.&rdquo;</p>
+      </div>
+      <div class="card card-accent" style="margin-bottom:16px;">
+        <div class="card-num">Second 60 Minutes &mdash; Hands-On RAD Lab</div>
+        <h4>Real Infrastructure. Real GCP Console. Real Outcomes.</h4>
+        <p>Every session deploys or configures real infrastructure in the participant&rsquo;s GCP environment via the RAD platform. Participants observe outcomes in the GCP console, connect configuration decisions to certification exam objectives, and leave with running systems &mdash; not screenshots.</p>
+      </div>
+      <div class="card card-gold">
+        <h4>Measurable Outcomes by Design</h4>
+        <p>Programs begin with a DORA baseline assessment and end with a re-measurement. Every engagement produces a DORA improvement report, a Well-Architected Review finding, and a certification pathway progress record &mdash; giving clients and partners quantifiable evidence of transformation ROI.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="footer-bar"><div class="fb-left">Cloud Transformation Accelerator &mdash; Opportunity 2 &nbsp;&middot;&nbsp; Tech Equity Cloud &nbsp;&middot;&nbsp; Confidential</div><div class="fb-right">Page 4</div></div>
+</div>
+
+<!-- PAGE 5: MARKET OPPORTUNITY & BUSINESS MODEL -->
+<div class="page-break"><div class="inner">
+  <div class="sh"><div class="sh-title">Market Opportunity &amp; Business Model</div><div class="sh-line"></div></div>
+  <div class="page-title">A $911B Market With No Dominant Evidence-Based Curriculum</div>
+  <div class="page-sub">The digital transformation market is enormous, fast-growing, and poorly served &mdash; most programs are generic, theoretical, and impossible to measure. The Cloud Transformation Accelerator is none of these.</div>
+
+  <div class="metrics-row">
+    <div class="mc mc-gold"><span class="mc-val">$911B</span><span class="mc-sub">Digital transformation market 2024 (MarketsandMarkets)</span></div>
+    <div class="mc mc-gold"><span class="mc-val">23.9%</span><span class="mc-sub">DX market CAGR 2024&ndash;2030</span></div>
+    <div class="mc mc-gold"><span class="mc-val">81%</span><span class="mc-sub">DX initiatives fail to meet objectives</span></div>
+    <div class="mc mc-gold"><span class="mc-val">$3.3T</span><span class="mc-sub">Projected DX market by 2030</span></div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="sh"><div class="sh-title">Revenue Streams</div><div class="sh-line"></div></div>
+      <table style="margin-bottom:16px;">
+        <tr><th>Engagement Type</th><th>Price Range</th></tr>
+        <tr><td>DORA Diagnostic Workshop (half-day)</td><td class="td-gold">$2,500 &ndash; $5,000</td></tr>
+        <tr><td>Single Program Delivery (4 sessions)</td><td class="td-gold">$15,000 &ndash; $40,000</td></tr>
+        <tr><td>Full Accelerator (all 6 programs)</td><td class="td-gold">$75,000 &ndash; $200,000</td></tr>
+        <tr><td>SI / Partner License (per program)</td><td class="td-gold">$5,000 &ndash; $15,000</td></tr>
+        <tr><td>Enterprise Annual Retainer</td><td class="td-gold">$25,000+ / year</td></tr>
+        <tr><td>GCP Certification Vouchers (bundled)</td><td class="td-gold">$200 / exam + margin</td></tr>
+      </table>
+
+      <div class="sh"><div class="sh-title">Revenue Projections</div><div class="sh-line"></div></div>
+      <table>
+        <tr><th>Stream</th><th>Year 1</th><th>Year 2</th><th>Year 3</th></tr>
+        <tr><td>Diagnostic Workshops</td><td>$30,000</td><td>$80,000</td><td>$150,000</td></tr>
+        <tr><td>Program Delivery</td><td>$200,000</td><td>$700,000</td><td>$2,000,000</td></tr>
+        <tr><td>SI Licensing</td><td>$40,000</td><td>$200,000</td><td>$600,000</td></tr>
+        <tr><td>Enterprise Retainers</td><td>$20,000</td><td>$120,000</td><td>$350,000</td></tr>
+        <tr style="background:var(--dark);"><td style="color:#fff;font-weight:700;">Total</td><td style="color:var(--gold);font-weight:700;">$290,000</td><td style="color:var(--gold);font-weight:700;">$1,100,000</td><td style="color:var(--gold);font-weight:700;">$3,100,000</td></tr>
+      </table>
+      <div class="cite">Year 1 assumes partner co-delivery from Q2. Year 3 assumes 3+ SI licensing agreements and 10+ enterprise clients.</div>
+    </div>
+    <div>
+      <div class="sh"><div class="sh-title">Target Segments &amp; Sales Motion</div><div class="sh-line"></div></div>
+      <div class="card card-accent" style="margin-bottom:10px;">
+        <div class="card-num">Entry: Free DORA Diagnostic (Lead Generation)</div>
+        <h4>Half-Day DORA Benchmark Workshop</h4>
+        <p>Offered free or at cost to organisations. Produces a DORA maturity report that surfaces pain points and creates the business case for the full program. Converts to paid engagements with consistently high rates because the data makes the need undeniable.</p>
+      </div>
+      <div class="card card-accent" style="margin-bottom:10px;">
+        <div class="card-num">Scale: SI &amp; Partner Licensing</div>
+        <h4>System Integrator Channel</h4>
+        <p>Large SIs (Deloitte, KPMG, Accenture, Capgemini, Wipro) regularly deliver digital transformation engagements but lack a Google-aligned, evidence-based hands-on curriculum. The Accelerator becomes the technical content layer beneath their organisational change methodology.</p>
+      </div>
+      <div class="card card-accent">
+        <div class="card-num">Enterprise: Google Cloud Partner Co-Sell</div>
+        <h4>Google Cloud Marketplace &amp; Partner Ecosystem</h4>
+        <p>Listing on Google Cloud Marketplace enables co-sell with Google Customer Engineers and access to committed cloud spend. Partners enrolled in the Google Cloud Build programme gain access to joint marketing development funds (MDF) for Accelerator campaigns.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="footer-bar"><div class="fb-left">Cloud Transformation Accelerator &mdash; Opportunity 2 &nbsp;&middot;&nbsp; Tech Equity Cloud &nbsp;&middot;&nbsp; Confidential</div><div class="fb-right">Page 5</div></div>
+</div>
+
+<!-- PAGE 6: IP VALUATION -->
+<div class="page-break"><div class="inner">
+  <div class="sh"><div class="sh-title">IP Asset Valuation</div><div class="sh-line"></div></div>
+  <div class="page-title">Curriculum IP: 11 Years of Expertise Encoded Into a Structured Program</div>
+  <div class="page-sub">Valuation uses a cost-to-replicate methodology &mdash; the minimum cost to rebuild the transformation curriculum, certification guides, and framework synthesis from scratch at expert consulting rates</div>
+
+  <div class="highlight">
+    <h3>Total Curriculum IP Replacement Cost: ~$144,000</h3>
+    <p>This covers the 24 certification exploration guides, the 6-program transformation curriculum, and the framework research and synthesis. It does not capture what cannot be replicated through capital alone: 11 years of Google Cloud delivery experience, 500+ engagements informing the methodology, a 4.8/5 CSAT track record, or the academic rigour of a PhD-level research approach to curriculum design.</p>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="sh"><div class="sh-title">Component Breakdown</div><div class="sh-line"></div></div>
+      <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+        <div class="val-row"><div class="val-cell val-header">Curriculum Component</div><div class="val-cell val-header">Hours</div><div class="val-cell val-header">Value @ $200/hr</div></div>
+        <div class="val-row"><div class="val-cell"><strong>24 Certification Exploration Guides</strong><br><span style="font-size:7.5pt;color:var(--mid)">Expert mapping of GCP services to ACE, PCA, PCD, PDE &amp; PSE objectives. Real-world case study integration (Altostrat, Cymbal, EHR, KnightMotives)</span></div><div class="val-cell">480 hrs</div><div class="val-cell td-hl">$96,000</div></div>
+        <div class="val-row"><div class="val-cell"><strong>6-Program Transformation Curriculum</strong><br><span style="font-size:7.5pt;color:var(--mid)">24 sessions with lab guides, DORA capability mapping, framework integration, assessment tools, and facilitator notes</span></div><div class="val-cell">240 hrs</div><div class="val-cell td-hl">$48,000</div></div>
+        <div class="val-row val-total"><div class="val-cell"><strong>Total Curriculum IP</strong></div><div class="val-cell"><strong>720 hrs</strong></div><div class="val-cell" style="color:var(--accent);font-weight:700;">$144,000</div></div>
+        <div class="val-row" style="background:var(--dark);"><div class="val-cell" style="color:#fff;">Framework Research &amp; Synthesis</div><div class="val-cell" style="color:rgba(255,255,255,.6);">150 hrs</div><div class="val-cell" style="color:var(--gold);">$30,000</div></div>
+        <div class="val-row" style="background:var(--accent);border-radius:0 0 8px 8px;"><div class="val-cell" style="color:#fff;font-weight:700;font-size:10pt;">Total Curriculum Consideration</div><div class="val-cell" style="color:rgba(255,255,255,.6);">870 hrs</div><div class="val-cell" style="color:var(--gold);font-weight:700;font-size:11pt;">$174,000</div></div>
+      </div>
+      <div class="cite" style="margin-top:8px;">Rate: $200/hr expert GCP trainer &amp; curriculum designer. Framework Research covers synthesis of 11 global frameworks into a coherent, sequenced delivery methodology &mdash; a task requiring both academic depth and practitioner experience.</div>
+    </div>
+    <div>
+      <div class="sh"><div class="sh-title">What the Valuation Does Not Capture</div><div class="sh-line"></div></div>
+      <ul class="bullet-list" style="margin-bottom:20px;">
+        <li><span class="dot"></span><strong>500+ delivery engagements</strong> &mdash; the methodology is informed by real client outcomes across 50+ countries, not academic theory alone</li>
+        <li><span class="dot"></span><strong>7-year Google trusted relationship</strong> &mdash; the curriculum is delivered by a Google Cloud Authorised Trainer, adding a credibility layer no third party can purchase</li>
+        <li><span class="dot"></span><strong>PhD-level research methodology</strong> &mdash; the framework synthesis is designed with academic rigour, creating a defensible, evidence-based curriculum rather than a commercial slide deck</li>
+        <li><span class="dot"></span><strong>10,000+ professionals trained</strong> &mdash; the curriculum has been iterated across thousands of real training interactions, not just written once</li>
+        <li><span class="dot"></span><strong>Google program delivery experience</strong> &mdash; 6 named Google Cloud programs delivered, including the Google Cloud Adoption Framework and Gemini AI Models program</li>
+      </ul>
+
+      <div class="card card-gold">
+        <h4>Combined Opportunity Value</h4>
+        <p>Partners investing in both Opportunity 1 (RAD Platform, ~$877K) and Opportunity 2 (Transformation Accelerator, ~$174K) access the complete Tech Equity Cloud proposition at a total IP consideration of approximately <strong>$1,051,000</strong> &mdash; with Year 3 combined revenue potential exceeding <strong>$4,700,000</strong>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="footer-bar"><div class="fb-left">Cloud Transformation Accelerator &mdash; Opportunity 2 &nbsp;&middot;&nbsp; Tech Equity Cloud &nbsp;&middot;&nbsp; Confidential</div><div class="fb-right">Page 6</div></div>
+</div>
+
+<!-- PAGE 7: FOUNDER & PARTNERSHIP -->
+<div class="page-break"><div class="inner">
+  <div class="sh"><div class="sh-title">The Founder &amp; Partnership Opportunity</div><div class="sh-line"></div></div>
+  <div class="page-title">Shiyghan Navti &mdash; Founder &amp; CTO, Tech Equity Cloud</div>
+  <div class="page-sub">Google Cloud Authorised Trainer with 10,000+ professionals trained, 500+ engagements, and a 4.8/5 CSAT &mdash; the proven practitioner behind every framework, every session, and every lab in the Accelerator</div>
+
+  <div class="two-col">
+    <div>
+      <p>Shiyghan Navti has personally designed and delivered transformation programs for clients across Fortune 100 organisations, the <strong>World Bank</strong>, and the <strong>Commonwealth Telecommunications Organization</strong>. His cloud career spans IBM (Europe Cloud Technical Sales Leader; Africa Geo-Expansion) and Vodafone Group (Head of Cloud Advisory Group, building hybrid cloud services with Google, AWS, and Microsoft), before founding Tech Equity in 2013.</p>
+      <p>Since 2018 he has held a trusted position within Google Cloud&rsquo;s partner ecosystem, delivering more than 50 engagements per year globally &mdash; maintaining a <strong>4.8/5 CSAT</strong> across Google&rsquo;s own post-engagement surveys. He has delivered six named Google Cloud programs including the Adoption Framework, Application Modernization Program, and Accelerating Innovation with Gemini AI Models.</p>
+      <p>His PhD in Computational Modelling and MSc in Numerical Modelling underpin a rigorous, evidence-based approach to curriculum design that distinguishes the Accelerator from commercially motivated training content.</p>
+
+      <div class="sh" style="margin-top:14px;"><div class="sh-title">Google Cloud Programs Delivered</div><div class="sh-line"></div></div>
+      <ul class="bullet-list">
+        <li><span class="dot dot-blue"></span>Google Cloud Adoption Framework</li>
+        <li><span class="dot dot-blue"></span>Google Cloud Rapid Application Migration Program</li>
+        <li><span class="dot dot-blue"></span>Google Cloud Application Modernization Program</li>
+        <li><span class="dot dot-blue"></span>Architecting with Google Cloud Serverless Platform</li>
+        <li><span class="dot dot-blue"></span>Designing Scalable Infrastructure with Google Kubernetes Engine</li>
+        <li><span class="dot dot-blue"></span>Accelerating Innovation with Google Cloud Gemini AI Models</li>
+      </ul>
+    </div>
+    <div>
+      <div class="sh"><div class="sh-title">Partnership Structure Options</div><div class="sh-line"></div></div>
+      <div class="card card-accent" style="margin-bottom:10px;">
+        <div class="card-num">Option A &mdash; Co-Delivery</div>
+        <h4>Delivery Partnership</h4>
+        <p>Partner brings the client pipeline and co-delivery capacity. Tech Equity delivers or trains the delivery team on the curriculum. Revenue split on program fees. Rapid path to market &mdash; first engagement deliverable within 60 days of agreement.</p>
+      </div>
+      <div class="card card-gold" style="margin-bottom:10px;">
+        <div class="card-num">Option B &mdash; Curriculum License</div>
+        <h4>Licensed Methodology</h4>
+        <p>Partner licenses the 6-program curriculum and facilitator guides for delivery by their own certified trainers. Annual license fee plus per-engagement royalty. Tech Equity provides trainer certification, curriculum updates, and DORA assessment tooling.</p>
+      </div>
+      <div class="card card-green" style="margin-bottom:16px;">
+        <div class="card-num">Option C &mdash; Equity Investment</div>
+        <h4>Strategic Investment</h4>
+        <p>Partner invests against the curriculum IP valuation (~$174K) and projected revenue for a negotiated equity stake in the Transformation Accelerator business unit. Funds go to market, content expansion, and SI partnership development.</p>
+      </div>
+
+      <div style="text-align:center;padding:16px;border:2px solid #1e6b50;border-radius:8px;">
+        <div style="font-size:10pt;font-weight:600;color:var(--dark);margin-bottom:6px;">To begin the conversation</div>
+        <div style="font-size:9pt;color:var(--mid);"><strong style="color:#1e6b50;">shiyghan.navti@techequity.cloud</strong><br>+44 7966 265130 &nbsp;|&nbsp; techequity.cloud</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="footer-bar"><div class="fb-left">Cloud Transformation Accelerator &mdash; Opportunity 2 &nbsp;&middot;&nbsp; Tech Equity Cloud &nbsp;&middot;&nbsp; Confidential &nbsp;&middot;&nbsp; April 2026</div><div class="fb-right">Page 7</div></div>
+</div>
+
+</body></html>
