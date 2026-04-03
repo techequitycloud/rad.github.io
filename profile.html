@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Professional Profile — Shiyghan Navti</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --primary:   #1a73e8;
+      --accent:    #0d47a1;
+      --dark:      #1c2b3a;
+      --mid:       #4a6274;
+      --light:     #f0f4f8;
+      --border:    #d0dce8;
+      --white:     #ffffff;
+      --gold:      #f9ab00;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.65;
+      color: var(--dark);
+      background: var(--white);
+    }
+
+    /* ── Page layout ── */
+    .page {
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 0;
+    }
+
+    /* ── Header / Hero ── */
+    .hero {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 60%, #42a5f5 100%);
+      padding: 44px 48px 36px;
+      color: var(--white);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      right: 60px;
+      bottom: -60px;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-logo {
+      font-size: 11pt;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-size: 26pt;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+      line-height: 1.15;
+    }
+
+    .hero-title {
+      font-size: 11pt;
+      font-weight: 400;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 24px;
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 8.5pt;
+      font-weight: 500;
+      color: var(--white);
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Metrics bar ── */
+    .metrics {
+      background: var(--dark);
+      padding: 20px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .metric {
+      text-align: center;
+      color: var(--white);
+    }
+
+    .metric-value {
+      font-size: 20pt;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+      display: block;
+    }
+
+    .metric-label {
+      font-size: 7.5pt;
+      color: rgba(255,255,255,0.65);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 3px;
+      display: block;
+    }
+
+    .metric-divider {
+      width: 1px;
+      height: 36px;
+      background: rgba(255,255,255,0.15);
+    }
+
+    /* ── Body content ── */
+    .content {
+      padding: 40px 48px;
+    }
+
+    /* ── Section layout ── */
+    .section {
+      margin-bottom: 34px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .section-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+    }
+
+    .section-title {
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    /* ── Profile text ── */
+    .profile-text p {
+      margin-bottom: 14px;
+      color: var(--dark);
+      text-align: justify;
+      hyphens: auto;
+    }
+
+    .profile-text p:last-child {
+      margin-bottom: 0;
+    }
+
+    .profile-text strong {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    /* ── Programs grid ── */
+    .programs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .program-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: var(--light);
+      border-left: 3px solid var(--primary);
+    }
+
+    .program-card-title {
+      font-size: 8.5pt;
+      font-weight: 600;
+      color: var(--dark);
+      line-height: 1.35;
+    }
+
+    /* ── Transformation program ── */
+    .transform-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .transform-card {
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: var(--light);
+      border-top: 3px solid var(--primary);
+    }
+
+    .transform-card-num {
+      font-size: 7pt;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .transform-card-title {
+      font-size: 8.5pt;
+      font-weight: 600;
+      color: var(--dark);
+      margin-top: 3px;
+      line-height: 1.3;
+    }
+
+    /* ── Two-column layout ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
+    /* ── Credentials list ── */
+    .cred-list {
+      list-style: none;
+    }
+
+    .cred-list li {
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 9pt;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .cred-list li:last-child {
+      border-bottom: none;
+    }
+
+    .cred-dot {
+      width: 7px;
+      height: 7px;
+      min-width: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      margin-top: 4px;
+    }
+
+    /* ── Career timeline ── */
+    .career-item {
+      padding: 8px 0 8px 16px;
+      border-left: 2px solid var(--border);
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .career-item::before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: 12px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+
+    .career-org {
+      font-weight: 600;
+      font-size: 9pt;
+      color: var(--dark);
+    }
+
+    .career-role {
+      font-size: 8.5pt;
+      color: var(--mid);
+    }
+
+    .career-date {
+      font-size: 7.5pt;
+      color: var(--primary);
+      font-weight: 500;
+    }
+
+    /* ── Academic ── */
+    .academic-item {
+      margin-bottom: 10px;
+    }
+
+    .academic-degree {
+      font-weight: 600;
+      font-size: 9pt;
+    }
+
+    .academic-inst {
+      font-size: 8.5pt;
+      color: var(--mid);
+    }
+
+    /* ── Footer ── */
+    .footer {
+      background: var(--dark);
+      padding: 20px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-contact {
+      color: rgba(255,255,255,0.8);
+      font-size: 8.5pt;
+    }
+
+    .footer-contact span {
+      color: var(--gold);
+      font-weight: 500;
+    }
+
+    .footer-contact a {
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+    }
+
+    .footer-brand {
+      font-size: 9pt;
+      font-weight: 600;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .divider {
+      color: rgba(255,255,255,0.3);
+      margin: 0 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── HERO ── -->
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-logo">Tech Equity Cloud</div>
+      <h1>Shiyghan Navti</h1>
+      <div class="hero-title">Founder &amp; CTO, Tech Equity &nbsp;·&nbsp; Google Cloud Authorised Trainer &amp; Partner Enablement Lead</div>
+      <div class="hero-tags">
+        <span class="tag">Digital Transformation</span>
+        <span class="tag">Cloud Platform Engineering</span>
+        <span class="tag">DevSecOps &amp; SRE</span>
+        <span class="tag">Google Cloud Partner Ecosystem</span>
+        <span class="tag">AI &amp; Generative AI</span>
+        <span class="tag">FinOps</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── METRICS ── -->
+  <div class="metrics">
+    <div class="metric">
+      <span class="metric-value">10,000+</span>
+      <span class="metric-label">Professionals Trained</span>
+    </div>
+    <div class="metric-divider"></div>
+    <div class="metric">
+      <span class="metric-value">500+</span>
+      <span class="metric-label">Client Engagements</span>
+    </div>
+    <div class="metric-divider"></div>
+    <div class="metric">
+      <span class="metric-value">50+</span>
+      <span class="metric-label">Countries Reached</span>
+    </div>
+    <div class="metric-divider"></div>
+    <div class="metric">
+      <span class="metric-value">4.8 / 5</span>
+      <span class="metric-label">Google CSAT Score</span>
+    </div>
+    <div class="metric-divider"></div>
+    <div class="metric">
+      <span class="metric-value">2018</span>
+      <span class="metric-label">Google Relationship Since</span>
+    </div>
+  </div>
+
+  <!-- ── BODY ── -->
+  <div class="content">
+
+    <!-- Profile -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Executive Profile</div>
+        <div class="section-line"></div>
+      </div>
+      <div class="profile-text">
+        <p>
+          Shiyghan Navti is one of the most experienced Google Cloud transformation practitioners
+          operating globally today. Since 2018, he has held a trusted position within Google Cloud's
+          partner and client enablement ecosystem, consistently delivering more than 50 engagements
+          per year across Europe, the Middle East and Africa, North America, Asia Pacific, and Latin
+          America. Over the course of that relationship, he has personally trained more than
+          <strong>10,000 professionals</strong> and completed more than <strong>500 unique client
+          engagements</strong> on the Google Cloud platform — achieving a customer satisfaction score
+          of <strong>4.8 out of 5.0</strong> across Google's own post-engagement surveys. He is widely
+          regarded within the Google Cloud community as one of the most technically and academically
+          qualified members of the extended trainer and partner network.
+        </p>
+        <p>
+          In parallel to his Google Cloud delivery work, Shiyghan has led the development of
+          <strong>RAD (Rapid Application Deployment)</strong>, a proprietary Internal Developer
+          Platform built on Google Cloud that operationalises cloud best practices as deployable,
+          production-ready infrastructure. RAD serves as the hands-on delivery vehicle for a
+          structured <strong>Cloud Transformation Accelerator Program</strong> — a six-program,
+          24-session curriculum grounded in Google's DORA research, the Google Cloud Adoption
+          Framework, Site Reliability Engineering, DevSecOps, Platform Engineering, FinOps, Team
+          Topologies, the NIST Cybersecurity Framework, and Generative AI — designed to take
+          organisations from baseline maturity assessment through to a continuously improving,
+          AI-ready cloud operating model.
+        </p>
+        <p>
+          Shiyghan's depth of expertise is underpinned by an unusually broad career spanning
+          rigorous academic research, enterprise technology leadership, and entrepreneurship. His
+          enterprise career includes senior leadership roles at <strong>IBM</strong>, where he led
+          cloud technical sales across Europe and drove the organisation's Africa geo-expansion
+          strategy, and at <strong>Vodafone Group</strong>, where he built and led the Cloud Advisory
+          Group responsible for developing hybrid cloud services in partnership with Google, AWS, and
+          Microsoft. He has delivered consulting and advisory services to numerous Fortune 100
+          organisations, the <strong>World Bank</strong>, and the <strong>Commonwealth
+          Telecommunications Organization</strong>. For a digital transformation partnership, he
+          brings a rare combination of academic rigour, technical depth, Google ecosystem credentials,
+          and over two decades of enterprise leadership across multiple industries and geographies.
+        </p>
+      </div>
+    </div>
+
+    <!-- Google Cloud Programs -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Google Cloud Programs Delivered</div>
+        <div class="section-line"></div>
+      </div>
+      <div class="programs-grid">
+        <div class="program-card">
+          <div class="program-card-title">Google Cloud Adoption Framework</div>
+        </div>
+        <div class="program-card">
+          <div class="program-card-title">Google Cloud Rapid Application Migration Program</div>
+        </div>
+        <div class="program-card">
+          <div class="program-card-title">Google Cloud Application Modernization Program</div>
+        </div>
+        <div class="program-card">
+          <div class="program-card-title">Architecting with Google Cloud Serverless Platform</div>
+        </div>
+        <div class="program-card">
+          <div class="program-card-title">Designing Scalable Infrastructure with Google Kubernetes Engine</div>
+        </div>
+        <div class="program-card">
+          <div class="program-card-title">Accelerating Innovation with Google Cloud Gemini AI Models</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transformation Program -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Cloud Transformation Accelerator — Program Portfolio</div>
+        <div class="section-line"></div>
+      </div>
+      <div class="transform-grid">
+        <div class="transform-card">
+          <div class="transform-card-num">Program 1</div>
+          <div class="transform-card-title">Transformation Strategy &amp; Organisation Design</div>
+        </div>
+        <div class="transform-card">
+          <div class="transform-card-num">Program 2</div>
+          <div class="transform-card-title">Cloud Foundation &amp; Platform Engineering</div>
+        </div>
+        <div class="transform-card">
+          <div class="transform-card-num">Program 3</div>
+          <div class="transform-card-title">DevSecOps &amp; Zero Trust Security</div>
+        </div>
+        <div class="transform-card">
+          <div class="transform-card-num">Program 4</div>
+          <div class="transform-card-title">SRE &amp; Operational Excellence</div>
+        </div>
+        <div class="transform-card">
+          <div class="transform-card-num">Program 5</div>
+          <div class="transform-card-title">FinOps &amp; Continuous Improvement</div>
+        </div>
+        <div class="transform-card">
+          <div class="transform-card-num">Program 6</div>
+          <div class="transform-card-title">AI &amp; Generative AI on Google Cloud</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two column: Credentials + Career -->
+    <div class="two-col">
+
+      <!-- Left: Certifications + Academic -->
+      <div>
+        <div class="section">
+          <div class="section-header">
+            <div class="section-title">Google Cloud Certifications</div>
+            <div class="section-line"></div>
+          </div>
+          <ul class="cred-list">
+            <li><span class="cred-dot"></span>Google Cloud Authorised Trainer</li>
+            <li><span class="cred-dot"></span>Professional Cloud Architect</li>
+            <li><span class="cred-dot"></span>Professional Cloud Security Engineer</li>
+            <li><span class="cred-dot"></span>Professional Cloud Developer</li>
+            <li><span class="cred-dot"></span>Associate Cloud Engineer</li>
+            <li><span class="cred-dot"></span>Cloud Digital Leader</li>
+          </ul>
+        </div>
+
+        <div class="section">
+          <div class="section-header">
+            <div class="section-title">Academic Qualifications</div>
+            <div class="section-line"></div>
+          </div>
+          <div class="academic-item">
+            <div class="academic-degree">PhD, Computational Modelling</div>
+            <div class="academic-inst">University of Wales</div>
+          </div>
+          <div class="academic-item">
+            <div class="academic-degree">MSc, Numerical Modelling &amp; Finite Elements</div>
+            <div class="academic-inst">University of Wales</div>
+          </div>
+          <div class="academic-item">
+            <div class="academic-degree">BEng, Structural Engineering with Architecture</div>
+            <div class="academic-inst">University of Manchester</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">
+            <div class="section-title">Framework Expertise</div>
+            <div class="section-line"></div>
+          </div>
+          <ul class="cred-list">
+            <li><span class="cred-dot"></span>DORA Research &amp; Accelerate</li>
+            <li><span class="cred-dot"></span>Google Cloud Adoption Framework</li>
+            <li><span class="cred-dot"></span>Cloud Centre of Excellence</li>
+            <li><span class="cred-dot"></span>Site Reliability Engineering</li>
+            <li><span class="cred-dot"></span>DevSecOps &amp; BeyondCorp / Zero Trust</li>
+            <li><span class="cred-dot"></span>FinOps Framework</li>
+            <li><span class="cred-dot"></span>Team Topologies</li>
+            <li><span class="cred-dot"></span>NIST Cybersecurity Framework 2.0</li>
+            <li><span class="cred-dot"></span>Value Stream Management</li>
+            <li><span class="cred-dot"></span>Platform Engineering / IDP</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Right: Career -->
+      <div>
+        <div class="section">
+          <div class="section-header">
+            <div class="section-title">Career Highlights</div>
+            <div class="section-line"></div>
+          </div>
+
+          <div class="career-item">
+            <div class="career-org">Tech Equity</div>
+            <div class="career-role">Founder &amp; CTO</div>
+            <div class="career-date">2013 — Present</div>
+          </div>
+
+          <div class="career-item">
+            <div class="career-org">Google Cloud</div>
+            <div class="career-role">Authorised Trainer &amp; Partner Enablement Lead</div>
+            <div class="career-date">2018 — Present</div>
+          </div>
+
+          <div class="career-item">
+            <div class="career-org">Media Markt Saturn</div>
+            <div class="career-role">Cloud Architect (Independent Consultant)</div>
+            <div class="career-date">2018 — 2019</div>
+          </div>
+
+          <div class="career-item">
+            <div class="career-org">Vodafone Group Enterprise</div>
+            <div class="career-role">Head of Cloud Advisory Group</div>
+            <div class="career-date">2016 — 2018</div>
+          </div>
+
+          <div class="career-item">
+            <div class="career-org">IBM</div>
+            <div class="career-role">Europe Cloud Technical Sales Leader</div>
+            <div class="career-date">2012 — 2013</div>
+          </div>
+
+          <div class="career-item">
+            <div class="career-org">IBM</div>
+            <div class="career-role">Geo-Expansion Strategy &amp; Marketing, Middle East &amp; Africa</div>
+            <div class="career-date">2009 — 2011</div>
+          </div>
+
+          <div class="career-item">
+            <div class="career-org">IBM</div>
+            <div class="career-role">Senior Consulting IT Specialist &amp; Technical Pre-Sales</div>
+            <div class="career-date">2009 — 2010</div>
+          </div>
+
+          <div class="career-item">
+            <div class="career-org">Honda UK</div>
+            <div class="career-role">DevOps Engineer</div>
+            <div class="career-date">2000 — 2009</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">
+            <div class="section-title">Select Client Engagements</div>
+            <div class="section-line"></div>
+          </div>
+          <ul class="cred-list">
+            <li><span class="cred-dot"></span>World Bank</li>
+            <li><span class="cred-dot"></span>Commonwealth Telecommunications Organization</li>
+            <li><span class="cred-dot"></span>Media Markt Saturn</li>
+            <li><span class="cred-dot"></span>Multiple Fortune 100 Organisations</li>
+            <li><span class="cred-dot"></span>Google Cloud Partners &amp; System Integrators (Global)</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+    <!-- /two-col -->
+
+  </div>
+  <!-- /content -->
+
+  <!-- ── FOOTER ── -->
+  <div class="footer">
+    <div class="footer-contact">
+      <span>shiyghan.navti@techequity.cloud</span>
+      <span class="divider">·</span>
+      +44 7966 265130
+      <span class="divider">·</span>
+      <a href="https://techequity.cloud">techequity.cloud</a>
+    </div>
+    <div class="footer-brand">Tech Equity Cloud</div>
+  </div>
+
+</div>
+</body>
+</html>
