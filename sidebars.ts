@@ -15,9 +15,20 @@ import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 const sidebars: SidebarsConfig = {
   docsSidebar: [
     {
-      type: 'doc',
-      id: 'workflows/getting-started',
+      type: 'category',
       label: 'Getting Started',
+      items: [
+        {
+          type: 'doc',
+          id: 'workflows/rad-benefits',
+          label: 'RAD Benefits',
+        },
+        {
+          type: 'doc',
+          id: 'workflows/using-rad',
+          label: 'Using RAD',
+        },
+      ],
     },
     {
       type: 'category',
