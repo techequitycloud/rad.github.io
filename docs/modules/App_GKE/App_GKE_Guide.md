@@ -51,6 +51,8 @@ gcloud services describe container.googleapis.com \
 
 ## Group 1: Project & Identity
 
+> **ACE Exam Connection:** This group maps to ACE Section 1.1 (Setting up cloud projects and accounts) and Section 1.2 (Managing billing configuration). The `project_id` variable demonstrates GCP's resource hierarchy; `support_users` demonstrates IAM group-based access management (using a Google Group email is the exam-recommended approach); `resource_labels` demonstrates billing export and cost attribution via BigQuery.
+
 These variables establish the GCP project context and the shared identity settings that apply across all resources created by the module. They must be configured correctly before any deployment can succeed.
 
 | Variable | Default | Options / Format | Description & Implications |
@@ -124,6 +126,8 @@ gcloud secrets list --project=PROJECT_ID \
 
 ## Group 3: Runtime & Scaling
 
+> **ACE Exam Connection:** This group maps to ACE Section 2.1 (Planning and implementing compute resources) and Section 3.1 (Managing compute resources). Key variables: `min_instance_count`/`max_instance_count` configure the Horizontal Pod Autoscaler (HPA); `container_resources` demonstrates GKE Autopilot resource requests/limits (GKE Autopilot bills per pod request — a direct ACE exam cost topic); `enable_vertical_pod_autoscaling` demonstrates VPA vs HPA trade-offs tested in the ACE exam.
+
 These variables control how the application container is sourced, built, deployed, and scaled on GKE Autopilot. They are the core settings that determine the runtime behaviour of your application, including how the Horizontal Pod Autoscaler (HPA) manages replicas and how container resources are allocated by the Kubernetes scheduler.
 
 | Variable | Default | Options / Format | Description & Implications |
@@ -184,6 +188,8 @@ kubectl describe vpa APPLICATION_NAME -n NAMESPACE
 
 ## Group 4: Environment Variables & Secrets
 
+> **ACE Exam Connection:** This group maps to ACE Section 4.2 (Managing service accounts — Securing Secrets). The `secret_environment_variables` variable demonstrates standard Secret Manager integration; `enable_secrets_store_csi_driver` demonstrates the more secure Secrets Store CSI Driver pattern where secret values never appear in Kubernetes etcd or Terraform state — relevant to ACE exam compliance scenarios (PCI-DSS, HIPAA). The `manage_storage_kms_iam` variable demonstrates CMEK for Cloud Storage — an ACE Section 4 KMS topic.
+
 These variables control how configuration and sensitive credentials are delivered to the running container. A key principle here is the separation of **plain-text configuration** (non-sensitive settings injected directly as environment variables) from **sensitive credentials** (injected securely via Secret Manager, never stored in plaintext). The module offers two mechanisms for secrets: environment-variable injection via `secret_environment_variables`, and file-based injection via the Secrets Store CSI Driver (`enable_secrets_store_csi_driver`).
 
 | Variable | Default | Options / Format | Description & Implications |
@@ -240,6 +246,8 @@ kubectl get secretproviderclass -n NAMESPACE
 ---
 
 ## Group 5: GKE Backend Configuration
+
+> **ACE Exam Connection:** This group maps to ACE Section 2.1 (Selecting appropriate compute choices), Section 2.3 (Networking resources), and Section 4.2 (Defining Internal Access Controls). Key variables: `workload_type` (Deployment vs StatefulSet) is a direct ACE exam Kubernetes topic; `service_type` (LoadBalancer/ClusterIP/NodePort) maps directly to ACE exam Kubernetes Service type questions; `enable_network_segmentation` demonstrates Kubernetes NetworkPolicy enforcement — the ACE exam's pod-level security topic; `configure_service_mesh` demonstrates Istio/Cloud Service Mesh for mTLS.
 
 These variables configure how the application workload is hosted within the GKE cluster — which cluster it targets, how the Kubernetes namespace and workload type are set up, how the Service exposes the application, and what reliability and networking policies govern the pods. These settings have a direct impact on availability, traffic routing, and infrastructure topology.
 
@@ -345,6 +353,8 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep OUTPUT_ENV_VAR_NAME
 ---
 
 ## Group 7: CI/CD & GitHub Integration
+
+> **ACE Exam Connection:** This group maps to ACE Section 3.1 (Deploying new versions of an application). The `enable_cicd_trigger` + `cicd_trigger_config` variables demonstrate Cloud Build trigger configuration; `enable_cloud_deploy` + `cloud_deploy_stages` demonstrate progressive delivery with cross-cluster promotion and manual approval gates; `enable_binary_authorization` demonstrates image supply-chain security — verifying container attestations before scheduling pods onto the cluster.
 
 These variables configure automated build and deployment pipelines. The module supports two pipeline models: a simple **Cloud Build** model where every qualifying code push builds a new image and rolls it out directly to the GKE Deployment, and a more advanced **Cloud Deploy** model that introduces a promotion-based pipeline with defined stages and optional manual approvals between them.
 
@@ -471,6 +481,8 @@ kubectl logs POD_NAME -n NAMESPACE --previous 2>/dev/null || \
 
 ## Group 9: Storage & Filesystem — GCS
 
+> **ACE Exam Connection:** This group maps to ACE Section 2.2 (Choosing and deploying storage products) and Section 3.2 (Managing and securing objects in Cloud Storage buckets). The `storage_buckets` variable demonstrates GCS bucket provisioning; `storage_class` options (Standard, Nearline, Coldline, Archive) are direct ACE exam storage class selection questions; GCS Fuse mounts demonstrate how Kubernetes pods access object storage as a filesystem — relevant to PVC and volume concepts tested in the exam.
+
 These variables configure **Google Cloud Storage (GCS)** for the application. GCS provides two distinct integration patterns: standard **object storage** (buckets the application reads and writes via the GCS API or client libraries), and **GCS Fuse** mounts (buckets surfaced as a POSIX filesystem path directly inside the container via the GCS Fuse CSI Driver). See also `manage_storage_kms_iam` in Group 4 for customer-managed encryption key configuration.
 
 > **Prerequisites:** GCS Fuse volume mounts (`gcs_volumes`) require the **GCS Fuse CSI Driver** add-on to be enabled on the GKE cluster. Enable it with: `gcloud container clusters update CLUSTER --update-addons GcsFuseCsiDriver=ENABLED --region=REGION`. Workload Identity must also be enabled and correctly configured so that pods have permission to access the target buckets.
@@ -527,6 +539,8 @@ gcloud kms keys get-iam-policy KEY_NAME \
 ---
 
 ## Group 10: Database Configuration
+
+> **ACE Exam Connection:** This group maps to ACE Section 2.2 (Choosing and deploying relational data products) and Section 3.2 (Database backups and restore). The `database_type` options map directly to ACE exam Cloud SQL engine selection questions; Workload Identity authentication via the Cloud SQL Auth Proxy (configured in Group 3) demonstrates the exam-recommended IAM-based database connection pattern without JSON keys; `enable_auto_password_rotation` demonstrates automated Secret Manager rotation — an ACE Section 4.2 security best practice.
 
 These variables configure the Cloud SQL database backend for the application. The module supports PostgreSQL, MySQL, and SQL Server. It can provision a new Cloud SQL instance automatically, connect to an existing instance, or skip database provisioning entirely. Database credentials are generated securely and injected into the application pods via Secret Manager — the application receives `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` as environment variables. The Cloud SQL Auth Proxy sidecar (configured in Group 3 via `enable_cloudsql_volume`) handles the secure connection from the pod to the Cloud SQL instance using Workload Identity.
 
@@ -677,6 +691,8 @@ gcloud storage buckets get-iam-policy gs://SCRIPTS_BUCKET_NAME \
 
 ## Group 13: Observability & Health
 
+> **ACE Exam Connection:** This group maps to ACE Section 1.1 (Provisioning Google Cloud Observability) and Section 3.4 (Monitoring and logging). The `uptime_check_config` variable creates synthetic uptime monitors — a direct ACE exam objective; `alert_policies` demonstrates GKE-specific alerting (CrashLoopBackOff, unschedulable pods, CPU saturation); startup and liveness probes demonstrate Kubernetes pod health management, including the exam-relevant CrashLoopBackOff diagnosis pattern.
+
 These variables configure how GKE monitors the health of individual pods and how Cloud Monitoring observes the application from the outside. Properly configured probes prevent unhealthy pods from receiving traffic and trigger automatic restarts when an application becomes unresponsive; uptime checks and alert policies surface failures to your team before users notice them.
 
 | Variable | Default | Options / Format | Description & Implications |
@@ -730,6 +746,8 @@ gcloud alpha monitoring policies list \
 
 ## Group 14: Reliability Policies
 
+> **ACE Exam Connection:** This group maps to ACE Section 3.1 (Configuring autoscaling for an application). The `pdb_min_available` variable configures PodDisruptionBudgets — Kubernetes availability guarantees during node drains and cluster upgrades; `enable_topology_spread` demonstrates multi-zone pod distribution, mapping to ACE exam HA architecture questions about eliminating single-zone failure points. These are key GKE operational concepts tested in Section 3.
+
 These variables configure Kubernetes reliability mechanisms that protect application availability during voluntary disruptions and control how pods are distributed across the cluster topology. Together they ensure that rolling updates, node drains, and cluster upgrades do not cause unplanned downtime, and that pod replicas are spread across nodes and zones to eliminate single points of failure.
 
 | Variable | Default | Options / Format | Description & Implications |
@@ -738,6 +756,8 @@ These variables configure Kubernetes reliability mechanisms that protect applica
 | `pdb_min_available` | `"1"` | Integer string or percentage string | The minimum number or percentage of pod replicas that must remain available during a voluntary disruption before Kubernetes is permitted to evict further pods. Expressed as either an **integer** (e.g. `"1"` — at least one pod must always be running) or a **percentage** (e.g. `"50%"` — at least 50% of the desired replica count must remain available). Only used when `enable_pod_disruption_budget` is `true`. **Sizing guidance:** for a Deployment with `min_instance_count = 2`, setting `pdb_min_available = "1"` ensures one pod is always serving traffic while the other is being updated or evicted. For higher-traffic workloads, consider a percentage such as `"75%"` to maintain throughput during disruptions. Setting `pdb_min_available` equal to `max_instance_count` will prevent all voluntary disruptions — avoid this as it will block node upgrades indefinitely. |
 | `enable_topology_spread` | `false` | `true` / `false` | When `true`, adds **TopologySpreadConstraints** to the pod spec, instructing the Kubernetes scheduler to distribute pod replicas evenly across topology domains — by default across nodes and availability zones. This eliminates single-zone or single-node failure as a cause of complete service outage. For example, with three replicas and topology spreading enabled across three zones, one replica runs in each zone: a single zone failure takes down only one third of capacity. Without topology spreading, the scheduler may place all replicas on the same node or in the same zone, which provides no redundancy against zone-level failures. **Recommended for production workloads with `max_instance_count` ≥ 2** deployed in multi-zone clusters. Has no meaningful effect on single-node or single-zone clusters. |
 | `topology_spread_strict` | `false` | `true` / `false` | Controls the scheduling action taken when the topology spread constraint defined by `enable_topology_spread` cannot be fully satisfied — for example when there are fewer available zones than pod replicas, or when one zone has no schedulable nodes. **`false` (default — `ScheduleAnyway`):** the scheduler still places the pod even if doing so violates the spread constraint, choosing the topology domain that minimises the imbalance. This ensures pods are always scheduled and the application remains available, at the cost of potentially uneven distribution. **`true` (`DoNotSchedule`):** the pod is held in `Pending` state and not scheduled until a topology domain becomes available that satisfies the constraint. This guarantees strict enforcement of spread rules but risks pods remaining unscheduled indefinitely if the cluster has insufficient capacity in all required zones. Use `true` only when even distribution is a hard requirement and you have guaranteed multi-zone node capacity. |
+
+> **Real-World Example:** A payments API runs 4 pod replicas on a multi-zone cluster. During a scheduled GKE Autopilot upgrade, nodes are drained zone by zone. Without a PDB, all 4 pods could be evicted simultaneously causing a complete outage. With `enable_pod_disruption_budget = true` and `pdb_min_available = "2"`, Kubernetes will only proceed if at least 2 pods remain available — the upgrade proceeds safely by draining one zone at a time, maintaining service continuity throughout. Pairing this with `enable_topology_spread = true` ensures the surviving pods are spread across the remaining zones rather than concentrated in one.
 
 ### Validating Group 14 Settings
 
@@ -879,6 +899,8 @@ gcloud container clusters describe CLUSTER_NAME \
 
 ## Group 17: Identity-Aware Proxy
 
+> **ACE Exam Connection:** This group maps to ACE Section 4.2 (Identity-Aware Proxy). IAP is a direct ACE exam objective — `enable_iap`, `iap_authorized_users`, and `iap_authorized_groups` demonstrate zero-trust access control in front of a GKE-hosted application. Using a Google Group email in `iap_authorized_groups` rather than individual emails is the exam-recommended approach for scalable identity management without modifying IAM bindings per user.
+
 These variables configure Identity-Aware Proxy (IAP) for the application's load balancer, requiring Google-identity authentication before users can access the application. IAP enforces access at the proxy layer — no application code changes are needed to add authentication. It is recommended for internal tools, admin interfaces, or any application where access should be restricted to known Google identities.
 
 | Variable | Default | Options / Format | Description & Implications |
@@ -914,6 +936,8 @@ gcloud compute backend-services get-iam-policy BACKEND_SERVICE_NAME \
 ---
 
 ## Group 18: Cloud Armor
+
+> **ACE Exam Connection:** This group maps to ACE Section 2.3 (Choosing and deploying load balancers). The `enable_cloud_armor` variable provisions a Global External Application Load Balancer with the GKE Gateway API backend — a core ACE exam architecture. Cloud Armor WAF rules and DDoS protection at the Google network edge demonstrate the exam's edge security topics. This is the GKE equivalent of the Cloud Run load balancer pattern in App_CloudRun Group 16.
 
 These variables attach a **Cloud Armor security policy** to the application's external HTTPS load balancer, providing DDoS mitigation, Web Application Firewall (WAF) rules, and IP-based access controls. Cloud Armor operates at the Google network edge — malicious or unwanted traffic is blocked before it reaches the GKE cluster, reducing both attack surface and unnecessary load on cluster resources.
 

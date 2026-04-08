@@ -54,6 +54,8 @@ gcloud projects get-iam-policy PROJECT_ID \
 
 ## Group 1: Project & Identity
 
+> **ACE Exam Connection:** This group maps to ACE Section 1.1 (Setting up cloud projects and accounts) and Section 1.2 (Managing billing configuration). The `project_id` variable demonstrates GCP's resource hierarchy; `support_users` demonstrates IAM group-based access management; `resource_labels` demonstrates billing export and cost attribution.
+
 These variables establish the GCP project context and the shared identity settings that apply across all resources created by the module. They must be configured correctly before any deployment can succeed.
 
 | Variable | Default | Options / Format | Description & Implications |
@@ -128,6 +130,8 @@ gcloud secrets list --project=PROJECT_ID \
 
 ## Group 3: Runtime & Scaling
 
+> **ACE Exam Connection:** This group maps to ACE Section 2.1 (Planning and implementing compute resources) and Section 3.1 (Managing compute resources). Key variables: `min_instance_count`/`max_instance_count` demonstrate Cloud Run autoscaling; `container_resources` demonstrates resource sizing; `traffic_split` demonstrates canary and blue-green deployment strategies; `execution_environment` demonstrates Cloud Run gen2 capabilities.
+
 These variables control how the application container is sourced, built, deployed, and scaled on Cloud Run. They are the core settings that determine the runtime behaviour of your application.
 
 | Variable | Default | Options / Format | Description & Implications |
@@ -148,6 +152,8 @@ These variables control how the application container is sourced, built, deploye
 | `enable_cloudsql_volume` | `true` | `true` / `false` | When `true`, a Cloud SQL Auth Proxy sidecar is injected into the Cloud Run service. The proxy creates a secure Unix socket at the path defined by `cloudsql_volume_mount_path`, which the application uses instead of a direct TCP connection. This is the **recommended and most secure** way to connect to Cloud SQL — it uses IAM authentication and encrypts the connection without exposing the database to the public internet. Set to `false` only if your application connects to Cloud SQL via a private IP address over TCP directly. |
 | `cloudsql_volume_mount_path` | `"/cloudsql"` | Filesystem path | The path inside the container where the Cloud SQL Auth Proxy Unix socket is mounted. Your application's database connection string must reference this path. For example, a PostgreSQL connection string would be `host=/cloudsql/PROJECT:REGION:INSTANCE`. Only relevant when `enable_cloudsql_volume` is `true`. Change this only if your application framework expects the socket at a specific non-default path. |
 | `traffic_split` | `[]` *(all traffic to latest)* | List of objects | Defines how incoming traffic is distributed across Cloud Run revisions. Leave empty to send 100% of traffic to the latest revision (default behaviour). Configure this for **canary deployments** (e.g. 90% to stable, 10% to new revision) or **blue-green deployments** (switch 100% to a specific revision on demand). Each entry requires: **`type`** — `TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST` (latest revision) or `TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION` (a named revision). **`percent`** — percentage of traffic (0–100; all entries must sum to exactly 100). **`revision`** — required when type is `REVISION`; the Cloud Run revision name. **`tag`** — optional stable URL tag (e.g. `canary`, `stable`) that creates a dedicated URL for that revision for testing before shifting traffic. |
+
+> **Real-World Example:** A team deploys a new checkout redesign as a Cloud Run revision. Rather than switching all users at once, they set `traffic_split` to route 5% to the new revision and 95% to the stable one. Cloud Monitoring dashboards show identical error rates after 30 minutes, so traffic is shifted to 50%, then 100% — all with zero downtime and no new deployment. If errors had spiked, 100% of traffic could be instantly redirected back to the stable revision by updating this variable alone.
 
 ### Validating Group 3 Settings
 
@@ -186,6 +192,8 @@ gcloud artifacts docker images list \
 ---
 
 ## Group 4: Environment Variables & Secrets
+
+> **ACE Exam Connection:** This group maps to ACE Section 4.2 (Managing service accounts — Securing Secrets). The `secret_environment_variables` variable demonstrates Secret Manager integration; `secret_rotation_period` demonstrates automated secret lifecycle management. Never store passwords in `environment_variables` — a direct ACE exam principle.
 
 These variables control how configuration and sensitive credentials are delivered to the running container. A key principle here is the separation of **plain-text configuration** (non-sensitive settings injected directly as environment variables) from **sensitive credentials** (injected securely via Secret Manager references, never stored in plaintext).
 
@@ -236,6 +244,8 @@ gcloud secrets versions list SECRET_NAME \
 ---
 
 ## Group 5: Observability & Health
+
+> **ACE Exam Connection:** This group maps to ACE Section 1.1 (Provisioning Google Cloud Observability) and Section 3.4 (Monitoring and logging). The `uptime_check_config` variable creates synthetic monitors tested in the ACE exam; `alert_policies` demonstrates threshold-based alerting with MQL; startup and liveness probes demonstrate application health management on Cloud Run.
 
 These variables configure how Cloud Run monitors the health of individual container instances and how Cloud Monitoring observes the application from the outside. Properly configured health checks prevent unhealthy instances from serving traffic; uptime checks and alert policies surface failures to your team before users notice them.
 
@@ -333,6 +343,8 @@ gcloud run services list \
 ---
 
 ## Group 7: CI/CD & GitHub Integration
+
+> **ACE Exam Connection:** This group maps to ACE Section 3.1 (Deploying new versions of an application). The `enable_cicd_trigger` + `cicd_trigger_config` variables demonstrate Cloud Build trigger configuration; `enable_cloud_deploy` + `cloud_deploy_stages` demonstrate progressive delivery pipelines with manual approval gates; `enable_binary_authorization` demonstrates supply-chain security enforcement — an ACE Section 4 security topic.
 
 These variables configure automated build and deployment pipelines. The module supports two pipeline models: a simple **Cloud Build** model where every qualifying code push builds and deploys directly to Cloud Run, and a more advanced **Cloud Deploy** model that introduces a promotion-based pipeline with defined stages and optional manual approvals between them.
 
@@ -456,6 +468,8 @@ gcloud logging read \
 
 ## Group 9: Storage & Filesystem — GCS
 
+> **ACE Exam Connection:** This group maps to ACE Section 2.2 (Choosing and deploying storage products) and Section 3.2 (Managing and securing objects in Cloud Storage buckets). The `storage_buckets` variable demonstrates GCS bucket provisioning; the storage class options (Standard, Nearline, Coldline, Archive) map directly to ACE exam storage class selection questions; CMEK via `manage_storage_kms_iam` maps to ACE Section 4 encryption topics.
+
 These variables configure **Google Cloud Storage (GCS)** for the application. GCS provides two distinct integration patterns: standard **object storage** (buckets the application reads and writes via the GCS API or client libraries), and **GCS Fuse** mounts (buckets surfaced as a POSIX filesystem path directly inside the container). A KMS encryption option is also available for buckets that require customer-managed encryption keys.
 
 > **Prerequisites:** GCS Fuse volume mounts require `execution_environment` to be set to `gen2`.
@@ -549,6 +563,8 @@ gcloud run services describe SERVICE_NAME \
 ---
 
 ## Group 11: Database Backend
+
+> **ACE Exam Connection:** This group maps to ACE Section 2.2 (Choosing and deploying relational data products) and Section 3.2 (Database backups and restore). The `database_type` options (PostgreSQL, MySQL, SQL Server) correspond to ACE exam database selection questions; `enable_auto_password_rotation` demonstrates Secret Manager rotation — an ACE Section 4.2 security topic; `enable_postgres_extensions` is relevant to the ACE exam's Cloud SQL configuration topics.
 
 These variables configure the Cloud SQL database backend for the application. The module supports PostgreSQL, MySQL, and SQL Server. It can provision a new Cloud SQL instance automatically, connect to an existing instance, or skip database provisioning entirely. Database credentials are generated securely and injected into the application via Secret Manager — the application receives `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` as environment variables.
 
@@ -718,6 +734,8 @@ gcloud logging read \
 
 ## Group 14: Access & Networking
 
+> **ACE Exam Connection:** This group maps to ACE Section 2.3 (Planning and implementing networking resources). The `vpc_egress_setting` variable demonstrates Direct VPC Egress and VPC routing choices; `ingress_settings` demonstrates serverless ingress restriction — a key ACE exam networking pattern. The combination of `ingress_settings = "internal-and-cloud-load-balancing"` with Cloud Armor (Group 16) is the recommended architecture for public applications.
+
 These variables control how traffic reaches the Cloud Run service and how the service connects outbound to other GCP resources. Correct configuration here is essential for both security (restricting public internet exposure) and connectivity (ensuring the service can reach private Cloud SQL instances, Memorystore, or NFS volumes over VPC).
 
 | Variable | Default | Options / Format | Description & Implications |
@@ -748,6 +766,8 @@ gcloud run services describe SERVICE_NAME \
 ---
 
 ## Group 15: Identity-Aware Proxy
+
+> **ACE Exam Connection:** This group maps to ACE Section 4.2 (Identity-Aware Proxy). IAP is a direct ACE exam objective — `enable_iap`, `iap_authorized_users`, and `iap_authorized_groups` demonstrate zero-trust access control. Using a Google Group email in `iap_authorized_groups` rather than individual emails is the exam-recommended approach for scalable identity management.
 
 These variables configure Identity-Aware Proxy (IAP) in front of the Cloud Run service, requiring Google-identity authentication before users can access the application. IAP enforces access at the proxy layer — no application code changes are needed to add authentication. It is recommended for internal tools, admin interfaces, or any application where access should be restricted to known Google identities. `enable_iap` is the master switch; `iap_authorized_users` and `iap_authorized_groups` define who is permitted access.
 
@@ -782,6 +802,8 @@ gcloud compute backend-services list \
 
 ## Group 16: Cloud Armor & CDN
 
+> **ACE Exam Connection:** This group maps to ACE Section 2.3 (Choosing and deploying load balancers). The `enable_cloud_armor` variable provisions a Global External Application Load Balancer with a Serverless NEG — a core ACE exam architecture. Cloud Armor WAF rules, `admin_ip_ranges`, and `application_domains` demonstrate the ACE exam's edge security and custom domain topics. This is the configuration that enables Premium Network Tier routing through Google's global backbone.
+
 These variables configure a Global HTTPS Load Balancer fronting the Cloud Run service, with optional Cloud Armor WAF protection, custom domain SSL termination, and Cloud CDN edge caching. Enabling this group is required whenever the application needs a stable custom domain with a Google-managed SSL certificate, DDoS mitigation, IP-based access controls, or globally cached static content. All four variables work together as a unit — `enable_cloud_armor` is the master switch, and the remaining variables refine its behaviour.
 
 > **Note:** Provisioning a Global HTTPS Load Balancer and Cloud Armor policy incurs additional GCP costs beyond Cloud Run pricing. Review the [Cloud Armor pricing page](https://cloud.google.com/armor/pricing) before enabling in production.
@@ -794,6 +816,8 @@ These variables configure a Global HTTPS Load Balancer fronting the Cloud Run se
 | `admin_ip_ranges` | `[]` | List of CIDR strings (e.g. `["203.0.113.0/24"]`) | CIDR IP address ranges that are granted a higher-priority Cloud Armor rule exempting them from WAF inspection rules. Requests from these ranges are allowed unconditionally, bypassing any `deny` or WAF rules in the security policy. Use this for trusted networks such as corporate office egress IPs, CI/CD runner IPs, or monitoring probe sources that would otherwise trigger WAF rules. Leave empty to apply WAF rules uniformly to all traffic. Only effective when `enable_cloud_armor` is `true`. **Do not add overly broad ranges** (e.g. `0.0.0.0/0`) as this would defeat the purpose of the WAF policy. |
 | `application_domains` | `[]` | List of domain name strings (e.g. `["app.example.com", "www.example.com"]`) | Custom domain names to associate with the load balancer. A Google-managed SSL certificate is provisioned automatically for each domain, handling certificate issuance and renewal without manual intervention. After deployment, the load balancer's external IP address is output by Terraform — **DNS A records for each domain must be pointed to this IP** before the certificate can be issued and the domain will serve traffic. Certificate provisioning typically takes 10–60 minutes after DNS propagation. Leave empty if you do not need a custom domain and are content with the default `*.run.app` URL. Only used when `enable_cloud_armor` is `true`. |
 | `enable_cdn` | `false` | `true` / `false` | Enables Cloud CDN on the load balancer backend, caching HTTP responses at Google's global edge network. When `true`, cacheable responses (those with appropriate `Cache-Control` headers) are served from the nearest edge PoP, reducing latency for geographically distributed users and reducing load on the Cloud Run origin. Only applies when `enable_cloud_armor` is `true`. **Recommended for** applications serving static assets, images, or public API responses that change infrequently. **Not recommended for** applications with session-based or highly personalised responses where caching would cause users to receive incorrect content. Ensure your application sets correct `Cache-Control` headers to control what is and is not cached at the edge. |
+
+> **Real-World Example:** A global e-commerce platform sets `enable_cloud_armor = true` with `application_domains = ["shop.example.com"]`. The resulting Global HTTPS Load Balancer routes a customer in Singapore and a customer in Ireland to the nearest Google PoP via Premium Tier anycast routing — both reach the same IP address. A Cloud Armor preconfigured WAF rule blocks SQL injection attempts before they reach Cloud Run. During a flash sale, the operations team adds `admin_ip_ranges` with their monitoring tool's IP range to prevent uptime check traffic from triggering WAF rules. Enabling `enable_cdn = true` for the product catalogue API (which uses `Cache-Control: max-age=300`) cuts Cloud Run invocations by 70% at peak load.
 
 ### Validating Group 16 Settings
 
