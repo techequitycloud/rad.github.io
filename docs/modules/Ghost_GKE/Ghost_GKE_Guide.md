@@ -5,7 +5,7 @@ sidebar_label: "GKE"
 
 # Ghost_GKE Module — Configuration Guide
 
-This guide describes every configuration variable available in the `Ghost_GKE` module. `Ghost_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE_Guide.md) infrastructure module with the `Ghost_Common` shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot.
+This guide describes every configuration variable available in the `Ghost_GKE` module. `Ghost_GKE` is a **wrapper module** built on the generic [`App_GKE`](../App_GKE/App_GKE_Guide.md) infrastructure module to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Ghost_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Ghost** are described in full here.
 
@@ -15,12 +15,12 @@ Most configuration options in `Ghost_GKE` map directly to the same options in `A
 
 ## How Ghost_GKE Relates to App_GKE
 
-`Ghost_GKE` passes all variables through to `App_GKE` and adds a `Ghost_Common` sub-module that supplies Ghost-specific defaults and application configuration. The main effects are:
+`Ghost_GKE` passes all variables through to `App_GKE` and adds Ghost-specific defaults and application configuration. The main effects are:
 
 1. **MySQL 8.0 is required.** Ghost 6.x requires MySQL 8.0 and will not work with PostgreSQL. The `database_type` default is overridden to `"MYSQL_8_0"`.
 2. **`database__client = "mysql"` is injected automatically.** Ghost 6.x will silently fall back to SQLite without this environment variable, even when all other database connection variables are present. The module injects it automatically — you do not need to set it yourself.
-3. **A `ghost-content` GCS bucket is provisioned automatically.** `Ghost_Common` provides a `ghost-content` bucket definition that is merged into the module's bucket list. You do not need to define it in `storage_buckets`.
-4. **A `db-init` job runs on first deployment.** `Ghost_Common` supplies a default `db-init` Kubernetes Job using a `mysql:8.0-debian` image that initialises the Ghost MySQL schema. Override `initialization_jobs` to replace it with a custom job.
+3. **A `ghost-content` GCS bucket is provisioned automatically.** The module provides a `ghost-content` bucket definition that is merged into the bucket list. You do not need to define it in `storage_buckets`.
+4. **A `db-init` job runs on first deployment.** The module supplies a default `db-init` Kubernetes Job using a `mysql:8.0-debian` image that initialises the Ghost MySQL schema. Override `initialization_jobs` to replace it with a custom job.
 5. **Resource defaults are sized for Ghost.** The default `cpu_limit` (2 vCPU) and `memory_limit` (4 Gi) are higher than the `App_GKE` defaults to match Ghost 6.x's resource requirements.
 6. **Redis caching is enabled by default.** Ghost uses Redis for page caching. See [Group 20: Redis Cache](#group-20-redis-cache) below.
 7. **Health probes are tuned for Ghost's slow startup.** Ghost runs database migrations and compiles themes on first boot. The default startup probe allows 90 seconds of initial delay before checking.
@@ -74,7 +74,7 @@ Most variables behave identically to `App_GKE`. See [App_GKE Group 3](../App_GKE
 | `max_instance_count` | `5` | `3` | Ghost is more resource-intensive than a generic application; the higher ceiling accommodates traffic spikes during newsletter sends or content publication. |
 | `cpu_limit` | `"2000m"` | `"1000m"` | Ghost 6.x requires a minimum of 1 vCPU; 2 vCPU (2000m) is recommended for production to handle concurrent membership and admin requests without degradation. |
 | `memory_limit` | `"4Gi"` | `"512Mi"` | Ghost 6.x uses significantly more memory than the base default. 4 Gi is recommended for production; do not set below 512 Mi or Ghost will OOMKill during theme compilation. |
-| `container_image_source` | `"custom"` | `"custom"` | `Ghost_Common` supplies a Dockerfile-based build by default so that Ghost can be customised with plugins and themes before deployment. Set to `"prebuilt"` to deploy the official Docker Hub Ghost image directly. |
+| `container_image_source` | `"custom"` | `"custom"` | The module supplies a Dockerfile-based build by default so that Ghost can be customised with plugins and themes before deployment. Set to `"prebuilt"` to deploy the official Docker Hub Ghost image directly. |
 | `enable_cloudsql_volume` | `true` | `true` | The Cloud SQL Auth Proxy sidecar is required for Ghost to connect to Cloud SQL via a Unix socket. Only disable if connecting to Cloud SQL directly over a private TCP connection. |
 
 The remaining runtime variables (`deploy_application`, `container_image`, `container_build_config`, `enable_image_mirroring`, `min_instance_count`, `enable_vertical_pod_autoscaling`, `container_protocol`, `container_resources`, `timeout_seconds`, `cloudsql_volume_mount_path`, `service_annotations`, `service_labels`) behave as described in [App_GKE Group 3](../App_GKE/App_GKE_Guide.md#group-3-runtime--scaling).
@@ -186,7 +186,7 @@ These variables behave as described in [App_GKE Group 6](../App_GKE/App_GKE_Guid
 
 **Ghost default `db-init` job:**
 
-When `initialization_jobs` is left as the default (empty list `[]`), `Ghost_Common` automatically supplies a `db-init` job:
+When `initialization_jobs` is left as the default (empty list `[]`), the module automatically supplies a `db-init` job:
 
 | Field | Value |
 |---|---|
@@ -223,7 +223,7 @@ These variables behave identically to `App_GKE`. See [App_GKE Group 9](../App_GK
 
 **Ghost-specific defaults:**
 
-`Ghost_Common` automatically provisions a `ghost-content` GCS bucket in addition to any buckets defined in `storage_buckets`. This bucket is used for Ghost media storage via GCS Fuse. You do not need to define it manually.
+`Ghost_GKE` automatically provisions a `ghost-content` GCS bucket in addition to any buckets defined in `storage_buckets`. This bucket is used for Ghost media storage via GCS Fuse. You do not need to define it manually.
 
 | Bucket | `name_suffix` | Purpose |
 |---|---|---|
@@ -244,8 +244,8 @@ These variables behave identically to `App_GKE`. See [App_GKE Group 10](../App_G
 | `database_type` | `"MYSQL_8_0"` | `"POSTGRES"` | **Ghost 6.x requires MySQL 8.0.** Do not change this to a PostgreSQL or SQL Server variant — Ghost will not start. |
 | `application_database_name` | `"gkeappdb"` | `"gkeappdb"` | Override to `"ghost"` or a meaningful name such as `"ghost_prod"`. |
 | `application_database_user` | `"gkeappuser"` | `"gkeappuser"` | Override to `"ghost"` or a meaningful name such as `"ghost_svc"`. |
-| `db_name` | `"ghost"` | *(not in App_GKE)* | Shorthand variable for the database name injected into Ghost_Common. Takes precedence over `application_database_name` for Ghost configuration. |
-| `db_user` | `"ghost"` | *(not in App_GKE)* | Shorthand variable for the database user injected into Ghost_Common. |
+| `db_name` | `"ghost"` | *(not in App_GKE)* | Shorthand variable for the database name. Takes precedence over `application_database_name` for Ghost configuration. |
+| `db_user` | `"ghost"` | *(not in App_GKE)* | Shorthand variable for the database user. |
 
 > **Important:** Ghost 6.x will silently use SQLite instead of MySQL if the `database__client` variable is not set. This module injects `database__client = "mysql"` automatically. Do not remove or override it.
 

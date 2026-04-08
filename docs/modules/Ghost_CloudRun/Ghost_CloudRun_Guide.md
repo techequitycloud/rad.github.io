@@ -5,7 +5,7 @@ sidebar_label: "Cloud Run"
 
 # Ghost_CloudRun Module — Configuration Guide
 
-This guide describes every configuration variable available in the `Ghost_CloudRun` module. `Ghost_CloudRun` is a **wrapper module** that combines the generic [`App_CloudRun`](../App_CloudRun/App_CloudRun_Guide.md) infrastructure module with the `Ghost_Common` shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Cloud Run (serverless).
+This guide describes every configuration variable available in the `Ghost_CloudRun` module. `Ghost_CloudRun` is a **wrapper module** built on the generic [`App_CloudRun`](../App_CloudRun/App_CloudRun_Guide.md) infrastructure module to deploy the [Ghost](https://ghost.org/) publishing platform on Google Cloud Run (serverless).
 
 Most configuration options in `Ghost_CloudRun` map directly to the same options in `App_CloudRun`. Where a variable is identical in behaviour, this guide references the `App_CloudRun` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Ghost** are described in full here.
 
@@ -15,12 +15,12 @@ Most configuration options in `Ghost_CloudRun` map directly to the same options 
 
 ## How Ghost_CloudRun Relates to App_CloudRun
 
-`Ghost_CloudRun` passes all variables through to `App_CloudRun` and adds a `Ghost_Common` sub-module that supplies Ghost-specific defaults and application configuration. The main effects are:
+`Ghost_CloudRun` passes all variables through to `App_CloudRun` and adds Ghost-specific defaults and application configuration. The main effects are:
 
 1. **MySQL 8.0 is required.** Ghost 6.x requires MySQL 8.0 and will not work with PostgreSQL. The `database_type` default is fixed to `"MYSQL_8_0"`.
 2. **`database__client = "mysql"` is injected automatically.** Ghost 6.x will silently fall back to SQLite without this environment variable, even when all other database connection variables are present. The module injects it automatically — you do not need to set it yourself.
-3. **A `ghost-content` GCS bucket is provisioned automatically.** `Ghost_Common` provides a `ghost-content` bucket definition that is merged into the module's bucket list. You do not need to define it in `storage_buckets`.
-4. **A `db-init` job runs on first deployment.** `Ghost_Common` supplies a default `db-init` Cloud Run Job using a `mysql:8.0-debian` image that initialises the Ghost MySQL schema. Override `initialization_jobs` to replace it with a custom job.
+3. **A `ghost-content` GCS bucket is provisioned automatically.** The module provides a `ghost-content` bucket definition that is merged into the bucket list. You do not need to define it in `storage_buckets`.
+4. **A `db-init` job runs on first deployment.** The module supplies a default `db-init` Cloud Run Job using a `mysql:8.0-debian` image that initialises the Ghost MySQL schema. Override `initialization_jobs` to replace it with a custom job.
 5. **Resource defaults are sized for Ghost.** The default `cpu_limit` (2 vCPU) and `memory_limit` (4 Gi) are higher than the `App_CloudRun` defaults to match Ghost 6.x's resource requirements.
 6. **Redis caching is enabled by default.** Ghost uses Redis for page caching. See [Group 20: Redis Cache](#group-20-redis-cache) below.
 7. **Health probes are tuned for Ghost's slow startup.** Ghost runs database migrations and compiles themes on first boot. The default startup probe allows 90 seconds of initial delay before checking.
@@ -76,7 +76,7 @@ Most variables behave identically to `App_CloudRun`. See [App_CloudRun Group 3](
 | `max_instance_count` | `5` | `1` | Ghost is more resource-intensive than a generic application; the higher ceiling accommodates traffic spikes during newsletter sends or content publication. |
 | `cpu_limit` | `"2000m"` | `"1000m"` | Ghost 6.x requires a minimum of 1 vCPU; 2 vCPU (2000m) is recommended for production. Note that Cloud Run requires `cpu_always_allocated = true` (or equivalent) when `cpu_limit` exceeds `1000m`. |
 | `memory_limit` | `"4Gi"` | `"512Mi"` | Ghost 6.x uses significantly more memory than the base default. 4 Gi is recommended for production; do not set below 512 Mi or Ghost will fail during theme compilation. |
-| `container_image_source` | `"custom"` | `"custom"` | `Ghost_Common` supplies a Dockerfile-based build by default so that Ghost can be customised with plugins and themes. Set to `"prebuilt"` to deploy the official Docker Hub Ghost image directly. |
+| `container_image_source` | `"custom"` | `"custom"` | The module supplies a Dockerfile-based build by default so that Ghost can be customised with plugins and themes. Set to `"prebuilt"` to deploy the official Docker Hub Ghost image directly. |
 | `execution_environment` | `"gen2"` | `"gen2"` | gen2 is required for NFS mounts (`enable_nfs = true`) and GCS Fuse volumes. Do not change to `"gen1"` if NFS or GCS volume mounts are enabled. |
 | `enable_cloudsql_volume` | `true` | `true` | The Cloud SQL Auth Proxy sidecar is required for Ghost to connect to Cloud SQL via a Unix socket. Only disable if connecting to Cloud SQL directly over a private TCP connection. |
 
@@ -189,7 +189,7 @@ These variables behave as described in [App_CloudRun Group 6](../App_CloudRun/Ap
 
 **Ghost default `db-init` job:**
 
-When `initialization_jobs` is left as the default (empty list `[]`), `Ghost_Common` automatically supplies a `db-init` job:
+When `initialization_jobs` is left as the default (empty list `[]`), the module automatically supplies a `db-init` job:
 
 | Field | Value |
 |---|---|
@@ -224,7 +224,7 @@ These variables behave identically to `App_CloudRun`. See [App_CloudRun Group 10
 | `enable_nfs` | `true` | NFS storage is enabled by default. Ghost stores uploaded images, themes, and other content files on the shared NFS volume so all container instances access the same filesystem. Disable only if using GCS Fuse exclusively for content storage. Requires `execution_environment = "gen2"`. |
 | `nfs_mount_path` | `"/mnt/nfs"` | The path where the NFS volume is mounted inside the Ghost container. Configure your Ghost Dockerfile to use this path for the `content` directory. |
 
-`Ghost_Common` automatically provisions a `ghost-content` GCS bucket in addition to any buckets defined in `storage_buckets`. This bucket is used for Ghost media storage via GCS Fuse. You do not need to define it manually.
+`Ghost_CloudRun` automatically provisions a `ghost-content` GCS bucket in addition to any buckets defined in `storage_buckets`. This bucket is used for Ghost media storage via GCS Fuse. You do not need to define it manually.
 
 | Bucket | `name_suffix` | Purpose |
 |---|---|---|
@@ -242,11 +242,11 @@ These variables behave identically to `App_CloudRun`. See [App_CloudRun Group 11
 
 | Variable | Ghost_CloudRun Default | App_CloudRun Default | Notes |
 |---|---|---|---|
-| `db_name` | `"ghost"` | *(not in App_CloudRun)* | Ghost-specific shorthand for the database name. Injected into Ghost_Common configuration. |
+| `db_name` | `"ghost"` | *(not in App_CloudRun)* | Ghost-specific shorthand for the database name used by the module. |
 | `db_user` | `"ghost"` | *(not in App_CloudRun)* | Ghost-specific shorthand for the database user. |
 | `database_password_length` | `16` | `16` | Increase to `32` for production. |
 
-> **Important:** Ghost_CloudRun always uses `database_type = "MYSQL_8_0"`. This value is set by `Ghost_Common` and cannot be overridden — Ghost 6.x will not function with any other database engine.
+> **Important:** Ghost_CloudRun always uses `database_type = "MYSQL_8_0"`. This value is fixed by the module and cannot be overridden — Ghost 6.x will not function with any other database engine.
 
 **Automatic password rotation:**
 
