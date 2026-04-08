@@ -11,6 +11,47 @@ This guide describes every configuration variable available in the `App_GKE` mod
 
 ---
 
+## Security Architecture Overview
+
+The `App_GKE` module deploys onto **GKE Autopilot**, where Google manages the node OS, node pool configuration, system pods, and OS security patching — significantly narrowing the customer's compliance scope compared to GKE Standard. The module implements a layered, defence-in-depth security posture on top of these Autopilot-managed foundations. Enable controls progressively based on the sensitivity of the workload.
+
+| Layer | Control | Variable(s) | Group |
+|---|---|---|---|
+| **Perimeter** | Cloud Armor WAF + DDoS mitigation | `enable_cloud_armor`, `cloud_armor_policy_name` | 18 |
+| **Perimeter** | Identity-Aware Proxy authentication | `enable_iap`, `iap_authorized_users`, `iap_authorized_groups` | 17 |
+| **Network** | Pod-to-pod microsegmentation (eBPF/Cilium) | `enable_network_segmentation` | 5 |
+| **Network** | Service mesh mTLS (east-west traffic) | `configure_service_mesh` | 5 |
+| **Network** | API-level perimeter (data exfiltration prevention) | `enable_vpc_sc` | Prerequisites |
+| **Identity** | Workload Identity (no JSON keys in containers) | Provisioned automatically | — |
+| **Identity** | Dedicated minimum-privilege GKE service account | Provisioned automatically | — |
+| **Identity** | Workload authenticates to Cloud SQL via IAM (no keys) | `enable_cloudsql_volume` | 3 |
+| **Secrets** | Secret Manager environment variable references | `secret_environment_variables` | 4 |
+| **Secrets** | Secrets Store CSI Driver (plaintext never in etcd or state) | `enable_secrets_store_csi_driver` | 4 |
+| **Secrets** | Automated database credential rotation | `enable_auto_password_rotation`, `secret_rotation_period` | 10, 4 |
+| **Data** | Private-IP-only Cloud SQL | Provisioned automatically | — |
+| **Data** | Customer-managed encryption keys (CMEK) on GCS | `manage_storage_kms_iam` | 4 |
+| **Data** | Public access prevention on GCS buckets | `public_access_prevention = "enforced"` | 9 |
+| **Data** | Object lifecycle rules for data minimisation | `lifecycle_rules`, `backup_retention_days` | 9, 11 |
+| **Supply chain** | Binary Authorization attestation enforcement | `enable_binary_authorization` | 7 |
+| **Supply chain** | Container images mirrored to project Artifact Registry | `enable_image_mirroring` | 3 |
+| **Reliability** | Pod Disruption Budget (prevents full-service eviction) | `enable_pod_disruption_budget` | 14 |
+| **Visibility** | Cloud Monitoring alert policies | `alert_policies` | 13 |
+| **Visibility** | Uptime checks from global probe locations | `uptime_check_config` | 13 |
+
+**GKE Autopilot shared responsibility model:** Google manages node OS hardening, system pod security, OS patch management, and Shielded Node enablement — these are the customer's responsibility in GKE Standard but are Google-managed in Autopilot. The customer retains responsibility for workload IAM, network controls, secret management, data encryption, and application security. Navigate to **Kubernetes Engine > Clusters > [cluster] > Security** to review the security controls applied automatically by Autopilot.
+
+**Recommended minimum for internet-facing production workloads:**
+1. Set `enable_cloud_armor = true` (Group 18) — WAF and DDoS protection at the Google network edge
+2. Set `enable_iap = true` (Group 17) for services requiring Google identity authentication
+3. Set `enable_network_segmentation = true` (Group 5) — pod-to-pod microsegmentation for all production workloads handling sensitive data
+4. Set `enable_secrets_store_csi_driver = true` (Group 4) for PCI-DSS or HIPAA workloads requiring the highest secret delivery assurance
+5. Set `enable_auto_password_rotation = true` (Group 10) for all production database-backed deployments
+6. Set `enable_binary_authorization = true` (Group 7) for regulated environments requiring supply chain integrity
+
+> **PSE Certification note:** This module's security controls map directly to the Google Cloud Professional Cloud Security Engineer exam domains. See the [PSE Section 1 guide](../../certification/PSE_Section_1_Exploration_Guide.md) (identity), [PSE Section 2](../../certification/PSE_Section_2_Exploration_Guide.md) (communications and boundary protection), [PSE Section 3](../../certification/PSE_Section_3_Exploration_Guide.md) (data protection), [PSE Section 4](../../certification/PSE_Section_4_Exploration_Guide.md) (operations), and [PSE Section 5](../../certification/PSE_Section_5_Exploration_Guide.md) (compliance) for hands-on exploration guidance mapped to each group.
+
+---
+
 ## Group 0: Module Metadata & Configuration
 
 These variables describe the module to the platform catalogue and control platform-level behaviours such as credit billing, resource purge protection, and wrapper-module integration. They are *platform-managed* and should not be changed unless you are customising or extending the module itself.
@@ -184,6 +225,8 @@ kubectl describe vpa APPLICATION_NAME -n NAMESPACE
 
 ## Group 4: Environment Variables & Secrets
 
+> **PSE Certification relevance:** This group maps to PSE exam Section 3.1 (protecting sensitive data) and Section 1.4 (fine-grained IAM). The module grants `roles/secretmanager.secretAccessor` only on the specific secrets the workload requires — not at project level — demonstrating resource-level IAM as a least-privilege pattern. `enable_secrets_store_csi_driver` is the highest-assurance secret delivery mechanism: plaintext is never written to Kubernetes Secrets in etcd or to Terraform state, satisfying the most stringent PCI-DSS and HIPAA secret handling requirements. `secret_rotation_period` and `enable_auto_password_rotation` (Group 10) map to PSE Section 3.1's automated credential rotation objective.
+
 These variables control how configuration and sensitive credentials are delivered to the running container. A key principle here is the separation of **plain-text configuration** (non-sensitive settings injected directly as environment variables) from **sensitive credentials** (injected securely via Secret Manager, never stored in plaintext). The module offers two mechanisms for secrets: environment-variable injection via `secret_environment_variables`, and file-based injection via the Secrets Store CSI Driver (`enable_secrets_store_csi_driver`).
 
 | Variable | Default | Options / Format | Description & Implications |
@@ -240,6 +283,8 @@ kubectl get secretproviderclass -n NAMESPACE
 ---
 
 ## Group 5: GKE Backend Configuration
+
+> **PSE Certification relevance:** This group contains two significant security controls. `enable_network_segmentation` maps to PSE exam Section 2.2 (boundary segmentation) — it creates Kubernetes NetworkPolicies enforced by GKE Dataplane V2 (eBPF/Cilium), implementing pod-level microsegmentation so that only permitted pod-to-pod flows are allowed. `configure_service_mesh` maps to PSE Section 2.1 (perimeter security) — enabling Istio sidecar injection delivers automatic mutual TLS (mTLS) for all east-west traffic within the cluster, providing cryptographic service identity verification without Certificate Authority Service configuration.
 
 These variables configure how the application workload is hosted within the GKE cluster — which cluster it targets, how the Kubernetes namespace and workload type are set up, how the Service exposes the application, and what reliability and networking policies govern the pods. These settings have a direct impact on availability, traffic routing, and infrastructure topology.
 
@@ -345,6 +390,8 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep OUTPUT_ENV_VAR_NAME
 ---
 
 ## Group 7: CI/CD & GitHub Integration
+
+> **PSE Certification relevance:** This group maps to PSE exam Section 4.1 (automating infrastructure and application security). `enable_cicd_trigger` demonstrates secure CI/CD: secrets are injected from Secret Manager into Cloud Build steps — never written to build logs. `enable_binary_authorization` implements supply chain integrity enforcement — the GKE admission controller rejects any image that was not cryptographically attested by the approved build pipeline, even if a developer attempts a direct `kubectl apply` with an unsigned image. `cloud_deploy_stages` with `require_approval = true` models the manual approval gates referenced in PSE Section 4.1 change management objectives.
 
 These variables configure automated build and deployment pipelines. The module supports two pipeline models: a simple **Cloud Build** model where every qualifying code push builds a new image and rolls it out directly to the GKE Deployment, and a more advanced **Cloud Deploy** model that introduces a promotion-based pipeline with defined stages and optional manual approvals between them.
 
@@ -879,6 +926,8 @@ gcloud container clusters describe CLUSTER_NAME \
 
 ## Group 17: Identity-Aware Proxy
 
+> **PSE Certification relevance:** This group maps to PSE exam Section 1.3 (managing authentication) and Section 2.1 (perimeter security). IAP implements OAuth 2.0-based authentication at the application perimeter — all requests must carry a valid Google identity credential, eliminating VPN dependency. `iap_authorized_groups` demonstrates the PSE best practice from Section 1.4 of managing access through Google Groups rather than individual user accounts, enabling centrally managed team access without Terraform re-applies when membership changes.
+
 These variables configure Identity-Aware Proxy (IAP) for the application's load balancer, requiring Google-identity authentication before users can access the application. IAP enforces access at the proxy layer — no application code changes are needed to add authentication. It is recommended for internal tools, admin interfaces, or any application where access should be restricted to known Google identities.
 
 | Variable | Default | Options / Format | Description & Implications |
@@ -914,6 +963,8 @@ gcloud compute backend-services get-iam-policy BACKEND_SERVICE_NAME \
 ---
 
 ## Group 18: Cloud Armor
+
+> **PSE Certification relevance:** This group maps to PSE exam Section 2.1 (designing and configuring perimeter security). `enable_cloud_armor` attaches a Cloud Armor security policy enforcing OWASP CRS WAF rules (blocking SQL injection, XSS, RFI, and other web exploits) with Adaptive Protection for AI-driven DDoS mitigation. `admin_ip_ranges` demonstrates the PSE pattern of higher-priority allow rules for trusted networks, exempting corporate egress IPs and monitoring probes from WAF inspection while all other traffic remains subject to the policy.
 
 These variables attach a **Cloud Armor security policy** to the application's external HTTPS load balancer, providing DDoS mitigation, Web Application Firewall (WAF) rules, and IP-based access controls. Cloud Armor operates at the Google network edge — malicious or unwanted traffic is blocked before it reaches the GKE cluster, reducing both attack surface and unnecessary load on cluster resources.
 
@@ -981,7 +1032,7 @@ These configurations will cause `terraform apply` to fail, or will prevent GKE p
 | **CI/CD pipeline** | `enable_cicd_trigger = true` | A GitHub repository must be accessible and either a GitHub Personal Access Token (scopes: `repo` and `admin:repo_hook`) or a GitHub App installation ID must be provided. Without valid credentials, the Cloud Build GitHub connection cannot be established and `terraform apply` will fail. |
 | **Custom container build** | `container_image_source = "custom"` | Requires the same GitHub repository connection and credentials as `enable_cicd_trigger`. Cloud Build will fail at apply time if the repository is unreachable or credentials are absent. |
 | **External Cloud Armor policy** | `enable_cloud_armor = false` + non-default `cloud_armor_policy_name` | When `enable_cloud_armor` is `false` but `cloud_armor_policy_name` is set to a custom value, the module references an existing externally-managed Cloud Armor policy. That policy must already exist in the project. Setting `enable_cloud_armor = true` (recommended) creates an inline WAF policy automatically and removes this prerequisite entirely. |
-| **VPC Service Controls** | `enable_vpc_sc = true` | An Access Context Manager policy and VPC-SC perimeter covering all GCP service APIs used by this module must already exist, and the module's service account must be a permitted principal within the perimeter. VPC-SC perimeters are organisation-level resources that cannot be created by this module — configure them via your platform team before enabling this flag. |
+| **VPC Service Controls** | `enable_vpc_sc = true` | An Access Context Manager policy and VPC-SC perimeter covering all GCP service APIs used by this module must already exist, and the module's service account must be a permitted principal within the perimeter. VPC-SC perimeters are organisation-level resources that cannot be created by this module — configure them via your platform team before enabling this flag. **PSE relevance (Section 2.2, 5.1):** VPC-SC is a key exam control — it blocks API access from outside the perimeter even from principals holding valid IAM roles, providing location-based access control that complements identity-based IAM. In regulated environments, VPC-SC is a component of the network boundary controls used to scope PCI-DSS and HIPAA compliance environments. |
 | **Multiple inline deployments — subnet CIDR conflict** | `prereq_gke_subnet_cidr` | When `Services_GCP` has not been deployed and more than one `App_GKE` deployment is created in the same VPC, each deployment that provisions its own inline GKE cluster must use a distinct, non-overlapping `prereq_gke_subnet_cidr`. The default value (`10.201.0.0/24`) will cause an address conflict if used by more than one deployment in the same project. This constraint is eliminated entirely by using a `Services_GCP`-managed shared cluster. |
 
 ---

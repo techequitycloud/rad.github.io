@@ -50,7 +50,7 @@ Navigate to **IAM & Admin > Service Accounts** to view each dedicated service ac
 **Concept:** Enforcing identity verification at the application perimeter before requests reach any workload.
 
 **In the RAD UI:**
-*   **Identity-Aware Proxy (IAP):** Enabling `enable_iap` (Group 4) configures IAP on the Global External Application Load Balancer. IAP intercepts every request, verifies the user's Google identity via OAuth 2.0, and only forwards the request to the Cloud Run service or GKE backend if the caller holds `roles/iap.httpsResourceAccessor` on the resource. Unauthenticated and unauthorized requests are rejected at the Google edge.
+*   **Identity-Aware Proxy (IAP):** Enabling `enable_iap` (Group 15 for App CloudRun, Group 17 for App GKE) configures IAP on the Global External Application Load Balancer. IAP intercepts every request, verifies the user's Google identity via OAuth 2.0, and only forwards the request to the Cloud Run service or GKE backend if the caller holds `roles/iap.httpsResourceAccessor` on the resource. Unauthenticated and unauthorized requests are rejected at the Google edge.
 
 **Console Exploration:**
 Navigate to **Security > Identity-Aware Proxy**. Review which backends are protected (green shield icon) and the list of principals with access. Click the **OAuth consent screen** link to review the application name and scopes presented to users during sign-in. Open the application URL in an incognito browser window to observe the Google authentication redirect flow in action.

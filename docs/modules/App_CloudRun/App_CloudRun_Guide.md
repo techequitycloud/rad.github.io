@@ -11,6 +11,41 @@ This guide describes every configuration variable available in the `App_CloudRun
 
 ---
 
+## Security Architecture Overview
+
+The `App_CloudRun` module implements a layered, defence-in-depth security posture. The controls below compose into a complete security architecture — each layer operates independently so that a failure or bypass of one control does not compromise the others. Enable controls progressively based on the sensitivity of the workload.
+
+| Layer | Control | Variable(s) | Group |
+|---|---|---|---|
+| **Perimeter** | Cloud Armor WAF + DDoS mitigation | `enable_cloud_armor` | 16 |
+| **Perimeter** | Identity-Aware Proxy authentication | `enable_iap`, `iap_authorized_users`, `iap_authorized_groups` | 15 |
+| **Perimeter** | Ingress restriction to load balancer only | `ingress_settings = "internal-and-cloud-load-balancing"` | 14 |
+| **Network** | All egress routed through VPC | `vpc_egress_setting = "ALL_TRAFFIC"` | 14 |
+| **Network** | API-level perimeter (data exfiltration prevention) | `enable_vpc_sc` | 17 |
+| **Identity** | Dedicated minimum-privilege service account | Provisioned automatically | — |
+| **Identity** | Workload authenticates to Cloud SQL via IAM (no keys) | `enable_cloudsql_volume` | 3 |
+| **Secrets** | Secret Manager references (plaintext never in state) | `secret_environment_variables` | 4 |
+| **Secrets** | Automated database credential rotation | `enable_auto_password_rotation`, `secret_rotation_period` | 11, 4 |
+| **Data** | Private-IP-only Cloud SQL | Provisioned automatically | — |
+| **Data** | Customer-managed encryption keys (CMEK) | `manage_storage_kms_iam` | 9 |
+| **Data** | Public access prevention on GCS buckets | `public_access_prevention = "enforced"` | 9 |
+| **Data** | Object lifecycle rules for data minimisation | `lifecycle_rules`, `backup_retention_days` | 9, 12 |
+| **Supply chain** | Binary Authorization attestation enforcement | `enable_binary_authorization` | 7 |
+| **Supply chain** | Container images mirrored to project registry | `enable_image_mirroring` | 3 |
+| **Visibility** | Cloud Monitoring alert policies | `alert_policies` | 5 |
+| **Visibility** | Uptime checks from global probe locations | `uptime_check_config` | 5 |
+
+**Recommended minimum for internet-facing production workloads:**
+1. Set `ingress_settings = "internal-and-cloud-load-balancing"` and `enable_cloud_armor = true` (Groups 14 and 16) — WAF and DDoS protection with ingress locked to the load balancer
+2. Set `enable_iap = true` (Group 15) for any service that should require Google identity authentication
+3. Set `vpc_egress_setting = "ALL_TRAFFIC"` (Group 14) when consistent egress IP control is needed
+4. Set `enable_auto_password_rotation = true` (Group 11) for all production database-backed deployments
+5. Set `enable_binary_authorization = true` (Group 7) for regulated environments requiring supply chain integrity
+
+> **PSE Certification note:** This module's security controls map directly to the Google Cloud Professional Cloud Security Engineer exam domains. See the [PSE Section 1 guide](../../certification/PSE_Section_1_Exploration_Guide.md) (identity), [PSE Section 2](../../certification/PSE_Section_2_Exploration_Guide.md) (communications and boundary protection), [PSE Section 3](../../certification/PSE_Section_3_Exploration_Guide.md) (data protection), [PSE Section 4](../../certification/PSE_Section_4_Exploration_Guide.md) (operations), and [PSE Section 5](../../certification/PSE_Section_5_Exploration_Guide.md) (compliance) for hands-on exploration guidance mapped to each group.
+
+---
+
 ## Group 0: Module Metadata & Configuration
 
 These variables describe the module to the platform catalogue and control platform-level behaviours such as credit billing, resource purge protection, and wrapper-module integration. They are *platform-managed* and should not be changed unless you are customising or extending the module itself.
@@ -187,6 +222,8 @@ gcloud artifacts docker images list \
 
 ## Group 4: Environment Variables & Secrets
 
+> **PSE Certification relevance:** This group directly maps to PSE exam Section 3.1 (protecting sensitive data) and Section 1.4 (fine-grained IAM). The module grants `roles/secretmanager.secretAccessor` only on the specific secrets the service requires — not at project level — demonstrating resource-level IAM as a least-privilege pattern. The `secret_rotation_period` and `enable_auto_password_rotation` (Group 11) variables relate to PSE Section 3.1's automated credential rotation objective.
+
 These variables control how configuration and sensitive credentials are delivered to the running container. A key principle here is the separation of **plain-text configuration** (non-sensitive settings injected directly as environment variables) from **sensitive credentials** (injected securely via Secret Manager references, never stored in plaintext).
 
 | Variable | Default | Options / Format | Description & Implications |
@@ -333,6 +370,8 @@ gcloud run services list \
 ---
 
 ## Group 7: CI/CD & GitHub Integration
+
+> **PSE Certification relevance:** This group maps to PSE exam Section 4.1 (automating infrastructure and application security). `enable_cicd_trigger` demonstrates secure CI/CD with Secret Manager secret injection (secrets never appear in build logs). `enable_binary_authorization` directly implements the PSE supply chain integrity objective — cryptographic attestation ensures only images that passed the CI/CD security pipeline can be deployed, even preventing manual deployments of unsigned images. The `cloud_deploy_stages` with `require_approval = true` is an example of the change management controls referenced in PSE Section 4.1.
 
 These variables configure automated build and deployment pipelines. The module supports two pipeline models: a simple **Cloud Build** model where every qualifying code push builds and deploys directly to Cloud Run, and a more advanced **Cloud Deploy** model that introduces a promotion-based pipeline with defined stages and optional manual approvals between them.
 
@@ -718,6 +757,8 @@ gcloud logging read \
 
 ## Group 14: Access & Networking
 
+> **PSE Certification relevance:** This group maps to PSE exam Section 2.3 (establishing private connectivity). `vpc_egress_setting = "ALL_TRAFFIC"` is the Cloud Run implementation of routing all egress through the VPC — enabling Cloud NAT logging, consistent egress IP, and on-premises connectivity. `ingress_settings = "internal-and-cloud-load-balancing"` is a required pairing with `enable_cloud_armor` (Group 16): it ensures the Cloud Run service only accepts traffic that has already passed through the load balancer and WAF, closing the bypass path that would otherwise allow direct internet access to the service URL.
+
 These variables control how traffic reaches the Cloud Run service and how the service connects outbound to other GCP resources. Correct configuration here is essential for both security (restricting public internet exposure) and connectivity (ensuring the service can reach private Cloud SQL instances, Memorystore, or NFS volumes over VPC).
 
 | Variable | Default | Options / Format | Description & Implications |
@@ -748,6 +789,8 @@ gcloud run services describe SERVICE_NAME \
 ---
 
 ## Group 15: Identity-Aware Proxy
+
+> **PSE Certification relevance:** This group maps to PSE exam Section 1.3 (managing authentication) and Section 2.1 (perimeter security). IAP is the RAD platform's implementation of OAuth 2.0-based application perimeter authentication — all requests must carry a valid Google identity, eliminating the need for a VPN. `iap_authorized_groups` demonstrates the PSE best practice of managing access through Google Groups rather than individual user accounts (PSE Section 1.4), enabling centrally managed team access without Terraform re-applies.
 
 These variables configure Identity-Aware Proxy (IAP) in front of the Cloud Run service, requiring Google-identity authentication before users can access the application. IAP enforces access at the proxy layer — no application code changes are needed to add authentication. It is recommended for internal tools, admin interfaces, or any application where access should be restricted to known Google identities. `enable_iap` is the master switch; `iap_authorized_users` and `iap_authorized_groups` define who is permitted access.
 
@@ -781,6 +824,8 @@ gcloud compute backend-services list \
 ---
 
 ## Group 16: Cloud Armor & CDN
+
+> **PSE Certification relevance:** This group maps to PSE exam Section 2.1 (designing and configuring perimeter security). `enable_cloud_armor` deploys Cloud Armor with OWASP CRS WAF rules and Adaptive Protection — the primary exam objective for web application firewall configuration. `admin_ip_ranges` demonstrates priority-ordered allow rules for trusted networks. **Critical pairing:** always set `ingress_settings = "internal-and-cloud-load-balancing"` (Group 14) alongside `enable_cloud_armor = true` to prevent direct internet access to the Cloud Run service URL that would bypass the WAF.
 
 These variables configure a Global HTTPS Load Balancer fronting the Cloud Run service, with optional Cloud Armor WAF protection, custom domain SSL termination, and Cloud CDN edge caching. Enabling this group is required whenever the application needs a stable custom domain with a Google-managed SSL certificate, DDoS mitigation, IP-based access controls, or globally cached static content. All four variables work together as a unit — `enable_cloud_armor` is the master switch, and the remaining variables refine its behaviour.
 
@@ -834,6 +879,8 @@ dig +short app.example.com
 ---
 
 ## Group 17: VPC Service Controls
+
+> **PSE Certification relevance:** This group maps to PSE exam Section 2.2 (configuring boundary segmentation) and Section 5.1 (compliance). VPC Service Controls is a key PSE exam topic as a defence-in-depth control that operates independently of IAM — it blocks API access to Cloud Storage, Secret Manager, Cloud SQL, and other services from outside the defined perimeter *even if the requester holds valid IAM roles*. This is the exam's primary example of location-based access control complementing identity-based IAM. In regulated environments (PCI-DSS, HIPAA), VPC-SC is a component of the network boundary controls required to scope the compliance environment.
 
 These variables control whether VPC Service Controls (VPC-SC) perimeters are enforced around the GCP APIs consumed by the module. VPC-SC provides a defence-in-depth layer that restricts API access to within a defined security perimeter, preventing data exfiltration even if IAM credentials are compromised. This variable acts as an opt-in integration point — the perimeter itself must be configured externally in Access Context Manager before this setting has any effect.
 
