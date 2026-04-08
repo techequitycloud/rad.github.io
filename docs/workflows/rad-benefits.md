@@ -94,16 +94,16 @@ RAD provides **26 deployment modules** covering 13 application types across two 
 <table style={{tableLayout: 'fixed', width: '100%'}}>
   <colgroup>
     <col style={{width: '13%'}} />
-    <col style={{width: '62%'}} />
-    <col style={{width: '12%'}} />
-    <col style={{width: '12%'}} />
+    <col style={{width: '57%'}} />
+    <col style={{width: '15%'}} />
+    <col style={{width: '15%'}} />
   </colgroup>
   <thead>
     <tr>
       <th style={{width: '13%'}}>Module</th>
-      <th style={{width: '62%'}}>Description</th>
-      <th style={{width: '12%'}}>Cloud Run</th>
-      <th style={{width: '12%'}}>GKE</th>
+      <th style={{width: '57%'}}>Description</th>
+      <th style={{width: '15%'}}>Cloud Run</th>
+      <th style={{width: '15%'}}>GKE</th>
     </tr>
   </thead>
   <tbody>
