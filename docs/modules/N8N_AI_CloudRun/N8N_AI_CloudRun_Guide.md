@@ -1,0 +1,372 @@
+---
+title: "N8N AI Cloud Run Configuration Guide"
+sidebar_label: "Cloud Run"
+---
+
+# N8N_AI_CloudRun Module — Configuration Guide
+
+n8n is an open-source workflow automation platform that lets you connect services, run logic, and build AI-powered pipelines through a visual node-based interface. This module deploys n8n on **Google Cloud Run** alongside two companion AI services: **Qdrant** (vector database for RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis workflows without external AI API dependencies.
+
+`N8N_AI_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds n8n-specific application configuration and AI component orchestration on top.
+
+> **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
+
+---
+
+## How This Guide Is Structured
+
+This guide documents only the variables that are **unique to `N8N_AI_CloudRun`** or that have **n8n-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, CI/CD, GCS storage, backup, custom SQL, access and networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md).
+
+**Variables fully covered by the App_CloudRun guide:**
+
+| Configuration Area | App_CloudRun_Guide Section | N8N_AI-Specific Notes |
+|---|---|---|
+| Module Metadata & Configuration | Group 0 | Different defaults for `module_description` and `module_documentation`. |
+| Project & Identity | Group 1 | Refer to base App_CloudRun module documentation. |
+| Application Identity | Group 2 | See [N8N AI Application Identity](#n8n-ai-application-identity) below for n8n-specific defaults. |
+| Runtime & Scaling | Group 3 | See [N8N Runtime Configuration](#n8n-runtime-configuration) below. `container_port` defaults to `5678`. `cpu_limit` and `memory_limit` are top-level variables. |
+| Environment Variables & Secrets | Group 4 | See [N8N Environment Variables](#n8n-environment-variables) below for SMTP defaults. |
+| Observability & Health | Group 5 | See [N8N Health Probes](#n8n-health-probes) below for n8n-specific probe defaults. |
+| Jobs & Scheduled Tasks | Group 6 | Refer to base App_CloudRun module documentation. |
+| CI/CD & GitHub Integration | Group 7 | Refer to base App_CloudRun module documentation. |
+| Storage — NFS | Group 8 | NFS is **enabled by default** (`enable_nfs = true`). See [Platform-Managed Behaviours](#platform-managed-behaviours). |
+| Storage — GCS | Group 9 | Refer to base App_CloudRun module documentation. |
+| Redis Cache | Group 10 | See [Redis Configuration](#redis-configuration) below — n8n adds `enable_redis` and `redis_host` toggles not present in the base module. |
+| Database Backend | Group 11 | See [N8N Database Configuration](#n8n-database-configuration) below. `db_name` and `db_user` replace `application_database_name` and `application_database_user`. |
+| Backup & Maintenance | Group 12 | Refer to base App_CloudRun module documentation. |
+| Custom Initialisation & SQL | Group 13 | Refer to base App_CloudRun module documentation. |
+| Access & Networking | Group 14 | Refer to base App_CloudRun module documentation. |
+| Identity-Aware Proxy | Group 15 | Refer to base App_CloudRun module documentation. Note: enabling IAP blocks public webhook endpoints. |
+| Cloud Armor & CDN | Group 16 | Refer to base App_CloudRun module documentation. |
+| VPC Service Controls | Group 17 | Refer to base App_CloudRun module documentation. |
+
+---
+
+## Platform-Managed Behaviours
+
+The following behaviours are applied automatically by `N8N_AI_CloudRun` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
+
+| Behaviour | Detail |
+|---|---|
+| **Encryption key auto-generated** | A 32-character random encryption key is generated and stored in Secret Manager as `N8N_ENCRYPTION_KEY`. This key encrypts all n8n credentials (API keys, OAuth tokens, passwords stored in workflows). It is injected into the Cloud Run service automatically. **Back up this secret before destroying the module** — credentials encrypted with one key cannot be decrypted with a different key. |
+| **SMTP password auto-generated** | A placeholder SMTP password is generated and stored in Secret Manager as `N8N_SMTP_PASS`. Replace the secret value with your real SMTP credentials before enabling email sending. |
+| **n8n port fixed at 5678** | `N8N_PORT=5678` is injected automatically. The `container_port` variable defaults to `5678` to match. Do not override `N8N_PORT` in `environment_variables`. |
+| **Database type set to PostgreSQL** | `DB_TYPE=postgresdb` is injected automatically. n8n requires PostgreSQL — do not change `database_type` to MySQL or SQL Server. |
+| **Database connection variables injected** | `DB_POSTGRESDB_HOST`, `DB_POSTGRESDB_PORT`, `DB_POSTGRESDB_DATABASE`, `DB_POSTGRESDB_USER`, and `DB_POSTGRESDB_PASSWORD` are injected automatically from the Cloud SQL instance provisioned by App_CloudRun. |
+| **Webhook and editor URLs auto-set** | `WEBHOOK_URL` and `N8N_EDITOR_BASE_URL` are set to the predicted Cloud Run service URL, computed from the project number and deployment region before the service is created. This allows n8n webhooks to be correctly advertised in the UI. |
+| **Qdrant URL auto-injected** | When `enable_qdrant = true`, `QDRANT_URL` is set to the internal URL of the companion Qdrant Cloud Run service. This URL is accessible only within the VPC — Qdrant is not exposed to the public internet. |
+| **Ollama host auto-injected** | When `enable_ollama = true`, `OLLAMA_HOST` is set to the internal URL of the companion Ollama Cloud Run service. Ollama is not exposed to the public internet. |
+| **Qdrant and Ollama use internal-only ingress** | The Qdrant and Ollama Cloud Run services are deployed with `INGRESS_TRAFFIC_INTERNAL_ONLY`. They can only be reached from within the VPC by the n8n service. |
+| **GCS persistence for AI data** | Qdrant stores its vector index at `/mnt/gcs/qdrant` and Ollama stores model weights at `/mnt/gcs/ollama/models` via GCS Fuse on the shared `-n8n-data` bucket. This persists data across container restarts. |
+| **Database initialisation job** | A Cloud Run Job (`db-init`) is created automatically to provision the `n8n_db` database and `n8n_user` PostgreSQL user before the n8n container starts. |
+
+---
+
+## N8N AI Application Identity
+
+These variables control how the n8n deployment is named and described. They correspond to Group 2 variables in App_CloudRun but carry n8n-specific defaults.
+
+| Variable | Default | Options / Format | Description & Implications |
+|---|---|---|---|
+| `application_name` | `"n8nai"` | `[a-z][a-z0-9-]{0,19}` | Internal identifier used as the base name for the Cloud Run service, Artifact Registry repository, Secret Manager secrets, and GCS buckets. **Do not change after initial deployment** — it is embedded in resource names and changing it will cause resources to be recreated. |
+| `application_display_name` | `"N8N AI Starter Kit"` | Any string | Human-readable name shown in the platform UI, the Cloud Run service list, and monitoring dashboards. Can be updated freely without affecting resource names. |
+| `description` | `"N8N AI Starter Kit - Workflow automation with Qdrant and Ollama"` | Any string | Brief description of the deployment. Populated into the Cloud Run service description field and platform documentation. |
+| `application_version` | `"2.4.7"` | n8n version string, e.g. `"2.4.7"`, `"latest"` | Version tag applied to the container image and used for deployment tracking. Increment this value to trigger a new image build and revision. See [n8n releases](https://github.com/n8nio/n8n/releases) for available versions. |
+
+### Validating Application Identity
+
+```bash
+# Confirm the Cloud Run service exists with the expected name
+gcloud run services describe n8nai \
+  --region=REGION \
+  --format="table(metadata.name,metadata.annotations['run.googleapis.com/description'])"
+```
+
+---
+
+## N8N Runtime Configuration
+
+n8n listens on port 5678 and exposes `cpu_limit` and `memory_limit` as **dedicated top-level variables** rather than requiring users to set the full `container_resources` object.
+
+| Variable | Default | Options / Format | Description & Implications |
+|---|---|---|---|
+| `container_port` | `5678` | Integer, 1–65535 | The TCP port n8n binds to inside the container. Cloud Run routes incoming traffic to this port. Must match `N8N_PORT`. **Do not change** unless you are overriding the default n8n port. |
+| `cpu_limit` | `"2000m"` | Cloud Run CPU string (e.g. `"1000m"`, `"2000m"`, `"4"`) | CPU limit for the n8n container. **2 vCPU is recommended for active AI workflows.** n8n executes workflow nodes concurrently and the AI node operations (vector search, LLM calls) are CPU-bound. Setting below `"1000m"` risks throttling on complex workflows. |
+| `memory_limit` | `"4Gi"` | Cloud Run memory string (e.g. `"2Gi"`, `"4Gi"`, `"8Gi"`) | Memory limit for the n8n container. **4 Gi is recommended for AI workflows.** n8n caches workflow state and credential data in memory; AI nodes processing large document sets can require 2–3 Gi alone. |
+| `min_instance_count` | `0` | Integer ≥ 0 | Minimum running instances. Set to `0` to enable scale-to-zero when idle (lowest cost). Set to `1` to eliminate cold starts and ensure webhook availability — n8n webhooks registered in the platform are only active while at least one instance is running. |
+| `max_instance_count` | `1` | Integer ≥ 1 | Maximum concurrent instances. The default of `1` ensures workflow state consistency. Increase only after configuring Redis queue mode (`enable_redis = true`) — without Redis, multiple instances will conflict on credential and workflow state. |
+| `timeout_seconds` | `300` | Integer, 0–3600 | Maximum request duration before Cloud Run returns a 504 timeout. n8n long-running workflow executions or Ollama inference requests can exceed the default. Increase to `600` or `900` for workflows that call large LLMs or process many documents. |
+
+> **Note on `container_resources`:** The full `container_resources` object (as documented in [App_CloudRun_Guide Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling)) is also available. If `container_resources` is set explicitly in your `tfvars`, it takes precedence over the top-level `cpu_limit` and `memory_limit` variables. Use `container_resources` when you also need to set `cpu_request` or `mem_request`.
+
+**N8N-specific runtime defaults that differ from App_CloudRun:**
+
+| Variable | App_CloudRun Default | N8N_AI_CloudRun Default | Reason |
+|---|---|---|---|
+| `container_port` | `8080` | `5678` | n8n's native port. |
+| `cpu_limit` | `"1000m"` | `"2000m"` | AI workflows are CPU-intensive. |
+| `memory_limit` | `"512Mi"` | `"4Gi"` | n8n with AI nodes requires substantial memory. |
+| `max_instance_count` | `1` | `1` | Multi-instance requires Redis queue mode. |
+| `enable_nfs` | `false` | `true` | NFS provides shared persistence for workflow data and credentials across restarts. |
+| `enable_cloudsql_volume` | `true` | `true` | n8n connects to Cloud SQL via the Auth Proxy Unix socket. |
+
+### Validating Runtime Configuration
+
+```bash
+# View the CPU, memory, and port on the latest revision
+gcloud run services describe n8nai \
+  --region=REGION \
+  --format="yaml(spec.template.spec.containers[0].resources,spec.template.spec.containers[0].ports)"
+```
+
+---
+
+## N8N Health Probes
+
+The `N8N_AI_CloudRun` module uses **flat probe objects** (`startup_probe` and `liveness_probe`) that differ from the `startup_probe_config` / `health_check_config` structured objects documented in [App_CloudRun_Guide Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health).
+
+| Variable | Default | Description & Implications |
+|---|---|---|
+| `startup_probe` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=120, timeout_seconds=3, period_seconds=10, failure_threshold=3 }` | Determines when n8n is ready to receive traffic after starting. The `initial_delay_seconds=120` gives n8n time to connect to Cloud SQL and load workflow state before the probe begins. Reduce this if your n8n instance starts quickly (small workflow count, warm database connection). |
+| `liveness_probe` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Periodically checks that the running n8n container is healthy. A failed liveness probe causes Cloud Run to restart the container. The `initial_delay_seconds=30` avoids false restarts during startup. |
+
+> **Note:** The `startup_probe_config` and `health_check_config` structured object variables are also accepted by this module. When both the flat and structured forms are provided, the structured form takes precedence.
+
+---
+
+## AI Components Configuration
+
+These variables are **unique to `N8N_AI_CloudRun`** — they do not exist in `App_CloudRun`. They control the Qdrant vector database and Ollama LLM server that are deployed as companion Cloud Run services.
+
+| Variable | Default | Options / Format | Description & Implications |
+|---|---|---|---|
+| `enable_ai_components` | `true` | `true` / `false` | Master toggle for the entire AI stack. Set to `false` to deploy n8n as a standard workflow automation tool without Qdrant or Ollama. When `false`, the `QDRANT_URL` and `OLLAMA_HOST` environment variables are not injected. Individual components can be further controlled via `enable_qdrant` and `enable_ollama`. |
+| `enable_qdrant` | `true` | `true` / `false` | Deploys Qdrant vector database as a companion Cloud Run service for n8n AI workflows. Qdrant enables RAG pipelines, document embedding search, and AI memory. Only used when `enable_ai_components = true`. When `false`, the `QDRANT_URL` variable is not injected and the Qdrant service is not created. |
+| `qdrant_version` | `"latest"` | Docker image tag, e.g. `"latest"`, `"v1.9.0"` | Image version of the `qdrant/qdrant` container. Use a pinned version (e.g. `"v1.9.0"`) in production for reproducible deployments. Only used when `enable_qdrant = true`. |
+| `enable_ollama` | `true` | `true` / `false` | Deploys Ollama LLM server as a companion Cloud Run service. Ollama runs open-source models (Llama 3, Mistral, Gemma) on your infrastructure — no external AI API keys required. Only used when `enable_ai_components = true`. Ollama requires at least 4 Gi of memory on the companion service. |
+| `ollama_version` | `"latest"` | Docker image tag, e.g. `"latest"`, `"0.3.0"` | Image version of the `ollama/ollama` container. Use a pinned version in production. Only used when `enable_ollama = true`. |
+| `ollama_model` | `"llama3.2"` | Ollama model name, e.g. `"llama3.2"`, `"mistral"`, `"gemma2"` | The default language model served by Ollama. This model is available to n8n AI nodes for text generation, summarisation, and chat workflows. Larger models (e.g. `"llama3:70b"`) require more CPU and memory than the Ollama service defaults. |
+
+### AI Component Resource Allocation
+
+The Qdrant and Ollama services are deployed with fixed resources managed by the platform. These are not user-configurable in this release:
+
+| Service | CPU | Memory | Scaling | Storage |
+|---|---|---|---|---|
+| Qdrant | 1 vCPU | 1 Gi | Fixed: 1 instance | GCS Fuse at `/mnt/gcs/qdrant` |
+| Ollama | 2 vCPU | 4 Gi | Fixed: 1 instance | GCS Fuse at `/mnt/gcs/ollama/models` |
+
+> **Note on GPU support:** Ollama currently runs on CPU only. When Cloud Run GPU support becomes generally available, a future release will add GPU acceleration for faster LLM inference.
+
+### Validating AI Components
+
+```bash
+# List all Cloud Run services in the project (n8n, qdrant, and ollama should appear)
+gcloud run services list --project=PROJECT_ID --region=REGION \
+  --format="table(name,status.url,status.conditions[0].type)"
+
+# Confirm QDRANT_URL and OLLAMA_HOST are injected into the n8n service
+gcloud run services describe n8nai \
+  --region=REGION \
+  --format="yaml(spec.template.spec.containers[0].env)" | grep -E "QDRANT|OLLAMA"
+
+# Check the Qdrant service is internal-only
+gcloud run services describe QDRANT_SERVICE_NAME \
+  --region=REGION \
+  --format="yaml(metadata.annotations['run.googleapis.com/ingress'])"
+```
+
+---
+
+## Redis Configuration
+
+These variables are **unique to `N8N_AI_CloudRun`** at the module level. The base `App_CloudRun` module accepts `redis_auth` but does not have the `enable_redis`, `redis_host`, or `redis_port` toggles. Redis is required for n8n **queue mode**, which enables reliable multi-instance workflow execution.
+
+| Variable | Default | Options / Format | Description & Implications |
+|---|---|---|---|
+| `enable_redis` | `true` | `true` / `false` | Enables Redis as the n8n queue mode backend by injecting `REDIS_HOST` and `REDIS_PORT` into the Cloud Run service. When `true` and `redis_host` is empty, the module defaults to the NFS server IP (if one is discovered via the `Services_GCP` NFS discovery). **Required when `max_instance_count > 1`** to avoid workflow state conflicts between instances. |
+| `redis_host` | `""` *(auto-discovered)* | Hostname or IP, e.g. `"10.0.0.5"`, `"redis.internal"` | Hostname or IP of the Redis server. Leave blank to use the NFS server IP auto-discovered from `Services_GCP`. Override with a dedicated Redis/Memorystore instance endpoint for production deployments requiring higher availability or AUTH. |
+| `redis_port` | `"6379"` | Port string, e.g. `"6379"` | TCP port of the Redis server. Must match the port configured on the Redis instance. |
+| `redis_auth` | `""` | Sensitive string | Authentication password for the Redis server. Leave empty for unauthenticated Redis. For Google Cloud Memorystore with AUTH enabled, set this to the instance auth string. Treated as sensitive — never stored in Terraform state in plaintext. |
+
+For full documentation of the Redis Cache group including Memorystore provisioning and TLS configuration, refer to [App_CloudRun_Guide Group 10](../App_CloudRun/App_CloudRun_Guide.md#group-10-redis-cache).
+
+### Validating Redis Configuration
+
+```bash
+# Confirm REDIS_HOST and REDIS_PORT are injected into the n8n service
+gcloud run services describe n8nai \
+  --region=REGION \
+  --format="yaml(spec.template.spec.containers[0].env)" | grep -E "REDIS"
+```
+
+---
+
+## N8N Database Configuration
+
+n8n requires PostgreSQL. This module exposes `db_name` and `db_user` as **short top-level variables** in place of the `application_database_name` and `application_database_user` variables documented in [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend).
+
+All other database variables (`database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, `secret_rotation_period`, etc.) behave identically to the App_CloudRun equivalents — refer to [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend) for their documentation.
+
+| Variable | Default | Options / Format | Description & Implications |
+|---|---|---|---|
+| `db_name` | `"n8n_db"` | `[a-z][a-z0-9_]{0,62}` | Name of the PostgreSQL database created within the Cloud SQL instance. Injected automatically as `DB_POSTGRESDB_DATABASE`. **Do not change after initial deployment** — renaming the database requires a full backup-and-restore migration. |
+| `db_user` | `"n8n_user"` | `[a-z][a-z0-9_]{0,31}` | PostgreSQL user created for n8n. Injected automatically as `DB_POSTGRESDB_USER`. The password is auto-generated, stored in Secret Manager, and injected as `DB_POSTGRESDB_PASSWORD`. |
+
+### Validating Database Configuration
+
+```bash
+# Confirm the database and user were created
+gcloud sql databases list --instance=INSTANCE_NAME --project=PROJECT_ID
+
+gcloud sql users list --instance=INSTANCE_NAME --project=PROJECT_ID
+
+# Confirm database env vars are injected into the Cloud Run service
+gcloud run services describe n8nai \
+  --region=REGION \
+  --format="yaml(spec.template.spec.containers[0].env)" | grep -E "DB_POSTGRES"
+```
+
+---
+
+## N8N Environment Variables
+
+The `environment_variables` variable (documented in [App_CloudRun_Guide Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets)) has n8n-specific defaults that configure email delivery. These are plain-text values — for the SMTP password use `secret_environment_variables`.
+
+**Default `environment_variables` in N8N_AI_CloudRun:**
+
+```hcl
+environment_variables = {
+  SMTP_HOST     = ""
+  SMTP_PORT     = "25"
+  SMTP_USER     = ""
+  SMTP_PASSWORD = ""
+  SMTP_SSL      = "false"
+  EMAIL_FROM    = "ghost@example.com"
+}
+```
+
+Override the SMTP values to enable n8n email notifications (workflow failure alerts, credential sharing invitations). For providers such as SendGrid or Mailgun that use API key authentication, set `SMTP_USER = "apikey"` and store the actual key in `secret_environment_variables`.
+
+> **Do not set** `N8N_PORT`, `DB_TYPE`, `DB_POSTGRESDB_*`, `N8N_ENCRYPTION_KEY`, `WEBHOOK_URL`, `N8N_EDITOR_BASE_URL`, `QDRANT_URL`, or `OLLAMA_HOST` in `environment_variables` — these are injected automatically by the platform and will be overridden.
+
+---
+
+## Configuration Examples
+
+### Basic Deployment
+
+Deploys n8n with AI components using default settings. Suitable for evaluation and development.
+
+```hcl
+# config/basic.tfvars
+resource_creator_identity = ""
+project_id                = "my-project-123"
+tenant_deployment_id      = "basic"
+```
+
+### Advanced Deployment
+
+Production-grade deployment with scaled resources, Redis queue mode, CI/CD, and full observability.
+
+```hcl
+# config/advanced.tfvars
+resource_creator_identity = ""
+project_id                = "my-project-123"
+tenant_deployment_id      = "prod"
+
+application_name         = "n8nai"
+application_display_name = "N8N AI Production"
+
+# Scaling & Performance
+cpu_limit          = "4000m"
+memory_limit       = "8Gi"
+min_instance_count = 1
+max_instance_count = 5
+
+# AI Components
+enable_ai_components = true
+enable_qdrant        = true
+qdrant_version       = "v1.9.0"
+enable_ollama        = true
+ollama_version       = "0.3.0"
+ollama_model         = "llama3.2"
+
+# Redis (required for multi-instance scaling)
+enable_redis = true
+
+# Database
+database_password_length = 32
+
+# CI/CD & Cloud Deploy
+enable_cicd_trigger = true
+enable_cloud_deploy = true
+cloud_deploy_stages = [
+  { name = "dev",     require_approval = false, auto_promote = false },
+  { name = "staging", require_approval = false, auto_promote = false },
+  { name = "prod",    require_approval = true,  auto_promote = false },
+]
+
+# Security
+enable_iap                  = false  # Note: enabling IAP blocks public webhooks
+enable_binary_authorization = true
+enable_cloud_armor          = true
+
+# Backup
+backup_schedule       = "0 2 * * *"
+backup_retention_days = 30
+
+# Observability
+uptime_check_config = {
+  enabled        = true
+  path           = "/"
+  check_interval = "60s"
+  timeout        = "10s"
+}
+```
+
+### Custom Image Deployment
+
+Deploys n8n with a custom-built container image, external SMTP, and Redis configured explicitly.
+
+```hcl
+# config/custom.tfvars
+resource_creator_identity = ""
+project_id                = "my-project-123"
+tenant_deployment_id      = "custom"
+
+application_name = "n8nai"
+
+# Custom Container Build
+container_image_source = "custom"
+container_build_config = {
+  enabled            = true
+  dockerfile_path    = "Dockerfile"
+  context_path       = "scripts"
+  dockerfile_content = null
+  build_args         = {}
+  artifact_repo_name = "n8n-repo"
+}
+
+# AI Components
+enable_ai_components = true
+enable_qdrant        = true
+enable_ollama        = true
+
+# Redis
+enable_redis = true
+redis_host   = "10.0.0.5"   # Explicit Memorystore IP
+
+# SMTP
+environment_variables = {
+  SMTP_HOST  = "smtp.sendgrid.net"
+  SMTP_PORT  = "587"
+  SMTP_USER  = "apikey"
+  SMTP_SSL   = "true"
+  EMAIL_FROM = "noreply@example.com"
+}
+
+secret_environment_variables = {
+  SMTP_PASSWORD = "sendgrid-api-key-secret"
+}
+```

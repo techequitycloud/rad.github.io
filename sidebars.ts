@@ -70,23 +70,112 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Enterprise Applications',
+      label: 'RAD Modules',
       items: [
-        { type: 'doc', id: 'applications/gcp-services', label: 'GCP Services' },
-        { type: 'doc', id: 'applications/cloud-run-app', label: 'Cloud Run App' },
-        { type: 'doc', id: 'applications/cyclos', label: 'Cyclos' },
-        { type: 'doc', id: 'applications/directus', label: 'Directus' },
-        { type: 'doc', id: 'applications/django', label: 'Django' },
-        { type: 'doc', id: 'applications/ghost', label: 'Ghost' },
-        { type: 'doc', id: 'applications/moodle', label: 'Moodle' },
-        { type: 'doc', id: 'applications/n8n', label: 'N8N' },
-        { type: 'doc', id: 'applications/n8n-ai', label: 'N8N AI' },
-        { type: 'doc', id: 'applications/odoo', label: 'Odoo' },
-        { type: 'doc', id: 'applications/openemr', label: 'OpenEMR' },
-        { type: 'doc', id: 'applications/sample', label: 'Sample' },
-        { type: 'doc', id: 'applications/strapi', label: 'Strapi' },
-        { type: 'doc', id: 'applications/wiki-js', label: 'Wiki.js' },
-        { type: 'doc', id: 'applications/wordpress', label: 'Wordpress' },
+        {
+          type: 'category',
+          label: 'Application',
+          items: [
+            { type: 'doc', id: 'modules/App_CloudRun/App_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/App_GKE/App_GKE_Guide', label: 'GKE' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Cyclos',
+          items: [
+            { type: 'doc', id: 'modules/Cyclos_CloudRun/Cyclos_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Cyclos_GKE/Cyclos_GKE_Guide', label: 'GKE' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Directus',
+          items: [
+            { type: 'doc', id: 'modules/Directus_CloudRun/Directus_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Directus_GKE/Directus_GKE_Guide', label: 'GKE' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Django',
+          items: [
+            { type: 'doc', id: 'modules/Django_CloudRun/Django_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Django_GKE/Django_GKE_Guide', label: 'GKE' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Ghost',
+          items: [
+            { type: 'doc', id: 'modules/Ghost_CloudRun/Ghost_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Ghost_GKE/Ghost_GKE_Guide', label: 'GKE' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Moodle',
+          items: [
+            { type: 'doc', id: 'modules/Moodle_CloudRun/Moodle_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Moodle_GKE/Moodle_GKE_Guide', label: 'GKE' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'N8N',
+          items: [
+            { type: 'doc', id: 'modules/N8N_CloudRun/N8N_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/N8N_GKE/N8N_GKE_Guide', label: 'GKE' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'N8N AI',
+          items: [
+            { type: 'doc', id: 'modules/N8N_AI_CloudRun/N8N_AI_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/N8N_AI_GKE/N8N_AI_GKE_Guide', label: 'GKE' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Odoo',
+          items: [
+            { type: 'doc', id: 'modules/Odoo_CloudRun/Odoo_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Odoo_GKE/Odoo_GKE_Guide', label: 'GKE' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'OpenEMR',
+          items: [
+            { type: 'doc', id: 'modules/OpenEMR_CloudRun/OpenEMR_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/OpenEMR_GKE/OpenEMR_GKE_Guide', label: 'GKE' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Sample',
+          items: [
+            { type: 'doc', id: 'modules/Sample_CloudRun/Sample_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Sample_GKE/Sample_GKE_Guide', label: 'GKE' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Strapi',
+          items: [
+            { type: 'doc', id: 'modules/Strapi_CloudRun/Strapi_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Strapi_GKE/Strapi_GKE_Guide', label: 'GKE' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Wiki.js',
+          items: [
+            { type: 'doc', id: 'modules/Wikijs_CloudRun/Wikijs_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Wikijs_GKE/Wikijs_GKE_Guide', label: 'GKE' },
+          ],
+        },
       ],
     },
     {
