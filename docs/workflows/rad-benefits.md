@@ -90,6 +90,7 @@ RAD provides **26 deployment modules** covering 13 application types across two 
 
 ### Available Application Modules
 
+<div className="module-availability-table">
 <table style={{tableLayout: 'fixed', width: '100%'}}>
   <colgroup>
     <col style={{width: '13%'}} />
@@ -186,6 +187,7 @@ RAD provides **26 deployment modules** covering 13 application types across two 
     </tr>
   </tbody>
 </table>
+</div>
 
 ---
 
