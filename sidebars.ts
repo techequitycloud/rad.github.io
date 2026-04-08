@@ -15,58 +15,9 @@ import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 const sidebars: SidebarsConfig = {
   docsSidebar: [
     {
-      type: 'category',
-      label: 'Associate Cloud Engineer',
-      items: [
-        { type: 'doc', id: 'ace/section1', label: 'Section 1' },
-        { type: 'doc', id: 'ace/section2', label: 'Section 2' },
-        { type: 'doc', id: 'ace/section3', label: 'Section 3' },
-        { type: 'doc', id: 'ace/section4', label: 'Section 4' },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Professional Cloud Architect',
-      items: [
-        { type: 'doc', id: 'pca/section1', label: 'Section 1' },
-        { type: 'doc', id: 'pca/section2', label: 'Section 2' },
-        { type: 'doc', id: 'pca/section3', label: 'Section 3' },
-        { type: 'doc', id: 'pca/section4', label: 'Section 4' },
-        { type: 'doc', id: 'pca/section5', label: 'Section 5' },
-        { type: 'doc', id: 'pca/section6', label: 'Section 6' },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Professional Cloud Developer',
-      items: [
-        { type: 'doc', id: 'pcd/section1', label: 'Section 1' },
-        { type: 'doc', id: 'pcd/section2', label: 'Section 2' },
-        { type: 'doc', id: 'pcd/section3', label: 'Section 3' },
-        { type: 'doc', id: 'pcd/section4', label: 'Section 4' },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Professional Cloud DevOps Engineer',
-      items: [
-        { type: 'doc', id: 'pde/section1', label: 'Section 1' },
-        { type: 'doc', id: 'pde/section2', label: 'Section 2' },
-        { type: 'doc', id: 'pde/section3', label: 'Section 3' },
-        { type: 'doc', id: 'pde/section4', label: 'Section 4' },
-        { type: 'doc', id: 'pde/section5', label: 'Section 5' },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Professional Cloud Security Engineer',
-      items: [
-        { type: 'doc', id: 'pse/section1', label: 'Section 1' },
-        { type: 'doc', id: 'pse/section2', label: 'Section 2' },
-        { type: 'doc', id: 'pse/section3', label: 'Section 3' },
-        { type: 'doc', id: 'pse/section4', label: 'Section 4' },
-        { type: 'doc', id: 'pse/section5', label: 'Section 5' },
-      ],
+      type: 'doc',
+      id: 'workflows/getting-started',
+      label: 'Getting Started',
     },
     {
       type: 'category',
@@ -179,9 +130,64 @@ const sidebars: SidebarsConfig = {
       ],
     },
     {
-      type: 'doc',
-      id: 'workflows/getting-started',
-      label: 'Getting Started',
+      type: 'category',
+      label: 'Certification Guides',
+      items: [
+        {
+          type: 'category',
+          label: 'Associate Cloud Engineer',
+          items: [
+            { type: 'doc', id: 'ace/section1', label: 'Section 1' },
+            { type: 'doc', id: 'ace/section2', label: 'Section 2' },
+            { type: 'doc', id: 'ace/section3', label: 'Section 3' },
+            { type: 'doc', id: 'ace/section4', label: 'Section 4' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Professional Cloud Architect',
+          items: [
+            { type: 'doc', id: 'pca/section1', label: 'Section 1' },
+            { type: 'doc', id: 'pca/section2', label: 'Section 2' },
+            { type: 'doc', id: 'pca/section3', label: 'Section 3' },
+            { type: 'doc', id: 'pca/section4', label: 'Section 4' },
+            { type: 'doc', id: 'pca/section5', label: 'Section 5' },
+            { type: 'doc', id: 'pca/section6', label: 'Section 6' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Professional Cloud Developer',
+          items: [
+            { type: 'doc', id: 'pcd/section1', label: 'Section 1' },
+            { type: 'doc', id: 'pcd/section2', label: 'Section 2' },
+            { type: 'doc', id: 'pcd/section3', label: 'Section 3' },
+            { type: 'doc', id: 'pcd/section4', label: 'Section 4' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Professional Cloud DevOps Engineer',
+          items: [
+            { type: 'doc', id: 'pde/section1', label: 'Section 1' },
+            { type: 'doc', id: 'pde/section2', label: 'Section 2' },
+            { type: 'doc', id: 'pde/section3', label: 'Section 3' },
+            { type: 'doc', id: 'pde/section4', label: 'Section 4' },
+            { type: 'doc', id: 'pde/section5', label: 'Section 5' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Professional Cloud Security Engineer',
+          items: [
+            { type: 'doc', id: 'pse/section1', label: 'Section 1' },
+            { type: 'doc', id: 'pse/section2', label: 'Section 2' },
+            { type: 'doc', id: 'pse/section3', label: 'Section 3' },
+            { type: 'doc', id: 'pse/section4', label: 'Section 4' },
+            { type: 'doc', id: 'pse/section5', label: 'Section 5' },
+          ],
+        },
+      ],
     },
   ],
 };
