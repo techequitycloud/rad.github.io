@@ -37,7 +37,7 @@ The Wiki.js-specific defaults for this module are:
 | Variable | Wikijs_CloudRun Default | App_CloudRun Default |
 |---|---|---|
 | `module_description` | `"Wiki.js: Deploy powerful open-source wiki software on Google Cloud Run…"` | `"App_CloudRun: A production-ready module…"` |
-| `module_documentation` | `"https://docs.techequity.cloud/docs/applications/wiki-js"` | `"https://docs.techequity.cloud/docs/applications/…"` |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/wiki-js"` | `"https://docs.radmodules.dev/docs/applications/…"` |
 | `module_services` | Includes Cloud Run Gen2, PostgreSQL 15, pg_trgm, GCS Fuse, NFS, and related services | Same services, generic labels |
 
 All other Group 0 variables (`credit_cost`, `require_credit_purchases`, `enable_purge`, `public_access`, `deployment_id`, `resource_creator_identity`) share the same defaults and behaviour as `App_CloudRun`.

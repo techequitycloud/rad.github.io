@@ -18,7 +18,7 @@ These variables describe the module to the platform catalogue and control platfo
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
 | `module_description` | `"App_CloudRun: A production-ready module…"` | Any string | Human-readable description displayed in the platform catalogue. Change only when forking or white-labelling the module. |
-| `module_documentation` | `"https://docs.techequity.cloud/…"` | Valid URL | URL shown as a help link in the platform UI. Update if you host your own documentation. |
+| `module_documentation` | `"https://docs.radmodules.dev/…"` | Valid URL | URL shown as a help link in the platform UI. Update if you host your own documentation. |
 | `module_dependency` | `["Services_GCP"]` | List of module names | Declares which platform modules the platform catalogue will associate with this one for dependency tracking and display purposes. All required GCP prerequisites (APIs, networking, IAM) are provisioned automatically by this module if not already present. Optionally, deploying `Services_GCP` first is recommended when multiple deployments need to share a common set of platform resources — for example a shared Cloud SQL instance, NFS server, or VPC network — as `Services_GCP` provisions these shared resources centrally. |
 | `module_services` | *(list of GCP service names)* | List of strings | Informational list of GCP services this module uses, shown in the catalogue. No operational effect. |
 | `credit_cost` | `100` | Positive integer | Number of platform credits deducted when a deployment is created. Set by the platform administrator. |
