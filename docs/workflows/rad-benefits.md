@@ -90,21 +90,102 @@ RAD provides **26 deployment modules** covering 13 application types across two 
 
 ### Available Application Modules
 
-| Module | Description | Cloud Run | GKE |
-|---|---|---|---|
-| **Application** | Base containerized application module. The foundation for all wrapper modules. Covers the complete Cloud Run or GKE infrastructure stack for any containerized workload. | Yes | Yes |
-| **Cyclos** | Community banking and mutual credit platform. Demonstrates financial application deployment with strict data isolation requirements. | Yes | Yes |
-| **Directus** | Headless CMS and data platform with REST and GraphQL APIs. Illustrates API-first architecture with Cloud SQL and GCS integration. | Yes | Yes |
-| **Django** | Python web framework for rapid application development. Demonstrates application-tier deployment with Cloud SQL backend and automated schema migration. | Yes | Yes |
-| **Ghost** | Modern publishing platform and content management system. Covers CDN integration, GCS media storage, and Cloud Run autoscaling for variable publishing traffic. | Yes | Yes |
-| **Moodle** | Open-source Learning Management System (LMS). Demonstrates stateful application deployment with NFS shared storage (Filestore), high user concurrency, and persistent session requirements. | Yes | Yes |
-| **N8N** | Open-source workflow automation platform. Illustrates event-driven architecture, webhook integration, and background job processing on both Cloud Run and GKE. | Yes | Yes |
-| **N8N AI** | Workflow automation with integrated AI components. Deploys N8N alongside Qdrant (vector database) and Ollama (local LLM inference), demonstrating multi-container AI workload orchestration, GCS Fuse for model storage, and Kubernetes service discovery. | Yes | Yes |
-| **Odoo** | Open-source ERP and business management suite. Covers enterprise application deployment with complex database schema initialization, module installation, and multi-process worker configuration. | Yes | Yes |
-| **OpenEMR** | Open-source Electronic Health Record (EHR) system. Demonstrates healthcare data workload deployment with strict security controls, private database access, and audit logging — patterns directly relevant to HIPAA compliance scenarios in the PCA exam. | Yes | Yes |
-| **Sample** | Minimal reference application. A clean baseline for learning the module configuration process without application-specific complexity. | Yes | Yes |
-| **Strapi** | Headless CMS and API builder. Illustrates content API deployment with GCS media storage, Cloud SQL backend, and automated build pipelines. | Yes | Yes |
-| **Wiki.js** | Modern collaborative wiki and documentation platform. Demonstrates full-text search integration, database-backed content storage, and Cloud Run deployment with persistent volume requirements. | Yes | Yes |
+<table>
+  <colgroup>
+    <col style={{width: '13%'}} />
+    <col style={{width: '62%'}} />
+    <col style={{width: '12%'}} />
+    <col style={{width: '12%'}} />
+  </colgroup>
+  <thead>
+    <tr>
+      <th>Module</th>
+      <th>Description</th>
+      <th>Cloud Run</th>
+      <th>GKE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Application</strong></td>
+      <td>Base containerized application module. The foundation for all wrapper modules. Covers the complete Cloud Run or GKE infrastructure stack for any containerized workload.</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><strong>Cyclos</strong></td>
+      <td>Community banking and mutual credit platform. Demonstrates financial application deployment with strict data isolation requirements.</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><strong>Directus</strong></td>
+      <td>Headless CMS and data platform with REST and GraphQL APIs. Illustrates API-first architecture with Cloud SQL and GCS integration.</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><strong>Django</strong></td>
+      <td>Python web framework for rapid application development. Demonstrates application-tier deployment with Cloud SQL backend and automated schema migration.</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><strong>Ghost</strong></td>
+      <td>Modern publishing platform and content management system. Covers CDN integration, GCS media storage, and Cloud Run autoscaling for variable publishing traffic.</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><strong>Moodle</strong></td>
+      <td>Open-source Learning Management System (LMS). Demonstrates stateful application deployment with NFS shared storage (Filestore), high user concurrency, and persistent session requirements.</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><strong>N8N</strong></td>
+      <td>Open-source workflow automation platform. Illustrates event-driven architecture, webhook integration, and background job processing on both Cloud Run and GKE.</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><strong>N8N AI</strong></td>
+      <td>Workflow automation with integrated AI components. Deploys N8N alongside Qdrant (vector database) and Ollama (local LLM inference), demonstrating multi-container AI workload orchestration, GCS Fuse for model storage, and Kubernetes service discovery.</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><strong>Odoo</strong></td>
+      <td>Open-source ERP and business management suite. Covers enterprise application deployment with complex database schema initialization, module installation, and multi-process worker configuration.</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><strong>OpenEMR</strong></td>
+      <td>Open-source Electronic Health Record (EHR) system. Demonstrates healthcare data workload deployment with strict security controls, private database access, and audit logging — patterns directly relevant to HIPAA compliance scenarios in the PCA exam.</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><strong>Sample</strong></td>
+      <td>Minimal reference application. A clean baseline for learning the module configuration process without application-specific complexity.</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><strong>Strapi</strong></td>
+      <td>Headless CMS and API builder. Illustrates content API deployment with GCS media storage, Cloud SQL backend, and automated build pipelines.</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><strong>Wiki.js</strong></td>
+      <td>Modern collaborative wiki and documentation platform. Demonstrates full-text search integration, database-backed content storage, and Cloud Run deployment with persistent volume requirements.</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+  </tbody>
+</table>
 
 ---
 
@@ -115,11 +196,7 @@ RAD provides structured certification preparation guides mapped directly to the 
 ### Certifications Supported
 
 **Associate Cloud Engineer (ACE)**
-The ACE certification validates the ability to deploy, manage, and monitor Google Cloud resources. The RAD platform covers all four exam sections, with particular depth in the hands-on configuration of:
-- Cloud project setup, IAM, billing, and API management (Section 1, ~23%)
-- VPC networking, Cloud SQL sizing, and GKE cluster configuration (Section 2, ~23%)
-- Cloud Run deployment, GKE workload deployment, and CI/CD configuration (Section 3, ~27%)
-- Cloud Monitoring dashboards, alert policies, and log-based metrics (Section 4, ~27%)
+The ACE certification validates the ability to deploy, manage, and monitor Google Cloud resources. The RAD platform covers all four exam sections across project setup, IAM, networking, compute deployment, and observability.
 
 **Professional Cloud Architect (PCA)**
 The PCA certification tests the ability to design, build, and manage scalable, secure cloud solutions. RAD modules implement the infrastructure patterns described in the four official PCA exam case studies (Altostrat Media, Cymbal Retail, EHR Healthcare, KnightMotives Automotive), enabling candidates to map real deployed infrastructure to scenario-based questions across all six exam sections.
