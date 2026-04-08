@@ -21,7 +21,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'RAD Modules',
+      label: 'Module Guides',
       items: [
         {
           type: 'category',
