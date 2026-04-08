@@ -31,9 +31,9 @@
 }
 
 .markdown table:has(th:nth-child(4)) :is(th, td):nth-child(1) { width: 15%; } /* Variable */
-.markdown table:has(th:nth-child(4)) :is(th, td):nth-child(2) { width: 8%;  } /* Default (halved) */
+.markdown table:has(th:nth-child(4)) :is(th, td):nth-child(2) { width: 15%; } /* Default */
 .markdown table:has(th:nth-child(4)) :is(th, td):nth-child(3) { width: 17%; } /* Options / Format */
-.markdown table:has(th:nth-child(4)) :is(th, td):nth-child(4) { width: 60%; } /* Description & Implications (doubled) */
+.markdown table:has(th:nth-child(4)) :is(th, td):nth-child(4) { width: 50%; } /* Description & Implications */
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
