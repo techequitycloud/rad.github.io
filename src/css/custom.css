@@ -32,8 +32,8 @@
 
 .sample-ref-table table :is(th, td):nth-child(1) { width: 8%;  } /* Group */
 .sample-ref-table table :is(th, td):nth-child(2) { width: 17%; } /* Description */
-.sample-ref-table table :is(th, td):nth-child(3) { width: 50%; } /* Defaults / Differences */
-.sample-ref-table table :is(th, td):nth-child(4) { width: 25%; } /* Reference */
+.sample-ref-table table :is(th, td):nth-child(3) { width: 15%; } /* Defaults / Differences */
+.sample-ref-table table :is(th, td):nth-child(4) { width: 60%; } /* Reference */
 
 /* Module guide tables: equal widths for 5-column resource allocation tables
    (Service | CPU | Memory | Scaling | Storage) */
@@ -66,6 +66,17 @@
 .markdown table:has(th:nth-child(4)) :is(th, td):nth-child(2) { width: 15%; } /* Default */
 .markdown table:has(th:nth-child(4)) :is(th, td):nth-child(3) { width: 15%; } /* Options / Format */
 .markdown table:has(th:nth-child(4)) :is(th, td):nth-child(4) { width: 50%; } /* Description & Implications */
+
+/* Security Architecture Overview tables: Layer | Control | Variable(s) | Group
+   Higher specificity (.markdown .security-arch-table) overrides the generic 4-column rule */
+.markdown .security-arch-table table {
+  table-layout: fixed;
+  width: 100%;
+}
+.markdown .security-arch-table table :is(th, td):nth-child(1) { width: 12%; } /* Layer */
+.markdown .security-arch-table table :is(th, td):nth-child(2) { width: 30%; } /* Control */
+.markdown .security-arch-table table :is(th, td):nth-child(3) { width: 50%; } /* Variable(s) */
+.markdown .security-arch-table table :is(th, td):nth-child(4) { width:  8%; } /* Group */
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
