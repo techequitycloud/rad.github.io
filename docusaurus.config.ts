@@ -11,7 +11,7 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://docs.techequity.cloud',
+  url: 'https://docs.radmodules.dev',
   baseUrl: '/',
 
   organizationName: 'techequitycloud',
