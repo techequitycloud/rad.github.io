@@ -28,7 +28,8 @@ You interact with each module by configuring its variables in the RAD UI deploym
 
 **In the RAD UI:**
 *   **Alert Policies:** The platform automatically configures custom alerting. In **GCP Services**, `alert_cpu_threshold` (Group 17), `alert_memory_threshold` (Group 17), and `alert_disk_threshold` (Group 17) monitor base infrastructure.
-*   **Synthetic Monitoring:** Uptime checks are automatically configured to hit the external Load Balancer IP, verifying that the entire stack is operational.
+*   **Application-Level Alert Policies:** The `alert_policies` variable (Group 5 for Cloud Run, Group 13 for GKE) configures Cloud Monitoring alert policies for application-specific metrics — request latency, error rate, CPU utilisation, and memory utilisation — with customisable thresholds, durations, and notification channels per metric.
+*   **Synthetic Monitoring:** The `uptime_check_config` variable (Group 5 for Cloud Run, Group 13 for GKE) configures Cloud Monitoring uptime checks that probe the application from multiple global locations, validating end-to-end reachability including DNS, load balancers, and Cloud Armor. Uptime checks are automatically configured to hit the external Load Balancer IP, verifying that the entire stack is operational.
 *   **Notification Channels:** `support_users` (Group 1) and `notification_alert_emails` (Group 17 in GCP Services) map to Cloud Monitoring Notification Channels to page operators during degradation.
 
 **Console Exploration:**
