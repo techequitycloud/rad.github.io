@@ -17,6 +17,24 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
+/* Sample module reference tables: Group | Description | Defaults/Differences | Reference
+   Override the generic 4-column rule — Defaults column needs more space, Reference less */
+.sample-ref-table table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.sample-ref-table table th,
+.sample-ref-table table td {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.sample-ref-table table :is(th, td):nth-child(1) { width: 8%;  } /* Group */
+.sample-ref-table table :is(th, td):nth-child(2) { width: 17%; } /* Description */
+.sample-ref-table table :is(th, td):nth-child(3) { width: 50%; } /* Defaults / Differences */
+.sample-ref-table table :is(th, td):nth-child(4) { width: 25%; } /* Reference */
+
 /* Module guide tables: equal widths for 5-column resource allocation tables
    (Service | CPU | Memory | Scaling | Storage) */
 .markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) {

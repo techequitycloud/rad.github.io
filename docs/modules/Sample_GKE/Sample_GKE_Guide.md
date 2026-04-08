@@ -114,6 +114,8 @@ This ensures the Secret Manager secret created by `Sample_Common` is named consi
 
 All configuration variables in `Sample_GKE` are passed through to `App_GKE`. The table below maps each configuration group to the corresponding section of the `App_GKE` Configuration Guide, noting any `Sample_GKE`-specific defaults or overrides.
 
+<div className="sample-ref-table">
+
 | Group | Description | Sample_GKE Defaults / Overrides | Reference |
 |---|---|---|---|
 | **Group 0** | Module Metadata & Configuration | `module_description` defaults to `"Sample_GKE: A sample application module…"`. `module_documentation` points to the GKE App docs URL. `module_services` includes GKE Autopilot, Cloud Build, Artifact Registry, Cloud SQL, Filestore (NFS), Secret Manager, Workload Identity, Cloud Monitoring, and Uptime Checks. All other variables are identical to `App_GKE`. | [App_GKE Guide — Group 0](../App_GKE/App_GKE_Guide.md#group-0-module-metadata--configuration) |
@@ -135,6 +137,8 @@ All configuration variables in `Sample_GKE` are passed through to `App_GKE`. The
 | **Group 16** | Custom Domain, Static IP & Network Configuration | All variables (`application_domains`, `enable_custom_domain`, `reserve_static_ip`, `static_ip_name`, `enable_cdn`, `admin_ip_ranges`, `network_tags`, `enable_vpc_sc`) are passed through unchanged. Refer to the base guide for full descriptions. | [App_GKE Guide — Group 16](../App_GKE/App_GKE_Guide.md#group-16-custom-domain-static-ip--network-configuration) |
 | **Group 17** | Identity-Aware Proxy | All variables (`enable_iap`, `iap_authorized_users`, `iap_authorized_groups`, `iap_oauth_client_id`, `iap_oauth_client_secret`, `iap_support_email`) are passed through unchanged. Refer to the base guide for full descriptions. | [App_GKE Guide — Group 17](../App_GKE/App_GKE_Guide.md#group-17-identity-aware-proxy) |
 | **Group 18** | Cloud Armor | All variables (`enable_cloud_armor`, `cloud_armor_policy_name`) are passed through unchanged. Refer to the base guide for full descriptions. | [App_GKE Guide — Group 18](../App_GKE/App_GKE_Guide.md#group-18-cloud-armor) |
+
+</div>
 
 ---
 
