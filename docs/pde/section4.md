@@ -28,6 +28,23 @@ Navigate to **Monitoring > Uptime checks**. Review the deployed uptime check tar
 
 **Real-world example:** An e-commerce platform deploys Cloud Run services across three regions. Their Cloud Monitoring uptime checks probe all three endpoints every 60 seconds from 6 global regions. When a misconfigured deployment causes the Frankfurt endpoint to return HTTP 503, the uptime check detects the failure within 60 seconds from 3 of 6 probe regions, triggers a P1 alert to the on-call engineer via PagerDuty (configured as a notification channel), and the team rolls back before a single customer in EMEA reports an error.
 
+### Startup and Liveness Probes — Internal Container Health Signals
+**Concept:** Configuring container-level health checks that prevent unhealthy instances from serving traffic and trigger automatic restarts when an application becomes unresponsive — forming the innermost layer of an observability stack alongside external uptime checks.
+
+**In the RAD UI:**
+*   **Startup Probes (`startup_probe_config` — App_CloudRun Group 5, App_GKE Group 13):** The startup probe determines when a newly started container is ready to receive traffic. Neither Cloud Run nor Kubernetes routes any requests to a container until its startup probe succeeds. Configurable fields include: `path` (the HTTP endpoint to check, e.g. `/healthz`), `initial_delay_seconds` (wait before first probe — useful for slow-starting applications that run DB migrations), `failure_threshold` (consecutive failures before the container is considered failed and restarted), and `type` (`HTTP` or `TCP`). For applications with slow initialisation, increase `failure_threshold` or `period_seconds` rather than relying solely on `initial_delay_seconds`.
+*   **Liveness Probes (`health_check_config` — App_CloudRun Group 5, App_GKE Group 13):** The liveness probe runs continuously after the startup probe succeeds, periodically checking whether the container is still healthy. If it fails `failure_threshold` consecutive times, the container is restarted automatically. The liveness endpoint must respond quickly and must not perform expensive operations (database queries, external API calls) — a slow or overloaded health endpoint can trigger false-positive restarts under high load.
+
+**Understanding the Three-Layer Health Model:** The probes and uptime checks form distinct, complementary layers:
+- **Startup probe** — inner layer: gates traffic routing during container initialisation.
+- **Liveness probe** — inner layer: detects deadlocks or hung processes and triggers container restarts.
+- **Uptime check** — outer layer: validates end-to-end reachability from the public internet, covering DNS, load balancers, firewall rules, and Cloud Armor. A passing liveness probe but failing uptime check typically indicates an infrastructure problem (misconfigured load balancer, certificate expiry, Cloud Armor rule blocking probes) rather than an application problem.
+
+**Console Exploration:**
+For Cloud Run, navigate to **Cloud Run > [service] > Revisions** and click the active revision. Select **Container(s)** and view the **Health checks** section to see startup and liveness probe configuration. For GKE, navigate to **Kubernetes Engine > Workloads > [deployment]** and click **YAML** to view `startupProbe` and `livenessProbe` fields in the pod spec. Navigate to the **Events** tab to see probe failure events if health checks are failing — the event reason `Unhealthy` with message `Liveness probe failed` indicates a container being restarted by the probe.
+
+**Real-world example:** A team deploys a Node.js API on Cloud Run with `startup_probe_config = { path = "/healthz", initial_delay_seconds = 10, failure_threshold = 10 }`. The application runs a database migration at startup that takes up to 60 seconds. Without an appropriate `failure_threshold`, the default 3 failures × 10-second period = 30 seconds would kill the container before migrations complete. Setting `failure_threshold = 10` gives 100 seconds of grace — the startup probe passes once migrations complete, and only then does Cloud Run begin routing traffic to the instance. The external uptime check simultaneously confirms the load balancer endpoint is reachable — if the startup probe passes but the uptime check fails, the team knows to investigate network configuration rather than application startup.
+
 ### Cloud Monitoring Notification Channels
 **Concept:** Routing alert notifications to designated operators through structured, auditable channels.
 
@@ -93,5 +110,44 @@ Navigate to **Monitoring > Dashboards** to find the custom operational dashboard
 *   **Alerting Policy Best Practices — Reducing Noise:** Study alert policy design patterns to minimise false positives: use alignment periods long enough to smooth transient spikes (5 minutes for CPU, not 1 minute); use `ALIGN_PERCENTILE_99` for latency metrics rather than `ALIGN_MEAN` to alert on tail latency; configure a "renotification interval" to suppress repeated notifications for long-duration incidents; and use alert policy labels and user labels to route different alert types to different notification channels (infrastructure alerts to ops, application error alerts to developers). Navigate to **Monitoring > Alerting > [policy] > Edit** to explore all available condition options.
 *   **Multi-Condition Alert Policies:** Research how to combine multiple conditions in a single alert policy to reduce alert fatigue. A composite alert policy can fire only when both CPU > 80% AND memory > 80% are simultaneously true — preventing false positives from transient single-resource spikes. Use the `AND` condition combiner in the alert policy editor. Alternatively, use the `OR` combiner to create a single "service health degraded" alert that aggregates multiple error signals (high 5xx rate OR high latency OR low availability) into one actionable notification.
 *   **Alerting on Logs — Log-Based Alert Policies:** Research how to create alert policies that trigger directly on log entries matching a filter — without requiring a separate log-based metric. Navigate to **Monitoring > Alerting > Create policy > Log match condition** and define a log filter (e.g., `severity=CRITICAL AND resource.type="cloud_run_revision"`). This provides the fastest alerting path for conditions that are naturally expressed as log patterns (security events, specific error messages, audit log entries) without the latency of first converting them to a metric.
+
+---
+
+## 4.4 Managing and exporting logs
+
+### Log Routing and Log Sinks
+**Concept:** Controlling where log entries are sent — retaining them in Cloud Logging for interactive analysis, routing copies to long-term storage in GCS, exporting to BigQuery for SQL-based analysis, or forwarding to Pub/Sub for real-time stream processing.
+
+**In the RAD UI:**
+Cloud Run and GKE Autopilot workloads write logs automatically to Cloud Logging. The modules do not configure custom log sinks — all logs flow to the default `_Default` log bucket retained for 30 days. Understanding how to route logs beyond this default is an important PDE exam topic.
+
+**Key Log Routing Concepts:**
+*   **Log sinks** are the routing mechanism in Cloud Logging. Each sink has a filter (which log entries to route) and a destination (where to send them). Three sink scopes exist: **project-level** (routes logs from a single project), **folder-level** (aggregates logs from all projects in a folder — a key pattern for centralised compliance logging), and **organisation-level** (aggregates logs from the entire organisation).
+*   **Aggregated sinks** at the folder or organisation level are the standard pattern for centralised security and compliance logging. A single aggregated sink with an `_Required` or `_Default` filter routing to a shared GCS bucket or BigQuery dataset gives the security team a single place to query all audit logs across every project — without needing access to individual project consoles.
+*   **Exclusion filters** allow specific log types to be dropped before storage, reducing log ingestion costs. For example, Cloud Run request logs for health check paths (`/healthz`) generate high volume with no diagnostic value — an exclusion filter on `httpRequest.requestUrl="/healthz"` eliminates them before they are stored.
+
+**Console Exploration:**
+Navigate to **Logging > Log Router**. Review the default `_Default` and `_Required` log buckets and their retention periods. Click **Create sink** to see the available destination types: Cloud Logging bucket, Cloud Storage, BigQuery, and Pub/Sub. Navigate to **Logging > Logs Explorer** and switch the query mode to **Log Analytics** (the BigQuery-backed mode) — this unlocks SQL queries over log data, enabling aggregation, joins, and time-series analysis that are not possible in the standard filter interface. Run a query such as:
+```sql
+SELECT
+  timestamp,
+  resource.labels.service_name,
+  http_request.status,
+  http_request.latency
+FROM
+  `PROJECT_ID.global._Default._AllLogs`
+WHERE
+  resource.type = 'cloud_run_revision'
+  AND http_request.status >= 500
+ORDER BY timestamp DESC
+LIMIT 100
+```
+
+**Real-world example:** A company operating across 12 GCP projects configures an organisation-level aggregated log sink routing all `protoPayload.@type="type.googleapis.com/google.cloud.audit.AuditLog"` entries to a shared BigQuery dataset in a dedicated security project. Their security team runs weekly SQL queries against this dataset to identify anomalous API call patterns — for example, any `google.cloud.run.v1.Services.ReplaceService` call made outside the CI/CD service account (indicating a manual deployment bypassing the pipeline). The BigQuery export retains 365 days of audit history, satisfying their compliance requirement, while Cloud Logging's interactive interface retains only 30 days for operational troubleshooting.
+
+### 💡 Additional Log Management Objectives & Learning Guidelines
+*   **Log Buckets and Retention Policies:** Research how to create custom Cloud Logging log buckets with non-default retention periods. Navigate to **Logging > Log buckets > Create bucket** and configure a retention period of up to 3650 days (10 years). Applying a retention lock prevents the retention period from being reduced — a key compliance control for regulated industries. Understand that the `_Required` bucket (holding Admin Activity and System Event audit logs) has a fixed 400-day retention that cannot be shortened.
+*   **Structured Logging Best Practices:** For Cloud Run and GKE workloads to emit logs that are automatically parsed by Cloud Logging, applications must write JSON to stdout with a `severity` field matching Cloud Logging's severity levels (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`). Additionally, including `logging.googleapis.com/trace` and `logging.googleapis.com/spanId` fields in log entries automatically correlates them with Cloud Trace spans — enabling trace-to-log navigation in the console without additional configuration.
+*   **VPC Flow Logs for Network Troubleshooting:** Research VPC Flow Logs, which capture metadata about network flows through GKE node network interfaces — source/destination IP, port, bytes transferred, and latency. Enable flow logs on the GKE cluster's subnet (navigate to **VPC Network > Subnets > [subnet] > Edit** and enable flow logs). Flow logs are essential for diagnosing connectivity issues between pods and Cloud SQL, Memorystore, or NFS instances — confirming whether traffic is reaching its destination and at what volume.
 
 ---
