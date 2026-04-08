@@ -78,6 +78,17 @@
 .markdown .security-arch-table table :is(th, td):nth-child(3) { width: 50%; } /* Variable(s) */
 .markdown .security-arch-table table :is(th, td):nth-child(4) { width:  8%; } /* Group */
 
+/* Available Application Modules table: Module | Description | Cloud Run | GKE
+   Higher specificity overrides the generic 4-column rule; Cloud Run and GKE are equal width */
+.markdown .module-availability-table table {
+  table-layout: fixed;
+  width: 100%;
+}
+.markdown .module-availability-table table :is(th, td):nth-child(1) { width: 13%; } /* Module */
+.markdown .module-availability-table table :is(th, td):nth-child(2) { width: 62%; } /* Description */
+.markdown .module-availability-table table :is(th, td):nth-child(3) { width: 12%; } /* Cloud Run */
+.markdown .module-availability-table table :is(th, td):nth-child(4) { width: 12%; } /* GKE */
+
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
   --ifm-color-primary: #25c2a0;
