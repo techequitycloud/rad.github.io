@@ -125,6 +125,8 @@ For full details on probe configuration options, see [App_CloudRun Guide — Gro
 
 All configuration variables in `Sample_CloudRun` are passed through to `App_CloudRun`. The table below maps each configuration group to the corresponding section of the `App_CloudRun` Configuration Guide, noting any `Sample_CloudRun`-specific defaults or differences.
 
+<div className="sample-ref-table">
+
 | Group | Description | Sample_CloudRun Defaults / Differences | Reference |
 |---|---|---|---|
 | **Group 0** | Module Metadata & Configuration | `module_description` defaults to `"Sample_CloudRun: A sample application module…"`. `module_documentation` points to the Cloud Run App docs URL. `module_services` includes Cloud Run, Cloud Run Jobs, Cloud Build, Artifact Registry, Cloud SQL, Cloud SQL Auth Proxy, Filestore (NFS), GCS Fuse, Secret Manager, Direct VPC Egress, Cloud Monitoring, and Uptime Checks. `resource_creator_identity` is exposed and passed through as in `App_CloudRun`. All other variables are identical to `App_CloudRun`. | [App_CloudRun Guide — Group 0](../App_CloudRun/App_CloudRun_Guide.md#group-0-module-metadata--configuration) |
@@ -145,6 +147,8 @@ All configuration variables in `Sample_CloudRun` are passed through to `App_Clou
 | **Group 15** | Identity-Aware Proxy | All IAP variables are passed through unchanged. Refer to the base guide for full descriptions. | [App_CloudRun Guide — Group 15](../App_CloudRun/App_CloudRun_Guide.md#group-15-identity-aware-proxy) |
 | **Group 16** | Cloud Armor & CDN | All Cloud Armor and CDN variables are passed through unchanged. Refer to the base guide for full descriptions. | [App_CloudRun Guide — Group 16](../App_CloudRun/App_CloudRun_Guide.md#group-16-cloud-armor--cdn) |
 | **Group 17** | VPC Service Controls | All VPC SC variables are passed through unchanged. Refer to the base guide for full descriptions. | [App_CloudRun Guide — Group 17](../App_CloudRun/App_CloudRun_Guide.md#group-17-vpc-service-controls) |
+
+</div>
 
 ---
 
