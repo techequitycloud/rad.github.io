@@ -15,6 +15,8 @@ This guide describes every configuration variable available in the `App_GKE` mod
 
 The `App_GKE` module deploys onto **GKE Autopilot**, where Google manages the node OS, node pool configuration, system pods, and OS security patching — significantly narrowing the customer's compliance scope compared to GKE Standard. The module implements a layered, defence-in-depth security posture on top of these Autopilot-managed foundations. Enable controls progressively based on the sensitivity of the workload.
 
+<div className="security-arch-table">
+
 | Layer | Control | Variable(s) | Group |
 |---|---|---|---|
 | **Perimeter** | Cloud Armor WAF + DDoS mitigation | `enable_cloud_armor`, `cloud_armor_policy_name` | 18 |
@@ -37,6 +39,8 @@ The `App_GKE` module deploys onto **GKE Autopilot**, where Google manages the no
 | **Reliability** | Pod Disruption Budget (prevents full-service eviction) | `enable_pod_disruption_budget` | 14 |
 | **Visibility** | Cloud Monitoring alert policies | `alert_policies` | 13 |
 | **Visibility** | Uptime checks from global probe locations | `uptime_check_config` | 13 |
+
+</div>
 
 **GKE Autopilot shared responsibility model:** Google manages node OS hardening, system pod security, OS patch management, and Shielded Node enablement — these are the customer's responsibility in GKE Standard but are Google-managed in Autopilot. The customer retains responsibility for workload IAM, network controls, secret management, data encryption, and application security. Navigate to **Kubernetes Engine > Clusters > [cluster] > Security** to review the security controls applied automatically by Autopilot.
 

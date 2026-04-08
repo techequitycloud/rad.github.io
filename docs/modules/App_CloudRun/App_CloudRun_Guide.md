@@ -15,6 +15,8 @@ This guide describes every configuration variable available in the `App_CloudRun
 
 The `App_CloudRun` module implements a layered, defence-in-depth security posture. The controls below compose into a complete security architecture — each layer operates independently so that a failure or bypass of one control does not compromise the others. Enable controls progressively based on the sensitivity of the workload.
 
+<div className="security-arch-table">
+
 | Layer | Control | Variable(s) | Group |
 |---|---|---|---|
 | **Perimeter** | Cloud Armor WAF + DDoS mitigation | `enable_cloud_armor` | 16 |
@@ -34,6 +36,8 @@ The `App_CloudRun` module implements a layered, defence-in-depth security postur
 | **Supply chain** | Container images mirrored to project registry | `enable_image_mirroring` | 3 |
 | **Visibility** | Cloud Monitoring alert policies | `alert_policies` | 5 |
 | **Visibility** | Uptime checks from global probe locations | `uptime_check_config` | 5 |
+
+</div>
 
 **Recommended minimum for internet-facing production workloads:**
 1. Set `ingress_settings = "internal-and-cloud-load-balancing"` and `enable_cloud_armor = true` (Groups 14 and 16) — WAF and DDoS protection with ingress locked to the load balancer

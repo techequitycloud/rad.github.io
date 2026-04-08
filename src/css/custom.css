@@ -30,10 +30,10 @@
   word-break: break-word;
 }
 
-.sample-ref-table table :is(th, td):nth-child(1) { width: 8%;  } /* Group */
-.sample-ref-table table :is(th, td):nth-child(2) { width: 17%; } /* Description */
-.sample-ref-table table :is(th, td):nth-child(3) { width: 15%; } /* Defaults / Differences */
-.sample-ref-table table :is(th, td):nth-child(4) { width: 60%; } /* Reference */
+.markdown .sample-ref-table table:has(th:nth-child(4)) :is(th, td):nth-child(1) { width: 8% !important;  } /* Group */
+.markdown .sample-ref-table table:has(th:nth-child(4)) :is(th, td):nth-child(2) { width: 17% !important; } /* Description */
+.markdown .sample-ref-table table:has(th:nth-child(4)) :is(th, td):nth-child(3) { width: 45% !important; } /* Defaults / Differences */
+.markdown .sample-ref-table table:has(th:nth-child(4)) :is(th, td):nth-child(4) { width: 30% !important; } /* Reference */
 
 /* Module guide tables: equal widths for 5-column resource allocation tables
    (Service | CPU | Memory | Scaling | Storage) */
@@ -69,25 +69,25 @@
 
 /* Security Architecture Overview tables: Layer | Control | Variable(s) | Group
    Higher specificity (.markdown .security-arch-table) overrides the generic 4-column rule */
-.markdown .security-arch-table table {
+.markdown .security-arch-table table:has(th:nth-child(4)) {
   table-layout: fixed;
   width: 100%;
 }
-.markdown .security-arch-table table :is(th, td):nth-child(1) { width: 12%; } /* Layer */
-.markdown .security-arch-table table :is(th, td):nth-child(2) { width: 30%; } /* Control */
-.markdown .security-arch-table table :is(th, td):nth-child(3) { width: 50%; } /* Variable(s) */
-.markdown .security-arch-table table :is(th, td):nth-child(4) { width:  8%; } /* Group */
+.markdown .security-arch-table table:has(th:nth-child(4)) :is(th, td):nth-child(1) { width: 12% !important; } /* Layer */
+.markdown .security-arch-table table:has(th:nth-child(4)) :is(th, td):nth-child(2) { width: 30% !important; } /* Control */
+.markdown .security-arch-table table:has(th:nth-child(4)) :is(th, td):nth-child(3) { width: 50% !important; } /* Variable(s) */
+.markdown .security-arch-table table:has(th:nth-child(4)) :is(th, td):nth-child(4) { width:  8% !important; } /* Group */
 
 /* Available Application Modules table: Module | Description | Cloud Run | GKE
    Higher specificity overrides the generic 4-column rule; Cloud Run and GKE are equal width */
-.markdown .module-availability-table table {
+.markdown .module-availability-table table:has(th:nth-child(4)) {
   table-layout: fixed;
   width: 100%;
 }
-.markdown .module-availability-table table :is(th, td):nth-child(1) { width: 13%; } /* Module */
-.markdown .module-availability-table table :is(th, td):nth-child(2) { width: 62%; } /* Description */
-.markdown .module-availability-table table :is(th, td):nth-child(3) { width: 12%; } /* Cloud Run */
-.markdown .module-availability-table table :is(th, td):nth-child(4) { width: 12%; } /* GKE */
+.markdown .module-availability-table table:has(th:nth-child(4)) :is(th, td):nth-child(1) { width: 13% !important; } /* Module */
+.markdown .module-availability-table table:has(th:nth-child(4)) :is(th, td):nth-child(2) { width: 57% !important; } /* Description */
+.markdown .module-availability-table table:has(th:nth-child(4)) :is(th, td):nth-child(3) { width: 15% !important; } /* Cloud Run */
+.markdown .module-availability-table table:has(th:nth-child(4)) :is(th, td):nth-child(4) { width: 15% !important; } /* GKE */
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
