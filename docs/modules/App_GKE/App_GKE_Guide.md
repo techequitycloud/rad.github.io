@@ -11,6 +11,29 @@ This guide describes every configuration variable available in the `App_GKE` mod
 
 ---
 
+## Security Architecture Overview
+
+The `App_GKE` module implements a layered, defence-in-depth security posture. The controls below compose into a complete security architecture — each layer operates independently so that a failure or bypass of one control does not compromise the others. Enable controls progressively based on the sensitivity of the workload.
+
+<div className="security-arch-table">
+
+| Layer | Control | Variable(s) | Group |
+|---|---|---|---|
+| Perimeter | Cloud Armor WAF + DDoS mitigation | `enable_cloud_armor`, `admin_ip_ranges`, `cloud_armor_policy_name` | 18 |
+| Perimeter | Identity-Aware Proxy authentication | `enable_iap`, `iap_authorized_users`, `iap_authorized_groups` | 17 |
+| Perimeter | Custom domain and static IP ingress | `reserve_static_ip`, `enable_custom_domain`, `application_domains` | 16 |
+| Network | VPC network assignment and node tags | `network_name`, `network_tags` | 16 |
+| Identity | Workload Identity service accounts | `resource_creator_identity` | 0 |
+| Secrets | Credential injection via Secret Manager | `secret_environment_variables` | 4 |
+| Secrets | Secrets Store CSI Driver (zero-plaintext) | `enable_secrets_store_csi_driver` | 4 |
+| Secrets | Automated database password rotation | `enable_auto_password_rotation` | 10 |
+| Data | Customer-managed encryption (CMEK) | `manage_storage_kms_iam` | 4 |
+| Build | Binary Authorization image signing | `enable_binary_authorization` | 7 |
+
+</div>
+
+---
+
 ## Group 0: Module Metadata & Configuration
 
 These variables describe the module to the platform catalogue and control platform-level behaviours such as credit billing, resource purge protection, and wrapper-module integration. They are *platform-managed* and should not be changed unless you are customising or extending the module itself.
