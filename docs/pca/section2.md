@@ -30,6 +30,8 @@ Navigate to **VPC network > VPC networks** to view the subnets created. Navigate
 **Real-world example:** A financial institution segments its fraud detection microservices from its customer-facing web tier by placing each in a separate subnet with distinct CIDR ranges. Firewall rules permit only the specific east-west traffic required between tiers (e.g., the web tier can call the fraud API on port 8080 only), and all internet-bound traffic is inspected through Cloud Armor before reaching any application. This defence-in-depth approach ensures a compromised front-end cannot directly reach backend databases.
 
 ### 💡 Additional Network Topology Objectives & Learning Guidelines
+*   **Service Mesh (GKE):** The `configure_service_mesh` variable (Group 5 for GKE) enables Istio sidecar injection, providing mutual TLS (mTLS) between services and fine-grained traffic management (retries, circuit breaking, fault injection) without application code changes. Requires Cloud Service Mesh to be installed on the cluster.
+*   **Multi-Cluster Service (GKE):** The `enable_multi_cluster_service` variable (Group 5 for GKE) exports the Kubernetes Service to other clusters in the same GKE fleet using a stable DNS name (`SERVICE.NAMESPACE.svc.clusterset.local`), enabling cross-cluster service discovery without public load balancers.
 *   **Hybrid Networking:** Study Cloud VPN (HA VPN) and Cloud Interconnect (Dedicated and Partner) for extending on-premises environments. Understand BGP routing.
 *   **Multicloud Communication:** Research Network Connectivity Center (NCC) for hub-and-spoke multi-cloud routing, and Cross-Cloud Interconnect for dedicated physical connectivity between Google Cloud and other cloud providers. GKE Enterprise (formerly Anthos) enables management of Kubernetes clusters running on other clouds from a single Google Cloud control plane.
 *   **Shared VPC:** Understand the architecture of a Host project and Service projects to centralize network administration.
@@ -42,9 +44,9 @@ Navigate to **VPC network > VPC networks** to view the subnets created. Navigate
 **Concept:** Optimizing object storage costs, securing access, and enforcing data retention compliance.
 
 **In the RAD UI:**
-*   **Data Storage Allocation:** Utilizing `storage_buckets` (Group 10 for Cloud Run, Group 17 for GKE) creates regional or multi-regional buckets for application data.
+*   **Data Storage Allocation:** Utilizing `storage_buckets` (Group 9 for Cloud Run, Group 9 for GKE) creates regional or multi-regional buckets for application data.
 *   **Security and Access Management:** The platform automatically assigns minimum IAM roles (like `roles/storage.objectAdmin`) to the specific workload identities created for the applications.
-*   **Data Protection:** The automated jobs configured via `backup_schedule` (Group 6) back up the relational databases to Cloud Storage securely.
+*   **Data Protection:** The automated jobs configured via `backup_schedule` (Group 12 for Cloud Run, Group 11 for GKE) back up the relational databases to Cloud Storage securely.
 
 **Console Exploration:**
 Navigate to **Cloud Storage > Buckets** to verify the storage class and location type. Navigate to **IAM & Admin > Service Accounts** to view access configurations.
@@ -66,6 +68,8 @@ Navigate to **Cloud Storage > Buckets** to verify the storage class and location
 **In the RAD UI:**
 *   **Serverless Computing:** `container_image` (Group 3) and `container_port` (Group 3) define the core runtime execution environment for Cloud Run. `min_instance_count` (Group 3) dictates compute resource provisioning.
 *   **Container Orchestration:** `deploy_application` (Group 3) triggers the rollout of the Autopilot cluster, abstracting the underlying node infrastructure while allowing the architect to focus on Pod resource requests via `container_resources` (Group 3).
+*   **Workload Type (GKE):** The `workload_type` variable (Group 5 for GKE) controls whether the application is deployed as a `Deployment` (stateless, rolling updates) or a `StatefulSet` (stable pod identities, per-pod persistent storage) — a foundational architectural choice that determines failure behavior, update strategies, and storage topology.
+*   **Resource Quotas (GKE):** The `enable_resource_quota` variable (Group 15 for GKE) enforces namespace-level CPU, memory, pod count, and PVC ceilings for multi-tenant clusters, preventing any single application from monopolising shared cluster resources.
 
 **Console Exploration:**
 Navigate to **Cloud Run** or **Kubernetes Engine** to review the instantiated compute services and cluster configurations.

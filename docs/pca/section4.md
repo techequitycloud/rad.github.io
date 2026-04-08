@@ -22,8 +22,8 @@ You interact with each module by configuring its variables in the RAD UI deploym
 
 **In the RAD UI:**
 *   **Continuous Integration (CI):** The `enable_cicd_trigger` variable (Group 7) integrates the source repository (`github_repository_url`) with Cloud Build to compile containers and push them to Artifact Registry.
-*   **Continuous Deployment (CD):** The `cloud_deploy_stages` variable (Group 7 for Cloud Run, Group 18 for GKE) defines the pipeline stages (e.g., Dev -> Staging -> Prod) orchestrated by Google Cloud Deploy.
-*   **Testing and Validation:** `traffic_split` (Group 5 for Cloud Run) allows for A/B testing and canary rollouts at the infrastructure layer to validate software safely.
+*   **Continuous Deployment (CD):** The `cloud_deploy_stages` variable (Group 7 for Cloud Run, Group 7 for GKE) defines the pipeline stages (e.g., Dev -> Staging -> Prod) orchestrated by Google Cloud Deploy.
+*   **Testing and Validation:** `traffic_split` (Group 3 for Cloud Run) allows for A/B testing and canary rollouts at the infrastructure layer to validate software safely.
 
 **Console Exploration:**
 Navigate to **Cloud Build > Triggers** to see the CI integration. Navigate to **Cloud Deploy > Delivery pipelines** to see the CD promotion flow. In Cloud Run, check the **Revisions** tab to verify traffic splitting.
