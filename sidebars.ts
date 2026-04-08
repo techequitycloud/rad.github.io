@@ -138,6 +138,14 @@ const sidebars: SidebarsConfig = {
             { type: 'doc', id: 'modules/Wikijs_GKE/Wikijs_GKE_Guide', label: 'GKE' },
           ],
         },
+        {
+          type: 'category',
+          label: 'Wordpress',
+          items: [
+            { type: 'doc', id: 'modules/Wordpress_CloudRun/Wordpress_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Wordpress_GKE/Wordpress_GKE_Guide', label: 'GKE' },
+          ],
+        },
       ],
     },
     {
