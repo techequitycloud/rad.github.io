@@ -33,8 +33,10 @@ Navigate to **IAM & Admin > IAM** to view the assigned roles. Navigate to **IAM 
 **Concept:** Protecting sensitive data from unauthorized access or exfiltration using encryption and zero-trust proxies.
 
 **In the RAD UI:**
-*   **Secret Management:** The `enable_auto_password_rotation` variable (Group 11/17) automates credential rotation, securely passing them to workloads via Secret Manager.
-*   **Identity-Aware Proxy (IAP):** Review the `enable_iap` (Group 4) variable. IAP provides secure remote access, replacing traditional VPNs by verifying Google identities at the edge.
+*   **Secret Management:** The `enable_auto_password_rotation` variable (Group 11 for Cloud Run, Group 10 for GKE) automates credential rotation, securely passing them to workloads via Secret Manager.
+*   **Secrets Store CSI Driver (GKE):** Enable `enable_secrets_store_csi_driver` (Group 4 for GKE) to fetch secrets directly from Secret Manager at pod start time without storing plaintext values in Kubernetes Secrets or Terraform state — the most secure secret delivery method for GKE workloads with strict compliance requirements such as PCI-DSS or HIPAA.
+*   **Identity-Aware Proxy (IAP):** Review the `enable_iap` (Group 15 for Cloud Run, Group 17 for GKE) variable. IAP provides secure remote access, replacing traditional VPNs by verifying Google identities at the edge.
+*   **Network Segmentation (GKE):** The `enable_network_segmentation` variable (Group 5 for GKE) creates Kubernetes NetworkPolicy objects restricting east-west traffic to only explicitly permitted connections, enforcing least-privilege at the network layer for pods within the cluster.
 *   **VPC Service Controls:** In **GCP Services**, `enable_vpc_sc` (Group 10) creates a VPC Service Perimeter, preventing data exfiltration by blocking API access outside the defined trusted boundary.
 *   **Securing Software Supply Chain:** In **GCP Services**, `enable_binary_authorization` (Group 11) ensures only verified, signed container images are deployed.
 
