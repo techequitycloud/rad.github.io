@@ -17,7 +17,7 @@
 Welcome to the Rapid Application Deployment (RAD) platform! This tutorial will guide you through your first steps: logging in, exploring the dashboard, and deploying your first module.
 
 ## 2. Step 1: Login
-1.  Navigate to the application URL.
+1.  Navigate to the RAD portal at [https://radmodules.dev](https://radmodules.dev).
 2.  Click the **"Sign in with Google"** button.
 3.  Enter your Google credentials.
 4.  **Success!** You will be redirected to the **Deployments** page (or your role-specific home page).
