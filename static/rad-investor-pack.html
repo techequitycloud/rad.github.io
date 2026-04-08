@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RAD — Investment Proposition</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+:root {
+  --primary: #1a73e8; --accent: #0d47a1; --dark: #1c2b3a;
+  --mid: #4a6274; --light: #f0f4f8; --border: #d0dce8;
+  --white: #ffffff; --gold: #f9ab00; --green: #1e8e3e; --red: #d93025;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter','Helvetica Neue',Arial,sans-serif; font-size: 10pt; line-height: 1.6; color: var(--dark); background: var(--white); }
+.page-break { page-break-before: always; }
+
+/* ── COVER ── */
+.cover { background: linear-gradient(150deg, var(--accent) 0%, var(--primary) 55%, #42a5f5 100%); min-height: 297mm; display: flex; flex-direction: column; justify-content: space-between; padding: 0; }
+.cover-top { padding: 56px 60px 40px; }
+.cover-brand { font-size: 10pt; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.65); margin-bottom: 48px; }
+.cover h1 { font-size: 38pt; font-weight: 700; color: #fff; line-height: 1.1; letter-spacing: -1px; margin-bottom: 12px; }
+.cover-sub { font-size: 16pt; font-weight: 300; color: rgba(255,255,255,0.85); margin-bottom: 40px; }
+.cover-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+.cover-tag { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 20px; padding: 5px 16px; font-size: 9pt; color: #fff; }
+.cover-metrics { background: rgba(0,0,0,0.25); padding: 24px 60px; display: flex; gap: 48px; }
+.cm { color: #fff; }
+.cm-val { font-size: 22pt; font-weight: 700; color: var(--gold); display: block; line-height: 1; }
+.cm-lbl { font-size: 7.5pt; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
+.cover-footer { background: rgba(0,0,0,0.35); padding: 20px 60px; display: flex; justify-content: space-between; align-items: center; }
+.cover-footer-left { color: rgba(255,255,255,0.7); font-size: 9pt; }
+.cover-footer-right { color: rgba(255,255,255,0.5); font-size: 8.5pt; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* ── INNER PAGES ── */
+.inner { padding: 44px 56px; }
+.section { margin-bottom: 36px; }
+.sh { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.sh-title { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--primary); white-space: nowrap; }
+.sh-line { flex: 1; height: 2px; background: var(--border); }
+.page-title { font-size: 20pt; font-weight: 700; color: var(--dark); margin-bottom: 6px; line-height: 1.2; }
+.page-sub { font-size: 10.5pt; color: var(--mid); margin-bottom: 28px; }
+
+/* ── TEXT ── */
+p { margin-bottom: 12px; color: var(--dark); }
+p:last-child { margin-bottom: 0; }
+strong { font-weight: 600; color: var(--accent); }
+.lead { font-size: 11pt; line-height: 1.7; color: var(--dark); }
+
+/* ── METRIC CARDS ── */
+.metrics-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 28px; }
+.metrics-row-3 { grid-template-columns: repeat(3,1fr); }
+.mc { background: var(--light); border-radius: 10px; padding: 18px 16px; border-top: 3px solid var(--primary); text-align: center; }
+.mc-val { font-size: 18pt; font-weight: 700; color: var(--primary); display: block; line-height: 1; }
+.mc-sub { font-size: 7.5pt; color: var(--mid); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 5px; display: block; }
+.mc-gold { border-top-color: var(--gold); }
+.mc-gold .mc-val { color: var(--gold); }
+.mc-green { border-top-color: var(--green); }
+.mc-green .mc-val { color: var(--green); }
+
+/* ── TWO COL ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+/* ── CARDS ── */
+.card { border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; background: var(--white); }
+.card-accent { border-left: 3px solid var(--primary); background: var(--light); }
+.card-gold { border-left: 3px solid var(--gold); background: #fffdf0; }
+.card-green { border-left: 3px solid var(--green); background: #f0faf3; }
+.card h4 { font-size: 9.5pt; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
+.card p { font-size: 8.5pt; color: var(--mid); margin: 0; }
+.card-num { font-size: 7pt; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+
+/* ── HIGHLIGHT BOX ── */
+.highlight { background: linear-gradient(135deg, var(--accent), var(--primary)); border-radius: 10px; padding: 24px 28px; color: #fff; margin-bottom: 20px; }
+.highlight h3 { font-size: 13pt; font-weight: 700; margin-bottom: 8px; }
+.highlight p { color: rgba(255,255,255,0.85); margin: 0; font-size: 9.5pt; }
+
+/* ── BAR CHART ── */
+.bar-row { margin-bottom: 14px; }
+.bar-label { font-size: 8.5pt; font-weight: 500; color: var(--dark); margin-bottom: 4px; display: flex; justify-content: space-between; }
+.bar-track { background: var(--border); border-radius: 4px; height: 10px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; background: var(--primary); }
+.bar-fill-gold { background: var(--gold); }
+.bar-fill-green { background: var(--green); }
+
+/* ── TABLE ── */
+table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+th { background: var(--dark); color: #fff; padding: 8px 12px; text-align: left; font-weight: 600; font-size: 7.5pt; letter-spacing: 0.04em; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) td { background: var(--light); }
+.td-highlight { font-weight: 600; color: var(--primary); }
+.td-gold { font-weight: 700; color: var(--gold); }
+
+/* ── LIST ── */
+.bullet-list { list-style: none; }
+.bullet-list li { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 9pt; display: flex; align-items: flex-start; gap: 10px; }
+.bullet-list li:last-child { border-bottom: none; }
+.dot { width: 7px; height: 7px; min-width: 7px; border-radius: 50%; background: var(--gold); margin-top: 4px; }
+.dot-blue { background: var(--primary); }
+
+/* ── DORA CLUSTER ── */
+.cluster-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+.cluster { border-radius: 8px; padding: 12px; text-align: center; }
+.cluster-elite { background: #e6f4ea; border: 2px solid var(--green); }
+.cluster-high { background: #e8f0fe; border: 2px solid var(--primary); }
+.cluster-mid { background: #fff8e1; border: 2px solid var(--gold); }
+.cluster-low { background: #fce8e6; border: 2px solid var(--red); }
+.cluster-pct { font-size: 16pt; font-weight: 700; display: block; line-height: 1; }
+.cluster-elite .cluster-pct { color: var(--green); }
+.cluster-high .cluster-pct { color: var(--primary); }
+.cluster-mid .cluster-pct { color: #b06000; }
+.cluster-low .cluster-pct { color: var(--red); }
+.cluster-name { font-size: 8pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; display: block; }
+
+/* ── FOOTER BAR ── */
+.footer-bar { background: var(--dark); padding: 14px 56px; display: flex; justify-content: space-between; align-items: center; }
+.fb-left { color: rgba(255,255,255,0.6); font-size: 8pt; }
+.fb-right { color: rgba(255,255,255,0.35); font-size: 7.5pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ── VALUATION ── */
+.val-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+.val-cell { padding: 10px 14px; border-right: 1px solid var(--border); font-size: 8.5pt; }
+.val-cell:last-child { border-right: none; }
+.val-header { background: var(--dark); color: #fff; font-weight: 600; font-size: 7.5pt; }
+.val-total { background: var(--light); font-weight: 700; }
+.val-grand { background: var(--accent); color: #fff; font-weight: 700; }
+
+/* ── SOURCE CITE ── */
+.cite { font-size: 7pt; color: var(--mid); font-style: italic; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-top">
+    <div class="cover-brand">Tech Equity Cloud &nbsp;&middot;&nbsp; Investment Opportunity 1 of 2 &nbsp;&middot;&nbsp; Confidential</div>
+    <h1>RAD</h1>
+    <div class="cover-sub">A Production-Ready Internal Developer Platform<br>on Google Cloud &mdash; Owned Outright by Tech Equity</div>
+    <div class="cover-tags">
+      <span class="cover-tag">Internal Developer Platform (IDP)</span>
+      <span class="cover-tag">15 Enterprise Application Modules</span>
+      <span class="cover-tag">Zero Trust Security by Default</span>
+      <span class="cover-tag">Google Cloud Native</span>
+      <span class="cover-tag">SRE-Grade Observability</span>
+      <span class="cover-tag">AI-Augmented</span>
+    </div>
+  </div>
+  <div class="cover-metrics">
+    <div class="cm"><span class="cm-val">15</span><span class="cm-lbl">Enterprise App Modules</span></div>
+    <div class="cm"><span class="cm-val">5</span><span class="cm-lbl">GCP Certifications Supported</span></div>
+    <div class="cm"><span class="cm-val">24</span><span class="cm-lbl">Certification Exploration Guides</span></div>
+    <div class="cm"><span class="cm-val">$847K</span><span class="cm-lbl">IP Replacement Cost</span></div>
+    <div class="cm"><span class="cm-val">80%</span><span class="cm-lbl">Large Orgs Need an IDP by 2026*</span></div>
+  </div>
+  <div class="cover-footer">
+    <div class="cf-left">Shiyghan Navti &nbsp;&middot;&nbsp; shiyghan.navti@radmodules.dev &nbsp;&middot;&nbsp; radmodules.dev &nbsp;&middot;&nbsp; April 2026</div>
+    <div class="cf-right">Strictly Confidential</div>
+  </div>
+</div>
+
+<!-- PAGE 2: EXECUTIVE SUMMARY -->
+<div class="page-break"><div class="inner">
+  <div class="sh"><div class="sh-title">Executive Summary</div><div class="sh-line"></div></div>
+  <div class="page-title">The IDP Market Is at an Inflection Point &mdash; RAD Is Already Built</div>
+  <div class="page-sub">Gartner forecasts that 80% of large software engineering organisations will have platform engineering teams by 2026. RAD is a fully operational Internal Developer Platform on Google Cloud, owned outright by Tech Equity, ready to deploy today.</div>
+
+  <div class="highlight">
+    <h3>92% of organisations struggle to hire cloud skills. RAD eliminates the skills barrier entirely &mdash; encoding Google-best-practice infrastructure into 15 self-service, minutes-to-deploy enterprise application modules.</h3>
+    <p>For startups, scale-ups and enterprises adopting Google Cloud, RAD provides production-ready infrastructure that would otherwise require a team of Google Cloud architects, DevSecOps engineers and SRE practitioners to build and maintain.</p>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="sh"><div class="sh-title">What RAD Is</div><div class="sh-line"></div></div>
+      <ul class="bullet-list">
+        <li><span class="dot dot-blue"></span>A <strong>self-service Internal Developer Platform</strong> on Google Cloud with a module catalogue, deployment UI, and built-in billing &mdash; the Developer Control Plane</li>
+        <li><span class="dot dot-blue"></span><strong>15 production-grade enterprise application modules</strong> spanning ERP, LMS, CMS, healthcare, digital banking, AI automation, and cloud-native apps</li>
+        <li><span class="dot dot-blue"></span><strong>Zero-trust security by default</strong> on every deployment: IAP (BeyondCorp), Cloud Armor WAF, Workload Identity, VPC Service Controls, Secret Manager</li>
+        <li><span class="dot dot-blue"></span><strong>Full SRE observability stack</strong>: SLO/SLI dashboards, multi-burn-rate alerting, uptime checks, distributed tracing</li>
+        <li><span class="dot dot-blue"></span><strong>Built-in monetisation</strong>: credit-based billing, subscription tiers, partner revenue sharing, and referral programme with Stripe &amp; Flutterwave</li>
+        <li><span class="dot dot-blue"></span><strong>Certification-aligned</strong>: 24 exploration guides map every deployment to ACE, PCA, PCD, PDE, and PSE exam objectives</li>
+      </ul>
+    </div>
+    <div>
+      <div class="sh"><div class="sh-title">The Investment Basis</div><div class="sh-line"></div></div>
+      <ul class="bullet-list">
+        <li><span class="dot"></span>Platform IP replacement cost: <strong>~$847,000</strong></li>
+        <li><span class="dot"></span>12 months GCP hosting: <strong>~$30,000</strong></li>
+        <li><span class="dot"></span>Total investment consideration: <strong>~$877,000</strong></li>
+        <li><span class="dot"></span>Platform subscription ARR potential (1,000 users @ $80 avg): <strong>$960,000</strong></li>
+        <li><span class="dot"></span>IP fully owned by Tech Equity &mdash; <strong>no third-party dependencies</strong></li>
+      </ul>
+
+      <div class="card card-gold" style="margin-top:14px;">
+        <h4>Why Platform Engineering, Why Now</h4>
+        <p>Gartner named Platform Engineering a <strong>Top 10 Strategic Technology Trend for 2024</strong>. By 2028, 85% of organisations with platform teams will have an Internal Developer Portal. RAD is a production implementation of exactly this model &mdash; on the fastest-growing enterprise cloud platform.</p>
+      </div>
+      <div class="cite">*Gartner Hype Cycle for Platform Engineering 2024; Gartner Strategic Trends in Platform Engineering 2025.</div>
+    </div>
+  </div>
+</div>
+<div class="footer-bar"><div class="fb-left">RAD &mdash; Investment Opportunity 1 &nbsp;&middot;&nbsp; Tech Equity Cloud &nbsp;&middot;&nbsp; Confidential</div><div class="fb-right">Page 2</div></div>
+</div>
+
+<!-- PAGE 3: THE PROBLEM & MARKET -->
+<div class="page-break"><div class="inner">
+  <div class="sh"><div class="sh-title">The Problem &amp; Market Opportunity</div><div class="sh-line"></div></div>
+  <div class="page-title">A $723 Billion Cloud Market With a Critical Infrastructure Gap</div>
+  <div class="page-sub">Cloud spend is accelerating but most organisations lack the engineering capability to implement it correctly &mdash; creating massive demand for self-service, expert-quality platform infrastructure</div>
+
+  <div class="metrics-row">
+    <div class="mc mc-gold"><span class="mc-val">$723B</span><span class="mc-sub">Global public cloud spend 2025 (Gartner)</span></div>
+    <div class="mc mc-gold"><span class="mc-val">21.5%</span><span class="mc-sub">YoY cloud growth 2024&rarr;2025 (Gartner)</span></div>
+    <div class="mc mc-gold"><span class="mc-val">92%</span><span class="mc-sub">Orgs struggling to hire cloud skills</span></div>
+    <div class="mc mc-gold"><span class="mc-val">1 in 3</span><span class="mc-sub">Orgs missed financial goals due to cloud skills gap</span></div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="sh"><div class="sh-title">The Platform Engineering Gap</div><div class="sh-line"></div></div>
+      <p>Building a production-ready Internal Developer Platform on Google Cloud from scratch requires a team of senior Google Cloud architects, security engineers, SRE practitioners, and DevOps specialists &mdash; typically 12&ndash;18 months of effort and $400K&ndash;$1M in engineering cost. For startups and SMEs, this is simply not viable.</p>
+      <p>The result: organisations either skip the platform entirely (accruing security debt, operational risk and inconsistency) or procure expensive consultancy that delivers a one-time build with no ongoing learning or self-service capability.</p>
+      <p><strong>RAD solves both problems simultaneously</strong>: it provides the platform and the knowledge to operate it.</p>
+
+      <div class="sh" style="margin-top:18px;"><div class="sh-title">Platform Engineering Adoption Curve</div><div class="sh-line"></div></div>
+      <div class="bar-row">
+        <div class="bar-label"><span>Orgs with platform teams (2022)</span><span>45%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:45%"></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label"><span>Current estimate (2025)</span><span>55%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:55%"></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label"><span>Gartner forecast (2026)</span><span style="color:var(--green);font-weight:700">80%</span></div>
+        <div class="bar-track"><div class="bar-fill bar-fill-green" style="width:80%"></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label"><span>Orgs with IDPs forecast (2028)</span><span style="color:var(--green);font-weight:700">85%</span></div>
+        <div class="bar-track"><div class="bar-fill bar-fill-green" style="width:85%"></div></div>
+      </div>
+      <div class="cite">Source: Gartner Hype Cycle for Platform Engineering 2024; Strategic Trends in Platform Engineering 2025.</div>
+    </div>
+    <div>
+      <div class="sh"><div class="sh-title">Target Market Segments</div><div class="sh-line"></div></div>
+      <div class="card card-accent" style="margin-bottom:10px;">
+        <div class="card-num">Primary &mdash; Highest Volume</div>
+        <h4>Startups &amp; Scale-ups on Google Cloud</h4>
+        <p>Founders building products who need production-ready GCP infrastructure without a full cloud engineering team. RAD delivers Google-best-practice infrastructure in minutes at a subscription cost far below a consultant&rsquo;s day rate.</p>
+      </div>
+      <div class="card card-accent" style="margin-bottom:10px;">
+        <div class="card-num">Secondary &mdash; Certification Market</div>
+        <h4>Google Cloud Certification Candidates</h4>
+        <p>90% of Google Cloud certified professionals say training made them more competitive. Professional Cloud Architect holders earn $165K&ndash;$190K/year. RAD is the only platform that aligns infrastructure deployment directly to all five professional certification exam objectives.</p>
+      </div>
+      <div class="card card-accent">
+        <div class="card-num">Tertiary &mdash; Enterprise</div>
+        <h4>Enterprise Platform Engineering Teams</h4>
+        <p>Organisations building or expanding their CCoE need a reference IDP implementation. RAD provides the golden-path modules, security baseline, and observability stack that would otherwise take 12+ months to build in-house.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="footer-bar"><div class="fb-left">RAD &mdash; Investment Opportunity 1 &nbsp;&middot;&nbsp; Tech Equity Cloud &nbsp;&middot;&nbsp; Confidential</div><div class="fb-right">Page 3</div></div>
+</div>
+
+<!-- PAGE 4: PLATFORM CAPABILITIES -->
+<div class="page-break"><div class="inner">
+  <div class="sh"><div class="sh-title">Platform Capabilities</div><div class="sh-line"></div></div>
+  <div class="page-title">The Five Planes of the RAD Internal Developer Platform</div>
+  <div class="page-sub">RAD implements all five planes of the IDP model defined by the CNCF Platform Working Group and referenced in Gartner&rsquo;s platform engineering framework</div>
+
+  <div class="section">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+      <div class="card card-accent"><div class="card-num">1 &mdash; Developer Control Plane</div><h4>Self-Service Module Catalogue, Deployment UI &amp; Credit-Based Billing</h4><p>Teams deploy production infrastructure via a UI without engineering support, in minutes. Built-in subscription management (Stripe &amp; Flutterwave), credit system, partner revenue sharing, and referral programme. Admin, User, Partner, Finance, Support, and Agent roles model a complete Cloud Centre of Excellence.</p></div>
+      <div class="card card-accent"><div class="card-num">2 &mdash; Integration &amp; Delivery Plane</div><h4>Cloud Build, Artifact Registry &amp; Cloud Deploy</h4><p>Automated CI/CD with immutable image tagging, Kaniko builds, progressive deployment strategies, and secret management integration. Every module follows an Infrastructure-as-Code paradigm &mdash; reproducible, auditable, version-controlled. Jules AI (GitHub-integrated) provides continuous module refinement.</p></div>
+      <div class="card card-accent"><div class="card-num">3 &mdash; Observability Plane</div><h4>Cloud Monitoring, Cloud Logging, SLO/SLI Dashboards &amp; Distributed Tracing</h4><p>SRE-grade observability out of the box: four golden signals dashboards, multi-burn-rate alert policies, uptime checks, log-based metrics, and Cloud Trace integration. Every deployment is observable from day one.</p></div>
+      <div class="card card-accent"><div class="card-num">4 &mdash; Security &amp; Identity Plane</div><h4>IAP (BeyondCorp), Cloud Armor, Secret Manager &amp; Workload Identity</h4><p>Zero-trust access on every deployment. No public IPs by default. Cloud NAT for private egress. VPC Service Controls for data perimeter. CMEK support. Automated secret rotation. Cloud Armor WAF with OWASP Top 10 rule sets. Binary authorisation for container trust. Every deployment is BeyondCorp-compliant.</p></div>
+      <div class="card card-accent"><div class="card-num">5 &mdash; Resource Plane</div><h4>GKE Autopilot, Cloud Run Gen 2, Cloud SQL, Cloud Filestore &amp; Memorystore</h4><p>Serverless-first architecture with managed auto-scaling. Multi-region deployment support. HA Cloud SQL with automated daily backups and point-in-time recovery. Redis caching. Scale-to-zero for cost optimisation. All configurable via the module UI &mdash; no Terraform knowledge required.</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sh"><div class="sh-title">15 Enterprise Application Modules</div><div class="sh-line"></div></div>
+    <div class="three-col">
+      <div class="card"><h4>Business &amp; ERP</h4><p><strong>Odoo</strong> (CRM, accounting, inventory, manufacturing), <strong>Cyclos</strong> (digital banking &amp; microfinance), <strong>OpenEMR</strong> (HIPAA-compliant healthcare records)</p></div>
+      <div class="card"><h4>Content &amp; Commerce</h4><p><strong>WordPress</strong> (serverless CMS on Cloud Run), <strong>Ghost</strong> (blogging), <strong>Strapi</strong> (headless CMS), <strong>Directus</strong> (database management), <strong>Wiki.js</strong> (knowledge base)</p></div>
+      <div class="card"><h4>Dev, AI &amp; Automation</h4><p><strong>Moodle</strong> (LMS), <strong>N8N</strong> (workflow automation), <strong>N8N AI</strong> (AI-augmented automation), <strong>Django</strong>, <strong>Cloud Run App</strong> (generic container), <strong>GCP Services</strong> (shared foundation)</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sh"><div class="sh-title">Certification Alignment &mdash; A Unique Dual-Purpose Platform</div><div class="sh-line"></div></div>
+    <p>RAD is the only IDP that simultaneously deploys production infrastructure <em>and</em> maps every configuration decision to Google Cloud certification exam objectives. The platform includes 24 expert-authored exploration guides spanning all five professional Google Cloud certifications (ACE, PCA, PCD, PDE, PSE), turning every deployment into a structured learning experience.</p>
+    <div class="card card-gold">
+      <h4>The 175:1 Certification ROI (Google / Ipsos Research)</h4>
+      <p>A Google-commissioned Ipsos study found Professional Cloud Architect holders earn $165K&ndash;$190K/year &mdash; a ~$35K premium over non-certified peers &mdash; at an exam cost of $200. This 175:1 first-year ROI drives sustained demand for RAD&rsquo;s certification-aligned subscriptions. 90% of certified professionals say training made them more competitive. <em>Source: Google Cloud Blog, Ipsos Certification ROI Research.</em></p>
+    </div>
+  </div>
+</div>
+<div class="footer-bar"><div class="fb-left">RAD &mdash; Investment Opportunity 1 &nbsp;&middot;&nbsp; Tech Equity Cloud &nbsp;&middot;&nbsp; Confidential</div><div class="fb-right">Page 4</div></div>
+</div>
+
+<!-- PAGE 5: BUSINESS MODEL -->
+<div class="page-break"><div class="inner">
+  <div class="sh"><div class="sh-title">Business Model &amp; Revenue</div><div class="sh-line"></div></div>
+  <div class="page-title">Scalable SaaS with Built-In Ecosystem Revenue</div>
+  <div class="page-sub">Credit-based subscriptions, partner revenue sharing, and a referral programme create multiple compounding revenue streams from a single platform</div>
+
+  <div class="two-col">
+    <div>
+      <div class="sh"><div class="sh-title">Subscription Tiers</div><div class="sh-line"></div></div>
+      <table style="margin-bottom:18px;">
+        <tr><th>Tier</th><th>Monthly Price</th><th>Target</th></tr>
+        <tr><td>Free</td><td>$0 (awarded credits)</td><td>Individual learners, lead generation</td></tr>
+        <tr><td class="td-hl">Exam Prep</td><td class="td-gold">$29 / month</td><td>Certification candidates</td></tr>
+        <tr><td class="td-hl">Professional</td><td class="td-gold">$99 / month</td><td>Architects &amp; DevOps engineers</td></tr>
+        <tr><td class="td-hl">Team (10 seats)</td><td class="td-gold">$299 / month</td><td>Corporate training teams</td></tr>
+        <tr><td class="td-hl">Enterprise</td><td class="td-gold">Custom</td><td>Large orgs, SIs, white-label</td></tr>
+      </table>
+
+      <div class="sh"><div class="sh-title">Ecosystem Revenue Streams</div><div class="sh-line"></div></div>
+      <ul class="bullet-list">
+        <li><span class="dot dot-blue"></span><strong>Partner Module Publishing</strong>: Technology partners publish modules and earn a configured % of True Revenue (purchased credits only)</li>
+        <li><span class="dot dot-blue"></span><strong>Agent Referral Programme</strong>: Certified professionals, course creators, and corporate trainers earn commission on referred user spend &mdash; tracked via QR codes and custom referral links</li>
+        <li><span class="dot dot-blue"></span><strong>Certification Voucher Bundling</strong>: Google Cloud exam vouchers bundled into subscription tiers at a margin</li>
+      </ul>
+    </div>
+    <div>
+      <div class="sh"><div class="sh-title">Platform Revenue Projections</div><div class="sh-line"></div></div>
+      <table style="margin-bottom:14px;">
+        <tr><th>Metric</th><th>Year 1</th><th>Year 2</th><th>Year 3</th></tr>
+        <tr><td>Paying Subscribers</td><td>200</td><td>600</td><td>1,500</td></tr>
+        <tr><td>Avg Revenue / User / Mo</td><td>$55</td><td>$65</td><td>$75</td></tr>
+        <tr><td>Subscription ARR</td><td>$132,000</td><td>$468,000</td><td>$1,350,000</td></tr>
+        <tr><td>Ecosystem Revenue</td><td>$20,000</td><td>$80,000</td><td>$250,000</td></tr>
+        <tr style="background:var(--dark);"><td style="color:#fff;font-weight:700;">Platform ARR</td><td style="color:var(--gold);font-weight:700;">$152,000</td><td style="color:var(--gold);font-weight:700;">$548,000</td><td style="color:var(--gold);font-weight:700;">$1,600,000</td></tr>
+      </table>
+      <div class="cite">Projections are illustrative. Growth assumes active partner co-marketing and Google Cloud partner ecosystem listing from Year 1.</div>
+
+      <div class="card card-green" style="margin-top:14px;">
+        <h4>Platform Economics at Scale</h4>
+        <p>At 1,000 paying subscribers at an average $80/month, the platform generates <strong>$960,000 ARR</strong> from subscriptions alone. The credit-based model means every active deployment generates revenue proportional to usage &mdash; aligning platform revenue with customer value delivery.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="footer-bar"><div class="fb-left">RAD &mdash; Investment Opportunity 1 &nbsp;&middot;&nbsp; Tech Equity Cloud &nbsp;&middot;&nbsp; Confidential</div><div class="fb-right">Page 5</div></div>
+</div>
+
+<!-- PAGE 6: IP VALUATION -->
+<div class="page-break"><div class="inner">
+  <div class="sh"><div class="sh-title">IP Asset Valuation</div><div class="sh-line"></div></div>
+  <div class="page-title">The Investment Basis: Platform IP Replacement Cost</div>
+  <div class="page-sub">Valuation uses a cost-to-replicate methodology at $200/hour (senior Google Cloud architect rate) &mdash; the minimum cost to rebuild the RAD platform from scratch</div>
+
+  <div class="highlight">
+    <h3>Total RAD Platform IP Replacement Cost: ~$847,000</h3>
+    <p>This is what a commercial organisation would need to invest to build an equivalent IDP on Google Cloud: 15 enterprise-grade deployment modules with security hardening, observability, and IaC; a platform core with billing, subscriptions, multi-role access, partner revenue sharing and referral systems; and a documentation site with 118 expert-authored files aligned to five GCP certifications.</p>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="sh"><div class="sh-title">Component Breakdown</div><div class="sh-line"></div></div>
+      <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+        <div class="val-row"><div class="val-cell val-header">Component</div><div class="val-cell val-header">Hours</div><div class="val-cell val-header">Value @ $200/hr</div></div>
+        <div class="val-row"><div class="val-cell"><strong>Platform Core</strong><br><span style="font-size:7.5pt;color:var(--mid)">Billing, credits, subscriptions, multi-role access, partner &amp; agent systems, UI/UX</span></div><div class="val-cell">1,000</div><div class="val-cell td-hl">$200,000</div></div>
+        <div class="val-row"><div class="val-cell"><strong>15 Enterprise Application Modules</strong><br><span style="font-size:7.5pt;color:var(--mid)">IaC design, GCP implementation, security hardening, testing &amp; documentation (~200 hrs each)</span></div><div class="val-cell">3,000</div><div class="val-cell td-hl">$600,000</div></div>
+        <div class="val-row"><div class="val-cell"><strong>Platform Documentation (118 files)</strong><br><span style="font-size:7.5pt;color:var(--mid)">Role-based guides, feature docs, workflow documentation, application guides</span></div><div class="val-cell">236</div><div class="val-cell td-hl">$47,200</div></div>
+        <div class="val-row val-total"><div class="val-cell"><strong>Total Platform IP</strong></div><div class="val-cell"><strong>4,236 hrs</strong></div><div class="val-cell" style="color:var(--accent);font-weight:700;">$847,200</div></div>
+        <div class="val-row" style="background:var(--dark);"><div class="val-cell" style="color:#fff;">12 Months GCP Hosting</div><div class="val-cell" style="color:rgba(255,255,255,.6);">Production-grade</div><div class="val-cell" style="color:var(--gold);">$30,000</div></div>
+        <div class="val-row" style="background:var(--accent);border-radius:0 0 8px 8px;"><div class="val-cell" style="color:#fff;font-weight:700;font-size:10pt;">Total Investment Consideration</div><div class="val-cell" style="color:rgba(255,255,255,.6);">&nbsp;</div><div class="val-cell" style="color:var(--gold);font-weight:700;font-size:11pt;">$877,200</div></div>
+      </div>
+      <div class="cite" style="margin-top:8px;">Rate basis: $200/hour senior Google Cloud architect. GCP hosting: $2,500/month (Cloud Run, GKE Autopilot, Cloud SQL, Cloud Armor, Monitoring). Actual costs vary with usage.</div>
+    </div>
+    <div>
+      <div class="sh"><div class="sh-title">GCP Hosting Cost Basis (12 Months)</div><div class="sh-line"></div></div>
+      <table style="margin-bottom:16px;">
+        <tr><th>GCP Service</th><th>Est. Monthly</th></tr>
+        <tr><td>Cloud Run (platform API &amp; frontend)</td><td>$300 &ndash; $500</td></tr>
+        <tr><td>GKE Autopilot (module orchestration)</td><td>$400 &ndash; $600</td></tr>
+        <tr><td>Cloud SQL PostgreSQL (HA)</td><td>$250 &ndash; $400</td></tr>
+        <tr><td>Cloud Filestore &amp; Memorystore</td><td>$200 &ndash; $350</td></tr>
+        <tr><td>Cloud Armor, IAP &amp; Load Balancing</td><td>$150 &ndash; $250</td></tr>
+        <tr><td>Monitoring, Logging, Storage &amp; Other</td><td>$100 &ndash; $200</td></tr>
+        <tr style="background:var(--light);"><td style="font-weight:600;">Total (12 months)</td><td style="font-weight:600;color:var(--accent);">$16,800 &ndash; $27,600</td></tr>
+      </table>
+
+      <div class="sh"><div class="sh-title">What the Valuation Does Not Capture</div><div class="sh-line"></div></div>
+      <ul class="bullet-list">
+        <li><span class="dot"></span>7-year Google Cloud trusted relationship &mdash; not replicable through capital alone</li>
+        <li><span class="dot"></span>500+ delivery engagements embedded in the platform design decisions</li>
+        <li><span class="dot"></span>6 Google Cloud professional certifications held by the platform architect</li>
+        <li><span class="dot"></span>Full IP ownership &mdash; no third-party licensing dependencies or open-source encumbrances</li>
+        <li><span class="dot"></span>Active platform: already deployed, running, and serving users at <strong>docs.radmodules.dev</strong></li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="footer-bar"><div class="fb-left">RAD &mdash; Investment Opportunity 1 &nbsp;&middot;&nbsp; Tech Equity Cloud &nbsp;&middot;&nbsp; Confidential</div><div class="fb-right">Page 6</div></div>
+</div>
+
+<!-- PAGE 7: FOUNDER & NEXT STEPS -->
+<div class="page-break"><div class="inner">
+  <div class="sh"><div class="sh-title">The Founder</div><div class="sh-line"></div></div>
+  <div class="page-title">Shiyghan Navti &mdash; Founder &amp; CTO, Tech Equity Cloud</div>
+  <div class="page-sub">The architect behind the RAD platform and a Google Cloud Authorised Trainer with a 7-year, 4.8/5 CSAT track record in the partner ecosystem</div>
+
+  <div class="two-col">
+    <div>
+      <p>Shiyghan Navti has spent 11 years building the intellectual property, automation tooling, and partner ecosystem infrastructure that underpins the RAD platform. As the technical architect of all 15 enterprise application modules, the billing and subscription system, and the 118-file documentation estate, he brings a rare combination of academic rigour, Google Cloud depth, and enterprise delivery experience to the platform.</p>
+      <p>His career spans IBM (Europe Cloud Technical Sales Leader; Africa Geo-Expansion Strategy), Vodafone Group (Head of Cloud Advisory Group &mdash; Google, AWS, Microsoft hybrid cloud services), and 11 years as Founder &amp; CTO of Tech Equity. He has delivered advisory services to Fortune 100 organisations, the <strong>World Bank</strong>, and the <strong>Commonwealth Telecommunications Organization</strong>.</p>
+
+      <div class="sh" style="margin-top:16px;"><div class="sh-title">Google Cloud Certifications</div><div class="sh-line"></div></div>
+      <ul class="bullet-list">
+        <li><span class="dot dot-blue"></span>Google Cloud Authorised Trainer</li>
+        <li><span class="dot dot-blue"></span>Professional Cloud Architect &nbsp;|&nbsp; Professional Cloud Security Engineer</li>
+        <li><span class="dot dot-blue"></span>Professional Cloud Developer &nbsp;|&nbsp; Associate Cloud Engineer &nbsp;|&nbsp; Cloud Digital Leader</li>
+      </ul>
+
+      <div class="sh" style="margin-top:16px;"><div class="sh-title">Academic Qualifications</div><div class="sh-line"></div></div>
+      <ul class="bullet-list">
+        <li><span class="dot"></span><strong>PhD, Computational Modelling</strong> &mdash; University of Wales</li>
+        <li><span class="dot"></span><strong>MSc, Numerical Modelling &amp; Finite Elements</strong> &mdash; University of Wales</li>
+        <li><span class="dot"></span><strong>BEng, Structural Engineering with Architecture</strong> &mdash; University of Manchester</li>
+      </ul>
+    </div>
+    <div>
+      <div class="sh"><div class="sh-title">Investment Opportunity &mdash; Next Steps</div><div class="sh-line"></div></div>
+      <div class="card card-accent" style="margin-bottom:10px;">
+        <div class="card-num">Option A &mdash; Platform Partnership</div>
+        <h4>Co-Invest &amp; Co-Distribute</h4>
+        <p>Partner funds platform operations ($30K/12 months) and contributes market access and sales infrastructure. Revenue split on platform subscriptions and ecosystem income. Tech Equity retains IP.</p>
+      </div>
+      <div class="card card-gold" style="margin-bottom:10px;">
+        <div class="card-num">Option B &mdash; Platform Licensing</div>
+        <h4>White-Label or Territorial License</h4>
+        <p>Partner licenses RAD for a defined geography or vertical. Annual license fee plus per-seat royalty. Tech Equity provides platform updates, module expansion, and technical support.</p>
+      </div>
+      <div class="card card-green" style="margin-bottom:16px;">
+        <div class="card-num">Option C &mdash; Strategic Equity</div>
+        <h4>Equity Investment</h4>
+        <p>Partner invests against the IP valuation (~$877K) for a negotiated equity stake. Investment funds platform scaling, team expansion, Google Cloud Marketplace listing, and go-to-market.</p>
+      </div>
+
+      <div style="text-align:center;padding:18px;border:2px solid var(--primary);border-radius:8px;">
+        <div style="font-size:10pt;font-weight:600;color:var(--dark);margin-bottom:6px;">Begin the conversation</div>
+        <div style="font-size:9pt;color:var(--mid);"><strong style="color:var(--primary);">shiyghan.navti@radmodules.dev</strong><br>+44 7966 265130 &nbsp;|&nbsp; radmodules.dev</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="footer-bar"><div class="fb-left">RAD &mdash; Investment Opportunity 1 &nbsp;&middot;&nbsp; Tech Equity Cloud &nbsp;&middot;&nbsp; Confidential &nbsp;&middot;&nbsp; April 2026</div><div class="fb-right">Page 7</div></div>
+</div>
+
+</body></html>
