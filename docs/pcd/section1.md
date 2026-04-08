@@ -22,7 +22,7 @@ You interact with each module by configuring its variables in the RAD UI deploym
 
 **In the RAD UI:**
 *   **Platform Choice:** The RAD platform provides templates for **App CloudRun** (serverless, event-driven HTTP workloads that scale to zero) and **App GKE** (container orchestration for workloads that need persistent connections, StatefulSets, or fine-grained networking). For workloads requiring direct OS access, custom hardware, or persistent long-running background processes, Compute Engine VMs are the appropriate choice — these are provisioned via the Services GCP module infrastructure layer.
-*   **Traffic Splitting:** In Cloud Run, the `traffic_split` variable (Group 5) dictates how traffic is divided across container revisions for A/B testing and canary rollouts.
+*   **Traffic Splitting:** In Cloud Run, the `traffic_split` variable (Group 3) dictates how traffic is divided across container revisions for A/B testing and canary rollouts.
 
 **Console Exploration:**
 Navigate to **Cloud Run**, select the service, and review the **Revisions** tab to see how traffic is allocated across revisions. Observe that each revision is immutable — configuration changes always produce a new revision, which can then receive a percentage of traffic. For GKE, review **Cloud Deploy > Delivery pipelines** for progressive rollout stages.
@@ -46,11 +46,14 @@ Navigate to **Cloud Run** and observe that a Cloud Run service is regional — i
 - **Regional services:** Cloud SQL REGIONAL, GKE Autopilot, Cloud Run — redundant across multiple zones within a region. Survive individual zone failures.
 - **Global services:** Cloud Storage (multi-region), Cloud Spanner (multi-region), Global Load Balancing — distributed across regions. Highest availability, highest cost.
 
+**GKE pod-level zone distribution:**
+For GKE workloads, `enable_topology_spread` (Group 14) adds Kubernetes `TopologySpreadConstraints` to the pod spec, instructing the scheduler to distribute replicas evenly across availability zones. With three replicas and spreading enabled across three zones, one replica runs per zone — a single zone failure takes down only one third of capacity rather than all pods. Pair this with `enable_pod_disruption_budget` (Group 14), which creates a `PodDisruptionBudget` preventing Kubernetes from evicting too many pods simultaneously during voluntary disruptions (node drains, cluster upgrades). Set `pdb_min_available = "1"` to guarantee at least one pod is always serving while others are replaced.
+
 ### Caching Solutions
 **Concept:** Implementing in-memory caching to reduce database load and improve application response times.
 
 **In the RAD UI:**
-*   **Memorystore (Redis):** In **Services GCP**, `create_redis` (Group 5) and `redis_tier` (Group 5) configure managed in-memory caching. Set `enable_redis` (Group 14 for App CloudRun, Group 20 for App GKE) to dynamically pass the Redis host and port into the container as environment variables.
+*   **Memorystore (Redis):** In **Services GCP**, `create_redis` (Group 5) and `redis_tier` (Group 5) configure managed in-memory caching. Set `enable_redis` (Group 10 for App CloudRun; for App GKE set `redis_host` in Group 5 or deploy Services GCP for auto-discovery) to dynamically pass the Redis host and port into the container as environment variables.
 
 **Console Exploration:**
 Navigate to **Memorystore > Redis** to view the Redis instance. Observe the instance tier (`BASIC` for single-node, `STANDARD_HA` for primary-replica with automatic failover), the memory size, and the private IP address accessible only from within the VPC. In your application code, use this private IP with the Redis client library — all traffic stays within Google's private network.
@@ -61,7 +64,7 @@ Navigate to **Memorystore > Redis** to view the Redis instance. Observe the inst
 **Concept:** Configuring load balancers to route a user's requests consistently to the same backend, and using Cloud CDN to cache responses at the edge for lower latency.
 
 **In the RAD UI:**
-Both App CloudRun and App GKE provision a Global External Application Load Balancer when `enable_cloud_armor` (Group 9 for Cloud Run, Group 13 for GKE) is enabled. The load balancer is the integration point for both session affinity and Cloud CDN.
+Both App CloudRun and App GKE provision a Global External Application Load Balancer when `enable_cloud_armor` (Group 16 for Cloud Run, Group 18 for GKE) is enabled. The load balancer is the integration point for both session affinity and Cloud CDN.
 
 **Console Exploration and Learning Guidelines:**
 
@@ -72,7 +75,7 @@ Both App CloudRun and App GKE provision a Global External Application Load Balan
 
 > **Real-World Example:** A legacy e-commerce application stores user shopping cart state in local memory on each application server instance rather than in a shared cache or database. Enabling `GENERATED_COOKIE` session affinity on the load balancer ensures that once a user's session is established on a particular instance, all their requests in that session reach the same instance — preventing cart data loss. The team treats this as a migration step while they refactor cart storage to use Memorystore for proper stateless scaling.
 
-**Cloud CDN** caches responses from your backends at Google's globally distributed Points of Presence (PoPs), serving subsequent identical requests from cache without reaching your backend at all. Enable it on the load balancer's backend service and configure cache modes:
+**Cloud CDN** caches responses from your backends at Google's globally distributed Points of Presence (PoPs), serving subsequent identical requests from cache without reaching your backend at all. In the RAD platform, `enable_cdn = true` (Group 16 for Cloud Run) activates Cloud CDN on the load balancer backend — this variable is only effective when `enable_cloud_armor` is also `true`, as Cloud CDN requires the Global HTTPS Load Balancer that Cloud Armor provisions. Configure cache modes at the load balancer backend:
 - `CACHE_ALL_STATIC` — automatically caches all static content (images, CSS, JS) based on content type.
 - `USE_ORIGIN_HEADERS` — respects `Cache-Control` and `Expires` headers from your application.
 - `FORCE_CACHE_ALL` — caches all responses regardless of origin headers (use with caution for dynamic content).
@@ -176,7 +179,7 @@ Navigate to **Workflows > Workflows** to explore the visual workflow editor and 
 
 **In the RAD UI:**
 *   **Least Privilege:** The platform strictly uses dedicated custom service accounts with minimum required predefined roles (like `roles/cloudsql.client`) rather than the default compute service account. Using the default compute service account is an anti-pattern — it is automatically granted broad `roles/editor` permissions across the project.
-*   **Identity-Aware Proxy (IAP):** The `enable_iap` variable (Group 4) configures IAP, which authenticates end-users at the Google Front End before requests reach the backend — acting as a zero-trust access layer that replaces traditional VPN-based perimeter security.
+*   **Identity-Aware Proxy (IAP):** The `enable_iap` variable (Group 15 for Cloud Run, Group 17 for GKE) configures IAP, which authenticates end-users at the Google Front End before requests reach the backend — acting as a zero-trust access layer that replaces traditional VPN-based perimeter security.
 
 **Console Exploration:**
 Navigate to **IAM & Admin > Service Accounts** and view the **Permissions** tab for each application service account to confirm minimum required roles. Navigate to **Security > Identity-Aware Proxy** to view which users and groups have been granted the `IAP-secured Web App User` role.
@@ -209,9 +212,9 @@ Navigate to **IAM & Admin > Service Accounts**, select a service account, and ex
 **Concept:** Storing, accessing, and rotating secrets and encryption keys, and securing the container build pipeline.
 
 **In the RAD UI:**
-*   **Secret Manager Integration:** The `enable_auto_password_rotation` (Group 11 for Cloud Run, Group 17 for GKE) variable automates credential rotation. Secret values are fetched by the Cloud Run/GKE workload at startup via the Secret Manager API — the plaintext value is never written to a config file, container image layer, or Terraform state file.
-*   **Binary Authorization:** In **Services GCP**, `enable_binary_authorization` (Group 11) configures a cluster admission policy requiring all container images to be signed by a trusted Cloud Build attestor. Unsigned images are rejected at deploy time.
-*   **Micro-segmentation:** In **App GKE**, `enable_network_segmentation` (Group 9) enforces Kubernetes Network Policies that restrict pod-to-pod traffic — only pods with matching label selectors can communicate within the namespace.
+*   **Secret Manager Integration:** The `enable_auto_password_rotation` (Group 11 for Cloud Run, Group 10 for GKE) variable automates credential rotation. Secret values are fetched by the Cloud Run/GKE workload at startup via the Secret Manager API — the plaintext value is never written to a config file, container image layer, or Terraform state file. For workloads with strict compliance requirements (PCI-DSS, HIPAA), `enable_secrets_store_csi_driver` (Group 4 for GKE) bypasses Kubernetes Secrets storage entirely — secret values are fetched directly from Secret Manager at pod start time and never written to etcd or Terraform state.
+*   **Binary Authorization:** In **Services GCP**, `enable_binary_authorization` (Group 11) configures a cluster admission policy requiring all container images to be signed by a trusted Cloud Build attestor. Unsigned images are rejected at deploy time. In App GKE and App CloudRun standalone deployments, `enable_binary_authorization` (Group 7) self-provisions the attestor, KMS signing key, and policy automatically — no pre-existing Binary Authorization resources are required.
+*   **Micro-segmentation:** In **App GKE**, `enable_network_segmentation` (Group 5) enforces Kubernetes Network Policies that restrict pod-to-pod traffic — only pods with matching label selectors can communicate within the namespace.
 
 **Console Exploration:**
 Navigate to **Security > Secret Manager**. View a secret and note that you cannot read the value without `roles/secretmanager.secretAccessor` — `roles/secretmanager.viewer` allows listing secrets but not reading their material. Click **Versions** to see the rotation history. Navigate to **Security > Binary Authorization** to view the active policy and attestors.
@@ -263,7 +266,7 @@ Navigate to **Kubernetes Engine > Service Mesh** to explore the mesh topology an
 
 **In the RAD UI:**
 *   **Cloud SQL (Relational):** The `create_postgres` / `create_mysql` variables (Group 3 in Services GCP) provision fully managed PostgreSQL or MySQL. Cloud SQL provides strong consistency — a committed write is immediately visible to all readers.
-*   **Cloud Storage (Object Storage):** The `storage_buckets` variable (Group 10 for Cloud Run, Group 17 for GKE) provisions GCS buckets for unstructured data (files, images, backups, exported data). Multi-region Cloud Storage buckets provide eventual consistency for metadata operations (bucket listing) but strong read-after-write consistency for object operations since November 2020.
+*   **Cloud Storage (Object Storage):** The `storage_buckets` variable (Group 9 for both Cloud Run and GKE) provisions GCS buckets for unstructured data (files, images, backups, exported data). Multi-region Cloud Storage buckets provide eventual consistency for metadata operations (bucket listing) but strong read-after-write consistency for object operations since November 2020. The `gcs_volumes` variable in the same group mounts buckets directly into containers via the GCS Fuse CSI Driver, making Cloud Storage appear as a POSIX filesystem path — no client library API calls required in application code.
 *   **Memorystore (Redis):** Covered in section 1.1 — used for ephemeral caching, not durable storage.
 
 **Console Exploration:**
