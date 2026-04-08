@@ -196,11 +196,7 @@ RAD provides structured certification preparation guides mapped directly to the 
 ### Certifications Supported
 
 **Associate Cloud Engineer (ACE)**
-The ACE certification validates the ability to deploy, manage, and monitor Google Cloud resources. The RAD platform covers all four exam sections, with particular depth in the hands-on configuration of:
-- Cloud project setup, IAM, billing, and API management (Section 1, ~23%)
-- VPC networking, Cloud SQL sizing, and GKE cluster configuration (Section 2, ~23%)
-- Cloud Run deployment, GKE workload deployment, and CI/CD configuration (Section 3, ~27%)
-- Cloud Monitoring dashboards, alert policies, and log-based metrics (Section 4, ~27%)
+The ACE certification validates the ability to deploy, manage, and monitor Google Cloud resources. The RAD platform covers all four exam sections across project setup, IAM, networking, compute deployment, and observability.
 
 **Professional Cloud Architect (PCA)**
 The PCA certification tests the ability to design, build, and manage scalable, secure cloud solutions. RAD modules implement the infrastructure patterns described in the four official PCA exam case studies (Altostrat Media, Cymbal Retail, EHR Healthcare, KnightMotives Automotive), enabling candidates to map real deployed infrastructure to scenario-based questions across all six exam sections.
