@@ -5,7 +5,7 @@ sidebar_label: "Cloud Run"
 
 # Ghost_CloudRun Module — Configuration Guide
 
-This guide describes every configuration variable available in the `Ghost_CloudRun` module. `Ghost_CloudRun` is a **wrapper module** that combines the generic [`App_CloudRun`](../App_CloudRun/App_CloudRun_Guide.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Cloud Run (serverless).
+This guide describes every configuration variable available in the `Ghost_CloudRun` module. `Ghost_CloudRun` is a **wrapper module** that combines the generic [`App_CloudRun`](../App_CloudRun/App_CloudRun_Guide.md) infrastructure module with the `Ghost_Common` shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Cloud Run (serverless).
 
 Most configuration options in `Ghost_CloudRun` map directly to the same options in `App_CloudRun`. Where a variable is identical in behaviour, this guide references the `App_CloudRun` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Ghost** are described in full here.
 
