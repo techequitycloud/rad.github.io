@@ -973,10 +973,14 @@ These configurations will cause `terraform apply` to fail, or will prevent the C
 
 These configurations deploy without a Terraform error but will not function correctly at runtime. There is no immediate error to indicate the problem.
 
+<div className="silent-failures-table">
+
 | Feature | Variable(s) | Failure mode | Resolution |
 |---|---|---|---|
 | **Redis cache** | `enable_redis = true` + explicit `redis_host` | `REDIS_HOST` and `REDIS_PORT` environment variables are injected into the container, but the application cannot connect if no Redis service exists at the specified address. There is no Terraform error. | Provision a Cloud Memorystore instance or Redis VM before deploying, or deploy `Services_GCP` which provides a shared instance that is auto-discovered when `redis_host` is left blank. |
 | **Secret rotation** | `secret_rotation_period` | The Pub/Sub rotation notification is scheduled and fires at the configured interval, but **no secret value is actually rotated**. The notification is only a trigger — the handler that generates a new value and updates the secret must be implemented separately. | Use `enable_auto_password_rotation = true` for the database password (handled automatically by this module), or deploy a separate Cloud Function or Cloud Run Job that subscribes to the rotation Pub/Sub topic. |
+
+</div>
 
 ---
 

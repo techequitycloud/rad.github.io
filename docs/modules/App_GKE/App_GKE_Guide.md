@@ -1071,12 +1071,16 @@ These configurations will cause `terraform apply` to fail, or will prevent GKE p
 
 These configurations deploy without a Terraform error but will not function correctly at runtime. There is no immediate error to indicate the problem.
 
+<div className="silent-failures-table">
+
 | Feature | Variable(s) | Failure mode | Resolution |
 |---|---|---|---|
 | **Identity-Aware Proxy** | `enable_iap = true` with blank `iap_oauth_client_id` or `iap_oauth_client_secret` | IAP is **silently disabled** when either OAuth credential field is empty. The load balancer is created without IAP enforcement — the application is publicly accessible with no authentication gate and Terraform reports no error. | Manually create an OAuth 2.0 client in **APIs & Services → Credentials → Create Credentials → OAuth client ID** (type: Web Application) and supply the resulting client ID and secret via `iap_oauth_client_id` and `iap_oauth_client_secret` before applying. |
 | **Multi-Cluster Service** | `enable_multi_cluster_service = true` | The variable is declared but **no Kubernetes or GCP resources are created** in the current version of the module. Enabling it has no effect. | Use `Services_GCP` with `configure_cloud_service_mesh = true` for Fleet-based multi-cluster connectivity. Multi-Cluster Service support within `App_GKE` is planned for a future release. |
 | **Redis cache** | `enable_redis = true` + explicit `redis_host` | `REDIS_HOST` and `REDIS_PORT` environment variables are injected into pods, but applications cannot connect if no Redis service exists at the specified address. There is no Terraform error. | Provision a Cloud Memorystore instance or Redis VM before deploying, or deploy `Services_GCP` which provides a shared instance that is auto-discovered when `redis_host` is left blank. |
 | **Secret rotation** | `secret_rotation_period` | The Pub/Sub rotation notification is scheduled and fires at the configured interval, but no secret value is actually rotated. The notification is only a trigger — the handler that updates the secret must be implemented separately. | Use `enable_auto_password_rotation = true` for the database password, or deploy a separate handler (Cloud Function or Kubernetes CronJob) subscribing to the rotation Pub/Sub topic. |
+
+</div>
 
 ---
 
