@@ -32,7 +32,7 @@ The Wiki.js-specific defaults for this module are:
 | Variable | Wikijs_GKE Default | App_GKE Default |
 |---|---|---|
 | `module_description` | `"Wiki.js: Deploy powerful open-source wiki software on Google Kubernetes Engine (GKE)."` | `"App_GKE: A production-ready module…"` |
-| `module_documentation` | `"https://docs.techequity.cloud/docs/applications/wiki-js"` | `"https://docs.techequity.cloud/docs/applications/gke-app"` |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/wiki-js"` | `"https://docs.radmodules.dev/docs/applications/gke-app"` |
 | `module_services` | Includes GKE Autopilot, Cloud SQL, GCS Fuse, Filestore, Cloud Build, and related services | Same services, generic labels |
 
 All other Group 0 variables (`credit_cost`, `require_credit_purchases`, `enable_purge`, `public_access`, `deployment_id`, `resource_creator_identity`) share the same defaults and behaviour as `App_GKE`.

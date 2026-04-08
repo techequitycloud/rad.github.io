@@ -32,7 +32,7 @@ The behaviour of these variables is identical to `App_CloudRun`. See [App_CloudR
 | Variable | Ghost_CloudRun Default | Notes |
 |---|---|---|
 | `module_description` | `"Ghost: Deploy Ghost publishing platform on Google Cloud Run…"` | Pre-populated with Ghost-specific description. |
-| `module_documentation` | `"https://docs.techequity.cloud/docs/applications/ghost"` | Points to the Ghost documentation page. |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/ghost"` | Points to the Ghost documentation page. |
 | `module_services` | Includes Ghost-relevant services | Adds `Cloud SQL (MySQL 8.0)`, `Cloud Run Jobs`, and `SMTP Integration` to the standard list. |
 
 ---

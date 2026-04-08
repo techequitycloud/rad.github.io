@@ -31,7 +31,7 @@ The behaviour of these variables is identical to `App_GKE`. See [App_GKE Group 0
 | Variable | Ghost_GKE Default | Notes |
 |---|---|---|
 | `module_description` | `"Ghost: Deploy Ghost publishing platform on GKE Autopilot…"` | Pre-populated with Ghost-specific description. |
-| `module_documentation` | `"https://docs.techequity.cloud/docs/applications/ghost"` | Points to the Ghost documentation page. |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/ghost"` | Points to the Ghost documentation page. |
 | `module_services` | Includes Ghost-relevant services | Adds `Cloud SQL (MySQL 8.0)` and `SMTP Integration` to the standard list. |
 
 ---

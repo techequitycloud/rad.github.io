@@ -82,7 +82,7 @@ const config: Config = {
           label: 'Documentation',
         },
         {
-          href: 'https://techequity.cloud',
+          href: 'https://radmodules.dev',
           label: 'RAD Console',
           position: 'left',
           target: '_blank',
