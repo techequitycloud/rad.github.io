@@ -885,7 +885,7 @@ These configurations will cause `terraform apply` to fail, or will prevent the C
 
 | Feature | Variable(s) | Requirement |
 |---|---|---|
-| **Secret Manager references** | `secret_environment_variables` | Every secret named in the map must exist in Secret Manager **before running `terraform plan`**. Missing secrets are caught at plan time with the message: *`Secret '<name>' does not exist in project '<id>'. Create the secret in Secret Manager before running terraform plan.`* Previously this only surfaced when the Cloud Run revision failed to start. |
+| **Secret Manager references** | `secret_environment_variables` | Every secret named in the map must exist in Secret Manager **before running `terraform plan`**. Missing secrets are caught at plan time with the message: *`Secret '<name>' does not exist in project '<id>'. Create the secret in Secret Manager before running terraform plan.`*  this only surfaced when the Cloud Run revision failed to start. |
 | **Custom SQL scripts** | `enable_custom_sql_scripts = true` | The GCS bucket specified in `custom_sql_scripts_bucket` must exist and all `.sql` files must be uploaded to `custom_sql_scripts_path` before deployment. The module's own application bucket can serve as the scripts bucket, but the script files must be placed there manually before the first apply. |
 | **Database backup import** | `enable_backup_import = true` | The backup file named in `backup_file` must exist at the configured source — either the module's GCS backup bucket or a Google Drive location — before deployment. A missing file causes the import Cloud Run Job to fail immediately after it is triggered. |
 | **CI/CD pipeline** | `enable_cicd_trigger = true` | A GitHub repository must be accessible and either a GitHub Personal Access Token (scopes: `repo` and `admin:repo_hook`) or a GitHub App installation ID must be provided. Without valid credentials, the Cloud Build GitHub connection cannot be established and `terraform apply` will fail. |
@@ -917,7 +917,7 @@ These features deploy successfully but require a manual step outside Terraform b
 
 ---
 
-### Previously Manual — Now Self-Provisioned
+### Now Self-Provisioned
 
 The following were documented as hard prerequisites in earlier versions of this module. They are now handled automatically and require no pre-existing resources.
 
