@@ -5,6 +5,15 @@ sidebar_label: "GKE"
 
 # App_GKE Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/App_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/App_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/App_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 This guide describes every configuration variable available in the `App_GKE` module, organized into functional groups. For each variable it explains the available options, the implications of each choice, and how to validate the resulting configuration in the Google Cloud Console or using the `gcloud` CLI.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.

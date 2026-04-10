@@ -5,6 +5,15 @@ sidebar_label: "Cloud Run"
 
 # Ghost_CloudRun Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_CloudRun.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_CloudRun.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
 This guide describes every configuration variable available in the `Ghost_CloudRun` module. `Ghost_CloudRun` is a **wrapper module** built on the generic [`App_CloudRun`](../App_CloudRun/App_CloudRun_Guide.md) infrastructure module to deploy the [Ghost](https://ghost.org/) publishing platform on Google Cloud Run (serverless).
 
 Most configuration options in `Ghost_CloudRun` map directly to the same options in `App_CloudRun`. Where a variable is identical in behaviour, this guide references the `App_CloudRun` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Ghost** are described in full here.

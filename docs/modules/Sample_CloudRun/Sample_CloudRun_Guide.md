@@ -5,6 +5,15 @@ sidebar_label: "Cloud Run"
 
 # Sample_CloudRun Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Sample_CloudRun.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Sample_CloudRun.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Sample_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
 `Sample_CloudRun` is a **wrapper module** that sits on top of [`App_CloudRun`](../App_CloudRun/App_CloudRun_Guide.md). It deploys a pre-configured reference Flask application (Python 3.11, PostgreSQL 15, optional Redis, optional NFS) on Cloud Run. Its purpose is to serve as a working example of how to build a custom application module on top of `App_CloudRun`.
 
 Most configuration variables in `Sample_CloudRun` are passed through unchanged to `App_CloudRun`. For the meaning, options, validation steps, and `gcloud` CLI commands for any variable that appears in `App_CloudRun`, refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md). This guide documents only what is **unique to `Sample_CloudRun`**: its layered architecture, the pre-configured application it ships, and the specific behaviours and variable differences it introduces on top of `App_CloudRun`.

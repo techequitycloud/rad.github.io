@@ -5,6 +5,15 @@ sidebar_label: "GCP Services"
 
 # Services_GCP Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/GCP_Services.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/GCP_Services.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/GCP_Services.pdf" target="_blank">View Presentation (PDF)</a>
+
 This guide describes every configuration variable available in the `Services_GCP` module, organized into functional groups. For each variable it explains the available options, the implications of each choice, and how to validate the resulting configuration in the Google Cloud Console or using the `gcloud` CLI.
 
 ---

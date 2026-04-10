@@ -5,6 +5,15 @@ sidebar_label: "Cloud Run"
 
 # Directus_CloudRun Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Directus_CloudRun.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Directus_CloudRun.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Directus_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
 `Directus_CloudRun` is a wrapper module that deploys [Directus](https://directus.io/) — an open-source headless CMS and data API platform — on Google Cloud Run. It composes two underlying modules:
 
 - **[App_CloudRun](../App_CloudRun/App_CloudRun_Guide.md)** — provides all Cloud Run infrastructure: service configuration, scaling, networking, security, CI/CD, storage, observability, and backup.

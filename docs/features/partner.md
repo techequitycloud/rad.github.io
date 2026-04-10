@@ -3,13 +3,7 @@ title: Partner Features
 slug: /features/partners
 ---
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
-
 <img src="https://storage.googleapis.com/rad-public-2b65/features/partner_features.png" alt="Partner Features Infographic" />
-
-<br/>
-
-<AudioPlayer src="https://storage.googleapis.com/rad-public-2b65/features/partner_features.m4a" />
 
 <br/>
 

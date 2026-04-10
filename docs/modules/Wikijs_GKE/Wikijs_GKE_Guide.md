@@ -5,6 +5,15 @@ sidebar_label: "GKE"
 
 # Wikijs_GKE Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 `Wikijs_GKE` is a pre-configured wrapper around the [`App_GKE`](../App_GKE/App_GKE_Guide.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Kubernetes Engine (GKE) Autopilot.
 
 Every variable in this module is passed through to `App_GKE`. The wrapper's role is to supply Wiki.js-appropriate defaults and to call the `Wikijs_Common` sub-module, which generates the application's Docker build context, database initialisation scripts, and storage configuration. You configure this module exactly as you would `App_GKE`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_GKE`, or that are unique to this wrapper.

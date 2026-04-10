@@ -5,6 +5,15 @@ sidebar_label: "Cloud Run"
 
 # OpenEMR_CloudRun Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_CloudRun.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_CloudRun.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
 OpenEMR is a leading open-source electronic health records (EHR) and medical practice management platform used by clinics, hospitals, and healthcare providers worldwide. This module deploys OpenEMR on **Google Cloud Run Gen 2** using a custom container image built on Alpine 3.20 with Apache and PHP 8.3 FPM, backed by a managed Cloud SQL MySQL 8.0 instance connected via Unix socket, and a Filestore NFS volume for persistent patient document and sites directory storage.
 
 `OpenEMR_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds OpenEMR-specific application configuration, initialisation jobs, health probes, and runtime defaults on top.

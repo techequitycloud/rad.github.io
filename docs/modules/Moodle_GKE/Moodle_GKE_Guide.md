@@ -5,6 +5,15 @@ sidebar_label: "GKE"
 
 # Moodle_GKE Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 Moodle is the world's most popular open-source Learning Management System (LMS), used by educational institutions, corporations, and online learning platforms worldwide. This module deploys Moodle on **GKE Autopilot** using a custom PHP 8.3/Apache container, backed by a managed Cloud SQL PostgreSQL instance and shared NFS storage for course materials.
 
 `Moodle_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Moodle-specific application configuration, an automated cron Cloud Scheduler job, and database initialisation on top.

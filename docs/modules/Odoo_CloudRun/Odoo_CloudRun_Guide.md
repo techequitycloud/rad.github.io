@@ -5,6 +5,15 @@ sidebar_label: "Cloud Run"
 
 # Odoo_CloudRun Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Odoo_CloudRun.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Odoo_CloudRun.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Odoo_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
 Odoo is a comprehensive open-source ERP platform covering CRM, accounting, inventory, manufacturing, HR, eCommerce, and more. This module deploys Odoo Community Edition on **Google Cloud Run** using a custom container image built from the official Odoo nightly packages, backed by a managed Cloud SQL PostgreSQL instance and a Filestore NFS volume for shared file storage.
 
 `Odoo_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Odoo-specific application configuration, initialisation jobs, and runtime defaults on top.
