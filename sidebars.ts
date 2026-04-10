@@ -146,6 +146,13 @@ const sidebars: SidebarsConfig = {
             { type: 'doc', id: 'modules/Wordpress_GKE/Wordpress_GKE_Guide', label: 'GKE' },
           ],
         },
+        {
+          type: 'category',
+          label: 'GCP Services',
+          items: [
+            { type: 'doc', id: 'modules/GCP_Services/GCP_Services_Guide', label: 'GCP Services Guide' },
+          ],
+        },
       ],
     },
     {
