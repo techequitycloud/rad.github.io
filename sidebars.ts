@@ -148,7 +148,7 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: 'category',
-          label: 'GCP Services',
+          label: 'Foundation',
           items: [
             { type: 'doc', id: 'modules/GCP_Services/GCP_Services_Guide', label: 'GCP Services Guide' },
           ],
