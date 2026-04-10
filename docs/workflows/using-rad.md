@@ -1,4 +1,3 @@
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Deploying with RAD
 
@@ -10,8 +9,6 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 <br/>
 
 <a href="https://storage.googleapis.com/rad-public-2b65/modules/Using_RAD.pdf" target="_blank">View Presentation (PDF)</a>
-
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.m4a" title="Using RAD Audio" />
 
 ## 1. Introduction
 

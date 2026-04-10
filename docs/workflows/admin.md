@@ -1,10 +1,7 @@
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Tutorial: Administrator Workflow
 
 <img src="https://storage.googleapis.com/rad-public-2b65/workflows/admin_workflow.png" alt="Admin Workflow" style={{marginBottom: '20px'}} />
-
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflows/admin_workflow.m4a" title="Admin Workflow Audio" />
 
 <video width="100%" controls style={{marginTop: '20px'}}>
   <source src="https://storage.googleapis.com/rad-public-2b65/workflows/admin_workflow.mp4" type="video/mp4" />
