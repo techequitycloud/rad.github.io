@@ -13,7 +13,7 @@ These variables describe the module to the platform catalogue and control platfo
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
 | `module_description` | *(long string)* | Any string | Human-readable description of the module's purpose, displayed in the platform catalogue. The default describes the foundational GCP infrastructure this module provisions. Change only when forking or white-labelling the module. |
-| `module_documentation` | `'https://docs.techequity.cloud/docs/applications/gcp-services'` | Valid URL | URL shown as a help link in the platform UI. Points to the external documentation for this module. Update if you host your own documentation. |
+| `module_documentation` | `'https://docs.radmodules.dev/docs/applications/gcp-services'` | Valid URL | URL shown as a help link in the platform UI. Points to the external documentation for this module. Update if you host your own documentation. |
 | `module_dependency` | `['GCP_Project']` | List of module names | Declares which platform modules must be deployed before this one. The platform uses this to enforce deployment ordering. `GCP_Project` must exist before `Services_GCP` can provision resources. Metadata only — changing this does not alter any GCP resource. |
 | `module_services` | `['VPC Networking', 'Cloud SQL', 'Redis Cache', 'Cloud IAM', 'NFS Storage']` | List of strings | Informational list of GCP services enabled or consumed by this module, shown in the platform catalogue. No operational effect — changing this does not enable or disable any GCP API or resource. |
 | `credit_cost` | `100` | Positive integer | Number of platform credits deducted when a deployment is created. Set by the platform administrator. Metadata only. |
