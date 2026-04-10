@@ -5,6 +5,15 @@ sidebar_label: "GKE"
 
 # Ghost_GKE Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 This guide describes every configuration variable available in the `Ghost_GKE` module. `Ghost_GKE` is a **wrapper module** built on the generic [`App_GKE`](../App_GKE/App_GKE_Guide.md) infrastructure module to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Ghost_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Ghost** are described in full here.

@@ -5,6 +5,15 @@ sidebar_label: "GKE"
 
 # Cyclos_GKE Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 Cyclos is a professional banking and payment system designed for microfinance institutions, credit unions, complementary currency schemes, and community banks. This module deploys Cyclos on **GKE Autopilot** using the official `cyclos/cyclos` container image, backed by a managed Cloud SQL PostgreSQL instance.
 
 `Cyclos_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Cyclos-specific application configuration on top.

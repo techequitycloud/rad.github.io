@@ -5,6 +5,15 @@ sidebar_label: "Cloud Run"
 
 # N8N_CloudRun Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRuN.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRun.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
 n8n is an open-source workflow automation platform that lets you connect services, run logic, and build automated pipelines through a visual node-based interface. This module deploys n8n on **Google Cloud Run** with a managed PostgreSQL database and GCS-backed storage persistence.
 
 `N8N_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds n8n-specific application configuration on top.

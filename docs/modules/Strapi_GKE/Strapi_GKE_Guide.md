@@ -5,6 +5,15 @@ sidebar_label: "GKE"
 
 # Strapi_GKE Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 Strapi is an open-source headless CMS that gives developers the freedom to choose their favourite tools and frameworks while enabling content editors to manage their content independently. This module deploys Strapi on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL instance, a Cloud Filestore NFS volume for media uploads, and a GCS bucket for object storage.
 
 `Strapi_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Strapi-specific application configuration and secret management on top.

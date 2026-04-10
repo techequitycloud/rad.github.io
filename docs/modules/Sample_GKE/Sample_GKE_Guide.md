@@ -5,6 +5,15 @@ sidebar_label: "GKE"
 
 # Sample_GKE Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Sample_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Sample_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Sample_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 `Sample_GKE` is a **wrapper module** that sits on top of [`App_GKE`](../App_GKE/App_GKE_Guide.md). It deploys a pre-configured reference Flask application (Python 3.11, PostgreSQL 15, optional Redis, optional NFS) on GKE Autopilot. Its purpose is to serve as a working example of how to build a custom application module on top of `App_GKE`.
 
 Most configuration variables in `Sample_GKE` are passed through unchanged to `App_GKE`. For the meaning, options, validation steps, and `gcloud` CLI commands for any variable that appears in `App_GKE`, refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE_Guide.md). This guide documents only what is **unique to `Sample_GKE`**: its layered architecture, the pre-configured application it ships, and the specific behaviours it imposes on top of `App_GKE`.

@@ -5,6 +5,15 @@ sidebar_label: "GKE"
 
 # Directus_GKE Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Directus_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Directus_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Directus_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 `Directus_GKE` is a wrapper module that deploys [Directus](https://directus.io/) — an open-source headless CMS and data API platform — on Google Kubernetes Engine (GKE) Autopilot. It composes two underlying modules:
 
 - **[App_GKE](../App_GKE/App_GKE_Guide.md)** — provides all GKE infrastructure: cluster targeting, Kubernetes workloads, networking, security, CI/CD, storage, observability, and backup.

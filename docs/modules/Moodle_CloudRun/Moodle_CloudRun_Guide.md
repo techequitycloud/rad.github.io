@@ -5,6 +5,15 @@ sidebar_label: "Cloud Run"
 
 # Moodle_CloudRun Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_CloudRun.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_CloudRun.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
 Moodle is the world's most popular open-source Learning Management System (LMS), used by educational institutions, corporations, and online learning platforms worldwide. This module deploys Moodle on **Google Cloud Run** using a custom PHP 8.3/Apache container, backed by a managed Cloud SQL PostgreSQL instance and shared NFS storage for course materials.
 
 `Moodle_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Moodle-specific application configuration, an automated cron Cloud Scheduler job, and database initialisation on top.

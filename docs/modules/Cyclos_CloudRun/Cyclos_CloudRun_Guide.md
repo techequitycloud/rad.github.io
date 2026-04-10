@@ -5,6 +5,15 @@ sidebar_label: "Cloud Run"
 
 # Cyclos_CloudRun Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_CloudRun.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_CloudRun.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
 Cyclos is a professional banking and payment system designed for microfinance institutions, credit unions, complementary currency schemes, and community banks. This module deploys Cyclos on **Google Cloud Run** using the official `cyclos/cyclos` container image, backed by a managed Cloud SQL PostgreSQL instance.
 
 `Cyclos_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Cyclos-specific application configuration on top.

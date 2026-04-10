@@ -5,6 +5,15 @@ sidebar_label: "GKE"
 
 # N8N_GKE Module — Configuration Guide
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/N8N_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/N8N_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 n8n is an open-source workflow automation platform that lets you connect services, run logic, and build automated pipelines through a visual node-based interface. This module deploys n8n on **GKE Autopilot** with a managed PostgreSQL database, GCS-backed storage persistence, and optional NFS for shared volumes.
 
 `N8N_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS, secrets, CI/CD) and adds n8n-specific application configuration on top.

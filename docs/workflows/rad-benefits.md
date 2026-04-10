@@ -5,6 +5,15 @@ sidebar_label: "RAD Benefits"
 
 # RAD Platform Benefits
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/RAD_Benefits.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/RAD_Benefits.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/RAD_Benefits.pdf" target="_blank">View Presentation (PDF)</a>
+
 ## Overview
 
 The Rapid Application Deployment (RAD) platform bridges the gap between theoretical cloud knowledge and the hands-on expertise that professional roles — and Google Cloud certifications — demand. Rather than reading about infrastructure, you configure and deploy it: real VPC networks, real Cloud SQL instances, real GKE clusters, real Cloud Run services — all provisioned into your own Google Cloud project in minutes.
