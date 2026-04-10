@@ -5,7 +5,7 @@ sidebar_label: "Cloud Run"
 
 # N8N_CloudRun Module — Configuration Guide
 
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRuN.png">
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRun.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRun.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
