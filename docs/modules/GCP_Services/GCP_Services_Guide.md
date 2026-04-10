@@ -1,6 +1,6 @@
 ---
 title: "GCP Services Configuration Guide"
-sidebar_label: "GCP Services Guide"
+sidebar_label: "GCP Services"
 ---
 
 # Services_GCP Module — Configuration Guide
