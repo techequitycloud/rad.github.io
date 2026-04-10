@@ -7,47 +7,6 @@ sidebar_label: "GCP Services"
 
 This guide describes every configuration variable available in the `Services_GCP` module, organized into functional groups. For each variable it explains the available options, the implications of each choice, and how to validate the resulting configuration in the Google Cloud Console or using the `gcloud` CLI.
 
-> **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
-
----
-
-## Group 0: Module Metadata & Configuration
-
-These variables describe the module to the platform catalogue and control platform-level behaviours such as credit billing, resource purge protection, and wrapper-module integration. They are *platform-managed* and should not be changed unless you are customising or extending the module itself.
-
-| Variable | Default | Options / Format | Description & Implications |
-|---|---|---|---|
-| `module_description` | *(long string)* | Any string | Human-readable description of the module's purpose, displayed in the platform catalogue. The default describes the foundational GCP infrastructure this module provisions. Change only when forking or white-labelling the module. |
-| `module_documentation` | `'https://docs.techequity.cloud/docs/applications/gcp-services'` | Valid URL | URL shown as a help link in the platform UI. Points to the external documentation for this module. Update if you host your own documentation. |
-| `module_dependency` | `['GCP_Project']` | List of module names | Declares which platform modules must be deployed before this one. The platform uses this to enforce deployment ordering. `GCP_Project` must exist before `Services_GCP` can provision resources. Metadata only — changing this does not alter any GCP resource. |
-| `module_services` | `['VPC Networking', 'Cloud SQL', 'Redis Cache', 'Cloud IAM', 'NFS Storage']` | List of strings | Informational list of GCP services enabled or consumed by this module, shown in the platform catalogue. No operational effect — changing this does not enable or disable any GCP API or resource. |
-| `credit_cost` | `100` | Positive integer | Number of platform credits deducted when a deployment is created. Set by the platform administrator. Metadata only. |
-| `require_credit_purchases` | `true` | `true` / `false` | Determines whether purchased credits (credits bought by the user or assigned via a subscription plan) are consumed for this deployment, as opposed to free credits which are awarded at no charge. When `true`, the platform deducts from the user's purchased credit balance. When `false`, the platform uses free credits instead. |
-| `enable_purge` | `true` | `true` / `false` | Controls whether the deployment configuration can be removed from the portal. When `true`, a user can delete the deployment record from the portal without affecting the underlying GCP resources — the VPC, Cloud SQL instances, Redis, and Filestore remain intact. This is useful when resources were initially provisioned via the portal but the team wishes to manage them independently going forward. When `false`, the portal will not allow the configuration to be removed. **This setting does not destroy GCP resources.** |
-| `public_access` | `true` | `true` / `false` | When `true`, the module is listed in the public platform catalogue and any user can deploy it. When `false`, the module is visible only to platform administrators and the module owner or publisher. |
-| `enable_services` | `true` | `true` / `false` | Enables the required Google Cloud APIs in the target project when set to `true`. Set to `false` only if all required APIs are already enabled and managed externally. **Disabling this may cause downstream resource provisioning to fail** if the APIs are not present — only use this option in environments where API enablement is governed separately (e.g. via an organisation policy or a separate Terraform root module). |
-| `resource_creator_identity` | `'rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com'` | Service account email | The service account used by Terraform to create and manage GCP resources in the destination project. Must be granted the Owner role (ideally time-limited and conditional) in the target project. For enhanced security in production environments, replace this with a project-scoped service account that has been granted only the permissions required by this module, rather than Owner. |
-
-### Validating Group 0 Settings
-
-These variables do not create GCP resources directly, so there is nothing to validate in the console. The effects of `enable_purge` and `public_access` are enforced by the platform layer, not by GCP.
-
-To confirm the GCP APIs this module relies on are active in the project:
-
-**Google Cloud Console:** Navigate to **APIs & Services → Enabled APIs & Services** and verify that the core services listed in `module_services` (e.g. Compute Engine API, Cloud SQL Admin API, Redis API, Filestore API) are all enabled.
-
-**gcloud CLI:**
-```bash
-# List all currently enabled APIs in the project
-gcloud services list --enabled --project=PROJECT_ID \
-  --format="table(config.name,config.title)"
-
-# Check a specific API, e.g. Cloud SQL Admin
-gcloud services describe sqladmin.googleapis.com \
-  --project=PROJECT_ID \
-  --format="table(config.title,state)"
-```
-
 ---
 
 ## Group 1: Project & Identity
