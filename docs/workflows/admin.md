@@ -3,10 +3,14 @@
 
 <img src="https://storage.googleapis.com/rad-public-2b65/workflows/admin_workflow.png" alt="Admin Workflow" style={{marginBottom: '20px'}} />
 
-<video width="100%" controls style={{marginTop: '20px'}}>
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/workflows/admin_workflow.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/workflows/admin_workflow.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/workflows/admin_workflow.pdf" target="_blank" rel="noopener noreferrer">Download Workflow PDF</a>
 
 ## 1. Introduction
 This tutorial covers the essential tasks for setting up a new RAD platform instance. You will configure global settings, connect the platform repository, publish modules, and configure monetization settings like subscription tiers and user credits.

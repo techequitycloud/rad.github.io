@@ -3,10 +3,14 @@
 
 <img src="https://storage.googleapis.com/rad-public-2b65/guides/support_guide.png" alt="Support Guide" style={{marginBottom: '20px'}} />
 
-<video width="100%" controls style={{marginTop: '20px'}}>
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/guides/support_guide.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/guides/support_guide.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/guides/support_guide.pdf" target="_blank" rel="noopener noreferrer">Download Guide PDF</a>
 
 ## 1. Introduction
 

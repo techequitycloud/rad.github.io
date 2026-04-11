@@ -215,6 +215,62 @@ const sidebars: SidebarsConfig = {
         },
       ],
     },
+    {
+      type: 'category',
+      label: 'Platform Guides',
+      items: [
+        {
+          type: 'category',
+          label: 'Feature Guides',
+          items: [
+            { type: 'doc', id: 'features/user', label: 'User' },
+            { type: 'doc', id: 'features/partner', label: 'Partner' },
+            { type: 'doc', id: 'features/agent', label: 'Agent' },
+            { type: 'doc', id: 'features/finance', label: 'Finance' },
+            { type: 'doc', id: 'features/support', label: 'Support' },
+            { type: 'doc', id: 'features/admin', label: 'Admin' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Workflow Guides',
+          items: [
+            { type: 'doc', id: 'workflows/user', label: 'User' },
+            { type: 'doc', id: 'workflows/partner', label: 'Partner' },
+            { type: 'doc', id: 'workflows/agent', label: 'Agent' },
+            { type: 'doc', id: 'workflows/finance', label: 'Finance' },
+            { type: 'doc', id: 'workflows/support', label: 'Support' },
+            { type: 'doc', id: 'workflows/admin', label: 'Admin' },
+            { type: 'doc', id: 'workflows/roi', label: 'ROI' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'User Guides',
+          items: [
+            { type: 'doc', id: 'guides/user', label: 'User' },
+            { type: 'doc', id: 'guides/partner', label: 'Partner' },
+            { type: 'doc', id: 'guides/agent', label: 'Agent' },
+            { type: 'doc', id: 'guides/finance', label: 'Finance' },
+            { type: 'doc', id: 'guides/support', label: 'Support' },
+            { type: 'doc', id: 'guides/admin', label: 'Admin' },
+            { type: 'doc', id: 'guides/roi', label: 'ROI' },
+          ],
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Platform Demos',
+      items: [
+        { type: 'doc', id: 'demos/user', label: 'User' },
+        { type: 'doc', id: 'demos/partner', label: 'Partner' },
+        { type: 'doc', id: 'demos/support', label: 'Support' },
+        { type: 'doc', id: 'demos/agent', label: 'Agent' },
+        { type: 'doc', id: 'demos/finance', label: 'Finance' },
+        { type: 'doc', id: 'demos/admin', label: 'Admin' },
+      ],
+    },
   ],
 };
 
