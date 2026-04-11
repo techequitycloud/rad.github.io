@@ -3,7 +3,7 @@ title: "N8N Cloud Run Configuration Guide"
 sidebar_label: "Cloud Run"
 ---
 
-# N8N_CloudRun Module — Configuration Guide
+# N8N CloudRun Module
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRun.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRun.mp4" type="video/mp4" />
@@ -16,7 +16,7 @@ sidebar_label: "Cloud Run"
 
 n8n is an open-source workflow automation platform that lets you connect services, run logic, and build automated pipelines through a visual node-based interface. This module deploys n8n on **Google Cloud Run** with a managed PostgreSQL database and GCS-backed storage persistence.
 
-`N8N_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds n8n-specific application configuration on top.
+`N8N CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds n8n-specific application configuration on top.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -24,36 +24,36 @@ n8n is an open-source workflow automation platform that lets you connect service
 
 ## How This Guide Is Structured
 
-This guide documents only the variables that are **unique to `N8N_CloudRun`** or that have **n8n-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, CI/CD, GCS storage, backup, custom SQL, access and networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md).
+This guide documents only the variables that are **unique to `N8N CloudRun`** or that have **n8n-specific defaults** that differ from the `App CloudRun` base module. For all other variables — project identity, CI/CD, GCS storage, backup, custom SQL, access and networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md).
 
-**Variables fully covered by the App_CloudRun guide:**
+**Variables fully covered by the App CloudRun guide:**
 
 | Configuration Area | App_CloudRun_Guide Section | N8N-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | Group 0 | Different defaults for `module_description` and `module_documentation`. |
-| Project & Identity | Group 1 | Refer to base App_CloudRun module documentation. |
+| Project & Identity | Group 1 | Refer to base App CloudRun module documentation. |
 | Application Identity | Group 2 | See [N8N Application Identity](#n8n-application-identity) below for n8n-specific defaults. |
 | Runtime & Scaling | Group 3 | See [N8N Runtime Configuration](#n8n-runtime-configuration) below. `container_port` defaults to `5678`. `cpu_limit` and `memory_limit` are top-level variables. |
 | Environment Variables & Secrets | Group 4 | See [N8N Environment Variables](#n8n-environment-variables) below for SMTP defaults. |
 | Observability & Health | Group 5 | See [N8N Health Probes](#n8n-health-probes) below for n8n-specific probe defaults. |
-| Jobs & Scheduled Tasks | Group 6 | Refer to base App_CloudRun module documentation. |
-| CI/CD & GitHub Integration | Group 7 | Refer to base App_CloudRun module documentation. |
+| Jobs & Scheduled Tasks | Group 6 | Refer to base App CloudRun module documentation. |
+| CI/CD & GitHub Integration | Group 7 | Refer to base App CloudRun module documentation. |
 | Storage — NFS | Group 8 | NFS is **enabled by default** (`enable_nfs = true`). See [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| Storage — GCS | Group 9 | Refer to base App_CloudRun module documentation. |
+| Storage — GCS | Group 9 | Refer to base App CloudRun module documentation. |
 | Redis Cache | Group 10 | See [Redis Configuration](#redis-configuration) below — n8n adds `enable_redis` and `redis_host` toggles not present in the base module. |
 | Database Backend | Group 11 | See [N8N Database Configuration](#n8n-database-configuration) below. `db_name` and `db_user` replace `application_database_name` and `application_database_user`. |
-| Backup & Maintenance | Group 12 | Refer to base App_CloudRun module documentation. |
-| Custom Initialisation & SQL | Group 13 | Refer to base App_CloudRun module documentation. |
-| Access & Networking | Group 14 | Refer to base App_CloudRun module documentation. |
-| Identity-Aware Proxy | Group 15 | Refer to base App_CloudRun module documentation. Note: enabling IAP blocks public webhook endpoints — n8n webhooks will be inaccessible to external services when IAP is active. |
-| Cloud Armor & CDN | Group 16 | Refer to base App_CloudRun module documentation. |
-| VPC Service Controls | Group 17 | Refer to base App_CloudRun module documentation. |
+| Backup & Maintenance | Group 12 | Refer to base App CloudRun module documentation. |
+| Custom Initialisation & SQL | Group 13 | Refer to base App CloudRun module documentation. |
+| Access & Networking | Group 14 | Refer to base App CloudRun module documentation. |
+| Identity-Aware Proxy | Group 15 | Refer to base App CloudRun module documentation. Note: enabling IAP blocks public webhook endpoints — n8n webhooks will be inaccessible to external services when IAP is active. |
+| Cloud Armor & CDN | Group 16 | Refer to base App CloudRun module documentation. |
+| VPC Service Controls | Group 17 | Refer to base App CloudRun module documentation. |
 
 ---
 
 ## Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `N8N_CloudRun` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
+The following behaviours are applied automatically by `N8N CloudRun` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
 | Behaviour | Detail |
 |---|---|
@@ -61,7 +61,7 @@ The following behaviours are applied automatically by `N8N_CloudRun` regardless 
 | **SMTP password auto-generated** | A placeholder SMTP password is generated and stored in Secret Manager as `N8N_SMTP_PASS`. Replace the secret value with your real SMTP credentials before enabling email sending. |
 | **n8n port fixed at 5678** | `N8N_PORT=5678` is injected automatically. The `container_port` variable defaults to `5678` to match. Do not override `N8N_PORT` in `environment_variables`. |
 | **Database type set to PostgreSQL** | `DB_TYPE=postgresdb` is injected automatically. n8n requires PostgreSQL — do not change `database_type` to MySQL or SQL Server. |
-| **Database connection variables injected** | `DB_POSTGRESDB_HOST`, `DB_POSTGRESDB_PORT`, `DB_POSTGRESDB_DATABASE`, `DB_POSTGRESDB_USER`, and `DB_POSTGRESDB_PASSWORD` are injected automatically from the Cloud SQL instance provisioned by App_CloudRun. The n8n container connects via the Cloud SQL Auth Proxy Unix socket. |
+| **Database connection variables injected** | `DB_POSTGRESDB_HOST`, `DB_POSTGRESDB_PORT`, `DB_POSTGRESDB_DATABASE`, `DB_POSTGRESDB_USER`, and `DB_POSTGRESDB_PASSWORD` are injected automatically from the Cloud SQL instance provisioned by App CloudRun. The n8n container connects via the Cloud SQL Auth Proxy Unix socket. |
 | **Webhook and editor URLs auto-set** | `WEBHOOK_URL` and `N8N_EDITOR_BASE_URL` are set to the predicted Cloud Run service URL, computed from the project number and deployment region before the service is created. This allows n8n webhooks to be correctly advertised in the UI without a chicken-and-egg dependency on the deployed service URL. |
 | **GCS persistence for workflow data** | n8n stores workflow binary data in a GCS Fuse volume. This persists data across container restarts and new revisions. |
 | **Database initialisation job** | A Cloud Run Job (`db-init`) is created automatically to provision the `n8n_db` database and `n8n_user` PostgreSQL user before the n8n container starts. |
@@ -70,7 +70,7 @@ The following behaviours are applied automatically by `N8N_CloudRun` regardless 
 
 ## N8N Application Identity
 
-These variables control how the n8n deployment is named and described. They correspond to Group 2 variables in App_CloudRun but carry n8n-specific defaults.
+These variables control how the n8n deployment is named and described. They correspond to Group 2 variables in App CloudRun but carry n8n-specific defaults.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -105,9 +105,9 @@ n8n listens on port 5678 and exposes `cpu_limit` and `memory_limit` as **dedicat
 
 > **Note on `container_resources`:** The full `container_resources` object (as documented in [App_CloudRun_Guide Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling)) is also available. If `container_resources` is set explicitly in your `tfvars`, it takes precedence over the top-level `cpu_limit` and `memory_limit` variables. Use `container_resources` when you also need to set `cpu_request` or `mem_request`.
 
-**N8N-specific runtime defaults that differ from App_CloudRun:**
+**N8N-specific runtime defaults that differ from App CloudRun:**
 
-| Variable | App_CloudRun Default | N8N_CloudRun Default | Reason |
+| Variable | App CloudRun Default | N8N CloudRun Default | Reason |
 |---|---|---|---|
 | `container_port` | `8080` | `5678` | n8n's native port. |
 | `cpu_limit` | `"1000m"` | `"2000m"` | Workflow automation is CPU-intensive for concurrent node execution. |
@@ -129,7 +129,7 @@ gcloud run services describe n8n \
 
 ## N8N Health Probes
 
-The `N8N_CloudRun` module uses **flat probe objects** (`startup_probe` and `liveness_probe`) with n8n-specific defaults. These differ from the `startup_probe_config` / `health_check_config` structured objects documented in [App_CloudRun_Guide Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health).
+The `N8N CloudRun` module uses **flat probe objects** (`startup_probe` and `liveness_probe`) with n8n-specific defaults. These differ from the `startup_probe_config` / `health_check_config` structured objects documented in [App_CloudRun_Guide Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health).
 
 | Variable | Default | Description & Implications |
 |---|---|---|
@@ -142,12 +142,12 @@ The `N8N_CloudRun` module uses **flat probe objects** (`startup_probe` and `live
 
 ## Redis Configuration
 
-These variables are **unique to `N8N_CloudRun`** at the module level. The base `App_CloudRun` module accepts `redis_auth` but does not have the `enable_redis`, `redis_host`, or `redis_port` toggles. Redis is required for n8n **queue mode**, which enables reliable multi-instance workflow execution.
+These variables are **unique to `N8N CloudRun`** at the module level. The base `App CloudRun` module accepts `redis_auth` but does not have the `enable_redis`, `redis_host`, or `redis_port` toggles. Redis is required for n8n **queue mode**, which enables reliable multi-instance workflow execution.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `enable_redis` | `true` | `true` / `false` | Enables Redis as the n8n queue mode backend by injecting `REDIS_HOST` and `REDIS_PORT` into the Cloud Run service environment. When `true` and `redis_host` is empty, the module defaults to the NFS server IP auto-discovered from `Services_GCP`. **Required when `max_instance_count > 1`** to avoid workflow state conflicts between instances. |
-| `redis_host` | `""` *(auto-discovered)* | Hostname or IP, e.g. `"10.0.0.5"`, `"redis.internal"` | Hostname or IP of the Redis server. Leave blank to use the NFS server IP auto-discovered from `Services_GCP`. Override with a dedicated Redis/Memorystore instance endpoint for production deployments requiring higher availability or AUTH. |
+| `enable_redis` | `true` | `true` / `false` | Enables Redis as the n8n queue mode backend by injecting `REDIS_HOST` and `REDIS_PORT` into the Cloud Run service environment. When `true` and `redis_host` is empty, the module defaults to the NFS server IP auto-discovered from `GCP Services`. **Required when `max_instance_count > 1`** to avoid workflow state conflicts between instances. |
+| `redis_host` | `""` *(auto-discovered)* | Hostname or IP, e.g. `"10.0.0.5"`, `"redis.internal"` | Hostname or IP of the Redis server. Leave blank to use the NFS server IP auto-discovered from `GCP Services`. Override with a dedicated Redis/Memorystore instance endpoint for production deployments requiring higher availability or AUTH. |
 | `redis_port` | `"6379"` | Port string, e.g. `"6379"` | TCP port of the Redis server. Must match the port configured on the Redis instance. |
 | `redis_auth` | `""` | Sensitive string | Authentication password for the Redis server. Leave empty for unauthenticated Redis. For Google Cloud Memorystore with AUTH enabled, set this to the instance auth string. Treated as sensitive — never stored in Terraform state in plaintext. |
 
@@ -168,7 +168,7 @@ gcloud run services describe n8n \
 
 n8n requires PostgreSQL. This module exposes `db_name` and `db_user` as **short top-level variables** in place of the `application_database_name` and `application_database_user` variables documented in [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend).
 
-All other database variables (`database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, `secret_rotation_period`, etc.) behave identically to the App_CloudRun equivalents — refer to [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend) for their documentation.
+All other database variables (`database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, `secret_rotation_period`, etc.) behave identically to the App CloudRun equivalents — refer to [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend) for their documentation.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -195,7 +195,7 @@ gcloud run services describe n8n \
 
 The `environment_variables` variable (documented in [App_CloudRun_Guide Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets)) has n8n-specific defaults that configure email delivery. These are plain-text values — for the SMTP password use `secret_environment_variables`.
 
-**Default `environment_variables` in N8N_CloudRun:**
+**Default `environment_variables` in N8N CloudRun:**
 
 ```hcl
 environment_variables = {

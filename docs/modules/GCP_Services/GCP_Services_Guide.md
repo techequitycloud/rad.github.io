@@ -3,7 +3,7 @@ title: "GCP Services Configuration Guide"
 sidebar_label: "GCP Services"
 ---
 
-# Services_GCP Module — Configuration Guide
+# GCP Services Module
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/GCP_Services.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/GCP_Services.mp4" type="video/mp4" />
@@ -14,13 +14,13 @@ sidebar_label: "GCP Services"
 
 <a href="https://storage.googleapis.com/rad-public-2b65/modules/GCP_Services.pdf" target="_blank">View Presentation (PDF)</a>
 
-This guide describes every configuration variable available in the `Services_GCP` module, organized into functional groups. For each variable it explains the available options, the implications of each choice, and how to validate the resulting configuration in the Google Cloud Console or using the `gcloud` CLI.
+This guide describes every configuration variable available in the `GCP Services` module, organized into functional groups. For each variable it explains the available options, the implications of each choice, and how to validate the resulting configuration in the Google Cloud Console or using the `gcloud` CLI.
 
 ---
 
 ## Group 1: Project & Identity
 
-These variables establish the GCP project context and the shared identity settings that apply across all resources created by the module. They must be configured correctly before any deployment can succeed. `project_id` is the only strictly required variable in the module — every resource provisioned by `Services_GCP` is scoped to this project. `support_users` and `resource_labels` are optional but strongly recommended for production deployments to ensure operational visibility and consistent resource tagging.
+These variables establish the GCP project context and the shared identity settings that apply across all resources created by the module. They must be configured correctly before any deployment can succeed. `project_id` is the only strictly required variable in the module — every resource provisioned by `GCP Services` is scoped to this project. `support_users` and `resource_labels` are optional but strongly recommended for production deployments to ensure operational visibility and consistent resource tagging.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -244,13 +244,13 @@ gcloud filestore instances describe INSTANCE_NAME \
 
 ## Group 7: Google Kubernetes Engine
 
-These variables configure one or more GKE Autopilot clusters that serve as the shared compute environment for containerised application workloads deployed via the `App_GKE` module. Autopilot is a fully managed cluster mode in which Google provisions, scales, and secures nodes automatically — you pay per pod rather than per node, and there is no need to manage node pools or machine types. All clusters are provisioned in the primary availability region of the module VPC and registered to a GKE fleet to enable multi-cluster features. Three optional GKE fleet add-ons — Cloud Service Mesh, Config Management, and Policy Controller — can be enabled independently on each cluster.
+These variables configure one or more GKE Autopilot clusters that serve as the shared compute environment for containerised application workloads deployed via the `App GKE` module. Autopilot is a fully managed cluster mode in which Google provisions, scales, and secures nodes automatically — you pay per pod rather than per node, and there is no need to manage node pools or machine types. All clusters are provisioned in the primary availability region of the module VPC and registered to a GKE fleet to enable multi-cluster features. Three optional GKE fleet add-ons — Cloud Service Mesh, Config Management, and Policy Controller — can be enabled independently on each cluster.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `create_google_kubernetes_engine` | `false` | `true` / `false` | Provisions one or more GKE Autopilot clusters in the primary availability region. Set to `true` when deploying containerised workloads via the `App_GKE` module — the App_GKE module will automatically discover and use clusters provisioned here. When `false`, no GKE infrastructure is created and all GKE-dependent variables in this group are ignored. Each cluster is registered to a GKE fleet automatically, enabling fleet-level features such as multi-cluster services and Config Management. |
+| `create_google_kubernetes_engine` | `false` | `true` / `false` | Provisions one or more GKE Autopilot clusters in the primary availability region. Set to `true` when deploying containerised workloads via the `App GKE` module — the App GKE module will automatically discover and use clusters provisioned here. When `false`, no GKE infrastructure is created and all GKE-dependent variables in this group are ignored. Each cluster is registered to a GKE fleet automatically, enabling fleet-level features such as multi-cluster services and Config Management. |
 | `gke_cluster_name_prefix` | `'gke-cluster'` | Lowercase string | Prefix applied to the name of each GKE Autopilot cluster. The zero-based cluster index is appended to generate unique names — for example, a prefix of `'gke-cluster'` with `gke_cluster_count = 2` produces `gke-cluster-0` and `gke-cluster-1`. Must be lowercase and contain only letters, numbers, and hyphens. **Do not change this after clusters are provisioned** — renaming requires destroying and recreating all clusters, which is a disruptive operation for running workloads. (e.g., `'gke-cluster'`, `'autopilot'`, `'platform'`) |
-| `gke_cluster_count` | `1` | Integer `1`–`10` | Number of GKE Autopilot clusters to provision in the primary availability region. Each cluster is independent with its own node pool, networking, and workload namespace. Use `1` for most deployments. Increase for multi-tenant architectures where workloads must be isolated at the cluster level (e.g. separate clusters per environment or per customer tier), or to distribute load across multiple clusters using the `round-robin` selection mode in `App_GKE`. Valid range: 1–10. |
+| `gke_cluster_count` | `1` | Integer `1`–`10` | Number of GKE Autopilot clusters to provision in the primary availability region. Each cluster is independent with its own node pool, networking, and workload namespace. Use `1` for most deployments. Increase for multi-tenant architectures where workloads must be isolated at the cluster level (e.g. separate clusters per environment or per customer tier), or to distribute load across multiple clusters using the `round-robin` selection mode in `App GKE`. Valid range: 1–10. |
 | `gke_subnet_base_cidr` | `'10.128.0.0/12'` | CIDR notation | Base CIDR block used to generate the node subnet range for each GKE cluster. When multiple clusters are provisioned, subnets for additional clusters are automatically derived by incrementing the third octet of this base. **Must not overlap** with `subnet_cidr_range` (Group 2), `gke_pod_base_cidr`, or `gke_service_base_cidr`. The `/12` default provides a large address space suitable for multi-cluster deployments. (e.g., `'10.128.0.0/12'`) |
 | `gke_pod_base_cidr` | `'10.64.0.0/10'` | CIDR notation | Base CIDR block used to generate pod IP ranges for each GKE cluster. In GKE Autopilot, each node receives a `/24` slice of this range (providing 256 pod IPs per node). The `/10` default accommodates a large number of nodes across multiple clusters. **Must not overlap** with `subnet_cidr_range`, `gke_subnet_base_cidr`, or `gke_service_base_cidr`. Size this range based on your expected maximum number of pods across all clusters. (e.g., `'10.64.0.0/10'`) |
 | `gke_service_base_cidr` | `'10.8.0.0/16'` | CIDR notation | Base CIDR block used to generate Kubernetes Service (ClusterIP) IP ranges for each GKE cluster. Each Kubernetes Service is assigned an IP from this range. The `/16` default provides 65,536 service IPs, which is sufficient for all but the largest deployments. **Must not overlap** with `subnet_cidr_range`, `gke_subnet_base_cidr`, or `gke_pod_base_cidr`. (e.g., `'10.8.0.0/16'`) |

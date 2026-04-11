@@ -17,7 +17,7 @@ The relationship between these SRE concepts is foundational to the PDE exam:
 - **Error Budget:** The permitted amount of unreliability derived from the SLO. If the SLO is 99.9% availability, the error budget is 0.1% — approximately 43 minutes of downtime per month. The error budget is consumed by outages, risky deployments, and chaos experiments. When the error budget is exhausted (or burn rate is too high), the team should freeze feature releases and focus on reliability work.
 
 **In the Terraform Codebase:**
-Review `monitoring.tf` in the `App_CloudRun` and `App_GKE` modules. These modules configure monitoring via the shared `app_monitoring` module. The metrics tracked — `run.googleapis.com/container/cpu/utilizations` (Cloud Run) and `kubernetes.io/container/cpu/limit_utilization` (GKE) — form the raw telemetry that SLIs are derived from. The threshold-based alert policies (e.g., `cpu_threshold = 0.9`) operationalise SLOs: when the threshold is breached, the error budget is being consumed.
+Review `monitoring.tf` in the `App CloudRun` and `App GKE` modules. These modules configure monitoring via the shared `app_monitoring` module. The metrics tracked — `run.googleapis.com/container/cpu/utilizations` (Cloud Run) and `kubernetes.io/container/cpu/limit_utilization` (GKE) — form the raw telemetry that SLIs are derived from. The threshold-based alert policies (e.g., `cpu_threshold = 0.9`) operationalise SLOs: when the threshold is breached, the error budget is being consumed.
 
 **Console Exploration:**
 *   Navigate to **Monitoring > Dashboards** to view telemetry data for Cloud Run and GKE. Observe the request count, latency percentile (p50/p95/p99), and error rate charts — these are the raw signals from which SLIs are constructed.
@@ -35,9 +35,9 @@ Review `monitoring.tf` in the `App_CloudRun` and `App_GKE` modules. These module
 
 **In the Terraform Codebase:**
 
-*   **Cloud Run capacity management:** Review `variables.tf` and `service.tf` in the `App_CloudRun` module. The `min_instance_count` and `max_instance_count` variables control the scaling floor and ceiling. `min_instance_count = 0` enables scale-to-zero (lowest cost, tolerates cold start latency). `min_instance_count >= 1` keeps instances always warm (eliminates cold starts, higher baseline cost). `max_instance_count` prevents runaway scaling and cost surprises under unexpected load.
+*   **Cloud Run capacity management:** Review `variables.tf` and `service.tf` in the `App CloudRun` module. The `min_instance_count` and `max_instance_count` variables control the scaling floor and ceiling. `min_instance_count = 0` enables scale-to-zero (lowest cost, tolerates cold start latency). `min_instance_count >= 1` keeps instances always warm (eliminates cold starts, higher baseline cost). `max_instance_count` prevents runaway scaling and cost surprises under unexpected load.
 
-*   **GKE capacity management:** In the `App_GKE` module, resource requests and limits are defined in `deployment.tf` or `statefulset.tf` via the `container_resources` variable. These values establish the capacity contract with GKE Autopilot — the cluster provisions underlying node capacity to satisfy the aggregate requests of all scheduled pods.
+*   **GKE capacity management:** In the `App GKE` module, resource requests and limits are defined in `deployment.tf` or `statefulset.tf` via the `container_resources` variable. These values establish the capacity contract with GKE Autopilot — the cluster provisions underlying node capacity to satisfy the aggregate requests of all scheduled pods.
 
     Autoscaling in GKE has two distinct dimensions:
     - **Horizontal Pod Autoscaler (HPA):** Scales the *number of pod replicas* based on observed CPU or memory utilisation relative to the defined requests. Configured via `min_instance_count` and `max_instance_count`. If 10 pods are running at 80% CPU and the HPA target is 70%, HPA adds more pods to distribute the load.

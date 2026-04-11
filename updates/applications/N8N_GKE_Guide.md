@@ -1,8 +1,8 @@
-# N8N_GKE Module — Configuration Guide
+# N8N GKE Module
 
 n8n is an open-source workflow automation platform that lets you connect services, run logic, and build automated pipelines through a visual node-based interface. This module deploys n8n on **GKE Autopilot** with a managed PostgreSQL database, GCS-backed storage persistence, and optional NFS for shared volumes.
 
-`N8N_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS, secrets, CI/CD) and adds n8n-specific application configuration on top.
+`N8N GKE` is a **wrapper module** built on top of `App GKE`. It uses `App GKE` for all GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS, secrets, CI/CD) and adds n8n-specific application configuration on top.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -10,37 +10,37 @@ n8n is an open-source workflow automation platform that lets you connect service
 
 ## How This Guide Is Structured
 
-This guide documents only the variables that are **unique to `N8N_GKE`** or that have **n8n-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, GKE backend configuration, CI/CD, GCS storage, backup, custom SQL, observability, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE_Guide.md).
+This guide documents only the variables that are **unique to `N8N GKE`** or that have **n8n-specific defaults** that differ from the `App GKE` base module. For all other variables — project identity, GKE backend configuration, CI/CD, GCS storage, backup, custom SQL, observability, networking, IAP, and Cloud Armor — refer directly to the [App GKE Configuration Guide](../App_GKE/App_GKE_Guide.md).
 
-**Variables fully covered by the App_GKE guide:**
+**Variables fully covered by the App GKE guide:**
 
 | Configuration Area | App_GKE_Guide Section | N8N-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | Group 0 | Different defaults for `module_description` and `module_documentation`. |
-| Project & Identity | Group 1 | Refer to base App_GKE module documentation. |
+| Project & Identity | Group 1 | Refer to base App GKE module documentation. |
 | Application Identity | Group 2 | See [N8N Application Identity](#n8n-application-identity) below for n8n-specific defaults. |
 | Runtime & Scaling | Group 3 | See [N8N Runtime Configuration](#n8n-runtime-configuration) below. `cpu_limit` and `memory_limit` are top-level variables. |
 | Environment Variables & Secrets | Group 4 | See [N8N Environment Variables](#n8n-environment-variables) below for SMTP defaults. |
-| GKE Backend Configuration | Group 5 | Refer to base App_GKE module documentation (`service_type`, `workload_type`, `session_affinity`, `gke_cluster_name`, `namespace_name`, etc.). See [StatefulSet Configuration](#statefulset-configuration) for n8n StatefulSet-specific variables. |
-| Jobs & Scheduled Tasks | Group 6 | Refer to base App_GKE module documentation. |
-| CI/CD & GitHub Integration | Group 7 | Refer to base App_GKE module documentation. |
+| GKE Backend Configuration | Group 5 | Refer to base App GKE module documentation (`service_type`, `workload_type`, `session_affinity`, `gke_cluster_name`, `namespace_name`, etc.). See [StatefulSet Configuration](#statefulset-configuration) for n8n StatefulSet-specific variables. |
+| Jobs & Scheduled Tasks | Group 6 | Refer to base App GKE module documentation. |
+| CI/CD & GitHub Integration | Group 7 | Refer to base App GKE module documentation. |
 | Storage — NFS | Group 8 | NFS is **enabled by default** (`enable_nfs = true`). See [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| Storage — GCS | Group 9 | Refer to base App_GKE module documentation. |
+| Storage — GCS | Group 9 | Refer to base App GKE module documentation. |
 | Database Configuration | Group 10 | See [N8N Database Configuration](#n8n-database-configuration) below. `db_name` and `db_user` replace `application_database_name` and `application_database_user`. |
-| Backup Schedule & Retention | Group 11 | Refer to base App_GKE module documentation. |
-| Custom SQL Scripts | Group 12 | Refer to base App_GKE module documentation. |
-| Observability & Health | Group 13 | Refer to base App_GKE module documentation for `startup_probe_config`, `health_check_config`, `uptime_check_config`, and `alert_policies`. |
-| Reliability Policies | Group 14 | Refer to base App_GKE module documentation (`enable_pod_disruption_budget`, `enable_resource_quota`). |
-| Resource Quota | Group 15 | Refer to base App_GKE module documentation. |
-| Custom Domain, Static IP & Network | Group 16 | Refer to base App_GKE module documentation. |
-| Identity-Aware Proxy | Group 17 | Refer to base App_GKE module documentation. Note: GKE IAP requires `iap_oauth_client_id` and `iap_oauth_client_secret`. |
-| Cloud Armor | Group 18 | Refer to base App_GKE module documentation. |
+| Backup Schedule & Retention | Group 11 | Refer to base App GKE module documentation. |
+| Custom SQL Scripts | Group 12 | Refer to base App GKE module documentation. |
+| Observability & Health | Group 13 | Refer to base App GKE module documentation for `startup_probe_config`, `health_check_config`, `uptime_check_config`, and `alert_policies`. |
+| Reliability Policies | Group 14 | Refer to base App GKE module documentation (`enable_pod_disruption_budget`, `enable_resource_quota`). |
+| Resource Quota | Group 15 | Refer to base App GKE module documentation. |
+| Custom Domain, Static IP & Network | Group 16 | Refer to base App GKE module documentation. |
+| Identity-Aware Proxy | Group 17 | Refer to base App GKE module documentation. Note: GKE IAP requires `iap_oauth_client_id` and `iap_oauth_client_secret`. |
+| Cloud Armor | Group 18 | Refer to base App GKE module documentation. |
 
 ---
 
 ## Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `N8N_GKE` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
+The following behaviours are applied automatically by `N8N GKE` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
 | Behaviour | Detail |
 |---|---|
@@ -48,7 +48,7 @@ The following behaviours are applied automatically by `N8N_GKE` regardless of th
 | **SMTP password auto-generated** | A placeholder SMTP password is generated and stored in Secret Manager as `N8N_SMTP_PASS`. Replace the secret value with your real SMTP credentials before enabling email sending. |
 | **n8n port fixed at 5678** | `N8N_PORT=5678` is injected automatically via the application configuration. The `container_port` variable defaults to `5678` to match. |
 | **Database type set to PostgreSQL** | `DB_TYPE=postgresdb` is injected automatically. n8n requires PostgreSQL — do not change `database_type` to MySQL or SQL Server. |
-| **Database connection variables injected** | `DB_POSTGRESDB_HOST`, `DB_POSTGRESDB_PORT`, `DB_POSTGRESDB_DATABASE`, `DB_POSTGRESDB_USER`, and `DB_POSTGRESDB_PASSWORD` are injected automatically from the Cloud SQL instance provisioned by App_GKE. The n8n Pod connects via the Cloud SQL Auth Proxy sidecar running at `127.0.0.1`. |
+| **Database connection variables injected** | `DB_POSTGRESDB_HOST`, `DB_POSTGRESDB_PORT`, `DB_POSTGRESDB_DATABASE`, `DB_POSTGRESDB_USER`, and `DB_POSTGRESDB_PASSWORD` are injected automatically from the Cloud SQL instance provisioned by App GKE. The n8n Pod connects via the Cloud SQL Auth Proxy sidecar running at `127.0.0.1`. |
 | **Webhook and editor URLs auto-set** | `WEBHOOK_URL` and `N8N_EDITOR_BASE_URL` are set to the predicted service URL. When `enable_custom_domain = true` and `application_domains` is non-empty, the first domain is used. Otherwise the internal ClusterIP service URL (`http://<service>.<namespace>.svc.cluster.local`) is used. |
 | **Workload Identity for IAM** | The n8n Pod uses Workload Identity to authenticate to GCP services (Cloud SQL, GCS, Secret Manager) without needing to embed service account keys in the container. |
 | **GCS persistence for workflow data** | n8n stores workflow data in a GCS Fuse volume. This persists data across Pod restarts and rescheduling. |
@@ -58,12 +58,12 @@ The following behaviours are applied automatically by `N8N_GKE` regardless of th
 
 ## N8N Application Identity
 
-These variables control how the n8n deployment is named and described. They correspond to Group 2 variables in App_GKE but carry n8n-specific defaults.
+These variables control how the n8n deployment is named and described. They correspond to Group 2 variables in App GKE but carry n8n-specific defaults.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
 | `application_name` | `"n8n"` | `[a-z][a-z0-9-]{0,19}` | Internal identifier used as the base name for GKE workloads, Cloud SQL, GCS buckets, Kubernetes namespace, and Artifact Registry. **Do not change after initial deployment** — it is embedded in resource names and changing it will cause resources to be recreated. |
-| `display_name` | `"N8N Workflow Automation"` | Any string | Human-readable name shown in the platform UI and GKE monitoring dashboards. Equivalent to `application_display_name` in App_GKE. Can be updated freely without affecting resource names. |
+| `display_name` | `"N8N Workflow Automation"` | Any string | Human-readable name shown in the platform UI and GKE monitoring dashboards. Equivalent to `application_display_name` in App GKE. Can be updated freely without affecting resource names. |
 | `description` | `"n8n Workflow Automation - Workflow automation platform on GKE Autopilot"` | Any string | Brief description of the deployment. Populated into Kubernetes resource annotations and platform documentation. |
 | `application_version` | `"2.4.7"` | n8n version string, e.g. `"2.4.7"`, `"latest"` | Version tag applied to the container image and used for deployment tracking. Increment this value to trigger a new image build and revision. See [n8n releases](https://github.com/n8nio/n8n/releases) for available versions. |
 
@@ -93,9 +93,9 @@ n8n exposes `cpu_limit` and `memory_limit` as **dedicated top-level variables** 
 
 > **Note on `container_resources`:** The full `container_resources` object (as documented in [App_GKE_Guide Group 3](../App_GKE/App_GKE_Guide.md#group-3-runtime--scaling)) is also available. If `container_resources` is set explicitly in your `tfvars`, it takes precedence over the top-level `cpu_limit` and `memory_limit` variables. Use `container_resources` when you also need to set `cpu_request` or `mem_request`.
 
-**N8N-specific runtime defaults that differ from App_GKE:**
+**N8N-specific runtime defaults that differ from App GKE:**
 
-| Variable | App_GKE Default | N8N_GKE Default | Reason |
+| Variable | App GKE Default | N8N GKE Default | Reason |
 |---|---|---|---|
 | `container_port` | `8080` | `5678` | n8n's native port. |
 | `cpu_limit` | `"1000m"` | `"2000m"` | Workflow automation is CPU-intensive for concurrent node execution. |
@@ -119,7 +119,7 @@ kubectl get hpa -n NAMESPACE
 
 ## StatefulSet Configuration
 
-When `workload_type = "StatefulSet"` (see [App_GKE_Guide Group 5](../App_GKE/App_GKE_Guide.md#group-5-gke-backend-configuration)), `N8N_GKE` exposes additional variables to configure the StatefulSet's persistent volume claim and Pod management behaviour. These variables are **unique to `N8N_GKE`** — they do not exist in `App_GKE`.
+When `workload_type = "StatefulSet"` (see [App_GKE_Guide Group 5](../App_GKE/App_GKE_Guide.md#group-5-gke-backend-configuration)), `N8N GKE` exposes additional variables to configure the StatefulSet's persistent volume claim and Pod management behaviour. These variables are **unique to `N8N GKE`** — they do not exist in `App GKE`.
 
 Use `workload_type = "StatefulSet"` when n8n must retain local state across Pod restarts and you require stable network identities or ordered Pod startup. For most deployments, the default `workload_type = "Deployment"` with GCS Fuse persistence is sufficient.
 
@@ -150,12 +150,12 @@ kubectl exec -n NAMESPACE <any-pod> -- nslookup n8n-0.n8n.NAMESPACE.svc.cluster.
 
 ## Redis Configuration
 
-These variables are **unique to `N8N_GKE`** — the base `App_GKE` module does not include a Redis configuration group. Redis is required for n8n **queue mode**, which enables reliable multi-replica workflow execution.
+These variables are **unique to `N8N GKE`** — the base `App GKE` module does not include a Redis configuration group. Redis is required for n8n **queue mode**, which enables reliable multi-replica workflow execution.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `enable_redis` | `true` | `true` / `false` | Enables Redis as the n8n queue mode backend by injecting `REDIS_HOST` and `REDIS_PORT` environment variables into the n8n Pod. When `true` and `redis_host` is empty, the module defaults to the NFS server IP discovered from `Services_GCP`. **Required when `max_instance_count > 1`** to avoid workflow state conflicts between replicas. |
-| `redis_host` | `""` *(auto-discovered)* | Hostname or IP, e.g. `"10.0.0.5"`, `"redis.internal"` | Hostname or IP of the Redis server. Leave blank to use the NFS server IP auto-discovered from `Services_GCP`. Override with a dedicated Redis/Memorystore instance endpoint for production deployments requiring higher availability or AUTH. |
+| `enable_redis` | `true` | `true` / `false` | Enables Redis as the n8n queue mode backend by injecting `REDIS_HOST` and `REDIS_PORT` environment variables into the n8n Pod. When `true` and `redis_host` is empty, the module defaults to the NFS server IP discovered from `GCP Services`. **Required when `max_instance_count > 1`** to avoid workflow state conflicts between replicas. |
+| `redis_host` | `""` *(auto-discovered)* | Hostname or IP, e.g. `"10.0.0.5"`, `"redis.internal"` | Hostname or IP of the Redis server. Leave blank to use the NFS server IP auto-discovered from `GCP Services`. Override with a dedicated Redis/Memorystore instance endpoint for production deployments requiring higher availability or AUTH. |
 | `redis_port` | `"6379"` | Port string, e.g. `"6379"` | TCP port of the Redis server. Must match the port configured on the Redis instance. |
 | `redis_auth` | `""` | Sensitive string | Authentication password for the Redis server. Leave empty for unauthenticated Redis. For Google Cloud Memorystore with AUTH enabled, set this to the instance auth string. Treated as sensitive — never stored in Terraform state in plaintext. |
 
@@ -174,7 +174,7 @@ kubectl describe pod -n NAMESPACE -l app=n8n | grep -E "REDIS"
 
 n8n requires PostgreSQL. This module exposes `db_name` and `db_user` as **short top-level variables** in place of the `application_database_name` and `application_database_user` variables documented in [App_GKE_Guide Group 10](../App_GKE/App_GKE_Guide.md#group-10-database-configuration).
 
-All other database variables (`database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, `secret_rotation_period`, etc.) behave identically to the App_GKE equivalents — refer to [App_GKE_Guide Group 10](../App_GKE/App_GKE_Guide.md#group-10-database-configuration) for their documentation.
+All other database variables (`database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, `secret_rotation_period`, etc.) behave identically to the App GKE equivalents — refer to [App_GKE_Guide Group 10](../App_GKE/App_GKE_Guide.md#group-10-database-configuration) for their documentation.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -199,7 +199,7 @@ kubectl describe pod -n NAMESPACE -l app=n8n | grep -E "DB_POSTGRES"
 
 The `environment_variables` variable (documented in [App_GKE_Guide Group 4](../App_GKE/App_GKE_Guide.md#group-4-environment-variables--secrets)) has n8n-specific defaults that configure email delivery.
 
-**Default `environment_variables` in N8N_GKE:**
+**Default `environment_variables` in N8N GKE:**
 
 ```hcl
 environment_variables = {

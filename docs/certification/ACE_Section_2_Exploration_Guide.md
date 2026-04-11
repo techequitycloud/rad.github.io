@@ -76,8 +76,8 @@ The ACE exam also heavily covers standard Compute Engine VMs, App Engine, and Cl
 **Concept:** Integrating distinct storage classes for different application needs (objects vs. files).
 
 **In the RAD UI:**
-*   **Cloud Storage (GCS):** The `storage_buckets` variable (Group 9 for both App_CloudRun and App_GKE) dynamically provisions GCS buckets. The modules integrate GCS Fuse CSI drivers to mount these buckets directly into the running containers as if they were local directories.
-*   **Cloud Filestore (NFS):** If persistent, shared file storage is required, configure `create_filestore_nfs` (Group 6) and `filestore_tier` (Group 6) in **Services GCP**. Subsequently, enable `enable_nfs` (Group 8 for both App_CloudRun and App_GKE) to mount the network filesystem to the container.
+*   **Cloud Storage (GCS):** The `storage_buckets` variable (Group 9 for both App CloudRun and App GKE) dynamically provisions GCS buckets. The modules integrate GCS Fuse CSI drivers to mount these buckets directly into the running containers as if they were local directories.
+*   **Cloud Filestore (NFS):** If persistent, shared file storage is required, configure `create_filestore_nfs` (Group 6) and `filestore_tier` (Group 6) in **Services GCP**. Subsequently, enable `enable_nfs` (Group 8 for both App CloudRun and App GKE) to mount the network filesystem to the container.
 
 **Console Exploration:**
 Navigate to **Cloud Storage > Buckets** to see the provisioned object storage buckets. Navigate to **Filestore > Instances** to view the managed NFS instances and observe their regional availability. For GKE, navigate to **Kubernetes Engine > Storage** to view any dynamically provisioned Persistent Volume Claims (PVCs).
@@ -97,7 +97,7 @@ The exam tests your ability to select the appropriate class based on access freq
 
 **In the RAD UI:**
 *   **Cloud SQL:** In **Services GCP**, utilize variables like `create_postgres` (Group 3) and `postgres_tier` (Group 3) or `create_mysql` (Group 3) and `mysql_tier` (Group 3) to provision managed relational databases. In the application modules, toggle `enable_cloudsql_volume` (Group 3) to inject the Cloud SQL Auth Proxy sidecar, enabling secure Unix socket connections without public IP exposure.
-*   **Memorystore (Redis):** In **Services GCP**, `create_redis` (Group 5) and `redis_tier` (Group 5) configure managed in-memory caching. Set `enable_redis` (Group 10 for App_CloudRun; configure via `environment_variables` Group 4 for App_GKE) to dynamically pass the Redis host and port into the container's environment variables.
+*   **Memorystore (Redis):** In **Services GCP**, `create_redis` (Group 5) and `redis_tier` (Group 5) configure managed in-memory caching. Set `enable_redis` (Group 10 for App CloudRun; configure via `environment_variables` Group 4 for App GKE) to dynamically pass the Redis host and port into the container's environment variables.
 
 **Console Exploration:**
 Navigate to **SQL** to review the managed PostgreSQL or MySQL instances, noting their high-availability configuration. Navigate to **Memorystore** to see the Redis cluster and its network endpoints.
@@ -167,15 +167,15 @@ Navigate to **VPC network > Firewall policies** to explore Network Firewall Poli
 
 **In the RAD UI:**
 *   **Services GCP:** `availability_regions` (Group 2) and `subnet_cidr_range` (Group 2) define the core VPC. Private Service Access automatically peers managed services like Cloud SQL and Memorystore to this private network.
-*   **App_CloudRun:** `vpc_egress_setting` (Group 14) configures Direct VPC Egress, allowing the serverless container to securely access internal resources like the database via internal IP addresses.
-*   **App_GKE:** Uses native Kubernetes networking, but `enable_network_segmentation` (Group 5) can enforce network policies to restrict internal pod-to-pod communication.
+*   **App CloudRun:** `vpc_egress_setting` (Group 14) configures Direct VPC Egress, allowing the serverless container to securely access internal resources like the database via internal IP addresses.
+*   **App GKE:** Uses native Kubernetes networking, but `enable_network_segmentation` (Group 5) can enforce network policies to restrict internal pod-to-pod communication.
 
 ### Choosing and deploying load balancers
 **Concept:** Distributing global traffic, terminating SSL, and providing edge security.
 
 **In the RAD UI:**
-*   **App_CloudRun:** Activating `enable_cloud_armor` (Group 16) provisions a Global External Application Load Balancer with a Serverless Network Endpoint Group (NEG) backend, attaching Web Application Firewall (WAF) policies.
-*   **App_GKE:** `enable_cloud_armor` (Group 18) configures routing using the Kubernetes Gateway API, mapping external traffic to internal services and applying security policies directly to the backend configurations.
+*   **App CloudRun:** Activating `enable_cloud_armor` (Group 16) provisions a Global External Application Load Balancer with a Serverless Network Endpoint Group (NEG) backend, attaching Web Application Firewall (WAF) policies.
+*   **App GKE:** `enable_cloud_armor` (Group 18) configures routing using the Kubernetes Gateway API, mapping external traffic to internal services and applying security policies directly to the backend configurations.
 
 **Console Exploration:**
 Navigate to **Network Services > Load balancing**. Inspect the Frontend to see the global anycast IP and SSL certificate, and the Backend to see how traffic is routed to the Serverless NEG (Cloud Run) or GKE Services (GKE). Navigate to **Network Security > Cloud Armor** to view the applied WAF policies restricting inbound traffic.

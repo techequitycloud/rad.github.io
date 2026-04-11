@@ -65,7 +65,7 @@ The solution uses the following Google Cloud services:
 
 *   **Redis (Enhanced):**
     *   **Integration:** Optional support for Redis.
-    *   **Configuration:** Can use the shared Internal Redis (from `GCP_Services`) or a custom host.
+    *   **Configuration:** Can use the shared Internal Redis (from `GCP Services`) or a custom host.
     *   **Usage:** Configured in `odoo.conf` via `redis_host` and `redis_port` parameters if enabled.
     *   **Logic:** If `enable_redis` is true and `redis_host` is unset, it automatically defaults to the NFS server's internal IP (assuming a co-located Redis/NFS setup).
 

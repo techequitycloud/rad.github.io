@@ -1,8 +1,8 @@
-# Cyclos_CloudRun Module — Configuration Guide
+# Cyclos CloudRun Module
 
 Cyclos is a professional banking and payment system designed for microfinance institutions, credit unions, complementary currency schemes, and community banks. This module deploys Cyclos on **Google Cloud Run** using the official `cyclos/cyclos` container image, backed by a managed Cloud SQL PostgreSQL instance.
 
-`Cyclos_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Cyclos-specific application configuration on top.
+`Cyclos CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Cyclos-specific application configuration on top.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -10,34 +10,34 @@ Cyclos is a professional banking and payment system designed for microfinance in
 
 ## How This Guide Is Structured
 
-This guide documents only the variables that are **unique to `Cyclos_CloudRun`** or that have **Cyclos-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, runtime scaling, storage, CI/CD, Redis, backup, custom SQL, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md).
+This guide documents only the variables that are **unique to `Cyclos CloudRun`** or that have **Cyclos-specific defaults** that differ from the `App CloudRun` base module. For all other variables — project identity, runtime scaling, storage, CI/CD, Redis, backup, custom SQL, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md).
 
-**Variables fully covered by the App_CloudRun guide:**
+**Variables fully covered by the App CloudRun guide:**
 
 | Configuration Area | App_CloudRun_Guide Section | Cyclos-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | Group 0 | Different defaults for `module_description` and `module_documentation`. `resource_creator_identity` is the same — see Group 0. |
-| Project & Identity | Group 1 | Refer to base App_CloudRun module documentation. |
+| Project & Identity | Group 1 | Refer to base App CloudRun module documentation. |
 | Runtime & Scaling | Group 3 | See [Cyclos Runtime Configuration](#cyclos-runtime-configuration) below for `cpu_limit`, `memory_limit`, and Cyclos-specific scaling defaults. `container_image` defaults to `cyclos/cyclos`; `container_image_source` defaults to `prebuilt`. `enable_cloudsql_volume` defaults to `false` (Cyclos uses TCP, not Unix socket). |
 | Environment Variables & Secrets | Group 4 | See [Cyclos Environment Variables](#cyclos-environment-variables) below for SMTP defaults. |
 | Observability & Health | Group 5 | See [Cyclos Health Probes](#cyclos-health-probes) below for renamed variables and Cyclos-specific defaults. |
-| Jobs & Scheduled Tasks | Group 6 | Refer to base App_CloudRun module documentation. |
-| CI/CD & GitHub Integration | Group 7 | Refer to base App_CloudRun module documentation. |
+| Jobs & Scheduled Tasks | Group 6 | Refer to base App CloudRun module documentation. |
+| CI/CD & GitHub Integration | Group 7 | Refer to base App CloudRun module documentation. |
 | Storage — NFS | Group 8 | NFS is **disabled by this module**. See [Platform-Managed Behaviours](#platform-managed-behaviours). `enable_nfs` defaults to `false`. |
-| Storage — GCS | Group 9 | Refer to base App_CloudRun module documentation. |
-| Redis Cache | Group 10 | Refer to base App_CloudRun module documentation. Cyclos uses Redis for session storage and caching — configure as documented in App_CloudRun_Guide Group 10. |
-| Backup & Maintenance | Group 12 | Refer to base App_CloudRun module documentation for `backup_schedule` and `backup_retention_days`. See [Backup Import & Recovery](#backup-import--recovery) below for `enable_backup_import` and related variables. |
-| Custom Initialisation & SQL | Group 13 | Refer to base App_CloudRun module documentation. |
-| Access & Networking | Group 14 | Refer to base App_CloudRun module documentation (`ingress_settings`, `vpc_egress_setting`, `network_name`). |
-| Identity-Aware Proxy | Group 15 | Refer to base App_CloudRun module documentation. |
-| Cloud Armor & CDN | Group 16 | Refer to base App_CloudRun module documentation. |
-| VPC Service Controls | Group 17 | Refer to base App_CloudRun module documentation. |
+| Storage — GCS | Group 9 | Refer to base App CloudRun module documentation. |
+| Redis Cache | Group 10 | Refer to base App CloudRun module documentation. Cyclos uses Redis for session storage and caching — configure as documented in App_CloudRun_Guide Group 10. |
+| Backup & Maintenance | Group 12 | Refer to base App CloudRun module documentation for `backup_schedule` and `backup_retention_days`. See [Backup Import & Recovery](#backup-import--recovery) below for `enable_backup_import` and related variables. |
+| Custom Initialisation & SQL | Group 13 | Refer to base App CloudRun module documentation. |
+| Access & Networking | Group 14 | Refer to base App CloudRun module documentation (`ingress_settings`, `vpc_egress_setting`, `network_name`). |
+| Identity-Aware Proxy | Group 15 | Refer to base App CloudRun module documentation. |
+| Cloud Armor & CDN | Group 16 | Refer to base App CloudRun module documentation. |
+| VPC Service Controls | Group 17 | Refer to base App CloudRun module documentation. |
 
 ---
 
 ## Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `Cyclos_CloudRun` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
+The following behaviours are applied automatically by `Cyclos CloudRun` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
 | Behaviour | Detail |
 |---|---|
@@ -52,14 +52,14 @@ The following behaviours are applied automatically by `Cyclos_CloudRun` regardle
 
 ## Cyclos Application Identity
 
-These variables control how the Cyclos deployment is named and described. They correspond to the `application_display_name` and `application_description` variables in App_CloudRun but use shorter names to match the Cyclos_Common interface.
+These variables control how the Cyclos deployment is named and described. They correspond to the `application_display_name` and `application_description` variables in App CloudRun but use shorter names to match the Cyclos_Common interface.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `application_name` | `"cyclos"` | `[a-z][a-z0-9-]{0,19}` | Internal identifier used as the base name for the Cloud Run service, Artifact Registry repository, Secret Manager secrets, and GCS buckets. Functionally identical to `application_name` in App_CloudRun. **Do not change after initial deployment.** |
+| `application_name` | `"cyclos"` | `[a-z][a-z0-9-]{0,19}` | Internal identifier used as the base name for the Cloud Run service, Artifact Registry repository, Secret Manager secrets, and GCS buckets. Functionally identical to `application_name` in App CloudRun. **Do not change after initial deployment.** |
 | `application_version` | `"4.16.17"` | Cyclos version string, e.g. `"4.16.17"` | Version tag applied to the container image and used for deployment tracking. Use the official Cyclos release version matching the image you intend to deploy. See the [Cyclos release notes](https://www.cyclos.org/releaseNotes) for available versions. When `container_image_source = "prebuilt"`, this controls which tagged image is pulled from Docker Hub. |
-| `display_name` | `"Cyclos Community Edition"` | Any string | Human-readable name shown in the platform UI, the Cloud Run service list, and monitoring dashboards. Equivalent to `application_display_name` in App_CloudRun. Can be updated freely without affecting resource names. |
-| `description` | `"Cyclos Banking System on Cloud Run"` | Any string | Brief description of the deployment. Populated into the Cloud Run service description field and platform documentation. Equivalent to `application_description` in App_CloudRun. |
+| `display_name` | `"Cyclos Community Edition"` | Any string | Human-readable name shown in the platform UI, the Cloud Run service list, and monitoring dashboards. Equivalent to `application_display_name` in App CloudRun. Can be updated freely without affecting resource names. |
+| `description` | `"Cyclos Banking System on Cloud Run"` | Any string | Brief description of the deployment. Populated into the Cloud Run service description field and platform documentation. Equivalent to `application_description` in App CloudRun. |
 
 ### Validating Application Identity
 
@@ -83,9 +83,9 @@ Cyclos is a Java application and requires significantly more CPU and memory than
 
 > **Note on `container_resources`:** The full `container_resources` object (as documented in [App_CloudRun_Guide Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling)) is also available and takes precedence over `cpu_limit` and `memory_limit` when set explicitly. Use `container_resources` when you need to set both CPU and memory in a single block, for example in the advanced configuration example.
 
-**Cyclos-specific runtime defaults that differ from App_CloudRun:**
+**Cyclos-specific runtime defaults that differ from App CloudRun:**
 
-| Variable | App_CloudRun Default | Cyclos_CloudRun Default | Reason |
+| Variable | App CloudRun Default | Cyclos CloudRun Default | Reason |
 |---|---|---|---|
 | `container_image_source` | `"custom"` | `"prebuilt"` | The official `cyclos/cyclos` Docker Hub image is production-ready and pre-configured. |
 | `container_image` | `""` | `"cyclos/cyclos"` | The official Cyclos image from Docker Hub. |
@@ -113,7 +113,7 @@ gcloud run services describe cyclos \
 
 Cyclos requires PostgreSQL. The module uses `db_name` and `db_user` (shorter names aligned with the Cyclos_Common interface) in place of the `application_database_name` and `application_database_user` variables documented in [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend).
 
-All other database variables (`sql_instance_name`, `database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, etc.) behave identically to the App_CloudRun equivalents — refer to [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend) for their documentation.
+All other database variables (`sql_instance_name`, `database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, etc.) behave identically to the App CloudRun equivalents — refer to [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend) for their documentation.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -144,7 +144,7 @@ gcloud run services describe cyclos \
 
 The `environment_variables` variable (documented in [App_CloudRun_Guide Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets)) has Cyclos-specific defaults that configure email delivery.
 
-**Default `environment_variables` in Cyclos_CloudRun:**
+**Default `environment_variables` in Cyclos CloudRun:**
 
 ```hcl
 environment_variables = {
@@ -173,13 +173,13 @@ secret_environment_variables = {
 }
 ```
 
-All other `environment_variables` and `secret_environment_variables` behaviour is identical to App_CloudRun — refer to [App_CloudRun_Guide Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets).
+All other `environment_variables` and `secret_environment_variables` behaviour is identical to App CloudRun — refer to [App_CloudRun_Guide Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets).
 
 ---
 
 ## Cyclos Health Probes
 
-Cyclos is a Java application that performs database schema validation and migration on first boot. This startup phase can take 2–5 minutes on a fresh deployment, much longer than a typical Cloud Run service. The probe variables in `Cyclos_CloudRun` use **different names** from App_CloudRun (`startup_probe` and `liveness_probe` instead of `startup_probe_config` and `health_check_config`) and have extended default timeouts to accommodate this behaviour.
+Cyclos is a Java application that performs database schema validation and migration on first boot. This startup phase can take 2–5 minutes on a fresh deployment, much longer than a typical Cloud Run service. The probe variables in `Cyclos CloudRun` use **different names** from App CloudRun (`startup_probe` and `liveness_probe` instead of `startup_probe_config` and `health_check_config`) and have extended default timeouts to accommodate this behaviour.
 
 Both probes target the `/api` endpoint, which reflects the Cyclos application's readiness more accurately than a generic `/healthz` path.
 
@@ -188,7 +188,7 @@ Both probes target the `/api` endpoint, which reflects the Cyclos application's 
 | `startup_probe` | `{ enabled = true, type = "HTTP", path = "/api", initial_delay_seconds = 90, timeout_seconds = 30, period_seconds = 60, failure_threshold = 5 }` | Determines when the Cloud Run instance is ready to receive traffic after starting. The `initial_delay_seconds = 90` gives the JVM time to start and Cyclos time to validate or create the database schema before the first probe fires. `failure_threshold = 5` with `period_seconds = 60` allows up to 5 minutes of additional startup time beyond the initial delay. **On first deployment** (when the schema is created from scratch), startup may take longer than usual — consider increasing `failure_threshold` to `10` for the initial rollout. |
 | `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/api", initial_delay_seconds = 120, timeout_seconds = 10, period_seconds = 60, failure_threshold = 3 }` | Periodically checks whether a running Cyclos instance is healthy. The `initial_delay_seconds = 120` prevents premature restarts during the startup phase. A `period_seconds = 60` check interval is appropriate for a database-backed application — more frequent checks add unnecessary load to the database. |
 
-> **Relationship to App_CloudRun probes:** `startup_probe` corresponds to `startup_probe_config` in App_CloudRun; `liveness_probe` corresponds to `health_check_config`. Their sub-field structure is identical. The `startup_probe_config` and `health_check_config` variables are also present in `Cyclos_CloudRun` (with `/api` defaults) for compatibility — prefer the dedicated `startup_probe` and `liveness_probe` variables.
+> **Relationship to App CloudRun probes:** `startup_probe` corresponds to `startup_probe_config` in App CloudRun; `liveness_probe` corresponds to `health_check_config`. Their sub-field structure is identical. The `startup_probe_config` and `health_check_config` variables are also present in `Cyclos CloudRun` (with `/api` defaults) for compatibility — prefer the dedicated `startup_probe` and `liveness_probe` variables.
 
 ### Validating Health Probe Configuration
 
@@ -212,9 +212,9 @@ gcloud logging read \
 
 ## Backup Import & Recovery
 
-In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_CloudRun_Guide Group 12](../App_CloudRun/App_CloudRun_Guide.md#group-12-backup--maintenance)), `Cyclos_CloudRun` supports a **one-time import** of an existing Cyclos database backup during deployment. This is designed for migrating an existing Cyclos instance to GCP or seeding a new environment with production data.
+In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_CloudRun_Guide Group 12](../App_CloudRun/App_CloudRun_Guide.md#group-12-backup--maintenance)), `Cyclos CloudRun` supports a **one-time import** of an existing Cyclos database backup during deployment. This is designed for migrating an existing Cyclos instance to GCP or seeding a new environment with production data.
 
-The backup import variables in `Cyclos_CloudRun` have the same semantics as those in App_CloudRun_Guide Group 12, with one naming difference: **`backup_uri`** (a full GCS object path or Google Drive file ID) is used instead of `backup_file` (a filename relative to the backup bucket).
+The backup import variables in `Cyclos CloudRun` have the same semantics as those in App_CloudRun_Guide Group 12, with one naming difference: **`backup_uri`** (a full GCS object path or Google Drive file ID) is used instead of `backup_file` (a filename relative to the backup bucket).
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -245,7 +245,7 @@ gcloud logging read \
 
 ## Deployment Prerequisites & Validation
 
-After deploying `Cyclos_CloudRun`, confirm the deployment is healthy:
+After deploying `Cyclos CloudRun`, confirm the deployment is healthy:
 
 ```bash
 # Confirm the Cloud Run service is deployed and its URL
