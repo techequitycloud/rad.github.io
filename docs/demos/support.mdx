@@ -2,12 +2,15 @@
 title: Support Demos
 ---
 
-import VideoGallery from '@site/src/components/VideoGallery';
+import DemoPlayer from '@site/src/components/DemoPlayer';
 
 # Support Demos
 
-Explore demonstration videos for the Support role on the RAD platform.
-
-<VideoGallery videos={[
-  { title: 'Support Demo', url: 'https://storage.googleapis.com/rad-public-2b65/demos/support_demo.mp4' },
+<DemoPlayer sections={[
+  {
+    title: 'Deployments',
+    videos: [
+      { title: 'All Deployments', url: 'https://storage.googleapis.com/rad-public-2b65/demos/24-support-deployments.mp4', poster: 'https://storage.googleapis.com/rad-public-2b65/demos/24-support-deployments.jpg' },
+    ],
+  },
 ]} />

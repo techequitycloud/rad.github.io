@@ -2,12 +2,15 @@
 title: Agent Demos
 ---
 
-import VideoGallery from '@site/src/components/VideoGallery';
+import DemoPlayer from '@site/src/components/DemoPlayer';
 
 # Agent Demos
 
-Explore demonstration videos for the Agent role on the RAD platform.
-
-<VideoGallery videos={[
-  { title: 'Agent Demo', url: 'https://storage.googleapis.com/rad-public-2b65/demos/agent_demo.mp4' },
+<DemoPlayer sections={[
+  {
+    title: 'Revenue',
+    videos: [
+      { title: 'Revenue & Referral Module', url: 'https://storage.googleapis.com/rad-public-2b65/demos/25-agent-revenue_referral_module.mp4', poster: 'https://storage.googleapis.com/rad-public-2b65/demos/25-agent-revenue_referral_module.jpg' },
+    ],
+  },
 ]} />
