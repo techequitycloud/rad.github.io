@@ -1,8 +1,8 @@
-# Django_CloudRun Module — Configuration Guide
+# Django CloudRun Module — Configuration Guide
 
 Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design. This module deploys a production-ready Django application on **Google Cloud Run**, backed by a managed Cloud SQL PostgreSQL instance, GCS media storage, and Secret Manager for secrets including the Django `SECRET_KEY`.
 
-`Django_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, Filestore, secrets, CI/CD) and adds Django-specific application configuration on top via the `Django_Common` sub-module.
+`Django CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, Filestore, secrets, CI/CD) and adds Django-specific application configuration on top via the `Django_Common` sub-module.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -10,40 +10,40 @@ Django is a high-level Python web framework that encourages rapid development an
 
 ## How This Guide Is Structured
 
-This guide documents only the variables that are **unique to `Django_CloudRun`** or that have **Django-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, runtime scaling, CI/CD, backup, custom SQL, storage, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md).
+This guide documents only the variables that are **unique to `Django CloudRun`** or that have **Django-specific defaults** that differ from the `App CloudRun` base module. For all other variables — project identity, runtime scaling, CI/CD, backup, custom SQL, storage, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md).
 
-**Variables fully covered by the App_CloudRun guide:**
+**Variables fully covered by the App CloudRun guide:**
 
 | Configuration Area | App_CloudRun_Guide Section | Django-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | Group 0 | Different defaults for `module_description` and `module_documentation`. |
-| Project & Identity | Group 1 | Refer to base App_CloudRun module documentation. |
+| Project & Identity | Group 1 | Refer to base App CloudRun module documentation. |
 | Application Identity | Group 2 | See [Django Application Identity](#django-application-identity) below. `application_name` defaults to `"django"`. |
 | Runtime & Scaling | Group 3 | `min_instance_count` defaults to `0` (scale-to-zero). `container_port` defaults to `8080`. `enable_cloudsql_volume` defaults to `true` (Unix socket connection to Cloud SQL). |
 | Environment Variables & Secrets | Group 4 | Django_Common injects `DB_HOST`, `DB_ENGINE`, `SECRET_KEY`, and other database variables automatically — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| Observability & Health | Group 5 | See [Django Health Probes](#django-health-probes) — Django_CloudRun exposes a dual probe system with `/healthz` defaults. |
+| Observability & Health | Group 5 | See [Django Health Probes](#django-health-probes) — Django CloudRun exposes a dual probe system with `/healthz` defaults. |
 | Jobs & Scheduled Tasks | Group 6 | See [Initialization Jobs](#initialization-jobs) — a default `db-init` job is pre-configured. |
-| CI/CD & GitHub Integration | Group 7 | Refer to base App_CloudRun module documentation. |
+| CI/CD & GitHub Integration | Group 7 | Refer to base App CloudRun module documentation. |
 | Storage — NFS | Group 8 | `enable_nfs` defaults to `true` for Django. Requires `execution_environment = "gen2"` (the default). |
-| Storage — GCS | Group 9 | Refer to base App_CloudRun module documentation. The media GCS bucket is provisioned automatically by Django_Common. |
+| Storage — GCS | Group 9 | Refer to base App CloudRun module documentation. The media GCS bucket is provisioned automatically by Django_Common. |
 | Redis Cache | Group 10 | See [Redis Configuration](#redis-configuration) — Django uses Redis for sessions and caching. |
 | Database Backend | Group 11 | See [Django Database Configuration](#django-database-configuration) — PostgreSQL required, extensions auto-installed. |
-| Backup & Maintenance | Group 12 | Refer to base App_CloudRun module documentation. |
-| Custom Initialisation & SQL | Group 13 | Refer to base App_CloudRun module documentation. |
-| Access & Networking | Group 14 | `vpc_egress_setting` defaults to `"PRIVATE_RANGES_ONLY"`. `ingress_settings` defaults to `"all"`. Refer to the App_CloudRun guide for full documentation. |
-| Identity-Aware Proxy | Group 15 | Refer to base App_CloudRun module documentation. |
-| Cloud Armor & CDN | Group 16 | Refer to base App_CloudRun module documentation. |
-| VPC Service Controls | Group 17 | Refer to base App_CloudRun module documentation. |
+| Backup & Maintenance | Group 12 | Refer to base App CloudRun module documentation. |
+| Custom Initialisation & SQL | Group 13 | Refer to base App CloudRun module documentation. |
+| Access & Networking | Group 14 | `vpc_egress_setting` defaults to `"PRIVATE_RANGES_ONLY"`. `ingress_settings` defaults to `"all"`. Refer to the App CloudRun guide for full documentation. |
+| Identity-Aware Proxy | Group 15 | Refer to base App CloudRun module documentation. |
+| Cloud Armor & CDN | Group 16 | Refer to base App CloudRun module documentation. |
+| VPC Service Controls | Group 17 | Refer to base App CloudRun module documentation. |
 
 ---
 
 ## Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `Django_CloudRun` (via the `Django_Common` sub-module) regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
+The following behaviours are applied automatically by `Django CloudRun` (via the `Django_Common` sub-module) regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
 | Behaviour | Detail |
 |---|---|
-| **Django environment variables** | `Django_Common` injects the following environment variables automatically: `DB_ENGINE` (`django.db.backends.postgresql`), `DB_HOST` (Cloud SQL Auth Proxy socket path, e.g. `/cloudsql/PROJECT:REGION:INSTANCE`), `DB_PORT` (`5432`), `DB_NAME`, `DB_USER`. These values are derived from the Cloud SQL instance provisioned by `App_CloudRun` and do not need to be set manually in `environment_variables`. |
+| **Django environment variables** | `Django_Common` injects the following environment variables automatically: `DB_ENGINE` (`django.db.backends.postgresql`), `DB_HOST` (Cloud SQL Auth Proxy socket path, e.g. `/cloudsql/PROJECT:REGION:INSTANCE`), `DB_PORT` (`5432`), `DB_NAME`, `DB_USER`. These values are derived from the Cloud SQL instance provisioned by `App CloudRun` and do not need to be set manually in `environment_variables`. |
 | **Django secret key** | A random `SECRET_KEY` is auto-generated and stored in Secret Manager. It is injected into the container as the `SECRET_KEY` environment variable via `module_secret_env_vars`. **Do not set `SECRET_KEY` in `environment_variables`** — the platform-managed value in Secret Manager takes precedence. |
 | **PostgreSQL extensions** | The following extensions are installed automatically in the application database during the initialisation job: `pg_trgm`, `unaccent`, `hstore`, `citext`. These are required for Django's full-text search, accent-insensitive lookups, and schema-flexible field types. You do not need to set `enable_postgres_extensions = true` for these extensions. |
 | **Database initialisation** | A dedicated Django database user is created with the password from Secret Manager and granted the permissions required by the application. The `postgres` superuser is used only for the extension and user setup jobs. |
@@ -60,7 +60,7 @@ These variables have Django-specific defaults. Their semantics are identical to 
 
 | Variable | Default | Description & Implications |
 |---|---|---|
-| `application_name` | `"django"` | Internal identifier used as the base name for the Cloud Run service, Artifact Registry repository, Secret Manager secrets, and GCS buckets. Functionally identical to `application_name` in App_CloudRun. **Do not change after initial deployment.** |
+| `application_name` | `"django"` | Internal identifier used as the base name for the Cloud Run service, Artifact Registry repository, Secret Manager secrets, and GCS buckets. Functionally identical to `application_name` in App CloudRun. **Do not change after initial deployment.** |
 | `application_display_name` | `"Django Application"` | Human-readable name shown in the platform UI, the Cloud Run service list, and monitoring dashboards. Can be updated freely at any time. |
 | `application_description` | `"Django Application - High-level Python Web framework"` | Brief description populated into the Cloud Run service description field and platform documentation. |
 | `application_version` | `"latest"` | Version tag applied to the container image. When `container_image_source = "custom"`, incrementing this value triggers a new Cloud Build run. Prefer a pinned version (e.g. `"v1.2.0"`) over `"latest"` in production to ensure reproducible deployments. |
@@ -112,11 +112,11 @@ gcloud run services describe django \
 
 ## Django Health Probes
 
-`Django_CloudRun` exposes **two independent probe systems**:
+`Django CloudRun` exposes **two independent probe systems**:
 
 1. **`startup_probe` / `liveness_probe`** — these are used by the `Django_Common` sub-module and configure how the initialisation scripts and application entrypoint assess Django readiness. They are passed into Django_Common and are separate from the Cloud Run infrastructure probe configuration.
 
-2. **`startup_probe_config` / `health_check_config`** — these are passed directly to `App_CloudRun` and configure the actual **Cloud Run startup and liveness probes** on the container revision. They correspond to the variables of the same names documented in [App_CloudRun_Guide Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health).
+2. **`startup_probe_config` / `health_check_config`** — these are passed directly to `App CloudRun` and configure the actual **Cloud Run startup and liveness probes** on the container revision. They correspond to the variables of the same names documented in [App_CloudRun_Guide Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health).
 
 For most deployments you will adjust both sets. `startup_probe` / `liveness_probe` control Django_Common's internal readiness assessment, while `startup_probe_config` / `health_check_config` control the Cloud Run infrastructure health checks that determine whether traffic is routed to an instance.
 
@@ -129,7 +129,7 @@ For most deployments you will adjust both sets. `startup_probe` / `liveness_prob
 
 **`startup_probe_config` / `health_check_config` (Cloud Run infrastructure probes):**
 
-Django-specific defaults differ from the App_CloudRun base:
+Django-specific defaults differ from the App CloudRun base:
 - `startup_probe_config`: `{ enabled = true, type = "HTTP", path = "/healthz", initial_delay_seconds = 10, timeout_seconds = 5, period_seconds = 10, failure_threshold = 10 }`
 - `health_check_config`: `{ enabled = true, type = "HTTP", path = "/healthz", initial_delay_seconds = 15, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }`
 
@@ -168,7 +168,7 @@ Django uses Redis as a session store and caching backend via `django-redis`. Whe
 | `redis_port` | `6379` | Integer | The TCP port of the Redis server. The default `6379` is correct for Cloud Memorystore and most self-hosted Redis instances. |
 | `redis_auth` | `""` *(no authentication)* | Password string *(sensitive)* | Authentication password for the Redis server. Leave empty if the Redis instance does not require authentication. When set, the value is stored securely and never appears in Terraform state in plaintext. For Cloud Memorystore with AUTH enabled, set this to the instance's auth string. |
 
-> **Provisioning Redis:** The `Django_CloudRun` module does not provision a Redis instance. Provision a Cloud Memorystore for Redis instance separately and set `redis_host` to its private IP address.
+> **Provisioning Redis:** The `Django CloudRun` module does not provision a Redis instance. Provision a Cloud Memorystore for Redis instance separately and set `redis_host` to its private IP address.
 
 > **VPC connectivity:** Cloud Run must be able to reach the private Redis IP. Ensure the Cloud Run service has VPC egress configured (`vpc_egress_setting = "PRIVATE_RANGES_ONLY"`) and that the VPC network contains a subnet in the same region as the Redis instance.
 
@@ -185,9 +185,9 @@ gcloud run services describe django \
 
 ## Initialization Jobs
 
-Django deployments require database setup and schema migration jobs to run before (or immediately after) the application starts. `Django_CloudRun` pre-configures a default `db-init` job and supports additional Django-specific jobs.
+Django deployments require database setup and schema migration jobs to run before (or immediately after) the application starts. `Django CloudRun` pre-configures a default `db-init` job and supports additional Django-specific jobs.
 
-**Default `initialization_jobs` in `Django_CloudRun`:**
+**Default `initialization_jobs` in `Django CloudRun`:**
 
 ```hcl
 initialization_jobs = [
@@ -285,7 +285,7 @@ The `rotation_propagation_delay_sec` variable controls how long the module waits
 
 ## Deployment Prerequisites & Validation
 
-After deploying `Django_CloudRun`, confirm the deployment is healthy:
+After deploying `Django CloudRun`, confirm the deployment is healthy:
 
 ```bash
 # Confirm the Cloud Run service is deployed and view its URL

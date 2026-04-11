@@ -1,22 +1,22 @@
-# Ghost_CloudRun Module — Configuration Guide
+# Ghost CloudRun Module — Configuration Guide
 
-This guide describes every configuration variable available in the `Ghost_CloudRun` module. `Ghost_CloudRun` is a **wrapper module** that combines the generic [`App_CloudRun`](../App_CloudRun/App_CloudRun_Guide.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Cloud Run (serverless).
+This guide describes every configuration variable available in the `Ghost CloudRun` module. `Ghost CloudRun` is a **wrapper module** that combines the generic [`App CloudRun`](../App_CloudRun/App_CloudRun_Guide.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Cloud Run (serverless).
 
-Most configuration options in `Ghost_CloudRun` map directly to the same options in `App_CloudRun`. Where a variable is identical in behaviour, this guide references the `App_CloudRun` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Ghost** are described in full here.
+Most configuration options in `Ghost CloudRun` map directly to the same options in `App CloudRun`. Where a variable is identical in behaviour, this guide references the `App CloudRun` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Ghost** are described in full here.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
 ---
 
-## How Ghost_CloudRun Relates to App_CloudRun
+## How Ghost CloudRun Relates to App CloudRun
 
-`Ghost_CloudRun` passes all variables through to `App_CloudRun` and adds a `Ghost_Common` sub-module that supplies Ghost-specific defaults and application configuration. The main effects are:
+`Ghost CloudRun` passes all variables through to `App CloudRun` and adds a `Ghost_Common` sub-module that supplies Ghost-specific defaults and application configuration. The main effects are:
 
 1. **MySQL 8.0 is required.** Ghost 6.x requires MySQL 8.0 and will not work with PostgreSQL. The `database_type` default is fixed to `"MYSQL_8_0"`.
 2. **`database__client = "mysql"` is injected automatically.** Ghost 6.x will silently fall back to SQLite without this environment variable, even when all other database connection variables are present. The module injects it automatically — you do not need to set it yourself.
 3. **A `ghost-content` GCS bucket is provisioned automatically.** `Ghost_Common` provides a `ghost-content` bucket definition that is merged into the module's bucket list. You do not need to define it in `storage_buckets`.
 4. **A `db-init` job runs on first deployment.** `Ghost_Common` supplies a default `db-init` Cloud Run Job using a `mysql:8.0-debian` image that initialises the Ghost MySQL schema. Override `initialization_jobs` to replace it with a custom job.
-5. **Resource defaults are sized for Ghost.** The default `cpu_limit` (2 vCPU) and `memory_limit` (4 Gi) are higher than the `App_CloudRun` defaults to match Ghost 6.x's resource requirements.
+5. **Resource defaults are sized for Ghost.** The default `cpu_limit` (2 vCPU) and `memory_limit` (4 Gi) are higher than the `App CloudRun` defaults to match Ghost 6.x's resource requirements.
 6. **Redis caching is enabled by default.** Ghost uses Redis for page caching. See [Group 20: Redis Cache](#group-20-redis-cache) below.
 7. **Health probes are tuned for Ghost's slow startup.** Ghost runs database migrations and compiles themes on first boot. The default startup probe allows 90 seconds of initial delay before checking.
 8. **Scale-to-zero is the default.** Cloud Run defaults `min_instance_count` to `0`, allowing the service to scale down completely when idle. Set `min_instance_count = 1` for production Ghost sites to eliminate cold start delays.
@@ -25,11 +25,11 @@ Most configuration options in `Ghost_CloudRun` map directly to the same options 
 
 ## Group 0: Module Metadata & Configuration
 
-The behaviour of these variables is identical to `App_CloudRun`. See [App_CloudRun Group 0](../App_CloudRun/App_CloudRun_Guide.md#group-0-module-metadata--configuration) for a full description.
+The behaviour of these variables is identical to `App CloudRun`. See [App CloudRun Group 0](../App_CloudRun/App_CloudRun_Guide.md#group-0-module-metadata--configuration) for a full description.
 
 **Ghost-specific defaults:**
 
-| Variable | Ghost_CloudRun Default | Notes |
+| Variable | Ghost CloudRun Default | Notes |
 |---|---|---|
 | `module_description` | `"Ghost: Deploy Ghost publishing platform on Google Cloud Run…"` | Pre-populated with Ghost-specific description. |
 | `module_documentation` | `"https://docs.radmodules.dev/docs/applications/ghost"` | Points to the Ghost documentation page. |
@@ -39,32 +39,32 @@ The behaviour of these variables is identical to `App_CloudRun`. See [App_CloudR
 
 ## Group 1: Project & Identity
 
-Identical to `App_CloudRun`. See [App_CloudRun Group 1](../App_CloudRun/App_CloudRun_Guide.md#group-1-project--identity).
+Identical to `App CloudRun`. See [App CloudRun Group 1](../App_CloudRun/App_CloudRun_Guide.md#group-1-project--identity).
 
 ---
 
 ## Group 2: Application Identity
 
-These variables behave identically to `App_CloudRun`. See [App_CloudRun Group 2](../App_CloudRun/App_CloudRun_Guide.md#group-2-application-identity) for descriptions.
+These variables behave identically to `App CloudRun`. See [App CloudRun Group 2](../App_CloudRun/App_CloudRun_Guide.md#group-2-application-identity) for descriptions.
 
 **Ghost-specific defaults:**
 
-| Variable | Ghost_CloudRun Default | App_CloudRun Default | Notes |
+| Variable | Ghost CloudRun Default | App CloudRun Default | Notes |
 |---|---|---|---|
 | `application_name` | `"ghost"` | `"crapp"` | Used as the base name for all GCP resources. **Do not change after deployment.** |
-| `display_name` | `"Ghost Publishing"` | `"App_CloudRun Application"` | Shown in the platform UI and dashboards. Can be changed freely. |
-| `description` | `"Ghost - Professional publishing platform"` | `"App_CloudRun Custom Application…"` | Descriptive label. Can be changed freely. |
+| `display_name` | `"Ghost Publishing"` | `"App CloudRun Application"` | Shown in the platform UI and dashboards. Can be changed freely. |
+| `description` | `"Ghost - Professional publishing platform"` | `"App CloudRun Custom Application…"` | Descriptive label. Can be changed freely. |
 | `application_version` | `"6.14.0"` | `"1.0.0"` | The Ghost release version to build and deploy. Incrementing this value triggers a new Cloud Build run and a new Cloud Run revision. |
 
 ---
 
 ## Group 3: Runtime & Scaling
 
-Most variables behave identically to `App_CloudRun`. See [App_CloudRun Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling).
+Most variables behave identically to `App CloudRun`. See [App CloudRun Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling).
 
 **Ghost-specific defaults and behaviour:**
 
-| Variable | Ghost_CloudRun Default | App_CloudRun Default | Notes |
+| Variable | Ghost CloudRun Default | App CloudRun Default | Notes |
 |---|---|---|---|
 | `container_port` | `2368` | `8080` | Ghost's native HTTP port. Do not change unless your custom Dockerfile binds Ghost to a different port. |
 | `min_instance_count` | `0` | `0` | Cloud Run defaults to scale-to-zero. **For production Ghost sites, set to `1`** to keep at least one instance warm and avoid cold start delays when readers visit the site. Cold starts can take 5–15 seconds for Ghost 6.x due to initialisation overhead. |
@@ -77,17 +77,17 @@ Most variables behave identically to `App_CloudRun`. See [App_CloudRun Group 3](
 
 **Traffic splitting for canary and blue-green deployments:**
 
-`Ghost_CloudRun` supports the `traffic_split` variable inherited from `App_CloudRun`. This allows gradual rollouts of new Ghost revisions. See [App_CloudRun Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling) for full documentation on `traffic_split`.
+`Ghost CloudRun` supports the `traffic_split` variable inherited from `App CloudRun`. This allows gradual rollouts of new Ghost revisions. See [App CloudRun Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling) for full documentation on `traffic_split`.
 
-The remaining runtime variables (`deploy_application`, `container_image`, `container_build_config`, `enable_image_mirroring`, `enable_vertical_pod_autoscaling` *(N/A for Cloud Run)*, `container_protocol`, `timeout_seconds`, `cloudsql_volume_mount_path`, `service_annotations`, `service_labels`, `enable_image_mirroring`, `container_protocol`) behave as described in [App_CloudRun Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling).
+The remaining runtime variables (`deploy_application`, `container_image`, `container_build_config`, `enable_image_mirroring`, `enable_vertical_pod_autoscaling` *(N/A for Cloud Run)*, `container_protocol`, `timeout_seconds`, `cloudsql_volume_mount_path`, `service_annotations`, `service_labels`, `enable_image_mirroring`, `container_protocol`) behave as described in [App CloudRun Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling).
 
 ---
 
 ## Group 4: Access & Networking
 
-These variables behave identically to `App_CloudRun`. See [App_CloudRun Group 4](../App_CloudRun/App_CloudRun_Guide.md) for full descriptions.
+These variables behave identically to `App CloudRun`. See [App CloudRun Group 4](../App_CloudRun/App_CloudRun_Guide.md) for full descriptions.
 
-**Cloud Run-specific networking variables (not present in Ghost_GKE):**
+**Cloud Run-specific networking variables (not present in Ghost GKE):**
 
 | Variable | Default | Description |
 |---|---|---|
@@ -111,7 +111,7 @@ These variables behave identically to `App_CloudRun`. See [App_CloudRun Group 4]
 
 ## Group 5: Environment Variables & Secrets
 
-These variables behave identically to `App_CloudRun`. See [App_CloudRun Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets).
+These variables behave identically to `App CloudRun`. See [App CloudRun Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets).
 
 **Ghost-specific defaults:**
 
@@ -142,13 +142,13 @@ environment_variables = {
 }
 ```
 
-The remaining secrets variables (`secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`) behave as described in [App_CloudRun Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets).
+The remaining secrets variables (`secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`) behave as described in [App CloudRun Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets).
 
 ---
 
 ## Group 6: Backup & Maintenance
 
-These variables behave identically to `App_CloudRun`. See [App_CloudRun Group 12](../App_CloudRun/App_CloudRun_Guide.md).
+These variables behave identically to `App CloudRun`. See [App CloudRun Group 12](../App_CloudRun/App_CloudRun_Guide.md).
 
 **Ghost-specific defaults:**
 
@@ -157,7 +157,7 @@ These variables behave identically to `App_CloudRun`. See [App_CloudRun Group 12
 | `backup_schedule` | `"0 2 * * *"` | Daily at 02:00 UTC. Adjust to match your Recovery Point Objective and traffic patterns. |
 | `backup_retention_days` | `7` | 7-day retention. Increase for production deployments (30–90 days recommended). |
 
-**Backup Import** — Ghost_CloudRun supports importing an existing backup on first deployment:
+**Backup Import** — Ghost CloudRun supports importing an existing backup on first deployment:
 
 | Variable | Default | Description |
 |---|---|---|
@@ -170,17 +170,17 @@ These variables behave identically to `App_CloudRun`. See [App_CloudRun Group 12
 
 ## Group 7: CI/CD & GitHub Integration
 
-Identical to `App_CloudRun`. See [App_CloudRun Group 7](../App_CloudRun/App_CloudRun_Guide.md).
+Identical to `App CloudRun`. See [App CloudRun Group 7](../App_CloudRun/App_CloudRun_Guide.md).
 
 Available variables: `enable_cicd_trigger`, `github_repository_url`, `github_token`, `github_app_installation_id`, `cicd_trigger_config`, `enable_cloud_deploy`, `cloud_deploy_stages`, `enable_binary_authorization`.
 
-**Cloud Deploy stages in Ghost_CloudRun** have a slightly different shape to the GKE equivalent: each stage targets a Cloud Run service rather than a Kubernetes namespace. See [App_CloudRun Group 7](../App_CloudRun/App_CloudRun_Guide.md) for the full `cloud_deploy_stages` field reference.
+**Cloud Deploy stages in Ghost CloudRun** have a slightly different shape to the GKE equivalent: each stage targets a Cloud Run service rather than a Kubernetes namespace. See [App CloudRun Group 7](../App_CloudRun/App_CloudRun_Guide.md) for the full `cloud_deploy_stages` field reference.
 
 ---
 
 ## Group 8: Jobs & Scheduled Tasks
 
-These variables behave as described in [App_CloudRun Group 6](../App_CloudRun/App_CloudRun_Guide.md#group-6-jobs--scheduled-tasks), with one important Ghost-specific behaviour.
+These variables behave as described in [App CloudRun Group 6](../App_CloudRun/App_CloudRun_Guide.md#group-6-jobs--scheduled-tasks), with one important Ghost-specific behaviour.
 
 **Ghost default `db-init` job:**
 
@@ -196,13 +196,13 @@ When `initialization_jobs` is left as the default (empty list `[]`), `Ghost_Comm
 
 Override `initialization_jobs` with a non-empty list to replace this default with your own jobs.
 
-The `cron_jobs` and `additional_services` variables are available and behave identically to `App_CloudRun`. See [App_CloudRun Group 6](../App_CloudRun/App_CloudRun_Guide.md#group-6-jobs--scheduled-tasks) for full documentation.
+The `cron_jobs` and `additional_services` variables are available and behave identically to `App CloudRun`. See [App CloudRun Group 6](../App_CloudRun/App_CloudRun_Guide.md#group-6-jobs--scheduled-tasks) for full documentation.
 
 ---
 
 ## Group 9: Custom Initialisation & SQL
 
-Identical to `App_CloudRun`. See [App_CloudRun Group 13](../App_CloudRun/App_CloudRun_Guide.md).
+Identical to `App CloudRun`. See [App CloudRun Group 13](../App_CloudRun/App_CloudRun_Guide.md).
 
 Available variables: `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`, `custom_sql_scripts_use_root`.
 
@@ -210,7 +210,7 @@ Available variables: `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `
 
 ## Group 10: Storage & Filesystem
 
-These variables behave identically to `App_CloudRun`. See [App_CloudRun Group 10](../App_CloudRun/App_CloudRun_Guide.md).
+These variables behave identically to `App CloudRun`. See [App CloudRun Group 10](../App_CloudRun/App_CloudRun_Guide.md).
 
 **Ghost-specific defaults:**
 
@@ -225,23 +225,23 @@ These variables behave identically to `App_CloudRun`. See [App_CloudRun Group 10
 |---|---|---|
 | Auto-provisioned | `ghost-content` | Ghost media storage (images, files, themes) via GCS Fuse CSI Driver |
 
-The `create_cloud_storage`, `storage_buckets`, and `gcs_volumes` variables behave as described in [App_CloudRun Group 10](../App_CloudRun/App_CloudRun_Guide.md).
+The `create_cloud_storage`, `storage_buckets`, and `gcs_volumes` variables behave as described in [App CloudRun Group 10](../App_CloudRun/App_CloudRun_Guide.md).
 
 ---
 
 ## Group 11: Database Backend
 
-These variables behave identically to `App_CloudRun`. See [App_CloudRun Group 11](../App_CloudRun/App_CloudRun_Guide.md).
+These variables behave identically to `App CloudRun`. See [App CloudRun Group 11](../App_CloudRun/App_CloudRun_Guide.md).
 
 **Ghost-specific defaults and restrictions:**
 
-| Variable | Ghost_CloudRun Default | App_CloudRun Default | Notes |
+| Variable | Ghost CloudRun Default | App CloudRun Default | Notes |
 |---|---|---|---|
-| `db_name` | `"ghost"` | *(not in App_CloudRun)* | Ghost-specific shorthand for the database name. Injected into Ghost_Common configuration. |
-| `db_user` | `"ghost"` | *(not in App_CloudRun)* | Ghost-specific shorthand for the database user. |
+| `db_name` | `"ghost"` | *(not in App CloudRun)* | Ghost-specific shorthand for the database name. Injected into Ghost_Common configuration. |
+| `db_user` | `"ghost"` | *(not in App CloudRun)* | Ghost-specific shorthand for the database user. |
 | `database_password_length` | `16` | `16` | Increase to `32` for production. |
 
-> **Important:** Ghost_CloudRun always uses `database_type = "MYSQL_8_0"`. This value is set by `Ghost_Common` and cannot be overridden — Ghost 6.x will not function with any other database engine.
+> **Important:** Ghost CloudRun always uses `database_type = "MYSQL_8_0"`. This value is set by `Ghost_Common` and cannot be overridden — Ghost 6.x will not function with any other database engine.
 
 **Automatic password rotation:**
 
@@ -254,7 +254,7 @@ These variables behave identically to `App_CloudRun`. See [App_CloudRun Group 11
 
 ## Group 12: Jobs — Observability & Health
 
-These variables behave identically to `App_CloudRun`. See [App_CloudRun Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health).
+These variables behave identically to `App CloudRun`. See [App CloudRun Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health).
 
 **Ghost-specific defaults:**
 
@@ -262,7 +262,7 @@ Ghost 6.x performs database migrations and theme compilation during startup, mea
 
 **Startup probe** (`startup_probe`):
 
-| Field | Ghost Default | App_CloudRun Default | Notes |
+| Field | Ghost Default | App CloudRun Default | Notes |
 |---|---|---|---|
 | `path` | `"/"` | `"/healthz"` | Ghost does not expose a dedicated `/healthz` endpoint; the root path returns HTTP 200 when the application is ready. |
 | `initial_delay_seconds` | `90` | `10` | Allows Ghost 90 seconds before the first probe attempt, giving it time to run database migrations. |
@@ -270,18 +270,18 @@ Ghost 6.x performs database migrations and theme compilation during startup, mea
 
 **Liveness probe** (`liveness_probe`):
 
-| Field | Ghost Default | App_CloudRun Default | Notes |
+| Field | Ghost Default | App CloudRun Default | Notes |
 |---|---|---|---|
 | `path` | `"/"` | `"/healthz"` | Same as startup probe. |
 | `initial_delay_seconds` | `60` | `15` | Gives Ghost additional time to stabilise before liveness checks begin. |
 
-The `uptime_check_config` and `alert_policies` variables behave as described in [App_CloudRun Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health).
+The `uptime_check_config` and `alert_policies` variables behave as described in [App CloudRun Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health).
 
 ---
 
 ## Group 20: Redis Cache
 
-These variables are specific to Ghost and do not exist in the base `App_CloudRun` module. Ghost uses Redis for page caching and session caching, which significantly reduces database load and improves page delivery speed for high-traffic sites.
+These variables are specific to Ghost and do not exist in the base `App CloudRun` module. Ghost uses Redis for page caching and session caching, which significantly reduces database load and improves page delivery speed for high-traffic sites.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|

@@ -3,7 +3,7 @@ title: "Strapi Cloud Run Configuration Guide"
 sidebar_label: "Cloud Run"
 ---
 
-# Strapi_CloudRun Module — Configuration Guide
+# Strapi CloudRun Module — Configuration Guide
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_CloudRun.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_CloudRun.mp4" type="video/mp4" />
@@ -16,7 +16,7 @@ sidebar_label: "Cloud Run"
 
 Strapi is an open-source headless CMS that gives developers the freedom to choose their favourite tools and frameworks while enabling content editors to manage their content independently. This module deploys Strapi on **Google Cloud Run** (Gen2), backed by a managed Cloud SQL PostgreSQL instance, an optional Cloud Filestore NFS volume for media uploads, and a GCS bucket for object storage.
 
-`Strapi_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Strapi-specific application configuration and secret management on top.
+`Strapi CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Strapi-specific application configuration and secret management on top.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -24,43 +24,43 @@ Strapi is an open-source headless CMS that gives developers the freedom to choos
 
 ## How This Guide Is Structured
 
-This guide documents only the variables that are **unique to `Strapi_CloudRun`** or that have **Strapi-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, runtime scaling, storage, CI/CD, backup, custom SQL, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md).
+This guide documents only the variables that are **unique to `Strapi CloudRun`** or that have **Strapi-specific defaults** that differ from the `App CloudRun` base module. For all other variables — project identity, runtime scaling, storage, CI/CD, backup, custom SQL, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md).
 
-**Variables fully covered by the App_CloudRun guide:**
+**Variables fully covered by the App CloudRun guide:**
 
 | Configuration Area | App_CloudRun_Guide Section | Strapi-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | Group 0 | Different defaults for `module_description` and `module_documentation`. `resource_creator_identity` is the same. |
-| Project & Identity | Group 1 | Refer to base App_CloudRun module documentation. |
+| Project & Identity | Group 1 | Refer to base App CloudRun module documentation. |
 | Application Identity | Group 2 | See [Strapi Application Identity](#strapi-application-identity) below for Strapi-specific defaults. |
 | Runtime & Scaling | Group 3 | See [Strapi Runtime Configuration](#strapi-runtime-configuration) below for `cpu_limit`, `memory_limit`, `container_port`, and scaling defaults. |
 | Environment Variables & Secrets | Group 4 | See [Strapi Environment Variables](#strapi-environment-variables) below for email and GCS defaults. |
 | Observability & Health | Group 5 | See [Strapi Health Probes](#strapi-health-probes) below for `startup_probe`, `liveness_probe`, and their Strapi-specific defaults. |
 | Jobs & Scheduled Tasks | Group 6 | A `db-init` Cloud Run job runs automatically — see [Platform-Managed Behaviours](#platform-managed-behaviours). Refer to App_CloudRun_Guide for customising additional jobs. |
-| CI/CD & GitHub Integration | Group 7 | See [Cloud Deploy Pipeline](#cloud-deploy-pipeline) below for Strapi-specific Cloud Deploy defaults. Refer to App_CloudRun module documentation for all other CI/CD variables. |
+| CI/CD & GitHub Integration | Group 7 | See [Cloud Deploy Pipeline](#cloud-deploy-pipeline) below for Strapi-specific Cloud Deploy defaults. Refer to App CloudRun module documentation for all other CI/CD variables. |
 | Storage — NFS | Group 8 | NFS is **enabled by default** in this module. See [NFS Storage](#nfs-storage) below. |
-| Storage — GCS | Group 9 | A default `data` bucket is provisioned. Refer to App_CloudRun module documentation for bucket configuration. |
+| Storage — GCS | Group 9 | A default `data` bucket is provisioned. Refer to App CloudRun module documentation for bucket configuration. |
 | Redis Cache | Group 10 | See [Redis Cache](#redis-cache) below for Strapi-specific Redis configuration and environment variable injection. |
 | Database Backend | Group 11 | See [Strapi Database Configuration](#strapi-database-configuration) below. |
-| Backup & Maintenance | Group 12 | Refer to base App_CloudRun module documentation for `backup_schedule` and `backup_retention_days`. See [Backup Import & Recovery](#backup-import--recovery) below for `enable_backup_import` and related variables. |
-| Custom Initialisation & SQL | Group 13 | Refer to base App_CloudRun module documentation. |
-| Access & Networking | Group 14 | Refer to base App_CloudRun module documentation (`ingress_settings`, `vpc_egress_setting`). |
-| Identity-Aware Proxy | Group 15 | Refer to base App_CloudRun module documentation. |
-| Cloud Armor & CDN | Group 16 | Refer to base App_CloudRun module documentation. |
-| VPC Service Controls | Group 17 | Refer to base App_CloudRun module documentation. |
+| Backup & Maintenance | Group 12 | Refer to base App CloudRun module documentation for `backup_schedule` and `backup_retention_days`. See [Backup Import & Recovery](#backup-import--recovery) below for `enable_backup_import` and related variables. |
+| Custom Initialisation & SQL | Group 13 | Refer to base App CloudRun module documentation. |
+| Access & Networking | Group 14 | Refer to base App CloudRun module documentation (`ingress_settings`, `vpc_egress_setting`). |
+| Identity-Aware Proxy | Group 15 | Refer to base App CloudRun module documentation. |
+| Cloud Armor & CDN | Group 16 | Refer to base App CloudRun module documentation. |
+| VPC Service Controls | Group 17 | Refer to base App CloudRun module documentation. |
 
 ---
 
 ## Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `Strapi_CloudRun` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
+The following behaviours are applied automatically by `Strapi CloudRun` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
 | Behaviour | Detail |
 |---|---|
 | **Strapi security secrets** | Five secrets are auto-generated and stored in Secret Manager: `JWT_SECRET`, `ADMIN_JWT_SECRET`, `API_TOKEN_SALT`, `TRANSFER_TOKEN_SALT`, and `APP_KEYS` (a comma-separated list of four keys). These are required by Strapi for authentication and API security and are injected into the container automatically. You do not need to generate or manage these values. |
 | **GCS environment variables** | `GCS_BUCKET_NAME` and `GCS_BASE_URL` are automatically injected into the container, pointing to the provisioned GCS uploads bucket. Strapi is pre-configured to use the GCS upload provider when these variables are present. |
 | **Database initialisation job** | A `db-init` Cloud Run job runs automatically on each deployment using `postgres:15-alpine`. It idempotently creates the Strapi database and user, waits for Cloud SQL to be ready, and handles password updates. You do not need to run manual database setup. To override the default job, set `initialization_jobs` with your custom job definition. |
-| **PostgreSQL 15 enforced** | `database_type` is set to `"POSTGRES_15"` by the Strapi_Common module. Strapi requires PostgreSQL — there is no `database_type` variable in `Strapi_CloudRun` to change this. |
+| **PostgreSQL 15 enforced** | `database_type` is set to `"POSTGRES_15"` by the Strapi_Common module. Strapi requires PostgreSQL — there is no `database_type` variable in `Strapi CloudRun` to change this. |
 | **Container port 8080** | Cloud Run automatically injects `PORT=8080` into every container. Strapi reads this environment variable (`env.int('PORT', 1337)`) and listens on port `8080` when deployed on Cloud Run. The `container_port` variable defaults to `8080` to match this behaviour. |
 | **Custom image build** | `container_image_source` defaults to `"custom"`. The module includes a Strapi Dockerfile (based on `node:20-alpine`) that installs dependencies, builds the application, and packages it for production. Set `container_image_source = "prebuilt"` with a `container_image` URI to skip the build and deploy an existing image. |
 | **NFS enabled** | `enable_nfs = true` by default. Strapi stores media uploads on the NFS volume mounted at `/mnt/nfs`, which persists across container restarts and is shared between instances. Requires the Gen2 execution environment (the default). |
@@ -70,7 +70,7 @@ The following behaviours are applied automatically by `Strapi_CloudRun` regardle
 
 ## Strapi Application Identity
 
-These variables control how the Strapi deployment is named and described. They correspond directly to the `application_name`, `application_display_name`, and `application_description` variables in `App_CloudRun` and behave identically — the only difference is the Strapi-specific default values.
+These variables control how the Strapi deployment is named and described. They correspond directly to the `application_name`, `application_display_name`, and `application_description` variables in `App CloudRun` and behave identically — the only difference is the Strapi-specific default values.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -94,16 +94,16 @@ gcloud run services describe strapi \
 
 Strapi is a Node.js application. The module defaults are sized for a production workload, with scale-to-zero enabled for cost efficiency. Adjust `cpu_limit` and `memory_limit` based on your expected traffic and content volume.
 
-The CloudRun module exposes `cpu_limit` and `memory_limit` as **dedicated top-level variables** (rather than the `container_resources` object used in `Strapi_GKE`).
+The CloudRun module exposes `cpu_limit` and `memory_limit` as **dedicated top-level variables** (rather than the `container_resources` object used in `Strapi GKE`).
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
 | `cpu_limit` | `"2000m"` | Kubernetes CPU quantity (e.g. `"1000m"`, `"2"`) | CPU allocated to each Strapi container instance. 2 vCPU is recommended for production to handle media processing (image resizing via `sharp`) and concurrent API requests without throttling. |
 | `memory_limit` | `"2Gi"` | Kubernetes memory quantity (e.g. `"1Gi"`, `"2Gi"`) | Memory allocated to each Strapi container instance. 2 Gi is recommended for production workloads with large media libraries. Reducing below `512Mi` may cause out-of-memory crashes during image processing. |
 
-**Strapi-specific runtime defaults that differ from App_CloudRun:**
+**Strapi-specific runtime defaults that differ from App CloudRun:**
 
-| Variable | App_CloudRun Default | Strapi_CloudRun Default | Reason |
+| Variable | App CloudRun Default | Strapi CloudRun Default | Reason |
 |---|---|---|---|
 | `cpu_limit` | `"1000m"` | `"2000m"` | Strapi's image processing (sharp) and Node.js runtime benefit from 2 vCPU. |
 | `memory_limit` | `"512Mi"` | `"2Gi"` | Strapi holds content schemas, plugins, and media buffers in memory. |
@@ -136,16 +136,16 @@ gcloud run services describe strapi \
 
 ## Strapi Database Configuration
 
-Strapi requires PostgreSQL. `Strapi_CloudRun` uses `application_database_name` and `application_database_user` (consistent with the App_CloudRun interface) to configure the database. The PostgreSQL version is fixed at `POSTGRES_15` by the Strapi_Common module — there is no `database_type` variable in `Strapi_CloudRun`.
+Strapi requires PostgreSQL. `Strapi CloudRun` uses `application_database_name` and `application_database_user` (consistent with the App CloudRun interface) to configure the database. The PostgreSQL version is fixed at `POSTGRES_15` by the Strapi_Common module — there is no `database_type` variable in `Strapi CloudRun`.
 
-All other database variables (`database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, `enable_cloudsql_volume`, `cloudsql_volume_mount_path`) behave identically to the App_CloudRun equivalents — refer to [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend) for their documentation.
+All other database variables (`database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, `enable_cloudsql_volume`, `cloudsql_volume_mount_path`) behave identically to the App CloudRun equivalents — refer to [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend) for their documentation.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
 | `application_database_name` | `"strapidb"` | `[a-z][a-z0-9_]{0,62}` | The name of the PostgreSQL database created within the Cloud SQL instance. Injected as the `DB_NAME` environment variable. **Do not change after initial deployment** — Strapi stores all application data in this database and renaming it requires manual migration. |
 | `application_database_user` | `"strapiuser"` | `[a-z][a-z0-9_]{0,31}` | The PostgreSQL user created for the Strapi application. Injected as the `DB_USER` environment variable. The password is auto-generated, stored in Secret Manager, and injected as `DB_PASSWORD`. |
 
-> **Note:** The database defaults in `Strapi_CloudRun` (`strapidb` / `strapiuser`) differ from `Strapi_GKE` (`strapi` / `strapi`). Do not mix these defaults when migrating between deployment targets — ensure the database name and user match your existing data.
+> **Note:** The database defaults in `Strapi CloudRun` (`strapidb` / `strapiuser`) differ from `Strapi GKE` (`strapi` / `strapi`). Do not mix these defaults when migrating between deployment targets — ensure the database name and user match your existing data.
 
 > **Note:** The `db-init` initialisation job connects as the `postgres` superuser to create the database and user before the application starts. You do not need to run these steps manually.
 
@@ -190,20 +190,20 @@ secret_environment_variables = {
 
 `GCS_BUCKET_NAME` and `GCS_BASE_URL` are injected automatically by the platform and do not need to be set manually. Strapi's `plugins.js` reads these values to configure the GCS upload provider.
 
-All other `environment_variables` and `secret_environment_variables` behaviour is identical to App_CloudRun — refer to [App_CloudRun_Guide Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets).
+All other `environment_variables` and `secret_environment_variables` behaviour is identical to App CloudRun — refer to [App_CloudRun_Guide Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets).
 
 ---
 
 ## Strapi Health Probes
 
-Strapi performs database connection validation and may run pending migrations on startup. `Strapi_CloudRun` provides **two sets of health probe variables**:
+Strapi performs database connection validation and may run pending migrations on startup. `Strapi CloudRun` provides **two sets of health probe variables**:
 
-- **`startup_probe` / `liveness_probe`**: These are the **primary probe variables** in `Strapi_CloudRun`, passed directly to Strapi_Common. They use the Strapi-native `/_health` endpoint.
-- **`startup_probe_config` / `health_check_config`**: These are the App_CloudRun-compatible variable names, also accepted by `Strapi_CloudRun` and passed to `App_CloudRun`. They default to the same `/_health` endpoint.
+- **`startup_probe` / `liveness_probe`**: These are the **primary probe variables** in `Strapi CloudRun`, passed directly to Strapi_Common. They use the Strapi-native `/_health` endpoint.
+- **`startup_probe_config` / `health_check_config`**: These are the App CloudRun-compatible variable names, also accepted by `Strapi CloudRun` and passed to `App CloudRun`. They default to the same `/_health` endpoint.
 
-Prefer `startup_probe` and `liveness_probe` when configuring probes in `Strapi_CloudRun`. The `startup_probe_config` and `health_check_config` variables exist for users familiar with the App_CloudRun interface.
+Prefer `startup_probe` and `liveness_probe` when configuring probes in `Strapi CloudRun`. The `startup_probe_config` and `health_check_config` variables exist for users familiar with the App CloudRun interface.
 
-> **Relationship to App_CloudRun probes:** `startup_probe` corresponds to `startup_probe_config` in App_CloudRun; `liveness_probe` corresponds to `health_check_config`. Their sub-field structure is identical. Refer to [App_CloudRun_Guide Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health) for the full field reference.
+> **Relationship to App CloudRun probes:** `startup_probe` corresponds to `startup_probe_config` in App CloudRun; `liveness_probe` corresponds to `health_check_config`. Their sub-field structure is identical. Refer to [App_CloudRun_Guide Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health) for the full field reference.
 
 **Default probe configuration:**
 
@@ -229,9 +229,9 @@ liveness_probe = {
 }
 ```
 
-**Strapi-specific probe defaults that differ from App_CloudRun:**
+**Strapi-specific probe defaults that differ from App CloudRun:**
 
-| Variable | App_CloudRun Default `path` | Strapi_CloudRun Default `path` | Reason |
+| Variable | App CloudRun Default `path` | Strapi CloudRun Default `path` | Reason |
 |---|---|---|---|
 | `startup_probe` / `startup_probe_config` | `"/_health"` | `"/_health"` | Strapi exposes a dedicated health endpoint that confirms the application and database connection are ready. |
 | `liveness_probe` / `health_check_config` | `"/_health"` | `"/_health"` | Using `/_health` ensures Cloud Run only routes traffic to fully initialised Strapi instances. |
@@ -257,14 +257,14 @@ gcloud logging read \
 
 ## NFS Storage
 
-Strapi stores media uploads and shared files on the NFS volume. `Strapi_CloudRun` enables NFS by default, unlike the `App_CloudRun` base module where NFS is opt-in. NFS mounts on Cloud Run require the Gen2 execution environment (the default).
+Strapi stores media uploads and shared files on the NFS volume. `Strapi CloudRun` enables NFS by default, unlike the `App CloudRun` base module where NFS is opt-in. NFS mounts on Cloud Run require the Gen2 execution environment (the default).
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
 | `enable_nfs` | `true` | `true` / `false` | When `true`, a Cloud Filestore instance is provisioned and mounted into the Strapi container. Media uploads written to `nfs_mount_path` are preserved across container restarts and shared between all Cloud Run instances. Set to `false` only if you are using GCS as the sole upload backend. Requires `execution_environment = "gen2"`. |
 | `nfs_mount_path` | `"/mnt/nfs"` | Filesystem path | The path inside the container where the NFS volume is mounted. Strapi should be configured to write uploads to this path. |
 
-> **Note:** All other NFS configuration variables are identical to the App_CloudRun equivalents — refer to [App_CloudRun_Guide Group 8](../App_CloudRun/App_CloudRun_Guide.md#group-8-storage--filesystem--nfs) for their documentation.
+> **Note:** All other NFS configuration variables are identical to the App CloudRun equivalents — refer to [App_CloudRun_Guide Group 8](../App_CloudRun/App_CloudRun_Guide.md#group-8-storage--filesystem--nfs) for their documentation.
 
 ### Validating NFS Configuration
 
@@ -301,7 +301,7 @@ gcloud run services describe strapi \
 
 ## Backup Import & Recovery
 
-In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_CloudRun_Guide Group 12](../App_CloudRun/App_CloudRun_Guide.md#group-12-backup--maintenance)), `Strapi_CloudRun` supports a **one-time import** of an existing database backup during deployment. This is designed for migrating an existing Strapi instance to GCP or seeding a new environment with production data.
+In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_CloudRun_Guide Group 12](../App_CloudRun/App_CloudRun_Guide.md#group-12-backup--maintenance)), `Strapi CloudRun` supports a **one-time import** of an existing database backup during deployment. This is designed for migrating an existing Strapi instance to GCP or seeding a new environment with production data.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -327,7 +327,7 @@ gcloud logging read \
 
 ## Cloud Deploy Pipeline
 
-`Strapi_CloudRun` supports managed progressive delivery via Google Cloud Deploy. When `enable_cloud_deploy = true`, Cloud Build creates a Cloud Deploy release that deploys to the `dev` stage automatically; subsequent promotions to `staging` and `prod` are triggered manually via the Cloud Console or `gcloud` CLI.
+`Strapi CloudRun` supports managed progressive delivery via Google Cloud Deploy. When `enable_cloud_deploy = true`, Cloud Build creates a Cloud Deploy release that deploys to the `dev` stage automatically; subsequent promotions to `staging` and `prod` are triggered manually via the Cloud Console or `gcloud` CLI.
 
 This feature requires `enable_cicd_trigger = true`. Refer to [App_CloudRun_Guide Group 7](../App_CloudRun/App_CloudRun_Guide.md#group-7-cicd--github-integration) for CI/CD trigger configuration.
 
@@ -368,7 +368,7 @@ gcloud deploy releases promote \
 
 ## Additional Services
 
-`Strapi_CloudRun` supports deploying helper services alongside the main Strapi application using the `additional_services` variable, identical in behaviour to `App_CloudRun`. Refer to [App_CloudRun_Guide Group 6](../App_CloudRun/App_CloudRun_Guide.md#group-6-jobs--scheduled-tasks) for the full variable reference.
+`Strapi CloudRun` supports deploying helper services alongside the main Strapi application using the `additional_services` variable, identical in behaviour to `App CloudRun`. Refer to [App_CloudRun_Guide Group 6](../App_CloudRun/App_CloudRun_Guide.md#group-6-jobs--scheduled-tasks) for the full variable reference.
 
 Common use cases include:
 - A **Redis sidecar** (when a managed Memorystore instance is not available)

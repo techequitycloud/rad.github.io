@@ -49,7 +49,7 @@ The `Wordpress` module deploys a scalable, containerized WordPress application o
 - **Connection**:
   - **Application**: Connects via Unix socket (`/cloudsql/<instance>`) mounted at `/cloudsql`.
   - **Init Jobs**: Connect via TCP (Private IP) to perform schema operations.
-- **Provisioning**: The module *expects an existing Cloud SQL instance* (likely provided by a platform module like `GCP_Services`) and validates it via an external script (`sql.tf`). It does *not* provision the instance itself.
+- **Provisioning**: The module *expects an existing Cloud SQL instance* (likely provided by a platform module like `GCP Services`) and validates it via an external script (`sql.tf`). It does *not* provision the instance itself.
 
 ### Storage: Google Cloud Storage (GCS)
 - **Media Assets**: A GCS bucket (`wp-uploads`) is mounted to `/var/www/html/wp-content` via **GCS FUSE**.

@@ -3,7 +3,7 @@ title: "Moodle Cloud Run Configuration Guide"
 sidebar_label: "Cloud Run"
 ---
 
-# Moodle_CloudRun Module — Configuration Guide
+# Moodle CloudRun Module — Configuration Guide
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_CloudRun.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_CloudRun.mp4" type="video/mp4" />
@@ -16,7 +16,7 @@ sidebar_label: "Cloud Run"
 
 Moodle is the world's most popular open-source Learning Management System (LMS), used by educational institutions, corporations, and online learning platforms worldwide. This module deploys Moodle on **Google Cloud Run** using a custom PHP 8.3/Apache container, backed by a managed Cloud SQL PostgreSQL instance and shared NFS storage for course materials.
 
-`Moodle_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Moodle-specific application configuration, an automated cron Cloud Scheduler job, and database initialisation on top.
+`Moodle CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Moodle-specific application configuration, an automated cron Cloud Scheduler job, and database initialisation on top.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -24,35 +24,35 @@ Moodle is the world's most popular open-source Learning Management System (LMS),
 
 ## How This Guide Is Structured
 
-This guide documents only the variables that are **unique to `Moodle_CloudRun`** or that have **Moodle-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, runtime scaling, storage, CI/CD, backup, custom SQL, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md).
+This guide documents only the variables that are **unique to `Moodle CloudRun`** or that have **Moodle-specific defaults** that differ from the `App CloudRun` base module. For all other variables — project identity, runtime scaling, storage, CI/CD, backup, custom SQL, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md).
 
-**Variables fully covered by the App_CloudRun guide:**
+**Variables fully covered by the App CloudRun guide:**
 
 | Configuration Area | App_CloudRun_Guide Section | Moodle-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | Group 0 | Different defaults for `module_description` and `module_documentation`. `resource_creator_identity` is the same — see Group 0. |
-| Project & Identity | Group 1 | Refer to base App_CloudRun module documentation. |
+| Project & Identity | Group 1 | Refer to base App CloudRun module documentation. |
 | Runtime & Scaling | Group 3 | See [Moodle Runtime Configuration](#moodle-runtime-configuration) below for `cpu_limit`, `memory_limit`, and Moodle-specific scaling defaults. `enable_image_mirroring` defaults to `false`. `enable_cloudsql_volume` is forced to `true`. |
 | Environment Variables & Secrets | Group 4 | See [Moodle Environment Variables](#moodle-environment-variables) below for Moodle-specific injected defaults. |
 | Observability & Health | Group 5 | See [Moodle Health Probes](#moodle-health-probes) below for the `startup_probe` and `liveness_probe` variables and their `/health.php` defaults. |
 | Jobs & Scheduled Tasks | Group 6 | See [Platform-Managed Behaviours](#platform-managed-behaviours) for the auto-provisioned Moodle cron Cloud Scheduler job. |
-| CI/CD & GitHub Integration | Group 7 | Refer to base App_CloudRun module documentation. |
+| CI/CD & GitHub Integration | Group 7 | Refer to base App CloudRun module documentation. |
 | Storage — NFS | Group 8 | `enable_nfs` defaults to `true`. NFS is the active Moodle data directory. See [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| Storage — GCS | Group 9 | Refer to base App_CloudRun module documentation. An additional `moodle-data` GCS bucket is provisioned automatically. |
+| Storage — GCS | Group 9 | Refer to base App CloudRun module documentation. An additional `moodle-data` GCS bucket is provisioned automatically. |
 | Redis Cache | Group 10 | `enable_redis` defaults to `true`. See [Redis Cache](#redis-cache) below for Moodle-specific defaults and the `MOODLE_REDIS_*` variable injection. |
-| Database Backend | Group 11 | See [Moodle Database Configuration](#moodle-database-configuration) below for the `db_name` and `db_user` naming difference from App_CloudRun. |
-| Backup & Maintenance | Group 12 | Refer to base App_CloudRun module documentation for `backup_schedule` and `backup_retention_days`. See [Backup Import & Recovery](#backup-import--recovery) below for the `backup_uri` naming difference. |
-| Custom Initialisation & SQL | Group 13 | Refer to base App_CloudRun module documentation. |
-| Access & Networking | Group 14 | Refer to base App_CloudRun module documentation. |
-| Identity-Aware Proxy | Group 15 | Refer to base App_CloudRun module documentation. |
-| Cloud Armor & CDN | Group 16 | Refer to base App_CloudRun module documentation. |
-| VPC Service Controls | Group 17 | Refer to base App_CloudRun module documentation. |
+| Database Backend | Group 11 | See [Moodle Database Configuration](#moodle-database-configuration) below for the `db_name` and `db_user` naming difference from App CloudRun. |
+| Backup & Maintenance | Group 12 | Refer to base App CloudRun module documentation for `backup_schedule` and `backup_retention_days`. See [Backup Import & Recovery](#backup-import--recovery) below for the `backup_uri` naming difference. |
+| Custom Initialisation & SQL | Group 13 | Refer to base App CloudRun module documentation. |
+| Access & Networking | Group 14 | Refer to base App CloudRun module documentation. |
+| Identity-Aware Proxy | Group 15 | Refer to base App CloudRun module documentation. |
+| Cloud Armor & CDN | Group 16 | Refer to base App CloudRun module documentation. |
+| VPC Service Controls | Group 17 | Refer to base App CloudRun module documentation. |
 
 ---
 
 ## Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `Moodle_CloudRun` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
+The following behaviours are applied automatically by `Moodle CloudRun` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
 | Behaviour | Detail |
 |---|---|
@@ -70,14 +70,14 @@ The following behaviours are applied automatically by `Moodle_CloudRun` regardle
 
 ## Moodle Application Identity
 
-These variables control how the Moodle deployment is named and described. They use shorter names (`display_name`, `description`) aligned with the `Moodle_Common` interface rather than the full `application_display_name` and `application_description` names from App_CloudRun.
+These variables control how the Moodle deployment is named and described. They use shorter names (`display_name`, `description`) aligned with the `Moodle_Common` interface rather than the full `application_display_name` and `application_description` names from App CloudRun.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `application_name` | `"moodle"` | `[a-z][a-z0-9-]{0,19}` | Internal identifier used as the base name for the Cloud Run service, Artifact Registry repository, Secret Manager secrets, and GCS buckets. Functionally identical to `application_name` in App_CloudRun. **Do not change after initial deployment.** |
+| `application_name` | `"moodle"` | `[a-z][a-z0-9-]{0,19}` | Internal identifier used as the base name for the Cloud Run service, Artifact Registry repository, Secret Manager secrets, and GCS buckets. Functionally identical to `application_name` in App CloudRun. **Do not change after initial deployment.** |
 | `application_version` | `"4.5.1"` | Moodle version string, e.g. `"4.5.1"` | Version tag applied to the container image and used for deployment tracking. Increment to trigger a new Cloud Build run and create a new Cloud Run revision. |
-| `display_name` | `"Moodle LMS"` | Any string | Human-readable name shown in the platform UI and Cloud Run service list. Equivalent to `application_display_name` in App_CloudRun. Can be updated freely without affecting resource names. |
-| `description` | `"Moodle LMS - Online learning and course management platform"` | Any string | Brief description of the deployment. Populated into the Cloud Run service description field and platform documentation. Equivalent to `application_description` in App_CloudRun. |
+| `display_name` | `"Moodle LMS"` | Any string | Human-readable name shown in the platform UI and Cloud Run service list. Equivalent to `application_display_name` in App CloudRun. Can be updated freely without affecting resource names. |
+| `description` | `"Moodle LMS - Online learning and course management platform"` | Any string | Brief description of the deployment. Populated into the Cloud Run service description field and platform documentation. Equivalent to `application_description` in App CloudRun. |
 
 ### Validating Application Identity
 
@@ -101,9 +101,9 @@ Moodle is a PHP 8.3/Apache application. The module exposes `cpu_limit` and `memo
 
 > **Note on `container_resources`:** The full `container_resources` object (documented in [App_CloudRun_Guide Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling)) takes precedence over `cpu_limit` and `memory_limit` when set explicitly in your `tfvars`. Use `container_resources` when you need to configure both CPU and memory in a single block, for example in the advanced configuration.
 
-**Moodle-specific runtime defaults that differ from App_CloudRun:**
+**Moodle-specific runtime defaults that differ from App CloudRun:**
 
-| Variable | App_CloudRun Default | Moodle_CloudRun Default | Reason |
+| Variable | App CloudRun Default | Moodle CloudRun Default | Reason |
 |---|---|---|---|
 | `application_name` | `"crapp"` | `"moodle"` | Moodle-specific application identifier. |
 | `application_version` | `"1.0.0"` | `"4.5.1"` | Default Moodle release version. |
@@ -132,7 +132,7 @@ gcloud run services describe moodle \
 
 Moodle requires PostgreSQL. The module uses `db_name` and `db_user` (shorter names aligned with the `Moodle_Common` interface) in place of the `application_database_name` and `application_database_user` variables documented in [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend).
 
-All other database variables (`sql_instance_name`, `database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, etc.) behave identically to the App_CloudRun equivalents — refer to [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend) for their documentation.
+All other database variables (`sql_instance_name`, `database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, etc.) behave identically to the App CloudRun equivalents — refer to [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend) for their documentation.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -215,20 +215,20 @@ secret_environment_variables = {
 }
 ```
 
-All other `environment_variables` and `secret_environment_variables` behaviour is identical to App_CloudRun — refer to [App_CloudRun_Guide Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets).
+All other `environment_variables` and `secret_environment_variables` behaviour is identical to App CloudRun — refer to [App_CloudRun_Guide Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets).
 
 ---
 
 ## Moodle Health Probes
 
-Moodle performs database schema validation and plugin checks on startup. The module exposes **dedicated probe variables** — `startup_probe` and `liveness_probe` — that use **different names** from App_CloudRun (`startup_probe_config` and `health_check_config`) and have Moodle-specific defaults targeting the `/health.php` endpoint, which reflects both PHP availability and database connectivity and is more accurate for Moodle's readiness than a generic `/healthz` path.
+Moodle performs database schema validation and plugin checks on startup. The module exposes **dedicated probe variables** — `startup_probe` and `liveness_probe` — that use **different names** from App CloudRun (`startup_probe_config` and `health_check_config`) and have Moodle-specific defaults targeting the `/health.php` endpoint, which reflects both PHP availability and database connectivity and is more accurate for Moodle's readiness than a generic `/healthz` path.
 
 | Variable | Default | Description & Implications |
 |---|---|---|
 | `startup_probe` | `{ enabled = true, type = "HTTP", path = "/health.php", initial_delay_seconds = 0, timeout_seconds = 10, period_seconds = 30, failure_threshold = 20 }` | Determines when the Cloud Run instance is ready to receive traffic. `failure_threshold = 20` with `period_seconds = 30` allows up to 10 minutes of startup time — sufficient for first-boot schema creation and plugin setup. On subsequent deployments the schema is already in place and startup is significantly faster; the high failure threshold is a safety margin for the initial rollout. |
 | `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/health.php", initial_delay_seconds = 120, timeout_seconds = 10, period_seconds = 60, failure_threshold = 3 }` | Periodically checks whether the running Moodle instance is healthy. The `initial_delay_seconds = 120` prevents premature restarts during the post-startup phase. A `period_seconds = 60` interval is appropriate for a database-backed LMS. |
 
-> **Relationship to App_CloudRun probes:** `startup_probe` corresponds to `startup_probe_config` in App_CloudRun; `liveness_probe` corresponds to `health_check_config`. Their sub-field structure is identical. The `startup_probe_config` and `health_check_config` variables are also present in `Moodle_CloudRun` (with `/health.php` defaults) for compatibility — prefer the dedicated `startup_probe` and `liveness_probe` variables.
+> **Relationship to App CloudRun probes:** `startup_probe` corresponds to `startup_probe_config` in App CloudRun; `liveness_probe` corresponds to `health_check_config`. Their sub-field structure is identical. The `startup_probe_config` and `health_check_config` variables are also present in `Moodle CloudRun` (with `/health.php` defaults) for compatibility — prefer the dedicated `startup_probe` and `liveness_probe` variables.
 
 ### Validating Health Probe Configuration
 
@@ -252,11 +252,11 @@ gcloud logging read \
 
 ## Redis Cache
 
-Moodle uses Redis as the PHP session handler and application cache. When `enable_redis = true`, the `MOODLE_REDIS_ENABLED`, `MOODLE_REDIS_HOST`, `MOODLE_REDIS_PORT`, and `MOODLE_REDIS_PASSWORD` environment variables are injected automatically. **Redis is enabled by default** in `Moodle_CloudRun` because Cloud Run routes requests across multiple instances simultaneously, and shared Redis session storage prevents users from being logged out when a request reaches a different instance.
+Moodle uses Redis as the PHP session handler and application cache. When `enable_redis = true`, the `MOODLE_REDIS_ENABLED`, `MOODLE_REDIS_HOST`, `MOODLE_REDIS_PORT`, and `MOODLE_REDIS_PASSWORD` environment variables are injected automatically. **Redis is enabled by default** in `Moodle CloudRun` because Cloud Run routes requests across multiple instances simultaneously, and shared Redis session storage prevents users from being logged out when a request reaches a different instance.
 
 For detailed documentation on the Redis variables `enable_redis`, `redis_host`, `redis_port`, and `redis_auth`, refer to [App_CloudRun_Guide Group 10](../App_CloudRun/App_CloudRun_Guide.md#group-10-redis-cache) — the variable semantics are identical, but the defaults differ:
 
-| Variable | App_CloudRun Default | Moodle_CloudRun Default | Reason |
+| Variable | App CloudRun Default | Moodle CloudRun Default | Reason |
 |---|---|---|---|
 | `enable_redis` | `true` | `true` | Redis session handling is critical for Moodle with multiple Cloud Run instances. |
 | `redis_host` | `""` | `""` | Defaults to NFS server IP when blank. Override with a Cloud Memorystore instance IP for production. |
@@ -276,9 +276,9 @@ gcloud run services describe moodle \
 
 ## Backup Import & Recovery
 
-In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_CloudRun_Guide Group 12](../App_CloudRun/App_CloudRun_Guide.md#group-12-backup--maintenance)), `Moodle_CloudRun` supports a **one-time import** of an existing Moodle database backup during deployment. This is designed for migrating an existing Moodle instance to GCP or seeding a new environment with production data.
+In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_CloudRun_Guide Group 12](../App_CloudRun/App_CloudRun_Guide.md#group-12-backup--maintenance)), `Moodle CloudRun` supports a **one-time import** of an existing Moodle database backup during deployment. This is designed for migrating an existing Moodle instance to GCP or seeding a new environment with production data.
 
-The key naming difference from App_CloudRun is that **`backup_uri`** (a full GCS object path or Google Drive file ID) is used instead of `backup_file` (a filename relative to the backup bucket). The value is mapped internally to the App_CloudRun `backup_file` input.
+The key naming difference from App CloudRun is that **`backup_uri`** (a full GCS object path or Google Drive file ID) is used instead of `backup_file` (a filename relative to the backup bucket). The value is mapped internally to the App CloudRun `backup_file` input.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -309,7 +309,7 @@ gcloud logging read \
 
 ## Deployment Prerequisites & Validation
 
-After deploying `Moodle_CloudRun`, confirm the deployment is healthy:
+After deploying `Moodle CloudRun`, confirm the deployment is healthy:
 
 ```bash
 # Confirm the Cloud Run service is deployed and view its URL

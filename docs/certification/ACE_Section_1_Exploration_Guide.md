@@ -12,7 +12,7 @@ You interact with each module by configuring its variables in the RAD UI deploym
 **Concept:** GCP organises resources into a hierarchy — Organisation → Folders → Projects → Resources. Understanding this structure is foundational to the ACE exam.
 
 **In the RAD UI:**
-Every module requires the `project_id` variable (Group 1 in each module). This is the GCP project into which all resources are deployed. Every resource created — VPC networks, Cloud SQL instances, GKE clusters, Cloud Run services, IAM bindings, Secret Manager secrets, and Cloud Storage buckets — is scoped to this single project. Deploying Services GCP first establishes the shared infrastructure layer; App_CloudRun and App_GKE deployments then build application environments on top of it within the same project.
+Every module requires the `project_id` variable (Group 1 in each module). This is the GCP project into which all resources are deployed. Every resource created — VPC networks, Cloud SQL instances, GKE clusters, Cloud Run services, IAM bindings, Secret Manager secrets, and Cloud Storage buckets — is scoped to this single project. Deploying Services GCP first establishes the shared infrastructure layer; App CloudRun and App GKE deployments then build application environments on top of it within the same project.
 
 **Console Exploration:**
 Open the [GCP Console](https://console.cloud.google.com) and click the **Project Selector** dropdown at the top of the page. Review the organisation, folder, and project hierarchy. Navigate to **IAM & Admin > Settings** to view the project ID, project number, and project name — three distinct identifiers that the ACE exam tests on. Note that the project ID is set permanently at creation time and cannot be changed.
