@@ -3,10 +3,6 @@ title: Support Features
 slug: /features/support
 ---
 
-<img src="https://storage.googleapis.com/rad-public-2b65/features/support_features.png" alt="Support Features Infographic" />
-
-<br/>
-
 <video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/features/support_features.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/features/support_features.mp4" type="video/mp4" />
   Your browser does not support the video tag.
