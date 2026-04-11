@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 export interface DemoVideo {
   title: string;
   url: string;
-  poster: string;
+  poster?: string;
 }
 
 export interface DemoSection {
@@ -76,7 +76,6 @@ export default function DemoPlayer({ sections }: DemoPlayerProps): JSX.Element {
           key={selected.url}
           controls
           width="100%"
-          poster={selected.poster}
           style={{ display: 'block' }}
         >
           <source src={selected.url} type="video/mp4" />
