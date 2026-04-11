@@ -3,10 +3,14 @@
 
 <img src="https://storage.googleapis.com/rad-public-2b65/workflows/support_workflow.png" alt="Support Workflow" style={{marginBottom: '20px'}} />
 
-<video width="100%" controls style={{marginTop: '20px'}}>
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/workflows/support_workflow.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/workflows/support_workflow.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/workflows/support_workflow.pdf" target="_blank" rel="noopener noreferrer">Download Workflow PDF</a>
 
 ## 1. Introduction
 This tutorial is designed for **Support** users. You will learn how to use your enhanced permissions to troubleshoot user deployments and manage the module catalog.
