@@ -1,4 +1,4 @@
-# Wordpress GKE Module — Configuration Guide
+# Wordpress GKE Module
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_GKE.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_GKE.mp4" type="video/mp4" />

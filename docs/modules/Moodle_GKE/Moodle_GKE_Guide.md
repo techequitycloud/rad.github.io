@@ -3,7 +3,7 @@ title: "Moodle GKE Configuration Guide"
 sidebar_label: "GKE"
 ---
 
-# Moodle GKE Module — Configuration Guide
+# Moodle GKE Module
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.mp4" type="video/mp4" />

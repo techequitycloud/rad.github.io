@@ -1,4 +1,4 @@
-# Odoo CloudRun Module — Configuration Guide
+# Odoo CloudRun Module
 
 Odoo is a comprehensive open-source ERP platform covering CRM, accounting, inventory, manufacturing, HR, eCommerce, and more. This module deploys Odoo Community Edition on **Google Cloud Run** using a custom container image built from the official Odoo nightly packages, backed by a managed Cloud SQL PostgreSQL instance and a Filestore NFS volume for shared file storage.
 

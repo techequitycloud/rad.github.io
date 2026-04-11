@@ -1,4 +1,4 @@
-# App GKE Module — Configuration Guide
+# App GKE Module
 
 This guide describes every configuration variable available in the `App GKE` module, organized into functional groups. For each variable it explains the available options, the implications of each choice, and how to validate the resulting configuration in the Google Cloud Console or using the `gcloud` CLI.
 

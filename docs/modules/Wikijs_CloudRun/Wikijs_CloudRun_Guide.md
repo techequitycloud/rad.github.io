@@ -3,7 +3,7 @@ title: "Wiki.js Cloud Run Configuration Guide"
 sidebar_label: "Cloud Run"
 ---
 
-# Wikijs CloudRun Module — Configuration Guide
+# Wikijs CloudRun Module
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_CloudRun.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_CloudRun.mp4" type="video/mp4" />

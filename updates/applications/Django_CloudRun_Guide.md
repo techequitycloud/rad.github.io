@@ -1,4 +1,4 @@
-# Django CloudRun Module — Configuration Guide
+# Django CloudRun Module
 
 Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design. This module deploys a production-ready Django application on **Google Cloud Run**, backed by a managed Cloud SQL PostgreSQL instance, GCS media storage, and Secret Manager for secrets including the Django `SECRET_KEY`.
 

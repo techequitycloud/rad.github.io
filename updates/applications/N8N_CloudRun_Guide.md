@@ -1,4 +1,4 @@
-# N8N CloudRun Module — Configuration Guide
+# N8N CloudRun Module
 
 n8n is an open-source workflow automation platform that lets you connect services, run logic, and build automated pipelines through a visual node-based interface. This module deploys n8n on **Google Cloud Run** with a managed PostgreSQL database and GCS-backed storage persistence.
 

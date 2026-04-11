@@ -1,4 +1,4 @@
-# N8N GKE Module — Configuration Guide
+# N8N GKE Module
 
 n8n is an open-source workflow automation platform that lets you connect services, run logic, and build automated pipelines through a visual node-based interface. This module deploys n8n on **GKE Autopilot** with a managed PostgreSQL database, GCS-backed storage persistence, and optional NFS for shared volumes.
 

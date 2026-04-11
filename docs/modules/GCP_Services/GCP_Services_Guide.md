@@ -3,7 +3,7 @@ title: "GCP Services Configuration Guide"
 sidebar_label: "GCP Services"
 ---
 
-# GCP Services Module — Configuration Guide
+# GCP Services Module
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/GCP_Services.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/GCP_Services.mp4" type="video/mp4" />

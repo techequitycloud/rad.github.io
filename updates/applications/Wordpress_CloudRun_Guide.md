@@ -1,4 +1,4 @@
-# Wordpress CloudRun Module — Configuration Guide
+# Wordpress CloudRun Module
 
 This guide describes the configuration variables that are **unique to the `Wordpress CloudRun` module**. Because `Wordpress CloudRun` is a wrapper around `App CloudRun`, the vast majority of its variables are passed directly to that base module and are fully documented in the [App CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md). This guide explains the WordPress-specific additions, the differences in default values, and what the `Wordpress_Common` sub-module provisions automatically.
 

@@ -3,7 +3,7 @@ title: "Django Cloud Run Configuration Guide"
 sidebar_label: "Cloud Run"
 ---
 
-# Django CloudRun Module — Configuration Guide
+# Django CloudRun Module
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Django_CloudRun.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/Django_CloudRun.mp4" type="video/mp4" />

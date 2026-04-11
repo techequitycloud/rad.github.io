@@ -3,7 +3,7 @@ title: "Sample Cloud Run Configuration Guide"
 sidebar_label: "Cloud Run"
 ---
 
-# Sample CloudRun Module — Configuration Guide
+# Sample CloudRun Module
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Sample_CloudRun.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/Sample_CloudRun.mp4" type="video/mp4" />

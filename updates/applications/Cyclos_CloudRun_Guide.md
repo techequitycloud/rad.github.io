@@ -1,4 +1,4 @@
-# Cyclos CloudRun Module — Configuration Guide
+# Cyclos CloudRun Module
 
 Cyclos is a professional banking and payment system designed for microfinance institutions, credit unions, complementary currency schemes, and community banks. This module deploys Cyclos on **Google Cloud Run** using the official `cyclos/cyclos` container image, backed by a managed Cloud SQL PostgreSQL instance.
 

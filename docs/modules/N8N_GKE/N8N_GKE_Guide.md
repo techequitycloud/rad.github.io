@@ -3,7 +3,7 @@ title: "N8N GKE Configuration Guide"
 sidebar_label: "GKE"
 ---
 
-# N8N GKE Module — Configuration Guide
+# N8N GKE Module
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_GKE.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/N8N_GKE.mp4" type="video/mp4" />

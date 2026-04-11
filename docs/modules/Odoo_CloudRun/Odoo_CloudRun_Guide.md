@@ -3,7 +3,7 @@ title: "Odoo Cloud Run Configuration Guide"
 sidebar_label: "Cloud Run"
 ---
 
-# Odoo CloudRun Module — Configuration Guide
+# Odoo CloudRun Module
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Odoo_CloudRun.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/Odoo_CloudRun.mp4" type="video/mp4" />

@@ -1,4 +1,4 @@
-# Wikijs GKE Module — Configuration Guide
+# Wikijs GKE Module
 
 `Wikijs GKE` is a pre-configured wrapper around the [`App GKE`](../App_GKE/App_GKE_Guide.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Kubernetes Engine (GKE) Autopilot.
 

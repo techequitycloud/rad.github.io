@@ -3,7 +3,7 @@ title: "Strapi GKE Configuration Guide"
 sidebar_label: "GKE"
 ---
 
-# Strapi GKE Module — Configuration Guide
+# Strapi GKE Module
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_GKE.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_GKE.mp4" type="video/mp4" />

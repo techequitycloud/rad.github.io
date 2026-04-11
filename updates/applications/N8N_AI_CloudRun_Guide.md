@@ -1,4 +1,4 @@
-# N8N AI CloudRun Module — Configuration Guide
+# N8N AI CloudRun Module
 
 n8n is an open-source workflow automation platform that lets you connect services, run logic, and build AI-powered pipelines through a visual node-based interface. This module deploys n8n on **Google Cloud Run** alongside two companion AI services: **Qdrant** (vector database for RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis workflows without external AI API dependencies.
 

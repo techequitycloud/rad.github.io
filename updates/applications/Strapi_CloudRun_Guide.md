@@ -1,4 +1,4 @@
-# Strapi CloudRun Module — Configuration Guide
+# Strapi CloudRun Module
 
 Strapi is an open-source headless CMS that gives developers the freedom to choose their favourite tools and frameworks while enabling content editors to manage their content independently. This module deploys Strapi on **Google Cloud Run** (Gen2), backed by a managed Cloud SQL PostgreSQL instance, an optional Cloud Filestore NFS volume for media uploads, and a GCS bucket for object storage.
 

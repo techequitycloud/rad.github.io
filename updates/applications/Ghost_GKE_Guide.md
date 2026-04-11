@@ -1,4 +1,4 @@
-# Ghost GKE Module — Configuration Guide
+# Ghost GKE Module
 
 This guide describes every configuration variable available in the `Ghost GKE` module. `Ghost GKE` is a **wrapper module** that combines the generic [`App GKE`](../App_GKE/App_GKE_Guide.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot.
 

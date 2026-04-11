@@ -1,4 +1,4 @@
-# Sample CloudRun Module — Configuration Guide
+# Sample CloudRun Module
 
 `Sample CloudRun` is a **wrapper module** that sits on top of [`App CloudRun`](../App_CloudRun/App_CloudRun_Guide.md). It deploys a pre-configured reference Flask application (Python 3.11, PostgreSQL 15, optional Redis, optional NFS) on Cloud Run. Its purpose is to serve as a working example of how to build a custom application module on top of `App CloudRun`.
 

@@ -3,7 +3,7 @@ title: "Directus Cloud Run Configuration Guide"
 sidebar_label: "Cloud Run"
 ---
 
-# Directus CloudRun Module — Configuration Guide
+# Directus CloudRun Module
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Directus_CloudRun.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/Directus_CloudRun.mp4" type="video/mp4" />

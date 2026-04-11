@@ -1,4 +1,4 @@
-# Directus CloudRun Module — Configuration Guide
+# Directus CloudRun Module
 
 `Directus CloudRun` is a wrapper module that deploys [Directus](https://directus.io/) — an open-source headless CMS and data API platform — on Google Cloud Run. It composes two underlying modules:
 

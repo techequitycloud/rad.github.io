@@ -3,7 +3,7 @@ title: "N8N Cloud Run Configuration Guide"
 sidebar_label: "Cloud Run"
 ---
 
-# N8N CloudRun Module — Configuration Guide
+# N8N CloudRun Module
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRun.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRun.mp4" type="video/mp4" />
