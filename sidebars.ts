@@ -241,7 +241,6 @@ const sidebars: SidebarsConfig = {
             { type: 'doc', id: 'workflows/finance', label: 'Finance' },
             { type: 'doc', id: 'workflows/support', label: 'Support' },
             { type: 'doc', id: 'workflows/admin', label: 'Admin' },
-            { type: 'doc', id: 'workflows/roi', label: 'ROI' },
           ],
         },
         {
@@ -254,7 +253,6 @@ const sidebars: SidebarsConfig = {
             { type: 'doc', id: 'guides/finance', label: 'Finance' },
             { type: 'doc', id: 'guides/support', label: 'Support' },
             { type: 'doc', id: 'guides/admin', label: 'Admin' },
-            { type: 'doc', id: 'guides/roi', label: 'ROI' },
           ],
         },
       ],
