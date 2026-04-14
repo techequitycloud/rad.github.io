@@ -254,7 +254,6 @@ const sidebars: SidebarsConfig = {
             { type: 'doc', id: 'guides/finance', label: 'Finance' },
             { type: 'doc', id: 'guides/support', label: 'Support' },
             { type: 'doc', id: 'guides/admin', label: 'Admin' },
-            { type: 'doc', id: 'guides/roi', label: 'ROI' },
           ],
         },
       ],
