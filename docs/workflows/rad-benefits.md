@@ -3,7 +3,7 @@ title: "RAD Benefits"
 sidebar_label: "RAD Benefits"
 ---
 
-# RAD Platform Benefits
+# RAD Benefits
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/RAD_Benefits.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/RAD_Benefits.mp4" type="video/mp4" />
