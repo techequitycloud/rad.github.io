@@ -1,5 +1,5 @@
 
-# Tutorial: Getting Started
+# Getting Started
 
 
 <br/>

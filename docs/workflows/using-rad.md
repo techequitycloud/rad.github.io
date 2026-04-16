@@ -1,5 +1,5 @@
 
-# Deploying with RAD
+# Using RAD
 
 <video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Using_RAD.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/modules/Using_RAD.mp4" type="video/mp4" />
