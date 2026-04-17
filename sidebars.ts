@@ -100,6 +100,7 @@ const sidebars: SidebarsConfig = {
           items: [
             { type: 'doc', id: 'modules/App_CloudRun/App_CloudRun_Guide', label: 'Cloud Run' },
             { type: 'doc', id: 'modules/App_GKE/App_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/App_Common/App_Common_Guide', label: 'Common' },
           ],
         },
         {
