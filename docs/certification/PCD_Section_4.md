@@ -146,6 +146,27 @@ Navigate to **APIs & Services > API Library** and select any enabled API, then c
 
 ### 💡 Additional API Consumption Objectives & Learning Guidelines
 
+*   **Batching requests:** Some Google Cloud REST APIs support combining multiple operations into a single HTTP call to reduce network round-trips. The Google API Client Library exposes batching via `new_batch_http_request()`:
+    ```python
+    from googleapiclient.discovery import build
+
+    service = build('storage', 'v1')
+    batch = service.new_batch_http_request()
+
+    results = {}
+    def callback(request_id, response, exception):
+        if exception is None:
+            results[request_id] = response
+
+    batch.add(service.objects().get(bucket='my-bucket', object='file1.txt'),
+              callback=callback, request_id='r1')
+    batch.add(service.objects().get(bucket='my-bucket', object='file2.txt'),
+              callback=callback, request_id='r2')
+
+    batch.execute()  # Single HTTP call executes all queued operations
+    ```
+    Batching is most valuable when making many small API calls in a loop — fetching metadata for 50 Cloud Storage objects individually requires 50 round-trips; batching them into one call reduces this to a single round-trip. Not all APIs support batching — it applies to REST-based APIs (Cloud Storage JSON API, Compute Engine API) but not to gRPC-based APIs (Bigtable, Spanner, Pub/Sub), which use server-side streaming for equivalent high-throughput patterns.
+
 *   **Exponential Backoff for Error Handling:** Google Cloud APIs are designed for retryable errors (HTTP 429 Too Many Requests, 500 Internal Server Error, 503 Service Unavailable). The correct response is to retry with exponential backoff — not to fail immediately. The pattern:
     ```python
     import time, random

@@ -70,6 +70,52 @@ Navigate to **Cloud Workstations > Workstation clusters** to explore configurati
 
 > **Real-World Example:** A developer is writing a Cloud Run service that reads from Bigtable. They have no prior Bigtable experience. In their IDE, they open Gemini Code Assist chat and ask "Write a Python function that reads the 10 most recent rows for a given device ID from a Bigtable table named `telemetry`, where the row key format is `<device-id>#<reverse-timestamp>`." Gemini generates a complete function using the `google-cloud-bigtable` client library with correct row key prefix scanning. The developer reviews, tests against the Bigtable emulator, and ships the feature in one afternoon instead of spending two days reading documentation.
 
+### Configuring AI Tooling: MCP Servers and Generative AI APIs
+**Concept:** Configuring Model Context Protocol (MCP) servers to extend AI coding assistants with live cloud context, and integrating generative AI APIs into cloud-native applications to deliver intelligent user experiences.
+
+**MCP Servers (Model Context Protocol):**
+MCP is an open standard that allows AI coding assistants to connect to external tools and data sources, giving them real-time access to your infrastructure rather than relying solely on training knowledge. In a Google Cloud developer context, MCP servers enable your assistant to:
+- Query live GCP resources — list running Cloud Run services, inspect GKE workloads, read recent Cloud Build failures.
+- Execute `gcloud` commands and surface their output directly in the IDE chat panel.
+- Read from services such as BigQuery, Firestore, Secret Manager, and Artifact Registry on your behalf.
+
+Configure an MCP server in VS Code by adding a block to `.vscode/settings.json` or your global VS Code settings:
+```json
+{
+  "mcpServers": {
+    "gcp": {
+      "command": "npx",
+      "args": ["-y", "@google-cloud/mcp-server"],
+      "env": {
+        "GOOGLE_CLOUD_PROJECT": "my-project-id"
+      }
+    }
+  }
+}
+```
+The MCP server process runs locally and authenticates to GCP using your Application Default Credentials — run `gcloud auth application-default login` once to establish credentials. In JetBrains IDEs, configure MCP servers through the AI Assistant plugin settings.
+
+**Context engineering:**
+Context engineering is the practice of structuring the information you provide to an AI model to reliably elicit accurate, useful responses:
+- Include the relevant code file, error message, and log output together in the same prompt rather than describing the problem abstractly.
+- Specify library versions and coding conventions when requesting code generation.
+- MCP servers automatically inject live infrastructure context (actual environment variable names, current service configurations) into the AI's context window, reducing the need for manual context preparation.
+
+**Generative AI APIs in application development:**
+PCD candidates must design and build applications that call generative AI APIs to deliver intelligent user experiences. The primary service is **Vertex AI**, which exposes the Gemini family of models via the `google-cloud-aiplatform` client library:
+```python
+import vertexai
+from vertexai.generative_models import GenerativeModel
+
+vertexai.init(project="my-project", location="us-central1")
+model = GenerativeModel("gemini-2.0-flash")
+response = model.generate_content("Summarise this support ticket: " + ticket_text)
+print(response.text)
+```
+The Vertex AI SDK uses Application Default Credentials — the same authentication pattern as all other Google Cloud client libraries. A Cloud Run or GKE workload calls Vertex AI using its Workload Identity-bound service account with `roles/aiplatform.user` on the project. Navigate to **Vertex AI > Model Garden** to explore available foundation models and their capability summaries. Navigate to **Vertex AI > Vertex AI Studio** to interactively test prompts and model configurations before integrating them into application code.
+
+> **Real-World Example:** A developer is integrating the Gemini API into a Cloud Run service that generates product description drafts. They open Gemini Code Assist and ask it to generate the Vertex AI client code — the assistant, augmented by an MCP server that has access to the project's Artifact Registry, suggests reusing the same base image already in use across the team's other services. The developer tests different prompt designs in Vertex AI Studio, applying context engineering by providing sample product data and specifying the desired output format in the system instruction until output quality meets the product team's bar. The finalised prompt and client code are committed, and the Cloud Build pipeline tests the function with mocked Vertex AI responses.
+
 ---
 
 ## 2.2 Building

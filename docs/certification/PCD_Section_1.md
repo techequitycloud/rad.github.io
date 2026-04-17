@@ -1,4 +1,4 @@
-# PCD Certification Preparation Guide: Section 1 — Designing highly scalable, available, and reliable cloud-native applications (~36% of the exam)
+# PCD Certification Preparation Guide: Section 1 — Designing highly scalable, secure, and reliable cloud-native applications (~32% of the exam)
 
 This guide helps candidates preparing for the Google Cloud Professional Cloud Developer (PCD) certification explore Section 1 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
@@ -231,6 +231,22 @@ The `enable_security_command_center` variable (Group 11, Services GCP) activates
 - Service-level metrics (request rate, error rate, latency) are collected automatically for every service without manual instrumentation.
 
 Navigate to **Kubernetes Engine > Service Mesh** to explore the mesh topology and traffic health dashboard. For simpler pod-to-pod security without a full service mesh, Kubernetes Network Policies (enabled via `enable_network_segmentation`) provide L3/L4 firewall rules based on pod label selectors.
+
+**Direct VPC egress and Private Service Connect:**
+
+**Direct VPC egress** (`vpc_egress_setting`, Group 14 in App CloudRun) routes all outbound traffic from a Cloud Run service through the VPC network rather than the public internet, enabling access to private IP resources — Cloud SQL, Memorystore, internal GKE services — without any public IP exposure.
+
+**Private Service Connect (PSC)** provides more targeted private connectivity: instead of routing all traffic through the VPC (as Direct VPC egress does), PSC creates a specific internal IP *endpoint* inside your VPC that privately forwards requests to a Google-managed service, a Google API, or another team's published service. Key differences from Private Service Access (PSA, which uses VPC peering):
+- PSA connects your entire VPC to Google's managed services network via peering — all PSA-supported services become reachable once peering is active.
+- PSC creates a dedicated endpoint IP (e.g. `10.0.1.20`) for one specific service — traffic to that IP is forwarded privately to the service without VPC peering and without traversing the public internet.
+- PSC supports **published services**: your team can expose a Cloud Run service or internal load balancer as a PSC service endpoint, letting other VPCs connect to it via their own private IP with no VPC peering and no public exposure.
+
+Use cases for PSC in application development:
+- Access Google APIs (Cloud Storage, Secret Manager, Pub/Sub) from a VPC with strict egress policies that block all public internet traffic — create a PSC endpoint for the `all-apis` bundle and all Google Cloud client library calls route through it automatically.
+- Connect to AlloyDB or Cloud SQL via a native PSC endpoint (supported instance types) instead of the Auth Proxy sidecar — eliminating the proxy process reduces latency and resource overhead per pod.
+- Share a microservice privately across teams within the same organisation — the owning team publishes the service via PSC; consuming teams connect via a private IP in their own VPC without network peering.
+
+Navigate to **VPC network > Private Service Connect** to explore endpoint and published service configuration. Select **Endpoints** to create an endpoint targeting a Google API bundle or managed service. Select **Published services** to expose your own service for private consumption by other VPCs.
 
 ### Data Retention, Compliance, and Identity Platform
 **Concept:** Enforcing data retention policies for compliance, and managing end-user authentication at scale.
