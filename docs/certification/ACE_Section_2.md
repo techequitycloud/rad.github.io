@@ -29,6 +29,8 @@ The choice between the **App CloudRun** and **App GKE** modules reflects the com
 **Console Exploration:**
 Navigate to **Cloud Run** to see the managed serverless service. Then, navigate to **Kubernetes Engine > Clusters** to see the GKE Autopilot cluster and recognize that node provisioning is fully managed by GCP.
 
+> **Note — Knative serving:** Knative is the open-source serverless runtime that Cloud Run is built on. GKE clusters can run Knative workloads directly (via the Knative Serving add-on) when portability across cloud environments or on-premises is a requirement — at the cost of operating the Knative control plane yourself. For the ACE exam, recognise that Cloud Run is Google's fully managed Knative-based offering that removes this operational burden. When a question presents a workload needing serverless scaling behaviour alongside custom Kubernetes operators or cross-environment portability, Knative on GKE is the distinguishing answer.
+
 ### 💡 Additional Compute Objectives & Learning Guidelines
 The ACE exam also heavily covers standard Compute Engine VMs, App Engine, and Cloud Functions. These are not the primary application targets in these modules, but they are important exam topics that complement your hands-on experience with Cloud Run and GKE.
 
@@ -105,6 +107,53 @@ The exam tests your ability to select the appropriate class based on access freq
 
 **Console Exploration:**
 Navigate to **SQL** to review the managed PostgreSQL or MySQL instances, noting their high-availability configuration. Navigate to **Memorystore** to see the Redis cluster and its network endpoints.
+
+---
+
+### Planning for multi-regional redundancy
+**Concept:** Selecting a storage configuration that survives zone or region failures — and choosing the right redundancy tier for each data service based on RPO, RTO, and cost.
+
+**Cloud Storage — location types:**
+When creating a bucket, the **location type** determines its geo-redundancy:
+- **Regional** (e.g. `us-central1`): Data stored in a single region, replicated across zones within that region. Lowest cost. Use for data that is read and written from a single region.
+- **Dual-region** (e.g. `nam4` — Iowa + South Carolina): Data synchronously replicated across two specific regions. Higher cost. Use when regional redundancy is needed with predictable, low latency between the two regions.
+- **Multi-region** (e.g. `US`, `EU`, `ASIA`): Data distributed across multiple regions within the continent. Highest availability SLA (99.99%). Best for globally accessed assets or content requiring maximum geo-redundancy.
+
+**In the RAD UI:** App CloudRun (Group 9 `storage_buckets`) and App GKE (§3.C `storage_buckets`) provision regional buckets by default. To use a dual-region or multi-region bucket, set the `location` field within a `storage_buckets` entry to a dual-region code (e.g. `nam4`) or multi-region code (e.g. `US`).
+
+**Console Exploration:** Navigate to **Cloud Storage > Buckets > Create**. On the location step, compare the three location type options and note the differences in availability SLA, storage cost per GB, and retrieval pricing.
+
+---
+
+**BigQuery — dataset location:**
+A BigQuery dataset is permanently tied to its location at creation time.
+- **Regional** (e.g. `us-central1`): Data stays within a single region. Required when data residency regulations restrict data to a specific geography.
+- **Multi-region** (`US` or `EU`): Data distributed across multiple data centres within the continent. Recommended for production datasets with no single-region residency requirement.
+
+> **Exam tip:** Cross-region queries and joins between datasets in different locations incur egress fees. Co-locate BigQuery datasets in the same region as their Cloud Storage source data to avoid unexpected costs.
+
+**Console Exploration:** Navigate to **BigQuery > Explorer**, click **+ Create dataset**, and observe the **Data location** field. Dataset location is immutable after creation — plan this choice carefully before loading production data.
+
+---
+
+**Cloud Spanner — regional vs. multi-regional instances:**
+- **Regional instances:** Nodes in a single region, replicated across three zones. 99.99% availability. Use when all clients are in one region and cross-region consistency is not required.
+- **Multi-regional instances:** Data synchronously replicated across multiple regions with external consistency maintained globally. 99.999% availability. Use for globally distributed applications that require consistent reads from multiple continents and zero data loss on a complete regional failure.
+
+**Console Exploration:** Navigate to **Spanner > Create instance** and compare the **Regional** and **Multi-region** tabs. Multi-regional configurations specify a primary region and one or more witness/read-only regions for global read scaling.
+
+---
+
+**Cloud SQL — Regional HA vs. cross-region read replicas:**
+These address different failure scenarios:
+- **Regional HA** (`postgres_database_availability_type = "REGIONAL"` in Services GCP): A synchronous hot standby in a *second zone within the same region*. Provides automatic failover within seconds on a zone failure. Does **not** protect against a full regional outage.
+- **Cross-region read replicas:** An asynchronous replica in a separate region that can serve read traffic and be manually promoted to a standalone primary during a regional disaster. Promotion is a manual operation, unlike Regional HA failover.
+
+> **Real-World Example:** A financial application deploys Cloud SQL with Regional HA for automatic zone failover, plus a cross-region read replica in a secondary region as a cold DR standby. Regular DR drills test the replica promotion procedure to validate that the recovery time objective (RTO) can be met when a regional outage occurs.
+
+**Console Exploration:** Navigate to **SQL > &lt;instance&gt; > Replicas** to view any read replicas. To create a cross-region read replica, click **Create read replica** and select a region different from the primary instance's region.
+
+---
 
 ### 💡 Additional Storage & Data Objectives & Learning Guidelines
 The ACE exam requires understanding the full breadth of Google Cloud data products — from NoSQL and global relational databases to streaming and batch analytics. These services complement the Cloud SQL and Memorystore you've already deployed.
