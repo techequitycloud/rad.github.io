@@ -1,15 +1,14 @@
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Deploying with RAD
+# Using RAD
 
-<img src="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.png" alt="Using RAD" style={{marginBottom: '20px'}} />
-
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.m4a" title="Using RAD Audio" />
-
-<video width="100%" controls style={{marginTop: '20px'}}>
-  <source src="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.mp4" type="video/mp4" />
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Using_RAD.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Using_RAD.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Using_RAD.pdf" target="_blank">View Presentation (PDF)</a>
 
 ## 1. Introduction
 

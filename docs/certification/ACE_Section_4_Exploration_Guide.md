@@ -66,7 +66,7 @@ In the GCP Console, navigate to **IAM & Admin > Service Accounts**. Locate the s
 **Concept:** Protecting sensitive configuration data from being exposed in source code, environment variables, or Terraform state.
 
 **In the RAD UI:**
-*   **Secret Manager Integration:** The application modules use Secret Manager to store sensitive configurations like database passwords. In the RAD UI, the `enable_auto_password_rotation` (Group 11 for App_CloudRun, Group 10 for App_GKE) variable configures automated secret rotation. The secret values are fetched dynamically during deployment and mounted as environment variables or volumes, meaning the plaintext secret is never exposed.
+*   **Secret Manager Integration:** The application modules use Secret Manager to store sensitive configurations like database passwords. In the RAD UI, the `enable_auto_password_rotation` (Group 11 for App CloudRun, Group 10 for App GKE) variable configures automated secret rotation. The secret values are fetched dynamically during deployment and mounted as environment variables or volumes, meaning the plaintext secret is never exposed.
 
 **Console Exploration:**
 Navigate to **Security > Secret Manager** in the GCP Console. View the list of secrets provisioned for the application. Notice that you cannot see the value without explicit permission — access to view secret material requires the `roles/secretmanager.secretAccessor` role, which is separate from the `roles/secretmanager.viewer` role that allows listing secrets without reading their values. Look at the **Versions** tab to see the history of secret rotations.
@@ -77,7 +77,7 @@ Navigate to **Security > Secret Manager** in the GCP Console. View the list of s
 **Concept:** Controlling application access based on user identity and context, removing the need for traditional VPNs.
 
 **In the RAD UI:**
-*   **Zero-Trust Access:** Both modules support configuring IAP via the `enable_iap` variable (Group 15 for App_CloudRun, Group 17 for App_GKE). You then provide specific users or groups via `iap_authorized_users` and `iap_authorized_groups` (same group as `enable_iap` in each module). IAP evaluates policies at the edge before traffic ever reaches the backend Cloud Run service or GKE Gateway, restricting access to authenticated Google users. Because authentication happens at the Google Front End — before the request reaches your application — IAP protects against unauthenticated access even if the application itself has a vulnerability.
+*   **Zero-Trust Access:** Both modules support configuring IAP via the `enable_iap` variable (Group 15 for App CloudRun, Group 17 for App GKE). You then provide specific users or groups via `iap_authorized_users` and `iap_authorized_groups` (same group as `enable_iap` in each module). IAP evaluates policies at the edge before traffic ever reaches the backend Cloud Run service or GKE Gateway, restricting access to authenticated Google users. Because authentication happens at the Google Front End — before the request reaches your application — IAP protects against unauthenticated access even if the application itself has a vulnerability.
 
     > **Real-World Example:** An internal HR portal is deployed on Cloud Run. Rather than setting up and maintaining a VPN for all employees, the security team enables IAP and grants `IAP-secured Web App User` to `hr-employees@company.com`. Employees open the URL in any browser, are redirected to Google sign-in, and are granted access if their authenticated identity is in the group — no VPN client, no certificate management, and access is instantly revoked by removing someone from the group.
 
@@ -88,7 +88,7 @@ In the GCP Console, navigate to **Security > Identity-Aware Proxy**. Locate the 
 **Concept:** Implementing defense-in-depth networking to restrict pod-to-pod communication.
 
 **In the RAD UI:**
-*   **Network Policies (GKE):** The `App_GKE` module defines strict internal access controls using the `enable_network_segmentation` variable (Group 5). This ensures that even if a pod within the namespace is compromised, lateral movement is strictly restricted (e.g., denying ingress from all namespaces except the Gateway API or specific whitelisted pods).
+*   **Network Policies (GKE):** The `App GKE` module defines strict internal access controls using the `enable_network_segmentation` variable (Group 5). This ensures that even if a pod within the namespace is compromised, lateral movement is strictly restricted (e.g., denying ingress from all namespaces except the Gateway API or specific whitelisted pods).
 
 **Console Exploration:**
 In the GCP Console, navigate to **Kubernetes Engine > Workloads**, select your deployment, and view the "Networking" section to inspect assigned labels and selectors that drive these network policies. Alternatively, use `kubectl describe networkpolicies -n <namespace>` via Cloud Shell.

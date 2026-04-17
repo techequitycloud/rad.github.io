@@ -12,8 +12,8 @@ You interact with each module by configuring its variables in the RAD UI deploym
 **Concept:** Automating the delivery pipeline to reliably push new container images to production.
 
 **In the RAD UI:**
-*   **CI/CD Pipelines:** Both `App_CloudRun` and `App_GKE` include built-in CI/CD pipelines. The `enable_cicd_trigger` (Group 7) variable activates Cloud Build integration. When active, variables like `github_repository_url` (Group 7) and `cicd_trigger_config` (Group 7 for both modules) define how the system reacts to code commits.
-*   **Continuous Deployment:** Setting `cloud_deploy_stages` (Group 7 for both App_CloudRun and App_GKE) configures Google Cloud Deploy to take the built container and roll it out progressively across defined environments (e.g., dev, staging, prod).
+*   **CI/CD Pipelines:** Both `App CloudRun` and `App GKE` include built-in CI/CD pipelines. The `enable_cicd_trigger` (Group 7) variable activates Cloud Build integration. When active, variables like `github_repository_url` (Group 7) and `cicd_trigger_config` (Group 7 for both modules) define how the system reacts to code commits.
+*   **Continuous Deployment:** Setting `cloud_deploy_stages` (Group 7 for both App CloudRun and App GKE) configures Google Cloud Deploy to take the built container and roll it out progressively across defined environments (e.g., dev, staging, prod).
 
 **Console Exploration:**
 In the GCP Console, navigate to **Cloud Build > Triggers** to see the configured integration with source control. Then, navigate to **Cloud Deploy > Delivery pipelines** to visualise the progression of a release and understand how approvals or automated promotions move the application through its environments.
@@ -24,7 +24,7 @@ In the GCP Console, navigate to **Cloud Build > Triggers** to see the configured
 **Concept:** Safely routing user traffic between different versions of an application to minimize deployment risk.
 
 **In the RAD UI:**
-*   **Traffic Allocation (Cloud Run):** The `App_CloudRun` module exposes the `traffic_split` variable (Group 3). This allows practitioners to implement canary deployments declaratively (e.g., routing 5% of traffic to a new revision for testing).
+*   **Traffic Allocation (Cloud Run):** The `App CloudRun` module exposes the `traffic_split` variable (Group 3). This allows practitioners to implement canary deployments declaratively (e.g., routing 5% of traffic to a new revision for testing).
 *   **Canary Deployments (GKE):** While Cloud Run manages traffic natively at the revision level, GKE manages progressive rollouts via Cloud Deploy target configurations.
 
 **Console Exploration:**
@@ -37,7 +37,7 @@ Navigate to **Cloud Run** in the GCP Console, select the deployed service, and c
 
 **In the RAD UI:**
 *   **Scaling Limits (Cloud Run):** Variables `min_instance_count` (Group 3) and `max_instance_count` (Group 3) are applied directly to the Cloud Run service. Setting `min_instance_count` > 0 eliminates cold starts, while `max_instance_count` caps costs.
-*   **Horizontal Pod Autoscaler (HPA in GKE):** The `App_GKE` module similarly uses `min_instance_count` (Group 3) and `max_instance_count` (Group 3) alongside `container_resources` (Group 3) limits. The module also automatically provisions Pod Disruption Budgets (configured via `pdb_min_available`, Group 14) to ensure a minimum number of pods remain available during voluntary disruptions.
+*   **Horizontal Pod Autoscaler (HPA in GKE):** The `App GKE` module similarly uses `min_instance_count` (Group 3) and `max_instance_count` (Group 3) alongside `container_resources` (Group 3) limits. The module also automatically provisions Pod Disruption Budgets (configured via `pdb_min_available`, Group 14) to ensure a minimum number of pods remain available during voluntary disruptions.
 
 **Console Exploration:**
 Still in the **Revisions** tab of your Cloud Run service in the Console, inspect the autoscaling and concurrency settings. For GKE, navigate to **Kubernetes Engine > Workloads**, select the deployment, and view the **Autoscaling** tab to see current CPU/Memory targets driving the HPA.

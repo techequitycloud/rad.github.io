@@ -1,15 +1,14 @@
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Finance Guide
 
-<img src="https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.png" alt="Finance Guide" style={{marginBottom: '20px'}} />
-
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.m4a" title="Finance Quick Start Audio" />
-
-<video width="100%" controls style={{marginTop: '20px'}}>
+<video width="100%" controls poster="https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.png">
   <source src="https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.pdf" target="_blank" rel="noopener noreferrer">Download Guide PDF</a>
 
 ## 1. Introduction
 
