@@ -118,6 +118,7 @@ const sidebars: SidebarsConfig = {
           items: [
             { type: 'doc', id: 'modules/Directus_CloudRun/Directus_CloudRun_Guide', label: 'Cloud Run' },
             { type: 'doc', id: 'modules/Directus_GKE/Directus_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Directus_Common/Directus_Common_Guide', label: 'Common' },
           ],
         },
         {
