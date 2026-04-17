@@ -109,6 +109,7 @@ const sidebars: SidebarsConfig = {
           items: [
             { type: 'doc', id: 'modules/Cyclos_CloudRun/Cyclos_CloudRun_Guide', label: 'Cloud Run' },
             { type: 'doc', id: 'modules/Cyclos_GKE/Cyclos_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Cyclos_Common/Cyclos_Common_Guide', label: 'Common' },
           ],
         },
         {
