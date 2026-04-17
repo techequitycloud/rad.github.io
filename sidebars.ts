@@ -136,6 +136,7 @@ const sidebars: SidebarsConfig = {
           items: [
             { type: 'doc', id: 'modules/Ghost_CloudRun/Ghost_CloudRun_Guide', label: 'Cloud Run' },
             { type: 'doc', id: 'modules/Ghost_GKE/Ghost_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Ghost_Common/Ghost_Common_Guide', label: 'Common' },
           ],
         },
         {
