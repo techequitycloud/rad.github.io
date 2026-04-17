@@ -127,6 +127,7 @@ const sidebars: SidebarsConfig = {
           items: [
             { type: 'doc', id: 'modules/Django_CloudRun/Django_CloudRun_Guide', label: 'Cloud Run' },
             { type: 'doc', id: 'modules/Django_GKE/Django_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Django_Common/Django_Common_Guide', label: 'Common' },
           ],
         },
         {
