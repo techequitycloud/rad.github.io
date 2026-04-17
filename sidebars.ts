@@ -224,7 +224,7 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Foundation',
           items: [
-            { type: 'doc', id: 'modules/GCP_Services/GCP_Services_Guide', label: 'GCP Services' },
+            { type: 'doc', id: 'modules/GCP_Services/GCP_Services_Guide', label: 'Services' },
           ],
         },
       ],
