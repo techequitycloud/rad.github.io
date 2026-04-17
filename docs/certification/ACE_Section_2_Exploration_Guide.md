@@ -13,7 +13,7 @@ You interact with each module by configuring its variables in the RAD UI deploym
 
 **In the RAD UI:**
 *   **App CloudRun:** Uses `container_resources` (Group 3) to configure memory and CPU. Configurations dictate performance and resource consumption. The `min_instance_count` (Group 3) and `max_instance_count` (Group 3) control auto-scaling bounds.
-*   **App GKE:** Deploys to a Kubernetes Engine. The `container_resources` (Group 3) dictate pod CPU and memory requests/limits. The `min_instance_count` (Group 3) and `max_instance_count` (Group 3) handle autoscaling via Horizontal Pod Autoscaler (HPA) without managing underlying infrastructure logic directly, as the workloads run on Autopilot.
+*   **App GKE:** Deploys to a Kubernetes Engine. The `container_resources` (§3.A Compute & Scaling) dictate pod CPU and memory requests/limits. The `min_instance_count` and `max_instance_count` (§3.A) handle autoscaling via Horizontal Pod Autoscaler (HPA) without managing underlying infrastructure logic directly, as the workloads run on Autopilot.
 
 **Console Exploration:**
 Navigate to **Cloud Run** and select your deployed service. Inspect the **Revisions** tab to see the memory/CPU allocations and concurrency limits. For GKE, navigate to **Kubernetes Engine > Workloads**, find your deployment, and inspect the YAML definition of the pod to see requested resources and limits.
@@ -24,7 +24,7 @@ Navigate to **Cloud Run** and select your deployed service. Inspect the **Revisi
 **In the RAD UI:**
 The choice between the **App CloudRun** and **App GKE** modules reflects the compute selection process. App CloudRun is selected for stateless web applications needing to scale to zero. App GKE is chosen when stateful sets, fine-grained control via network policies, or specific pod topologies are required.
 *   **App CloudRun:** The module abstracts all infrastructure, providing rapid deployment via variables like `container_image` (Group 3).
-*   **App GKE:** Utilizing GKE Autopilot still abstracts node pools, but exposes variables like `enable_vertical_pod_autoscaling` (Group 3) for finer workload resource control.
+*   **App GKE:** Utilizing GKE Autopilot still abstracts node pools, but exposes variables like `enable_vertical_pod_autoscaling` (§3.A Compute & Scaling) for finer workload resource control.
 
 **Console Exploration:**
 Navigate to **Cloud Run** to see the managed serverless service. Then, navigate to **Kubernetes Engine > Clusters** to see the GKE Autopilot cluster and recognize that node provisioning is fully managed by GCP.
@@ -62,6 +62,8 @@ The ACE exam also heavily covers standard Compute Engine VMs, App Engine, and Cl
     - A **Cloud Storage object change notification** (object finalized, deleted, etc.) via Eventarc's Audit Log-based triggers.
     Navigate to **Eventarc > Triggers** to create a trigger and map event sources to a Cloud Run target. Understanding Eventarc is increasingly important as the exam moves toward event-driven architectures on serverless platforms.
 
+    **In the RAD UI:** Both App CloudRun (Group 11 `enable_auto_password_rotation`) and App GKE (§7.D Auto Password Rotation) provision an Eventarc trigger as part of automated database password rotation. When `enable_auto_password_rotation = true`, Secret Manager publishes a `SECRET_VERSION_ADD` event to a Pub/Sub topic, and Eventarc routes that event to a Cloud Run Job that rotates the password. Navigate to **Eventarc > Triggers** after enabling this feature to see a live, production-grade Eventarc trigger in action — it demonstrates the event source (Secret Manager), the event type (`google.cloud.secretmanager.secret.v1.rotationScheduleOccurred`), and the Cloud Run Job target.
+
     > **Real-World Example:** A document processing pipeline uses Eventarc to trigger a Cloud Run function whenever a PDF is uploaded to a Cloud Storage bucket. Eventarc detects the `google.cloud.storage.object.v1.finalized` event and invokes the Cloud Run service with the event payload — the service extracts text, calls the Document AI API, and stores results in Firestore. No polling loop is needed, and the architecture scales to zero when no documents are being processed.
 
 *   **App Engine:** The exam tests your ability to choose between App Engine Standard (language-specific sandboxes) and Flexible (custom containers). You can deploy a simple "Hello World" application using the `gcloud app deploy` command in Cloud Shell to understand its `app.yaml` configuration structure.
@@ -90,6 +92,8 @@ Navigate to **Cloud Storage > Buckets** to see the provisioned object storage bu
 
 The exam tests your ability to select the appropriate class based on access frequency and cost requirements. Object lifecycle rules (covered in Section 3) automate transitions between these classes.
 
+**In the RAD UI:** Both App CloudRun (Group 9 `storage_buckets` → `storage_class` field) and App GKE (§3.C `storage_buckets`) expose this choice per bucket. For example, setting `storage_class = "NEARLINE"` on a bucket used only for database backups is a direct cost optimisation. The `lifecycle_rules` sub-field within `storage_buckets` (App CloudRun Group 9) lets you automate transitions — for example, moving objects to `COLDLINE` after 90 days and deleting them after 365 days, without any application-level changes. In App_Common, the `app_storage_enhanced` module implements these rules on every bucket created by either platform module.
+
 **Google Cloud NetApp Volumes** is a managed enterprise file storage service that provides NFS (v3/v4.1) and SMB protocol access with workload profiles optimised for SAP, Oracle databases, and high-performance computing. Navigate to **NetApp Volumes > Volumes** in the console to explore available service levels (Standard, Premium, Extreme) and their IOPS characteristics. While the RAD platform uses Filestore for NFS, NetApp Volumes is an important alternative for enterprise workloads that require mature data management features such as snapshots, cloning, and replication.
 
 ### Choosing and deploying relational data products
@@ -97,7 +101,7 @@ The exam tests your ability to select the appropriate class based on access freq
 
 **In the RAD UI:**
 *   **Cloud SQL:** In **Services GCP**, utilize variables like `create_postgres` (Group 3) and `postgres_tier` (Group 3) or `create_mysql` (Group 3) and `mysql_tier` (Group 3) to provision managed relational databases. In the application modules, toggle `enable_cloudsql_volume` (Group 3) to inject the Cloud SQL Auth Proxy sidecar, enabling secure Unix socket connections without public IP exposure.
-*   **Memorystore (Redis):** In **Services GCP**, `create_redis` (Group 5) and `redis_tier` (Group 5) configure managed in-memory caching. Set `enable_redis` (Group 10 for App CloudRun; configure via `environment_variables` Group 4 for App GKE) to dynamically pass the Redis host and port into the container's environment variables.
+*   **Memorystore (Redis):** In **Services GCP**, `create_redis` (Group 5) and `redis_tier` (Group 5) configure managed in-memory caching. Set `enable_redis` (Group 10 for App CloudRun; §8.A Integrations for App GKE) to dynamically pass the Redis host and port (`REDIS_HOST`, `REDIS_PORT`) into the container's environment variables. Both modules also accept `redis_host` to point at a dedicated Memorystore private IP, and `redis_auth` (stored in Secret Manager) when the instance has AUTH enabled.
 
 **Console Exploration:**
 Navigate to **SQL** to review the managed PostgreSQL or MySQL instances, noting their high-availability configuration. Navigate to **Memorystore** to see the Redis cluster and its network endpoints.
@@ -168,7 +172,7 @@ Navigate to **VPC network > Firewall policies** to explore Network Firewall Poli
 **In the RAD UI:**
 *   **Services GCP:** `availability_regions` (Group 2) and `subnet_cidr_range` (Group 2) define the core VPC. Private Service Access automatically peers managed services like Cloud SQL and Memorystore to this private network.
 *   **App CloudRun:** `vpc_egress_setting` (Group 14) configures Direct VPC Egress, allowing the serverless container to securely access internal resources like the database via internal IP addresses.
-*   **App GKE:** Uses native Kubernetes networking, but `enable_network_segmentation` (Group 5) can enforce network policies to restrict internal pod-to-pod communication.
+*   **App GKE:** Uses native Kubernetes networking, but `enable_network_segmentation` (§3.D Networking & Network Policies) can enforce network policies to restrict internal pod-to-pod communication.
 
 ### Choosing and deploying load balancers
 **Concept:** Distributing global traffic, terminating SSL, and providing edge security.
@@ -190,6 +194,8 @@ Google Cloud offers two **Network Service Tiers** for egress traffic:
 - **Standard Tier:** Traffic enters Google's network at the destination region and uses the public internet for the first/last mile. Lower cost, but higher latency and no SLA equivalent to Premium. Suitable for non-latency-sensitive workloads where cost reduction is a priority.
 
 Navigate to **VPC network > Network Service Tiers** to view the project-level default tier and understand how to configure per-resource overrides. Note that Cloud Armor, the Global External Application Load Balancer (used by App CloudRun and App GKE), and global Anycast IPs always use Premium Tier.
+
+**In the RAD UI:** When you enable `enable_cloud_armor = true` in App CloudRun (Group 16) or App GKE (§4.A / §5.A), the module provisions a `gke-l7-global-external-managed` Global External Application Load Balancer with a global Anycast IP — this resource is always on **Premium Tier** regardless of the project-level default. The reserved static IP outputs (`reserve_static_ip = true`) are global addresses, which are only available under Premium Tier. This is the real-world illustration of why Premium Tier is required for globally distributed, low-latency application delivery.
 
 ### 💡 Additional Networking Objectives & Learning Guidelines
 The ACE exam tests hybrid connectivity and advanced VPC routing.
