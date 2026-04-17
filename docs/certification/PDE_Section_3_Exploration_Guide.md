@@ -2,7 +2,7 @@
 
 This guide helps candidates preparing for the Google Cloud Professional Cloud DevOps Engineer (PDE) certification explore Section 3 of the exam. It walks you through how SRE concepts are practically implemented in the provided Terraform codebases (`modules/App_CloudRun` and `modules/App_GKE`). By exploring the GCP Console and corresponding code, you will gain hands-on context for these critical SRE topics.
 
-Three modules are relevant to this section: **App CloudRun**, which deploys serverless containerised applications on Cloud Run; **App GKE**, which deploys containerised workloads on GKE Autopilot; and **App GCP**, which provides the shared foundational infrastructure including monitoring and alerting.
+Three modules are relevant to this section: **App CloudRun**, which deploys serverless containerised applications on Cloud Run; **App GKE**, which deploys containerised workloads on GKE Autopilot; and **GCP Services**, which provides the shared foundational infrastructure including monitoring and alerting.
 
 ---
 

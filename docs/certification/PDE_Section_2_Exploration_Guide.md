@@ -2,7 +2,7 @@
 
 This guide helps candidates preparing for the Google Cloud Professional Cloud DevOps Engineer (PDE) certification explore Section 2 of the exam. It maps the official exam guide domains to practical implementations in the provided Terraform codebase (`modules/App_CloudRun` and `modules/App_GKE`), which rely on the shared `modules/App_GCP` module.
 
-Three modules are relevant to this section: **App CloudRun**, which deploys serverless containerised applications on Cloud Run; **App GKE**, which deploys containerised workloads on GKE Autopilot; and **App GCP**, which provides the shared foundational infrastructure consumed by both application modules.
+Three modules are relevant to this section: **App CloudRun**, which deploys serverless containerised applications on Cloud Run; **App GKE**, which deploys containerised workloads on GKE Autopilot; and **GCP Services**, which provides the shared foundational infrastructure consumed by both application modules.
 
 By exploring the GCP Console and the corresponding Terraform code, you will gain hands-on context for these critical DevOps topics.
 

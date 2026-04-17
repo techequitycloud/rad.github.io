@@ -2,7 +2,7 @@
 
 This guide helps candidates preparing for the Google Cloud Professional Cloud DevOps Engineer (PDE) certification explore Section 1 of the exam. It walks you through how these concepts are practically implemented in the provided Terraform codebase (`modules/App_CloudRun` and `modules/App_GKE`). By exploring the GCP Console and corresponding code, you will gain hands-on context for these critical DevOps topics.
 
-Three modules are relevant to this section: **App CloudRun**, which deploys serverless containerised applications on Cloud Run; **App GKE**, which deploys containerised workloads on GKE Autopilot; and **App GCP**, which provides the shared foundational infrastructure consumed by both application modules.
+Three modules are relevant to this section: **App CloudRun**, which deploys serverless containerised applications on Cloud Run; **App GKE**, which deploys containerised workloads on GKE Autopilot; and **GCP Services**, which provides the shared foundational infrastructure consumed by both application modules.
 
 ---
 
@@ -13,7 +13,7 @@ Three modules are relevant to this section: **App CloudRun**, which deploys serv
 **In the Terraform Codebase:**
 The RAD platform provisions all resources within a defined project, but understanding the hierarchy above the project level is essential for the PDE exam. The `modules/App_GCP` module configures project-scoped resources. In a production landing zone, the project itself would sit within a folder structure (e.g., `corp/production/app-team`) enforced by the organization.
 
-Examine `modules/App_GCP/main.tf` to understand which APIs are enabled and which IAM bindings are created at the project level. The separation between `App GCP` (shared services), `App CloudRun` (application workload), and `App GKE` (application workload) mirrors the separation-of-concerns principle applied to real folder and project hierarchies.
+Examine `modules/App_GCP/main.tf` to understand which APIs are enabled and which IAM bindings are created at the project level. The separation between `GCP Services` (shared services), `App CloudRun` (application workload), and `App GKE` (application workload) mirrors the separation-of-concerns principle applied to real folder and project hierarchies.
 
 **Console Exploration:**
 *   Navigate to **IAM & Admin > Resource Manager** to view the project's position within the organization hierarchy.
@@ -39,7 +39,7 @@ The repository uses Terraform extensively. The **App CloudRun** and **App GKE** 
 
 Key IaC practices demonstrated in the codebase:
 *   **Remote state:** Terraform state is stored in Cloud Storage buckets (not locally), enabling team collaboration and preventing state file conflicts. Review the backend configuration in the root module.
-*   **Module versioning:** The `App GCP`, `App CloudRun`, and `App GKE` modules are versioned independently — a change to `App GCP` does not force a redeploy of application modules. This mirrors the module registry versioning pattern recommended for enterprise IaC.
+*   **Module versioning:** The `GCP Services`, `App CloudRun`, and `App GKE` modules are versioned independently — a change to `GCP Services` does not force a redeploy of application modules. This mirrors the module registry versioning pattern recommended for enterprise IaC.
 *   **Variable parameterisation:** All environment-specific values (instance counts, regions, image tags) are passed as variables — no hardcoded values in resource definitions. This enforces the principle that module code is environment-agnostic.
 
 **Console Exploration:**
