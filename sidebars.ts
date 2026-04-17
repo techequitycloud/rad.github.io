@@ -181,6 +181,7 @@ const sidebars: SidebarsConfig = {
           items: [
             { type: 'doc', id: 'modules/OpenEMR_CloudRun/OpenEMR_CloudRun_Guide', label: 'Cloud Run' },
             { type: 'doc', id: 'modules/OpenEMR_GKE/OpenEMR_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/OpenEMR_Common/OpenEMR_Common_Guide', label: 'Common' },
           ],
         },
         {
