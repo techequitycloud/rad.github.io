@@ -14,9 +14,11 @@ sidebar_label: "GKE"
 
 <a href="https://storage.googleapis.com/rad-public-2b65/modules/Odoo_GKE.pdf" target="_blank">View Presentation (PDF)</a>
 
+
+
 Odoo is a comprehensive open-source ERP platform covering CRM, accounting, inventory, manufacturing, HR, eCommerce, and more. This module deploys Odoo Community Edition on **GKE Autopilot** using a custom container image built from the official Odoo nightly packages, backed by a managed Cloud SQL PostgreSQL instance and a Filestore NFS volume for shared file storage.
 
-`Odoo GKE` is a **wrapper module** built on top of `App GKE`. It uses `App GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Odoo-specific application configuration, initialisation jobs, and runtime defaults on top.
+`Odoo_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Odoo-specific application configuration, initialisation jobs, and runtime defaults on top.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -24,37 +26,49 @@ Odoo is a comprehensive open-source ERP platform covering CRM, accounting, inven
 
 ## How This Guide Is Structured
 
-This guide documents only the variables that are **unique to `Odoo GKE`** or that have **Odoo-specific defaults** that differ from the `App GKE` base module. For all other variables — project identity, GKE backend configuration, CI/CD, custom SQL scripts, observability alerting, networking, IAP, and Cloud Armor — refer directly to the [App GKE Configuration Guide](../App_GKE/App_GKE_Guide.md).
+This guide documents only the variables that are **unique to `Odoo_GKE`** or that have **Odoo-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, GKE backend configuration, CI/CD, custom SQL scripts, observability alerting, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
-**Variables fully covered by the App GKE guide:**
+**Variables fully covered by the App_GKE guide:**
 
-| Configuration Area | App_GKE_Guide Section | Odoo-Specific Notes |
+| Configuration Area | App_GKE.md Section | Odoo-Specific Notes |
 |---|---|---|
-| Module Metadata & Configuration | Group 0 | Different defaults for `module_description` and `module_documentation`. `resource_creator_identity` behaves identically. |
-| Project & Identity | Group 1 | Refer to base App GKE module documentation. |
-| Runtime & Scaling | Group 3 | See [Odoo Runtime Configuration](#odoo-runtime-configuration) below. `container_port` defaults to `8069`. `session_affinity` defaults to `"ClientIP"`. |
-| Environment Variables & Secrets | Group 5 | See [Odoo Environment Variables](#odoo-environment-variables) below for SMTP defaults. |
-| GKE Backend Configuration | Group 9 | Refer to base App GKE module documentation. Note: `session_affinity` defaults to `"ClientIP"` for Odoo. |
-| Jobs & Scheduled Tasks | Group 12 | Refer to base App GKE module documentation. The module also injects two platform-managed initialisation jobs — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| CI/CD & GitHub Integration | Group 7 | Refer to base App GKE module documentation. The module injects `ODOO_VERSION` as a Cloud Build substitution variable automatically. |
-| Storage — NFS | Group 15 | NFS is **enabled by default** (`enable_nfs = true`). See [Platform-Managed Behaviours](#platform-managed-behaviours) for the NFS initialisation job. |
-| Storage — GCS | Group 16 | Refer to base App GKE module documentation. |
-| Backup Schedule & Retention | Group 6 | Refer to base App GKE module documentation. See also [Backup Import & Recovery](#backup-import--recovery) below. |
-| Custom SQL Scripts | Group 8 | Refer to base App GKE module documentation. |
-| Observability & Health | Group 13 | See [Odoo Health Probes](#odoo-health-probes) below for Odoo-specific probe paths and timing defaults. |
-| Reliability Policies | Group 27 | Refer to base App GKE module documentation. `enable_pod_disruption_budget` defaults to `true`. |
-| Resource Quota | Group 14 | Refer to base App GKE module documentation. |
-| Custom Domain, Static IP & Network | Group 11 | Refer to base App GKE module documentation. |
-| Identity-Aware Proxy | Group 4 | Refer to base App GKE module documentation. |
-| Cloud Armor | Group 13 | Refer to base App GKE module documentation. |
-| VPC Service Controls | Group 28 | Refer to base App GKE module documentation. |
-| StatefulSet Configuration | Group 10 | Refer to base App GKE module documentation. |
+| Module Metadata & Configuration | [§1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) | Different defaults for `module_description` and `module_documentation`. `resource_creator_identity` behaves identically. |
+| Project & Identity | [§2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) | Refer to base App_GKE module documentation. |
+| Runtime & Scaling | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | See [Odoo Runtime Configuration](#odoo-runtime-configuration) below. `container_port` defaults to `8069`. `session_affinity` defaults to `"ClientIP"`. |
+| Environment Variables & Secrets | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | See [Odoo Environment Variables](#odoo-environment-variables) below for SMTP defaults. |
+| GKE Backend Configuration | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | Refer to base App_GKE module documentation. Note: `session_affinity` defaults to `"ClientIP"` for Odoo. |
+| Jobs & Scheduled Tasks | [§3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | Refer to base App_GKE module documentation. The module also injects two platform-managed initialisation jobs — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
+| CI/CD & GitHub Integration | [§6 CI/CD & Delivery](../App_GKE/App_GKE.md#6-cicd--delivery) | Refer to base App_GKE module documentation. The module injects `ODOO_VERSION` as a Cloud Build substitution variable automatically. |
+| Storage — NFS | [§3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) | NFS is **enabled by default** (`enable_nfs = true`). See [Platform-Managed Behaviours](#platform-managed-behaviours) for the NFS initialisation job. |
+| Storage — GCS | [§3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) | Refer to base App_GKE module documentation. |
+| Backup Schedule & Retention | [§8.B Backup Import & Recovery](../App_GKE/App_GKE.md#b-backup-import) | Refer to base App_GKE module documentation. See also [Backup Import & Recovery](#backup-import--recovery) below. |
+| Custom SQL Scripts | [§3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | Refer to base App_GKE module documentation. |
+| Observability & Health | [§5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) | See [Odoo Health Probes](#odoo-health-probes) below for Odoo-specific probe paths and timing defaults. |
+| Reliability Policies | [§7 Reliability & Scheduling](../App_GKE/App_GKE.md#7-reliability--scheduling) | Refer to base App_GKE module documentation. `enable_pod_disruption_budget` defaults to `true`. |
+| Resource Quota | [§7.C Resource Quotas](../App_GKE/App_GKE.md#c-resource-quotas) | Refer to base App_GKE module documentation. |
+| Custom Domain, Static IP & Network | [§5.C Static IP](../App_GKE/App_GKE.md#c-static-ip) | Refer to base App_GKE module documentation. |
+| Identity-Aware Proxy | [§4.B Identity-Aware Proxy (IAP)](../App_GKE/App_GKE.md#b-identity-aware-proxy-iap) | Refer to base App_GKE module documentation. |
+| Cloud Armor WAF | [§4.A Cloud Armor WAF](../App_GKE/App_GKE.md#a-cloud-armor-waf) | Refer to base App_GKE module documentation. |
+| VPC Service Controls | [§4.D VPC Service Controls](../App_GKE/App_GKE.md#d-vpc-service-controls) | Refer to base App_GKE module documentation. |
+| StatefulSet Configuration | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | Refer to base App_GKE module documentation. |
+| Database Configuration | [§3.B Database (Cloud SQL)](../App_GKE/App_GKE.md#b-database-cloud-sql) | `database_type` must be `"POSTGRES"`. See [Odoo Database Configuration](#odoo-database-configuration) below. |
+| Networking & Network Policies | [§3.D Networking & Network Policies](../App_GKE/App_GKE.md#d-networking--network-policies) | Refer to base App_GKE module documentation. |
+| Additional Services | [§3.F Additional Services](../App_GKE/App_GKE.md#f-additional-services) | Refer to base App_GKE module documentation. |
+| Binary Authorization | [§4.C Binary Authorization](../App_GKE/App_GKE.md#c-binary-authorization) | Refer to base App_GKE module documentation. |
+| Secrets Store CSI | [§4.E Secrets Store CSI](../App_GKE/App_GKE.md#e-secrets-store-csi-driver) | Refer to base App_GKE module documentation. |
+| Cloud CDN | [§5.B Cloud CDN](../App_GKE/App_GKE.md#b-cloud-cdn) | Refer to base App_GKE module documentation. |
+| Pod Disruption Budget | [§7.A Pod Disruption Budget](../App_GKE/App_GKE.md#a-pod-disruption-budgets) | `enable_pod_disruption_budget` defaults to `true`. |
+| Topology Spread | [§7.B Topology Spread](../App_GKE/App_GKE.md#b-topology-spread-constraints) | Refer to base App_GKE module documentation. |
+| Auto Password Rotation | [§7.D Auto Password Rotation](../App_GKE/App_GKE.md#d-auto-password-rotation) | Refer to base App_GKE module documentation. |
+| Redis / Memorystore | [§8.A Redis / Memorystore](../App_GKE/App_GKE.md#a-redis--memorystore) | `enable_redis` defaults to `false`. See [Redis Session Store](#redis-session-store) below. |
+| Service Mesh | [§8.C Service Mesh](../App_GKE/App_GKE.md#c-service-mesh-asm-via-fleet) | Refer to base App_GKE module documentation. |
+| Multi-Cluster Services | [§8.D Multi-Cluster Services](../App_GKE/App_GKE.md#d-multi-cluster-services-mcs) | Refer to base App_GKE module documentation. |
 
 ---
 
 ## Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `Odoo GKE` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
+The following behaviours are applied automatically by `Odoo_GKE` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
 | Behaviour | Detail |
 |---|---|
@@ -73,7 +87,7 @@ These variables define how the Odoo deployment is named across GCP and Kubernete
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `application_name` | `"odoo"` | `[a-z][a-z0-9-]{0,19}` | Internal identifier used as the base name for the Kubernetes Deployment, Namespace, Cloud SQL database, GCS buckets, and Secret Manager secrets. Functionally identical to `application_name` in App GKE. **Do not change after initial deployment.** |
+| `application_name` | `"odoo"` | `[a-z][a-z0-9-]{0,19}` | Internal identifier used as the base name for the Kubernetes Deployment, Namespace, Cloud SQL database, GCS buckets, and Secret Manager secrets. Functionally identical to `application_name` in App_GKE. **Do not change after initial deployment.** |
 | `application_display_name` | `"Odoo ERP"` | Any string | Human-readable name shown in the platform UI and GKE monitoring dashboards. Can be updated freely without affecting resource names. |
 | `application_description` | `"Odoo ERP on GKE Autopilot"` | Any string | Brief description of the deployment. Populated into Kubernetes resource annotations. Can be updated freely. |
 | `application_version` | `"18.0"` | Odoo version string, e.g. `"18.0"`, `"17.0"` | **For Odoo this is the Odoo release version, not a semver tag.** It maps directly to the Odoo nightly package channel used in the Dockerfile (`ODOO_VERSION` build arg). Supported values are the Odoo long-term supported (LTS) versions: `"18.0"`, `"17.0"`, `"16.0"`. When `container_image_source = "custom"`, changing this value triggers a new Cloud Build run that installs the specified Odoo version. |
@@ -102,7 +116,7 @@ Odoo is a Python/PostgreSQL ERP application that requires more resources than a 
 
 ### Resource Sizing
 
-The `container_resources` variable behaves identically to App GKE (see [App_GKE_Guide Group 3](../App_GKE/App_GKE_Guide.md#group-3-runtime--scaling)), but the Odoo defaults are lower than recommended for production:
+The `container_resources` variable behaves identically to App_GKE (see [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot)), but the Odoo defaults are lower than recommended for production:
 
 | Variable | Module Default | Recommended for Production |
 |---|---|---|
@@ -125,7 +139,7 @@ container_resources = {
 
 ### Session Affinity
 
-| Variable | App GKE Default | Odoo GKE Default | Description & Implications |
+| Variable | App_GKE Default | Odoo_GKE Default | Description & Implications |
 |---|---|---|---|
 | `session_affinity` | `"None"` | `"ClientIP"` | Odoo stores HTTP session data on the local filesystem (`/mnt/sessions` on NFS) keyed by session ID, but worker processes are assigned by the xmlrpc load balancer. Setting `"ClientIP"` ensures a given client consistently reaches the same pod, avoiding cross-pod session lookup overhead. Change to `"None"` only if Redis session storage is configured and all workers share session state. |
 
@@ -143,14 +157,14 @@ kubectl get service odoo -n NAMESPACE -o jsonpath='{.spec.sessionAffinity}'
 
 ## Odoo Health Probes
 
-Odoo performs database schema validation and, on first boot, full module installation. This startup phase can take 2–10 minutes on a fresh deployment, depending on the number of installed modules and available CPU. The `startup_probe_config` and `health_check_config` variables in `Odoo GKE` have Odoo-specific defaults for the `/web/health` endpoint.
+Odoo performs database schema validation and, on first boot, full module installation. This startup phase can take 2–10 minutes on a fresh deployment, depending on the number of installed modules and available CPU. The `startup_probe_config` and `health_check_config` variables in `Odoo_GKE` have Odoo-specific defaults for the `/web/health` endpoint.
 
 | Variable | Default | Description & Implications |
 |---|---|---|
 | `startup_probe_config` | `{ enabled = true, type = "HTTP", path = "/web/health", initial_delay_seconds = 180, timeout_seconds = 60, period_seconds = 120, failure_threshold = 3 }` | Determines when the Odoo pod is ready to serve traffic. The `initial_delay_seconds = 180` gives Odoo time to load Python modules and perform database migration before the first probe fires. `period_seconds = 120` and `failure_threshold = 3` allow up to 6 minutes of additional startup time. **On first deployment** (when the schema is created from scratch), consider increasing `failure_threshold` to `5` or `initial_delay_seconds` to `300`. |
 | `health_check_config` | `{ enabled = true, type = "HTTP", path = "/web/health", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Periodically checks whether a running Odoo instance is healthy. The `/web/health` endpoint returns HTTP 200 only when Odoo has a live database connection and the application is operational. A `period_seconds = 30` check is appropriate. Kubernetes will restart the pod if this probe fails 3 consecutive times. |
 
-> Both probe variables behave identically to `startup_probe_config` and `health_check_config` in App GKE — see [App_GKE_Guide Group 13](../App_GKE/App_GKE_Guide.md#group-13-observability--health) for the full field reference. The Odoo GKE defaults override the base App GKE defaults.
+> **Probe routing in Odoo_GKE:** `startup_probe_config` and `health_check_config` each serve a dual role — they are passed to `Odoo_Common` (as `startup_probe` and `liveness_probe` respectively) to configure the Kubernetes container probes, and also forwarded directly to `App_GKE` to configure the load balancer backend health checks. Other App_GKE wrapper modules use separate `startup_probe`/`liveness_probe` variables for container probes; Odoo consolidates both paths into the single `_config` pair. See [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) for the App_GKE field reference.
 
 ### Validating Health Probes
 
@@ -172,11 +186,11 @@ kubectl exec -n NAMESPACE deploy/odoo -- curl -s -o /dev/null -w "%{http_code}" 
 
 ## Odoo Database Configuration
 
-Odoo requires PostgreSQL. The database is provisioned by the underlying `App GKE` module — see [App_GKE_Guide Group 17](../App_GKE/App_GKE_Guide.md#group-17-database-configuration) for the full variable reference.
+Odoo requires PostgreSQL. The database is provisioned by the underlying `App_GKE` module — see [App_GKE §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql) for the full variable reference.
 
-The following defaults are **Odoo-specific** and differ from the App GKE defaults:
+The following defaults are **Odoo-specific** and differ from the App_GKE defaults:
 
-| Variable | App GKE Default | Odoo GKE Default | Recommendation |
+| Variable | App_GKE Default | Odoo_GKE Default | Recommendation |
 |---|---|---|---|
 | `application_database_name` | `"gkeappdb"` | `"gkeappdb"` | Set to `"odoo"` to match Odoo conventions. |
 | `application_database_user` | `"gkeappuser"` | `"gkeappuser"` | Set to `"odoo"` to match Odoo conventions. |
@@ -200,9 +214,9 @@ kubectl exec -n NAMESPACE deploy/odoo -- env | grep -E "^(DB_|PGHOST|PGUSER)"
 
 ## Odoo Environment Variables
 
-The `environment_variables` variable (documented in [App_GKE_Guide Group 5](../App_GKE/App_GKE_Guide.md#group-5-environment-variables--secrets)) has Odoo-specific defaults that configure outbound email delivery.
+The `environment_variables` variable (documented in [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot)) has Odoo-specific defaults that configure outbound email delivery.
 
-**Default `environment_variables` in Odoo GKE:**
+**Default `environment_variables` in Odoo_GKE:**
 
 ```hcl
 environment_variables = {
@@ -231,13 +245,13 @@ secret_environment_variables = {
 }
 ```
 
-All other `environment_variables` and `secret_environment_variables` behaviour is identical to App GKE — refer to [App_GKE_Guide Group 5](../App_GKE/App_GKE_Guide.md#group-5-environment-variables--secrets).
+All other `environment_variables` and `secret_environment_variables` behaviour is identical to App_GKE — refer to [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 
 ---
 
 ## Redis Session Store
 
-Odoo supports Redis as a shared session store. When multiple Odoo pods are running (i.e. `max_instance_count > 1`), Redis is **strongly recommended** to avoid session loss when a request is routed to a pod that does not hold the user's local session. Without Redis, `session_affinity = "ClientIP"` mitigates this but does not eliminate the risk during pod restarts.
+Odoo supports Redis as a shared session store. When multiple Odoo pods are running (i.e. `max_instance_count > 1`), Redis is **strongly recommended** to avoid session loss when a request is routed to a pod that does not hold the user's local session. Without Redis, `session_affinity = "ClientIP"` mitigates this but does not eliminate the risk during pod restarts. The Redis integration is provided by App_GKE — see [§8.A Redis / Memorystore](../App_GKE/App_GKE.md#a-redis--memorystore) for the full integration reference.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -261,9 +275,9 @@ kubectl exec -n NAMESPACE deploy/odoo -- redis-cli -h REDIS_HOST -p REDIS_PORT P
 
 ## Backup Import & Recovery
 
-In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_GKE_Guide Group 6](../App_GKE/App_GKE_Guide.md#group-6-backup--maintenance)), `Odoo GKE` supports a one-time database import during deployment. Use this to migrate an existing Odoo instance to GCP or to seed a new environment with production data.
+In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_GKE §8.B](../App_GKE/App_GKE.md#b-backup-import)), `Odoo_GKE` supports a one-time database import during deployment. Use this to migrate an existing Odoo instance to GCP or to seed a new environment with production data.
 
-The backup import variables behave identically to those in App_GKE_Guide Group 6:
+The backup import variables behave identically to those in App_GKE §8.B:
 
 | Variable | Default | Description |
 |---|---|---|
@@ -274,13 +288,13 @@ The backup import variables behave identically to those in App_GKE_Guide Group 6
 
 > The Odoo backup is a PostgreSQL dump (`pg_dump`). The recommended format for Odoo is `"sql"` (plain text) or `"gz"` (gzip-compressed). The import job restores the dump into the database identified by `application_database_name`.
 
-For the full variable reference and validation steps, refer to [App_GKE_Guide Group 6](../App_GKE/App_GKE_Guide.md#group-6-backup--maintenance).
+For the full variable reference and validation steps, refer to [App_GKE §8.B](../App_GKE/App_GKE.md#b-backup-import).
 
 ---
 
 ## Deployment Prerequisites & Validation
 
-After deploying `Odoo GKE`, confirm the deployment is healthy:
+After deploying `Odoo_GKE`, confirm the deployment is healthy:
 
 ```bash
 # Confirm both initialisation jobs completed successfully

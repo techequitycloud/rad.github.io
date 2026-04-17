@@ -172,6 +172,7 @@ const sidebars: SidebarsConfig = {
           items: [
             { type: 'doc', id: 'modules/Odoo_CloudRun/Odoo_CloudRun_Guide', label: 'Cloud Run' },
             { type: 'doc', id: 'modules/Odoo_GKE/Odoo_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Odoo_Common/Odoo_Common_Guide', label: 'Common' },
           ],
         },
         {
