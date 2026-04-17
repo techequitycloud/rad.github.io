@@ -3,218 +3,485 @@ title: "Sample Cloud Run Configuration Guide"
 sidebar_label: "Cloud Run"
 ---
 
-# Sample_CloudRun Module — Configuration Guide
+# Sample CloudRun Module
 
-`Sample_CloudRun` is a **wrapper module** that sits on top of [`App_CloudRun`](../App_CloudRun/App_CloudRun_Guide.md). It deploys a pre-configured reference Flask application (Python 3.11, PostgreSQL 15, optional Redis, optional NFS) on Cloud Run. Its purpose is to serve as a working example of how to build a custom application module on top of `App_CloudRun`.
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Sample_CloudRun.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Sample_CloudRun.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
-Most configuration variables in `Sample_CloudRun` are passed through unchanged to `App_CloudRun`. For the meaning, options, validation steps, and `gcloud` CLI commands for any variable that appears in `App_CloudRun`, refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md). This guide documents only what is **unique to `Sample_CloudRun`**: its layered architecture, the pre-configured application it ships, and the specific behaviours and variable differences it introduces on top of `App_CloudRun`.
+<br/>
 
-> **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Sample_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
 
----
 
-## Module Architecture
 
-`Sample_CloudRun` composes two internal layers:
+`Sample_CloudRun` is a **reference wrapper module** that sits on top of `App_CloudRun`.
+It deploys a pre-configured Flask application (Python 3.11, PostgreSQL 15, optional
+Redis, optional NFS) on Cloud Run, and serves as a working example of how to build
+a custom application module on top of `App_CloudRun`.
 
-```
-Sample_CloudRun
-├── Sample_Common  (application layer — Flask app, secrets, db-init job, Redis service)
-└── App_CloudRun   (infrastructure layer — Cloud Run, Cloud SQL, NFS, networking, CI/CD)
-```
-
-**`Sample_Common`** is a shared internal module that produces the application-specific configuration object (`application_config`) consumed by `App_CloudRun`. It is responsible for:
-
-- Generating a random 32-character Flask `SECRET_KEY` and storing it in Secret Manager.
-- Defining a `db-init` Cloud Run Job (using `postgres:15-alpine`) that runs the bundled database initialisation script (`scripts/db-init.sh`) on first deployment.
-- Optionally defining an internal Redis additional Cloud Run service (using `redis:alpine`) when `enable_redis = true`.
-- Providing a custom Cloud Build configuration that builds the sample Flask application from the bundled Dockerfile in `Sample_Common/scripts/`.
-
-**`App_CloudRun`** receives the merged configuration from `Sample_Common` and provisions all GCP infrastructure: the Cloud Run service, Cloud SQL instance, NFS Filestore/GCE VM, Artifact Registry repository, Secret Manager secrets, IAM bindings, networking, CI/CD pipelines, and observability resources.
-
-You do not interact with `Sample_Common` directly. All inputs are exposed as variables on `Sample_CloudRun` itself.
+`Sample_CloudRun` composes two internal layers: `Sample_Common` produces the
+application-specific configuration object, and `App_CloudRun` provisions all GCP
+infrastructure. You do not interact with `Sample_Common` directly — all inputs are
+exposed as variables on `Sample_CloudRun` itself.
 
 ---
 
-## Pre-configured Application
+## §1 · Module Overview
 
-When deployed with default settings, `Sample_CloudRun` provides:
-
-| Component | Details |
+| Attribute | Value |
 |---|---|
-| **Application framework** | Flask (Python 3.11-slim), listening on port `8080` |
-| **Container image source** | `prebuilt` by default (hello container placeholder). Set `container_image_source = "custom"` to build the sample Flask app via Cloud Build. |
-| **Database** | PostgreSQL 15, with a `db-init` Cloud Run Job that runs on first deployment |
-| **Secret** | `SECRET_KEY` — auto-generated 32-character random string, stored in Secret Manager, injected as the `SECRET_KEY` environment variable |
-| **Redis** | Optional — when `enable_redis = true`, an internal Redis (`redis:alpine`) Cloud Run service is deployed alongside the application |
-| **NFS** | Optional — when `enable_nfs = true`, a shared NFS volume is mounted at `nfs_mount_path` |
+| **Underlying platform** | `App_CloudRun` |
+| **Sub-module** | `Sample_Common` |
+| **Application** | Flask (Python 3.11-slim), listening on port `8080` |
+| **Default version** | `"latest"` |
+| **Database** | Cloud SQL PostgreSQL 15, initialised by the `db-init` job |
+| **Default image** | `us-docker.pkg.dev/cloudrun/container/hello` (`container_image_source = "prebuilt"`) |
+| **Min instances** | `0` — **hardcoded in `sample.tf`**; overrides user input (see §9) |
+| **Max instances** | `1` |
+| **NFS** | Optional (`enable_nfs = true` by default), mounted at `/mnt/nfs` |
+| **Redis** | Optional (`enable_redis = false` by default); no NFS-server fallback |
+| **Platform-managed secret** | `SECRET_KEY` (auto-generated 32-char Flask secret key) |
+| **Platform-managed job** | `db-init` (PostgreSQL schema initialisation) |
 
-The `db-init` job and the `SECRET_KEY` secret are managed entirely by the module. You do not need to pre-create them.
+### Wrapper Architecture
+
+```
+Sample_CloudRun (variables.tf / sample.tf / main.tf)
+  └─ Sample_Common    ← resolves app config, db-init job, SECRET_KEY secret, Redis service
+  └─ App_CloudRun     ← provisions all GCP infrastructure
+```
+
+`Sample_Common` outputs:
+- `config` → merged into `application_config` (with `min_instance_count = 0` forced)
+- `secret_ids.FLASK_SECRET_KEY` → injected as `SECRET_KEY` via `module_secret_env_vars`
+- `storage_buckets` → merged into `module_storage_buckets`
+- `path` → used to resolve `scripts_dir`
+
+`module_env_vars` injects `ENABLE_REDIS`, `REDIS_HOST`, and `REDIS_PORT` from the
+Redis variables. `REDIS_HOST` is left empty when `redis_host` is not set — there is
+no NFS-server fallback (see §8.A).
 
 ---
 
-## Behaviours and Variables Unique to Sample_CloudRun
+## §2 · IAM & Project Identity
 
-### 1. Scale-to-Zero Default (`min_instance_count = 0`)
+| Variable | Default | Description |
+|---|---|---|
+| `project_id` | — | GCP project ID. All resources are created in this project. Grant the Owner role to `rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com`. |
+| `tenant_deployment_id` | `"demo"` | Short suffix appended to resource names. Use `"prod"`, `"staging"`, etc. for multiple environments in the same project. |
+| `resource_creator_identity` | `"rad-module-creator@…"` | Service account used by Terraform. Override with a project-specific SA for production. |
+| `support_users` | `[]` | Email addresses of users granted IAM access and added as monitoring alert recipients. |
+| `resource_labels` | `{}` | Key-value labels applied to all resources (cost centre, team, environment). |
+| `deployment_id` | `""` | Optional fixed deployment ID. A random hex ID is generated when left empty. |
 
-`Sample_CloudRun` defaults `min_instance_count` to `0`, and passes it through to `App_CloudRun` without override:
+---
 
-```terraform
+## §3 · Core Service Configuration
+
+### §3.A · Application Identity
+
+`application_display_name` and `application_description` are passed to `Sample_Common`
+as `display_name` and `description`, then merged into `application_config` for
+`App_CloudRun`.
+
+| Variable | Default | Description |
+|---|---|---|
+| `application_name` | `"cloudrunapp"` | Internal identifier used as the base name for the Cloud Run service, Artifact Registry repository, and Secret Manager secrets. **Do not change after initial deployment.** |
+| `application_display_name` | `"Cloudrun Application"` | Human-readable name shown in the platform UI and Cloud Run console. Safe to update at any time. |
+| `application_description` | `"Sample application to showcase Cloudrun features"` | Brief description of the application. Populates the Cloud Run service description field. |
+| `application_version` | `"latest"` | Version tag applied to the container image. Increment to trigger a new image build or revision. |
+| `application_database_name` | `"cloudrunapp"` | PostgreSQL database name. Passed to `Sample_Common` as `db_name`. **Do not change after initial deployment.** |
+| `application_database_user` | `"cloudrunapp"` | PostgreSQL user. Passed to `Sample_Common` as `db_user`. Password auto-generated. |
+
+### §3.B · Resource Sizing
+
+`cpu_limit` and `memory_limit` are flat scalar variables passed to `Sample_Common`,
+which assembles them into the `container_resources` object consumed by `App_CloudRun`.
+
+| Variable | Default | Description |
+|---|---|---|
+| `cpu_limit` | `"1000m"` | CPU per instance (millicores). Increase for CPU-bound Flask workloads. |
+| `memory_limit` | `"512Mi"` | Memory per instance. Increase for memory-intensive operations or large datasets. |
+| `min_instance_count` | `0` | User-configurable, but **overridden to `0` in `sample.tf`**. Scale-to-zero is hardcoded for this reference module (see §9). |
+| `max_instance_count` | `1` | Maximum concurrent instances. Increase when combined with Redis session store. |
+| `timeout_seconds` | `300` | Maximum request duration (0–3600 s). |
+| `execution_environment` | `"gen2"` | Required for NFS mounts when `enable_nfs = true`. |
+
+### §3.C · Environment Variables & Secrets
+
+| Variable | Default | Description |
+|---|---|---|
+| `environment_variables` | `{}` | Plain-text environment variables injected at runtime. For non-sensitive config such as feature flags, log levels, or API endpoints. |
+| `secret_environment_variables` | `{}` | Map of env var name → Secret Manager secret name. Values resolved at runtime; never stored in plaintext. |
+| `secret_rotation_period` | `"2592000s"` | Rotation reminder period (30 days default). Set `null` to disable. |
+| `secret_propagation_delay` | `30` | Seconds to wait after secret creation before dependent operations proceed. |
+
+### §3.D · Networking
+
+| Variable | Default | Description |
+|---|---|---|
+| `ingress_settings` | `"all"` | Traffic sources permitted to reach Cloud Run. `"all"` = public internet; `"internal"` = VPC only; `"internal-and-cloud-load-balancing"` = when fronted by a GLB. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | Routes RFC 1918 traffic via VPC; public traffic exits directly. Change to `"ALL_TRAFFIC"` for strict egress controls. |
+| `container_port` | `8080` | Port the Flask application listens on. Must match the application's bind port. |
+| `container_protocol` | `"http1"` | HTTP version: `"http1"` or `"h2c"`. |
+| `enable_cloudsql_volume` | `true` | Injects Cloud SQL Auth Proxy sidecar for Unix socket connections to Cloud SQL. |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` | Path where the Cloud SQL Auth Proxy Unix socket is mounted. |
+
+### §3.E · Container Image & Build
+
+By default the module deploys the Cloud Run hello container (`prebuilt`). Set
+`container_image_source = "custom"` to build the bundled sample Flask app from the
+`Sample_Common/scripts/Dockerfile` via Cloud Build.
+
+| Variable | Default | Description |
+|---|---|---|
+| `container_image_source` | `"prebuilt"` | `"prebuilt"` = deploy an existing image; `"custom"` = build via Cloud Build from `container_build_config`. |
+| `container_image` | `"us-docker.pkg.dev/cloudrun/container/hello"` | Image URI when `container_image_source = "prebuilt"`. |
+| `container_build_config` | `{ enabled = false }` | Cloud Build config when `container_image_source = "custom"`. Set `enabled = true` and provide `dockerfile_path`, `context_path`, `build_args`, `artifact_repo_name`. |
+| `enable_image_mirroring` | `true` | Mirrors the image into Artifact Registry before deploy. Recommended to avoid Docker Hub rate limits. |
+| `deploy_application` | `true` | Set `false` to provision infrastructure without deploying the container. |
+
+---
+
+## §4 · Advanced Security
+
+### §4.A · Automated Password Rotation
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_auto_password_rotation` | `false` | Deploys a Cloud Run + Eventarc automated rotation job. Rotates the database password on the schedule set by `secret_rotation_period`. |
+| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts to pick up the new value. |
+| `secret_rotation_period` | `"2592000s"` | Rotation reminder interval (30 days default). Also used as trigger period when rotation is enabled. |
+
+### §4.B · VPC Service Controls
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_vpc_sc` | `false` | Enforces VPC-SC perimeter. Restricts GCP API calls to requests from inside the perimeter. Requires an existing VPC-SC perimeter in the project. |
+
+### §4.C · Identity-Aware Proxy
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_iap` | `false` | Enables Cloud Run native IAP. Requires Google identity authentication before the application is accessible. |
+| `iap_authorized_users` | `[]` | Users granted access: `"user:alice@example.com"`. |
+| `iap_authorized_groups` | `[]` | Google Groups granted access: `"group:engineering@example.com"`. |
+
+### §4.D · Cloud Armor & CDN
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_cloud_armor` | `false` | Provisions a Global HTTPS Load Balancer with Cloud Armor WAF policy. Required when `application_domains` is set. |
+| `application_domains` | `[]` | Custom domains. Google-managed SSL certificates are provisioned per domain. DNS must point to the GLB IP first. |
+| `enable_cdn` | `false` | Enables Cloud CDN on the GLB to cache static assets at edge. Only used when `enable_cloud_armor = true`. |
+| `admin_ip_ranges` | `[]` | IP CIDR ranges permitted for direct administrative access. |
+
+### §4.E · Binary Authorization
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_binary_authorization` | `false` | Enforces Binary Authorization policy. Images must carry a valid attestation before deployment. |
+
+---
+
+## §5 · Traffic & Ingress
+
+### §5.A · Traffic Splitting
+
+| Variable | Default | Description |
+|---|---|---|
+| `traffic_split` | `[]` | Canary or blue-green traffic allocations across Cloud Run revisions. All entries must sum to 100%. Leave empty to route all traffic to the latest revision. |
+
+**Example:**
+```hcl
+traffic_split = [
+  { type = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST",   percent = 90 },
+  { type = "TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION", percent = 10, revision = "cloudrunapp-00003-abc" },
+]
+```
+
+### §5.B · Service Annotations & Labels
+
+| Variable | Default | Description |
+|---|---|---|
+| `service_annotations` | `{}` | Kubernetes-style annotations on the Cloud Run service resource. |
+| `service_labels` | `{}` | Labels on the Cloud Run service (in addition to `resource_labels`). |
+
+---
+
+## §6 · CI/CD Integration
+
+### §6.A · GitHub Integration
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_cicd_trigger` | `false` | Enables a Cloud Build trigger that builds and deploys when code is pushed to the configured repository. |
+| `github_repository_url` | `""` | Full HTTPS URL of the GitHub repository. Required when `enable_cicd_trigger = true`. |
+| `github_token` | `""` | GitHub PAT for authentication. Mutually exclusive with `github_app_installation_id`. |
+| `github_app_installation_id` | `""` | Cloud Build GitHub App installation ID. Preferred for organisation repositories. |
+| `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Advanced trigger config: `branch_pattern`, `included_files`, `ignored_files`, `trigger_name`, `substitutions`. |
+
+### §6.B · Cloud Deploy
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_cloud_deploy` | `false` | Switches CI/CD to a managed Cloud Deploy pipeline. Requires `enable_cicd_trigger = true`. |
+| `cloud_deploy_stages` | `[dev, staging, prod]` | Ordered promotion stages. `prod` requires manual approval by default. |
+
+---
+
+## §7 · Reliability & Data
+
+### §7.A · Health Probes
+
+`Sample_CloudRun` exposes **two distinct sets** of health probe variables:
+
+- `startup_probe` / `liveness_probe` → passed to `Sample_Common` (application config within `application_config`)
+- `startup_probe_config` / `health_check_config` → passed directly to `App_CloudRun` (the actual Cloud Run container health checks)
+
+The `startup_probe_config` / `health_check_config` pair controls Cloud Run's live health checking behaviour. `startup_probe` / `liveness_probe` embed probe definitions in the app module config for downstream reference.
+
+| Variable | Default | Description |
+|---|---|---|
+| `startup_probe` | `{ enabled = true, type = "HTTP", path = "/healthz", initial_delay_seconds = 60, timeout_seconds = 5, period_seconds = 10, failure_threshold = 3 }` | Application-level startup probe passed to `Sample_Common`. |
+| `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/healthz", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Application-level liveness probe passed to `Sample_Common`. |
+| `startup_probe_config` | `{ enabled = true }` | Cloud Run infrastructure startup probe (TCP, `timeout_seconds = 240`, `period_seconds = 240`, `failure_threshold = 1`). Passed directly to `App_CloudRun`. |
+| `health_check_config` | `{ enabled = true }` | Cloud Run infrastructure liveness probe (HTTP, `path = "/"`, `timeout_seconds = 1`, `period_seconds = 10`, `failure_threshold = 3`). Passed directly to `App_CloudRun`. |
+| `uptime_check_config` | `{ enabled = true, path = "/" }` | Cloud Monitoring uptime check. `check_interval` and `timeout` use `"Ns"` format. |
+| `alert_policies` | `[]` | Metric-threshold alert policies. Each entry: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
+
+### §7.B · Storage
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_nfs` | `true` | Provisions a Cloud Filestore NFS instance. Requires `execution_environment = "gen2"`. |
+| `nfs_mount_path` | `"/mnt/nfs"` | Container mount path for the NFS volume. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. `Sample_Common` may provision additional buckets via `module_storage_buckets`. |
+| `create_cloud_storage` | `true` | Set `false` to skip GCS bucket provisioning. |
+| `gcs_volumes` | `[]` | GCS buckets to mount as GCS Fuse volumes inside the container. |
+
+### §7.C · Database
+
+| Variable | Default | Description |
+|---|---|---|
+| `application_database_name` | `"cloudrunapp"` | PostgreSQL database name, passed to `Sample_Common` as `db_name`. Initialised by the `db-init` job on first deployment. |
+| `application_database_user` | `"cloudrunapp"` | PostgreSQL user, passed as `db_user`. Password auto-generated. |
+| `database_password_length` | `16` | Auto-generated password length (8–64 characters). |
+| `enable_auto_password_rotation` | `false` | Automated password rotation. See §4.A. |
+| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts. |
+
+### §7.D · Backup & Recovery
+
+`backup_uri` is aliased to `backup_file` in `main.tf` (`backup_file = var.backup_uri`).
+
+| Variable | Default | Description |
+|---|---|---|
+| `backup_schedule` | `"0 2 * * *"` | Cron expression (UTC) for automated backups. Leave empty to disable. |
+| `backup_retention_days` | `7` | Days to retain backup files before automatic deletion. |
+| `enable_backup_import` | `false` | Triggers a one-time database restore on the next `terraform apply`. |
+| `backup_source` | `"gcs"` | Source: `"gcs"` (full GCS URI) or `"gdrive"` (Google Drive file ID). |
+| `backup_uri` | `""` | For GCS: e.g. `"gs://my-bucket/backups/app.sql"`. Mapped to `backup_file` in App_CloudRun. |
+| `backup_format` | `"sql"` | Format: `sql`, `gz`, `tar`, `tgz`, `tar.gz`, `zip`, `auto`. |
+
+---
+
+## §8 · Integrations
+
+### §8.A · Redis
+
+Redis is **disabled by default** (`enable_redis = false`). When enabled,
+`Sample_Common` deploys an internal `redis:alpine` Cloud Run additional service.
+`ENABLE_REDIS`, `REDIS_HOST`, and `REDIS_PORT` are injected via `module_env_vars`.
+
+**Important:** `REDIS_HOST` is left **empty** when `redis_host` is not set. Unlike
+other modules (e.g. OpenEMR_CloudRun), there is no NFS-server-IP fallback. Cloud Run
+instances are network-isolated — they cannot reach a co-located Redis via `127.0.0.1`.
+You must set `redis_host` to the IP or internal URL of your Redis instance (e.g. a
+Cloud Memorystore private IP, or the Cloud Run internal URL of the Redis additional
+service).
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_redis` | `false` | Deploys an internal `redis:alpine` Cloud Run service. Injects `ENABLE_REDIS`, `REDIS_HOST`, `REDIS_PORT` into the application container. |
+| `redis_host` | `""` | **Must be set explicitly.** If left empty, `REDIS_HOST` is an empty string and the application cannot connect to Redis. |
+| `redis_port` | `6379` | Redis TCP port. **Note: this is a `number` type**, unlike other modules where it is a string. |
+| `redis_auth` | `""` | Redis AUTH password. Treated as sensitive; passed to `App_CloudRun`. Leave empty for unauthenticated Redis. |
+
+### §8.B · Custom SQL Scripts
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_custom_sql_scripts` | `false` | Runs `.sql` files from GCS against the PostgreSQL database after provisioning. |
+| `custom_sql_scripts_bucket` | `""` | GCS bucket name (without `gs://`) containing the scripts. |
+| `custom_sql_scripts_path` | `""` | Path prefix within the bucket. Files run in lexicographic order. |
+| `custom_sql_scripts_use_root` | `false` | Run scripts as the root database user. |
+
+### §8.C · Jobs & Scheduled Tasks
+
+| Variable | Default | Description |
+|---|---|---|
+| `initialization_jobs` | `[]` | Cloud Run jobs executed once during deployment. Supplements the platform-managed `db-init` job from `Sample_Common`. |
+| `cron_jobs` | `[]` | Recurring Cloud Scheduler-triggered jobs. Each entry: `name`, `schedule` (cron, UTC). |
+
+### §8.D · Observability
+
+| Variable | Default | Description |
+|---|---|---|
+| `uptime_check_config` | `{ enabled = true, path = "/" }` | Cloud Monitoring uptime check. |
+| `alert_policies` | `[]` | Metric-threshold alert policies. |
+| `service_annotations` | `{}` | Kubernetes-style annotations on the Cloud Run service. |
+| `service_labels` | `{}` | Labels on the Cloud Run service. |
+
+---
+
+## §9 · Platform-Managed Behaviours
+
+These are set automatically by the module and cannot be overridden via input variables.
+
+### Scale-to-Zero Override
+
+`min_instance_count` is **always forced to `0`** in `sample.tf`, regardless of the
+value you configure:
+
+```hcl
 # sample.tf
-sample_module = merge(module.sample_app.config, {
-  min_instance_count = 0  # Scale to zero when no traffic
+local.sample_module = merge(module.sample_app.config, {
+  min_instance_count = 0  # hardcoded; overrides var.min_instance_count
 })
 ```
 
-**Why:** Cloud Run natively supports scale-to-zero — instances shut down completely when there is no traffic, eliminating idle compute costs. The trade-off is a cold-start delay (typically 1–10 seconds) on the first request after a period of inactivity. Set `min_instance_count = 1` if your application is latency-sensitive or maintains persistent connections.
+This is intentional for a reference module that prioritises cost efficiency. Set
+`min_instance_count = 1` in the variables if you adapt this module for production
+latency requirements (and update the hardcoded value in `sample.tf`).
 
-**Contrast with `Sample_GKE`:** `Sample_GKE` overrides `min_instance_count` to `1` regardless of the configured value, because GKE Autopilot does not support true scale-to-zero for standard Deployments.
+### Initialisation Job
 
-For full details on `min_instance_count` and `max_instance_count`, see [App_CloudRun Guide — Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling).
+| Job | What it does |
+|---|---|
+| `db-init` | Runs the bundled `db-init.sh` script (`postgres:15-alpine` image) against the Cloud SQL PostgreSQL instance on first deployment. Creates the application schema. Managed by `Sample_Common`. |
 
-### 2. Redis Requires an Explicit Host
+### Environment Variables (always injected)
 
-When `enable_redis = true` and `redis_host` is not set, `Sample_CloudRun` leaves `REDIS_HOST` empty:
-
-```terraform
-# sample.tf
-REDIS_HOST = var.enable_redis ? (
-  var.redis_host != null && var.redis_host != "" ? var.redis_host : ""
-) : ""
-```
-
-**Why:** Cloud Run instances do not share a pod-level network namespace — each instance is isolated and cannot reach a co-located process via `127.0.0.1`. When `enable_redis = true`, Sample_Common deploys Redis as a separate Cloud Run service (via `additional_services`), but that service has its own internal URL, not `127.0.0.1`. You must set `redis_host` explicitly to the internal URL or IP address of your Redis instance (e.g. a Cloud Memorystore for Redis private IP, or the Cloud Run internal URL of the Redis additional service).
-
-**Contrast with `Sample_GKE`:** `Sample_GKE` falls back to `127.0.0.1` when no `redis_host` is provided, because in Kubernetes the Redis additional service can be reached via a stable cluster-local address.
-
-### 3. Flat CPU and Memory Variables
-
-`Sample_CloudRun` exposes CPU and memory as two independent scalar variables rather than a nested object:
-
-| Variable | Type | Default | Passed to |
-|---|---|---|---|
-| `cpu_limit` | `string` | `"1000m"` | `Sample_Common` (application config) |
-| `memory_limit` | `string` | `"512Mi"` | `Sample_Common` (application config) |
-
-These are passed to `Sample_Common`, which assembles them into the `container_resources` object that `App_CloudRun` consumes.
-
-**Contrast with `Sample_GKE`:** `Sample_GKE` uses a nested `container_resources` object (matching `App_GKE`'s variable structure directly), with sub-fields `cpu_limit`, `memory_limit`, `cpu_request`, `mem_request`, and `ephemeral_storage_limit`.
-
-For guidance on appropriate CPU and memory values for Cloud Run, see [App_CloudRun Guide — Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling).
-
-### 4. Dual Probe Variables
-
-`Sample_CloudRun` exposes **two distinct sets** of health probe variables that serve different purposes:
-
-| Variable | Passed to | Purpose |
+| Variable | Value / Source | Notes |
 |---|---|---|
-| `startup_probe` | `Sample_Common` (application config) | Configures the sample application's startup probe within the merged `application_config` object. This is the probe definition embedded in the app module configuration. |
-| `liveness_probe` | `Sample_Common` (application config) | Configures the sample application's liveness probe within the merged `application_config` object. |
-| `startup_probe_config` | `App_CloudRun` (directly) | Configures the Cloud Run infrastructure-level startup probe — the actual probe that Cloud Run uses to determine when the container is ready to receive traffic. |
-| `health_check_config` | `App_CloudRun` (directly) | Configures the Cloud Run infrastructure-level liveness probe — the actual probe that Cloud Run uses to periodically check container health. |
+| `SECRET_KEY` | Secret Manager ref | Auto-generated 32-char Flask secret key, stored as `FLASK_SECRET_KEY` in Secret Manager. Injected via `module_secret_env_vars`. |
+| `ENABLE_REDIS` | `tostring(var.enable_redis)` | `"true"` or `"false"`. Injected via `module_env_vars`. |
+| `REDIS_HOST` | `var.redis_host` (or `""`) | Empty string when `redis_host` is not set. No NFS-server fallback. |
+| `REDIS_PORT` | `tostring(var.redis_port)` | Only injected when `enable_redis = true`; otherwise `""`. |
 
-In most deployments you will configure `startup_probe_config` and `health_check_config` (which control Cloud Run's actual health checking behaviour). The `startup_probe` and `liveness_probe` variables configure the application-module-level probe definitions that are embedded in the `application_config` for downstream use.
+### Conditional: Redis Additional Service
 
-For full details on probe configuration options, see [App_CloudRun Guide — Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health).
+When `enable_redis = true`, `Sample_Common` declares an `additional_services` entry
+that deploys a `redis:alpine` Cloud Run service alongside the main application. The
+service is internal-only (`INGRESS_TRAFFIC_INTERNAL_ONLY`).
 
-**Contrast with `Sample_GKE`:** `Sample_GKE` exposes only `startup_probe_config` and `health_check_config` (passed to `App_GKE` and also to `Sample_Common` via the respective variable names). There is no separate `startup_probe`/`liveness_probe` pair in `Sample_GKE`.
+### Structural Wiring
 
----
-
-## Configuration Reference
-
-All configuration variables in `Sample_CloudRun` are passed through to `App_CloudRun`. The table below maps each configuration group to the corresponding section of the `App_CloudRun` Configuration Guide, noting any `Sample_CloudRun`-specific defaults or differences.
-
-<div className="sample-ref-table">
-
-| Group | Description | Sample_CloudRun Defaults / Differences | Reference |
-|---|---|---|---|
-| **Group 0** | Module Metadata & Configuration | `module_description` defaults to `"Sample_CloudRun: A sample application module…"`. `module_documentation` points to the Cloud Run App docs URL. `module_services` includes Cloud Run, Cloud Run Jobs, Cloud Build, Artifact Registry, Cloud SQL, Cloud SQL Auth Proxy, Filestore (NFS), GCS Fuse, Secret Manager, Direct VPC Egress, Cloud Monitoring, and Uptime Checks. `resource_creator_identity` is exposed and passed through as in `App_CloudRun`. All other variables are identical to `App_CloudRun`. | [App_CloudRun Guide — Group 0](../App_CloudRun/App_CloudRun_Guide.md#group-0-module-metadata--configuration) |
-| **Group 1** | Project & Identity | No changes. `project_id`, `tenant_deployment_id`, `support_users`, and `resource_labels` behave identically to `App_CloudRun`. | [App_CloudRun Guide — Group 1](../App_CloudRun/App_CloudRun_Guide.md#group-1-project--identity) |
-| **Group 2** | Application Identity | `application_name` defaults to `"cloudrunapp"`. `application_display_name` defaults to `"Cloudrun Application"`. `application_description` defaults to `"Sample application to showcase Cloudrun features"`. `application_version` defaults to `"latest"`. All other behaviour is identical to `App_CloudRun`. | [App_CloudRun Guide — Group 2](../App_CloudRun/App_CloudRun_Guide.md#group-2-application-identity) |
-| **Group 3** | Runtime & Scaling | `container_image_source` defaults to `"prebuilt"`. `container_image` defaults to `us-docker.pkg.dev/cloudrun/container/hello`. `min_instance_count` defaults to `0` (scale-to-zero; see [Scale-to-Zero Default](#1-scale-to-zero-default-min_instance_count--0) above). `max_instance_count` defaults to `1`. CPU and memory are exposed as flat `cpu_limit` / `memory_limit` variables rather than a nested `container_resources` object (see [Flat CPU and Memory Variables](#3-flat-cpu-and-memory-variables) above). `enable_image_mirroring`, `container_port`, `container_protocol`, `execution_environment`, `timeout_seconds`, `traffic_split`, `cpu_always_allocated`, `enable_cloudsql_volume`, `cloudsql_volume_mount_path`, `ingress_settings`, and `vpc_egress_setting` are passed through unchanged. | [App_CloudRun Guide — Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling) |
-| **Group 4** | Environment Variables & Secrets | `environment_variables` and `secret_environment_variables` are passed through to `App_CloudRun`. The module automatically injects `ENABLE_REDIS`, `REDIS_HOST` (empty if no `redis_host` provided — see [Redis Requires an Explicit Host](#2-redis-requires-an-explicit-host) above), and `REDIS_PORT`, plus `SECRET_KEY` (sourced from the auto-generated Secret Manager secret). `secret_rotation_period`, `secret_propagation_delay`, `service_annotations`, and `service_labels` are passed through unchanged. | [App_CloudRun Guide — Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets) |
-| **Group 5** | Observability & Health | `startup_probe_config` and `health_check_config` are passed directly to `App_CloudRun` (Cloud Run infrastructure health checks). `startup_probe` and `liveness_probe` are passed to `Sample_Common` (application module config). See [Dual Probe Variables](#4-dual-probe-variables) above for the distinction. `uptime_check_config` and `alert_policies` are passed through unchanged. | [App_CloudRun Guide — Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health) |
-| **Group 6** | Jobs & Scheduled Tasks | `initialization_jobs` defaults to the pre-configured `db-init` job (using `postgres:15-alpine` and the bundled `db-init.sh` script). You may override this with a custom job list. When `enable_redis = true`, an internal Redis additional Cloud Run service is added automatically — you do not need to declare it in `additional_services`. `cron_jobs` is passed through unchanged. | [App_CloudRun Guide — Group 6](../App_CloudRun/App_CloudRun_Guide.md#group-6-jobs--scheduled-tasks) |
-| **Group 7** | CI/CD & GitHub Integration | All variables (`enable_cicd_trigger`, `github_repository_url`, `github_token`, `github_app_installation_id`, `cicd_trigger_config`, `enable_cloud_deploy`, `cloud_deploy_stages`, `enable_binary_authorization`) are passed through unchanged. Refer to the base guide for full descriptions. | [App_CloudRun Guide — Group 7](../App_CloudRun/App_CloudRun_Guide.md#group-7-cicd--github-integration) |
-| **Group 8** | Storage & Filesystem — NFS | All variables (`enable_nfs`, `nfs_mount_path`, `nfs_instance_name`, `nfs_instance_base_name`) are passed through unchanged. Refer to the base guide for full descriptions. | [App_CloudRun Guide — Group 8](../App_CloudRun/App_CloudRun_Guide.md#group-8-storage--filesystem--nfs) |
-| **Group 9** | Storage & Filesystem — GCS | All variables (`create_cloud_storage`, `storage_buckets`, `gcs_volumes`) are passed through unchanged. `Sample_Common` does not define any additional GCS buckets beyond what you configure here. Refer to the base guide for full descriptions. | [App_CloudRun Guide — Group 9](../App_CloudRun/App_CloudRun_Guide.md#group-9-storage--filesystem--gcs) |
-| **Group 10** | Redis Cache | `enable_redis`, `redis_host`, `redis_port`, and `redis_auth` are passed through to `App_CloudRun`. **Note:** `redis_host` must be set explicitly when using Redis — there is no automatic fallback (see [Redis Requires an Explicit Host](#2-redis-requires-an-explicit-host) above). | [App_CloudRun Guide — Group 10](../App_CloudRun/App_CloudRun_Guide.md#group-10-redis-cache) |
-| **Group 11** | Database Backend | All variables (`database_type`, `application_database_name`, `application_database_user`, `database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`) are passed through unchanged. The database is automatically initialised by the `db-init` Cloud Run Job. Refer to the base guide for full descriptions. | [App_CloudRun Guide — Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend) |
-| **Group 12** | Backup & Maintenance | All variables (`backup_schedule`, `backup_retention_days`, `enable_backup_import`, `backup_source`, `backup_file`, `backup_format`) are passed through unchanged. Refer to the base guide for full descriptions. | [App_CloudRun Guide — Group 12](../App_CloudRun/App_CloudRun_Guide.md#group-12-backup--maintenance) |
-| **Group 13** | Custom Initialisation & SQL | All variables (`enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`, `custom_sql_scripts_use_root`) are passed through unchanged. Refer to the base guide for full descriptions. | [App_CloudRun Guide — Group 13](../App_CloudRun/App_CloudRun_Guide.md#group-13-custom-initialisation--sql) |
-| **Group 14** | Access & Networking | All variables (`enable_iap`, `iap_authorized_users`, `iap_authorized_groups`, `enable_vpc_sc`, `admin_ip_ranges`, `enable_cloud_armor`, `application_domains`, `enable_cdn`) are passed through unchanged. Refer to the base guide for full descriptions. | [App_CloudRun Guide — Group 14](../App_CloudRun/App_CloudRun_Guide.md#group-14-access--networking) |
-| **Group 15** | Identity-Aware Proxy | All IAP variables are passed through unchanged. Refer to the base guide for full descriptions. | [App_CloudRun Guide — Group 15](../App_CloudRun/App_CloudRun_Guide.md#group-15-identity-aware-proxy) |
-| **Group 16** | Cloud Armor & CDN | All Cloud Armor and CDN variables are passed through unchanged. Refer to the base guide for full descriptions. | [App_CloudRun Guide — Group 16](../App_CloudRun/App_CloudRun_Guide.md#group-16-cloud-armor--cdn) |
-| **Group 17** | VPC Service Controls | All VPC SC variables are passed through unchanged. Refer to the base guide for full descriptions. | [App_CloudRun Guide — Group 17](../App_CloudRun/App_CloudRun_Guide.md#group-17-vpc-service-controls) |
-
-</div>
+| Behaviour | Detail |
+|---|---|
+| `scripts_dir` | Resolved as `abspath("${module.sample_app.path}/scripts")` — points to `Sample_Common`'s bundled scripts. |
+| `backup_uri` → `backup_file` | `var.backup_uri` is mapped to `backup_file` in `main.tf`. |
+| `startup_probe` → `Sample_Common` | `var.startup_probe` is passed to `Sample_Common`, embedding it in the `application_config`. |
+| `startup_probe_config` → `App_CloudRun` | `var.startup_probe_config` is passed directly to `App_CloudRun` as the live Cloud Run infrastructure probe. |
+| `liveness_probe` / `health_check_config` | Same dual routing as startup probes above. |
 
 ---
 
-## Redis Configuration Summary
+## §10 · Variable Reference
 
-The table below summarises the three Redis-related variables and how they interact with `Sample_CloudRun`'s behaviour:
+Complete list of all input variables, grouped by UI section.
 
-| Variable | Default | Behaviour when `enable_redis = true` |
-|---|---|---|
-| `enable_redis` | `true` | Deploys an internal `redis:alpine` Cloud Run additional service. Injects `ENABLE_REDIS=true`, `REDIS_HOST`, and `REDIS_PORT` into the application container. |
-| `redis_host` | `""` | **Must be set explicitly.** If left empty, `REDIS_HOST` is set to an empty string. The application will not be able to connect to Redis unless a valid hostname or IP address is provided (e.g. a Cloud Memorystore private IP, or the internal URL of the Redis additional service). |
-| `redis_port` | `"6379"` | Injected as `REDIS_PORT`. Change only if your Redis instance uses a non-standard port. |
-| `redis_auth` | `""` | If set, stored in Secret Manager and injected securely. Leave empty for unauthenticated Redis. |
-
----
-
-## Validating a Sample_CloudRun Deployment
-
-Because `Sample_CloudRun` delegates all infrastructure to `App_CloudRun`, validation follows the same procedures described in the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md). The additional resources managed by `Sample_Common` can be validated as follows:
-
-**Flask SECRET_KEY secret:**
-
-```bash
-# Confirm the Flask SECRET_KEY secret exists
-gcloud secrets list --project=PROJECT_ID \
-  --filter="name:secret-key" \
-  --format="table(name,createTime)"
-
-# View the secret's replication and rotation config
-gcloud secrets describe SECRET_NAME \
-  --project=PROJECT_ID \
-  --format="yaml(replication,rotation)"
-```
-
-**DB-init Cloud Run Job:**
-
-```bash
-# List all Cloud Run Jobs in the project
-gcloud run jobs list \
-  --region=REGION \
-  --format="table(name,metadata.creationTimestamp,status.conditions[0].type)"
-
-# View the execution history of the db-init job
-gcloud run jobs executions list \
-  --job=db-init \
-  --region=REGION \
-  --format="table(name,status.conditions[0].type,status.startTime,status.completionTime)"
-
-# View db-init job logs
-gcloud logging read \
-  "resource.type=cloud_run_job AND resource.labels.job_name=db-init" \
-  --project=PROJECT_ID \
-  --limit=50
-```
-
-**Redis additional service (when `enable_redis = true`):**
-
-```bash
-# List all Cloud Run services (Redis should appear as APPLICATION_NAME-redis)
-gcloud run services list \
-  --region=REGION \
-  --format="table(name,status.url,status.conditions[0].status)"
-
-# Confirm REDIS_HOST and REDIS_PORT are injected into the main service
-gcloud run services describe APPLICATION_NAME \
-  --region=REGION \
-  --format="yaml(spec.template.spec.containers[0].env)" \
-  | grep -A2 "REDIS"
-```
+| Group | Variable | Type | Default | Updatable |
+|---|---|---|---|---|
+| 0 | `module_description` | string | *(long description)* | — |
+| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/applications/cloud-run-app"` | — |
+| 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
+| 0 | `module_services` | list(string) | *(service list)* | — |
+| 0 | `credit_cost` | number | `100` | — |
+| 0 | `require_credit_purchases` | bool | `true` | — |
+| 0 | `enable_purge` | bool | `true` | — |
+| 0 | `public_access` | bool | `false` | — |
+| 0 | `deployment_id` | string | `""` | yes |
+| 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
+| 1 | `project_id` | string | — | yes |
+| 1 | `tenant_deployment_id` | string | `"demo"` | yes |
+| 1 | `support_users` | list(string) | `[]` | yes |
+| 1 | `resource_labels` | map(string) | `{}` | yes |
+| 2 | `application_name` | string | `"cloudrunapp"` | — |
+| 2 | `application_display_name` | string | `"Cloudrun Application"` | yes |
+| 2 | `application_description` | string | `"Sample application to showcase Cloudrun features"` | yes |
+| 2 | `application_version` | string | `"latest"` | yes |
+| 3 | `deploy_application` | bool | `true` | yes |
+| 3 | `container_image_source` | string | `"prebuilt"` | yes |
+| 3 | `container_image` | string | `"us-docker.pkg.dev/cloudrun/container/hello"` | yes |
+| 3 | `container_build_config` | object | `{ enabled = false }` | yes |
+| 3 | `enable_image_mirroring` | bool | `true` | yes |
+| 3 | `cpu_limit` | string | `"1000m"` | yes |
+| 3 | `memory_limit` | string | `"512Mi"` | yes |
+| 3 | `min_instance_count` | number | `0` (hardcoded to `0` in `sample.tf`) | yes |
+| 3 | `max_instance_count` | number | `1` | yes |
+| 3 | `container_port` | number | `8080` | yes |
+| 3 | `container_protocol` | string | `"http1"` | yes |
+| 3 | `execution_environment` | string | `"gen2"` | yes |
+| 3 | `timeout_seconds` | number | `300` | yes |
+| 3 | `enable_cloudsql_volume` | bool | `true` | yes |
+| 3 | `cloudsql_volume_mount_path` | string | `"/cloudsql"` | yes |
+| 3 | `traffic_split` | list(object) | `[]` | yes |
+| 3 | `service_annotations` | map(string) | `{}` | yes |
+| 3 | `service_labels` | map(string) | `{}` | yes |
+| 4 | `ingress_settings` | string | `"all"` | yes |
+| 4 | `vpc_egress_setting` | string | `"PRIVATE_RANGES_ONLY"` | yes |
+| 4 | `enable_iap` | bool | `false` | yes |
+| 4 | `iap_authorized_users` | list(string) | `[]` | yes |
+| 4 | `iap_authorized_groups` | list(string) | `[]` | yes |
+| 5 | `environment_variables` | map(string) | `{}` | yes |
+| 5 | `secret_environment_variables` | map(string) | `{}` | yes |
+| 5 | `secret_rotation_period` | string | `"2592000s"` | yes |
+| 5 | `secret_propagation_delay` | number | `30` | yes |
+| 6 | `backup_schedule` | string | `"0 2 * * *"` | yes |
+| 6 | `backup_retention_days` | number | `7` | yes |
+| 6 | `enable_backup_import` | bool | `false` | yes |
+| 6 | `backup_source` | string | `"gcs"` | yes |
+| 6 | `backup_uri` | string | `""` | yes |
+| 6 | `backup_format` | string | `"sql"` | yes |
+| 7 | `enable_cicd_trigger` | bool | `false` | yes |
+| 7 | `github_repository_url` | string | `""` | yes |
+| 7 | `github_token` | string | `""` | yes |
+| 7 | `github_app_installation_id` | string | `""` | yes |
+| 7 | `cicd_trigger_config` | object | `{ branch_pattern = "^main$" }` | yes |
+| 7 | `enable_cloud_deploy` | bool | `false` | yes |
+| 7 | `cloud_deploy_stages` | list(object) | `[dev, staging, prod]` | yes |
+| 7 | `enable_binary_authorization` | bool | `false` | yes |
+| 8 | `enable_custom_sql_scripts` | bool | `false` | yes |
+| 8 | `custom_sql_scripts_bucket` | string | `""` | yes |
+| 8 | `custom_sql_scripts_path` | string | `""` | yes |
+| 8 | `custom_sql_scripts_use_root` | bool | `false` | yes |
+| 9 | `enable_cloud_armor` | bool | `false` | yes |
+| 9 | `admin_ip_ranges` | list(string) | `[]` | yes |
+| 9 | `application_domains` | list(string) | `[]` | yes |
+| 9 | `enable_cdn` | bool | `false` | yes |
+| 10 | `create_cloud_storage` | bool | `true` | yes |
+| 10 | `storage_buckets` | list(object) | `[{ name_suffix = "data" }]` | yes |
+| 10 | `enable_nfs` | bool | `true` | yes |
+| 10 | `nfs_mount_path` | string | `"/mnt/nfs"` | yes |
+| 10 | `gcs_volumes` | list(object) | `[]` | yes |
+| 11 | `application_database_name` | string | `"cloudrunapp"` | — |
+| 11 | `application_database_user` | string | `"cloudrunapp"` | — |
+| 11 | `database_password_length` | number | `16` | yes |
+| 11 | `enable_auto_password_rotation` | bool | `false` | yes |
+| 11 | `rotation_propagation_delay_sec` | number | `90` | yes |
+| 12 | `initialization_jobs` | list(object) | `[]` | yes |
+| 12 | `cron_jobs` | list(object) | `[]` | yes |
+| 13 | `startup_probe` | object | `{ type = "HTTP", path = "/healthz", initial_delay_seconds = 60, … }` | yes |
+| 13 | `liveness_probe` | object | `{ type = "HTTP", path = "/healthz", initial_delay_seconds = 30, … }` | yes |
+| 13 | `startup_probe_config` | object | `{ enabled = true }` (TCP, timeout=240, period=240, threshold=1) | yes |
+| 13 | `health_check_config` | object | `{ enabled = true }` (HTTP, path="/", timeout=1, period=10, threshold=3) | yes |
+| 13 | `uptime_check_config` | object | `{ enabled = true, path = "/" }` | yes |
+| 13 | `alert_policies` | list(object) | `[]` | yes |
+| 20 | `enable_redis` | bool | `false` | yes |
+| 20 | `redis_host` | string | `""` | yes |
+| 20 | `redis_port` | **number** | `6379` | yes |
+| 20 | `redis_auth` | string | `""` | yes |
+| 21 | `enable_vpc_sc` | bool | `false` | yes |

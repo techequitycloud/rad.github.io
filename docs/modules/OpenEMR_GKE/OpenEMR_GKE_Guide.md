@@ -3,7 +3,18 @@ title: "OpenEMR GKE Configuration Guide"
 sidebar_label: "GKE"
 ---
 
-# OpenEMR_GKE Module — Configuration Guide
+# OpenEMR GKE Module
+
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 
 OpenEMR is a leading open-source electronic health records (EHR) and medical practice management platform used by clinics, hospitals, and healthcare providers worldwide. This module deploys OpenEMR on **GKE Autopilot** using a custom container image built on Alpine 3.20 with Apache and PHP 8.3 FPM, backed by a managed Cloud SQL MySQL 8.0 instance accessed via a Cloud SQL Auth Proxy sidecar, and a Filestore NFS volume for persistent patient document and sites directory storage.
 
@@ -15,31 +26,43 @@ OpenEMR is a leading open-source electronic health records (EHR) and medical pra
 
 ## How This Guide Is Structured
 
-This guide documents only the variables that are **unique to `OpenEMR_GKE`** or that have **OpenEMR-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, GKE backend configuration, CI/CD, custom SQL scripts, observability alerting, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE_Guide.md).
+This guide documents only the variables that are **unique to `OpenEMR_GKE`** or that have **OpenEMR-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, GKE backend configuration, CI/CD, custom SQL scripts, observability alerting, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
 **Variables fully covered by the App_GKE guide:**
 
-| Configuration Area | App_GKE_Guide Section | OpenEMR-Specific Notes |
+| Configuration Area | App_GKE.md Section | OpenEMR-Specific Notes |
 |---|---|---|
-| Module Metadata & Configuration | Group 0 | Different defaults for `module_description` and `module_documentation`. `resource_creator_identity` behaves identically. |
-| Project & Identity | Group 1 | Refer to base App_GKE module documentation. |
-| Runtime & Scaling | Group 3 | See [OpenEMR Runtime Configuration](#openemr-runtime-configuration) below. `container_port` defaults to `80`. `session_affinity` defaults to `"ClientIP"`. |
-| Environment Variables & Secrets | Group 5 | See [OpenEMR Environment Variables](#openemr-environment-variables) below for PHP and SMTP defaults. |
-| GKE Backend Configuration | Group 9 | Refer to base App_GKE module documentation. `session_affinity` defaults to `"ClientIP"`. `deployment_timeout` defaults to `1200`. |
-| Jobs & Scheduled Tasks | Group 12 | Refer to base App_GKE module documentation. The module injects a platform-managed `nfs-init` initialisation job — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| CI/CD & GitHub Integration | Group 7 | Refer to base App_GKE module documentation. |
-| Storage — NFS | Group 15 | NFS is **enabled by default** (`enable_nfs = true`). See [NFS & Patient Document Storage](#nfs--patient-document-storage) below. |
-| Storage — GCS | Group 16 | Refer to base App_GKE module documentation. |
-| Backup Schedule & Retention | Group 6 | Refer to base App_GKE module documentation. See also [Backup Import & Recovery](#backup-import--recovery) below. |
-| Custom SQL Scripts | Group 8 | Refer to base App_GKE module documentation. |
-| Observability & Health | Group 13 | See [OpenEMR Health Probes](#openemr-health-probes) below for OpenEMR-specific probe paths and timing defaults. |
-| Reliability Policies | Group 27 | Refer to base App_GKE module documentation. |
-| Resource Quota | Group 14 | Refer to base App_GKE module documentation. |
-| Custom Domain, Static IP & Network | Group 11 | Refer to base App_GKE module documentation. |
-| Identity-Aware Proxy | Group 4 | Refer to base App_GKE module documentation. |
-| Cloud Armor | Group 13 | Refer to base App_GKE module documentation. |
-| VPC Service Controls | Group 28 | Refer to base App_GKE module documentation. |
-| StatefulSet Configuration | Group 10 | Refer to base App_GKE module documentation. |
+| Module Metadata & Configuration | [§1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) | Different defaults for `module_description` and `module_documentation`. `resource_creator_identity` behaves identically. |
+| Project & Identity | [§2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) | Refer to base App_GKE module documentation. |
+| Runtime & Scaling | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | See [OpenEMR Runtime Configuration](#openemr-runtime-configuration) below. `container_port` defaults to `80`. `session_affinity` defaults to `"ClientIP"`. |
+| Environment Variables & Secrets | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | See [OpenEMR Environment Variables](#openemr-environment-variables) below for PHP and SMTP defaults. |
+| GKE Backend Configuration | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | Refer to base App_GKE module documentation. `session_affinity` defaults to `"ClientIP"`. `deployment_timeout` defaults to `1200`. |
+| Jobs & Scheduled Tasks | [§3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | Refer to base App_GKE module documentation. The module injects a platform-managed `nfs-init` initialisation job — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
+| CI/CD & GitHub Integration | [§6 CI/CD & Delivery](../App_GKE/App_GKE.md#6-cicd--delivery) | Refer to base App_GKE module documentation. |
+| Storage — NFS | [§3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) | NFS is **enabled by default** (`enable_nfs = true`). See [NFS & Patient Document Storage](#nfs--patient-document-storage) below. |
+| Storage — GCS | [§3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) | Refer to base App_GKE module documentation. |
+| Backup Schedule & Retention | [§8.B Backup Import & Recovery](../App_GKE/App_GKE.md#b-backup-import) | Refer to base App_GKE module documentation. See also [Backup Import & Recovery](#backup-import--recovery) below. |
+| Custom SQL Scripts | [§3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | Refer to base App_GKE module documentation. |
+| Observability & Health | [§5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) | See [OpenEMR Health Probes](#openemr-health-probes) below for OpenEMR-specific probe paths and timing defaults. |
+| Reliability Policies | [§7 Reliability & Scheduling](../App_GKE/App_GKE.md#7-reliability--scheduling) | Refer to base App_GKE module documentation. `enable_pod_disruption_budget` defaults to `true`. |
+| Resource Quota | [§7.C Resource Quotas](../App_GKE/App_GKE.md#c-resource-quotas) | Refer to base App_GKE module documentation. |
+| Custom Domain, Static IP & Network | [§5.C Static IP](../App_GKE/App_GKE.md#c-static-ip) | Refer to base App_GKE module documentation. |
+| Identity-Aware Proxy | [§4.B Identity-Aware Proxy (IAP)](../App_GKE/App_GKE.md#b-identity-aware-proxy-iap) | Refer to base App_GKE module documentation. |
+| Cloud Armor WAF | [§4.A Cloud Armor WAF](../App_GKE/App_GKE.md#a-cloud-armor-waf) | Refer to base App_GKE module documentation. |
+| VPC Service Controls | [§4.D VPC Service Controls](../App_GKE/App_GKE.md#d-vpc-service-controls) | Refer to base App_GKE module documentation. |
+| StatefulSet Configuration | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | Refer to base App_GKE module documentation. |
+| Database Configuration | [§3.B Database (Cloud SQL)](../App_GKE/App_GKE.md#b-database-cloud-sql) | `database_type` must be `"MYSQL_8_0"`. See [OpenEMR Database Configuration](#openemr-database-configuration) below. |
+| Networking & Network Policies | [§3.D Networking & Network Policies](../App_GKE/App_GKE.md#d-networking--network-policies) | Refer to base App_GKE module documentation. |
+| Additional Services | [§3.F Additional Services](../App_GKE/App_GKE.md#f-additional-services) | Refer to base App_GKE module documentation. |
+| Binary Authorization | [§4.C Binary Authorization](../App_GKE/App_GKE.md#c-binary-authorization) | Refer to base App_GKE module documentation. |
+| Secrets Store CSI | [§4.E Secrets Store CSI](../App_GKE/App_GKE.md#e-secrets-store-csi-driver) | Refer to base App_GKE module documentation. |
+| Cloud CDN | [§5.B Cloud CDN](../App_GKE/App_GKE.md#b-cloud-cdn) | Refer to base App_GKE module documentation. |
+| Pod Disruption Budget | [§7.A Pod Disruption Budget](../App_GKE/App_GKE.md#a-pod-disruption-budgets) | `enable_pod_disruption_budget` defaults to `true`. |
+| Topology Spread | [§7.B Topology Spread](../App_GKE/App_GKE.md#b-topology-spread-constraints) | Refer to base App_GKE module documentation. |
+| Auto Password Rotation | [§7.D Auto Password Rotation](../App_GKE/App_GKE.md#d-auto-password-rotation) | Refer to base App_GKE module documentation. |
+| Redis / Memorystore | [§8.A Redis / Memorystore](../App_GKE/App_GKE.md#a-redis--memorystore) | `enable_redis` defaults to `true`. See [Redis Session Store](#redis-session-store) below. |
+| Service Mesh | [§8.C Service Mesh](../App_GKE/App_GKE.md#c-service-mesh-asm-via-fleet) | Refer to base App_GKE module documentation. |
+| Multi-Cluster Services | [§8.D Multi-Cluster Services](../App_GKE/App_GKE.md#d-multi-cluster-services-mcs) | Refer to base App_GKE module documentation. |
 
 ---
 
@@ -154,7 +177,7 @@ OpenEMR performs database connection validation and, on first boot, runs the ful
 | `startup_probe` | `{ enabled = true, type = "TCP", path = "/", initial_delay_seconds = 0, timeout_seconds = 5, period_seconds = 10, failure_threshold = 12 }` | Uses a **TCP port check** on port 80 rather than an HTTP endpoint. A TCP probe is more reliable during OpenEMR's boot phase, when Apache may be accepting connections before PHP and the database are fully ready. With `period_seconds = 10` and `failure_threshold = 12`, Kubernetes allows up to 120 seconds of startup time before declaring the pod unhealthy. **On first deployment**, consider increasing `failure_threshold` to `30` or higher to allow for the full database installation. |
 | `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/interface/login/login.php", initial_delay_seconds = 0, timeout_seconds = 10, period_seconds = 30, failure_threshold = 10 }` | Periodically checks that the OpenEMR login page is reachable. The `/interface/login/login.php` endpoint returns HTTP 200 only when Apache, PHP-FPM, and the database connection are all operational. `period_seconds = 30` and `failure_threshold = 10` allow up to 5 minutes of recovery time before the pod is restarted. |
 
-> Both probe variables behave identically to `startup_probe_config` and `health_check_config` in App_GKE — see [App_GKE_Guide Group 13](../App_GKE/App_GKE_Guide.md#group-13-observability--health) for the full field reference. The OpenEMR_GKE defaults override the base App_GKE defaults.
+> **Probe routing in OpenEMR_GKE:** `startup_probe` and `liveness_probe` each serve a dual role — they are passed to `OpenEMR_Common` to configure the Kubernetes container probes, and also forwarded directly to `App_GKE` (as `startup_probe_config` and `health_check_config` respectively) to configure the load balancer backend health checks. Unlike other App_GKE wrapper modules that expose separate `startup_probe`/`liveness_probe` variables for container probes and `startup_probe_config`/`health_check_config` for LB health checks, OpenEMR_GKE uses the same two variables for both layers. See [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) for the App_GKE field reference.
 
 ### Validating Health Probes
 
@@ -176,7 +199,7 @@ kubectl exec -n NAMESPACE deploy/openemr -- curl -s -o /dev/null -w "%{http_code
 
 ## OpenEMR Database Configuration
 
-OpenEMR requires MySQL 8.0. The database is provisioned by the underlying `App_GKE` module — see [App_GKE_Guide Group 17](../App_GKE/App_GKE_Guide.md#group-17-database-configuration) for the full variable reference.
+OpenEMR requires MySQL 8.0. The database is provisioned by the underlying `App_GKE` module — see [App_GKE §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql) for the full variable reference.
 
 The following defaults are **OpenEMR-specific** and differ from the App_GKE defaults:
 
@@ -207,7 +230,7 @@ kubectl get pod -n NAMESPACE -l app=openemr -o jsonpath='{.items[0].spec.contain
 
 ## OpenEMR Environment Variables
 
-The `environment_variables` variable (documented in [App_GKE_Guide Group 5](../App_GKE/App_GKE_Guide.md#group-5-environment-variables--secrets)) can be used to set any PHP or SMTP configuration consumed by the OpenEMR container's startup script.
+The `environment_variables` variable (documented in [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot)) can be used to set any PHP or SMTP configuration consumed by the OpenEMR container's startup script.
 
 **Commonly configured environment variables:**
 
@@ -231,7 +254,7 @@ secret_environment_variables = {
 }
 ```
 
-All other `environment_variables` and `secret_environment_variables` behaviour is identical to App_GKE — refer to [App_GKE_Guide Group 5](../App_GKE/App_GKE_Guide.md#group-5-environment-variables--secrets).
+All other `environment_variables` and `secret_environment_variables` behaviour is identical to App_GKE — refer to [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 
 ---
 
@@ -244,7 +267,7 @@ OpenEMR stores patient-uploaded documents, the `sites` directory configuration, 
 | `enable_nfs` | `true` | `true` / `false` | **Must remain `true`** for a functional OpenEMR deployment. Setting to `false` will prevent the `nfs-init` job from running and OpenEMR will fail to persist patient data across pod restarts. |
 | `nfs_mount_path` | `"/var/www/localhost/htdocs/openemr/sites"` | Filesystem path | The path inside the container where the NFS volume is mounted. This maps directly to OpenEMR's `sites` directory, which contains patient documents, site configuration, and uploaded files. **Do not change this** unless you have modified the OpenEMR container to use a different sites path. |
 
-For the full NFS variable reference (Filestore instance sizing, capacity, etc.), refer to [App_GKE_Guide Group 15](../App_GKE/App_GKE_Guide.md#group-15-storage--filesystem--nfs).
+For the full NFS variable reference (Filestore instance sizing, capacity, etc.), refer to [App_GKE §3.C](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
 ### Validating NFS Storage
 
@@ -263,7 +286,7 @@ kubectl exec -n NAMESPACE deploy/openemr -- ls /var/www/localhost/htdocs/openemr
 
 ## Redis Session Store
 
-OpenEMR supports Redis as a shared PHP session store. Redis is **enabled by default** (`enable_redis = true`) because the OpenEMR deployment uses the NFS server's co-located Redis instance by default. When `max_instance_count > 1`, Redis is **required** to prevent session loss when requests are routed to different pods.
+OpenEMR supports Redis as a shared PHP session store. Redis is **enabled by default** (`enable_redis = true`) because the OpenEMR deployment uses the NFS server's co-located Redis instance by default. When `max_instance_count > 1`, Redis is **required** to prevent session loss when requests are routed to different pods. The Redis integration is provided by App_GKE — see [§8.A Redis / Memorystore](../App_GKE/App_GKE.md#a-redis--memorystore) for the full integration reference.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -287,7 +310,7 @@ kubectl exec -n NAMESPACE deploy/openemr -- redis-cli -h REDIS_HOST -p 6379 PING
 
 ## Backup Import & Recovery
 
-In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_GKE_Guide Group 6](../App_GKE/App_GKE_Guide.md#group-6-backup--maintenance)), `OpenEMR_GKE` supports a one-time backup restoration during deployment via the `nfs-init` job. Use this to migrate an existing OpenEMR instance to GCP or to seed a new environment with production data.
+In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_GKE §8.B](../App_GKE/App_GKE.md#b-backup-import)), `OpenEMR_GKE` supports a one-time backup restoration during deployment via the `nfs-init` job. Use this to migrate an existing OpenEMR instance to GCP or to seed a new environment with production data.
 
 | Variable | Default | Options / Format | Description |
 |---|---|---|---|
@@ -298,7 +321,7 @@ In addition to the scheduled backup (`backup_schedule` and `backup_retention_day
 
 > **OpenEMR backup scope:** The `nfs-init` job restores both the MySQL database dump and the NFS `sites` directory content from the backup archive. The backup should contain the complete OpenEMR `sites` directory and the MySQL database for a full restoration.
 
-For the full variable reference, refer to [App_GKE_Guide Group 6](../App_GKE/App_GKE_Guide.md#group-6-backup--maintenance).
+For the full variable reference, refer to [App_GKE §8.B](../App_GKE/App_GKE.md#b-backup-import).
 
 ---
 

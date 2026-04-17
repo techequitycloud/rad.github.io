@@ -32,124 +32,6 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Module Guides',
-      items: [
-        {
-          type: 'category',
-          label: 'Application',
-          items: [
-            { type: 'doc', id: 'modules/App_CloudRun/App_CloudRun_Guide', label: 'Cloud Run' },
-            { type: 'doc', id: 'modules/App_GKE/App_GKE_Guide', label: 'GKE' },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Cyclos',
-          items: [
-            { type: 'doc', id: 'modules/Cyclos_CloudRun/Cyclos_CloudRun_Guide', label: 'Cloud Run' },
-            { type: 'doc', id: 'modules/Cyclos_GKE/Cyclos_GKE_Guide', label: 'GKE' },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Directus',
-          items: [
-            { type: 'doc', id: 'modules/Directus_CloudRun/Directus_CloudRun_Guide', label: 'Cloud Run' },
-            { type: 'doc', id: 'modules/Directus_GKE/Directus_GKE_Guide', label: 'GKE' },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Django',
-          items: [
-            { type: 'doc', id: 'modules/Django_CloudRun/Django_CloudRun_Guide', label: 'Cloud Run' },
-            { type: 'doc', id: 'modules/Django_GKE/Django_GKE_Guide', label: 'GKE' },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Ghost',
-          items: [
-            { type: 'doc', id: 'modules/Ghost_CloudRun/Ghost_CloudRun_Guide', label: 'Cloud Run' },
-            { type: 'doc', id: 'modules/Ghost_GKE/Ghost_GKE_Guide', label: 'GKE' },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Moodle',
-          items: [
-            { type: 'doc', id: 'modules/Moodle_CloudRun/Moodle_CloudRun_Guide', label: 'Cloud Run' },
-            { type: 'doc', id: 'modules/Moodle_GKE/Moodle_GKE_Guide', label: 'GKE' },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'N8N',
-          items: [
-            { type: 'doc', id: 'modules/N8N_CloudRun/N8N_CloudRun_Guide', label: 'Cloud Run' },
-            { type: 'doc', id: 'modules/N8N_GKE/N8N_GKE_Guide', label: 'GKE' },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'N8N AI',
-          items: [
-            { type: 'doc', id: 'modules/N8N_AI_CloudRun/N8N_AI_CloudRun_Guide', label: 'Cloud Run' },
-            { type: 'doc', id: 'modules/N8N_AI_GKE/N8N_AI_GKE_Guide', label: 'GKE' },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Odoo',
-          items: [
-            { type: 'doc', id: 'modules/Odoo_CloudRun/Odoo_CloudRun_Guide', label: 'Cloud Run' },
-            { type: 'doc', id: 'modules/Odoo_GKE/Odoo_GKE_Guide', label: 'GKE' },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'OpenEMR',
-          items: [
-            { type: 'doc', id: 'modules/OpenEMR_CloudRun/OpenEMR_CloudRun_Guide', label: 'Cloud Run' },
-            { type: 'doc', id: 'modules/OpenEMR_GKE/OpenEMR_GKE_Guide', label: 'GKE' },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Sample',
-          items: [
-            { type: 'doc', id: 'modules/Sample_CloudRun/Sample_CloudRun_Guide', label: 'Cloud Run' },
-            { type: 'doc', id: 'modules/Sample_GKE/Sample_GKE_Guide', label: 'GKE' },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Strapi',
-          items: [
-            { type: 'doc', id: 'modules/Strapi_CloudRun/Strapi_CloudRun_Guide', label: 'Cloud Run' },
-            { type: 'doc', id: 'modules/Strapi_GKE/Strapi_GKE_Guide', label: 'GKE' },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Wiki.js',
-          items: [
-            { type: 'doc', id: 'modules/Wikijs_CloudRun/Wikijs_CloudRun_Guide', label: 'Cloud Run' },
-            { type: 'doc', id: 'modules/Wikijs_GKE/Wikijs_GKE_Guide', label: 'GKE' },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Wordpress',
-          items: [
-            { type: 'doc', id: 'modules/Wordpress_CloudRun/Wordpress_CloudRun_Guide', label: 'Cloud Run' },
-            { type: 'doc', id: 'modules/Wordpress_GKE/Wordpress_GKE_Guide', label: 'GKE' },
-          ],
-        },
-      ],
-    },
-    {
-      type: 'category',
       label: 'Certification Guides',
       items: [
         {
@@ -206,6 +88,199 @@ const sidebars: SidebarsConfig = {
             { type: 'doc', id: 'pse/section5', label: 'Section 5' },
           ],
         },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Module Guides',
+      items: [
+        {
+          type: 'category',
+          label: 'Application',
+          items: [
+            { type: 'doc', id: 'modules/App_CloudRun/App_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/App_GKE/App_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/App_Common/App_Common_Guide', label: 'Common' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Cyclos',
+          items: [
+            { type: 'doc', id: 'modules/Cyclos_CloudRun/Cyclos_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Cyclos_GKE/Cyclos_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Cyclos_Common/Cyclos_Common_Guide', label: 'Common' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Directus',
+          items: [
+            { type: 'doc', id: 'modules/Directus_CloudRun/Directus_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Directus_GKE/Directus_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Directus_Common/Directus_Common_Guide', label: 'Common' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Django',
+          items: [
+            { type: 'doc', id: 'modules/Django_CloudRun/Django_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Django_GKE/Django_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Django_Common/Django_Common_Guide', label: 'Common' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Ghost',
+          items: [
+            { type: 'doc', id: 'modules/Ghost_CloudRun/Ghost_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Ghost_GKE/Ghost_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Ghost_Common/Ghost_Common_Guide', label: 'Common' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Moodle',
+          items: [
+            { type: 'doc', id: 'modules/Moodle_CloudRun/Moodle_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Moodle_GKE/Moodle_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Moodle_Common/Moodle_Common_Guide', label: 'Common' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'N8N',
+          items: [
+            { type: 'doc', id: 'modules/N8N_CloudRun/N8N_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/N8N_GKE/N8N_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/N8N_Common/N8N_Common_Guide', label: 'Common' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'N8N AI',
+          items: [
+            { type: 'doc', id: 'modules/N8N_AI_CloudRun/N8N_AI_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/N8N_AI_GKE/N8N_AI_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/N8N_AI_Common/N8N_AI_Common_Guide', label: 'Common' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Odoo',
+          items: [
+            { type: 'doc', id: 'modules/Odoo_CloudRun/Odoo_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Odoo_GKE/Odoo_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Odoo_Common/Odoo_Common_Guide', label: 'Common' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'OpenEMR',
+          items: [
+            { type: 'doc', id: 'modules/OpenEMR_CloudRun/OpenEMR_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/OpenEMR_GKE/OpenEMR_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/OpenEMR_Common/OpenEMR_Common_Guide', label: 'Common' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Sample',
+          items: [
+            { type: 'doc', id: 'modules/Sample_CloudRun/Sample_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Sample_GKE/Sample_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Sample_Common/Sample_Common_Guide', label: 'Common' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Strapi',
+          items: [
+            { type: 'doc', id: 'modules/Strapi_CloudRun/Strapi_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Strapi_GKE/Strapi_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Strapi_Common/Strapi_Common_Guide', label: 'Common' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Wiki.js',
+          items: [
+            { type: 'doc', id: 'modules/Wikijs_CloudRun/Wikijs_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Wikijs_GKE/Wikijs_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Wikijs_Common/Wikijs_Common_Guide', label: 'Common' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Wordpress',
+          items: [
+            { type: 'doc', id: 'modules/Wordpress_CloudRun/Wordpress_CloudRun_Guide', label: 'Cloud Run' },
+            { type: 'doc', id: 'modules/Wordpress_GKE/Wordpress_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Wordpress_Common/Wordpress_Common_Guide', label: 'Common' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Foundation',
+          items: [
+            { type: 'doc', id: 'modules/GCP_Services/GCP_Services_Guide', label: 'Services' },
+          ],
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Platform Guides',
+      items: [
+        {
+          type: 'category',
+          label: 'Feature Guides',
+          items: [
+            { type: 'doc', id: 'features/user', label: 'User' },
+            { type: 'doc', id: 'features/partner', label: 'Partner' },
+            { type: 'doc', id: 'features/agent', label: 'Agent' },
+            { type: 'doc', id: 'features/finance', label: 'Finance' },
+            { type: 'doc', id: 'features/support', label: 'Support' },
+            { type: 'doc', id: 'features/admin', label: 'Admin' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Workflow Guides',
+          items: [
+            { type: 'doc', id: 'workflows/user', label: 'User' },
+            { type: 'doc', id: 'workflows/partner', label: 'Partner' },
+            { type: 'doc', id: 'workflows/agent', label: 'Agent' },
+            { type: 'doc', id: 'workflows/finance', label: 'Finance' },
+            { type: 'doc', id: 'workflows/support', label: 'Support' },
+            { type: 'doc', id: 'workflows/admin', label: 'Admin' },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'User Guides',
+          items: [
+            { type: 'doc', id: 'guides/user', label: 'User' },
+            { type: 'doc', id: 'guides/partner', label: 'Partner' },
+            { type: 'doc', id: 'guides/agent', label: 'Agent' },
+            { type: 'doc', id: 'guides/finance', label: 'Finance' },
+            { type: 'doc', id: 'guides/support', label: 'Support' },
+            { type: 'doc', id: 'guides/admin', label: 'Admin' },
+          ],
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Platform Demos',
+      items: [
+        { type: 'doc', id: 'demos/user', label: 'User' },
+        { type: 'doc', id: 'demos/partner', label: 'Partner' },
+        { type: 'doc', id: 'demos/support', label: 'Support' },
+        { type: 'doc', id: 'demos/agent', label: 'Agent' },
+        { type: 'doc', id: 'demos/finance', label: 'Finance' },
+        { type: 'doc', id: 'demos/admin', label: 'Admin' },
       ],
     },
   ],

@@ -3,13 +3,24 @@ title: "Wiki.js GKE Configuration Guide"
 sidebar_label: "GKE"
 ---
 
-# Wikijs_GKE Module — Configuration Guide
+# Wikijs GKE Module
 
-`Wikijs_GKE` is a pre-configured wrapper around the [`App_GKE`](../App_GKE/App_GKE_Guide.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Kubernetes Engine (GKE) Autopilot.
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
+
+`Wikijs_GKE` is a pre-configured wrapper around the [`App_GKE`](../App_GKE/App_GKE.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Kubernetes Engine (GKE) Autopilot.
 
 Every variable in this module is passed through to `App_GKE`. The wrapper's role is to supply Wiki.js-appropriate defaults and to call the `Wikijs_Common` sub-module, which generates the application's Docker build context, database initialisation scripts, and storage configuration. You configure this module exactly as you would `App_GKE`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_GKE`, or that are unique to this wrapper.
 
-> **Full reference:** For complete descriptions, validation steps, and gcloud CLI examples for any variable not covered here, see the [App_GKE Configuration Guide](../App_GKE/App_GKE_Guide.md).
+> **Full reference:** For complete descriptions, validation steps, and gcloud CLI examples for any variable not covered here, see the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -28,9 +39,9 @@ None of the `Wikijs_Common` internals are directly configurable through this mod
 
 ---
 
-## Group 0: Module Metadata & Configuration
+## Module Metadata & Configuration
 
-The variables in this group are identical in purpose to those in `App_GKE`. See [App_GKE — Group 0](../App_GKE/App_GKE_Guide.md#group-0-module-metadata--configuration) for full descriptions.
+The variables in this group are identical in purpose to those in `App_GKE`. See [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) for full descriptions.
 
 The Wiki.js-specific defaults for this module are:
 
@@ -44,9 +55,9 @@ All other Group 0 variables (`credit_cost`, `require_credit_purchases`, `enable_
 
 ---
 
-## Group 1: Project & Identity
+## Project & Identity
 
-All variables in this group are identical to `App_GKE`. See [App_GKE — Group 1](../App_GKE/App_GKE_Guide.md#group-1-project--identity) for full descriptions.
+All variables in this group are identical to `App_GKE`. See [App_GKE §2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) for full descriptions.
 
 This module adds one variable not present in `App_GKE`:
 
@@ -56,9 +67,9 @@ This module adds one variable not present in `App_GKE`:
 
 ---
 
-## Group 2: Application Identity
+## Application Identity
 
-All variables are identical in purpose to `App_GKE`. See [App_GKE — Group 2](../App_GKE/App_GKE_Guide.md#group-2-application-identity) for full descriptions.
+All variables are identical in purpose to `App_GKE`. See [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) for full descriptions.
 
 The Wiki.js-specific defaults are:
 
@@ -71,9 +82,9 @@ The Wiki.js-specific defaults are:
 
 ---
 
-## Group 3: Runtime & Scaling
+## Runtime & Scaling
 
-All variables are identical in purpose to `App_GKE`. See [App_GKE — Group 3](../App_GKE/App_GKE_Guide.md#group-3-runtime--scaling) for full descriptions.
+All variables are identical in purpose to `App_GKE`. See [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for full descriptions.
 
 The Wiki.js-specific defaults are:
 
@@ -91,9 +102,9 @@ The Wiki.js-specific defaults are:
 
 ---
 
-## Group 5: Environment Variables & Secrets
+## Environment Variables & Secrets
 
-All variables are identical in purpose to `App_GKE`. See [App_GKE — Group 4](../App_GKE/App_GKE_Guide.md#group-4-environment-variables--secrets) for full descriptions.
+All variables are identical in purpose to `App_GKE`. See [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for full descriptions.
 
 `environment_variables` is pre-populated with the Wiki.js database connection settings that the application reads at startup:
 
@@ -112,9 +123,9 @@ To add application-level environment variables, add entries to the `environment_
 
 ---
 
-## Group 9: GKE Backend Configuration
+## GKE Backend Configuration
 
-All variables are identical to `App_GKE`. See [App_GKE — Group 5](../App_GKE/App_GKE_Guide.md#group-5-gke-backend-configuration) for full descriptions.
+All variables are identical to `App_GKE`. See [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for full descriptions.
 
 Wiki.js-specific defaults:
 
@@ -126,9 +137,9 @@ Wiki.js-specific defaults:
 
 ---
 
-## Group 17: Database Configuration
+## Database Configuration
 
-All variables are identical in purpose to `App_GKE`. See [App_GKE — Group 10](../App_GKE/App_GKE_Guide.md#group-10-database-configuration) for full descriptions.
+All variables are identical in purpose to `App_GKE`. See [App_GKE §3.B Database (Cloud SQL)](../App_GKE/App_GKE.md#b-database-cloud-sql) for full descriptions.
 
 The Wiki.js-specific defaults are:
 
@@ -148,25 +159,35 @@ The Wiki.js-specific defaults are:
 
 The following groups are available in `Wikijs_GKE` and behave exactly as documented in the `App_GKE` guide. The Wiki.js application imposes no additional constraints or defaults on them beyond what is noted in that guide.
 
-| Group | Wikijs_GKE Variables | App_GKE Guide Reference |
+| Configuration Area | Wikijs_GKE Variables | App_GKE.md Section |
 |---|---|---|
-| CI/CD & GitHub Integration | `enable_cicd_trigger`, `github_repository_url`, `github_token`, `github_app_installation_id`, `cicd_trigger_config`, `enable_cloud_deploy`, `cloud_deploy_stages` | [Group 7](../App_GKE/App_GKE_Guide.md#group-7-cicd--github-integration) |
-| Custom SQL Scripts | `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`, `custom_sql_scripts_use_root` | [Group 12](../App_GKE/App_GKE_Guide.md#group-12-custom-sql-scripts) |
-| Storage & Filesystem — NFS | `enable_nfs`, `nfs_mount_path` | [Group 8](../App_GKE/App_GKE_Guide.md#group-8-storage--filesystem--nfs) |
-| Storage & Filesystem — GCS | `create_cloud_storage`, `storage_buckets`, `gcs_volumes` | [Group 9](../App_GKE/App_GKE_Guide.md#group-9-storage--filesystem--gcs) |
-| Backup Schedule & Retention | `backup_schedule`, `backup_retention_days` | [Group 11](../App_GKE/App_GKE_Guide.md#group-11-backup-schedule--retention) |
-| Backup Import | `enable_backup_import`, `backup_source`, `backup_file`, `backup_format` | [Group 11](../App_GKE/App_GKE_Guide.md#group-11-backup-schedule--retention) |
-| Observability & Health | `health_check_config`, `startup_probe_config`, `uptime_check_config`, `alert_policies` | [Group 13](../App_GKE/App_GKE_Guide.md#group-13-observability--health) |
-| Custom Domain, Static IP & Networking | `enable_custom_domain`, `application_domains`, `reserve_static_ip`, `static_ip_name`, `enable_cdn` | [Group 16](../App_GKE/App_GKE_Guide.md#group-16-custom-domain-static-ip--network-configuration) |
-| Identity-Aware Proxy | `enable_iap`, `iap_authorized_users`, `iap_authorized_groups`, `iap_oauth_client_id`, `iap_oauth_client_secret`, `iap_support_email` | [Group 17](../App_GKE/App_GKE_Guide.md#group-17-identity-aware-proxy) |
-| Cloud Armor | `enable_cloud_armor`, `cloud_armor_policy_name`, `admin_ip_ranges` | [Group 18](../App_GKE/App_GKE_Guide.md#group-18-cloud-armor) |
-| Redis Cache | `enable_redis`, `redis_host`, `redis_port`, `redis_auth` | [Group 14](../App_GKE/App_GKE_Guide.md#group-14-reliability-policies) |
-| StatefulSet Configuration | `stateful_pvc_enabled`, `stateful_pvc_size`, `stateful_pvc_mount_path`, `stateful_pvc_storage_class`, `stateful_headless_service`, `stateful_pod_management_policy`, `stateful_update_strategy` | [Group 5](../App_GKE/App_GKE_Guide.md#group-5-gke-backend-configuration) |
-| Jobs & Workload Automation | `initialization_jobs`, `cron_jobs`, `additional_services` | [Group 6](../App_GKE/App_GKE_Guide.md#group-6-jobs--scheduled-tasks) |
-| Secrets Management | `secret_propagation_delay`, `secret_rotation_period`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec` | [Group 4](../App_GKE/App_GKE_Guide.md#group-4-environment-variables--secrets) |
-| MySQL Extensions | `enable_mysql_plugins`, `mysql_plugins` | [Group 10](../App_GKE/App_GKE_Guide.md#group-10-database-configuration) |
-| Binary Authorization | `enable_binary_authorization` | [Group 7](../App_GKE/App_GKE_Guide.md#group-7-cicd--github-integration) |
-| VPC Service Controls | `enable_vpc_sc` | [Group 18](../App_GKE/App_GKE_Guide.md#group-18-cloud-armor) |
+| CI/CD & GitHub Integration | `enable_cicd_trigger`, `github_repository_url`, `github_token`, `github_app_installation_id`, `cicd_trigger_config`, `enable_cloud_deploy`, `cloud_deploy_stages` | [App_GKE §6 CI/CD & Delivery](../App_GKE/App_GKE.md#6-cicd--delivery) |
+| Binary Authorization | `enable_binary_authorization`, `binauthz_evaluation_mode` | [App_GKE §4.C Binary Authorization](../App_GKE/App_GKE.md#c-binary-authorization) |
+| Identity-Aware Proxy | `enable_iap`, `iap_authorized_users`, `iap_authorized_groups`, `iap_oauth_client_id`, `iap_oauth_client_secret`, `iap_support_email` | [App_GKE §4.B Identity-Aware Proxy (IAP)](../App_GKE/App_GKE.md#b-identity-aware-proxy-iap) |
+| Cloud Armor | `enable_cloud_armor`, `cloud_armor_policy_name`, `admin_ip_ranges` | [App_GKE §4.A Cloud Armor WAF](../App_GKE/App_GKE.md#a-cloud-armor-waf) |
+| VPC Service Controls | `enable_vpc_sc` | [App_GKE §4.D VPC Service Controls](../App_GKE/App_GKE.md#d-vpc-service-controls) |
+| Secrets Store CSI | `enable_secrets_store_csi_driver` | [App_GKE §4.E Secrets Store CSI](../App_GKE/App_GKE.md#e-secrets-store-csi-driver) |
+| Storage & Filesystem — NFS | `enable_nfs`, `nfs_mount_path`, `nfs_instance_name`, `nfs_instance_base_name` | [App_GKE §3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) |
+| Storage & Filesystem — GCS | `create_cloud_storage`, `storage_buckets`, `gcs_volumes` | [App_GKE §3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) |
+| Networking & Network Policies | `enable_network_segmentation`, `network_tags` | [App_GKE §3.D Networking & Network Policies](../App_GKE/App_GKE.md#d-networking--network-policies) |
+| Jobs & Workload Automation | `initialization_jobs`, `cron_jobs`, `additional_services` | [App_GKE §3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) |
+| Custom SQL Scripts | `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`, `custom_sql_scripts_use_root` | [App_GKE §3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) |
+| Observability & Health | `health_check_config`, `startup_probe_config`, `uptime_check_config`, `alert_policies` — **Note:** `startup_probe_config` and `health_check_config` each serve a dual role: forwarded to `Wikijs_Common` (as `startup_probe`/`liveness_probe`) for container probes, and also to `App_GKE` for LB health checks. | [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) |
+| Custom Domain | `enable_custom_domain`, `application_domains` | [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) |
+| Cloud CDN | `enable_cdn` | [App_GKE §5.B Cloud CDN](../App_GKE/App_GKE.md#b-cloud-cdn) |
+| Static IP | `reserve_static_ip`, `static_ip_name` | [App_GKE §5.C Static IP](../App_GKE/App_GKE.md#c-static-ip) |
+| StatefulSet Configuration | `stateful_pvc_enabled`, `stateful_pvc_size`, `stateful_pvc_mount_path`, `stateful_pvc_storage_class`, `stateful_headless_service`, `stateful_pod_management_policy`, `stateful_update_strategy` | [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) |
+| Secrets Management | `secret_propagation_delay`, `secret_rotation_period` | [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) |
+| MySQL Extensions | `enable_mysql_plugins`, `mysql_plugins` | [App_GKE §3.B Database (Cloud SQL)](../App_GKE/App_GKE.md#b-database-cloud-sql) |
+| Backup Schedule & Retention | `backup_schedule`, `backup_retention_days` | [App_GKE §8.B Backup Import & Recovery](../App_GKE/App_GKE.md#b-backup-import) |
+| Backup Import | `enable_backup_import`, `backup_source`, `backup_file`, `backup_format` | [App_GKE §8.B Backup Import & Recovery](../App_GKE/App_GKE.md#b-backup-import) |
+| Redis Cache | `enable_redis`, `redis_host`, `redis_port`, `redis_auth` | [App_GKE §8.A Redis / Memorystore](../App_GKE/App_GKE.md#a-redis--memorystore) |
+| Pod Disruption Budget | `enable_pod_disruption_budget`, `pdb_min_available` | [App_GKE §7.A Pod Disruption Budget](../App_GKE/App_GKE.md#a-pod-disruption-budgets) |
+| Topology Spread | `enable_topology_spread`, `topology_spread_strict` | [App_GKE §7.B Topology Spread](../App_GKE/App_GKE.md#b-topology-spread-constraints) |
+| Resource Quotas | `enable_resource_quota`, `quota_cpu_requests`, `quota_cpu_limits`, `quota_memory_requests`, `quota_memory_limits` | [App_GKE §7.C Resource Quotas](../App_GKE/App_GKE.md#c-resource-quotas) |
+| Auto Password Rotation | `enable_auto_password_rotation`, `rotation_propagation_delay_sec` | [App_GKE §7.D Auto Password Rotation](../App_GKE/App_GKE.md#d-auto-password-rotation) |
+| Service Mesh | `configure_service_mesh` | [App_GKE §8.C Service Mesh](../App_GKE/App_GKE.md#c-service-mesh-asm-via-fleet) |
+| Multi-Cluster Services | `enable_multi_cluster_service` | [App_GKE §8.D Multi-Cluster Services](../App_GKE/App_GKE.md#d-multi-cluster-services-mcs) |
 
 > **Note on NFS defaults:** `enable_nfs` defaults to `true` in `Wikijs_GKE`. Wiki.js uses the NFS mount for shared page assets and uploads across pod replicas. Disabling NFS (`enable_nfs = false`) is only appropriate for single-replica deployments where data loss on pod restart is acceptable.
 
@@ -174,7 +195,7 @@ The following groups are available in `Wikijs_GKE` and behave exactly as documen
 
 ## Deployment Prerequisites & Dependency Analysis
 
-`Wikijs_GKE` inherits all prerequisites and dependency requirements from `App_GKE`. See [App_GKE — Deployment Prerequisites & Dependency Analysis](../App_GKE/App_GKE_Guide.md#deployment-prerequisites--dependency-analysis) for the full reference.
+`Wikijs_GKE` inherits all prerequisites and dependency requirements from `App_GKE`. See [App_GKE — Deployment Prerequisites & Dependency Analysis](../App_GKE/App_GKE.md#deployment-prerequisites--dependency-analysis) for the full reference.
 
 The following Wiki.js-specific points supplement that analysis:
 

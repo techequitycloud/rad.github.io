@@ -3,227 +3,129 @@ title: "Odoo Cloud Run Configuration Guide"
 sidebar_label: "Cloud Run"
 ---
 
-# Odoo_CloudRun Module — Configuration Guide
+# Odoo CloudRun Module
 
-Odoo is a comprehensive open-source ERP platform covering CRM, accounting, inventory, manufacturing, HR, eCommerce, and more. This module deploys Odoo Community Edition on **Google Cloud Run** using a custom container image built from the official Odoo nightly packages, backed by a managed Cloud SQL PostgreSQL instance and a Filestore NFS volume for shared file storage.
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Odoo_CloudRun.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Odoo_CloudRun.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
-`Odoo_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Odoo-specific application configuration, initialisation jobs, and runtime defaults on top.
+<br/>
 
-> **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Odoo_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
 
----
 
-## How This Guide Is Structured
 
-This guide documents only the variables that are **unique to `Odoo_CloudRun`** or that have **Odoo-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, CI/CD, custom SQL, networking, IAP, Cloud Armor, VPC Service Controls, and Cloud Deploy — refer directly to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md).
+`Odoo_CloudRun` deploys **Odoo Community Edition** on Google Cloud Run, backed by
+Cloud SQL PostgreSQL and a Cloud Filestore NFS volume for shared file storage.
+It is a **wrapper module** built on top of `App_CloudRun`. All GCP infrastructure
+(Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) is provisioned by
+`App_CloudRun`. `Odoo_CloudRun` adds Odoo-specific application configuration,
+two platform-managed initialisation jobs, the master-password secret, and runtime
+defaults tuned for Odoo's startup characteristics.
 
-**Variables fully covered by the App_CloudRun guide:**
-
-| Configuration Area | App_CloudRun_Guide Section | Odoo-Specific Notes |
-|---|---|---|
-| Module Metadata & Configuration | Group 0 | Different defaults for `module_description` and `module_documentation`. `resource_creator_identity` behaves identically. |
-| Project & Identity | Group 1 | Refer to base App_CloudRun module documentation. |
-| Runtime & Scaling | Group 3 | See [Odoo Runtime Configuration](#odoo-runtime-configuration) below. `container_port` defaults to `8069`. `min_instance_count` defaults to `0`; `max_instance_count` defaults to `1`. |
-| Environment Variables & Secrets | Group 4/5 | See [Odoo Environment Variables](#odoo-environment-variables) below for SMTP defaults. `explicit_secret_values` — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| Observability & Health | Group 13 | See [Odoo Health Probes](#odoo-health-probes) below. The module uses **`startup_probe`** and **`liveness_probe`** (Odoo-specific names) rather than `startup_probe_config` / `health_check_config`. |
-| Jobs & Scheduled Tasks | Group 12 | Refer to base App_CloudRun module documentation. The module also injects two platform-managed initialisation jobs — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| CI/CD & GitHub Integration | Group 7 | Refer to base App_CloudRun module documentation. Cloud Deploy (`enable_cloud_deploy`, `cloud_deploy_stages`) is also available. |
-| Storage — NFS | Group 10 | NFS is **enabled by default** (`enable_nfs = true`). Requires `execution_environment = "gen2"` (the default). |
-| Storage — GCS | Group 10 | Refer to base App_CloudRun module documentation. |
-| Redis Cache | Group 20 | See [Redis Session Store](#redis-session-store) below. Note: `redis_auth` is available in this module. |
-| Backup & Maintenance | Group 6 | Refer to base App_CloudRun module documentation for `backup_schedule` and `backup_retention_days`. See also [Backup Import & Recovery](#backup-import--recovery) below for `enable_backup_import` and related variables. |
-| Custom Initialisation & SQL | Group 8 | Refer to base App_CloudRun module documentation. |
-| Access & Networking | Group 4 | Refer to base App_CloudRun module documentation (`ingress_settings`, `vpc_egress_setting`). |
-| Load Balancer & CDN | Group 9 | Refer to base App_CloudRun module documentation (`enable_cloud_armor`, `enable_cdn`, `application_domains`). |
-| Identity-Aware Proxy | Group 4 | Refer to base App_CloudRun module documentation. |
-| VPC Service Controls | Group 21 | Refer to base App_CloudRun module documentation. |
-| Traffic Splitting | Group 3 | Refer to base App_CloudRun module documentation (`traffic_split`). |
-| Additional Services | Group 12 | Refer to base App_CloudRun module documentation (`additional_services`). |
+The module uses `Odoo_Common` as a sub-module to resolve application configuration,
+secrets, and storage bucket lists, which are then passed into `App_CloudRun` via
+`application_config`, `module_secret_env_vars`, and `module_storage_buckets`.
 
 ---
 
-## Platform-Managed Behaviours
+## §1 · Module Overview
 
-The following behaviours are applied automatically by `Odoo_CloudRun` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
-
-| Behaviour | Detail |
+| Attribute | Value |
 |---|---|
-| **NFS directory initialisation** | An `nfs-init` Cloud Run Job runs automatically on deployment. It mounts the Filestore NFS share and creates the directories `/mnt/filestore`, `/mnt/sessions`, and `/mnt/extra-addons`, setting ownership to UID/GID `101:101` (the Odoo process user). This is required before Odoo starts — without it, Odoo will fail to write session and filestore data. |
-| **Database initialisation** | A `db-init` Cloud Run Job runs after `nfs-init` to create the Odoo database and application user using the credentials stored in Secret Manager. |
-| **ODOO_MASTER_PASS secret** | A 16-character alphanumeric master password is auto-generated and stored in Secret Manager under the name `app{application_name}{tenant_deployment_id}{deployment_id}-master-password`. It is injected into the container as the `ODOO_MASTER_PASS` environment variable via Secret Manager reference (not in plaintext). Used for Odoo's database management interface. |
-| **DB_PASSWORD and ROOT_PASSWORD** | The database password generated by `App_CloudRun` is automatically injected as both `DB_PASSWORD` (used by Odoo at runtime) and `ROOT_PASSWORD` (used by the `db-init` job for superuser setup). These secrets are managed automatically — do not define them manually in `secret_environment_variables`. |
-| **SMTP environment defaults** | The `environment_variables` map is pre-populated with Odoo SMTP configuration keys (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SSL`, `EMAIL_FROM`). Override these to configure outbound email for Odoo notifications. |
+| **Underlying platform** | `App_CloudRun` |
+| **Sub-module** | `Odoo_Common` |
+| **Application** | Odoo Community Edition |
+| **Default version** | `18.0` (nightly build channel) |
+| **Database** | Cloud SQL PostgreSQL (required) |
+| **Persistent storage** | Cloud Filestore NFS (`enable_nfs = true` by default) |
+| **Default container port** | `8069` |
+| **Default image source** | `custom` (Cloud Build from Odoo nightly Dockerfile) |
+| **Max instances default** | `1` (increase only after configuring Redis session store) |
+| **Redis** | Optional session store; `enable_redis = false` by default |
+| **Platform-managed jobs** | `nfs-init` (directory setup) + `db-init` (database creation) |
+| **Platform-managed secret** | `ODOO_MASTER_PASS` (auto-generated, stored in Secret Manager) |
 
----
+### Wrapper Architecture
 
-## Odoo Application Identity
-
-These variables define how the Odoo deployment is named across GCP resources.
-
-| Variable | Default | Options / Format | Description & Implications |
-|---|---|---|---|
-| `application_name` | `"odoo"` | `[a-z][a-z0-9-]{0,19}` | Internal identifier used as the base name for the Cloud Run service, Artifact Registry repository, Secret Manager secrets, and GCS buckets. Functionally identical to `application_name` in App_CloudRun. **Do not change after initial deployment.** |
-| `application_display_name` | `"Odoo ERP"` | Any string | Human-readable name shown in the platform UI, Cloud Run service list, and monitoring dashboards. Can be updated freely without affecting resource names. |
-| `application_description` | `"Odoo ERP on Cloud Run"` | Any string | Brief description. Populated into the Cloud Run service description field. Can be updated freely. |
-| `application_version` | `"18.0"` | Odoo version string, e.g. `"18.0"`, `"17.0"` | **For Odoo this is the Odoo release version, not a semver tag.** It maps directly to the Odoo nightly package channel used in the Dockerfile (`ODOO_VERSION` build arg). Supported values are `"18.0"`, `"17.0"`, `"16.0"`. When `container_image_source = "custom"`, changing this value triggers a new Cloud Build run. |
-
-### Validating Application Identity
-
-```bash
-# Confirm the Cloud Run service exists with the expected name
-gcloud run services describe odoo \
-  --region=REGION \
-  --format="table(metadata.name,metadata.annotations['run.googleapis.com/description'])"
-
-# Confirm the Odoo version from the running container
-gcloud run services describe odoo \
-  --region=REGION \
-  --format="yaml(spec.template.spec.containers[0].env)" | grep ODOO_VERSION
+```
+Odoo_CloudRun (variables.tf / odoo.tf / main.tf)
+  └─ Odoo_Common          ← resolves app config, scripts, master-pass secret
+  └─ App_CloudRun         ← provisions all GCP infrastructure
 ```
 
+`Odoo_Common` outputs:
+- `config` → merged into `application_config` passed to App_CloudRun
+- `odoo_master_pass_secret_id` → injected as `ODOO_MASTER_PASS` via `module_secret_env_vars`
+- `storage_buckets` → merged into `module_storage_buckets`
+- `path` → used to resolve `scripts_dir`
+
 ---
 
-## Odoo Runtime Configuration
+## §2 · IAM & Project Identity
 
-Odoo is a Python/PostgreSQL ERP application that requires more resources than a typical Cloud Run service, particularly during initial database creation and module installation.
-
-### Container Port
-
-| Variable | Default | Description & Implications |
+| Variable | Default | Description |
 |---|---|---|
-| `container_port` | `8069` | The port Odoo listens on for HTTP traffic. **Do not change this** unless you have modified the Odoo server configuration to bind on a different port. |
+| `project_id` | — | GCP project ID. All resources are created in this project. Grant the Owner role to `rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com`. |
+| `tenant_deployment_id` | `"demo"` | Short suffix appended to resource names. Use `"prod"`, `"staging"`, etc. to deploy multiple environments in the same project. |
+| `resource_creator_identity` | `"rad-module-creator@…"` | Service account used by Terraform. Override with a project-specific SA for production. |
+| `support_users` | `[]` | Email addresses of users granted IAM access and added as alert notification recipients. |
+| `resource_labels` | `{}` | Key-value labels applied to all resources (cost centre, team, environment). |
+| `deployment_id` | `""` | Optional fixed deployment ID. A random hex ID is generated when left empty. |
 
-### Resource Sizing
+---
 
-`Odoo_CloudRun` exposes `cpu_limit` and `memory_limit` as **dedicated top-level variables** (in addition to the `container_resources` object). When both are set, `container_resources` takes precedence.
+## §3 · Core Service Configuration
 
-| Variable | Module Default | Recommended for Production |
+### §3.A · Application Identity
+
+| Variable | Default | Description |
 |---|---|---|
-| `cpu_limit` | `"1000m"` | `"2000m"` or higher |
-| `memory_limit` | `"1Gi"` | `"4Gi"` (minimum `"2Gi"`) |
+| `application_name` | `"odoo"` | Internal identifier used as the base name for the Cloud Run service, Artifact Registry repository, Secret Manager secrets, and GCS buckets. **Do not change after initial deployment.** |
+| `application_display_name` | `"Odoo ERP"` | Human-readable name shown in the platform UI, Cloud Run console, and monitoring dashboards. Safe to update at any time. |
+| `application_description` | `"Odoo ERP on Cloud Run"` | Brief description populated into the Cloud Run service description field. |
+| `application_version` | `"18.0"` | Odoo release version. Maps directly to the nightly build channel used in the Dockerfile (`ODOO_VERSION` build arg). Supported values: `"18.0"`, `"17.0"`, `"16.0"`. Changing this when `container_image_source = "custom"` triggers a new Cloud Build run. |
 
-Odoo's Python worker processes and database connection pool together consume 1.5–3 Gi of memory under normal load. Setting `memory_limit` below `"2Gi"` will cause OOM kills during peak activity.
+`application_display_name` and `application_description` are passed to `Odoo_Common`
+as `display_name` and `description`, then merged into the `application_config` object
+consumed by `App_CloudRun`.
 
-> **Note:** Cloud Run CPU allocations above `"1000m"` require `min_instance_count >= 1` (CPU is always allocated). If you increase `cpu_limit` beyond `"1000m"` while keeping `min_instance_count = 0`, Cloud Run will throttle CPU to zero between requests and Odoo will experience severe cold-start latency.
+### §3.B · Resource Sizing
 
-**Recommended production configuration:**
+Odoo is memory-intensive. Its Python workers and database connection pool typically
+consume 1.5–3 Gi under normal load. `cpu_limit` and `memory_limit` are dedicated
+top-level variables that take precedence over `container_resources` when both are set.
+
+| Variable | Default | Description |
+|---|---|---|
+| `cpu_limit` | `"1000m"` | CPU allocated per instance. Increase to `"2000m"` or higher for production. CPU above `"1000m"` requires `min_instance_count >= 1`. |
+| `memory_limit` | `"1Gi"` | Memory per instance. **Minimum `"2Gi"` recommended for production**; below `"2Gi"` causes OOM kills under load. |
+| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | Structured resource object. Takes precedence over `cpu_limit` / `memory_limit` when explicitly set. |
+| `min_instance_count` | `0` | Scale-to-zero by default. Set to `1` for production to eliminate cold starts (60–180 s for Odoo). |
+| `max_instance_count` | `1` | Keep at `1` until Redis session store is configured; multiple instances without Redis cause session inconsistency. |
+| `timeout_seconds` | `300` | Maximum request duration (0–3600 s). Increase for long Odoo operations such as report generation or data imports. |
+| `execution_environment` | `"gen2"` | Required for NFS mounts. Do not change to `"gen1"` when `enable_nfs = true`. |
+
+**Recommended production sizing:**
 ```hcl
 cpu_limit          = "2000m"
 memory_limit       = "4Gi"
 min_instance_count = 1
-max_instance_count = 3
+max_instance_count = 3   # only after configuring Redis
 ```
 
-### Scaling Defaults
+### §3.C · Environment Variables & Secrets
 
-| Variable | App_CloudRun Default | Odoo_CloudRun Default | Reason |
-|---|---|---|---|
-| `min_instance_count` | `0` | `0` | Odoo supports scale-to-zero but cold starts are slow (60–180 s). Set to `1` for production to eliminate cold starts. |
-| `max_instance_count` | `1` | `1` | Odoo in standalone mode (no Redis session store) should run as a single instance to avoid session inconsistency. Increase only after configuring Redis session storage. |
-
-### Validating Runtime Configuration
-
-```bash
-# View CPU and memory limits on the latest revision
-gcloud run services describe odoo \
-  --region=REGION \
-  --format="yaml(spec.template.spec.containers[0].resources)"
-
-# Confirm the minimum instance count
-gcloud run services describe odoo \
-  --region=REGION \
-  --format="yaml(spec.template.metadata.annotations)"
-```
-
----
-
-## Odoo Health Probes
-
-Odoo performs database schema validation and, on first boot, full module installation. This can take 2–10 minutes. `Odoo_CloudRun` uses **two sets of probe variable names**:
-
-- **`startup_probe` and `liveness_probe`** — the primary Odoo probe variables, passed to the Odoo_Common module. These are the variables you should configure.
-- `startup_probe_config` and `health_check_config` — the App_CloudRun base interface names, also present and passed to App_CloudRun directly. These have Odoo-specific `/web/health` defaults as well.
-
-Prefer `startup_probe` and `liveness_probe` when tuning Odoo probe behaviour.
-
-| Variable | Default | Description & Implications |
+| Variable | Default | Description |
 |---|---|---|
-| `startup_probe` | `{ enabled = true, type = "TCP", path = "/", initial_delay_seconds = 60, timeout_seconds = 10, period_seconds = 30, failure_threshold = 3 }` | Uses a **TCP port check** rather than HTTP. A TCP probe is more reliable during Odoo's boot phase, when the HTTP server may not yet be accepting connections even though the process is starting. The `initial_delay_seconds = 60` gives Odoo time to start before the first check. `failure_threshold = 3` with `period_seconds = 30` allows 90 more seconds after the initial delay. **On first deployment**, consider increasing `failure_threshold` to `6` to allow for database schema creation. |
-| `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/web/health", initial_delay_seconds = 120, timeout_seconds = 60, period_seconds = 120, failure_threshold = 3 }` | Periodically checks whether a running Odoo instance is healthy using the `/web/health` endpoint, which returns HTTP 200 only when the application has a live database connection. The `initial_delay_seconds = 120` prevents premature restarts during startup. `period_seconds = 120` avoids unnecessary database load from frequent probing. |
+| `environment_variables` | `{}` | Plain-text environment variables injected at runtime. Use for SMTP settings, feature flags, and other non-sensitive config. |
+| `secret_environment_variables` | `{}` | Map of env var name → Secret Manager secret name. Values resolved at runtime; never stored in plaintext. |
+| `explicit_secret_values` | `{}` | Raw sensitive values written into Secret Manager during deployment. Use to set a custom `ODOO_MASTER_PASS` or SMTP password. Sensitive; never stored in Terraform state in plaintext. |
+| `secret_rotation_period` | `"2592000s"` | Rotation reminder period (30 days default). Set `null` to disable. |
+| `secret_propagation_delay` | `30` | Seconds to wait after secret creation before dependent operations proceed. |
 
-> **Relationship to App_CloudRun probes:** `startup_probe` configures the Cloud Run startup probe passed through Odoo_Common; `startup_probe_config` configures the startup probe on the App_CloudRun module directly. In practice, the Odoo-specific probe applied to the container is the one from `startup_probe` / `liveness_probe`. Both use the same sub-field structure.
-
-### Validating Health Probes
-
-**Google Cloud Console:** Navigate to **Cloud Run → Services → odoo → Revisions**, select the latest revision, click **Container(s)**, and view the **Health checks** section.
-
-```bash
-# View startup and liveness probe configuration on the latest revision
-gcloud run services describe odoo \
-  --region=REGION \
-  --format="yaml(spec.template.spec.containers[0].livenessProbe,spec.template.spec.containers[0].startupProbe)"
-
-# Monitor Cloud Run logs for probe failures
-gcloud logging read \
-  "resource.type=cloud_run_revision AND resource.labels.service_name=odoo AND severity>=WARNING" \
-  --project=PROJECT_ID \
-  --limit=20 \
-  --format="table(timestamp,severity,textPayload)"
-
-# Manually test the health endpoint
-curl -s -o /dev/null -w "%{http_code}" https://SERVICE_URL/web/health
-# Expect: 200
-```
-
----
-
-## Odoo Database Configuration
-
-Odoo requires PostgreSQL. The database is provisioned by the underlying `App_CloudRun` module — see [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend) for the full variable reference.
-
-The following defaults are **Odoo-specific** and set appropriately out of the box:
-
-| Variable | Odoo_CloudRun Default | Description |
-|---|---|---|
-| `application_database_name` | `"odoo"` | The PostgreSQL database created for Odoo. Injected as `DB_NAME`. |
-| `application_database_user` | `"odoo"` | The PostgreSQL user for the application. Injected as `DB_USER`. |
-
-> **Must remain PostgreSQL.** Setting any non-PostgreSQL `database_type` will prevent Odoo from starting.
-
-### Validating Database Configuration
-
-```bash
-# Confirm the database and user were created
-gcloud sql databases list --instance=INSTANCE_NAME --project=PROJECT_ID
-
-gcloud sql users list --instance=INSTANCE_NAME --project=PROJECT_ID
-
-# Confirm DB environment variables are injected into the Cloud Run service
-gcloud run services describe odoo \
-  --region=REGION \
-  --format="yaml(spec.template.spec.containers[0].env)" | grep -E "DB_"
-```
-
----
-
-## Odoo Environment Variables
-
-The `environment_variables` variable (documented in [App_CloudRun_Guide Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets)) has Odoo-specific defaults that configure outbound email delivery.
-
-**Default `environment_variables` in Odoo_CloudRun:**
-
-```hcl
-environment_variables = {
-  SMTP_HOST     = ""
-  SMTP_PORT     = "25"
-  SMTP_USER     = ""
-  SMTP_PASSWORD = ""
-  SMTP_SSL      = "false"
-  EMAIL_FROM    = "odoo@example.com"
-}
-```
-
-Configure these before going live to enable Odoo email notifications (order confirmations, password resets, CRM activities). Move sensitive values to `secret_environment_variables`:
+**Configuring SMTP for Odoo email notifications:**
 
 ```hcl
 environment_variables = {
@@ -239,9 +141,7 @@ secret_environment_variables = {
 }
 ```
 
-### Injecting the Odoo Admin Password
-
-The Odoo master password (`ODOO_MASTER_PASS`) is generated automatically (see [Platform-Managed Behaviours](#platform-managed-behaviours)). If you need to set a specific admin password rather than using the generated one, use `explicit_secret_values`:
+To set a known master password instead of the auto-generated one:
 
 ```hcl
 explicit_secret_values = {
@@ -249,96 +149,355 @@ explicit_secret_values = {
 }
 ```
 
-> `explicit_secret_values` values are treated as sensitive and written directly to Secret Manager. They are never stored in plaintext in Terraform state. See [App_CloudRun_Guide Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-environment-variables--secrets) for the full reference.
+### §3.D · Networking
+
+| Variable | Default | Description |
+|---|---|---|
+| `ingress_settings` | `"all"` | Traffic sources permitted to reach Cloud Run. `"all"` = public internet; `"internal"` = VPC only; `"internal-and-cloud-load-balancing"` = when fronted by a GLB. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | Outbound VPC routing. `"PRIVATE_RANGES_ONLY"` routes RFC 1918 traffic via VPC; `"ALL_TRAFFIC"` routes all egress via VPC. |
+| `container_port` | `8069` | Port Odoo listens on inside the container. Do not change unless the Odoo server config binds to a different port. |
+| `container_protocol` | `"http1"` | HTTP version: `"http1"` or `"h2c"`. Use `"http1"` for Odoo. |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` | Path where the Cloud SQL Auth Proxy Unix socket is mounted. Only used when `enable_cloudsql_volume = true`. |
+| `enable_cloudsql_volume` | `true` | Injects Cloud SQL Auth Proxy sidecar for Unix socket connections to Cloud SQL. Disable only when connecting via TCP. |
+
+### §3.E · Container Image & Build
+
+Odoo_CloudRun defaults to building a custom container image from the official Odoo
+nightly packages via Cloud Build. Set `container_image_source = "prebuilt"` to
+skip the build and deploy a pre-existing image directly.
+
+| Variable | Default | Description |
+|---|---|---|
+| `container_image_source` | `"custom"` | `"custom"` = build from source using Cloud Build; `"prebuilt"` = deploy an existing image directly. |
+| `container_image` | `""` | Full image URI (e.g. `"us-docker.pkg.dev/my-project/repo/odoo:18.0"`). Used when `container_image_source = "prebuilt"` or to override the built image. |
+| `container_build_config` | `{ enabled = true }` | Cloud Build configuration: `dockerfile_path`, `context_path`, `build_args`, `artifact_repo_name`. Set `enabled = false` to skip the build step. |
+| `enable_image_mirroring` | `true` | Mirrors the image into Artifact Registry before deploy. Recommended to avoid Docker Hub rate limits. |
+| `deploy_application` | `true` | Set `false` to provision infrastructure only without deploying the container (useful for staged rollouts). |
 
 ---
 
-## Redis Session Store
+## §4 · Advanced Security
 
-Odoo supports Redis as a shared session store. When multiple Cloud Run instances are running (`max_instance_count > 1`), Redis is **required** — without it each instance has its own session store and users will be logged out on every request that lands on a different instance.
+### §4.A · Automated Password Rotation
 
-| Variable | Default | Options / Format | Description & Implications |
-|---|---|---|---|
-| `enable_redis` | `false` | `true` / `false` | When `true`, Odoo is configured to use Redis at `redis_host:redis_port` for session storage. The `SESSION_REDIS`, `REDIS_HOST`, and `REDIS_PORT` environment variables are injected automatically. Requires `redis_host` to be set. |
-| `redis_host` | `""` | IP address or hostname | The Redis server hostname or IP. For Google Memorystore, use the primary endpoint IP (available under **Memorystore → Redis → your instance → Properties**). Required when `enable_redis = true`. |
-| `redis_port` | `"6379"` | Port string | The Redis port. Change only if your Redis instance uses a non-standard port. |
-| `redis_auth` | `""` | String (sensitive) | Authentication password for the Redis server. Leave empty for unauthenticated Redis. For Memorystore instances with AUTH enabled, set this to the auth string. Treated as sensitive. |
+| Variable | Default | Description |
+|---|---|---|
+| `enable_auto_password_rotation` | `false` | Deploys a Cloud Run + Eventarc automated rotation job. Rotates the database password on the schedule set by `secret_rotation_period`. |
+| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts to pick up the new value. |
+| `secret_rotation_period` | `"2592000s"` | Rotation reminder interval. Also used as the trigger period when `enable_auto_password_rotation = true`. |
 
-For a full description of the Redis variables, refer to [App_CloudRun_Guide Group 20](../App_CloudRun/App_CloudRun_Guide.md#group-20-redis-cache).
+### §4.B · VPC Service Controls
 
-### Validating Redis Configuration
+| Variable | Default | Description |
+|---|---|---|
+| `enable_vpc_sc` | `false` | Enforces VPC-SC perimeter. Restricts GCP API calls to requests originating inside the perimeter. Requires an existing VPC-SC perimeter in the project. |
 
-```bash
-# Confirm REDIS_HOST and REDIS_PORT are injected into the Cloud Run service
-gcloud run services describe odoo \
-  --region=REGION \
-  --format="yaml(spec.template.spec.containers[0].env)" | grep -E "REDIS_"
-```
+### §4.C · Identity-Aware Proxy
 
----
+| Variable | Default | Description |
+|---|---|---|
+| `enable_iap` | `false` | Enables Cloud Run native IAP. Requires Google identity authentication before the application is accessible. |
+| `iap_authorized_users` | `[]` | Users granted access: `"user:alice@example.com"`, `"serviceAccount:sa@project.iam.gserviceaccount.com"`. |
+| `iap_authorized_groups` | `[]` | Google Groups granted access: `"group:engineering@example.com"`. |
 
-## Backup Import & Recovery
+### §4.D · Cloud Armor & CDN
 
-In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_CloudRun_Guide Group 6](../App_CloudRun/App_CloudRun_Guide.md#group-6-backup--maintenance)), `Odoo_CloudRun` supports a one-time database import during deployment. Use this to migrate an existing Odoo instance to GCP or to seed a new environment with production data.
+| Variable | Default | Description |
+|---|---|---|
+| `enable_cloud_armor` | `false` | Provisions a Global HTTPS Load Balancer with a Cloud Armor WAF policy (OWASP Top 10, DDoS mitigation). Required when `application_domains` is set. |
+| `application_domains` | `[]` | Custom domains. Google-managed SSL certificates are provisioned per domain. DNS must point to the GLB IP before cert provisioning completes. |
+| `enable_cdn` | `false` | Enables Cloud CDN on the GLB to cache static assets at edge. Only used when `enable_cloud_armor = true`. |
+| `admin_ip_ranges` | `[]` | IP CIDR ranges permitted for direct administrative access. |
 
-| Variable | Default | Options / Format | Description & Implications |
-|---|---|---|---|
-| `enable_backup_import` | `false` | `true` / `false` | When `true`, triggers a one-time Cloud Run Job to restore the backup specified by `backup_file` from the source defined in `backup_source`. The import runs after the database is provisioned. Configure `backup_source`, `backup_file`, and `backup_format` before enabling. **If the database already contains data**, test in a non-production environment first — the import may conflict with existing schema. |
-| `backup_source` | `"gcs"` | `gcs` / `gdrive` | `"gcs"` to import from the automatically created GCS backups bucket; `"gdrive"` to import from a Google Drive file ID. GCS is recommended for production. |
-| `backup_file` | `"backup.sql"` | Filename or Drive file ID | For GCS: the filename within the backups bucket (e.g. `"odoo_prod_2024.sql.gz"`). For Google Drive: the file ID from the share URL. |
-| `backup_format` | `"sql"` | `sql` / `tar` / `gz` / `tgz` / `tar.gz` / `zip` / `auto` | The format of the backup file. The recommended format for Odoo PostgreSQL dumps is `"sql"` (plain text) or `"gz"` (gzip-compressed). |
+### §4.E · Binary Authorization
 
-### Validating Backup Import
-
-```bash
-# Confirm the import job completed successfully
-gcloud run jobs executions list \
-  --job=odoo-backup-import \
-  --region=REGION \
-  --format="table(name,status.conditions[0].type,status.startTime,status.completionTime)"
-
-# View import job logs for any errors
-gcloud logging read \
-  "resource.type=cloud_run_job AND resource.labels.job_name=odoo-backup-import" \
-  --project=PROJECT_ID \
-  --limit=50 \
-  --order=asc \
-  --format="table(timestamp,severity,textPayload)"
-```
+| Variable | Default | Description |
+|---|---|---|
+| `enable_binary_authorization` | `false` | Enforces Binary Authorization policy. Images must carry a valid attestation before deployment. Requires a Binary Authorization policy and attestor to be configured in the project. |
 
 ---
 
-## Deployment Prerequisites & Validation
+## §5 · Traffic & Ingress
 
-After deploying `Odoo_CloudRun`, confirm the deployment is healthy:
+### §5.A · Traffic Splitting
 
-```bash
-# Confirm both initialisation jobs completed successfully
-gcloud run jobs executions list \
-  --region=REGION \
-  --format="table(name,status.conditions[0].type,status.startTime,status.completionTime)"
+Canary or blue-green deployments can be configured by splitting traffic across
+Cloud Run revisions. All entries must sum to exactly 100%.
 
-# View nfs-init job logs
-gcloud logging read \
-  "resource.type=cloud_run_job AND resource.labels.job_name=odoo-nfs-init" \
-  --project=PROJECT_ID \
-  --limit=20
+| Variable | Default | Description |
+|---|---|---|
+| `traffic_split` | `[]` | List of traffic allocations. Each entry: `{ type, percent, revision?, tag? }`. Leave empty to send all traffic to the latest revision. |
 
-# View db-init job logs
-gcloud logging read \
-  "resource.type=cloud_run_job AND resource.labels.job_name=odoo-db-init" \
-  --project=PROJECT_ID \
-  --limit=20
-
-# Confirm the Cloud Run service is deployed and retrieve its URL
-gcloud run services describe odoo \
-  --region=REGION \
-  --format="table(status.url,status.conditions[0].type)"
-
-# Confirm the ODOO_MASTER_PASS secret was created in Secret Manager
-gcloud secrets list --project=PROJECT_ID --filter="name:master-password"
-
-# Test the Odoo web interface
-curl -s -o /dev/null -w "%{http_code}" https://SERVICE_URL/web/health
-# Expect: 200
+**Example — canary deployment:**
+```hcl
+traffic_split = [
+  { type = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST",   percent = 90 },
+  { type = "TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION", percent = 10, revision = "odoo-00003-abc" },
+]
 ```
+
+### §5.B · Service Annotations & Labels
+
+| Variable | Default | Description |
+|---|---|---|
+| `service_annotations` | `{}` | Kubernetes-style annotations applied to the Cloud Run service resource. Use for advanced Cloud Run config not exposed as a first-class attribute. |
+| `service_labels` | `{}` | Labels applied to the Cloud Run service (in addition to `resource_labels`). |
+
+---
+
+## §6 · CI/CD Integration
+
+### §6.A · GitHub Integration
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_cicd_trigger` | `false` | Enables a Cloud Build trigger that automatically builds and deploys when code is pushed to the configured repository. |
+| `github_repository_url` | `""` | Full HTTPS URL of the GitHub repository. Required when `enable_cicd_trigger = true`. |
+| `github_token` | `""` | GitHub PAT for repository authentication. Mutually exclusive with `github_app_installation_id`. |
+| `github_app_installation_id` | `""` | Cloud Build GitHub App installation ID. Preferred for organisation repositories. |
+| `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Advanced trigger config: `branch_pattern`, `included_files`, `ignored_files`, `trigger_name`, `substitutions`. |
+
+### §6.B · Cloud Deploy
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_cloud_deploy` | `false` | Switches CI/CD from direct Cloud Build deployments to a managed Cloud Deploy pipeline. Requires `enable_cicd_trigger = true`. |
+| `cloud_deploy_stages` | `[dev, staging, prod]` | Ordered promotion stages. Each stage: `name`, `require_approval`, `auto_promote`. `prod` requires approval by default. |
+
+---
+
+## §7 · Reliability & Data
+
+### §7.A · Health Probes
+
+Odoo performs database schema validation and full module installation on first boot,
+taking 2–10 minutes. The module exposes **two sets of probe variable names**:
+
+- `startup_probe` / `liveness_probe` — passed to `Odoo_Common`; these are the
+  primary variables to configure for Odoo probe tuning.
+- `startup_probe_config` / `health_check_config` — the App_CloudRun interface names,
+  also passed directly. They have Odoo-specific `/web/health` defaults.
+
+When both are supplied, `startup_probe_config` / `health_check_config` take precedence
+on the App_CloudRun side; `startup_probe` / `liveness_probe` apply via Odoo_Common.
+
+| Variable | Default | Description |
+|---|---|---|
+| `startup_probe` | `{ enabled = true, type = "TCP", path = "/", initial_delay_seconds = 60, timeout_seconds = 10, period_seconds = 30, failure_threshold = 3 }` | TCP port check on startup. More reliable than HTTP during Odoo's boot phase. For first deployments with schema creation, increase `failure_threshold` to `6`. |
+| `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/web/health", initial_delay_seconds = 120, timeout_seconds = 60, period_seconds = 120, failure_threshold = 3 }` | HTTP check against `/web/health`, which returns 200 only when Odoo has a live database connection. `period_seconds = 120` avoids unnecessary database load. |
+| `startup_probe_config` | `{ enabled = true, path = "/web/health", initial_delay_seconds = 180, timeout_seconds = 60, period_seconds = 120, failure_threshold = 3 }` | Structured App_CloudRun startup probe with Odoo-tuned defaults. |
+| `health_check_config` | `{ enabled = true, path = "/web/health", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Structured App_CloudRun liveness probe with Odoo-tuned defaults. |
+
+### §7.B · Storage
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_nfs` | `true` | Provisions a Cloud Filestore NFS instance. Required for Odoo filestore, session, and extra-addons directories. Requires `execution_environment = "gen2"`. |
+| `nfs_mount_path` | `"/mnt"` | Container mount path for the NFS volume. The `nfs-init` job creates subdirectories (`/mnt/filestore`, `/mnt/sessions`, `/mnt/extra-addons`) under this path. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. `Odoo_Common` may provision additional buckets via `module_storage_buckets`. |
+| `create_cloud_storage` | `true` | Set `false` to skip GCS bucket provisioning. |
+| `gcs_volumes` | `[]` | GCS buckets to mount as GCS Fuse volumes inside the container. |
+
+### §7.C · Database
+
+Odoo requires PostgreSQL. `application_database_name` and `application_database_user`
+are the Odoo-specific defaults for the database and user provisioned by `App_CloudRun`.
+All DB connection variables (`DB_NAME`, `DB_USER`, `DB_PASSWORD`, etc.) are injected
+automatically — see §9 Platform-Managed Behaviours.
+
+| Variable | Default | Description |
+|---|---|---|
+| `application_database_name` | `"odoo"` | PostgreSQL database name. Injected as `DB_NAME`. **Do not change after initial deployment.** |
+| `application_database_user` | `"odoo"` | PostgreSQL user. Password auto-generated; injected as `DB_PASSWORD`. |
+| `database_password_length` | `16` | Auto-generated password length (8–64 characters). |
+| `enable_auto_password_rotation` | `false` | Automates password rotation via Cloud Run + Eventarc. See §4.A. |
+| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts. |
+
+### §7.D · Backup & Recovery
+
+| Variable | Default | Description |
+|---|---|---|
+| `backup_schedule` | `"0 2 * * *"` | Cron expression (UTC) for automated backups. Leave empty to disable. |
+| `backup_retention_days` | `7` | Days to retain backup files before automatic deletion. |
+| `enable_backup_import` | `false` | Triggers a one-time import job to restore a backup on the next `terraform apply`. |
+| `backup_source` | `"gcs"` | Source: `"gcs"` (filename in the backups bucket) or `"gdrive"` (Google Drive file ID). |
+| `backup_file` | `"backup.sql"` | For GCS: filename in the backups bucket. For Google Drive: the file ID from the share URL. |
+| `backup_format` | `"sql"` | Format: `sql`, `gz`, `tar`, `tgz`, `tar.gz`, `zip`, `auto`. |
+
+---
+
+## §8 · Integrations
+
+### §8.A · Redis Session Store
+
+When `max_instance_count > 1`, Redis is required. Without it each instance has its
+own session store and users are logged out on requests landing on different instances.
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_redis` | `false` | Configures Odoo to use Redis for session storage. Injects `SESSION_REDIS`, `REDIS_HOST`, and `REDIS_PORT` automatically. Requires `redis_host` to be set. |
+| `redis_host` | `""` | Redis hostname or IP. For Cloud Memorystore use the primary endpoint IP. Required when `enable_redis = true`. |
+| `redis_port` | `"6379"` | Redis TCP port (string). |
+| `redis_auth` | `""` | Redis AUTH password. Leave empty if authentication is not enabled. Treated as sensitive. |
+
+### §8.B · Custom SQL Scripts
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_custom_sql_scripts` | `false` | Runs `.sql` files from GCS against the Odoo database after provisioning. Useful for schema migrations or seed data. |
+| `custom_sql_scripts_bucket` | `""` | GCS bucket name (without `gs://`) containing the scripts. |
+| `custom_sql_scripts_path` | `""` | Path prefix within the bucket. Files are run in lexicographic order; use numeric prefixes (e.g. `001_schema.sql`). |
+| `custom_sql_scripts_use_root` | `false` | Run scripts as the root database user (for extension creation, role management). |
+
+### §8.C · Jobs & Scheduled Tasks
+
+User-defined initialization and cron jobs are passed through to `App_CloudRun` in
+addition to the two platform-managed jobs (`nfs-init` and `db-init` — see §9).
+
+| Variable | Default | Description |
+|---|---|---|
+| `initialization_jobs` | `[]` | Cloud Run jobs executed once during deployment. Each job requires at least one of `command`, `args`, or `script_path`. |
+| `cron_jobs` | `[]` | Recurring Cloud Scheduler-triggered jobs. Each entry requires `name` and `schedule` (cron format, UTC). |
+| `additional_services` | `[]` | Additional Cloud Run services deployed alongside Odoo (e.g. Celery workers, background processors). Each service URL can be injected into Odoo via `output_env_var_name`. |
+
+### §8.D · Observability
+
+| Variable | Default | Description |
+|---|---|---|
+| `uptime_check_config` | `{ enabled = true, path = "/" }` | Cloud Monitoring uptime check. `check_interval` and `timeout` use `"Ns"` format. |
+| `alert_policies` | `[]` | Metric-threshold alert policies. Each entry: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
+| `service_annotations` | `{}` | Kubernetes-style annotations on the Cloud Run service resource. |
+| `service_labels` | `{}` | Labels on the Cloud Run service (in addition to `resource_labels`). |
+
+---
+
+## §9 · Platform-Managed Behaviours
+
+These are set automatically by the module and cannot be overridden via input variables.
+
+### Initialisation Jobs (always run)
+
+| Job | What it does |
+|---|---|
+| `nfs-init` | Mounts the Filestore NFS share and creates `/mnt/filestore`, `/mnt/sessions`, and `/mnt/extra-addons` with ownership `101:101` (Odoo process user). Must succeed before the Cloud Run service starts. |
+| `db-init` | Creates the Odoo database and application user using credentials from Secret Manager. Runs after `nfs-init`. |
+
+### Environment Variables (always injected)
+
+| Variable | Value / Source | Notes |
+|---|---|---|
+| `ODOO_MASTER_PASS` | Secret Manager ref | Auto-generated 16-char alphanumeric password stored as `app<app_name><tenant_id><deployment_id>-master-password`. Used for Odoo's database management interface. |
+| `DB_PASSWORD` | Secret Manager ref | Auto-generated database password from App_CloudRun; injected for the Odoo application user. |
+| `ROOT_PASSWORD` | Secret Manager ref | Same auto-generated database password; used by `db-init` for superuser setup. |
+
+### Structural Wiring
+
+| Behaviour | Detail |
+|---|---|
+| `scripts_dir` | Resolved as `abspath("${module.odoo_app.path}/scripts")` — points to `Odoo_Common`'s bundled scripts. |
+| `module_env_vars` | Empty `{}`. All Odoo env vars are set via `environment_variables` or auto-injected by App_CloudRun. |
+| `module_secret_env_vars` | `{ ODOO_MASTER_PASS = module.odoo_app.odoo_master_pass_secret_id }`. |
+| `module_storage_buckets` | `module.odoo_app.storage_buckets` from Odoo_Common. |
+| `application_config` | Built from `Odoo_Common` config merged with `container_image_source`, `container_image`, `container_port`, and `container_resources` overrides when set. |
+
+---
+
+## §10 · Variable Reference
+
+Complete list of all input variables, grouped by UI section.
+
+| Group | Variable | Type | Default | Updatable |
+|---|---|---|---|---|
+| 0 | `module_description` | string | *(long description)* | — |
+| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/applications/cloud-run-app"` | — |
+| 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
+| 0 | `module_services` | list(string) | *(service list)* | — |
+| 0 | `credit_cost` | number | `100` | — |
+| 0 | `require_credit_purchases` | bool | `true` | — |
+| 0 | `enable_purge` | bool | `true` | — |
+| 0 | `public_access` | bool | `false` | — |
+| 0 | `deployment_id` | string | `""` | yes |
+| 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
+| 1 | `project_id` | string | — | yes |
+| 1 | `tenant_deployment_id` | string | `"demo"` | yes |
+| 1 | `support_users` | list(string) | `[]` | yes |
+| 1 | `resource_labels` | map(string) | `{}` | yes |
+| 2 | `application_name` | string | `"odoo"` | — |
+| 2 | `application_display_name` | string | `"Odoo ERP"` | yes |
+| 2 | `application_description` | string | `"Odoo ERP on Cloud Run"` | yes |
+| 2 | `application_version` | string | `"18.0"` | yes |
+| 3 | `deploy_application` | bool | `true` | yes |
+| 3 | `container_image_source` | string | `"custom"` | yes |
+| 3 | `container_image` | string | `""` | yes |
+| 3 | `container_build_config` | object | `{ enabled = true }` | yes |
+| 3 | `enable_image_mirroring` | bool | `true` | yes |
+| 3 | `cpu_limit` | string | `"1000m"` | yes |
+| 3 | `memory_limit` | string | `"1Gi"` | yes |
+| 3 | `container_resources` | object | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | yes |
+| 3 | `min_instance_count` | number | `0` | yes |
+| 3 | `max_instance_count` | number | `1` | yes |
+| 3 | `container_port` | number | `8069` | yes |
+| 3 | `container_protocol` | string | `"http1"` | yes |
+| 3 | `execution_environment` | string | `"gen2"` | yes |
+| 3 | `timeout_seconds` | number | `300` | yes |
+| 3 | `enable_cloudsql_volume` | bool | `true` | yes |
+| 3 | `cloudsql_volume_mount_path` | string | `"/cloudsql"` | yes |
+| 3 | `traffic_split` | list(object) | `[]` | yes |
+| 3 | `service_annotations` | map(string) | `{}` | yes |
+| 3 | `service_labels` | map(string) | `{}` | yes |
+| 4 | `ingress_settings` | string | `"all"` | yes |
+| 4 | `vpc_egress_setting` | string | `"PRIVATE_RANGES_ONLY"` | yes |
+| 4 | `enable_iap` | bool | `false` | yes |
+| 4 | `iap_authorized_users` | list(string) | `[]` | yes |
+| 4 | `iap_authorized_groups` | list(string) | `[]` | yes |
+| 5 | `environment_variables` | map(string) | `{}` | yes |
+| 5 | `secret_environment_variables` | map(string) | `{}` | yes |
+| 5 | `secret_rotation_period` | string | `"2592000s"` | yes |
+| 5 | `secret_propagation_delay` | number | `30` | yes |
+| 5 | `explicit_secret_values` | map(string) | `{}` | yes |
+| 6 | `backup_schedule` | string | `"0 2 * * *"` | yes |
+| 6 | `backup_retention_days` | number | `7` | yes |
+| 6 | `enable_backup_import` | bool | `false` | yes |
+| 6 | `backup_source` | string | `"gcs"` | yes |
+| 6 | `backup_file` | string | `"backup.sql"` | yes |
+| 6 | `backup_format` | string | `"sql"` | yes |
+| 7 | `enable_cicd_trigger` | bool | `false` | yes |
+| 7 | `github_repository_url` | string | `""` | yes |
+| 7 | `github_token` | string | `""` | yes |
+| 7 | `github_app_installation_id` | string | `""` | yes |
+| 7 | `cicd_trigger_config` | object | `{ branch_pattern = "^main$" }` | yes |
+| 7 | `enable_cloud_deploy` | bool | `false` | yes |
+| 7 | `cloud_deploy_stages` | list(object) | `[dev, staging, prod]` | yes |
+| 7 | `enable_binary_authorization` | bool | `false` | yes |
+| 8 | `enable_custom_sql_scripts` | bool | `false` | yes |
+| 8 | `custom_sql_scripts_bucket` | string | `""` | yes |
+| 8 | `custom_sql_scripts_path` | string | `""` | yes |
+| 8 | `custom_sql_scripts_use_root` | bool | `false` | yes |
+| 9 | `enable_cloud_armor` | bool | `false` | yes |
+| 9 | `admin_ip_ranges` | list(string) | `[]` | yes |
+| 9 | `application_domains` | list(string) | `[]` | yes |
+| 9 | `enable_cdn` | bool | `false` | yes |
+| 10 | `create_cloud_storage` | bool | `true` | yes |
+| 10 | `storage_buckets` | list(object) | `[{ name_suffix = "data" }]` | yes |
+| 10 | `enable_nfs` | bool | `true` | — |
+| 10 | `nfs_mount_path` | string | `"/mnt"` | — |
+| 10 | `gcs_volumes` | list(object) | `[]` | yes |
+| 11 | `application_database_name` | string | `"odoo"` | — |
+| 11 | `application_database_user` | string | `"odoo"` | — |
+| 11 | `database_password_length` | number | `16` | yes |
+| 11 | `enable_auto_password_rotation` | bool | `false` | yes |
+| 11 | `rotation_propagation_delay_sec` | number | `90` | yes |
+| 12 | `initialization_jobs` | list(object) | `[]` | yes |
+| 12 | `cron_jobs` | list(object) | `[]` | yes |
+| 12 | `additional_services` | list(object) | `[]` | yes |
+| 13 | `startup_probe` | object | `{ type = "TCP", initial_delay_seconds = 60, … }` | yes |
+| 13 | `liveness_probe` | object | `{ type = "HTTP", path = "/web/health", initial_delay_seconds = 120, … }` | yes |
+| 13 | `startup_probe_config` | object | `{ path = "/web/health", initial_delay_seconds = 180, … }` | yes |
+| 13 | `health_check_config` | object | `{ path = "/web/health", initial_delay_seconds = 30, … }` | yes |
+| 13 | `uptime_check_config` | object | `{ enabled = true, path = "/" }` | yes |
+| 13 | `alert_policies` | list(object) | `[]` | yes |
+| 20 | `enable_redis` | bool | `false` | yes |
+| 20 | `redis_host` | string | `""` | yes |
+| 20 | `redis_port` | string | `"6379"` | yes |
+| 20 | `redis_auth` | string | `""` | yes |
+| 21 | `enable_vpc_sc` | bool | `false` | yes |

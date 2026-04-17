@@ -3,242 +3,132 @@ title: "OpenEMR Cloud Run Configuration Guide"
 sidebar_label: "Cloud Run"
 ---
 
-# OpenEMR_CloudRun Module — Configuration Guide
+# OpenEMR CloudRun Module
 
-OpenEMR is a leading open-source electronic health records (EHR) and medical practice management platform used by clinics, hospitals, and healthcare providers worldwide. This module deploys OpenEMR on **Google Cloud Run Gen 2** using a custom container image built on Alpine 3.20 with Apache and PHP 8.3 FPM, backed by a managed Cloud SQL MySQL 8.0 instance connected via Unix socket, and a Filestore NFS volume for persistent patient document and sites directory storage.
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_CloudRun.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_CloudRun.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
-`OpenEMR_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds OpenEMR-specific application configuration, initialisation jobs, health probes, and runtime defaults on top.
+<br/>
 
-> **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
 
----
 
-## How This Guide Is Structured
 
-This guide documents only the variables that are **unique to `OpenEMR_CloudRun`** or that have **OpenEMR-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, CI/CD, custom SQL, load balancer, VPC Service Controls, and Cloud Deploy — refer directly to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md).
+`OpenEMR_CloudRun` deploys **OpenEMR Community Edition** — an open-source Electronic
+Health Records (EHR) and medical practice management platform — on Google Cloud Run
+Gen 2. The application runs on Apache with PHP 8.3 FPM on Alpine 3.20, backed by
+Cloud SQL MySQL 8.0 connected via Unix socket, and a Cloud Filestore NFS volume that
+persists the `sites` directory containing patient documents and application state.
 
-**Variables fully covered by the App_CloudRun guide:**
+`OpenEMR_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. All GCP
+infrastructure is provisioned by `App_CloudRun`. The module adds OpenEMR-specific
+configuration, a platform-managed `nfs-init` job for storage preparation and backup
+restoration, auto-generated admin password and database password secrets, and runtime
+defaults tuned for healthcare availability requirements.
 
-| Configuration Area | App_CloudRun_Guide Section | OpenEMR-Specific Notes |
-|---|---|---|
-| Module Metadata & Configuration | Group 0 | Different defaults for `module_description` and `module_documentation`. `resource_creator_identity` behaves identically. |
-| Project & Identity | Group 1 | Refer to base App_CloudRun module documentation. |
-| Runtime & Scaling | Group 3 | See [OpenEMR Runtime Configuration](#openemr-runtime-configuration) below. `container_port` defaults to `80`. `execution_environment` must remain `"gen2"` for NFS support. |
-| Environment Variables & Secrets | Group 4/5 | See [OpenEMR Environment Variables](#openemr-environment-variables) below for PHP and SMTP configuration. |
-| Observability & Health | Group 12/13 | See [OpenEMR Health Probes](#openemr-health-probes) below. The module uses **`startup_probe`** and **`liveness_probe`** (OpenEMR-specific names). |
-| Jobs & Scheduled Tasks | Group 12 | Refer to base App_CloudRun module documentation. The module injects a platform-managed `nfs-init` initialisation job — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| CI/CD & GitHub Integration | Group 7 | Refer to base App_CloudRun module documentation. Cloud Deploy (`enable_cloud_deploy`, `cloud_deploy_stages`) is also available. |
-| Storage — NFS | Group 10 | NFS is **enabled by default** (`enable_nfs = true`). Requires `execution_environment = "gen2"` (the default). See [NFS & Patient Document Storage](#nfs--patient-document-storage) below. |
-| Storage — GCS | Group 10 | Refer to base App_CloudRun module documentation. |
-| Redis Cache | Group 20 | See [Redis Session Store](#redis-session-store) below. `enable_redis` defaults to `true`. |
-| Backup & Maintenance | Group 6 | Refer to base App_CloudRun module documentation for `backup_schedule` and `backup_retention_days`. See also [Backup Import & Recovery](#backup-import--recovery) below. |
-| Custom Initialisation & SQL | Group 8 | Refer to base App_CloudRun module documentation. |
-| Access & Networking | Group 5 | Refer to base App_CloudRun module documentation (`ingress_settings`, `vpc_egress_setting`). See [OpenEMR Networking Defaults](#openemr-networking-defaults) below for OpenEMR-specific values. |
-| Load Balancer & CDN | Group 13 | Refer to base App_CloudRun module documentation (`enable_cloud_armor`, `enable_cdn`, `application_domains`). |
-| Identity-Aware Proxy | Group 5 | Refer to base App_CloudRun module documentation. |
-| VPC Service Controls | Group 21 | Refer to base App_CloudRun module documentation. |
-| Traffic Splitting | Group 3 | Refer to base App_CloudRun module documentation (`traffic_split`). |
+The module uses `OpenEMR_Common` as a sub-module to resolve application configuration,
+scripts, and storage bucket lists, which are passed into `App_CloudRun` via
+`application_config`, `module_env_vars`, `module_secret_env_vars`, and
+`module_storage_buckets`.
 
 ---
 
-## Platform-Managed Behaviours
+## §1 · Module Overview
 
-The following behaviours are applied automatically by `OpenEMR_CloudRun` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
-
-| Behaviour | Detail |
+| Attribute | Value |
 |---|---|
-| **NFS directory initialisation** | An `nfs-init` Cloud Run Job runs automatically on deployment. It mounts the Filestore NFS share, sets ownership of the `sites` directory to UID `1000` (the Apache process user), downloads and restores a backup if `backup_uri` is set, and regenerates `sqlconf.php` with current database credentials. This job must complete before OpenEMR can serve traffic. |
-| **OE_PASS secret** | An OpenEMR admin password is auto-generated and stored in Secret Manager. It is injected into the container as the `OE_PASS` environment variable via Secret Manager reference (not in plaintext). OpenEMR uses this to set the administrator account on first boot. |
-| **MYSQL_PASS secret** | The MySQL database password generated by `App_CloudRun` is automatically injected as the `MYSQL_PASS` environment variable. Do not define this manually in `secret_environment_variables`. |
-| **Cloud SQL Unix socket** | The Cloud SQL instance is connected via a Unix socket mounted at `/cloudsql` inside the container (`cloudsql_volume_mount_path = "/cloudsql"`). OpenEMR's `sqlconf.php` is configured to use this socket path. This is applied unconditionally and is not configurable by the user. |
-| **BACKUP_FILEID injection** | When `backup_uri` is set, it is automatically injected into the `nfs-init` job as the `BACKUP_FILEID` environment variable, triggering backup restoration during deployment. |
+| **Underlying platform** | `App_CloudRun` |
+| **Sub-module** | `OpenEMR_Common` |
+| **Application** | OpenEMR (Apache/PHP 8.3 FPM on Alpine 3.20) |
+| **Default version** | `7.0.4` |
+| **Database** | Cloud SQL MySQL 8.0 (required; Unix socket connection) |
+| **Persistent storage** | Cloud Filestore NFS (`enable_nfs = true` by default) |
+| **NFS mount path** | `/var/www/localhost/htdocs/openemr/sites` |
+| **Default container port** | `80` |
+| **Min instances default** | `1` (healthcare availability; scale-to-zero not recommended) |
+| **Max instances default** | `1` (increase only after configuring Redis) |
+| **Redis** | Enabled by default (`enable_redis = true`); uses NFS server IP when no host is set |
+| **Platform-managed job** | `nfs-init` (NFS setup + optional backup restoration) |
+| **Platform-managed secrets** | `OE_PASS` (admin password) + `MYSQL_PASS` (database password) |
 
----
+### Wrapper Architecture
 
-## OpenEMR Application Identity
-
-These variables define how the OpenEMR deployment is named across GCP resources.
-
-| Variable | Default | Options / Format | Description & Implications |
-|---|---|---|---|
-| `application_name` | `"openemr"` | `[a-z][a-z0-9-]{0,19}` | Internal identifier used as the base name for the Cloud Run service, Artifact Registry repository, Secret Manager secrets, and GCS buckets. Functionally identical to `application_name` in App_CloudRun. **Do not change after initial deployment.** |
-| `display_name` | `"OpenEMR"` | Any string | Human-readable name shown in the platform UI, Cloud Run service list, and monitoring dashboards. Can be updated freely without affecting resource names. |
-| `description` | `"Initialize NFS directories for OpenEMR and restore backup if provided"` | Any string | Description populates the Cloud Run service description field and is used in the `nfs-init` job. Can be updated freely. |
-| `application_version` | `"7.0.4"` | OpenEMR version string, e.g. `"7.0.4"`, `"7.0.3"` | The OpenEMR release version, used as the container image tag. When `container_image_source = "custom"`, changing this value triggers a new Cloud Build run that builds the specified version. |
-
-### Validating Application Identity
-
-```bash
-# Confirm the Cloud Run service exists with the expected name
-gcloud run services describe openemr \
-  --region=REGION \
-  --format="table(metadata.name,metadata.annotations['run.googleapis.com/description'])"
-
-# Confirm the running container image tag
-gcloud run services describe openemr \
-  --region=REGION \
-  --format="yaml(spec.template.spec.containers[0].image)"
+```
+OpenEMR_CloudRun (variables.tf / openemr.tf / main.tf)
+  └─ OpenEMR_Common   ← resolves app config, nfs-init job, admin-pass secret
+  └─ App_CloudRun     ← provisions all GCP infrastructure
 ```
 
+`OpenEMR_Common` outputs:
+- `config` → merged into `application_config` (with `BACKUP_FILEID` injected into `nfs-init` when `backup_uri` is set)
+- `admin_password_secret_id` → injected as `OE_PASS` via `module_secret_env_vars`
+- `storage_buckets` → merged into `module_storage_buckets`
+- `path` → used to resolve `scripts_dir`
+
+The `MYSQL_PASS` secret is sourced directly from `module.app_cloudrun.database_password_secret`
+and injected alongside `OE_PASS` via `module_secret_env_vars`.
+
 ---
 
-## OpenEMR Runtime Configuration
+## §2 · IAM & Project Identity
 
-OpenEMR is a PHP/MySQL EHR application running on Apache. It requires more CPU and memory than a typical Cloud Run service, particularly during initial database installation and on first boot.
-
-### Container Port
-
-| Variable | Default | Description & Implications |
+| Variable | Default | Description |
 |---|---|---|
-| `container_port` | `80` | The port Apache listens on inside the container. Cloud Run routes incoming HTTP traffic to this port. **Do not change this** unless you have modified the Apache configuration to bind on a different port. |
-
-### Execution Environment
-
-| Variable | Default | Description & Implications |
-|---|---|---|
-| `execution_environment` | `"gen2"` | **Must remain `"gen2"`** for NFS volume support. Cloud Run Gen 2 provides full Linux kernel compatibility required for NFS mounts. Setting `"gen1"` will prevent NFS volumes from mounting and OpenEMR will fail to start. |
-
-### Resource Sizing
-
-`OpenEMR_CloudRun` exposes `cpu_limit` and `memory_limit` as **dedicated top-level variables**.
-
-| Variable | Module Default | Recommended for Production |
-|---|---|---|
-| `cpu_limit` | `"2000m"` | `"2000m"` or higher |
-| `memory_limit` | `"4Gi"` | `"4Gi"` (minimum `"2Gi"`) |
-
-OpenEMR's PHP-FPM worker processes and database connection pool together consume 1.5–3 Gi of memory under normal load. Setting `memory_limit` below `"2Gi"` will cause OOM kills during peak clinical activity.
-
-> **Note:** Cloud Run CPU allocations above `"1000m"` require `min_instance_count >= 1` (CPU is always allocated). The default `cpu_limit = "2000m"` combined with `min_instance_count = 1` ensures CPU is always available, eliminating cold-start latency that would be unacceptable for clinical users.
-
-**Recommended production configuration:**
-```hcl
-cpu_limit          = "2000m"
-memory_limit       = "4Gi"
-min_instance_count = 1
-max_instance_count = 1
-```
-
-### Scaling Defaults
-
-| Variable | App_CloudRun Default | OpenEMR_CloudRun Default | Reason |
-|---|---|---|---|
-| `min_instance_count` | `0` | `1` | OpenEMR must always have at least one warm instance to provide immediate access for clinical users. Scale-to-zero is not appropriate for healthcare applications. |
-| `max_instance_count` | `1` | `1` | OpenEMR's PHP session handling relies on the shared NFS mount. Multi-instance deployments require Redis session storage (`enable_redis = true`). Increase only after confirming Redis is operational. |
-
-### Validating Runtime Configuration
-
-```bash
-# View CPU and memory limits on the latest revision
-gcloud run services describe openemr \
-  --region=REGION \
-  --format="yaml(spec.template.spec.containers[0].resources)"
-
-# Confirm the execution environment is gen2
-gcloud run services describe openemr \
-  --region=REGION \
-  --format="yaml(spec.template.metadata.annotations['run.googleapis.com/execution-environment'])"
-
-# Confirm minimum instance count
-gcloud run services describe openemr \
-  --region=REGION \
-  --format="yaml(spec.template.metadata.annotations['autoscaling.knative.dev/minScale'])"
-```
+| `project_id` | — | GCP project ID. All resources are created in this project. Grant the Owner role to `rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com`. |
+| `tenant_deployment_id` | `"demo"` | Short suffix appended to resource names. Use `"prod"`, `"clinic-1"`, etc. to deploy multiple environments in the same project. |
+| `resource_creator_identity` | `"rad-module-creator@…"` | Service account used by Terraform. Override with a project-specific SA for production. |
+| `support_users` | `[]` | Email addresses of users granted IAM access and added as monitoring alert recipients. |
+| `resource_labels` | `{}` | Key-value labels applied to all resources (cost centre, team, environment). |
+| `deployment_id` | `""` | Optional fixed deployment ID. A random hex ID is generated when left empty. |
 
 ---
 
-## OpenEMR Health Probes
+## §3 · Core Service Configuration
 
-OpenEMR performs database connection validation and, on first boot, runs the full database installation process. This startup phase can take 5–20 minutes on a fresh deployment. `OpenEMR_CloudRun` uses **two sets of probe variable names**:
+### §3.A · Application Identity
 
-- **`startup_probe` and `liveness_probe`** — the primary OpenEMR probe variables, passed to the OpenEMR_Common module. These are the variables you should configure.
-- `startup_probe_config` and `health_check_config` — the App_CloudRun base interface names, also present and passed to App_CloudRun directly.
+`display_name` and `description` are OpenEMR-specific aliases for
+`application_display_name` and `application_description`, passed directly to
+`OpenEMR_Common` and then to `App_CloudRun`.
 
-Prefer `startup_probe` and `liveness_probe` when tuning OpenEMR probe behaviour.
-
-| Variable | Default | Description & Implications |
+| Variable | Default | Description |
 |---|---|---|
-| `startup_probe` | `{ enabled = true, type = "TCP", path = "/", initial_delay_seconds = 0, timeout_seconds = 5, period_seconds = 10, failure_threshold = 12 }` | Uses a **TCP port check** on port 80 rather than an HTTP endpoint. A TCP probe is more reliable during OpenEMR's boot phase, when Apache may be accepting connections before PHP-FPM and the database are fully initialised. With `period_seconds = 10` and `failure_threshold = 12`, Cloud Run allows up to 120 seconds of startup time. **On first deployment** (when the database schema is created from scratch), consider increasing `failure_threshold` to `30` or setting `initial_delay_seconds = 120` to allow for the full OpenEMR installation wizard to complete. |
-| `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/interface/login/login.php", initial_delay_seconds = 0, timeout_seconds = 10, period_seconds = 30, failure_threshold = 10 }` | Periodically checks that the OpenEMR login page is reachable. The `/interface/login/login.php` endpoint returns HTTP 200 only when Apache, PHP-FPM, and the database connection are all operational. `period_seconds = 30` and `failure_threshold = 10` allow up to 5 minutes of recovery time before Cloud Run restarts the container. |
+| `application_name` | `"openemr"` | Internal identifier used as the base name for the Cloud Run service, Artifact Registry repository, Secret Manager secrets, and GCS buckets. **Do not change after initial deployment.** |
+| `display_name` | `"OpenEMR"` | Human-readable name shown in the platform UI, Cloud Run console, and monitoring dashboards. Safe to update at any time. |
+| `description` | `"Initialize NFS directories for OpenEMR and restore backup if provided"` | Brief description. Populates the Cloud Run service description field and the `nfs-init` job description. |
+| `application_version` | `"7.0.4"` | OpenEMR release version used as the container image tag. Changing this triggers a new image build. Supported values: `"7.0.4"`, `"7.0.3"`. |
 
-> **Relationship to App_CloudRun probes:** `startup_probe` configures the Cloud Run startup probe passed through OpenEMR_Common; `startup_probe_config` configures the startup probe directly on the App_CloudRun module. In practice, the OpenEMR-specific probe applied to the container revision is the one from `startup_probe` / `liveness_probe`.
+### §3.B · Resource Sizing
 
-### Validating Health Probes
+OpenEMR's PHP-FPM workers and database connection pool consume 1.5–3 Gi under
+normal clinical load. `cpu_limit` and `memory_limit` are built directly into
+`container_resources` passed to `App_CloudRun`.
 
-**Google Cloud Console:** Navigate to **Cloud Run → Services → openemr → Revisions**, select the latest revision, click **Container(s)**, and view the **Health checks** section.
+| Variable | Default | Description |
+|---|---|---|
+| `cpu_limit` | `"2000m"` | CPU per instance. `"2000m"` is the recommended minimum for production with concurrent clinical users. CPU above `"1000m"` requires `min_instance_count >= 1`. |
+| `memory_limit` | `"4Gi"` | Memory per instance. Minimum `"2Gi"` for production; below `"2Gi"` causes OOM kills during peak clinical activity. |
+| `min_instance_count` | `1` | **Default is `1`** (not 0). Scale-to-zero is not recommended for healthcare — clinicians require immediate access without cold-start delays. |
+| `max_instance_count` | `1` | Keep at `1` until Redis session store is operational; multiple instances without Redis cause PHP session loss. |
+| `timeout_seconds` | `300` | Maximum request duration (0–3600 s). Increase for long-running operations (report generation, large file uploads, patient data exports). |
+| `execution_environment` | `"gen2"` | **Must remain `"gen2"`** for NFS volume support. `"gen1"` will prevent NFS mounts and OpenEMR will fail to start. |
 
-```bash
-# View startup and liveness probe configuration on the latest revision
-gcloud run services describe openemr \
-  --region=REGION \
-  --format="yaml(spec.template.spec.containers[0].livenessProbe,spec.template.spec.containers[0].startupProbe)"
+### §3.C · Environment Variables & Secrets
 
-# Monitor Cloud Run logs for probe failures or startup errors
-gcloud logging read \
-  "resource.type=cloud_run_revision AND resource.labels.service_name=openemr AND severity>=WARNING" \
-  --project=PROJECT_ID \
-  --limit=20 \
-  --format="table(timestamp,severity,textPayload)"
+| Variable | Default | Description |
+|---|---|---|
+| `environment_variables` | `{}` | Plain-text environment variables injected at runtime. Use for PHP configuration (`PHP_MEMORY_LIMIT`), SMTP settings, and other non-sensitive config. |
+| `secret_environment_variables` | `{}` | Map of env var name → Secret Manager secret name. Values resolved at runtime; never stored in plaintext. |
+| `secret_rotation_period` | `"2592000s"` | Rotation reminder interval (30 days default). Set `null` to disable. |
+| `secret_propagation_delay` | `30` | Seconds to wait after secret creation before dependent operations proceed. |
 
-# Manually test the login page endpoint
-curl -s -o /dev/null -w "%{http_code}" https://SERVICE_URL/interface/login/login.php
-# Expect: 200
-```
-
----
-
-## OpenEMR Database Configuration
-
-OpenEMR requires MySQL 8.0. The database is provisioned by the underlying `App_CloudRun` module — see [App_CloudRun_Guide Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend) for the full variable reference.
-
-The following defaults are **OpenEMR-specific** and set appropriately out of the box:
-
-| Variable | App_CloudRun Default | OpenEMR_CloudRun Default | Description |
-|---|---|---|---|
-| `db_name` | `"appdb"` | `"openemr"` | The MySQL database created for OpenEMR. Injected into the `sqlconf.php` configuration file. |
-| `db_user` | `"appuser"` | `"openemr"` | The MySQL user for the application. Injected into the OpenEMR configuration. |
-| `database_type` | `"MYSQL_8_0"` | `"MYSQL_8_0"` | **Must remain MySQL 8.0.** OpenEMR does not support PostgreSQL or other database engines. |
-
-> **Database connection method:** OpenEMR connects to Cloud SQL via a **Unix socket** mounted at `/cloudsql` inside the container (`cloudsql_volume_mount_path`). This is the recommended connection method for Cloud Run services and is enforced by the platform. TCP connections to Cloud SQL are not used.
-
-### Validating Database Configuration
-
-```bash
-# Confirm the database and user were created
-gcloud sql databases list --instance=INSTANCE_NAME --project=PROJECT_ID
-
-gcloud sql users list --instance=INSTANCE_NAME --project=PROJECT_ID
-
-# Confirm the DB password secret is injected into the Cloud Run service
-gcloud run services describe openemr \
-  --region=REGION \
-  --format="yaml(spec.template.spec.containers[0].env)" | grep -E "MYSQL_PASS"
-```
-
----
-
-## OpenEMR Environment Variables
-
-The `environment_variables` variable (documented in [App_CloudRun_Guide Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets)) can be used to set any PHP or SMTP configuration consumed by the OpenEMR container's startup script.
-
-**Commonly configured environment variables:**
+**Configuring PHP and SMTP:**
 
 ```hcl
 environment_variables = {
-  PHP_MEMORY_LIMIT = "512M"    # PHP memory limit; increase for large patient datasets
-  SMTP_HOST        = ""        # SMTP server for outbound email notifications
-  SMTP_PORT        = "25"      # SMTP server port
-  SMTP_USER        = ""        # SMTP authentication username
-  SMTP_SSL         = "false"   # Set to "true" for TLS/SSL SMTP connections
-  EMAIL_FROM       = "openemr@example.com"
-}
-```
-
-Configure `PHP_MEMORY_LIMIT` before going live if your deployment handles large numbers of concurrent patients or generates complex clinical reports. Move sensitive values to `secret_environment_variables`:
-
-```hcl
-environment_variables = {
-  PHP_MEMORY_LIMIT = "512M"
+  PHP_MEMORY_LIMIT = "512M"           # increase for large patient datasets
   SMTP_HOST        = "smtp.sendgrid.net"
   SMTP_PORT        = "587"
   SMTP_USER        = "apikey"
@@ -251,135 +141,344 @@ secret_environment_variables = {
 }
 ```
 
-All other `environment_variables` and `secret_environment_variables` behaviour is identical to App_CloudRun — refer to [App_CloudRun_Guide Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets).
+### §3.D · Networking
+
+| Variable | Default | Description |
+|---|---|---|
+| `ingress_settings` | `"all"` | Traffic sources permitted to reach Cloud Run. For HIPAA-aligned deployments, consider `"internal-and-cloud-load-balancing"` combined with Cloud Armor WAF. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | Routes RFC 1918 traffic (Cloud SQL, NFS, Redis) via VPC. Change to `"ALL_TRAFFIC"` if all egress must pass through a centralised network appliance. |
+| `container_port` | `80` | Apache's listening port inside the container. Do not change unless the Apache config is modified. |
+| `container_protocol` | `"http1"` | HTTP version: `"http1"` or `"h2c"`. Use `"http1"` for OpenEMR. |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` | Path where the Cloud SQL Auth Proxy Unix socket is mounted. OpenEMR's `sqlconf.php` uses this socket path. |
+
+### §3.E · Container Image & Build
+
+OpenEMR_CloudRun does not expose `container_image_source` or `container_build_config`
+as user variables. Image building is managed entirely by `OpenEMR_Common` based on
+`application_version`. Set `enable_image_mirroring = false` only if the image is
+already available in a private registry.
+
+| Variable | Default | Description |
+|---|---|---|
+| `application_version` | `"7.0.4"` | OpenEMR version used as the container image tag. Changing this triggers a new Cloud Build image build. |
+| `enable_image_mirroring` | `true` | Mirrors the image into Artifact Registry before deploy. Recommended to avoid Docker Hub rate limits. |
+| `deploy_application` | `true` | Set `false` to provision infrastructure only (secrets, storage, IAM) without deploying the container. |
 
 ---
 
-## OpenEMR Networking Defaults
+## §4 · Advanced Security
 
-The following networking variables have OpenEMR-specific defaults that differ from the `App_CloudRun` base module. For the full variable reference and all available options, refer to [App_CloudRun_Guide Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-access--networking-cloud-run).
+### §4.A · Automated Password Rotation
 
-| Variable | App_CloudRun Default | OpenEMR_CloudRun Default | Recommendation |
-|---|---|---|---|
-| `ingress_settings` | `"all"` | `"all"` | Allows public internet access. For HIPAA-compliant deployments, consider `"internal-and-cloud-load-balancing"` combined with Cloud Armor WAF to restrict and protect access to the EHR. |
-| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | `"PRIVATE_RANGES_ONLY"` | Routes only RFC 1918 private IP traffic (Cloud SQL, NFS server, Redis) through the VPC. Public traffic exits directly. Change to `"ALL_TRAFFIC"` if your organisation requires all egress to pass through a centralised network appliance. |
+| Variable | Default | Description |
+|---|---|---|
+| `enable_auto_password_rotation` | `false` | Deploys a Cloud Run + Eventarc automated rotation job. Rotates the MySQL database password on the schedule set by `secret_rotation_period`. |
+| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts to pick up the new password. |
+| `secret_rotation_period` | `"2592000s"` | Rotation reminder interval. Also used as the trigger period when `enable_auto_password_rotation = true`. |
+
+### §4.B · VPC Service Controls
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_vpc_sc` | `false` | Enforces VPC-SC perimeter. Restricts GCP API calls to requests from inside the perimeter. Requires an existing VPC-SC perimeter in the project. |
+
+### §4.C · Identity-Aware Proxy
+
+IAP is particularly valuable for EHR applications — it restricts access to
+authenticated clinical staff before any request reaches OpenEMR.
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_iap` | `false` | Enables Cloud Run native IAP. Requires Google identity authentication before the application is accessible. |
+| `iap_authorized_users` | `[]` | Users granted access: `"user:doctor@clinic.com"`, `"serviceAccount:sa@project.iam.gserviceaccount.com"`. |
+| `iap_authorized_groups` | `[]` | Google Groups granted access: `"group:clinical-staff@clinic.com"`. Preferred for clinic-level access management. |
+
+### §4.D · Cloud Armor & CDN
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_cloud_armor` | `false` | Provisions a Global HTTPS Load Balancer with Cloud Armor WAF (OWASP Top 10, DDoS). Required when `application_domains` is set. |
+| `application_domains` | `[]` | Custom domains. Google-managed SSL certificates are provisioned per domain. DNS must point to the GLB IP before cert provisioning completes. |
+| `enable_cdn` | `false` | Enables Cloud CDN on the GLB to cache static assets at edge. Only used when `enable_cloud_armor = true`. |
+| `admin_ip_ranges` | `[]` | IP CIDR ranges permitted for direct administrative access. |
+
+### §4.E · Binary Authorization
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_binary_authorization` | `false` | Enforces Binary Authorization policy. Images must carry a valid attestation before deployment. Requires a Binary Authorization policy and attestor to be configured in the project. |
 
 ---
 
-## NFS & Patient Document Storage
+## §5 · Traffic & Ingress
 
-OpenEMR stores patient-uploaded documents, the `sites` directory configuration, and application state on a shared NFS volume. NFS is **enabled by default** (`enable_nfs = true`) because OpenEMR cannot function correctly without persistent shared storage across container restarts.
+### §5.A · Traffic Splitting
 
-| Variable | Default | Options / Format | Description & Implications |
-|---|---|---|---|
-| `enable_nfs` | `true` | `true` / `false` | **Must remain `true`** for a functional OpenEMR deployment. Setting to `false` will prevent the `nfs-init` job from running and OpenEMR will fail to persist patient data across instance restarts. |
-| `nfs_mount_path` | `"/var/www/localhost/htdocs/openemr/sites"` | Filesystem path | The path inside the container where the NFS volume is mounted. This maps directly to OpenEMR's `sites` directory. **Do not change this** unless you have modified the OpenEMR container to use a different sites path. |
+| Variable | Default | Description |
+|---|---|---|
+| `traffic_split` | `[]` | Canary or blue-green traffic allocations across Cloud Run revisions. All entries must sum to 100%. Leave empty to route all traffic to the latest revision. |
 
-> **Gen 2 requirement:** NFS volume mounts require `execution_environment = "gen2"`, which is the default. Never change the execution environment to `"gen1"` when NFS is enabled.
-
-For the full NFS variable reference (Filestore instance sizing, capacity, etc.), refer to [App_CloudRun_Guide Group 9](../App_CloudRun/App_CloudRun_Guide.md#group-9-storage--filesystem--nfs).
-
-### Validating NFS Storage
-
-```bash
-# Confirm the nfs-init job completed successfully
-gcloud run jobs executions list \
-  --job=openemr-nfs-init \
-  --region=REGION \
-  --format="table(name,status.conditions[0].type,status.startTime,status.completionTime)"
-
-# View nfs-init job logs to confirm directory setup and any backup restoration
-gcloud logging read \
-  "resource.type=cloud_run_job AND resource.labels.job_name=openemr-nfs-init" \
-  --project=PROJECT_ID \
-  --limit=30 \
-  --order=asc \
-  --format="table(timestamp,severity,textPayload)"
+**Example — canary deployment:**
+```hcl
+traffic_split = [
+  { type = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST",   percent = 90 },
+  { type = "TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION", percent = 10, revision = "openemr-00003-abc" },
+]
 ```
 
----
+### §5.B · Service Annotations & Labels
 
-## Redis Session Store
-
-OpenEMR supports Redis as a shared PHP session store. Redis is **enabled by default** (`enable_redis = true`) and is **required** for multi-instance deployments (`max_instance_count > 1`) — without it, each instance has its own PHP session store and users will experience session loss when their requests land on a different instance.
-
-| Variable | Default | Options / Format | Description & Implications |
-|---|---|---|---|
-| `enable_redis` | `true` | `true` / `false` | When `true`, OpenEMR is configured to use Redis for PHP session storage via `session.save_handler = redis`. The `REDIS_SERVER` environment variable is set automatically. If `redis_host` is left blank, the module defaults to using the NFS server IP, which runs a co-located Redis instance. |
-| `redis_host` | `""` | IP address or hostname | The Redis server hostname or IP. When left empty and `enable_redis = true`, the module uses the NFS server IP. Override with a dedicated Google Memorystore for Redis instance IP for higher-availability production deployments. |
-| `redis_port` | `"6379"` | Port string | The Redis port. Change only if your Redis instance uses a non-standard port. |
-
-For a full description of the Redis variables and Memorystore configuration guidance, refer to [App_CloudRun_Guide Group 20](../App_CloudRun/App_CloudRun_Guide.md#group-20-redis-cache).
-
-### Validating Redis Configuration
-
-```bash
-# Confirm the REDIS_SERVER environment variable is set on the Cloud Run service
-gcloud run services describe openemr \
-  --region=REGION \
-  --format="yaml(spec.template.spec.containers[0].env)" | grep -E "REDIS"
-```
+| Variable | Default | Description |
+|---|---|---|
+| `service_annotations` | `{}` | Kubernetes-style annotations on the Cloud Run service resource. |
+| `service_labels` | `{}` | Labels on the Cloud Run service (in addition to `resource_labels`). |
 
 ---
 
-## Backup Import & Recovery
+## §6 · CI/CD Integration
 
-In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_CloudRun_Guide Group 6](../App_CloudRun/App_CloudRun_Guide.md#group-6-backup--maintenance)), `OpenEMR_CloudRun` supports a one-time backup restoration during deployment via the `nfs-init` job. Use this to migrate an existing OpenEMR instance to GCP or to seed a new environment with production data.
+### §6.A · GitHub Integration
 
-| Variable | Default | Options / Format | Description & Implications |
-|---|---|---|---|
-| `enable_backup_import` | `false` | `true` / `false` | When `true`, the `backup_uri` is injected into the `nfs-init` job as `BACKUP_FILEID`, triggering restoration of the backup during deployment. Configure `backup_source`, `backup_uri`, and `backup_format` before enabling. |
-| `backup_source` | `"gcs"` | `gcs` / `gdrive` | `"gcs"` to import from a Cloud Storage path; `"gdrive"` to import from a Google Drive file ID. GCS is recommended for production due to better security and performance. |
-| `backup_uri` | `""` | GCS URI or Drive file ID | For GCS: the full object URI (e.g., `"gs://my-bucket/backups/openemr.sql"`). For Google Drive: the file ID from the share URL. |
-| `backup_format` | `"sql"` | `sql` / `tar` / `gz` / `tgz` / `tar.gz` / `zip` | The format of the backup file. OpenEMR backups are typically MySQL dumps in `"sql"` or `"gz"` format. |
+| Variable | Default | Description |
+|---|---|---|
+| `enable_cicd_trigger` | `false` | Enables a Cloud Build trigger that automatically builds and deploys when code is pushed to the configured repository. |
+| `github_repository_url` | `""` | Full HTTPS URL of the GitHub repository. Required when `enable_cicd_trigger = true`. |
+| `github_token` | `""` | GitHub PAT for authentication. Mutually exclusive with `github_app_installation_id`. |
+| `github_app_installation_id` | `""` | Cloud Build GitHub App installation ID. Preferred for organisation repositories. |
+| `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Advanced trigger config: `branch_pattern`, `included_files`, `ignored_files`, `trigger_name`, `substitutions`. |
 
-> **OpenEMR backup scope:** The `nfs-init` job restores both the MySQL database dump and the NFS `sites` directory content from the backup archive. The backup should contain the complete OpenEMR `sites` directory and the MySQL database for a full restoration.
+### §6.B · Cloud Deploy
 
-### Validating Backup Import
-
-```bash
-# Confirm the nfs-init job (which performs the restore) completed successfully
-gcloud run jobs executions list \
-  --job=openemr-nfs-init \
-  --region=REGION \
-  --format="table(name,status.conditions[0].type,status.startTime,status.completionTime)"
-
-# View restore logs for any errors
-gcloud logging read \
-  "resource.type=cloud_run_job AND resource.labels.job_name=openemr-nfs-init" \
-  --project=PROJECT_ID \
-  --limit=50 \
-  --order=asc \
-  --format="table(timestamp,severity,textPayload)"
-```
+| Variable | Default | Description |
+|---|---|---|
+| `enable_cloud_deploy` | `false` | Switches CI/CD from direct Cloud Build deployments to a managed Cloud Deploy pipeline. Requires `enable_cicd_trigger = true`. |
+| `cloud_deploy_stages` | `[dev, staging, prod]` | Ordered promotion stages. Each stage: `name`, `require_approval`, `auto_promote`. `prod` requires approval by default. |
 
 ---
 
-## Deployment Prerequisites & Validation
+## §7 · Reliability & Data
 
-After deploying `OpenEMR_CloudRun`, confirm the deployment is healthy:
+### §7.A · Health Probes
 
-```bash
-# Confirm the nfs-init job completed successfully
-gcloud run jobs executions list \
-  --region=REGION \
-  --format="table(name,status.conditions[0].type,status.startTime,status.completionTime)"
+OpenEMR performs database connection validation and, on first boot, runs the full
+database installation process (5–20 minutes). `startup_probe` and `liveness_probe`
+are passed both to `OpenEMR_Common` and — as `startup_probe_config` /
+`health_check_config` — directly to `App_CloudRun`.
 
-# View nfs-init job logs to confirm storage preparation
-gcloud logging read \
-  "resource.type=cloud_run_job AND resource.labels.job_name=openemr-nfs-init" \
-  --project=PROJECT_ID \
-  --limit=20
+| Variable | Default | Description |
+|---|---|---|
+| `startup_probe` | `{ enabled = true, type = "TCP", path = "/", initial_delay_seconds = 0, timeout_seconds = 5, period_seconds = 10, failure_threshold = 12 }` | TCP port check during startup. More reliable than HTTP during Apache/PHP-FPM initialisation. With `period_seconds = 10` and `failure_threshold = 12`, allows 120 s of startup time. **On first deployment** (full DB schema install), increase `failure_threshold` to `30`. |
+| `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/interface/login/login.php", initial_delay_seconds = 0, timeout_seconds = 10, period_seconds = 30, failure_threshold = 10 }` | HTTP check on the OpenEMR login page. Returns 200 only when Apache, PHP-FPM, and the database connection are all operational. `period_seconds = 30` with `failure_threshold = 10` allows 5 min of recovery. |
 
-# Confirm the Cloud Run service is deployed and retrieve its URL
-gcloud run services describe openemr \
-  --region=REGION \
-  --format="table(status.url,status.conditions[0].type)"
+### §7.B · Storage
 
-# Confirm the OE_PASS admin password secret was created in Secret Manager
-gcloud secrets list --project=PROJECT_ID --filter="name:openemr" | grep password
+| Variable | Default | Description |
+|---|---|---|
+| `enable_nfs` | `true` | **Must remain `true`** for a functional OpenEMR deployment. Provisions Cloud Filestore NFS. OpenEMR cannot persist patient data without shared NFS storage. |
+| `nfs_mount_path` | `"/var/www/localhost/htdocs/openemr/sites"` | Container mount path for the NFS volume. Maps directly to OpenEMR's `sites` directory. Do not change unless the container uses a different path. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. `OpenEMR_Common` may provision additional buckets via `module_storage_buckets`. |
+| `create_cloud_storage` | `true` | Set `false` to skip GCS bucket provisioning. |
+| `gcs_volumes` | `[]` | GCS buckets to mount as GCS Fuse volumes inside the container (passed to both `OpenEMR_Common` and `App_CloudRun`). |
 
-# Test the OpenEMR login page
-curl -s -o /dev/null -w "%{http_code}" https://SERVICE_URL/interface/login/login.php
-# Expect: 200
-```
+### §7.C · Database
+
+OpenEMR requires MySQL 8.0. `db_name` and `db_user` are aliases for
+`application_database_name` and `application_database_user`. The Cloud SQL
+connection uses a Unix socket at `cloudsql_volume_mount_path`; TCP connections
+are not used.
+
+| Variable | Default | Description |
+|---|---|---|
+| `db_name` | `"openemr"` | MySQL database name. Injected into `sqlconf.php`. **Do not change after initial deployment.** |
+| `db_user` | `"openemr"` | MySQL user. Password auto-generated and injected as `MYSQL_PASS`. |
+| `database_password_length` | `16` | Auto-generated password length (8–64 characters). |
+| `enable_auto_password_rotation` | `false` | Automates password rotation via Cloud Run + Eventarc. See §4.A. |
+| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts. |
+
+### §7.D · Backup & Recovery
+
+`backup_uri` is the OpenEMR-specific name for `backup_file`. The mapping is applied
+in `main.tf` (`backup_file = var.backup_uri`). When `backup_uri` is set, it is also
+injected into the `nfs-init` job as `BACKUP_FILEID`, triggering backup restoration
+during deployment.
+
+| Variable | Default | Description |
+|---|---|---|
+| `backup_schedule` | `"0 2 * * *"` | Cron expression (UTC) for automated backups. Leave empty to disable. Daily backups strongly recommended for healthcare data. |
+| `backup_retention_days` | `7` | Days to retain backup files. Consider regulatory retention requirements before reducing. |
+| `enable_backup_import` | `false` | Triggers backup restoration via the `nfs-init` job. The `backup_uri` value is injected as `BACKUP_FILEID`. |
+| `backup_source` | `"gcs"` | Source: `"gcs"` (full GCS URI) or `"gdrive"` (Google Drive file ID). |
+| `backup_uri` | `""` | For GCS: e.g. `"gs://my-bucket/backups/openemr.sql"`. Mapped to `backup_file` in App_CloudRun. |
+| `backup_format` | `"sql"` | Format: `sql`, `gz`, `tar`, `tgz`, `tar.gz`, `zip`. |
+
+---
+
+## §8 · Integrations
+
+### §8.A · Redis Session Store
+
+Redis is **enabled by default** (`enable_redis = true`) and is required for
+multi-instance deployments. Without Redis, each Cloud Run instance has its own
+PHP session store and clinical users lose their sessions when requests land on
+different instances. When `redis_host` is left empty, the module defaults to
+using the NFS server IP as the Redis host (the NFS server runs a co-located
+Redis instance).
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_redis` | `true` | Configures OpenEMR to use Redis for PHP session storage. Injects `REDIS_SERVER` automatically. If `redis_host` is empty, uses the NFS server IP. |
+| `redis_host` | `""` | Redis hostname or IP. Leave empty to use the NFS server IP. Override with a dedicated Cloud Memorystore instance for higher-availability production deployments. |
+| `redis_port` | `"6379"` | Redis TCP port (string). |
+| `redis_auth` | `""` | Redis AUTH password. Leave empty if authentication is not enabled. Treated as sensitive. Passed to `App_CloudRun` but not `OpenEMR_Common`. |
+
+### §8.B · Custom SQL Scripts
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_custom_sql_scripts` | `false` | Runs `.sql` files from GCS against the OpenEMR MySQL database after provisioning. |
+| `custom_sql_scripts_bucket` | `""` | GCS bucket name (without `gs://`) containing the scripts. |
+| `custom_sql_scripts_path` | `""` | Path prefix within the bucket. Files run in lexicographic order; use numeric prefixes (e.g. `001_schema.sql`). |
+| `custom_sql_scripts_use_root` | `false` | Run scripts as the root database user (for privilege-requiring operations). |
+
+### §8.C · Jobs & Scheduled Tasks
+
+User-defined initialization and cron jobs supplement the platform-managed `nfs-init`
+job (see §9). Both are passed through to `App_CloudRun` via `initialization_jobs`
+and `cron_jobs`.
+
+| Variable | Default | Description |
+|---|---|---|
+| `initialization_jobs` | `[]` | Cloud Run jobs executed once during deployment. Each job requires at least one of `command`, `args`, or `script_path`. Set `mount_nfs = true` for jobs that need access to the sites directory. |
+| `cron_jobs` | `[]` | Recurring Cloud Scheduler-triggered jobs. Each entry requires `name` and `schedule` (cron format, UTC). Set `mount_nfs = true` for jobs that access patient documents. |
+
+### §8.D · Observability
+
+| Variable | Default | Description |
+|---|---|---|
+| `uptime_check_config` | `{ enabled = true, path = "/" }` | Cloud Monitoring uptime check. `check_interval` and `timeout` use `"Ns"` format. |
+| `alert_policies` | `[]` | Metric-threshold alert policies. Each entry: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
+| `service_annotations` | `{}` | Kubernetes-style annotations on the Cloud Run service resource. |
+| `service_labels` | `{}` | Labels on the Cloud Run service (in addition to `resource_labels`). |
+
+---
+
+## §9 · Platform-Managed Behaviours
+
+These are set automatically by the module and cannot be overridden via input variables.
+
+### Initialisation Job
+
+| Job | What it does |
+|---|---|
+| `nfs-init` | Mounts the Cloud Filestore NFS share; sets ownership of the `sites` directory to UID `1000` (Apache process user); downloads and restores the backup if `backup_uri` is set (injected as `BACKUP_FILEID`); regenerates `sqlconf.php` with current database credentials. **Must complete before the Cloud Run service starts.** |
+
+### Secrets (always injected)
+
+| Variable | Value / Source | Notes |
+|---|---|---|
+| `OE_PASS` | Secret Manager ref | Auto-generated OpenEMR admin password stored in Secret Manager. Used to set the administrator account on first boot. |
+| `MYSQL_PASS` | `module.app_cloudrun.database_password_secret` | Auto-generated MySQL password from App_CloudRun. Do not define this in `secret_environment_variables`. |
+
+### Structural Wiring
+
+| Behaviour | Detail |
+|---|---|
+| Cloud SQL Unix socket | Connected via Unix socket at `cloudsql_volume_mount_path = "/cloudsql"`. OpenEMR's `sqlconf.php` uses this socket path. TCP connections are not used. This is enforced unconditionally. |
+| `scripts_dir` | Resolved as `abspath("${module.openemr_app.path}/scripts")` — points to `OpenEMR_Common`'s bundled scripts. |
+| `module_env_vars` | Sourced from `module.openemr_app.config.environment_variables` (OpenEMR_Common's resolved env vars). |
+| `startup_probe` → `startup_probe_config` | `var.startup_probe` is passed as `startup_probe_config` to `App_CloudRun` in `main.tf`. |
+| `liveness_probe` → `health_check_config` | `var.liveness_probe` is passed as `health_check_config` to `App_CloudRun` in `main.tf`. |
+| `backup_uri` → `backup_file` | `var.backup_uri` is mapped to `backup_file` in `main.tf`. Also injected into the `nfs-init` job as `BACKUP_FILEID`. |
+
+---
+
+## §10 · Variable Reference
+
+Complete list of all input variables, grouped by UI section.
+
+| Group | Variable | Type | Default | Updatable |
+|---|---|---|---|---|
+| 0 | `module_description` | string | *(long description)* | — |
+| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/applications/openemr"` | — |
+| 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
+| 0 | `module_services` | list(string) | *(service list)* | — |
+| 0 | `credit_cost` | number | `100` | — |
+| 0 | `require_credit_purchases` | bool | `true` | — |
+| 0 | `enable_purge` | bool | `true` | — |
+| 0 | `public_access` | bool | `false` | — |
+| 0 | `deployment_id` | string | `""` | yes |
+| 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
+| 1 | `project_id` | string | — | yes |
+| 1 | `tenant_deployment_id` | string | `"demo"` | yes |
+| 1 | `support_users` | list(string) | `[]` | yes |
+| 1 | `resource_labels` | map(string) | `{}` | yes |
+| 2 | `application_name` | string | `"openemr"` | — |
+| 2 | `display_name` | string | `"OpenEMR"` | yes |
+| 2 | `description` | string | `"Initialize NFS directories for OpenEMR and restore backup if provided"` | yes |
+| 2 | `application_version` | string | `"7.0.4"` | yes |
+| 3 | `deploy_application` | bool | `true` | yes |
+| 3 | `cpu_limit` | string | `"2000m"` | yes |
+| 3 | `memory_limit` | string | `"4Gi"` | yes |
+| 3 | `min_instance_count` | number | `1` | yes |
+| 3 | `max_instance_count` | number | `1` | yes |
+| 3 | `container_port` | number | `80` | yes |
+| 3 | `execution_environment` | string | `"gen2"` | yes |
+| 3 | `timeout_seconds` | number | `300` | yes |
+| 3 | `service_annotations` | map(string) | `{}` | yes |
+| 3 | `service_labels` | map(string) | `{}` | yes |
+| 3 | `traffic_split` | list(object) | `[]` | yes |
+| 3 | `container_protocol` | string | `"http1"` | yes |
+| 3 | `cloudsql_volume_mount_path` | string | `"/cloudsql"` | yes |
+| 3 | `enable_image_mirroring` | bool | `true` | yes |
+| 4 | `ingress_settings` | string | `"all"` | yes |
+| 4 | `vpc_egress_setting` | string | `"PRIVATE_RANGES_ONLY"` | yes |
+| 4 | `enable_iap` | bool | `false` | yes |
+| 4 | `iap_authorized_users` | list(string) | `[]` | yes |
+| 4 | `iap_authorized_groups` | list(string) | `[]` | yes |
+| 5 | `environment_variables` | map(string) | `{}` | yes |
+| 5 | `secret_environment_variables` | map(string) | `{}` | yes |
+| 5 | `secret_rotation_period` | string | `"2592000s"` | yes |
+| 5 | `secret_propagation_delay` | number | `30` | yes |
+| 6 | `backup_schedule` | string | `"0 2 * * *"` | yes |
+| 6 | `backup_retention_days` | number | `7` | yes |
+| 6 | `enable_backup_import` | bool | `false` | yes |
+| 6 | `backup_source` | string | `"gcs"` | yes |
+| 6 | `backup_uri` | string | `""` | yes |
+| 6 | `backup_format` | string | `"sql"` | yes |
+| 7 | `enable_cicd_trigger` | bool | `false` | yes |
+| 7 | `github_repository_url` | string | `""` | yes |
+| 7 | `github_token` | string | `""` | yes |
+| 7 | `github_app_installation_id` | string | `""` | yes |
+| 7 | `cicd_trigger_config` | object | `{ branch_pattern = "^main$" }` | yes |
+| 7 | `enable_cloud_deploy` | bool | `false` | yes |
+| 7 | `cloud_deploy_stages` | list(object) | `[dev, staging, prod]` | yes |
+| 7 | `enable_binary_authorization` | bool | `false` | yes |
+| 8 | `enable_custom_sql_scripts` | bool | `false` | yes |
+| 8 | `custom_sql_scripts_bucket` | string | `""` | yes |
+| 8 | `custom_sql_scripts_path` | string | `""` | yes |
+| 8 | `custom_sql_scripts_use_root` | bool | `false` | yes |
+| 9 | `enable_cloud_armor` | bool | `false` | yes |
+| 9 | `admin_ip_ranges` | list(string) | `[]` | yes |
+| 9 | `application_domains` | list(string) | `[]` | yes |
+| 9 | `enable_cdn` | bool | `false` | yes |
+| 10 | `create_cloud_storage` | bool | `true` | yes |
+| 10 | `storage_buckets` | list(object) | `[{ name_suffix = "data" }]` | yes |
+| 10 | `enable_nfs` | bool | `true` | — |
+| 10 | `nfs_mount_path` | string | `"/var/www/localhost/htdocs/openemr/sites"` | — |
+| 10 | `gcs_volumes` | list(object) | `[]` | yes |
+| 11 | `db_name` | string | `"openemr"` | — |
+| 11 | `db_user` | string | `"openemr"` | — |
+| 11 | `database_password_length` | number | `16` | yes |
+| 11 | `enable_auto_password_rotation` | bool | `false` | yes |
+| 11 | `rotation_propagation_delay_sec` | number | `90` | yes |
+| 12 | `initialization_jobs` | list(object) | `[]` | yes |
+| 12 | `cron_jobs` | list(object) | `[]` | yes |
+| 13 | `startup_probe` | object | `{ type = "TCP", initial_delay_seconds = 0, failure_threshold = 12, … }` | yes |
+| 13 | `liveness_probe` | object | `{ type = "HTTP", path = "/interface/login/login.php", failure_threshold = 10, … }` | yes |
+| 13 | `uptime_check_config` | object | `{ enabled = true, path = "/" }` | yes |
+| 13 | `alert_policies` | list(object) | `[]` | yes |
+| 20 | `enable_redis` | bool | `true` | yes |
+| 20 | `redis_host` | string | `""` | yes |
+| 20 | `redis_port` | string | `"6379"` | yes |
+| 20 | `redis_auth` | string | `""` | yes |
+| 21 | `enable_vpc_sc` | bool | `false` | yes |

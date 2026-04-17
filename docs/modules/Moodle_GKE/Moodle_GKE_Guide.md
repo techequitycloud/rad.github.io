@@ -3,7 +3,18 @@ title: "Moodle GKE Configuration Guide"
 sidebar_label: "GKE"
 ---
 
-# Moodle_GKE Module — Configuration Guide
+# Moodle GKE Module
+
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 
 Moodle is the world's most popular open-source Learning Management System (LMS), used by educational institutions, corporations, and online learning platforms worldwide. This module deploys Moodle on **GKE Autopilot** using a custom PHP 8.3/Apache container, backed by a managed Cloud SQL PostgreSQL instance and shared NFS storage for course materials.
 
@@ -15,30 +26,42 @@ Moodle is the world's most popular open-source Learning Management System (LMS),
 
 ## How This Guide Is Structured
 
-This guide documents only the variables that are **unique to `Moodle_GKE`** or that have **Moodle-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, storage, CI/CD, observability, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE_Guide.md).
+This guide documents only the variables that are **unique to `Moodle_GKE`** or that have **Moodle-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, storage, CI/CD, observability, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
 **Variables fully covered by the App_GKE guide:**
 
-| Configuration Area | App_GKE_Guide Section | Moodle-Specific Notes |
+| Configuration Area | App_GKE.md Section | Moodle-Specific Notes |
 |---|---|---|
-| Module Metadata & Configuration | Group 0 | Different defaults for `module_description` and `module_documentation`. |
-| Project & Identity | Group 1 | Refer to base App_GKE module documentation. |
-| Runtime & Scaling | Group 3 | See [Moodle Runtime Configuration](#moodle-runtime-configuration) below for `cpu_limit`, `memory_limit`, and Moodle-specific scaling defaults. `container_image_source` defaults to `"custom"` — Moodle is built from a Dockerfile. |
-| Environment Variables & Secrets | Group 4 | See [Moodle Environment Variables](#moodle-environment-variables) below for Moodle-specific injected defaults. |
-| GKE Backend Configuration | Group 5 | `enable_custom_domain` defaults to `true` and `reserve_static_ip` defaults to `true`. See [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| Jobs & Scheduled Tasks | Group 6 | See [Platform-Managed Behaviours](#platform-managed-behaviours) for the auto-provisioned Moodle cron Cloud Scheduler job. |
-| CI/CD & GitHub Integration | Group 7 | Refer to base App_GKE module documentation. |
-| Storage — NFS | Group 8 | `enable_nfs` defaults to `true`. NFS is the active Moodle data directory (`moodledata`). See [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| Storage — GCS | Group 9 | Refer to base App_GKE module documentation. An additional `moodle-data` GCS bucket is provisioned automatically. |
-| Database Configuration | Group 10 | See [Moodle Database Configuration](#moodle-database-configuration) below for the `db_name` and `db_user` variable naming. |
-| Backup Schedule & Retention | Group 11 | Refer to base App_GKE module documentation. See [Backup Import & Recovery](#backup-import--recovery) below for the `backup_uri` naming difference. |
-| Custom SQL Scripts | Group 12 | Refer to base App_GKE module documentation. |
-| Observability & Health | Group 13 | See [Moodle Health Probes](#moodle-health-probes) below for the `startup_probe` and `liveness_probe` variables and their `/health.php` defaults. |
-| Reliability Policies | Group 14 | Refer to base App_GKE module documentation. |
-| Resource Quota | Group 15 | Refer to base App_GKE module documentation. |
-| Custom Domain, Static IP & Network | Group 16 | `enable_custom_domain` defaults to `true`. See [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| Identity-Aware Proxy | Group 17 | Refer to base App_GKE module documentation. |
-| Cloud Armor | Group 18 | Refer to base App_GKE module documentation. |
+| Module Metadata & Configuration | §1 Module Overview | Different defaults for `module_description` and `module_documentation`. |
+| Project & Identity | §2 IAM & Access Control | Refer to base App_GKE module documentation. |
+| Runtime & Scaling | §3.A Compute (GKE Autopilot) | See [Moodle Runtime Configuration](#moodle-runtime-configuration) below for `cpu_limit`, `memory_limit`, and Moodle-specific scaling defaults. `container_image_source` defaults to `"custom"` — Moodle is built from a Dockerfile. |
+| Environment Variables & Secrets | §3 Core Service Configuration | See [Moodle Environment Variables](#moodle-environment-variables) below for Moodle-specific injected defaults. |
+| GKE Backend Configuration | §3.A Compute (GKE Autopilot) | `enable_custom_domain` defaults to `true` and `reserve_static_ip` defaults to `true`. See [Platform-Managed Behaviours](#platform-managed-behaviours). |
+| Networking & Network Policies | §3.D Networking & Network Policies | Identical. |
+| Jobs & Scheduled Tasks | §3.E Initialization Jobs & CronJobs | See [Platform-Managed Behaviours](#platform-managed-behaviours) for the auto-provisioned Moodle cron Cloud Scheduler job. |
+| Additional Services | §3.F Additional Services | Identical. |
+| CI/CD & GitHub Integration | §6 CI/CD & Delivery | Refer to base App_GKE module documentation. |
+| Storage — NFS | §3.C Storage (NFS / GCS / GCS Fuse) | `enable_nfs` defaults to `true`. NFS is the active Moodle data directory (`moodledata`). See [Platform-Managed Behaviours](#platform-managed-behaviours). |
+| Storage — GCS | §3.C Storage (NFS / GCS / GCS Fuse) | Refer to base App_GKE module documentation. An additional `moodle-data` GCS bucket is provisioned automatically. |
+| Database Configuration | §3.B Database (Cloud SQL) | See [Moodle Database Configuration](#moodle-database-configuration) below for the `db_name` and `db_user` variable naming. |
+| Backup Schedule & Retention | §3.B Database (Cloud SQL) | Refer to base App_GKE module documentation. See [Backup Import & Recovery](#backup-import--recovery) below for the `backup_uri` naming difference. |
+| Custom SQL Scripts | §3.E Initialization Jobs & CronJobs | Refer to base App_GKE module documentation. |
+| Observability & Health | §3.A Compute (GKE Autopilot) | See [Moodle Health Probes](#moodle-health-probes) below for the `startup_probe` and `liveness_probe` variables and their `/health.php` defaults. |
+| Cloud Armor WAF | §4.A Cloud Armor WAF | Refer to base App_GKE module documentation. |
+| Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Refer to base App_GKE module documentation. |
+| Binary Authorization | §4.C Binary Authorization | Identical. |
+| VPC Service Controls | §4.D VPC Service Controls | Identical. |
+| Secrets Store CSI Driver | §4.E Secrets Store CSI Driver | Identical. |
+| Traffic & Ingress | §5 Traffic & Ingress | `enable_custom_domain` defaults to `true`. See [Platform-Managed Behaviours](#platform-managed-behaviours). |
+| CDN | §5.B CDN | Identical. |
+| Pod Disruption Budgets | §7.A Pod Disruption Budgets | `enable_pod_disruption_budget` defaults to `true`. |
+| Topology Spread Constraints | §7.B Topology Spread Constraints | Identical. |
+| Resource Quotas | §7.C Resource Quotas | Refer to base App_GKE module documentation. |
+| Auto Password Rotation | §7.D Auto Password Rotation | See [Moodle Database Configuration](#moodle-database-configuration). |
+| Redis Cache | §8.A Redis / Memorystore | `enable_redis` defaults to `true`. See [Redis Cache](#redis-cache) for Moodle-specific configuration. |
+| Backup Import | §8.B Backup Import | Uses `backup_uri` instead of `backup_file` — see [Backup Import & Recovery](#backup-import--recovery). |
+| Service Mesh (ASM) | §8.C Service Mesh (ASM via Fleet) | Identical. |
+| Multi-Cluster Services | §8.D Multi-Cluster Services (MCS) | Identical. |
 
 ---
 
@@ -94,7 +117,7 @@ Moodle is a PHP 8.3/Apache application. The module exposes `cpu_limit` and `memo
 | `cpu_limit` | `"2000m"` | Kubernetes CPU quantity string (e.g. `"1000m"`, `"4000m"`) | CPU limit for the Moodle application container. PHP with OPcache and concurrent student requests can generate significant CPU bursts during quiz rendering, grade calculations, and file operations. **Minimum `1000m` for development; `2000m` recommended for production.** |
 | `memory_limit` | `"4Gi"` | Kubernetes memory quantity string (e.g. `"2Gi"`, `"4Gi"`) | Memory limit for the Moodle application container. PHP 8.3 with OPcache, active student sessions, and file upload handling typically consumes 1–2 Gi under normal load. **Minimum `1Gi` for development; `4Gi` recommended for production** with concurrent course delivery. |
 
-> **Note on `container_resources`:** The standard `container_resources` object (documented in [App_GKE_Guide Group 3](../App_GKE/App_GKE_Guide.md#group-3-runtime--scaling)) is also available and is passed directly to App_GKE. Use it when you need to set `cpu_request`, `mem_request`, or `ephemeral_storage_limit`. The `cpu_limit` and `memory_limit` top-level variables are applied via the `Moodle_Common` application configuration layer and are the primary knobs for Moodle container sizing.
+> **Note on `container_resources`:** The standard `container_resources` object (documented in [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot)) is also available and is passed directly to App_GKE. Use it when you need to set `cpu_request`, `mem_request`, or `ephemeral_storage_limit`. The `cpu_limit` and `memory_limit` top-level variables are applied via the `Moodle_Common` application configuration layer and are the primary knobs for Moodle container sizing.
 
 **Moodle-specific runtime defaults that differ from App_GKE:**
 
@@ -122,7 +145,7 @@ kubectl get deployment moodle -n NAMESPACE \
 
 Moodle requires PostgreSQL. The module uses `db_name` and `db_user` (shorter names aligned with the `Moodle_Common` interface) alongside the standard `application_database_name` and `application_database_user` variables from App_GKE. Both naming pairs are present; they serve distinct roles in the module's two-layer architecture.
 
-All other database variables (`database_type`, `sql_instance_name`, `database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, etc.) behave identically to the App_GKE equivalents — refer to [App_GKE_Guide Group 10](../App_GKE/App_GKE_Guide.md#group-10-database-configuration) for their documentation.
+All other database variables (`database_type`, `sql_instance_name`, `database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, etc.) behave identically to the App_GKE equivalents — refer to [App_GKE §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql) for their documentation.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -149,7 +172,7 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep -E "^DB_"
 
 ## Moodle Environment Variables
 
-The `environment_variables` variable (documented in [App_GKE_Guide Group 4](../App_GKE/App_GKE_Guide.md#group-4-environment-variables--secrets)) is supplemented by a set of Moodle-specific defaults that are **automatically injected** by the module.
+The `environment_variables` variable (documented in [App_GKE §3](../App_GKE/App_GKE.md#3-core-service-configuration)) is supplemented by a set of Moodle-specific defaults that are **automatically injected** by the module.
 
 **Moodle environment variables injected automatically:**
 
@@ -203,7 +226,7 @@ secret_environment_variables = {
 }
 ```
 
-All other `environment_variables` and `secret_environment_variables` behaviour is identical to App_GKE — refer to [App_GKE_Guide Group 4](../App_GKE/App_GKE_Guide.md#group-4-environment-variables--secrets).
+All other `environment_variables` and `secret_environment_variables` behaviour is identical to App_GKE — refer to [App_GKE §3](../App_GKE/App_GKE.md#3-core-service-configuration).
 
 ---
 
@@ -218,7 +241,7 @@ In addition to these, the App_GKE passthrough variables `startup_probe_config` a
 | `startup_probe` | `{ enabled = true, type = "HTTP", path = "/health.php", initial_delay_seconds = 0, timeout_seconds = 10, period_seconds = 30, failure_threshold = 20 }` | Determines when the Moodle container is ready to receive traffic. The `/health.php` endpoint checks PHP availability and database connectivity. `failure_threshold = 20` with `period_seconds = 30` allows up to 10 minutes of startup time — sufficient for first-boot schema creation and plugin setup. On subsequent deployments the schema is already in place and startup is significantly faster, so the high failure threshold is a safety margin for initial rollouts. |
 | `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/health.php", initial_delay_seconds = 120, timeout_seconds = 10, period_seconds = 60, failure_threshold = 3 }` | Periodically checks whether the running Moodle instance is healthy. The `initial_delay_seconds = 120` prevents premature restarts during the post-startup phase. A `period_seconds = 60` interval is appropriate for a database-backed LMS — more frequent checks would add unnecessary load. |
 
-> **Relationship to App_GKE probes:** `startup_probe` corresponds to `startup_probe_config` in App_GKE; `liveness_probe` corresponds to `health_check_config`. Their sub-field structure is identical. The `startup_probe_config` and `health_check_config` variables are also present in `Moodle_GKE` (with `/health.php` defaults) for compatibility — prefer the dedicated `startup_probe` and `liveness_probe` variables.
+> **Health probe routing:** `Moodle_GKE` exposes two **parallel** probe variable sets that configure Kubernetes probes via different routing paths. `startup_probe` and `liveness_probe` (documented above) are passed to `Moodle_Common`, which applies them to the application container's Kubernetes probe spec. `startup_probe_config` and `health_check_config` are passed **directly to `App_GKE`** and configure the App_GKE-standard infrastructure probes. These are parallel paths, not aliases — changing one does not affect the other. `startup_probe_config` defaults to TCP type (path is irrelevant); `health_check_config` defaults to HTTP on `"/"`. Override `health_check_config` with `path = "/health.php"` to align the App_GKE-standard liveness probe with Moodle's dedicated health endpoint.
 
 ### Validating Health Probe Configuration
 
@@ -245,7 +268,7 @@ kubectl logs -n NAMESPACE -l app=moodle --since=15m | head -150
 
 Moodle uses Redis as the PHP session handler and application cache. When `enable_redis = true`, the `MOODLE_REDIS_ENABLED`, `MOODLE_REDIS_HOST`, `MOODLE_REDIS_PORT`, and `MOODLE_REDIS_PASSWORD` environment variables are injected automatically. **Redis is enabled by default** in `Moodle_GKE` because session consistency across multiple pod replicas requires a shared external session store — without it, users may be logged out when a request is routed to a different pod.
 
-For detailed documentation on the Redis variables `enable_redis`, `redis_host`, `redis_port`, and `redis_auth`, refer to [App_GKE_Guide](../App_GKE/App_GKE_Guide.md) — the variable semantics are identical, but the defaults differ:
+For detailed documentation on the Redis variables `enable_redis`, `redis_host`, `redis_port`, and `redis_auth`, refer to [App_GKE §8.A](../App_GKE/App_GKE.md#a-redis--memorystore) — the variable semantics are identical, but the defaults differ:
 
 | Variable | App_GKE Default | Moodle_GKE Default | Reason |
 |---|---|---|---|
@@ -269,7 +292,7 @@ kubectl run redis-test --rm -it --image=redis:alpine --restart=Never -- \
 
 ## Backup Import & Recovery
 
-In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_GKE_Guide Group 11](../App_GKE/App_GKE_Guide.md#group-11-backup-schedule--retention)), `Moodle_GKE` supports a **one-time import** of an existing Moodle database backup during deployment. This is designed for migrating an existing Moodle instance to GCP or seeding a new environment with production data.
+In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_GKE §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql)), `Moodle_GKE` supports a **one-time import** of an existing Moodle database backup during deployment. This is designed for migrating an existing Moodle instance to GCP or seeding a new environment with production data.
 
 The key naming difference from App_GKE is that **`backup_uri`** (a full GCS object path or Google Drive file ID) is used instead of `backup_file` (a filename relative to the backup bucket). The value is mapped internally to the App_GKE `backup_file` input.
 
@@ -296,7 +319,7 @@ gcloud sql databases list --instance=INSTANCE_NAME --project=PROJECT_ID
 
 ## StatefulSet PVC Configuration
 
-When `workload_type = "StatefulSet"` is set (see [App_GKE_Guide Group 5](../App_GKE/App_GKE_Guide.md#group-5-gke-backend-configuration)), the following variables configure the per-pod **PersistentVolumeClaim** created for each replica. For full documentation on each variable, refer to [App_GKE_Guide Group 5](../App_GKE/App_GKE_Guide.md#group-5-gke-backend-configuration).
+When `workload_type = "StatefulSet"` is set (see [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot)), the following variables configure the per-pod **PersistentVolumeClaim** created for each replica. For full documentation on each variable, refer to [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 
 > **Moodle use case:** StatefulSets are generally not needed for `Moodle_GKE` because course files and uploads are stored on the shared NFS volume (accessible by all pods simultaneously) and the GCS bucket. The default `Deployment` workload type is recommended for Moodle. Use a StatefulSet only if your Moodle configuration requires per-pod local disk storage.
 

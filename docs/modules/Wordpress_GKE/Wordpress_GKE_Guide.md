@@ -1,8 +1,18 @@
-# Wordpress_GKE Module — Configuration Guide
+# Wordpress GKE Module
 
-This guide describes the configuration variables that are **unique to the `Wordpress_GKE` module**. Because `Wordpress_GKE` is a wrapper around `App_GKE`, the vast majority of its variables are passed directly to that base module and are fully documented in the [App_GKE Configuration Guide](../App_GKE/App_GKE_Guide.md). This guide explains the WordPress-specific additions, the differences in default values, and what the `Wordpress_Common` sub-module provisions automatically.
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
-> **Where to look:** If a variable you are configuring is not described here, consult the [App_GKE Configuration Guide](../App_GKE/App_GKE_Guide.md). All `App_GKE` features — GKE cluster selection, session affinity, network policies, Cloud Armor, IAP, CI/CD, Cloud Deploy, Binary Authorization, StatefulSets, resource quotas, and VPC Service Controls — are available in `Wordpress_GKE` with identical behaviour and configuration.
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
+This guide describes the configuration variables that are **unique to the `Wordpress_GKE` module**. Because `Wordpress_GKE` is a wrapper around `App_GKE`, the vast majority of its variables are passed directly to that base module and are fully documented in the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). This guide explains the WordPress-specific additions, the differences in default values, and what the `Wordpress_Common` sub-module provisions automatically.
+
+> **Where to look:** If a variable you are configuring is not described here, consult the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). All `App_GKE` features — GKE cluster selection, session affinity, network policies, Cloud Armor, IAP, CI/CD, Cloud Deploy, Binary Authorization, StatefulSets, resource quotas, and VPC Service Controls — are available in `Wordpress_GKE` with identical behaviour and configuration.
 
 ---
 
@@ -32,26 +42,37 @@ On first deployment the `db-init` job (using `mysql:8.0-debian`) runs a script t
 
 ## Platform-Inherited Configuration
 
-The groups below are **fully inherited from `App_GKE`** and behave identically. Refer to the linked sections of the [App_GKE Configuration Guide](../App_GKE/App_GKE_Guide.md) for complete documentation, including all option values, validation commands, and Console navigation paths.
+The groups below are **fully inherited from `App_GKE`** and behave identically. Refer to the linked sections of the [App_GKE Configuration Guide](../App_GKE/App_GKE.md) for complete documentation, including all option values, validation commands, and Console navigation paths.
 
-| Configuration Area | App_GKE Guide Section |
+| Configuration Area | App_GKE.md Section |
 |---|---|
-| Module Metadata & Configuration | [Group 0](../App_GKE/App_GKE_Guide.md#group-0-module-metadata--configuration) |
-| Project & Identity | [Group 1](../App_GKE/App_GKE_Guide.md#group-1-project--identity) |
-| GKE Backend Configuration (cluster selection, namespace, workload type, service type, session affinity, network policy, service mesh) | [Group 5](../App_GKE/App_GKE_Guide.md#group-5-gke-backend-configuration) |
-| CI/CD & GitHub Integration | [Group 7](../App_GKE/App_GKE_Guide.md#group-7-cicd--github-integration) |
-| Storage & Filesystem — NFS | [Group 8](../App_GKE/App_GKE_Guide.md#group-8-storage--filesystem--nfs) |
-| Storage & Filesystem — GCS | [Group 9](../App_GKE/App_GKE_Guide.md#group-9-storage--filesystem--gcs) |
-| Backup Schedule & Retention and Backup Import | [Group 11](../App_GKE/App_GKE_Guide.md#group-11-backup-schedule--retention) |
-| Custom SQL Scripts | [Group 12](../App_GKE/App_GKE_Guide.md#group-12-custom-sql-scripts) |
-| Observability & Health (uptime checks, alert policies) | [Group 13](../App_GKE/App_GKE_Guide.md#group-13-observability--health) |
-| Reliability Policies (PodDisruptionBudget, topology spread) | [Group 14](../App_GKE/App_GKE_Guide.md#group-14-reliability-policies) |
-| Resource Quota | [Group 15](../App_GKE/App_GKE_Guide.md#group-15-resource-quota) |
-| Custom Domain, Static IP & Network Configuration | [Group 16](../App_GKE/App_GKE_Guide.md#group-16-custom-domain-static-ip--network-configuration) |
-| Identity-Aware Proxy | [Group 17](../App_GKE/App_GKE_Guide.md#group-17-identity-aware-proxy) |
-| Cloud Armor | [Group 18](../App_GKE/App_GKE_Guide.md#group-18-cloud-armor) |
-| VPC Service Controls | — *(same behaviour as App_GKE; no additional WordPress-specific notes)* |
-| StatefulSet Configuration | — *(same behaviour as App_GKE; not commonly used for WordPress)* |
+| Module Metadata & Configuration | [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) |
+| Project & Identity | [App_GKE §2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) |
+| GKE Backend Configuration (cluster selection, namespace, workload type, service type, session affinity) | [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) |
+| Networking & Network Policies | [App_GKE §3.D Networking & Network Policies](../App_GKE/App_GKE.md#d-networking--network-policies) |
+| Additional Services | [App_GKE §3.F Additional Services](../App_GKE/App_GKE.md#f-additional-services) |
+| Storage & Filesystem — NFS | [App_GKE §3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) |
+| Storage & Filesystem — GCS | [App_GKE §3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) |
+| Custom SQL Scripts | [App_GKE §3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) |
+| CI/CD & GitHub Integration | [App_GKE §6 CI/CD & Delivery](../App_GKE/App_GKE.md#6-cicd--delivery) |
+| Binary Authorization | [App_GKE §4.C Binary Authorization](../App_GKE/App_GKE.md#c-binary-authorization) |
+| Identity-Aware Proxy | [App_GKE §4.B Identity-Aware Proxy (IAP)](../App_GKE/App_GKE.md#b-identity-aware-proxy-iap) |
+| Cloud Armor | [App_GKE §4.A Cloud Armor WAF](../App_GKE/App_GKE.md#a-cloud-armor-waf) |
+| VPC Service Controls | [App_GKE §4.D VPC Service Controls](../App_GKE/App_GKE.md#d-vpc-service-controls) |
+| Secrets Store CSI | [App_GKE §4.E Secrets Store CSI](../App_GKE/App_GKE.md#e-secrets-store-csi-driver) |
+| Observability & Health (`startup_probe_config`, `health_check_config` for LB health checks; `uptime_check_config`, `alert_policies`) | [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) |
+| Cloud CDN | [App_GKE §5.B Cloud CDN](../App_GKE/App_GKE.md#b-cloud-cdn) |
+| Static IP | [App_GKE §5.C Static IP](../App_GKE/App_GKE.md#c-static-ip) |
+| Backup Schedule & Retention and Backup Import | [App_GKE §8.B Backup Import & Recovery](../App_GKE/App_GKE.md#b-backup-import) |
+| Pod Disruption Budget | [App_GKE §7.A Pod Disruption Budget](../App_GKE/App_GKE.md#a-pod-disruption-budgets) |
+| Topology Spread | [App_GKE §7.B Topology Spread](../App_GKE/App_GKE.md#b-topology-spread-constraints) |
+| Resource Quotas | [App_GKE §7.C Resource Quotas](../App_GKE/App_GKE.md#c-resource-quotas) |
+| Auto Password Rotation | [App_GKE §7.D Auto Password Rotation](../App_GKE/App_GKE.md#d-auto-password-rotation) |
+| Redis / Memorystore | [App_GKE §8.A Redis / Memorystore](../App_GKE/App_GKE.md#a-redis--memorystore) |
+| Custom Domain | [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) |
+| Service Mesh | [App_GKE §8.C Service Mesh](../App_GKE/App_GKE.md#c-service-mesh-asm-via-fleet) |
+| Multi-Cluster Services | [App_GKE §8.D Multi-Cluster Services](../App_GKE/App_GKE.md#d-multi-cluster-services-mcs) |
+| StatefulSet Configuration | [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) *(not commonly used for WordPress)* |
 
 ---
 
@@ -63,7 +84,7 @@ The sections below document variables that are **unique to this module** or that
 
 ### Application Identity
 
-The variables in this group work identically to [App_GKE Group 2](../App_GKE/App_GKE_Guide.md#group-2-application-identity), but `Wordpress_GKE` provides WordPress-appropriate defaults. The three PHP configuration variables (`php_memory_limit`, `upload_max_filesize`, `post_max_size`) are unique to this module and control the container's PHP runtime behaviour.
+The variables in this group work identically to [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview), but `Wordpress_GKE` provides WordPress-appropriate defaults. The three PHP configuration variables (`php_memory_limit`, `upload_max_filesize`, `post_max_size`) are unique to this module and control the container's PHP runtime behaviour.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -90,7 +111,7 @@ kubectl exec -n NAMESPACE POD_NAME -- php -r "
 
 ### Runtime & Scaling
 
-All variables in this group behave as documented in [App_GKE Group 3](../App_GKE/App_GKE_Guide.md#group-3-runtime--scaling). The table below highlights the defaults that `Wordpress_GKE` changes from the base module values.
+All variables in this group behave as documented in [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot). The table below highlights the defaults that `Wordpress_GKE` changes from the base module values.
 
 | Variable | WordPress Default | App_GKE Default | Note |
 |---|---|---|---|
@@ -106,7 +127,7 @@ All variables in this group behave as documented in [App_GKE Group 3](../App_GKE
 
 ### Environment Variables & Secrets
 
-Refer to [App_GKE Group 4](../App_GKE/App_GKE_Guide.md#group-4-environment-variables--secrets) for documentation on `environment_variables`, `secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, and `enable_secrets_store_csi_driver`.
+Refer to [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for documentation on `environment_variables`, `secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, and `enable_secrets_store_csi_driver`.
 
 #### WordPress Auto-Generated Security Keys & Salts
 
@@ -148,7 +169,7 @@ gcloud secrets list --project=PROJECT_ID \
 
 ### Database Configuration
 
-The WordPress database is always **MySQL 8.0** (`MYSQL_8_0`), locked in by `Wordpress_Common`. Refer to [App_GKE Group 10](../App_GKE/App_GKE_Guide.md#group-10-database-configuration) for documentation on Cloud SQL instance discovery (`sql_instance_name`, `sql_instance_base_name`), `database_password_length`, `enable_auto_password_rotation`, and `rotation_propagation_delay_sec`.
+The WordPress database is always **MySQL 8.0** (`MYSQL_8_0`), locked in by `Wordpress_Common`. Refer to [App_GKE §3.B Database (Cloud SQL)](../App_GKE/App_GKE.md#b-database-cloud-sql) for documentation on Cloud SQL instance discovery (`sql_instance_name`, `sql_instance_base_name`), `database_password_length`, `enable_auto_password_rotation`, and `rotation_propagation_delay_sec`.
 
 The variables below behave identically to their `App_GKE` counterparts but carry WordPress-appropriate defaults.
 
@@ -164,7 +185,7 @@ The variables below behave identically to their `App_GKE` counterparts but carry
 
 ### Jobs & Scheduled Tasks
 
-Refer to [App_GKE Group 6](../App_GKE/App_GKE_Guide.md#group-6-jobs--scheduled-tasks) for documentation on `initialization_jobs`, `cron_jobs`, and `additional_services`.
+Refer to [App_GKE §3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) for documentation on `initialization_jobs`, `cron_jobs`, and `additional_services`.
 
 #### Pre-Configured db-init Job
 
@@ -188,7 +209,7 @@ kubectl logs -n NAMESPACE -l job-name=JOB_NAME
 
 ### Redis Object Cache
 
-WordPress uses Redis as a persistent object cache to store the results of expensive database queries in memory, dramatically reducing page load time and database load on high-traffic sites. This module integrates with the **Redis Object Cache** WordPress plugin.
+WordPress uses Redis as a persistent object cache to store the results of expensive database queries in memory, dramatically reducing page load time and database load on high-traffic sites. This module integrates with the **Redis Object Cache** WordPress plugin. The Redis integration is provided by App_GKE — see [§8.A Redis / Memorystore](../App_GKE/App_GKE.md#a-redis--memorystore) for the full integration reference.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -214,7 +235,7 @@ kubectl exec -n NAMESPACE POD_NAME -- wp redis status --allow-root
 
 ### Health Checks
 
-Refer to [App_GKE Group 13](../App_GKE/App_GKE_Guide.md#group-13-observability--health) for documentation on `startup_probe_config`, `health_check_config`, `uptime_check_config`, and `alert_policies`.
+Refer to [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) for documentation on `startup_probe_config`, `health_check_config`, `uptime_check_config`, and `alert_policies`.
 
 `Wordpress_GKE` exposes two additional internal probe variables (`startup_probe` and `liveness_probe`) that are passed to `Wordpress_Common` and control the probe configuration embedded in the WordPress application configuration object. These have WordPress-specific defaults that are tuned for WordPress's startup behaviour:
 
@@ -227,7 +248,7 @@ Refer to [App_GKE Group 13](../App_GKE/App_GKE_Guide.md#group-13-observability--
 
 ## Deployment Prerequisites
 
-Refer to [App_GKE — Deployment Prerequisites & Dependency Analysis](../App_GKE/App_GKE_Guide.md#deployment-prerequisites--dependency-analysis) for the complete list of hard prerequisites, silent failure modes, and soft prerequisites.
+Refer to [App_GKE — Deployment Prerequisites & Dependency Analysis](../App_GKE/App_GKE.md#deployment-prerequisites--dependency-analysis) for the complete list of hard prerequisites, silent failure modes, and soft prerequisites.
 
 **WordPress-specific notes:**
 
@@ -240,6 +261,6 @@ Refer to [App_GKE — Deployment Prerequisites & Dependency Analysis](../App_GKE
 
 ## Dependency on `Services_GCP`
 
-Refer to [App_GKE — Dependency on `Services_GCP` for Shared Resources](../App_GKE/App_GKE_Guide.md#dependency-on-services_gcp-for-shared-resources) for a full comparison of standalone versus `Services_GCP`-backed deployments.
+Refer to [App_GKE — Dependency on `Services_GCP` for Shared Resources](../App_GKE/App_GKE.md#dependency-on-services_gcp-for-shared-resources) for a full comparison of standalone versus `Services_GCP`-backed deployments.
 
 **WordPress-specific benefit:** when `Services_GCP` provides a shared Cloud SQL instance, the `db-init` job connects to it and creates only the WordPress database and user within the shared instance — eliminating the cost of a dedicated Cloud SQL instance per WordPress site. This is the recommended model for multi-tenant platforms where many independent WordPress deployments share the same GCP project.

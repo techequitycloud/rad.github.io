@@ -3,7 +3,18 @@ title: "Strapi GKE Configuration Guide"
 sidebar_label: "GKE"
 ---
 
-# Strapi_GKE Module — Configuration Guide
+# Strapi GKE Module
+
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 
 Strapi is an open-source headless CMS that gives developers the freedom to choose their favourite tools and frameworks while enabling content editors to manage their content independently. This module deploys Strapi on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL instance, a Cloud Filestore NFS volume for media uploads, and a GCS bucket for object storage.
 
@@ -15,31 +26,31 @@ Strapi is an open-source headless CMS that gives developers the freedom to choos
 
 ## How This Guide Is Structured
 
-This guide documents only the variables that are **unique to `Strapi_GKE`** or that have **Strapi-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, storage, CI/CD, observability, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE_Guide.md).
+This guide documents only the variables that are **unique to `Strapi_GKE`** or that have **Strapi-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, storage, CI/CD, observability, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
 **Variables fully covered by the App_GKE guide:**
 
-| Configuration Area | App_GKE_Guide Section | Strapi-Specific Notes |
+| Configuration Area | App_GKE.md Section | Strapi-Specific Notes |
 |---|---|---|
-| Module Metadata & Configuration | Group 0 | Different defaults for `module_description` and `module_documentation`. |
-| Project & Identity | Group 1 | Refer to base App_GKE module documentation. |
-| Application Identity | Group 2 | See [Strapi Application Identity](#strapi-application-identity) below for Strapi-specific defaults. |
-| Runtime & Scaling | Group 3 | See [Strapi Runtime Configuration](#strapi-runtime-configuration) below. `container_image_source` defaults to `"custom"`; `container_port` defaults to `1337`. |
-| Environment Variables & Secrets | Group 4 | See [Strapi Environment Variables](#strapi-environment-variables) below for email and GCS defaults. |
-| GKE Backend Configuration | Group 5 | Refer to base App_GKE module documentation. |
-| Jobs & Scheduled Tasks | Group 6 | A `db-init` job runs automatically — see [Platform-Managed Behaviours](#platform-managed-behaviours). Refer to App_GKE_Guide for customising additional jobs. |
-| CI/CD & GitHub Integration | Group 7 | Refer to base App_GKE module documentation. |
-| Storage — NFS | Group 8 | NFS is **enabled by default** in this module. See [NFS Storage](#nfs-storage) below. |
-| Storage — GCS | Group 9 | A default `data` bucket is provisioned. Refer to App_GKE module documentation for bucket configuration. |
-| Database Configuration | Group 10 | See [Strapi Database Configuration](#strapi-database-configuration) below. |
-| Backup Schedule & Retention | Group 11 | Refer to base App_GKE module documentation. See also [Backup Import & Recovery](#backup-import--recovery) below. |
-| Custom SQL Scripts | Group 12 | Refer to base App_GKE module documentation. |
-| Observability & Health | Group 13 | See [Strapi Health Probes](#strapi-health-probes) below for Strapi-specific defaults. |
-| Reliability Policies | Group 14 | Refer to base App_GKE module documentation. |
-| Resource Quota | Group 15 | Refer to base App_GKE module documentation. |
-| Custom Domain, Static IP & Network | Group 16 | Refer to base App_GKE module documentation. |
-| Identity-Aware Proxy | Group 17 | Refer to base App_GKE module documentation. |
-| Cloud Armor | Group 18 | Refer to base App_GKE module documentation. |
+| Module Metadata & Configuration | [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) | Different defaults for `module_description` and `module_documentation`. |
+| Project & Identity | [App_GKE §2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) | Refer to base App_GKE module documentation. |
+| Application Identity | [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) | See [Strapi Application Identity](#strapi-application-identity) below for Strapi-specific defaults. |
+| Runtime & Scaling | [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | See [Strapi Runtime Configuration](#strapi-runtime-configuration) below. `container_image_source` defaults to `"custom"`; `container_port` defaults to `1337`. |
+| Environment Variables & Secrets | [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | See [Strapi Environment Variables](#strapi-environment-variables) below for email and GCS defaults. |
+| GKE Backend Configuration | [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | Refer to base App_GKE module documentation. |
+| Jobs & Scheduled Tasks | [App_GKE §3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | A `db-init` job runs automatically — see [Platform-Managed Behaviours](#platform-managed-behaviours). Refer to App_GKE for customising additional jobs. |
+| CI/CD & GitHub Integration | [App_GKE §6 CI/CD & Delivery](../App_GKE/App_GKE.md#6-cicd--delivery) | Refer to base App_GKE module documentation. |
+| Storage — NFS | [App_GKE §3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) | NFS is **enabled by default** in this module. See [NFS Storage](#nfs-storage) below. |
+| Storage — GCS | [App_GKE §3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) | A default `data` bucket is provisioned. Refer to App_GKE module documentation for bucket configuration. |
+| Database Configuration | [App_GKE §3.B Database (Cloud SQL)](../App_GKE/App_GKE.md#b-database-cloud-sql) | See [Strapi Database Configuration](#strapi-database-configuration) below. |
+| Backup Schedule & Retention | [App_GKE §8.B Backup Import & Recovery](../App_GKE/App_GKE.md#b-backup-import) | Refer to base App_GKE module documentation. See also [Backup Import & Recovery](#backup-import--recovery) below. |
+| Custom SQL Scripts | [App_GKE §3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | Refer to base App_GKE module documentation. |
+| Observability & Health | [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) | See [Strapi Health Probes](#strapi-health-probes) below for Strapi-specific defaults. |
+| Reliability Policies | [App_GKE §7 Reliability & Scheduling](../App_GKE/App_GKE.md#7-reliability--scheduling) | Refer to base App_GKE module documentation. |
+| Resource Quota | [App_GKE §7.C Resource Quotas](../App_GKE/App_GKE.md#c-resource-quotas) | Refer to base App_GKE module documentation. |
+| Custom Domain, Static IP & Network | [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) | Refer to base App_GKE module documentation. |
+| Identity-Aware Proxy | [App_GKE §4.B Identity-Aware Proxy (IAP)](../App_GKE/App_GKE.md#b-identity-aware-proxy-iap) | Refer to base App_GKE module documentation. |
+| Cloud Armor | [App_GKE §4.A Cloud Armor WAF](../App_GKE/App_GKE.md#a-cloud-armor-waf) | Refer to base App_GKE module documentation. |
 
 ---
 
@@ -66,7 +77,7 @@ These variables control how the Strapi deployment is named and described. They c
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `application_name` | `"strapi"` | `[a-z][a-z0-9-]{0,19}` | Internal identifier used as the base name for GKE workloads, Cloud SQL, GCS buckets, Artifact Registry, and Secret Manager secrets. **Do not change after initial deployment.** See [App_GKE_Guide Group 2](../App_GKE/App_GKE_Guide.md#group-2-application-identity) for full details. |
+| `application_name` | `"strapi"` | `[a-z][a-z0-9-]{0,19}` | Internal identifier used as the base name for GKE workloads, Cloud SQL, GCS buckets, Artifact Registry, and Secret Manager secrets. **Do not change after initial deployment.** See [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) for full details. |
 | `application_display_name` | `"Strapi CMS"` | Any string | Human-readable name shown in the platform UI and monitoring dashboards. Can be updated freely without affecting resource names. |
 | `application_description` | `"Strapi Headless CMS on GKE"` | Any string | Brief description of the deployment. Populated into Kubernetes resource annotations and platform documentation. |
 | `application_version` | `"5.0.0"` | Strapi version string (e.g. `"5.0.0"`, `"4.25.0"`) | Version tag applied to the container image and used for deployment tracking. When `container_image_source = "custom"`, incrementing this value triggers a new Cloud Build run. When `container_image_source = "prebuilt"`, this value is informational only. Use the official [Strapi release](https://github.com/strapi/strapi/releases) version matching the image you intend to deploy. |
@@ -98,7 +109,7 @@ Strapi is a Node.js application. The module defaults are sized for a development
 | `min_instance_count` | `1` | `1` | Keeps at least one Strapi pod running at all times to avoid cold-start latency. |
 | `max_instance_count` | `3` | `10` | Allows horizontal scaling up to 10 replicas under load. |
 
-> **Note on `container_resources`:** The full `container_resources` object (as documented in [App_GKE_Guide Group 3](../App_GKE/App_GKE_Guide.md#group-3-runtime--scaling)) is available. Use it to set `cpu_request`, `mem_request`, and ephemeral storage limits in addition to the defaults above.
+> **Note on `container_resources`:** The full `container_resources` object (as documented in [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot)) is available. Use it to set `cpu_request`, `mem_request`, and ephemeral storage limits in addition to the defaults above.
 
 ### deploy_application
 
@@ -126,7 +137,7 @@ kubectl get service strapi -n NAMESPACE \
 
 Strapi requires PostgreSQL. The module uses `application_database_name` and `application_database_user` (consistent with the App_GKE interface) to configure the database.
 
-All other database variables (`database_type`, `sql_instance_name`, `database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, etc.) behave identically to the App_GKE equivalents — refer to [App_GKE_Guide Group 10](../App_GKE/App_GKE_Guide.md#group-10-database-configuration) for their documentation.
+All other database variables (`database_type`, `sql_instance_name`, `database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, etc.) behave identically to the App_GKE equivalents — refer to [App_GKE §3.B Database (Cloud SQL)](../App_GKE/App_GKE.md#b-database-cloud-sql) for their documentation.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -152,7 +163,7 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep -E "^DB_"
 
 ## Strapi Environment Variables
 
-The `environment_variables` variable (documented in [App_GKE_Guide Group 4](../App_GKE/App_GKE_Guide.md#group-4-environment-variables--secrets)) is used by Strapi to configure email delivery and other runtime settings.
+The `environment_variables` variable (documented in [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot)) is used by Strapi to configure email delivery and other runtime settings.
 
 **Email delivery (optional):**
 
@@ -175,7 +186,7 @@ secret_environment_variables = {
 
 `GCS_BUCKET_NAME` and `GCS_BASE_URL` are injected automatically by the platform and do not need to be set manually. Strapi's `plugins.js` reads these values to configure the GCS upload provider.
 
-All other `environment_variables` and `secret_environment_variables` behaviour is identical to App_GKE — refer to [App_GKE_Guide Group 4](../App_GKE/App_GKE_Guide.md#group-4-environment-variables--secrets).
+All other `environment_variables` and `secret_environment_variables` behaviour is identical to App_GKE — refer to [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 
 ---
 
@@ -183,7 +194,7 @@ All other `environment_variables` and `secret_environment_variables` behaviour i
 
 Strapi performs database connection validation and may run pending migrations on startup. The health probes in `Strapi_GKE` use the Strapi-native `/_health` endpoint rather than a generic path, and have extended timeouts to accommodate the Node.js startup sequence and database checks.
 
-Both `startup_probe_config` and `health_check_config` use the same variable structure as App_GKE — refer to [App_GKE_Guide Group 13](../App_GKE/App_GKE_Guide.md#group-13-observability--health) for the full field reference.
+**Probe routing in Strapi_GKE:** `startup_probe_config` and `health_check_config` each serve a dual role — they are passed to `Strapi_Common` (as `startup_probe` and `liveness_probe` respectively) to configure the Kubernetes container probes, and also forwarded directly to `App_GKE` (using the same `startup_probe_config` / `health_check_config` names) to configure the load balancer backend health checks. Other App_GKE wrapper modules use separate `startup_probe`/`liveness_probe` variables for container probes; Strapi_GKE consolidates both paths into the single `_config` pair. See [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) for the App_GKE field reference.
 
 **Strapi-specific probe defaults that differ from App_GKE:**
 
@@ -246,7 +257,7 @@ Strapi stores media uploads and shared files on the NFS volume. `Strapi_GKE` ena
 | `enable_nfs` | `true` | `true` / `false` | When `true`, a Cloud Filestore instance is provisioned and mounted into the Strapi container. Media uploads written to `nfs_mount_path` are preserved across pod restarts and shared between all Strapi replicas. Set to `false` only if you are using GCS as the sole upload backend (via the GCS upload provider). |
 | `nfs_mount_path` | `"/mnt/nfs"` | Filesystem path | The path inside the container where the NFS volume is mounted. Strapi should be configured to write uploads to this path. |
 
-> **Note:** All other NFS configuration variables (`nfs_share_name`, `nfs_server_ip`, `filestore_tier`, etc.) are identical to the App_GKE equivalents — refer to [App_GKE_Guide Group 8](../App_GKE/App_GKE_Guide.md#group-8-storage--filesystem--nfs) for their documentation.
+> **Note:** All other NFS configuration variables (`nfs_share_name`, `nfs_server_ip`, `filestore_tier`, etc.) are identical to the App_GKE equivalents — refer to [App_GKE §3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) for their documentation.
 
 ### Validating NFS Configuration
 
@@ -265,7 +276,7 @@ kubectl exec -n NAMESPACE POD_NAME -- ls -la /mnt/nfs
 
 ## Redis Cache
 
-Strapi supports Redis as a session store and application-level cache. When `enable_redis = true`, the `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, and `ENABLE_REDIS` environment variables are injected into the Strapi container, and Strapi's built-in configuration automatically enables the Redis cache backend.
+Strapi supports Redis as a session store and application-level cache. When `enable_redis = true`, the `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, and `ENABLE_REDIS` environment variables are injected into the Strapi container, and Strapi's built-in configuration automatically enables the Redis cache backend. The Redis integration is provided by App_GKE — see [§8.A Redis / Memorystore](../App_GKE/App_GKE.md#a-redis--memorystore) for the full integration reference.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -285,7 +296,7 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep -E "^REDIS|ENABLE_REDIS"
 
 ## Backup Import & Recovery
 
-In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_GKE_Guide Group 11](../App_GKE/App_GKE_Guide.md#group-11-backup-schedule--retention)), `Strapi_GKE` supports a **one-time import** of an existing database backup during deployment. This is designed for migrating an existing Strapi instance to GCP or seeding a new environment with production data.
+In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_GKE §8.B Backup Import & Recovery](../App_GKE/App_GKE.md#b-backup-import)), `Strapi_GKE` supports a **one-time import** of an existing database backup during deployment. This is designed for migrating an existing Strapi instance to GCP or seeding a new environment with production data.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -310,7 +321,7 @@ gcloud sql databases list --instance=INSTANCE_NAME --project=PROJECT_ID
 
 ## StatefulSet PVC Configuration
 
-When `workload_type = "StatefulSet"` is set (see [App_GKE_Guide Group 5](../App_GKE/App_GKE_Guide.md#group-5-gke-backend-configuration)), the following variables configure the per-pod **PersistentVolumeClaim** automatically created for each StatefulSet replica.
+When `workload_type = "StatefulSet"` is set (see [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot)), the following variables configure the per-pod **PersistentVolumeClaim** automatically created for each StatefulSet replica.
 
 > **Strapi use case:** A StatefulSet with per-pod PVCs is relevant only if you are running Strapi with a local disk-backed file store. For the default configuration (NFS-backed uploads at `/mnt/nfs`), a StatefulSet is not needed and the default `Deployment` workload type is recommended.
 
