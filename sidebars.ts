@@ -208,6 +208,7 @@ const sidebars: SidebarsConfig = {
           items: [
             { type: 'doc', id: 'modules/Wikijs_CloudRun/Wikijs_CloudRun_Guide', label: 'Cloud Run' },
             { type: 'doc', id: 'modules/Wikijs_GKE/Wikijs_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Wikijs_Common/Wikijs_Common_Guide', label: 'Common' },
           ],
         },
         {

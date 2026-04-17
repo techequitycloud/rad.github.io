@@ -14,167 +14,384 @@ sidebar_label: "Cloud Run"
 
 <a href="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
 
-`Wikijs CloudRun` is a pre-configured wrapper around the [`App CloudRun`](../App_CloudRun/App_CloudRun_Guide.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Cloud Run Gen2.
 
-Every variable in this module is passed through to `App CloudRun`. The wrapper's role is to supply Wiki.js-appropriate defaults and to call the `Wikijs_Common` sub-module, which generates the application's Docker build context, database initialisation jobs, and storage configuration. You configure this module exactly as you would `App CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App CloudRun`, or that are unique to this wrapper.
 
-> **Full reference:** For complete descriptions, validation steps, and gcloud CLI examples for any variable not covered here, see the [App CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md).
+`Wikijs_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Cloud Run Gen2.
 
-> **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
+Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply Wiki.js-appropriate defaults and to call the `Wikijs_Common` sub-module, which generates the application's container image configuration, database initialisation logic, GCS Fuse storage mounts, and database password wiring. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.
 
----
-
-## Architecture: the Wikijs_Common sub-module
-
-Before variables are forwarded to `App CloudRun`, this module calls `Wikijs_Common`, which:
-
-- Generates the Wiki.js `Dockerfile` and Cloud Build context that builds the `requarks/wiki:2` image with the correct configuration baked in.
-- Produces a set of initialisation Cloud Run Jobs (database schema setup, `pg_trgm` extension installation, initial configuration seeding).
-- Defines the GCS storage bucket layout (the `wikijs-storage` bucket, mounted via GCS Fuse at `/wiki-storage`).
-- Computes the `application_config` object that `App CloudRun` uses to wire the application into its deployment pipeline.
-
-The database is always **PostgreSQL 15** with the **`pg_trgm`** extension (required for Wiki.js full-text search). The database engine and extensions are fixed by `Wikijs_Common` and are not configurable through the variables exposed by this module. To customise the Wiki.js build or initialisation behaviour beyond what the variables below expose, fork the `Wikijs_Common` module.
+> **Where to look:** If a variable you are configuring is not described here, consult the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md). All `App_CloudRun` features — access and networking, IAP, Cloud Armor, CDN, CI/CD, Cloud Deploy, Binary Authorization, traffic splitting, and VPC Service Controls — are available in `Wikijs_CloudRun` with identical behaviour and configuration.
 
 ---
 
-## Group 0: Module Metadata & Configuration
+## §1 Module Overview
 
-The variables in this group are identical in purpose to those in `App CloudRun`. See [App CloudRun — Group 0](../App_CloudRun/App_CloudRun_Guide.md#group-0-module-metadata--configuration) for full descriptions.
+| Property | Value |
+|---|---|
+| Sub-module | `Wikijs_Common` |
+| Default application name | `wikijs` |
+| Default display name | `Wiki.js` |
+| Default version | `2.5.311` |
+| Container port | Managed by `Wikijs_Common` |
+| Execution environment | `gen2` |
+| Database engine | PostgreSQL 15 (with `pg_trgm` extension) |
+| Default DB name | `wikijs` |
+| Default DB user | `wikijs` |
+| NFS enabled | `true` (mount: `/mnt/nfs`) |
+| Redis enabled | `false` |
+| Image source | Managed by `Wikijs_Common` |
+| Platform-managed job | none (empty default) |
 
-The Wiki.js-specific defaults for this module are:
+`Wikijs_Common` manages the container image source, build configuration, and GCS Fuse storage (`wikijs-storage` bucket mounted at `/wiki-storage` for persistent asset storage). The database password is wired from `module.app_cloudrun.database_password_secret` directly into `module_secret_env_vars`. The `pg_trgm` PostgreSQL extension is installed by `Wikijs_Common` to enable native full-text search.
 
-| Variable | Wikijs CloudRun Default | App CloudRun Default |
+---
+
+## §2 IAM & Project Identity
+
+Behaviour is identical to `App_CloudRun`. The following variables are passed through unchanged.
+
+| Variable | Default | Notes |
 |---|---|---|
-| `module_description` | `"Wiki.js: Deploy powerful open-source wiki software on Google Cloud Run…"` | `"App CloudRun: A production-ready module…"` |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/wiki-js"` | `"https://docs.radmodules.dev/docs/applications/…"` |
-| `module_services` | Includes Cloud Run Gen2, PostgreSQL 15, pg_trgm, GCS Fuse, NFS, and related services | Same services, generic labels |
-
-All other Group 0 variables (`credit_cost`, `require_credit_purchases`, `enable_purge`, `public_access`, `deployment_id`, `resource_creator_identity`) share the same defaults and behaviour as `App CloudRun`.
-
----
-
-## Group 1: Project & Identity
-
-All variables in this group are identical to `App CloudRun`. See [App CloudRun — Group 1](../App_CloudRun/App_CloudRun_Guide.md#group-1-project--identity) for full descriptions.
+| `project_id` | _(required)_ | Target GCP project |
+| `tenant_deployment_id` | `"demo"` | Appended to resource names |
+| `resource_creator_identity` | `"rad-module-creator@..."` | Terraform executor SA |
+| `resource_labels` | `{}` | Applied to all resources |
+| `support_users` | `[]` | Alert recipients & IAM members |
 
 ---
 
-## Group 2: Application Identity
+## §3 Core Service Configuration
 
-This group differs from `App CloudRun` in two ways: the variable `application_display_name` is named `display_name` in this module, and two additional variables (`db_name` and `db_user`) are exposed here rather than in the database group.
+### §3.A Application Identity
 
-| Variable | Default | Options / Format | Description & Implications |
-|---|---|---|---|
-| `application_name` | `"wikijs"` | `[a-z][a-z0-9-]{0,19}` | The internal identifier for the application. Used as a base name for the Cloud Run service, Artifact Registry repository, Secret Manager secrets, and GCS buckets. Do not change after initial deployment. See [App CloudRun — Group 2](../App_CloudRun/App_CloudRun_Guide.md#group-2-application-identity) for full details. |
-| `display_name` | `"Wiki.js"` | Any string | Human-readable name shown in the platform UI, the Cloud Run console, and monitoring dashboards. Equivalent to `application_display_name` in `App CloudRun`. Safe to change at any time without affecting resource names. |
-| `application_version` | `"2.5.311"` | Any string | The Wiki.js release tag applied to the container image. Increment to trigger a new build with a newer Wiki.js version. See [App CloudRun — Group 2](../App_CloudRun/App_CloudRun_Guide.md#group-2-application-identity). |
-| `db_name` | `"wikijs"` | `[a-z][a-z0-9_]{0,62}` | The name of the PostgreSQL database created within the Cloud SQL instance. Injected into Wiki.js as the `DB_NAME` environment variable. Must match the `DB_NAME` entry in `environment_variables`. **Do not change after initial deployment.** |
-| `db_user` | `"wikijs"` | `[a-z][a-z0-9_]{0,31}` | The PostgreSQL user created for the Wiki.js application. Injected as `DB_USER`. Must match the `DB_USER` entry in `environment_variables`. **Do not change after initial deployment.** |
-
-> **Naming note:** `Wikijs CloudRun` uses `display_name` where `App CloudRun` uses `application_display_name`. The variable serves the same purpose and is mapped transparently — this naming difference only matters when comparing the two modules side by side.
-
----
-
-## Group 3: Runtime & Scaling
-
-All variables are identical in purpose to `App CloudRun`. See [App CloudRun — Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling) for full descriptions.
-
-Note that `Wikijs CloudRun` exposes CPU and memory as **separate top-level variables** (`cpu_limit`, `memory_limit`) rather than nested inside a `container_resources` object as in `App CloudRun`. The behaviour is otherwise identical.
-
-The Wiki.js-specific defaults are:
-
-| Variable | Wikijs CloudRun Default | App CloudRun Default | Notes |
-|---|---|---|---|
-| `cpu_limit` | `"1000m"` | *(varies)* | 1 vCPU is the minimum for Wiki.js. Increase to `"2000m"` for wikis with heavy concurrent editing. |
-| `memory_limit` | `"2Gi"` | *(varies)* | Wiki.js with pg_trgm full-text search and asset handling requires at least 1Gi; 2Gi is recommended for production. |
-| `min_instance_count` | `0` | `0` | Scales to zero when idle. Set to `1` in production to eliminate cold start delays for wiki users. |
-| `max_instance_count` | `1` | `1` | Increase for wikis with concurrent editors. Note that `max_instance_count` × DB connections must not exceed the Cloud SQL instance's connection limit. |
-| `execution_environment` | `"gen2"` | `"gen2"` | Gen2 is required for NFS (Filestore) mounts and GCS Fuse. Do not change. |
-| `enable_cloudsql_volume` | `true` | `true` | Required for Wiki.js to connect to PostgreSQL via a Cloud SQL Auth Proxy Unix socket. |
-| `enable_image_mirroring` | `true` | `true` | Mirrors `requarks/wiki:2` from Docker Hub into Artifact Registry to avoid rate limits. |
-
----
-
-## Group 5: Environment Variables & Secrets
-
-All variables are identical in purpose to `App CloudRun`. See [App CloudRun — Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets) for full descriptions.
-
-`environment_variables` is pre-populated with the Wiki.js database connection settings that the application reads at startup:
-
-| Variable | Default Value | Purpose |
+| Variable | Default | Notes |
 |---|---|---|
-| `DB_TYPE` | `"postgres"` | Tells Wiki.js to use a PostgreSQL backend. Do not change — the module provisions only PostgreSQL. |
-| `DB_PORT` | `"5432"` | PostgreSQL port. Matches the Cloud SQL Auth Proxy Unix socket convention. |
-| `DB_USER` | `"wikijs"` | Must match `db_user`. |
-| `DB_NAME` | `"wikijs"` | Must match `db_name`. |
-| `DB_SSL` | `"false"` | SSL is handled by the Cloud SQL Auth Proxy tunnel; the application-level SSL handshake is not needed. |
-| `HA_STORAGE_PATH` | `"/wiki-storage"` | The path where Wiki.js reads and writes uploaded assets. Must match the GCS Fuse mount point configured by `Wikijs_Common`. Do not change unless you also reconfigure the GCS volume mount in `Wikijs_Common`. |
+| `application_name` | `"wikijs"` | Base name for Cloud Run service, secrets, Artifact Registry |
+| `display_name` | `"Wiki.js"` | Human-readable name in UI and dashboards |
+| `application_version` | `"2.5.311"` | Image tag; increment to update the Wiki.js release |
 
-`DB_HOST` and `DB_PASSWORD` are injected automatically at runtime. `DB_PASSWORD` is sourced from Secret Manager; `DB_HOST` points to the Cloud SQL Auth Proxy Unix socket.
+Note: there is no `description` variable in this module. `display_name` is passed to `Wikijs_Common` but is not forwarded to `App_CloudRun` as `application_display_name`.
 
-To add application-level environment variables, add entries to the `environment_variables` map. To supply sensitive values (tokens, API keys), use `secret_environment_variables` instead.
+### §3.B Resource Sizing
 
----
-
-## Database Configuration
-
-The PostgreSQL 15 database, database user, and `pg_trgm` extension are provisioned automatically by `Wikijs_Common`. The only database variables directly configurable in `Wikijs CloudRun` are:
-
-| Variable | Default | Options / Format | Description & Implications |
-|---|---|---|---|
-| `db_name` | `"wikijs"` | `[a-z][a-z0-9_]{0,62}` | Database name. Passed to `Wikijs_Common` and injected as `DB_NAME`. See Group 2 above. |
-| `db_user` | `"wikijs"` | `[a-z][a-z0-9_]{0,31}` | Database username. Passed to `Wikijs_Common` and injected as `DB_USER`. See Group 2 above. |
-| `database_password_length` | `16` | Integer `8`–`64` | Length of the randomly generated database password. Increase to `32` for production. For full details see [App CloudRun — Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend). |
-
-The following database variables available in `App CloudRun` are **not exposed** in `Wikijs CloudRun` because they are fixed by the `Wikijs_Common` module: `database_type` (always `POSTGRES_15`), `application_database_name` (set from `db_name`), `application_database_user` (set from `db_user`), `enable_postgres_extensions` (always `true`), `postgres_extensions` (always `["pg_trgm"]`), `enable_mysql_plugins`, `mysql_plugins`.
-
----
-
-## All Other Configuration Groups
-
-The following groups are available in `Wikijs CloudRun` and behave exactly as documented in the `App CloudRun` guide. The Wiki.js application imposes no additional constraints or defaults on them beyond what is noted in that guide.
-
-| Group | Wikijs CloudRun Variables | App CloudRun Guide Reference |
+| Variable | Default | Notes |
 |---|---|---|
-| CI/CD & GitHub Integration | `enable_cicd_trigger`, `github_repository_url`, `github_token`, `github_app_installation_id`, `cicd_trigger_config`, `enable_cloud_deploy`, `cloud_deploy_stages` | [Group 7](../App_CloudRun/App_CloudRun_Guide.md#group-7-cicd--github-integration) |
-| Custom SQL Scripts | `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`, `custom_sql_scripts_use_root` | [Group 13](../App_CloudRun/App_CloudRun_Guide.md#group-13-custom-initialisation--sql) |
-| Storage & Filesystem — NFS | `enable_nfs`, `nfs_mount_path` | [Group 8](../App_CloudRun/App_CloudRun_Guide.md#group-8-storage--filesystem--nfs) |
-| Storage & Filesystem — GCS | `create_cloud_storage`, `storage_buckets`, `gcs_volumes` | [Group 9](../App_CloudRun/App_CloudRun_Guide.md#group-9-storage--filesystem--gcs) |
-| Backup & Maintenance | `backup_schedule`, `backup_retention_days`, `enable_backup_import`, `backup_source`, `backup_uri`, `backup_format` | [Group 12](../App_CloudRun/App_CloudRun_Guide.md#group-12-backup--maintenance) |
-| Observability & Health | `startup_probe`, `liveness_probe`, `uptime_check_config`, `alert_policies` | [Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health) |
-| Jobs & Scheduled Tasks | `initialization_jobs`, `cron_jobs` | [Group 6](../App_CloudRun/App_CloudRun_Guide.md#group-6-jobs--scheduled-tasks) |
-| Access & Networking | `ingress_settings`, `vpc_egress_setting` | [Group 14](../App_CloudRun/App_CloudRun_Guide.md#group-14-access--networking) |
-| Identity-Aware Proxy | `enable_iap`, `iap_authorized_users`, `iap_authorized_groups` | [Group 15](../App_CloudRun/App_CloudRun_Guide.md#group-15-identity-aware-proxy) |
-| Cloud Armor & CDN | `enable_cloud_armor`, `application_domains`, `admin_ip_ranges`, `enable_cdn` | [Group 16](../App_CloudRun/App_CloudRun_Guide.md#group-16-cloud-armor--cdn) |
-| Redis Cache | `enable_redis`, `redis_host`, `redis_port`, `redis_auth` | [Group 10](../App_CloudRun/App_CloudRun_Guide.md#group-10-redis-cache) |
-| Secrets Management | `secret_propagation_delay`, `secret_rotation_period`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec` | [Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets) |
-| Service Configuration | `service_annotations`, `service_labels`, `container_protocol`, `cloudsql_volume_mount_path`, `traffic_split` | [Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling) |
-| Binary Authorization | `enable_binary_authorization` | [Group 7](../App_CloudRun/App_CloudRun_Guide.md#group-7-cicd--github-integration) |
-| VPC Service Controls | `enable_vpc_sc` | [Group 17](../App_CloudRun/App_CloudRun_Guide.md#group-17-vpc-service-controls) |
+| `cpu_limit` | `"1000m"` | 1 vCPU; increase for wikis with heavy concurrent editing |
+| `memory_limit` | `"2Gi"` | 2 GiB; required for Wiki.js with PostgreSQL full-text search |
+| `min_instance_count` | `0` | Scale-to-zero by default; set to `1` to eliminate cold starts |
+| `max_instance_count` | `1` | Single-instance default |
+| `timeout_seconds` | `300` | Increase for large page exports or asset processing |
 
-> **Note on NFS defaults:** `enable_nfs` defaults to `true` in `Wikijs CloudRun`. Wiki.js uses the NFS mount for shared page assets and uploads across container instances. Disabling NFS (`enable_nfs = false`) is only appropriate for single-instance deployments (`max_instance_count = 1`) where instance-local ephemeral storage is acceptable. Setting `max_instance_count > 1` with `enable_nfs = false` will cause asset inconsistency across instances.
+### §3.C Environment Variables & Secrets
+
+`environment_variables` has a non-empty default that configures Wiki.js database connectivity:
+
+```hcl
+environment_variables = {
+  DB_TYPE         = "postgres"
+  DB_PORT         = "5432"
+  DB_USER         = "wikijs"
+  DB_NAME         = "wikijs"
+  DB_SSL          = "false"
+  HA_STORAGE_PATH = "/wiki-storage"
+}
+```
+
+Override individual keys to change database settings or storage path. Do not remove `DB_TYPE` or `DB_PORT` as Wiki.js requires them to connect.
+
+**Module-injected secrets** (wired via `module_secret_env_vars` in `main.tf`):
+
+| Secret env var | Source |
+|---|---|
+| `database_password_secret` | `module.app_cloudrun.database_password_secret` |
+
+The database password secret ID is injected directly from `App_CloudRun`'s output. This is wired automatically and does not require user configuration.
+
+**User-supplied secrets:**
+
+```hcl
+secret_environment_variables = {
+  GITHUB_CLIENT_SECRET = "my-github-oauth-secret"
+}
+```
+
+### §3.D Networking
+
+Key defaults:
+
+| Variable | Default |
+|---|---|
+| `ingress_settings` | `"all"` |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` |
+| `enable_cloudsql_volume` | `true` |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` |
+| `container_protocol` | `"http1"` |
+
+Set `container_protocol = "h2c"` to enable HTTP/2 communication between the load balancer and the Cloud Run service.
+
+### §3.E Container Image & Build
+
+Container image source and build configuration are fully managed by `Wikijs_Common`. The `container_image_source`, `container_image`, and `container_build_config` variables are not exposed in this module.
+
+| Variable | Default | Notes |
+|---|---|---|
+| `enable_image_mirroring` | `true` | Mirrors image to Artifact Registry before deployment |
 
 ---
 
-## Deployment Prerequisites & Dependency Analysis
+## §4 Advanced Security
 
-`Wikijs CloudRun` inherits all prerequisites and dependency requirements from `App CloudRun`. See [App CloudRun — Deployment Prerequisites & Dependency Analysis](../App_CloudRun/App_CloudRun_Guide.md#deployment-prerequisites--dependency-analysis) for the full reference.
+### §4.A Identity-Aware Proxy
 
-The following Wiki.js-specific points supplement that analysis:
+```hcl
+enable_iap            = true
+iap_authorized_groups = ["group:wiki-editors@example.com"]
+```
 
-### Wiki.js application startup
+### §4.B VPC Service Controls
 
-On first deployment, the `Wikijs_Common` initialisation jobs run before the Cloud Run service begins accepting traffic:
+```hcl
+enable_vpc_sc = true  # group=21; requires existing VPC-SC perimeter
+```
 
-1. **`db-init`** — runs `psql` to create the `wikijs` database schema and installs the `pg_trgm` extension. Requires the Cloud SQL instance and the `wikijs` database user to be fully provisioned. The Cloud Run service will not start until this job completes successfully.
-2. The Wiki.js service revision then starts. It connects to PostgreSQL via the Cloud SQL Auth Proxy Unix socket (`/cloudsql`), reads `DB_*` environment variables, and runs its own startup schema migration.
+### §4.C Cloud Armor & CDN
 
-If the `db-init` job fails, the Wiki.js service will fail its startup probe and Cloud Run will not route traffic to it. Check execution logs in **Cloud Run → Jobs** if the deployment appears to hang.
+```hcl
+enable_cloud_armor  = true
+application_domains = ["wiki.example.com"]
+enable_cdn          = true
+```
 
-### `db_name` / `db_user` / `environment_variables` consistency
+### §4.D Binary Authorization
 
-The values of `db_name` and `db_user` (Group 2) must exactly match the `DB_NAME` and `DB_USER` entries in `environment_variables` (Group 5). The module pre-populates all three to `"wikijs"`. If you change any of them, change all of them to match.
+```hcl
+enable_binary_authorization = true
+```
 
-### NFS and execution environment
+### §4.E Secret Rotation
 
-NFS mounts require `execution_environment = "gen2"` (the default). Changing `execution_environment` to `"gen1"` will cause NFS mounts to fail silently, resulting in Wiki.js being unable to store or serve uploaded assets.
+```hcl
+secret_rotation_period         = "2592000s"  # 30-day notification
+enable_auto_password_rotation  = false
+rotation_propagation_delay_sec = 90
+```
+
+---
+
+## §5 Traffic & Ingress
+
+### §5.A Traffic Splitting
+
+```hcl
+traffic_split = [
+  { type = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST",   percent = 90 },
+  { type = "TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION", revision = "wikijs-00002", percent = 10 },
+]
+```
+
+### §5.B Ingress Control
+
+```hcl
+ingress_settings   = "internal-and-cloud-load-balancing"
+vpc_egress_setting = "ALL_TRAFFIC"
+```
+
+---
+
+## §6 CI/CD Integration
+
+### §6.A Cloud Build Trigger
+
+```hcl
+enable_cicd_trigger   = true
+github_repository_url = "https://github.com/my-org/wikijs-config"
+github_token          = "ghp_xxxx"  # or use github_app_installation_id
+cicd_trigger_config = {
+  branch_pattern = "^main$"
+}
+```
+
+### §6.B Cloud Deploy Pipeline
+
+```hcl
+enable_cloud_deploy = true
+cloud_deploy_stages = [
+  { name = "dev",     require_approval = false },
+  { name = "staging", require_approval = false },
+  { name = "prod",    require_approval = true  },
+]
+```
+
+---
+
+## §7 Reliability & Data
+
+### §7.A Health Probes
+
+`Wikijs_CloudRun` uses only `startup_probe` and `liveness_probe` (passed to `Wikijs_Common`). There is no separate `startup_probe_config` / `health_check_config` interface in this module.
+
+| Variable | Default | Notes |
+|---|---|---|
+| `startup_probe.type` | `"HTTP"` | |
+| `startup_probe.path` | `"/healthz"` | Wiki.js health endpoint |
+| `startup_probe.initial_delay_seconds` | `60` | Allows time for PostgreSQL schema init |
+| `startup_probe.timeout_seconds` | `5` | |
+| `startup_probe.period_seconds` | `10` | |
+| `startup_probe.failure_threshold` | `3` | |
+| `liveness_probe.type` | `"HTTP"` | |
+| `liveness_probe.path` | `"/healthz"` | |
+| `liveness_probe.initial_delay_seconds` | `60` | |
+| `liveness_probe.timeout_seconds` | `5` | |
+| `liveness_probe.period_seconds` | `30` | |
+| `liveness_probe.failure_threshold` | `3` | |
+
+The `/healthz` endpoint reflects both application readiness and live database connection status.
+
+### §7.B Backup & Recovery
+
+| Variable | Default | Notes |
+|---|---|---|
+| `backup_schedule` | `"0 2 * * *"` | Daily at 02:00 UTC |
+| `backup_retention_days` | `7` | GCS lifecycle rule |
+| `enable_backup_import` | `false` | One-time restore on deploy |
+| `backup_source` | `"gcs"` | `"gcs"` or `"gdrive"` |
+| `backup_uri` | `""` | Full GCS URI or Google Drive file ID |
+| `backup_format` | `"sql"` | `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip` |
+
+Note: this module uses `backup_uri` (aliased to `backup_file` in `main.tf`). The `"auto"` format is not listed in the variable description but the underlying `backup_format` validation accepts it.
+
+### §7.C Scheduled Jobs
+
+```hcl
+cron_jobs = [{
+  name     = "wiki-export"
+  schedule = "0 3 * * 0"  # weekly Sunday at 03:00
+  image    = "postgres:15-alpine"
+  command  = ["pg_dump", "wikijs"]
+}]
+```
+
+### §7.D Observability
+
+```hcl
+uptime_check_config = {
+  enabled        = true
+  path           = "/"
+  check_interval = "60s"
+  timeout        = "10s"
+}
+
+alert_policies = [{
+  name               = "high-latency"
+  metric_type        = "run.googleapis.com/request_latencies"
+  comparison         = "COMPARISON_GT"
+  threshold_value    = 2000
+  duration_seconds   = 300
+  aggregation_period = "60s"
+}]
+```
+
+---
+
+## §8 Integrations
+
+### §8.A Redis Cache
+
+Wiki.js can use Redis for session caching. When `enable_redis = false` (the default), no Redis environment variables are injected.
+
+```hcl
+enable_redis = true
+redis_host   = "10.0.0.5"  # required when Redis enabled
+redis_port   = "6379"       # string type
+redis_auth   = ""
+```
+
+### §8.B NFS Storage
+
+```hcl
+enable_nfs     = true
+nfs_mount_path = "/mnt/nfs"
+```
+
+### §8.C GCS Fuse Volumes (wikijs-storage)
+
+`Wikijs_Common` provisions a `wikijs-storage` GCS bucket and expects it to be mounted at `/wiki-storage` for persistent asset storage. To wire this up, use `gcs_volumes`:
+
+```hcl
+gcs_volumes = [{
+  name        = "wikijs-storage"
+  bucket_name = ""          # leave empty for the auto-provisioned bucket
+  mount_path  = "/wiki-storage"
+  readonly    = false
+}]
+```
+
+The `HA_STORAGE_PATH = "/wiki-storage"` default in `environment_variables` points Wiki.js to this mount. If you change the mount path, update `HA_STORAGE_PATH` accordingly.
+
+### §8.D Additional Services
+
+`Wikijs_CloudRun` does not expose the `additional_services` variable.
+
+---
+
+## §9 Platform-Managed Behaviours
+
+The following are set or injected automatically and do not require configuration.
+
+### Database password wiring
+
+Unlike most other wrapper modules, `Wikijs_CloudRun` wires the database password directly from `App_CloudRun`'s output (`module.app_cloudrun.database_password_secret`) into `module_secret_env_vars` as `database_password_secret`. This cross-module reference is handled in `main.tf` and does not require user input.
+
+### PostgreSQL pg_trgm extension
+
+`Wikijs_Common` installs the `pg_trgm` PostgreSQL extension during database initialisation to enable Wiki.js's native full-text search. This is performed automatically and requires no additional configuration.
+
+### GCS storage bucket
+
+`Wikijs_Common` provisions a storage bucket with the suffix `wikijs-storage`. The bucket name is made available via `module.wikijs_app.storage_buckets` and passed to `App_CloudRun` as `module_storage_buckets`. Set `gcs_volumes` to mount this bucket at `/wiki-storage`.
+
+### Default environment variables
+
+The non-empty `environment_variables` default (`DB_TYPE`, `DB_PORT`, `DB_USER`, `DB_NAME`, `DB_SSL`, `HA_STORAGE_PATH`) is required for Wiki.js to connect to the database and locate its storage path. These values are merged with any user-supplied `environment_variables`; user values take precedence.
+
+### Probe endpoint
+
+Wiki.js exposes `/healthz` for both startup and liveness checks. This endpoint returns 200 when the application is running and connected to PostgreSQL. The `initial_delay_seconds = 60` on both probes allows time for PostgreSQL schema initialisation on first boot.
+
+---
+
+## §10 Variable Reference
+
+The table below covers all variables unique to or with notable defaults in `Wikijs_CloudRun`. For the full set of inherited variables, see the [App_CloudRun Variable Reference](../App_CloudRun/App_CloudRun.md#variable-reference).
+
+| Variable | Type | Default | Group | Notes |
+|---|---|---|---|---|
+| `application_name` | `string` | `"wikijs"` | 2 | Base resource name |
+| `display_name` | `string` | `"Wiki.js"` | 2 | Passed to Wikijs_Common |
+| `application_version` | `string` | `"2.5.311"` | 2 | Image tag |
+| `db_name` | `string` | `"wikijs"` | 11 | PostgreSQL DB name |
+| `db_user` | `string` | `"wikijs"` | 11 | PostgreSQL user |
+| `cpu_limit` | `string` | `"1000m"` | 3 | 1 vCPU |
+| `memory_limit` | `string` | `"2Gi"` | 3 | 2 GiB |
+| `min_instance_count` | `number` | `0` | 3 | Scale-to-zero |
+| `max_instance_count` | `number` | `1` | 3 | |
+| `enable_image_mirroring` | `bool` | `true` | 3 | Mirror to Artifact Registry |
+| `container_protocol` | `string` | `"http1"` | 3 | `"http1"` or `"h2c"` |
+| `enable_cloudsql_volume` | `bool` | `true` | 3 | Unix socket proxy |
+| `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | 3 | Socket path |
+| `environment_variables` | `map(string)` | `{ DB_TYPE="postgres", DB_PORT="5432", ... }` | 5 | Non-empty default; required for DB connectivity |
+| `database_password_length` | `number` | `16` | 11 | 8–64 characters |
+| `enable_nfs` | `bool` | `true` | 10 | Cloud Filestore mount |
+| `nfs_mount_path` | `string` | `"/mnt/nfs"` | 10 | Container mount path |
+| `storage_buckets` | `list` | `[{ name_suffix = "data" }]` | 10 | GCS buckets |
+| `gcs_volumes` | `list` | `[]` | 10 | Mount wikijs-storage at `/wiki-storage` |
+| `backup_uri` | `string` | `""` | 6 | Full GCS URI or Drive ID (aliased to `backup_file`) |
+| `backup_format` | `string` | `"sql"` | 6 | No `"auto"` in description (accepted by validation) |
+| `enable_redis` | `bool` | `false` | 20 | Redis cache |
+| `redis_host` | `string` | `""` | 20 | Required when Redis enabled |
+| `redis_port` | `string` | `"6379"` | 20 | String type |
+| `redis_auth` | `string` | `""` | 20 | Sensitive |
+| `startup_probe` | `object` | `{ type="HTTP", path="/healthz", initial_delay_seconds=60 }` | 13 | |
+| `liveness_probe` | `object` | `{ type="HTTP", path="/healthz", initial_delay_seconds=60 }` | 13 | |
+| `initialization_jobs` | `list` | `[]` | 12 | No platform-managed jobs |
+| `enable_vpc_sc` | `bool` | `false` | 21 | VPC Service Controls |
