@@ -199,6 +199,7 @@ const sidebars: SidebarsConfig = {
           items: [
             { type: 'doc', id: 'modules/Strapi_CloudRun/Strapi_CloudRun_Guide', label: 'Cloud Run' },
             { type: 'doc', id: 'modules/Strapi_GKE/Strapi_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Strapi_Common/Strapi_Common_Guide', label: 'Common' },
           ],
         },
         {
