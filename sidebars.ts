@@ -145,6 +145,7 @@ const sidebars: SidebarsConfig = {
           items: [
             { type: 'doc', id: 'modules/Moodle_CloudRun/Moodle_CloudRun_Guide', label: 'Cloud Run' },
             { type: 'doc', id: 'modules/Moodle_GKE/Moodle_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Moodle_Common/Moodle_Common_Guide', label: 'Common' },
           ],
         },
         {
