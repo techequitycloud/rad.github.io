@@ -154,6 +154,7 @@ const sidebars: SidebarsConfig = {
           items: [
             { type: 'doc', id: 'modules/N8N_CloudRun/N8N_CloudRun_Guide', label: 'Cloud Run' },
             { type: 'doc', id: 'modules/N8N_GKE/N8N_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/N8N_Common/N8N_Common_Guide', label: 'Common' },
           ],
         },
         {
