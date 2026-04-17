@@ -190,6 +190,7 @@ const sidebars: SidebarsConfig = {
           items: [
             { type: 'doc', id: 'modules/Sample_CloudRun/Sample_CloudRun_Guide', label: 'Cloud Run' },
             { type: 'doc', id: 'modules/Sample_GKE/Sample_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Sample_Common/Sample_Common_Guide', label: 'Common' },
           ],
         },
         {
