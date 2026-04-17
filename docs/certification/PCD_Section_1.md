@@ -1,4 +1,4 @@
-# PCD Certification Preparation Guide: Section 1 — Designing highly scalable, available, and reliable cloud-native applications (~36% of the exam)
+# PCD Certification Preparation Guide: Section 1 — Designing highly scalable, secure, and reliable cloud-native applications (~32% of the exam)
 
 This guide helps candidates preparing for the Google Cloud Professional Cloud Developer (PCD) certification explore Section 1 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
@@ -13,7 +13,7 @@ You interact with each module by configuring its variables in the RAD UI deploym
 
 **In the RAD UI:**
 *   **Platform Choice:** The RAD platform provides templates for **App CloudRun** (serverless, event-driven HTTP workloads that scale to zero) and **App GKE** (container orchestration for workloads that need persistent connections, StatefulSets, or fine-grained networking). For workloads requiring direct OS access, custom hardware, or persistent long-running background processes, Compute Engine VMs are the appropriate choice — these are provisioned via the Services GCP module infrastructure layer.
-*   **Traffic Splitting:** In Cloud Run, the `traffic_split` variable (Group 5) dictates how traffic is divided across container revisions for A/B testing and canary rollouts.
+*   **Traffic Splitting:** In Cloud Run, the `traffic_split` variable (Group 3) dictates how traffic is divided across container revisions for A/B testing and canary rollouts.
 
 **Console Exploration:**
 Navigate to **Cloud Run**, select the service, and review the **Revisions** tab to see how traffic is allocated across revisions. Observe that each revision is immutable — configuration changes always produce a new revision, which can then receive a percentage of traffic. For GKE, review **Cloud Deploy > Delivery pipelines** for progressive rollout stages.
@@ -41,7 +41,7 @@ Navigate to **Cloud Run** and observe that a Cloud Run service is regional — i
 **Concept:** Implementing in-memory caching to reduce database load and improve application response times.
 
 **In the RAD UI:**
-*   **Memorystore (Redis):** In **Services GCP**, `create_redis` (Group 5) and `redis_tier` (Group 5) configure managed in-memory caching. Set `enable_redis` (Group 14 for App CloudRun, Group 20 for App GKE) to dynamically pass the Redis host and port into the container as environment variables.
+*   **Memorystore (Redis):** In **Services GCP**, `create_redis` (Group 5) and `redis_tier` (Group 5) configure managed in-memory caching. Set `enable_redis` (Group 10 for App CloudRun; §8.A Integrations for App GKE) to dynamically pass the Redis host and port — including `redis_host`, `redis_port`, and `redis_auth` — into the container as environment variables.
 
 **Console Exploration:**
 Navigate to **Memorystore > Redis** to view the Redis instance. Observe the instance tier (`BASIC` for single-node, `STANDARD_HA` for primary-replica with automatic failover), the memory size, and the private IP address accessible only from within the VPC. In your application code, use this private IP with the Redis client library — all traffic stays within Google's private network.
@@ -52,7 +52,7 @@ Navigate to **Memorystore > Redis** to view the Redis instance. Observe the inst
 **Concept:** Configuring load balancers to route a user's requests consistently to the same backend, and using Cloud CDN to cache responses at the edge for lower latency.
 
 **In the RAD UI:**
-Both App CloudRun and App GKE provision a Global External Application Load Balancer when `enable_cloud_armor` (Group 9 for Cloud Run, Group 13 for GKE) is enabled. The load balancer is the integration point for both session affinity and Cloud CDN.
+Both App CloudRun and App GKE provision a Global External Application Load Balancer when `enable_cloud_armor` (Group 16 for App CloudRun; §4.A Cloud Armor WAF for App GKE) is enabled. The load balancer is the integration point for both session affinity and Cloud CDN.
 
 **Console Exploration and Learning Guidelines:**
 
@@ -167,7 +167,7 @@ Navigate to **Workflows > Workflows** to explore the visual workflow editor and 
 
 **In the RAD UI:**
 *   **Least Privilege:** The platform strictly uses dedicated custom service accounts with minimum required predefined roles (like `roles/cloudsql.client`) rather than the default compute service account. Using the default compute service account is an anti-pattern — it is automatically granted broad `roles/editor` permissions across the project.
-*   **Identity-Aware Proxy (IAP):** The `enable_iap` variable (Group 4) configures IAP, which authenticates end-users at the Google Front End before requests reach the backend — acting as a zero-trust access layer that replaces traditional VPN-based perimeter security.
+*   **Identity-Aware Proxy (IAP):** The `enable_iap` variable (Group 15 for App CloudRun; §4.B Identity-Aware Proxy for App GKE) configures IAP, which authenticates end-users at the Google Front End before requests reach the backend — acting as a zero-trust access layer that replaces traditional VPN-based perimeter security. In App GKE, IAP is enforced via a `GCPBackendPolicy` CRD on the Gateway backend and requires a pre-created OAuth 2.0 client (`iap_oauth_client_id` / `iap_oauth_client_secret`).
 
 **Console Exploration:**
 Navigate to **IAM & Admin > Service Accounts** and view the **Permissions** tab for each application service account to confirm minimum required roles. Navigate to **Security > Identity-Aware Proxy** to view which users and groups have been granted the `IAP-secured Web App User` role.
@@ -200,9 +200,9 @@ Navigate to **IAM & Admin > Service Accounts**, select a service account, and ex
 **Concept:** Storing, accessing, and rotating secrets and encryption keys, and securing the container build pipeline.
 
 **In the RAD UI:**
-*   **Secret Manager Integration:** The `enable_auto_password_rotation` (Group 11 for Cloud Run, Group 17 for GKE) variable automates credential rotation. Secret values are fetched by the Cloud Run/GKE workload at startup via the Secret Manager API — the plaintext value is never written to a config file, container image layer, or Terraform state file.
+*   **Secret Manager Integration:** The `enable_auto_password_rotation` (Group 11 for App CloudRun; §7.D Auto Password Rotation for App GKE) variable automates credential rotation using an Eventarc trigger on Secret Manager `SECRET_VERSION_ADD` events that invokes a Cloud Run Job rotator. Secret values are fetched by the Cloud Run/GKE workload at startup via the Secret Manager API — the plaintext value is never written to a config file, container image layer, or Terraform state file.
 *   **Binary Authorization:** In **Services GCP**, `enable_binary_authorization` (Group 11) configures a cluster admission policy requiring all container images to be signed by a trusted Cloud Build attestor. Unsigned images are rejected at deploy time.
-*   **Micro-segmentation:** In **App GKE**, `enable_network_segmentation` (Group 9) enforces Kubernetes Network Policies that restrict pod-to-pod traffic — only pods with matching label selectors can communicate within the namespace.
+*   **Micro-segmentation:** In **App GKE**, `enable_network_segmentation` (§3.D Networking & Network Policies) enforces Kubernetes Network Policies using GKE Dataplane V2 (Cilium) that restrict pod-to-pod traffic — only pods with matching label selectors can communicate within the namespace. Egress to Private Google Access endpoints is explicitly permitted, making this configuration compatible with VPC Service Controls environments.
 
 **Console Exploration:**
 Navigate to **Security > Secret Manager**. View a secret and note that you cannot read the value without `roles/secretmanager.secretAccessor` — `roles/secretmanager.viewer` allows listing secrets but not reading their material. Click **Versions** to see the rotation history. Navigate to **Security > Binary Authorization** to view the active policy and attestors.
@@ -232,6 +232,22 @@ The `enable_security_command_center` variable (Group 11, Services GCP) activates
 
 Navigate to **Kubernetes Engine > Service Mesh** to explore the mesh topology and traffic health dashboard. For simpler pod-to-pod security without a full service mesh, Kubernetes Network Policies (enabled via `enable_network_segmentation`) provide L3/L4 firewall rules based on pod label selectors.
 
+**Direct VPC egress and Private Service Connect:**
+
+**Direct VPC egress** (`vpc_egress_setting`, Group 14 in App CloudRun) routes all outbound traffic from a Cloud Run service through the VPC network rather than the public internet, enabling access to private IP resources — Cloud SQL, Memorystore, internal GKE services — without any public IP exposure.
+
+**Private Service Connect (PSC)** provides more targeted private connectivity: instead of routing all traffic through the VPC (as Direct VPC egress does), PSC creates a specific internal IP *endpoint* inside your VPC that privately forwards requests to a Google-managed service, a Google API, or another team's published service. Key differences from Private Service Access (PSA, which uses VPC peering):
+- PSA connects your entire VPC to Google's managed services network via peering — all PSA-supported services become reachable once peering is active.
+- PSC creates a dedicated endpoint IP (e.g. `10.0.1.20`) for one specific service — traffic to that IP is forwarded privately to the service without VPC peering and without traversing the public internet.
+- PSC supports **published services**: your team can expose a Cloud Run service or internal load balancer as a PSC service endpoint, letting other VPCs connect to it via their own private IP with no VPC peering and no public exposure.
+
+Use cases for PSC in application development:
+- Access Google APIs (Cloud Storage, Secret Manager, Pub/Sub) from a VPC with strict egress policies that block all public internet traffic — create a PSC endpoint for the `all-apis` bundle and all Google Cloud client library calls route through it automatically.
+- Connect to AlloyDB or Cloud SQL via a native PSC endpoint (supported instance types) instead of the Auth Proxy sidecar — eliminating the proxy process reduces latency and resource overhead per pod.
+- Share a microservice privately across teams within the same organisation — the owning team publishes the service via PSC; consuming teams connect via a private IP in their own VPC without network peering.
+
+Navigate to **VPC network > Private Service Connect** to explore endpoint and published service configuration. Select **Endpoints** to create an endpoint targeting a Google API bundle or managed service. Select **Published services** to expose your own service for private consumption by other VPCs.
+
 ### Data Retention, Compliance, and Identity Platform
 **Concept:** Enforcing data retention policies for compliance, and managing end-user authentication at scale.
 
@@ -254,7 +270,7 @@ Navigate to **Kubernetes Engine > Service Mesh** to explore the mesh topology an
 
 **In the RAD UI:**
 *   **Cloud SQL (Relational):** The `create_postgres` / `create_mysql` variables (Group 3 in Services GCP) provision fully managed PostgreSQL or MySQL. Cloud SQL provides strong consistency — a committed write is immediately visible to all readers.
-*   **Cloud Storage (Object Storage):** The `storage_buckets` variable (Group 10 for Cloud Run, Group 17 for GKE) provisions GCS buckets for unstructured data (files, images, backups, exported data). Multi-region Cloud Storage buckets provide eventual consistency for metadata operations (bucket listing) but strong read-after-write consistency for object operations since November 2020.
+*   **Cloud Storage (Object Storage):** The `storage_buckets` variable (Group 9 for App CloudRun; §3.C Storage for App GKE) provisions GCS buckets for unstructured data (files, images, backups, exported data). Each bucket supports per-bucket configuration of storage class (`STANDARD`, `NEARLINE`, `COLDLINE`, `ARCHIVE`), versioning, lifecycle rules, and uniform bucket-level access. Multi-region Cloud Storage buckets provide eventual consistency for metadata operations (bucket listing) but strong read-after-write consistency for object operations since November 2020.
 *   **Memorystore (Redis):** Covered in section 1.1 — used for ephemeral caching, not durable storage.
 
 **Console Exploration:**

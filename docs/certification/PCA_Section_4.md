@@ -13,7 +13,7 @@ You interact with each module by configuring its variables in the RAD UI deploym
 
 **In the RAD UI:**
 *   **Continuous Integration (CI):** The `enable_cicd_trigger` variable (Group 7) integrates the source repository (`github_repository_url`) with Cloud Build to compile containers and push them to Artifact Registry.
-*   **Continuous Deployment (CD):** The `cloud_deploy_stages` variable (Group 7 for Cloud Run, Group 7 for GKE) defines the pipeline stages (e.g., Dev -> Staging -> Prod) orchestrated by Google Cloud Deploy.
+*   **Continuous Deployment (CD):** The `cloud_deploy_stages` variable (Group 7 for Cloud Run; §6.B Cloud Deploy Pipeline in App GKE) defines the pipeline stages (e.g., Dev → Staging → Prod) orchestrated by Google Cloud Deploy. For App GKE, each stage gets its own isolated Kubernetes namespace, ServiceAccount, and Kubernetes Secret, with Skaffold manifests (`skaffold.yaml` and per-stage Deployment/Service YAML) generated automatically by the module. Set `require_approval = true` on a stage to enforce a manual promotion gate before any traffic is promoted to that environment.
 *   **Testing and Validation:** `traffic_split` (Group 3 for Cloud Run) allows for A/B testing and canary rollouts at the infrastructure layer to validate software safely.
 
 **Console Exploration:**
@@ -22,6 +22,7 @@ Navigate to **Cloud Build > Triggers** to see the CI integration. Navigate to **
 **Real-world example:** An engineering team releasing a payments API uses Cloud Build to run unit tests on every pull request merge. On success, Cloud Deploy automatically promotes the container image to the Staging environment. A canary rollout then directs 10% of production traffic to the new revision via `traffic_split`, and Cloud Monitoring alerts fire if the error rate on the new revision exceeds 0.5% — giving the team automated rollback capability before all users are affected.
 
 ### 💡 Additional Technical Process Objectives & Learning Guidelines
+*   **GKE Cluster Selection Modes for Multi-Cluster Deployments:** App GKE's `gke_cluster_selection_mode` variable (§3.D Networking) provides three multi-cluster deployment patterns: `primary` (single-cluster deployment for stateful or constrained workloads), `explicit` (deploy to all clusters named in `cluster_names` — for deterministic multi-region deployment), and `round-robin` (distribute across all Fleet-registered clusters). Architects must select the appropriate mode based on workload characteristics: stateful services requiring consistent storage access use `primary`; globally distributed stateless APIs use `round-robin` for automatic load distribution across regions.
 *   **Disaster Recovery:** Study the technical processes for implementing Pilot Light, Warm Standby, and Hot Standby (Active-Active) architectures.
 *   **Troubleshooting/Root Cause Analysis:** Understand SRE principles. Differentiate between diagnosing the symptom versus treating the root cause (e.g., using Cloud Profiler for memory leaks).
 *   **Service Catalog:** Explore Google Cloud Service Catalog to understand how administrators curate approved, compliant Terraform or Deployment Manager templates for developers.

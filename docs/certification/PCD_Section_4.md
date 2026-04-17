@@ -12,8 +12,8 @@ You interact with each module by configuring its variables in the RAD UI deploym
 **Concept:** Securely connecting applications to Google Cloud datastores (Cloud SQL, Cloud Storage) without exposing credentials or network endpoints.
 
 **In the RAD UI:**
-*   **Cloud SQL Auth Proxy:** The `enable_cloudsql_volume` variable (Group 3) automatically injects the Cloud SQL Auth Proxy as a sidecar container. The proxy establishes an encrypted tunnel to Cloud SQL using IAM-based authentication — no SSL certificate management, no public IP exposure, and no database password embedded in connection strings. Your application code connects to the database via a Unix socket (`/cloudsql/<instance-connection-name>`) mounted as a volume in the container.
-*   **Cloud Storage Integration:** The `storage_buckets` variable (Group 10 for Cloud Run, Group 17 for GKE) provisions Cloud Storage buckets and mounts them into running containers using the **Cloud Storage FUSE CSI driver**. The bucket appears as a local directory inside the container — your application can use standard filesystem operations (`open()`, `read()`, `write()`) rather than the Cloud Storage client library API. This is well-suited for reading large static assets, model files, or configuration data at startup.
+*   **Cloud SQL Auth Proxy:** The `enable_cloudsql_volume` variable (Group 3 for App CloudRun; §3.B Database for App GKE) automatically injects the Cloud SQL Auth Proxy as a sidecar container. The proxy establishes an encrypted tunnel to Cloud SQL using IAM-based authentication — no SSL certificate management, no public IP exposure, and no database password embedded in connection strings. Your application code connects to the database via a Unix socket (`/cloudsql/<instance-connection-name>`) mounted as a volume in the container.
+*   **Cloud Storage Integration:** The `storage_buckets` variable (Group 9 for App CloudRun; §3.C Storage for App GKE) provisions Cloud Storage buckets and mounts them into running containers using the **Cloud Storage FUSE CSI driver**. The bucket appears as a local directory inside the container — your application can use standard filesystem operations (`open()`, `read()`, `write()`) rather than the Cloud Storage client library API. This is well-suited for reading large static assets, model files, or configuration data at startup.
 
 **Console Exploration:**
 Navigate to **Cloud Run** or **Kubernetes Engine**, select the deployment, and look at the **Volumes** configuration to see how Cloud SQL sockets and Cloud Storage buckets are mounted into the container runtime. For Cloud Run, inspect the **Edit & deploy new revision** panel and click the **Volumes** tab — you will see the Cloud SQL connection volume and the Cloud Storage FUSE volume listed alongside any Secret Manager secret volumes.
@@ -145,6 +145,27 @@ Navigate to **APIs & Services > API Library** and select any enabled API, then c
 > **Real-World Example:** A developer is building a Cloud Run service that needs to list Compute Engine instances programmatically. They open the API Explorer for the Compute Engine API, select the `instances.list` method, enter their project ID and zone, and click Execute. The response shows the full JSON representation of each instance. They then add a `fields` parameter (field mask) to restrict the response to only `items/name,items/status` — the response is 80% smaller and the code they write models only the fields they need.
 
 ### 💡 Additional API Consumption Objectives & Learning Guidelines
+
+*   **Batching requests:** Some Google Cloud REST APIs support combining multiple operations into a single HTTP call to reduce network round-trips. The Google API Client Library exposes batching via `new_batch_http_request()`:
+    ```python
+    from googleapiclient.discovery import build
+
+    service = build('storage', 'v1')
+    batch = service.new_batch_http_request()
+
+    results = {}
+    def callback(request_id, response, exception):
+        if exception is None:
+            results[request_id] = response
+
+    batch.add(service.objects().get(bucket='my-bucket', object='file1.txt'),
+              callback=callback, request_id='r1')
+    batch.add(service.objects().get(bucket='my-bucket', object='file2.txt'),
+              callback=callback, request_id='r2')
+
+    batch.execute()  # Single HTTP call executes all queued operations
+    ```
+    Batching is most valuable when making many small API calls in a loop — fetching metadata for 50 Cloud Storage objects individually requires 50 round-trips; batching them into one call reduces this to a single round-trip. Not all APIs support batching — it applies to REST-based APIs (Cloud Storage JSON API, Compute Engine API) but not to gRPC-based APIs (Bigtable, Spanner, Pub/Sub), which use server-side streaming for equivalent high-throughput patterns.
 
 *   **Exponential Backoff for Error Handling:** Google Cloud APIs are designed for retryable errors (HTTP 429 Too Many Requests, 500 Internal Server Error, 503 Service Unavailable). The correct response is to retry with exponential backoff — not to fail immediately. The pattern:
     ```python

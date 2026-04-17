@@ -14,9 +14,10 @@ You interact with each module by configuring its variables in the RAD UI deploym
 **In the RAD UI:**
 *   **CI/CD Pipelines:** Both `App CloudRun` and `App GKE` include built-in CI/CD pipelines. The `enable_cicd_trigger` (Group 7) variable activates Cloud Build integration. When active, variables like `github_repository_url` (Group 7) and `cicd_trigger_config` (Group 7 for both modules) define how the system reacts to code commits.
 *   **Continuous Deployment:** Setting `cloud_deploy_stages` (Group 7 for both App CloudRun and App GKE) configures Google Cloud Deploy to take the built container and roll it out progressively across defined environments (e.g., dev, staging, prod).
+*   **Cloud Run functions (2nd gen):** Deploy new function versions using `gcloud functions deploy <name> --gen2 --source=.` or via the **Cloud Functions** console. Each deploy creates a new immutable version. Because Cloud Run functions 2nd gen runs on Cloud Run infrastructure, the same CI/CD principles apply — a Cloud Build trigger can include a `gcloud functions deploy` step alongside container build steps, enabling functions and services to be versioned and deployed through the same pipeline.
 
 **Console Exploration:**
-In the GCP Console, navigate to **Cloud Build > Triggers** to see the configured integration with source control. Then, navigate to **Cloud Deploy > Delivery pipelines** to visualise the progression of a release and understand how approvals or automated promotions move the application through its environments.
+In the GCP Console, navigate to **Cloud Build > Triggers** to see the configured integration with source control. Then, navigate to **Cloud Deploy > Delivery pipelines** to visualise the progression of a release and understand how approvals or automated promotions move the application through its environments. For Cloud Functions, navigate to **Cloud Functions > &lt;function&gt;** and click the **Versions** tab to see the full version history and which version is currently receiving traffic.
 
 > **Real-World Example:** A development team merges a feature branch into `main`. The Cloud Build trigger fires, builds the container image, pushes it to Artifact Registry, and creates a new Cloud Deploy release targeting the `dev` stage. Automated integration tests pass, and the release is automatically promoted to `staging`. A manual approval gate in Cloud Deploy requires the engineering manager to review test results before the release is promoted to `prod` — providing a human checkpoint before production traffic is affected.
 
@@ -25,10 +26,11 @@ In the GCP Console, navigate to **Cloud Build > Triggers** to see the configured
 
 **In the RAD UI:**
 *   **Traffic Allocation (Cloud Run):** The `App CloudRun` module exposes the `traffic_split` variable (Group 3). This allows practitioners to implement canary deployments declaratively (e.g., routing 5% of traffic to a new revision for testing).
+*   **Traffic Splitting (Cloud Run functions 2nd gen):** Cloud Run functions 2nd gen supports traffic splitting between function versions using the same model as Cloud Run services. Deploy a new version without routing traffic using `gcloud functions deploy <name> --gen2 --no-traffic`, then shift traffic progressively with `gcloud functions set-traffic <name> --gen2 --traffic=<version>=<percentage>`.
 *   **Canary Deployments (GKE):** While Cloud Run manages traffic natively at the revision level, GKE manages progressive rollouts via Cloud Deploy target configurations.
 
 **Console Exploration:**
-Navigate to **Cloud Run** in the GCP Console, select the deployed service, and click on the **Revisions** tab. Observe the "Traffic" column to see traffic weighting. For GKE, navigate to **Cloud Deploy > Delivery pipelines** and review the "Rollout" details to observe multi-stage deployments.
+Navigate to **Cloud Run** in the GCP Console, select the deployed service, and click on the **Revisions** tab. Observe the "Traffic" column to see traffic weighting. For Cloud Functions, navigate to **Cloud Functions > &lt;function&gt; > Traffic** to view and adjust the active traffic split across function versions. For GKE, navigate to **Cloud Deploy > Delivery pipelines** and review the "Rollout" details to observe multi-stage deployments.
 
 > **Real-World Example:** A team releases a new checkout page redesign. They deploy it as a new Cloud Run revision but route only 5% of traffic to it using `traffic_split`. Cloud Monitoring dashboards show the new revision's error rate is identical to the stable version. After 30 minutes, traffic is shifted to 50%, then 100% — all with zero downtime. If the error rate had spiked on the new revision, the team would have instantly redirected 100% of traffic back to the previous revision with a single variable change.
 
@@ -37,10 +39,10 @@ Navigate to **Cloud Run** in the GCP Console, select the deployed service, and c
 
 **In the RAD UI:**
 *   **Scaling Limits (Cloud Run):** Variables `min_instance_count` (Group 3) and `max_instance_count` (Group 3) are applied directly to the Cloud Run service. Setting `min_instance_count` > 0 eliminates cold starts, while `max_instance_count` caps costs.
-*   **Horizontal Pod Autoscaler (HPA in GKE):** The `App GKE` module similarly uses `min_instance_count` (Group 3) and `max_instance_count` (Group 3) alongside `container_resources` (Group 3) limits. The module also automatically provisions Pod Disruption Budgets (configured via `pdb_min_available`, Group 14) to ensure a minimum number of pods remain available during voluntary disruptions.
-
+*   **Horizontal Pod Autoscaler (HPA in GKE):** The `App GKE` module similarly uses `min_instance_count` and `max_instance_count` (§3.A Compute & Scaling) alongside `container_resources` (§3.A) limits. The module also automatically provisions Pod Disruption Budgets (configured via `pdb_min_available`, §7.A Reliability & Scheduling) to ensure a minimum number of pods remain available during voluntary disruptions (node upgrades, autoscaler activity). `pdb_min_available` accepts an integer (e.g. `"1"`) or a percentage (e.g. `"50%"`) — for multi-replica workloads `"50%"` maintains half the fleet during any voluntary disruption.
+*   **Autoscaling (Cloud Run functions 2nd gen):** Configure minimum and maximum instances via `--min-instances` and `--max-instances` flags on `gcloud functions deploy`, or adjust them under **Cloud Functions > &lt;function&gt; > Edit** in the console. Setting `--min-instances=1` eliminates cold starts for latency-sensitive functions; `--max-instances` caps concurrent instances and controls maximum spend under a traffic spike. These settings use the same underlying autoscaling model as Cloud Run services.
 **Console Exploration:**
-Still in the **Revisions** tab of your Cloud Run service in the Console, inspect the autoscaling and concurrency settings. For GKE, navigate to **Kubernetes Engine > Workloads**, select the deployment, and view the **Autoscaling** tab to see current CPU/Memory targets driving the HPA.
+Still in the **Revisions** tab of your Cloud Run service in the Console, inspect the autoscaling and concurrency settings. For Cloud Functions, navigate to **Cloud Functions > &lt;function&gt; > Edit** and expand the **Runtime, build, connections and security settings** section to view min/max instance configuration. For GKE, navigate to **Kubernetes Engine > Workloads**, select the deployment, and view the **Autoscaling** tab to see current CPU/Memory targets driving the HPA.
 
 ### 💡 Additional Compute Management Objectives & Learning Guidelines
 The ACE exam extensively tests manual VM management, GKE operations, snapshots, and manual Kubernetes scaling.
@@ -85,7 +87,15 @@ The ACE exam extensively tests manual VM management, GKE operations, snapshots, 
 
 ### Managing and securing objects in Cloud Storage buckets
 **In the RAD UI:**
-The App CloudRun and App GKE modules provision GCS buckets via the `storage_buckets` variable. For the exam, you must also understand the operational and security controls available on those buckets.
+The App CloudRun (Group 9) and App GKE (§3.C) modules provision GCS buckets via the `storage_buckets` variable. Key per-bucket security and management controls are available directly in the RAD UI:
+
+*   **App CloudRun (Group 9 `storage_buckets`):**
+    *   `versioning_enabled = true` — keeps previous versions of overwritten or deleted objects, enabling recovery from accidental overwrites.
+    *   `uniform_bucket_level_access = true` — disables per-object ACLs and enforces IAM-only access (recommended for all new buckets; equivalent to the console's **uniform bucket-level access** setting).
+    *   `public_access_prevention = "enforced"` — blocks all public access even if ACLs are set. Leave as `"enforced"` unless the bucket explicitly serves public content.
+    *   `lifecycle_rules` — automate transitions between storage classes and object deletion (e.g. delete objects older than 90 days, transition to Coldline after 30 days).
+
+    For the exam, you must also understand the operational and security controls available on those buckets.
 
 **Console Exploration:**
 Navigate to **Cloud Storage > Buckets**. Click into a bucket and explore:
@@ -255,6 +265,8 @@ The ACE exam requires hands-on familiarity with the full observability stack —
 *   **Configuring and deploying Ops Agent:** The **Ops Agent** is the recommended unified agent for collecting logs and metrics from Compute Engine VMs. It replaces the older Stackdriver Logging and Monitoring agents. Install it on a VM by running the agent install script (available in **Monitoring > Settings > Agent installation instructions** or via the VM's Observability tab), or automate installation fleet-wide using **VM Manager OS Configuration policies**. The Ops Agent collects system metrics (CPU, disk, memory, network), application logs from standard log paths, and can be configured to scrape Prometheus-format metrics endpoints.
 
 *   **Google Cloud Managed Service for Prometheus:** Navigate to **Monitoring > Managed Prometheus** to explore the fully managed Prometheus-compatible metrics service. GKE Autopilot (as used by App GKE) supports Managed Service for Prometheus out of the box — enable it by setting `enableManagedPrometheus: true` in the GKE cluster configuration. Once enabled, applications that expose Prometheus-format metrics endpoints are automatically scraped and their metrics are queryable via PromQL in the Monitoring console. This avoids the need to operate a self-managed Prometheus deployment.
+
+    **In the RAD UI (App GKE):** The App GKE module deploys workloads on GKE Autopilot. After deployment, navigate to **Kubernetes Engine > Clusters**, select your cluster, and look for the **Managed Prometheus** section under the cluster details to confirm the collection endpoint is active. If your application container exposes a `/metrics` endpoint in Prometheus format, you can add a `PodMonitoring` custom resource (applied via `kubectl apply`) to register the scrape target — metrics then appear in **Monitoring > Metrics explorer** under the `prometheus.googleapis.com/` namespace. No separate Prometheus installation is needed in an Autopilot cluster.
 
     > **Real-World Example:** A GKE application exposes a `/metrics` endpoint in Prometheus format (tracking queue depth, request rates, and database pool usage). After enabling Managed Service for Prometheus on the cluster, these custom metrics appear in Cloud Monitoring within minutes — the team creates Cloud Monitoring alert policies using PromQL conditions, and the metrics feed into Grafana dashboards via the Managed Prometheus query API.
 
