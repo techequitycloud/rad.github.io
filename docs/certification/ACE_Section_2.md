@@ -68,8 +68,6 @@ The ACE exam also heavily covers standard Compute Engine VMs, App Engine, and Cl
 
     > **Real-World Example:** A document processing pipeline uses Eventarc to trigger a Cloud Run function whenever a PDF is uploaded to a Cloud Storage bucket. Eventarc detects the `google.cloud.storage.object.v1.finalized` event and invokes the Cloud Run service with the event payload — the service extracts text, calls the Document AI API, and stores results in Firestore. No polling loop is needed, and the architecture scales to zero when no documents are being processed.
 
-*   **App Engine:** The exam tests your ability to choose between App Engine Standard (language-specific sandboxes) and Flexible (custom containers). You can deploy a simple "Hello World" application using the `gcloud app deploy` command in Cloud Shell to understand its `app.yaml` configuration structure.
-
 *   **Cloud Functions (2nd gen):** Used for event-driven, single-purpose functions. Practice creating a Cloud Function triggered by a Cloud Storage bucket upload or a Pub/Sub message via the **Cloud Functions** console. Note that Cloud Functions 2nd gen is built on Cloud Run, giving functions the same concurrency and networking features you explored in the App CloudRun module.
 
 ---
@@ -275,8 +273,6 @@ Navigate to **Cloud Build > History** to see the automated pipelines executing t
 
 ### 💡 Additional IaC Objectives & Learning Guidelines
 The ACE exam tests knowledge of the full Google Cloud IaC toolchain, including tools beyond Terraform.
-
-*   **Inline Infrastructure Self-Provisioning:** The App GKE module supports an Inline Infrastructure mode (§9) that self-provisions the entire GCP environment — VPC, GKE Autopilot cluster, Cloud Filestore NFS, and Cloud SQL — from within the module itself, without requiring a separately deployed GCP Services module. This is controlled by the `prereq_needs_*` variables (e.g., `prereq_needs_gke = true`, `prereq_needs_nfs = true`). The resulting infrastructure is fully managed by the module's Terraform state and can be torn down cleanly. This pattern is valuable for ephemeral per-feature-branch environments where standing up a complete environment and deleting it after a pull request is merged is the desired workflow.
 
 *   **Fabric FAST:** The GCP Fast Automated Security Templates (Fabric FAST) is an opinionated, production-grade Terraform-based framework developed by Google Cloud Professional Services. It provides a hierarchical set of bootstrapping stages (bootstrap, resource management, networking, security) that implement GCP Landing Zone best practices out of the box. While the RAD platform is a purpose-built deployment framework for its application modules, Fabric FAST is the reference architecture for building enterprise-grade GCP foundations. Explore the public repository for `cloud-foundation-fabric` on Cloud Source Repositories or via the Google Cloud documentation to understand its stage-based structure.
 
