@@ -22,9 +22,9 @@ As you explore these modules, practice mapping the infrastructure patterns deplo
 **Concept:** Ensuring the architecture meets strict organizational security policies, handles data securely during transit, and protects secrets.
 
 **In the RAD UI:**
-*   **Identity-Aware Proxy (IAP):** Review the `enable_iap` (Group 15 for Cloud Run, Group 17 for GKE) variable. IAP protects applications by verifying user identity and context before allowing requests to reach the service.
-*   **Cloud Armor (WAF):** Activating `enable_cloud_armor` (Group 16 for Cloud Run, Group 18 for GKE) deploys a Global External Application Load Balancer with a Serverless Network Endpoint Group (NEG) or Gateway backend, attaching Web Application Firewall (WAF) policies.
-*   **Secret Manager Integration:** The `enable_auto_password_rotation` (Group 11 for Cloud Run, Group 10 for GKE) variable configures automated secret rotation, preventing plaintext secrets in environments.
+*   **Identity-Aware Proxy (IAP):** Review the `enable_iap` variable (Group 15 for Cloud Run; §4.B Identity-Aware Proxy in App GKE). IAP protects applications by verifying user identity and context before allowing requests to reach the service. In App GKE, IAP is configured via a `GCPBackendPolicy` CRD on the Gateway backend and requires `iap_oauth_client_id` / `iap_oauth_client_secret` (§4.B).
+*   **Cloud Armor (WAF):** Activating `enable_cloud_armor` (Group 16 for Cloud Run; §4.A Cloud Armor WAF in App GKE) deploys a Global External Application Load Balancer with a Serverless Network Endpoint Group (NEG) or Gateway backend, attaching Web Application Firewall (WAF) policies.
+*   **Secret Manager Integration:** The `enable_auto_password_rotation` variable (Group 11 for Cloud Run; §7.D Auto Password Rotation in App GKE) configures automated secret rotation, preventing plaintext secrets in environments.
 
 **Console Exploration:**
 Navigate to **Security > Identity-Aware Proxy** to view access policies. Navigate to **Network Security > Cloud Armor** to inspect the edge WAF rules. Navigate to **Security > Secret Manager** to see how environment variables resolve securely.
@@ -69,8 +69,8 @@ Navigate to **Monitoring > Dashboards** and view the custom Cloud Run or GKE das
 
 **In the RAD UI:**
 *   **Global Load Balancing:** When `enable_cloud_armor` is active, it provisions a global L7 load balancer capable of routing across regions.
-*   **Pod Disruption Budgets (GKE):** The `pdb_min_available` variable (Group 14) ensures a minimum number of replicas are always available during voluntary disruptions.
-*   **Topology Spread (GKE):** The `enable_topology_spread` variable (Group 14) distributes pod replicas evenly across availability zones, ensuring a single zone failure cannot take down the entire deployment.
+*   **Pod Disruption Budgets (GKE):** The `pdb_min_available` variable (§7.A Reliability & Scheduling in App GKE) ensures a minimum number of replicas are always available during voluntary disruptions. Accepts an integer (`"1"`) or percentage (`"50%"`).
+*   **Topology Spread (GKE):** The `enable_topology_spread` variable (§7.B Reliability & Scheduling in App GKE) distributes pod replicas evenly across availability zones, ensuring a single zone failure cannot take down the entire deployment. Set `topology_spread_strict = true` to enforce the zone spread constraint absolutely (pods will not be scheduled if the zone balance cannot be maintained).
 *   **Database HA:** `postgres_database_availability_type` (Group 3 in GCP Services) allows switching between ZONAL and REGIONAL (multi-zone high availability) configurations. A REGIONAL instance provisions a synchronous hot standby in a separate zone and automatically promotes it within approximately 60 seconds if the primary zone fails.
 
 **Console Exploration:**
@@ -92,7 +92,7 @@ Review the **Revisions** tab in Cloud Run for concurrency limits, and the **Auto
 **Concept:** Guaranteeing Recovery Point Objectives (RPO) and Recovery Time Objectives (RTO).
 
 **In the RAD UI:**
-*   **Automated Jobs & Cloud Scheduler:** The `backup_schedule` (Group 12 for Cloud Run, Group 11 for GKE) and `backup_retention_days` (Group 12 for Cloud Run, Group 11 for GKE) variables configure automated Cloud Scheduler jobs that trigger containerized Cloud Run Jobs or Kubernetes CronJobs to stream database backups securely to Cloud Storage.
+*   **Automated Jobs & Cloud Scheduler:** For App CloudRun, the `backup_schedule` and `backup_retention_days` variables (Group 12) configure automated Cloud Scheduler jobs that trigger containerized Cloud Run Jobs to stream database backups to Cloud Storage. For App GKE, equivalent database export scheduling is configured via the `cron_jobs` variable (§3.E Initialization Jobs & CronJobs) — the module ships a built-in `db-export` CronJob image (via `App_Common/modules/app_db_clients`) that can be scheduled to run on any cron expression and write backups to the module's GCS backup bucket. Backup bucket object retention is governed by the `storage_buckets` lifecycle rules (§3.C).
 
 **Console Exploration:**
 Go to **Cloud Scheduler** to see the cron configuration, and **Cloud Run > Jobs** to see the containerized execution history.
