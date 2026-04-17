@@ -220,7 +220,7 @@ Navigate to **VPC network > Firewall policies** to explore Network Firewall Poli
 
 **In the RAD UI:**
 *   **Services GCP:** `availability_regions` (Group 2) and `subnet_cidr_range` (Group 2) define the core VPC. Private Service Access automatically peers managed services like Cloud SQL and Memorystore to this private network.
-*   **App CloudRun:** `vpc_egress_setting` (Group 14) configures Direct VPC Egress, allowing the serverless container to securely access internal resources like the database via internal IP addresses.
+*   **App CloudRun:** `vpc_egress_setting` (Group 14) configures Direct VPC Egress, allowing the serverless container to securely access internal resources like the database via internal IP addresses. The companion `ingress_settings` variable (Group 14) controls which traffic sources may reach the Cloud Run service: `all` (public internet, no restriction), `internal` (VPC traffic only), or `internal-and-cloud-load-balancing` (required when `enable_cloud_armor = true` — restricts direct service URL access so all inbound traffic must flow through the load balancer and Cloud Armor WAF before reaching Cloud Run).
 *   **App GKE:** Uses native Kubernetes networking, but `enable_network_segmentation` (§3.D Networking & Network Policies) can enforce network policies to restrict internal pod-to-pod communication.
 
 ### Choosing and deploying load balancers
@@ -275,6 +275,8 @@ Navigate to **Cloud Build > History** to see the automated pipelines executing t
 
 ### 💡 Additional IaC Objectives & Learning Guidelines
 The ACE exam tests knowledge of the full Google Cloud IaC toolchain, including tools beyond Terraform.
+
+*   **Inline Infrastructure Self-Provisioning:** The App GKE module supports an Inline Infrastructure mode (§9) that self-provisions the entire GCP environment — VPC, GKE Autopilot cluster, Cloud Filestore NFS, and Cloud SQL — from within the module itself, without requiring a separately deployed GCP Services module. This is controlled by the `prereq_needs_*` variables (e.g., `prereq_needs_gke = true`, `prereq_needs_nfs = true`). The resulting infrastructure is fully managed by the module's Terraform state and can be torn down cleanly. This pattern is valuable for ephemeral per-feature-branch environments where standing up a complete environment and deleting it after a pull request is merged is the desired workflow.
 
 *   **Fabric FAST:** The GCP Fast Automated Security Templates (Fabric FAST) is an opinionated, production-grade Terraform-based framework developed by Google Cloud Professional Services. It provides a hierarchical set of bootstrapping stages (bootstrap, resource management, networking, security) that implement GCP Landing Zone best practices out of the box. While the RAD platform is a purpose-built deployment framework for its application modules, Fabric FAST is the reference architecture for building enterprise-grade GCP foundations. Explore the public repository for `cloud-foundation-fabric` on Cloud Source Repositories or via the Google Cloud documentation to understand its stage-based structure.
 
