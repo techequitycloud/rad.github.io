@@ -217,6 +217,7 @@ const sidebars: SidebarsConfig = {
           items: [
             { type: 'doc', id: 'modules/Wordpress_CloudRun/Wordpress_CloudRun_Guide', label: 'Cloud Run' },
             { type: 'doc', id: 'modules/Wordpress_GKE/Wordpress_GKE_Guide', label: 'GKE' },
+            { type: 'doc', id: 'modules/Wordpress_Common/Wordpress_Common_Guide', label: 'Common' },
           ],
         },
         {

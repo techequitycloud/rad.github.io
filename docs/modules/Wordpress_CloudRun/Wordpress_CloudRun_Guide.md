@@ -9,246 +9,409 @@
 
 <a href="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
 
-This guide describes the configuration variables that are **unique to the `Wordpress CloudRun` module**. Because `Wordpress CloudRun` is a wrapper around `App CloudRun`, the vast majority of its variables are passed directly to that base module and are fully documented in the [App CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md). This guide explains the WordPress-specific additions, the differences in default values, and what the `Wordpress_Common` sub-module provisions automatically.
 
-> **Where to look:** If a variable you are configuring is not described here, consult the [App CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md). All `App CloudRun` features — access and networking, IAP, Cloud Armor, CDN, CI/CD, Cloud Deploy, Binary Authorization, traffic splitting, and VPC Service Controls — are available in `Wordpress CloudRun` with identical behaviour and configuration.
+`Wordpress_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [WordPress](https://wordpress.org/) on Google Cloud Run Gen2.
 
----
+Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply WordPress-appropriate defaults and to call the `Wordpress_Common` sub-module, which generates the application's container build context, PHP configuration, MySQL connection settings, Redis object cache configuration, and WordPress-specific secrets. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.
 
-## WordPress Application Architecture
-
-`Wordpress CloudRun` composes two modules:
-
-```
-Wordpress_CloudRun
-├── Wordpress_Common        (generates WordPress-specific configuration)
-│   ├── Custom PHP 8.4 + Apache container image
-│   │   └── Extensions: gd, mysqli, imagick, bcmath, intl, zip
-│   ├── MySQL 8.0 database type and defaults
-│   ├── GCS uploads bucket definition
-│   ├── 8 WordPress security keys/salts (auto-generated in Secret Manager)
-│   └── db-init initialization job (creates database and user on every apply)
-└── App_CloudRun            (Cloud Run v2 platform)
-    ├── Provisions Cloud SQL MySQL 8.0 (or discovers shared Services_GCP instance)
-    ├── Mounts GCS wp-uploads bucket via GCS Fuse (requires gen2 execution environment)
-    ├── Injects WordPress secrets into the Cloud Run revision via Secret Manager
-    └── Runs db-init Cloud Run Job (execute_on_apply = true — idempotent)
-```
-
-On first deployment the `db-init` Cloud Run Job (using `mysql:8.0-debian`) connects to the Cloud SQL instance via its **private IP over TCP** (not the Unix socket — the socket is not available during job execution) and creates the WordPress database and user. The job runs on **every** `terraform apply` because it is idempotent — it safely skips steps that are already complete.
-
-> **Note on `service_url`:** Unlike `Wordpress GKE`, the Cloud Run wrapper passes `local.predicted_service_url` to `Wordpress_Common` before the Cloud Run service exists. This allows `Wordpress_Common` to pre-configure `WP_HOME` and `WP_SITEURL` using the deterministic Cloud Run URL (`https://{service_name}-{project_number}.{region}.run.app`), ensuring WordPress knows its own URL from the first request without requiring a post-deployment update.
+> **Where to look:** If a variable you are configuring is not described here, consult the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md). All `App_CloudRun` features — access and networking, IAP, Cloud Armor, CDN, CI/CD, Cloud Deploy, Binary Authorization, traffic splitting, and VPC Service Controls — are available in `Wordpress_CloudRun` with identical behaviour and configuration.
 
 ---
 
-## Platform-Inherited Configuration
+## §1 Module Overview
 
-The groups below are **fully inherited from `App CloudRun`** and behave identically. Refer to the linked sections of the [App CloudRun Configuration Guide](../App_CloudRun/App_CloudRun_Guide.md) for complete documentation, including all option values, validation commands, and Console navigation paths.
-
-| Configuration Area | App CloudRun Guide Section |
+| Property | Value |
 |---|---|
-| Module Metadata & Configuration | [Group 0](../App_CloudRun/App_CloudRun_Guide.md#group-0-module-metadata--configuration) |
-| Project & Identity | [Group 1](../App_CloudRun/App_CloudRun_Guide.md#group-1-project--identity) |
-| CI/CD & GitHub Integration | [Group 7](../App_CloudRun/App_CloudRun_Guide.md#group-7-cicd--github-integration) |
-| Storage & Filesystem — NFS | [Group 8](../App_CloudRun/App_CloudRun_Guide.md#group-8-storage--filesystem--nfs) |
-| Storage & Filesystem — GCS | [Group 9](../App_CloudRun/App_CloudRun_Guide.md#group-9-storage--filesystem--gcs) |
-| Backup & Maintenance (schedule, retention, import) | [Group 12](../App_CloudRun/App_CloudRun_Guide.md#group-12-backup--maintenance) |
-| Custom Initialisation & SQL | [Group 13](../App_CloudRun/App_CloudRun_Guide.md#group-13-custom-initialisation--sql) |
-| Access & Networking (ingress, VPC egress, network name) | [Group 14](../App_CloudRun/App_CloudRun_Guide.md#group-14-access--networking) |
-| Identity-Aware Proxy | [Group 15](../App_CloudRun/App_CloudRun_Guide.md#group-15-identity-aware-proxy) |
-| Cloud Armor & CDN | [Group 16](../App_CloudRun/App_CloudRun_Guide.md#group-16-cloud-armor--cdn) |
-| VPC Service Controls | [Group 17](../App_CloudRun/App_CloudRun_Guide.md#group-17-vpc-service-controls) |
+| Sub-module | `Wordpress_Common` |
+| Default application name | `wordpress` |
+| Default display name | `Wordpress` |
+| Default version | `latest` |
+| Container port | `80` |
+| Execution environment | `gen2` |
+| Database engine | **MySQL 8.0** |
+| Default DB name | `wp` |
+| Default DB user | `wp` |
+| NFS enabled | `true` (mount: `/mnt/nfs`) |
+| Redis enabled | `true` (object cache) |
+| Image source | `custom` (Cloud Build) |
+| Platform-managed job | none (empty default) |
+
+`Wordpress_Common` generates the Dockerfile (based on the official `wordpress` image), PHP configuration (`php.ini` overrides), WordPress `wp-config.php` template, and WordPress-specific secrets. Redis object caching is enabled by default; `Wordpress_Common` injects the required `WP_REDIS_HOST` and `WP_REDIS_PORT` environment variables when `enable_redis = true`.
+
+**Note on MySQL:** This module uses MySQL 8.0, not PostgreSQL. The Cloud SQL Auth Proxy sidecar (`enable_cloudsql_volume = true`) provides a Unix socket connection. Attempting to disable `enable_cloudsql_volume` without switching to TCP-based connectivity will break the database connection.
 
 ---
 
-## WordPress-Specific Configuration
+## §2 IAM & Project Identity
 
-The sections below document variables that are **unique to this module** or that carry **WordPress-specific defaults** which differ from the `App CloudRun` base.
+Behaviour is identical to `App_CloudRun`. The following variables are passed through unchanged.
 
----
-
-### Application Identity
-
-The variables in this group work identically to [App CloudRun Group 2](../App_CloudRun/App_CloudRun_Guide.md#group-2-application-identity), but `Wordpress CloudRun` provides WordPress-appropriate defaults. Note that this module uses `display_name` and `description` (rather than `application_display_name` and `application_description`) for the human-readable fields. The three PHP configuration variables are unique to this module.
-
-| Variable | Default | Options / Format | Description & Implications |
-|---|---|---|---|
-| `application_name` | `"wordpress"` | `[a-z][a-z0-9-]{0,19}` | Internal identifier for this WordPress deployment. Used as the base name for the Cloud Run service, Artifact Registry repository, Cloud SQL database/user, GCS buckets, and Secret Manager secrets. **Do not change after initial deployment.** |
-| `display_name` | `"Wordpress"` | Any string | Human-readable name shown in the platform UI, the Cloud Run service list, and monitoring dashboards. May be updated freely without affecting resource names. |
-| `description` | `"Wordpress CMS on Cloud Run"` | Any string | Brief description of the application. Visible in the Cloud Run service details and platform documentation. |
-| `application_version` | `"latest"` | Any string (e.g. `"6.5.3"`, `"6.6"`) | Version tag passed to Cloud Build as the `APP_VERSION` build argument and baked into the container image. Incrementing this value triggers a new build and Cloud Run revision. Avoid `"latest"` in production — pin to a specific WordPress version for reproducibility and reliable rollbacks. |
-| `php_memory_limit` | `"512M"` | String with unit suffix (e.g. `"256M"`, `"1G"`) | PHP `memory_limit` directive applied inside the WordPress container. WordPress loads all active plugins into memory on each request — sites with many or memory-intensive plugins may exhaust the default. **Symptoms of an insufficient value:** "Allowed memory size exhausted" fatal errors, blank pages, or silent failures during plugin activation or import operations. Common production values: `"512M"` (default), `"1G"` (heavy plugin workloads). |
-| `upload_max_filesize` | `"64M"` | String with unit suffix (e.g. `"64M"`, `"256M"`) | PHP `upload_max_filesize` directive. Sets the maximum size of a **single file** that can be uploaded via the WordPress media library, plugin installer, or theme installer. Must be **equal to or less than `post_max_size`**. Increase for sites managing large video, audio, or high-resolution image uploads. |
-| `post_max_size` | `"64M"` | String with unit suffix (e.g. `"64M"`, `"256M"`) | PHP `post_max_size` directive. Sets the maximum size of all POST data in a single HTTP request, including file uploads. Must be **greater than or equal to `upload_max_filesize`**. If a client exceeds this limit, PHP discards all `$_POST` variables — in WordPress this causes failed uploads, empty form submissions, and silent post-save failures. |
-
-#### Validating PHP Limits
-
-```bash
-# Confirm PHP limits are active in a running Cloud Run revision
-gcloud run services describe SERVICE_NAME \
-  --region=REGION \
-  --format="yaml(spec.template.spec.containers[0].env)" \
-  | grep -E "PHP_MEMORY_LIMIT|UPLOAD_MAX_FILESIZE|POST_MAX_SIZE"
-```
-
----
-
-### Runtime & Scaling
-
-All variables in this group behave as documented in [App CloudRun Group 3](../App_CloudRun/App_CloudRun_Guide.md#group-3-runtime--scaling). The table below highlights the defaults that `Wordpress CloudRun` changes from the base module.
-
-| Variable | WordPress Default | App CloudRun Default | Note |
-|---|---|---|---|
-| `container_image_source` | `"custom"` | `"custom"` | WordPress always builds a custom PHP 8.4 + Apache image via Cloud Build. Override with `"prebuilt"` only when supplying your own pre-built WordPress image via `container_image`. |
-| `container_port` | `80` | `8080` | Apache in the WordPress container listens on port 80. Do not change unless you have modified the container's Apache configuration. |
-| `cpu_limit` | `"1000m"` | *(set via `container_resources`)* | Exposed as a top-level variable for convenience alongside `memory_limit`. |
-| `memory_limit` | `"2Gi"` | `"512Mi"` *(via `container_resources`)* | WordPress with PHP 8.x requires substantially more memory than a generic application. The `2Gi` default accommodates WordPress core, WooCommerce, Yoast SEO, and moderate media library usage. Increase to `4Gi` for sites with many concurrent users or heavy plugin workloads. |
-| `min_instance_count` | `0` | `0` | Scale-to-zero is enabled by default. Set to `1` to eliminate cold-start delays for production sites with SLA requirements or persistent database connections. |
-| `max_instance_count` | `1` | `1` | WordPress stores uploaded media in a GCS Fuse–mounted bucket, which supports concurrent writers. However, in-memory PHP session state and some plugin caches may not be multi-instance–safe. Increase this value only after confirming all installed plugins handle concurrent access correctly. |
-| `execution_environment` | `"gen2"` | `"gen2"` | The gen2 execution environment is **required** for NFS volume mounts and GCS Fuse mounts. Do not change to `"gen1"` — doing so will prevent NFS and GCS Fuse volumes from mounting and WordPress will lose access to its media library. |
-| `container_resources` | `null` *(uses `cpu_limit`/`memory_limit`)* | `null` | When `container_resources` is set explicitly it overrides the separate `cpu_limit` and `memory_limit` variables. Use `container_resources` when you also need to specify CPU/memory *requests* or ephemeral storage limits. |
-
----
-
-### Environment Variables & Secrets
-
-Refer to [App CloudRun Group 4](../App_CloudRun/App_CloudRun_Guide.md#group-4-environment-variables--secrets) for documentation on `environment_variables`, `secret_environment_variables`, `secret_rotation_period`, and `secret_propagation_delay`.
-
-#### WordPress Auto-Generated Security Keys & Salts
-
-`Wordpress_Common` automatically provisions **eight WordPress cryptographic secrets** in Secret Manager and injects them into the Cloud Run revision as secret references. You do not need to supply values — they are generated as random 64-character strings on the first deployment and persist across subsequent applies.
-
-| Secret | WordPress Constant | Purpose |
+| Variable | Default | Notes |
 |---|---|---|
-| `*-auth-key` | `WORDPRESS_AUTH_KEY` | Signs authentication cookies |
-| `*-secure-auth-key` | `WORDPRESS_SECURE_AUTH_KEY` | Signs authentication cookies over HTTPS |
-| `*-logged-in-key` | `WORDPRESS_LOGGED_IN_KEY` | Identifies logged-in cookies |
-| `*-nonce-key` | `WORDPRESS_NONCE_KEY` | Provides nonce uniqueness |
-| `*-auth-salt` | `WORDPRESS_AUTH_SALT` | Salts the auth key |
-| `*-secure-auth-salt` | `WORDPRESS_SECURE_AUTH_SALT` | Salts the secure auth key |
-| `*-logged-in-salt` | `WORDPRESS_LOGGED_IN_SALT` | Salts the logged-in key |
-| `*-nonce-salt` | `WORDPRESS_NONCE_SALT` | Salts the nonce key |
+| `project_id` | _(required)_ | Target GCP project |
+| `tenant_deployment_id` | `"demo"` | Appended to resource names |
+| `resource_creator_identity` | `"rad-module-creator@..."` | Terraform executor SA |
+| `resource_labels` | `{}` | Applied to all resources |
+| `support_users` | `[]` | Alert recipients & IAM members |
 
-> **Important:** Rotating these secrets invalidates all existing browser cookies. Every logged-in WordPress user — including administrators — will be immediately signed out and will need to re-authenticate. Rotate only if a secret is believed to have been compromised.
+---
 
-```bash
-# Confirm all WordPress secrets are present in Secret Manager
-gcloud secrets list --project=PROJECT_ID \
-  --filter="name:RESOURCE_PREFIX" \
-  --format="table(name,createTime)"
-```
+## §3 Core Service Configuration
 
-#### WordPress Pre-Set Environment Variables
+### §3.A Application Identity
 
-`Wordpress_Common` injects the following environment variables into all Cloud Run revisions automatically. Override via `environment_variables` only when customising beyond the defaults.
-
-| Variable | Pre-Set Value | Description |
+| Variable | Default | Notes |
 |---|---|---|
-| `WORDPRESS_TABLE_PREFIX` | `wp_` | Standard WordPress table prefix. Override only when migrating an existing database with a non-standard prefix. |
-| `WORDPRESS_DEBUG` | `false` | Disables debug mode. Set to `true` in development environments only — debug output may expose sensitive information in HTTP responses. |
-| `ENABLE_REDIS` | `true` / `false` | Controlled by `enable_redis`. |
-| `WP_REDIS_HOST` | *value of `redis_host`* | Injected only when `enable_redis = true`. |
-| `WP_REDIS_PORT` | *value of `redis_port`* | Injected only when `enable_redis = true`. |
+| `application_name` | `"wordpress"` | Base name for Cloud Run service, secrets, Artifact Registry |
+| `display_name` | `"Wordpress"` | Human-readable name in UI and dashboards |
+| `description` | `"Wordpress CMS on Cloud Run"` | Used by `Wordpress_Common` for internal labelling |
+| `application_version` | `"latest"` | Image tag; change to a specific version (e.g. `"6.5"`) for reproducible deployments |
+
+Note: this module uses `display_name` and `description` (not `application_display_name` / `application_description`). `display_name` is forwarded to `App_CloudRun` as `application_display_name`; `description` is used only within `Wordpress_Common` and is not passed to `App_CloudRun`.
+
+**WordPress-specific PHP configuration variables:**
+
+| Variable | Default | Notes |
+|---|---|---|
+| `php_memory_limit` | `"512M"` | PHP memory limit; increase for heavy plugin or media use |
+| `upload_max_filesize` | `"64M"` | Max single upload file size |
+| `post_max_size` | `"64M"` | Max POST body size; must be ≥ `upload_max_filesize` |
+
+### §3.B Resource Sizing
+
+| Variable | Default | Notes |
+|---|---|---|
+| `cpu_limit` | `"1000m"` | 1 vCPU; increase for high-traffic or plugin-heavy sites |
+| `memory_limit` | `"2Gi"` | 2 GiB; WordPress with PHP 8.x and caching plugins |
+| `min_instance_count` | `0` | Scale-to-zero by default; set to `1` to eliminate cold starts |
+| `max_instance_count` | `1` | Single-instance default; NFS shared state required before increasing |
+| `timeout_seconds` | `300` | Increase for plugin installs, theme updates, or large media imports |
+
+`container_resources` can be used to override `cpu_limit` and `memory_limit` with a structured object including requests and ephemeral storage:
+
+```hcl
+container_resources = {
+  cpu_limit    = "2000m"
+  memory_limit = "4Gi"
+}
+```
+
+When `container_resources` is set (non-null), it takes precedence over the flat `cpu_limit` and `memory_limit` variables.
+
+### §3.C Environment Variables & Secrets
+
+Plain-text variables via `environment_variables`; sensitive values via `secret_environment_variables`.
+
+**Module-injected secrets** (provisioned by `Wordpress_Common`, injected via `module_secret_env_vars`):
+
+WordPress auth keys and salts are auto-generated by `Wordpress_Common` and stored in Secret Manager. The secret IDs are injected as environment variables at runtime. The exact variable names follow WordPress conventions (e.g. `WORDPRESS_AUTH_KEY`, `WORDPRESS_SECURE_AUTH_KEY`, `WORDPRESS_LOGGED_IN_KEY`, `WORDPRESS_NONCE_KEY`, and their corresponding salts).
+
+The database password is auto-generated by `App_CloudRun` and wired through the module.
+
+**User-supplied variables (non-sensitive):**
+
+```hcl
+environment_variables = {
+  WORDPRESS_DEBUG = "false"
+  WP_MEMORY_LIMIT = "512M"
+}
+```
+
+**User-supplied secrets:**
+
+```hcl
+secret_environment_variables = {
+  SENDGRID_API_KEY = "my-sendgrid-secret"
+}
+```
+
+### §3.D Networking
+
+Key defaults:
+
+| Variable | Default |
+|---|---|
+| `ingress_settings` | `"all"` |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` |
+| `enable_cloudsql_volume` | `true` |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` |
+| `container_protocol` | `"http1"` |
+
+The Cloud SQL Auth Proxy sidecar is required for MySQL Unix socket connectivity. Disable only when switching to TCP-based MySQL access. Set `container_protocol = "h2c"` to enable HTTP/2 communication between the load balancer and the Cloud Run service.
+
+### §3.E Container Image & Build
+
+| Variable | Default | Notes |
+|---|---|---|
+| `container_image_source` | `"custom"` | `"custom"` triggers Cloud Build; `"prebuilt"` deploys an existing image |
+| `container_image` | `""` | Leave empty for Cloud Build output; set for prebuilt image URI |
+| `enable_image_mirroring` | `true` | Mirrors image to Artifact Registry before deployment |
+
+There is no `container_build_config` user variable in this module; the build configuration is fully managed by `Wordpress_Common`.
 
 ---
 
-### Database Configuration
+## §4 Advanced Security
 
-The WordPress database is always **MySQL 8.0** (`MYSQL_8_0`), locked in by `Wordpress_Common`. Refer to [App CloudRun Group 11](../App_CloudRun/App_CloudRun_Guide.md#group-11-database-backend) for documentation on Cloud SQL instance discovery (`sql_instance_name`, `sql_instance_base_name`), `database_password_length`, `enable_auto_password_rotation`, and `rotation_propagation_delay_sec`.
+### §4.A Identity-Aware Proxy
 
-The variables below behave identically to their `App CloudRun` counterparts but carry WordPress-appropriate defaults.
+```hcl
+enable_iap            = true
+iap_authorized_groups = ["group:wordpress-admins@example.com"]
+```
 
-| Variable | WordPress Default | App CloudRun Default | Description |
-|---|---|---|---|
-| `database_type` | `"MYSQL_8_0"` *(set by Wordpress_Common)* | `"POSTGRES"` | WordPress requires MySQL. The default is pre-configured by `Wordpress_Common` and should not be changed. Setting this to a non-MySQL type will prevent WordPress from connecting. |
-| `db_name` | `"wp"` | `"crappdb"` | Name of the MySQL database created inside the Cloud SQL instance. Injected into the Cloud Run service as `DB_NAME`. **Do not change after initial deployment** without first migrating the database contents. |
-| `db_user` | `"wp"` | `"crappuser"` | MySQL username created for the WordPress application. Injected as `DB_USER`. The auto-generated password is stored in Secret Manager and injected as `DB_PASSWORD`. |
+### §4.B VPC Service Controls
 
-> **Note:** The variables `enable_postgres_extensions`, `postgres_extensions`, `enable_mysql_plugins`, and `mysql_plugins` are available but have no effect in the default WordPress configuration.
+```hcl
+enable_vpc_sc = true  # group=21; requires existing VPC-SC perimeter
+```
 
----
+### §4.C Cloud Armor & CDN
 
-### Jobs & Scheduled Tasks
+```hcl
+enable_cloud_armor  = true
+application_domains = ["www.example.com"]
+enable_cdn          = true
+```
 
-Refer to [App CloudRun Group 6](../App_CloudRun/App_CloudRun_Guide.md#group-6-jobs--scheduled-tasks) for documentation on `initialization_jobs`, `cron_jobs`, and `additional_services`.
+### §4.D Binary Authorization
 
-#### Pre-Configured db-init Job
+```hcl
+enable_binary_authorization = true
+```
 
-`Wordpress_Common` automatically defines a `db-init` Cloud Run Job. This job runs the `db-init.sh` script using the `mysql:8.0-debian` image and creates the WordPress MySQL database and user in the Cloud SQL instance if they do not already exist. Key properties:
+### §4.E Secret Rotation
 
-- **`execute_on_apply = true`** — the job is triggered on every `terraform apply`, not only on first deployment.
-- **Idempotent** — checks whether the database and user already exist before attempting to create them; safe to run repeatedly.
-- **TCP connection** — the `db-init` job connects to Cloud SQL via the instance's **private IP address over TCP** (not via the Unix socket, which is only available inside the running Cloud Run service).
-
-If you supply custom entries in `initialization_jobs`, they **replace** the default `db-init` job entirely. If your custom jobs still require database setup, include a database initialisation step in your list.
-
-```bash
-# List all Cloud Run Jobs associated with this deployment
-gcloud run jobs list \
-  --region=REGION \
-  --format="table(name,metadata.creationTimestamp)"
-
-# View the most recent execution of the db-init job
-gcloud run jobs executions list \
-  --job=JOB_NAME \
-  --region=REGION \
-  --format="table(name,status.conditions[0].type,status.startTime,status.completionTime)"
+```hcl
+secret_rotation_period         = "2592000s"  # 30-day notification
+enable_auto_password_rotation  = false
+rotation_propagation_delay_sec = 90
 ```
 
 ---
 
-### Redis Object Cache
+## §5 Traffic & Ingress
 
-WordPress uses Redis as a persistent object cache to store the results of expensive database queries in memory, reducing page load time and database load on high-traffic sites. This module integrates with the **Redis Object Cache** WordPress plugin.
+### §5.A Traffic Splitting
 
-| Variable | Default | Options / Format | Description & Implications |
-|---|---|---|---|
-| `enable_redis` | `true` | `true` / `false` | When `true`, injects the `ENABLE_REDIS`, `WP_REDIS_HOST`, and `WP_REDIS_PORT` environment variables into the Cloud Run revision. The container entrypoint script reads these and configures the Redis Object Cache plugin accordingly. **Enabling this variable does not provision a Redis server** — the server must exist independently. Leave `redis_host` empty to automatically use the Redis-compatible service co-located on the `GCP Services`-managed NFS server. Set to `false` to disable object caching entirely; this increases database load on busy sites but removes the Redis dependency. |
-| `redis_host` | `""` *(defaults to NFS server IP)* | IP address or hostname | The hostname or IP address of the Redis server, injected as `WP_REDIS_HOST`. Leave blank to fall back to the IP of the `GCP Services`-managed NFS server (where a Redis-compatible service is typically co-located). Set explicitly when using a dedicated Cloud Memorystore instance — use the instance's private IP from **Memorystore → Redis → *instance* → Primary endpoint**. The Cloud Run service reaches this address over the VPC — ensure the `vpc_egress_setting` routes private IP traffic through the VPC (`PRIVATE_RANGES_ONLY` is sufficient) and that firewall rules permit TCP traffic on `redis_port` from the Cloud Run VPC connector range. |
-| `redis_port` | `"6379"` | Port number as string (e.g. `"6379"`) | TCP port of the Redis server, injected as `WP_REDIS_PORT`. The default `6379` is correct for standard Redis and Cloud Memorystore. Change only if your Redis instance is configured on a non-standard port. |
+```hcl
+traffic_split = [
+  { type = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST",   percent = 90 },
+  { type = "TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION", revision = "wordpress-00002", percent = 10 },
+]
+```
 
-#### Validating Redis Configuration
+### §5.B Ingress Control
 
-```bash
-# Confirm Redis environment variables are present on the latest Cloud Run revision
-gcloud run services describe SERVICE_NAME \
-  --region=REGION \
-  --format="yaml(spec.template.spec.containers[0].env)" \
-  | grep -E "REDIS"
+```hcl
+ingress_settings   = "internal-and-cloud-load-balancing"
+vpc_egress_setting = "ALL_TRAFFIC"
 ```
 
 ---
 
-### Observability & Health
+## §6 CI/CD Integration
 
-Refer to [App CloudRun Group 5](../App_CloudRun/App_CloudRun_Guide.md#group-5-observability--health) for documentation on `uptime_check_config` and `alert_policies`. The probe configuration variables below have WordPress-specific defaults that differ materially from the `App CloudRun` base module.
+### §6.A Cloud Build Trigger
 
-WordPress requires generous probe settings due to its variable startup time: on first boot it establishes a database connection, loads all active plugins, and may run upgrade routines — all before it can serve an HTTP response.
+```hcl
+enable_cicd_trigger   = true
+github_repository_url = "https://github.com/my-org/wordpress-site"
+github_token          = "ghp_xxxx"  # or use github_app_installation_id
+cicd_trigger_config = {
+  branch_pattern = "^main$"
+  included_files = ["wp-content/**", "Dockerfile"]
+}
+```
 
-| Variable | WordPress Default | App CloudRun Default | Description |
-|---|---|---|---|
-| `startup_probe` | `{ enabled = true, type = "TCP", path = "/", initial_delay_seconds = 30, timeout_seconds = 10, period_seconds = 15, failure_threshold = 20 }` | `{ enabled = true, type = "HTTP", path = "/healthz", initial_delay_seconds = 10, failure_threshold = 10 }` | Cloud Run startup probe. Uses **TCP** rather than HTTP because WordPress may not yet respond to HTTP requests during its initialisation phase. The high `failure_threshold` (20 × 15s = 300 seconds of total grace) accommodates the `db-init` Cloud Run Job and WordPress's plugin loading phase. Cloud Run will not route any traffic to the instance until this probe succeeds. **Do not reduce `failure_threshold` below 10 for production** — premature startup probe failures cause the instance to restart during database initialisation, which can result in a restart loop. |
-| `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/wp-admin/install.php", initial_delay_seconds = 300, timeout_seconds = 60, period_seconds = 60, failure_threshold = 3 }` | `{ enabled = true, type = "HTTP", path = "/healthz", initial_delay_seconds = 15, failure_threshold = 3 }` | Cloud Run liveness probe. Uses `/wp-admin/install.php` as the health endpoint — this WordPress-managed page returns HTTP 200 whether WordPress is freshly installed or already configured, making it a reliable and dependency-free liveness indicator. The 300-second initial delay ensures liveness checks do not begin until after the `db-init` job has completed and WordPress has fully initialised. The 60-second `timeout_seconds` allows for slow database response times under load. |
+### §6.B Cloud Deploy Pipeline
+
+```hcl
+enable_cloud_deploy = true
+cloud_deploy_stages = [
+  { name = "dev",     require_approval = false },
+  { name = "staging", require_approval = false },
+  { name = "prod",    require_approval = true  },
+]
+```
 
 ---
 
-## Deployment Prerequisites
+## §7 Reliability & Data
 
-Refer to [App CloudRun — Deployment Prerequisites & Dependency Analysis](../App_CloudRun/App_CloudRun_Guide.md#deployment-prerequisites--dependency-analysis) for the complete list of hard prerequisites, silent failure modes, and soft prerequisites.
+### §7.A Health Probes
 
-**WordPress-specific notes:**
+`Wordpress_CloudRun` uses only `startup_probe` and `liveness_probe` (passed to `Wordpress_Common`). There is no separate `startup_probe_config` / `health_check_config` interface in this module.
 
-- The `db-init` Cloud Run Job creates the MySQL database and user automatically on the first apply — no manual database setup is required before deployment.
-- The eight WordPress security keys and salts are generated and stored in Secret Manager automatically — no pre-existing secrets are needed.
-- The GCS uploads bucket (`wp-uploads`) is defined by `Wordpress_Common` and provisioned by `App CloudRun` — it does not need to be created manually.
-- Because `execute_on_apply = true` on the `db-init` job, every `terraform apply` triggers the initialisation script. This is intentional and safe; the script is idempotent.
-- The `execution_environment` must remain `"gen2"` — changing it to `"gen1"` will prevent NFS and GCS Fuse volumes from mounting and break the WordPress media library.
-- The `backup_uri` variable (for backup import) accepts a full GCS URI (`gs://bucket/path/to/file.sql`) or a Google Drive file ID, depending on `backup_source`. This differs from some other App modules that use a bare filename.
+| Variable | Default | Notes |
+|---|---|---|
+| `startup_probe.type` | `"TCP"` | TCP check during startup |
+| `startup_probe.initial_delay_seconds` | `30` | |
+| `startup_probe.timeout_seconds` | `10` | |
+| `startup_probe.period_seconds` | `15` | |
+| `startup_probe.failure_threshold` | `20` | High threshold to allow PHP/WP initialisation |
+| `liveness_probe.type` | `"HTTP"` | HTTP check during steady state |
+| `liveness_probe.path` | `"/wp-admin/install.php"` | Confirms PHP and database connection |
+| `liveness_probe.initial_delay_seconds` | `300` | Long delay for first-boot database setup |
+| `liveness_probe.timeout_seconds` | `60` | |
+| `liveness_probe.period_seconds` | `60` | |
+| `liveness_probe.failure_threshold` | `3` | |
+
+The `liveness_probe` uses `/wp-admin/install.php` because this page requires a working PHP runtime and database connection, making it a reliable indicator of application health.
+
+### §7.B Backup & Recovery
+
+| Variable | Default | Notes |
+|---|---|---|
+| `backup_schedule` | `"0 2 * * *"` | Daily at 02:00 UTC |
+| `backup_retention_days` | `7` | GCS lifecycle rule |
+| `enable_backup_import` | `false` | One-time restore on deploy |
+| `backup_source` | `"gcs"` | `"gcs"` or `"gdrive"` |
+| `backup_uri` | `""` | Full GCS URI or Google Drive file ID |
+| `backup_format` | `"sql"` | `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`, `auto` |
+
+Note: this module uses `backup_uri` (aliased to `backup_file` in `main.tf`).
+
+### §7.C Scheduled Jobs
+
+```hcl
+cron_jobs = [{
+  name     = "wp-cron"
+  schedule = "*/5 * * * *"
+  image    = "wordpress:latest"
+  command  = ["wp", "cron", "event", "run", "--due-now"]
+}]
+```
+
+### §7.D Observability
+
+```hcl
+uptime_check_config = {
+  enabled        = true
+  path           = "/"
+  check_interval = "60s"
+  timeout        = "10s"
+}
+
+alert_policies = [{
+  name               = "high-latency"
+  metric_type        = "run.googleapis.com/request_latencies"
+  comparison         = "COMPARISON_GT"
+  threshold_value    = 2000
+  duration_seconds   = 300
+  aggregation_period = "60s"
+}]
+```
 
 ---
 
-## Dependency on `GCP Services`
+## §8 Integrations
 
-Refer to [App CloudRun — Dependency on `GCP Services` for Shared Resources](../App_CloudRun/App_CloudRun_Guide.md#dependency-on-services_gcp-for-shared-resources) for a full comparison of standalone versus `GCP Services`-backed deployments.
+### §8.A Redis Object Cache
 
-**WordPress-specific benefit:** when `GCP Services` provides a shared Cloud SQL instance, the `db-init` Cloud Run Job connects to it and creates only the WordPress database and user within the shared instance — eliminating the cost of a dedicated Cloud SQL instance per WordPress deployment. This is the recommended model for multi-tenant platforms where many independent WordPress sites share the same GCP project.
+Redis is **enabled by default** (`enable_redis = true`). `Wordpress_Common` injects Redis connection details when enabled. Leave `redis_host` empty to use the default Redis configuration supplied by `Wordpress_Common`.
+
+```hcl
+enable_redis = true
+redis_host   = "10.0.0.5"  # leave "" for default; set for external Memorystore
+redis_port   = "6379"       # string type
+redis_auth   = ""
+```
+
+When `enable_redis = false`, no Redis environment variables are injected and the WordPress object cache operates in memory-only mode.
+
+### §8.B NFS Storage
+
+NFS is used for the WordPress `wp-content` directory (uploads, themes, plugins).
+
+```hcl
+enable_nfs     = true
+nfs_mount_path = "/mnt/nfs"
+```
+
+`Wordpress_Common` configures WordPress to use this mount path for persistent file storage. Disable NFS only for single-container, stateless deployments where uploads are stored externally.
+
+### §8.C GCS Fuse Volumes
+
+```hcl
+gcs_volumes = [{
+  name        = "wp-uploads"
+  bucket_name = "my-wp-uploads-bucket"
+  mount_path  = "/var/www/html/wp-content/uploads"
+  readonly    = false
+}]
+```
+
+### §8.D Additional Services
+
+`Wordpress_CloudRun` does not expose the `additional_services` variable. Co-deployed services are not supported in this module's interface.
+
+---
+
+## §9 Platform-Managed Behaviours
+
+The following are set or injected automatically and do not require configuration.
+
+### Database credentials (MySQL 8.0)
+
+`App_CloudRun` generates a random MySQL password and stores it in Secret Manager. `Wordpress_Common` injects the password as `WORDPRESS_DB_PASSWORD` and constructs the database host path for the Unix socket connection.
+
+### WordPress authentication keys and salts
+
+`Wordpress_Common` auto-generates all eight WordPress authentication keys and salts on first deploy (e.g. `WORDPRESS_AUTH_KEY`, `WORDPRESS_LOGGED_IN_KEY`, and their `_SALT` counterparts). These are stored in Secret Manager and injected at runtime.
+
+### PHP configuration
+
+`Wordpress_Common` applies `php_memory_limit`, `upload_max_filesize`, and `post_max_size` to the container's `php.ini` during the Cloud Build step. These do not need to be set in `environment_variables`.
+
+### Redis injection
+
+When `enable_redis = true`, `Wordpress_Common` injects `WP_REDIS_HOST` and `WP_REDIS_PORT` into the container environment and configures the Redis Object Cache plugin. The plugin must be installed in the WordPress image for caching to activate.
+
+### Probe endpoints
+
+The liveness probe uses `/wp-admin/install.php`, which returns 200 when WordPress is installed and 302 (redirect) when it is not. The TCP startup probe (`type = "TCP"`) confirms the Apache web server is listening before HTTP checks begin. The high `failure_threshold = 20` on the startup probe provides approximately 5 minutes of tolerance for first-boot database setup.
+
+---
+
+## §10 Variable Reference
+
+The table below covers all variables unique to or with notable defaults in `Wordpress_CloudRun`. For the full set of inherited variables, see the [App_CloudRun Variable Reference](../App_CloudRun/App_CloudRun.md#variable-reference).
+
+| Variable | Type | Default | Group | Notes |
+|---|---|---|---|---|
+| `application_name` | `string` | `"wordpress"` | 2 | Base resource name |
+| `display_name` | `string` | `"Wordpress"` | 2 | UI display name (forwarded as `application_display_name`) |
+| `description` | `string` | `"Wordpress CMS on Cloud Run"` | 2 | Used by Wordpress_Common only |
+| `application_version` | `string` | `"latest"` | 2 | Image tag |
+| `php_memory_limit` | `string` | `"512M"` | 2 | PHP memory limit |
+| `upload_max_filesize` | `string` | `"64M"` | 2 | Max upload file size |
+| `post_max_size` | `string` | `"64M"` | 2 | Max POST body size |
+| `cpu_limit` | `string` | `"1000m"` | 3 | 1 vCPU |
+| `memory_limit` | `string` | `"2Gi"` | 3 | 2 GiB |
+| `container_resources` | `object` | `null` | 3 | Overrides `cpu_limit`/`memory_limit` when set |
+| `min_instance_count` | `number` | `0` | 3 | Scale-to-zero |
+| `max_instance_count` | `number` | `1` | 3 | |
+| `container_port` | `number` | `80` | 3 | Apache default |
+| `container_protocol` | `string` | `"http1"` | 3 | `"http1"` or `"h2c"` |
+| `container_image_source` | `string` | `"custom"` | 3 | `"prebuilt"` or `"custom"` |
+| `container_image` | `string` | `""` | 3 | Override for prebuilt |
+| `enable_image_mirroring` | `bool` | `true` | 3 | Mirror to Artifact Registry |
+| `enable_cloudsql_volume` | `bool` | `true` | 3 | Required for MySQL Unix socket |
+| `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | 3 | Socket path |
+| `db_name` | `string` | `"wp"` | 11 | MySQL database name |
+| `db_user` | `string` | `"wp"` | 11 | MySQL user |
+| `database_password_length` | `number` | `16` | 11 | 8–64 characters |
+| `enable_nfs` | `bool` | `true` | 10 | Cloud Filestore mount |
+| `nfs_mount_path` | `string` | `"/mnt/nfs"` | 10 | Container mount path |
+| `storage_buckets` | `list` | `[{ name_suffix = "data" }]` | 10 | GCS buckets |
+| `backup_uri` | `string` | `""` | 6 | Full GCS URI or Drive ID (aliased to `backup_file`) |
+| `backup_format` | `string` | `"sql"` | 6 | Includes `"auto"` option |
+| `enable_redis` | `bool` | `true` | 20 | Redis object cache (on by default) |
+| `redis_host` | `string` | `""` | 20 | Leave empty for default |
+| `redis_port` | `string` | `"6379"` | 20 | String type |
+| `redis_auth` | `string` | `""` | 20 | Sensitive |
+| `startup_probe` | `object` | `{ type="TCP", initial_delay_seconds=30, failure_threshold=20 }` | 13 | |
+| `liveness_probe` | `object` | `{ type="HTTP", path="/wp-admin/install.php", initial_delay_seconds=300 }` | 13 | |
+| `initialization_jobs` | `list` | `[]` | 12 | No platform-managed jobs |
+| `enable_vpc_sc` | `bool` | `false` | 21 | VPC Service Controls |
