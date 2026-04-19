@@ -5,6 +5,15 @@ sidebar_label: "EKS GKE"
 
 # EKS GKE Module
 
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/EKS_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/EKS_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/EKS_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 ## Overview
 
 The EKS GKE module provisions a complete Amazon Elastic Kubernetes Service (EKS) cluster on AWS and registers it with Google Cloud as a **GKE Attached Cluster**. Once registered, the EKS cluster is visible and manageable from the Google Cloud console alongside any native GKE clusters in the same project — giving platform engineers a single pane of glass across both clouds.

@@ -1,4 +1,18 @@
+---
+title: "Bank GKE Module Documentation"
+sidebar_label: "Bank GKE"
+---
+
 # Bank GKE Module
+
+<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Bank_GKE.png">
+  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Bank_GKE.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Bank_GKE.pdf" target="_blank">View Presentation (PDF)</a>
 
 ## Overview
 
