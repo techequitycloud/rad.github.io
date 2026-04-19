@@ -1,13 +1,13 @@
 ---
-title: "EKS_GKE Module Documentation"
-sidebar_label: "EKS_GKE"
+title: "EKS GKE Module Documentation"
+sidebar_label: "EKS GKE"
 ---
 
-# EKS_GKE Module
+# EKS GKE Module
 
 ## Overview
 
-The EKS_GKE module provisions a complete Amazon Elastic Kubernetes Service (EKS) cluster on AWS and registers it with Google Cloud as a **GKE Attached Cluster**. Once registered, the EKS cluster is visible and manageable from the Google Cloud console alongside any native GKE clusters in the same project — giving platform engineers a single pane of glass across both clouds.
+The EKS GKE module provisions a complete Amazon Elastic Kubernetes Service (EKS) cluster on AWS and registers it with Google Cloud as a **GKE Attached Cluster**. Once registered, the EKS cluster is visible and manageable from the Google Cloud console alongside any native GKE clusters in the same project — giving platform engineers a single pane of glass across both clouds.
 
 This module is designed as a hands-on learning environment for platform engineers who want to understand how Google Cloud's multi-cloud Kubernetes capabilities work in practice. By deploying it, you gain direct experience with:
 
@@ -42,7 +42,7 @@ At a high level, the module creates two sets of resources in parallel and then c
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                            EKS_GKE Module                                   │
+│                            EKS GKE Module                                   │
 │                                                                             │
 │   AWS (default: us-west-2)              Google Cloud (default: us-central1) │
 │   ─────────────────────────             ────────────────────────────────    │

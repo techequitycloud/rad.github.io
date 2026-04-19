@@ -1,14 +1,14 @@
-# Bank_GKE Module
+# Bank GKE Module
 
 ## Overview
 
-The **Bank_GKE** module deploys a production-grade microservices banking application on a single Google Kubernetes Engine (GKE) cluster. It is designed as a focused learning environment for platform engineers who want hands-on experience with core GKE capabilities, Cloud Service Mesh, Anthos Config Management, and cloud-native observability — within a single-region, single-cluster deployment that is simpler to reason about than a multi-cluster setup.
+The **Bank GKE** module deploys a production-grade microservices banking application on a single Google Kubernetes Engine (GKE) cluster. It is designed as a focused learning environment for platform engineers who want hands-on experience with core GKE capabilities, Cloud Service Mesh, Anthos Config Management, and cloud-native observability — within a single-region, single-cluster deployment that is simpler to reason about than a multi-cluster setup.
 
 The application deployed is **Bank of Anthos** — an open-source, HTTP-based banking simulation built by Google Cloud Platform. It consists of nine microservices written in Python and Java, communicating over a service mesh, and exposed to the internet via a GKE-managed global HTTPS load balancer with automatic TLS certificate management.
 
 This module is intended for **educational purposes**. It is not a production banking system. Its value lies in the breadth of GKE Enterprise features it exercises in a realistic, working application context.
 
-> **Relationship to MC_Bank_GKE**: This module covers the same application and most of the same GKE features as `MC_Bank_GKE`, but deploys to a single cluster in a single region. It adds **Anthos Config Management** and **Service Level Objectives (SLOs)** which are not covered by `MC_Bank_GKE`. If you have completed `MC_Bank_GKE`, treat this module as a complement focused on Config Management, SLOs, and single-cluster ingress patterns.
+> **Relationship to MC Bank GKE**: This module covers the same application and most of the same GKE features as `MC Bank GKE`, but deploys to a single cluster in a single region. It adds **Anthos Config Management** and **Service Level Objectives (SLOs)** which are not covered by `MC Bank GKE`. If you have completed `MC Bank GKE`, treat this module as a complement focused on Config Management, SLOs, and single-cluster ingress patterns.
 
 ---
 
@@ -68,7 +68,7 @@ GKE Cluster (single region)
 
 **Single cluster, single region**: All workloads run in one cluster in one GCP region. This simplifies the architecture and focuses attention on application-level features (service mesh, ingress, observability) without the additional complexity of cross-cluster coordination.
 
-**Standard GKE Ingress vs Multi-Cluster Ingress**: Unlike `MC_Bank_GKE`, this module uses a standard Kubernetes `Ingress` resource backed by a GKE-managed Global Layer 7 load balancer. This is the most common ingress pattern for single-cluster GKE deployments and is suitable for most production workloads that do not require multi-region failover.
+**Standard GKE Ingress vs Multi-Cluster Ingress**: Unlike `MC Bank GKE`, this module uses a standard Kubernetes `Ingress` resource backed by a GKE-managed Global Layer 7 load balancer. This is the most common ingress pattern for single-cluster GKE deployments and is suitable for most production workloads that do not require multi-region failover.
 
 **Anthos Config Management**: This module optionally enables Config Sync, which continuously reconciles cluster configuration against a Git repository. This enables a GitOps workflow where the desired state of the cluster is expressed as code in a repository.
 
@@ -337,7 +337,7 @@ The module creates five firewall rules:
 | `allow-internal-pods` | Ingress | Pod CIDR (`10.62.128.0/17`) | All | Pod-to-pod communication across nodes |
 | `allow-http-https` | Ingress | `0.0.0.0/0` | TCP 80, 443 | External HTTP/HTTPS traffic to the load balancer |
 
-**Notable differences from MC_Bank_GKE**: This module uses **IAP-tunnelled SSH** (`35.235.240.0/20`) instead of direct SSH from `0.0.0.0/0`, and includes an explicit **NFS health check rule** for port 2049. The IAP tunnel approach is more secure — SSH access to nodes requires an authenticated GCP identity and does not expose port 22 to the internet.
+**Notable differences from MC Bank GKE**: This module uses **IAP-tunnelled SSH** (`35.235.240.0/20`) instead of direct SSH from `0.0.0.0/0`, and includes an explicit **NFS health check rule** for port 2049. The IAP tunnel approach is more secure — SSH access to nodes requires an authenticated GCP identity and does not expose port 22 to the internet.
 
 **Explore in the Console**: Navigate to **VPC Network → Firewall** and filter by network `vpc-network`.
 
@@ -471,7 +471,7 @@ kubectl get authorizationpolicy -n bank-of-anthos
 
 Anthos Config Management (ACM) brings GitOps-style configuration synchronisation to GKE clusters. In this module, **Config Sync** watches a Git repository and automatically reconciles the desired Kubernetes state declared in that repository with the live state in the cluster. This enables repeatable, auditable, and version-controlled configuration management without manual `kubectl apply` operations.
 
-> **This section is unique to Bank_GKE.** The `MC_Bank_GKE` module does not enable Anthos Config Management.
+> **This section is unique to Bank GKE.** The `MC Bank GKE` module does not enable Anthos Config Management.
 
 ### What Is Config Sync?
 
@@ -603,7 +603,7 @@ Restore sync by fixing the underlying cause (e.g. correcting the manifest in Git
 
 ## GKE Ingress and Load Balancing
 
-Bank_GKE exposes the frontend microservice to the internet using the **GKE Ingress controller** backed by a Google Cloud External HTTP(S) Load Balancer. This is a single-cluster ingress pattern — it differs from the `MC_Bank_GKE` module which uses Multi-Cluster Ingress (MCI). The GKE Ingress approach is simpler and is appropriate when high availability across multiple clusters or regions is not required.
+Bank GKE exposes the frontend microservice to the internet using the **GKE Ingress controller** backed by a Google Cloud External HTTP(S) Load Balancer. This is a single-cluster ingress pattern — it differs from the `MC Bank GKE` module which uses Multi-Cluster Ingress (MCI). The GKE Ingress approach is simpler and is appropriate when high availability across multiple clusters or regions is not required.
 
 ### Architecture Overview
 
@@ -973,7 +973,7 @@ kubectl get configmap istio-asm-managed -n istio-system -o yaml
 
 Service Level Objectives (SLOs) express the reliability target for each service in measurable terms. This module defines SLOs for all nine Bank of Anthos microservices using Cloud Monitoring SLO capabilities. Engineers can observe each service's current error rate, availability, and latency against its declared target, and configure alerting when services breach their error budget.
 
-> **This section is unique to Bank_GKE.** The `MC_Bank_GKE` module does not configure SLOs.
+> **This section is unique to Bank GKE.** The `MC Bank GKE` module does not configure SLOs.
 
 ### What Is an SLO?
 
@@ -1087,7 +1087,7 @@ gcloud monitoring services slos describe ${SLO_ID} \
 
 ## Module Configuration Options
 
-The following options are available when deploying the Bank_GKE module. Engineers who do not have access to the underlying Terraform code configure these options through the platform UI or deployment parameters.
+The following options are available when deploying the Bank GKE module. Engineers who do not have access to the underlying Terraform code configure these options through the platform UI or deployment parameters.
 
 ### Project and Region
 
