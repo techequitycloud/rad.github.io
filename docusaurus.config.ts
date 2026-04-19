@@ -92,7 +92,7 @@ const config: Config = {
     },
     footer: {
       style: 'light',
-      copyright: `© ${new Date().getFullYear()} Tech Equity Cloud. All rights reserved.`,
+      copyright: `<a href="https://github.com/techequitycloud/rad.github.io/issues" target="_blank" rel="noopener noreferrer">Report an Issue</a><br/>© ${new Date().getFullYear()} Tech Equity Cloud. All rights reserved.`,
     },
     prism: {
       theme: prismThemes.github,
