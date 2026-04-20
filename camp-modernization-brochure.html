@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cloud Application Modernization Playbook — Tech Equity Cloud</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+:root {
+  --primary: #1a73e8; --accent: #0d47a1; --dark: #1c2b3a;
+  --mid: #4a6274; --light: #f0f4f8; --border: #d0dce8;
+  --white: #ffffff; --gold: #f9ab00; --green: #1e8e3e; --red: #d93025;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter','Helvetica Neue',Arial,sans-serif; font-size: 10pt; line-height: 1.6; color: var(--dark); background: var(--white); }
+.page-break { page-break-before: always; }
+
+/* ── COVER ── */
+.cover { background: linear-gradient(150deg, var(--accent) 0%, var(--primary) 55%, #42a5f5 100%); min-height: 297mm; display: flex; flex-direction: column; justify-content: space-between; padding: 0; }
+.cover-top { padding: 56px 60px 40px; }
+.cover-brand { font-size: 10pt; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.65); margin-bottom: 48px; }
+.cover h1 { font-size: 38pt; font-weight: 700; color: #fff; line-height: 1.1; letter-spacing: -1px; margin-bottom: 12px; }
+.cover-sub { font-size: 16pt; font-weight: 300; color: rgba(255,255,255,0.85); margin-bottom: 40px; }
+.cover-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+.cover-tag { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 20px; padding: 5px 16px; font-size: 9pt; color: #fff; }
+.cover-metrics { background: rgba(0,0,0,0.25); padding: 24px 60px; display: flex; gap: 48px; }
+.cm { color: #fff; }
+.cm-val { font-size: 22pt; font-weight: 700; color: var(--gold); display: block; line-height: 1; }
+.cm-lbl { font-size: 7.5pt; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
+.cover-tagline { background: rgba(0,0,0,0.18); padding: 20px 60px; }
+.cover-tagline p { font-size: 13pt; font-weight: 300; color: rgba(255,255,255,0.9); font-style: italic; }
+.cover-footer { background: rgba(0,0,0,0.35); padding: 20px 60px; display: flex; justify-content: space-between; align-items: center; }
+.cover-footer-left { color: rgba(255,255,255,0.7); font-size: 9pt; }
+.cover-footer-right { color: rgba(255,255,255,0.5); font-size: 8.5pt; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* ── INNER PAGES ── */
+.inner { padding: 44px 56px; }
+.section { margin-bottom: 36px; }
+.sh { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.sh-title { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--primary); white-space: nowrap; }
+.sh-line { flex: 1; height: 2px; background: var(--border); }
+.page-title { font-size: 20pt; font-weight: 700; color: var(--dark); margin-bottom: 6px; line-height: 1.2; }
+.page-sub { font-size: 10.5pt; color: var(--mid); margin-bottom: 28px; }
+
+/* ── TEXT ── */
+p { margin-bottom: 12px; color: var(--dark); }
+p:last-child { margin-bottom: 0; }
+strong { font-weight: 600; color: var(--accent); }
+.lead { font-size: 11pt; line-height: 1.7; color: var(--dark); }
+
+/* ── METRIC CARDS ── */
+.metrics-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 28px; }
+.metrics-row-3 { grid-template-columns: repeat(3,1fr); }
+.mc { background: var(--light); border-radius: 10px; padding: 18px 16px; border-top: 3px solid var(--primary); text-align: center; }
+.mc-val { font-size: 18pt; font-weight: 700; color: var(--primary); display: block; line-height: 1; }
+.mc-sub { font-size: 7.5pt; color: var(--mid); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 5px; display: block; }
+.mc-gold { border-top-color: var(--gold); }
+.mc-gold .mc-val { color: var(--gold); }
+.mc-green { border-top-color: var(--green); }
+.mc-green .mc-val { color: var(--green); }
+
+/* ── TWO / THREE COL ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.col-60-40 { display: grid; grid-template-columns: 3fr 2fr; gap: 28px; }
+
+/* ── CARDS ── */
+.card { border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; background: var(--white); }
+.card-accent { border-left: 3px solid var(--primary); background: var(--light); }
+.card-gold { border-left: 3px solid var(--gold); background: #fffdf0; }
+.card-green { border-left: 3px solid var(--green); background: #f0faf3; }
+.card h4 { font-size: 9.5pt; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
+.card p { font-size: 8.5pt; color: var(--mid); margin: 0; }
+.card-num { font-size: 7pt; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+.card-icon { font-size: 18pt; margin-bottom: 8px; display: block; }
+
+/* ── HIGHLIGHT BOX ── */
+.highlight { background: linear-gradient(135deg, var(--accent), var(--primary)); border-radius: 10px; padding: 24px 28px; color: #fff; margin-bottom: 20px; }
+.highlight h3 { font-size: 13pt; font-weight: 700; margin-bottom: 8px; }
+.highlight p { color: rgba(255,255,255,0.85); margin: 0; font-size: 9.5pt; }
+.highlight-gold { background: linear-gradient(135deg, #b06000, var(--gold)); }
+.highlight-green { background: linear-gradient(135deg, #0a5c22, var(--green)); }
+
+/* ── LAYER TABLE ── */
+.layer-table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+.layer-table th { background: var(--dark); color: #fff; padding: 10px 16px; text-align: left; font-size: 8pt; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.layer-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 9pt; vertical-align: middle; }
+.layer-table tr:last-child td { border-bottom: none; }
+.layer-table tr:nth-child(even) td { background: var(--light); }
+.layer-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 7.5pt; font-weight: 600; letter-spacing: 0.04em; }
+.badge-blue { background: #e8f0fe; color: var(--accent); }
+.badge-gold { background: #fff8e1; color: #7a4900; }
+.badge-green { background: #e6f4ea; color: #0a5c22; }
+.badge-dark { background: var(--dark); color: #fff; }
+
+/* ── PHASE FLOW ── */
+.phase-flow { display: flex; align-items: center; gap: 0; margin-bottom: 20px; }
+.phase-step { flex: 1; background: var(--light); border: 1px solid var(--border); padding: 12px 14px; text-align: center; }
+.phase-step:first-child { border-radius: 8px 0 0 8px; }
+.phase-step:last-child { border-radius: 0 8px 8px 0; }
+.phase-arrow { color: var(--primary); font-size: 14pt; font-weight: 700; padding: 0 2px; flex-shrink: 0; }
+.phase-title { font-size: 8.5pt; font-weight: 700; color: var(--dark); display: block; }
+.phase-sub { font-size: 7.5pt; color: var(--mid); display: block; margin-top: 2px; }
+
+/* ── ENGAGEMENT TIERS ── */
+.tier-card { border-radius: 10px; padding: 20px; border: 1px solid var(--border); background: var(--white); position: relative; }
+.tier-card h4 { font-size: 12pt; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+.tier-duration { font-size: 8pt; color: var(--mid); margin-bottom: 14px; display: block; }
+.tier-outcome { margin-top: 14px; background: var(--light); border-radius: 6px; padding: 10px 12px; font-size: 8.5pt; }
+.tier-outcome strong { color: var(--primary); }
+.tier-featured { border: 2px solid var(--primary); }
+.tier-featured::before { content: 'Most Popular'; position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; font-size: 7pt; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 12px; border-radius: 10px; }
+
+/* ── BAR CHART ── */
+.bar-row { margin-bottom: 14px; }
+.bar-label { font-size: 8.5pt; font-weight: 500; color: var(--dark); margin-bottom: 4px; display: flex; justify-content: space-between; }
+.bar-track { background: var(--border); border-radius: 4px; height: 10px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; background: var(--primary); }
+.bar-fill-gold { background: var(--gold); }
+.bar-fill-green { background: var(--green); }
+
+/* ── TABLE ── */
+table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+th { background: var(--dark); color: #fff; padding: 8px 12px; text-align: left; font-weight: 600; font-size: 7.5pt; letter-spacing: 0.04em; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) td { background: var(--light); }
+.td-highlight { font-weight: 600; color: var(--primary); }
+
+/* ── LIST ── */
+.bullet-list { list-style: none; }
+.bullet-list li { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 9pt; display: flex; align-items: flex-start; gap: 10px; }
+.bullet-list li:last-child { border-bottom: none; }
+.dot { width: 7px; height: 7px; min-width: 7px; border-radius: 50%; background: var(--gold); margin-top: 4px; }
+.dot-blue { background: var(--primary); }
+.dot-green { background: var(--green); }
+
+/* ── FOOTER BAR ── */
+.footer-bar { background: var(--dark); padding: 14px 56px; display: flex; justify-content: space-between; align-items: center; }
+.fb-left { color: rgba(255,255,255,0.6); font-size: 8pt; }
+.fb-right { color: rgba(255,255,255,0.35); font-size: 7.5pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ── UTILITY ── */
+.cite { font-size: 7pt; color: var(--mid); font-style: italic; margin-top: 8px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-28 { margin-bottom: 28px; }
+.tag { display: inline-block; background: #e8f0fe; color: var(--accent); border-radius: 12px; padding: 3px 10px; font-size: 7.5pt; font-weight: 600; margin-right: 6px; margin-bottom: 6px; }
+.tag-gold { background: #fff8e1; color: #7a4900; }
+.tag-green { background: #e6f4ea; color: #0a5c22; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- PAGE 1: COVER                                                 -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-top">
+    <div class="cover-brand">Tech Equity Cloud &nbsp;·&nbsp; Google Cloud CAMP Partner</div>
+    <h1>Cloud Application<br>Modernization<br>Playbook</h1>
+    <div class="cover-sub">AI-Based Transformation with Google CAMP + RAD</div>
+    <div class="cover-tags">
+      <span class="cover-tag">Google CAMP Framework</span>
+      <span class="cover-tag">RAD Internal Developer Platform</span>
+      <span class="cover-tag">Claude Code — Interactive AI</span>
+      <span class="cover-tag">Jules — Autonomous AI Agent</span>
+      <span class="cover-tag">DORA-Backed Methodology</span>
+      <span class="cover-tag">Platform Engineering</span>
+    </div>
+  </div>
+  <div class="cover-metrics">
+    <div class="cm"><span class="cm-val">10,000+</span><span class="cm-lbl">Professionals Trained</span></div>
+    <div class="cm"><span class="cm-val">500+</span><span class="cm-lbl">Client Engagements</span></div>
+    <div class="cm"><span class="cm-val">4.8 / 5.0</span><span class="cm-lbl">Google CSAT Score</span></div>
+    <div class="cm"><span class="cm-val">26</span><span class="cm-lbl">Deployment Modules</span></div>
+    <div class="cm"><span class="cm-val">7 Years</span><span class="cm-lbl">Google Partnership</span></div>
+  </div>
+  <div class="cover-tagline">
+    <p>&ldquo;RAD delivers the platform. CAMP maps the journey. AI accelerates every step.&rdquo;</p>
+  </div>
+  <div class="cover-footer">
+    <div class="cover-footer-left">Tech Equity Cloud &nbsp;·&nbsp; April 2026 &nbsp;·&nbsp; radmodules.dev</div>
+    <div class="cover-footer-right">Confidential</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- PAGE 2: THE MODERNIZATION IMPERATIVE                          -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page-break">
+<div class="inner">
+  <div class="section">
+    <div class="sh"><div class="sh-title">The Modernization Imperative</div><div class="sh-line"></div></div>
+    <div class="page-title">Why Modernization Cannot Wait</div>
+    <div class="page-sub">Three forces are compounding the cost of delay — and widening the gap between organisations that act and those that don't</div>
+
+    <div class="two-col mb-28">
+      <div>
+        <div class="sh"><div class="sh-title">The Three Blockers</div><div class="sh-line"></div></div>
+
+        <div class="card card-accent mb-20">
+          <div class="card-num">Blocker 01 &mdash; Developer Productivity</div>
+          <h4>17.3 hours lost every week, per developer</h4>
+          <p>The average developer spends 17.3 hours each week on maintenance, debugging and technical debt instead of building — creating a vicious cycle where innovation becomes nearly impossible. Developer burnout accelerates as talented engineers lose motivation working on outdated systems.</p>
+          <div class="cite">Source: McKinsey &amp; Company</div>
+        </div>
+
+        <div class="card card-gold mb-20">
+          <div class="card-num">Blocker 02 &mdash; Talent Crisis</div>
+          <h4>A disappearing skills base for legacy systems</h4>
+          <p>Graduates are trained on modern languages and cloud-native architectures. Expertise in older systems grows scarcer every year, making legacy positions increasingly difficult to fill — while the systems themselves become harder to understand and safer to leave untouched.</p>
+        </div>
+
+        <div class="card" style="border-left: 3px solid var(--red); background: #fef6f5;">
+          <div class="card-num" style="color: var(--red);">Blocker 03 &mdash; Technical Debt &amp; Security Risk</div>
+          <h4>70% of organisations cite debt as their innovation blocker</h4>
+          <p>Legacy systems no longer receive security patches. Each unpatched vulnerability is a potential entry point. Compliance requirements evolve while legacy systems remain static — creating an ever-widening gap between what regulations demand and what systems can deliver.</p>
+          <div class="cite">Source: Protiviti; 82% in biotechnology, 78% in financial services</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="sh"><div class="sh-title">The CAMP Answer</div><div class="sh-line"></div></div>
+
+        <div class="highlight mb-20">
+          <h3>Google CAMP: A Structured Path Forward</h3>
+          <p>The Google Cloud Application Modernization Program (CAMP) is a framework for designing a tailored, end-to-end modernization journey — providing step-by-step guidance while allowing each organisation to choose their path based on their comfort level and budgetary constraints.</p>
+        </div>
+
+        <div class="sh"><div class="sh-title">The CAMP Cycle</div><div class="sh-line"></div></div>
+        <div class="phase-flow mb-20">
+          <div class="phase-step">
+            <span class="phase-title">Assess</span>
+            <span class="phase-sub">Identify challenges &amp; baseline</span>
+          </div>
+          <div class="phase-arrow">›</div>
+          <div class="phase-step">
+            <span class="phase-title">Analyse</span>
+            <span class="phase-sub">Understand paths forward</span>
+          </div>
+          <div class="phase-arrow">›</div>
+          <div class="phase-step">
+            <span class="phase-title">Plan &amp; Execute</span>
+            <span class="phase-sub">Expert-led delivery</span>
+          </div>
+          <div class="phase-arrow">›</div>
+          <div class="phase-step">
+            <span class="phase-title">Measure &amp; Iterate</span>
+            <span class="phase-sub">Track &amp; improve</span>
+          </div>
+        </div>
+
+        <div class="sh"><div class="sh-title">CAMP Engagement Types</div><div class="sh-line"></div></div>
+        <ul class="bullet-list mb-20">
+          <li><span class="dot dot-blue"></span><strong>Jumpstart</strong> — &lt;2 hours: expert Q&amp;A and concept introduction</li>
+          <li><span class="dot dot-blue"></span><strong>Workshop</strong> — half day: instructor-led labs and deep-dive sessions</li>
+          <li><span class="dot dot-blue"></span><strong>Pilot</strong> — multi-week: recommended technology in your own environment</li>
+        </ul>
+
+        <div class="card card-green">
+          <h4>CAMP Requires a Partner Ecosystem</h4>
+          <p>CAMP's ultimate goal is to help customers get started on the right path — supported every step of the way by a CAMP-enabled partner ecosystem. <strong>RAD is that partner's delivery engine.</strong> It deploys production-grade, CAMP-aligned Google Cloud infrastructure into a customer's own GCP project in minutes — the missing mechanism for scalable Pilot-tier delivery.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="footer-bar">
+  <div class="fb-left">Tech Equity Cloud &nbsp;·&nbsp; Cloud Application Modernization Playbook &nbsp;·&nbsp; radmodules.dev</div>
+  <div class="fb-right">Page 2</div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- PAGE 3: THE FOUR-LAYER SOLUTION                               -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page-break">
+<div class="inner">
+  <div class="section">
+    <div class="sh"><div class="sh-title">The Solution</div><div class="sh-line"></div></div>
+    <div class="page-title">A Complete Modernization Stack</div>
+    <div class="page-sub">Four layers working in concert — methodology, platform, interactive AI, and autonomous AI — to deliver modernization at a pace and scale previously out of reach</div>
+
+    <table class="layer-table mb-28">
+      <thead>
+        <tr>
+          <th style="width:15%">Layer</th>
+          <th style="width:20%">Component</th>
+          <th style="width:30%">Role</th>
+          <th style="width:35%">Key Capabilities</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="layer-badge badge-dark">Framework</span></td>
+          <td><strong>Google CAMP</strong></td>
+          <td>Structured modernization methodology with proven phased approach</td>
+          <td>Assess → Analyse → Plan &amp; Execute → Measure &amp; Iterate · Three modernization paths · Partner-delivered engagement model</td>
+        </tr>
+        <tr>
+          <td><span class="layer-badge badge-blue">Platform</span></td>
+          <td><strong>RAD (IDP)</strong></td>
+          <td>Production-grade Google Cloud IDP — the golden path to modernized infrastructure</td>
+          <td>26 deployment modules · Cloud Run + GKE Autopilot targets · Security, observability, CI/CD, FinOps built-in · 35+ GCP APIs per deployment</td>
+        </tr>
+        <tr>
+          <td><span class="layer-badge badge-gold">Interactive AI</span></td>
+          <td><strong>Claude Code</strong></td>
+          <td>Developer-in-the-loop AI for architecture, design and complex migrations</td>
+          <td>Whole-codebase awareness · Architecture decisions · Legacy code archaeology · Documentation generation · Test suite creation · Thought partnership</td>
+        </tr>
+        <tr>
+          <td><span class="layer-badge badge-green">Autonomous AI</span></td>
+          <td><strong>Jules (Google)</strong></td>
+          <td>Async AI agent for continuous execution, CI/CD automation and platform maintenance</td>
+          <td>GitHub-native PR workflow · Jules API in CI/CD pipelines · Jules Tools CLI · Multi-VM parallel task execution · Dependency management · Compliance automation</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="two-col mb-20">
+      <div>
+        <div class="sh"><div class="sh-title">Claude Code — Interactive AI</div><div class="sh-line"></div></div>
+        <div class="highlight mb-20" style="padding: 18px 22px;">
+          <h3 style="font-size:11pt;">The Architect's Partner</h3>
+          <p>Claude Code understands context across entire codebases — tracing execution paths through multiple files, identifying dependencies before they become problems, and walking teams through the reasoning behind architectural decisions.</p>
+        </div>
+        <ul class="bullet-list">
+          <li><span class="dot dot-blue"></span>Analyse legacy codebases: extract business logic, map dependencies, document hidden constraints</li>
+          <li><span class="dot dot-blue"></span>Design migration architectures: monolith decomposition, service boundary identification, IaC optimisation</li>
+          <li><span class="dot dot-blue"></span>Generate comprehensive test suites before any code is migrated</li>
+          <li><span class="dot dot-blue"></span>Produce documentation where none previously existed — with a single prompt</li>
+          <li><span class="dot dot-blue"></span>Enables newer developers to architect systems without expert-level codebase knowledge</li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="sh"><div class="sh-title">Jules — Autonomous AI Agent</div><div class="sh-line"></div></div>
+        <div class="highlight highlight-green mb-20" style="padding: 18px 22px;">
+          <h3 style="font-size:11pt;">The Always-On Executor</h3>
+          <p>Jules works asynchronously in a secure cloud VM — powered by Gemini 2.5 Pro — cloning your repo, making changes, running tests, and opening pull requests for review while your team focuses on higher-value work.</p>
+        </div>
+        <ul class="bullet-list">
+          <li><span class="dot dot-green"></span>GitHub-native: understands full codebase context, works through issues, branches and PRs</li>
+          <li><span class="dot dot-green"></span>Jules API integrates directly into RAD's Cloud Build / Cloud Deploy pipelines</li>
+          <li><span class="dot dot-green"></span>Jules Tools CLI: scriptable, composable with existing developer toolchains</li>
+          <li><span class="dot dot-green"></span>AGENTS.md: encodes platform engineering conventions Jules follows consistently</li>
+          <li><span class="dot dot-green"></span>Multi-VM parallel execution: scales concurrent tasks across the entire codebase</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="highlight highlight-gold" style="padding: 20px 28px;">
+      <h3 style="font-size: 12pt;">&ldquo;Claude Code for thinking. Jules for doing.&rdquo;</h3>
+      <p>Claude Code is used when designing platform modules, making architectural decisions or navigating complex migrations. Jules runs continuously in the background — handling execution, dependency management, security patching and quality work. Together, they compress months of platform engineering into weeks, and transform a one-time CAMP engagement into a continuously improving platform.</p>
+    </div>
+  </div>
+</div>
+<div class="footer-bar">
+  <div class="fb-left">Tech Equity Cloud &nbsp;·&nbsp; Cloud Application Modernization Playbook &nbsp;·&nbsp; radmodules.dev</div>
+  <div class="fb-right">Page 3</div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- PAGE 4: THE THREE MODERNIZATION PATHS                         -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page-break">
+<div class="inner">
+  <div class="section">
+    <div class="sh"><div class="sh-title">Modernization Paths</div><div class="sh-line"></div></div>
+    <div class="page-title">Three Paths to Modernization</div>
+    <div class="page-sub">CAMP organises modernization across three paths. RAD provides the platform foundation for each — and AI accelerates delivery at every stage.</div>
+
+    <div class="three-col mb-20">
+
+      <!-- Path 1: Move & Improve -->
+      <div class="card" style="border-top: 3px solid var(--primary); padding: 20px;">
+        <div style="margin-bottom: 12px;">
+          <span class="tag">Move &amp; Improve</span>
+        </div>
+        <h4 style="font-size: 11pt; margin-bottom: 8px;">Modernise the Legacy Estate</h4>
+        <p style="font-size: 8.5pt; color: var(--mid); margin-bottom: 14px;">Containerise traditional applications, migrate from legacy platforms, and unlock value from systems that cannot be re-architected.</p>
+
+        <div class="sh"><div class="sh-title">CAMP Scope</div><div class="sh-line"></div></div>
+        <ul class="bullet-list" style="margin-bottom: 14px;">
+          <li><span class="dot dot-blue"></span>Containerise Java and .NET applications</li>
+          <li><span class="dot dot-blue"></span>Migrate from Cloud Foundry and OpenShift to GKE</li>
+          <li><span class="dot dot-blue"></span>Mainframe migration and modernisation</li>
+          <li><span class="dot dot-blue"></span>Legacy API exposure via Apigee</li>
+        </ul>
+
+        <div class="sh"><div class="sh-title">RAD Modules</div><div class="sh-line"></div></div>
+        <div style="margin-bottom: 14px;">
+          <span class="tag">AKS_GKE</span><span class="tag">EKS_GKE</span><span class="tag">Bank_GKE</span><span class="tag">MC_Bank_GKE</span><span class="tag">Istio_GKE</span>
+        </div>
+
+        <div class="sh"><div class="sh-title">AI Acceleration</div><div class="sh-line"></div></div>
+        <ul class="bullet-list">
+          <li><span class="dot dot-blue"></span><strong>Jules:</strong> async legacy repo analysis, dependency mapping, PR-based migration proposals</li>
+          <li><span class="dot dot-blue"></span><strong>Claude Code:</strong> migration architecture design, business logic extraction, test suite generation</li>
+          <li><span class="dot dot-blue"></span><strong>RAD:</strong> production-grade GKE landing zone ready from day one</li>
+        </ul>
+      </div>
+
+      <!-- Path 2: Build & Operate -->
+      <div class="card tier-featured" style="padding: 20px;">
+        <div style="margin-bottom: 12px;">
+          <span class="tag">Build &amp; Operate</span>
+        </div>
+        <h4 style="font-size: 11pt; margin-bottom: 8px;">Engineering Excellence at Scale</h4>
+        <p style="font-size: 8.5pt; color: var(--mid); margin-bottom: 14px;">Improve developer and operations efficiency through DevOps best practices, SRE principles, FinOps discipline and a secure software supply chain.</p>
+
+        <div class="sh"><div class="sh-title">CAMP Scope</div><div class="sh-line"></div></div>
+        <ul class="bullet-list" style="margin-bottom: 14px;">
+          <li><span class="dot dot-blue"></span>DORA-based DevOps assessment and improvement</li>
+          <li><span class="dot dot-blue"></span>SRE principles and observability adoption</li>
+          <li><span class="dot dot-blue"></span>CI/CD pipeline modernisation</li>
+          <li><span class="dot dot-blue"></span>GKE FinOps optimisation and Day 2 operations</li>
+          <li><span class="dot dot-blue"></span>Secure software supply chain (SLSA)</li>
+        </ul>
+
+        <div class="sh"><div class="sh-title">RAD Modules</div><div class="sh-line"></div></div>
+        <div style="margin-bottom: 14px;">
+          <span class="tag">Foundation</span><span class="tag">Cloud Build</span><span class="tag">Cloud Deploy</span><span class="tag">Cloud Armor</span><span class="tag">IAP</span><span class="tag">Binary Auth</span><span class="tag">Cloud Monitoring</span><span class="tag">Billing Budgets</span>
+        </div>
+
+        <div class="sh"><div class="sh-title">AI Acceleration</div><div class="sh-line"></div></div>
+        <ul class="bullet-list">
+          <li><span class="dot dot-blue"></span><strong>Jules API:</strong> embedded in RAD CI/CD pipelines for automated dependency updates, patch management and compliance changes</li>
+          <li><span class="dot dot-blue"></span><strong>Claude Code:</strong> IaC optimisation, platform architecture improvements, runbook generation</li>
+          <li><span class="dot dot-blue"></span><strong>RAD:</strong> 35+ GCP APIs pre-configured — security and observability built-in from day one</li>
+        </ul>
+      </div>
+
+      <!-- Path 3: Cloud & Beyond -->
+      <div class="card" style="border-top: 3px solid var(--green); padding: 20px;">
+        <div style="margin-bottom: 12px;">
+          <span class="tag tag-green">Cloud &amp; Beyond</span>
+        </div>
+        <h4 style="font-size: 11pt; margin-bottom: 8px;">Next-Generation Platforms</h4>
+        <p style="font-size: 8.5pt; color: var(--mid); margin-bottom: 14px;">Design for the future — serverless architectures, AI/ML workloads, multicloud operations, and API-first application design.</p>
+
+        <div class="sh"><div class="sh-title">CAMP Scope</div><div class="sh-line"></div></div>
+        <ul class="bullet-list" style="margin-bottom: 14px;">
+          <li><span class="dot dot-green"></span>Serverless application development (Cloud Run)</li>
+          <li><span class="dot dot-green"></span>Multicloud architecture with Anthos</li>
+          <li><span class="dot dot-green"></span>API management and design (Apigee)</li>
+          <li><span class="dot dot-green"></span>AI/ML workload deployment and operations</li>
+        </ul>
+
+        <div class="sh"><div class="sh-title">RAD Modules</div><div class="sh-line"></div></div>
+        <div style="margin-bottom: 14px;">
+          <span class="tag tag-green">Cloud Run</span><span class="tag tag-green">GKE Autopilot</span><span class="tag tag-green">N8N AI</span><span class="tag tag-green">Qdrant Vector DB</span><span class="tag tag-green">Ollama LLM</span>
+        </div>
+
+        <div class="sh"><div class="sh-title">AI Acceleration</div><div class="sh-line"></div></div>
+        <ul class="bullet-list">
+          <li><span class="dot dot-green"></span><strong>Jules:</strong> background feature development, test generation, async PR delivery at scale</li>
+          <li><span class="dot dot-green"></span><strong>Claude Code:</strong> next-generation architecture design, serverless and multicloud patterns</li>
+          <li><span class="dot dot-green"></span><strong>RAD:</strong> N8N AI module deploys production-ready AI stack with vector DB and LLM in minutes</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Bottom metric strip -->
+    <div class="metrics-row">
+      <div class="mc">
+        <span class="mc-val">35+</span>
+        <span class="mc-sub">GCP APIs activated per deployment</span>
+      </div>
+      <div class="mc mc-green">
+        <span class="mc-val">100%</span>
+        <span class="mc-sub">Security built-in from day one</span>
+      </div>
+      <div class="mc mc-gold">
+        <span class="mc-val">DORA</span>
+        <span class="mc-sub">Research-aligned curriculum &amp; metrics</span>
+      </div>
+      <div class="mc">
+        <span class="mc-val">5</span>
+        <span class="mc-sub">Google Cloud certifications covered</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="footer-bar">
+  <div class="fb-left">Tech Equity Cloud &nbsp;·&nbsp; Cloud Application Modernization Playbook &nbsp;·&nbsp; radmodules.dev</div>
+  <div class="fb-right">Page 4</div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- PAGE 5: ENGAGEMENT MODEL & NEXT STEPS                        -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page-break">
+<div class="inner">
+  <div class="section">
+    <div class="sh"><div class="sh-title">Engagement Model</div><div class="sh-line"></div></div>
+    <div class="page-title">Start Your Modernization Journey</div>
+    <div class="page-sub">Three engagement tiers — designed to deliver value at every stage, from initial assessment through to a production-ready platform</div>
+
+    <div class="three-col mb-28">
+
+      <div class="tier-card">
+        <div class="card-num">Tier 01</div>
+        <h4>Jumpstart</h4>
+        <span class="tier-duration">~2 hours &nbsp;·&nbsp; Low commitment, high insight</span>
+        <ul class="bullet-list">
+          <li><span class="dot dot-blue"></span>CAMP platform maturity assessment</li>
+          <li><span class="dot dot-blue"></span>Identify highest-ROI modernization targets</li>
+          <li><span class="dot dot-blue"></span>Legacy estate review with AI-assisted analysis</li>
+          <li><span class="dot dot-blue"></span>DORA quick-check baseline</li>
+        </ul>
+        <div class="tier-outcome">
+          <strong>Outcome:</strong> Prioritised modernization roadmap aligned to your CAMP path
+        </div>
+      </div>
+
+      <div class="tier-card tier-featured">
+        <div class="card-num" style="color: var(--primary);">Tier 02</div>
+        <h4>Workshop</h4>
+        <span class="tier-duration">Half day &nbsp;·&nbsp; Hands-on in your GCP project</span>
+        <ul class="bullet-list">
+          <li><span class="dot dot-blue"></span>Live RAD module deployment into your own GCP environment</li>
+          <li><span class="dot dot-blue"></span>AI-assisted platform engineering demonstration</li>
+          <li><span class="dot dot-blue"></span>DORA baseline measurement and improvement planning</li>
+          <li><span class="dot dot-blue"></span>Jules integration walkthrough in your GitHub repos</li>
+        </ul>
+        <div class="tier-outcome">
+          <strong>Outcome:</strong> Proof-of-value with your own production-grade infrastructure
+        </div>
+      </div>
+
+      <div class="tier-card">
+        <div class="card-num">Tier 03</div>
+        <h4>Pilot</h4>
+        <span class="tier-duration">4–8 weeks &nbsp;·&nbsp; Full CAMP-aligned delivery</span>
+        <ul class="bullet-list">
+          <li><span class="dot dot-blue"></span>Full modernization of a target system or platform</li>
+          <li><span class="dot dot-blue"></span>RAD IDP deployed to your GCP environment</li>
+          <li><span class="dot dot-blue"></span>Jules integrated into your CI/CD pipeline via Jules API</li>
+          <li><span class="dot dot-blue"></span>Google Cloud certification pathway initiated for your team</li>
+          <li><span class="dot dot-blue"></span>Measurable DORA improvement with results readout</li>
+        </ul>
+        <div class="tier-outcome">
+          <strong>Outcome:</strong> Production-ready platform + quantified engineering performance improvement
+        </div>
+      </div>
+
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="sh"><div class="sh-title">Why RAD + CAMP + AI</div><div class="sh-line"></div></div>
+        <ul class="bullet-list mb-20">
+          <li><span class="dot"></span><strong>Google Cloud partner — 7-year relationship:</strong> 500+ engagements, 4.8/5 CSAT across EMEA, APAC, North America and Latin America</li>
+          <li><span class="dot"></span><strong>CAMP-enabled delivery:</strong> structured Google methodology combined with hands-on platform execution — not just advice</li>
+          <li><span class="dot"></span><strong>AI-accelerated throughout:</strong> Claude Code for design and architecture; Jules for continuous autonomous execution — reducing platform engineering timelines significantly</li>
+          <li><span class="dot"></span><strong>Built-in upskilling:</strong> every RAD deployment maps to Google Cloud certification objectives across 5 certifications</li>
+          <li><span class="dot"></span><strong>Production-grade from day one:</strong> security, observability, CI/CD and FinOps controls are never bolted on later — they are baked into every module</li>
+          <li><span class="dot"></span><strong>Continuous improvement:</strong> Jules keeps running after the initial engagement — handling maintenance, patching and compliance as a background process</li>
+        </ul>
+        <div class="cite">Most modernization programs deliver a project. RAD + CAMP + AI delivers a platform — and then keeps improving it.</div>
+      </div>
+
+      <div>
+        <div class="highlight mb-20">
+          <h3>The All-Google Ecosystem Advantage</h3>
+          <p>CAMP (Google Cloud) · RAD (Google Cloud partner, 7-year relationship) · Jules (Google Labs, Gemini 2.5 Pro) · Gemini-powered tooling throughout. A coherent, deeply integrated stack — no fragmented vendor relationships, no integration tax.</p>
+        </div>
+
+        <div class="sh"><div class="sh-title">Take the Next Step</div><div class="sh-line"></div></div>
+        <div class="card card-accent" style="margin-bottom: 14px;">
+          <h4>Book a Jumpstart Session</h4>
+          <p>A no-obligation 2-hour session to assess your current platform maturity, identify your CAMP path, and see RAD in action. Walk away with a prioritised modernization roadmap.</p>
+        </div>
+
+        <div class="card card-green">
+          <h4>Contact</h4>
+          <p style="margin-bottom: 4px;"><strong>Shiyghan Navti</strong> &nbsp;·&nbsp; Tech Equity Cloud</p>
+          <p style="margin-bottom: 4px;">shiyghan.navti@techequity.cloud</p>
+          <p>radmodules.dev &nbsp;·&nbsp; docs.radmodules.dev</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="footer-bar">
+  <div class="fb-left">Tech Equity Cloud &nbsp;·&nbsp; Cloud Application Modernization Playbook &nbsp;·&nbsp; radmodules.dev &nbsp;·&nbsp; April 2026</div>
+  <div class="fb-right">Page 5 &nbsp;·&nbsp; Confidential</div>
+</div>
+</div>
+
+</body>
+</html>
