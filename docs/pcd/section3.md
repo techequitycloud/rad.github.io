@@ -1,8 +1,5 @@
 # PCD Certification Preparation Guide: Section 3 — Deploying applications (~20% of the exam)
-<video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pcd_section3.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/gcp/pcd_section3.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="diwTXVr2jek" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pcd_section3.png" />
 
 <br/>
 

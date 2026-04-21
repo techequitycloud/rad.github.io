@@ -5,10 +5,7 @@ sidebar_label: "GKE"
 
 # Directus GKE Module
 
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Directus_GKE.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Directus_GKE.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="KrfBYyPNRw8" poster="https://storage.googleapis.com/rad-public-2b65/modules/Directus_GKE.png" />
 
 <br/>
 

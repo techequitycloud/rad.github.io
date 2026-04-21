@@ -1,8 +1,5 @@
 # ACE Certification Preparation Guide: Section 3 — Ensuring successful operation of a cloud solution (~27% of the exam)
-<video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/gcp/ace_section3.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/gcp/ace_section3.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="B6juHA1kYEQ" poster="https://storage.googleapis.com/rad-public-2b65/gcp/ace_section3.png" />
 
 <br/>
 

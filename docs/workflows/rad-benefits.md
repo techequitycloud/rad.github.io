@@ -5,10 +5,7 @@ sidebar_label: "RAD Benefits"
 
 # RAD Benefits
 
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/RAD_Benefits.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/RAD_Benefits.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="T5L6FRc7G9c" poster="https://storage.googleapis.com/rad-public-2b65/modules/RAD_Benefits.png" />
 
 <br/>
 

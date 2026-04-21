@@ -5,10 +5,7 @@ sidebar_label: "GKE"
 
 # App GKE Module
 
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/App_GKE.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/App_GKE.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="d1HD_C5dvRY" poster="https://storage.googleapis.com/rad-public-2b65/modules/App_GKE.png" />
 
 <br/>
 

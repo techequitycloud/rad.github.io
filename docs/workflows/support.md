@@ -1,10 +1,7 @@
 
 # Support Workflow
 
-<video width="100%" controls poster="https://storage.googleapis.com/rad-public-2b65/workflows/support_workflow.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/workflows/support_workflow.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="ZCBxacTrebE" poster="https://storage.googleapis.com/rad-public-2b65/workflows/support_workflow.png" />
 
 <br/>
 

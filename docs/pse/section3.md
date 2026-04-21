@@ -1,8 +1,5 @@
 # PSE Certification Preparation Guide: Section 3 — Ensuring data protection (~23% of the exam)
-<video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pse_section3.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/gcp/pse_section3.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="272U8DD415s" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pse_section3.png" />
 
 <br/>
 

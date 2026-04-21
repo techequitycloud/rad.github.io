@@ -1,8 +1,5 @@
 # PCA Certification Preparation Guide: Section 6 — Ensuring solution and operations excellence (~12.5% of the exam)
-<video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pca_section6.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/gcp/pca_section6.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="yt7BCx-K5Y4" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pca_section6.png" />
 
 <br/>
 

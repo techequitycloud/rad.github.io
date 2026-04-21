@@ -71,16 +71,30 @@ export default function DemoPlayer({ sections }: DemoPlayerProps): JSX.Element {
         borderRadius: 'var(--ifm-card-border-radius)',
         overflow: 'hidden',
         backgroundColor: '#000',
+        position: 'relative',
+        paddingBottom: selected.url.includes('youtube.com/embed') ? '56.25%' : '0',
+        height: selected.url.includes('youtube.com/embed') ? 0 : 'auto',
       }}>
-        <video
-          key={selected.url}
-          controls
-          width="100%"
-          style={{ display: 'block' }}
-        >
-          <source src={selected.url} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+        {selected.url.includes('youtube.com/embed') ? (
+          <iframe
+            key={selected.url}
+            src={selected.url}
+            title={selected.title}
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : (
+          <video
+            key={selected.url}
+            controls
+            width="100%"
+            style={{ display: 'block' }}
+          >
+            <source src={selected.url} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        )}
       </div>
       <p style={{
         textAlign: 'center',

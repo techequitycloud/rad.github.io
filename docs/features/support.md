@@ -3,10 +3,7 @@ title: Support Features
 slug: /features/support
 ---
 
-<video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/features/support_features.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/features/support_features.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="sgS29sv2OTY" poster="https://storage.googleapis.com/rad-public-2b65/features/support_features.png" />
 
 <br/>
 

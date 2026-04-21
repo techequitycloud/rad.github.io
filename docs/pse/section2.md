@@ -1,8 +1,5 @@
 # PSE Certification Preparation Guide: Section 2 — Securing communications and establishing boundary protection (~22% of the exam)
-<video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pse_section2.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/gcp/pse_section2.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="caJp5wZT_N4" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pse_section2.png" />
 
 <br/>
 

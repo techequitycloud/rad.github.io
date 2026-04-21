@@ -1,10 +1,7 @@
 
 # ROI Workflow
 
-<video width="100%" controls poster="https://storage.googleapis.com/rad-public-2b65/workflows/roi_workflow.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/workflows/roi_workflow.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="RkWtwF0fPdw" poster="https://storage.googleapis.com/rad-public-2b65/workflows/roi_workflow.png" />
 
 <br/>
 

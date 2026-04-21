@@ -5,10 +5,7 @@ sidebar_label: "Cloud Run"
 
 # Ghost CloudRun Module
 
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_CloudRun.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_CloudRun.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="N-kCP7yhoWE" poster="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_CloudRun.png" />
 
 <br/>
 

@@ -1,8 +1,5 @@
 # PCA Certification Preparation Guide: Section 3 — Designing for security and compliance (~17.5% of the exam)
-<video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pca_section3.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/gcp/pca_section3.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="R64oIHMv6Ns" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pca_section3.png" />
 
 <br/>
 

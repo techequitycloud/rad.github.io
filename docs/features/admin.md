@@ -3,10 +3,7 @@ title: Admin Features
 slug: /features/admins
 ---
 
-<video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/features/admin_features.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/features/admin_features.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="Yc1yQbShlw0" poster="https://storage.googleapis.com/rad-public-2b65/features/admin_features.png" />
 
 <br/>
 

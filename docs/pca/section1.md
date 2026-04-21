@@ -1,8 +1,5 @@
 # PCA Certification Preparation Guide: Section 1 — Designing and planning a cloud solution architecture (~25% of the exam)
-<video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pca_section1.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/gcp/pca_section1.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="f-I_BpwkRPo" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pca_section1.png" />
 
 <br/>
 

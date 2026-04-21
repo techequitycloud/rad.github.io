@@ -5,10 +5,7 @@ sidebar_label: "Cloud Run"
 
 # Cyclos CloudRun Module
 
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_CloudRun.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_CloudRun.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="J1AqLzi507k" poster="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_CloudRun.png" />
 
 <br/>
 
