@@ -4,10 +4,7 @@
 
 <br/>
 
-<video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/guides/start_guide.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/guides/start_guide.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="ohdt12sh7Kk" poster="https://storage.googleapis.com/rad-public-2b65/guides/start_guide.png" />
 
 <br/>
 

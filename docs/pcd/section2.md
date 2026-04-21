@@ -1,8 +1,5 @@
 # PCD Certification Preparation Guide: Section 2 — Building and testing applications (~23% of the exam)
-<video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pcd_section2.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/gcp/pcd_section2.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="T7ybAG9V5N0" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pcd_section2.png" />
 
 <br/>
 

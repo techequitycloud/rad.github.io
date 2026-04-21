@@ -3,10 +3,7 @@ title: Partner Features
 slug: /features/partners
 ---
 
-<video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/features/partner_features.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/features/partner_features.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="GTbSaXMH4Hw" poster="https://storage.googleapis.com/rad-public-2b65/features/partner_features.png" />
 
 <br/>
 

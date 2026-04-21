@@ -1,10 +1,7 @@
 
 # Agent Guide
 
-<video width="100%" controls poster="https://storage.googleapis.com/rad-public-2b65/guides/agent_guide.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/guides/agent_guide.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="CJfALVC2mHk" poster="https://storage.googleapis.com/rad-public-2b65/guides/agent_guide.png" />
 
 <br/>
 

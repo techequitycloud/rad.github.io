@@ -1,9 +1,6 @@
 # Wordpress CloudRun Module
 
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_CloudRun.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_CloudRun.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="9iLeMqmdAYU" poster="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_CloudRun.png" />
 
 <br/>
 

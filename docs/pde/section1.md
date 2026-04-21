@@ -1,8 +1,5 @@
 # PDE Certification Preparation Guide: Section 1 — Bootstrapping and maintaining a Google Cloud organization (~20% of the exam)
-<video controls width="100%" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pde_section1.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/gcp/pde_section1.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="2CpUIChu09w" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pde_section1.png" />
 
 <br/>
 

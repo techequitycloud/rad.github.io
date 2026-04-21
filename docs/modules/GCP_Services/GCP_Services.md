@@ -5,10 +5,7 @@ sidebar_label: "GCP Services"
 
 # GCP Services Module
 
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/GCP_Services.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/GCP_Services.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="bOzIrYMC3C8" poster="https://storage.googleapis.com/rad-public-2b65/modules/GCP_Services.png" />
 
 <br/>
 
