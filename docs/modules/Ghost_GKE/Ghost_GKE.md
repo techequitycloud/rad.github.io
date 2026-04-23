@@ -13,7 +13,7 @@ sidebar_label: "GKE"
 
 
 
-This guide describes every configuration variable available in the `Ghost_GKE` module. `Ghost_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot.
+This guide describes every configuration variable available in the `Ghost_GKE` module. `Ghost_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/Ghost_Common.md) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Ghost_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Ghost** are described in full here.
 
