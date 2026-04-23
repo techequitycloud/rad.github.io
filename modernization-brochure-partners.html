@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Cloud Application Modernization at Scale — A Partner Playbook</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --primary: #1a73e8;
+      --accent: #0d47a1;
+      --dark: #1c2b3a;
+      --mid: #4a6274;
+      --light: #f0f4f8;
+      --border: #d0dce8;
+      --white: #ffffff;
+      --gold: #f9ab00;
+      --green: #1e8e3e;
+      --red: #d93025;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.6;
+      color: var(--dark);
+      background: var(--white);
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    /* ── COVER ── */
+    .cover {
+      background: linear-gradient(150deg, #0a2540 0%, var(--accent) 45%, var(--primary) 100%);
+      min-height: 297mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 0;
+    }
+
+    .cover-top {
+      padding: 56px 60px 40px;
+    }
+
+    .cover-brand {
+      font-size: 10pt;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.65);
+      margin-bottom: 48px;
+    }
+
+    .cover h1 {
+      font-size: 36pt;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+
+    .cover-sub {
+      font-size: 14pt;
+      font-weight: 300;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 40px;
+    }
+
+    .cover-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .cover-tag {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      padding: 5px 16px;
+      font-size: 9pt;
+      color: #fff;
+    }
+
+    .cover-metrics {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 24px 60px;
+      display: flex;
+      gap: 48px;
+    }
+
+    .cm {
+      color: #fff;
+    }
+
+    .cm-val {
+      font-size: 22pt;
+      font-weight: 700;
+      color: var(--gold);
+      display: block;
+      line-height: 1;
+    }
+
+    .cm-lbl {
+      font-size: 7.5pt;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 3px;
+    }
+
+    .cover-tagline {
+      background: rgba(0, 0, 0, 0.18);
+      padding: 20px 60px;
+    }
+
+    .cover-tagline p {
+      font-size: 13pt;
+      font-weight: 300;
+      color: rgba(255, 255, 255, 0.9);
+      font-style: italic;
+    }
+
+    .cover-footer {
+      background: rgba(0, 0, 0, 0.35);
+      padding: 20px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cover-footer-left {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 9pt;
+    }
+
+    .cover-footer-right {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 8.5pt;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── INNER PAGES ── */
+    .inner {
+      padding: 44px 56px;
+    }
+
+    .section {
+      margin-bottom: 36px;
+    }
+
+    .sh {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .sh-title {
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    .sh-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+    }
+
+    .page-title {
+      font-size: 20pt;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 6px;
+      line-height: 1.2;
+    }
+
+    .page-sub {
+      font-size: 10.5pt;
+      color: var(--mid);
+      margin-bottom: 28px;
+    }
+
+    /* ── TEXT ── */
+    p {
+      margin-bottom: 12px;
+      color: var(--dark);
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .lead {
+      font-size: 11pt;
+      line-height: 1.7;
+      color: var(--dark);
+    }
+
+    /* ── METRIC CARDS ── */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .metrics-row-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .mc {
+      background: var(--light);
+      border-radius: 10px;
+      padding: 18px 16px;
+      border-top: 3px solid var(--primary);
+      text-align: center;
+    }
+
+    .mc-val {
+      font-size: 18pt;
+      font-weight: 700;
+      color: var(--primary);
+      display: block;
+      line-height: 1;
+    }
+
+    .mc-sub {
+      font-size: 7.5pt;
+      color: var(--mid);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 5px;
+      display: block;
+    }
+
+    .mc-gold {
+      border-top-color: var(--gold);
+    }
+
+    .mc-gold .mc-val {
+      color: var(--gold);
+    }
+
+    .mc-green {
+      border-top-color: var(--green);
+    }
+
+    .mc-green .mc-val {
+      color: var(--green);
+    }
+
+    /* ── TWO / THREE COL ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    .col-60-40 {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 28px;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      background: var(--white);
+    }
+
+    .card-accent {
+      border-left: 3px solid var(--primary);
+      background: var(--light);
+    }
+
+    .card-gold {
+      border-left: 3px solid var(--gold);
+      background: #fffdf0;
+    }
+
+    .card-green {
+      border-left: 3px solid var(--green);
+      background: #f0faf3;
+    }
+
+    .card h4 {
+      font-size: 9.5pt;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      font-size: 8.5pt;
+      color: var(--mid);
+      margin: 0;
+    }
+
+    .card-num {
+      font-size: 7pt;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight {
+      background: linear-gradient(135deg, var(--accent), var(--primary));
+      border-radius: 10px;
+      padding: 24px 28px;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+
+    .highlight h3 {
+      font-size: 13pt;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .highlight p {
+      color: rgba(255, 255, 255, 0.85);
+      margin: 0;
+      font-size: 9.5pt;
+    }
+
+    .highlight-gold {
+      background: linear-gradient(135deg, #b06000, var(--gold));
+    }
+
+    .highlight-green {
+      background: linear-gradient(135deg, #0a5c22, var(--green));
+    }
+
+    .highlight-dark {
+      background: linear-gradient(135deg, #0a2540, var(--dark));
+    }
+
+    /* ── LAYER TABLE ── */
+    .layer-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .layer-table th {
+      background: var(--dark);
+      color: #fff;
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 8pt;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .layer-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 9pt;
+      vertical-align: middle;
+    }
+
+    .layer-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .layer-table tr:nth-child(even) td {
+      background: var(--light);
+    }
+
+    .layer-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 7.5pt;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-blue {
+      background: #e8f0fe;
+      color: var(--accent);
+    }
+
+    .badge-gold {
+      background: #fff8e1;
+      color: #7a4900;
+    }
+
+    .badge-green {
+      background: #e6f4ea;
+      color: #0a5c22;
+    }
+
+    .badge-dark {
+      background: var(--dark);
+      color: #fff;
+    }
+
+    /* ── PHASE FLOW ── */
+    .phase-flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 20px;
+    }
+
+    .phase-step {
+      flex: 1;
+      background: var(--light);
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      text-align: center;
+    }
+
+    .phase-step:first-child {
+      border-radius: 8px 0 0 8px;
+    }
+
+    .phase-step:last-child {
+      border-radius: 0 8px 8px 0;
+    }
+
+    .phase-arrow {
+      color: var(--primary);
+      font-size: 14pt;
+      font-weight: 700;
+      padding: 0 2px;
+      flex-shrink: 0;
+    }
+
+    .phase-title {
+      font-size: 8.5pt;
+      font-weight: 700;
+      color: var(--dark);
+      display: block;
+    }
+
+    .phase-sub {
+      font-size: 7.5pt;
+      color: var(--mid);
+      display: block;
+      margin-top: 2px;
+    }
+
+    /* ── ENGAGEMENT TIERS ── */
+    .tier-card {
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      background: var(--white);
+      position: relative;
+    }
+
+    .tier-card h4 {
+      font-size: 12pt;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+
+    .tier-duration {
+      font-size: 8pt;
+      color: var(--mid);
+      margin-bottom: 14px;
+      display: block;
+    }
+
+    .tier-outcome {
+      margin-top: 14px;
+      background: var(--light);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 8.5pt;
+    }
+
+    .tier-outcome strong {
+      color: var(--primary);
+    }
+
+    .tier-featured {
+      border: 2px solid var(--primary);
+    }
+
+    .tier-featured::before {
+      content: 'Most Popular';
+      position: absolute;
+      top: -11px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: #fff;
+      font-size: 7pt;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 12px;
+      border-radius: 10px;
+    }
+
+    /* ── PARTNER ADVANTAGE GRID ── */
+    .advantage-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .adv-card {
+      border-radius: 8px;
+      padding: 14px 16px;
+      background: var(--light);
+      border-left: 3px solid var(--primary);
+    }
+
+    .adv-card h5 {
+      font-size: 9pt;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+
+    .adv-card p {
+      font-size: 8pt;
+      color: var(--mid);
+      margin: 0;
+    }
+
+    /* ── TABLE ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8.5pt;
+    }
+
+    th {
+      background: var(--dark);
+      color: #fff;
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 7.5pt;
+      letter-spacing: 0.04em;
+    }
+
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:nth-child(even) td {
+      background: var(--light);
+    }
+
+    .td-highlight {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    /* ── LIST ── */
+    .bullet-list {
+      list-style: none;
+    }
+
+    .bullet-list li {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 9pt;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .bullet-list li:last-child {
+      border-bottom: none;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      min-width: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      margin-top: 4px;
+    }
+
+    .dot-blue {
+      background: var(--primary);
+    }
+
+    .dot-green {
+      background: var(--green);
+    }
+
+    /* ── FOOTER BAR ── */
+    .footer-bar {
+      background: var(--dark);
+      padding: 14px 56px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .fb-left {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 8pt;
+    }
+
+    .fb-right {
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 7.5pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── UTILITY ── */
+    .cite {
+      font-size: 7pt;
+      color: var(--mid);
+      font-style: italic;
+      margin-top: 8px;
+    }
+
+    .mb-20 {
+      margin-bottom: 20px;
+    }
+
+    .mb-28 {
+      margin-bottom: 28px;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #e8f0fe;
+      color: var(--accent);
+      border-radius: 12px;
+      padding: 3px 10px;
+      font-size: 7.5pt;
+      font-weight: 600;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    .tag-gold {
+      background: #fff8e1;
+      color: #7a4900;
+    }
+
+    .tag-green {
+      background: #e6f4ea;
+      color: #0a5c22;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 1: COVER                                                 -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="cover">
+    <div class="cover-top">
+      <div class="cover-brand">Google Cloud</div>
+      <h1>Cloud Application<br>Modernization<br>Playbook</h1>
+      <div class="cover-sub">AI-Based Transformation with Cloud Application Modernization Program (CAMP) + Rapid
+        Application Deployment (RAD)</div>
+      <div class="cover-tags">
+        <span class="cover-tag">Google CAMP Framework</span>
+        <span class="cover-tag">Internal Developer Platform</span>
+        <span class="cover-tag">White-Label Delivery</span>
+        <span class="cover-tag">Claude Code — Interactive AI</span>
+        <span class="cover-tag">Jules — Autonomous AI Agent</span>
+        <span class="cover-tag">Repeatable Partner IP</span>
+      </div>
+    </div>
+    <div class="cover-metrics">
+      <div class="cm"><span class="cm-val">10,000+</span><span class="cm-lbl">Professionals Trained</span></div>
+      <div class="cm"><span class="cm-val">500+</span><span class="cm-lbl">Client Engagements</span></div>
+      <div class="cm"><span class="cm-val">4.8/5.0</span><span class="cm-lbl">CSAT Score</span></div>
+      <div class="cm"><span class="cm-val">25+</span><span class="cm-lbl">Deployment Modules</span></div>
+      <div class="cm"><span class="cm-val">13 Years</span><span class="cm-lbl">Google Partnership</span></div>
+    </div>
+    <div class="cover-tagline">
+      <p>&ldquo;Stop building delivery capability from scratch. RAD is the platform your consultants need to deliver
+        Cloud Application Modernization pilots in days, not months.&rdquo;</p>
+    </div>
+    <div class="cover-footer">
+      <div class="cover-footer-left">April 2026 &nbsp;·&nbsp; https://radmodules.dev</div>
+      <div class="cover-footer-right">Partner Confidential</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 2: THE PARTNER OPPORTUNITY                               -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="page-break">
+    <div class="inner">
+      <div class="section">
+        <div class="sh">
+          <div class="sh-title">The Partner Opportunity</div>
+          <div class="sh-line"></div>
+        </div>
+        <div class="page-title">RAD accelerates CAMP delivery.</div>
+        <div class="page-sub">Google invites the partner ecosystem to deliver CAMP client engagements — but
+          pilot-tier delivery is where most partners lose margin, velocity and repeatability</div>
+
+        <div class="two-col mb-28">
+          <div>
+            <div class="sh">
+              <div class="sh-title">The Delivery Problem</div>
+              <div class="sh-line"></div>
+            </div>
+
+            <div class="card card-accent mb-20">
+              <div class="card-num">Challenge 01 &mdash; Time to Value</div>
+              <h4>Pilot engagements take weeks to stand up</h4>
+              <p>Getting a client environment ready for a CAMP Pilot — VPC, security controls, observability, CI/CD, IAM
+                — requires days of manual configuration before any application is deployed. This erodes
+                margin and frustrates clients expecting rapid results.</p>
+            </div>
+
+            <div class="card card-gold mb-20">
+              <div class="card-num">Challenge 02 &mdash; Repeatability</div>
+              <h4>Every engagement reinvents the wheel</h4>
+              <p>Without a standardised delivery platform, each consultant builds infrastructure differently. Quality
+                varies. Knowledge walks out the door. Best practices aren't enforced. The cost of each Pilot engagement
+                stays stubbornly high.</p>
+            </div>
+
+            <div class="card" style="border-left: 3px solid var(--red); background: #fef6f5;">
+              <div class="card-num" style="color: var(--red);">Challenge 03 &mdash; Skills Depth</div>
+              <h4>Breadth of GCP expertise is hard to staff</h4>
+              <p>A complete CAMP Pilot touches 10+ GCP service families simultaneously — networking, security, compute,
+                observability, CI/CD, FinOps. Staffing consultants with that full-stack depth on every engagement is
+                expensive and often impossible at scale.</p>
+            </div>
+          </div>
+
+          <div>
+            <div class="sh">
+              <div class="sh-title">The RAD Advantage for Partners</div>
+              <div class="sh-line"></div>
+            </div>
+
+            <div class="highlight mb-20">
+              <h3>RAD Is Your CAMP Delivery Engine</h3>
+              <p>RAD is a production-ready Internal Developer Platform (IDP). It encodes Google
+                Cloud best practices — security, observability, CI/CD, FinOps — into pre-built deployment modules
+                that provision complete, client-ready infrastructure in minutes, not weeks.</p>
+            </div>
+
+            <div class="advantage-grid mb-20">
+              <div class="adv-card">
+                <h5>Faster Time to Pilot</h5>
+                <p>Deploy a complete, production-grade GCP environment into a client's own project in minutes. Spend
+                  consultant time on outcomes, not plumbing.</p>
+              </div>
+              <div class="adv-card">
+                <h5>Standardised Delivery</h5>
+                <p>Every engagement uses the same battle-tested modules. Best practices are enforced by default. Quality
+                  is consistent across every client engagement.</p>
+              </div>
+              <div class="adv-card" style="border-left-color: var(--gold);">
+                <h5>Reduced Staffing Depth</h5>
+                <p>RAD activates 35+ GCP APIs per deployment. Your consultants focus on CAMP methodology and client
+                  outcomes — RAD handles the infrastructure complexity.</p>
+              </div>
+              <div class="adv-card" style="border-left-color: var(--green);">
+                <h5>White-Label Ready</h5>
+                <p>Deploy RAD under your own brand. Deliver CAMP engagements as your proprietary methodology, backed by
+                  proven platform IP.</p>
+              </div>
+            </div>
+
+            <div class="sh">
+              <div class="sh-title">The CAMP Delivery Model</div>
+              <div class="sh-line"></div>
+            </div>
+            <div class="phase-flow">
+              <div class="phase-step">
+                <span class="phase-title">Jumpstart</span>
+                <span class="phase-sub">2 hrs · Assess</span>
+              </div>
+              <div class="phase-arrow">›</div>
+              <div class="phase-step">
+                <span class="phase-title">Workshop</span>
+                <span class="phase-sub">Half day · Demo</span>
+              </div>
+              <div class="phase-arrow">›</div>
+              <div class="phase-step">
+                <span class="phase-title">Pilot</span>
+                <span class="phase-sub">4–8 wks · Deliver</span>
+              </div>
+              <div class="phase-arrow">›</div>
+              <div class="phase-step">
+                <span class="phase-title">Scale</span>
+                <span class="phase-sub">Expand &amp; Repeat</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="fb-left">Deliver Cloud Application Modernization at Scale: A Partner Playbook &nbsp;·&nbsp;
+        https://radmodules.dev</div>
+      <div class="fb-right">Page 2</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 3: RAD + AI AS THE DELIVERY ENGINE                      -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="page-break">
+    <div class="inner">
+      <div class="section">
+        <div class="sh">
+          <div class="sh-title">The Delivery Stack</div>
+          <div class="sh-line"></div>
+        </div>
+        <div class="page-title">RAD + AI: Your Competitive Delivery Advantage</div>
+        <div class="page-sub">RAD provides the platform your consultants need to deploy into client environments. Claude
+          Code
+          and Jules reduce the consultant hours required at every stage of the modernization engagement lifecycle.</div>
+
+        <table class="layer-table mb-28">
+          <thead>
+            <tr>
+              <th style="width:18%">Layer</th>
+              <th style="width:18%">Component</th>
+              <th style="width:30%">What It Does for Your Practice</th>
+              <th style="width:34%">Partner Benefit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="layer-badge badge-dark">Framework</span></td>
+              <td><strong>CAMP</strong></td>
+              <td>Provides the client-facing methodology and engagement structure your consultants follow</td>
+              <td>Google-branded credibility · Proven assessment tools · Structured modernization path from Jumpstart to
+                Pilot</td>
+            </tr>
+            <tr>
+              <td><span class="layer-badge badge-blue">Platform</span></td>
+              <td><strong>RAD</strong></td>
+              <td>Deploys production-grade GCP infrastructure into client environments in minutes — security,
+                observability, CI/CD, FinOps included</td>
+              <td>Eliminates environment setup toil · Consistent quality across engagements · 35+ GCP APIs per
+                deployment · White-label ready</td>
+            </tr>
+            <tr>
+              <td><span class="layer-badge badge-gold">Interactive AI</span></td>
+              <td><strong>Claude</strong></td>
+              <td>Analyses client legacy codebases, designs migration architectures, generates documentation and test
+                suites</td>
+              <td>Reduces senior consultant hours on discovery and analysis · Enables junior consultants to deliver
+                architect-quality outputs</td>
+            </tr>
+            <tr>
+              <td><span class="layer-badge badge-green">Autonomous AI</span></td>
+              <td><strong>Jules</strong></td>
+              <td>Runs async in client GitHub repos — handling code migration, dependency updates, test generation and
+                PR review via Jules API in CI/CD</td>
+              <td>Extends your team without headcount · Keeps delivering between consultant check-ins · Integrates into
+                client's existing toolchain</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="two-col mb-20">
+          <div>
+            <div class="sh">
+              <div class="sh-title">How AI Reduces Your Delivery Cost</div>
+              <div class="sh-line"></div>
+            </div>
+
+            <div class="card card-accent mb-20">
+              <div class="card-num">Assess Phase — Claude</div>
+              <h4>Legacy codebase discovery in hours, not weeks</h4>
+              <p>Point Claude Code at a client's legacy repository. It traces execution paths, maps dependencies,
+                extracts embedded business logic, and generates documentation — producing outputs that would previously
+                require a senior architect spending two to three weeks on discovery alone.</p>
+            </div>
+
+            <div class="card card-green mb-20">
+              <div class="card-num">Pilot Phase — Jules</div>
+              <h4>Async execution runs between client sessions</h4>
+              <p>Once Jules is connected to a client's GitHub repos via the Jules API, it continues working between
+                consultant engagements — migrating code, bumping dependencies, generating tests, opening PRs.
+                Consultants review and approve rather than write. Billable hours shift from execution to oversight.</p>
+            </div>
+
+            <div class="card card-gold">
+              <div class="card-num">Scale Phase — Both</div>
+              <h4>Parallel delivery across multiple clients</h4>
+              <p>RAD modules are reused across every client. Jules runs concurrently across multiple repos using
+                multi-VM scaling. A small team of consultants can oversee the modernization Pilot delivery for several
+                clients
+                simultaneously — something impossible with manual approaches.</p>
+            </div>
+          </div>
+
+          <div>
+            <div class="sh">
+              <div class="sh-title">The All-Google Ecosystem Story</div>
+              <div class="sh-line"></div>
+            </div>
+            <div class="highlight mb-20">
+              <h3>The Best of Breed</h3>
+              <p>CAMP (Google Cloud) · RAD (Google Cloud partner platform, 13-year relationship) · Jules (Google Labs,
+                Gemini 3.0 Pro) · Claude Code (Anthropic) - Claude-powered tooling throughout. A coherent, deeply
+                integrated stack.</p>
+            </div>
+
+            <div class="sh">
+              <div class="sh-title">What Claude + Jules Replace</div>
+              <div class="sh-line"></div>
+            </div>
+            <ul class="bullet-list">
+              <li><span class="dot dot-blue"></span>Manual legacy codebase analysis (weeks → hours)</li>
+              <li><span class="dot dot-blue"></span>Hand-written migration architecture documentation</li>
+              <li><span class="dot dot-blue"></span>Consultant-written test suites for migrated code</li>
+              <li><span class="dot dot-blue"></span>Manual dependency and security patch management</li>
+              <li><span class="dot dot-blue"></span>PR-by-PR code review bottlenecks</li>
+              <li><span class="dot dot-blue"></span>Bespoke IaC written per client engagement</li>
+            </ul>
+
+            <div class="highlight highlight-dark" style="margin-top: 20px; padding: 18px 22px;">
+              <h3 style="font-size: 11pt;">&ldquo;Claude for thinking. Jules for doing.&rdquo;</h3>
+              <p>Your consultants focus on client relationships, CAMP methodology and strategic decisions. Claude
+                handles discovery and design. Jules handles execution. RAD handles infrastructure. Your margin improves
+                on every engagement.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="fb-left">Deliver Cloud Application Modernization at Scale: A Partner Playbook &nbsp;·&nbsp;
+        https://radmodules.dev</div>
+      <div class="fb-right">Page 3</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 4: THREE MODERNIZATION PATHS — PARTNER VIEW             -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="page-break">
+    <div class="inner">
+      <div class="section">
+        <div class="sh">
+          <div class="sh-title">What You Deliver</div>
+          <div class="sh-line"></div>
+        </div>
+        <div class="page-title">Three Paths to Client Modernization</div>
+        <div class="page-sub">CAMP organises client modernization across three paths. For each one, RAD provides the
+          infrastructure foundation and AI provides the acceleration — so your consultants deliver more, faster.</div>
+
+        <div class="three-col mb-20">
+
+          <!-- Path 1: Move & Improve -->
+          <div class="card" style="border-top: 3px solid var(--primary); padding: 20px;">
+            <div style="margin-bottom: 12px;">
+              <span class="tag">Move &amp; Improve</span>
+            </div>
+            <h4 style="font-size: 11pt; margin-bottom: 8px;">Modernise the Legacy Estate</h4>
+            <p style="font-size: 8.5pt; color: var(--mid); margin-bottom: 14px;">Help clients containerise traditional
+              applications, migrate from legacy platforms, and unlock value from systems that cannot be re-architected.
+            </p>
+
+            <div class="sh">
+              <div class="sh-title">Client Deliverables</div>
+              <div class="sh-line"></div>
+            </div>
+            <ul class="bullet-list" style="margin-bottom: 14px;">
+              <li><span class="dot dot-blue"></span>Java / .NET containerisation on GKE</li>
+              <li><span class="dot dot-blue"></span>Cloud Foundry / OpenShift migration to GKE</li>
+              <li><span class="dot dot-blue"></span>Mainframe migration planning and execution</li>
+              <li><span class="dot dot-blue"></span>Legacy API exposure via Apigee gateway</li>
+            </ul>
+
+            <div class="sh">
+              <div class="sh-title">How AI Accelerates Delivery</div>
+              <div class="sh-line"></div>
+            </div>
+            <ul class="bullet-list">
+              <li><span class="dot dot-blue"></span><strong>Claude</strong> Asynchronous legacy repo analysis,
+                dependency mapping, migration proposals</li>
+              <li><span class="dot dot-blue"></span><strong>Jules</strong>Migration architecture, business logic
+                extraction, test suite generation</li>
+              <li><span class="dot dot-blue"></span><strong>RAD</strong> Automated deployment of production-grade GKE
+                landing zone</li>
+            </ul>
+          </div>
+
+          <!-- Path 2: Build & Operate -->
+          <div class="card tier-featured" style="padding: 20px;">
+            <div style="margin-bottom: 12px;">
+              <span class="tag">Build &amp; Operate</span>
+            </div>
+            <h4 style="font-size: 11pt; margin-bottom: 8px;">Platform Engineering Excellence</h4>
+            <p style="font-size: 8.5pt; color: var(--mid); margin-bottom: 14px;">Deliver DevOps transformation, SRE
+              adoption, FinOps discipline and a secure software supply chain for clients building cloud-native
+              engineering practices.</p>
+
+            <div class="sh">
+              <div class="sh-title">Client Deliverables</div>
+              <div class="sh-line"></div>
+            </div>
+            <ul class="bullet-list" style="margin-bottom: 14px;">
+              <li><span class="dot dot-blue"></span>DORA assessment and DevOps improvement roadmap</li>
+              <li><span class="dot dot-blue"></span>Secure CI/CD pipeline (Cloud Build, Cloud Deploy, SLSA, Binary
+                Authorization)</li>
+              <li><span class="dot dot-blue"></span>GKE FinOps optimisation and Day 2 operations</li>
+              <li><span class="dot dot-blue"></span>Observability stack (Cloud Monitoring, Logging, Trace)</li>
+            </ul>
+
+            <div class="sh">
+              <div class="sh-title">How AI Accelerates Delivery</div>
+              <div class="sh-line"></div>
+            </div>
+            <ul class="bullet-list">
+              <li><span class="dot dot-blue"></span><strong>Jules</strong> Automated dependency updates, patch
+                management and compliance changes</li>
+              <li><span class="dot dot-blue"></span><strong>Claude</strong> IaC optimisation, platform architecture
+                improvements, runbook generation</li>
+              <li><span class="dot dot-blue"></span><strong>RAD</strong> Pre-configured APIs — security and
+                observability built-in from day one</li>
+            </ul>
+          </div>
+
+          <!-- Path 3: Cloud & Beyond -->
+          <div class="card" style="border-top: 3px solid var(--green); padding: 20px;">
+            <div style="margin-bottom: 12px;">
+              <span class="tag tag-green">Cloud &amp; Beyond</span>
+            </div>
+            <h4 style="font-size: 11pt; margin-bottom: 8px;">Next-Generation Platforms</h4>
+            <p style="font-size: 8.5pt; color: var(--mid); margin-bottom: 14px;">Help clients design for the future —
+              serverless architectures, AI/ML workloads, multicloud operations and API-first application design.</p>
+
+            <div class="sh">
+              <div class="sh-title">Client Deliverables</div>
+              <div class="sh-line"></div>
+            </div>
+            <ul class="bullet-list" style="margin-bottom: 14px;">
+              <li><span class="dot dot-green"></span>Serverless application platform (Cloud Run)</li>
+              <li><span class="dot dot-green"></span>Multicloud architecture with Anthos</li>
+              <li><span class="dot dot-green"></span>AI/ML workload deployment and operations</li>
+              <li><span class="dot dot-green"></span>API management and design (Apigee)</li>
+            </ul>
+
+            <div class="sh">
+              <div class="sh-title">How AI Accelerates Delivery</div>
+              <div class="sh-line"></div>
+            </div>
+            <ul class="bullet-list">
+              <li><span class="dot dot-green"></span><strong>Jules</strong> Background feature development, test
+                generation, async PR delivery at scale</li>
+              <li><span class="dot dot-green"></span><strong>Claude</strong> Next-generation architecture design,
+                serverless and multicloud patterns</li>
+              <li><span class="dot dot-green"></span><strong>RAD</strong> Automated deployment of production-ready AI
+                stack with vector DB and LLM</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div class="metrics-row">
+          <div class="mc">
+            <span class="mc-val">35+</span>
+            <span class="mc-sub">GCP APIs activated per client deployment</span>
+          </div>
+          <div class="mc mc-gold">
+            <span class="mc-val">Minutes</span>
+            <span class="mc-sub">To a production-grade client environment</span>
+          </div>
+          <div class="mc mc-green">
+            <span class="mc-val">DORA</span>
+            <span class="mc-sub">Research-backed metrics for every engagement</span>
+          </div>
+          <div class="mc">
+            <span class="mc-val">5</span>
+            <span class="mc-sub">Google Cloud certifications built into delivery</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="fb-left">Deliver Cloud Application Modernization at Scale: A Partner Playbook &nbsp;·&nbsp;
+        https://radmodules.dev</div>
+      <div class="fb-right">Page 4</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 5: PARTNER MODEL & NEXT STEPS                           -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="page-break">
+    <div class="inner">
+      <div class="section">
+        <div class="sh">
+          <div class="sh-title">Partner Model</div>
+          <div class="sh-line"></div>
+        </div>
+        <div class="page-title">Become a Rapid Application Modernization Partner with RAD & CAMP</div>
+        <div class="page-sub">Three ways to bring RAD into your practice — from a co-delivery arrangement through to
+          full white-label licensing of the platform and curriculum</div>
+
+        <div class="three-col mb-28">
+
+          <div class="tier-card">
+            <div class="card-num">Model 01</div>
+            <h4>Co-Delivery</h4>
+            <span class="tier-duration">Best for: SIs new to RAD &nbsp;·&nbsp; Low commitment entry point</span>
+            <ul class="bullet-list">
+              <li><span class="dot dot-blue"></span>We partner and deliver CAMP engagements jointly</li>
+              <li><span class="dot dot-blue"></span>Your consultants learn the RAD platform and AI toolchain hands-on
+              </li>
+              <li><span class="dot dot-blue"></span>Shared IP access for the duration of the engagement</li>
+              <li><span class="dot dot-blue"></span>Ideal for a first Pilot engagement before deeper commitment</li>
+            </ul>
+            <div class="tier-outcome">
+              <strong>Outcome:</strong> Proven delivery model your team can replicate independently
+            </div>
+          </div>
+
+          <div class="tier-card tier-featured">
+            <div class="card-num" style="color: var(--primary);">Model 02</div>
+            <h4>Licensed Delivery</h4>
+            <span class="tier-duration">Best for: Established SIs scaling CAMP practice</span>
+            <ul class="bullet-list">
+              <li><span class="dot dot-blue"></span>Full access to all RAD deployment modules</li>
+              <li><span class="dot dot-blue"></span>Your consultants deploy RAD into client GCP projects independently
+              </li>
+              <li><span class="dot dot-blue"></span>Training on AI toolchain integration (Claude + Jules)</li>
+              <li><span class="dot dot-blue"></span>Ongoing platform updates and Google Cloud certification alignment
+              </li>
+            </ul>
+            <div class="tier-outcome">
+              <strong>Outcome:</strong> A repeatable, scalable CAMP delivery capability within your practice
+            </div>
+          </div>
+
+          <div class="tier-card">
+            <div class="card-num">Model 03</div>
+            <h4>White-Label</h4>
+            <span class="tier-duration">Best for: Large SIs with well established modernization practices</span>
+            <ul class="bullet-list">
+              <li><span class="dot dot-blue"></span>Full RAD platform licensing under your own brand</li>
+              <li><span class="dot dot-blue"></span>Custom curriculum development as your proprietary IP</li>
+              <li><span class="dot dot-blue"></span>Custom module development for your vertical specialisations</li>
+              <li><span class="dot dot-blue"></span>Dedicated onboarding, training and support for your team</li>
+            </ul>
+            <div class="tier-outcome">
+              <strong>Outcome:</strong> Proprietary platform engineering IP — built on proven Google Cloud
+              infrastructure
+            </div>
+          </div>
+
+        </div>
+
+        <div class="two-col">
+          <div>
+            <div class="sh">
+              <div class="sh-title">What You Get as a Partner</div>
+              <div class="sh-line"></div>
+            </div>
+            <ul class="bullet-list mb-20">
+              <li><span class="dot"></span><strong>Production-ready deployment modules</strong> — Cloud Run and GKE
+                Autopilot targets</li>
+              <li><span class="dot"></span><strong>End-to-end modules</strong> — security,
+                observability, CI/CD and FinOps controls built in from day one</li>
+              <li><span class="dot"></span><strong>Transformation curriculum</strong> — grounded in DORA, CAF, SRE,
+                DevSecOps, FinOps and Team Topologies</li>
+              <li><span class="dot"></span><strong>AI toolchain integration</strong> — Claude for discovery and
+                design; Jules for continuous autonomous execution in client repos</li>
+              <li><span class="dot"></span><strong>Google Cloud certification pathway</strong> — maps to objectives
+                across 5 Google Cloud certifications, enabling client upskilling
+              </li>
+              <li><span class="dot"></span><strong>13-year Google Cloud relationship</strong> — 4.8/5
+                CSAT, 500+ engagements active across EMEA, APAC, North America and Latin America</li>
+            </ul>
+          </div>
+
+          <div>
+            <div class="highlight mb-20">
+              <h3>The Partner Value Proposition</h3>
+              <p>Most CAMP partners spend their margin on infrastructure setup and codebase discovery. AI-enabled RAD
+                eliminates
+                both. Your consultants arrive with a production-ready platform and AI-generated discovery outputs — and
+                spend their time where it matters: client relationships, strategic decisions, and measurable DORA
+                improvement.</p>
+            </div>
+
+            <div class="sh">
+              <div class="sh-title">Start the Conversation</div>
+              <div class="sh-line"></div>
+            </div>
+            <div class="card card-accent" style="margin-bottom: 14px;">
+              <h4>Partner Discovery Session</h4>
+              <p>A 90-minute session to assess fit, walk through the RAD platform live, and design a co-delivery pilot
+                engagement with your team. No long procurement process — start with a single client engagement.</p>
+            </div>
+
+            <div class="card card-green">
+              <h4>Contact</h4>
+              <p style="margin-bottom: 4px;"><strong>Dr. Shiyghan Emmanuel Navti</strong></p>
+              <p style="margin-bottom: 4px;">shiyghan.navti@techequity.cloud</p>
+              <p>+44-7966265130 &nbsp;·&nbsp; https://docs.radmodules.dev</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="fb-left">Deliver Cloud Application Modernization at Scale: A Partner Playbook &nbsp;·&nbsp;
+        https://radmodules.dev &nbsp;·&nbsp; April 2026</div>
+      <div class="fb-right">Page 5 &nbsp;·&nbsp; Partner Confidential</div>
+    </div>
+  </div>
+
+</body>
+
+</html>
