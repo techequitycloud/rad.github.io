@@ -393,4 +393,3 @@ secret_env_vars = {
   ODOO_MASTER_PASS = module.odoo_common.odoo_master_pass_secret_id
 }
 ```
-

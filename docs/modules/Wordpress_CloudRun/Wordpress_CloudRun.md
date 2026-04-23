@@ -1,11 +1,4 @@
-# Wordpress CloudRun Module
-
-<YouTubeEmbed videoId="9iLeMqmdAYU" poster="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
+# Wordpress_CloudRun Module — Configuration Guide
 
 `Wordpress_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [WordPress](https://wordpress.org/) on Google Cloud Run Gen2.
 

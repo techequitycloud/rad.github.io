@@ -563,10 +563,3 @@ Complete reference of all `N8N_AI_CloudRun` variables, their defaults, and UI me
 | `ollama_version` | `"latest"` | 21 |
 | `ollama_model` | `"llama3.2"` | 21 |
 | `enable_vpc_sc` | `false` | 22 |
-
-
-
-
-
-
-

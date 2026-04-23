@@ -1,11 +1,4 @@
-# Wordpress GKE Module
-
-<YouTubeEmbed videoId="QI6ZLtt36eg" poster="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
+# Wordpress_GKE Module — Configuration Guide
 
 This guide describes the configuration variables that are **unique to the `Wordpress_GKE` module**. Because `Wordpress_GKE` is a wrapper around `App_GKE`, the vast majority of its variables are passed directly to that base module and are fully documented in the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). This guide explains the WordPress-specific additions, the differences in default values, and what the `Wordpress_Common` sub-module provisions automatically.
 
