@@ -13,7 +13,7 @@ sidebar_label: "Istio GKE"
 
 ## Overview
 
-The Istio GKE module provisions a complete Google Kubernetes Engine (GKE) Standard cluster and installs the **open-source Istio service mesh** onto it. Unlike Google Cloud Service Mesh (which is Google's managed, commercially supported Istio distribution), this module works directly with upstream Istio — the same project maintained by the Cloud Native Computing Foundation (CNCF) — giving platform engineers hands-on experience with the technology in its original, unmodified form.
+The Istio_GKE module provisions a complete Google Kubernetes Engine (GKE) Standard cluster and installs the **open-source Istio service mesh** onto it. Unlike Google Cloud Service Mesh (which is Google's managed, commercially supported Istio distribution), this module works directly with upstream Istio — the same project maintained by the Cloud Native Computing Foundation (CNCF) — giving platform engineers hands-on experience with the technology in its original, unmodified form.
 
 This module is designed as a deep learning environment for platform engineers who want to understand how Istio works from the ground up: how the control plane manages the data plane, how proxies intercept and observe traffic, and how the two fundamentally different data plane architectures — **sidecar mode** and **ambient mode** — approach the same problems with different trade-offs.
 
@@ -52,7 +52,7 @@ The module deploys approximately **10–12 minutes** to a single GCP project and
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
-│                          Istio GKE Module                                  │
+│                          Istio_GKE Module                                  │
 │                                                                            │
 │   Google Cloud Project                                                     │
 │   ────────────────────────────────────────────────────────────────────     │
@@ -1176,7 +1176,7 @@ kubectl patch configmap istio -n istio-system --type=merge \
 
 ## Configuration Reference
 
-The following table covers the key configuration parameters that affect the behaviour of the Istio GKE module. These are the settings available when using the module.
+The following table covers the key configuration parameters that affect the behaviour of the Istio_GKE module. These are the settings available when using the module.
 
 ### GKE Cluster Settings
 
@@ -1247,7 +1247,7 @@ Understanding the module's default configuration helps avoid surprises when expl
 
 ## Prerequisites
 
-Before deploying the Istio GKE module, verify the following:
+Before deploying the Istio_GKE module, verify the following:
 
 ### Google Cloud
 

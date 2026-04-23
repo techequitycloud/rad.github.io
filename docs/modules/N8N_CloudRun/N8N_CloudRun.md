@@ -527,5 +527,3 @@ Complete list of all input variables, grouped by UI section.
 | 20 | `redis_port` | string | `"6379"` | yes |
 | 20 | `redis_auth` | string | `""` | yes |
 | 21 | `enable_vpc_sc` | bool | `false` | yes |
-
-

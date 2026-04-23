@@ -401,4 +401,3 @@ module "strapi_cloudrun" {
   }
 }
 ```
-

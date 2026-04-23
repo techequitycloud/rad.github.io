@@ -13,7 +13,7 @@ sidebar_label: "MC Bank GKE"
 
 ## Overview
 
-The **MC Bank GKE** module deploys a production-grade, multi-cluster microservices banking application on Google Kubernetes Engine (GKE). It is designed as a comprehensive learning environment for platform engineers who want to gain hands-on experience with advanced GKE capabilities, including multi-cluster networking, service mesh, global load balancing, and cloud-native observability.
+The **MC_Bank_GKE** module deploys a production-grade, multi-cluster microservices banking application on Google Kubernetes Engine (GKE). It is designed as a comprehensive learning environment for platform engineers who want to gain hands-on experience with advanced GKE capabilities, including multi-cluster networking, service mesh, global load balancing, and cloud-native observability.
 
 The application deployed is **Bank of Anthos** — an open-source, HTTP-based banking simulation built by Google Cloud Platform. It consists of nine microservices written in Python and Java, communicating over a service mesh, and exposed to the internet via a globally distributed load balancer with automatic TLS certificate management.
 
@@ -1245,7 +1245,6 @@ gcloud services list --enabled --project PROJECT_ID \
 | `cloudresourcemanager.googleapis.com` | Project resource management — required by Terraform for IAM and project operations |
 | `iam.googleapis.com` | Identity and Access Management — service account and role management |
 | `iamcredentials.googleapis.com` | Service account impersonation — used for Workload Identity token exchange |
-| `compute.googleapis.com` | Compute Engine — VPC networks, subnets, firewall rules, static IPs, NAT |
 
 ### Observability APIs
 

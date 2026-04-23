@@ -579,11 +579,3 @@ group they belong to.
 | `redis_port` | `"6379"` | 20 |
 | `redis_auth` | `""` | 20 |
 | `enable_vpc_sc` | `false` | 21 |
-
-
-
-
-
-
-
-

@@ -13,7 +13,7 @@ sidebar_label: "EKS GKE"
 
 ## Overview
 
-The EKS GKE module provisions a complete Amazon Elastic Kubernetes Service (EKS) cluster on AWS and registers it with Google Cloud as a **GKE Attached Cluster**. Once registered, the EKS cluster is visible and manageable from the Google Cloud console alongside any native GKE clusters in the same project — giving platform engineers a single pane of glass across both clouds.
+The EKS_GKE module provisions a complete Amazon Elastic Kubernetes Service (EKS) cluster on AWS and registers it with Google Cloud as a **GKE Attached Cluster**. Once registered, the EKS cluster is visible and manageable from the Google Cloud console alongside any native GKE clusters in the same project — giving platform engineers a single pane of glass across both clouds.
 
 This module is designed as a hands-on learning environment for platform engineers who want to understand how Google Cloud's multi-cloud Kubernetes capabilities work in practice. By deploying it, you gain direct experience with:
 
@@ -48,7 +48,7 @@ At a high level, the module creates two sets of resources in parallel and then c
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                            EKS GKE Module                                   │
+│                            EKS_GKE Module                                   │
 │                                                                             │
 │   AWS (default: us-west-2)              Google Cloud (default: us-central1) │
 │   ─────────────────────────             ────────────────────────────────    │
@@ -1105,4 +1105,3 @@ Deploying this module gives you a working environment to explore the following G
 | [Anthos Service Mesh](https://cloud.google.com/service-mesh/docs/overview) | Install ASM using the `attached-install-mesh` sub-module and observe the service topology map |
 | [Policy Controller](https://cloud.google.com/anthos-config-management/docs/concepts/policy-controller) | Enable Policy Controller from the Fleet dashboard and apply a constraint to the EKS cluster |
 | [Config Management](https://cloud.google.com/anthos-config-management/docs/overview) | Enable Config Sync and point it at a Git repository to synchronise manifests to the EKS cluster |
-
