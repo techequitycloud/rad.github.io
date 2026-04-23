@@ -25,7 +25,7 @@ This document provides a detailed analysis of the configuration options for the 
 | **Group 1: Project & Identity** | | | | |
 | `existing_project_id` | Project ID. Target Google Cloud Project ID. e.g. "my-project-id" | Required | **No** (Re-provision) | End User |
 | `support_users` | Trusted Users. List of users for budget alerts/admin access. e.g. ["user@example.com"] | `[]` | Yes | End User |
-| `resource_labels` | Resource Labels. Common labels applied to all resources. e.g. {"environment" = "dev"} | `{}` | Yes | End User |
+| `resource_labels` | Resource Labels. Common labels applied to all resources. e.g. `{"environment" = "dev"}` | `{}` | Yes | End User |
 | **Group 2: Networking Configuration** | | | | |
 | `availability_regions` | Regions. Target regions for resources. e.g. ["us-central1","us-west1"] | `["us-central1"]` | **Destructive** | End User |
 | `network_name` | VPC Network Name. Name of the VPC network. | `vpc-network` | **No** (Recreation) | End User |
@@ -36,14 +36,14 @@ This document provides a detailed analysis of the configuration options for the 
 | `postgres_database_availability_type` | Postgres Availability. Options: `ZONAL`, `REGIONAL` (HA). | `ZONAL` | Yes | End User |
 | `postgres_database_version` | Postgres Version. Options: `POSTGRES_16`, `POSTGRES_15`, `POSTGRES_14`. | `POSTGRES_16` | Yes | End User |
 | `postgres_tier` | Postgres Tier. Machine type (e.g. `db-custom-1-3840`). | `db-custom-1-3840` | Yes | End User |
-| `postgres_database_flags` | Postgres Flags. Database configuration flags. e.g. [{name="max_connections", value="30000"}] | `[{name="max_connections", ...}]` | Yes | End User |
+| `postgres_database_flags` | Postgres Flags. Database configuration flags. e.g. `[{name="max_connections", value="30000"}]` | `[{name="max_connections", ...}]` | Yes | End User |
 | `create_postgres_read_replica` | Create Replica. Adds read replica to Postgres. | `false` | Yes | End User |
 | `postgres_read_replica_count` | Number of read replicas to create for PostgreSQL. | `1` | Yes | End User |
 | `create_mysql` | Create MySQL. Provisions Cloud SQL MySQL instance. | `false` | Yes | End User |
 | `mysql_database_availability_type` | MySQL Availability. Options: `ZONAL`, `REGIONAL` (HA). | `ZONAL` | Yes | End User |
 | `mysql_database_version` | MySQL Version. Options: `MYSQL_8_0`, `MYSQL_5_7`. | `MYSQL_8_0` | Yes | End User |
 | `mysql_tier` | MySQL Tier. Machine type. | `db-custom-1-3840` | Yes | End User |
-| `mysql_database_flags` | MySQL Flags. Database configuration flags. e.g. [{name="max_connections", value="30000"}] | `[{name="max_connections", ...}]` | Yes | End User |
+| `mysql_database_flags` | MySQL Flags. Database configuration flags. e.g. `[{name="max_connections", value="30000"}]` | `[{name="max_connections", ...}]` | Yes | End User |
 | `create_mysql_read_replica` | Create a read replica for the MySQL instance. Requires create_mysql = true. | `false` | Yes | End User |
 | `mysql_read_replica_count` | Number of read replicas to create for MySQL. | `1` | Yes | End User |
 | **Group 4: Self Managed NFS & Redis** | | | | |
