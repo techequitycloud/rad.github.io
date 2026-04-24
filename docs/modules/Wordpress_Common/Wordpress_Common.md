@@ -221,8 +221,8 @@ Callers may inject additional secret references via `var.secret_environment_vari
 3. Writes `~/.my.cnf` with root credentials — password is double-escaped (`\` → `\\`, `"` → `\"`) then wrapped in double quotes, preventing `#` and `;` from being silently treated as MySQL option file comment characters
 4. For TCP connections: appends `ssl-mode=PREFERRED` to `~/.my.cnf`
 5. Creates MySQL user: `CREATE USER IF NOT EXISTS … IDENTIFIED WITH mysql_native_password BY '${SAFE_DB_PASS}'` then `ALTER USER` (idempotent password update)
-6. Creates database: ``CREATE DATABASE IF NOT EXISTS `${DB_NAME}` ``
-7. Grants ``ALL PRIVILEGES ON `${DB_NAME}`.* TO '${DB_USER}'@'%'``
+6. Creates database: `CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\``
+7. Grants `ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'%'`
 8. Removes `~/.my.cnf`
 9. Signals Cloud SQL Auth Proxy shutdown via `POST http://localhost:9091/quitquitquit` (30 retries, 2s intervals)
 
