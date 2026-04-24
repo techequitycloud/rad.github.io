@@ -25,7 +25,7 @@ This document provides a detailed analysis of the configuration options for the 
 | **Group 1: Project & Identity** | | | | |
 | `existing_project_id` | Project ID. Target Google Cloud Project ID. e.g. "my-project-id" | Required | **No** (Re-provision) | End User |
 | `support_users` | Trusted Users. List of users for budget alerts/admin access. e.g. ["user@example.com"] | `[]` | Yes | End User |
-| `resource_labels` | Resource Labels. Common labels applied to all resources. e.g. {"environment" = "dev"} | `{}` | Yes | End User |
+| `resource_labels` | Resource Labels. Common labels applied to all resources. e.g. \{"environment" = "dev"\} | `{}` | Yes | End User |
 | **Group 2: Networking Configuration** | | | | |
 | `availability_regions` | Regions. Target regions for resources. e.g. ["us-central1","us-west1"] | `["us-central1"]` | **Destructive** | End User |
 | `network_name` | VPC Network Name. Name of the VPC network. | `vpc-network` | **No** (Recreation) | End User |
