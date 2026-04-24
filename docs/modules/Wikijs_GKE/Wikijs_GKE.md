@@ -163,7 +163,7 @@ The following groups are available in `Wikijs_GKE` and behave exactly as documen
 | Identity-Aware Proxy | `enable_iap`, `iap_authorized_users`, `iap_authorized_groups`, `iap_oauth_client_id`, `iap_oauth_client_secret`, `iap_support_email` | [App_GKE §4.B Identity-Aware Proxy (IAP)](../App_GKE/App_GKE.md#b-identity-aware-proxy-iap) |
 | Cloud Armor | `enable_cloud_armor`, `cloud_armor_policy_name`, `admin_ip_ranges` | [App_GKE §4.A Cloud Armor WAF](../App_GKE/App_GKE.md#a-cloud-armor-waf) |
 | VPC Service Controls | `enable_vpc_sc` | [App_GKE §4.D VPC Service Controls](../App_GKE/App_GKE.md#d-vpc-service-controls) |
-| Secrets Store CSI | `enable_secrets_store_csi_driver` | [App_GKE §4.E Secrets Store CSI](../App_GKE/App_GKE.md#e-secrets-store-csi-driver) |
+| Secrets Store CSI | Always enabled — no configuration required. | [App_GKE §4.E Secrets Store CSI](../App_GKE/App_GKE.md#e-secrets-store-csi-driver) |
 | Storage & Filesystem — NFS | `enable_nfs`, `nfs_mount_path`, `nfs_instance_name`, `nfs_instance_base_name` | [App_GKE §3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) |
 | Storage & Filesystem — GCS | `create_cloud_storage`, `storage_buckets`, `gcs_volumes` | [App_GKE §3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) |
 | Networking & Network Policies | `enable_network_segmentation`, `network_tags` | [App_GKE §3.D Networking & Network Policies](../App_GKE/App_GKE.md#d-networking--network-policies) |

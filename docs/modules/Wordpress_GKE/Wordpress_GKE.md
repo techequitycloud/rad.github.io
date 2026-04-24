@@ -49,7 +49,7 @@ The groups below are **fully inherited from `App_GKE`** and behave identically. 
 | Identity-Aware Proxy | [App_GKE §4.B Identity-Aware Proxy (IAP)](../App_GKE/App_GKE.md#b-identity-aware-proxy-iap) |
 | Cloud Armor | [App_GKE §4.A Cloud Armor WAF](../App_GKE/App_GKE.md#a-cloud-armor-waf) |
 | VPC Service Controls | [App_GKE §4.D VPC Service Controls](../App_GKE/App_GKE.md#d-vpc-service-controls) |
-| Secrets Store CSI | [App_GKE §4.E Secrets Store CSI](../App_GKE/App_GKE.md#e-secrets-store-csi-driver) |
+| Secrets Store CSI | Always enabled — no configuration required. See [App_GKE §4.E Secrets Store CSI](../App_GKE/App_GKE.md#e-secrets-store-csi-driver). |
 | Observability & Health (`startup_probe_config`, `health_check_config` for LB health checks; `uptime_check_config`, `alert_policies`) | [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) |
 | Cloud CDN | [App_GKE §5.B Cloud CDN](../App_GKE/App_GKE.md#b-cloud-cdn) |
 | Static IP | [App_GKE §5.C Static IP](../App_GKE/App_GKE.md#c-static-ip) |
@@ -117,7 +117,7 @@ All variables in this group behave as documented in [App_GKE §3.A Compute (GKE 
 
 ### Environment Variables & Secrets
 
-Refer to [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for documentation on `environment_variables`, `secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, and `enable_secrets_store_csi_driver`.
+Refer to [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for documentation on `environment_variables`, `secret_environment_variables`, `secret_rotation_period`, and `secret_propagation_delay`.
 
 #### WordPress Auto-Generated Security Keys & Salts
 

@@ -13,7 +13,7 @@ sidebar_label: "GKE"
 
 
 
-This guide describes every configuration variable available in the `Ghost_GKE` module. `Ghost_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/Ghost_Common.md) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot.
+This guide describes every configuration variable available in the `Ghost_GKE` module. `Ghost_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Ghost_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Ghost** are described in full here.
 
@@ -45,7 +45,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Identical. |
 | Binary Authorization | §4.C Binary Authorization | Identical. |
 | VPC Service Controls | §4.D VPC Service Controls | Identical. |
-| Secrets Store CSI Driver | §4.E Secrets Store CSI Driver | Identical. |
+| Secrets Store CSI Driver | §4.E Secrets Store CSI Driver | Always enabled — no configuration required. |
 | Traffic & Ingress | §5 Traffic & Ingress | Identical. |
 | CDN | §5.B CDN | Identical. |
 | Custom Domain & Static IP | §5.C Static IP Reservation | Ghost URL must be configured to match; see [Group 16: Custom Domain & Static IP](#group-16-custom-domain--static-ip). |
@@ -198,7 +198,7 @@ environment_variables = merge(
 )
 ```
 
-The remaining secrets variables (`secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, `manage_storage_kms_iam`, `enable_secrets_store_csi_driver`) behave as described in [App_GKE §3](../App_GKE/App_GKE.md#3-core-service-configuration).
+The remaining secrets variables (`secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, `manage_storage_kms_iam`) behave as described in [App_GKE §3](../App_GKE/App_GKE.md#3-core-service-configuration).
 
 ---
 

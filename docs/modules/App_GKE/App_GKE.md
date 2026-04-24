@@ -28,6 +28,16 @@ The `modules/App_GKE` module is a foundational building block for deploying cont
 *   **CI/CD**: Built-in support for Cloud Build triggers and image mirroring.
 *   **Service Mesh**: When the module provisions its own GKE cluster (`configure_service_mesh = true`), it registers the cluster with GKE Fleet Hub and deploys Cloud Service Mesh with `MANAGEMENT_AUTOMATIC`. On externally-provisioned clusters, Istio sidecar injection is enabled via namespace labels only.
 
+**Required versions** (`versions.tf`):
+
+| Tool / Provider | Constraint | Why |
+|---|---|---|
+| Terraform / OpenTofu | `>= 1.5.0` | `optional()` in object variables, `terraform_data`, `check{}`, `sensitive()` semantics |
+| `hashicorp/google` | `>= 6.0.0` | Cloud Deploy v2, GKE Gateway API, Binary Authorization, Workload Identity schema |
+| `hashicorp/google-beta` | `~> 6.0` | Matches google for beta-only Cloud Service Mesh / Fleet resources |
+| `hashicorp/kubernetes` | `>= 2.25.0` | `kubernetes_manifest` with server-side CRD validation |
+| `integrations/github` | `>= 5.0.0` | Cloud Build v2 GitHub connection |
+
 ---
 
 ## 2. IAM & Access Control
@@ -65,6 +75,8 @@ The module implements a least-privilege IAM strategy using dedicated Service Acc
 *   **Replicas**: Configurable `min_instance_count` and `max_instance_count` for scaling bounds.
 *   **Service Types**: Configurable Kubernetes Service type (`ClusterIP`, `LoadBalancer`, `NodePort`).
 *   **Stateful Storage**: Automatic PVC provisioning for `StatefulSet` workloads via volume claim templates.
+*   **Rollout timeouts**: `deployment_timeout` (default `1800` seconds) controls how long Terraform waits for the Deployment/StatefulSet rollout during apply. Applied to `create`, `update`, and `delete` timeout blocks — raise for large images or slow-starting pods.
+*   **Null-default override pattern**: Variables such as `workload_type`, `min_instance_count`, `max_instance_count`, `pdb_min_available`, and `container_resources` default to `null` rather than sentinel values. The module's `modules.tf` uses `!= null` checks so wrapper modules can explicitly pass the module-preset value without it being mistaken for "unset".
 
 ### B. Database (Cloud SQL)
 *   **Discovery & Provisioning**: The module first runs a discovery script to locate an existing Cloud SQL instance in the project. If one is found it is used directly. If none is found, an **inline instance** is provisioned automatically — PostgreSQL via `google_sql_database_instance.inline_postgres` or MySQL via `google_sql_database_instance.inline_mysql` — along with a root password stored in Secret Manager.
@@ -174,23 +186,41 @@ When `enable_binary_authorization = true`, the module enforces image provenance 
 
 ### D. VPC Service Controls
 
-The `enable_vpc_sc` variable is declared as a preparatory flag for VPC Service Controls compatibility. Two VPC-SC-relevant behaviours are always present in the module regardless of this flag:
+When `enable_vpc_sc = true`, the module provisions a full VPC-SC perimeter around the project's GCP APIs via `module.vpc_sc` (`App_Common/modules/app_vpc_sc`) — Services_GCP is not required. Two additional VPC-SC-friendly behaviours are present unconditionally:
 
-1.  **Cloud SQL Auth Proxy image mirroring** (always active when a SQL server and Artifact Registry exist): The proxy image (`gcr.io/cloud-sql-connectors/cloud-sql-proxy:2-alpine`) is unconditionally mirrored into the project's own Artifact Registry. This ensures GKE nodes never pull from `gcr.io` (an out-of-project registry that would be blocked inside a VPC-SC perimeter).
+1.  **Cloud SQL Auth Proxy image mirroring** (always active when a SQL server and Artifact Registry exist): The proxy image (`gcr.io/cloud-sql-connectors/cloud-sql-proxy:${cloud_sql_proxy_version}`) is mirrored into the project's own Artifact Registry so GKE nodes never pull from `gcr.io` (an out-of-project registry blocked by a VPC-SC perimeter). The tag is configurable via `cloud_sql_proxy_version` (default `"2-alpine"`).
 2.  **VPC-SC compliant NetworkPolicy egress** (always present when `enable_network_segmentation = true`): Egress rules include `199.36.153.4/30` (`restricted.googleapis.com`) and `199.36.153.8/30` (`private.googleapis.com`) — the recommended Private Google Access endpoints for GCP APIs inside a VPC-SC perimeter.
 
-*   **Key variable**: `enable_vpc_sc`
+**Perimeter provisioning (when `enable_vpc_sc = true`):**
 
-> **Note**: `enable_vpc_sc` is currently declared but does not gate either of the behaviours above; both are applied unconditionally as best practices. Full VPC-SC perimeter configuration (access policies, service restrictions, ingress/egress rules) is managed at the GCP organization level by Services_GCP or a dedicated security module.
+*   **Organization auto-discovery**: Reads the project's `org_id`; falls back to `var.organization_id` for folder-nested projects. Standalone projects (e.g. Qwiklab) emit a warning and skip the perimeter automatically.
+*   **Access levels** (four, all suffixed with `deployment_id`): VPC network access (from `vpc_cidr_ranges` or auto-discovered from the discovered network), admin IP ranges (`admin_ip_ranges`), IAP service agent, and CI/CD (Cloud Build SA + `resource_creator_identity`).
+*   **Perimeter**: `PERIMETER_TYPE_REGULAR` restricting Cloud Run, GKE, Cloud SQL, Secret Manager, Storage, Artifact Registry, Cloud Build, Certificate Manager, IAP, Compute, KMS, Pub/Sub, Redis, Filestore, and Firestore.
+*   **Dry-run mode**: `vpc_sc_dry_run = true` (default) logs violations without enforcing them. Set to `false` to actively block out-of-perimeter API calls after validating the dry-run logs.
+*   **Auto-skip**: No resources are created when the project has no organization, when it is folder-nested without an explicit `organization_id`, or when `admin_ip_ranges` is empty (lockout protection). Each case emits a `null_resource` warning with remediation guidance.
+
+*   **Key variables**: `enable_vpc_sc`, `vpc_sc_dry_run`, `vpc_cidr_ranges`, `organization_id`, `admin_ip_ranges`
 
 ### E. Secrets Store CSI Driver
 
-When `enable_secrets_store_csi_driver = true`, secrets are fetched from Secret Manager and mounted into pods at start time by the GKE Secrets Store CSI Driver — secret values are **never written to Terraform state**.
+Secrets are always fetched from Secret Manager and mounted into pods at start time by the GKE-managed Secrets Store CSI Driver — secret values are **never written to Terraform state**.
 
-*   **Cluster enablement**: The module runs `gcloud container clusters update <cluster> --enable-secret-manager-config` on the target cluster to activate the driver.
-*   **SecretProviderClass**: A `SecretProviderClass` manifest is created per namespace, mapping each entry in `secret_environment_variables` to a Secret Manager secret version. The CSI driver mounts these as a volume and also creates a `secretObjects` entry so they are available as standard `envFrom` / `valueFrom` references.
-*   **Default behaviour**: When `enable_secrets_store_csi_driver = false` (default), secrets are fetched via Terraform data sources and stored as Kubernetes `Secret` resources in state (values appear as base64 in the Terraform state file).
-*   **Key variable**: `enable_secrets_store_csi_driver`
+*   **Driver name**: The GKE managed addon uses the driver name **`secrets-store-gke.csi.k8s.io`** with provider `"gke"`. This is distinct from the community `secrets-store.csi.k8s.io` driver — using the wrong driver name causes `CSIDriver not found` errors at pod creation.
+*   **Cluster enablement**: Services_GCP enables the addon via `null_resource.configure_gke_addons` using `gcloud container clusters update --enable-secret-manager`. For inline clusters (no Services_GCP), App_GKE runs the same command in its own `null_resource`. The `gcloud beta` command is used to ensure `--enable-secret-sync` support.
+*   **120 s propagation wait**: `time_sleep.wait_for_secret_manager_addon` blocks for 120 seconds after the addon is enabled so the CSI driver DaemonSet is ready on every Autopilot node before `SecretProviderClass` resources are applied.
+*   **Plan-time CRD guard**: `data.external.csi_driver_crd_installed` probes the live cluster using `kubectl get crd secretproviderclasses.secrets-store.csi.x-k8s.io` (kubectl, not gcloud schema paths). When the CRD is absent, `SecretProviderClass` and `SecretSync` resources are excluded from the plan (`count = csi_driver_crd_ready && sm_backed_secret_count > 0 ? 1 : 0`). A second apply materialises them.
+*   **SecretProviderClass (base + per stage)**: A base `SecretProviderClass` is created in the application namespace, plus one per Cloud Deploy stage (`${service_name}-${stage}-secrets`). Each maps every entry in `secret_environment_variables` to a Secret Manager secret version with files written to the CSI volume.
+*   **Native Kubernetes Secrets via SecretSync**: The GKE managed addon does **not** support the `secretObjects` field in `SecretProviderClass`. Instead, a `SecretSync` resource (`secrets-store.csi.x-k8s.io/v1alpha1`) is created alongside each SPC. The `SecretSync` controller watches the CSI-mounted files and syncs their content into a native Kubernetes `Secret`. Pods reference the standard K8s Secret via `envFrom` / `valueFrom` as normal.
+*   **Drift suppression**: The google provider 6.x GA schema does not declare `secret_manager_config` at the cluster top level (set out-of-band by `gcloud`). Both `addons_config` and `secret_manager_config` are listed in `lifecycle.ignore_changes` to prevent spurious empty-mask PATCH requests that GKE rejects with `400 Must specify a field to update`.
+
+### F. Audit Logging
+
+When `enable_audit_logging = true`, the module enables Cloud Audit Logs beyond the default `ADMIN_WRITE`:
+
+*   **`google_project_iam_audit_config.all_services`**: Captures `ADMIN_READ`, `DATA_READ`, and `DATA_WRITE` for all GCP services used by the project.
+*   **Per-service overrides**: Secret Manager and Cloud KMS receive explicit `DATA_READ` / `DATA_WRITE` configs so sensitive secret and key access is always logged even if `allServices` is tuned down elsewhere.
+*   **Equivalent to `Services_GCP enable_audit_logging = true`** — safe to enable at any point; does not affect running workloads. Increases Cloud Logging storage costs.
+*   **Key variable**: `enable_audit_logging` (default `false`)
 
 ---
 
@@ -205,7 +235,8 @@ Activated when `enable_custom_domain = true` or `enable_cdn = true` (`use_gatewa
 *   **HTTPRoute**: Routes traffic from the Gateway to the application Kubernetes Service.
 *   **GCPBackendPolicy**: A GKE-native CRD (`networking.gke.io/v1`) attached to the Service that configures IAP, Cloud Armor security policy, and backend timeout in a single resource.
 *   **Static IP**: When `reserve_static_ip = true` (default), a Global Static IP is reserved and attached to the Gateway. `static_ip_name` allows a custom name.
-*   **Key variables**: `enable_custom_domain`, `application_domains`, `reserve_static_ip`, `static_ip_name`
+*   **Cloud Deploy Gateway backend** (`gateway_backend_stage`): When `enable_cloud_deploy = true`, the HTTPRoute backend must target a single stage's Service (the Gateway cannot fan out across stages at the Terraform level). The `gateway_backend_stage` variable (default `"dev"`) controls which stage's Service and namespace the HTTPRoute points to. Change this to route external traffic to `staging` or `prod` once those stages are promoted. When `enable_cloud_deploy = false`, this variable is ignored and the HTTPRoute targets the base application Service directly.
+*   **Key variables**: `enable_custom_domain`, `application_domains`, `reserve_static_ip`, `static_ip_name`, `gateway_backend_stage`
 
 ### B. Cloud CDN
 
@@ -242,7 +273,9 @@ When `enable_cloud_deploy = true`, the module generates a full multi-stage deliv
 
 *   **Stages**: Defined via `cloud_deploy_stages`. Default pipeline is `dev → staging → prod`. Each stage has its own Kubernetes namespace, Service, and Deployment.
 *   **Skaffold manifests**: The module generates `skaffold.yaml` and per-stage `k8s-deployment-<stage>.yaml` / `k8s-service-<stage>.yaml` manifests automatically. Job manifests are intentionally excluded — Kubernetes Jobs are immutable and are run exclusively by Terraform to avoid `RELEASE_FAILED` errors.
-*   **Stage isolation**: Each stage gets its own namespace, Kubernetes ServiceAccount, and Kubernetes Secret. Terraform provisions these before Cloud Deploy runs so that no hook-based setup is required.
+*   **Stage isolation**: Each stage gets its own namespace, Kubernetes ServiceAccount, Kubernetes Secret, and per-stage `SecretProviderClass` (`${service_name}-${stage}-secrets`). Terraform provisions these before Cloud Deploy runs so that no hook-based setup is required.
+*   **Stage initialization jobs**: When `sm_backed_secret_count > 0`, `stage_initialization_jobs` mount the Secrets Store CSI volume against the stage-specific `SecretProviderClass` so the Kubernetes Secret referenced by each job's `secretKeyRef` is materialized at pod start time. Without this mount the CSI driver never runs and pods fail with `CreateContainerConfigError: secret not found`.
+*   **Rollout ownership**: `kubernetes_deployment_v1.app_cd` (the placeholder Deployment Cloud Deploy targets) is created with `wait_for_rollout = false` so Terraform does not block waiting for pods that Cloud Deploy — not Terraform — is responsible for rolling out.
 *   **Approval gates**: `require_approval = true` on a stage pauses promotion until a human approves. `auto_promote = true` triggers automatic promotion on success.
 *   **Environment variables**: Per-stage env vars (e.g. `DB_NAME`, `DB_USER`) are substituted with stage-namespaced values in the generated manifests.
 *   **Key variables**: `enable_cloud_deploy`, `cloud_deploy_stages`
@@ -378,6 +411,18 @@ When no Services_GCP dependency is detected, the module is fully self-contained 
 
 **Destroy ordering**: `kubernetes_namespace_v1.app` declares an explicit `depends_on` on `google_container_cluster.inline_gke`. This reverses on destroy so Terraform deletes the namespace (and all Kubernetes resources within it) before deleting the cluster, avoiding `connection refused` errors when the Kubernetes provider loses its API endpoint mid-destroy.
 
+**Drift suppression on `google_container_cluster.inline_gke`**: The resource's `lifecycle.ignore_changes` list covers every block that is either modified out-of-band by GKE itself or not yet represented in the provider schema, so Terraform never issues an empty-mask cluster PATCH (rejected by GCP with `400 Must specify a field to update`):
+
+| Block | Reason it is ignored |
+|---|---|
+| `datapath_provider` | Dataplane V2 is selected at create time and cannot be mutated safely. |
+| `addons_config` | `secret_manager_config` is enabled out-of-band by `null_resource.enable_secret_manager_addon`; the provider schema does not yet expose it. |
+| `cluster_autoscaling` | GKE fills in default NAP values after creation. |
+| `master_authorized_networks_config` | Commonly adjusted by platform operators via `gcloud`. |
+| `gateway_api_config` | Auto-enabled when the Gateway API is first used. |
+| `vertical_pod_autoscaling` | Autopilot toggles VPA status based on usage. |
+| `ip_allocation_policy` | GCP rewrites secondary range references after cluster bootstrap. |
+
 **Override variables**: To target an existing instance rather than provisioning inline, supply the explicit name variables:
 
 | Variable | Default | Purpose |
@@ -402,20 +447,24 @@ Key variables grouped by functional area. All variables are defined in `variable
 | `application_name` | `string` | `"gkeapp"` | Internal app name; used in resource naming |
 | `tenant_deployment_id` | `string` | `"demo"` | Deployment environment suffix (e.g. `prod`, `dev`) |
 | `resource_labels` | `map(string)` | `{}` | Common labels applied to all resources |
+| `fallback_region` | `string` | `"us-central1"` | GCP region used when no Services_GCP subnet mapping can be auto-discovered |
+| `impersonation_service_account` | `string` | `""` | Service account email to impersonate in discovery / mirror scripts (cross-project deployments) |
 
 ### Compute & Scaling (§3.A)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `workload_type` | `string` | `"Deployment"` | `Deployment` or `StatefulSet` |
+| `workload_type` | `string` | `null` | `Deployment` or `StatefulSet` — `null` falls through to the module preset |
 | `min_instance_count` | `number` | `1` | HPA minimum replicas |
 | `max_instance_count` | `number` | `3` | HPA maximum replicas |
 | `container_image` | `string` | `""` | Container image URI |
+| `container_image_source` | `string` | `"custom"` | `prebuilt` (use `container_image` directly) or `custom` (build from source). Wrapper-overridable. |
 | `container_port` | `number` | `8080` | Port the container listens on |
 | `container_resources` | `object` | `{cpu_limit="1000m", memory_limit="512Mi"}` | CPU/memory requests and limits |
 | `service_type` | `string` | `"LoadBalancer"` | Kubernetes Service type |
 | `enable_vertical_pod_autoscaling` | `bool` | `false` | Enable VPA |
 | `deploy_application` | `bool` | `true` | Set `false` to provision infrastructure only |
+| `deployment_timeout` | `number` | `1800` | Seconds Terraform waits for rollout during apply (create/update/delete) |
 
 ### Database (§3.B)
 
@@ -425,7 +474,9 @@ Key variables grouped by functional area. All variables are defined in `variable
 | `application_database_name` | `string` | `"gkeappdb"` | Cloud SQL database name |
 | `application_database_user` | `string` | `"gkeappuser"` | Cloud SQL user |
 | `enable_cloudsql_volume` | `bool` | `true` | Inject Cloud SQL Auth Proxy sidecar |
+| `cloud_sql_proxy_version` | `string` | `"2-alpine"` | Tag used for the Cloud SQL Auth Proxy sidecar image (mirrored into Artifact Registry) |
 | `sql_instance_name` | `string` | `""` | Target an existing Cloud SQL instance by name |
+| `db_password_env_var_name` | `string` | `""` | Additional env var name (alongside `DB_PASSWORD`) wrapper modules can set for apps that expect a non-standard name, e.g. `"WORDPRESS_DB_PASSWORD"` |
 
 ### Storage (§3.C)
 
@@ -433,6 +484,7 @@ Key variables grouped by functional area. All variables are defined in `variable
 |---|---|---|---|
 | `enable_nfs` | `bool` | `true` | Enable NFS (Filestore) mount |
 | `nfs_mount_path` | `string` | `"/mnt/nfs"` | Mount path inside container |
+| `nfs_volume_name` | `string` | `"nfs-data-volume"` | Kubernetes Volume name for the NFS mount — override when mounting a second NFS share alongside the first |
 | `create_cloud_storage` | `bool` | `true` | Create GCS buckets |
 | `storage_buckets` | `list(object)` | `[{name_suffix="data"}]` | Bucket configurations |
 | `gcs_volumes` | `list(object)` | `[]` | GCS Fuse volume mounts |
@@ -460,7 +512,11 @@ Key variables grouped by functional area. All variables are defined in `variable
 | `iap_authorized_groups` | `list(string)` | `[]` | IAP group allowlist |
 | `enable_binary_authorization` | `bool` | `false` | Enforce Binary Authorization |
 | `binauthz_evaluation_mode` | `string` | `"ALWAYS_ALLOW"` | `ALWAYS_ALLOW`, `REQUIRE_ATTESTATION`, or `ALWAYS_DENY` |
-| `enable_secrets_store_csi_driver` | `bool` | `false` | Fetch secrets via CSI driver (keeps values out of state) |
+| `enable_vpc_sc` | `bool` | `false` | Provision a VPC Service Controls perimeter (see §4.D) |
+| `vpc_sc_dry_run` | `bool` | `true` | Log perimeter violations without blocking (flip to `false` to enforce) |
+| `vpc_cidr_ranges` | `list(string)` | `[]` | Explicit VPC CIDR ranges for the perimeter access level (auto-discovered when empty) |
+| `organization_id` | `string` | `""` | GCP Organization ID — required for folder-nested projects |
+| `enable_audit_logging` | `bool` | `false` | Enable `ADMIN_READ`/`DATA_READ`/`DATA_WRITE` audit logs plus Secret Manager / KMS overrides |
 
 ### Traffic & Ingress (§5)
 
