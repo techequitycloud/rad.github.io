@@ -96,7 +96,7 @@ const sidebars: SidebarsConfig = {
       items: [
         {
           type: 'category',
-          label: 'Basic Modules',
+          label: 'Platform Modules',
           items: [
             { type: 'doc', id: 'modules/AKS_GKE/AKS_GKE', label: 'AKS GKE' },
             { type: 'doc', id: 'modules/Bank_GKE/Bank_GKE', label: 'Bank GKE' },
@@ -107,7 +107,7 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: 'category',
-          label: 'Custom Modules',
+          label: 'Partner Modules',
           items: [
             {
               type: 'category',
