@@ -15,7 +15,18 @@ The `App_Common` module is a collection of reusable, shared Terraform modules th
 
 ## 2. Module Reference
 
-The functional logic is encapsulated in submodules located in `modules/App_Common/modules/`.
+The functional logic is encapsulated in submodules located in `modules/App_Common/modules/`. The top-level `.tf` files at `modules/App_Common/` provide shared infrastructure resources consumed by the platform layer.
+
+### Top-Level Shared Resources
+
+| File | Purpose |
+|---|---|
+| `buildappcontainer.tf` | Renders a per-app `cloudbuild.yaml` and drives the application image build via `terraform_data.build_and_push_application_image`, which invokes `scripts/build-container.sh`. Replacement is triggered by hashes of the Dockerfile, context directory, repository ID, tag, and build args. |
+| `sql.tf` | Discovers an existing Cloud SQL instance via `scripts/get-sqlserver-info.sh`, computes the canonical `${instance}-root-password` Secret Manager secret ID, and inline-provisions the secret (generated 32-char random password) when Services_GCP has not already created it. The plaintext root password is never written to Terraform state — callers retrieve it at runtime via `gcloud secrets versions access`. |
+| `registry.tf` | Discovers an existing Artifact Registry repository for the deployment region. |
+| `network.tf` | Base VPC network discovery (App_GKE extends this with static IP resources in its own `network.tf`). |
+| `nfs.tf` | Locates the Filestore NFS server for the deployment and exposes its IP and file-share name. |
+| `storage.tf` | Application bucket wiring consumed by application modules. |
 
 ### Core Integration Modules
 These modules are directly used by `App_CloudRun` and `App_GKE` via `gcp_integration.tf`.
@@ -40,8 +51,11 @@ These modules are directly used by `App_CloudRun` and `App_GKE` via `gcp_integra
 *   **Path**: `modules/app_storage_wrapper`
 *   **Description**: Convenience wrapper that composes `app_cmek` and `app_storage_enhanced` into a single interface for standardized Cloud Storage provisioning.
 *   **Capabilities**:
-    *   Invokes `app_cmek` to provision a CMEK keyring when `manage_storage_kms_iam = true`.
+    *   Invokes `app_cmek` to provision a CMEK keyring when `manage_storage_kms_iam = true` (and optionally the Artifact Registry key when `enable_artifact_registry_cmek = true`).
+    *   Grants the GCS service agent `roles/cloudkms.cryptoKeyEncrypterDecrypter` on the storage key, with `lifecycle.create_before_destroy = true` to eliminate the access gap during key rotation.
+    *   Out-of-band self-heal: `null_resource.ensure_gcs_kms_binding` re-asserts the GCS service agent KMS binding via idempotent `gcloud kms keys add-iam-policy-binding` on every apply. This prevents a chicken-and-egg failure when the managed IAM binding drifts out of GCP (manual revocation, failed apply) and subsequent plans fail during refresh of CMEK-encrypted objects with "Permission denied on Cloud KMS key".
     *   Delegates bucket creation to `app_storage_enhanced` (versioning, lifecycle rules, KMS encryption, backup bucket).
+    *   Creates a dedicated backup bucket (`${resource_prefix}-backups`) and optionally uploads an initial `backup.sql` seed object (`backup_sql_source_path`).
     *   Provides a simplified interface that hides the two-module composition from callers.
 
 #### `app_nfs_discovery`
@@ -134,13 +148,14 @@ These modules provide lower-level utilities or specific enhancements.
 
 #### `app_cmek`
 *   **Path**: `modules/app_cmek`
-*   **Description**: Provisions Cloud KMS infrastructure for Customer-Managed Encryption Keys (CMEK).
+*   **Description**: Provisions Cloud KMS infrastructure for Customer-Managed Encryption Keys (CMEK) used by Cloud Storage and Artifact Registry.
 *   **Capabilities**:
-    *   Creates a KMS keyring named `${project_id}-cmek-keyring` in the specified region.
-    *   Creates a `storage-key` CryptoKey within the keyring for encrypting Cloud Storage buckets.
-    *   Idempotent: uses `gcloud kms keyrings create ... || true` to avoid errors on re-apply.
+    *   **Keyring discovery**: Runs `scripts/discover_cmek_keyring.sh` at plan time to find any pre-existing CMEK keyring whose name begins with `${project_id}-cmek-` (e.g. a Services_GCP keyring named `${project_id}-cmek-${random_id}`). The discovery list is sorted deterministically so the selection is stable across runs; falls back to `${project_id}-cmek-keyring` when no match is found.
+    *   Creates the keyring and a `storage-key` CryptoKey for encrypting Cloud Storage buckets when `enable_cmek = true`.
+    *   Creates an `artifact-registry-key` CryptoKey and grants the Artifact Registry service identity `roles/cloudkms.cryptoKeyEncrypterDecrypter` when `enable_artifact_registry_cmek = true`.
+    *   Idempotent: uses `gcloud kms keyrings create ... || true` (and matching `keys create`) to avoid errors on re-apply, since KMS keyrings cannot be deleted and re-creation fails with HTTP 409.
     *   Outputs the full KMS key resource ID (`storage_key_id`) consumed by `app_storage_enhanced`.
-    *   Set `enable_cmek = false` to skip provisioning (returns an empty `storage_key_id`).
+    *   Set `enable_cmek = false` and `enable_artifact_registry_cmek = false` to skip provisioning entirely.
 
 #### `app_security`
 *   **Path**: `modules/app_security`
@@ -150,9 +165,22 @@ These modules provide lower-level utilities or specific enhancements.
     *   Creates a Container Analysis attestor and Binary Authorization policy.
     *   Signs application container images using the `pipeline-attestor` pattern via `sign-image.sh`.
     *   Optionally signs the `db-clients` image when a Cloud SQL instance exists.
+    *   Skips signing for the `gcr.io/cloudrun/hello` placeholder image via an early-exit in the provisioner script (plan-time `count` check cannot be used because `container_image` may depend on post-apply Artifact Registry attributes).
     *   Supports three enforcement modes: `ALWAYS_ALLOW` (default, permissive), `REQUIRE_ATTESTATION` (enforce signed images), and `ALWAYS_DENY` (emergency lockdown).
     *   Self-sufficient fallback: creates Binary Authorization prerequisites (via `create-binauthz-prerequisites.sh`) if `Services_GCP` has not pre-configured them.
     *   Set `enable_binary_authorization = false` to skip all provisioning.
+
+#### `app_vpc_sc`
+*   **Path**: `modules/app_vpc_sc`
+*   **Description**: Auto-discovers organization scope and provisions a VPC Service Controls perimeter around the project's GCP APIs.
+*   **Capabilities**:
+    *   **Organization auto-discovery**: Reads `data.google_project` to find `org_id`; falls back to `var.organization_id` when the project sits under a folder. Detects three states — direct-org, folder-nested, and standalone — and emits a `null_resource` warning with remediation guidance when VPC-SC cannot be created.
+    *   **VPC CIDR auto-discovery**: When `vpc_cidr_ranges` is empty and `network_name` is set, reads all subnetworks from the named VPC and uses their CIDR ranges for the VPC access level. Falls back to `10.0.0.0/8` when neither is available.
+    *   **Access Context Manager policy**: Reuses an existing org-level policy when one is present; otherwise creates a new one titled "VPC Service Controls Policy".
+    *   **Access levels**: Creates four per-deployment access levels — VPC network (`ip_subnetworks`), admin IPs (`admin_ip_ranges`), IAP (`service-{project_number}@gcp-sa-iap`), and CI/CD (Cloud Build service account plus optional `resource_creator_identity`). Names are suffixed with `deployment_id` to avoid collisions across deployments.
+    *   **Service perimeter**: Creates a `PERIMETER_TYPE_REGULAR` perimeter protecting `projects/${project_number}`, with `restricted_services` and `vpc_accessible_services` covering Cloud Run, GKE, Cloud SQL, Secret Manager, Storage, Artifact Registry, Cloud Build, Certificate Manager, IAP, Compute, KMS, Pub/Sub, Redis, Filestore, Firestore, plus logging/monitoring/trace for egress. Lifecycle-ignores `status.resources` so manual additions are not reverted.
+    *   **Dry-run mode**: `vpc_sc_dry_run = true` (default) logs violations without enforcing them — recommended for initial rollout. Set to `false` to actively block out-of-perimeter API calls.
+    *   **Auto-skip**: Emits a clear warning and creates no resources when the project has no organization (e.g. Qwiklab), when it is folder-nested without an explicit `organization_id`, or when `admin_ip_ranges` is empty (lockout protection).
 
 ### Storage Modules
 
