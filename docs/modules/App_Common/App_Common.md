@@ -40,52 +40,58 @@ These modules are directly used by `App_CloudRun` and `App_GKE` via `gcp_integra
 *   **Path**: `modules/app_networking`
 *   **Description**: Discovers and validates the existing VPC network topology.
 *   **Capabilities**:
-    *   Verifies existence of the target VPC network.
-    *   Retrieves Subnet IDs, CIDR ranges, and Gateway information.
-    *   Outputs regional subnet maps for multi-region deployments.
+    *   **Auto-discovery**: When `network_name` is empty, queries all subnets with description `managed-by=services-gcp` and selects the unique Services_GCP-managed network; emits a clear error if zero or more than one is found.
+    *   Verifies existence of the target (or discovered) VPC network.
+    *   Retrieves subnet names, CIDR ranges, and a `region_to_subnet` map for multi-region deployments.
+    *   **Network tags**: Discovers ingress firewall-rule target tags on the network (HTTP/HTTPS ports). Outputs `network_tags` — used to tag Cloud Run services with Direct VPC Egress so the correct firewall rules apply.
+    *   Falls back to `fallback_region` when no subnets are discovered so downstream `available_regions` is never empty.
 
 #### `app_sql_discovery`
 *   **Path**: `modules/app_sql_discovery`
-*   **Description**: Handles Cloud SQL database discovery and connection management.
+*   **Description**: Discovers an existing Cloud SQL instance and exposes connection metadata. Does not create secrets or passwords — that is handled by `app_secrets`.
 *   **Capabilities**:
-    *   **Discovery**: Finds existing Cloud SQL instances in the project.
-    *   **Connection Info**: Returns Connection Name (for Auth Proxy) and IP address (for direct access).
-    *   **Credentials**: Generates random passwords for new database users and stores them in Secret Manager.
+    *   Calls `get-sqlserver-info.sh` with an optional `sql_instance_name` hint to locate the Cloud SQL instance.
+    *   Returns `sql_server_exists`, `db_instance_name`, `db_instance_region`, `db_instance_connection_name` (for Auth Proxy), `db_internal_ip` (for direct access), `database_version`, and `db_root_password` (when available from the discovery script).
+    *   Derives `db_password_secret_name` as `{instance}-{resource_prefix}-db-password` for use by `app_secrets` and `app_iam`.
 
 #### `app_storage_wrapper`
 *   **Path**: `modules/app_storage_wrapper`
-*   **Description**: Convenience wrapper that composes `app_cmek` and `app_storage_enhanced` into a single interface for standardized Cloud Storage provisioning.
+*   **Description**: Convenience wrapper that composes `app_cmek`, GCS KMS IAM, and `app_storage_enhanced` into a single interface for standardized Cloud Storage provisioning.
 *   **Capabilities**:
-    *   Invokes `app_cmek` to provision a CMEK keyring when `manage_storage_kms_iam = true` (and optionally the Artifact Registry key when `enable_artifact_registry_cmek = true`).
-    *   Grants the GCS service agent `roles/cloudkms.cryptoKeyEncrypterDecrypter` on the storage key, with `lifecycle.create_before_destroy = true` to eliminate the access gap during key rotation.
-    *   Out-of-band self-heal: `null_resource.ensure_gcs_kms_binding` re-asserts the GCS service agent KMS binding via idempotent `gcloud kms keys add-iam-policy-binding` on every apply. This prevents a chicken-and-egg failure when the managed IAM binding drifts out of GCP (manual revocation, failed apply) and subsequent plans fail during refresh of CMEK-encrypted objects with "Permission denied on Cloud KMS key".
+    *   Invokes `app_cmek` to provision a CMEK keyring when `manage_storage_kms_iam = true`.
+    *   Fetches the GCS project service account and grants it `roles/cloudkms.cryptoKeyEncrypterDecrypter` on the storage key so encrypted buckets can be created without manual IAM setup.
     *   Delegates bucket creation to `app_storage_enhanced` (versioning, lifecycle rules, KMS encryption, backup bucket).
-    *   Creates a dedicated backup bucket (`${resource_prefix}-backups`) and optionally uploads an initial `backup.sql` seed object (`backup_sql_source_path`).
-    *   Provides a simplified interface that hides the two-module composition from callers.
+    *   Conditionally uploads a `backup.sql` seed object to the backup bucket when `backup_sql_source_path` is set.
+    *   Provides a simplified interface that hides the three-step composition from callers.
 
 #### `app_nfs_discovery`
 *   **Path**: `modules/app_nfs_discovery`
-*   **Description**: Integrates with Cloud Filestore (NFS).
+*   **Description**: Discovers NFS infrastructure — either a Cloud Filestore instance or a GCE-based NFS server — and outputs a unified set of connection details.
 *   **Capabilities**:
-    *   Discovers existing Filestore instances.
-    *   Outputs the NFS Server IP and File Share Name required for mounting volumes.
+    *   Runs `get-nfsserver-info.sh` (with optional `nfs_instance_name` hint) and `get-filestore-info.sh` in parallel when `nfs_enabled = true`.
+    *   Normalises residual `"null"` strings returned by `jq -r` on JSON null values to `""` so all downstream comparisons use a single empty-string check.
+    *   **Priority**: Filestore IP takes precedence over GCE IP when both exist.
+    *   Outputs `nfs_internal_ip`, `nfs_instance_name`, `nfs_instance_zone`, and `nfs_instance_tags` (GCE network tags; empty for Filestore, which is a managed service).
+    *   Sets `nfs_server_exists = true` only when a non-empty IP is discovered.
 
 #### `app_registry_discovery`
 *   **Path**: `modules/app_registry_discovery`
 *   **Description**: Artifact Registry repository discovery.
 *   **Capabilities**:
-    *   Discovers an existing Artifact Registry repository via an external shell script (`discover_repo.sh`).
-    *   Outputs repository ID, project, location, and GitHub URL for use by build and deployment processes.
-    *   Skips discovery when `enable_custom_build` and `enable_cicd_trigger` are both false.
+    *   Always runs `discover_repo.sh` via `data.external` to locate the shared Artifact Registry repository.
+    *   The `google_artifact_registry_repository` data source (which validates the repo exists via the GCP API) is gated on `enable_custom_build || enable_cicd_trigger` and a non-empty discovered location — avoiding API errors when neither feature is active.
+    *   Outputs repository ID, project, location, and name for use by `app_build` and CI/CD resources.
 
 #### `app_build`
 *   **Path**: `modules/app_build`
-*   **Description**: Container build orchestration using Cloud Build.
+*   **Description**: Container build orchestration using Cloud Build (Kaniko). Used by Foundation modules (`App_CloudRun`, `App_GKE`).
 *   **Capabilities**:
-    *   **Custom Build**: Builds containers from source using a provided `Dockerfile`.
-    *   **Image Mirroring**: Pulls public images and pushes them to the private Artifact Registry.
-    *   **Tagging**: Standardizes image tagging with application versions.
-    *   **Path Handling**: Resolves both absolute and relative Dockerfile context paths.
+    *   **Path handling**: Detects whether `container_build_config.context_path` is absolute or relative. Absolute paths (e.g. an app's own `scripts/` dir) set the build working directory to that path so all context files are included in the Cloud Build tarball; relative paths resolve against `scripts_dir` as before.
+    *   **Inline Dockerfile**: When `dockerfile_content` is provided it is written to disk via `local_file`; otherwise the existing file at `{context_path}/{dockerfile_path}` is used. Falls back to a clear error comment if neither is found.
+    *   **`cloudbuild.yaml` generation**: Renders `cloudbuild.yaml.tpl` into the build working directory. Template now accepts `DOCKERFILE_CONTENT` and `CLOUDBUILD_SA` so the Kaniko step can use an explicit service account and embed the Dockerfile inline when needed.
+    *   **`core_scripts_dir`**: Optional override (`var.core_scripts_dir`) for the directory containing shared build scripts (`build-container.sh`, `cloudbuild.yaml.tpl`). Defaults to `var.scripts_dir` when not set.
+    *   **Rich trigger hashing**: `null_resource` triggers include `script_hash`, `context_hash` (all files in the context dir, excluding `cloudbuild.yaml`, the Dockerfile, and `Dockerfile.placeholder`), `dockerfile_hash`, `build_args`, and `cloudbuild_hash` — ensuring rebuilds fire on any meaningful change.
+    *   **Tagging**: Standardizes image tagging with `application_version`.
 
 ### Supporting Infrastructure Modules
 These modules provide lower-level utilities or specific enhancements.
@@ -96,22 +102,27 @@ These modules provide lower-level utilities or specific enhancements.
 *   **Capabilities**:
     *   **Secret Manager**: Grants `roles/secretmanager.secretAccessor` to the workload service account for the database password secret, optionally the root password secret (`grant_root_password_access`), and all secrets listed in `secret_environment_variables`.
     *   **Storage Buckets**: Grants `roles/storage.objectAdmin` and `roles/storage.legacyBucketReader` to the workload service account for each bucket in `storage_buckets` (conditional on `create_cloud_storage`).
-    *   **GitHub Token IAM**: When `enable_github_token_iam = true`, grants `roles/secretmanager.secretAccessor` on the GitHub token secret to the Cloud Build service account, the Cloud Build default service identity, and the Cloud Build service agent (`service-{project_number}@gcp-sa-cloudbuild.iam.gserviceaccount.com`).
-    *   **Cloud Build deployment permissions**: Grants `var.deployment_role` (e.g., `roles/run.developer` or `roles/container.developer`) and `roles/iam.serviceAccountUser` to the Cloud Build service account so it can deploy on behalf of the workload identity.
+    *   **GitHub Token IAM**: When `enable_github_token_iam = true`, grants `roles/secretmanager.secretAccessor` on the GitHub token secret to: the explicit Cloud Build service account (`cloud_build_sa_email`), the Cloud Build default service identity (obtained via `google_project_service_identity`), and the Cloud Build service agent (`service-{project_number}@gcp-sa-cloudbuild.iam.gserviceaccount.com`).
+    *   **Cloud Build deployment permissions**: Gated on `enable_cicd_trigger`. Grants `var.deployment_role` (e.g. `roles/run.developer` or `roles/container.developer`) and `roles/iam.serviceAccountUser` to the Cloud Build service account so it can deploy on behalf of the workload identity.
     *   **Cloud Build service identity**: When `enable_github_token_iam = true`, enables `cloudbuild.googleapis.com`, waits 60s for propagation, and creates a `google_project_service_identity` for Cloud Build so the service agent account exists before IAM bindings are applied.
 
 #### `app_secrets`
 *   **Path**: `modules/app_secrets`
-*   **Description**: Full lifecycle management of secrets in Secret Manager, including generation, storage, and automated rotation.
+*   **Description**: Full lifecycle management of secrets in Secret Manager, including generation, storage, validation, and automated rotation.
 *   **Capabilities**:
-    *   Generates random database passwords of configurable length and stores them in Secret Manager.
-    *   Supports additional secrets sourced from Secret Manager via `secret_environment_variables`.
-    *   Configures a `secret_propagation_delay` to ensure secrets are available before dependent resources start.
-    *   **Secret Rotation**: Creates a Pub/Sub topic and configures Secret Manager to emit rotation notifications at a configurable `secret_rotation_period` (e.g., `"2592000s"` for 30 days).
-    *   **Automatic Password Rotation**: When `enable_auto_password_rotation = true`, deploys a Cloud Run Job and Eventarc trigger that automatically rotates the Cloud SQL database password on the rotation schedule — generates a new password, updates Cloud SQL, adds a new Secret Manager version, and disables the old version.
-    *   Configurable `rotation_propagation_delay_sec` to allow running application instances to pick up the new secret before the old version is disabled (default: 90s, safe for both Cloud Run and GKE CSI driver).
-    *   Optional VPC attachment for the rotator job to reach Cloud SQL via private IP.
-    *   Supports GitHub token storage for CI/CD integration.
+    *   Generates random database passwords of configurable length and stores them in Secret Manager. Configures a `secret_propagation_delay` to ensure secrets are available before dependent resources start.
+    *   **Explicit secret values**: Accepts `explicit_secret_values` (a map of key → sensitive string) for secrets whose values are provided directly by the caller. Keys in this map are excluded from the external existence check and from `data.google_secret_manager_secret_version` reads.
+    *   **Additional secrets**: References user-provided secrets via `secret_environment_variables` (key → Secret Manager secret ID). Non-explicit entries are validated by `check-secret-exists.sh`.
+    *   **Non-fatal validation**: A Terraform `check` block (`secret_environment_variables_exist`) emits a plan-time warning when a referenced secret is absent, without hard-failing the plan. This keeps `terraform destroy` safe even when externally-managed secrets have already been deleted.
+    *   **`read_additional_secret_versions`**: When `false` (default for Cloud Run), Terraform skips reading secret versions at plan time — Cloud Run resolves them at runtime. When `true` (default for GKE, which embeds values into Kubernetes Secrets), versions are read during apply.
+    *   **GitHub token**: Stored with `deletion_policy = "ABANDON"` so disabling `enable_cicd_trigger` leaves the secret version enabled in Secret Manager, preventing a "DESTROYED state" error on re-enable.
+    *   **Secret Rotation**: Creates a Pub/Sub topic and grants the Secret Manager service identity `roles/pubsub.publisher` so rotation notifications are emitted at the configured `secret_rotation_period`.
+    *   **Automatic Password Rotation** (`enable_auto_password_rotation = true`): Deploys a two-tier rotation architecture:
+        *   **Cloud Run Job** (`pw-rotator`): Executes the zero-downtime dual-version pattern — generate new password → `ALTER USER` on Cloud SQL → add new Secret Manager version → sleep `rotation_propagation_delay_sec` (default 90s) → disable old version.
+        *   **Dispatcher Cloud Run Service** (`rot-dispatch`): A minimal scale-to-zero HTTP service that bridges the Eventarc trigger to the Cloud Run Job (Eventarc does not yet support Jobs as a direct destination).
+        *   **Eventarc trigger**: Fires the dispatcher on each Pub/Sub rotation notification.
+        *   A dedicated least-privilege service account is created for the rotator with only `roles/cloudsql.client`, `secretVersionAdder`, `secretVersionManager`, `secretAccessor`, `roles/run.developer`, and `roles/eventarc.eventReceiver`.
+    *   Optional VPC attachment (`rotation_vpc_network` / `rotation_vpc_subnet`) for the rotator job to reach Cloud SQL via private IP.
 
 #### `app_provider_auth`
 *   **Path**: `modules/app_provider_auth`
@@ -132,60 +143,60 @@ These modules provide lower-level utilities or specific enhancements.
     *   **Custom alert policies**: Accepts a `custom_alert_policies` map; creates additional `google_monitoring_alert_policy` resources for each entry, each with configurable filter, threshold, duration, comparison, and aggregation period.
     *   All resources are gated on `configure_monitoring = true` and a non-empty `support_users` list.
 
-#### `app_cicd_base` & `app_cloud_deploy`
-*   **Path**: `modules/app_cicd_base`, `modules/app_cloud_deploy`
-*   **Description**: Components for setting up advanced CI/CD pipelines using Cloud Build and Google Cloud Deploy.
-*   **`app_cicd_base` Capabilities**:
-    *   **Repository initialization**: Executes `init-cicd-repo.sh` via a `null_resource` local-exec provisioner to create (or reuse) a GitHub repository, commit a `README.md`, `.gitignore`, `cloudbuild.yaml` (Kaniko-based build), and optionally application source files from `APP_SOURCE_DIR`.
-    *   **Cloud Build v2 connection**: Creates a `google_cloudbuildv2_connection` linking Cloud Build to GitHub via an OAuth token (`github_token_secret_version`) and a GitHub App installation ID; waits 120s for IAM propagation before connecting.
-    *   **Cloud Build v2 repository**: Creates a `google_cloudbuildv2_repository` that links the GitHub repository to the Cloud Build connection, enabling trigger-based builds directly from GitHub.
+#### `app_cicd_base`
+*   **Path**: `modules/app_cicd_base`
+*   **Description**: Sets up the GitHub repository and Cloud Build v2 connection required for trigger-based CI/CD pipelines.
+*   **Capabilities**:
+    *   **Repository initialization**: Gated on `create_repository = true`. Executes `init-cicd-repo.sh` via a `null_resource` local-exec provisioner (re-runs on `repo_name`, `service_name`, `container_image`, or script hash changes) to create or reuse a GitHub repository, commit a `README.md`, `.gitignore`, `cloudbuild.yaml`, and optionally application source files from `APP_SOURCE_DIR`. Gated additionally on `github_token` being non-empty to avoid "unbound variable" errors.
+    *   **Cloud Build v2 connection**: Creates a `google_cloudbuildv2_connection` linking Cloud Build to GitHub via an OAuth token (`github_token_secret_version`) and a GitHub App installation ID (`github_app_installation_id`). Waits 120s (driven by `iam_dependencies` trigger) for IAM propagation before connecting.
+    *   **Cloud Build v2 repository**: Creates a `google_cloudbuildv2_repository` linked to the connection. The remote URI defaults to `https://github.com/{owner}/{repo}` but can be overridden directly via `github_repo_url`.
     *   All resources are gated on `enable_cicd = true`.
-*   **`app_cloud_deploy` Capabilities**:
-    *   Creates a Cloud Deploy delivery pipeline with an ordered list of stages (e.g., `dev → staging → prod`).
-    *   Each stage maps to a named target with configurable `require_approval` and `auto_promote` flags.
-    *   Manages platform-specific IAM bindings (Cloud Run vs. GKE) for the Cloud Deploy service agent.
-    *   Uploads pre-rendered Skaffold YAML and deployment manifests to a GCS bucket for use by each release.
-    *   Optionally creates an initial Cloud Deploy release on first apply so the pipeline is visible in the dashboard immediately.
-    *   Supports cross-project and cross-region targets via per-stage `project_id` and `region` overrides.
-    *   Includes destroy-time provisioners to clean up deployments when the pipeline is torn down.
+
+#### `app_cloud_deploy`
+*   **Path**: `modules/app_cloud_deploy`
+*   **Description**: Creates a Google Cloud Deploy delivery pipeline with per-stage targets, Skaffold configuration in GCS, and all required IAM bindings.
+*   **Capabilities**:
+    *   Creates a `google_clouddeploy_delivery_pipeline` with an ordered list of stages (e.g. `dev → staging → prod`). Each stage maps to a named target with configurable `require_approval` and `auto_promote` flags, plus per-stage `project_id` and `region` overrides for cross-project and cross-region topologies.
+    *   **Auto-promote**: For stages with `auto_promote = true` (excluding the final stage), creates a `google_clouddeploy_automation` resource that advances the rollout to the next stage on success.
+    *   **GCS Skaffold bucket**: Creates a deterministically-named GCS bucket (`{project_id}-{md5(pipeline_name)[0:8]}-cd-configs`) to store Skaffold YAML and per-stage deployment manifests. Cloud Build and the Cloud Deploy service agent are granted `roles/storage.objectViewer` on this bucket.
+    *   **Platform IAM**: The Cloud Deploy service agent receives `roles/run.admin` for Cloud Run targets (not `roles/run.developer`, because the Skaffold after-hook that applies `allUsers` IAM bindings requires `run.services.setIamPolicy`, present only in `roles/run.admin`) and `roles/container.developer` for GKE targets.
+    *   **Initial release**: When `create_initial_release = true` and a `container_image` is provided, a `null_resource` creates a first Cloud Deploy release on apply so the pipeline is immediately visible in the dashboard.
+    *   **Destroy cleanup**: Per-stage `null_resource` destroy-time provisioners delete the corresponding Cloud Run service or GKE Deployment/Service when the pipeline is torn down.
+    *   Enables `clouddeploy.googleapis.com` and waits 120s for the Cloud Deploy service agent to be provisioned before applying IAM bindings.
 
 ### Security Modules
 
 #### `app_cmek`
 *   **Path**: `modules/app_cmek`
-*   **Description**: Provisions Cloud KMS infrastructure for Customer-Managed Encryption Keys (CMEK) used by Cloud Storage and Artifact Registry.
+*   **Description**: Provisions Cloud KMS infrastructure for Customer-Managed Encryption Keys (CMEK) for both Cloud Storage and Artifact Registry.
 *   **Capabilities**:
-    *   **Keyring discovery**: Runs `scripts/discover_cmek_keyring.sh` at plan time to find any pre-existing CMEK keyring whose name begins with `${project_id}-cmek-` (e.g. a Services_GCP keyring named `${project_id}-cmek-${random_id}`). The discovery list is sorted deterministically so the selection is stable across runs; falls back to `${project_id}-cmek-keyring` when no match is found.
-    *   Creates the keyring and a `storage-key` CryptoKey for encrypting Cloud Storage buckets when `enable_cmek = true`.
-    *   Creates an `artifact-registry-key` CryptoKey and grants the Artifact Registry service identity `roles/cloudkms.cryptoKeyEncrypterDecrypter` when `enable_artifact_registry_cmek = true`.
-    *   Idempotent: uses `gcloud kms keyrings create ... || true` (and matching `keys create`) to avoid errors on re-apply, since KMS keyrings cannot be deleted and re-creation fails with HTTP 409.
-    *   Outputs the full KMS key resource ID (`storage_key_id`) consumed by `app_storage_enhanced`.
-    *   Set `enable_cmek = false` and `enable_artifact_registry_cmek = false` to skip provisioning entirely.
+    *   **Keyring discovery**: Runs `discover_cmek_keyring.sh` at plan time to find any pre-existing keyring created by `Services_GCP` (prefix `{project_id}-cmek-`). Reuses the discovered keyring; falls back to creating `{project_id}-cmek-keyring` when none exists. This ensures the two modules always converge on the same keyring without conflicts.
+    *   **Storage CMEK** (`enable_cmek = true`): Idempotently creates the CMEK keyring and a `storage-key` CryptoKey via `gcloud kms keyrings create ... || true`. Reads the keyring via a data source (deferred to apply time by `depends_on`) and outputs `storage_key_id` for `app_storage_enhanced`.
+    *   **Artifact Registry CMEK** (`enable_artifact_registry_cmek = true`): Idempotently creates an `artifact-registry-key` in the same keyring and grants the AR service identity (`service-{project_number}@gcp-sa-artifactregistry.iam.gserviceaccount.com`) `roles/cloudkms.cryptoKeyEncrypterDecrypter` — without requiring the `google-beta` provider for the service identity lookup.
+    *   Set both flags to `false` to skip all provisioning.
 
 #### `app_security`
 *   **Path**: `modules/app_security`
 *   **Description**: Binary Authorization image signing and policy enforcement for container images.
 *   **Capabilities**:
-    *   Creates a CMEK keyring (`${project_id}-binauthz-keyring`) and an asymmetric signing key (`binauthz-signer`) for attestation.
-    *   Creates a Container Analysis attestor and Binary Authorization policy.
-    *   Signs application container images using the `pipeline-attestor` pattern via `sign-image.sh`.
-    *   Optionally signs the `db-clients` image when a Cloud SQL instance exists.
-    *   Skips signing for the `gcr.io/cloudrun/hello` placeholder image via an early-exit in the provisioner script (plan-time `count` check cannot be used because `container_image` may depend on post-apply Artifact Registry attributes).
-    *   Supports three enforcement modes: `ALWAYS_ALLOW` (default, permissive), `REQUIRE_ATTESTATION` (enforce signed images), and `ALWAYS_DENY` (emergency lockdown).
-    *   Self-sufficient fallback: creates Binary Authorization prerequisites (via `create-binauthz-prerequisites.sh`) if `Services_GCP` has not pre-configured them.
+    *   Creates a KMS keyring (`${project_id}-binauthz-keyring`) and an asymmetric RSA signing key (`binauthz-signer`). The provisioner also restores and enables key version 1 if it is in `DESTROY_SCHEDULED` state, ensuring re-deploys after a partial destroy succeed without manual intervention.
+    *   Creates a Container Analysis note, `pipeline-attestor` attestor, and Binary Authorization policy via `create-binauthz-prerequisites.sh`. The script is idempotent — it exits immediately when the attestor already exists, leaving `Services_GCP`-provisioned environments untouched.
+    *   Signs the application container image via `sign-image.sh`. Skips signing when the image is the placeholder `gcr.io/cloudrun/hello` (guard is inside the provisioner, not `count`, because the image value may be unknown at plan time).
+    *   Optionally signs the `db-clients` image when `sql_server_exists = true`.
+    *   Supports three enforcement modes via `binauthz_evaluation_mode`: `ALWAYS_ALLOW` (default, permissive), `REQUIRE_ATTESTATION` (enforce signed images), and `ALWAYS_DENY` (emergency lockdown).
     *   Set `enable_binary_authorization = false` to skip all provisioning.
 
 #### `app_vpc_sc`
 *   **Path**: `modules/app_vpc_sc`
-*   **Description**: Auto-discovers organization scope and provisions a VPC Service Controls perimeter around the project's GCP APIs.
+*   **Description**: Configures VPC Service Controls to create an Access Context Manager perimeter around the project, restricting which identities and networks can access protected GCP services.
 *   **Capabilities**:
-    *   **Organization auto-discovery**: Reads `data.google_project` to find `org_id`; falls back to `var.organization_id` when the project sits under a folder. Detects three states — direct-org, folder-nested, and standalone — and emits a `null_resource` warning with remediation guidance when VPC-SC cannot be created.
-    *   **VPC CIDR auto-discovery**: When `vpc_cidr_ranges` is empty and `network_name` is set, reads all subnetworks from the named VPC and uses their CIDR ranges for the VPC access level. Falls back to `10.0.0.0/8` when neither is available.
-    *   **Access Context Manager policy**: Reuses an existing org-level policy when one is present; otherwise creates a new one titled "VPC Service Controls Policy".
-    *   **Access levels**: Creates four per-deployment access levels — VPC network (`ip_subnetworks`), admin IPs (`admin_ip_ranges`), IAP (`service-{project_number}@gcp-sa-iap`), and CI/CD (Cloud Build service account plus optional `resource_creator_identity`). Names are suffixed with `deployment_id` to avoid collisions across deployments.
-    *   **Service perimeter**: Creates a `PERIMETER_TYPE_REGULAR` perimeter protecting `projects/${project_number}`, with `restricted_services` and `vpc_accessible_services` covering Cloud Run, GKE, Cloud SQL, Secret Manager, Storage, Artifact Registry, Cloud Build, Certificate Manager, IAP, Compute, KMS, Pub/Sub, Redis, Filestore, Firestore, plus logging/monitoring/trace for egress. Lifecycle-ignores `status.resources` so manual additions are not reverted.
-    *   **Dry-run mode**: `vpc_sc_dry_run = true` (default) logs violations without enforcing them — recommended for initial rollout. Set to `false` to actively block out-of-perimeter API calls.
-    *   **Auto-skip**: Emits a clear warning and creates no resources when the project has no organization (e.g. Qwiklab), when it is folder-nested without an explicit `organization_id`, or when `admin_ip_ranges` is empty (lockout protection).
+    *   **Organization auto-discovery**: Reads `org_id` and `folder_id` from the project resource. Emits a clear `null_resource` warning (not a hard error) when: (a) the project is standalone with no GCP organization (VPC-SC permanently unavailable), (b) the project is nested under a folder and the org ID cannot be auto-discovered (caller must supply `organization_id` explicitly), or (c) `admin_ip_ranges` is empty (would risk lockout).
+    *   **VPC CIDR auto-discovery**: When `vpc_cidr_ranges` is empty and `network_name` is set, queries subnets of the named VPC and uses their CIDR ranges as the VPC access level. Falls back to `10.0.0.0/8` when no subnets are found.
+    *   **Access Context Manager policy**: Reuses an existing org-level ACM policy if one exists; creates one otherwise.
+    *   **Four access levels**: `vpc_access` (VPC subnet CIDRs), `admin_access` (`admin_ip_ranges`), `iap_access` (IAP service agent), and `cicd_access` (Cloud Build SA and `resource_creator_identity`).
+    *   **Service perimeter**: Restricts 15 GCP services (Cloud Run, GKE, Cloud SQL, Secret Manager, Storage, Artifact Registry, Cloud Build, Certificate Manager, IAP, Compute, KMS, Pub/Sub, Redis, Filestore, Firestore). Ingress allows all four access levels; egress policies permit outbound calls to Storage, Artifact Registry, Logging, Monitoring, Secret Manager, and Cloud SQL.
+    *   **Dry-run mode**: Set `vpc_sc_dry_run = true` to enforce the perimeter in audit-only mode before going live.
+    *   Skipped entirely when no organization is present or `admin_ip_ranges` is empty.
 
 ### Storage Modules
 
@@ -205,12 +216,11 @@ These modules provide lower-level utilities or specific enhancements.
 *   **Path**: `modules/app_db_clients`
 *   **Description**: Builds and pushes a database client tools container image to Artifact Registry.
 *   **Capabilities**:
-    *   Builds a container image containing PostgreSQL and MySQL clients via a Cloud Build job.
-    *   Pushes the image to Artifact Registry tagged as `db-clients:latest`.
+    *   Builds a container image containing PostgreSQL and MySQL clients via a Cloud Build job (`cloudbuild-db-clients.yaml`).
+    *   Pushes the image to Artifact Registry tagged as `db-clients:latest`. Outputs the full image URI (`db_clients_image`) consumed by `app_security` for Binary Authorization signing.
     *   Used by db-export CronJobs and db-cleanup destroy provisioners across platform modules.
-    *   Idempotent: skips the build if the image already exists in the registry.
-    *   Build is skipped when `sql_server_exists = false` or `artifact_repo_id` is empty.
-    *   Outputs the full image URI (`db_clients_image`) consumed by `app_security` for Binary Authorization signing.
+    *   **No `count`**: `sql_server_exists` and `artifact_repo_id` can both be unknown at plan time, so a runtime guard inside the provisioner handles the skip logic rather than a `count` expression. An `always_run = timestamp()` trigger ensures the existence check runs on every apply, rebuilding only when the image is absent.
+    *   Triggers on `dockerfile_hash` (`Dockerfile.db-clients`) and `cloudbuild_hash` so image changes are detected automatically.
 
 ### Monitoring Modules
 
@@ -228,24 +238,40 @@ These modules provide lower-level utilities or specific enhancements.
 
 ## 3. Implementation Pattern
 
-Platform modules integrate `App_Common` using the following pattern:
+Platform modules (`App_CloudRun`, `App_GKE`) consume `App_Common` submodules directly. The pattern below shows a typical integration:
 
 ```hcl
 # Example from modules/App_CloudRun/gcp_integration.tf
+
+module "network_discovery" {
+  source = "../App_Common/modules/app_networking"
+
+  project_id                    = local.project_id
+  network_name                  = ""             # auto-discovers the Services_GCP network
+  fallback_region               = "us-central1"
+  impersonation_service_account = local.impersonation_service_account
+}
 
 module "app_sql_discovery" {
   source = "../App_Common/modules/app_sql_discovery"
 
   project_id                    = local.project_id
-  application_database_name     = local.db_name
-  # ... other inputs
+  database_client_type          = local.database_client_type
+  impersonation_service_account = local.impersonation_service_account
+  scripts_dir                   = "${path.module}/../App_Common/scripts"
+  resource_prefix               = local.resource_prefix
 }
 
 locals {
-  # Expose module outputs as locals for internal use
+  # Network outputs
+  region_to_subnet   = module.network_discovery.region_to_subnet
+  network_tags       = module.network_discovery.network_tags
+
+  # SQL outputs — used by app_secrets and app_iam
+  sql_server_exists  = module.app_sql_discovery.sql_server_exists
   db_connection_name = module.app_sql_discovery.db_instance_connection_name
   db_password_secret = module.app_sql_discovery.db_password_secret_name
 }
 ```
 
-This ensures that any improvements to the discovery or management logic in `App_Common` automatically benefit all consuming platform modules.
+Any improvement to the shared discovery or management logic in `App_Common` automatically benefits all consuming platform modules without changes to Application Modules.
