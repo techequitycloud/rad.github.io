@@ -1,6 +1,8 @@
 import React from 'react';
 import Head from '@docusaurus/Head';
 
+const DATE_MODIFIED = new Date().toISOString().split('T')[0];
+
 export default function Root({children}) {
   return (
     <>
@@ -70,7 +72,7 @@ export default function Root({children}) {
               }
             },
             datePublished: '2024-01-01',
-            dateModified: new Date().toISOString().split('T')[0]
+            dateModified: DATE_MODIFIED
           })}
         </script>
       </Head>
