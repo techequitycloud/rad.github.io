@@ -20,7 +20,7 @@ def get_published_rel_path(base):
 
 def git_show_original(rel_path):
     result = subprocess.run(
-        ['git', 'show', f'HEAD:{rel_path}'],
+        ['git', 'cat-file', '-p', f'HEAD:{rel_path}'],
         capture_output=True, text=True, cwd=BASE
     )
     return result.stdout if result.returncode == 0 else None
