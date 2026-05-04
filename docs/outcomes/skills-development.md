@@ -91,7 +91,7 @@ The same skill files that guide AI contributors serve equally well for human dev
 |---|---|---|
 | Certification preparation | Separate training purchase; abstract study against documentation | Five certification tracks tied directly to running infrastructure; hands-on exploration in the RAD UI |
 | Developer onboarding | Days reading unstructured docs and tribal knowledge | Layered agent skill guides, worked examples, and reference modules; new contributor productive within hours |
-| Application setup time | 3–5 days manual provisioning | <2 hours via self-service scaffold |
+| Application setup time | 3–5 days manual provisioning | &lt;2 hours via self-service scaffold |
 | Security knowledge transfer | Ad-hoc; depends on individual expertise | `/security` audit workflow encodes 30+ control checkpoints as executable documentation |
 
 ## See also
