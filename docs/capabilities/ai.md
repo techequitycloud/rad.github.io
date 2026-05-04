@@ -5,7 +5,7 @@ sidebar_label: "Artificial Intelligence"
 
 # Artificial Intelligence (AI)
 
-> **Scope.** Canonical home for the AI/LLM application modules in this repo, the vector-store backing services, and the runtime characteristics specific to AI workloads. The agent-driven developer experience for Claude Code itself is canonical in [outcomes/education_enablement.md](../outcomes/education_enablement.md).
+> **Scope.** Canonical home for the AI/LLM application modules in this repo, the vector-store backing services, and the runtime characteristics specific to AI workloads. The agent-driven developer experience for Claude Code itself is canonical in [outcomes/education_enablement.md](../outcomes/skills-development.md).
 
 ## What this repo uniquely brings to AI
 
@@ -19,7 +19,7 @@ sidebar_label: "Artificial Intelligence"
 | `modules/N8N_AI_*` | N8N workflow automation with AI/LLM nodes | `N8N_AI_Common/scripts/entrypoint.sh` |
 | `modules/Activepieces_*` | No-code automation with AI step support | — |
 
-Each follows the standard four-tier wiring (see [practices/platform_engineering.md](../practices/platform_engineering.md)) so an AI workload deploys with the same `tofu apply` as any other application.
+Each follows the standard four-tier wiring (see [practices/platform_engineering.md](../practices/idp.md)) so an AI workload deploys with the same `tofu apply` as any other application.
 
 **Module details:**
 
@@ -65,5 +65,5 @@ AI workloads inherit the platform-wide controls without extra wiring:
 - [capabilities/serverless](serverless) — Cloud Run / Autopilot runtime mechanics, custom builds
 - [practices/devsecops.md](../practices/devsecops.md) — secret management for AI API keys, Binary Authorization
 - [practices/finops.md](../practices/finops.md) — cost discipline for AI workloads
-- [outcomes/education_enablement.md](../outcomes/education_enablement.md) — AI-native developer experience (CLAUDE.md, AGENTS.md, .agent/skills)
-- [outcomes/developer_productivity.md](../outcomes/developer_productivity.md) — full application catalogue
+- [outcomes/education_enablement.md](../outcomes/skills-development.md) — AI-native developer experience (CLAUDE.md, AGENTS.md, .agent/skills)
+- [outcomes/developer_productivity.md](../outcomes/developer-productivity.md) — full application catalogue

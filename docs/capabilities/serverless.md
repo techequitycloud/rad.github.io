@@ -99,7 +99,7 @@ Every application ships in **both** flavours (`<App>_CloudRun` and `<App>_GKE`) 
 
 ### 10. Event-driven / serverless-friendly catalogue items
 
-Some applications are themselves serverless workflow engines: N8N, Activepieces, Kestra, NodeRED, Flowise. See the full catalogue in [outcomes/developer_productivity.md](../outcomes/developer_productivity.md).
+Some applications are themselves serverless workflow engines: N8N, Activepieces, Kestra, NodeRED, Flowise. See the full catalogue in [outcomes/developer_productivity.md](../outcomes/developer-productivity.md).
 
 ## Container image registry
 
