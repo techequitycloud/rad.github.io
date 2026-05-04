@@ -325,6 +325,18 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Platform Practices',
+      items: [
+        { type: 'doc', id: 'practices/cicd', label: 'CI/CD' },
+        { type: 'doc', id: 'practices/devsecops', label: 'DevSecOps' },
+        { type: 'doc', id: 'practices/finops', label: 'FinOps' },
+        { type: 'doc', id: 'practices/gitops-iac', label: 'GitOps & IaC' },
+        { type: 'doc', id: 'practices/idp', label: 'IDP' },
+        { type: 'doc', id: 'practices/sre', label: 'SRE' },
+      ],
+    },
+    {
+      type: 'category',
       label: 'Platform Guides',
       items: [
         {
