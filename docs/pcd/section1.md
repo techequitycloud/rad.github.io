@@ -286,7 +286,7 @@ Navigate to **Cloud Storage** and **SQL** in the GCP Console to review storage t
 - Use **interleaving** to co-locate parent and child rows physically — `INTERLEAVE IN PARENT Orders ON DELETE CASCADE` places each order's line items on the same Spanner server as the order, dramatically reducing cross-server joins.
 - Spanner supports standard SQL (ANSI 2011) and a GoogleSQL dialect — existing SQL queries generally work with minor modifications.
 
-Navigate to **Spanner > &lt;instance&gt; > Spanner Studio** to explore schema views and run queries.
+Navigate to **Spanner > `<instance>` > Spanner Studio** to explore schema views and run queries.
 
 **Unstructured (NoSQL) databases:**
 
