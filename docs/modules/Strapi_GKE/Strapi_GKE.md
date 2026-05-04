@@ -1,17 +1,4 @@
----
-title: "Strapi GKE Configuration Guide"
-sidebar_label: "GKE"
----
-
-# Strapi GKE Module
-
-<YouTubeEmbed videoId="zOhPGVxH5q0" poster="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Strapi_GKE Module — Configuration Guide
 
 Strapi is an open-source headless CMS that gives developers the freedom to choose their favourite tools and frameworks while enabling content editors to manage their content independently. This module deploys Strapi on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL instance, a Cloud Filestore NFS volume for media uploads, and a GCS bucket for object storage.
 
@@ -168,10 +155,10 @@ If `SMTP_HOST` is set, the built-in `plugins.js` automatically configures the `n
 
 ```hcl
 environment_variables = {
-  SMTP_HOST  = "smtp.sendgrid.net"
-  SMTP_PORT  = "587"
-  SMTP_USER  = "apikey"
-  EMAIL_FROM = "noreply@example.com"
+  SMTP_HOST     = "smtp.sendgrid.net"
+  SMTP_PORT     = "587"
+  SMTP_USERNAME = "apikey"
+  EMAIL_FROM    = "noreply@example.com"
 }
 
 secret_environment_variables = {

@@ -1,8 +1,3 @@
----
-title: "N8N Common Shared Configuration Module"
-sidebar_label: "Common"
----
-
 # N8N_Common Shared Configuration Module
 
 The `N8N_Common` module defines the n8n workflow automation platform (without AI components) for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`N8N_CloudRun` and `N8N_GKE`).
@@ -278,10 +273,10 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 
 | Aspect | N8N_CloudRun | N8N_GKE |
 |--------|--------------|---------|
-| `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
-| `enable_cloudsql_volume` | `true` (Auth Proxy sidecar) | `false` (TCP to Cloud SQL private IP) |
-| `DB_HOST` | Cloud SQL Auth Proxy socket path | Cloud SQL private IP |
-| NFS | Not used (serverless) | Optional via `enable_nfs` |
+| `service_url` | Predicted Cloud Run service URL (`https://<prefix>-<project_number>.<region>.run.app`) | Internal ClusterIP URL (`http://<service>.<namespace>.svc.cluster.local`), computed before deployment |
+| `enable_cloudsql_volume` | `true` (Auth Proxy sidecar, default) | `true` (Auth Proxy sidecar, default) |
+| `DB_HOST` | Cloud SQL Auth Proxy socket path (`/cloudsql`) | Cloud SQL Auth Proxy socket path (`/cloudsql`) when `enable_cloudsql_volume = true` |
+| NFS | Enabled by default (`enable_nfs = true`); provides shared persistence | Enabled by default (`enable_nfs = true`) via `enable_nfs` |
 | Redis | Optional; `$(NFS_SERVER_IP)` placeholder when enabled | Optional; `$(NFS_SERVER_IP)` placeholder when enabled |
 | GCS volumes | Optional via `gcs_volumes` | Optional via `gcs_volumes` |
 | Scaling | Serverless, scale-to-zero (`min_instance_count = 0`) | Kubernetes Deployment with configurable replicas |
@@ -296,27 +291,61 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 module "n8n_app" {
   source = "../N8N_Common"
 
+  # Project & Deployment
   project_id           = var.project_id
   resource_prefix      = local.resource_prefix
-  labels               = local.labels
+  labels               = var.resource_labels
   tenant_deployment_id = var.tenant_deployment_id
-  deployment_id        = local.deployment_id
-  deployment_region    = var.deployment_region
-  service_url          = local.service_url
-  enable_redis         = var.enable_redis
-  redis_host           = var.redis_host
-  redis_auth           = var.redis_auth
-  gcs_volumes          = local.n8n_gcs_volumes
+  deployment_id        = local.random_id
+  deployment_region    = local.region
+
+  # Application Details
+  application_name    = var.application_name
+  application_version = var.application_version
+  display_name        = var.display_name
+  description         = var.description
+
+  # Database
+  db_name = var.db_name
+  db_user = var.db_user
+
+  # Container Resources
+  cpu_limit          = var.cpu_limit
+  memory_limit       = var.memory_limit
+  min_instance_count = var.min_instance_count
+  max_instance_count = var.max_instance_count
+
+  # Probes
+  startup_probe  = var.startup_probe
+  liveness_probe = var.liveness_probe
+
+  # Integration
+  service_url = local.predicted_service_url
+
+  # Redis (redis_auth is NOT passed here; App_CloudRun handles it directly)
+  enable_redis  = var.enable_redis
+  redis_host    = var.redis_host
+  redis_port    = var.redis_port
+  nfs_server_ip = null
+
+  # Environment & Initialization
+  environment_variables  = var.environment_variables
+  enable_cloudsql_volume = var.enable_cloudsql_volume
+  initialization_jobs    = var.initialization_jobs
+
+  # Storage
+  gcs_volumes = var.gcs_volumes
 }
 
 # config and secrets are passed to App_CloudRun
 module "app_cloudrun" {
   source = "../App_CloudRun"
 
-  application_config     = module.n8n_app.config
-  module_storage_buckets = module.n8n_app.storage_buckets
-  module_secret_env_vars = module.n8n_app.secret_ids
-  scripts_dir            = module.n8n_app.path
+  application_config            = { n8n = merge(module.n8n_app.config, { description = var.description, container_port = var.container_port }) }
+  module_storage_buckets        = module.n8n_app.storage_buckets
+  module_secret_env_vars        = module.n8n_app.secret_ids
+  module_explicit_secret_values = module.n8n_app.secret_values
+  scripts_dir                   = abspath("${module.n8n_app.path}/scripts")
   # ... other inputs
 }
 ```

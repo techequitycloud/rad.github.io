@@ -1,17 +1,4 @@
----
-title: "Cyclos GKE Configuration Guide"
-sidebar_label: "GKE"
----
-
-# Cyclos GKE Module
-
-<YouTubeEmbed videoId="AR-KMV7GGco" poster="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Cyclos_GKE Module — Configuration Guide
 
 Cyclos is a professional banking and payment system designed for microfinance institutions, credit unions, complementary currency schemes, and community banks. This module deploys Cyclos on **GKE Autopilot** using the official `cyclos/cyclos` container image, backed by a managed Cloud SQL PostgreSQL instance.
 
@@ -75,14 +62,16 @@ The following behaviours are applied automatically by `Cyclos_GKE` regardless of
 
 ## Cyclos Application Identity
 
-These variables control how the Cyclos deployment is named and described. They correspond to the `application_display_name` and `application_description` variables in App_GKE but use shorter names to match the Cyclos_Common interface.
+These variables control how the Cyclos deployment is named and described. `Cyclos_GKE` exposes two parallel sets: `display_name`/`description` are passed to `Cyclos_Common` (and surface in the application config object), while `application_display_name`/`application_description` are passed directly to `App_GKE` (and surface in GKE workload annotations and the platform UI).
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
 | `application_name` | `"cyclos"` | `[a-z][a-z0-9-]{0,19}` | Internal identifier used as the base name for GKE workloads, Cloud SQL, GCS buckets, and Artifact Registry. Functionally identical to `application_name` in App_GKE. **Do not change after initial deployment.** |
 | `application_version` | `"4.16.17"` | Cyclos version string, e.g. `"4.16.17"` | Version tag applied to the container image. Use the official Cyclos release version matching the image you intend to deploy. See the [Cyclos release notes](https://www.cyclos.org/releaseNotes) for available versions. When `container_image_source = "prebuilt"`, this controls which tagged image is pulled from Docker Hub. |
-| `display_name` | `"Cyclos Community Edition"` | Any string | Human-readable name shown in the platform UI and GKE monitoring dashboards. Equivalent to `application_display_name` in App_GKE. Can be updated freely without affecting resource names. |
-| `description` | `"Cyclos Banking System on GKE"` | Any string | Brief description of the deployment. Populated into Kubernetes resource annotations and platform documentation. Equivalent to `application_description` in App_GKE. |
+| `display_name` | `"Cyclos Community Edition"` | Any string | Human-readable name passed to `Cyclos_Common` and used in the application config object. Can be updated freely without affecting resource names. |
+| `description` | `"Cyclos Banking System on GKE"` | Any string | Description passed to `Cyclos_Common` and used in the application config object. |
+| `application_display_name` | `"Cyclos Community Edition"` | Any string | Human-readable name passed directly to `App_GKE` for GKE workload annotations and platform UI display. Equivalent to `application_display_name` in App_GKE. Can be updated freely without affecting resource names. |
+| `application_description` | `"Cyclos Community Edition on GKE Autopilot"` | Any string | Description passed directly to `App_GKE` for Kubernetes deployment annotations and platform documentation. Equivalent to `application_description` in App_GKE. |
 
 ### Validating Application Identity
 
@@ -98,14 +87,25 @@ kubectl describe deployment cyclos -n NAMESPACE | grep -A5 Annotations
 
 ## Cyclos Runtime Configuration
 
-Cyclos is a Java application and requires significantly more CPU and memory than a typical web service. The module exposes `cpu_limit` and `memory_limit` as **dedicated top-level variables** rather than requiring users to set the full `container_resources` object.
+Cyclos is a Java application and requires significantly more CPU and memory than a typical web service. `Cyclos_GKE` exposes **two complementary mechanisms** for setting resource limits:
+
+1. **`container_resources`** (object, default `{ cpu_limit = "1000m", memory_limit = "2Gi" }`) — the primary resource configuration passed directly to `App_GKE`. This variable always takes effect and overrides the dedicated `cpu_limit`/`memory_limit` variables below.
+2. **`cpu_limit` / `memory_limit`** (dedicated string variables, defaults `"2000m"` / `"4Gi"`) — convenience variables passed to `Cyclos_Common` to build the initial `container_resources` object. These are overridden by `container_resources` whenever `container_resources` is set (which includes its default value).
+
+**In practice, configure resource limits using `container_resources` directly.** The defaults from `container_resources` (`cpu_limit = "1000m"`, `memory_limit = "2Gi"`) are lower than the Cyclos-recommended minimums — override them in your `tfvars`:
+
+```hcl
+container_resources = {
+  cpu_limit    = "2000m"
+  memory_limit = "4Gi"
+}
+```
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `cpu_limit` | `"2000m"` | Kubernetes CPU quantity string (e.g. `"2000m"`, `"2"`) | CPU limit for the Cyclos container. **Cyclos requires a minimum of 2 vCPU for reliable operation.** A lower value risks CPU throttling during startup (which is particularly expensive for the JVM) and during peak transaction processing. In GKE Autopilot, the CPU limit determines billing — set this based on your expected load. |
-| `memory_limit` | `"4Gi"` | Kubernetes memory quantity string (e.g. `"4Gi"`, `"2Gi"`) | Memory limit for the Cyclos container. **Cyclos requires a minimum of 2 Gi; 4 Gi is recommended for production.** The JVM heap, Cyclos internal caches, and the Hazelcast session state together typically consume 2–3 Gi under normal load. Setting this below 2 Gi will cause `OutOfMemoryError` crashes. |
-
-> **Note on `container_resources`:** The full `container_resources` object (as documented in [App_GKE.md §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot)) is also available. If `container_resources` is set explicitly in your `tfvars`, it takes precedence over `cpu_limit` and `memory_limit`. Use `container_resources` when you need to set `cpu_request`, `mem_request`, or `ephemeral_storage_limit`.
+| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "2Gi" }` | Kubernetes quantity object | Full resource spec for the Cyclos container. Takes precedence over `cpu_limit` and `memory_limit`. Use this to set `cpu_request`, `mem_request`, or `ephemeral_storage_limit` in addition to limits. **Set `cpu_limit` to at least `"2000m"` and `memory_limit` to at least `"2Gi"` for reliable Cyclos operation.** `"4Gi"` memory is recommended for production. |
+| `cpu_limit` | `"2000m"` | Kubernetes CPU quantity string (e.g. `"2000m"`, `"2"`) | Passed to `Cyclos_Common` for its internal config object. Effective only if `container_resources` is not set in your `tfvars` (which is unusual since it has a non-null default). |
+| `memory_limit` | `"4Gi"` | Kubernetes memory quantity string (e.g. `"4Gi"`, `"2Gi"`) | Passed to `Cyclos_Common` for its internal config object. Effective only if `container_resources` is not set in your `tfvars`. |
 
 **Cyclos-specific runtime defaults that differ from App_GKE:**
 
@@ -113,7 +113,7 @@ Cyclos is a Java application and requires significantly more CPU and memory than
 |---|---|---|---|
 | `container_image_source` | `"custom"` | `"prebuilt"` | The official `cyclos/cyclos` Docker Hub image is production-ready and pre-configured. |
 | `container_image` | `""` | `"cyclos/cyclos"` | The official Cyclos image from Docker Hub. |
-| `max_instance_count` | `3` | `1` | Cyclos clustering requires Hazelcast configuration. The default of `1` ensures a stable single-instance deployment. Increase only after configuring Hazelcast discovery. |
+| `max_instance_count` | `1` | `1` | Cyclos clustering requires Hazelcast configuration. The default of `1` ensures a stable single-instance deployment. Increase only after configuring Hazelcast discovery. |
 
 ### Validating Runtime Configuration
 
@@ -139,7 +139,7 @@ All other database variables (`database_type`, `sql_instance_name`, `database_pa
 | `db_name` | `"cyclos"` | `[a-z][a-z0-9_]{0,62}` | The name of the PostgreSQL database created within the Cloud SQL instance. Injected as the `DB_NAME` environment variable. **Do not change after initial deployment** — Cyclos stores all application data in this database and renaming it requires manual migration. |
 | `db_user` | `"cyclos"` | `[a-z][a-z0-9_]{0,31}` | The PostgreSQL user created for the Cyclos application. Injected as the `DB_USER` environment variable. The password is auto-generated, stored in Secret Manager, and injected as `DB_PASSWORD`. |
 
-> **Important:** Cyclos requires PostgreSQL. Set `database_type = "POSTGRES_15"` (or another supported PostgreSQL version) in your `tfvars`. The module's default is `"POSTGRES"` (latest managed version). Setting `database_type = "NONE"` or a MySQL/SQL Server type will prevent the application from starting.
+> **Important:** Cyclos requires PostgreSQL. The `database_type` variable is exposed in `Cyclos_GKE` and defaults to `"POSTGRES"` (latest managed Cloud SQL PostgreSQL version). `Cyclos_Common` configures `"POSTGRES_15"` in its config output, but since `cyclos.tf` merges `var.database_type` on top of the Cyclos_Common config, the effective default is the value of `var.database_type` (`"POSTGRES"`). You may override this to a specific version such as `"POSTGRES_15"`. Setting `database_type = "NONE"` or a MySQL/SQL Server type will prevent the application from starting.
 
 > **PostgreSQL extensions** are installed automatically — see [Platform-Managed Behaviours](#platform-managed-behaviours). You do not need to set `enable_postgres_extensions = true` for the Cyclos-required extensions.
 
@@ -159,22 +159,9 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep -E "^DB_"
 
 ## Cyclos Environment Variables
 
-The `environment_variables` variable has Cyclos-specific defaults that configure email delivery.
+The `environment_variables` variable in `Cyclos_GKE` defaults to an empty map (`{}`). There are no SMTP defaults set at the module level — unlike `Cyclos_CloudRun`, which pre-populates SMTP placeholder values. You must explicitly supply SMTP configuration if Cyclos email delivery is required.
 
-**Default `environment_variables` in Cyclos_GKE:**
-
-```hcl
-environment_variables = {
-  SMTP_HOST     = ""
-  SMTP_PORT     = "25"
-  SMTP_USER     = ""
-  SMTP_PASSWORD = ""
-  SMTP_SSL      = "false"
-  EMAIL_FROM    = "cyclos@example.com"
-}
-```
-
-Cyclos uses these variables to configure its outbound email transport (used for notifications, password resets, and transaction confirmations). Configure them to point to your SMTP server before going live. For sensitive values such as `SMTP_PASSWORD`, use `secret_environment_variables` instead:
+Configure SMTP settings before going live. For sensitive values such as `SMTP_PASSWORD`, use `secret_environment_variables` instead of `environment_variables`:
 
 ```hcl
 environment_variables = {
@@ -189,6 +176,8 @@ secret_environment_variables = {
   SMTP_PASSWORD = "cyclos-smtp-password"   # Secret Manager secret name
 }
 ```
+
+The core runtime environment variables (`DB_HOST`, `DB_PORT`, `CYCLOS_HOME`, `cyclos.storedFileContentManager`, and `cyclos.storedFileContentManager.bucketName`) are injected automatically via `Cyclos_Common` and do not need to be set manually.
 
 All other `environment_variables` and `secret_environment_variables` behaviour is identical to App_GKE.
 

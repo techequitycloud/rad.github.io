@@ -1,17 +1,4 @@
----
-title: "Ghost Cloud Run Configuration Guide"
-sidebar_label: "Cloud Run"
----
-
-# Ghost CloudRun Module
-
-<YouTubeEmbed videoId="N-kCP7yhoWE" poster="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Ghost on Google Cloud Run
 
 This document provides a comprehensive reference for the `modules/Ghost_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Ghost-specific behaviours, and operational patterns for deploying Ghost on Google Cloud Run (v2).
 
@@ -42,7 +29,7 @@ Ghost is a professional open-source publishing platform for newsletters, members
 | `description` | 2 | `string` | `'Ghost - Professional publishing platform'` | Cloud Run service description. Passed to `Ghost_Common`. |
 | `application_version` | 2 | `string` | `'6.14.0'` | Ghost image version tag. Increment to deploy a new release. |
 
-**Wrapper architecture:** `Ghost_CloudRun` calls `Ghost_Common` to build an `application_config` object containing Ghost-specific environment variables, probe configuration, and the `db-init` job definition. `Ghost_CloudRun` hardcodes `database__client = "mysql"` into the merged config to ensure Ghost 6.x connects to MySQL rather than falling back to SQLite. `module_storage_buckets` carries the `ghost-content` bucket provisioned by `Ghost_Common`. `scripts_dir` is resolved to `Ghost_Common/scripts`.
+**Wrapper architecture:** `Ghost_CloudRun` calls `Ghost_Common` to build an `application_config` object containing Ghost-specific environment variables, probe configuration, and the `db-init` job definition. `Ghost_CloudRun` hardcodes `database__client = "mysql"` into the merged config to ensure Ghost 6.x connects to MySQL rather than falling back to SQLite. `module_storage_buckets` carries the `ghost-content` bucket provisioned by `Ghost_Common`. `scripts_dir` is resolved to `abspath("${module.ghost_app.path}/scripts")` at apply time.
 
 **MySQL note:** Unlike every other module in this repo, Ghost requires **MySQL 8.0**, not PostgreSQL. `database_type = "MYSQL_8_0"` is fixed by `Ghost_Common` and cannot be overridden.
 
@@ -97,8 +84,9 @@ Ghost is a Node.js application with significant resource requirements — it run
 | `cpu_limit` | `'1000m'` | `'2000m'` | Ghost requires ≥2 vCPU for theme compilation and member features. |
 | `memory_limit` | `'512Mi'` | `'4Gi'` | Ghost's Node.js process + themes + membership caches require significantly more RAM. |
 | `enable_cloudsql_volume` | `true` | `true` | Same — Ghost connects via Auth Proxy Unix socket. |
-| `min_instance_count` | `0` | `0` **[fixed]** | Scale-to-zero; hardcoded in `main.tf`. |
-| `max_instance_count` | `1` | `5` **[fixed]** | Higher ceiling for traffic spikes; hardcoded in `main.tf`. |
+| `min_instance_count` | `0` | `0` **[fixed]** | Scale-to-zero; hardcoded in `main.tf` locals merge. |
+| `max_instance_count` | `1` | `5` **[fixed]** | Higher ceiling for traffic spikes; hardcoded in `main.tf` locals merge. |
+| `enable_image_mirroring` | `false` | `true` | Ghost mirrors its base image to Artifact Registry by default. |
 
 ### B. Database (Cloud SQL — MySQL 8.0)
 
@@ -112,11 +100,11 @@ The module uses `db_name` and `db_user` in place of the `application_database_na
 |---|---|---|---|
 | `db_name` | 11 | `'ghost'` | MySQL database name. **Do not change after initial deployment.** |
 | `db_user` | 11 | `'ghost'` | MySQL application user. Password auto-generated and stored in Secret Manager. |
-| `database_password_length` | 11 | `16` | Auto-generated password length. Range: 8–64. `32` recommended for production. |
+| `database_password_length` | 11 | `32` | Auto-generated password length. Range: 16–64. |
 | `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. See §7.D. |
 | `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
 
-> `database_type`, `sql_instance_name`, `sql_instance_base_name`, `enable_postgres_extensions`, and `enable_mysql_plugins` are not exposed — Ghost only supports MySQL 8.0, and database setup is managed by `Ghost_Common`'s `db-init.sh` script.
+> `database_type`, `enable_postgres_extensions`, and `enable_mysql_plugins` are not exposed — Ghost only supports MySQL 8.0, and database setup is managed by `Ghost_Common`'s `db-init.sh` script. `sql_instance_name` and `sql_instance_base_name` are not exposed either; Cloud SQL discovery/inline provisioning is handled transparently by `App_CloudRun`.
 
 ### C. Storage (NFS & GCS)
 
@@ -131,6 +119,10 @@ The module uses `db_name` and `db_user` in place of the `application_database_na
 | `create_cloud_storage` | 10 | `true` | Set `false` to skip additional bucket creation. The `ghost-content` bucket from `Ghost_Common` is always provisioned. |
 | `storage_buckets` | 10 | `[{ name_suffix = "data" }]` | Additional GCS buckets beyond the auto-provisioned content bucket. |
 | `gcs_volumes` | 10 | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). Each entry: `name`, `bucket_name`, `mount_path`, `readonly`, `mount_options`. |
+| `nfs_instance_name` | 8 | `""` | Name of an existing NFS GCE VM. Leave empty to auto-discover or use inline instance. |
+| `nfs_instance_base_name` | 8 | `'app-nfs'` | Base name for an inline NFS GCE VM when none exists. Deployment ID is appended. |
+| `manage_storage_kms_iam` | 10 | `false` | Creates a CMEK KMS keyring/key and enables CMEK on all storage buckets. |
+| `enable_artifact_registry_cmek` | 10 | `false` | Creates an Artifact Registry KMS key and enables at-rest CMEK encryption of container images. |
 
 ### D. Networking
 
@@ -158,8 +150,8 @@ Additional recurring cron jobs can be defined via `cron_jobs`:
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Ghost_Common` to supply the default `db-init` job. Non-empty list replaces it entirely. Each entry: `name`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `execute_on_apply`, `script_path`. |
-| `cron_jobs` | 12 | `[]` | Recurring jobs triggered by Cloud Scheduler. Each entry: `name`, `schedule` (cron UTC), `image`, `command`, `cpu_limit`, `memory_limit`, `paused`. |
+| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Ghost_Common` to supply the default `db-init` job. Non-empty list replaces it entirely. Each entry: `name`, `description`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `execution_mode`, `mount_nfs`, `mount_gcs_volumes`, `depends_on_jobs`, `execute_on_apply`, `script_path`. |
+| `cron_jobs` | 12 | `[]` | Recurring jobs triggered by Cloud Scheduler. Each entry: `name`, `schedule` (cron UTC), `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `parallelism`, `mount_nfs`, `mount_gcs_volumes`, `script_path`, `paused`. |
 
 **Backup Import:** If `enable_backup_import = true`, a dedicated Cloud Run Job restores a backup into the MySQL database during the apply. See §8.C for all backup variables.
 
@@ -237,6 +229,9 @@ When `enable_cdn = true` (requires `enable_cloud_armor = true`), Cloud CDN is at
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `enable_cdn` | 9 | `false` | Enables Cloud CDN on the HTTPS LB backend. Only effective when `enable_cloud_armor = true`. |
+| `max_images_to_retain` | 9 | `7` | Maximum number of recent container images to keep in Artifact Registry. Set `0` to disable. |
+| `delete_untagged_images` | 9 | `true` | Automatically deletes untagged (dangling) images from Artifact Registry. |
+| `image_retention_days` | 9 | `30` | Days after which images are eligible for deletion. Set `0` to disable age-based deletion. |
 
 ### C. Custom Domains
 
@@ -486,6 +481,7 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `container_protocol` | 3 | `'http1'` | `'http1'` or `'h2c'`. |
 | `enable_image_mirroring` | 3 | `true` | Mirrors the Ghost image into Artifact Registry. |
 | `traffic_split` | 3 | `[]` | Canary/blue-green traffic allocation. |
+| `max_revisions_to_retain` | 3 | `7` | Maximum number of Cloud Run revisions to keep. Revisions serving traffic are never deleted. Set `0` to disable. |
 | `service_annotations` | 3 | `{}` | Advanced Cloud Run annotations. |
 | `service_labels` | 3 | `{}` | Labels applied to the Cloud Run service. |
 | `min_instance_count` | — | `0` | **[fixed]** Hardcoded in `main.tf`. |
@@ -517,22 +513,29 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `custom_sql_scripts_bucket` | 8 | `""` | GCS bucket containing SQL scripts. |
 | `custom_sql_scripts_path` | 8 | `""` | Path prefix within the bucket. |
 | `custom_sql_scripts_use_root` | 8 | `false` | Run scripts as the root DB user. |
+| `nfs_instance_name` | 8 | `""` | Name of an existing NFS GCE VM. Leave empty to auto-discover. |
+| `nfs_instance_base_name` | 8 | `'app-nfs'` | Base name for inline NFS VM. Deployment ID is appended. |
 | `enable_cloud_armor` | 9 | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. |
 | `admin_ip_ranges` | 9 | `[]` | CIDR ranges exempted from WAF rules. |
 | `application_domains` | 9 | `[]` | Custom domains with Google-managed SSL certificates. |
 | `enable_cdn` | 9 | `false` | Enables Cloud CDN on the HTTPS LB backend. |
+| `max_images_to_retain` | 9 | `7` | Maximum number of recent container images to keep in Artifact Registry. Set `0` to disable. |
+| `delete_untagged_images` | 9 | `true` | Automatically deletes untagged (dangling) images from Artifact Registry. |
+| `image_retention_days` | 9 | `30` | Days after which images are eligible for deletion. Set `0` to disable age-based deletion. |
 | `create_cloud_storage` | 10 | `true` | Set `false` to skip GCS bucket creation. |
 | `storage_buckets` | 10 | `[{ name_suffix = "data" }]` | Additional GCS buckets to provision. |
 | `enable_nfs` | 10 | `true` | Provisions NFS shared storage for Ghost content. Requires `gen2`. |
 | `nfs_mount_path` | 10 | `'/mnt/nfs'` | Container path where NFS is mounted. |
 | `gcs_volumes` | 10 | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). |
+| `manage_storage_kms_iam` | 10 | `false` | Creates CMEK KMS key and enables CMEK on all storage buckets. |
+| `enable_artifact_registry_cmek` | 10 | `false` | Creates Artifact Registry KMS key for at-rest image encryption. |
 | `db_name` | 11 | `'ghost'` | MySQL database name. Do not change after initial deployment. |
 | `db_user` | 11 | `'ghost'` | MySQL application user. |
-| `database_password_length` | 11 | `16` | Auto-generated password length. Range: 8–64. |
+| `database_password_length` | 11 | `32` | Auto-generated password length. Range: 16–64. |
 | `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. |
 | `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
-| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Ghost_Common` to supply the default `db-init` job. |
-| `cron_jobs` | 12 | `[]` | Recurring scheduled Cloud Run Jobs. |
+| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Ghost_Common` to supply the default `db-init` job. Each entry: `name`, `description`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `execution_mode`, `mount_nfs`, `mount_gcs_volumes`, `depends_on_jobs`, `execute_on_apply`, `script_path`. |
+| `cron_jobs` | 12 | `[]` | Recurring scheduled Cloud Run Jobs. Each entry includes `parallelism`, `mount_nfs`, `mount_gcs_volumes`, and `script_path` fields in addition to the standard scheduling fields. |
 | `startup_probe` | 13 | `{ path="/", initial_delay_seconds=90, failure_threshold=10, ... }` | Startup probe. Long initial delay for Ghost DB migrations. |
 | `liveness_probe` | 13 | `{ path="/", initial_delay_seconds=60, failure_threshold=3, ... }` | Liveness probe. |
 | `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
@@ -542,3 +545,29 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `redis_port` | 20 | `'6379'` | Redis TCP port (string). |
 | `redis_auth` | 20 | `""` | Redis AUTH password. Sensitive. |
 | `enable_vpc_sc` | 21 | `false` | Registers API calls within the project's VPC-SC perimeter. |
+| `vpc_cidr_ranges` | 21 | `[]` | VPC subnet CIDR ranges for VPC-SC network access level. Auto-discovered when empty. |
+| `vpc_sc_dry_run` | 21 | `true` | Logs VPC-SC violations without blocking. Set `false` to enforce. |
+| `organization_id` | 21 | `""` | GCP Organization ID for VPC-SC. Auto-discovered from project when empty. |
+| `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ). |
+
+---
+
+## 11. Outputs
+
+| Output | Description |
+|---|---|
+| `service_name` | Name of the Cloud Run service. |
+| `service_url` | Public URL of the Cloud Run service. |
+| `service_location` | GCP region where the Cloud Run service is deployed. |
+| `project_id` | GCP project ID. |
+| `deployment_id` | Deployment ID suffix used in resource names. |
+| `database_instance_name` | Name of the Cloud SQL MySQL instance. |
+| `database_name` | Name of the application database. |
+| `database_user` | Name of the application database user. |
+| `database_password_secret` | Secret Manager secret name for the database password. |
+| `storage_buckets` | Created GCS storage buckets. |
+| `nfs_server_ip` | NFS server internal IP *(sensitive)*. |
+| `nfs_mount_path` | NFS mount path inside containers. |
+| `container_image` | Container image used for the deployment. |
+| `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
+| `github_repository_url` | GitHub repository URL connected for CI/CD. |

@@ -1,21 +1,23 @@
----
-title: "App Cloud Run Configuration Guide"
-sidebar_label: "Cloud Run"
----
-
-# App CloudRun Module
-
-<YouTubeEmbed videoId="mG2Aalcd9Ds" poster="https://storage.googleapis.com/rad-public-2b65/modules/App_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/App_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# App_CloudRun Module — Configuration Guide
 
 This guide describes every configuration variable available in the `App_CloudRun` module, organized into functional groups. For each variable it explains the available options, the implications of each choice, and how to validate the resulting configuration in the Google Cloud Console or using the `gcloud` CLI.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
+
+---
+
+## Required Providers & Terraform Version
+
+| Provider | Source | Minimum Version |
+|---|---|---|
+| `google` | `hashicorp/google` | `>= 5.20.0` |
+| `google-beta` | `hashicorp/google-beta` | `>= 5.20.0` |
+| `random` | `hashicorp/random` | `>= 3.0.0` |
+| `external` | `hashicorp/external` | `>= 2.0.0` |
+| `null` | `hashicorp/null` | `>= 3.0.0` |
+| `github` | `integrations/github` | `>= 5.0.0` |
+
+**Minimum Terraform / OpenTofu version:** `>= 1.5.0` (required for `optional()` in object variables, `terraform_data` resource, and `check{}` assertion blocks).
 
 ---
 
@@ -31,7 +33,7 @@ These variables describe the module to the platform catalogue and control platfo
 | `module_services` | *(list of GCP service names)* | List of strings | Informational list of GCP services this module uses, shown in the catalogue. No operational effect. |
 | `credit_cost` | `100` | Positive integer | Number of platform credits deducted when a deployment is created. Set by the platform administrator. |
 | `require_credit_purchases` | `true` | `true` / `false` | Determines whether purchased credits (credits bought by the user or assigned via a subscription plan) are consumed for this deployment, as opposed to free credits which are awarded at no charge. When `true`, the platform deducts from the user's purchased credit balance. When `false`, the platform uses free credits instead. |
-| `enable_purge` | `true` | `true` / `false` | Controls whether the deployment configuration can be removed from the portal. When `true`, a user can delete the deployment record from the portal without affecting the underlying GCP resources — the Cloud Run service, database, buckets, and secrets remain intact on GCP and continue to run. This is useful when resources were initially provisioned via the portal but the team wishes to manage them independently going forward. When `false`, the portal will not allow the configuration to be removed. **This setting does not destroy GCP resources.** |
+| `enable_purge` | `true` | `true` / `false` | Metadata-only flag consumed by the platform layer. When `true`, full deletion of all module-managed GCP resources is permitted on destroy — the Cloud Run service, database, buckets, and secrets are removed when the deployment is torn down. When `false`, GCP resources are retained after the module is removed, protecting against accidental data loss. This setting has no effect on Terraform resource lifecycle rules within the module itself; enforcement is handled by the platform layer. |
 | `public_access` | `false` | `true` / `false` | When `true`, the module is listed in the public platform catalogue and any user can deploy it. When `false`, the module is visible only to platform administrators and the module owner or publisher. |
 | `deployment_id` | `""` *(auto-generated)* | Alphanumeric string | A unique identifier for this deployment. If left blank the platform generates one automatically. Once set, do not change this value — it is embedded in resource names and changing it will cause resources to be recreated. |
 | `resource_creator_identity` | `"rad-module-creator@…"` | Service account email | The service account used to create and manage GCP resources. For enhanced security, replace with a project-scoped service account that has been granted only the permissions required by this module. |
@@ -41,6 +43,7 @@ These variables describe the module to the platform catalogue and control platfo
 | `module_secret_env_vars` | `{}` | Map of strings | Additional Secret Manager variable references injected by a wrapper module. Leave empty when deploying standalone. |
 | `module_explicit_secret_values` | `{}` *(sensitive)* | Map of strings | Raw secret values provided directly by a wrapper module. Keys must match entries in `module_secret_env_vars`. When provided, the module skips the plan-time Secret Manager data source lookup for these keys, allowing the first `terraform apply` to succeed before the secrets exist in Secret Manager. Leave empty when deploying standalone. This value is treated as sensitive and never stored in plaintext. |
 | `scripts_dir` | `""` *(built-in)* | Filesystem path | Path to the initialisation scripts directory. Leave blank to use the built-in scripts. Override only when a wrapper module supplies custom scripts. |
+| `application_config` | `{}` | Map (any) | Application-specific configuration map injected by a wrapper module (e.g. `Cyclos_CloudRun`, `Ghost_CloudRun`). When non-empty, this map replaces the built-in `cloudrunapp` preset and allows wrapper modules to supply their own container image, database type, initialization jobs, and other application defaults without needing to pass every value as a top-level variable. Leave empty when deploying `App_CloudRun` standalone. |
 
 ### Validating Group 0 Settings
 
@@ -144,7 +147,7 @@ These variables control how the application container is sourced, built, deploye
 | `deploy_application` | `true` | `true` / `false` | When `true`, the Cloud Run service is deployed as part of this configuration. Set to `false` to provision all supporting infrastructure (VPC, Cloud SQL, GCS buckets, secrets) without deploying the application container. This is useful for **infrastructure-first workflows** where the database and storage need to be seeded or configured before the application starts, or for staged rollouts where infrastructure is validated independently first. |
 | `container_image_source` | `"custom"` | `prebuilt` / `custom` | Determines how the container image is obtained. **`prebuilt`**: deploys an existing image directly from any accessible container registry (e.g. Docker Hub, Artifact Registry, GitHub Container Registry) using the URI in `container_image`. No build step is performed. Use this for vendor-supplied images or images built externally. **`custom`**: uses Cloud Build to build the image from source code in the connected GitHub repository using the configuration in `container_build_config`. The built image is pushed to Artifact Registry and then deployed. |
 | `container_image` | `""` | Full container image URI | The fully qualified URI of the container image to deploy. Required when `container_image_source` is `prebuilt`, or when `enable_image_mirroring` is `true` (as the source image to mirror). Examples: `us-docker.pkg.dev/my-project/my-repo/app:v1.0`, `nginx:1.25`, `ghcr.io/my-org/my-app:latest`. When using a public registry image such as Docker Hub, enabling `enable_image_mirroring` is strongly recommended to avoid rate limiting and to ensure reproducibility. |
-| `container_build_config` | `{ enabled = true }` | Object | Configuration passed to Cloud Build when `container_image_source` is `custom`. Key fields: **`enabled`** (`true`/`false`) — set to `false` to skip the build step entirely and deploy the last built image. **`dockerfile_path`** — relative path to the Dockerfile within the repository (default: `Dockerfile`). **`context_path`** — build context directory (default: `.`). **`build_args`** — map of `ARG` values passed to the Docker build (e.g. `{ ENV = "prod" }`). **`artifact_repo_name`** — name of the Artifact Registry repository to push the built image to; leave blank to use the auto-created repository named after `application_name`. |
+| `container_build_config` | `{ enabled = true }` | Object | Configuration passed to Cloud Build when `container_image_source` is `custom`. Key fields: **`enabled`** (`true`/`false`) — set to `false` to skip the build step entirely and deploy the last built image. **`dockerfile_path`** — relative path to the Dockerfile within the repository (default: `Dockerfile`). **`dockerfile_content`** — inline Dockerfile content as a string; when set, this content is written to a file at build time rather than reading a Dockerfile from the repository. **`context_path`** — build context directory (default: `.`). **`build_args`** — map of `ARG` values passed to the Docker build (e.g. `{ ENV = "prod" }`). **`artifact_repo_name`** — name of the Artifact Registry repository to push the built image to; leave blank to use the auto-created repository named after `application_name`. |
 | `enable_image_mirroring` | `true` | `true` / `false` | When `true`, the image specified in `container_image` is copied into the project's Artifact Registry repository before deployment. **Strongly recommended when using external public images** (Docker Hub, GitHub Container Registry, etc.) for three reasons: (1) avoids registry pull rate limits at scale; (2) ensures the image remains available even if the upstream registry is unavailable; (3) gives you a verifiable, project-scoped copy for audit and compliance purposes. Has no effect when `container_image_source` is `custom`, as the image is already built into Artifact Registry. |
 | `min_instance_count` | `0` | Integer `0`–`1000` | The minimum number of container instances kept running at all times. **`0` (scale-to-zero):** instances are shut down when there is no traffic, eliminating idle compute costs. The trade-off is a **cold start** delay (typically 1–10 seconds) on the first request after a period of inactivity. **`1` or more:** at least one instance is always warm, eliminating cold starts. Recommended for latency-sensitive applications, APIs with SLA requirements, or services that maintain connections to Cloud SQL or Redis. For `cpu_always_allocated = false`, setting `min_instance_count` > 0 incurs continuous instance costs even when idle. |
 | `max_instance_count` | `1` | Integer `1`–`1000` | The maximum number of container instances Cloud Run is permitted to scale up to under load. Acts as a cost ceiling and a safeguard against runaway scaling caused by traffic spikes or denial-of-service events. Each instance handles requests concurrently (Cloud Run default is 80 concurrent requests per instance). **Set this value based on your expected peak traffic and your downstream resource limits** — for example, a Cloud SQL instance has a maximum connection limit, so `max_instance_count` × connections-per-instance must not exceed it. |
@@ -482,7 +485,7 @@ These variables configure **Google Cloud Storage (GCS)** and **Artifact Registry
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
 | `create_cloud_storage` | `true` | `true` / `false` | Master switch for GCS bucket provisioning. When `true`, all buckets defined in `storage_buckets` are created. Set to `false` when buckets are managed externally, already exist, or when this deployment should share buckets provisioned by another module or deployment (e.g. a shared `Services_GCP` deployment). When `false`, the `storage_buckets` variable is ignored but `gcs_volumes` can still reference externally managed buckets. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | List of objects | Defines the GCS buckets to provision for the application. Each bucket name is automatically prefixed with the project ID and application name for uniqueness. Only used when `create_cloud_storage` is `true`. Key sub-fields per bucket entry: **`name_suffix`** — the suffix appended to the auto-generated bucket name (e.g. `"data"` produces `PROJECT-APPLICATION-data`). **`location`** — GCS location for the bucket; can be a region (`"us-central1"`), dual-region (`"US-EAST1+US-WEST1"`), or multi-region (`"US"`, `"EU"`, `"ASIA"`). Multi-region provides higher availability but at higher cost. **`storage_class`** — `"STANDARD"` (default; for frequently accessed data), `"NEARLINE"` (for data accessed less than once per month), `"COLDLINE"` (accessed less than once per quarter), `"ARCHIVE"` (for long-term backup, rarely accessed). Choose based on access frequency to optimise cost. **`force_destroy`** — when `true`, the bucket and all its contents are deleted when the deployment is destroyed (default: `true`). **Set to `false` for buckets containing data that must be retained** beyond the lifecycle of the deployment. **`versioning_enabled`** — when `true`, GCS retains previous versions of objects on update or delete, enabling recovery from accidental overwrites. Recommended for buckets storing important data. **`lifecycle_rules`** — list of object lifecycle rules (e.g. automatically delete objects older than 90 days, transition to Coldline after 30 days). **`public_access_prevention`** — `"enforced"` (default; blocks all public access even if ACLs are set) or `"inherited"` (defers to the organisation policy). Leave as `"enforced"` unless the bucket explicitly needs to serve public content. **`uniform_bucket_level_access`** — when `true`, disables per-object ACLs and enforces IAM-only access control. Recommended for all new buckets. |
+| `storage_buckets` | `[]` | List of objects | Defines the GCS buckets to provision for the application. Each bucket name is automatically prefixed with the project ID and application name for uniqueness. Only used when `create_cloud_storage` is `true`. Key sub-fields per bucket entry: **`name_suffix`** — the suffix appended to the auto-generated bucket name (e.g. `"data"` produces `PROJECT-APPLICATION-data`). **`location`** — GCS location for the bucket; can be a region (`"us-central1"`), dual-region (`"US-EAST1+US-WEST1"`), or multi-region (`"US"`, `"EU"`, `"ASIA"`). Multi-region provides higher availability but at higher cost. **`storage_class`** — `"STANDARD"` (default; for frequently accessed data), `"NEARLINE"` (for data accessed less than once per month), `"COLDLINE"` (accessed less than once per quarter), `"ARCHIVE"` (for long-term backup, rarely accessed). Choose based on access frequency to optimise cost. **`force_destroy`** — when `true`, the bucket and all its contents are deleted when the deployment is destroyed (default: `true`). **Set to `false` for buckets containing data that must be retained** beyond the lifecycle of the deployment. **`versioning_enabled`** — when `true`, GCS retains previous versions of objects on update or delete, enabling recovery from accidental overwrites. Recommended for buckets storing important data. **`lifecycle_rules`** — list of object lifecycle rules (e.g. automatically delete objects older than 90 days, transition to Coldline after 30 days). **`public_access_prevention`** — `"enforced"` (default; blocks all public access even if ACLs are set) or `"inherited"` (defers to the organisation policy). Leave as `"enforced"` unless the bucket explicitly needs to serve public content. **`uniform_bucket_level_access`** — when `true`, disables per-object ACLs and enforces IAM-only access control. Recommended for all new buckets. |
 | `gcs_volumes` | `[]` | List of objects | GCS buckets to mount as **filesystem volumes** inside the container using GCS Fuse. This allows the application to read and write GCS objects using standard file I/O operations (open, read, write, ls) without using the GCS API directly. Key sub-fields: **`name`** — a logical name for the volume (referenced in `mount_gcs_volumes` in jobs). **`bucket_name`** — the name of the GCS bucket to mount; can be a bucket created by `storage_buckets` or any existing bucket the Cloud Run service account can access. Leave blank to use the auto-named bucket. **`mount_path`** — the filesystem path inside the container where the bucket appears (e.g. `/mnt/gcs`, `/app/uploads`). **`readonly`** — when `true`, the mount is read-only; the container cannot write to the bucket via this mount. **`mount_options`** — advanced GCS Fuse options (defaults: `implicit-dirs`, `stat-cache-ttl=60s`, `type-cache-ttl=60s`). **Performance note:** GCS Fuse has higher latency than a native filesystem and is not suitable for workloads that require low-latency random reads/writes (e.g. databases). It is well suited for reading large files, serving static assets, or writing log files. |
 | `manage_storage_kms_iam` | `false` | `true` / `false` | Controls whether the module manages the IAM binding that grants the Cloud Run service account `roles/cloudkms.cryptoKeyEncrypterDecrypter` on the Cloud KMS key used to encrypt storage buckets. It is now safe to set this to `true` on the first deployment — the module's `app_cmek` sub-module automatically creates the `${project_id}-cmek-keyring` KMS keyring and `storage-key` CryptoKey if they do not already exist before applying the IAM binding. If `Services_GCP` was deployed with `enable_cmek = true`, the same well-known keyring name is shared and no duplicate resources are created. |
 | `enable_artifact_registry_cmek` | `false` | `true` / `false` | When `true`, creates an Artifact Registry KMS key in the project CMEK keyring and grants the Artifact Registry service identity the `roles/cloudkms.cryptoKeyEncrypterDecrypter` role, enabling at-rest encryption of container images with a customer-managed key. Safe to enable on the first deployment — the key is created automatically by the module. Works alongside `manage_storage_kms_iam` to provide a consistent CMEK encryption baseline across storage and the image registry. |
@@ -590,13 +593,13 @@ These variables configure the Cloud SQL database backend for the application. Th
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `database_type` | `"POSTGRES"` | See options below | The Cloud SQL database engine to provision. Use `"NONE"` to skip database provisioning entirely (for stateless applications or those using an external database). **Generic aliases** (`POSTGRES`, `MYSQL`) deploy the latest supported version managed by Cloud SQL. **Version-pinned values** deploy a specific engine version and are recommended for production environments where version consistency across deployments matters. Supported options: `NONE` — no database; `POSTGRES` / `POSTGRES_15` / `POSTGRES_14` / `POSTGRES_13` / `POSTGRES_12` / `POSTGRES_11` / `POSTGRES_10` / `POSTGRES_9_6`; `MYSQL` / `MYSQL_8_0` / `MYSQL_5_7` / `MYSQL_5_6`; `SQLSERVER_2019_ENTERPRISE` / `SQLSERVER_2019_STANDARD` / `SQLSERVER_2017_ENTERPRISE` / `SQLSERVER_2017_STANDARD`. **Note:** changing `database_type` after initial deployment will attempt to replace the Cloud SQL instance, which will result in data loss unless a backup is restored first. |
+| `database_type` | `"POSTGRES"` | See options below | The Cloud SQL database engine to provision. Use `"NONE"` to skip database provisioning entirely (for stateless applications or those using an external database). **Generic aliases** (`POSTGRES`, `MYSQL`) deploy the latest supported version managed by Cloud SQL. **Version-pinned values** deploy a specific engine version and are recommended for production environments where version consistency across deployments matters. Supported options: `NONE` — no database; `POSTGRES` / `POSTGRESQL` / `POSTGRES_15` / `POSTGRES_14` / `POSTGRES_13` / `POSTGRES_12` / `POSTGRES_11` / `POSTGRES_10` / `POSTGRES_9_6`; `MYSQL` / `MYSQL_8_0` / `MYSQL_5_7` / `MYSQL_5_6`; `SQLSERVER` / `SQLSERVER_2019_ENTERPRISE` / `SQLSERVER_2019_STANDARD` / `SQLSERVER_2017_ENTERPRISE` / `SQLSERVER_2017_STANDARD`. **Note:** changing `database_type` after initial deployment will attempt to replace the Cloud SQL instance, which will result in data loss unless a backup is restored first. |
 | `sql_instance_name` | `""` *(auto-discover)* | String | The name of a specific existing Cloud SQL instance to connect to. When set, the module uses this instance directly and skips auto-discovery and instance creation. Leave blank to allow the module to auto-discover a `Services_GCP`-managed instance in the project, or to create a new instance if none is found. Use this when you have multiple Cloud SQL instances in the project and need to explicitly target one, or when reusing a shared instance across multiple application deployments. The named instance must already exist and be of a compatible `database_type`. |
 | `sql_instance_base_name` | `"app-sql"` | String | The base name for a new Cloud SQL instance created when no existing instance is found. The deployment ID is appended automatically to ensure uniqueness (e.g. `app-sql-prod`). Change this only if the default name conflicts with an existing resource or your naming convention requires a different prefix. Only relevant when `sql_instance_name` is blank and no existing instance is auto-discovered. |
 | `application_database_name` | `"crappdb"` | `[a-z][a-z0-9_]{0,62}` (1–63 chars) | The name of the database created within the Cloud SQL instance. Injected into the application container as the `DB_NAME` environment variable. Must start with a lowercase letter and contain only lowercase letters, numbers, and underscores. Choose a name that reflects the application and environment, e.g. `crm_prod`, `payments_staging`. Only used when `database_type` is not `NONE`. **Do not change after initial deployment** — renaming the database requires manual data migration. |
 | `application_database_user` | `"crappuser"` | `[a-z][a-z0-9_]{0,31}` (1–32 chars) | The username of the database user created for the application. Injected into the application container as the `DB_USER` environment variable. Must start with a lowercase letter and contain only lowercase letters, numbers, and underscores. Use a meaningful name such as `crm_svc` or `app_user`. The corresponding password is auto-generated, stored in Secret Manager, and injected as `DB_PASSWORD`. Only used when `database_type` is not `NONE`. |
 | `db_password_env_var_name` | `""` *(disabled)* | Environment variable name string | An additional environment variable name under which the database password secret is also exposed alongside the standard `DB_PASSWORD`. Intended for wrapper modules wrapping applications that expect a non-standard password variable name (e.g. WordPress requires `WORDPRESS_DB_PASSWORD`). Leave empty to inject the password only as `DB_PASSWORD`. When set, both `DB_PASSWORD` and the named variable point to the same Secret Manager secret version — changing this value on an existing deployment does not affect the database password itself. |
-| `database_password_length` | `16` | Integer `8`–`64` | The length in characters of the randomly generated database user password. Longer passwords provide significantly more entropy and are harder to brute-force. **Recommended minimum for production: `32`**. The password is generated once on first deployment, stored in Secret Manager, and rotated automatically if `enable_auto_password_rotation` is enabled. Changing this value on a subsequent deployment generates a new password only if rotation is triggered — it does not retroactively change the existing password length. |
+| `database_password_length` | `32` | Integer `16`–`64` | The length in characters of the randomly generated database user password. Longer passwords provide significantly more entropy and are harder to brute-force. **Recommended minimum for production: `32`**. The password is generated once on first deployment, stored in Secret Manager, and rotated automatically if `enable_auto_password_rotation` is enabled. Changing this value on a subsequent deployment generates a new password only if rotation is triggered — it does not retroactively change the existing password length. |
 | `enable_postgres_extensions` | `false` | `true` / `false` | When `true`, the PostgreSQL extensions listed in `postgres_extensions` are installed in the application database after provisioning. Only applies when `database_type` is a PostgreSQL variant. Extensions are installed via a Cloud Run Job executed during deployment. Set to `false` if no extensions are required, or if extensions are managed by the application itself at startup. |
 | `postgres_extensions` | `[]` | List of extension name strings | The PostgreSQL extensions to install in the application database. Only used when `enable_postgres_extensions` is `true`. Common extensions: `postgis` (geospatial data), `uuid-ossp` (UUID generation), `pg_trgm` (trigram text search), `pgcrypto` (cryptographic functions), `hstore` (key-value storage), `pg_stat_statements` (query performance tracking). Ensure the extension is supported by the Cloud SQL PostgreSQL version in use — not all extensions available in self-hosted PostgreSQL are available in Cloud SQL. |
 | `enable_mysql_plugins` | `false` | `true` / `false` | When `true`, the MySQL plugins listed in `mysql_plugins` are installed in the application database after provisioning. Only applies when `database_type` is a MySQL variant. Functions similarly to `enable_postgres_extensions` for MySQL environments. |
@@ -1003,5 +1006,122 @@ The following were documented as hard prerequisites in earlier versions of this 
 | **CMEK encryption** | `app_cmek` self-provisions the `${project_id}-cmek-keyring` and `storage-key` automatically (see above). | `Services_GCP` (with `enable_cmek = true`) provisions the keyring with a configurable rotation period and applies CMEK across Cloud SQL, Artifact Registry, and other shared resources simultaneously, providing a consistent encryption baseline across all shared infrastructure. |
 | **VPC Service Controls perimeter** | `app_vpc_sc` self-provisions the access policy, four access levels, and `PERIMETER_TYPE_REGULAR` perimeter scoped to this deployment (suffixed with `deployment_id`) — see above. | `Services_GCP` can host a single shared perimeter across all deployments in the project, providing consistent ingress/egress rules and simpler enforcement. Recommended for organisations that already manage VPC-SC centrally; otherwise the self-provisioned per-deployment perimeter is sufficient. |
 | **Project audit logging** | `enable_audit_logging = true` wires `google_project_iam_audit_config` for `allServices` plus Secret Manager and KMS overrides. Requires no additional infrastructure. | `Services_GCP` (with `enable_audit_logging = true`) provisions the same audit configs once at the project level — recommended when multiple deployments share the project, to avoid duplicated IAM audit config resources. |
+
+---
+
+## Outputs
+
+The module exposes the following outputs after a successful `terraform apply`.
+
+### Service Information
+
+| Output | Description |
+|---|---|
+| `service_name` | Name of the Cloud Run service |
+| `service_url` | HTTPS URL of the Cloud Run service (`.run.app` URL) |
+| `service_location` | GCP region where the Cloud Run service is deployed |
+| `stage_services` | Map of stage name → `{ name, uri }` for Cloud Deploy multi-stage deployments; empty map when `enable_cloud_deploy` is `false` |
+
+### Load Balancer
+
+| Output | Description |
+|---|---|
+| `load_balancer_ip` | Static external IP address of the HTTPS load balancer; `null` when `enable_cloud_armor` is `false` |
+| `load_balancer_url` | HTTPS URL via the load balancer; uses a `nip.io` development domain when no custom domain is set; `null` when no load balancer exists |
+
+### Database
+
+| Output | Description |
+|---|---|
+| `database_instance_name` | Name of the Cloud SQL instance; `null` when `database_type = "NONE"` |
+| `database_name` | Name of the application database within the instance |
+| `database_user` | Name of the application database user |
+| `database_password_secret` | Secret Manager secret name containing the database password |
+| `database_host` | Internal IP of the Cloud SQL instance *(sensitive)* |
+| `database_port` | Port the database listens on |
+
+### Storage
+
+| Output | Description |
+|---|---|
+| `storage_buckets` | Map of bucket logical name → bucket name for all provisioned GCS buckets; empty map when `create_cloud_storage` is `false` |
+
+### Network
+
+| Output | Description |
+|---|---|
+| `network_name` | VPC network name used by the deployment |
+| `network_exists` | Whether the VPC network was found (`true`/`false`) |
+| `regions` | Available GCP regions in the VPC |
+
+### NFS
+
+| Output | Description |
+|---|---|
+| `nfs_server_ip` | Internal IP of the NFS server *(sensitive)*; `null` when NFS is disabled or no server exists |
+| `nfs_instance_tags` | Comma-separated network tags of the NFS GCE VM; empty for Filestore instances |
+| `nfs_mount_path` | Container filesystem path where the NFS volume is mounted |
+| `nfs_share_path` | Export path on the NFS server |
+
+### Container & Registry
+
+| Output | Description |
+|---|---|
+| `container_image` | Fully qualified container image URI used by the deployed service |
+| `container_registry` | Artifact Registry repository name; `null` when no custom build is configured |
+
+### Monitoring
+
+| Output | Description |
+|---|---|
+| `monitoring_enabled` | Whether Cloud Monitoring is configured (`true`/`false`) |
+| `monitoring_notification_channels` | List of Cloud Monitoring notification channel names |
+| `uptime_check_names` | List of uptime check configuration names (currently always `[]`) |
+
+### Deployment Metadata
+
+| Output | Description |
+|---|---|
+| `deployment_id` | Unique deployment identifier (auto-generated or supplied via `deployment_id`) |
+| `tenant_id` | Tenant identifier derived from `tenant_deployment_id` |
+| `resource_prefix` | Naming prefix applied to GCP resources in this deployment |
+| `project_id` | GCP project ID |
+| `project_number` | GCP project number |
+
+### Jobs
+
+| Output | Description |
+|---|---|
+| `initialization_jobs` | Map of job key → Cloud Run job name for all provisioned initialization jobs |
+| `nfs_setup_job` | Cloud Run job name for the NFS setup job; `null` when not created |
+
+### CI/CD
+
+| Output | Description |
+|---|---|
+| `cicd_enabled` | Whether the CI/CD pipeline is enabled |
+| `github_repository_url` | GitHub repository URL connected to Cloud Build |
+| `github_repository_owner` | GitHub repository owner / organisation |
+| `github_repository_name` | GitHub repository name |
+| `artifact_registry_repository` | Object containing `name`, `location`, and `url` of the Artifact Registry repository; `null` when neither a custom build nor CI/CD is enabled |
+| `cloudbuild_trigger_name` | Cloud Build trigger name; `null` when `enable_cicd_trigger` is `false` |
+| `cloudbuild_trigger_id` | Cloud Build trigger ID; `null` when `enable_cicd_trigger` is `false` |
+| `cicd_configuration` | Object with full CI/CD details (trigger name/ID, repo info, branch pattern, registry URL, SA email); `null` when no trigger exists |
+
+### VPC Service Controls
+
+| Output | Description |
+|---|---|
+| `vpc_sc_enabled` | Whether the VPC-SC perimeter was successfully created |
+| `vpc_sc_perimeter_name` | VPC-SC service perimeter resource name; `null` when not enabled |
+| `vpc_sc_dry_run_mode` | Whether VPC-SC is in dry-run (`true`) or active enforcement (`false`) mode |
+| `audit_logging_enabled` | Whether project-level Cloud Audit Logs are enabled (mirrors `enable_audit_logging`) |
+| `artifact_registry_cmek_enabled` | Whether Artifact Registry CMEK encryption is configured (mirrors `enable_artifact_registry_cmek`) |
+
+### Deployment Summary
+
+| Output | Description |
+|---|---|
+| `deployment_summary` | Object summarising the deployment: `application_name` (populated with the display name), `service_url`, `database_type`, `database_name`, `storage_buckets` (list of keys), `nfs_enabled`, `monitoring_enabled`, `deployment_region`, `container_image` |
 
 ---

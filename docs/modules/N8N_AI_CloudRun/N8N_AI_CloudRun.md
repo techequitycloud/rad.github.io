@@ -1,17 +1,4 @@
----
-title: "N8N AI Cloud Run Configuration Guide"
-sidebar_label: "Cloud Run"
----
-
-# N8N AI CloudRun Module
-
-<YouTubeEmbed videoId="U8cdjhZbQzU" poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_AI_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/N8N_AI_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# N8N_AI_CloudRun Module — Configuration Guide
 
 n8n is an open-source workflow automation platform that lets you connect services, run logic,
 and build AI-powered pipelines through a visual node-based interface. This module deploys n8n
@@ -73,7 +60,6 @@ inputs.
 | `enable_nfs` | `false` | `true` |
 | `enable_cloudsql_volume` | `false` | `true` (user-configurable) |
 | `enable_redis` | `false` | `true` |
-| `enable_image_mirroring` | `true` | `true` |
 | Health probe path | `/healthz` | `/` |
 | AI companion services | none | Qdrant + Ollama (optional) |
 | Service URL pre-computation | none | predicted before deployment |
@@ -254,6 +240,10 @@ Both are injected via `module_secret_env_vars` and are never stored in Terraform
 | Variable | Default | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Restricts GCP API access to a VPC-SC perimeter, preventing data exfiltration. Requires an existing perimeter. |
+| `vpc_cidr_ranges` | `[]` | VPC subnet CIDR ranges for the VPC-SC network access level. Auto-discovered when empty; falls back to `10.0.0.0/8`. |
+| `vpc_sc_dry_run` | `true` | When `true`, VPC-SC violations are logged but not blocked. Set `false` to actively enforce the perimeter. |
+| `organization_id` | `""` | GCP Organization ID for the Access Context Manager policy. Auto-discovered from the project when empty. |
+| `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ) for all GCP services in the project. |
 
 ### §4.E · Binary Authorization
 
@@ -312,6 +302,15 @@ is needed unless you extend the base image.
 | `cloud_deploy_stages` | `[dev, staging, prod(approval)]` | Ordered promotion stages with optional manual approval gates. |
 | `enable_binary_authorization` | `false` | See §4.E. |
 
+### §6.C · Artifact Registry Image Lifecycle
+
+| Variable | Default | Description |
+|---|---|---|
+| `max_images_to_retain` | `7` | Maximum number of recent container images to keep in Artifact Registry. Images beyond this count are eligible for deletion by cleanup policies. Set `0` to disable. |
+| `delete_untagged_images` | `true` | Automatically deletes untagged (dangling) container images from the Artifact Registry repository. |
+| `image_retention_days` | `30` | Days after which container images are eligible for deletion. Images within `max_images_to_retain` are always kept. Set `0` to disable age-based deletion. |
+| `max_revisions_to_retain` | `7` | Maximum number of Cloud Run revisions to keep after each deployment. Revisions actively serving traffic are never deleted. Set `0` to disable. |
+
 ---
 
 ## §7 · Reliability & Data
@@ -340,6 +339,8 @@ dedicated health endpoint.
 |---|---|---|
 | `enable_nfs` | `true` | Provisions a Cloud Filestore NFS instance mounted into the container. Used for n8n workflow data and credential persistence, and as the default Redis host source via `nfs_discovery`. Requires `execution_environment = "gen2"`. |
 | `nfs_mount_path` | `"/mnt/nfs"` | Container path for the NFS volume. |
+| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to target directly. Leave empty for auto-discovery or inline creation. |
+| `nfs_instance_base_name` | `"app-nfs"` | Base name for an inline NFS GCE VM when none is found. The deployment ID is appended for uniqueness. |
 
 **GCS buckets:**
 
@@ -353,6 +354,8 @@ model files across container restarts.
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Additional GCS buckets. The AI data bucket is provisioned separately via `module_storage_buckets`. |
 | `create_cloud_storage` | `true` | Set `false` to skip provisioning `storage_buckets`. |
 | `gcs_volumes` | `[]` | Additional GCS buckets mounted as GCS Fuse volumes into the n8n container. |
+| `manage_storage_kms_iam` | `false` | Creates a CMEK KMS keyring and storage encryption key, grants the GCS service account encrypter/decrypter, and enables CMEK on all buckets. |
+| `enable_artifact_registry_cmek` | `false` | Creates an Artifact Registry KMS key and enables CMEK encryption for container images in Artifact Registry. |
 
 ### §7.C · Database
 
@@ -364,22 +367,20 @@ connection variables are injected automatically.
 |---|---|---|
 | `db_name` | `"n8n_db"` | PostgreSQL database name. Injected as `DB_POSTGRESDB_DATABASE`. **Do not change after initial deployment** — renaming requires a full backup-restore migration. |
 | `db_user` | `"n8n_user"` | PostgreSQL user. Injected as `DB_POSTGRESDB_USER`. Password auto-generated, stored in Secret Manager, injected as `DB_POSTGRESDB_PASSWORD`. |
-| `database_password_length` | `16` | Auto-generated password length (8–64 characters). |
+| `database_password_length` | `32` | Auto-generated password length (16–64 characters). |
 | `enable_auto_password_rotation` | `false` | Automates password rotation via Cloud Run + Eventarc. See §4.A. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts. |
 
 ### §7.D · Backup & Recovery
 
-`backup_uri` is the n8n-specific name for the `backup_file` input in App_CloudRun.
-
 | Variable | Default | Description |
 |---|---|---|
 | `backup_schedule` | `"0 2 * * *"` | Cron expression (UTC) for the automated backup job. Leave empty to disable. |
 | `backup_retention_days` | `7` | Days to retain backup files in GCS before automatic deletion. |
-| `enable_backup_import` | `false` | Triggers a one-time import job to restore the backup at `backup_uri`. |
+| `enable_backup_import` | `false` | Triggers a one-time import job to restore the backup. |
 | `backup_source` | `"gcs"` | Source of the backup: `"gcs"` (full GCS URI) or `"gdrive"` (Google Drive file ID). |
-| `backup_uri` | `""` | For GCS: e.g. `"gs://my-bucket/backups/n8n.sql"`. For Google Drive: the file ID. |
-| `backup_format` | `"sql"` | Format of the backup file. Accepted: `sql`, `gz`, `tar`, `tgz`, `tar.gz`, `zip`. |
+| `backup_uri` | `""` | For GCS: e.g. `"gs://my-bucket/backups/n8n.sql"`. For Google Drive: the file ID. **Note:** This variable is declared in `N8N_AI_CloudRun` but is not currently forwarded to `App_CloudRun` — it has no effect in the current implementation. Backup file location must be configured via the underlying App_CloudRun variables instead. |
+| `backup_format` | `"sql"` | Format of the backup file. Accepted: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`. (`"auto"` appears in the UI OPTIONS metadata but is rejected by the validation rule — always use an explicit format string.) |
 
 ---
 
@@ -399,14 +400,16 @@ are not exposed to the public internet.
 | `qdrant_version` | `"latest"` | Qdrant Docker image tag. Use a pinned version (e.g. `"v1.9.0"`) in production for reproducible deployments. |
 | `enable_ollama` | `true` | Deploys Ollama LLM server as a companion Cloud Run service. Enables open-source LLM inference (Llama 3, Mistral, Gemma) on your infrastructure — no external AI API keys required. Only active when `enable_ai_components = true`. |
 | `ollama_version` | `"latest"` | Ollama Docker image tag. Use a pinned version in production. |
-| `ollama_model` | `"llama3.2"` | The default model pulled and served by Ollama on startup. Common options: `"llama3.2"` (recommended), `"mistral"`, `"gemma2"`. Larger models require more memory and CPU. |
+| `ollama_model` | `"llama3.2"` | Default model name for Ollama. Common options: `"llama3.2"` (recommended), `"mistral"`, `"gemma2"`. **Note:** This variable is declared in `N8N_AI_CloudRun` but is not currently forwarded to `N8N_AI_Common` — it has no effect in the current implementation. Model selection must be configured at the Ollama service level directly. |
 
 **AI service resource allocation** (platform-managed, not user-configurable):
 
 | Service | CPU | Memory | Scaling | GCS persistence path |
 |---|---|---|---|---|
 | Qdrant | 1 vCPU | 1 Gi | Fixed: 1 instance | `/mnt/gcs/qdrant` |
-| Ollama | 2 vCPU | 4 Gi | Fixed: 1 instance | `/mnt/gcs/ollama/models` |
+| Ollama | inherits `cpu_limit` | inherits `memory_limit` | Fixed: 1 instance | `/mnt/gcs/ollama/models` |
+
+> **Note:** Ollama's CPU and memory limits are not independently configurable — they are inherited from the `cpu_limit` and `memory_limit` variables set on the main n8n container. The defaults (`2000m` / `4Gi`) therefore apply to both n8n and Ollama simultaneously.
 
 ### §8.B · Redis Cache
 
@@ -541,7 +544,7 @@ Complete reference of all `N8N_AI_CloudRun` variables, their defaults, and UI me
 | `gcs_volumes` | `[]` | 10 |
 | `db_name` | `"n8n_db"` | 11 |
 | `db_user` | `"n8n_user"` | 11 |
-| `database_password_length` | `16` | 11 |
+| `database_password_length` | `32` | 11 |
 | `enable_auto_password_rotation` | `false` | 11 |
 | `rotation_propagation_delay_sec` | `90` | 11 |
 | `initialization_jobs` | `[]` | 12 |
@@ -563,3 +566,20 @@ Complete reference of all `N8N_AI_CloudRun` variables, their defaults, and UI me
 | `ollama_version` | `"latest"` | 21 |
 | `ollama_model` | `"llama3.2"` | 21 |
 | `enable_vpc_sc` | `false` | 22 |
+| `vpc_cidr_ranges` | `[]` | 22 |
+| `vpc_sc_dry_run` | `true` | 22 |
+| `organization_id` | `""` | 22 |
+| `enable_audit_logging` | `false` | 22 |
+| `nfs_instance_name` | `""` | 10 |
+| `nfs_instance_base_name` | `"app-nfs"` | 10 |
+| `manage_storage_kms_iam` | `false` | 10 |
+| `enable_artifact_registry_cmek` | `false` | 10 |
+| `max_images_to_retain` | `7` | 9 |
+| `delete_untagged_images` | `true` | 9 |
+| `image_retention_days` | `30` | 9 |
+| `max_revisions_to_retain` | `7` | 3 |
+
+
+
+
+

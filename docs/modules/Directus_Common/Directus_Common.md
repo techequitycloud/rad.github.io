@@ -1,8 +1,3 @@
----
-title: "Directus Common Shared Configuration Module"
-sidebar_label: "Common"
----
-
 # Directus_Common Shared Configuration Module
 
 The `Directus_Common` module defines the Directus headless CMS and Backend-as-a-Service (BaaS) platform configuration for the RAD Modules ecosystem. Unlike a purely configuration-only module, it **also creates GCP resources** — specifically the Secret Manager secrets required by the Directus runtime. Its outputs are consumed by platform-specific wrapper modules (`Directus_CloudRun` and `Directus_GKE`).
@@ -41,10 +36,10 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 
 | Secret ID suffix | Content | Description |
 |-----------------|---------|-------------|
-| `-key` | 32-char random alphanumeric | Directus `KEY` — used for encrypting data at rest |
-| `-secret` | 32-char random alphanumeric | Directus `SECRET` — used for signing JWTs |
-| `-admin-password` | 16-char random (with `_%@`) | Initial admin account password |
-| `-redis` _(conditional)_ | Full Redis connection URL | Redis connection string; created only when `enable_redis = true` |
+| `-key` | 32-char random alphanumeric (no special chars) | Directus `KEY` — used for encrypting data at rest |
+| `-secret` | 32-char random alphanumeric (no special chars) | Directus `SECRET` — used for signing JWTs |
+| `-admin-password` | 16-char random with `_%@` special chars | Initial admin account password |
+| `-redis` _(conditional)_ | Full Redis connection URL (e.g. `redis://:pass@host:6379`) | Redis connection string built from `redis_host`, `redis_port`, and `redis_auth`; created only when `enable_redis = true`. When `redis_host` is empty the URL uses `$(NFS_SERVER_IP)` as a placeholder expanded by `docker-entrypoint.sh` at runtime. |
 
 Secret IDs are prefixed with `resource_prefix` when provided, or constructed as `app<name><tenant><deployment_id>` otherwise.
 
@@ -269,9 +264,9 @@ A lighter-weight bootstrap script (used by the `directus-bootstrap` initializati
 
 | Aspect | Directus_CloudRun | Directus_GKE |
 |--------|------------------|--------------|
-| `enable_cloudsql_volume` | `true` (Auth Proxy sidecar via socket) | Typically `false` (TCP to private IP) |
-| `DB_SSL` | `"false"` (Auth Proxy handles TLS) | `'{"rejectUnauthorized":false}'` (private IP TCP) |
-| `DB_HOST` | Socket path → remapped to `127.0.0.1` by entrypoint | Private IP from Cloud SQL |
+| `enable_cloudsql_volume` | `false` by default (TCP to private IP) | `true` by default (Auth Proxy sidecar via socket) |
+| `DB_SSL` | `'{"rejectUnauthorized":false}'` (private IP TCP) | `"false"` (Auth Proxy handles TLS) |
+| `DB_HOST` | Private IP from Cloud SQL | Socket path → remapped to `127.0.0.1` by entrypoint |
 | `secret_ids` vs `secret_values` | Uses `secret_ids` (Secret Manager references) | Uses `secret_values` (raw values to avoid read-after-write issues) |
 | NFS | Optional (default enabled) | Optional (default enabled) |
 | Redis | Supported (NFS-hosted or external) | Supported (NFS-hosted or external) |
@@ -287,26 +282,54 @@ A lighter-weight bootstrap script (used by the `directus-bootstrap` initializati
 module "directus_app" {
   source = "../Directus_Common"
 
-  project_id           = var.project_id
+  deployment_id        = local.random_id
+  deployment_id_suffix = local.random_id
   resource_prefix      = local.resource_prefix
-  deployment_id        = local.deployment_id
+  labels               = var.resource_labels
+  project_id           = var.project_id
   tenant_deployment_id = var.tenant_deployment_id
-  deployment_region    = var.deployment_region
+  application_name     = var.application_name
   application_version  = var.application_version
-  enable_redis         = var.enable_redis
-  redis_host           = var.redis_host
-  redis_auth           = var.redis_auth
-  labels               = local.labels
+  description          = var.description
+  container_port       = var.container_port
+
+  db_name = var.db_name
+  db_user = var.db_user
+
+  enable_image_mirroring = var.enable_image_mirroring
+  enable_cloudsql_volume = var.enable_cloudsql_volume
+
+  enable_nfs     = var.enable_nfs
+  nfs_mount_path = var.nfs_mount_path
+  gcs_volumes    = var.gcs_volumes
+
+  cpu_limit    = var.cpu_limit
+  memory_limit = var.memory_limit
+
+  min_instance_count = var.min_instance_count
+  max_instance_count = var.max_instance_count
+
+  environment_variables = var.environment_variables
+  initialization_jobs   = var.initialization_jobs
+
+  startup_probe  = var.startup_probe
+  liveness_probe = var.liveness_probe
+
+  enable_redis = var.enable_redis
+  redis_host   = var.redis_host
+  redis_port   = var.redis_port
+  redis_auth   = var.redis_auth
 }
 
 # config and secrets are passed to App_CloudRun
 module "app_cloudrun" {
   source = "../App_CloudRun"
 
-  application_config     = module.directus_app.config
+  application_config     = local.application_modules  # wraps module.directus_app.config
   module_storage_buckets = module.directus_app.storage_buckets
   module_secret_env_vars = module.directus_app.secret_ids
-  scripts_dir            = "${module.directus_app.path}/scripts"
+  module_env_vars        = {}
+  scripts_dir            = abspath("${module.directus_app.path}/scripts")
   # ... other inputs
 }
 ```

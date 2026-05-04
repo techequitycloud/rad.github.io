@@ -1,17 +1,4 @@
----
-title: "Strapi Cloud Run Configuration Guide"
-sidebar_label: "Cloud Run"
----
-
-# Strapi CloudRun Module
-
-<YouTubeEmbed videoId="4b85A6ZBVwQ" poster="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Strapi_CloudRun Module — Configuration Guide
 
 `Strapi_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Strapi](https://strapi.io/) — an open-source headless CMS — on Google Cloud Run Gen2.
 
@@ -388,7 +375,7 @@ The following are set or injected automatically and do not require configuration
 
 ### Platform-managed initialisation job: `db-init`
 
-The `db-init` job (defined in the `initialization_jobs` default) runs `scripts/db-init.sh` using a `postgres:15-alpine` image on every Terraform apply (`execute_on_apply = true`). It creates the Strapi database user and initialises the schema. This job is idempotent.
+The `db-init` job (defined in the `initialization_jobs` default) runs `scripts/create-db-and-user.sh` using a `postgres:15-alpine` image on every Terraform apply (`execute_on_apply = true`). It creates the Strapi database user and initialises the schema. This job is idempotent.
 
 ### Probe endpoints
 
@@ -410,7 +397,7 @@ The table below covers all variables unique to or with notable defaults in `Stra
 | `memory_limit` | `string` | `"2Gi"` | 3 | 2 GiB |
 | `min_instance_count` | `number` | `0` | 3 | Scale-to-zero |
 | `max_instance_count` | `number` | `1` | 3 | |
-| `container_port` | `number` | `8080` | 3 | Strapi default |
+| `container_port` | `number` | `8080` | 3 | Cloud Run module default; overrides Strapi_Common's 1337 |
 | `container_protocol` | `string` | `"http1"` | 3 | `"http1"` or `"h2c"` |
 | `container_image_source` | `string` | `"custom"` | 3 | `"prebuilt"` or `"custom"` |
 | `container_image` | `string` | `""` | 3 | Override for prebuilt |
@@ -420,7 +407,7 @@ The table below covers all variables unique to or with notable defaults in `Stra
 | `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | 3 | Socket path |
 | `application_database_name` | `string` | `"strapidb"` | 11 | PostgreSQL DB name |
 | `application_database_user` | `string` | `"strapiuser"` | 11 | PostgreSQL user |
-| `database_password_length` | `number` | `16` | 11 | 8–64 characters |
+| `database_password_length` | `number` | `32` | 11 | 16–64 characters |
 | `enable_nfs` | `bool` | `true` | 10 | Cloud Filestore mount |
 | `nfs_mount_path` | `string` | `"/mnt/nfs"` | 10 | Container mount path |
 | `storage_buckets` | `list` | `[{ name_suffix = "data" }]` | 10 | GCS buckets |

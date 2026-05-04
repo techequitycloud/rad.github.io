@@ -1,15 +1,4 @@
----
-title: "AKS GKE Module Documentation"
-sidebar_label: "AKS GKE"
----
-
-# AKS GKE Module
-
-<YouTubeEmbed videoId="xh2sRXhbGto" poster="https://storage.googleapis.com/rad-public-2b65/modules/AKS_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/AKS_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+# AKS_GKE Module: Google Kubernetes Engine Multi-Cloud Deep Dive
 
 ## 1. Overview and Learning Objectives
 

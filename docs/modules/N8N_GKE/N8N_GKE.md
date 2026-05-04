@@ -1,17 +1,4 @@
----
-title: "N8N GKE Configuration Guide"
-sidebar_label: "GKE"
----
-
-# N8N GKE Module
-
-<YouTubeEmbed videoId="S4mnK_jMNzY" poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/N8N_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# N8N_GKE Module — Configuration Guide
 
 n8n is an open-source workflow automation platform that lets you connect services, run logic, and build automated pipelines through a visual node-based interface. This module deploys n8n on **GKE Autopilot** with a managed PostgreSQL database, GCS-backed storage persistence, and optional NFS for shared volumes.
 
@@ -74,7 +61,7 @@ The following behaviours are applied automatically by `N8N_GKE` regardless of th
 | **n8n port fixed at 5678** | `N8N_PORT=5678` is injected automatically via the application configuration. The `container_port` variable defaults to `5678` to match. |
 | **Database type set to PostgreSQL** | `DB_TYPE=postgresdb` is injected automatically. n8n requires PostgreSQL — do not change `database_type` to MySQL or SQL Server. |
 | **Database connection variables injected** | `DB_POSTGRESDB_HOST`, `DB_POSTGRESDB_PORT`, `DB_POSTGRESDB_DATABASE`, `DB_POSTGRESDB_USER`, and `DB_POSTGRESDB_PASSWORD` are injected automatically from the Cloud SQL instance provisioned by App_GKE. The n8n Pod connects via the Cloud SQL Auth Proxy sidecar running at `127.0.0.1`. |
-| **Webhook and editor URLs auto-set** | `WEBHOOK_URL` and `N8N_EDITOR_BASE_URL` are set to the predicted service URL. When `enable_custom_domain = true` and `application_domains` is non-empty, the first domain is used. Otherwise the internal ClusterIP service URL (`http://<service>.<namespace>.svc.cluster.local`) is used. |
+| **Webhook and editor URLs auto-set** | `WEBHOOK_URL` and `N8N_EDITOR_BASE_URL` are always set to the predicted internal ClusterIP service URL (`http://<service>.<namespace>.svc.cluster.local`), computed before deployment. This value is pre-computed from `application_name`, `tenant_deployment_id`, and `deployment_id` and is stable across applies. |
 | **Workload Identity for IAM** | The n8n Pod uses Workload Identity to authenticate to GCP services (Cloud SQL, GCS, Secret Manager) without needing to embed service account keys in the container. |
 | **GCS persistence for workflow data** | n8n stores workflow data in a GCS Fuse volume. This persists data across Pod restarts and rescheduling. |
 | **Database initialisation job** | A Kubernetes Job (`db-init`) is created automatically to provision the `n8n_db` database and `n8n_user` PostgreSQL user before the n8n Deployment starts. |
@@ -271,6 +258,8 @@ The `initial_delay_seconds = 120` on the startup probe gives n8n time to connect
 | `health_check_config` | `{ enabled = true, type = "HTTP", path = "/" }` — HTTP GET on `"/"` |
 
 For full documentation on `uptime_check_config` and `alert_policies`, refer to [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
+
+> **Note:** `uptime_check_config` defaults to `{ enabled = false, path = "/" }` in N8N_GKE (monitoring is disabled by default), unlike N8N_CloudRun where it defaults to `{ enabled = true, path = "/" }`.
 
 ---
 

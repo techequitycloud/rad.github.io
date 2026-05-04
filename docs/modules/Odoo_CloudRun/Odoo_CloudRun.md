@@ -1,17 +1,4 @@
----
-title: "Odoo Cloud Run Configuration Guide"
-sidebar_label: "Cloud Run"
----
-
-# Odoo CloudRun Module
-
-<YouTubeEmbed videoId="Jds05J0_ctM" poster="https://storage.googleapis.com/rad-public-2b65/modules/Odoo_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Odoo_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Odoo_CloudRun Module — Configuration Guide
 
 `Odoo_CloudRun` deploys **Odoo Community Edition** on Google Cloud Run, backed by
 Cloud SQL PostgreSQL and a Cloud Filestore NFS volume for shared file storage.
@@ -188,6 +175,10 @@ skip the build and deploy a pre-existing image directly.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Enforces VPC-SC perimeter. Restricts GCP API calls to requests originating inside the perimeter. Requires an existing VPC-SC perimeter in the project. |
+| `vpc_cidr_ranges` | `[]` | VPC subnet CIDR ranges for the VPC-SC network access level. Auto-discovered from the VPC when empty; falls back to `10.0.0.0/8` if discovery finds nothing. |
+| `vpc_sc_dry_run` | `true` | When `true`, VPC-SC violations are logged but not blocked — recommended for initial rollout. Set `false` to actively enforce the perimeter. |
+| `organization_id` | `""` | GCP Organization ID for the VPC-SC Access Context Manager policy. Auto-discovered when empty. Must be set explicitly when the project is nested under a folder. |
+| `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ) for all supported GCP services. Recommended for compliance-sensitive environments. |
 
 ### §4.C · Identity-Aware Proxy
 
@@ -290,10 +281,14 @@ on the App_CloudRun side; `startup_probe` / `liveness_probe` apply via Odoo_Comm
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Provisions a Cloud Filestore NFS instance. Required for Odoo filestore, session, and extra-addons directories. Requires `execution_environment = "gen2"`. |
-| `nfs_mount_path` | `"/mnt"` | Container mount path for the NFS volume. The `nfs-init` job creates subdirectories (`/mnt/filestore`, `/mnt/sessions`, `/mnt/extra-addons`) under this path. |
+| `nfs_mount_path` | `"/mnt/nfs"` | Container mount path for the NFS volume as seen by `App_CloudRun`. `Odoo_Common` always passes `nfs_mount_path = "/mnt"` inside `application_config`; this variable controls the top-level NFS mount that App_CloudRun provisions. The `nfs-init` job creates subdirectories (`/mnt/filestore`, `/mnt/sessions`, `/mnt/extra-addons`) under `/mnt`. |
+| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to use. When set, targets this instance directly instead of auto-discovering one. |
+| `nfs_instance_base_name` | `"app-nfs"` | Base name for the inline NFS GCE VM created when no existing NFS server is found. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. `Odoo_Common` may provision additional buckets via `module_storage_buckets`. |
 | `create_cloud_storage` | `true` | Set `false` to skip GCS bucket provisioning. |
 | `gcs_volumes` | `[]` | GCS buckets to mount as GCS Fuse volumes inside the container. |
+| `manage_storage_kms_iam` | `false` | Creates a CMEK KMS keyring and storage key, grants the GCS service account the Cloud KMS encrypter/decrypter role, and enables CMEK encryption on all storage buckets. |
+| `enable_artifact_registry_cmek` | `false` | Creates an Artifact Registry KMS key and grants the Artifact Registry service identity the encrypter/decrypter role, enabling CMEK at-rest encryption for container images. |
 
 ### §7.C · Database
 
@@ -306,7 +301,7 @@ automatically — see §9 Platform-Managed Behaviours.
 |---|---|---|
 | `application_database_name` | `"odoo"` | PostgreSQL database name. Injected as `DB_NAME`. **Do not change after initial deployment.** |
 | `application_database_user` | `"odoo"` | PostgreSQL user. Password auto-generated; injected as `DB_PASSWORD`. |
-| `database_password_length` | `16` | Auto-generated password length (8–64 characters). |
+| `database_password_length` | `32` | Auto-generated password length (16–64 characters). |
 | `enable_auto_password_rotation` | `false` | Automates password rotation via Cloud Run + Eventarc. See §4.A. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts. |
 
@@ -383,7 +378,7 @@ These are set automatically by the module and cannot be overridden via input var
 
 | Variable | Value / Source | Notes |
 |---|---|---|
-| `ODOO_MASTER_PASS` | Secret Manager ref | Auto-generated 16-char alphanumeric password stored as `app<app_name><tenant_id><deployment_id>-master-password`. Used for Odoo's database management interface. |
+| `ODOO_MASTER_PASS` | Secret Manager ref | Auto-generated 16-char alphanumeric password stored as `app<app_name><tenant_id><random_hex>-master-password` (where `random_hex` is an internally-generated suffix, not the user-supplied `deployment_id`). The secret ID is passed via `module_secret_env_vars`. Used for Odoo's database management interface. |
 | `DB_PASSWORD` | Secret Manager ref | Auto-generated database password from App_CloudRun; injected for the Odoo application user. |
 | `ROOT_PASSWORD` | Secret Manager ref | Same auto-generated database password; used by `db-init` for superuser setup. |
 
@@ -442,6 +437,7 @@ Complete list of all input variables, grouped by UI section.
 | 3 | `traffic_split` | list(object) | `[]` | yes |
 | 3 | `service_annotations` | map(string) | `{}` | yes |
 | 3 | `service_labels` | map(string) | `{}` | yes |
+| 3 | `max_revisions_to_retain` | number | `7` | yes |
 | 4 | `ingress_settings` | string | `"all"` | yes |
 | 4 | `vpc_egress_setting` | string | `"PRIVATE_RANGES_ONLY"` | yes |
 | 4 | `enable_iap` | bool | `false` | yes |
@@ -474,14 +470,21 @@ Complete list of all input variables, grouped by UI section.
 | 9 | `admin_ip_ranges` | list(string) | `[]` | yes |
 | 9 | `application_domains` | list(string) | `[]` | yes |
 | 9 | `enable_cdn` | bool | `false` | yes |
+| 9 | `max_images_to_retain` | number | `7` | yes |
+| 9 | `delete_untagged_images` | bool | `true` | yes |
+| 9 | `image_retention_days` | number | `30` | yes |
 | 10 | `create_cloud_storage` | bool | `true` | yes |
 | 10 | `storage_buckets` | list(object) | `[{ name_suffix = "data" }]` | yes |
 | 10 | `enable_nfs` | bool | `true` | — |
-| 10 | `nfs_mount_path` | string | `"/mnt"` | — |
+| 10 | `nfs_mount_path` | string | `"/mnt/nfs"` | — |
+| 10 | `nfs_instance_name` | string | `""` | yes |
+| 10 | `nfs_instance_base_name` | string | `"app-nfs"` | yes |
 | 10 | `gcs_volumes` | list(object) | `[]` | yes |
+| 10 | `manage_storage_kms_iam` | bool | `false` | yes |
+| 10 | `enable_artifact_registry_cmek` | bool | `false` | yes |
 | 11 | `application_database_name` | string | `"odoo"` | — |
 | 11 | `application_database_user` | string | `"odoo"` | — |
-| 11 | `database_password_length` | number | `16` | yes |
+| 11 | `database_password_length` | number | `32` | yes |
 | 11 | `enable_auto_password_rotation` | bool | `false` | yes |
 | 11 | `rotation_propagation_delay_sec` | number | `90` | yes |
 | 12 | `initialization_jobs` | list(object) | `[]` | yes |
@@ -498,3 +501,7 @@ Complete list of all input variables, grouped by UI section.
 | 20 | `redis_port` | string | `"6379"` | yes |
 | 20 | `redis_auth` | string | `""` | yes |
 | 21 | `enable_vpc_sc` | bool | `false` | yes |
+| 21 | `vpc_cidr_ranges` | list(string) | `[]` | yes |
+| 21 | `vpc_sc_dry_run` | bool | `true` | yes |
+| 21 | `organization_id` | string | `""` | yes |
+| 21 | `enable_audit_logging` | bool | `false` | yes |

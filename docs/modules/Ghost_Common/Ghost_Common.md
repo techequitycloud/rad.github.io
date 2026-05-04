@@ -1,8 +1,3 @@
----
-title: "Ghost Common Shared Configuration Module"
-sidebar_label: "Common"
----
-
 # Ghost_Common Shared Configuration Module
 
 The `Ghost_Common` module defines the Ghost publishing platform configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates no GCP resources and produces a `config` output consumed by platform-specific wrapper modules (`Ghost_CloudRun` and `Ghost_GKE`).
@@ -98,13 +93,13 @@ The absolute path to the module directory, used by wrapper modules to locate the
 | `db_user` | `string` | `"ghost"` | MySQL application user |
 | `cpu_limit` | `string` | `"2000m"` | Container CPU limit |
 | `memory_limit` | `string` | `"4Gi"` | Container memory limit |
-| `environment_variables` | `map(string)` | `{}` | Environment variables passed directly to the container |
+| `environment_variables` | `map(string)` | `{}` | Environment variables passed directly to the container. Note: wrapper modules (`Ghost_CloudRun`, `Ghost_GKE`) default this to SMTP stub values; `Ghost_Common` itself defaults to an empty map. |
 | `initialization_jobs` | `list(object)` | `[]` | Custom init jobs; empty triggers the default `db-init` job |
 | `startup_probe` | `object` | see above | Startup health probe |
 | `liveness_probe` | `object` | see above | Liveness health probe |
 | `enable_image_mirroring` | `bool` | `false` | Mirror the container image to Artifact Registry before deployment |
-| `min_instance_count` | `number` | `0` | Minimum number of running instances (0 enables scale-to-zero) |
-| `max_instance_count` | `number` | `3` | Maximum number of running instances |
+| `min_instance_count` | `number` | `0` | Minimum number of running instances (0 enables scale-to-zero). Overridden to `0` by `Ghost_CloudRun` and `1` by `Ghost_GKE` via hardcoded locals. |
+| `max_instance_count` | `number` | `3` | Maximum number of running instances. Overridden to `5` by both `Ghost_CloudRun` and `Ghost_GKE` via hardcoded locals. |
 | `secret_environment_variables` | `map(string)` | `{}` | Secret environment variables passed to the container |
 
 ### Storage & Volumes
@@ -181,7 +176,7 @@ Runs before the original Ghost entrypoint to configure the runtime environment:
    - Retrieves the project ID and region from metadata.
    - Calls the Cloud Run API v2 (`https://run.googleapis.com/v2/projects/.../services/...`) to get the service URI.
    - Exports both `url` and `admin__url` from the detected URI.
-3. Falls back to `http://localhost:2368` for local development when not on Cloud Run.
+3. Falls back to `http://localhost:2368` when not on Cloud Run (i.e., when `K_SERVICE` is not set — including GKE deployments).
 
 **2. Database Variable Mapping**: Translates standard platform env vars into Ghost's double-underscore config key syntax:
 
@@ -225,13 +220,14 @@ environment_variables = {
 
 | Aspect | Ghost_CloudRun | Ghost_GKE |
 |--------|----------------|-----------|
-| `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
-| `min_instance_count` | `0` (scale-to-zero) | `1` (always one pod running) |
+| `service_url` | `entrypoint.sh` auto-detects from GCE metadata API (checks `K_SERVICE` env var) | `entrypoint.sh` falls back to `http://localhost:2368` — GKE pods do not set `K_SERVICE`, so the URL must be configured via a Ghost `url` environment variable |
+| `min_instance_count` | `0` (scale-to-zero) — hardcoded in `Ghost_CloudRun/main.tf`, overrides Common default | `1` (always one pod running) — hardcoded in `Ghost_GKE/main.tf`, overrides Common default |
+| `max_instance_count` | `5` — hardcoded in `Ghost_CloudRun/main.tf`, overrides Common default of `3` | `5` — hardcoded in `Ghost_GKE/main.tf`, overrides Common default of `3` |
 | `enable_cloudsql_volume` | Optional (default `true`) | Optional (default `true`) |
 | `DB_HOST` | Cloud SQL Auth Proxy socket path | Cloud SQL private IP |
-| URL auto-detection | `entrypoint.sh` fetches service URL from GCP metadata API | `entrypoint.sh` fetches service URL from GCP metadata API |
-| NFS | Not supported | Not supported |
-| Redis | Not supported | Not supported |
+| URL auto-detection | `entrypoint.sh` fetches service URL from GCP metadata API (Cloud Run sets `K_SERVICE`) | `entrypoint.sh` falls back to `http://localhost:2368` because GKE pods do not set `K_SERVICE`; set the `url` env var explicitly for GKE |
+| NFS | Enabled by default (`enable_nfs = true`) in `Ghost_CloudRun` | Enabled by default (`enable_nfs = true`) in `Ghost_GKE` |
+| Redis | Enabled by default (`enable_redis = true`) in `Ghost_CloudRun` | Enabled by default (`enable_redis = true`) in `Ghost_GKE` |
 
 ---
 
@@ -243,23 +239,40 @@ environment_variables = {
 module "ghost_app" {
   source = "../Ghost_Common"
 
-  application_version  = var.application_version
-  db_name              = var.db_name
-  db_user              = var.db_user
-  deployment_region    = var.deployment_region
-  environment_variables = {
-    "database__client" = "mysql"
-    # Additional Ghost config keys as needed
-  }
+  application_version    = var.application_version
+  db_name                = var.db_name
+  db_user                = var.db_user
+  cpu_limit              = var.cpu_limit
+  memory_limit           = var.memory_limit
+  description            = var.description
+  startup_probe          = var.startup_probe
+  liveness_probe         = var.liveness_probe
+  enable_cloudsql_volume = var.enable_cloudsql_volume
 }
 
-# config is passed directly to App_CloudRun
+# The wrapper merges Ghost_Common config with module-level overrides,
+# including injecting database__client = "mysql" at this layer (not in Ghost_Common).
+locals {
+  ghost_module = merge(
+    module.ghost_app.config,
+    {
+      min_instance_count = 0
+      max_instance_count = 5
+      environment_variables = merge(
+        module.ghost_app.config.environment_variables,
+        { "database__client" = "mysql" }
+      )
+    }
+  )
+}
+
+# config is passed to App_CloudRun via application_config
 module "app_cloudrun" {
   source = "../App_CloudRun"
 
-  application_config     = module.ghost_app.config
+  application_config     = { ghost = local.ghost_module }
   module_storage_buckets = module.ghost_app.storage_buckets
-  scripts_dir            = "${module.ghost_app.path}/scripts"
+  scripts_dir            = abspath("${module.ghost_app.path}/scripts")
   # ... other inputs
 }
 ```

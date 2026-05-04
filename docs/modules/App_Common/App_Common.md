@@ -1,8 +1,3 @@
----
-title: "App Common Shared Library"
-sidebar_label: "Common"
----
-
 # App_Common Shared Library
 
 The `App_Common` module is a collection of reusable, shared Terraform modules that serve as the foundation for the RAD Modules ecosystem. It provides the core infrastructure logic used by platform-specific modules like `App_CloudRun` and `App_GKE`.
@@ -26,42 +21,46 @@ The functional logic is encapsulated in submodules located in `modules/App_Commo
 
 | File | Purpose |
 |---|---|
-| `buildappcontainer.tf` | Renders a per-app `cloudbuild.yaml` and drives the application image build via `terraform_data.build_and_push_application_image`, which invokes `scripts/build-container.sh`. Replacement is triggered by hashes of the Dockerfile, context directory, repository ID, tag, and build args. |
-| `sql.tf` | Discovers an existing Cloud SQL instance via `scripts/get-sqlserver-info.sh`, computes the canonical `${instance}-root-password` Secret Manager secret ID, and inline-provisions the secret (generated 32-char random password) when Services_GCP has not already created it. The plaintext root password is never written to Terraform state — callers retrieve it at runtime via `gcloud secrets versions access`. |
-| `registry.tf` | Discovers an existing Artifact Registry repository for the deployment region. |
-| `network.tf` | Base VPC network discovery (App_GKE extends this with static IP resources in its own `network.tf`). |
-| `nfs.tf` | Locates the Filestore NFS server for the deployment and exposes its IP and file-share name. |
-| `storage.tf` | Application bucket wiring consumed by application modules. |
+| `buildappcontainer.tf` | Creates `local_file.app_dockerfile` (when `dockerfile_content` is provided) and `local_file.app_cloudbuild`, then drives the application image build via `terraform_data.build_and_push_application_image`, which invokes `scripts/build-container.sh`. Replacement is triggered by hashes of the build script, Dockerfile, context directory, repository ID, tag, and build args. All three resources are gated on `local.enable_custom_build`. The `cloudbuild.yaml` template at the top level accepts `PROJECT_ID`, `APP_NAME`, `IMAGE_REGION`, `IMAGE_NAME`, `IMAGE_VERSION`, `REPO_NAME`, `REPO_PROJECT_ID`, `REPO_LOCATION`, `DOCKERFILE`, `CONTEXT_PATH`, and `BUILD_ARGS` — it does not include `DOCKERFILE_CONTENT` or `CLOUDBUILD_SA` (those variables are only used in the `app_build` submodule's template). |
+| `sql.tf` | Discovers an existing Cloud SQL instance via `scripts/get-sqlserver-info.sh`, computes the canonical `${instance}-root-password` Secret Manager secret ID, and provisions the secret container plus a 32-char `random_password` version when the secret does not already exist in Secret Manager. Uses `data.google_secret_manager_secret` to detect whether Services_GCP has already created it before deciding whether to create one. Note: the generated password is stored in Terraform state via `random_password`; callers can also retrieve it at runtime via `gcloud secrets versions access`. |
+| `registry.tf` | Discovers an existing Artifact Registry repository via `scripts/discover_repo.sh` (using `data.external`). The `google_artifact_registry_repository` data source is gated on `enable_custom_build || enable_cicd_trigger` and a non-empty discovered location. |
+| `network.tf` | Delegates VPC network discovery to the `app_networking` submodule (`modules/App_Common/modules/app_networking`) and surfaces its outputs as locals (`network_exists`, `discovered_regions`, `available_regions`, `subnet_names`, `subnet_cidrs`, `subnet_details`, `region_to_subnet`). Note: `network_tags` is an output of the submodule but is not promoted to a top-level local here. |
+| `nfs.tf` | Runs `get-nfsserver-info.sh` and `get-filestore-info.sh` directly via `data.external` (when `local.nfs_enabled = true`) and exposes computed locals for `nfs_internal_ip`, `nfs_instance_name`, `nfs_instance_zone`, and `nfs_server_exists`. Filestore IP takes precedence over GCE IP. Does not expose `nfs_instance_tags`; that output exists only in the `app_nfs_discovery` submodule. |
+| `storage.tf` | Calls `app_storage_enhanced` directly (not `app_storage_wrapper`) to provision application buckets plus a fixed backup bucket (`${resource_prefix}-backups`). `gcsfuse_unmount_wait` is hardcoded to `60`. The KMS key name is hardcoded to the well-known path `projects/{project_id}/locations/{region}/keyRings/{project_id}-cmek-keyring/cryptoKeys/storage-key`. Always unconditionally uploads a `backup.sql` seed object from `${path.module}/scripts/backup.sql` to the backup bucket (no count gate). |
 
 ### Core Integration Modules
 These modules are directly used by `App_CloudRun` and `App_GKE` via `gcp_integration.tf`.
 
 #### `app_networking`
 *   **Path**: `modules/app_networking`
-*   **Description**: Discovers and validates the existing VPC network topology.
+*   **Description**: Discovers and validates the existing VPC network topology. All discovery logic runs in a single inline `data "external"` bash script.
+*   **Outputs**: `network_exists`, `network_name`, `discovered_regions`, `available_regions`, `subnet_names`, `subnet_cidrs`, `subnet_details`, `region_to_subnet`, `subnet_count`, `network_tags`.
 *   **Capabilities**:
-    *   **Auto-discovery**: When `network_name` is empty, queries all subnets with description `managed-by=services-gcp` and selects the unique Services_GCP-managed network; emits a clear error if zero or more than one is found.
+    *   **Auto-discovery**: When `network_name` is empty, queries all subnets with description `managed-by=services-gcp` and selects the unique Services_GCP-managed network; emits a stderr message and leaves `NETWORK_NAME` empty (not a hard Terraform error) if zero or more than one is found.
     *   Verifies existence of the target (or discovered) VPC network.
     *   Retrieves subnet names, CIDR ranges, and a `region_to_subnet` map for multi-region deployments.
-    *   **Network tags**: Discovers ingress firewall-rule target tags on the network (HTTP/HTTPS ports). Outputs `network_tags` — used to tag Cloud Run services with Direct VPC Egress so the correct firewall rules apply.
+    *   **Network tags**: Discovers all ingress firewall-rule target tags on the network (filtered by `targetTags:*`, not restricted to HTTP/HTTPS ports). Outputs `network_tags` — used to tag Cloud Run services with Direct VPC Egress so the correct firewall rules apply.
     *   Falls back to `fallback_region` when no subnets are discovered so downstream `available_regions` is never empty.
 
 #### `app_sql_discovery`
 *   **Path**: `modules/app_sql_discovery`
 *   **Description**: Discovers an existing Cloud SQL instance and exposes connection metadata. Does not create secrets or passwords — that is handled by `app_secrets`.
+*   **Outputs**: `sql_server_exists`, `db_instance_name`, `db_instance_region`, `db_instance_connection_name`, `database_version`, `db_internal_ip`, `db_root_password` (sensitive), `db_password_secret_name`.
 *   **Capabilities**:
     *   Calls `get-sqlserver-info.sh` with an optional `sql_instance_name` hint to locate the Cloud SQL instance.
-    *   Returns `sql_server_exists`, `db_instance_name`, `db_instance_region`, `db_instance_connection_name` (for Auth Proxy), `db_internal_ip` (for direct access), `database_version`, and `db_root_password` (when available from the discovery script).
+    *   Returns `sql_server_exists`, `db_instance_name`, `db_instance_region`, `db_instance_connection_name` (for Auth Proxy), `db_internal_ip` (for direct access), `database_version`, and `db_root_password` (sensitive; read from the script's JSON output, not generated here).
     *   Derives `db_password_secret_name` as `{instance}-{resource_prefix}-db-password` for use by `app_secrets` and `app_iam`.
 
 #### `app_storage_wrapper`
 *   **Path**: `modules/app_storage_wrapper`
 *   **Description**: Convenience wrapper that composes `app_cmek`, GCS KMS IAM, and `app_storage_enhanced` into a single interface for standardized Cloud Storage provisioning.
+*   **Outputs**: `bucket_names`, `backup_bucket_name`, `artifact_registry_key_id`.
 *   **Capabilities**:
     *   Invokes `app_cmek` to provision a CMEK keyring when `manage_storage_kms_iam = true`.
     *   Fetches the GCS project service account and grants it `roles/cloudkms.cryptoKeyEncrypterDecrypter` on the storage key so encrypted buckets can be created without manual IAM setup.
+    *   Also runs `assert_gcs_kms_binding.sh` via `data "external"` at plan time to re-assert the KMS binding idempotently — preventing plan/apply failures caused by binding drift even before the first `google_kms_crypto_key_iam_member` is applied.
     *   Delegates bucket creation to `app_storage_enhanced` (versioning, lifecycle rules, KMS encryption, backup bucket).
-    *   Conditionally uploads a `backup.sql` seed object to the backup bucket when `backup_sql_source_path` is set.
+    *   Conditionally uploads a `backup.sql` seed object to the backup bucket when `backup_sql_source_path` is set (count-gated).
     *   Provides a simplified interface that hides the three-step composition from callers.
 
 #### `app_nfs_discovery`
