@@ -333,6 +333,10 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'practices/gitops-iac', label: 'GitOps & IaC' },
         { type: 'doc', id: 'practices/idp', label: 'IDP' },
         { type: 'doc', id: 'practices/sre', label: 'SRE' },
+      ],
+    },
+    {
+      type: 'category',
       label: 'Platform Capabilities',
       items: [
         { type: 'doc', id: 'capabilities/ai', label: 'Artificial Intelligence' },
