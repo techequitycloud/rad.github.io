@@ -110,9 +110,9 @@ The ACE exam focuses heavily on object lifecycle management, data backup, queryi
 *   **Database Backups and Restore:** The exam covers backup and restore for multiple database services:
     - **Cloud SQL:** Navigate to **SQL > Backups**. Practice creating an on-demand backup and restoring an instance from a backup. Understand point-in-time recovery (PITR) — restore to any second within the backup retention window (up to 35 days), critical for recovering from accidental data deletion.
     - **AlloyDB:** Navigate to **AlloyDB > Clusters > Backups**. AlloyDB provides continuous backup with a 14-day PITR window. Restore creates a new cluster.
-    - **Spanner:** Navigate to **Spanner > &lt;instance&gt; > Backups**. Spanner backups are taken while the database remains online and fully operational.
+    - **Spanner:** Navigate to **Spanner > `<instance>` > Backups**. Spanner backups are taken while the database remains online and fully operational.
     - **Firestore:** Navigate to **Firestore > Import/Export**. Practice scheduling exports to a GCS bucket using `gcloud firestore export gs://bucket-name`. Imports restore from a previously exported snapshot.
-    - **Bigtable:** Navigate to **Bigtable > &lt;instance&gt; > Backups**. Bigtable backups are copies of table data at a point in time, stored within the Bigtable service.
+    - **Bigtable:** Navigate to **Bigtable > `<instance>` > Backups**. Bigtable backups are copies of table data at a point in time, stored within the Bigtable service.
 
 *   **Executing queries to retrieve data from data instances:** The exam tests basic query execution across multiple database products:
     - **Cloud SQL:** Use Cloud Shell — `gcloud sql connect <instance-name> --user=postgres` — then run standard SQL queries.
