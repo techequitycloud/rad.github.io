@@ -325,6 +325,27 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Platform Capabilities',
+      items: [
+        { type: 'doc', id: 'capabilities/ai', label: 'Artificial Intelligence' },
+        { type: 'doc', id: 'capabilities/container-orchestration', label: 'Container Orchestration' },
+        { type: 'doc', id: 'capabilities/data-and-databases', label: 'Data & Databases' },
+        { type: 'doc', id: 'capabilities/disaster-recovery', label: 'Disaster Recovery' },
+        { type: 'doc', id: 'capabilities/hybrid-cloud', label: 'Hybrid Cloud' },
+        { type: 'doc', id: 'capabilities/infrastructure-as-code', label: 'Infrastructure as Code' },
+        { type: 'doc', id: 'capabilities/modernization', label: 'Modernization' },
+        { type: 'doc', id: 'capabilities/multicloud', label: 'Multicloud' },
+        { type: 'doc', id: 'capabilities/multitenancy-saas', label: 'Multitenancy & SaaS' },
+        { type: 'doc', id: 'capabilities/networking', label: 'Networking' },
+        { type: 'doc', id: 'capabilities/observability', label: 'Observability' },
+        { type: 'doc', id: 'capabilities/security', label: 'Security' },
+        { type: 'doc', id: 'capabilities/serverless', label: 'Serverless' },
+        { type: 'doc', id: 'capabilities/service-mesh', label: 'Service Mesh' },
+        { type: 'doc', id: 'capabilities/zero-trust', label: 'Zero Trust' },
+      ],
+    },
+    {
+      type: 'category',
       label: 'Platform Guides',
       items: [
         {
