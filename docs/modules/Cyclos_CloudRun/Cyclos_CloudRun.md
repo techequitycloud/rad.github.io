@@ -1,17 +1,4 @@
----
-title: "Cyclos Cloud Run Configuration Guide"
-sidebar_label: "Cloud Run"
----
-
-# Cyclos CloudRun Module
-
-<YouTubeEmbed videoId="J1AqLzi507k" poster="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Cyclos_CloudRun Module — Configuration Guide
 
 Cyclos is a professional banking and payment system designed for microfinance institutions, credit unions, complementary currency schemes, and community banks. This module deploys Cyclos on **Google Cloud Run** using the official `cyclos/cyclos` container image, backed by a managed Cloud SQL PostgreSQL instance.
 
@@ -38,7 +25,7 @@ This guide documents only the variables that are **unique to `Cyclos_CloudRun`**
 | CI/CD & GitHub Integration | Group 7 | Refer to base App_CloudRun module documentation. |
 | Storage — NFS | Group 8 | NFS is **disabled by this module**. See [Platform-Managed Behaviours](#platform-managed-behaviours). `enable_nfs` defaults to `false`. |
 | Storage — GCS | Group 9 | Refer to base App_CloudRun module documentation. |
-| Redis Cache | Group 10 | Refer to base App_CloudRun module documentation. Cyclos uses Redis for session storage and caching — configure as documented in App_CloudRun Group 10. |
+| Redis Cache | Group 10 | Redis is **not supported** by `Cyclos_CloudRun`. `enable_redis` is hardcoded to `false` and is not exposed as a variable. Do not configure Redis for this module. |
 | Backup & Maintenance | Group 12 | Refer to base App_CloudRun module documentation for `backup_schedule` and `backup_retention_days`. See [Backup Import & Recovery](#backup-import--recovery) below for `enable_backup_import` and related variables. |
 | Custom Initialisation & SQL | Group 13 | Refer to base App_CloudRun module documentation. |
 | Access & Networking | Group 14 | Refer to base App_CloudRun module documentation (`ingress_settings`, `vpc_egress_setting`, `network_name`). |
@@ -94,7 +81,7 @@ Cyclos is a Java application and requires significantly more CPU and memory than
 | `cpu_limit` | `"1000m"` | Cloud Run CPU quantity string (e.g. `"1000m"`, `"2000m"`) | CPU limit for the Cyclos Cloud Run instance. **Cyclos requires a minimum of 2 vCPU for reliable production operation.** The default of `1000m` is sufficient for low-traffic or development deployments. For production, set this to `"2000m"` or higher. Note: CPUs above `"1000m"` require `cpu_always_allocated = true`. |
 | `memory_limit` | `"2Gi"` | Cloud Run memory quantity string (e.g. `"2Gi"`, `"4Gi"`) | Memory limit for the Cyclos Cloud Run instance. **4 Gi is recommended for production.** The JVM heap, Cyclos internal caches, and active sessions together typically consume 2–3 Gi under normal load. |
 
-> **Note on `container_resources`:** The full `container_resources` object (as documented in [App_CloudRun Group 3](../App_CloudRun/App_CloudRun.md#group-3-runtime--scaling)) is also available and takes precedence over `cpu_limit` and `memory_limit` when set explicitly. Use `container_resources` when you need to set both CPU and memory in a single block, for example in the advanced configuration example.
+> **Note on `container_resources`:** `Cyclos_CloudRun` exposes only `cpu_limit` and `memory_limit` as top-level variables. There is no `container_resources` variable in this module — the underlying object is assembled internally from these two variables via `Cyclos_Common`. If you need to set CPU/memory requests or ephemeral storage limits, use `Cyclos_GKE` (which does expose `container_resources`) or extend the module.
 
 **Cyclos-specific runtime defaults that differ from App_CloudRun:**
 
@@ -133,7 +120,7 @@ All other database variables (`sql_instance_name`, `database_password_length`, `
 | `db_name` | `"cyclos"` | `[a-z][a-z0-9_]{0,62}` | The name of the PostgreSQL database created within the Cloud SQL instance. Injected as the `DB_NAME` environment variable. **Do not change after initial deployment** — Cyclos stores all application data in this database and renaming it requires manual migration. |
 | `db_user` | `"cyclos"` | `[a-z][a-z0-9_]{0,31}` | The PostgreSQL user created for the Cyclos application. Injected as the `DB_USER` environment variable. The password is auto-generated, stored in Secret Manager, and injected as `DB_PASSWORD`. |
 
-> **Important:** Cyclos requires PostgreSQL. The module defaults `database_type` to `"POSTGRES"` (latest managed version). Setting `database_type = "NONE"` or a MySQL/SQL Server type will prevent the application from starting.
+> **Important:** Cyclos requires PostgreSQL. `Cyclos_CloudRun` does not expose `database_type` as a user-facing variable — it is hardcoded to `"POSTGRES_15"` by `Cyclos_Common`. Setting any MySQL or SQL Server database in the platform layer will prevent the application from starting.
 
 > **PostgreSQL extensions** are installed automatically — see [Platform-Managed Behaviours](#platform-managed-behaviours). You do not need to set `enable_postgres_extensions = true` for the Cyclos-required extensions.
 
@@ -198,10 +185,10 @@ Both probes target the `/api` endpoint, which reflects the Cyclos application's 
 
 | Variable | Default | Description & Implications |
 |---|---|---|
-| `startup_probe` | `{ enabled = true, type = "HTTP", path = "/api", initial_delay_seconds = 90, timeout_seconds = 30, period_seconds = 60, failure_threshold = 5 }` | Determines when the Cloud Run instance is ready to receive traffic after starting. The `initial_delay_seconds = 90` gives the JVM time to start and Cyclos time to validate or create the database schema before the first probe fires. `failure_threshold = 5` with `period_seconds = 60` allows up to 5 minutes of additional startup time beyond the initial delay. **On first deployment** (when the schema is created from scratch), startup may take longer than usual — consider increasing `failure_threshold` to `10` for the initial rollout. |
+| `startup_probe` | `{ enabled = true, type = "HTTP", path = "/api", initial_delay_seconds = 90, timeout_seconds = 30, period_seconds = 60, failure_threshold = 10 }` | Determines when the Cloud Run instance is ready to receive traffic after starting. The `initial_delay_seconds = 90` gives the JVM time to start and Cyclos time to validate or create the database schema before the first probe fires. `failure_threshold = 10` with `period_seconds = 60` allows up to 11 minutes 30 seconds of additional startup time beyond the initial delay. This generous threshold is intentional — on first deployment the schema is created from scratch and startup can take several minutes. |
 | `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/api", initial_delay_seconds = 120, timeout_seconds = 10, period_seconds = 60, failure_threshold = 3 }` | Periodically checks whether a running Cyclos instance is healthy. The `initial_delay_seconds = 120` prevents premature restarts during the startup phase. A `period_seconds = 60` check interval is appropriate for a database-backed application — more frequent checks add unnecessary load to the database. |
 
-> **Relationship to App_CloudRun probes:** `startup_probe` corresponds to `startup_probe_config` in App_CloudRun; `liveness_probe` corresponds to `health_check_config`. Their sub-field structure is identical. The `startup_probe_config` and `health_check_config` variables are also present in `Cyclos_CloudRun` (with `/api` defaults) for compatibility — prefer the dedicated `startup_probe` and `liveness_probe` variables.
+> **Relationship to App_CloudRun probes:** `startup_probe` maps to `startup_probe_config` in App_CloudRun; `liveness_probe` maps to `health_check_config`. Their sub-field structure is identical. `Cyclos_CloudRun` does not expose separate `startup_probe_config` or `health_check_config` variables — `startup_probe` and `liveness_probe` are the only probe variables in this module.
 
 ### Validating Health Probe Configuration
 
@@ -234,7 +221,7 @@ The backup import variables in `Cyclos_CloudRun` have the same semantics as thos
 | `enable_backup_import` | `false` | `true` / `false` | When `true`, triggers a one-time Cloud Run Job to restore the backup specified by `backup_uri` from the source defined in `backup_source`. The import runs after the database is provisioned and extensions are installed. Configure `backup_source`, `backup_uri`, and `backup_format` before enabling. **If the database already contains data**, the import may produce errors — test in a non-production environment first. |
 | `backup_source` | `"gcs"` | `gcs` / `gdrive` | The source from which the backup file is retrieved. **`gcs`:** imports from a Cloud Storage path. Provide the full GCS URI in `backup_uri` (e.g. `gs://my-bucket/backups/cyclos.sql.gz`). **`gdrive`:** imports from a Google Drive file. Provide the Drive file ID in `backup_uri`. Only used when `enable_backup_import = true`. |
 | `backup_uri` | `""` | Full GCS URI or Google Drive file ID | For GCS: the full object URI, e.g. `"gs://my-backup-bucket/cyclos-2024-01-15.sql.gz"`. For Google Drive: the file ID from the share URL (the string after `/file/d/` in the URL). Required when `enable_backup_import = true`. |
-| `backup_format` | `"gz"` | `sql` / `tar` / `gz` / `tgz` / `tar.gz` / `zip` | The format of the backup file. The default is `"gz"` (gzip-compressed SQL dump from `pg_dump`), which is the recommended format for Cyclos backups. Use `"sql"` for uncompressed plain-text dumps. |
+| `backup_format` | `"gz"` | `sql` / `tar` / `gz` / `tgz` / `tar.gz` / `zip` | The format of the backup file. The default is `"gz"` (gzip-compressed SQL dump from `pg_dump`), which is the recommended format for Cyclos backups. Use `"sql"` for uncompressed plain-text dumps. Note: unlike `Cyclos_GKE`, this module does not accept `"auto"` — the format must be specified explicitly. |
 
 ### Validating Backup Import
 

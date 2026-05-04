@@ -1,8 +1,3 @@
----
-title: "Sample Common Shared Configuration Module"
-sidebar_label: "Common"
----
-
 # Sample_Common Module
 
 ## Overview
@@ -27,7 +22,8 @@ The module provisions one GCP Secret Manager secret (the Flask `SECRET_KEY`), de
 │  ┌──────────────────────┐    ┌─────────────────────────────────────────┐    │
 │  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │    │
 │  │                      │    │                                         │    │
-│  │  Secret Manager API  │    │  container_image: "sample" (custom)     │    │
+│  │  Secret Manager API  │    │  container_image: "" (derived from      │    │
+│  │                      │    │    application_name by App_GKE/Run)     │    │
 │  │  secret-key          │    │  container_port: 8080                   │    │
 │  │    (32-char, no      │    │  secret_env_vars: {SECRET_KEY: ...}     │    │
 │  │     special chars)   │    │  database_type: POSTGRES_15             │    │

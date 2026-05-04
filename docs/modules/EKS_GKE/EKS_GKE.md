@@ -1,15 +1,9 @@
 ---
-title: "EKS GKE Module Documentation"
-sidebar_label: "EKS GKE"
+title: "EKS_GKE Module Documentation"
+sidebar_label: "EKS_GKE"
 ---
 
-# EKS GKE Module
-
-<YouTubeEmbed videoId="M-TFY-hYfLs" poster="https://storage.googleapis.com/rad-public-2b65/modules/EKS_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/EKS_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+# EKS_GKE Module
 
 ## Overview
 
@@ -1105,3 +1099,4 @@ Deploying this module gives you a working environment to explore the following G
 | [Anthos Service Mesh](https://cloud.google.com/service-mesh/docs/overview) | Install ASM using the `attached-install-mesh` sub-module and observe the service topology map |
 | [Policy Controller](https://cloud.google.com/anthos-config-management/docs/concepts/policy-controller) | Enable Policy Controller from the Fleet dashboard and apply a constraint to the EKS cluster |
 | [Config Management](https://cloud.google.com/anthos-config-management/docs/overview) | Enable Config Sync and point it at a Git repository to synchronise manifests to the EKS cluster |
+

@@ -1,8 +1,3 @@
----
-title: "Odoo Common Shared Configuration Module"
-sidebar_label: "Common"
----
-
 # Odoo_Common Module
 
 ## Overview
@@ -40,7 +35,7 @@ Odoo is a comprehensive open-source ERP platform. This module handles its specif
 │                              └─────────────────────────────────────────┘    │
 │                                                                              │
 │  wrapper_prefix = "app{application_name}{tenant_deployment_id}{             │
-│                         deployment_id}"                                      │
+│                         random_hex}"   (always internal random_id.hex)      │
 └──────────────────────────────────────────────────────────────────────────────┘
                     │
                     ▼
@@ -52,7 +47,7 @@ Odoo is a comprehensive open-source ERP platform. This module handles its specif
 
 | Mount | Source | Path | Purpose |
 |-------|--------|------|---------|
-| NFS | Filestore | `/mnt` | filestore, sessions, odoo.conf |
+| NFS | Filestore | `/mnt` | filestore, sessions, odoo.conf, extra-addons |
 | GCS Fuse | `odoo-addons` bucket | `/mnt/extra-addons` | Custom/community addons |
 | Cloud SQL | Auth Proxy socket | `/cloudsql` | PostgreSQL via Unix socket |
 
@@ -69,11 +64,11 @@ Odoo is a comprehensive open-source ERP platform. This module handles its specif
 
 **GCS Bucket** (defined in `storage_buckets` output, created by Layer 2):
 
-| Bucket Suffix | Location | Purpose |
-|---------------|----------|---------|
-| `odoo-addons` | `deployment_region` | Custom and community Odoo addons |
+| Bucket Suffix | Location | Storage Class | `public_access_prevention` | Purpose |
+|---------------|----------|---------------|---------------------------|---------|
+| `odoo-addons` | `deployment_region` | `STANDARD` | `inherited` | Custom and community Odoo addons |
 
-> **Note:** `wrapper_prefix` is computed as `"app{application_name}{tenant_deployment_id}{deployment_id}"` (e.g., `appodoodemo<id>`).
+> **Note:** `wrapper_prefix` is computed as `"app{application_name}{tenant_deployment_id}{random_hex}"` where `random_hex` is an internally-generated 8-character hex ID (from `random_id.deployment.hex`). The variable `var.deployment_id` is **not** used in the prefix — even when set — because using an externally-supplied value causes plan-time cycles with Secret Manager's immutable `secret_id`. The result is always stable within a given Terraform state. Example: `appodoodemo1a2b3c4d`.
 
 ---
 
@@ -294,14 +289,24 @@ Standalone utility script in `scripts/` (not baked into the Docker image). Can b
 
 ### `odoo.conf` (template)
 
-Static template baked into the image at `/etc/odoo/odoo.conf`. Contains a `DB_NAME` placeholder that `cloudrun-entrypoint.sh` substitutes at runtime:
+Static template baked into the image at `/etc/odoo/odoo.conf`. Contains a `DB_NAME` placeholder that `cloudrun-entrypoint.sh` substitutes at runtime. Key settings in the template:
 
 ```ini
 [options]
-db_name = DB_NAME
-xmlrpc_port = 8069
 data_dir = /mnt
+proxy_mode = True
+addons_path = /extra-addons
+db_maxconn = 32
+db_name = DB_NAME
+limit_memory_hard = 1572864000
+limit_memory_soft = 1073741824
+limit_request = 8192
+limit_time_cpu = 600
+limit_time_real = 1200
+xmlrpc_port = 8069
 ```
+
+> **Note:** The startup script's inline auto-generated `odoo.conf` (written to `/mnt/odoo.conf`) is more comprehensive than this baked-in template and takes precedence at runtime because Odoo is started with `-c /mnt/odoo.conf`. The baked-in template is only used as a fallback reference.
 
 ---
 
@@ -339,8 +344,8 @@ The `redis_host_final` local is computed at Terraform plan time: if `var.redis_h
 | Aspect | Odoo_CloudRun | Odoo_GKE |
 |--------|---------------|----------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
-| `enable_cloudsql_volume` | Optional (Auth Proxy sidecar) | Not used (TCP to Cloud SQL private IP) |
-| `DB_HOST` | Cloud SQL Auth Proxy socket path | Cloud SQL private IP |
+| `enable_cloudsql_volume` | Optional (Auth Proxy sidecar); default `true` | Optional (Auth Proxy sidecar); default `true` — GKE pods can use either socket or TCP depending on cluster networking |
+| `DB_HOST` | Cloud SQL Auth Proxy socket path (remapped to `/tmp`) | Cloud SQL Auth Proxy socket path or Cloud SQL private IP |
 | NFS | Mandatory (`enable_nfs = true` hardcoded) | Mandatory (`enable_nfs = true` hardcoded) |
 | Init job sequence | `nfs-init` (no DB) → `db-init` (with DB) | `nfs-init` (no DB) → `db-init` (with DB) |
 | Redis | Optional; appended to `odoo.conf` at runtime if enabled | Optional; appended to `odoo.conf` at runtime if enabled |
@@ -393,3 +398,4 @@ secret_env_vars = {
   ODOO_MASTER_PASS = module.odoo_common.odoo_master_pass_secret_id
 }
 ```
+

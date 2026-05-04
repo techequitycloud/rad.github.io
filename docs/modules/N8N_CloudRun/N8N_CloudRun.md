@@ -1,17 +1,4 @@
----
-title: "N8N Cloud Run Configuration Guide"
-sidebar_label: "Cloud Run"
----
-
-# N8N CloudRun Module
-
-<YouTubeEmbed videoId="N_DFU3Rt2Ds" poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# N8N_CloudRun Module — Configuration Guide
 
 n8n is an open-source workflow automation platform that lets you connect services, run logic,
 and build automated pipelines through a visual node-based interface. This module deploys n8n
@@ -137,9 +124,12 @@ platform-managed variables are **automatically injected** and must not be set in
 `environment_variables` — they will conflict with or be overridden by the platform values.
 
 **Do not set in `environment_variables`:**
-`N8N_PORT`, `DB_TYPE`, `DB_POSTGRESDB_HOST`, `DB_POSTGRESDB_PORT`,
-`DB_POSTGRESDB_DATABASE`, `DB_POSTGRESDB_USER`, `DB_POSTGRESDB_PASSWORD`,
-`N8N_ENCRYPTION_KEY`, `WEBHOOK_URL`, `N8N_EDITOR_BASE_URL`, `REDIS_HOST`, `REDIS_PORT`.
+`N8N_PORT`, `DB_TYPE`, `N8N_ENCRYPTION_KEY`, `WEBHOOK_URL`, `N8N_EDITOR_BASE_URL`,
+`ENABLE_REDIS`, `QUEUE_BULL_REDIS_HOST`, `QUEUE_BULL_REDIS_PORT`, `QUEUE_BULL_REDIS_PASSWORD`,
+`N8N_PROTOCOL`, `N8N_DIAGNOSTICS_ENABLED`, `N8N_METRICS`, `N8N_SECURE_COOKIE`,
+`N8N_DEFAULT_BINARY_DATA_MODE`.
+The `DB_POSTGRESDB_*` variables are injected at runtime by `entrypoint.sh` (not by Terraform
+directly) — do not set them in `environment_variables` either.
 
 **Default `environment_variables` (SMTP placeholders):**
 
@@ -331,7 +321,7 @@ automatically.
 |---|---|---|
 | `db_name` | `"n8n_db"` | PostgreSQL database name. Injected as `DB_POSTGRESDB_DATABASE`. **Do not change after initial deployment.** |
 | `db_user` | `"n8n_user"` | PostgreSQL user. Injected as `DB_POSTGRESDB_USER`. Password auto-generated and injected as `DB_POSTGRESDB_PASSWORD`. |
-| `database_password_length` | `16` | Auto-generated password length (8–64 characters). |
+| `database_password_length` | `32` | Auto-generated password length (16–64 characters). |
 | `enable_auto_password_rotation` | `false` | Automates password rotation via Cloud Run + Eventarc. See §4.A. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts. |
 
@@ -347,7 +337,7 @@ applied in `main.tf` (`backup_file = var.backup_uri`).
 | `enable_backup_import` | `false` | Triggers a one-time import job to restore the backup at `backup_uri`. |
 | `backup_source` | `"gcs"` | Source: `"gcs"` (full GCS URI) or `"gdrive"` (Google Drive file ID). |
 | `backup_uri` | `""` | For GCS: e.g. `"gs://my-bucket/backups/n8n.sql"`. Mapped to `backup_file` in App_CloudRun. |
-| `backup_format` | `"sql"` | Format of the backup file. Accepted: `sql`, `gz`, `tar`, `tgz`, `tar.gz`, `zip`. |
+| `backup_format` | `"sql"` | Format of the backup file. Accepted: `sql`, `gz`, `tar`, `tgz`, `tar.gz`, `zip`. Note: `"auto"` is **not** a valid value here (it appears in the UI option list but fails validation). |
 
 ---
 
@@ -358,25 +348,29 @@ applied in `main.tf` (`backup_file = var.backup_uri`).
 Redis enables n8n queue mode, allowing reliable workflow execution and horizontal
 scaling. When `enable_redis = true` and `redis_host` is left empty, the module
 defaults to using the NFS server IP via the `$(NFS_SERVER_IP)` runtime placeholder
-injected by App_CloudRun. Override `redis_host` to point at an external instance
-such as Cloud Memorystore.
+resolved by `entrypoint.sh`. Override `redis_host` to point at an external instance
+such as Cloud Memorystore. The injected environment variables are `ENABLE_REDIS`,
+`QUEUE_BULL_REDIS_HOST`, `QUEUE_BULL_REDIS_PORT`, and `QUEUE_BULL_REDIS_PASSWORD`
+(when `redis_auth` is set).
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `true` | Injects `REDIS_HOST` and `REDIS_PORT` into the Cloud Run service. |
+| `enable_redis` | `true` | Injects `ENABLE_REDIS`, `QUEUE_BULL_REDIS_HOST`, and `QUEUE_BULL_REDIS_PORT` into the Cloud Run service. |
 | `redis_host` | `""` | Redis hostname or IP. Leave empty to use `$(NFS_SERVER_IP)` (NFS server IP resolved at runtime). |
-| `redis_port` | `"6379"` | Redis TCP port (string). Injected as `REDIS_PORT`. |
+| `redis_port` | `"6379"` | Redis TCP port (string). Injected as `QUEUE_BULL_REDIS_PORT`. |
 | `redis_auth` | `""` | Redis AUTH password. Leave empty if authentication is not enabled. |
 
 ### §8.B · Custom SQL
 
-Custom SQL scripts run during database initialisation, before the application
-starts. Useful for schema migrations or seeding reference data.
+Custom SQL scripts stored in GCS are run against the database during initialisation,
+before the application starts. Useful for schema migrations or seeding reference data.
 
 | Variable | Default | Description |
 |---|---|---|
-| `custom_sql` | `""` | SQL statement(s) executed once against the n8n PostgreSQL database during initialisation. |
-| `custom_sql_file` | `""` | Path to a `.sql` file executed during initialisation (alternative to inline `custom_sql`). |
+| `enable_custom_sql_scripts` | `false` | Runs custom SQL scripts from a GCS bucket against the application database after provisioning. |
+| `custom_sql_scripts_bucket` | `""` | GCS bucket name (without `gs://`) containing the SQL scripts. Required when `enable_custom_sql_scripts = true`. |
+| `custom_sql_scripts_path` | `""` | Path prefix within the GCS bucket from which `.sql` files are executed in lexicographic order. |
+| `custom_sql_scripts_use_root` | `false` | Execute scripts as the root database user instead of the application user. Enable for scripts requiring elevated privileges (e.g., creating extensions or roles). |
 
 ### §8.C · Observability
 
@@ -418,23 +412,30 @@ variables. They are listed here for diagnostic and integration reference.
 | Variable | Value / Source | Notes |
 |---|---|---|
 | `N8N_PORT` | `"5678"` | Hardcoded to match `container_port`. |
+| `N8N_PROTOCOL` | `"https"` | Sets the public protocol for webhook URL generation. |
+| `N8N_DIAGNOSTICS_ENABLED` | `"true"` | Enables usage telemetry. Override in `environment_variables` to disable. |
+| `N8N_METRICS` | `"true"` | Enables Prometheus metrics endpoint. |
+| `N8N_SECURE_COOKIE` | `"false"` | Disables secure cookie flag — required because Cloud Run terminates TLS before the container. |
+| `N8N_DEFAULT_BINARY_DATA_MODE` | `"filesystem"` | Stores binary workflow data on the GCS Fuse filesystem volume. |
 | `DB_TYPE` | `"postgresdb"` | Forces PostgreSQL backend. |
-| `DB_POSTGRESDB_HOST` | Cloud SQL private IP | Resolved from the provisioned Cloud SQL instance. |
-| `DB_POSTGRESDB_PORT` | `"5432"` | Standard PostgreSQL port. |
-| `DB_POSTGRESDB_DATABASE` | `var.db_name` | Defaults to `"n8n_db"`. |
-| `DB_POSTGRESDB_USER` | `var.db_user` | Defaults to `"n8n_user"`. |
-| `DB_POSTGRESDB_PASSWORD` | Secret Manager ref | Auto-generated; injected as a secret env var. |
+| `DB_POSTGRESDB_HOST` | Cloud SQL socket/IP | Resolved at runtime by `entrypoint.sh` from the `DB_HOST` platform variable. |
+| `DB_POSTGRESDB_DATABASE` | `var.db_name` | Mapped from `DB_NAME` by `entrypoint.sh`. Defaults to `"n8n_db"`. |
+| `DB_POSTGRESDB_USER` | `var.db_user` | Mapped from `DB_USER` by `entrypoint.sh`. Defaults to `"n8n_user"`. |
+| `DB_POSTGRESDB_PASSWORD` | Secret Manager ref | Mapped from `DB_PASSWORD` by `entrypoint.sh`; auto-generated and injected as a secret env var. |
 | `N8N_ENCRYPTION_KEY` | Secret Manager ref | Auto-generated encryption key; injected as a secret env var. |
 | `N8N_SMTP_PASS` | Secret Manager ref | Auto-generated SMTP password; injected as a secret env var. |
 | `WEBHOOK_URL` | Predicted service URL | Pre-computed as `https://<resource_prefix>-<project_number>.<region>.run.app` before the service is created. |
 | `N8N_EDITOR_BASE_URL` | Predicted service URL | Same value as `WEBHOOK_URL`. |
+| `ENABLE_REDIS` | `"true"` / `"false"` | Always injected; reflects the `enable_redis` variable value. |
 
 ### Conditional Injections
 
 | Condition | Variable | Value |
 |---|---|---|
-| `enable_redis = true` | `REDIS_HOST` | `var.redis_host` if set; otherwise `$(NFS_SERVER_IP)` (resolved at runtime by App_CloudRun). |
-| `enable_redis = true` | `REDIS_PORT` | `var.redis_port` (default `"6379"`). |
+| always | `ENABLE_REDIS` | `"true"` when `enable_redis = true`; `"false"` otherwise. |
+| `enable_redis = true` | `QUEUE_BULL_REDIS_HOST` | `var.redis_host` if set; otherwise `$(NFS_SERVER_IP)` (resolved at runtime by `entrypoint.sh`). |
+| `enable_redis = true` | `QUEUE_BULL_REDIS_PORT` | `var.redis_port` (default `"6379"`). |
+| `enable_redis = true` and `redis_auth` non-empty | `QUEUE_BULL_REDIS_PASSWORD` | `var.redis_auth`. |
 
 ### Structural Wiring
 
@@ -443,6 +444,7 @@ variables. They are listed here for diagnostic and integration reference.
 | `enable_cloudsql_volume` | Passed through from `var.enable_cloudsql_volume` (default `true`). Not forced. |
 | `scripts_dir` | Resolved as `abspath("${module.n8n_app.path}/scripts")` — points to N8N_Common's bundled scripts. |
 | `backup_file` | Mapped from `var.backup_uri` in `main.tf`. |
+| `module_explicit_secret_values` | Receives `module.n8n_app.secret_values` — the raw generated secret values. Passed to `App_CloudRun` to allow GKE-style direct Kubernetes Secret injection, bypassing Secret Manager read-after-write delays. |
 | Probe resolution | `startup_probe_config` / `health_check_config` take precedence over flat `startup_probe` / `liveness_probe` variables when both are supplied. |
 
 ---
@@ -465,65 +467,92 @@ Complete list of all input variables, grouped by UI section.
 | 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
 | 1 | `project_id` | string | — | yes |
 | 1 | `tenant_deployment_id` | string | `"demo"` | yes |
-| 1 | `region` | string | `"us-central1"` | — |
-| 1 | `resource_prefix` | string | `"n8n"` | — |
-| 1 | `application_name` | string | `"n8n"` | — |
-| 1 | `display_name` | string | `"N8N Workflow Automation"` | yes |
-| 1 | `description` | string | `"n8n Workflow Automation - …"` | yes |
-| 1 | `application_domains` | list(string) | `[]` | yes |
 | 1 | `support_users` | list(string) | `[]` | yes |
-| 2 | `resource_labels` | map(string) | `{}` | yes |
+| 1 | `resource_labels` | map(string) | `{}` | yes |
+| 2 | `application_name` | string | `"n8n"` | — |
+| 2 | `display_name` | string | `"N8N Workflow Automation"` | yes |
+| 2 | `description` | string | `"n8n Workflow Automation - …"` | yes |
+| 2 | `application_version` | string | `"2.4.7"` | yes |
+| 3 | `deploy_application` | bool | `true` | yes |
 | 3 | `cpu_limit` | string | `"2000m"` | yes |
 | 3 | `memory_limit` | string | `"4Gi"` | yes |
 | 3 | `min_instance_count` | number | `0` | yes |
-| 3 | `max_instance_count` | number | `3` | yes |
+| 3 | `max_instance_count` | number | `1` | yes |
 | 3 | `container_port` | number | `5678` | — |
 | 3 | `execution_environment` | string | `"gen2"` | yes |
-| 3 | `startup_cpu_boost` | bool | `true` | yes |
+| 3 | `timeout_seconds` | number | `300` | yes |
+| 3 | `enable_cloudsql_volume` | bool | `true` | yes |
 | 3 | `service_annotations` | map(string) | `{}` | yes |
 | 3 | `service_labels` | map(string) | `{}` | yes |
-| 4 | `vpc_network` | string | `"default"` | — |
-| 4 | `vpc_subnetwork` | string | `"default"` | — |
-| 4 | `enable_vpc_connector` | bool | `true` | — |
-| 4 | `vpc_connector_max_throughput` | number | `300` | yes |
-| 4 | `enable_cloudsql_volume` | bool | `true` | yes |
+| 3 | `enable_image_mirroring` | bool | `true` | yes |
+| 3 | `traffic_split` | list(object) | `[]` | yes |
+| 3 | `max_revisions_to_retain` | number | `7` | yes |
+| 3 | `container_protocol` | string | `"http1"` | yes |
+| 3 | `cloudsql_volume_mount_path` | string | `"/cloudsql"` | yes |
+| 4 | `ingress_settings` | string | `"all"` | yes |
+| 4 | `vpc_egress_setting` | string | `"PRIVATE_RANGES_ONLY"` | yes |
+| 4 | `enable_iap` | bool | `false` | yes |
+| 4 | `iap_authorized_users` | list(string) | `[]` | yes |
+| 4 | `iap_authorized_groups` | list(string) | `[]` | yes |
 | 5 | `environment_variables` | map(string) | `{ SMTP_HOST = "", … }` | yes |
 | 5 | `secret_environment_variables` | map(string) | `{}` | yes |
-| 6 | `container_image` | string | `""` | yes |
-| 6 | `artifact_registry_repository` | string | `""` | — |
-| 6 | `build_args` | map(string) | `{}` | yes |
-| 6 | `build_context` | string | `""` | yes |
-| 6 | `dockerfile` | string | `""` | yes |
-| 7 | `session_affinity` | bool | `false` | yes |
-| 7 | `ingress` | string | `"INGRESS_TRAFFIC_ALL"` | yes |
-| 7 | `traffic_split` | list(object) | `[]` | yes |
-| 7 | `custom_audiences` | list(string) | `[]` | yes |
-| 8 | `custom_sql` | string | `""` | yes |
-| 8 | `custom_sql_file` | string | `""` | yes |
-| 9 | `enable_auto_password_rotation` | bool | `false` | yes |
-| 9 | `rotation_propagation_delay_sec` | number | `90` | yes |
-| 10 | `startup_probe` | string | `""` | yes |
-| 10 | `liveness_probe` | string | `""` | yes |
-| 10 | `startup_probe_config` | object | *(structured)* | yes |
-| 10 | `health_check_config` | object | *(structured)* | yes |
-| 11 | `enable_nfs` | bool | `true` | — |
-| 11 | `nfs_mount_path` | string | `"/mnt/nfs"` | — |
-| 11 | `storage_buckets` | list(object) | `[{ name_suffix = "data" }]` | yes |
-| 11 | `create_cloud_storage` | bool | `true` | yes |
-| 11 | `gcs_volumes` | list(object) | `[]` | yes |
-| 12 | `db_name` | string | `"n8n_db"` | — |
-| 12 | `db_user` | string | `"n8n_user"` | — |
-| 12 | `database_password_length` | number | `16` | yes |
+| 5 | `secret_rotation_period` | string | `"2592000s"` | yes |
+| 5 | `secret_propagation_delay` | number | `30` | yes |
+| 6 | `backup_schedule` | string | `"0 2 * * *"` | yes |
+| 6 | `backup_retention_days` | number | `7` | yes |
+| 6 | `enable_backup_import` | bool | `false` | yes |
+| 6 | `backup_source` | string | `"gcs"` | yes |
+| 6 | `backup_uri` | string | `""` | yes |
+| 6 | `backup_format` | string | `"sql"` | yes |
+| 7 | `enable_cicd_trigger` | bool | `false` | yes |
+| 7 | `github_repository_url` | string | `""` | yes |
+| 7 | `github_token` | string | `""` | yes |
+| 7 | `github_app_installation_id` | string | `""` | yes |
+| 7 | `cicd_trigger_config` | object | `{ branch_pattern = "^main$" }` | yes |
+| 7 | `enable_cloud_deploy` | bool | `false` | yes |
+| 7 | `cloud_deploy_stages` | list(object) | `[dev, staging, prod(approval)]` | yes |
+| 7 | `enable_binary_authorization` | bool | `false` | yes |
+| 8 | `enable_custom_sql_scripts` | bool | `false` | yes |
+| 8 | `custom_sql_scripts_bucket` | string | `""` | yes |
+| 8 | `custom_sql_scripts_path` | string | `""` | yes |
+| 8 | `custom_sql_scripts_use_root` | bool | `false` | yes |
+| 9 | `enable_cloud_armor` | bool | `false` | yes |
+| 9 | `admin_ip_ranges` | list(string) | `[]` | yes |
+| 9 | `application_domains` | list(string) | `[]` | yes |
+| 9 | `enable_cdn` | bool | `false` | yes |
+| 9 | `max_images_to_retain` | number | `7` | yes |
+| 9 | `delete_untagged_images` | bool | `true` | yes |
+| 9 | `image_retention_days` | number | `30` | yes |
+| 10 | `create_cloud_storage` | bool | `true` | yes |
+| 10 | `storage_buckets` | list(object) | `[{ name_suffix = "data" }]` | yes |
+| 10 | `enable_nfs` | bool | `true` | — |
+| 10 | `nfs_mount_path` | string | `"/mnt/nfs"` | — |
+| 10 | `nfs_instance_name` | string | `""` | yes |
+| 10 | `nfs_instance_base_name` | string | `"app-nfs"` | yes |
+| 10 | `gcs_volumes` | list(object) | `[]` | yes |
+| 10 | `manage_storage_kms_iam` | bool | `false` | yes |
+| 10 | `enable_artifact_registry_cmek` | bool | `false` | yes |
+| 11 | `db_name` | string | `"n8n_db"` | — |
+| 11 | `db_user` | string | `"n8n_user"` | — |
+| 11 | `database_password_length` | number | `32` | yes |
+| 11 | `enable_auto_password_rotation` | bool | `false` | yes |
+| 11 | `rotation_propagation_delay_sec` | number | `90` | yes |
+| 12 | `initialization_jobs` | list(object) | `[]` | yes |
+| 12 | `cron_jobs` | list(object) | `[]` | yes |
+| 13 | `startup_probe` | object | *(HTTP `/`, 120s delay)* | yes |
+| 13 | `liveness_probe` | object | *(HTTP `/`, 30s delay)* | yes |
+| 13 | `startup_probe_config` | object | *(TCP, 240s timeout)* | yes |
+| 13 | `health_check_config` | object | *(HTTP `/`, 10s period)* | yes |
 | 13 | `uptime_check_config` | object | `{ enabled = true, path = "/" }` | yes |
 | 13 | `alert_policies` | list(object) | `[]` | yes |
-| 14 | `backup_schedule` | string | `"0 2 * * *"` | yes |
-| 14 | `backup_retention_days` | number | `7` | yes |
-| 14 | `enable_backup_import` | bool | `false` | yes |
-| 14 | `backup_source` | string | `"gcs"` | yes |
-| 14 | `backup_uri` | string | `""` | yes |
-| 14 | `backup_format` | string | `"sql"` | yes |
 | 20 | `enable_redis` | bool | `true` | yes |
 | 20 | `redis_host` | string | `""` | yes |
 | 20 | `redis_port` | string | `"6379"` | yes |
 | 20 | `redis_auth` | string | `""` | yes |
 | 21 | `enable_vpc_sc` | bool | `false` | yes |
+| 21 | `vpc_cidr_ranges` | list(string) | `[]` | yes |
+| 21 | `vpc_sc_dry_run` | bool | `true` | yes |
+| 21 | `organization_id` | string | `""` | yes |
+| 21 | `enable_audit_logging` | bool | `false` | yes |
+
+

@@ -1,15 +1,4 @@
----
-title: "MC Bank GKE Module Documentation"
-sidebar_label: "MC Bank GKE"
----
-
-# MC Bank GKE Module
-
-<YouTubeEmbed videoId="SYfdsLLLLrE" poster="https://storage.googleapis.com/rad-public-2b65/modules/Bank_GKE_MC.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Bank_GKE_MC.pdf" target="_blank">View Presentation (PDF)</a>
+# MC_Bank_GKE Module
 
 ## Overview
 

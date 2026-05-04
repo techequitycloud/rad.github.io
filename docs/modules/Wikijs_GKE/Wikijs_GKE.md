@@ -1,17 +1,4 @@
----
-title: "Wiki.js GKE Configuration Guide"
-sidebar_label: "GKE"
----
-
-# Wikijs GKE Module
-
-<YouTubeEmbed videoId="K7KZauUYk-w" poster="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Wikijs_GKE Module — Configuration Guide
 
 `Wikijs_GKE` is a pre-configured wrapper around the [`App_GKE`](../App_GKE/App_GKE.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Kubernetes Engine (GKE) Autopilot.
 
@@ -162,7 +149,7 @@ The following groups are available in `Wikijs_GKE` and behave exactly as documen
 | Binary Authorization | `enable_binary_authorization`, `binauthz_evaluation_mode` | [App_GKE §4.C Binary Authorization](../App_GKE/App_GKE.md#c-binary-authorization) |
 | Identity-Aware Proxy | `enable_iap`, `iap_authorized_users`, `iap_authorized_groups`, `iap_oauth_client_id`, `iap_oauth_client_secret`, `iap_support_email` | [App_GKE §4.B Identity-Aware Proxy (IAP)](../App_GKE/App_GKE.md#b-identity-aware-proxy-iap) |
 | Cloud Armor | `enable_cloud_armor`, `cloud_armor_policy_name`, `admin_ip_ranges` | [App_GKE §4.A Cloud Armor WAF](../App_GKE/App_GKE.md#a-cloud-armor-waf) |
-| VPC Service Controls | `enable_vpc_sc` | [App_GKE §4.D VPC Service Controls](../App_GKE/App_GKE.md#d-vpc-service-controls) |
+| VPC Service Controls | `enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_sc_dry_run`, `organization_id`, `enable_audit_logging` | [App_GKE §4.D VPC Service Controls](../App_GKE/App_GKE.md#d-vpc-service-controls) |
 | Secrets Store CSI | Always enabled — no configuration required. | [App_GKE §4.E Secrets Store CSI](../App_GKE/App_GKE.md#e-secrets-store-csi-driver) |
 | Storage & Filesystem — NFS | `enable_nfs`, `nfs_mount_path`, `nfs_instance_name`, `nfs_instance_base_name` | [App_GKE §3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) |
 | Storage & Filesystem — GCS | `create_cloud_storage`, `storage_buckets`, `gcs_volumes` | [App_GKE §3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) |
@@ -181,12 +168,52 @@ The following groups are available in `Wikijs_GKE` and behave exactly as documen
 | Redis Cache | `enable_redis`, `redis_host`, `redis_port`, `redis_auth` | [App_GKE §8.A Redis / Memorystore](../App_GKE/App_GKE.md#a-redis--memorystore) |
 | Pod Disruption Budget | `enable_pod_disruption_budget`, `pdb_min_available` | [App_GKE §7.A Pod Disruption Budget](../App_GKE/App_GKE.md#a-pod-disruption-budgets) |
 | Topology Spread | `enable_topology_spread`, `topology_spread_strict` | [App_GKE §7.B Topology Spread](../App_GKE/App_GKE.md#b-topology-spread-constraints) |
-| Resource Quotas | `enable_resource_quota`, `quota_cpu_requests`, `quota_cpu_limits`, `quota_memory_requests`, `quota_memory_limits` | [App_GKE §7.C Resource Quotas](../App_GKE/App_GKE.md#c-resource-quotas) |
+| Resource Quotas | `enable_resource_quota`, `quota_cpu_requests`, `quota_cpu_limits`, `quota_memory_requests`, `quota_memory_limits`, `quota_max_pods`, `quota_max_services`, `quota_max_pvcs` | [App_GKE §7.C Resource Quotas](../App_GKE/App_GKE.md#c-resource-quotas) |
 | Auto Password Rotation | `enable_auto_password_rotation`, `rotation_propagation_delay_sec` | [App_GKE §7.D Auto Password Rotation](../App_GKE/App_GKE.md#d-auto-password-rotation) |
 | Service Mesh | `configure_service_mesh` | [App_GKE §8.C Service Mesh](../App_GKE/App_GKE.md#c-service-mesh-asm-via-fleet) |
 | Multi-Cluster Services | `enable_multi_cluster_service` | [App_GKE §8.D Multi-Cluster Services](../App_GKE/App_GKE.md#d-multi-cluster-services-mcs) |
 
 > **Note on NFS defaults:** `enable_nfs` defaults to `true` in `Wikijs_GKE`. Wiki.js uses the NFS mount for shared page assets and uploads across pod replicas. Disabling NFS (`enable_nfs = false`) is only appropriate for single-replica deployments where data loss on pod restart is acceptable.
+
+---
+
+## Required Providers
+
+`Wikijs_GKE` declares the following required providers in `versions.tf` (minimum versions):
+
+| Provider | Source | Version |
+|---|---|---|
+| `google` | `hashicorp/google` | `>= 6.0.0` |
+| `google-beta` | `hashicorp/google-beta` | `>= 6.0.0` |
+| `kubernetes` | `hashicorp/kubernetes` | `>= 2.0` |
+| `random` | `hashicorp/random` | `>= 3.0` |
+| `external` | `hashicorp/external` | `>= 2.0` |
+| `null` | `hashicorp/null` | `>= 3.0` |
+| `github` | `integrations/github` | `>= 5.0.0` (configuration alias: `github.cicd`) |
+
+OpenTofu/Terraform `>= 1.0` is required.
+
+---
+
+## Cross-Variable Validation Guards
+
+`Wikijs_GKE` includes a `validation.tf` file with lifecycle `precondition` blocks that catch invalid configuration combinations at plan time:
+
+| Guard | Condition |
+|---|---|
+| Instance count | `min_instance_count` must not exceed `max_instance_count` |
+| Redis without host | When `enable_redis = true`, either `redis_host` must be non-empty or `enable_nfs = true` (NFS server IP used as Redis host fallback) |
+| IAP without credentials | When `enable_iap = true`, both `iap_oauth_client_id` and `iap_oauth_client_secret` must be provided |
+| CloudSQL volume without database | `enable_cloudsql_volume` must not be `true` when `database_type = "NONE"` |
+
+---
+
+## Module Outputs
+
+| Output | Description |
+|--------|-------------|
+| `service_url` | URL of the deployed Wiki.js service. |
+| `kubernetes_ready` | `true` when the GKE cluster endpoint is available and all Kubernetes workload resources have been deployed. `false` on the first apply of a new inline cluster — the cluster is created but its endpoint is not yet readable, so Kubernetes resources are skipped. The CI/CD pipeline must detect this value and re-run `apply` to complete the deployment. |
 
 ---
 
@@ -200,10 +227,10 @@ The following Wiki.js-specific points supplement that analysis:
 
 On first deployment, the `Wikijs_Common` initialisation jobs run in order before the main pod receives traffic:
 
-1. **`db-init`** — runs `psql` to create the `wikijs` database schema and installs the `pg_trgm` extension. Requires the Cloud SQL instance and the `wikijs` database user to be fully provisioned. Terraform waits for this job to complete before proceeding.
+1. **`db-init`** — runs `psql` to create the `wikijs` database user and database, then grants the necessary privileges. The `pg_trgm` extension is installed separately by `App_GKE` using the `enable_postgres_extensions = true` / `postgres_extensions = ["pg_trgm"]` configuration emitted by `Wikijs_Common`. Requires the Cloud SQL instance to be fully provisioned. Terraform waits for this job to complete before proceeding.
 2. The Wiki.js pod then starts. It connects to PostgreSQL via the Cloud SQL Auth Proxy Unix socket (`/cloudsql`), reads `DB_*` environment variables, and completes its own startup migration.
 
-If the `db-init` job fails, the Wiki.js pod will also fail to start (it will crash-loop until the schema exists). Check the Cloud Run Job execution logs in **Cloud Run → Jobs** if the initial deployment appears to hang.
+If the `db-init` job fails, the Wiki.js pod will also fail to start (it will crash-loop until the schema exists). Check the Kubernetes Job logs in **GKE → Workloads → Jobs** if the initial deployment appears to hang.
 
 ### NFS dependency
 

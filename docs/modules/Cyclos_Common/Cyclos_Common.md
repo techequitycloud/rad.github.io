@@ -1,8 +1,3 @@
----
-title: "Cyclos Common Shared Configuration Module"
-sidebar_label: "Common"
----
-
 # Cyclos_Common Shared Configuration Module
 
 The `Cyclos_Common` module defines the Cyclos banking and payment platform configuration for the RAD Modules ecosystem. It is a **configuration library**, not a resource-creating module — it produces a standardized application configuration object consumed by platform-specific wrapper modules (`Cyclos_CloudRun` and `Cyclos_GKE`).
@@ -72,6 +67,7 @@ A list of GCS bucket configuration objects provisioned by the platform module:
 | `location` | Deployment region |
 | `storage_class` | `"STANDARD"` |
 | `versioning_enabled` | `false` |
+| `force_destroy` | `true` |
 | `public_access_prevention` | `"enforced"` |
 
 This bucket stores all Cyclos uploaded files, media, and custom field binaries via the GCS Content Manager (`cyclos.storedFileContentManager = gcs`).
@@ -88,10 +84,10 @@ The absolute path to the module directory, used by wrapper modules to locate the
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `project_id` | `string` | required | GCP project ID |
-| `resource_prefix` | `string` | `""` | Prefix for resource naming (e.g., `appcyclos<tenant><random>`) |
+| `resource_prefix` | `string` | required | Prefix for resource naming (e.g., `appcyclos<tenant><random>`). Computed by the wrapper module from `application_name`, `tenant_deployment_id`, and `deployment_id`. |
 | `labels` | `map(string)` | `{}` | Labels applied to all resources |
 | `deployment_id` | `string` | `""` | Unique deployment identifier |
-| `deployment_id_suffix` | `string` | `""` | Random suffix used in resource name calculations |
+| `deployment_id_suffix` | `string` | required | Random suffix used in resource name calculations. Set to the same value as `deployment_id` by wrapper modules. |
 | `service_url` | `string` | `""` | Accessible service URL (empty for GKE — URL is not known at plan time) |
 | `tenant_deployment_id` | `string` | `"demo"` | Deployment environment identifier (1–20 lowercase alphanumeric characters) |
 | `deployment_region` | `string` | `"us-central1"` | Primary GCP region for deployment |
@@ -113,8 +109,8 @@ The absolute path to the module directory, used by wrapper modules to locate the
 | `environment_variables` | `map(string)` | see §4 | Environment variables merged into the container spec |
 | `enable_cloudsql_volume` | `bool` | `false` | Mount a Cloud SQL Auth Proxy sidecar socket |
 | `initialization_jobs` | `list(object)` | `[]` | Custom initialization jobs; if empty, the built-in `db-init` job is used |
-| `startup_probe` | `object` | HTTP `/api`, 90s delay, 30s timeout, 10s period, 30 failures | Startup health probe configuration |
-| `liveness_probe` | `object` | HTTP `/api`, 120s delay, 10s timeout, 30s period, 3 failures | Liveness health probe configuration |
+| `startup_probe` | `object` | HTTP `/api`, 90s delay, 30s timeout, 60s period, 10 failures | Startup health probe configuration |
+| `liveness_probe` | `object` | HTTP `/api`, 120s delay, 10s timeout, 60s period, 3 failures | Liveness health probe configuration |
 
 ---
 
@@ -202,7 +198,7 @@ Optional Hazelcast cluster configuration for multi-instance deployments:
 | Aspect | Cyclos_CloudRun | Cyclos_GKE |
 |--------|-----------------|------------|
 | `service_url` | Set to the Cloud Run service URL | Empty string (not known at plan time) |
-| `enable_cloudsql_volume` | Optional (Auth Proxy sidecar) | Not used (TCP connection to Cloud SQL) |
+| `enable_cloudsql_volume` | Optional (Auth Proxy sidecar) | Optional (defaults to `false`; Cyclos uses TCP to Cloud SQL private IP) |
 | `DB_HOST` | Cloud SQL Auth Proxy socket path | Cloud SQL private IP |
 | NFS | Disabled (`enable_nfs = false`) | Disabled (GCS used instead) |
 | Redis | Not supported | Not supported |

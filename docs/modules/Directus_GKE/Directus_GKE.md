@@ -1,17 +1,4 @@
----
-title: "Directus GKE Configuration Guide"
-sidebar_label: "GKE"
----
-
-# Directus GKE Module
-
-<YouTubeEmbed videoId="KrfBYyPNRw8" poster="https://storage.googleapis.com/rad-public-2b65/modules/Directus_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Directus_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Directus_GKE Module — Configuration Guide
 
 `Directus_GKE` is a wrapper module that deploys [Directus](https://directus.io/) — an open-source headless CMS and data API platform — on Google Kubernetes Engine (GKE) Autopilot. It composes two underlying modules:
 
@@ -41,9 +28,9 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Backup Schedule & Retention | §3.B Database (Cloud SQL) | Identical. |
 | Custom SQL Scripts | §3.E Initialization Jobs & CronJobs | Identical. |
 | Observability & Health Checks | §3.A Compute (GKE Autopilot) | Directus exposes `startup_probe` and `liveness_probe` pre-tuned for `/server/health` — see [Runtime Configuration](#runtime-configuration) below. |
-| Cloud Armor WAF | §4.A Cloud Armor WAF | Identical. |
-| Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Identical. |
-| Binary Authorization | §4.C Binary Authorization | Identical. |
+| Cloud Armor WAF | §4.A Cloud Armor WAF | `Directus_GKE` additionally exposes `cloud_armor_policy_name` (default `"default-waf-policy"`) to target a named policy. |
+| Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | `Directus_GKE` additionally exposes `iap_oauth_client_id`, `iap_oauth_client_secret` (both sensitive), and `iap_support_email` — required for GKE Gateway-based IAP. |
+| Binary Authorization | §4.C Binary Authorization | `Directus_GKE` additionally exposes `binauthz_evaluation_mode` (default `"ALWAYS_ALLOW"`; options: `ALWAYS_ALLOW`, `REQUIRE_ATTESTATION`, `ALWAYS_DENY`). |
 | VPC Service Controls | §4.D VPC Service Controls | Identical. |
 | Secrets Store CSI Driver | §4.E Secrets Store CSI Driver | Identical. |
 | Traffic & Ingress | §5 Traffic & Ingress | Identical. |
@@ -57,7 +44,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Resource Quotas | §7.C Resource Quotas | Identical. |
 | Auto Password Rotation | §7.D Auto Password Rotation | Identical. |
 | Redis Cache | §8.A Redis | `enable_redis` defaults to `true` for Directus. See [Redis Cache](#redis-cache) for Directus-specific configuration. |
-| Backup Import | §8.B Backup Import | Uses `backup_uri` instead of `backup_file` — see [Variable Name Differences](#variable-name-differences). |
+| Backup Import | §8.B Backup Import | Uses `backup_uri` (preferred) instead of `backup_file` — see [Variable Name Differences](#variable-name-differences). A legacy `backup_file` variable also exists (default `"backup.sql"`) but is not forwarded to App_GKE; use `backup_uri` instead. |
 | Service Mesh (ASM) | §8.C Service Mesh (ASM via Fleet) | Identical. |
 | Multi-Cluster Services | §8.D Multi-Cluster Services (MCS) | Identical. |
 
@@ -92,14 +79,14 @@ Several variables in `Directus_GKE` use different names from their `App_GKE` equ
 
 | Directus_GKE Variable | App_GKE Equivalent | Notes |
 |---|---|---|
-| `db_name` | `application_database_name` | Name of the database created within Cloud SQL. Default: `"directus"`. |
-| `db_user` | `application_database_user` | Username of the database user. Default: `"directus"`. |
-| `description` | `application_description` | Brief description of the application. |
-| `cpu_limit` | `container_resources.cpu_limit` | Top-level convenience variable; overrides the `cpu_limit` field of `container_resources`. |
-| `memory_limit` | `container_resources.memory_limit` | Top-level convenience variable; overrides the `memory_limit` field of `container_resources`. |
+| `db_name` | `application_database_name` | Name of the database created within Cloud SQL. Default: `"directus"`. Passed to App_GKE as `application_database_name`. |
+| `db_user` | `application_database_user` | Username of the database user. Default: `"directus"`. Passed to App_GKE as `application_database_user`. |
+| `description` | `application_description` | Brief description passed to App_GKE as `application_description`. Note: Directus_GKE also exposes `application_description` as a separate variable (default `"Directus CMS on GKE Autopilot"`) which is **overridden** by `description` at the App_GKE call site — use `description` to control this field. |
+| `cpu_limit` | `container_resources.cpu_limit` | Top-level convenience variable; overrides the `cpu_limit` field of `container_resources`. Default: `"2000m"`. |
+| `memory_limit` | `container_resources.memory_limit` | Top-level convenience variable; overrides the `memory_limit` field of `container_resources`. Default: `"2Gi"`. |
 | `startup_probe` | *(no direct equivalent)* | Directus-specific probe variable passed to `Directus_Common`. Does **not** override `startup_probe_config`, which is passed directly to `App_GKE`. See [Runtime Configuration](#runtime-configuration). |
 | `liveness_probe` | *(no direct equivalent)* | Directus-specific probe variable passed to `Directus_Common`. Does **not** override `health_check_config`, which is passed directly to `App_GKE`. See [Runtime Configuration](#runtime-configuration). |
-| `backup_uri` | `backup_file` | URI of the backup file to import. For GCS: `gs://bucket/path/file.sql`. For Google Drive: the file ID. |
+| `backup_uri` | `backup_file` (App_GKE parameter) | URI of the backup file to import. For GCS: `gs://bucket/path/file.sql`. For Google Drive: the file ID. Note: Directus_GKE also exposes a `backup_file` variable (default `"backup.sql"`) which is a legacy field — use `backup_uri` instead. |
 
 ---
 
@@ -128,11 +115,14 @@ gcloud projects get-iam-policy PROJECT_ID \
 
 ## Project & Identity
 
-All variables described in [App_GKE.md §2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) apply to `Directus_GKE` unchanged. In addition, `Directus_GKE` exposes the following variable that has no equivalent in `App_GKE`:
+All variables described in [App_GKE.md §2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) apply to `Directus_GKE` unchanged. In addition, `Directus_GKE` exposes the following variables that have no equivalent in `App_GKE`:
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
+| `deployment_id` | `""` | Short alphanumeric string (e.g. `"a1b2c3"`) | Short alphanumeric identifier appended to all resource names. Auto-generated when empty; set explicitly to pin a stable suffix across Terraform runs. |
 | `deployment_region` | `"us-central1"` | GCP region identifier (e.g. `"us-central1"`, `"europe-west1"`) | Fallback GCP region used when the module's network discovery routine cannot determine the deployment region from existing VPC subnets in the project. The module inspects subnet configurations at apply time and derives the region automatically in most environments. Set this explicitly when (1) the project has no pre-existing subnets and `Services_GCP` has not yet been deployed, or (2) the default `"us-central1"` does not match the intended deployment target. If network discovery succeeds, the discovered region takes precedence over this value. |
+| `network_name` | `""` | VPC network name | Name of the VPC network to use. Leave empty to auto-discover a single `Services_GCP`-managed network. Required when more than one network exists in the project. |
+| `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` | CIDR string | CIDR range for the inline GKE subnet created when a `Services_GCP` VPC exists but no GKE cluster is present. Must not overlap with other subnets. Each `App_GKE` deployment sharing the same VPC must use a distinct CIDR. |
 
 **Validating Deployment Region:**
 ```bash

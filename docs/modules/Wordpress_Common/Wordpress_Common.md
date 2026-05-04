@@ -1,8 +1,3 @@
----
-title: "Wordpress Common Shared Configuration Module"
-sidebar_label: "Common"
----
-
 # Wordpress_Common Module
 
 ## Overview
@@ -140,6 +135,8 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 | `initialization_jobs` | list(any) | `[]` | Override default jobs (empty = use `db-init`) |
 | `enable_cloudsql_volume` | bool | `true` | Mount Cloud SQL Auth Proxy sidecar socket volume |
 
+> **Note:** `cloudsql_volume_mount_path` is hardcoded to `"/cloudsql"` in the config output — it is not a variable exposed by `Wordpress_Common`. The callers (`Wordpress_CloudRun`, `Wordpress_GKE`) may override it when merging the config into `application_modules`.
+
 ### WordPress-Specific
 
 | Variable | Type | Default | Description |
@@ -208,11 +205,13 @@ Callers may inject additional secret references via `var.secret_environment_vari
 | Property | Value |
 |----------|-------|
 | Image | `mysql:8.0-debian` |
-| Script | `scripts/db-init.sh` |
+| Script | `scripts/db-init.sh` (resolved to an absolute path via `abspath`) |
 | `execute_on_apply` | `true` |
 | `max_retries` | 3 |
 | Timeout | 600s |
 | Secret env vars | `{}` — ROOT_PASSWORD and DB_PASSWORD are injected by App_CloudRun/App_GKE |
+
+> **Note on caller-override jobs:** When the caller provides custom entries in `initialization_jobs`, the module normalises each job with safe fallbacks. The `timeout_seconds` fallback for caller-supplied jobs is **1200s** (not 600s). The 600s timeout applies only to the built-in `db-init` default job.
 
 **`db-init.sh` flow:**
 
@@ -221,8 +220,8 @@ Callers may inject additional secret references via `var.secret_environment_vari
 3. Writes `~/.my.cnf` with root credentials — password is double-escaped (`\` → `\\`, `"` → `\"`) then wrapped in double quotes, preventing `#` and `;` from being silently treated as MySQL option file comment characters
 4. For TCP connections: appends `ssl-mode=PREFERRED` to `~/.my.cnf`
 5. Creates MySQL user: `CREATE USER IF NOT EXISTS … IDENTIFIED WITH mysql_native_password BY '${SAFE_DB_PASS}'` then `ALTER USER` (idempotent password update)
-6. Creates database: `` CREATE DATABASE IF NOT EXISTS `${DB_NAME}` ``
-7. Grants `` ALL PRIVILEGES ON `${DB_NAME}`.* TO '${DB_USER}'@'%' ``
+6. Creates database: `CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\``
+7. Grants `ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'%'`
 8. Removes `~/.my.cnf`
 9. Signals Cloud SQL Auth Proxy shutdown via `POST http://localhost:9091/quitquitquit` (30 retries, 2s intervals)
 

@@ -1,8 +1,3 @@
----
-title: "Moodle Common Shared Configuration Module"
-sidebar_label: "Common"
----
-
 # Moodle_Common Shared Configuration Module
 
 The `Moodle_Common` module defines the Moodle Learning Management System (LMS) configuration for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`Moodle_CloudRun` and `Moodle_GKE`).
@@ -158,6 +153,7 @@ Two jobs run by default (when `initialization_jobs = []`):
 | Script | `scripts/db-init.sh` |
 | Secrets required | `DB_PASSWORD`, `ROOT_PASSWORD` |
 | `execute_on_apply` | `true` |
+| CPU / Memory | `1000m` / `512Mi` |
 | Timeout | 600s, 3 retries |
 | `needs_db` | `true` (Cloud SQL proxy sidecar injected) |
 
@@ -179,6 +175,7 @@ Two jobs run by default (when `initialization_jobs = []`):
 | Script | `scripts/nfs-init.sh` |
 | Secrets required | None |
 | `execute_on_apply` | `true` |
+| CPU / Memory | `500m` / `256Mi` |
 | Timeout | 300s, 3 retries |
 | `mount_nfs` | `true` — the NFS volume is mounted at `/mnt` |
 | `needs_db` | `false` — Cloud SQL proxy sidecar is **not** injected |
@@ -271,7 +268,7 @@ Both commands source `/root/env.sh` first to inherit the runtime environment var
 
 ### `entrypoint.sh`
 A simpler alternative entrypoint (not used by default — `cloudrun-entrypoint.sh` is the active entrypoint):
-- Sets default values for `DB_HOST`, `DB_PORT`, `DB_USER`, `DB__PASSWORD`, `DB_NAME`, and `PORT`.
+- Sets default values for `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, and `PORT`.
 - Sets `www-data` ownership on `/mnt` if it exists.
 - Executes `"$@"`.
 
@@ -309,11 +306,11 @@ Key environment variables consumed by `moodle-config.php` and `cloudrun-entrypoi
 | Aspect | Moodle_CloudRun | Moodle_GKE |
 |--------|-----------------|-----------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
-| `enable_cloudsql_volume` | `var.enable_cloudsql_volume` (default `true`) | `var.enable_cloudsql_volume` (default `true`) |
+| `enable_cloudsql_volume` | Forced to `true` in `moodle.tf` application_modules merge (not user-configurable) | `var.enable_cloudsql_volume` (default `true`, user-configurable) |
 | `DB_HOST` | Cloud SQL Auth Proxy socket path | Cloud SQL private IP |
 | NFS | Mandatory (`var.enable_nfs`, default `true`) | Mandatory (`var.enable_nfs`, default `true`) |
-| `nfs-init` job | Runs first with `needs_db = false` | Runs first with `needs_db = false` |
-| Cron | Cloud Scheduler invokes `/admin/cron.php` via signed URL | Cloud Scheduler invokes `/admin/cron.php` via signed URL |
+| `nfs-init` job | Runs second (after `db-init`) with `needs_db = false` | Runs second (after `db-init`) with `needs_db = false` |
+| Cron | Cloud Scheduler invokes `/admin/cron.php?password=<MOODLE_CRON_PASSWORD>` via HTTP GET | Cloud Scheduler invokes `/admin/cron.php?password=<MOODLE_CRON_PASSWORD>` via HTTP GET |
 | Redis | Optional; defaults to NFS-hosted via `$(NFS_SERVER_IP)` | Optional; defaults to NFS-hosted via `$(NFS_SERVER_IP)` |
 | Secret injection | `secret_env_vars` from `module.moodle_app` + `DB_PASSWORD` | Secret values injected directly |
 
@@ -327,12 +324,11 @@ Key environment variables consumed by `moodle-config.php` and `cloudrun-entrypoi
 module "moodle_app" {
   source = "../Moodle_Common"
 
-  application_name  = "moodle"
-  project_id        = var.project_id
-  wrapper_prefix    = local.resource_prefix
-  resource_labels   = local.labels
-  deployment_id     = local.deployment_id
-  deployment_region = var.deployment_region
+  application_name = "moodle"
+  project_id       = var.project_id
+  wrapper_prefix   = local.resource_prefix
+  resource_labels  = local.labels
+  deployment_id    = local.deployment_id
 
   module_storage_buckets = [
     {

@@ -1,17 +1,4 @@
----
-title: "Moodle GKE Configuration Guide"
-sidebar_label: "GKE"
----
-
-# Moodle GKE Module
-
-<YouTubeEmbed videoId="ri9b1CFEFTY" poster="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Moodle_GKE Module — Configuration Guide
 
 Moodle is the world's most popular open-source Learning Management System (LMS), used by educational institutions, corporations, and online learning platforms worldwide. This module deploys Moodle on **GKE Autopilot** using a custom PHP 8.3/Apache container, backed by a managed Cloud SQL PostgreSQL instance and shared NFS storage for course materials.
 
@@ -35,7 +22,7 @@ This guide documents only the variables that are **unique to `Moodle_GKE`** or t
 | Environment Variables & Secrets | §3 Core Service Configuration | See [Moodle Environment Variables](#moodle-environment-variables) below for Moodle-specific injected defaults. |
 | GKE Backend Configuration | §3.A Compute (GKE Autopilot) | `enable_custom_domain` defaults to `true` and `reserve_static_ip` defaults to `true`. See [Platform-Managed Behaviours](#platform-managed-behaviours). |
 | Networking & Network Policies | §3.D Networking & Network Policies | Identical. |
-| Jobs & Scheduled Tasks | §3.E Initialization Jobs & CronJobs | See [Platform-Managed Behaviours](#platform-managed-behaviours) for the auto-provisioned Moodle cron Cloud Scheduler job. |
+| Jobs & Scheduled Tasks | §3.E Initialization Jobs & CronJobs | See [Platform-Managed Behaviours](#platform-managed-behaviours) for the auto-provisioned Moodle cron Cloud Scheduler job. Two default init jobs are defined: `db-init` (first) and `nfs-init` (second, `needs_db = false`). |
 | Additional Services | §3.F Additional Services | Identical. |
 | CI/CD & GitHub Integration | §6 CI/CD & Delivery | Refer to base App_GKE module documentation. |
 | Storage — NFS | §3.C Storage (NFS / GCS / GCS Fuse) | `enable_nfs` defaults to `true`. NFS is the active Moodle data directory (`moodledata`). See [Platform-Managed Behaviours](#platform-managed-behaviours). |
@@ -45,8 +32,8 @@ This guide documents only the variables that are **unique to `Moodle_GKE`** or t
 | Custom SQL Scripts | §3.E Initialization Jobs & CronJobs | Refer to base App_GKE module documentation. |
 | Observability & Health | §3.A Compute (GKE Autopilot) | See [Moodle Health Probes](#moodle-health-probes) below for the `startup_probe` and `liveness_probe` variables and their `/health.php` defaults. |
 | Cloud Armor WAF | §4.A Cloud Armor WAF | Refer to base App_GKE module documentation. |
-| Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Refer to base App_GKE module documentation. |
-| Binary Authorization | §4.C Binary Authorization | Identical. |
+| Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Requires `iap_oauth_client_id`, `iap_oauth_client_secret`, and optionally `iap_support_email` — enforced by `validation.tf` precondition. Refer to base App_GKE module documentation. |
+| Binary Authorization | §4.C Binary Authorization | Includes `binauthz_evaluation_mode` variable (default `"ALWAYS_ALLOW"`). Refer to base App_GKE module documentation. |
 | VPC Service Controls | §4.D VPC Service Controls | Identical. |
 | Secrets Store CSI Driver | §4.E Secrets Store CSI Driver | Identical. |
 | Traffic & Ingress | §5 Traffic & Ingress | `enable_custom_domain` defaults to `true`. See [Platform-Managed Behaviours](#platform-managed-behaviours). |
@@ -69,14 +56,14 @@ The following behaviours are applied automatically by `Moodle_GKE` regardless of
 | Behaviour | Detail |
 |---|---|
 | **PostgreSQL forced** | `MOODLE_DB_TYPE = "pgsql"` is injected automatically. Moodle requires PostgreSQL — do not set `database_type` to a MySQL or SQL Server variant. |
-| **Cloud SQL Auth Proxy** | `enable_cloudsql_volume` is forced to `true`. Moodle connects to Cloud SQL via the Auth Proxy Unix socket. |
+| **Cloud SQL Auth Proxy** | `enable_cloudsql_volume` defaults to `true` and is passed through as a user-configurable variable. Moodle connects to Cloud SQL via the Auth Proxy Unix socket by default. |
 | **NFS as moodledata** | `MOODLE_DATA_DIR` and `DATA_PATH` are automatically set to the value of `nfs_mount_path`. The NFS volume is the active `moodledata` directory where Moodle stores uploaded files, course materials, and user submissions. |
-| **Reverse proxy headers** | `MOODLE_REVERSE_PROXY` and `ENABLE_REVERSE_PROXY` are set to `"true"` / `"TRUE"` when `application_domains` is non-empty, and `"false"` / `"FALSE"` otherwise. This ensures Moodle generates correct URLs behind the GKE load balancer. |
+| **Reverse proxy headers** | `ENABLE_REVERSE_PROXY` is set to `"TRUE"` when `application_domains` is non-empty and `"FALSE"` otherwise. This is injected via the `moodle_module` `environment_variables` merge in `moodle.tf`. Note: `MOODLE_REVERSE_PROXY` is **not** injected by `Moodle_GKE`; only `ENABLE_REVERSE_PROXY` is set. |
 | **Moodle cron job** | A Cloud Scheduler job is created automatically, targeting `/admin/cron.php?password=CRON_PASSWORD` on the application URL every minute. The cron password is a randomly generated 32-character string stored in Secret Manager and never exposed in plaintext. |
 | **SMTP defaults** | `MOODLE_SMTP_HOST`, `MOODLE_SMTP_PORT` (`"587"`), `MOODLE_SMTP_USER`, `MOODLE_SMTP_SECURE` (`"tls"`), and `MOODLE_SMTP_AUTH` (`"LOGIN"`) are injected with defaults. Override these via `environment_variables` to configure your SMTP server before going live. |
 | **Site identity defaults** | `MOODLE_SITE_NAME` (`"Moodle LMS"`), `MOODLE_SITE_FULLNAME`, `LANGUAGE` (`"en"`), `MOODLE_ADMIN_USER` (`"admin"`), `MOODLE_ADMIN_EMAIL` (`"admin@example.com"`), `MOODLE_SKIP_INSTALL` (`"no"`), and `MOODLE_UPDATE` (`"yes"`) are injected with defaults. Override via `environment_variables`. |
 | **Moodle data GCS bucket** | An additional GCS bucket with the suffix `moodle-data` is provisioned alongside any buckets defined in `storage_buckets`. |
-| **CRON and SMTP secrets** | `MOODLE_CRON_PASSWORD` and `MOODLE_SMTP_PASSWORD` are generated and stored in Secret Manager automatically. |
+| **CRON and SMTP secrets** | `MOODLE_CRON_PASSWORD` and `MOODLE_SMTP_PASSWORD` are generated by `Moodle_Common` and stored in Secret Manager. For GKE, their raw values are also passed via `explicit_secret_values` to bypass Secret Manager read-after-write consistency issues on initial apply. |
 | **Custom domain enabled** | `enable_custom_domain` defaults to `true` and `reserve_static_ip` defaults to `true`. This ensures a stable external IP is reserved and Moodle's `wwwroot` is configured correctly from the first deployment without manual post-deployment steps. |
 
 ---
@@ -151,7 +138,7 @@ All other database variables (`database_type`, `sql_instance_name`, `database_pa
 
 > **Important:** Moodle requires PostgreSQL. Set `database_type = "POSTGRES_15"` (or another supported PostgreSQL version) in your `tfvars`. The module's default is `"POSTGRES"` (latest managed version). Setting `database_type = "NONE"` or a MySQL/SQL Server type will prevent Moodle from starting.
 
-> **`pg_trgm` extension:** Required by Moodle for full-text search performance. Enable it by setting `enable_postgres_extensions = true` and `postgres_extensions = ["pg_trgm"]` in your `tfvars`.
+> **`pg_trgm` extension:** Required by Moodle for full-text search performance. `Moodle_Common` automatically sets `enable_postgres_extensions = true` and `postgres_extensions = ["pg_trgm"]` in the `application_config` it passes to App_GKE — no user configuration is needed.
 
 ### Validating Database Configuration
 
@@ -198,7 +185,7 @@ MOODLE_SMTP_AUTH     = "LOGIN"
 MOODLE_DB_TYPE       = "pgsql"
 
 # Reverse proxy (set based on whether application_domains is non-empty)
-MOODLE_REVERSE_PROXY = "true"    # "false" when application_domains is empty
+# Note: MOODLE_REVERSE_PROXY is NOT injected by Moodle_GKE.
 ENABLE_REVERSE_PROXY = "TRUE"    # "FALSE" when application_domains is empty
 
 # Redis (derived from enable_redis, redis_host, redis_port, redis_auth)

@@ -1,17 +1,4 @@
----
-title: "Django Cloud Run Configuration Guide"
-sidebar_label: "Cloud Run"
----
-
-# Django CloudRun Module
-
-<YouTubeEmbed videoId="1d3rrY7FoqA" poster="https://storage.googleapis.com/rad-public-2b65/modules/Django_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Django_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Django on Google Cloud Run
 
 This document provides a comprehensive reference for the `modules/Django_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Django-specific behaviours, and operational patterns for deploying Django on Google Cloud Run (v2).
 
@@ -23,7 +10,7 @@ Django is a high-level Python web framework that encourages rapid development an
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Python container, scale-to-zero by default (`min_instance_count = 0`). Custom image build via Cloud Build is the default workflow.
-*   **Data Persistence**: Cloud SQL PostgreSQL with Unix socket connection via the Cloud SQL Auth Proxy sidecar (`enable_cloudsql_volume = true` by default). NFS (GCE VM or Filestore) for shared media files. GCS media bucket provisioned automatically by `Django_Common`.
+*   **Data Persistence**: Cloud SQL PostgreSQL with Cloud SQL Auth Proxy sidecar (`enable_cloudsql_volume = true` by default). The `db-init.sh` script auto-detects whether to use a Unix socket or the proxy at `127.0.0.1`. NFS (GCE VM or Filestore) for shared media files. GCS media bucket provisioned automatically by `Django_Common`.
 *   **Security**: `SECRET_KEY` auto-generated and stored in Secret Manager. Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_CloudRun`.
 *   **Caching**: Redis disabled by default — set `enable_redis = true` to inject `REDIS_HOST` and `REDIS_PORT` as environment variables.
 *   **CI/CD**: Cloud Build custom image pipeline by default; Cloud Deploy progressive delivery optional.
@@ -54,7 +41,7 @@ Django is a high-level Python web framework that encourages rapid development an
 
 **Django auto-generated secrets and IAM:** `Django_Common` creates one Secret Manager secret during provisioning: `SECRET_KEY`. This is injected into the Cloud Run revision via `module_secret_env_vars`. The Cloud Run SA requires `roles/secretmanager.secretAccessor`, which is already granted by `App_CloudRun`. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App_CloudRun`.
 
-**Database initialisation identity:** The `db-init` Cloud Run Job runs under the Cloud Run SA. It connects to Cloud SQL via the Auth Proxy Unix socket (since `enable_cloudsql_volume = true` by default), using `DB_HOST` (the socket path under `/cloudsql`), `DB_USER`, and `ROOT_PASSWORD` (from Secret Manager).
+**Database initialisation identity:** The `db-init` Cloud Run Job runs under the Cloud Run SA. It connects to Cloud SQL via the Auth Proxy sidecar (since `enable_cloudsql_volume = true` by default). The `db-init.sh` script auto-detects the connection mode at runtime — using either the socket path (under `/cloudsql`) or the proxy at `127.0.0.1` — along with `DB_USER` and `ROOT_PASSWORD` (from Secret Manager).
 
 **GCS media bucket IAM:** `Django_Common` provisions a GCS media bucket and grants the application SA `roles/storage.objectAdmin` and `roles/storage.legacyBucketReader`. The Django container runs as non-root UID `2000`, which is mapped to the GCS Fuse user to ensure write access on GCS-mounted paths.
 
@@ -76,7 +63,7 @@ Django is a Python application. The default resource limits (`cpu_limit = "1000m
 
 **Container image:** `container_image_source` defaults to `'custom'`, meaning Cloud Build compiles a custom image using `Django_Common`'s Dockerfile. Set `container_image_source = 'prebuilt'` and `container_image` to an existing image URI to skip the build.
 
-**Unix socket connection:** `enable_cloudsql_volume` defaults to `true`. The Cloud SQL Auth Proxy sidecar is injected, and `DB_HOST` is set to the Unix socket path (e.g., `/cloudsql/PROJECT:REGION:INSTANCE`) by `Django_Common`. This differs from `Directus_CloudRun` and `Cyclos_CloudRun`, which default to TCP.
+**Cloud SQL Auth Proxy:** `enable_cloudsql_volume` defaults to `true`. The Cloud SQL Auth Proxy sidecar is injected. The `db-init.sh` script detects the connection type at runtime: if `DB_HOST` is a Unix socket path it connects directly; if `DB_SSL=false` and `DB_HOST` is a private IP it routes through the proxy at `127.0.0.1`. This differs from `Directus_CloudRun` and `Cyclos_CloudRun`, which default to TCP.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -90,8 +77,8 @@ Django is a Python application. The default resource limits (`cpu_limit = "1000m
 | `container_port` | 3 | `8080` | Django default port. Change only if your WSGI/ASGI server binds to a different port. |
 | `execution_environment` | 3 | `'gen2'` | Gen2 required for NFS mounts and GCS Fuse. |
 | `timeout_seconds` | 3 | `300` | Max request duration. Increase for long-running operations such as report generation or file processing. |
-| `enable_cloudsql_volume` | 3 | `true` | `true` — injects Cloud SQL Auth Proxy sidecar and enables Unix socket connections. |
-| `cloudsql_volume_mount_path` | 3 | `'/cloudsql'` | Container path for the Auth Proxy Unix socket. Must match `DB_HOST` in Django's database config. |
+| `enable_cloudsql_volume` | 3 | `true` | `true` — injects Cloud SQL Auth Proxy sidecar. `db-init.sh` auto-detects whether to connect via Unix socket or proxy at `127.0.0.1`. |
+| `cloudsql_volume_mount_path` | 3 | `'/cloudsql'` | Base path for the Auth Proxy Unix socket mount. Used when Django connects via the socket path. |
 | `traffic_split` | 3 | `[]` | Percentage-based canary/blue-green traffic allocation. See §7.B. |
 | `service_annotations` | 3 | `{}` | Advanced Cloud Run annotations. |
 | `service_labels` | 3 | `{}` | Labels applied to the Cloud Run service. |
@@ -101,7 +88,7 @@ Django is a Python application. The default resource limits (`cpu_limit = "1000m
 | Variable | `App_CloudRun` | `Django_CloudRun` | Reason |
 |---|---|---|---|
 | `container_image` | `""` | `'us-docker.pkg.dev/cloudrun/container/hello'` | Placeholder image for initial provisioning before a custom image is built. |
-| `enable_cloudsql_volume` | `true` | `true` | Same — Django connects via Unix socket by default. |
+| `enable_cloudsql_volume` | `true` | `true` | Same — Auth Proxy sidecar injected by default; connection mode (socket or `127.0.0.1`) detected at runtime by `db-init.sh`. |
 | `container_resources` | object `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | same | `Django_CloudRun` uses the native object; no `cpu_limit`/`memory_limit` top-level aliases. |
 
 ### B. Database (Cloud SQL — PostgreSQL)
@@ -110,7 +97,7 @@ Django requires **PostgreSQL** — `Django_Common` hardcodes `DB_ENGINE = "djang
 
 `Django_CloudRun` uses `application_database_name` and `application_database_user` — the native `App_CloudRun` variable names. Unlike `Cyclos_CloudRun` and `Directus_CloudRun`, which use `db_name`/`db_user` aliases, no aliasing is needed here.
 
-**Unix socket connection:** `enable_cloudsql_volume = true` (default). `Django_Common` sets `DB_HOST` to the socket path (e.g., `/cloudsql/PROJECT:REGION:INSTANCE`). `DB_PORT` is set to `5432`. `DB_NAME` and `DB_USER` are set from the variables below.
+**Connection mode:** `enable_cloudsql_volume = true` (default). When enabled, `db-init.sh` detects the connection type: if `DB_SSL=false` and `DB_HOST` is not a Unix socket, it routes traffic through the Auth Proxy at `127.0.0.1`. The environment variable `DB_HOST` is set either to the socket path (e.g., `/cloudsql/PROJECT:REGION:INSTANCE`) for socket connections or to the proxy address. `DB_PORT` is set to `5432`. `DB_NAME` and `DB_USER` are set from the variables below.
 
 **PostgreSQL extensions:** `pg_trgm`, `unaccent`, `hstore`, and `citext` are installed automatically by `Django_Common`'s `db-init.sh` script during the initialisation job, using the `ROOT_PASSWORD` superuser secret.
 
@@ -118,7 +105,7 @@ Django requires **PostgreSQL** — `Django_Common` hardcodes `DB_ENGINE = "djang
 |---|---|---|---|
 | `application_database_name` | 11 | `'django_db'` | PostgreSQL database name. Injected as `DB_NAME`. **Do not change after initial deployment.** |
 | `application_database_user` | 11 | `'django_user'` | PostgreSQL application user. Injected as `DB_USER`. Password auto-generated and stored in Secret Manager as `DB_PASSWORD`. |
-| `database_password_length` | 11 | `16` | Auto-generated password length. Range: 8–64. `32` recommended for production. |
+| `database_password_length` | 11 | `32` | Auto-generated password length. Range: 16–64. |
 | `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. See §7.D. |
 | `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
 
@@ -140,7 +127,7 @@ Django requires **PostgreSQL** — `Django_Common` hardcodes `DB_ENGINE = "djang
 
 ### D. Networking
 
-Cloud Run uses Direct VPC Egress to reach Cloud SQL via the Auth Proxy Unix socket. Because `enable_cloudsql_volume = true` is the default, `DB_HOST` is set to the socket path by `Django_Common`, not to a TCP IP address.
+Cloud Run uses Direct VPC Egress to reach Cloud SQL. Because `enable_cloudsql_volume = true` is the default, the Cloud SQL Auth Proxy sidecar is injected. The `db-init.sh` script determines the effective connection target at runtime (socket path or proxy at `127.0.0.1`), not a plain TCP IP address.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -151,13 +138,15 @@ Cloud Run uses Direct VPC Egress to reach Cloud SQL via the Auth Proxy Unix sock
 
 ### E. Initialization & Bootstrap
 
-A `db-init` Cloud Run Job is automatically configured in `initialization_jobs` and runs on every `terraform apply` (`execute_on_apply = true`). It uses `postgres:15-alpine` and executes `Django_Common/scripts/db-init.sh`, which performs the following idempotent operations:
+A `db-init` Cloud Run Job is automatically configured in `initialization_jobs` as the variable default (with `execute_on_apply = false`). When you pass an empty list (`initialization_jobs = []`), `Django_Common` substitutes two default jobs — `db-init` and `db-migrate` — both with `execute_on_apply = true`. The `db-init` job uses `postgres:15-alpine` and executes `Django_Common/scripts/db-init.sh`, which performs the following idempotent operations:
 
-1. Connects to Cloud SQL via the Auth Proxy Unix socket.
-2. Creates the `django_user` database user with the password from Secret Manager (`DB_PASSWORD`).
-3. Creates the `django_db` database if it does not exist.
-4. Installs the required PostgreSQL extensions: `pg_trgm`, `unaccent`, `hstore`, `citext`.
-5. Grants the `django_user` full privileges on the schema, tables, sequences, and functions.
+1. Detects the connection mode: if `DB_SSL=false` and `DB_HOST` is not a Unix socket path, forces `DB_HOST=127.0.0.1` to route through the Cloud SQL Auth Proxy sidecar. Otherwise uses `DB_IP` (injected by `App_CloudRun`) or falls back to `DB_HOST`.
+2. Polls the database using `psql` until it is reachable.
+3. Creates (or updates) the Django database role with `CREATEDB` privileges, using the `ROOT_PASSWORD` (`postgres` superuser) secret.
+4. Creates the `django_db` database as the application user (`DB_USER`) if it does not already exist.
+5. Grants the application user full privileges on the database and public schema (tables, sequences, functions), and sets the database owner.
+6. Installs the required PostgreSQL extensions: `pg_trgm`, `unaccent`, `hstore`, `citext` (using `CREATE EXTENSION IF NOT EXISTS`).
+7. Signals Cloud SQL Proxy shutdown via `POST http://localhost:9091/quitquitquit`.
 
 Extensions are installed as the `postgres` superuser via the `ROOT_PASSWORD` secret. The script is idempotent — running it on an already-initialised database is safe.
 
@@ -167,7 +156,7 @@ Additional initialization jobs and recurring cron jobs can be defined via the `i
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `initialization_jobs` | 12 | `[db-init job]` | One-shot Cloud Run Jobs. The default `db-init` job is pre-configured. Additional jobs (e.g., `db-migrate`) can be appended. Each entry: `name`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `execute_on_apply`, `script_path`. |
+| `initialization_jobs` | 12 | `[db-init job]` | One-shot Cloud Run Jobs. The default `db-init` job is pre-configured with `execute_on_apply = false`. Additional jobs (e.g., `db-migrate`) can be appended. Each entry: `name`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `execute_on_apply`, `script_path`. When `initialization_jobs = []` is passed, `Django_Common` substitutes two default jobs: `db-init` (execute_on_apply=true) and `db-migrate` (execute_on_apply=true). |
 | `cron_jobs` | 12 | `[]` | Recurring jobs triggered by Cloud Scheduler. Each entry: `name`, `schedule` (cron UTC), `image`, `command`, `cpu_limit`, `memory_limit`, `paused`. |
 | `additional_services` | 12 | `[]` | Additional Cloud Run services deployed alongside the main Django application. Use for sidecar or helper services (e.g., Celery workers). Each entry: `name`, `image`, `port`, `env_vars`, `cpu_limit`, `memory_limit`, `min_instance_count`, `max_instance_count`, `ingress`, `output_env_var_name`. |
 
@@ -446,7 +435,7 @@ The following behaviours are applied automatically by `Django_CloudRun` regardle
 | Behaviour | Implementation | Detail |
 |---|---|---|
 | **PostgreSQL required** | `DB_ENGINE = "django.db.backends.postgresql"` hardcoded by `Django_Common` | Django only supports PostgreSQL through this module. `database_type` is not exposed. |
-| **Unix socket by default** | `enable_cloudsql_volume = true` default | Django connects to Cloud SQL via the Auth Proxy Unix socket at `/cloudsql/PROJECT:REGION:INSTANCE`. `DB_HOST` is set to the socket path. Set `enable_cloudsql_volume = false` to switch to TCP. |
+| **Flexible proxy connection** | `enable_cloudsql_volume = true` default | `db-init.sh` detects the connection mode: if `DB_SSL=false` and `DB_HOST` is not a Unix socket path, it routes through the Cloud SQL Auth Proxy at `127.0.0.1`. If `DB_HOST` is already a socket path (e.g., `/cloudsql/PROJECT:REGION:INSTANCE`), it connects directly. Set `enable_cloudsql_volume = false` to switch to direct TCP. |
 | **Django environment variables** | `DB_ENGINE`, `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` injected by `Django_Common` | These values are derived from the Cloud SQL instance and do not need to be set in `environment_variables`. |
 | **SECRET_KEY** | Auto-generated and stored in Secret Manager by `Django_Common` | Injected via `module_secret_env_vars`. Do not set `SECRET_KEY` in `environment_variables`. |
 | **PostgreSQL extensions** | Installed by `db-init` job via `Django_Common/scripts/db-init.sh` | `pg_trgm`, `unaccent`, `hstore`, `citext` are installed automatically on every apply. The job is idempotent. |
@@ -455,7 +444,7 @@ The following behaviours are applied automatically by `Django_CloudRun` regardle
 | **NFS enabled by default** | `enable_nfs = true` default | NFS shared storage is provisioned for media files. Requires `execution_environment = 'gen2'`. Set `enable_nfs = false` if using GCS volumes exclusively for media. |
 | **Redis disabled by default** | `enable_redis = false` default | Unlike Directus, Redis is opt-in. Set `enable_redis = true` to inject `REDIS_HOST`/`REDIS_PORT`. No Redis secret is created — values are plain-text env vars. |
 | **Superuser creation** | `entrypoint.sh` in `Django_Common` | If `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL`, and `DJANGO_SUPERUSER_PASSWORD` are set, an admin superuser is created on first boot. Use `secret_environment_variables` for the password. |
-| **Default db-init job** | `initialization_jobs` default includes `db-init` entry | The `db-init` job runs on every apply (`execute_on_apply = true`), creates the database and user, and installs PostgreSQL extensions. It is idempotent. |
+| **Default db-init job** | `initialization_jobs` variable default includes a single `db-init` entry with `execute_on_apply = false` | The `db-init` job runs once on initial deployment. To also run `db-migrate` automatically, pass `initialization_jobs = []` — `Django_Common` then substitutes both jobs with `execute_on_apply = true`. Set `execute_on_apply = true` on the `db-init` entry to re-run it on every apply (safe — the script is idempotent). |
 | **Scripts directory** | `scripts_dir = abspath("${path.module}/../Django_Common/scripts")` | Initialization and utility scripts are sourced from `Django_Common`, not from the deployment directory. |
 
 **Inline infrastructure** (when no `Services_GCP` stack is present) is identical to `App_CloudRun` §9 — `App_CloudRun` provisions an inline VPC, Cloud NAT, Cloud SQL instance, service accounts, and GCP APIs as required. See [App_CloudRun §9](../App_CloudRun/App_CloudRun.md#9-inline-infrastructure-provisioning) for the full inline resource inventory and teardown notes.
@@ -498,10 +487,11 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `container_port` | 3 | `8080` | TCP port Django listens on. Must match the WSGI/ASGI server binding. |
 | `execution_environment` | 3 | `'gen2'` | Gen2 required for NFS mounts and GCS Fuse. |
 | `timeout_seconds` | 3 | `300` | Max request duration. Increase for long reports or file processing. |
-| `enable_cloudsql_volume` | 3 | `true` | Default `true` — Django connects via Unix socket. Set `false` for TCP. |
-| `cloudsql_volume_mount_path` | 3 | `'/cloudsql'` | Container path for the Auth Proxy Unix socket. |
+| `enable_cloudsql_volume` | 3 | `true` | Default `true` — Auth Proxy sidecar injected; `db-init.sh` auto-detects socket vs. `127.0.0.1`. Set `false` for direct TCP. |
+| `cloudsql_volume_mount_path` | 3 | `'/cloudsql'` | Base path for the Auth Proxy Unix socket mount. |
 | `container_protocol` | 3 | `'http1'` | `'http1'` or `'h2c'`. |
 | `enable_image_mirroring` | 3 | `true` | Mirrors the container image into Artifact Registry. |
+| `max_revisions_to_retain` | 3 | `7` | Maximum number of Cloud Run revisions to keep after each deployment. Set to 0 to disable pruning. |
 | `traffic_split` | 3 | `[]` | Canary/blue-green traffic allocation. |
 | `service_annotations` | 3 | `{}` | Advanced Cloud Run annotations. |
 | `service_labels` | 3 | `{}` | Labels applied to the Cloud Run service. |
@@ -536,17 +526,24 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `admin_ip_ranges` | 9 | `[]` | CIDR ranges exempted from WAF rules. |
 | `application_domains` | 9 | `[]` | Custom domains with Google-managed SSL certificates. |
 | `enable_cdn` | 9 | `false` | Enables Cloud CDN on the HTTPS LB backend. |
+| `max_images_to_retain` | 9 | `7` | Maximum number of recent container images to keep in Artifact Registry. Set to 0 to disable. |
+| `delete_untagged_images` | 9 | `true` | Automatically deletes untagged container images from Artifact Registry. |
+| `image_retention_days` | 9 | `30` | Days after which images are eligible for deletion from Artifact Registry. Set to 0 to disable age-based deletion. |
 | `create_cloud_storage` | 10 | `true` | Set `false` to skip GCS bucket creation. |
 | `storage_buckets` | 10 | `[{ name_suffix = "data" }]` | Additional GCS buckets to provision. |
 | `enable_nfs` | 10 | `true` | Provisions NFS shared storage for media files. Requires `gen2`. |
 | `nfs_mount_path` | 10 | `'/mnt/nfs'` | Container path where NFS is mounted. |
+| `nfs_instance_name` | 8 | `""` | Name of an existing NFS GCE VM to use instead of auto-discovering one. |
+| `nfs_instance_base_name` | 8 | `'app-nfs'` | Base name for the inline NFS GCE VM when no existing server is found. |
 | `gcs_volumes` | 10 | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). |
+| `manage_storage_kms_iam` | 10 | `false` | Creates CMEK KMS keyring and enables CMEK encryption on storage buckets. |
+| `enable_artifact_registry_cmek` | 10 | `false` | Enables CMEK encryption for container images in Artifact Registry. |
 | `application_database_name` | 11 | `'django_db'` | PostgreSQL database name. Injected as `DB_NAME`. Do not change after initial deployment. |
 | `application_database_user` | 11 | `'django_user'` | PostgreSQL application user. Injected as `DB_USER`. |
-| `database_password_length` | 11 | `16` | Auto-generated password length. Range: 8–64. |
+| `database_password_length` | 11 | `32` | Auto-generated password length. Range: 16–64. |
 | `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. |
 | `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
-| `initialization_jobs` | 12 | `[db-init job]` | One-shot Cloud Run Jobs. The `db-init` job is pre-configured and runs on every apply. |
+| `initialization_jobs` | 12 | `[db-init job (execute_on_apply=false)]` | One-shot Cloud Run Jobs. The `db-init` job is pre-configured with `execute_on_apply = false`. Pass `[]` to let `Django_Common` substitute both `db-init` and `db-migrate` jobs, each with `execute_on_apply = true`. |
 | `cron_jobs` | 12 | `[]` | Recurring scheduled Cloud Run Jobs (e.g., `clearsessions`). |
 | `additional_services` | 12 | `[]` | Additional Cloud Run services (e.g., Celery workers). Unique to `Django_CloudRun`. |
 | `startup_probe` | 13 | `{ path="/healthz", initial_delay_seconds=60, failure_threshold=3, ... }` | Django_Common startup probe. |
@@ -560,3 +557,7 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `redis_port` | 20 | `6379` | Redis TCP port. |
 | `redis_auth` | 20 | `""` | Redis AUTH password. Sensitive. |
 | `enable_vpc_sc` | 21 | `false` | Registers API calls within the project's VPC-SC perimeter. |
+| `vpc_cidr_ranges` | 21 | `[]` | VPC subnet CIDR ranges for the VPC-SC network access level. Auto-discovered from the VPC when empty. |
+| `vpc_sc_dry_run` | 21 | `true` | When `true`, VPC-SC violations are logged but not blocked. Set to `false` to enforce. |
+| `organization_id` | 21 | `""` | GCP Organization ID for the VPC-SC Access Context Manager policy. Auto-discovered when empty. |
+| `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ) for all supported services. |

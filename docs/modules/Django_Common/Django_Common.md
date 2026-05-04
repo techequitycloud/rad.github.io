@@ -1,8 +1,3 @@
----
-title: "Django Common Shared Configuration Module"
-sidebar_label: "Common"
----
-
 # Django_Common Shared Configuration Module
 
 The `Django_Common` module defines the Django web framework configuration for the RAD Modules ecosystem. Like `Directus_Common`, it **creates GCP resources** (a Secret Manager secret for the Django `SECRET_KEY`) and produces a `config` output consumed by platform-specific wrapper modules (`Django_CloudRun` and `Django_GKE`).
@@ -76,8 +71,8 @@ The application configuration object passed to the platform module via `applicat
 | `enable_postgres_extensions` | `true` |
 | `postgres_extensions` | `["pg_trgm", "unaccent", "hstore", "citext"]` — see §5 |
 | `initialization_jobs` | Two default jobs (`db-init`, `db-migrate`) or custom override — see §6 |
-| `startup_probe` | `null` — caller must provide; no module default |
-| `liveness_probe` | `null` — caller must provide; no module default |
+| `startup_probe` | Pass-through of `var.startup_probe`; defaults to `null` when caller does not provide a value |
+| `liveness_probe` | Pass-through of `var.liveness_probe`; defaults to `null` when caller does not provide a value |
 
 ### `storage_buckets`
 A list of GCS bucket configurations for provisioning by the platform module:
@@ -104,7 +99,7 @@ A map of Django secret environment variable names to their Secret Manager secret
 A **sensitive** map of the same secrets with raw generated values. Used by `App_GKE` to bypass Secret Manager read-after-write consistency issues during initial apply.
 
 ### `path`
-The absolute path to the module directory, used by wrapper modules to locate the `scripts/` directory.
+The absolute path to the `Django_Common` module directory (`path.module`). Note: wrapper modules (`Django_CloudRun`, `Django_GKE`) do **not** use this output to set `scripts_dir` — they instead hard-code `abspath("${path.module}/../Django_Common/scripts")` to point directly at the `scripts/` subdirectory.
 
 ---
 
@@ -288,10 +283,10 @@ The production settings extend `basesettings.py` and configure Django for cloud 
 |--------|-----------------|-----------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Optional (`var.enable_cloudsql_volume`) | Optional (`var.enable_cloudsql_volume`) |
-| `DB_HOST` | Cloud SQL Auth Proxy socket path or TCP | Cloud SQL private IP |
+| `DB_HOST` | Detected at runtime by `db-init.sh`: socket path if Unix socket, or `127.0.0.1` when using the Auth Proxy over TCP | Cloud SQL private IP or `127.0.0.1` via Auth Proxy |
 | Health probes | Caller must provide (`startup_probe`, `liveness_probe`) | Caller must provide (`startup_probe`, `liveness_probe`) |
 | Secret injection | `secret_ids` map from `module.django_app` | Secret values injected directly |
-| NFS | Not supported | Not supported (GCS volumes only) |
+| NFS | Not managed by Django_Common; App_CloudRun handles NFS via `enable_nfs` | Not managed by Django_Common; App_GKE handles NFS via `enable_nfs` (defaults to `true` in Django_GKE) |
 | Redis | Optional via `enable_redis` | Optional via `enable_redis` |
 | Scaling | Serverless, scale-to-zero (`min_instance_count = 0`) | Kubernetes Deployment with configurable replicas |
 
@@ -307,21 +302,37 @@ module "django_app" {
 
   project_id           = var.project_id
   resource_prefix      = local.resource_prefix
-  deployment_id        = local.deployment_id
-  deployment_id_suffix = local.deployment_id_suffix
+  deployment_id        = local.random_id
+  deployment_id_suffix = local.random_id
+  service_url          = local.predicted_service_url
   tenant_deployment_id = var.tenant_deployment_id
-  deployment_region    = var.deployment_region
-  labels               = local.labels
+  application_name     = var.application_name
+  application_version  = var.application_version
+  deployment_region    = local.region
+  db_name              = var.application_database_name
+  db_user              = var.application_database_user
+  labels               = var.resource_labels
+  # ... other inputs
+}
+
+locals {
+  application_modules    = { django = merge(module.django_app.config, { ... }) }
+  module_env_vars        = var.enable_redis ? { REDIS_HOST = var.redis_host, REDIS_PORT = tostring(var.redis_port) } : {}
+  module_secret_env_vars = module.django_app.secret_ids
+  module_storage_buckets = module.django_app.storage_buckets
+  # Note: scripts_dir points to the scripts/ subdirectory, not the module root
+  scripts_dir            = abspath("${path.module}/../Django_Common/scripts")
 }
 
 # config and secrets are passed to App_CloudRun
 module "app_cloudrun" {
   source = "../App_CloudRun"
 
-  application_config     = module.django_app.config
-  module_storage_buckets = module.django_app.storage_buckets
-  module_secret_env_vars = module.django_app.secret_ids
-  scripts_dir            = module.django_app.path
+  application_config     = local.application_modules
+  module_env_vars        = local.module_env_vars
+  module_storage_buckets = local.module_storage_buckets
+  module_secret_env_vars = local.module_secret_env_vars
+  scripts_dir            = local.scripts_dir
   # ... other inputs
 }
 ```

@@ -1,17 +1,4 @@
----
-title: "Django GKE Configuration Guide"
-sidebar_label: "GKE"
----
-
-# Django GKE Module
-
-<YouTubeEmbed videoId="ydylYkUbmpM" poster="https://storage.googleapis.com/rad-public-2b65/modules/Django_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Django_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Django_GKE Module — Configuration Guide
 
 Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design. This module deploys a production-ready Django application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL instance, GCS media storage, and Secret Manager for secrets including the Django `SECRET_KEY`.
 
@@ -43,7 +30,7 @@ This guide documents only the variables that are **unique to `Django_GKE`** or t
 | Custom SQL Scripts | §3.E Initialization Jobs & CronJobs | Identical. |
 | Observability & Health Checks | §3.A Compute (GKE Autopilot) | See [Django Health Probes](#django-health-probes) — Django_GKE exposes a dual probe system. |
 | Cloud Armor WAF | §4.A Cloud Armor WAF | Identical. |
-| Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Identical. |
+| Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Requires additional GKE-specific variables: `iap_oauth_client_id`, `iap_oauth_client_secret`, `iap_support_email` (group 19). See note below. |
 | Binary Authorization | §4.C Binary Authorization | Identical. |
 | VPC Service Controls | §4.D VPC Service Controls | Identical. |
 | Secrets Store CSI Driver | §4.E Secrets Store CSI Driver | Identical. |
@@ -77,6 +64,20 @@ The following behaviours are applied automatically by `Django_GKE` (via the `Dja
 | **GCS media storage** | When `gcs_volumes` is configured (e.g. a bucket mounted at `/app/media`), `Django_Common` provisions the bucket and grants the application service account `roles/storage.objectAdmin` and `roles/storage.legacyBucketReader`. The Django application can read and write user-uploaded media files directly to the GCS-mounted path. |
 | **NFS enabled by default** | `enable_nfs` defaults to `true` so that shared persistent storage is available across all pod replicas for Django media files. If you configure GCS volumes for media instead of NFS, set `enable_nfs = false` to suppress Filestore provisioning. |
 | **Session affinity** | `session_affinity` defaults to `"ClientIP"` so that a given user's requests are consistently routed to the same pod. This prevents session inconsistency in deployments that use in-process session storage or local caching rather than Redis. |
+
+---
+
+## Identity-Aware Proxy (GKE-specific)
+
+`Django_GKE` exposes three IAP variables not present in `Django_CloudRun` or `App_GKE`'s default IAP configuration. These are required when `enable_iap = true`:
+
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `iap_oauth_client_id` | 19 | `""` | OAuth client ID. Create in Google Cloud Console > APIs & Services > Credentials. Sensitive (`sensitive = true`). |
+| `iap_oauth_client_secret` | 19 | `""` | OAuth client secret. Sensitive (`sensitive = true`). |
+| `iap_support_email` | 19 | `""` | Support email shown on the OAuth consent screen. Must be a valid email or Google Group address. Validated by regex. |
+
+A `validation.tf` precondition enforces that both `iap_oauth_client_id` and `iap_oauth_client_secret` are non-empty when `enable_iap = true`.
 
 ---
 

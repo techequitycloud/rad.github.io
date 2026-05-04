@@ -1,17 +1,4 @@
----
-title: "Wiki.js Cloud Run Configuration Guide"
-sidebar_label: "Cloud Run"
----
-
-# Wikijs CloudRun Module
-
-<YouTubeEmbed videoId="TxnYEzjUyGk" poster="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Wikijs_CloudRun Module — Configuration Guide
 
 `Wikijs_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Cloud Run Gen2.
 
@@ -29,7 +16,7 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 | Default application name | `wikijs` |
 | Default display name | `Wiki.js` |
 | Default version | `2.5.311` |
-| Container port | Managed by `Wikijs_Common` |
+| Container port | `3000` (set by `Wikijs_Common`) |
 | Execution environment | `gen2` |
 | Database engine | PostgreSQL 15 (with `pg_trgm` extension) |
 | Default DB name | `wikijs` |
@@ -37,9 +24,9 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 | NFS enabled | `true` (mount: `/mnt/nfs`) |
 | Redis enabled | `false` |
 | Image source | Managed by `Wikijs_Common` |
-| Platform-managed job | none (empty default) |
+| Platform-managed job | `db-init` (from `Wikijs_Common` when `initialization_jobs = []`) |
 
-`Wikijs_Common` manages the container image source, build configuration, and GCS Fuse storage (`wikijs-storage` bucket mounted at `/wiki-storage` for persistent asset storage). The database password is wired from `module.app_cloudrun.database_password_secret` directly into `module_secret_env_vars`. The `pg_trgm` PostgreSQL extension is installed by `Wikijs_Common` to enable native full-text search.
+`Wikijs_Common` manages the container image source, build configuration, and GCS Fuse storage (`wikijs-storage` bucket provisioned for persistent asset storage). The database password is wired from `module.app_cloudrun.database_password_secret` into `module_secret_env_vars` as the key `database_password_secret`, which the platform maps to the `DB_PASS` environment variable consumed by Wiki.js. The `pg_trgm` PostgreSQL extension is installed by `Wikijs_Common` to enable native full-text search.
 
 ---
 
@@ -67,7 +54,7 @@ Behaviour is identical to `App_CloudRun`. The following variables are passed thr
 | `display_name` | `"Wiki.js"` | Human-readable name in UI and dashboards |
 | `application_version` | `"2.5.311"` | Image tag; increment to update the Wiki.js release |
 
-Note: there is no `description` variable in this module. `display_name` is passed to `Wikijs_Common` but is not forwarded to `App_CloudRun` as `application_display_name`.
+Note: there is no `application_display_name` or `description` variable in this module — the Cloud Run wrapper uses `display_name` (passed to `Wikijs_Common`) rather than the `application_display_name` used by `App_GKE`. A `deploy_application` variable (default `true`) controls whether the Cloud Run service is deployed; set to `false` to provision only supporting infrastructure (secrets, storage, IAM).
 
 ### §3.B Resource Sizing
 
@@ -77,6 +64,7 @@ Note: there is no `description` variable in this module. `display_name` is passe
 | `memory_limit` | `"2Gi"` | 2 GiB; required for Wiki.js with PostgreSQL full-text search |
 | `min_instance_count` | `0` | Scale-to-zero by default; set to `1` to eliminate cold starts |
 | `max_instance_count` | `1` | Single-instance default |
+| `execution_environment` | `"gen2"` | Cloud Run execution environment; gen2 required for NFS mounts |
 | `timeout_seconds` | `300` | Increase for large page exports or asset processing |
 
 ### §3.C Environment Variables & Secrets
@@ -98,11 +86,11 @@ Override individual keys to change database settings or storage path. Do not rem
 
 **Module-injected secrets** (wired via `module_secret_env_vars` in `main.tf`):
 
-| Secret env var | Source |
-|---|---|
-| `database_password_secret` | `module.app_cloudrun.database_password_secret` |
+| `module_secret_env_vars` key | Source | Env var visible to Wiki.js |
+|---|---|---|
+| `database_password_secret` | `module.app_cloudrun.database_password_secret` | `DB_PASS` (mapped by `entrypoint.sh`) |
 
-The database password secret ID is injected directly from `App_CloudRun`'s output. This is wired automatically and does not require user configuration.
+`main.tf` passes `module_secret_env_vars = { database_password_secret = module.app_cloudrun.database_password_secret }` to `App_CloudRun`. `Wikijs_Common`'s `config.secret_environment_variables` carries `DB_PASS = "database_password_secret"`, which the platform resolves to the actual Secret Manager ID and injects into the container as `DB_PASSWORD`. `entrypoint.sh` then maps `DB_PASSWORD` → `DB_PASS` at container start. This is wired automatically and does not require user configuration.
 
 **User-supplied secrets:**
 
@@ -128,11 +116,20 @@ Set `container_protocol = "h2c"` to enable HTTP/2 communication between the load
 
 ### §3.E Container Image & Build
 
-Container image source and build configuration are fully managed by `Wikijs_Common`. The `container_image_source`, `container_image`, and `container_build_config` variables are not exposed in this module.
+Container image source and build configuration are fully managed by `Wikijs_Common`. The `container_image_source`, `container_image`, and `container_build_config` variables are **not** exposed in this module's `variables.tf`. `Wikijs_Common` always produces `image_source = "custom"` and `container_image = "requarks/wiki:2"` with a Cloud Build context pointing to its own `scripts/` directory.
 
 | Variable | Default | Notes |
 |---|---|---|
-| `enable_image_mirroring` | `true` | Mirrors image to Artifact Registry before deployment |
+| `enable_image_mirroring` | `true` | Mirrors `requarks/wiki:2` from Docker Hub to Artifact Registry before the build |
+
+Additional Artifact Registry lifecycle variables exposed in this module:
+
+| Variable | Default | Notes |
+|---|---|---|
+| `max_images_to_retain` | `7` | Keep this many recent images; 0 = disabled |
+| `delete_untagged_images` | `true` | Auto-delete untagged/dangling images |
+| `image_retention_days` | `30` | Delete images older than this; 0 = disabled |
+| `max_revisions_to_retain` | `7` | Maximum Cloud Run revisions to keep; 0 = disabled |
 
 ---
 
@@ -255,7 +252,7 @@ The `/healthz` endpoint reflects both application readiness and live database co
 | `backup_uri` | `""` | Full GCS URI or Google Drive file ID |
 | `backup_format` | `"sql"` | `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip` |
 
-Note: this module uses `backup_uri` (aliased to `backup_file` in `main.tf`). The `"auto"` format is not listed in the variable description but the underlying `backup_format` validation accepts it.
+Note: this module uses `backup_uri` (aliased to `backup_file` in `main.tf`). The `backup_format` variable has no validation constraint in this module; accepted values are `sql`, `tar`, `gz`, `tgz`, `tar.gz`, and `zip`.
 
 ### §7.C Scheduled Jobs
 
@@ -325,9 +322,9 @@ gcs_volumes = [{
 
 The `HA_STORAGE_PATH = "/wiki-storage"` default in `environment_variables` points Wiki.js to this mount. If you change the mount path, update `HA_STORAGE_PATH` accordingly.
 
-### §8.D Additional Services
+### §8.D Additional Services & Scheduled Jobs
 
-`Wikijs_CloudRun` does not expose the `additional_services` variable.
+`Wikijs_CloudRun` does not expose the `additional_services` variable. However, `cron_jobs` is exposed and allows scheduling recurring Cloud Run jobs (e.g. database backups) using Cloud Scheduler. See §7.C for an example.
 
 ---
 
@@ -366,6 +363,7 @@ The table below covers all variables unique to or with notable defaults in `Wiki
 | `application_name` | `string` | `"wikijs"` | 2 | Base resource name |
 | `display_name` | `string` | `"Wiki.js"` | 2 | Passed to Wikijs_Common |
 | `application_version` | `string` | `"2.5.311"` | 2 | Image tag |
+| `deployment_id` | `string` | `""` | 0 | Auto-generated when empty; pin to stabilise resource names across runs |
 | `db_name` | `string` | `"wikijs"` | 11 | PostgreSQL DB name |
 | `db_user` | `string` | `"wikijs"` | 11 | PostgreSQL user |
 | `cpu_limit` | `string` | `"1000m"` | 3 | 1 vCPU |
@@ -374,21 +372,45 @@ The table below covers all variables unique to or with notable defaults in `Wiki
 | `max_instance_count` | `number` | `1` | 3 | |
 | `enable_image_mirroring` | `bool` | `true` | 3 | Mirror to Artifact Registry |
 | `container_protocol` | `string` | `"http1"` | 3 | `"http1"` or `"h2c"` |
-| `enable_cloudsql_volume` | `bool` | `true` | 3 | Unix socket proxy |
-| `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | 3 | Socket path |
+| `enable_cloudsql_volume` | `bool` | `true` | 3 | Injects Cloud SQL Auth Proxy sidecar |
+| `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | 3 | Auth Proxy Unix socket mount path |
+| `ingress_settings` | `string` | `"all"` | 4 | `"all"`, `"internal"`, or `"internal-and-cloud-load-balancing"` |
+| `vpc_egress_setting` | `string` | `"PRIVATE_RANGES_ONLY"` | 4 | `"ALL_TRAFFIC"` or `"PRIVATE_RANGES_ONLY"` |
 | `environment_variables` | `map(string)` | `{ DB_TYPE="postgres", DB_PORT="5432", ... }` | 5 | Non-empty default; required for DB connectivity |
-| `database_password_length` | `number` | `16` | 11 | 8–64 characters |
+| `database_password_length` | `number` | `32` | 11 | 16–64 characters |
+| `create_cloud_storage` | `bool` | `true` | 10 | Set to `false` to skip provisioning `storage_buckets` |
 | `enable_nfs` | `bool` | `true` | 10 | Cloud Filestore mount |
 | `nfs_mount_path` | `string` | `"/mnt/nfs"` | 10 | Container mount path |
-| `storage_buckets` | `list` | `[{ name_suffix = "data" }]` | 10 | GCS buckets |
+| `nfs_instance_name` | `string` | `""` | 8 | Target an existing NFS GCE VM by name; empty = auto-discover |
+| `nfs_instance_base_name` | `string` | `"app-nfs"` | 8 | Base name for an inline NFS VM when none is found |
+| `storage_buckets` | `list` | `[{ name_suffix = "data", location = "" }]` | 10 | GCS buckets provisioned for the app (separate from the `wikijs-storage` bucket) |
 | `gcs_volumes` | `list` | `[]` | 10 | Mount wikijs-storage at `/wiki-storage` |
-| `backup_uri` | `string` | `""` | 6 | Full GCS URI or Drive ID (aliased to `backup_file`) |
-| `backup_format` | `string` | `"sql"` | 6 | No `"auto"` in description (accepted by validation) |
+| `backup_uri` | `string` | `""` | 6 | Full GCS URI or Drive ID (aliased to `backup_file` in `main.tf`) |
+| `backup_format` | `string` | `"sql"` | 6 | `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`; no validation constraint in this module |
 | `enable_redis` | `bool` | `false` | 20 | Redis cache |
 | `redis_host` | `string` | `""` | 20 | Required when Redis enabled |
 | `redis_port` | `string` | `"6379"` | 20 | String type |
 | `redis_auth` | `string` | `""` | 20 | Sensitive |
 | `startup_probe` | `object` | `{ type="HTTP", path="/healthz", initial_delay_seconds=60 }` | 13 | |
 | `liveness_probe` | `object` | `{ type="HTTP", path="/healthz", initial_delay_seconds=60 }` | 13 | |
-| `initialization_jobs` | `list` | `[]` | 12 | No platform-managed jobs |
+| `initialization_jobs` | `list` | `[]` | 12 | Empty = use platform-managed `db-init` job; supply entries to override |
+| `cron_jobs` | `list` | `[]` | 12 | Recurring Cloud Run jobs triggered by Cloud Scheduler |
+| `enable_custom_sql_scripts` | `bool` | `false` | 8 | Run custom SQL scripts from GCS against the DB |
+| `custom_sql_scripts_bucket` | `string` | `""` | 8 | GCS bucket name for custom SQL scripts |
+| `custom_sql_scripts_path` | `string` | `""` | 8 | Path prefix within the bucket |
+| `custom_sql_scripts_use_root` | `bool` | `false` | 8 | Run scripts as root DB user |
+| `manage_storage_kms_iam` | `bool` | `false` | 10 | Enable CMEK for GCS buckets |
+| `enable_artifact_registry_cmek` | `bool` | `false` | 10 | Enable CMEK for Artifact Registry |
+| `service_annotations` | `map(string)` | `{}` | 3 | Custom Cloud Run service annotations |
+| `service_labels` | `map(string)` | `{}` | 3 | Custom Cloud Run service labels |
+| `admin_ip_ranges` | `list(string)` | `[]` | 9 | IP CIDR ranges for admin access allowlist |
+| `enable_cloud_armor` | `bool` | `false` | 9 | Cloud Armor WAF |
+| `secret_propagation_delay` | `number` | `30` | 5 | Seconds to wait after secret creation/update |
+| `secret_rotation_period` | `string` | `"2592000s"` | 5 | Secret Manager rotation notification period |
+| `traffic_split` | `list` | `[]` | 3 | Traffic allocation across revisions |
+| `max_revisions_to_retain` | `number` | `7` | 3 | Cloud Run revisions to retain |
+| `vpc_cidr_ranges` | `list(string)` | `[]` | 21 | VPC CIDR ranges for VPC-SC access level |
+| `vpc_sc_dry_run` | `bool` | `true` | 21 | Log-only VPC-SC enforcement (no blocking) |
+| `organization_id` | `string` | `""` | 21 | GCP Org ID for VPC-SC policy |
+| `enable_audit_logging` | `bool` | `false` | 21 | Enable Cloud Audit Logs |
 | `enable_vpc_sc` | `bool` | `false` | 21 | VPC Service Controls |
