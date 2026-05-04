@@ -20,7 +20,7 @@ Navigate to **Cloud Deploy > Delivery pipelines** to visualise the progression o
 
 Navigate to **Cloud Run** and select your service. Under the **Revisions** tab, observe that each deployment creates a new immutable revision. Cloud Run traffic splitting allows you to route a percentage of traffic to multiple revisions simultaneously — enabling canary and blue/green deployment patterns without Cloud Deploy.
 
-> **Real-World Example:** A team uses Cloud Deploy to manage their dev→staging→prod pipeline for a Cloud Run service. The Cloud Build CI pipeline builds and tests the container, then creates a new Cloud Deploy release. The release automatically rolls out to the dev stage; the team reviews the deployment in dev, then clicks "Promote" in the Cloud Deploy console to advance to staging. Production requires a two-person approval — the Cloud Deploy delivery pipeline is configured with an approval gate that blocks promotion until two approvers have confirmed in the console.
+**Real-world example:** A team uses Cloud Deploy to manage their dev→staging→prod pipeline for a Cloud Run service. The Cloud Build CI pipeline builds and tests the container, then creates a new Cloud Deploy release. The release automatically rolls out to the dev stage; the team reviews the deployment in dev, then clicks "Promote" in the Cloud Deploy console to advance to staging. Production requires a two-person approval — the Cloud Deploy delivery pipeline is configured with an approval gate that blocks promotion until two approvers have confirmed in the console.
 
 ### Configuring Cloud Run Services
 **Concept:** Tuning Cloud Run service behaviour for performance, cost, and availability.
@@ -32,7 +32,7 @@ Navigate to **Cloud Run** and select your service. Under the **Revisions** tab, 
 **Console Exploration:**
 Navigate to **Cloud Run**, select your service, and click the **Edit & deploy new revision** button. Examine the available configuration options: container port, environment variables, secrets (mounted as environment variables or volumes from Secret Manager), concurrency per instance, request timeout, and CPU allocation (CPU always allocated vs CPU only allocated during request processing). Understand the cost implications: CPU always allocated is billed per second and eliminates cold starts; CPU allocated only during requests is billed per request and scales to zero.
 
-> **Real-World Example:** A data processing Cloud Run service runs expensive initialisation on startup (loading a large ML model into memory). Setting `min_instance_count = 1` ensures the model is always loaded, eliminating 8-second cold starts for end users. Setting CPU allocation to "CPU always allocated" allows the service to perform background maintenance tasks between requests. The team sets `max_instance_count = 10` to cap monthly costs — load testing confirmed that 10 instances handle peak throughput.
+**Real-world example:** A data processing Cloud Run service runs expensive initialisation on startup (loading a large ML model into memory). Setting `min_instance_count = 1` ensures the model is always loaded, eliminating 8-second cold starts for end users. Setting CPU allocation to "CPU always allocated" allows the service to perform background maintenance tasks between requests. The team sets `max_instance_count = 10` to cap monthly costs — load testing confirmed that 10 instances handle peak throughput.
 
 ### 💡 Additional Cloud Run Deployment Objectives & Learning Guidelines
 
@@ -102,7 +102,7 @@ Navigate to **Cloud Run**, select your service, and click the **Edit & deploy ne
 **Console Exploration:**
 Navigate to **Kubernetes Engine > Workloads**, select your deployment, and inspect the YAML definition of the pod to see the `resources.requests` and `resources.limits` fields under the container spec. In Autopilot clusters, note that the cluster manages node provisioning automatically — you never interact with individual nodes. Navigate to **Kubernetes Engine > Clusters** and observe that the Autopilot cluster shows no node pool configuration — this is managed by Google.
 
-> **Real-World Example:** A team deploys a Java Spring Boot application to GKE Autopilot with `memory: "256Mi"` requests. Under load, the application's JVM heap grows beyond 256 MiB and the Linux OOM killer terminates the container — causing repeated CrashLoopBackOff restarts. Increasing `memory` requests to `"512Mi"` and setting `memory` limits to `"768Mi"` resolves the restarts. The team uses **Kubernetes Engine > Workloads > Observability** to monitor actual memory usage over 24 hours, then right-size the requests based on the observed P95 usage.
+**Real-world example:** A team deploys a Java Spring Boot application to GKE Autopilot with `memory: "256Mi"` requests. Under load, the application's JVM heap grows beyond 256 MiB and the Linux OOM killer terminates the container — causing repeated CrashLoopBackOff restarts. Increasing `memory` requests to `"512Mi"` and setting `memory` limits to `"768Mi"` resolves the restarts. The team uses **Kubernetes Engine > Workloads > Observability** to monitor actual memory usage over 24 hours, then right-size the requests based on the observed P95 usage.
 
 ### Autoscaling and Health Checks
 **Concept:** Implementing Kubernetes health checks to ensure application availability and configuring autoscaling for cost optimisation.
@@ -119,7 +119,7 @@ Navigate to **Kubernetes Engine > Workloads** and select your deployment. Under 
 
 To observe autoscaling in action, navigate to **Kubernetes Engine > Workloads > Observability** and view the CPU utilisation chart. If utilisation exceeds the HPA target threshold (typically 80%), additional pods are scheduled within seconds.
 
-> **Real-World Example:** A Cloud Run-style stateless API is deployed on GKE Autopilot with HPA configured for min=2, max=20 pods at 70% CPU target. During a product launch, traffic spikes 10× in 3 minutes. HPA detects CPU utilisation exceeding 70%, scales from 2 to 14 pods over 2 minutes, and the service absorbs the traffic without degradation. After the spike, HPA gradually scales back down to 2 pods over 10 minutes (the default scale-down stabilisation window prevents thrashing). The readiness probe ensures that newly started pods only receive traffic once they have completed their warm-up sequence.
+**Real-world example:** A Cloud Run-style stateless API is deployed on GKE Autopilot with HPA configured for min=2, max=20 pods at 70% CPU target. During a product launch, traffic spikes 10× in 3 minutes. HPA detects CPU utilisation exceeding 70%, scales from 2 to 14 pods over 2 minutes, and the service absorbs the traffic without degradation. After the spike, HPA gradually scales back down to 2 pods over 10 minutes (the default scale-down stabilisation window prevents thrashing). The readiness probe ensures that newly started pods only receive traffic once they have completed their warm-up sequence.
 
 ### 💡 Additional GKE Deployment Objectives & Learning Guidelines
 

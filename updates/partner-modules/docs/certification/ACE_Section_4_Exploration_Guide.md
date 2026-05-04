@@ -71,7 +71,7 @@ In the GCP Console, navigate to **IAM & Admin > Service Accounts**. Locate the s
 **Console Exploration:**
 Navigate to **Security > Secret Manager** in the GCP Console. View the list of secrets provisioned for the application. Notice that you cannot see the value without explicit permission — access to view secret material requires the `roles/secretmanager.secretAccessor` role, which is separate from the `roles/secretmanager.viewer` role that allows listing secrets without reading their values. Look at the **Versions** tab to see the history of secret rotations.
 
-> **Real-World Example:** A Cloud Run service connects to Cloud SQL using a database password stored in Secret Manager. When the database password is rotated quarterly, the `enable_auto_password_rotation` feature updates the secret version in Secret Manager automatically. The Cloud Run service fetches the current version at startup — no redeployment is needed, and the old version remains accessible for a grace period in case any instances are still starting up with the previous password. The plaintext password is never written to a config file, environment variable in source code, or Terraform state file.
+**Real-world example:** A Cloud Run service connects to Cloud SQL using a database password stored in Secret Manager. When the database password is rotated quarterly, the `enable_auto_password_rotation` feature updates the secret version in Secret Manager automatically. The Cloud Run service fetches the current version at startup — no redeployment is needed, and the old version remains accessible for a grace period in case any instances are still starting up with the previous password. The plaintext password is never written to a config file, environment variable in source code, or Terraform state file.
 
 ### Identity-Aware Proxy (IAP)
 **Concept:** Controlling application access based on user identity and context, removing the need for traditional VPNs.
@@ -107,7 +107,7 @@ Service account impersonation allows a user (or another service account) to make
 
 Impersonation is audited — every API call made under the impersonated identity is logged with both the original caller and the service account being impersonated. This makes it far more traceable than shared credentials.
 
-> **Real-World Example:** A CI/CD pipeline runs as a Cloud Build service account with broad `roles/run.admin` permissions. A developer needs to test the deployment script locally but should not receive those same permissions permanently. Rather than downloading a key or granting the developer `roles/run.admin`, the developer is granted `roles/iam.serviceAccountTokenCreator` on the Cloud Build SA — they can impersonate it for local testing, with every action logged under both identities.
+**Real-world example:** A CI/CD pipeline runs as a Cloud Build service account with broad `roles/run.admin` permissions. A developer needs to test the deployment script locally but should not receive those same permissions permanently. Rather than downloading a key or granting the developer `roles/run.admin`, the developer is granted `roles/iam.serviceAccountTokenCreator` on the Cloud Build SA — they can impersonate it for local testing, with every action logged under both identities.
 
 **Short-lived service account credentials:**
 Instead of static JSON keys (which never expire), short-lived credentials are generated on demand and expire automatically. Key types:

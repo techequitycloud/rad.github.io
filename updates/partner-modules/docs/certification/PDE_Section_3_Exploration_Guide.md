@@ -16,7 +16,7 @@ The relationship between these SRE concepts is foundational to the PDE exam:
 - **SLA (Service Level Agreement):** A contractual commitment to customers, typically less strict than the internal SLO to provide an operational buffer. Example: "We guarantee 99.5% availability." The SLA is typically 10–20% less strict than the SLO.
 - **Error Budget:** The permitted amount of unreliability derived from the SLO. If the SLO is 99.9% availability, the error budget is 0.1% — approximately 43 minutes of downtime per month. The error budget is consumed by outages, risky deployments, and chaos experiments. When the error budget is exhausted (or burn rate is too high), the team should freeze feature releases and focus on reliability work.
 
-**In the Terraform Codebase:**
+**In the RAD UI:**
 Review `monitoring.tf` in the `App_CloudRun` and `App_GKE` modules. These modules configure monitoring via the shared `app_monitoring` module. The metrics tracked — `run.googleapis.com/container/cpu/utilizations` (Cloud Run) and `kubernetes.io/container/cpu/limit_utilization` (GKE) — form the raw telemetry that SLIs are derived from. The threshold-based alert policies (e.g., `cpu_threshold = 0.9`) operationalise SLOs: when the threshold is breached, the error budget is being consumed.
 
 **Console Exploration:**
@@ -25,7 +25,7 @@ Review `monitoring.tf` in the `App_CloudRun` and `App_GKE` modules. These module
 *   To create an SLO manually: select **Monitoring > SLOs > Create SLO**. Choose the Cloud Run service as the resource, select **Request-based** as the SLI type, and configure a good-request definition (HTTP 2xx responses) and a performance goal (e.g., 99.9% over 30 days).
 *   Navigate to **Monitoring > Alerting** and review the multi-burn-rate alert policies. A well-configured SLO produces two alerts: a fast burn alert (consuming error budget at 14× the sustainable rate over 1 hour — page the on-call immediately) and a slow burn alert (consuming at 6× the sustainable rate over 6 hours — create a ticket for the next business day).
 
-> **Real-World Example:** A streaming media company defines an SLO for their video playback API: 99.95% of requests must return HTTP 2xx within 200ms, measured over a rolling 28-day window. This gives them an error budget of 0.05% — about 20 minutes of allowed errors per month. The engineering team uses the error budget as a deployment gate: when the budget is above 50% consumed, feature deployments are allowed. When it drops below 50%, only bug fixes and reliability improvements are permitted. When the budget is fully consumed, all feature work stops until the 28-day window rolls forward and the budget resets. This policy aligns development velocity with operational risk — the team does not need management approval for each release; the error budget provides an objective, automated governance mechanism.
+**Real-world example:** A streaming media company defines an SLO for their video playback API: 99.95% of requests must return HTTP 2xx within 200ms, measured over a rolling 28-day window. This gives them an error budget of 0.05% — about 20 minutes of allowed errors per month. The engineering team uses the error budget as a deployment gate: when the budget is above 50% consumed, feature deployments are allowed. When it drops below 50%, only bug fixes and reliability improvements are permitted. When the budget is fully consumed, all feature work stops until the 28-day window rolls forward and the budget resets. This policy aligns development velocity with operational risk — the team does not need management approval for each release; the error budget provides an objective, automated governance mechanism.
 
 ---
 
@@ -33,7 +33,7 @@ Review `monitoring.tf` in the `App_CloudRun` and `App_GKE` modules. These module
 
 **Concept:** Planning capacity, managing autoscaling to match demand, and overseeing the complete service lifecycle from initial deployment through graceful retirement.
 
-**In the Terraform Codebase:**
+**In the RAD UI:**
 
 *   **Cloud Run capacity management:** Review `variables.tf` and `service.tf` in the `App_CloudRun` module. The `min_instance_count` and `max_instance_count` variables control the scaling floor and ceiling. `min_instance_count = 0` enables scale-to-zero (lowest cost, tolerates cold start latency). `min_instance_count >= 1` keeps instances always warm (eliminates cold starts, higher baseline cost). `max_instance_count` prevents runaway scaling and cost surprises under unexpected load.
 
@@ -48,7 +48,7 @@ Review `monitoring.tf` in the `App_CloudRun` and `App_GKE` modules. These module
 *   Navigate to **Kubernetes Engine > Workloads**, select your deployment, and review the **Autoscaling** section under the **Details** tab to see the HPA configuration (min replicas, max replicas, current CPU target). Click into a pod and view its YAML to see `resources.requests` and `resources.limits` — the values that VPA may adjust over time if VPA is enabled.
 *   Navigate to **Kubernetes Engine > Workloads > Observability** and view the CPU and memory usage charts for the deployment over time. Compare actual usage against the configured requests — significant headroom indicates the requests are over-provisioned and could be right-sized.
 
-> **Real-World Example:** An e-commerce company's GKE-deployed order service starts with manually tuned resource requests of 500m CPU and 512Mi memory per pod, based on estimates. After one week in production, the VPA recommends 200m CPU and 384Mi memory based on observed P95 usage. The team applies the VPA recommendation — reducing per-pod cost by 30% and allowing the same GKE Autopilot cluster to schedule 40% more pods for the same cost. Simultaneously, the HPA is configured to maintain 60% average CPU utilisation — during Black Friday, it scales from 5 to 35 pods in under 2 minutes as traffic surges 7×, with zero manual intervention and no degradation in response time.
+**Real-world example:** An e-commerce company's GKE-deployed order service starts with manually tuned resource requests of 500m CPU and 512Mi memory per pod, based on estimates. After one week in production, the VPA recommends 200m CPU and 384Mi memory based on observed P95 usage. The team applies the VPA recommendation — reducing per-pod cost by 30% and allowing the same GKE Autopilot cluster to schedule 40% more pods for the same cost. Simultaneously, the HPA is configured to maintain 60% average CPU utilisation — during Black Friday, it scales from 5 to 35 pods in under 2 minutes as traffic surges 7×, with zero manual intervention and no degradation in response time.
 
 ---
 
@@ -56,7 +56,7 @@ Review `monitoring.tf` in the `App_CloudRun` and `App_GKE` modules. These module
 
 **Concept:** Reducing the blast radius and duration of incidents through traffic draining, traffic redirection, capacity injection, and rapid rollback to previous known-good states.
 
-**In the Terraform Codebase:**
+**In the RAD UI:**
 In `App_CloudRun/service.tf`, the `traffic` block supports traffic splitting and canary deployments, allowing operators to redirect traffic away from a problematic revision instantly. Cloud Deploy retains the prior release for fast rollback. Cloud Run keeps all previous revisions available — any named revision can receive traffic at any time without rebuilding.
 
 **Console Exploration:**
@@ -64,7 +64,7 @@ In `App_CloudRun/service.tf`, the `traffic` block supports traffic splitting and
 *   Navigate to **Cloud Deploy > Delivery pipelines**, select your pipeline, and inspect a specific rollout. Observe the **Rollback** button — clicking it immediately creates a new rollout targeting the prior release's image digest, without requiring a new Cloud Build execution.
 *   For GKE, navigate to **Kubernetes Engine > Workloads** and select a deployment. From the **Actions** menu, select **Rolling update** — this triggers a Kubernetes rolling update that replaces pods incrementally, keeping a configurable percentage of pods available throughout the update. If the new version shows errors, `kubectl rollout undo deployment/<name>` immediately reverts to the previous ReplicaSet.
 
-> **Real-World Example:** At 14:37 on a Tuesday, a newly deployed Cloud Run revision of a payment service begins returning HTTP 500 errors for 3% of requests — an error budget burn rate of 60× the sustainable rate, triggering the fast-burn SLO alert. The on-call engineer receives a PagerDuty notification within 2 minutes of the error spike. They navigate to **Cloud Run > Revisions**, click **Manage traffic**, and shift 100% of traffic back to the previous revision in 20 seconds — the error rate drops immediately to zero. Total user impact: 7 minutes of elevated error rate. The engineer then investigates the failed revision's logs in **Logs Explorer** to identify the root cause (a missing database index on a new query) before re-deploying with the fix. The post-incident review documents the timeline, the detection method (SLO multi-burn-rate alert), and the remediation steps — feeding improvements back into the runbook.
+**Real-world example:** At 14:37 on a Tuesday, a newly deployed Cloud Run revision of a payment service begins returning HTTP 500 errors for 3% of requests — an error budget burn rate of 60× the sustainable rate, triggering the fast-burn SLO alert. The on-call engineer receives a PagerDuty notification within 2 minutes of the error spike. They navigate to **Cloud Run > Revisions**, click **Manage traffic**, and shift 100% of traffic back to the previous revision in 20 seconds — the error rate drops immediately to zero. Total user impact: 7 minutes of elevated error rate. The engineer then investigates the failed revision's logs in **Logs Explorer** to identify the root cause (a missing database index on a new query) before re-deploying with the fix. The post-incident review documents the timeline, the detection method (SLO multi-burn-rate alert), and the remediation steps — feeding improvements back into the runbook.
 
 ### 💡 Additional SRE Practice Objectives & Learning Guidelines
 

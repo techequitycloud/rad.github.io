@@ -18,7 +18,7 @@ You interact with each module by configuring its variables in the RAD UI deploym
 **Console Exploration:**
 In the GCP Console, navigate to **Cloud Build > Triggers** to see the configured integration with source control. Then, navigate to **Cloud Deploy > Delivery pipelines** to visualise the progression of a release and understand how approvals or automated promotions move the application through its environments.
 
-> **Real-World Example:** A development team merges a feature branch into `main`. The Cloud Build trigger fires, builds the container image, pushes it to Artifact Registry, and creates a new Cloud Deploy release targeting the `dev` stage. Automated integration tests pass, and the release is automatically promoted to `staging`. A manual approval gate in Cloud Deploy requires the engineering manager to review test results before the release is promoted to `prod` — providing a human checkpoint before production traffic is affected.
+**Real-world example:** A development team merges a feature branch into `main`. The Cloud Build trigger fires, builds the container image, pushes it to Artifact Registry, and creates a new Cloud Deploy release targeting the `dev` stage. Automated integration tests pass, and the release is automatically promoted to `staging`. A manual approval gate in Cloud Deploy requires the engineering manager to review test results before the release is promoted to `prod` — providing a human checkpoint before production traffic is affected.
 
 ### Adjusting application traffic splitting parameters
 **Concept:** Safely routing user traffic between different versions of an application to minimize deployment risk.
@@ -30,7 +30,7 @@ In the GCP Console, navigate to **Cloud Build > Triggers** to see the configured
 **Console Exploration:**
 Navigate to **Cloud Run** in the GCP Console, select the deployed service, and click on the **Revisions** tab. Observe the "Traffic" column to see traffic weighting. For GKE, navigate to **Cloud Deploy > Delivery pipelines** and review the "Rollout" details to observe multi-stage deployments.
 
-> **Real-World Example:** A team releases a new checkout page redesign. They deploy it as a new Cloud Run revision but route only 5% of traffic to it using `traffic_split`. Cloud Monitoring dashboards show the new revision's error rate is identical to the stable version. After 30 minutes, traffic is shifted to 50%, then 100% — all with zero downtime. If the error rate had spiked on the new revision, the team would have instantly redirected 100% of traffic back to the previous revision with a single variable change.
+**Real-world example:** A team releases a new checkout page redesign. They deploy it as a new Cloud Run revision but route only 5% of traffic to it using `traffic_split`. Cloud Monitoring dashboards show the new revision's error rate is identical to the stable version. After 30 minutes, traffic is shifted to 50%, then 100% — all with zero downtime. If the error rate had spiked on the new revision, the team would have instantly redirected 100% of traffic back to the previous revision with a single variable change.
 
 ### Configuring autoscaling for an application
 **Concept:** Tuning concurrency and instance counts to handle load efficiently while controlling costs.
@@ -146,7 +146,7 @@ The `availability_regions` variable provisions subnets in each listed region. Ad
 - **Expanding a subnet's IP range:** Select an existing subnet and click **Edit**. Expand the primary IPv4 range to a larger CIDR that is a superset of the current range (e.g. `/24` → `/23`). Note that you cannot shrink a CIDR range — expansions are permanent. Secondary IP ranges (used for GKE pods and services) can also be expanded here.
 - **Command line:** `gcloud compute networks subnets expand-ip-range <subnet-name> --region=<region> --prefix-length=<new-prefix>`
 
-> **Real-World Example:** A rapidly growing application team exhausts their `/24` subnet (256 addresses) as new VMs and pods are added. The network administrator expands the subnet's primary range to `/22` (1024 addresses) with a single console edit — existing resources retain their IPs, new resources can be assigned from the expanded range, and no downtime is required.
+**Real-world example:** A rapidly growing application team exhausts their `/24` subnet (256 addresses) as new VMs and pods are added. The network administrator expands the subnet's primary range to `/22` (1024 addresses) with a single console edit — existing resources retain their IPs, new resources can be assigned from the expanded range, and no downtime is required.
 
 ### Reserving static external and internal IP addresses
 **Concept:** Holding a specific IP address for a resource so it persists if the resource is deleted or recreated.
@@ -168,7 +168,7 @@ Navigate to **VPC network > Routes**. Review the system-generated default routes
 - Specify a **next hop** (a VPN gateway, a VM instance acting as a router, or a VPC peering connection).
 - Set a **priority** — lower number wins if multiple routes match the same destination.
 
-> **Real-World Example:** A company connects its GCP VPC to an on-premises network via HA VPN. After the VPN tunnels are established, a custom static route is added with destination `192.168.0.0/16` (on-premises CIDR) and next hop set to the VPN gateway. GCP VMs automatically route traffic destined for on-premises addresses through the VPN tunnel rather than attempting to reach them via the internet.
+**Real-world example:** A company connects its GCP VPC to an on-premises network via HA VPN. After the VPN tunnels are established, a custom static route is added with destination `192.168.0.0/16` (on-premises CIDR) and next hop set to the VPN gateway. GCP VMs automatically route traffic destined for on-premises addresses through the VPN tunnel rather than attempting to reach them via the internet.
 
 ### 💡 Additional Networking Management Objectives & Learning Guidelines
 
@@ -218,7 +218,7 @@ Navigate to **Logging > Log router** to view the default `_Default` and `_Requir
 
 **Log Buckets with Log Analytics:** Navigate to **Logging > Logs storage** to view log buckets. Create a custom log bucket with a longer retention period (up to 3650 days). Enable **Log Analytics** on the bucket to allow SQL queries against the log data using the **Log Analytics** view in the console — this provides BigQuery-compatible querying without exporting the data.
 
-> **Real-World Example:** A compliance requirement mandates that all Admin Activity audit logs be retained for 7 years. The team creates a custom log bucket with a 2557-day (7-year) retention policy and a locked retention period (prevents early deletion). A log sink routes `cloudaudit.googleapis.com/activity` logs to this bucket. The `_Required` sink continues to exist for the 400-day default — the custom sink provides the extended retention without disrupting normal log access.
+**Real-world example:** A compliance requirement mandates that all Admin Activity audit logs be retained for 7 years. The team creates a custom log bucket with a 2557-day (7-year) retention policy and a locked retention period (prevents early deletion). A log sink routes `cloudaudit.googleapis.com/activity` logs to this bucket. The `_Required` sink continues to exist for the 400-day default — the custom sink provides the extended retention without disrupting normal log access.
 
 ### 💡 Additional Observability Objectives & Learning Guidelines
 The ACE exam requires hands-on familiarity with the full observability stack — logging, metrics, tracing, profiling, and diagnostics tools.

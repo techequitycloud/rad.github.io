@@ -10,7 +10,7 @@ Three modules are relevant to this section: **App CloudRun**, which deploys serv
 
 **Concept:** Structuring a Google Cloud organization using the resource hierarchy (Organisation → Folders → Projects → Resources) to enforce governance, isolate environments, and enable scalable IAM and billing management.
 
-**In the Terraform Codebase:**
+**In the RAD UI:**
 The RAD platform provisions all resources within a defined project, but understanding the hierarchy above the project level is essential for the PDE exam. The `modules/App_Common` module configures project-scoped resources. In a production landing zone, the project itself would sit within a folder structure (e.g., `corp/production/app-team`) enforced by the organization.
 
 Examine `modules/App_Common/main.tf` to understand which APIs are enabled and which IAM bindings are created at the project level. The separation between `App GCP` (shared services), `App CloudRun` (application workload), and `App GKE` (application workload) mirrors the separation-of-concerns principle applied to real folder and project hierarchies.
@@ -20,7 +20,7 @@ Examine `modules/App_Common/main.tf` to understand which APIs are enabled and wh
 *   Navigate to **IAM & Admin > Organization Policies** to view the constraint policies applied at the organization or folder level that flow down to this project. Relevant constraints include `constraints/compute.requireOsLogin`, `constraints/iam.disableServiceAccountKeyCreation`, and `constraints/compute.restrictCloudRunRegion`.
 *   Navigate to **Billing > Budgets & alerts** to see how billing budgets (configured via the `create_billing_budget` variable) provide financial governance guardrails at the project level.
 
-> **Real-World Example:** A financial services organization structures its Google Cloud hierarchy as: Organization → `Corp` folder → `Production` and `Non-Production` folders → individual project per application team per environment (e.g., `payments-prod`, `payments-staging`). An organization policy at the `Non-Production` folder level enforces `constraints/compute.restrictCloudRunRegion` to `us-central1` only — keeping developer experimentation costs low. A separate policy at the `Production` folder enforces `constraints/iam.disableServiceAccountKeyCreation` — preventing any JSON key files from being created in production projects. Both policies are defined in Terraform using `google_org_policy_policy` resources and applied to folders, flowing down automatically to all child projects without per-project configuration.
+**Real-world example:** A financial services organization structures its Google Cloud hierarchy as: Organization → `Corp` folder → `Production` and `Non-Production` folders → individual project per application team per environment (e.g., `payments-prod`, `payments-staging`). An organization policy at the `Non-Production` folder level enforces `constraints/compute.restrictCloudRunRegion` to `us-central1` only — keeping developer experimentation costs low. A separate policy at the `Production` folder enforces `constraints/iam.disableServiceAccountKeyCreation` — preventing any JSON key files from being created in production projects. Both policies are defined in Terraform using `google_org_policy_policy` resources and applied to folders, flowing down automatically to all child projects without per-project configuration.
 
 ### 💡 Additional Resource Hierarchy Objectives & Learning Guidelines
 
@@ -34,7 +34,7 @@ Examine `modules/App_Common/main.tf` to understand which APIs are enabled and wh
 
 **Concept:** Utilizing infrastructure-as-code (IaC) to manage environments efficiently, repeatedly, and with full auditability.
 
-**In the Terraform Codebase:**
+**In the RAD UI:**
 The repository uses Terraform extensively. The **App CloudRun** and **App GKE** modules define full-stack environments. By reviewing `main.tf`, `variables.tf`, and specific resource files (e.g., `service.tf`, `deployment.tf`), candidates see how Google-recommended IaC practices are applied. Terraform resources like `google_cloud_run_v2_service` or GKE workloads (`kubernetes_deployment_v1`) are defined declaratively, enabling automated creation, updating, and versioning of cloud infrastructure.
 
 Key IaC practices demonstrated in the codebase:
@@ -48,7 +48,7 @@ Key IaC practices demonstrated in the codebase:
 *   Observe the declarative resource definitions and how they are linked to form a complete application platform.
 *   Navigate to **Cloud Storage** and find the Terraform state bucket. Observe that state is stored remotely and that state lock objects prevent concurrent modifications.
 
-> **Real-World Example:** A platform engineering team manages 12 microservices using shared Terraform modules. Each service team configures their service via a `terraform.tfvars` file — specifying container image, min/max instances, and database size — without touching the underlying module code. When the platform team releases a new module version that adds mandatory security labels to all Cloud Run services, each service team runs `terraform apply` against the new module version. The change is tracked in the module's changelog; the Terraform plan shows exactly which resource attributes will change before any infrastructure is modified. Remote state in Cloud Storage ensures that two engineers cannot simultaneously modify the same service's infrastructure.
+**Real-world example:** A platform engineering team manages 12 microservices using shared Terraform modules. Each service team configures their service via a `terraform.tfvars` file — specifying container image, min/max instances, and database size — without touching the underlying module code. When the platform team releases a new module version that adds mandatory security labels to all Cloud Run services, each service team runs `terraform apply` against the new module version. The change is tracked in the module's changelog; the Terraform plan shows exactly which resource attributes will change before any infrastructure is modified. Remote state in Cloud Storage ensures that two engineers cannot simultaneously modify the same service's infrastructure.
 
 ### 💡 Additional Infrastructure Management Objectives & Learning Guidelines
 
@@ -61,7 +61,7 @@ Key IaC practices demonstrated in the codebase:
 
 **Concept:** Designing robust, automated pipelines for continuous integration (building and validating code) and continuous delivery (releasing to environments progressively and safely).
 
-**In the Terraform Codebase:**
+**In the RAD UI:**
 The codebase shows a complete CI/CD lifecycle:
 
 *   **Cloud Build (CI):** Review `trigger.tf` in either module. It configures a `google_cloudbuild_trigger` that reacts to source code changes, builds container images using Kaniko (a daemonless, rootless container image builder that runs securely inside Cloud Build without requiring Docker daemon privileges), and pushes them to Artifact Registry.
@@ -76,7 +76,7 @@ The codebase shows a complete CI/CD lifecycle:
 *   Navigate to **Cloud Deploy > Delivery pipelines** to observe the progressive delivery configuration. Select a pipeline and inspect how releases are promoted across stages.
 *   Navigate to **Security > Binary Authorization** to view the attestation policy and which attestors are required before a deployment can proceed.
 
-> **Real-World Example:** A retail company's Cloud Build pipeline runs on every push to the `main` branch. The pipeline: (1) builds the container image with Kaniko and tags it with the commit SHA; (2) runs `gcloud artifacts docker images scan` to check for known CVEs — the build fails if any CRITICAL vulnerabilities are found; (3) creates a Cloud Build attestation confirming the image passed the vulnerability gate; (4) creates a Cloud Deploy release targeting the `dev` stage. The dev deployment is automatic; staging requires a manual promotion in the Cloud Deploy console; production requires two approvers to confirm in the Cloud Deploy approval UI. Binary Authorization enforces that only images with a valid Cloud Build attestation can reach the production Cloud Run service — a developer cannot push an arbitrary image directly to production even with sufficient IAM permissions.
+**Real-world example:** A retail company's Cloud Build pipeline runs on every push to the `main` branch. The pipeline: (1) builds the container image with Kaniko and tags it with the commit SHA; (2) runs `gcloud artifacts docker images scan` to check for known CVEs — the build fails if any CRITICAL vulnerabilities are found; (3) creates a Cloud Build attestation confirming the image passed the vulnerability gate; (4) creates a Cloud Deploy release targeting the `dev` stage. The dev deployment is automatic; staging requires a manual promotion in the Cloud Deploy console; production requires two approvers to confirm in the Cloud Deploy approval UI. Binary Authorization enforces that only images with a valid Cloud Build attestation can reach the production Cloud Run service — a developer cannot push an arbitrary image directly to production even with sufficient IAM permissions.
 
 ### 💡 Additional CI/CD Architecture Objectives & Learning Guidelines
 
@@ -89,7 +89,7 @@ The codebase shows a complete CI/CD lifecycle:
 
 **Concept:** Securely separating and managing different stages of the application lifecycle (development, staging, production) while maintaining environment parity to ensure pre-production tests accurately reflect production behaviour.
 
-**In the Terraform Codebase:**
+**In the RAD UI:**
 The Terraform modules use variables (`deployment_region`, `min_instance_count`, `application_config`, `cloud_deploy_stages`) to deploy identical infrastructure across different environments while tuning parameters specific to each stage:
 
 *   **Environment parity:** The same module code (`modules/App_CloudRun` or `modules/App_GKE`) is used for all environments — only the `terraform.tfvars` values differ. This guarantees that if a configuration works in staging, it will work identically in production.
@@ -102,7 +102,7 @@ The Terraform modules use variables (`deployment_region`, `min_instance_count`, 
 *   Navigate to **Cloud Deploy > Delivery pipelines** and select a pipeline. Observe that each stage (dev, staging, prod) maps to a distinct Cloud Run service or GKE target. Click **Promote** on a release to understand the manual promotion workflow.
 *   Navigate to **Cloud Run** and compare the revision configuration (min/max instances, environment variables, concurrency) between a development service and a production service to see how the same module produces differently-tuned deployments.
 
-> **Real-World Example:** A SaaS company runs dev, staging, and production as three separate GCP projects (enforcing network and IAM isolation between environments). All three environments use the identical `App CloudRun` Terraform module. The dev project uses `min_instance_count = 0` (scale to zero, no cost when idle) and `max_instance_count = 2`. Production uses `min_instance_count = 3` (always-warm, no cold starts) and `max_instance_count = 50`. A new payment feature is gated behind a feature flag passed as an environment variable (`ENABLE_NEW_PAYMENT_FLOW=true`). The flag is enabled in dev and staging for testing, but left as `false` in production until the A/B test confirms the rollout is safe — all without a code change or redeployment.
+**Real-world example:** A SaaS company runs dev, staging, and production as three separate GCP projects (enforcing network and IAM isolation between environments). All three environments use the identical `App CloudRun` Terraform module. The dev project uses `min_instance_count = 0` (scale to zero, no cost when idle) and `max_instance_count = 2`. Production uses `min_instance_count = 3` (always-warm, no cold starts) and `max_instance_count = 50`. A new payment feature is gated behind a feature flag passed as an environment variable (`ENABLE_NEW_PAYMENT_FLOW=true`). The flag is enabled in dev and staging for testing, but left as `false` in production until the A/B test confirms the rollout is safe — all without a code change or redeployment.
 
 ### 💡 Additional Environment Management Objectives & Learning Guidelines
 

@@ -27,7 +27,7 @@ Install the Cloud SDK locally and authenticate with `gcloud auth login`. Configu
 
 Emulators are critical for fast local development cycles and CI unit tests — they avoid network latency, authentication setup, and per-operation costs.
 
-> **Real-World Example:** A development team writes unit tests for a service that publishes to Pub/Sub and reads from Firestore. In their CI pipeline, the test setup script starts both the Pub/Sub and Datastore emulators, sets the corresponding environment variables, and runs `pytest`. The tests run in under 10 seconds — 15× faster than tests that hit live GCP services — and work in any environment with no credentials configured.
+**Real-world example:** A development team writes unit tests for a service that publishes to Pub/Sub and reads from Firestore. In their CI pipeline, the test setup script starts both the Pub/Sub and Datastore emulators, sets the corresponding environment variables, and runs `pytest`. The tests run in under 10 seconds — 15× faster than tests that hit live GCP services — and work in any environment with no credentials configured.
 
 ### Cloud Code, Cloud Shell, and Cloud Workstations
 **Concept:** Using Google-provided developer tooling to write, debug, and deploy cloud-native applications from any environment.
@@ -42,7 +42,7 @@ Install Cloud Code from your IDE's extension marketplace and sign in with your G
 
 **Cloud Shell** is a browser-based terminal in the GCP Console with all developer tools pre-installed (gcloud, kubectl, Docker, Terraform, Python, Node.js, Java, Go). It comes with a persistent 5GB home directory. Use **Cloud Shell Editor** (an in-browser VS Code instance) for editing files without local setup. Open Cloud Shell from any console page by clicking the `>_` icon in the top toolbar.
 
-> **Real-World Example:** A developer on a restricted corporate laptop cannot install the gcloud SDK due to IT policies. They use Cloud Shell to run all `gcloud` commands, edit configuration files in Cloud Shell Editor, and execute `kubectl` commands against their GKE cluster — all from a browser tab with zero local software installation.
+**Real-world example:** A developer on a restricted corporate laptop cannot install the gcloud SDK due to IT policies. They use Cloud Shell to run all `gcloud` commands, edit configuration files in Cloud Shell Editor, and execute `kubectl` commands against their GKE cluster — all from a browser tab with zero local software installation.
 
 **Cloud Workstations** is a fully managed, cloud-hosted development environment service. Unlike Cloud Shell (which is a shared, ephemeral terminal), Cloud Workstations provisions dedicated, persistent VMs configured with your chosen IDE (VS Code, JetBrains, or custom images) and development tools. Key benefits:
 - Consistent, reproducible environments across a team — every developer uses an identical pre-configured workstation image.
@@ -68,7 +68,7 @@ Navigate to **Cloud Workstations > Workstation clusters** to explore configurati
 - Analyse logs and suggest fixes for identified issues.
 - Access Gemini Cloud Assist from the Gemini icon (sparkle) in the top navigation bar of the GCP Console.
 
-> **Real-World Example:** A developer is writing a Cloud Run service that reads from Bigtable. They have no prior Bigtable experience. In their IDE, they open Gemini Code Assist chat and ask "Write a Python function that reads the 10 most recent rows for a given device ID from a Bigtable table named `telemetry`, where the row key format is `<device-id>#<reverse-timestamp>`." Gemini generates a complete function using the `google-cloud-bigtable` client library with correct row key prefix scanning. The developer reviews, tests against the Bigtable emulator, and ships the feature in one afternoon instead of spending two days reading documentation.
+**Real-world example:** A developer is writing a Cloud Run service that reads from Bigtable. They have no prior Bigtable experience. In their IDE, they open Gemini Code Assist chat and ask "Write a Python function that reads the 10 most recent rows for a given device ID from a Bigtable table named `telemetry`, where the row key format is `<device-id>#<reverse-timestamp>`." Gemini generates a complete function using the `google-cloud-bigtable` client library with correct row key prefix scanning. The developer reviews, tests against the Bigtable emulator, and ships the feature in one afternoon instead of spending two days reading documentation.
 
 ---
 
@@ -95,7 +95,7 @@ This command uses Google Cloud Buildpacks to automatically detect the language r
 **Cloud Build provenance and SLSA:**
 Cloud Build generates **SLSA (Supply chain Levels for Software Artifacts) provenance** — a signed attestation recording exactly what source commit was built, which build steps ran, and what artifact was produced. This provenance can be verified by Binary Authorization at deploy time to enforce that only images built by your trusted Cloud Build pipeline are permitted to run. Navigate to **Cloud Build > Build history**, select a build, and click the **Security Insights** tab to view the generated provenance attestation.
 
-> **Real-World Example:** A team's security policy requires that no container image can be deployed to production unless it was built by the official Cloud Build pipeline (not built locally by a developer and pushed directly). Binary Authorization enforces this: the cluster admission policy requires a valid attestation from the Cloud Build attestor. A developer who builds an image locally and pushes it to Artifact Registry will find that GKE rejects the pod at admission — the image lacks the required Binary Authorization attestation.
+**Real-world example:** A team's security policy requires that no container image can be deployed to production unless it was built by the official Cloud Build pipeline (not built locally by a developer and pushed directly). Binary Authorization enforces this: the cluster admission policy requires a valid attestation from the Cloud Build attestor. A developer who builds an image locally and pushes it to Artifact Registry will find that GKE rejects the pod at admission — the image lacks the required Binary Authorization attestation.
 
 ---
 
@@ -110,7 +110,7 @@ Cloud Build generates **SLSA (Supply chain Levels for Software Artifacts) proven
 **Console Exploration:**
 Navigate to **Cloud Build > History**, select a recent build, and expand the individual steps to view test output. A failed test step shows the error output and causes the overall build to fail with a non-zero exit code. Navigate to **Cloud Deploy > Delivery pipelines** to confirm that failed builds do not create new releases — the pipeline is gated on a successful Cloud Build.
 
-> **Real-World Example:** A Cloud Run service's `cloudbuild.yaml` defines three steps: (1) `docker build` to build the container, (2) `pytest integration_tests/` to run integration tests against a Cloud SQL test instance, (3) `docker push` to push the image to Artifact Registry. If step 2 fails, step 3 never executes — the broken image never reaches Artifact Registry and cannot be deployed. The build failure notification is sent to the team's chat channel via a Cloud Build Pub/Sub notification topic.
+**Real-world example:** A Cloud Run service's `cloudbuild.yaml` defines three steps: (1) `docker build` to build the container, (2) `pytest integration_tests/` to run integration tests against a Cloud SQL test instance, (3) `docker push` to push the image to Artifact Registry. If step 2 fails, step 3 never executes — the broken image never reaches Artifact Registry and cannot be deployed. The build failure notification is sent to the team's chat channel via a Cloud Build Pub/Sub notification topic.
 
 ### 💡 Additional Testing Objectives & Learning Guidelines
 
