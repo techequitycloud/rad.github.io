@@ -5,7 +5,7 @@ sidebar_label: "Networking"
 
 # Networking
 
-> **Scope.** Canonical home for the network surface — VPC, NAT, PSA peering, Direct VPC Egress, Cloud Armor WAF, Gateway API, multi-cluster topology, custom domains + CDN, service mesh, and hybrid connectivity. Identity-tier controls (IAP, VPC-SC, WIF) are in [practices/devsecops.md](../practices/devsecops.md); the IaC mechanics around PSA state migration are in [practices/gitops_iac.md](../practices/gitops_iac.md).
+> **Scope.** Canonical home for the network surface — VPC, NAT, PSA peering, Direct VPC Egress, Cloud Armor WAF, Gateway API, multi-cluster topology, custom domains + CDN, service mesh, and hybrid connectivity. Identity-tier controls (IAP, VPC-SC, WIF) are in [practices/devsecops.md](../practices/devsecops.md); the IaC mechanics around PSA state migration are in [practices/gitops_iac.md](../practices/gitops-iac.md).
 
 ## What this repo uniquely brings to networking
 
@@ -90,12 +90,12 @@ IAP, VPC-SC, Workload Identity — the identity-layer view of edge controls. Can
 
 ### 9. Hybrid connectivity
 
-- **VMware Engine** — `modules/VMware_Engine/network_peering.tf` and `firewall.tf`. VPC peering between GCVE private cloud and your VPC. Full modernisation context in [outcomes/modernisation.md](../outcomes/modernisation.md).
+- **VMware Engine** — `modules/VMware_Engine/network_peering.tf` and `firewall.tf`. VPC peering between GCVE private cloud and your VPC. Full modernisation context in [outcomes/modernisation.md](../outcomes/modernization.md).
 - **VPN / Interconnect-friendly** — VPC topology supports attachment.
 
 ### 10. Network-related troubleshooting
 
-`AGENTS.md` `/troubleshoot` documents PSA collisions, the `inline_psa` state migration after enabling VPC-SC (canonical in [practices/gitops_iac.md](../practices/gitops_iac.md)), and `CLUSTER_ALREADY_HAS_OPERATION` retry logic.
+`AGENTS.md` `/troubleshoot` documents PSA collisions, the `inline_psa` state migration after enabling VPC-SC (canonical in [practices/gitops_iac.md](../practices/gitops-iac.md)), and `CLUSTER_ALREADY_HAS_OPERATION` retry logic.
 
 ## Cross-references
 
@@ -104,5 +104,5 @@ IAP, VPC-SC, Workload Identity — the identity-layer view of edge controls. Can
 - [disaster-recovery](disaster-recovery) — multi-cluster HA / DR
 - [multicloud](multicloud) — multi-cluster mesh as multicloud foundation
 - [observability](observability) — service mesh telemetry, VPC-SC dry-run observation
-- [outcomes/modernisation.md](../outcomes/modernisation.md) — VMware Engine hybrid landing zone
+- [outcomes/modernisation.md](../outcomes/modernization.md) — VMware Engine hybrid landing zone
 - [practices/finops.md](../practices/finops.md) — CDN cost offload

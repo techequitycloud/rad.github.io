@@ -5,7 +5,7 @@ sidebar_label: "Observability"
 
 # Observability
 
-> **Scope.** Canonical home for metrics, logs, dashboards, alerts, audit telemetry, and mesh telemetry — spanning Cloud Monitoring, Cloud Logging, Cloud Audit Logs, Security Command Center, and the open-source observability stack. The SRE-specific framing of how to use these signals is in [practices/sre.md](../practices/sre.md); the auditor-evidence framing is in [outcomes/compliance_governance.md](../outcomes/compliance_governance.md).
+> **Scope.** Canonical home for metrics, logs, dashboards, alerts, audit telemetry, and mesh telemetry — spanning Cloud Monitoring, Cloud Logging, Cloud Audit Logs, Security Command Center, and the open-source observability stack. The SRE-specific framing of how to use these signals is in [practices/sre.md](../practices/sre.md); the auditor-evidence framing is in [outcomes/compliance_governance.md](../outcomes/compliance-governance.md).
 
 Every GKE module ships a working metrics, traces, and dashboards stack out of the box. There is no "later set up monitoring" step.
 
@@ -128,7 +128,7 @@ kubectl get pods --all-namespaces
 ## Cross-references
 
 - [practices/sre.md](../practices/sre.md) — SLO usage, DORA metrics, incident response (signal-consumption lens)
-- [outcomes/compliance_governance.md](../outcomes/compliance_governance.md) — audit-evidence framing
+- [outcomes/compliance_governance.md](../outcomes/compliance-governance.md) — audit-evidence framing
 - [practices/devsecops.md](../practices/devsecops.md) — VPC-SC dry-run, Binary Authorization, security-finding sources
 - [practices/cicd.md](../practices/cicd.md) — CI/CD and pipeline observability
 - [practices/finops.md](../practices/finops.md) — cost observability

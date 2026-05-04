@@ -11,7 +11,7 @@ This repo approaches multicloud from two complementary angles: concrete infrastr
 
 ### Cloud-agnostic IaC engine
 
-OpenTofu is the engine — see [practices/gitops_iac.md](../practices/gitops_iac.md) for the canonical detail. The four-tier module pattern (canonical in [practices/platform_engineering.md](../practices/platform_engineering.md)) hard-binds only the Platform tier to GCP; sibling `Services_AWS` / `Services_Azure` modules would slot in without changing Common or Application contracts.
+OpenTofu is the engine — see [practices/gitops_iac.md](../practices/gitops-iac.md) for the canonical detail. The four-tier module pattern (canonical in [practices/platform_engineering.md](../practices/idp.md)) hard-binds only the Platform tier to GCP; sibling `Services_AWS` / `Services_Azure` modules would slot in without changing Common or Application contracts.
 
 ### Container-portable workloads
 
@@ -57,7 +57,7 @@ The multi-cluster topology also serves as the multi-region / multi-cloud foundat
 
 ### Hybrid surface
 
-- **VMware Engine** — the standard hybrid landing zone for migrating on-prem VMware workloads into GCP without refactoring. See [outcomes/modernisation.md](../outcomes/modernisation.md).
+- **VMware Engine** — the standard hybrid landing zone for migrating on-prem VMware workloads into GCP without refactoring. See [outcomes/modernisation.md](../outcomes/modernization.md).
 - **Workload Identity Federation** — federates AWS, Azure AD, Okta, GitHub Actions identities into GCP — the same federation pattern is the bridge for multicloud CI/CD. Canonical in [practices/devsecops.md](../practices/devsecops.md) §2.
 - VPN/Interconnect-friendly VPC topology — see [networking](networking).
 
@@ -103,6 +103,6 @@ These cover the Azure / AWS networking and IAM model required to attach the clus
 - [service-mesh](service-mesh) — ASM on attached clusters
 - [networking](networking) — multi-cluster mesh, hybrid VPC topology
 - [modernization](modernization) — VM-to-container migration
-- [practices/gitops_iac.md](../practices/gitops_iac.md) — OpenTofu rationale (the cloud-agnostic engine)
+- [practices/gitops_iac.md](../practices/gitops-iac.md) — OpenTofu rationale (the cloud-agnostic engine)
 - [practices/devsecops.md](../practices/devsecops.md) — Workload Identity Federation for multicloud CI/CD
 - [practices/finops.md](../practices/finops.md) — egress cost considerations

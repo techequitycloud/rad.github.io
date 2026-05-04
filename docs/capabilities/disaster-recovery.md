@@ -5,7 +5,7 @@ sidebar_label: "Disaster Recovery"
 
 # Disaster Recovery & Business Continuity
 
-> **Scope.** Canonical home for backup/restore tooling, GKE Backup, PodDisruptionBudgets, application-level rollback, and DR-aware change management. The IaC reproducibility property that underlies "re-provision in a new region" is canonical in [practices/gitops_iac.md](../practices/gitops_iac.md); the multi-cluster HA topology is canonical in [networking](networking) §4.
+> **Scope.** Canonical home for backup/restore tooling, GKE Backup, PodDisruptionBudgets, application-level rollback, and DR-aware change management. The IaC reproducibility property that underlies "re-provision in a new region" is canonical in [practices/gitops_iac.md](../practices/gitops-iac.md); the multi-cluster HA topology is canonical in [networking](networking) §4.
 
 ## What this repo uniquely brings to DR & BC
 
@@ -71,7 +71,7 @@ Together they support the "destroy in region A, recreate in region B with the sa
 
 ### 7. Reproducibility through IaC (cross-ref)
 
-Per `BUSINESS_CASE.md`: *"the entire infrastructure can be re-provisioned in a new region in minutes."* The mechanics — commit-pinned deploys, per-deployment GCS state, idempotent re-apply — are canonical in [practices/gitops_iac.md](../practices/gitops_iac.md).
+Per `BUSINESS_CASE.md`: *"the entire infrastructure can be re-provisioned in a new region in minutes."* The mechanics — commit-pinned deploys, per-deployment GCS state, idempotent re-apply — are canonical in [practices/gitops_iac.md](../practices/gitops-iac.md).
 
 ### 8. Multi-cluster HA (cross-ref)
 
@@ -87,7 +87,7 @@ The 2–10 cluster topology with multi-primary Istio is the foundation for activ
 
 ## Cross-references
 
-- [practices/gitops_iac.md](../practices/gitops_iac.md) — IaC reproducibility, state versioning (the "re-provision anywhere" property)
+- [practices/gitops_iac.md](../practices/gitops-iac.md) — IaC reproducibility, state versioning (the "re-provision anywhere" property)
 - [networking](networking) — multi-cluster topology for HA/DR
 - [data-and-databases](data-and-databases) — DB-level backup/PITR configuration
 - [practices/finops.md](../practices/finops.md) — revision retention as rollback enabler
