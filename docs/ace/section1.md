@@ -6,6 +6,7 @@
 [Download PDF](https://storage.googleapis.com/rad-public-2b65/gcp/ace_section1.pdf)
 
 
+
 This guide helps candidates preparing for the Google Cloud Associate Cloud Engineer (ACE) certification explore Section 1 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure (VPC networking, databases, GKE clusters, IAM service accounts, and APIs); **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot. Both application modules depend on Services GCP and share the App GCP library for discovery and integration logic.
 
 You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes.
@@ -33,7 +34,7 @@ The `enable_vpc_sc` variable (Group 10) creates a VPC Service Perimeter around t
 
 The `configure_policy_controller` variable (Group 7) enables Policy Controller (part of GKE Enterprise) on GKE clusters, enforcing OPA Gatekeeper admission control policies across all workloads. This is the Kubernetes equivalent of organisation policy enforcement — for example, you can enforce constraints such as "all pods must have resource limits set" or "no container may run as root" across every workload in the cluster.
 
-> **Real-World Example:** A financial services company deploys GKE workloads and must comply with internal security standards that prohibit privileged containers. By enabling Policy Controller and deploying a constraint from the Policy Controller constraint library, every new pod is automatically evaluated at admission — non-compliant workloads are rejected before they ever start.
+**Real-world example:** A financial services company deploys GKE workloads and must comply with internal security standards that prohibit privileged containers. By enabling Policy Controller and deploying a constraint from the Policy Controller constraint library, every new pod is automatically evaluated at admission — non-compliant workloads are rejected before they ever start.
 
 **Console Exploration:**
 Navigate to **Security > VPC Service Controls** to view any active service perimeters. Navigate to **IAM & Admin > Organisation Policies** to review the built-in constraint catalogue and see which policies are applied to your project.
@@ -62,7 +63,7 @@ Navigate to **IAM & Admin > Service Accounts** to locate the service accounts pr
 **In the RAD UI:**
 The `support_users` variable (Group 1, all modules) is the key integration point. By entering a Google Workspace group email (e.g. `platform-team@example.com`) rather than individual user emails, you configure a single IAM binding that automatically tracks group membership. Adding or removing a user from the group in Google Workspace Admin Console or Cloud Identity immediately changes their effective GCP access — without any change to IAM bindings. This is the automated user management pattern tested on the ACE exam.
 
-> **Real-World Example:** An operations team of 12 engineers all need read access to Cloud Monitoring dashboards. Rather than creating 12 individual IAM bindings, the administrator creates a single binding for `ops-team@company.com`. When an engineer joins or leaves the team, only the Google Workspace group membership changes — GCP access is updated automatically across every project where that group is bound.
+**Real-world example:** An operations team of 12 engineers all need read access to Cloud Monitoring dashboards. Rather than creating 12 individual IAM bindings, the administrator creates a single binding for `ops-team@company.com`. When an engineer joins or leaves the team, only the Google Workspace group membership changes — GCP access is updated automatically across every project where that group is bound.
 
 **Console Exploration:**
 Navigate to **IAM & Admin > IAM** and find the email you configured in `support_users`. Click it to see its effective roles. If you configured a group, navigate to **admin.google.com** (Google Workspace Admin Console) to add or remove users from that group, then verify the access change propagates back to GCP.
@@ -132,7 +133,7 @@ The following variables (Group 2) control the foundational network provisioned b
 
 Services GCP also establishes **Private Service Access** (a peered `/16` address range) automatically, which is required for Cloud SQL, Memorystore for Redis, and Cloud Filestore to use private IP addresses only — a security best practice for all managed services. Private Service Access (PSA) is distinct from Private Service Connect (PSC): PSA uses VPC peering to connect your VPC to Google's managed services network, while PSC provides private endpoints for accessing Google APIs or published services without traversing the public internet.
 
-> **Real-World Example:** A healthcare company stores patient data in Cloud SQL. By enabling Private Service Access, the database is only reachable from inside the VPC via a private IP — it has no public endpoint exposed to the internet. Even if a network misconfiguration occurred, an external attacker would find no open port to target.
+**Real-world example:** A healthcare company stores patient data in Cloud SQL. By enabling Private Service Access, the database is only reachable from inside the VPC via a private IP — it has no public endpoint exposed to the internet. Even if a network misconfiguration occurred, an external attacker would find no open port to target.
 
 **Console Exploration:**
 Navigate to **VPC network > VPC networks** and select the VPC created by Services GCP. Review its subnets (one per region), secondary IP ranges for GKE pods and services, and the routing table. Navigate to **VPC network > Cloud NAT** to see the NAT gateway allowing private instances to reach the internet for updates. Navigate to **VPC network > VPC network peering** to view the Private Service Access peering connection to Google's managed services network.
@@ -150,7 +151,7 @@ Navigate to **VPC network > VPC networks** and select the VPC created by Service
 **Console Exploration:**
 Navigate to **Cloud SQL** and observe the region and zone of your instance. Note the difference between zonal and regional availability in the instance details. Navigate to **Filestore > Instances** and compare the zone placement for BASIC vs ENTERPRISE tiers. Use the [GCP Products by Region](https://cloud.google.com/about/locations) page to verify which services are available in any specific region before configuring `availability_regions`.
 
-> **Real-World Example:** A SaaS company is expanding to serve customers in Australia. Before committing to `australia-southeast1` as an `availability_regions` entry, they check the GCP Products by Region page to confirm that Cloud SQL, Memorystore for Redis, and GKE Autopilot are all available there — avoiding a deployment failure caused by an unsupported service in the target region.
+**Real-world example:** A SaaS company is expanding to serve customers in Australia. Before committing to `australia-southeast1` as an `availability_regions` entry, they check the GCP Products by Region page to confirm that Cloud SQL, Memorystore for Redis, and GKE Autopilot are all available there — avoiding a deployment failure caused by an unsupported service in the target region.
 
 ---
 
@@ -192,7 +193,7 @@ Navigate to **Billing** and select your billing account. Under **Account managem
 **Console Exploration:**
 Navigate to **Billing > Budgets & alerts** and create a budget scoped to your project. Set a monthly amount and configure email alerts at 50%, 90%, and 100% of budget. Navigate to **Billing > Cost table** to see a daily breakdown of spend by service and SKU.
 
-> **Real-World Example:** A startup sets a $500 monthly budget for their development project. They configure alerts at 50% ($250) so the engineering lead receives an early warning, at 90% ($450) to trigger a team review of running resources, and at 100% to alert the VP of Engineering. This tiered alert strategy prevents surprise invoices while giving the team time to act before the budget is exhausted.
+**Real-world example:** A startup sets a $500 monthly budget for their development project. They configure alerts at 50% ($250) so the engineering lead receives an early warning, at 90% ($450) to trigger a team review of running resources, and at 100% to alert the VP of Engineering. This tiered alert strategy prevents surprise invoices while giving the team time to act before the budget is exhausted.
 
 ---
 
@@ -205,4 +206,4 @@ The `resource_labels` variable (Group 1, all modules) applies key-value labels t
 **Console Exploration:**
 Navigate to **Billing > Billing export** and enable BigQuery export to a dataset in your project. Once data appears (within 24 hours), navigate to **BigQuery** and query the export table, grouping or filtering by the label keys you configured in `resource_labels`. In **Billing > Reports**, expand the **Labels** section in the right-hand filter pane to filter spend by your label key-value pairs.
 
-> **Real-World Example:** A platform engineering team manages infrastructure for three business units: Marketing, Finance, and Engineering. They apply `{ cost-center = "mkt-001" }`, `{ cost-center = "fin-002" }`, and `{ cost-center = "eng-003" }` labels to each set of resources. At month end, the Finance team queries the BigQuery billing export — `SELECT SUM(cost), labels.value FROM billing_export GROUP BY labels.value WHERE labels.key = "cost-center"` — to generate an accurate chargeback report for each business unit without needing separate GCP projects.
+**Real-world example:** A platform engineering team manages infrastructure for three business units: Marketing, Finance, and Engineering. They apply `{ cost-center = "mkt-001" }`, `{ cost-center = "fin-002" }`, and `{ cost-center = "eng-003" }` labels to each set of resources. At month end, the Finance team queries the BigQuery billing export — `SELECT SUM(cost), labels.value FROM billing_export GROUP BY labels.value WHERE labels.key = "cost-center"` — to generate an accurate chargeback report for each business unit without needing separate GCP projects.

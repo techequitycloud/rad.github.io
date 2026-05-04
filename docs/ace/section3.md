@@ -6,6 +6,7 @@
 [Download PDF](https://storage.googleapis.com/rad-public-2b65/gcp/ace_section3.pdf)
 
 
+
 This guide helps candidates preparing for the Google Cloud Associate Cloud Engineer (ACE) certification explore Section 3 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
 You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights ACE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
@@ -24,7 +25,7 @@ You interact with each module by configuring its variables in the RAD UI deploym
 **Console Exploration:**
 In the GCP Console, navigate to **Cloud Build > Triggers** to see the configured integration with source control. Then, navigate to **Cloud Deploy > Delivery pipelines** to visualise the progression of a release and understand how approvals or automated promotions move the application through its environments.
 
-> **Real-World Example:** A development team merges a feature branch into `main`. The Cloud Build trigger fires, builds the container image, pushes it to Artifact Registry, and creates a new Cloud Deploy release targeting the `dev` stage. Automated integration tests pass, and the release is automatically promoted to `staging`. A manual approval gate in Cloud Deploy requires the engineering manager to review test results before the release is promoted to `prod` — providing a human checkpoint before production traffic is affected.
+**Real-world example:** A development team merges a feature branch into `main`. The Cloud Build trigger fires, builds the container image, pushes it to Artifact Registry, and creates a new Cloud Deploy release targeting the `dev` stage. Automated integration tests pass, and the release is automatically promoted to `staging`. A manual approval gate in Cloud Deploy requires the engineering manager to review test results before the release is promoted to `prod` — providing a human checkpoint before production traffic is affected.
 
 ### Adjusting application traffic splitting parameters
 **Concept:** Safely routing user traffic between different versions of an application to minimize deployment risk.
@@ -36,7 +37,7 @@ In the GCP Console, navigate to **Cloud Build > Triggers** to see the configured
 **Console Exploration:**
 Navigate to **Cloud Run** in the GCP Console, select the deployed service, and click on the **Revisions** tab. Observe the "Traffic" column to see traffic weighting. For GKE, navigate to **Cloud Deploy > Delivery pipelines** and review the "Rollout" details to observe multi-stage deployments.
 
-> **Real-World Example:** A team releases a new checkout page redesign. They deploy it as a new Cloud Run revision but route only 5% of traffic to it using `traffic_split`. Cloud Monitoring dashboards show the new revision's error rate is identical to the stable version. After 30 minutes, traffic is shifted to 50%, then 100% — all with zero downtime. If the error rate had spiked on the new revision, the team would have instantly redirected 100% of traffic back to the previous revision with a single variable change.
+**Real-world example:** A team releases a new checkout page redesign. They deploy it as a new Cloud Run revision but route only 5% of traffic to it using `traffic_split`. Cloud Monitoring dashboards show the new revision's error rate is identical to the stable version. After 30 minutes, traffic is shifted to 50%, then 100% — all with zero downtime. If the error rate had spiked on the new revision, the team would have instantly redirected 100% of traffic back to the previous revision with a single variable change.
 
 ### Configuring autoscaling for an application
 **Concept:** Tuning concurrency and instance counts to handle load efficiently while controlling costs.
@@ -52,7 +53,7 @@ Still in the **Revisions** tab of your Cloud Run service in the Console, inspect
 The ACE exam extensively tests manual VM management, GKE operations, snapshots, and manual Kubernetes scaling.
 
 *   **Remotely connecting to Compute Engine instances:** The exam covers three approaches:
-    - **OS Login with IAP TCP Forwarding:** `gcloud compute ssh \<instance\> --tunnel-through-iap` — the recommended method; no public IP required, access controlled by IAM.
+    - **OS Login with IAP TCP Forwarding:** `gcloud compute ssh <instance> --tunnel-through-iap` — the recommended method; no public IP required, access controlled by IAM.
     - **SSH via External IP:** Requires a public IP on the VM and an SSH key in project metadata or OS Login.
     - **Cloud Shell/Console SSH:** The GCP Console provides a browser-based SSH terminal — click the **SSH** button on any VM in **Compute Engine > VM instances**.
 
@@ -109,15 +110,15 @@ The ACE exam focuses heavily on object lifecycle management, data backup, queryi
 *   **Database Backups and Restore:** The exam covers backup and restore for multiple database services:
     - **Cloud SQL:** Navigate to **SQL > Backups**. Practice creating an on-demand backup and restoring an instance from a backup. Understand point-in-time recovery (PITR) — restore to any second within the backup retention window (up to 35 days), critical for recovering from accidental data deletion.
     - **AlloyDB:** Navigate to **AlloyDB > Clusters > Backups**. AlloyDB provides continuous backup with a 14-day PITR window. Restore creates a new cluster.
-    - **Spanner:** Navigate to **Spanner > \<instance\> > Backups**. Spanner backups are taken while the database remains online and fully operational.
+    - **Spanner:** Navigate to **Spanner > <instance> > Backups**. Spanner backups are taken while the database remains online and fully operational.
     - **Firestore:** Navigate to **Firestore > Import/Export**. Practice scheduling exports to a GCS bucket using `gcloud firestore export gs://bucket-name`. Imports restore from a previously exported snapshot.
-    - **Bigtable:** Navigate to **Bigtable > \<instance\> > Backups**. Bigtable backups are copies of table data at a point in time, stored within the Bigtable service.
+    - **Bigtable:** Navigate to **Bigtable > <instance> > Backups**. Bigtable backups are copies of table data at a point in time, stored within the Bigtable service.
 
 *   **Executing queries to retrieve data from data instances:** The exam tests basic query execution across multiple database products:
-    - **Cloud SQL:** Use Cloud Shell — `gcloud sql connect \<instance-name\> --user=postgres` — then run standard SQL queries.
+    - **Cloud SQL:** Use Cloud Shell — `gcloud sql connect <instance-name> --user=postgres` — then run standard SQL queries.
     - **BigQuery:** Navigate to **BigQuery > Explorer**, select a table, click **Query**, and run standard SQL. BigQuery estimates the bytes scanned before execution — this is how you **estimate query cost** before running.
     - **Bigtable:** Use the `cbt` CLI tool in Cloud Shell — `cbt read <table-name>` — or the Bigtable Studio in the console.
-    - **Spanner:** Navigate to **Spanner > \<instance\> > \<database\> > Spanner Studio** to run SQL queries directly in the console.
+    - **Spanner:** Navigate to **Spanner > <instance> > <database> > Spanner Studio** to run SQL queries directly in the console.
     - **Firestore:** Navigate to **Firestore > Data** to browse collections and documents.
     - **AlloyDB:** Use Cloud Shell with a PostgreSQL client — `gcloud alloydb instances connect <name>` — then run standard SQL.
 
@@ -152,7 +153,7 @@ The `availability_regions` variable provisions subnets in each listed region. Ad
 - **Expanding a subnet's IP range:** Select an existing subnet and click **Edit**. Expand the primary IPv4 range to a larger CIDR that is a superset of the current range (e.g. `/24` → `/23`). Note that you cannot shrink a CIDR range — expansions are permanent. Secondary IP ranges (used for GKE pods and services) can also be expanded here.
 - **Command line:** `gcloud compute networks subnets expand-ip-range <subnet-name> --region=<region> --prefix-length=<new-prefix>`
 
-> **Real-World Example:** A rapidly growing application team exhausts their `/24` subnet (256 addresses) as new VMs and pods are added. The network administrator expands the subnet's primary range to `/22` (1024 addresses) with a single console edit — existing resources retain their IPs, new resources can be assigned from the expanded range, and no downtime is required.
+**Real-world example:** A rapidly growing application team exhausts their `/24` subnet (256 addresses) as new VMs and pods are added. The network administrator expands the subnet's primary range to `/22` (1024 addresses) with a single console edit — existing resources retain their IPs, new resources can be assigned from the expanded range, and no downtime is required.
 
 ### Reserving static external and internal IP addresses
 **Concept:** Holding a specific IP address for a resource so it persists if the resource is deleted or recreated.
@@ -174,7 +175,7 @@ Navigate to **VPC network > Routes**. Review the system-generated default routes
 - Specify a **next hop** (a VPN gateway, a VM instance acting as a router, or a VPC peering connection).
 - Set a **priority** — lower number wins if multiple routes match the same destination.
 
-> **Real-World Example:** A company connects its GCP VPC to an on-premises network via HA VPN. After the VPN tunnels are established, a custom static route is added with destination `192.168.0.0/16` (on-premises CIDR) and next hop set to the VPN gateway. GCP VMs automatically route traffic destined for on-premises addresses through the VPN tunnel rather than attempting to reach them via the internet.
+**Real-world example:** A company connects its GCP VPC to an on-premises network via HA VPN. After the VPN tunnels are established, a custom static route is added with destination `192.168.0.0/16` (on-premises CIDR) and next hop set to the VPN gateway. GCP VMs automatically route traffic destined for on-premises addresses through the VPN tunnel rather than attempting to reach them via the internet.
 
 ### 💡 Additional Networking Management Objectives & Learning Guidelines
 
@@ -224,7 +225,7 @@ Navigate to **Logging > Log router** to view the default `_Default` and `_Requir
 
 **Log Buckets with Log Analytics:** Navigate to **Logging > Logs storage** to view log buckets. Create a custom log bucket with a longer retention period (up to 3650 days). Enable **Log Analytics** on the bucket to allow SQL queries against the log data using the **Log Analytics** view in the console — this provides BigQuery-compatible querying without exporting the data.
 
-> **Real-World Example:** A compliance requirement mandates that all Admin Activity audit logs be retained for 7 years. The team creates a custom log bucket with a 2557-day (7-year) retention policy and a locked retention period (prevents early deletion). A log sink routes `cloudaudit.googleapis.com/activity` logs to this bucket. The `_Required` sink continues to exist for the 400-day default — the custom sink provides the extended retention without disrupting normal log access.
+**Real-world example:** A compliance requirement mandates that all Admin Activity audit logs be retained for 7 years. The team creates a custom log bucket with a 2557-day (7-year) retention policy and a locked retention period (prevents early deletion). A log sink routes `cloudaudit.googleapis.com/activity` logs to this bucket. The `_Required` sink continues to exist for the 400-day default — the custom sink provides the extended retention without disrupting normal log access.
 
 ### 💡 Additional Observability Objectives & Learning Guidelines
 The ACE exam requires hands-on familiarity with the full observability stack — logging, metrics, tracing, profiling, and diagnostics tools.
@@ -248,7 +249,7 @@ The ACE exam requires hands-on familiarity with the full observability stack —
 
     > **Real-World Example:** A Cloud Run service that processes API requests is exhibiting consistently high CPU usage, causing frequent autoscaling. An engineer enables Cloud Profiler by adding the Profiler library to the application. After an hour, the flame graph reveals that 40% of CPU time is spent in a JSON serialisation function that is called on every request — the team replaces it with a faster library, reducing CPU usage by 35% and halving the instance count.
 
-*   **Query Insights (Cloud SQL):** Navigate to **SQL > \<instance\> > Query insights** to identify slow queries, high-load queries, and query plans for PostgreSQL instances. Query Insights shows:
+*   **Query Insights (Cloud SQL):** Navigate to **SQL > <instance> > Query insights** to identify slow queries, high-load queries, and query plans for PostgreSQL instances. Query Insights shows:
     - Top queries ranked by total execution time.
     - The query plan (EXPLAIN ANALYZE output) for any selected query.
     - The application tags and database user associated with each query pattern.

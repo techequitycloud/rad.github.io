@@ -6,6 +6,7 @@
 [Download PDF](https://storage.googleapis.com/rad-public-2b65/gcp/pca_section1.pdf)
 
 
+
 This guide helps candidates preparing for the Google Cloud Professional Cloud Architect (PCA) certification explore Section 1 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
 You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCA objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
@@ -28,9 +29,9 @@ As you explore these modules, practice mapping the infrastructure patterns deplo
 **Concept:** Ensuring the architecture meets strict organizational security policies, handles data securely during transit, and protects secrets.
 
 **In the RAD UI:**
-*   **Identity-Aware Proxy (IAP):** Review the `enable_iap` (Group 15 for Cloud Run, Group 17 for GKE) variable. IAP protects applications by verifying user identity and context before allowing requests to reach the service.
-*   **Cloud Armor (WAF):** Activating `enable_cloud_armor` (Group 16 for Cloud Run, Group 18 for GKE) deploys a Global External Application Load Balancer with a Serverless Network Endpoint Group (NEG) or Gateway backend, attaching Web Application Firewall (WAF) policies.
-*   **Secret Manager Integration:** The `enable_auto_password_rotation` (Group 11 for Cloud Run, Group 10 for GKE) variable configures automated secret rotation, preventing plaintext secrets in environments.
+*   **Identity-Aware Proxy (IAP):** Review the `enable_iap` (Group 4) variable. IAP protects applications by verifying user identity and context before allowing requests to reach the service.
+*   **Cloud Armor (WAF):** Activating `enable_cloud_armor` (Group 9 for Cloud Run, Group 13 for GKE) deploys a Global External Application Load Balancer with a Serverless Network Endpoint Group (NEG) or Gateway backend, attaching Web Application Firewall (WAF) policies.
+*   **Secret Manager Integration:** The `enable_auto_password_rotation` (Group 11 for Cloud Run, Group 17 for GKE) variable configures automated secret rotation, preventing plaintext secrets in environments.
 
 **Console Exploration:**
 Navigate to **Security > Identity-Aware Proxy** to view access policies. Navigate to **Network Security > Cloud Armor** to inspect the edge WAF rules. Navigate to **Security > Secret Manager** to see how environment variables resolve securely.
@@ -75,8 +76,7 @@ Navigate to **Monitoring > Dashboards** and view the custom Cloud Run or GKE das
 
 **In the RAD UI:**
 *   **Global Load Balancing:** When `enable_cloud_armor` is active, it provisions a global L7 load balancer capable of routing across regions.
-*   **Pod Disruption Budgets (GKE):** The `pdb_min_available` variable (Group 14) ensures a minimum number of replicas are always available during voluntary disruptions.
-*   **Topology Spread (GKE):** The `enable_topology_spread` variable (Group 14) distributes pod replicas evenly across availability zones, ensuring a single zone failure cannot take down the entire deployment.
+*   **Pod Disruption Budgets (GKE):** The `pdb_min_available` variable (Group 27) ensures a minimum number of replicas are always available during voluntary disruptions.
 *   **Database HA:** `postgres_database_availability_type` (Group 3 in GCP Services) allows switching between ZONAL and REGIONAL (multi-zone high availability) configurations. A REGIONAL instance provisions a synchronous hot standby in a separate zone and automatically promotes it within approximately 60 seconds if the primary zone fails.
 
 **Console Exploration:**
@@ -98,7 +98,7 @@ Review the **Revisions** tab in Cloud Run for concurrency limits, and the **Auto
 **Concept:** Guaranteeing Recovery Point Objectives (RPO) and Recovery Time Objectives (RTO).
 
 **In the RAD UI:**
-*   **Automated Jobs & Cloud Scheduler:** The `backup_schedule` (Group 12 for Cloud Run, Group 11 for GKE) and `backup_retention_days` (Group 12 for Cloud Run, Group 11 for GKE) variables configure automated Cloud Scheduler jobs that trigger containerized Cloud Run Jobs or Kubernetes CronJobs to stream database backups securely to Cloud Storage.
+*   **Automated Jobs & Cloud Scheduler:** The `backup_schedule` (Group 6) and `backup_retention_days` (Group 6) variables configure automated Cloud Scheduler jobs that trigger containerized Cloud Run Jobs or Kubernetes CronJobs to stream database backups securely to Cloud Storage.
 
 **Console Exploration:**
 Go to **Cloud Scheduler** to see the cron configuration, and **Cloud Run > Jobs** to see the containerized execution history.
@@ -118,7 +118,7 @@ Go to **Cloud Scheduler** to see the cron configuration, and **Cloud Run > Jobs*
 **Concept:** Connecting managed compute to internal resources securely.
 
 **In the RAD UI:**
-*   **Direct VPC Egress:** Review `vpc_egress_setting` (Group 14 for Cloud Run) for Cloud Run Direct VPC Egress.
+*   **Direct VPC Egress:** Review `vpc_egress_setting` (Group 4) for Cloud Run Direct VPC Egress.
 *   **Private Service Connect:** The platform establishes peered VPC connections for managed services implicitly, securing database traffic.
 
 **Console Exploration:**
@@ -131,7 +131,7 @@ Check the Cloud Run service's **Networking** tab in the Console. Go to **Network
 
 **In the RAD UI:**
 *   **Cloud SQL (Relational):** Check `create_postgres` / `create_mysql` (Group 3 in GCP Services).
-*   **Cloud Storage (Object Storage):** Look at the `storage_buckets` variable (Group 9 for Cloud Run, Group 9 for GKE).
+*   **Cloud Storage (Object Storage):** Look at the `storage_buckets` variable (Group 10 for Cloud Run, Group 17 for GKE).
 *   **Filestore (File/NFS Storage):** Review `create_filestore_nfs` (Group 6 in GCP Services).
 
 **Console Exploration:**

@@ -6,6 +6,7 @@
 [Download PDF](https://storage.googleapis.com/rad-public-2b65/gcp/ace_section2.pdf)
 
 
+
 This guide helps candidates preparing for the Google Cloud Associate Cloud Engineer (ACE) certification explore Section 2 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
 You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights ACE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
@@ -166,7 +167,7 @@ Cloud NGFW introduces two key improvements over classic VPC firewall rules:
 **Console Exploration:**
 Navigate to **VPC network > Firewall policies** to explore Network Firewall Policies. Create a policy and add an ingress rule, noting the rule attributes: **action** (allow/deny/apply_security_profile), **priority**, **source** (CIDR, service account, tag), **destination**, **protocols/ports**, and **targets** (which VMs the rule applies to). Navigate to **IAM & Admin > Tags** to explore Secure Tags and understand the difference from classic network tags.
 
-> **Real-World Example:** A security team creates an Organisation Firewall Policy that denies all ingress on port 22 (SSH) from `0.0.0.0/0`, preventing any project team from accidentally exposing SSH to the internet. They then add a higher-priority rule that permits SSH from the corporate IP range using a Secure Tag — only VMs that have been granted the `allow-ssh` Secure Tag by a network administrator can receive SSH traffic from that range. Individual project teams cannot override this policy or self-assign the Secure Tag.
+**Real-world example:** A security team creates an Organisation Firewall Policy that denies all ingress on port 22 (SSH) from `0.0.0.0/0`, preventing any project team from accidentally exposing SSH to the internet. They then add a higher-priority rule that permits SSH from the corporate IP range using a Secure Tag — only VMs that have been granted the `allow-ssh` Secure Tag by a network administrator can receive SSH traffic from that range. Individual project teams cannot override this policy or self-assign the Secure Tag.
 
 ### Establishing network connectivity
 **Concept:** Securely connecting applications to resources within a private VPC and to external networks.
@@ -186,7 +187,7 @@ Navigate to **VPC network > Firewall policies** to explore Network Firewall Poli
 **Console Exploration:**
 Navigate to **Network Services > Load balancing**. Inspect the Frontend to see the global anycast IP and SSL certificate, and the Backend to see how traffic is routed to the Serverless NEG (Cloud Run) or GKE Services (GKE). Navigate to **Network Security > Cloud Armor** to view the applied WAF policies restricting inbound traffic.
 
-> **Real-World Example:** A global e-commerce application uses a Global External Application Load Balancer. A customer in Tokyo hits the same IP address as a customer in London — the global anycast routing directs each to the nearest Google Point of Presence, reducing latency. A Cloud Armor preconfigured WAF rule blocks SQL injection attempts before they reach the Cloud Run backend. During a DDoS incident, the operations team uses Cloud Armor's adaptive protection feature to automatically generate a rate-limiting rule in response to detected attack patterns.
+**Real-world example:** A global e-commerce application uses a Global External Application Load Balancer. A customer in Tokyo hits the same IP address as a customer in London — the global anycast routing directs each to the nearest Google Point of Presence, reducing latency. A Cloud Armor preconfigured WAF rule blocks SQL injection attempts before they reach the Cloud Run backend. During a DDoS incident, the operations team uses Cloud Armor's adaptive protection feature to automatically generate a rate-limiting rule in response to detected attack patterns.
 
 ### Differentiating Network Service Tiers
 **Concept:** Understanding how Google Cloud routes traffic and how Premium vs Standard Tier affects latency, cost, and SLA.
