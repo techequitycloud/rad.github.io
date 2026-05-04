@@ -346,6 +346,18 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Platform Outcomes',
+      items: [
+        { type: 'doc', id: 'outcomes/compliance-governance', label: 'Compliance & Governance' },
+        { type: 'doc', id: 'outcomes/cost-optimization', label: 'Cost Optimization' },
+        { type: 'doc', id: 'outcomes/developer-productivity', label: 'Developer Productivity' },
+        { type: 'doc', id: 'outcomes/modernization', label: 'Modernization' },
+        { type: 'doc', id: 'outcomes/skills-development', label: 'Skills Development' },
+        { type: 'doc', id: 'outcomes/zero-trust-security', label: 'Zero Trust Security' },
+      ],
+    },
+    {
+      type: 'category',
       label: 'Platform Guides',
       items: [
         {
