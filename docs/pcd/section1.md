@@ -286,7 +286,7 @@ Navigate to **Cloud Storage** and **SQL** in the GCP Console to review storage t
 - Use **interleaving** to co-locate parent and child rows physically — `INTERLEAVE IN PARENT Orders ON DELETE CASCADE` places each order's line items on the same Spanner server as the order, dramatically reducing cross-server joins.
 - Spanner supports standard SQL (ANSI 2011) and a GoogleSQL dialect — existing SQL queries generally work with minor modifications.
 
-Navigate to **Spanner > <instance> > Spanner Studio** to explore schema views and run queries.
+Navigate to **Spanner > &lt;instance&gt; > Spanner Studio** to explore schema views and run queries.
 
 **Unstructured (NoSQL) databases:**
 
@@ -301,7 +301,7 @@ Navigate to **Spanner > <instance> > Spanner Studio** to explore schema views an
 - Avoid **hotspotting**: if all writes go to rows with similar key prefixes (e.g. all start with today's date), all writes land on the same Bigtable tablet server. Use a hash prefix or field reordering to distribute writes.
 - Ideal for: IoT telemetry, financial time-series, ad-tech event streams, ML feature stores.
 
-Navigate to **Bigtable > <instance> > Bigtable Studio** to query tables and inspect row structure.
+Navigate to **Bigtable > &lt;instance&gt; > Bigtable Studio** to query tables and inspect row structure.
 
 ### Consistency Implications Across Data Services
 **Concept:** Understanding the consistency guarantee each service provides and designing applications accordingly.

@@ -72,7 +72,7 @@ Every expensive shared resource exposes cost/performance trade-off variables:
 
 | Metric | Value |
 |---|---|
-| Provisioning time reduction | ~95% (3–5 days → <2 hours) |
+| Provisioning time reduction | ~95% (3–5 days → &lt;2 hours) |
 | Cost per new application setup | $200 vs $3,200 manually |
 | Maintenance effort reduction (10-app portfolio) | ~95% (40 h → 2 h per cycle) |
 | Maintenance cost reduction (10-app portfolio) | $4,000 → $200 per cycle |
