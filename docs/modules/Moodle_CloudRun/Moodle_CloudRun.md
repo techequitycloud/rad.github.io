@@ -1,17 +1,4 @@
----
-title: "Moodle Cloud Run Configuration Guide"
-sidebar_label: "Cloud Run"
----
-
-# Moodle CloudRun Module
-
-<YouTubeEmbed videoId="qTwrlRjjlgk" poster="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Moodle_CloudRun Module — Configuration Guide
 
 Moodle is the world's most popular open-source Learning Management System (LMS), used by
 educational institutions, corporations, and online learning platforms worldwide. This module
@@ -41,8 +28,9 @@ outputs feed into App_CloudRun's `application_config`, `module_env_vars`,
   mirror.
 - A **Cloud SQL PostgreSQL** instance as the Moodle database backend. `MOODLE_DB_TYPE = "pgsql"`
   is hardcoded and cannot be changed.
-- **Cloud SQL Auth Proxy via Unix socket** — `enable_cloudsql_volume = true` is forced in the
-  module and cannot be overridden via tfvars. The socket path is configured by
+- **Cloud SQL Auth Proxy via Unix socket** — `enable_cloudsql_volume = true` is forced in
+  `moodle.tf` within the `moodle_module` local (the `application_modules` merge), and is not
+  exposed as a configurable variable. The socket path is configured by
   `cloudsql_volume_mount_path` (default `"/cloudsql"`).
 - **NFS (Cloud Filestore)** enabled by default (`enable_nfs = true`) as the Moodle `moodledata`
   directory, mounted at `nfs_mount_path` (default `"/mnt/nfs"`).
@@ -98,16 +86,17 @@ Their semantics are identical to the App_CloudRun equivalents — refer to
 
 ### §3.A · Application Identity
 
-`display_name` and `description` are Moodle-specific **aliases** for the
-`application_display_name` and `application_description` inputs in App_CloudRun. Similarly,
-`db_name` and `db_user` (documented in §7.C) are aliases for
-`application_database_name` / `application_database_user`.
+`display_name` is a Moodle-specific **alias** for the `application_display_name` input in
+App_CloudRun. `description` is passed only to `Moodle_Common` — it is **not** forwarded to
+App_CloudRun's `application_description`. Similarly, `db_name` and `db_user` (documented in
+§7.C) are aliases for `application_database_name` / `application_database_user` in
+`Moodle_Common`, not in App_CloudRun directly.
 
 | Variable | Default | Description |
 |---|---|---|
 | `application_name` | `"moodle"` | Base name for the Cloud Run service, Artifact Registry repo, Secret Manager secrets, and GCS buckets. **Do not change after initial deployment** — renaming requires manual resource migration. |
 | `display_name` | `"Moodle LMS"` | Human-readable name in the platform UI and Cloud Run console. Mapped to `application_display_name` in App_CloudRun. |
-| `description` | `"Moodle LMS - Online learning and course management platform"` | Deployment description shown in Cloud Run service metadata. Mapped to `application_description`. |
+| `description` | `"Moodle LMS - Online learning and course management platform"` | Description passed to `Moodle_Common` (used as the `db-init` job description and application description within the Common layer). It is **not** forwarded to App_CloudRun's `application_description` input. |
 | `application_version` | `"4.5.1"` | Container image version tag. Increment to trigger a new Cloud Build run and deploy a new Cloud Run revision. |
 
 ### §3.B · Resource Sizing
@@ -120,7 +109,7 @@ are user-configurable (unlike Ghost, where they are hardcoded).
 |---|---|---|
 | `cpu_limit` | `"1000m"` | CPU limit per container instance. Increase to `"2000m"` for production with concurrent students. CPUs above `"1000m"` require `cpu_always_allocated = true` to prevent throttling during idle periods. |
 | `memory_limit` | `"2Gi"` | Memory limit per container instance. PHP 8.3 with OPcache and active sessions typically consumes 0.5–1.5 Gi; 2 Gi provides adequate headroom. |
-| `min_instance_count` | `0` | Minimum live instances. Scale-to-zero is permitted for development. Set to `1` for production to eliminate cold-start latency between student sessions. |
+| `min_instance_count` | `0` | Minimum live instances. Scale-to-zero is enabled by default (`0`). Set to `1` for production to eliminate cold-start latency between student sessions. |
 | `max_instance_count` | `3` | Maximum concurrent instances. Moodle scales horizontally when Redis manages PHP sessions. |
 | `container_port` | `8080` | Port Apache/PHP-FPM binds to inside the container. Cloud Run routes HTTP traffic to this port. |
 | `timeout_seconds` | `300` | Maximum request duration before Cloud Run returns 504. Increase for course imports or large file uploads (maximum 3600). |
@@ -142,9 +131,8 @@ auto-injected default by supplying the same key in your `environment_variables` 
 
 | Variable | Injected value | Notes |
 |---|---|---|
-| `MOODLE_DB_TYPE` | `"pgsql"` | Hardcoded. Cannot be changed. |
-| `MOODLE_REVERSE_PROXY` | `"true"` / `"false"` | `"true"` only when `application_domains` is non-empty (Cloud Armor + custom domain in use). |
-| `ENABLE_REVERSE_PROXY` | `"TRUE"` / `"FALSE"` | Same condition as `MOODLE_REVERSE_PROXY`. |
+| `MOODLE_DB_TYPE` | `"pgsql"` | Hardcoded. Cannot be changed. Set in the `moodle_module` local via an `environment_variables` merge. |
+| `ENABLE_REVERSE_PROXY` | `"TRUE"` / `"FALSE"` | `"TRUE"` only when `application_domains` is non-empty (Cloud Armor + custom domain in use). Set in the `moodle_module` local. |
 | `MOODLE_DATA_DIR` | value of `nfs_mount_path` | `"/mnt/nfs"` by default. |
 | `DATA_PATH` | value of `nfs_mount_path` | `"/mnt/nfs"` by default. |
 | `MOODLE_SITE_NAME` | `"Moodle LMS"` | Override via `environment_variables`. |
@@ -160,7 +148,7 @@ auto-injected default by supplying the same key in your `environment_variables` 
 | `MOODLE_SMTP_SECURE` | `"tls"` | `"tls"` or `"ssl"`. |
 | `MOODLE_SMTP_AUTH` | `"LOGIN"` | Override if using a different auth mechanism. |
 | `MOODLE_REDIS_ENABLED` | `tostring(enable_redis)` | `"true"` by default. |
-| `MOODLE_REDIS_HOST` | `redis_host` or NFS server IP | Defaults to the NFS server IP when `redis_host = ""`. |
+| `MOODLE_REDIS_HOST` | `redis_host`, `"$(NFS_SERVER_IP)"`, or `""` | When `enable_redis = true` and `redis_host = ""`, the literal string `"$(NFS_SERVER_IP)"` is injected. `cloudrun-entrypoint.sh` expands this placeholder to the actual NFS server IP at container start-up. When `enable_redis = false`, this is set to `""`. |
 | `MOODLE_REDIS_PORT` | value of `redis_port` | `"6379"` by default. |
 | `MOODLE_REDIS_PASSWORD` | value of `redis_auth` | `""` by default. |
 
@@ -235,7 +223,7 @@ Three secrets are auto-generated and stored in Secret Manager on every deploymen
 | Variable | Default | Description |
 |---|---|---|
 | `secret_rotation_period` | `"2592000s"` | Duration between Secret Manager rotation Pub/Sub notifications (30 days). Set `null` to disable. Format: `"<seconds>s"`. |
-| `secret_propagation_delay` | `30` | Seconds to wait after secret creation before dependent operations proceed. Increase if deployments fail with "secret not found" errors. |
+| `secret_propagation_delay` | `30` | Seconds to wait after secret creation before dependent operations proceed. Increase if deployments fail with "secret not found" errors. Valid range: 0–300. |
 | `enable_auto_password_rotation` | `false` | Deploys an automated database password rotation job using Cloud Run and Eventarc. Rotates on the `secret_rotation_period` schedule. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after password rotation before restarting Cloud Run to pick up the new value. |
 
@@ -370,24 +358,31 @@ variable value.
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Additional GCS buckets to provision. Each entry defines a suffix, storage class, versioning, and access controls. |
 | `create_cloud_storage` | `true` | Set `false` to skip provisioning `storage_buckets` (the `moodle-data` bucket is unaffected). |
 | `gcs_volumes` | `[]` | GCS buckets to mount as GCS Fuse filesystem volumes inside the container. |
+| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to use. When set, targets this instance directly instead of auto-discovering one. Leave empty to auto-discover a Services_GCP-managed instance. |
+| `nfs_instance_base_name` | `"app-nfs"` | Base name for the inline NFS GCE VM when no existing instance is found. The deployment ID is appended for uniqueness. |
+| `manage_storage_kms_iam` | `false` | When `true`, creates a CMEK KMS keyring and storage encryption key and enables CMEK on all storage buckets. |
+| `enable_artifact_registry_cmek` | `false` | When `true`, enables at-rest encryption of container images with a customer-managed key in Artifact Registry. |
 
 ### §7.C · Database
 
-Moodle requires PostgreSQL. `db_name` and `db_user` are **aliases** for
-`application_database_name` and `application_database_user` in App_CloudRun. `MOODLE_DB_TYPE =
-"pgsql"` is hardcoded — setting `database_type` to anything other than a PostgreSQL variant
-will prevent Moodle from starting.
+Moodle requires PostgreSQL. `db_name` and `db_user` are passed to **`Moodle_Common`** where
+they configure the database name and user for initialization jobs and the application config.
+They are not forwarded directly to App_CloudRun's `application_database_name` /
+`application_database_user` inputs — `Moodle_Common` embeds them in the `config` output which
+App_CloudRun consumes. `MOODLE_DB_TYPE = "pgsql"` is hardcoded — setting a non-PostgreSQL
+database type will prevent Moodle from starting.
 
 | Variable | Default | Description |
 |---|---|---|
 | `db_name` | `"moodle"` | PostgreSQL database name created within the Cloud SQL instance. Injected as `DB_NAME`. **Do not change after initial deployment** — Moodle stores all data here and renaming requires manual migration. |
 | `db_user` | `"moodle"` | PostgreSQL user for the Moodle application. Injected as `DB_USER`. Password auto-generated and injected as `DB_PASSWORD`. |
-| `database_password_length` | `16` | Length of the auto-generated database password (8–64 characters). |
+| `database_password_length` | `32` | Length of the auto-generated database password (16–64 characters). |
 | `enable_auto_password_rotation` | `false` | Automates database password rotation via Cloud Run + Eventarc. See §4.A. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after password rotation before restarting Cloud Run. |
 
-> **`pg_trgm` extension:** Required by Moodle for full-text search performance. Enable it via
-> `enable_custom_sql_scripts` and a script that runs `CREATE EXTENSION IF NOT EXISTS pg_trgm;`.
+> **`pg_trgm` extension:** Required by Moodle for full-text search performance. This extension
+> is created automatically by the `db-init.sh` script (part of the `Moodle_Common` default
+> initialization jobs) — no user configuration is needed.
 
 ### §7.D · Backup & Recovery
 
@@ -477,8 +472,8 @@ variable values in your `tfvars` file. They cannot be overridden by user configu
 | Behaviour | Detail |
 |---|---|
 | **`enable_cloudsql_volume = true`** | Forced in `moodle.tf` locals merge. Moodle always connects to Cloud SQL via the Auth Proxy Unix socket. Not exposed as a variable. |
-| **`MOODLE_DB_TYPE = "pgsql"`** | Hardcoded in `moodle.tf` `module_env_vars`. PostgreSQL is the only supported Moodle database backend on this platform. |
-| **`MOODLE_REVERSE_PROXY` conditional** | Set to `"true"` / `"TRUE"` only when `application_domains` is non-empty. When Cloud Armor is not in use this is `"false"` / `"FALSE"`. |
+| **`MOODLE_DB_TYPE = "pgsql"`** | Hardcoded in `moodle.tf` via the `moodle_module` `environment_variables` merge. PostgreSQL is the only supported Moodle database backend on this platform. |
+| **`ENABLE_REVERSE_PROXY` conditional** | Set to `"TRUE"` only when `application_domains` is non-empty. Set to `"FALSE"` otherwise. Injected via the `moodle_module` `environment_variables` merge. Note: `MOODLE_REVERSE_PROXY` is **not** injected by `Moodle_CloudRun`; only `ENABLE_REVERSE_PROXY` is set. |
 | **Cloud Scheduler cron job** | Always created (`* * * * *`). Targets `admin/cron.php` with an auto-generated cron password. Cannot be disabled via variables. |
 | **`moodle-data` GCS bucket** | Always provisioned via the hardcoded `module_storage_buckets` in `moodle.tf`, independent of the user-defined `storage_buckets` variable. |
 | **`MOODLE_CRON_PASSWORD` secret** | Auto-generated by `Moodle_Common`. Embedded in the Cloud Scheduler job URL. |
@@ -563,9 +558,13 @@ group they belong to.
 | `enable_nfs` | `true` | 10 |
 | `nfs_mount_path` | `"/mnt/nfs"` | 10 |
 | `gcs_volumes` | `[]` | 10 |
+| `nfs_instance_name` | `""` | 8 |
+| `nfs_instance_base_name` | `"app-nfs"` | 8 |
+| `manage_storage_kms_iam` | `false` | 10 |
+| `enable_artifact_registry_cmek` | `false` | 10 |
 | `db_name` | `"moodle"` | 11 |
 | `db_user` | `"moodle"` | 11 |
-| `database_password_length` | `16` | 11 |
+| `database_password_length` | `32` | 11 |
 | `enable_auto_password_rotation` | `false` | 11 |
 | `rotation_propagation_delay_sec` | `90` | 11 |
 | `initialization_jobs` | `[]` | 12 |
@@ -579,3 +578,19 @@ group they belong to.
 | `redis_port` | `"6379"` | 20 |
 | `redis_auth` | `""` | 20 |
 | `enable_vpc_sc` | `false` | 21 |
+| `vpc_cidr_ranges` | `[]` | 21 |
+| `vpc_sc_dry_run` | `true` | 21 |
+| `organization_id` | `""` | 21 |
+| `enable_audit_logging` | `false` | 21 |
+| `max_images_to_retain` | `7` | 9 |
+| `delete_untagged_images` | `true` | 9 |
+| `image_retention_days` | `30` | 9 |
+| `max_revisions_to_retain` | `7` | 3 |
+
+
+
+
+
+
+
+

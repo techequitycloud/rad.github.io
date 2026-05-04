@@ -1,17 +1,4 @@
----
-title: "Sample Cloud Run Configuration Guide"
-sidebar_label: "Cloud Run"
----
-
-# Sample CloudRun Module
-
-<YouTubeEmbed videoId="XOQiOSkYFTs" poster="https://storage.googleapis.com/rad-public-2b65/modules/Sample_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Sample_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Sample_CloudRun Module — Configuration Guide
 
 `Sample_CloudRun` is a **reference wrapper module** that sits on top of `App_CloudRun`.
 It deploys a pre-configured Flask application (Python 3.11, PostgreSQL 15, optional
@@ -157,6 +144,10 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 | Variable | Default | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Enforces VPC-SC perimeter. Restricts GCP API calls to requests from inside the perimeter. Requires an existing VPC-SC perimeter in the project. |
+| `vpc_cidr_ranges` | `[]` | VPC subnet CIDR ranges for the VPC-SC network access level. Auto-discovered from the VPC network when empty; falls back to `10.0.0.0/8` if discovery finds nothing. |
+| `vpc_sc_dry_run` | `true` | When `true`, VPC-SC violations are logged but not blocked — recommended for initial rollout. Set to `false` to actively enforce the perimeter. |
+| `organization_id` | `""` | GCP Organization ID for the Access Context Manager policy. Auto-discovered from the project when empty. |
+| `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ) for all supported services. |
 
 ### §4.C · Identity-Aware Proxy
 
@@ -174,6 +165,9 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 | `application_domains` | `[]` | Custom domains. Google-managed SSL certificates are provisioned per domain. DNS must point to the GLB IP first. |
 | `enable_cdn` | `false` | Enables Cloud CDN on the GLB to cache static assets at edge. Only used when `enable_cloud_armor = true`. |
 | `admin_ip_ranges` | `[]` | IP CIDR ranges permitted for direct administrative access. |
+| `max_images_to_retain` | `7` | Maximum number of recent container images to keep in Artifact Registry per deployment. Set `0` to disable. |
+| `delete_untagged_images` | `true` | Automatically deletes untagged images (dangling layers, intermediate build artefacts) from the Artifact Registry repository. |
+| `image_retention_days` | `30` | Days after which container images are eligible for deletion from Artifact Registry. Set `0` to disable age-based deletion. |
 
 ### §4.E · Binary Authorization
 
@@ -190,6 +184,7 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 | Variable | Default | Description |
 |---|---|---|
 | `traffic_split` | `[]` | Canary or blue-green traffic allocations across Cloud Run revisions. All entries must sum to 100%. Leave empty to route all traffic to the latest revision. |
+| `max_revisions_to_retain` | `7` | Maximum number of Cloud Run revisions to keep after each deployment. Revisions actively serving traffic are never deleted. Set to `0` to disable pruning. |
 
 **Example:**
 ```hcl
@@ -255,9 +250,13 @@ The `startup_probe_config` / `health_check_config` pair controls Cloud Run's liv
 |---|---|---|
 | `enable_nfs` | `true` | Provisions a Cloud Filestore NFS instance. Requires `execution_environment = "gen2"`. |
 | `nfs_mount_path` | `"/mnt/nfs"` | Container mount path for the NFS volume. |
+| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to use directly. Leave empty to auto-discover or create inline. |
+| `nfs_instance_base_name` | `"app-nfs"` | Base name for the inline NFS GCE VM when none is found. Deployment ID is appended. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. `Sample_Common` may provision additional buckets via `module_storage_buckets`. |
 | `create_cloud_storage` | `true` | Set `false` to skip GCS bucket provisioning. |
 | `gcs_volumes` | `[]` | GCS buckets to mount as GCS Fuse volumes inside the container. |
+| `manage_storage_kms_iam` | `false` | Creates a CMEK KMS keyring and grants the GCS service account the encrypter/decrypter role, enabling CMEK on all storage buckets. |
+| `enable_artifact_registry_cmek` | `false` | Creates an Artifact Registry KMS key and enables CMEK encryption of container images. |
 
 ### §7.C · Database
 
@@ -265,7 +264,7 @@ The `startup_probe_config` / `health_check_config` pair controls Cloud Run's liv
 |---|---|---|
 | `application_database_name` | `"cloudrunapp"` | PostgreSQL database name, passed to `Sample_Common` as `db_name`. Initialised by the `db-init` job on first deployment. |
 | `application_database_user` | `"cloudrunapp"` | PostgreSQL user, passed as `db_user`. Password auto-generated. |
-| `database_password_length` | `16` | Auto-generated password length (8–64 characters). |
+| `database_password_length` | `32` | Auto-generated password length (16–64 characters). Default is `32`. |
 | `enable_auto_password_rotation` | `false` | Automated password rotation. See §4.A. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts. |
 
@@ -426,6 +425,7 @@ Complete list of all input variables, grouped by UI section.
 | 3 | `enable_cloudsql_volume` | bool | `true` | yes |
 | 3 | `cloudsql_volume_mount_path` | string | `"/cloudsql"` | yes |
 | 3 | `traffic_split` | list(object) | `[]` | yes |
+| 3 | `max_revisions_to_retain` | number | `7` | yes |
 | 3 | `service_annotations` | map(string) | `{}` | yes |
 | 3 | `service_labels` | map(string) | `{}` | yes |
 | 4 | `ingress_settings` | string | `"all"` | yes |
@@ -459,14 +459,21 @@ Complete list of all input variables, grouped by UI section.
 | 9 | `admin_ip_ranges` | list(string) | `[]` | yes |
 | 9 | `application_domains` | list(string) | `[]` | yes |
 | 9 | `enable_cdn` | bool | `false` | yes |
+| 9 | `max_images_to_retain` | number | `7` | yes |
+| 9 | `delete_untagged_images` | bool | `true` | yes |
+| 9 | `image_retention_days` | number | `30` | yes |
+| 8 | `nfs_instance_name` | string | `""` | yes |
+| 8 | `nfs_instance_base_name` | string | `"app-nfs"` | yes |
 | 10 | `create_cloud_storage` | bool | `true` | yes |
 | 10 | `storage_buckets` | list(object) | `[{ name_suffix = "data" }]` | yes |
 | 10 | `enable_nfs` | bool | `true` | yes |
 | 10 | `nfs_mount_path` | string | `"/mnt/nfs"` | yes |
 | 10 | `gcs_volumes` | list(object) | `[]` | yes |
+| 10 | `manage_storage_kms_iam` | bool | `false` | yes |
+| 10 | `enable_artifact_registry_cmek` | bool | `false` | yes |
 | 11 | `application_database_name` | string | `"cloudrunapp"` | — |
 | 11 | `application_database_user` | string | `"cloudrunapp"` | — |
-| 11 | `database_password_length` | number | `16` | yes |
+| 11 | `database_password_length` | number | `32` | yes |
 | 11 | `enable_auto_password_rotation` | bool | `false` | yes |
 | 11 | `rotation_propagation_delay_sec` | number | `90` | yes |
 | 12 | `initialization_jobs` | list(object) | `[]` | yes |
@@ -482,3 +489,7 @@ Complete list of all input variables, grouped by UI section.
 | 20 | `redis_port` | **number** | `6379` | yes |
 | 20 | `redis_auth` | string | `""` | yes |
 | 21 | `enable_vpc_sc` | bool | `false` | yes |
+| 21 | `vpc_cidr_ranges` | list(string) | `[]` | yes |
+| 21 | `vpc_sc_dry_run` | bool | `true` | yes |
+| 21 | `organization_id` | string | `""` | yes |
+| 21 | `enable_audit_logging` | bool | `false` | yes |

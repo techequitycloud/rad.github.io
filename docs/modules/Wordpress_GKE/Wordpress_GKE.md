@@ -112,6 +112,7 @@ All variables in this group behave as documented in [App_GKE §3.A Compute (GKE 
 | `min_instance_count` | `1` | `1` | One pod is always running to avoid cold-start latency for WordPress visitors. |
 | `max_instance_count` | `1` | `3` | WordPress stores uploaded media in a GCS Fuse–mounted bucket, which supports concurrent writers. However, PHP session state and certain plugin caches may not be multi-replica–safe. Increase this value only after verifying that all installed plugins handle concurrent access correctly, and ensure `session_affinity = "ClientIP"` (the default) is set to pin sessions to individual pods. |
 | `container_resources` | `null` *(uses `cpu_limit`/`memory_limit`)* | `null` | When `container_resources` is set explicitly it overrides the separate `cpu_limit` and `memory_limit` variables. Use `container_resources` when you also need to specify CPU/memory *requests* or ephemeral storage limits. |
+| `container_build_config` | `{ enabled = true }` | N/A | Advanced Cloud Build configuration (Dockerfile path, build args, artifact repo). Exposed in `Wordpress_GKE` but **not** in `Wordpress_CloudRun`. Defaults to the `Wordpress_Common`-managed build config; override only when supplying a custom Dockerfile. |
 
 ---
 
@@ -165,7 +166,7 @@ The variables below behave identically to their `App_GKE` counterparts but carry
 
 | Variable | WordPress Default | App_GKE Default | Description |
 |---|---|---|---|
-| `database_type` | `"MYSQL_8_0"` *(set by Wordpress_Common)* | `"POSTGRES"` | WordPress requires MySQL. The default is pre-configured by `Wordpress_Common` and should not be changed. Setting this to a non-MySQL type will prevent WordPress from connecting to the database. |
+| `database_type` | `null` *(defaults to `"MYSQL_8_0"` from `Wordpress_Common`)* | `"POSTGRES"` | WordPress requires MySQL. The `Wordpress_Common` config provides `"MYSQL_8_0"` as the base default, but the caller can override this via `var.database_type` (the GKE wrapper merges a non-null value). Setting this to a non-MySQL type will prevent WordPress from connecting to the database and should only be done with a corresponding custom `wp-config.php`. |
 | `application_database_name` | `"wp"` | `"gkeappdb"` | Name of the MySQL database created inside the Cloud SQL instance. Injected into pods as `DB_NAME`. **Do not change after initial deployment** without first migrating the database contents. |
 | `application_database_user` | `"wp"` | `"gkeappuser"` | MySQL username created for the WordPress application. Injected into pods as `DB_USER`. The auto-generated password is stored in Secret Manager and injected as `DB_PASSWORD`. |
 
@@ -175,7 +176,7 @@ The variables below behave identically to their `App_GKE` counterparts but carry
 
 ### Jobs & Scheduled Tasks
 
-Refer to [App_GKE §3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) for documentation on `initialization_jobs`, `cron_jobs`, and `additional_services`.
+Refer to [App_GKE §3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) for documentation on `initialization_jobs`, `cron_jobs`, and `additional_services`. Unlike `Wordpress_CloudRun`, this module **does** expose the `additional_services` variable.
 
 #### Pre-Configured db-init Job
 
@@ -246,6 +247,9 @@ Refer to [App_GKE — Deployment Prerequisites & Dependency Analysis](../App_GKE
 - The eight WordPress security keys and salts are generated and stored in Secret Manager automatically — no pre-existing secrets are needed.
 - The GCS uploads bucket (`wp-uploads`) is defined by `Wordpress_Common` and provisioned by `App_GKE` — it does not need to be created manually before deployment.
 - Because `execute_on_apply = true` on the `db-init` job, every `terraform apply` will run the database initialisation script. This is intentional and safe; the script is idempotent.
+- The backup import variable is named `backup_file` (not `backup_uri` as in `Wordpress_CloudRun`), with a default value of `"backup.sql"`.
+- The `container_build_config` variable is exposed in this module (unlike `Wordpress_CloudRun`) and can be used to customise the Cloud Build configuration when `container_image_source = "custom"`.
+- On a first apply that creates a new inline GKE cluster, `kubernetes_ready` outputs `false` and all Kubernetes workloads are skipped. A second apply completes the deployment. Refer to the `kubernetes_ready` output for details.
 
 ---
 

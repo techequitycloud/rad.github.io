@@ -1,8 +1,3 @@
----
-title: "OpenEMR Common Shared Configuration Module"
-sidebar_label: "Common"
----
-
 # OpenEMR_Common Module
 
 ## Overview
@@ -80,8 +75,7 @@ OpenEMR has specific infrastructure requirements: **MySQL 8.0** (not PostgreSQL)
 | `storage_buckets` | list | Always empty `[]` — no GCS buckets provisioned by this module |
 | `path` | string | Absolute path to this module directory |
 | `admin_password_secret_id` | string | Secret Manager resource ID for the admin password |
-
-> There is no `admin_password_secret_value` output. The plaintext password is accessible only through the Secret Manager secret, not as a Terraform output.
+| `admin_password` | string (sensitive) | Plaintext admin password value. Marked sensitive — used by `OpenEMR_GKE` to inject `OE_PASS` via `explicit_secret_values`. Not exposed to `OpenEMR_CloudRun`, which uses the Secret Manager reference instead. |
 
 ---
 
@@ -401,12 +395,12 @@ The following environment variables are always set by the module (merged with `v
 | Aspect | OpenEMR_CloudRun | OpenEMR_GKE |
 |--------|------------------|------------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
-| `enable_cloudsql_volume` | `false` (Unix socket via Auth Proxy) | `true` (Cloud SQL Proxy sidecar) |
-| `DB_HOST` | Cloud SQL Auth Proxy socket path | Cloud SQL private IP |
+| `enable_cloudsql_volume` | `true` (defaults from Common; CloudRun uses Auth Proxy socket) | `true` (forced in GKE wrapper; Cloud SQL Proxy sidecar) |
+| `DB_HOST` | Cloud SQL Auth Proxy Unix socket path (mounted at `/cloudsql`) | Cloud SQL private IP (proxy sidecar connects via `127.0.0.1`) |
 | NFS | Mandatory (OpenEMR sites directory) | Mandatory (OpenEMR sites directory) |
 | `K8S` env var | Not set (single-instance mode) | `K8S=yes` (multi-pod aware clustering) |
 | GCS volumes | Optional pass-through via `gcs_volumes` | Optional pass-through via `gcs_volumes` |
-| Redis | Optional (default off) | Optional (default off) |
+| Redis | Enabled by default (`enable_redis = true`) | Enabled by default (`enable_redis = true`) |
 | Init jobs | `nfs-init` (no DB) and `db-init` run independently | `nfs-init` (no DB) and `db-init` run independently |
 
 ---
@@ -466,3 +460,4 @@ initialization_jobs = [
 ```
 
 Or for a Google Drive backup, set `BACKUP_FILEID` to the Google Drive file ID (not a `gs://` URI).
+

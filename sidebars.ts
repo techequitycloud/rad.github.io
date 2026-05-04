@@ -111,6 +111,15 @@ const sidebars: SidebarsConfig = {
           items: [
             {
               type: 'category',
+              label: 'Activepieces',
+              items: [
+                { type: 'doc', id: 'modules/Activepieces_CloudRun/Activepieces_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'modules/Activepieces_GKE/Activepieces_GKE', label: 'GKE' },
+                { type: 'doc', id: 'modules/Activepieces_Common/Activepieces_Common', label: 'Common' },
+              ],
+            },
+            {
+              type: 'category',
               label: 'Application',
               items: [
                 { type: 'doc', id: 'modules/App_CloudRun/App_CloudRun', label: 'Cloud Run' },
@@ -147,11 +156,36 @@ const sidebars: SidebarsConfig = {
             },
             {
               type: 'category',
+              label: 'Elasticsearch',
+              items: [
+                { type: 'doc', id: 'modules/Elasticsearch_GKE/Elasticsearch_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Flowise',
+              items: [
+                { type: 'doc', id: 'modules/Flowise_CloudRun/Flowise_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'modules/Flowise_GKE/Flowise_GKE', label: 'GKE' },
+                { type: 'doc', id: 'modules/Flowise_Common/Flowise_Common', label: 'Common' },
+              ],
+            },
+            {
+              type: 'category',
               label: 'Ghost',
               items: [
                 { type: 'doc', id: 'modules/Ghost_CloudRun/Ghost_CloudRun', label: 'Cloud Run' },
                 { type: 'doc', id: 'modules/Ghost_GKE/Ghost_GKE', label: 'GKE' },
                 { type: 'doc', id: 'modules/Ghost_Common/Ghost_Common', label: 'Common' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Kestra',
+              items: [
+                { type: 'doc', id: 'modules/Kestra_CloudRun/Kestra_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'modules/Kestra_GKE/Kestra_GKE', label: 'GKE' },
+                { type: 'doc', id: 'modules/Kestra_Common/Kestra_Common', label: 'Common' },
               ],
             },
             {
@@ -183,6 +217,15 @@ const sidebars: SidebarsConfig = {
             },
             {
               type: 'category',
+              label: 'Node-RED',
+              items: [
+                { type: 'doc', id: 'modules/NodeRED_CloudRun/NodeRED_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'modules/NodeRED_GKE/NodeRED_GKE', label: 'GKE' },
+                { type: 'doc', id: 'modules/NodeRED_Common/NodeRED_Common', label: 'Common' },
+              ],
+            },
+            {
+              type: 'category',
               label: 'Odoo',
               items: [
                 { type: 'doc', id: 'modules/Odoo_CloudRun/Odoo_CloudRun', label: 'Cloud Run' },
@@ -192,11 +235,38 @@ const sidebars: SidebarsConfig = {
             },
             {
               type: 'category',
+              label: 'Ollama',
+              items: [
+                { type: 'doc', id: 'modules/Ollama_CloudRun/Ollama_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'modules/Ollama_GKE/Ollama_GKE', label: 'GKE' },
+                { type: 'doc', id: 'modules/Ollama_Common/Ollama_Common', label: 'Common' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'OpenClaw',
+              items: [
+                { type: 'doc', id: 'modules/OpenClaw_CloudRun/OpenClaw_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'modules/OpenClaw_GKE/OpenClaw_GKE', label: 'GKE' },
+                { type: 'doc', id: 'modules/OpenClaw_Common/OpenClaw_Common', label: 'Common' },
+              ],
+            },
+            {
+              type: 'category',
               label: 'OpenEMR',
               items: [
                 { type: 'doc', id: 'modules/OpenEMR_CloudRun/OpenEMR_CloudRun', label: 'Cloud Run' },
                 { type: 'doc', id: 'modules/OpenEMR_GKE/OpenEMR_GKE', label: 'GKE' },
                 { type: 'doc', id: 'modules/OpenEMR_Common/OpenEMR_Common', label: 'Common' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'RAGFlow',
+              items: [
+                { type: 'doc', id: 'modules/RAGFlow_CloudRun/RAGFlow_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'modules/RAGFlow_GKE/RAGFlow_GKE', label: 'GKE' },
+                { type: 'doc', id: 'modules/RAGFlow_Common/RAGFlow_Common', label: 'Common' },
               ],
             },
             {
@@ -215,6 +285,13 @@ const sidebars: SidebarsConfig = {
                 { type: 'doc', id: 'modules/Strapi_CloudRun/Strapi_CloudRun', label: 'Cloud Run' },
                 { type: 'doc', id: 'modules/Strapi_GKE/Strapi_GKE', label: 'GKE' },
                 { type: 'doc', id: 'modules/Strapi_Common/Strapi_Common', label: 'Common' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'VMware Engine',
+              items: [
+                { type: 'doc', id: 'modules/VMware_Engine/VMware_Engine', label: 'VMware Engine' },
               ],
             },
             {

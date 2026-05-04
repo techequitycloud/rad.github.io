@@ -1,8 +1,3 @@
----
-title: "Strapi Common Shared Configuration Module"
-sidebar_label: "Common"
----
-
 # Strapi_Common Module
 
 ## Overview
@@ -54,7 +49,7 @@ Strapi has specific cryptographic requirements: four distinct secrets must be co
 | Resource | Name Pattern | Description |
 |----------|-------------|-------------|
 | `google_project_service` | `secretmanager.googleapis.com` | Ensures Secret Manager API is active |
-| `random_password` × 7 | — | Individual 32-char alphanumeric values |
+| `random_password` × 8 | — | Individual 32-char alphanumeric values |
 | `google_secret_manager_secret` | `{prefix}-jwt-secret` | User JWT signing secret |
 | `google_secret_manager_secret` | `{prefix}-admin-jwt-secret` | Admin panel JWT signing secret |
 | `google_secret_manager_secret` | `{prefix}-api-token-salt` | API token salt |
@@ -81,7 +76,7 @@ Strapi has specific cryptographic requirements: four distinct secrets must be co
 | `config` | object | Full application configuration for App_CloudRun/App_GKE |
 | `storage_buckets` | list(object) | One bucket spec: `strapi-uploads` |
 | `secret_ids` | map(string) | Secret IDs for all 5 Strapi secrets (gated by 30s sleep) |
-| `secret_values` | map(string) (sensitive) | Plaintext secret values |
+| `secret_values` | map(string) (sensitive) | Plaintext secret values — used by `Strapi_GKE` to inject secrets via `explicit_secret_values` without a Secret Manager data source read |
 | `path` | string | Absolute path to this module directory |
 
 **`secret_ids` keys:**
@@ -304,7 +299,7 @@ Uses `@strapi-community/strapi-provider-upload-google-cloud-storage` for the Str
 
 **Redis plugin (conditional on `REDIS_HOST`):**
 
-When `REDIS_HOST` is set, enables `strapi-plugin-redis` with a `default` connection:
+When `REDIS_HOST` is set (i.e. `env('REDIS_HOST')` is truthy), enables `strapi-plugin-redis` with a `default` connection. Note: the `ENABLE_REDIS` environment variable is injected by the platform but `plugins.js` gates on `REDIS_HOST` directly, not on `ENABLE_REDIS`:
 
 | Setting | Value |
 |---------|-------|
@@ -324,7 +319,7 @@ When `SMTP_HOST` is set, enables the `nodemailer` email provider:
 |----------|-------------|
 | `SMTP_HOST` | SMTP server hostname |
 | `SMTP_PORT` | SMTP port (default: 587) |
-| `SMTP_USERNAME` | SMTP authentication user |
+| `SMTP_USERNAME` | SMTP authentication user (`auth.user` in nodemailer config) |
 | `SMTP_PASSWORD` | SMTP authentication password |
 | `EMAIL_FROM` | Default sender address |
 | `EMAIL_REPLY_TO` | Default reply-to address |
@@ -345,6 +340,10 @@ When `SMTP_HOST` is set, enables the `nodemailer` email provider:
 | `strapi-provider-rest-cache-redis` | 4.2.8 | Redis backend for REST cache |
 | `pg` | 8.11.3 | PostgreSQL driver (Knex) |
 | `sharp` | ^0.32.6 | Image processing (requires libvips) |
+| `react` | ^18.0.0 | React peer dependency (required by Strapi admin panel) |
+| `react-dom` | ^18.0.0 | React DOM peer dependency |
+| `react-router-dom` | ^5.2.0 | Router peer dependency for Strapi admin panel |
+| `styled-components` | ^5.2.1 | CSS-in-JS peer dependency for Strapi admin panel |
 
 Node.js requirement: `>=18.0.0 <=20.x.x`.
 
@@ -357,7 +356,7 @@ Node.js requirement: `>=18.0.0 <=20.x.x`.
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Optional (Auth Proxy sidecar) | Not used (TCP to Cloud SQL private IP) |
 | `DB_HOST` | Cloud SQL Auth Proxy socket path | Cloud SQL private IP |
-| NFS | Disabled | Disabled |
+| NFS | Enabled by default (`enable_nfs = true`) | Enabled by default (`enable_nfs = true`) |
 | Redis | Optional; disabled by default | Optional; disabled by default |
 | GCS media uploads | `strapi-uploads` bucket (always enabled) | `strapi-uploads` bucket (always enabled) |
 | Secret injection | `secret_ids` map from `module.strapi_app` | Secret values injected directly |
@@ -401,3 +400,4 @@ module "strapi_cloudrun" {
   }
 }
 ```
+

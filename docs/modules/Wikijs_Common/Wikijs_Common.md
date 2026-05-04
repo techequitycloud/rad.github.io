@@ -1,8 +1,3 @@
----
-title: "Wiki.js Common Shared Configuration Module"
-sidebar_label: "Common"
----
-
 # Wikijs_Common Module
 
 ## Overview
@@ -53,9 +48,11 @@ The database password is not generated here; it is managed by the platform layer
 
 **GCS Bucket** (defined in `storage_buckets` output, created by Layer 2):
 
-| Bucket Suffix | Location | Purpose |
-|---------------|----------|---------|
-| `wikijs-storage` | `deployment_region` | Wiki.js asset storage and uploads |
+| Bucket Suffix | Location | Storage Class | `force_destroy` | `versioning_enabled` | `public_access_prevention` | Purpose |
+|---------------|----------|---------------|-----------------|----------------------|----------------------------|---------|
+| `wikijs-storage` | `var.deployment_region` | `STANDARD` | `true` | `false` | `"inherited"` | Wiki.js asset storage and uploads |
+
+> **Note:** `public_access_prevention = "inherited"` means the bucket follows the organisation or project-level policy rather than enforcing a private-only setting. This differs from the `"enforced"` default used by most other modules. It allows GCS Fuse (which mounts the bucket into the container) to work without additional IAM overrides in some configurations.
 
 ---
 

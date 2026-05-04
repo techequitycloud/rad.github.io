@@ -1,17 +1,4 @@
----
-title: "GCP Services Configuration Guide"
-sidebar_label: "GCP Services"
----
-
-# GCP Services Module
-
-<YouTubeEmbed videoId="bOzIrYMC3C8" poster="https://storage.googleapis.com/rad-public-2b65/modules/GCP_Services.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/GCP_Services.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Services_GCP Module
 
 `Services_GCP` is the **foundational infrastructure module** in the RAD Modules ecosystem. It runs before any application module and provisions the shared GCP services that all applications depend on: VPC networking, Cloud SQL databases, NFS file storage, Redis cache, Artifact Registry, IAM service accounts, and optional security controls (CMEK, Binary Authorization, VPC Service Controls).
 
@@ -48,20 +35,22 @@ Services_GCP  →  App_CloudRun / App_GKE  →  *_Common modules
 
 ## GCP APIs Enabled
 
-When `enable_services = true` (default), the module enables 46 APIs. A 360-second `time_sleep` runs after enablement to allow full propagation before any resource is created.
+When `enable_services = true` (default), the module enables 46 APIs by default (the exact count grows when `additional_apis` entries are added). A 360-second `time_sleep` runs after enablement to allow full propagation before any resource is created. Additional project-specific APIs can be passed via the `additional_apis` variable without modifying the module source.
 
 | Category | APIs |
 |----------|------|
-| Core platform | `iam`, `cloudresourcemanager`, `serviceusage`, `compute` |
+| Core platform | `iam`, `iamcredentials`, `cloudresourcemanager`, `serviceusage`, `compute` |
 | Networking | `servicenetworking`, `dns`, `networkmanagement` |
-| Containers | `run`, `container`, `artifactregistry`, `cloudbuild`, `clouddeploy` |
-| Database | `sqladmin`, `redis`, `memorystore` |
+| Containers | `run`, `container`, `artifactregistry`, `cloudbuild`, `clouddeploy`, `containeranalysis`, `websecurityscanner`, `containersecurity` |
+| Database | `sqladmin`, `redis`, `memorystore`, `alloydb` |
 | Storage | `storage`, `file`, `firestore` |
-| Security | `secretmanager`, `cloudkms`, `binaryauthorization`, `accesscontextmanager`, `containersecurity` |
+| Security | `secretmanager`, `cloudkms`, `binaryauthorization`, `accesscontextmanager` |
 | GKE advanced | `gkehub`, `gkeconnect`, `mesh`, `anthospolicycontroller`, `anthosconfigmanagement` |
 | Observability | `monitoring`, `logging` |
-| AI/ML | `aiplatform`, `discoveryengine`, `cloudaicompanion` |
-| Other | `pubsub`, `iap`, `certificatemanager`, `eventarc`, `cloudbilling`, `billingbudgets` |
+| AI/ML | `aiplatform`, `discoveryengine`, `cloudaicompanion`, `appoptimize` |
+| Other | `pubsub`, `iap`, `certificatemanager`, `eventarc`, `cloudbilling`, `billingbudgets`, `cloudscheduler`, `ces` |
+
+> The full list is defined in `local.default_apis` in `main.tf`. It contains 46 entries including `alloydb.googleapis.com` and `memorystore.googleapis.com`.
 
 ---
 
@@ -79,19 +68,21 @@ These resources are provisioned on every deployment regardless of feature flags.
 | `google_compute_global_address` | `{network_name}-psconnect-ip-range` | /16 RFC 1918 range for Private Service Connect |
 | `google_service_networking_connection` | — | VPC peering to Google-managed services |
 
-**Firewall rules always created:**
+**Firewall rules always created** (names are prefixed with `{network_name}-`):
 
 | Rule | Direction | Source | Ports | Purpose |
 |------|-----------|--------|-------|---------|
-| `fw-allow-lb-hc` | INGRESS | `35.191.0.0/16`, `130.211.0.0/22` | TCP 80, 2049, 6379 | Load balancer health checks |
-| `fw-allow-iap-ssh` | INGRESS | `35.235.240.0/20` | TCP 22 | SSH via Identity-Aware Proxy |
-| `fw-allow-intra-vpc-tcp` | INGRESS | All internal CIDRs | TCP all | Intra-VPC TCP |
-| `fw-allow-intra-vpc-udp` | INGRESS | All internal CIDRs | UDP all | Intra-VPC UDP |
-| `fw-allow-intra-vpc-icmp` | INGRESS | All internal CIDRs | ICMP | Intra-VPC ICMP |
-| `fw-allow-nfs-tcp/udp` | INGRESS | GCE subnet CIDRs | TCP/UDP 2049 | NFS (tag: `nfsserver`) |
-| `fw-allow-http-tcp` | INGRESS | All internal CIDRs | TCP 80, 443, 8080, 8443 | HTTP/HTTPS |
+| `{network_name}-fw-allow-lb-hc` | INGRESS | `35.191.0.0/16`, `130.211.0.0/22` | TCP 80, 2049, 6379 | Load balancer health checks |
+| `{network_name}-fw-allow-iap-ssh` | INGRESS | `35.235.240.0/20` | TCP 22 | SSH via Identity-Aware Proxy |
+| `{network_name}-fw-allow-intra-vpc-tcp` | INGRESS | All internal CIDRs | TCP all | Intra-VPC TCP |
+| `{network_name}-fw-allow-intra-vpc-udp` | INGRESS | All internal CIDRs | UDP all | Intra-VPC UDP |
+| `{network_name}-fw-allow-intra-vpc-icmp` | INGRESS | All internal CIDRs | ICMP | Intra-VPC ICMP |
+| `{network_name}-fw-allow-nfs-tcp` / `fw-allow-nfs-udp` | INGRESS | GCE subnet CIDRs | TCP/UDP 2049 | NFS (tag: `nfsserver`) |
+| `{network_name}-fw-allow-http-tcp` | INGRESS | All internal CIDRs | TCP 80, 443, 8080, 8443 | HTTP/HTTPS (tags: `httpserver`, `webserver`) |
 
-> When `gke_cluster_count > 1`, two additional Istio east-west firewall rules are created (ports 15012, 15017, 15443).
+> "All internal CIDRs" includes the GCE subnets plus (when `create_google_kubernetes_engine = true`) the GKE node, pod, and service CIDR blocks.
+
+> When `gke_cluster_count > 1`, two additional Istio east-west firewall rules are created: `{network_name}-fw-allow-istio-eastwest` (TCP 15012, 15017, 15443 from cluster node subnets) and `{network_name}-fw-allow-istio-mesh` (all TCP from cluster pod CIDRs).
 
 ### Artifact Registry
 
@@ -101,24 +92,31 @@ A shared Docker repository (`shared-repo-{random_id}`) is created in the primary
 
 | Account | Purpose | Key Roles |
 |---------|---------|-----------|
-| `cloudbuild-sa-{id}` | CI/CD pipelines | `cloudbuild.builds.editor`, `run.admin`, `storage.admin`, `artifactregistry.writer`, `cloudkms.admin`, `containeranalysis.admin`, `clouddeploy.operator` (17 total) |
-| `clouddeploy-sa-{id}` | Cloud Deploy delivery | `clouddeploy.jobRunner`, `run.admin`, `container.admin`, `artifactregistry.reader` |
-| `cloudrun-sa-{id}` | Cloud Run containers | `run.admin`, `secretmanager.secretAccessor`, `storage.objectAdmin`, `cloudsql.client`, `vpcaccess.user` |
-| `app-nfs-sa-{id}` | NFS/Redis VM | `storage.admin`, `logging.logWriter`, `compute.instanceAdmin.v1` |
+| `cloudbuild-sa-{id}` | CI/CD pipelines | `cloudbuild.builds.editor`, `run.admin`, `storage.objectAdmin`, `artifactregistry.reader`, `artifactregistry.writer`, `cloudkms.admin`, `cloudkms.signerVerifier`, `cloudkms.publicKeyViewer`, `containeranalysis.admin`, `container.admin`, `binaryauthorization.attestorsViewer`, `clouddeploy.operator`, `secretmanager.secretAccessor`, `viewer`, `logging.logWriter`, `iam.serviceAccountUser`, `iam.serviceAccountTokenCreator` (17 total) |
+| `clouddeploy-sa-{id}` | Cloud Deploy delivery | `clouddeploy.jobRunner`, `run.admin`, `container.admin`, `container.clusterViewer`, `artifactregistry.reader`, `storage.objectViewer`, `logging.logWriter`, `iam.serviceAccountUser` |
+| `cloudrun-sa-{id}` | Cloud Run containers | `run.admin`, `secretmanager.secretAccessor`, `storage.objectAdmin`, `storage.objectUser`, `cloudsql.client`, `vpcaccess.user`, `compute.networkUser` |
+| `app-nfs-sa-{id}` | NFS/Redis VM | `storage.objectAdmin`, `logging.logWriter`, `compute.instanceAdmin.v1` |
+
+> The module also grants IAM roles to the **default Cloud Build service agent** (`{project_number}@cloudbuild.gserviceaccount.com`) and the **Cloud Run service agent** (created via `google_project_service_identity`). The Cloud Run service agent receives `compute.networkUser` and `vpcaccess.user` for Shared VPC connectivity.
 
 ---
 
 ## Timing & Dependencies
 
-| Sleep | Duration | Purpose |
-|-------|----------|---------|
-| `wait_for_apis` | 360s | After API enablement — blocks all resource creation |
-| `wait_for_servicenetworking_sa` | 30s | After Service Networking service identity creation |
-| `wait_for_servicenetworking_iam` | 60s | After Service Networking IAM grants — Cloud SQL depends on this |
-| `wait_for_cloudrun_sa` | 30s | After Cloud Run service identity creation |
-| `wait_for_pgsql_secret` | 10s | After PostgreSQL root password secret version |
-| `wait_30_seconds` (NFS) | 30s | After NFS MIG creation |
-| `wait_for_dependencies` | 60s | Before SQL instance creation — ensures PSC peering is ready |
+| Resource | Duration | Purpose |
+|----------|----------|---------|
+| `wait_for_apis` (`time_sleep`) | 360s | After API enablement — blocks all resource creation |
+| `wait_for_servicenetworking_sa` (`time_sleep`) | 30s | After Service Networking service identity creation |
+| `wait_for_servicenetworking_iam` (`time_sleep`) | 60s | After Service Networking IAM grants — Cloud SQL depends on this |
+| `wait_for_cloudrun_sa` (`time_sleep`) | 30s | After Cloud Run service identity creation |
+| `wait_for_dependencies` (`null_resource`) | 60s | Before SQL instance creation — ensures PSC peering and NFS MIG are ready |
+| `wait_for_pgsql_secret` (`time_sleep`) | 10s | After PostgreSQL root password secret version |
+| `wait_between_sql_instances` (`time_sleep`) | 120s | Between PostgreSQL and MySQL instance creation |
+| `wait_for_mysql_secret` (`time_sleep`) | 10s | After MySQL root password secret version |
+| `wait_30_seconds` (`time_sleep`) | 30s | After NFS MIG creation |
+| `wait_after_gke_cluster_creation` (`time_sleep`) | 5m | After GKE cluster creation — before Fleet registration |
+| `wait_for_gke_backup_api` (`time_sleep`) | 60s | After GKE Backup API enablement — before backup plan creation |
+| `wait_for_scc_sa` (`time_sleep`) | 30s | After SCC service identity creation |
 
 ---
 
@@ -140,9 +138,10 @@ These variables describe the module to the platform catalogue and control platfo
 | `module_services` | `['VPC Networking', 'Cloud SQL', 'Redis Cache', 'Cloud IAM', 'NFS Storage']` | List of strings | Informational list of GCP services enabled or consumed by this module, shown in the platform catalogue. No operational effect — changing this does not enable or disable any GCP API or resource. |
 | `credit_cost` | `100` | Positive integer | Number of platform credits deducted when a deployment is created. Set by the platform administrator. Metadata only. |
 | `require_credit_purchases` | `true` | `true` / `false` | Determines whether purchased credits (credits bought by the user or assigned via a subscription plan) are consumed for this deployment, as opposed to free credits which are awarded at no charge. When `true`, the platform deducts from the user's purchased credit balance. When `false`, the platform uses free credits instead. |
-| `enable_purge` | `true` | `true` / `false` | Controls whether the deployment configuration can be removed from the portal. When `true`, a user can delete the deployment record from the portal without affecting the underlying GCP resources — the VPC, Cloud SQL instances, Redis, and Filestore remain intact. This is useful when resources were initially provisioned via the portal but the team wishes to manage them independently going forward. When `false`, the portal will not allow the configuration to be removed. **This setting does not destroy GCP resources.** |
+| `enable_purge` | `true` | `true` / `false` | Permits full deletion of all module-managed resources on destroy. When `true`, a `terraform destroy` removes all provisioned GCP resources. When `false`, resources are retained after the module is removed, protecting against accidental data loss. Metadata only — enforced by the platform layer. |
 | `public_access` | `true` | `true` / `false` | When `true`, the module is listed in the public platform catalogue and any user can deploy it. When `false`, the module is visible only to platform administrators and the module owner or publisher. |
 | `enable_services` | `true` | `true` / `false` | Enables the required Google Cloud APIs in the target project when set to `true`. Set to `false` only if all required APIs are already enabled and managed externally. **Disabling this may cause downstream resource provisioning to fail** if the APIs are not present — only use this option in environments where API enablement is governed separately (e.g. via an organisation policy or a separate Terraform root module). |
+| `additional_apis` | `[]` | List of service endpoint strings | Additional Google Cloud APIs to enable beyond the built-in default set. Use to activate project-specific APIs such as Translation, Vision AI, or Healthcare without modifying the module source. Each entry must be a valid service endpoint string (e.g., `['translate.googleapis.com', 'vision.googleapis.com']`). |
 | `resource_creator_identity` | `'rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com'` | Service account email | The service account used by Terraform to create and manage GCP resources in the destination project. Must be granted the Owner role (ideally time-limited and conditional) in the target project. For enhanced security in production environments, replace this with a project-scoped service account that has been granted only the permissions required by this module, rather than Owner. |
 
 ### Validating Group 0 Settings
@@ -256,6 +255,12 @@ These variables configure managed Cloud SQL instances for PostgreSQL and MySQL. 
 | `mysql_database_flags` | `[{ name = "max_connections", value = "200" }, { name = "local_infile", value = "off" }]` | List of `{ name, value }` objects | Database engine flags applied to the MySQL Cloud SQL instance. Each entry is an object with a `name` (the MySQL system variable name) and a `value` (the variable value as a string). The defaults set `max_connections` to `200` and disable `local_infile` — a security best practice that prevents the `LOAD DATA LOCAL INFILE` command from loading files from the client filesystem into the database. Other common flags: `slow_query_log` (`"on"` to enable slow query logging), `long_query_time` (threshold in seconds, e.g. `"2"`). **Changes to some flags require an instance restart** — plan flag changes during a maintenance window for production instances. |
 | `create_mysql_read_replica` | `false` | `true` / `false` | Provisions one or more read replicas for the MySQL Cloud SQL instance. Read replicas serve read-only queries, offloading read-heavy workloads from the primary. A replica can be promoted to primary in a disaster recovery scenario. Requires `create_mysql = true`. Configure the number of replicas with `mysql_read_replica_count`. |
 | `mysql_read_replica_count` | `1` | Integer | Number of read replica instances to create for the MySQL Cloud SQL instance. Each replica is provisioned in the same region as the primary and replicates data asynchronously. Only used when `create_mysql_read_replica` is `true`. (e.g., `1`, `2`) |
+| `enable_cloudsql_iam_auth` | `false` | `true` / `false` | Enables Cloud SQL IAM database authentication on all provisioned Cloud SQL instances (both MySQL and PostgreSQL). When enabled, the Cloud Run and Cloud Build service accounts are granted `roles/cloudsql.instanceUser`, allowing them to authenticate using short-lived IAM tokens instead of long-lived passwords stored in Secret Manager. Eliminates the need to rotate DB passwords. See [Cloud SQL IAM authentication docs](https://cloud.google.com/sql/docs/postgres/iam-authentication). |
+| `enable_alloydb` | `false` | `true` / `false` | Provisions an AlloyDB for PostgreSQL cluster in the primary availability region. AlloyDB is PostgreSQL-compatible and optimised for analytics and AI/vector workloads — it includes a columnar engine, pgvector support with SCANN indexing, and delivers significantly higher performance than Cloud SQL for mixed OLTP/OLAP workloads. The cluster uses private IP on the module VPC. A primary read-write instance is always created; an optional read pool is controlled by `enable_alloydb_read_pool`. Mutually exclusive with `create_postgres` for most application needs. Root password and primary IP are stored in Secret Manager. |
+| `alloydb_cpu_count` | `2` | `2` / `4` / `8` / `16` / `32` / `64` | Number of vCPUs to allocate to each AlloyDB instance (primary and, if enabled, read pool). Must be one of the supported AlloyDB machine sizes. Only used when `enable_alloydb = true`. (e.g., `2`, `8`, `16`) |
+| `alloydb_database_flags` | `[]` | List of `{ name, value }` objects | PostgreSQL database flags to apply to the AlloyDB primary instance. Each entry maps a PostgreSQL server parameter name to a string value. Only used when `enable_alloydb = true`. (e.g., `[{ name = "max_connections", value = "500" }]`) |
+| `enable_alloydb_read_pool` | `false` | `true` / `false` | Provisions an AlloyDB read pool instance alongside the primary for analytic offload and read-scale workloads. The read pool is horizontally scalable via `alloydb_read_pool_node_count`. Only used when `enable_alloydb = true`. |
+| `alloydb_read_pool_node_count` | `1` | Integer `1`–`20` | Number of nodes in the AlloyDB read pool. Each node is an independent replica that can serve read queries. Increase for higher read throughput. Only used when `enable_alloydb_read_pool = true`. (e.g., `1`, `2`, `3`) |
 
 ### Validating Group 3 Settings
 
@@ -322,7 +327,7 @@ gcloud compute disks list --project=PROJECT_ID \
 
 ## Group 5: Redis Cache
 
-These variables configure Cloud Memorystore for Redis — the fully managed alternative to the self-managed Redis process running on the Group 4 NFS VM. Memorystore provides Google SLA-backed availability, automated patching, and built-in monitoring, at a higher cost than the self-managed option. The instance is provisioned in the primary availability region with a private IP address on the module VPC, accessible only from within the VPC. **Only enable this group when `create_network_filesystem` is `false`** — running both simultaneously creates redundant Redis infrastructure.
+These variables configure Cloud Memorystore for Redis — the fully managed alternative to the self-managed Redis process running on the Group 4 NFS VM. Memorystore provides Google SLA-backed availability, automated patching, and built-in monitoring, at a higher cost than the self-managed option. The instance is provisioned in the primary availability region with a private IP address on the module VPC, accessible only from within the VPC. **Only enable this group when `create_network_filesystem` is `false`** — running both simultaneously creates redundant Redis infrastructure. The module always enables Redis AUTH (`auth_enabled = true`); the auth string is stored in Secret Manager (`redis-auth-{id}`).
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -331,6 +336,8 @@ These variables configure Cloud Memorystore for Redis — the fully managed alte
 | `redis_memory_size_gb` | `1` | Integer `1`–`300` | Memory capacity in GB allocated to the Cloud Memorystore Redis instance. This is the total amount of memory available for storing keys, values, and Redis overhead. **Set this based on your expected dataset size plus headroom for growth** — when memory is exhausted Redis evicts keys according to the configured eviction policy, which can cause unexpected cache misses or data loss. Valid range: 1–300 GB. (e.g., `1` for small caches, `4` for moderate session stores, `16` for high-throughput caching workloads) |
 | `redis_version` | `'REDIS_7_2'` | `REDIS_7_2` / `REDIS_7_0` / `REDIS_6_X` | Redis engine version to deploy on Cloud Memorystore. Use the most recent version for new deployments to benefit from the latest performance improvements, commands, and security fixes. Downgrading after deployment is not supported. (e.g., `'REDIS_7_2'`, `'REDIS_7_0'`, `'REDIS_6_X'`) |
 | `redis_connect_mode` | `'DIRECT_PEERING'` | `DIRECT_PEERING` / `PRIVATE_SERVICE_ACCESS` | Network connectivity mode for the Cloud Memorystore Redis instance. **`DIRECT_PEERING`**: connects the Redis instance to the VPC via VPC peering — simpler to set up and suitable for most deployments where the VPC is not shared or subject to strict peering restrictions. **`PRIVATE_SERVICE_ACCESS`**: uses Private Service Connect to connect Redis to the VPC — required when the project uses Shared VPC, or when organisational policies restrict VPC peering. If unsure, use `DIRECT_PEERING`. This value cannot be changed after the instance is created without destroying and recreating it. |
+| `redis_persistence_mode` | `'DISABLED'` | `DISABLED` / `RDB` / `AOF` | Persistence mode for the Cloud Memorystore Redis instance. Only takes effect when `redis_tier = 'STANDARD_HA'` — the setting is silently ignored on `BASIC` tier. **`DISABLED`**: no persistence, cache-only (data is lost on restart). **`RDB`**: periodic point-in-time snapshots at the interval set by `redis_rdb_snapshot_period` — lower write overhead, some data loss on failure. **`AOF`**: append-only file persistence — minimal data loss, higher write overhead. **A lifecycle precondition blocks deployments that set `resource_labels.environment = "production"` with `BASIC` tier**, enforcing HA for production workloads. |
+| `redis_rdb_snapshot_period` | `'ONE_HOUR'` | `ONE_HOUR` / `SIX_HOURS` / `TWELVE_HOURS` / `TWENTY_FOUR_HOURS` | Snapshot interval for Redis RDB persistence. Controls how frequently a snapshot of the Redis dataset is saved. Only used when `redis_persistence_mode = 'RDB'`. More frequent snapshots reduce data loss at the cost of slightly higher disk I/O. |
 
 ### Validating Group 5 Settings
 
@@ -398,7 +405,7 @@ These variables configure one or more GKE Autopilot clusters that serve as the s
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
 | `create_google_kubernetes_engine` | `false` | `true` / `false` | Provisions one or more GKE Autopilot clusters in the primary availability region. Set to `true` when deploying containerised workloads via the `App_GKE` module — the App_GKE module will automatically discover and use clusters provisioned here. When `false`, no GKE infrastructure is created and all GKE-dependent variables in this group are ignored. Each cluster is registered to a GKE fleet automatically, enabling fleet-level features such as multi-cluster services and Config Management. |
-| `gke_cluster_name_prefix` | `'gke-cluster'` | Lowercase string | Prefix applied to the name of each GKE Autopilot cluster. The zero-based cluster index is appended to generate unique names — for example, a prefix of `'gke-cluster'` with `gke_cluster_count = 2` produces `gke-cluster-0` and `gke-cluster-1`. Must be lowercase and contain only letters, numbers, and hyphens. **Do not change this after clusters are provisioned** — renaming requires destroying and recreating all clusters, which is a disruptive operation for running workloads. (e.g., `'gke-cluster'`, `'autopilot'`, `'platform'`) |
+| `gke_cluster_name_prefix` | `'gke-cluster'` | Lowercase string | Prefix applied to the name of each GKE Autopilot cluster. A **1-based** cluster index is appended to generate unique names — for example, a prefix of `'gke-cluster'` with `gke_cluster_count = 2` produces `gke-cluster-1` and `gke-cluster-2`. A single cluster is always named `{prefix}-1`. Must be lowercase and contain only letters, numbers, and hyphens. **Do not change this after clusters are provisioned** — renaming requires destroying and recreating all clusters, which is a disruptive operation for running workloads. (e.g., `'gke-cluster'`, `'autopilot'`, `'platform'`) |
 | `gke_cluster_count` | `1` | Integer `1`–`10` | Number of GKE Autopilot clusters to provision in the primary availability region. Each cluster is independent with its own node pool, networking, and workload namespace. Use `1` for most deployments. Increase for multi-tenant architectures where workloads must be isolated at the cluster level (e.g. separate clusters per environment or per customer tier), or to distribute load across multiple clusters using the `round-robin` selection mode in `App_GKE`. Valid range: 1–10. |
 | `gke_subnet_base_cidr` | `'10.128.0.0/12'` | CIDR notation | Base CIDR block used to generate the node subnet range for each GKE cluster. When multiple clusters are provisioned, subnets for additional clusters are automatically derived by incrementing the third octet of this base. **Must not overlap** with `subnet_cidr_range` (Group 2), `gke_pod_base_cidr`, or `gke_service_base_cidr`. The `/12` default provides a large address space suitable for multi-cluster deployments. (e.g., `'10.128.0.0/12'`) |
 | `gke_pod_base_cidr` | `'10.64.0.0/10'` | CIDR notation | Base CIDR block used to generate pod IP ranges for each GKE cluster. In GKE Autopilot, each node receives a `/24` slice of this range (providing 256 pod IPs per node). The `/10` default accommodates a large number of nodes across multiple clusters. **Must not overlap** with `subnet_cidr_range`, `gke_subnet_base_cidr`, or `gke_service_base_cidr`. Size this range based on your expected maximum number of pods across all clusters. (e.g., `'10.64.0.0/10'`) |
@@ -406,6 +413,7 @@ These variables configure one or more GKE Autopilot clusters that serve as the s
 | `configure_cloud_service_mesh` | `false` | `true` / `false` | Enables Cloud Service Mesh (managed Istio) on the GKE Autopilot cluster via the GKE fleet. When enabled, the mesh provides automatic mutual TLS (mTLS) encryption between services, fine-grained traffic management (retries, timeouts, circuit breaking), and enhanced observability with service-level metrics and distributed tracing — all without requiring code changes to applications. Requires `create_google_kubernetes_engine = true`. Enabling this after initial cluster creation triggers a cluster update operation. |
 | `configure_config_management` | `false` | `true` / `false` | Enables Config Sync on the GKE Autopilot cluster via the GKE fleet. Config Sync continuously reconciles cluster configuration against a Git repository, enabling GitOps workflows for Kubernetes resource management. Changes to cluster configuration are made by committing to the repository rather than running `kubectl apply` directly, providing a full audit trail and enabling rollbacks via git. Requires `create_google_kubernetes_engine = true`. |
 | `configure_policy_controller` | `false` | `true` / `false` | Enables Policy Controller on the GKE Autopilot cluster via the GKE fleet. Policy Controller uses Open Policy Agent (OPA) Gatekeeper to enforce customisable security and compliance policies on all Kubernetes resources — for example, requiring resource limits on all containers, preventing privileged pods, or enforcing label standards. Policies are defined as `Constraint` and `ConstraintTemplate` custom resources. Requires `create_google_kubernetes_engine = true`. |
+| `gke_autoscaling_profile` | `'BALANCED'` | `BALANCED` / `OPTIMIZE_UTILIZATION` | Autoscaling profile controlling how aggressively GKE Autopilot scales nodes down when cluster utilisation drops. **`BALANCED`** (default): prioritises workload availability with conservative scale-down. **`OPTIMIZE_UTILIZATION`**: enables more aggressive scale-down and pod bin-packing, reducing idle node cost at the expense of slightly higher scheduling latency during scale-up. Individual workloads can independently request spot VMs via `nodeSelector cloud.google.com/gke-spot: "true"` — this is orthogonal to this setting. Requires `create_google_kubernetes_engine = true`. |
 
 ### Validating Group 7 Settings
 
@@ -745,11 +753,32 @@ A Cloud Armor security policy with OWASP Top 10 rules (SQLi, XSS, LFI, RCE prote
 | `gke_cluster_mode` | `create_google_kubernetes_engine` | `"single"` or `"multi"` |
 | `gke_clusters` | `create_google_kubernetes_engine` | Map of all cluster details (sensitive) |
 | `gke_mci_config_cluster` | Multi-cluster GKE | Config cluster name for Multi-Cluster Ingress |
-| `gke_fleet_membership_ids` | GKE + Fleet | List of Fleet membership IDs |
+| `gke_fleet_membership_ids` | GKE + (`configure_config_management` or `configure_cloud_service_mesh`) | List of Fleet membership IDs |
 | `storage_kms_key_name` | `enable_cmek` | KMS key resource name for Cloud Storage |
+| `alloydb_cluster_name` | `enable_alloydb` | AlloyDB cluster name |
+| `alloydb_primary_ip` | `enable_alloydb` | Private IP of the AlloyDB primary instance (sensitive) |
+| `alloydb_read_pool_ip` | `enable_alloydb` + `enable_alloydb_read_pool` | Private IP of the AlloyDB read pool instance (sensitive) |
 | `binauthz_attestor_name` | `enable_binary_authorization` | Binary Authorization attestor name |
 | `binauthz_kms_key_id` | `enable_binary_authorization` | KMS key ID for attestation signing |
 | `binauthz_note_id` | `enable_binary_authorization` | Container Analysis note ID |
+
+---
+
+## Required Providers
+
+Declared in `versions.tf`:
+
+| Provider | Source | Version |
+|----------|--------|---------|
+| Terraform | — | `>= 1.5.7` |
+| `google` | `hashicorp/google` | `~> 6.0` |
+| `google-beta` | `hashicorp/google-beta` | `~> 7.0` |
+| `null` | `hashicorp/null` | `>= 3.0.0` |
+| `time` | `hashicorp/time` | `~> 0.12` |
+| `http` | `hashicorp/http` | `~> 3.4` |
+| `github` | `integrations/github` | `~> 6.0` (required by `wif.tf` even when WIF is disabled) |
+
+The Cloud NAT is provisioned via the `terraform-google-modules/cloud-router/google ~> 7.0.0` registry module called from `network.tf`.
 
 ---
 

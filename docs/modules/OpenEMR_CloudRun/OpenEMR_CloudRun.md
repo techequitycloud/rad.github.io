@@ -1,17 +1,4 @@
----
-title: "OpenEMR Cloud Run Configuration Guide"
-sidebar_label: "Cloud Run"
----
-
-# OpenEMR CloudRun Module
-
-<YouTubeEmbed videoId="3oPG3v2vYeA" poster="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# OpenEMR_CloudRun Module — Configuration Guide
 
 `OpenEMR_CloudRun` deploys **OpenEMR Community Edition** — an open-source Electronic
 Health Records (EHR) and medical practice management platform — on Google Cloud Run
@@ -94,7 +81,7 @@ and injected alongside `OE_PASS` via `module_secret_env_vars`.
 |---|---|---|
 | `application_name` | `"openemr"` | Internal identifier used as the base name for the Cloud Run service, Artifact Registry repository, Secret Manager secrets, and GCS buckets. **Do not change after initial deployment.** |
 | `display_name` | `"OpenEMR"` | Human-readable name shown in the platform UI, Cloud Run console, and monitoring dashboards. Safe to update at any time. |
-| `description` | `"Initialize NFS directories for OpenEMR and restore backup if provided"` | Brief description. Populates the Cloud Run service description field and the `nfs-init` job description. |
+| `description` | `"OpenEMR Electronic Health Records on Cloud Run"` | Brief description. Populates the Cloud Run service description field and platform documentation. |
 | `application_version` | `"7.0.4"` | OpenEMR release version used as the container image tag. Changing this triggers a new image build. Supported values: `"7.0.4"`, `"7.0.3"`. |
 
 ### §3.B · Resource Sizing
@@ -178,6 +165,10 @@ already available in a private registry.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Enforces VPC-SC perimeter. Restricts GCP API calls to requests from inside the perimeter. Requires an existing VPC-SC perimeter in the project. |
+| `vpc_cidr_ranges` | `[]` | VPC subnet CIDR ranges for the VPC-SC network access level. Auto-discovered when empty. |
+| `vpc_sc_dry_run` | `true` | When `true`, VPC-SC violations are logged but not blocked. Set to `false` to actively enforce the perimeter. |
+| `organization_id` | `""` | GCP Organization ID for the VPC-SC Access Context Manager policy. Auto-discovered when empty. |
+| `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ) for compliance-sensitive environments. |
 
 ### §4.C · Identity-Aware Proxy
 
@@ -273,9 +264,13 @@ are passed both to `OpenEMR_Common` and — as `startup_probe_config` /
 |---|---|---|
 | `enable_nfs` | `true` | **Must remain `true`** for a functional OpenEMR deployment. Provisions Cloud Filestore NFS. OpenEMR cannot persist patient data without shared NFS storage. |
 | `nfs_mount_path` | `"/var/www/localhost/htdocs/openemr/sites"` | Container mount path for the NFS volume. Maps directly to OpenEMR's `sites` directory. Do not change unless the container uses a different path. |
+| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to use. Leave empty to auto-discover a Services_GCP-managed instance. |
+| `nfs_instance_base_name` | `"app-nfs"` | Base name for the inline NFS GCE VM when no existing instance is found. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. `OpenEMR_Common` may provision additional buckets via `module_storage_buckets`. |
 | `create_cloud_storage` | `true` | Set `false` to skip GCS bucket provisioning. |
 | `gcs_volumes` | `[]` | GCS buckets to mount as GCS Fuse volumes inside the container (passed to both `OpenEMR_Common` and `App_CloudRun`). |
+| `manage_storage_kms_iam` | `false` | Creates a CMEK KMS keyring and storage encryption key, enabling CMEK on all GCS buckets. |
+| `enable_artifact_registry_cmek` | `false` | Creates an Artifact Registry KMS key, enabling CMEK encryption of container images. |
 
 ### §7.C · Database
 
@@ -288,7 +283,7 @@ are not used.
 |---|---|---|
 | `db_name` | `"openemr"` | MySQL database name. Injected into `sqlconf.php`. **Do not change after initial deployment.** |
 | `db_user` | `"openemr"` | MySQL user. Password auto-generated and injected as `MYSQL_PASS`. |
-| `database_password_length` | `16` | Auto-generated password length (8–64 characters). |
+| `database_password_length` | `32` | Auto-generated password length (16–64 characters). |
 | `enable_auto_password_rotation` | `false` | Automates password rotation via Cloud Run + Eventarc. See §4.A. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts. |
 
@@ -409,9 +404,9 @@ Complete list of all input variables, grouped by UI section.
 | 1 | `tenant_deployment_id` | string | `"demo"` | yes |
 | 1 | `support_users` | list(string) | `[]` | yes |
 | 1 | `resource_labels` | map(string) | `{}` | yes |
-| 2 | `application_name` | string | `"openemr"` | — |
+| 2 | `application_name` | string | `"openemr"` | yes |
 | 2 | `display_name` | string | `"OpenEMR"` | yes |
-| 2 | `description` | string | `"Initialize NFS directories for OpenEMR and restore backup if provided"` | yes |
+| 2 | `description` | string | `"OpenEMR Electronic Health Records on Cloud Run"` | yes |
 | 2 | `application_version` | string | `"7.0.4"` | yes |
 | 3 | `deploy_application` | bool | `true` | yes |
 | 3 | `cpu_limit` | string | `"2000m"` | yes |
@@ -458,14 +453,21 @@ Complete list of all input variables, grouped by UI section.
 | 9 | `admin_ip_ranges` | list(string) | `[]` | yes |
 | 9 | `application_domains` | list(string) | `[]` | yes |
 | 9 | `enable_cdn` | bool | `false` | yes |
+| 9 | `max_images_to_retain` | number | `7` | yes |
+| 9 | `delete_untagged_images` | bool | `true` | yes |
+| 9 | `image_retention_days` | number | `30` | yes |
 | 10 | `create_cloud_storage` | bool | `true` | yes |
 | 10 | `storage_buckets` | list(object) | `[{ name_suffix = "data" }]` | yes |
-| 10 | `enable_nfs` | bool | `true` | — |
-| 10 | `nfs_mount_path` | string | `"/var/www/localhost/htdocs/openemr/sites"` | — |
+| 10 | `enable_nfs` | bool | `true` | yes |
+| 10 | `nfs_mount_path` | string | `"/var/www/localhost/htdocs/openemr/sites"` | yes |
+| 10 | `nfs_instance_name` | string | `""` | yes |
+| 10 | `nfs_instance_base_name` | string | `"app-nfs"` | yes |
 | 10 | `gcs_volumes` | list(object) | `[]` | yes |
-| 11 | `db_name` | string | `"openemr"` | — |
-| 11 | `db_user` | string | `"openemr"` | — |
-| 11 | `database_password_length` | number | `16` | yes |
+| 10 | `manage_storage_kms_iam` | bool | `false` | yes |
+| 10 | `enable_artifact_registry_cmek` | bool | `false` | yes |
+| 11 | `db_name` | string | `"openemr"` | yes |
+| 11 | `db_user` | string | `"openemr"` | yes |
+| 11 | `database_password_length` | number | `32` | yes |
 | 11 | `enable_auto_password_rotation` | bool | `false` | yes |
 | 11 | `rotation_propagation_delay_sec` | number | `90` | yes |
 | 12 | `initialization_jobs` | list(object) | `[]` | yes |
@@ -474,8 +476,13 @@ Complete list of all input variables, grouped by UI section.
 | 13 | `liveness_probe` | object | `{ type = "HTTP", path = "/interface/login/login.php", failure_threshold = 10, … }` | yes |
 | 13 | `uptime_check_config` | object | `{ enabled = true, path = "/" }` | yes |
 | 13 | `alert_policies` | list(object) | `[]` | yes |
+| 13 | `max_revisions_to_retain` | number | `7` | yes |
 | 20 | `enable_redis` | bool | `true` | yes |
 | 20 | `redis_host` | string | `""` | yes |
 | 20 | `redis_port` | string | `"6379"` | yes |
 | 20 | `redis_auth` | string | `""` | yes |
 | 21 | `enable_vpc_sc` | bool | `false` | yes |
+| 21 | `vpc_cidr_ranges` | list(string) | `[]` | yes |
+| 21 | `vpc_sc_dry_run` | bool | `true` | yes |
+| 21 | `organization_id` | string | `""` | yes |
+| 21 | `enable_audit_logging` | bool | `false` | yes |

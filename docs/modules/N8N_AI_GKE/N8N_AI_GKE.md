@@ -1,17 +1,4 @@
----
-title: "N8N AI GKE Configuration Guide"
-sidebar_label: "GKE"
----
-
-# N8N AI GKE Module
-
-<YouTubeEmbed videoId="S4mnK_jMNzY" poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_AI_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/N8N_AI_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# N8N_AI_GKE Module — Configuration Guide
 
 n8n is an open-source workflow automation platform that lets you connect services, run logic, and build AI-powered pipelines through a visual node-based interface. This module deploys n8n on **GKE Autopilot** alongside two companion AI services: **Qdrant** (vector database for RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis workflows without external AI API dependencies.
 
@@ -29,7 +16,7 @@ This guide documents only the variables that are **unique to `N8N_AI_GKE`** or t
 
 | Configuration Area | App_GKE.md Section | N8N_AI-Specific Notes |
 |---|---|---|
-| Module Metadata & Configuration | §1 Module Overview | Different defaults for `module_description` and `module_documentation`. |
+| Module Metadata & Configuration | §1 Module Overview | Different defaults for `module_description` and `module_documentation`. `module_documentation` defaults to `"https://docs.radmodules.dev/docs/applications/n8n-ai-gke"` (note the `-gke` suffix, unlike N8N_AI_CloudRun). |
 | Project & Identity | §2 IAM & Access Control | Refer to base App_GKE module documentation. |
 | Application Identity | §3.A Compute (GKE Autopilot) | See [N8N AI Application Identity](#n8n-ai-application-identity) below for n8n-specific defaults. |
 | Runtime & Scaling | §3.A Compute (GKE Autopilot) | See [N8N Runtime Configuration](#n8n-runtime-configuration) below. `cpu_limit` and `memory_limit` are top-level variables. |
@@ -94,6 +81,7 @@ These variables control how the n8n deployment is named and described. They corr
 | `application_display_name` | `"N8N AI Starter Kit"` | Any string | Human-readable name shown in the platform UI and GKE monitoring dashboards. Equivalent to `application_display_name` in App_GKE. Can be updated freely without affecting resource names. |
 | `description` | `"N8N AI Starter Kit - Workflow automation with Qdrant and Ollama"` | Any string | Brief description of the deployment. Populated into Kubernetes resource annotations and platform documentation. |
 | `application_version` | `"2.4.7"` | n8n version string, e.g. `"2.4.7"`, `"latest"` | Version tag applied to the container image and used for deployment tracking. Increment this value to trigger a new image build and revision. See [n8n releases](https://github.com/n8nio/n8n/releases) for available versions. |
+| `deployment_region` | `"us-central1"` | GCP region string | Fallback region used when network discovery cannot determine the region from existing VPC subnets. Unlike `N8N_AI_CloudRun`, this variable is explicitly declared in `N8N_AI_GKE` and used as a fallback in the `deployment_region` local. |
 
 ### Validating Application Identity
 
@@ -121,15 +109,17 @@ n8n exposes `cpu_limit` and `memory_limit` as **dedicated top-level variables** 
 
 > **Note on `container_resources`:** The full `container_resources` object (as documented in [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot)) is also available. If `container_resources` is set explicitly in your `tfvars`, it takes precedence over the top-level `cpu_limit` and `memory_limit` variables. Use `container_resources` when you also need to set `cpu_request` or `mem_request`.
 
+> **Note on `container_port`:** `N8N_AI_GKE` declares a `container_port` variable (default `8080`) but does **not** forward it to `App_GKE`. The n8n container port is always `5678`, set directly by `N8N_AI_Common` in the `application_config`. The `container_port` variable in this module has no effect in the current implementation.
+
 **N8N-specific runtime defaults that differ from App_GKE:**
 
 | Variable | App_GKE Default | N8N_AI_GKE Default | Reason |
 |---|---|---|---|
-| `cpu_limit` | `"1000m"` | `"2000m"` | AI workflows are CPU-intensive. |
-| `memory_limit` | `"512Mi"` | `"4Gi"` | n8n with AI nodes requires substantial memory. |
-| `max_instance_count` | `3` | `3` | Same default; Redis queue mode must be enabled before scaling beyond 1. |
+| `cpu_limit` (via `container_resources`) | `"1000m"` | `"2000m"` | AI workflows are CPU-intensive. |
+| `memory_limit` (via `container_resources`) | `"512Mi"` | `"4Gi"` | n8n with AI nodes requires substantial memory. |
 | `enable_nfs` | `false` | `true` | NFS provides shared persistence for workflow data and credentials. |
-| `enable_cloudsql_volume` | `true` | `true` | n8n connects to Cloud SQL via the Auth Proxy sidecar. |
+
+> **Note:** `max_instance_count` defaults to `3` in both `App_GKE` and `N8N_AI_GKE`. `enable_cloudsql_volume` defaults to `true` in both modules. Neither is an n8n-specific override.
 
 ### Validating Runtime Configuration
 
@@ -154,7 +144,7 @@ These variables are **unique to `N8N_AI_GKE`** — they do not exist in `App_GKE
 | `qdrant_version` | `"latest"` | Docker image tag, e.g. `"latest"`, `"v1.9.0"` | Image version of the `qdrant/qdrant` container. Use a pinned version in production for reproducible deployments. Only used when `enable_qdrant = true`. |
 | `enable_ollama` | `true` | `true` / `false` | Deploys Ollama LLM server as a Kubernetes Deployment and ClusterIP service. Ollama runs open-source models (Llama 3, Mistral, Gemma) on your infrastructure — no external AI API keys required. Only used when `enable_ai_components = true`. |
 | `ollama_version` | `"latest"` | Docker image tag, e.g. `"latest"`, `"0.3.0"` | Image version of the `ollama/ollama` container. Use a pinned version in production. Only used when `enable_ollama = true`. |
-| `ollama_model` | `"llama3.2"` | Ollama model name, e.g. `"llama3.2"`, `"mistral"`, `"gemma2"` | The default language model served by Ollama. Available to n8n AI nodes for text generation, summarisation, and chat workflows. Larger models require more CPU and memory allocated to the Ollama Deployment. |
+| `ollama_model` | `"llama3.2"` | Ollama model name, e.g. `"llama3.2"`, `"mistral"`, `"gemma2"` | Default language model name for Ollama. **Note:** This variable is declared in `N8N_AI_GKE` but is not currently forwarded to `N8N_AI_Common` — it has no effect in the current implementation. Model selection must be configured at the Ollama service level directly. |
 
 ### AI Component Resource Allocation
 
@@ -276,6 +266,8 @@ The `initial_delay_seconds = 120` on the startup probe gives n8n time to connect
 |---|---|
 | `startup_probe_config` | `{ enabled = true, type = "TCP" }` — TCP type; no HTTP path check |
 | `health_check_config` | `{ enabled = true, type = "HTTP", path = "/" }` — HTTP GET on `"/"` |
+
+**Note on `uptime_check_config`:** In `N8N_AI_GKE`, this variable **defaults to `{ enabled = false, path = "/" }`** — uptime checks are disabled by default, unlike `N8N_AI_CloudRun` where they are enabled by default. Enable explicitly for production monitoring.
 
 For full documentation on `uptime_check_config` and `alert_policies`, refer to [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 

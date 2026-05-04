@@ -1,8 +1,3 @@
----
-title: "N8N AI Common Shared Configuration Module"
-sidebar_label: "Common"
----
-
 # N8N_AI_Common Shared Configuration Module
 
 The `N8N_AI_Common` module defines the n8n workflow automation platform with an integrated AI stack (Qdrant vector database and Ollama LLM provider) for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`N8N_AI_CloudRun` and `N8N_AI_GKE`).
@@ -211,7 +206,7 @@ One `db-init` job runs by default (when `initialization_jobs = []`):
 5. Grants the application user role to `postgres` to allow database ownership transfer.
 6. Creates the n8n database owned by the application user if it does not exist; otherwise reassigns ownership.
 7. Grants full privileges on the database and public schema to the application user.
-8. Signals Cloud SQL Proxy shutdown via `wget POST http://127.0.0.1:9091/quitquitquit`.
+8. Signals Cloud SQL Proxy shutdown via `wget POST http://127.0.0.1:9091/quitquitquit` with up to 10 retry attempts (1 second sleep between each).
 
 ---
 
@@ -228,12 +223,12 @@ Builds from `node:22-alpine3.22`:
 - Copies and makes `entrypoint.sh` executable (as root, then switches back to `node`).
 - Sets `N8N_USER_FOLDER=/home/node/.n8n` and `N8N_PORT=5678`.
 - Exposes port `5678`.
-- Uses `tini` implicitly via the `entrypoint.sh` which calls `exec n8n`.
+- Installs `tini` as a system package but does **not** use it as the process supervisor — the `ENTRYPOINT` is set directly to `/entrypoint.sh`.
 
 ### `entrypoint.sh`
 Translates platform-standard environment variables into n8n's native variable names before starting n8n:
 
-**1. Unix socket detection**: If `DB_HOST` starts with `/`, symlinks the socket to `/tmp/.s.PGSQL.5432` and resets `DB_HOST=/tmp` for PostgreSQL client compatibility.
+**1. Unix socket detection**: If `DB_HOST` starts with `/` AND the path is a socket file (`-S` test), symlinks the socket to `/tmp/.s.PGSQL.5432` and resets `DB_HOST=/tmp` for PostgreSQL client compatibility. Paths starting with `/` that are not socket files are left unchanged.
 
 **2. DB variable mapping** (only sets if the n8n-native variable is not already present):
 
@@ -246,7 +241,7 @@ Translates platform-standard environment variables into n8n's native variable na
 
 **3. Redis host resolution**: Expands the `$(NFS_SERVER_IP)` placeholder in `QUEUE_BULL_REDIS_HOST` to the runtime NFS server IP, enabling NFS-hosted Redis to be referenced without knowing the IP at Terraform plan time.
 
-**4. Start n8n**: `exec n8n "$@"` — replaces the shell process with n8n as PID 1 (via `exec`).
+**4. Start n8n**: `exec n8n "$@"` — replaces the shell process with n8n as PID 1. Note that `tini` is installed in the image but is not invoked here; `exec` is used directly.
 
 ---
 
@@ -333,10 +328,10 @@ The default `gcs_volumes` variable mounts the bucket at `/home/node/.n8n` with `
 
 | Aspect | N8N_AI_CloudRun | N8N_AI_GKE |
 |--------|-----------------|-----------|
-| `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
-| `enable_cloudsql_volume` | `true` (Auth Proxy sidecar) | `false` (TCP to Cloud SQL private IP) |
-| `DB_HOST` | Cloud SQL Auth Proxy socket path | Cloud SQL private IP |
-| NFS | Not used (serverless) | Optional via `enable_nfs` |
+| `service_url` | Computed Cloud Run service URL | Internal ClusterIP URL (or first custom domain when `enable_custom_domain = true`) |
+| `enable_cloudsql_volume` | `true` (Auth Proxy sidecar) | `true` by default (Auth Proxy sidecar); can be set to `false` for TCP |
+| `DB_HOST` | Cloud SQL Auth Proxy socket path | Cloud SQL Auth Proxy socket path (default) or Cloud SQL private IP when `enable_cloudsql_volume = false` |
+| NFS | Optional via `enable_nfs` (defaults to `true`) | Optional via `enable_nfs` (defaults to `true`) |
 | AI sidecars | Qdrant and Ollama as separate Cloud Run services | Qdrant and Ollama as sidecar containers in the same pod |
 | Redis | Enabled by default; `$(NFS_SERVER_IP)` placeholder | Enabled by default; `$(NFS_SERVER_IP)` placeholder |
 | GCS volumes | `n8n-data` + `/mnt/gcs` (two fixed volumes) | `n8n-data` + `/mnt/gcs` (two fixed volumes) |
@@ -363,6 +358,7 @@ module "n8n_app" {
   enable_ollama           = var.enable_ollama
   enable_redis            = var.enable_redis
   redis_host              = var.redis_host
+  redis_port              = var.redis_port
   redis_auth              = var.redis_auth
 }
 

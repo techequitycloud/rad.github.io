@@ -24,7 +24,7 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 | NFS enabled | `true` (mount: `/mnt/nfs`) |
 | Redis enabled | `true` (object cache) |
 | Image source | `custom` (Cloud Build) |
-| Platform-managed job | none (empty default) |
+| Platform-managed job | `db-init` (injected by `Wordpress_Common` when `initialization_jobs = []`) |
 
 `Wordpress_Common` generates the Dockerfile (based on the official `wordpress` image), PHP configuration (`php.ini` overrides), WordPress `wp-config.php` template, and WordPress-specific secrets. Redis object caching is enabled by default; `Wordpress_Common` injects the required `WP_REDIS_HOST` and `WP_REDIS_PORT` environment variables when `enable_redis = true`.
 
@@ -123,6 +123,7 @@ Key defaults:
 |---|---|
 | `ingress_settings` | `"all"` |
 | `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` |
+| `execution_environment` | `"gen2"` |
 | `enable_cloudsql_volume` | `true` |
 | `cloudsql_volume_mount_path` | `"/cloudsql"` |
 | `container_protocol` | `"http1"` |
@@ -334,7 +335,7 @@ gcs_volumes = [{
 
 ### §8.D Additional Services
 
-`Wordpress_CloudRun` does not expose the `additional_services` variable. Co-deployed services are not supported in this module's interface.
+`Wordpress_CloudRun` does not expose the `additional_services` variable. Co-deployed services are not supported in this module's interface. (This variable is available in `Wordpress_GKE`.)
 
 ---
 
@@ -377,6 +378,7 @@ The table below covers all variables unique to or with notable defaults in `Word
 | `php_memory_limit` | `string` | `"512M"` | 2 | PHP memory limit |
 | `upload_max_filesize` | `string` | `"64M"` | 2 | Max upload file size |
 | `post_max_size` | `string` | `"64M"` | 2 | Max POST body size |
+| `deploy_application` | `bool` | `true` | 3 | Set `false` to provision infra without deploying the container |
 | `cpu_limit` | `string` | `"1000m"` | 3 | 1 vCPU |
 | `memory_limit` | `string` | `"2Gi"` | 3 | 2 GiB |
 | `container_resources` | `object` | `null` | 3 | Overrides `cpu_limit`/`memory_limit` when set |
@@ -384,24 +386,43 @@ The table below covers all variables unique to or with notable defaults in `Word
 | `max_instance_count` | `number` | `1` | 3 | |
 | `container_port` | `number` | `80` | 3 | Apache default |
 | `container_protocol` | `string` | `"http1"` | 3 | `"http1"` or `"h2c"` |
+| `execution_environment` | `string` | `"gen2"` | 3 | `"gen1"` or `"gen2"` |
+| `timeout_seconds` | `number` | `300` | 3 | Max request duration (0–3600 s) |
 | `container_image_source` | `string` | `"custom"` | 3 | `"prebuilt"` or `"custom"` |
 | `container_image` | `string` | `""` | 3 | Override for prebuilt |
 | `enable_image_mirroring` | `bool` | `true` | 3 | Mirror to Artifact Registry |
+| `max_revisions_to_retain` | `number` | `7` | 3 | Old revisions pruned beyond this count |
+| `max_images_to_retain` | `number` | `7` | 9 | Artifact Registry image retention guard |
+| `delete_untagged_images` | `bool` | `true` | 9 | Delete dangling/untagged images |
+| `image_retention_days` | `number` | `30` | 9 | Age-based image deletion (0 = disabled) |
 | `enable_cloudsql_volume` | `bool` | `true` | 3 | Required for MySQL Unix socket |
 | `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | 3 | Socket path |
+| `service_annotations` | `map(string)` | `{}` | 3 | Cloud Run service annotations |
+| `service_labels` | `map(string)` | `{}` | 3 | Cloud Run service labels |
 | `db_name` | `string` | `"wp"` | 11 | MySQL database name |
 | `db_user` | `string` | `"wp"` | 11 | MySQL user |
-| `database_password_length` | `number` | `16` | 11 | 8–64 characters |
+| `database_password_length` | `number` | `32` | 11 | 16–64 characters |
 | `enable_nfs` | `bool` | `true` | 10 | Cloud Filestore mount |
 | `nfs_mount_path` | `string` | `"/mnt/nfs"` | 10 | Container mount path |
+| `nfs_instance_name` | `string` | `""` | 8 | Explicit NFS VM name; empty = auto-discover |
+| `nfs_instance_base_name` | `string` | `"app-nfs"` | 8 | Base name for inline NFS VM |
 | `storage_buckets` | `list` | `[{ name_suffix = "data" }]` | 10 | GCS buckets |
-| `backup_uri` | `string` | `""` | 6 | Full GCS URI or Drive ID (aliased to `backup_file`) |
-| `backup_format` | `string` | `"sql"` | 6 | Includes `"auto"` option |
+| `create_cloud_storage` | `bool` | `true` | 10 | Skip bucket creation when `false` |
+| `manage_storage_kms_iam` | `bool` | `false` | 10 | Enable CMEK for GCS buckets |
+| `enable_artifact_registry_cmek` | `bool` | `false` | 10 | Enable CMEK for Artifact Registry |
+| `backup_uri` | `string` | `""` | 6 | Full GCS URI or Drive ID (passed as `backup_file` to `App_CloudRun`) |
+| `backup_format` | `string` | `"sql"` | 6 | `"sql"`, `"tar"`, `"gz"`, `"tgz"`, `"tar.gz"`, `"zip"`, `"auto"` |
+| `secret_rotation_period` | `string` | `"2592000s"` | 5 | Pub/Sub rotation notification period; `null` to disable |
+| `secret_propagation_delay` | `number` | `30` | 5 | Seconds to wait after secret create/update |
 | `enable_redis` | `bool` | `true` | 20 | Redis object cache (on by default) |
 | `redis_host` | `string` | `""` | 20 | Leave empty for default |
 | `redis_port` | `string` | `"6379"` | 20 | String type |
 | `redis_auth` | `string` | `""` | 20 | Sensitive |
 | `startup_probe` | `object` | `{ type="TCP", initial_delay_seconds=30, failure_threshold=20 }` | 13 | |
 | `liveness_probe` | `object` | `{ type="HTTP", path="/wp-admin/install.php", initial_delay_seconds=300 }` | 13 | |
-| `initialization_jobs` | `list` | `[]` | 12 | No platform-managed jobs |
+| `initialization_jobs` | `list` | `[]` | 12 | When empty, `Wordpress_Common` injects the `db-init` job automatically |
 | `enable_vpc_sc` | `bool` | `false` | 21 | VPC Service Controls |
+| `vpc_cidr_ranges` | `list(string)` | `[]` | 21 | CIDR ranges for VPC-SC access level; auto-discovered when empty |
+| `vpc_sc_dry_run` | `bool` | `true` | 21 | Log-only mode; set `false` to enforce |
+| `organization_id` | `string` | `""` | 21 | GCP org ID for VPC-SC; auto-discovered when empty |
+| `enable_audit_logging` | `bool` | `false` | 21 | Enable DATA_READ/WRITE audit logs |

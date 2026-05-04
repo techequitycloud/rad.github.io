@@ -1,17 +1,4 @@
----
-title: "Directus Cloud Run Configuration Guide"
-sidebar_label: "Cloud Run"
----
-
-# Directus CloudRun Module
-
-<YouTubeEmbed videoId="SSNkMWmmvzQ" poster="https://storage.googleapis.com/rad-public-2b65/modules/Directus_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Directus_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
+# Directus on Google Cloud Run
 
 This document provides a comprehensive reference for the `modules/Directus_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Directus-specific behaviours, and operational patterns for deploying Directus on Google Cloud Run (v2).
 
@@ -114,11 +101,13 @@ The module uses `db_name` and `db_user` in place of the `application_database_na
 |---|---|---|---|
 | `db_name` | 11 | `'directus'` | PostgreSQL database name. Injected as `DB_DATABASE`. **Do not change after initial deployment.** |
 | `db_user` | 11 | `'directus'` | PostgreSQL application user. Injected as `DB_USER`. Password auto-generated and stored in Secret Manager as `DB_PASSWORD`. |
-| `database_password_length` | 11 | `16` | Auto-generated password length. Range: 8–64. `32` recommended for production. |
+| `database_password_length` | 11 | `32` | Auto-generated password length. Valid range: 16–64. |
 | `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. See §7.D. |
 | `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
+| `sql_instance_name` | 11 | `""` | Name of an existing Cloud SQL instance. Leave empty to auto-discover or create inline. |
+| `sql_instance_base_name` | 11 | `"app-sql"` | Base name for the inline Cloud SQL instance created when no existing instance is found. |
 
-> `database_type`, `sql_instance_name`, `sql_instance_base_name`, `enable_postgres_extensions`, and `enable_mysql_plugins` are not exposed — Directus only supports PostgreSQL, and extension installation is managed by `Directus_Common`'s `db-init.sh` script.
+> `database_type`, `enable_postgres_extensions`, and `enable_mysql_plugins` are not exposed — Directus only supports PostgreSQL, and extension installation is managed by `Directus_Common`'s `db-init.sh` script. `sql_instance_name` and `sql_instance_base_name` **are** exposed (see table above) for targeting an existing Cloud SQL instance or naming the inline one.
 
 ### C. Storage (NFS & GCS)
 
@@ -134,7 +123,7 @@ The module uses `db_name` and `db_user` in place of the `application_database_na
 | `storage_buckets` | 10 | `[{ name_suffix = "data" }]` | Additional GCS buckets beyond the auto-provisioned uploads bucket. |
 | `gcs_volumes` | 10 | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). Each entry: `name`, `bucket_name`, `mount_path`, `readonly`, `mount_options`. |
 
-> `nfs_instance_name` and `nfs_instance_base_name` are not exposed — use `App_CloudRun` directly if you need to target a named NFS instance.
+> `nfs_instance_name` (group 8, default `""`) and `nfs_instance_base_name` (group 8, default `"app-nfs"`) are exposed for targeting or naming the inline NFS GCE VM. Leave `nfs_instance_name` empty to auto-discover a `Services_GCP`-managed instance.
 
 ### D. Networking
 
@@ -217,6 +206,10 @@ Identical to `App_CloudRun`. When `enable_vpc_sc = true`, all GCP API calls from
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `enable_vpc_sc` | 21 | `false` | Registers module API calls within the project's VPC-SC perimeter. A perimeter must already exist before enabling. |
+| `vpc_cidr_ranges` | 21 | `[]` | VPC subnet CIDR ranges for the VPC-SC network access level. Auto-discovered when empty; falls back to `10.0.0.0/8`. |
+| `vpc_sc_dry_run` | 21 | `true` | When `true`, violations are logged but not blocked. Set `false` to actively enforce the perimeter. |
+| `organization_id` | 21 | `""` | GCP Organization ID for the VPC-SC Access Context Manager policy. Auto-discovered when empty. |
+| `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs (`DATA_READ`, `DATA_WRITE`, `ADMIN_READ`) for all supported GCP services. |
 
 > Note: VPC SC is in **group 21** in `Directus_CloudRun` (vs group 17 in `App_CloudRun`).
 
@@ -326,7 +319,7 @@ See [App_CloudRun §7.B](../App_CloudRun/App_CloudRun.md#b-traffic-splitting) fo
 
 ### C. Health Probes & Uptime Monitoring
 
-Directus exposes a `/server/health` endpoint that reflects both application and database readiness. Both the startup and liveness probes target this endpoint. In `Directus_CloudRun` the probe variables are renamed — `startup_probe` (not `startup_probe_config`) and `liveness_probe` (not `health_check_config`) — with defaults tuned for Directus's Node.js startup behaviour.
+Directus exposes a `/server/health` endpoint that reflects both application and database readiness. Both the startup and liveness probes target this endpoint. In `Directus_CloudRun`, two separate probe variable pairs exist. `startup_probe` / `liveness_probe` are Directus-specific variables that are passed into `Directus_Common` and forwarded to the application config, with defaults tuned for Directus's Node.js startup behaviour. `startup_probe_config` / `health_check_config` are the `App_CloudRun`-standard variables that control the Cloud Run service-level probes directly; these are passed unchanged to `App_CloudRun`. In practice, tune `startup_probe` and `liveness_probe` for Directus probe behaviour.
 
 **Startup probe:** Fires after a 30-second initial delay. With `failure_threshold = 10` and `period_seconds = 20`, Cloud Run allows up to 3 minutes of additional startup time. On first deployment, when Directus runs `BOOTSTRAP` to seed the database, startup may take longer — consider increasing `failure_threshold`.
 
@@ -334,21 +327,23 @@ Directus exposes a `/server/health` endpoint that reflects both application and 
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `startup_probe` | 13 | `{ enabled=true, type="HTTP", path="/server/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=20, failure_threshold=10 }` | Startup readiness probe. Container receives no traffic until this succeeds. |
-| `liveness_probe` | 13 | `{ enabled=true, type="HTTP", path="/server/health", initial_delay_seconds=15, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe. Container is restarted after `failure_threshold` consecutive failures. |
+| `startup_probe` | 13 | `{ enabled=true, type="HTTP", path="/server/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=20, failure_threshold=10 }` | Directus startup probe passed into `Directus_Common`. Container receives no traffic until this succeeds. |
+| `liveness_probe` | 13 | `{ enabled=true, type="HTTP", path="/server/health", initial_delay_seconds=15, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Directus liveness probe passed into `Directus_Common`. Container is restarted after `failure_threshold` consecutive failures. |
+| `startup_probe_config` | 13 | `{ enabled=true, type="TCP", path="/", initial_delay_seconds=0, timeout_seconds=240, period_seconds=240, failure_threshold=1 }` | `App_CloudRun`-standard startup probe passed directly to `App_CloudRun`. Takes precedence over `startup_probe` at the service level. |
+| `health_check_config` | 13 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=0, timeout_seconds=1, period_seconds=10, failure_threshold=3 }` | `App_CloudRun`-standard liveness probe passed directly to `App_CloudRun`. Takes precedence over `liveness_probe` at the service level. |
 | `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. Alerts notify `support_users` if unreachable. |
 | `alert_policies` | 13 | `[]` | Cloud Monitoring metric alert policies. Each: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
 
-**Differences from `App_CloudRun` probe defaults:**
+**Differences from `App_CloudRun` probe defaults (for the Directus-specific `startup_probe` / `liveness_probe` variables):**
 
-| Field | `App_CloudRun` | `Directus_CloudRun` | Reason |
+| Field | `App_CloudRun` defaults | `Directus_CloudRun` (`startup_probe`/`liveness_probe`) | Reason |
 |---|---|---|---|
-| Variable names | `startup_probe_config` / `health_check_config` | `startup_probe` / `liveness_probe` | Shorter names aligned with `Directus_Common` interface |
-| `path` | `/healthz` | `/server/health` | Directus exposes health at `/server/health` |
-| Startup `initial_delay_seconds` | `10` | `30` | Directus + database connection takes 20–60s on cold start |
-| Startup `failure_threshold` | `10` | `10` | Same — sufficient retry budget for first-boot migrations |
-| Startup `period_seconds` | `10` | `20` | Less aggressive polling reduces load during startup |
-| Liveness `initial_delay_seconds` | `15` | `15` | Same — aligns with typical Node.js startup time |
+| `path` (startup) | `"/"` | `"/server/health"` | Directus exposes readiness at `/server/health` |
+| Startup `initial_delay_seconds` | `0` | `30` | Directus + database connection takes 20–60s on cold start |
+| Startup `failure_threshold` | `1` | `10` | Sufficient retry budget for first-boot migrations |
+| Startup `period_seconds` | `240` | `20` | More frequent polling for faster readiness detection |
+| Liveness `initial_delay_seconds` | `0` | `15` | Aligns with typical Node.js startup time |
+| Liveness `path` | `"/"` | `"/server/health"` | Directus exposes live status at `/server/health` |
 
 ### D. Auto Password Rotation
 
@@ -521,6 +516,7 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `traffic_split` | 3 | `[]` | Canary/blue-green traffic allocation. Safe to use with Directus (Redis sessions). |
 | `service_annotations` | 3 | `{}` | Advanced Cloud Run annotations. |
 | `service_labels` | 3 | `{}` | Labels applied to the Cloud Run service. |
+| `max_revisions_to_retain` | 3 | `7` | Maximum number of Cloud Run revisions to keep after each deployment. Set `0` to disable pruning. |
 | `ingress_settings` | 4 | `'all'` | `'all'`, `'internal'`, or `'internal-and-cloud-load-balancing'`. |
 | `vpc_egress_setting` | 4 | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` or `'ALL_TRAFFIC'`. |
 | `enable_iap` | 4 | `false` | Enables IAP natively on the Cloud Run service (BETA). |
@@ -548,24 +544,35 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `custom_sql_scripts_bucket` | 8 | `""` | GCS bucket containing SQL scripts. |
 | `custom_sql_scripts_path` | 8 | `""` | Path prefix within the bucket. |
 | `custom_sql_scripts_use_root` | 8 | `false` | Run scripts as the root DB user. |
+| `nfs_instance_name` | 8 | `""` | Name of an existing NFS GCE VM. Leave empty to auto-discover. |
+| `nfs_instance_base_name` | 8 | `'app-nfs'` | Base name for the inline NFS GCE VM. |
 | `enable_cloud_armor` | 9 | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. |
 | `admin_ip_ranges` | 9 | `[]` | CIDR ranges exempted from WAF rules. |
 | `application_domains` | 9 | `[]` | Custom domains with Google-managed SSL certificates. |
 | `enable_cdn` | 9 | `false` | Enables Cloud CDN on the HTTPS LB backend. |
+| `max_images_to_retain` | 9 | `7` | Maximum number of recent container images to keep in Artifact Registry. Set `0` to disable. |
+| `delete_untagged_images` | 9 | `true` | Automatically deletes untagged images from the Artifact Registry repository. |
+| `image_retention_days` | 9 | `30` | Days after which images are eligible for deletion from Artifact Registry. Set `0` to disable. |
 | `create_cloud_storage` | 10 | `true` | Set `false` to skip GCS bucket creation. |
 | `storage_buckets` | 10 | `[{ name_suffix = "data" }]` | Additional GCS buckets to provision. |
 | `enable_nfs` | 10 | `true` | Provisions NFS shared storage for uploaded assets. Requires `gen2`. |
 | `nfs_mount_path` | 10 | `'/mnt/nfs'` | Container path where NFS is mounted. |
 | `gcs_volumes` | 10 | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). |
+| `manage_storage_kms_iam` | 10 | `false` | Creates CMEK KMS key and enables CMEK encryption on all storage buckets. |
+| `enable_artifact_registry_cmek` | 10 | `false` | Creates Artifact Registry KMS key and enables at-rest encryption for container images. |
 | `db_name` | 11 | `'directus'` | PostgreSQL database name. Injected as `DB_DATABASE`. Maps to `application_database_name` in `App_CloudRun`. |
 | `db_user` | 11 | `'directus'` | PostgreSQL application user. Injected as `DB_USER`. Maps to `application_database_user` in `App_CloudRun`. |
-| `database_password_length` | 11 | `16` | Auto-generated password length. Range: 8–64. |
+| `database_password_length` | 11 | `32` | Auto-generated password length. Range: 16–64. |
 | `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. |
 | `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
+| `sql_instance_name` | 11 | `""` | Name of an existing Cloud SQL instance. Leave empty to auto-discover. |
+| `sql_instance_base_name` | 11 | `'app-sql'` | Base name for the inline Cloud SQL instance. |
 | `initialization_jobs` | 12 | `[]` | Additional one-shot Cloud Run Jobs (`db-init` is always injected by `Directus_Common`). |
 | `cron_jobs` | 12 | `[]` | Recurring scheduled Cloud Run Jobs. |
-| `startup_probe` | 13 | `{ path="/server/health", initial_delay_seconds=30, failure_threshold=10, ... }` | Startup probe. Maps to `startup_probe_config` in `App_CloudRun`. |
-| `liveness_probe` | 13 | `{ path="/server/health", initial_delay_seconds=15, failure_threshold=3, ... }` | Liveness probe. Maps to `health_check_config` in `App_CloudRun`. |
+| `startup_probe` | 13 | `{ path="/server/health", initial_delay_seconds=30, failure_threshold=10, period_seconds=20, timeout_seconds=5 }` | Startup probe passed into `Directus_Common`. |
+| `liveness_probe` | 13 | `{ path="/server/health", initial_delay_seconds=15, failure_threshold=3, period_seconds=30, timeout_seconds=5 }` | Liveness probe passed into `Directus_Common`. |
+| `startup_probe_config` | 13 | `{ enabled=true, type="TCP", initial_delay_seconds=0, timeout_seconds=240, period_seconds=240, failure_threshold=1 }` | `App_CloudRun`-standard startup probe. |
+| `health_check_config` | 13 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=0, timeout_seconds=1, period_seconds=10, failure_threshold=3 }` | `App_CloudRun`-standard liveness probe. |
 | `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | 13 | `[]` | Cloud Monitoring metric alert policies. |
 | `enable_redis` | 20 | `true` | **Enabled by default.** Redis for caching and rate limiting. |
@@ -573,3 +580,7 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `redis_port` | 20 | `'6379'` | Redis TCP port. |
 | `redis_auth` | 20 | `""` | Redis AUTH password. Sensitive. |
 | `enable_vpc_sc` | 21 | `false` | Registers API calls within the project's VPC-SC perimeter. |
+| `vpc_cidr_ranges` | 21 | `[]` | VPC subnet CIDR ranges for the VPC-SC network access level. Auto-discovered when empty. |
+| `vpc_sc_dry_run` | 21 | `true` | When `true`, violations are logged but not blocked. |
+| `organization_id` | 21 | `""` | GCP Organization ID for VPC-SC Access Context Manager. Auto-discovered when empty. |
+| `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs for all supported GCP services. |
