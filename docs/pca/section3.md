@@ -6,6 +6,7 @@
 [Download PDF](https://storage.googleapis.com/rad-public-2b65/gcp/pca_section3.pdf)
 
 
+
 This guide helps candidates preparing for the Google Cloud Professional Cloud Architect (PCA) certification explore Section 3 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
 You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCA objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
@@ -30,10 +31,8 @@ Navigate to **IAM & Admin > IAM** to view the assigned roles. Navigate to **IAM 
 **Concept:** Protecting sensitive data from unauthorized access or exfiltration using encryption and zero-trust proxies.
 
 **In the RAD UI:**
-*   **Secret Management:** The `enable_auto_password_rotation` variable (Group 11 for Cloud Run, Group 10 for GKE) automates credential rotation, securely passing them to workloads via Secret Manager.
-*   **Secrets Store CSI Driver (GKE):** Enable `enable_secrets_store_csi_driver` (Group 4 for GKE) to fetch secrets directly from Secret Manager at pod start time without storing plaintext values in Kubernetes Secrets or Terraform state — the most secure secret delivery method for GKE workloads with strict compliance requirements such as PCI-DSS or HIPAA.
-*   **Identity-Aware Proxy (IAP):** Review the `enable_iap` (Group 15 for Cloud Run, Group 17 for GKE) variable. IAP provides secure remote access, replacing traditional VPNs by verifying Google identities at the edge.
-*   **Network Segmentation (GKE):** The `enable_network_segmentation` variable (Group 5 for GKE) creates Kubernetes NetworkPolicy objects restricting east-west traffic to only explicitly permitted connections, enforcing least-privilege at the network layer for pods within the cluster.
+*   **Secret Management:** The `enable_auto_password_rotation` variable (Group 11/17) automates credential rotation, securely passing them to workloads via Secret Manager.
+*   **Identity-Aware Proxy (IAP):** Review the `enable_iap` (Group 4) variable. IAP provides secure remote access, replacing traditional VPNs by verifying Google identities at the edge.
 *   **VPC Service Controls:** In **GCP Services**, `enable_vpc_sc` (Group 10) creates a VPC Service Perimeter, preventing data exfiltration by blocking API access outside the defined trusted boundary.
 *   **Securing Software Supply Chain:** In **GCP Services**, `enable_binary_authorization` (Group 11) ensures only verified, signed container images are deployed.
 

@@ -6,6 +6,7 @@
 [Download PDF](https://storage.googleapis.com/rad-public-2b65/gcp/pcd_section1.pdf)
 
 
+
 This guide helps candidates preparing for the Google Cloud Professional Cloud Developer (PCD) certification explore Section 1 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
 You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCD objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
@@ -19,12 +20,12 @@ You interact with each module by configuring its variables in the RAD UI deploym
 
 **In the RAD UI:**
 *   **Platform Choice:** The RAD platform provides templates for **App CloudRun** (serverless, event-driven HTTP workloads that scale to zero) and **App GKE** (container orchestration for workloads that need persistent connections, StatefulSets, or fine-grained networking). For workloads requiring direct OS access, custom hardware, or persistent long-running background processes, Compute Engine VMs are the appropriate choice — these are provisioned via the Services GCP module infrastructure layer.
-*   **Traffic Splitting:** In Cloud Run, the `traffic_split` variable (Group 3) dictates how traffic is divided across container revisions for A/B testing and canary rollouts.
+*   **Traffic Splitting:** In Cloud Run, the `traffic_split` variable (Group 5) dictates how traffic is divided across container revisions for A/B testing and canary rollouts.
 
 **Console Exploration:**
 Navigate to **Cloud Run**, select the service, and review the **Revisions** tab to see how traffic is allocated across revisions. Observe that each revision is immutable — configuration changes always produce a new revision, which can then receive a percentage of traffic. For GKE, review **Cloud Deploy > Delivery pipelines** for progressive rollout stages.
 
-> **Real-World Example:** A team wants to validate a new recommendation algorithm on 10% of live traffic before a full rollout. They deploy the new algorithm as a new Cloud Run revision and set `traffic_split` to route 10% there and 90% to the stable revision. Cloud Monitoring dashboards compare click-through rates between the two revisions over 24 hours. If the new revision performs better, traffic is shifted to 100% with a single configuration change. If it underperforms, the rollback is instant — simply route 100% back to the previous revision.
+**Real-world example:** A team wants to validate a new recommendation algorithm on 10% of live traffic before a full rollout. They deploy the new algorithm as a new Cloud Run revision and set `traffic_split` to route 10% there and 90% to the stable revision. Cloud Monitoring dashboards compare click-through rates between the two revisions over 24 hours. If the new revision performs better, traffic is shifted to 100% with a single configuration change. If it underperforms, the rollback is instant — simply route 100% back to the previous revision.
 
 ### Geographic Distribution and High Availability
 **Concept:** Understanding how Google Cloud services are distributed across regions and zones, and designing applications that survive zonal and regional failures.
@@ -36,32 +37,29 @@ Navigate to **Cloud Run**, select the service, and review the **Revisions** tab 
 **Console Exploration:**
 Navigate to **Cloud Run** and observe that a Cloud Run service is regional — it runs across multiple zones within the selected region automatically. Navigate to **SQL** and inspect the instance details: a REGIONAL instance shows a primary zone and a failover zone. Navigate to **Network Services > Load balancing** to see how a global anycast IP routes users to the nearest region.
 
-> **Real-World Example:** A SaaS platform deploys Cloud Run services in `us-central1` and `europe-west1`. A Global External Application Load Balancer with two backend service regions routes users to the nearest region based on network latency. When the `us-central1` region experiences degraded connectivity, the load balancer health checks detect the failure within seconds and route all US traffic to `europe-west1` — users experience a brief latency increase but no application downtime.
+**Real-world example:** A SaaS platform deploys Cloud Run services in `us-central1` and `europe-west1`. A Global External Application Load Balancer with two backend service regions routes users to the nearest region based on network latency. When the `us-central1` region experiences degraded connectivity, the load balancer health checks detect the failure within seconds and route all US traffic to `europe-west1` — users experience a brief latency increase but no application downtime.
 
 **Key geographic concepts for the PCD exam:**
 - **Zonal services:** Compute Engine VMs, Persistent Disks, GKE nodes — tied to a single zone. A zone failure takes down all zonal resources in that zone.
 - **Regional services:** Cloud SQL REGIONAL, GKE Autopilot, Cloud Run — redundant across multiple zones within a region. Survive individual zone failures.
 - **Global services:** Cloud Storage (multi-region), Cloud Spanner (multi-region), Global Load Balancing — distributed across regions. Highest availability, highest cost.
 
-**GKE pod-level zone distribution:**
-For GKE workloads, `enable_topology_spread` (Group 14) adds Kubernetes `TopologySpreadConstraints` to the pod spec, instructing the scheduler to distribute replicas evenly across availability zones. With three replicas and spreading enabled across three zones, one replica runs per zone — a single zone failure takes down only one third of capacity rather than all pods. Pair this with `enable_pod_disruption_budget` (Group 14), which creates a `PodDisruptionBudget` preventing Kubernetes from evicting too many pods simultaneously during voluntary disruptions (node drains, cluster upgrades). Set `pdb_min_available = "1"` to guarantee at least one pod is always serving while others are replaced.
-
 ### Caching Solutions
 **Concept:** Implementing in-memory caching to reduce database load and improve application response times.
 
 **In the RAD UI:**
-*   **Memorystore (Redis):** In **Services GCP**, `create_redis` (Group 5) and `redis_tier` (Group 5) configure managed in-memory caching. Set `enable_redis` (Group 10 for App CloudRun; for App GKE set `redis_host` in Group 5 or deploy Services GCP for auto-discovery) to dynamically pass the Redis host and port into the container as environment variables.
+*   **Memorystore (Redis):** In **Services GCP**, `create_redis` (Group 5) and `redis_tier` (Group 5) configure managed in-memory caching. Set `enable_redis` (Group 14 for App CloudRun, Group 20 for App GKE) to dynamically pass the Redis host and port into the container as environment variables.
 
 **Console Exploration:**
 Navigate to **Memorystore > Redis** to view the Redis instance. Observe the instance tier (`BASIC` for single-node, `STANDARD_HA` for primary-replica with automatic failover), the memory size, and the private IP address accessible only from within the VPC. In your application code, use this private IP with the Redis client library — all traffic stays within Google's private network.
 
-> **Real-World Example:** A Cloud Run service queries the same product catalogue data for 80% of its requests. Without caching, every request hits Cloud SQL, consuming database connection pool slots and adding 20–50ms of query latency. After connecting to Memorystore, the application checks Redis first: a cache hit returns data in under 1ms and skips the database entirely. Cache miss rate drops to under 5% after warm-up, reducing Cloud SQL CPU utilisation by 60% and cutting p99 latency in half.
+**Real-world example:** A Cloud Run service queries the same product catalogue data for 80% of its requests. Without caching, every request hits Cloud SQL, consuming database connection pool slots and adding 20–50ms of query latency. After connecting to Memorystore, the application checks Redis first: a cache hit returns data in under 1ms and skips the database entirely. Cache miss rate drops to under 5% after warm-up, reducing Cloud SQL CPU utilisation by 60% and cutting p99 latency in half.
 
 ### Session Affinity and Content Delivery
 **Concept:** Configuring load balancers to route a user's requests consistently to the same backend, and using Cloud CDN to cache responses at the edge for lower latency.
 
 **In the RAD UI:**
-Both App CloudRun and App GKE provision a Global External Application Load Balancer when `enable_cloud_armor` (Group 16 for Cloud Run, Group 18 for GKE) is enabled. The load balancer is the integration point for both session affinity and Cloud CDN.
+Both App CloudRun and App GKE provision a Global External Application Load Balancer when `enable_cloud_armor` (Group 9 for Cloud Run, Group 13 for GKE) is enabled. The load balancer is the integration point for both session affinity and Cloud CDN.
 
 **Console Exploration and Learning Guidelines:**
 
@@ -70,9 +68,9 @@ Both App CloudRun and App GKE provision a Global External Application Load Balan
 - `GENERATED_COOKIE` — the load balancer sets a cookie on the first response; subsequent requests carrying that cookie are routed to the same backend. The recommended option for browser-based applications.
 - `HEADER_FIELD` — routes based on a specific HTTP header value.
 
-> **Real-World Example:** A legacy e-commerce application stores user shopping cart state in local memory on each application server instance rather than in a shared cache or database. Enabling `GENERATED_COOKIE` session affinity on the load balancer ensures that once a user's session is established on a particular instance, all their requests in that session reach the same instance — preventing cart data loss. The team treats this as a migration step while they refactor cart storage to use Memorystore for proper stateless scaling.
+**Real-world example:** A legacy e-commerce application stores user shopping cart state in local memory on each application server instance rather than in a shared cache or database. Enabling `GENERATED_COOKIE` session affinity on the load balancer ensures that once a user's session is established on a particular instance, all their requests in that session reach the same instance — preventing cart data loss. The team treats this as a migration step while they refactor cart storage to use Memorystore for proper stateless scaling.
 
-**Cloud CDN** caches responses from your backends at Google's globally distributed Points of Presence (PoPs), serving subsequent identical requests from cache without reaching your backend at all. In the RAD platform, `enable_cdn = true` (Group 16 for Cloud Run) activates Cloud CDN on the load balancer backend — this variable is only effective when `enable_cloud_armor` is also `true`, as Cloud CDN requires the Global HTTPS Load Balancer that Cloud Armor provisions. Configure cache modes at the load balancer backend:
+**Cloud CDN** caches responses from your backends at Google's globally distributed Points of Presence (PoPs), serving subsequent identical requests from cache without reaching your backend at all. Enable it on the load balancer's backend service and configure cache modes:
 - `CACHE_ALL_STATIC` — automatically caches all static content (images, CSS, JS) based on content type.
 - `USE_ORIGIN_HEADERS` — respects `Cache-Control` and `Expires` headers from your application.
 - `FORCE_CACHE_ALL` — caches all responses regardless of origin headers (use with caution for dynamic content).
@@ -93,7 +91,7 @@ REST APIs use standard HTTP methods (`GET`, `POST`, `PUT`, `DELETE`) and JSON pa
 - **Cloud API Gateway:** Lightweight, low-latency managed gateway. Define your API surface using an OpenAPI 2.0 specification and point it at your Cloud Run backend URL. Navigate to **API Gateway > APIs** to create an API config and deploy a gateway. Enforces quotas, API keys, and JWT authentication with minimal setup.
 - **Apigee:** Google's full-featured API management platform for enterprise scenarios. Provides advanced features including developer portals, monetisation, OAuth 2.0 flows, traffic analytics, and complex transformation policies. Use Apigee when you need fine-grained control over API lifecycle management and have multiple API consumers with different access tiers.
 
-> **Real-World Example:** A company exposes a Cloud Run microservice as a public API for third-party developers. They deploy Cloud API Gateway in front of it and define API key authentication in the OpenAPI spec. The gateway enforces a rate limit of 100 requests/minute per key, returning HTTP 429 when the quota is exceeded. The backend Cloud Run service only sees authenticated, rate-limited traffic — no rate-limiting logic needs to be written in application code.
+**Real-world example:** A company exposes a Cloud Run microservice as a public API for third-party developers. They deploy Cloud API Gateway in front of it and define API key authentication in the OpenAPI spec. The gateway enforces a rate limit of 100 requests/minute per key, returning HTTP 429 when the quota is exceeded. The backend Cloud Run service only sees authenticated, rate-limited traffic — no rate-limiting logic needs to be written in application code.
 
 **gRPC APIs:**
 gRPC is a high-performance RPC framework using Protocol Buffers (protobuf) for serialisation and HTTP/2 for transport. It is significantly more efficient than REST/JSON for service-to-service communication:
@@ -111,7 +109,7 @@ Navigate to **API Gateway > APIs** to explore a deployed API. The **Monitoring**
 
 For **Apigee**, navigate to **Apigee > Analytics > API Metrics** to view traffic dashboards, top consumers, and error breakdowns per API proxy. Apigee's built-in analytics are far richer than Cloud API Gateway for enterprise scenarios.
 
-> **Real-World Example:** An API team notices a spike in 4xx errors on their Cloud Run API. In Cloud API Gateway's monitoring tab, they filter by response code and see that one specific API key is generating 95% of the errors — the key belongs to a partner integration that recently deployed a bug causing malformed requests. The team revokes that key temporarily, notifies the partner, and the error rate drops to baseline within seconds.
+**Real-world example:** An API team notices a spike in 4xx errors on their Cloud Run API. In Cloud API Gateway's monitoring tab, they filter by response code and see that one specific API key is generating 95% of the errors — the key belongs to a partner integration that recently deployed a bug causing malformed requests. The team revokes that key temporarily, notifies the partner, and the error rate drops to baseline within seconds.
 
 ### Asynchronous and Event-Driven Integration
 **Concept:** Decoupling services using message queues and event triggers to build resilient, scalable architectures.
@@ -131,7 +129,7 @@ Navigate to **Pub/Sub > Topics** to see topics provisioned by the platform. Navi
 - **Audit Log triggers:** Any GCP API call can trigger a Cloud Run service — e.g. trigger on `cloudsql.instances.create` to automatically configure a new database.
 - **Pub/Sub triggers:** Route Pub/Sub messages directly to a Cloud Run service as HTTP POST requests in CloudEvents format.
 
-> **Real-World Example:** A document processing platform receives PDF uploads to a Cloud Storage bucket. An Eventarc trigger fires a Cloud Run service on every `objectFinalized` event. The service extracts text using Document AI, stores structured results in Firestore, and publishes a `document.processed` message to a Pub/Sub topic. Three downstream services subscribe independently: one sends an email notification, one updates a search index, and one triggers a compliance review workflow. No service is coupled to any other — each can be deployed, scaled, and updated independently.
+**Real-world example:** A document processing platform receives PDF uploads to a Cloud Storage bucket. An Eventarc trigger fires a Cloud Run service on every `objectFinalized` event. The service extracts text using Document AI, stores structured results in Firestore, and publishes a `document.processed` message to a Pub/Sub topic. Three downstream services subscribe independently: one sends an email notification, one updates a search index, and one triggers a compliance review workflow. No service is coupled to any other — each can be deployed, scaled, and updated independently.
 
 ### Orchestrating Application Services
 **Concept:** Coordinating multi-step workflows across services using managed orchestration tools.
@@ -154,7 +152,7 @@ Navigate to **Workflows > Workflows** to explore the visual workflow editor and 
 
 **Eventarc** is the event-routing layer rather than an orchestration tool — it delivers individual events to targets but does not manage multi-step workflows or state.
 
-> **Real-World Example:** An e-commerce order fulfilment system uses all three tools together. Cloud Scheduler triggers a Workflow every night at midnight to process all pending orders. The Workflow calls an inventory check service, a payment service, and a shipping service in sequence, handling errors at each step. For each order, the Workflow enqueues a Cloud Task to send a confirmation email — Cloud Tasks rate-limits email dispatch to 50/minute to respect the email provider's API limits. Eventarc separately triggers a real-time inventory update whenever a Cloud Storage import file lands.
+**Real-world example:** An e-commerce order fulfilment system uses all three tools together. Cloud Scheduler triggers a Workflow every night at midnight to process all pending orders. The Workflow calls an inventory check service, a payment service, and a shipping service in sequence, handling errors at each step. For each order, the Workflow enqueues a Cloud Task to send a confirmation email — Cloud Tasks rate-limits email dispatch to 50/minute to respect the email provider's API limits. Eventarc separately triggers a real-time inventory update whenever a Cloud Storage import file lands.
 
 ### Cost and Resource Optimisation
 **Concept:** Designing applications and infrastructure configurations that minimise cost while meeting performance requirements.
@@ -165,7 +163,7 @@ Navigate to **Workflows > Workflows** to explore the visual workflow editor and 
 *   **Resource right-sizing:** The `container_resources` variable (Group 3, both modules) sets CPU and memory requests. Over-provisioning CPU/memory wastes money; under-provisioning causes throttling. Use Cloud Profiler and container metrics to right-size over time.
 *   **Shared infrastructure:** In Services GCP, `create_network_filesystem = true` runs both Redis and an NFS server on a single shared `e2-small` VM instead of separate managed services — reducing cost significantly for development and test environments.
 
-> **Real-World Example:** A development team deploys all non-production environments with `min_instance_count = 0` and `max_instance_count = 2`. Production uses `min_instance_count = 1` (to avoid cold start latency) and `max_instance_count = 50`. This configuration means dev and staging environments cost nothing when not in use, while production maintains a warm instance at all times. The team uses Active Assist recommendations to identify that their `container_resources` setting is 40% over-provisioned based on actual usage — reducing memory from 512Mi to 256Mi cuts per-request billing in half.
+**Real-world example:** A development team deploys all non-production environments with `min_instance_count = 0` and `max_instance_count = 2`. Production uses `min_instance_count = 1` (to avoid cold start latency) and `max_instance_count = 50`. This configuration means dev and staging environments cost nothing when not in use, while production maintains a warm instance at all times. The team uses Active Assist recommendations to identify that their `container_resources` setting is 40% over-provisioned based on actual usage — reducing memory from 512Mi to 256Mi cuts per-request billing in half.
 
 ---
 
@@ -176,7 +174,7 @@ Navigate to **Workflows > Workflows** to explore the visual workflow editor and 
 
 **In the RAD UI:**
 *   **Least Privilege:** The platform strictly uses dedicated custom service accounts with minimum required predefined roles (like `roles/cloudsql.client`) rather than the default compute service account. Using the default compute service account is an anti-pattern — it is automatically granted broad `roles/editor` permissions across the project.
-*   **Identity-Aware Proxy (IAP):** The `enable_iap` variable (Group 15 for Cloud Run, Group 17 for GKE) configures IAP, which authenticates end-users at the Google Front End before requests reach the backend — acting as a zero-trust access layer that replaces traditional VPN-based perimeter security.
+*   **Identity-Aware Proxy (IAP):** The `enable_iap` variable (Group 4) configures IAP, which authenticates end-users at the Google Front End before requests reach the backend — acting as a zero-trust access layer that replaces traditional VPN-based perimeter security.
 
 **Console Exploration:**
 Navigate to **IAM & Admin > Service Accounts** and view the **Permissions** tab for each application service account to confirm minimum required roles. Navigate to **Security > Identity-Aware Proxy** to view which users and groups have been granted the `IAP-secured Web App User` role.
@@ -201,7 +199,7 @@ Navigate to **IAM & Admin > Service Accounts**, select a service account, and ex
 
 **Cloud SQL Auth Proxy** (already deployed by the RAD platform via `enable_cloudsql_volume`) and **AlloyDB Auth Proxy** both work on the same principle: a sidecar process authenticates to the Cloud SQL/AlloyDB API using ADC, then creates an encrypted tunnel to the database. Your application connects to `localhost` on a Unix socket or TCP port — SSL certificate management and IP allowlisting are handled automatically by the proxy.
 
-> **Real-World Example:** A Cloud Run service needs to connect to both a Cloud SQL PostgreSQL database and call the Vision API. With Workload Identity, the Cloud Run service identity is bound to a Google Service Account that has `roles/cloudsql.client` and `roles/vision.imageAnnotator`. The application code uses ADC for both connections — no credentials are stored in the container image, environment variables, or Secret Manager. When the service account's roles are updated, the change takes effect on the next request without redeployment.
+**Real-world example:** A Cloud Run service needs to connect to both a Cloud SQL PostgreSQL database and call the Vision API. With Workload Identity, the Cloud Run service identity is bound to a Google Service Account that has `roles/cloudsql.client` and `roles/vision.imageAnnotator`. The application code uses ADC for both connections — no credentials are stored in the container image, environment variables, or Secret Manager. When the service account's roles are updated, the change takes effect on the next request without redeployment.
 
 **Workload Identity Federation** extends ADC to workloads running *outside* Google Cloud (e.g. CI/CD pipelines on other cloud providers, on-premises servers). Instead of downloading a service account key, you configure a trust relationship between Google Cloud and an external identity provider (AWS IAM, GitHub Actions OIDC, Azure AD). The external workload exchanges its native identity token for a short-lived Google access token — no long-lived credentials are stored anywhere. Navigate to **IAM & Admin > Workload Identity Federation** to explore pool and provider configuration.
 
@@ -209,16 +207,16 @@ Navigate to **IAM & Admin > Service Accounts**, select a service account, and ex
 **Concept:** Storing, accessing, and rotating secrets and encryption keys, and securing the container build pipeline.
 
 **In the RAD UI:**
-*   **Secret Manager Integration:** The `enable_auto_password_rotation` (Group 11 for Cloud Run, Group 10 for GKE) variable automates credential rotation. Secret values are fetched by the Cloud Run/GKE workload at startup via the Secret Manager API — the plaintext value is never written to a config file, container image layer, or Terraform state file. For workloads with strict compliance requirements (PCI-DSS, HIPAA), `enable_secrets_store_csi_driver` (Group 4 for GKE) bypasses Kubernetes Secrets storage entirely — secret values are fetched directly from Secret Manager at pod start time and never written to etcd or Terraform state.
-*   **Binary Authorization:** In **Services GCP**, `enable_binary_authorization` (Group 11) configures a cluster admission policy requiring all container images to be signed by a trusted Cloud Build attestor. Unsigned images are rejected at deploy time. In App GKE and App CloudRun standalone deployments, `enable_binary_authorization` (Group 7) self-provisions the attestor, KMS signing key, and policy automatically — no pre-existing Binary Authorization resources are required.
-*   **Micro-segmentation:** In **App GKE**, `enable_network_segmentation` (Group 5) enforces Kubernetes Network Policies that restrict pod-to-pod traffic — only pods with matching label selectors can communicate within the namespace.
+*   **Secret Manager Integration:** The `enable_auto_password_rotation` (Group 11 for Cloud Run, Group 17 for GKE) variable automates credential rotation. Secret values are fetched by the Cloud Run/GKE workload at startup via the Secret Manager API — the plaintext value is never written to a config file, container image layer, or Terraform state file.
+*   **Binary Authorization:** In **Services GCP**, `enable_binary_authorization` (Group 11) configures a cluster admission policy requiring all container images to be signed by a trusted Cloud Build attestor. Unsigned images are rejected at deploy time.
+*   **Micro-segmentation:** In **App GKE**, `enable_network_segmentation` (Group 9) enforces Kubernetes Network Policies that restrict pod-to-pod traffic — only pods with matching label selectors can communicate within the namespace.
 
 **Console Exploration:**
 Navigate to **Security > Secret Manager**. View a secret and note that you cannot read the value without `roles/secretmanager.secretAccessor` — `roles/secretmanager.viewer` allows listing secrets but not reading their material. Click **Versions** to see the rotation history. Navigate to **Security > Binary Authorization** to view the active policy and attestors.
 
 **Cloud Key Management Service (Cloud KMS)** manages encryption keys for Customer-Managed Encryption Keys (CMEK). Navigate to **Security > Key Management** to explore key rings and keys. CMEKs are used when regulatory requirements demand that you control the encryption key lifecycle — you can disable a key to immediately render all data encrypted with it inaccessible. Integrate CMEK with Cloud Storage buckets, Cloud SQL, BigQuery, Pub/Sub, and Secret Manager.
 
-> **Real-World Example:** A fintech application stores sensitive customer data in Cloud Storage. Compliance requirements mandate that the company can provably delete all customer data within 24 hours of a deletion request. Rather than locating and deleting individual objects (impractical at scale), the team encrypts each customer's data with a unique CMEK key in Cloud KMS. When a deletion request arrives, they destroy the customer's KMS key — all objects encrypted with that key become permanently inaccessible within minutes, across every storage location.
+**Real-world example:** A fintech application stores sensitive customer data in Cloud Storage. Compliance requirements mandate that the company can provably delete all customer data within 24 hours of a deletion request. Rather than locating and deleting individual objects (impractical at scale), the team encrypts each customer's data with a unique CMEK key in Cloud KMS. When a deletion request arrives, they destroy the customer's KMS key — all objects encrypted with that key become permanently inaccessible within minutes, across every storage location.
 
 ### Security Mechanisms, Vulnerability Detection, and Service-to-Service Security
 **Concept:** Proactively identifying vulnerabilities in running services and container images, and securing communication between microservices.
@@ -232,7 +230,7 @@ The `enable_security_command_center` variable (Group 11, Services GCP) activates
 
 **Artifact Analysis** (formerly Container Analysis) automatically scans container images pushed to Artifact Registry for OS-level CVEs and language-specific vulnerabilities. Navigate to **Artifact Registry**, select a container image version, and click the **Vulnerabilities** tab to see a breakdown of CVEs by severity (Critical, High, Medium, Low). Artifact Analysis continuously rescans images as new CVEs are published — an image that was clean yesterday may show new findings today as the vulnerability database is updated.
 
-> **Real-World Example:** A Cloud Run service image is scanned by Artifact Analysis after being pushed to Artifact Registry by Cloud Build. A new Critical CVE in the base OS image is published three weeks later. Artifact Analysis detects it and creates a finding in Security Command Center. The team's SCC notification (via the `enable_scc_notifications` variable) sends an alert to their Pub/Sub topic, which triggers a Cloud Run function that opens a ticket in their issue tracker automatically — without any manual monitoring of the Artifact Registry console.
+**Real-world example:** A Cloud Run service image is scanned by Artifact Analysis after being pushed to Artifact Registry by Cloud Build. A new Critical CVE in the base OS image is published three weeks later. Artifact Analysis detects it and creates a finding in Security Command Center. The team's SCC notification (via the `enable_scc_notifications` variable) sends an alert to their Pub/Sub topic, which triggers a Cloud Run function that opens a ticket in their issue tracker automatically — without any manual monitoring of the Artifact Registry console.
 
 **Cloud Service Mesh** (formerly Anthos Service Mesh, based on Istio) provides mTLS encryption, traffic management, and observability for service-to-service communication in GKE clusters. With Service Mesh enabled:
 - All inter-pod traffic is automatically encrypted with mutual TLS — no application code changes needed.
@@ -250,7 +248,7 @@ Navigate to **Kubernetes Engine > Service Mesh** to explore the mesh topology an
 - **Object Lifecycle Management:** Navigate to **Cloud Storage > Buckets**, select a bucket, and click the **Lifecycle** tab. Create rules to automatically transition objects to cheaper storage classes (Nearline, Coldline, Archive) or delete them after a specified number of days. This is the primary mechanism for automated cost management and data expiry enforcement.
 - **Retention policies (Bucket Lock):** Under **Bucket details > Protection**, set a **Retention period** — objects in the bucket cannot be deleted or overwritten until the retention period expires, even by project owners. Enable **Bucket Lock** to make the retention policy permanent (irrevocable). This creates WORM (Write Once Read Many) storage for regulatory compliance (SEC 17a-4, FINRA, HIPAA).
 
-> **Real-World Example:** A healthcare provider must retain patient records for a minimum of 7 years under HIPAA. They create a Cloud Storage bucket with a 7-year retention policy and lock it. The Lock prevents any administrator — including Google support — from reducing the retention period or deleting records prematurely. Automated lifecycle rules delete records exactly on day 2557, without manual intervention.
+**Real-world example:** A healthcare provider must retain patient records for a minimum of 7 years under HIPAA. They create a Cloud Storage bucket with a 7-year retention policy and lock it. The Lock prevents any administrator — including Google support — from reducing the retention period or deleting records prematurely. Automated lifecycle rules delete records exactly on day 2557, without manual intervention.
 
 **Identity Platform** is Google Cloud's Customer Identity and Access Management (CIAM) service, providing authentication infrastructure for end-user-facing applications (B2C) and business customer portals (B2B). It supports email/password, phone SMS, social providers (Google, Facebook, GitHub), SAML 2.0, and OIDC federation. Navigate to **Identity Platform > Providers** to configure authentication providers. Key differences from Cloud Identity (which manages internal GCP users): Identity Platform manages your application's end-users — the people who sign in to your app, not your GCP administrators.
 
@@ -263,7 +261,7 @@ Navigate to **Kubernetes Engine > Service Mesh** to explore the mesh topology an
 
 **In the RAD UI:**
 *   **Cloud SQL (Relational):** The `create_postgres` / `create_mysql` variables (Group 3 in Services GCP) provision fully managed PostgreSQL or MySQL. Cloud SQL provides strong consistency — a committed write is immediately visible to all readers.
-*   **Cloud Storage (Object Storage):** The `storage_buckets` variable (Group 9 for both Cloud Run and GKE) provisions GCS buckets for unstructured data (files, images, backups, exported data). Multi-region Cloud Storage buckets provide eventual consistency for metadata operations (bucket listing) but strong read-after-write consistency for object operations since November 2020. The `gcs_volumes` variable in the same group mounts buckets directly into containers via the GCS Fuse CSI Driver, making Cloud Storage appear as a POSIX filesystem path — no client library API calls required in application code.
+*   **Cloud Storage (Object Storage):** The `storage_buckets` variable (Group 10 for Cloud Run, Group 17 for GKE) provisions GCS buckets for unstructured data (files, images, backups, exported data). Multi-region Cloud Storage buckets provide eventual consistency for metadata operations (bucket listing) but strong read-after-write consistency for object operations since November 2020.
 *   **Memorystore (Redis):** Covered in section 1.1 — used for ephemeral caching, not durable storage.
 
 **Console Exploration:**
@@ -288,7 +286,7 @@ Navigate to **Cloud Storage** and **SQL** in the GCP Console to review storage t
 - Use **interleaving** to co-locate parent and child rows physically — `INTERLEAVE IN PARENT Orders ON DELETE CASCADE` places each order's line items on the same Spanner server as the order, dramatically reducing cross-server joins.
 - Spanner supports standard SQL (ANSI 2011) and a GoogleSQL dialect — existing SQL queries generally work with minor modifications.
 
-Navigate to **Spanner > \<instance\> > Spanner Studio** to explore schema views and run queries.
+Navigate to **Spanner > <instance> > Spanner Studio** to explore schema views and run queries.
 
 **Unstructured (NoSQL) databases:**
 
@@ -303,7 +301,7 @@ Navigate to **Spanner > \<instance\> > Spanner Studio** to explore schema views 
 - Avoid **hotspotting**: if all writes go to rows with similar key prefixes (e.g. all start with today's date), all writes land on the same Bigtable tablet server. Use a hash prefix or field reordering to distribute writes.
 - Ideal for: IoT telemetry, financial time-series, ad-tech event streams, ML feature stores.
 
-Navigate to **Bigtable > \<instance\> > Bigtable Studio** to query tables and inspect row structure.
+Navigate to **Bigtable > <instance> > Bigtable Studio** to query tables and inspect row structure.
 
 ### Consistency Implications Across Data Services
 **Concept:** Understanding the consistency guarantee each service provides and designing applications accordingly.
@@ -317,7 +315,7 @@ Navigate to **Bigtable > \<instance\> > Bigtable Studio** to query tables and in
 | Bigtable | **Strong** within a single cluster | Multi-cluster replication is **eventually consistent** — reads from a replication target may not reflect the most recent writes to the primary cluster. |
 | Cloud Storage | **Strong** for object reads (since Nov 2020) | Read-after-write consistency for all object operations. Bucket listing (metadata) may still have eventual consistency behaviour under high mutation rates. |
 
-> **Real-World Example:** An IoT platform writes sensor readings to Bigtable using a multi-cluster replication setup for regional availability. Application code that reads from the replica cluster must account for potential replication lag — a sensor's latest reading may not yet be present in the replica. The team adds a `X-Read-Consistency: strong` routing policy for user-facing reads (which routes to the primary cluster) while allowing background analytics to read from the replica, accepting stale data in exchange for lower latency.
+**Real-world example:** An IoT platform writes sensor readings to Bigtable using a multi-cluster replication setup for regional availability. Application code that reads from the replica cluster must account for potential replication lag — a sensor's latest reading may not yet be present in the replica. The team adds a `X-Read-Consistency: strong` routing policy for user-facing reads (which routes to the primary cluster) while allowing background analytics to read from the replica, accepting stale data in exchange for lower latency.
 
 ### Signed URLs and BigQuery
 **Concept:** Granting temporary, delegated access to Cloud Storage objects, and writing data to BigQuery for analytics.
@@ -353,4 +351,4 @@ BigQuery supports two loading patterns for application developers:
 
 Navigate to **BigQuery > Explorer** to explore the schema of a dataset. Practice running a query and observing the bytes-processed estimate before execution — this is the billing basis for on-demand query pricing.
 
-> **Real-World Example:** A mobile analytics platform streams user click events from Cloud Run to BigQuery using the Storage Write API — approximately 50,000 events/second at peak. The product team queries BigQuery directly via the console for ad-hoc analysis, and a Looker Studio dashboard reads from BigQuery to display daily active users and funnel conversion rates. The same raw event data is also used to train an ML model in Vertex AI — BigQuery's direct Vertex AI integration allows training data to be exported without copying files to Cloud Storage first.
+**Real-world example:** A mobile analytics platform streams user click events from Cloud Run to BigQuery using the Storage Write API — approximately 50,000 events/second at peak. The product team queries BigQuery directly via the console for ad-hoc analysis, and a Looker Studio dashboard reads from BigQuery to display daily active users and funnel conversion rates. The same raw event data is also used to train an ML model in Vertex AI — BigQuery's direct Vertex AI integration allows training data to be exported without copying files to Cloud Storage first.

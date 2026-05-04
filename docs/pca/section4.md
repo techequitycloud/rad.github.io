@@ -6,6 +6,7 @@
 [Download PDF](https://storage.googleapis.com/rad-public-2b65/gcp/pca_section4.pdf)
 
 
+
 This guide helps candidates preparing for the Google Cloud Professional Cloud Architect (PCA) certification explore Section 4 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
 You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCA objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
@@ -19,8 +20,8 @@ You interact with each module by configuring its variables in the RAD UI deploym
 
 **In the RAD UI:**
 *   **Continuous Integration (CI):** The `enable_cicd_trigger` variable (Group 7) integrates the source repository (`github_repository_url`) with Cloud Build to compile containers and push them to Artifact Registry.
-*   **Continuous Deployment (CD):** The `cloud_deploy_stages` variable (Group 7 for Cloud Run, Group 7 for GKE) defines the pipeline stages (e.g., Dev -> Staging -> Prod) orchestrated by Google Cloud Deploy.
-*   **Testing and Validation:** `traffic_split` (Group 3 for Cloud Run) allows for A/B testing and canary rollouts at the infrastructure layer to validate software safely.
+*   **Continuous Deployment (CD):** The `cloud_deploy_stages` variable (Group 7 for Cloud Run, Group 18 for GKE) defines the pipeline stages (e.g., Dev -> Staging -> Prod) orchestrated by Google Cloud Deploy.
+*   **Testing and Validation:** `traffic_split` (Group 5 for Cloud Run) allows for A/B testing and canary rollouts at the infrastructure layer to validate software safely.
 
 **Console Exploration:**
 Navigate to **Cloud Build > Triggers** to see the CI integration. Navigate to **Cloud Deploy > Delivery pipelines** to see the CD promotion flow. In Cloud Run, check the **Revisions** tab to verify traffic splitting.
