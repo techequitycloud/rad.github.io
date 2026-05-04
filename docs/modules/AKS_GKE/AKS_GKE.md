@@ -1,4 +1,4 @@
-# AKS_GKE Module: Google Kubernetes Engine Multi-Cloud Deep Dive
+# Module AKS_GKE
 
 ## 1. Overview and Learning Objectives
 
