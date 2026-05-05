@@ -1,6 +1,6 @@
 ---
 title: "Istio_GKE Module Documentation"
-sidebar_label: "Istio_GKE"
+sidebar_label: "GKE"
 ---
 
 # Istio_GKE Module
