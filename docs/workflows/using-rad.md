@@ -325,5 +325,5 @@ For full details on credit allocation, transaction history, subscription managem
 ## Next Steps
 
 - **Deploy your first module:** Follow the [Quick Start Tutorial](../tutorials/getting-started) for a step-by-step walkthrough of your first login and deployment.
-- **Explore platform features:** Browse the [Feature Guides](../features/user) to understand what each platform role can do.
+- **Explore platform features:** Browse the [Feature Guides](../features/user.md) to understand what each platform role can do.
 - **Prepare for certification:** Use the [Certification Guides](../ace/section1) to map your deployments to Google Cloud exam topics.
