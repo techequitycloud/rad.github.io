@@ -9,7 +9,9 @@
 
 This guide helps candidates preparing for the Google Cloud Professional Cloud Architect (PCA) certification explore Section 2 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCA objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. Variables are organised into numbered groups in the RAD UI deployment form — for example, "(Group 3)" refers to the third collapsible section of settings for that module. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCA objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+
+📌 **Case study connection — Cymbal Retail:** Section 2 topics (network topology, compute provisioning, managed services, migration) map most directly to the Cymbal Retail case study. Cymbal Retail is modernising a legacy on-premises retail platform across multiple regions — requiring careful VPC design, managed database provisioning, containerised workload migration, and an IaC-driven deployment model. As you explore this section, consider which RAD module variables a Cymbal Retail architect would configure, and what constraints (regional availability, data residency, SKU migration risk) would drive those choices.
 
 ---
 
@@ -26,6 +28,8 @@ You interact with each module by configuring its variables in the RAD UI deploym
 Navigate to **VPC network > VPC networks** to view the subnets created. Navigate to **Network Security > Cloud Armor** to review WAF rules.
 
 **Real-world example:** A financial institution segments its fraud detection microservices from its customer-facing web tier by placing each in a separate subnet with distinct CIDR ranges. Firewall rules permit only the specific east-west traffic required between tiers (e.g., the web tier can call the fraud API on port 8080 only), and all internet-bound traffic is inspected through Cloud Armor before reaching any application. This defence-in-depth approach ensures a compromised front-end cannot directly reach backend databases.
+
+---
 
 ### 💡 Additional Network Topology Objectives & Learning Guidelines
 *   **Hybrid Networking:** Study Cloud VPN (HA VPN) and Cloud Interconnect (Dedicated and Partner) for extending on-premises environments. Understand BGP routing.
@@ -49,6 +53,8 @@ Navigate to **Cloud Storage > Buckets** to verify the storage class and location
 
 **Real-world example:** A media streaming company stores infrequently accessed archive footage in Coldline storage at a fraction of the cost of Standard storage. An Object Lifecycle rule automatically transitions objects from Standard to Nearline after 30 days and to Coldline after 90 days. Bucket Lock is applied to the archive bucket with a 7-year retention policy to satisfy financial record-keeping regulations, preventing any object from being deleted or overwritten until the retention period expires.
 
+---
+
 ### 💡 Additional Storage System Objectives & Learning Guidelines
 *   **Data Retention and Lifecycle Management:** Navigate to a GCS bucket and create an Object Lifecycle rule to transition objects to Coldline storage or delete them. Understand Bucket Lock for SEC/FINRA WORM compliance.
 *   **Configuration for Data Transfer:** Differentiate when to use Storage Transfer Service (STS) versus the offline hardware Transfer Appliance for large-scale migrations.
@@ -69,6 +75,8 @@ Navigate to **Cloud Storage > Buckets** to verify the storage class and location
 Navigate to **Cloud Run** or **Kubernetes Engine** to review the instantiated compute services and cluster configurations.
 
 **Real-world example:** An engineering team launching a new API product chooses Cloud Run because the service receives variable burst traffic with unpredictable idle periods between requests. They configure `min_instance_count: 0` for the development environment (cost savings) and `min_instance_count: 2` for production (eliminating cold-start latency for paying customers). The GKE Autopilot cluster is reserved for a stateful data-processing pipeline that requires persistent volumes and fine-grained CPU/GPU resource control that Cloud Run's serverless model cannot provide.
+
+---
 
 ### 💡 Additional Compute System Objectives & Learning Guidelines
 *   **Compute Volatility (Spot vs. Standard):** Practice provisioning a Spot VM in the console. Spot VMs offer up to 91% cost savings compared to standard VMs and can be preempted by Google at any time when capacity is needed — unlike the older Preemptible VMs which had a hard 24-hour maximum runtime, Spot VMs have no fixed maximum lifespan but may still be reclaimed at short notice. They are ideal for batch processing, rendering, and stateless fault-tolerant workloads that can tolerate interruption.

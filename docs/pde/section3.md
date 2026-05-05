@@ -7,9 +7,9 @@
 
 
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud DevOps Engineer (PDE) certification explore Section 3 of the exam. It walks you through how SRE concepts are practically implemented in the provided Terraform codebases (`modules/App_CloudRun` and `modules/App_GKE`). By exploring the GCP Console and corresponding code, you will gain hands-on context for these critical SRE topics.
+This guide helps candidates preparing for the Google Cloud Professional Cloud DevOps Engineer (PDE) certification explore Section 3 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
-Three modules are relevant to this section: **App CloudRun**, which deploys serverless containerised applications on Cloud Run; **App GKE**, which deploys containerised workloads on GKE Autopilot; and **App GCP**, which provides the shared foundational infrastructure including monitoring and alerting.
+You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. Variables are organised into numbered groups in the RAD UI deployment form — for example, "(Group 3)" refers to the third collapsible section of settings for that module. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PDE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
 
 ---
 
@@ -72,6 +72,8 @@ In `App_CloudRun/service.tf`, the `traffic` block supports traffic splitting and
 *   For GKE, navigate to **Kubernetes Engine > Workloads** and select a deployment. From the **Actions** menu, select **Rolling update** — this triggers a Kubernetes rolling update that replaces pods incrementally, keeping a configurable percentage of pods available throughout the update. If the new version shows errors, `kubectl rollout undo deployment/<name>` immediately reverts to the previous ReplicaSet.
 
 **Real-world example:** At 14:37 on a Tuesday, a newly deployed Cloud Run revision of a payment service begins returning HTTP 500 errors for 3% of requests — an error budget burn rate of 60× the sustainable rate, triggering the fast-burn SLO alert. The on-call engineer receives a PagerDuty notification within 2 minutes of the error spike. They navigate to **Cloud Run > Revisions**, click **Manage traffic**, and shift 100% of traffic back to the previous revision in 20 seconds — the error rate drops immediately to zero. Total user impact: 7 minutes of elevated error rate. The engineer then investigates the failed revision's logs in **Logs Explorer** to identify the root cause (a missing database index on a new query) before re-deploying with the fix. The post-incident review documents the timeline, the detection method (SLO multi-burn-rate alert), and the remediation steps — feeding improvements back into the runbook.
+
+---
 
 ### 💡 Additional SRE Practice Objectives & Learning Guidelines
 

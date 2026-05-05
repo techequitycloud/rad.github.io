@@ -7,9 +7,9 @@
 
 
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud Developer (PCD) certification explore Section 3 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
+This guide helps candidates preparing for the Google Cloud Professional Cloud Developer (PCD) certification explore Section 3 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCD objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. Variables are organised into numbered groups in the RAD UI deployment form — for example, "(Group 3)" refers to the third collapsible section of settings for that module. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCD objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
 
 ---
 
@@ -29,6 +29,8 @@ Navigate to **Cloud Run** and select your service. Under the **Revisions** tab, 
 
 **Real-world example:** A team uses Cloud Deploy to manage their dev→staging→prod pipeline for a Cloud Run service. The Cloud Build CI pipeline builds and tests the container, then creates a new Cloud Deploy release. The release automatically rolls out to the dev stage; the team reviews the deployment in dev, then clicks "Promote" in the Cloud Deploy console to advance to staging. Production requires a two-person approval — the Cloud Deploy delivery pipeline is configured with an approval gate that blocks promotion until two approvers have confirmed in the console.
 
+---
+
 ### Configuring Cloud Run Services
 **Concept:** Tuning Cloud Run service behaviour for performance, cost, and availability.
 
@@ -40,6 +42,8 @@ Navigate to **Cloud Run** and select your service. Under the **Revisions** tab, 
 Navigate to **Cloud Run**, select your service, and click the **Edit & deploy new revision** button. Examine the available configuration options: container port, environment variables, secrets (mounted as environment variables or volumes from Secret Manager), concurrency per instance, request timeout, and CPU allocation (CPU always allocated vs CPU only allocated during request processing). Understand the cost implications: CPU always allocated is billed per second and eliminates cold starts; CPU allocated only during requests is billed per request and scales to zero.
 
 **Real-world example:** A data processing Cloud Run service runs expensive initialisation on startup (loading a large ML model into memory). Setting `min_instance_count = 1` ensures the model is always loaded, eliminating 8-second cold starts for end users. Setting CPU allocation to "CPU always allocated" allows the service to perform background maintenance tasks between requests. The team sets `max_instance_count = 10` to cap monthly costs — load testing confirmed that 10 instances handle peak throughput.
+
+---
 
 ### 💡 Additional Cloud Run Deployment Objectives & Learning Guidelines
 
@@ -66,8 +70,7 @@ Navigate to **Cloud Run**, select your service, and click the **Edit & deploy ne
         # process the uploaded file
     ```
     Navigate to **Eventarc > Triggers** to create a trigger, select the event source (e.g., Cloud Storage), the event type (e.g., `google.cloud.storage.object.v1.finalized`), and the Cloud Run service destination.
-
-    > **Real-World Example:** A document processing service runs on Cloud Run. When a PDF is uploaded to a Cloud Storage bucket by a web application, Eventarc detects the `object.finalized` event and invokes the Cloud Run service with the CloudEvents payload. The service extracts the bucket name and object name from the payload, downloads the PDF using the Cloud Storage client library, runs OCR processing, and writes the extracted text to Firestore — all without a persistent server.
+**Real-world example:** A document processing service runs on Cloud Run. When a PDF is uploaded to a Cloud Storage bucket by a web application, Eventarc detects the `object.finalized` event and invokes the Cloud Run service with the CloudEvents payload. The service extracts the bucket name and object name from the payload, downloads the PDF using the Cloud Storage client library, runs OCR processing, and writes the extracted text to Firestore — all without a persistent server.
 
 *   **Pub/Sub Push Subscriptions to Cloud Run:** An alternative to Eventarc for event-driven Cloud Run invocations is a Pub/Sub push subscription, where Pub/Sub delivers messages directly to a Cloud Run service URL via HTTPS POST. The message arrives as a base64-encoded JSON body:
     ```python
@@ -90,8 +93,7 @@ Navigate to **Cloud Run**, select your service, and click the **Edit & deploy ne
     For **backward compatibility**, use versioned API paths (`/v1/`, `/v2/`) and apply the "API evolution" principle: never remove or rename existing fields — only add new optional fields. For breaking changes, deploy a new version under a new path and maintain the old version for a deprecation window.
 
     For rate limiting, add `x-google-quota` extensions to your OpenAPI spec to define quota limits per API key or per consumer project.
-
-    > **Real-World Example:** A fintech startup exposes a payment API through Cloud Endpoints. When they introduce a new `/v2/payments` endpoint with a restructured request format, they keep `/v1/payments` running in parallel and add a deprecation notice to the API documentation. Existing partner integrations continue working unchanged. Partners are notified and given 6 months to migrate. After the deprecation window, `/v1/payments` is removed from the OpenAPI spec and redeployed. API key quotas prevent any single partner from overwhelming the service.
+**Real-world example:** A fintech startup exposes a payment API through Cloud Endpoints. When they introduce a new `/v2/payments` endpoint with a restructured request format, they keep `/v1/payments` running in parallel and add a deprecation notice to the API documentation. Existing partner integrations continue working unchanged. Partners are notified and given 6 months to migrate. After the deprecation window, `/v1/payments` is removed from the OpenAPI spec and redeployed. API key quotas prevent any single partner from overwhelming the service.
 
 *   **Apigee for Enterprise API Management:** For more advanced API management requirements — developer portals, monetisation, API analytics, or enterprise-scale traffic management — Apigee is Google Cloud's full-featured API management platform. Apigee proxies sit in front of your Cloud Run services and provide policies for transformation, caching, threat protection, and OAuth 2.0 token validation. Navigate to the **Apigee** section of the GCP Console to explore API proxy configuration. Apigee is the preferred choice for organisations managing APIs as products exposed to external developers.
 
@@ -111,6 +113,8 @@ Navigate to **Kubernetes Engine > Workloads**, select your deployment, and inspe
 
 **Real-world example:** A team deploys a Java Spring Boot application to GKE Autopilot with `memory: "256Mi"` requests. Under load, the application's JVM heap grows beyond 256 MiB and the Linux OOM killer terminates the container — causing repeated CrashLoopBackOff restarts. Increasing `memory` requests to `"512Mi"` and setting `memory` limits to `"768Mi"` resolves the restarts. The team uses **Kubernetes Engine > Workloads > Observability** to monitor actual memory usage over 24 hours, then right-size the requests based on the observed P95 usage.
 
+---
+
 ### Autoscaling and Health Checks
 **Concept:** Implementing Kubernetes health checks to ensure application availability and configuring autoscaling for cost optimisation.
 
@@ -127,6 +131,8 @@ Navigate to **Kubernetes Engine > Workloads** and select your deployment. Under 
 To observe autoscaling in action, navigate to **Kubernetes Engine > Workloads > Observability** and view the CPU utilisation chart. If utilisation exceeds the HPA target threshold (typically 80%), additional pods are scheduled within seconds.
 
 **Real-world example:** A Cloud Run-style stateless API is deployed on GKE Autopilot with HPA configured for min=2, max=20 pods at 70% CPU target. During a product launch, traffic spikes 10× in 3 minutes. HPA detects CPU utilisation exceeding 70%, scales from 2 to 14 pods over 2 minutes, and the service absorbs the traffic without degradation. After the spike, HPA gradually scales back down to 2 pods over 10 minutes (the default scale-down stabilisation window prevents thrashing). The readiness probe ensures that newly started pods only receive traffic once they have completed their warm-up sequence.
+
+---
 
 ### 💡 Additional GKE Deployment Objectives & Learning Guidelines
 
