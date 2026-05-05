@@ -1,11 +1,15 @@
+import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # User Guide
 
-<YouTubeEmbed videoId="0UefEWxQ9Rk" poster="https://storage.googleapis.com/rad-public-2b65/guides/user_guide.png" />
+<img src="https://storage.googleapis.com/rad-public-2b65/guides/user_guide.png" alt="User Guide" style={{marginBottom: '20px'}} />
 
-<br/>
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/user_guide.m4a" title="User Quick Start Audio" />
 
-<a href="https://storage.googleapis.com/rad-public-2b65/guides/user_guide.pdf" target="_blank" rel="noopener noreferrer">Download Guide PDF</a>
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/guides/user_guide.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 ## 1. Introduction
 
@@ -59,6 +63,10 @@ Manage your platform credits and costs on the **Credits** page.
 
 ### 5.2. Subscriptions
 If subscription tiers are available, you can upgrade your plan to receive a monthly allowance of credits and access to premium features.
+
+*   **Subscribe:** Select a tier on the **Subscriptions** tab and complete checkout via your chosen payment provider.
+*   **Cancel:** To stop future renewals, click the **Cancel** button on your active subscription. Your credits remain available until the end of the current billing period.
+*   **Reinstate:** Changed your mind? Click the **Reinstate** button on a cancelled subscription to resume automatic renewals before the period expires.
 
 ## 6. ROI Calculator
 

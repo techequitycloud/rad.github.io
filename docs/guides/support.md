@@ -1,22 +1,26 @@
+import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Support Guide
 
-<YouTubeEmbed videoId="Y7EiLYGQAPY" poster="https://storage.googleapis.com/rad-public-2b65/guides/support_guide.png" />
+<img src="https://storage.googleapis.com/rad-public-2b65/guides/support_guide.png" alt="Support Guide" style={{marginBottom: '20px'}} />
 
-<br/>
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/support_guide.m4a" title="Support Quick Start Audio" />
 
-<a href="https://storage.googleapis.com/rad-public-2b65/guides/support_guide.pdf" target="_blank" rel="noopener noreferrer">Download Guide PDF</a>
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/guides/support_guide.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 ## 1. Introduction
 
-Welcome to the Support User Guide. As a member of the Support team, you have enhanced visibility into the platform's operations to assist users effectively. Your primary capability is the ability to view **All Deployments** made by any user on the platform, which is essential for troubleshooting and user assistance. You also have access to the module publishing tools if your repository and Jules AI are configured.
+Welcome to the Support User Guide. As a member of the Support team, you have enhanced visibility into the platform's operations to assist users effectively. Your primary capability is the ability to view **All Deployments** made by any user on the platform, which is essential for troubleshooting and user assistance.
 
 ## 2. Your Role & Privileges
 
-The Support role is designed to help you troubleshoot user issues and assist with module management. Your navigation bar shows **Publish** (if configured), **Deployments**, and **Help**.
+The Support role is designed to help you troubleshoot user issues. Your navigation bar includes **Deployments** and **Help**. If you also hold the **Partner** role and have configured your repository, you will also see **Publish**.
 
-*   **View All Deployments:** Unlike standard users or partners, you see the deployment history for *every* user by default. This is critical for diagnosing failed builds or stuck deployments.
-*   **Module Publishing:** You can access the **Publish** feature if your GitHub repository and Jules API key have been configured in your Profile. This allows you to assist in maintaining and testing modules.
+*   **View All Deployments:** Unlike standard users, you see the deployment history for *every* user by default. This is critical for diagnosing failed builds or stuck deployments.
+*   **Module Publishing:** If you are also a Partner, you can access the **Publish** feature to assist in maintaining and testing modules.
 *   **Help Resources:** Access platform documentation, demos, workflows, guides, and features through the Help page.
 
 ## 3. Managing Deployments
@@ -31,10 +35,12 @@ Your primary workspace for support activities is the **Deployments** page.
     *   **Module Name:** Find all instances of a specific module.
 4.  **Inspect Logs:** Click on any **Deployment ID** to open the detailed view. Here you can see:
     *   **Build Logs:** Raw output from the Cloud Build and Terraform processes. Look here for error messages (e.g., "Permissions denied", "Invalid variable").
-    *   **Status History:** The timeline of the deployment's lifecycle (QUEUED, WORKING, COMPLETED, FAILED, DELETED).
+    *   **Status History:** The timeline of the deployment's lifecycle (QUEUED, WORKING, COMPLETED, FAILED, DELETED, PURGE). **PURGE** indicates an admin-initiated force-cleanup: an aggressive resource removal pipeline was triggered and the deployment record will be removed once it completes. This is distinct from a normal soft delete.
     *   **Configuration:** The specific variables the user provided.
 
 ## 4. Publishing & Updating Modules
+
+*Note: This feature requires the **Partner** role.*
 
 If your repository is configured, you can assist in maintaining the module catalog or testing fixes.
 
@@ -48,7 +54,7 @@ When a user reports an issue:
 
 1.  **Ask for the Deployment ID:** This is the fastest way to locate their specific problem.
 2.  **Search in "All Deployments":** Locate the record using the search bar.
-3.  **Check the Status:** Is it `FAILED`, `QUEUED`, or stuck in `WORKING`?
+3.  **Check the Status:** Is it `FAILED`, `QUEUED`, stuck in `WORKING`, or showing `PURGE`?
 4.  **Review Logs:** Identify the root cause (e.g., quota exceeded, bad configuration, API error).
 5.  **Advise the User:** Based on your findings, guide the user to retry with different variables or escalate the issue to Engineering/Admin if it's a platform bug.
 
