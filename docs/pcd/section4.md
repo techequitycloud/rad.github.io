@@ -7,9 +7,9 @@
 
 
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud Developer (PCD) certification explore Section 4 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
+This guide helps candidates preparing for the Google Cloud Professional Cloud Developer (PCD) certification explore Section 4 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCD objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. Variables are organised into numbered groups in the RAD UI deployment form — for example, "(Group 3)" refers to the third collapsible section of settings for that module. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCD objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
 
 ---
 
@@ -26,6 +26,8 @@ You interact with each module by configuring its variables in the RAD UI deploym
 Navigate to **Cloud Run** or **Kubernetes Engine**, select the deployment, and look at the **Volumes** configuration to see how Cloud SQL sockets and Cloud Storage buckets are mounted into the container runtime. For Cloud Run, inspect the **Edit & deploy new revision** panel and click the **Volumes** tab — you will see the Cloud SQL connection volume and the Cloud Storage FUSE volume listed alongside any Secret Manager secret volumes.
 
 **Real-world example:** A Cloud Run service connects to a Cloud SQL PostgreSQL database using the Cloud SQL Auth Proxy sidecar. The database connection string is `postgresql://app_user:${DB_PASSWORD}@/appdb?host=/cloudsql/project:region:instance`. The `DB_PASSWORD` is injected from Secret Manager as an environment variable — not hard-coded. The proxy handles IAM authentication, TLS, and connection pooling. The service account running the Cloud Run service has `roles/cloudsql.client` on the instance — the only IAM role required. No VPC peering, no SSL certificate, and no publicly exposed Cloud SQL IP address are needed.
+
+---
 
 ### Integrating with Additional Datastores
 
@@ -62,6 +64,8 @@ Navigate to **Firestore > Data** to browse collections and documents. Navigate t
 **AlloyDB Auth Proxy:**
 AlloyDB for PostgreSQL uses the **AlloyDB Auth Proxy** — conceptually identical to the Cloud SQL Auth Proxy. Deploy it as a sidecar container and connect your application via the Unix socket path `/var/run/alloydb/alloydb.sock`. The proxy handles IAM authentication and TLS. Your service account requires `roles/alloydb.client` on the AlloyDB cluster. Navigate to **AlloyDB > Clusters** to explore instance configuration, read pool replicas, and connection management.
 
+---
+
 ### 💡 Additional Data Integration Objectives & Learning Guidelines
 
 *   **Pub/Sub Messaging — Publish and Consume:** The PCD exam expects you to write application code that interacts with Pub/Sub. Practice the full publish/subscribe pattern:
@@ -94,8 +98,7 @@ AlloyDB for PostgreSQL uses the **AlloyDB Auth Proxy** — conceptually identica
     streaming_pull_future.result()  # Block until cancelled
     ```
     Message attributes (like `origin="order-service"` in the publish call above) are key-value strings attached to the message envelope — useful for routing, filtering, and dead-letter queue configuration. Navigate to **Pub/Sub > Topics** and **Pub/Sub > Subscriptions** to create topics, configure subscriptions (pull vs push), and set up dead-letter topics for messages that fail processing after a configurable number of delivery attempts.
-
-    > **Real-World Example:** An e-commerce platform decouples its order service from the fulfilment service using Pub/Sub. When a customer places an order, the order service publishes a message to the `orders` topic. Three subscribers consume from the same topic via separate subscriptions: the fulfilment service schedules the shipment, the analytics service records the transaction, and the email service sends a confirmation. If the fulfilment service is temporarily unavailable, Pub/Sub retains the message and retries delivery — the order service is unaffected. A dead-letter topic captures any message that fails after 5 delivery attempts for manual investigation.
+**Real-world example:** An e-commerce platform decouples its order service from the fulfilment service using Pub/Sub. When a customer places an order, the order service publishes a message to the `orders` topic. Three subscribers consume from the same topic via separate subscriptions: the fulfilment service schedules the shipment, the analytics service records the transaction, and the email service sends a confirmation. If the fulfilment service is temporarily unavailable, Pub/Sub retains the message and retries delivery — the order service is unaffected. A dead-letter topic captures any message that fails after 5 delivery attempts for manual investigation.
 
 *   **Cloud Storage — Reading and Writing Objects:** For applications that need programmatic Cloud Storage access (rather than FUSE mounting), use the client library:
     ```python
@@ -133,6 +136,8 @@ AlloyDB for PostgreSQL uses the **AlloyDB Auth Proxy** — conceptually identica
 **Console Exploration:**
 Navigate to **APIs & Services > Enabled APIs & services** to view all activated APIs in the project and their current usage (requests per day). Navigate to **IAM & Admin > Service Accounts** to view the application service accounts and their assigned roles. Click a service account and select the **Keys** tab — in a well-configured production environment, this list should be empty (no JSON key files in use).
 
+---
+
 ### Best Practices for Consuming Google Cloud APIs
 
 **Google Cloud Client Libraries:**
@@ -150,6 +155,8 @@ Always use the official Google Cloud client libraries rather than making raw HTT
 Navigate to **APIs & Services > API Library** and select any enabled API, then click **Try this API** to open the API Explorer. The API Explorer allows you to make authenticated API calls directly from your browser — useful for understanding request/response formats, testing field masks, and exploring API methods before writing application code.
 
 **Real-world example:** A developer is building a Cloud Run service that needs to list Compute Engine instances programmatically. They open the API Explorer for the Compute Engine API, select the `instances.list` method, enter their project ID and zone, and click Execute. The response shows the full JSON representation of each instance. They then add a `fields` parameter (field mask) to restrict the response to only `items/name,items/status` — the response is 80% smaller and the code they write models only the fields they need.
+
+---
 
 ### 💡 Additional API Consumption Objectives & Learning Guidelines
 
@@ -222,6 +229,8 @@ log("INFO", "Order processed", order_id="123", user_id="456", amount=49.99)
 
 **Real-world example:** A Cloud Run service begins returning HTTP 500 errors at 2 AM. The on-call engineer receives a Monitoring alert notification. In Logs Explorer, they filter by `severity=ERROR` and `resource.type="cloud_run_revision"` for the past hour. The structured logs reveal `"message": "Database connection timeout"` with `"db_host": "/cloudsql/..."`. Checking **Cloud SQL > Instances > Monitoring**, they see that the Cloud SQL instance hit its maximum connections limit — the Cloud Run service scaled to 50 instances, each maintaining a connection pool of 5, exceeding the 200-connection limit. The fix: reduce the connection pool size per instance and enable **PgBouncer** connection pooling on the Cloud SQL proxy.
 
+---
+
 ### Distributed Tracing with Cloud Trace and OpenTelemetry
 
 **Cloud Trace** captures latency data for individual requests as they flow through your application. Each request is assigned a unique **trace ID**; each operation within the request (e.g., a database query, an external API call, a queue publish) creates a **span** that records its start time, duration, and any errors.
@@ -257,6 +266,8 @@ Navigate to **Trace > Trace list** to view recent traces. Select a trace to see 
 
 **Real-world example:** A user reports that checkout is slow — page load takes 4 seconds. In Cloud Trace, the engineer filters to the `/checkout` endpoint and finds a 4-second trace. Opening the trace waterfall reveals the breakdown: 50ms for authentication, 200ms for the cart query, **3,700ms for the `fetch_inventory` span**. Drilling into the `fetch_inventory` span attributes shows it is calling a Spanner database. Switching to **Spanner > Query Insights**, the engineer finds the inventory query is missing an index on `product_id` — adding the index reduces the query time to 15ms, and the checkout page drops to 300ms total.
 
+---
+
 ### Error Reporting
 
 **Cloud Error Reporting** automatically aggregates and deduplicates unhandled exceptions from your application logs. When a stack trace appears in Cloud Logging (for Cloud Run, GKE, or App Engine), Error Reporting groups it with identical stack traces, counts occurrences, tracks affected users, and surfaces it in the Error Reporting dashboard.
@@ -270,6 +281,8 @@ Navigate to **Error Reporting** to view a ranked list of errors by frequency and
 Error Reporting works automatically for most runtimes (Python, Java, Node.js, Go, Ruby, PHP) — no code changes required if your application logs unhandled exceptions to stdout. For custom error reporting (e.g., handled exceptions you want to track), use the **Error Reporting API** or the `google-cloud-error-reporting` client library.
 
 **Real-world example:** After deploying a new version of a Cloud Run service, the Error Reporting dashboard shows a new error group: `KeyError: 'user_preferences'` in `profile_handler.py:142`. The stack trace reveals that the new code assumes a `user_preferences` field exists in Firestore documents, but the field is absent in documents created before the migration script ran. Error Reporting shows 12,000 occurrences affecting 3,400 users in the past hour. The team rolls back the deployment within minutes and adds a `.get("user_preferences", {})` default to handle the missing field in the fix.
+
+---
 
 ### 💡 Additional Observability Objectives & Learning Guidelines
 

@@ -7,9 +7,9 @@
 
 
 
-This guide helps candidates preparing for the Google Cloud Associate Cloud Engineer (ACE) certification explore Section 2 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
+This guide helps candidates preparing for the Google Cloud Associate Cloud Engineer (ACE) certification explore Section 2 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights ACE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. Variables are organised into numbered groups in the RAD UI deployment form — for example, "(Group 3)" refers to the third collapsible section of settings for that module. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights ACE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
 
 ---
 
@@ -25,6 +25,8 @@ You interact with each module by configuring its variables in the RAD UI deploym
 **Console Exploration:**
 Navigate to **Cloud Run** and select your deployed service. Inspect the **Revisions** tab to see the memory/CPU allocations and concurrency limits. For GKE, navigate to **Kubernetes Engine > Workloads**, find your deployment, and inspect the YAML definition of the pod to see requested resources and limits.
 
+---
+
 ### Selecting appropriate compute choices
 **Concept:** Understanding when to use serverless solutions versus Kubernetes clusters versus raw virtual machines.
 
@@ -36,19 +38,19 @@ The choice between the **App CloudRun** and **App GKE** modules reflects the com
 **Console Exploration:**
 Navigate to **Cloud Run** to see the managed serverless service. Then, navigate to **Kubernetes Engine > Clusters** to see the GKE Autopilot cluster and recognize that node provisioning is fully managed by GCP.
 
+---
+
 ### 💡 Additional Compute Objectives & Learning Guidelines
 The ACE exam also heavily covers standard Compute Engine VMs, App Engine, and Cloud Functions. These are not the primary application targets in these modules, but they are important exam topics that complement your hands-on experience with Cloud Run and GKE.
 
 *   **Compute Engine VMs:** To practice this for the exam, provision a standalone VM via the GCP Console (**Compute Engine > VM instances**). When launching an instance, pay close attention to the **availability policy** (standard vs. Spot, on-host maintenance behaviour, automatic restart) and how you configure SSH access — either via project-wide SSH keys in metadata or the recommended OS Login approach. Understand the difference between preemptible/Spot VMs and standard instances.
-
-    > **Real-World Example:** A video transcoding pipeline uses Spot VMs for batch processing — they are up to 91% cheaper than standard instances and the workload can be restarted if a VM is preempted. A web server handling live user traffic, by contrast, uses a standard VM in a Managed Instance Group to ensure availability.
+**Real-world example:** A video transcoding pipeline uses Spot VMs for batch processing — they are up to 91% cheaper than standard instances and the workload can be restarted if a VM is preempted. A web server handling live user traffic, by contrast, uses a standard VM in a Managed Instance Group to ensure availability.
 
 *   **Compute Engine Storage — Persistent Disks and Hyperdisk:** The exam tests your ability to select the right disk type for a given workload. Key options are:
     - **Zonal Persistent Disk (PD):** Replicated within a single zone. Available as Standard HDD (`pd-standard`), Balanced SSD (`pd-balanced`), and SSD (`pd-ssd`).
     - **Regional Persistent Disk:** Synchronously replicated across two zones in the same region — suitable for HA workloads that can tolerate a zone failure (e.g. a failover database replica).
     - **Google Cloud Hyperdisk:** The next generation block storage family offering higher IOPS and throughput than Persistent Disk, with independently configurable capacity and performance. Hyperdisk Extreme and Hyperdisk Throughput are designed for database and data analytics workloads. Practice by navigating to **Compute Engine > Disks** and creating a disk, noting the difference between disk types and their per-GB costs.
-
-    > **Real-World Example:** A high-traffic PostgreSQL database on Compute Engine requires consistent low-latency reads. The team selects Hyperdisk Balanced rather than `pd-ssd` to gain higher provisioned IOPS per GB and the ability to adjust IOPS without reprovisioning the disk. A secondary read replica uses a Regional Persistent Disk so that if the primary zone fails, the replica can be promoted in the secondary zone without data loss.
+**Real-world example:** A high-traffic PostgreSQL database on Compute Engine requires consistent low-latency reads. The team selects Hyperdisk Balanced rather than `pd-ssd` to gain higher provisioned IOPS per GB and the ability to adjust IOPS without reprovisioning the disk. A secondary read replica uses a Regional Persistent Disk so that if the primary zone fails, the replica can be promoted in the secondary zone without data loss.
 
 *   **Managed Instance Groups (MIGs) with instance templates:** A MIG manages a group of identical VMs created from an instance template. Practice by creating an instance template (**Compute Engine > Instance templates**), then creating a MIG from that template (**Compute Engine > Instance groups**) with autoscaling configured on CPU utilisation. MIGs support rolling updates — when you update the instance template, you can control the maximum number of unavailable instances and the maximum surge count during the rollout.
 
@@ -68,8 +70,7 @@ The ACE exam also heavily covers standard Compute Engine VMs, App Engine, and Cl
     - A **Pub/Sub** topic message published by another service.
     - A **Cloud Storage object change notification** (object finalized, deleted, etc.) via Eventarc's Audit Log-based triggers.
     Navigate to **Eventarc > Triggers** to create a trigger and map event sources to a Cloud Run target. Understanding Eventarc is increasingly important as the exam moves toward event-driven architectures on serverless platforms.
-
-    > **Real-World Example:** A document processing pipeline uses Eventarc to trigger a Cloud Run function whenever a PDF is uploaded to a Cloud Storage bucket. Eventarc detects the `google.cloud.storage.object.v1.finalized` event and invokes the Cloud Run service with the event payload — the service extracts text, calls the Document AI API, and stores results in Firestore. No polling loop is needed, and the architecture scales to zero when no documents are being processed.
+**Real-world example:** A document processing pipeline uses Eventarc to trigger a Cloud Run function whenever a PDF is uploaded to a Cloud Storage bucket. Eventarc detects the `google.cloud.storage.object.v1.finalized` event and invokes the Cloud Run service with the event payload — the service extracts text, calls the Document AI API, and stores results in Firestore. No polling loop is needed, and the architecture scales to zero when no documents are being processed.
 
 *   **App Engine:** The exam tests your ability to choose between App Engine Standard (language-specific sandboxes) and Flexible (custom containers). You can deploy a simple "Hello World" application using the `gcloud app deploy` command in Cloud Shell to understand its `app.yaml` configuration structure.
 
@@ -84,7 +85,7 @@ The ACE exam also heavily covers standard Compute Engine VMs, App Engine, and Cl
 
 **In the RAD UI:**
 *   **Cloud Storage (GCS):** The `storage_buckets` variable (Group 10 for App CloudRun, Group 17 for App GKE) dynamically provisions GCS buckets. The modules integrate GCS Fuse CSI drivers to mount these buckets directly into the running containers as if they were local directories.
-*   **Cloud Filestore (NFS):** If persistent, shared file storage is required, configure `create_filestore_nfs` (Group 6) and `filestore_tier` (Group 6) in **Services GCP**. Subsequently, enable `enable_nfs` (Group 10 for App CloudRun, Group 15 for App GKE) to mount the network filesystem to the container.
+*   **Cloud Filestore (NFS):** If persistent, shared file storage is required, configure `create_filestore_nfs` (Group 6) and `filestore_tier` (Group 6) in **GCP Services**. Subsequently, enable `enable_nfs` (Group 10 for App CloudRun, Group 15 for App GKE) to mount the network filesystem to the container.
 
 **Console Exploration:**
 Navigate to **Cloud Storage > Buckets** to see the provisioned object storage buckets. Navigate to **Filestore > Instances** to view the managed NFS instances and observe their regional availability. For GKE, navigate to **Kubernetes Engine > Storage** to view any dynamically provisioned Persistent Volume Claims (PVCs).
@@ -99,15 +100,19 @@ The exam tests your ability to select the appropriate class based on access freq
 
 **Google Cloud NetApp Volumes** is a managed enterprise file storage service that provides NFS (v3/v4.1) and SMB protocol access with workload profiles optimised for SAP, Oracle databases, and high-performance computing. Navigate to **NetApp Volumes > Volumes** in the console to explore available service levels (Standard, Premium, Extreme) and their IOPS characteristics. While the RAD platform uses Filestore for NFS, NetApp Volumes is an important alternative for enterprise workloads that require mature data management features such as snapshots, cloning, and replication.
 
+---
+
 ### Choosing and deploying relational data products
 **Concept:** Selecting managed database and caching services for stateful application requirements.
 
 **In the RAD UI:**
-*   **Cloud SQL:** In **Services GCP**, utilize variables like `create_postgres` (Group 3) and `postgres_tier` (Group 3) or `create_mysql` (Group 3) and `mysql_tier` (Group 3) to provision managed relational databases. In the application modules, toggle `enable_cloudsql_volume` (Group 3) to inject the Cloud SQL Auth Proxy sidecar, enabling secure Unix socket connections without public IP exposure.
-*   **Memorystore (Redis):** In **Services GCP**, `create_redis` (Group 5) and `redis_tier` (Group 5) configure managed in-memory caching. Set `enable_redis` (Group 14 for App CloudRun, Group 20 for App GKE) to dynamically pass the Redis host and port into the container's environment variables.
+*   **Cloud SQL:** In **GCP Services**, utilize variables like `create_postgres` (Group 3) and `postgres_tier` (Group 3) or `create_mysql` (Group 3) and `mysql_tier` (Group 3) to provision managed relational databases. In the application modules, toggle `enable_cloudsql_volume` (Group 3) to inject the Cloud SQL Auth Proxy sidecar, enabling secure Unix socket connections without public IP exposure.
+*   **Memorystore (Redis):** In **GCP Services**, `create_redis` (Group 5) and `redis_tier` (Group 5) configure managed in-memory caching. Set `enable_redis` (Group 14 for App CloudRun, Group 20 for App GKE) to dynamically pass the Redis host and port into the container's environment variables.
 
 **Console Exploration:**
 Navigate to **SQL** to review the managed PostgreSQL or MySQL instances, noting their high-availability configuration. Navigate to **Memorystore** to see the Redis cluster and its network endpoints.
+
+---
 
 ### 💡 Additional Storage & Data Objectives & Learning Guidelines
 The ACE exam requires understanding the full breadth of Google Cloud data products — from NoSQL and global relational databases to streaming and batch analytics. These services complement the Cloud SQL and Memorystore you've already deployed.
@@ -115,8 +120,7 @@ The ACE exam requires understanding the full breadth of Google Cloud data produc
 *   **AlloyDB for PostgreSQL:** A fully managed, PostgreSQL-compatible database optimised for high-performance analytical and transactional (HTAP) workloads. AlloyDB delivers up to 4× the throughput of standard PostgreSQL and supports in-database ML inference. Navigate to **AlloyDB > Clusters** to explore the cluster/instance model. Choose AlloyDB over Cloud SQL when workloads require higher query performance on standard PostgreSQL without switching database engines.
 
 *   **Cloud Spanner:** The globally scalable, strongly consistent relational database. Practice by creating a small Spanner instance in the console, noting the node/processing unit configuration and regional/multi-regional setup.
-
-    > **Real-World Example:** A global retail platform processing financial transactions chooses Cloud Spanner over Cloud SQL because it provides external consistency (serialisable isolation) across multiple regions simultaneously — critical when inventory updates and order confirmations must be atomically consistent across a US and EU data centre with no replication lag.
+**Real-world example:** A global retail platform processing financial transactions chooses Cloud Spanner over Cloud SQL because it provides external consistency (serialisable isolation) across multiple regions simultaneously — critical when inventory updates and order confirmations must be atomically consistent across a US and EU data centre with no replication lag.
 
 *   **Firestore / Datastore:** The serverless document database. In the console, initialize Firestore in Native mode and practice adding a few documents and collections to understand the NoSQL structure. Firestore is ideal for user profile data, real-time collaboration features, and mobile app backends where schema flexibility and low-latency reads are more important than complex joins.
 
@@ -125,12 +129,10 @@ The ACE exam requires understanding the full breadth of Google Cloud data produc
 *   **BigQuery:** The serverless data warehouse. Practice loading a CSV file from Cloud Storage into a BigQuery table and running a simple SQL query. BigQuery integrates natively with Cloud Logging exports and Cloud Billing exports (as explored in Section 1), making it the central analytics hub for operational data across your GCP environment.
 
 *   **Pub/Sub:** The fully managed, asynchronous messaging service that decouples producers from consumers. A publisher sends messages to a **topic**; one or more **subscriptions** deliver those messages to consumers (push to an endpoint, or pull from the service). Navigate to **Pub/Sub > Topics** and practice creating a topic, a subscription, and publishing a test message via the console. Pub/Sub is the backbone of event-driven architectures and integrates directly with Eventarc, Dataflow, Cloud Functions, and BigQuery subscriptions.
-
-    > **Real-World Example:** An order management system publishes an event to a Pub/Sub topic every time an order is placed. Three downstream subscribers process the event independently: a fulfilment service, a billing service, and an analytics pipeline. Because Pub/Sub is asynchronous, the order service does not wait for any downstream system — if the billing service is briefly unavailable, its subscription simply accumulates messages and processes them when service resumes.
+**Real-world example:** An order management system publishes an event to a Pub/Sub topic every time an order is placed. Three downstream subscribers process the event independently: a fulfilment service, a billing service, and an analytics pipeline. Because Pub/Sub is asynchronous, the order service does not wait for any downstream system — if the billing service is briefly unavailable, its subscription simply accumulates messages and processes them when service resumes.
 
 *   **Dataflow:** The fully managed Apache Beam-based service for both streaming and batch data processing pipelines. Common use cases include ETL, real-time data enrichment, and analytics aggregation. Navigate to **Dataflow > Jobs** and explore the available templates (e.g. *Pub/Sub to BigQuery*) to understand how Dataflow reads from a source, transforms data, and writes to a sink — all without managing infrastructure.
-
-    > **Real-World Example:** A streaming analytics pipeline reads click events from Pub/Sub, applies windowed aggregations (e.g. count of page views per 5-minute window per user), and writes results to BigQuery for dashboarding. The same Dataflow pipeline can be used for daily batch reprocessing of historical data by pointing it at a Cloud Storage source instead of Pub/Sub.
+**Real-world example:** A streaming analytics pipeline reads click events from Pub/Sub, applies windowed aggregations (e.g. count of page views per 5-minute window per user), and writes results to BigQuery for dashboarding. The same Dataflow pipeline can be used for daily batch reprocessing of historical data by pointing it at a Cloud Storage source instead of Pub/Sub.
 
 *   **Google Cloud Managed Service for Apache Kafka:** A fully managed, cloud-native Kafka service that eliminates the operational overhead of running Kafka clusters. It is fully compatible with the Apache Kafka API, making it a drop-in replacement for self-managed Kafka. Navigate to **Managed Service for Apache Kafka > Clusters** to explore the cluster configuration options. Use it when migrating an existing Kafka-based architecture to Google Cloud without changing application code, or when your team has strong Kafka expertise and needs high-throughput, low-latency message streaming with Kafka semantics.
 
@@ -146,13 +148,15 @@ The ACE exam requires understanding the full breadth of Google Cloud data produc
 ### Creating a VPC with subnets
 **Concept:** Establishing a custom Virtual Private Cloud network that all resources share, with subnets partitioned by region and purpose.
 
-**In the RAD UI (Services GCP):**
+**In the RAD UI (GCP Services):**
 The `network_name` (Group 2) and `availability_regions` variables create a **custom-mode VPC** — one where subnets are explicitly defined rather than automatically created in every region. Custom-mode VPCs are the recommended configuration for production environments because they give you full control over IP ranges and prevent accidental overlap.
 
 The modules deploy all resources into a single VPC. In larger organisations, a **Shared VPC** architecture is used instead: one **host project** owns the VPC network and subnets, and multiple **service projects** attach to it. This allows central network governance (firewall rules, routing, subnet allocation) by a network team while application teams deploy into their own service projects with their own IAM boundaries. Navigate to **VPC network > Shared VPC** to understand the host/service project relationship.
 
 **Console Exploration:**
 Navigate to **VPC network > VPC networks** to see the custom-mode VPC and its subnets. Go to **VPC network > VPC network peering** to review the Private Service Access peering connection to Google's managed services network (note: this is distinct from Private Service Connect, which provides private endpoints for Google APIs). In Cloud Run, check the **Networking** tab of your service to verify the VPC egress configuration.
+
+---
 
 ### Creating and applying Cloud NGFW policies
 **Concept:** Enforcing network security at scale with hierarchical, tag-based firewall policies rather than per-VPC firewall rules.
@@ -169,13 +173,17 @@ Navigate to **VPC network > Firewall policies** to explore Network Firewall Poli
 
 **Real-world example:** A security team creates an Organisation Firewall Policy that denies all ingress on port 22 (SSH) from `0.0.0.0/0`, preventing any project team from accidentally exposing SSH to the internet. They then add a higher-priority rule that permits SSH from the corporate IP range using a Secure Tag — only VMs that have been granted the `allow-ssh` Secure Tag by a network administrator can receive SSH traffic from that range. Individual project teams cannot override this policy or self-assign the Secure Tag.
 
+---
+
 ### Establishing network connectivity
 **Concept:** Securely connecting applications to resources within a private VPC and to external networks.
 
 **In the RAD UI:**
-*   **Services GCP:** `availability_regions` (Group 2) and `subnet_cidr_range` (Group 2) define the core VPC. Private Service Access automatically peers managed services like Cloud SQL and Memorystore to this private network.
+*   **GCP Services:** `availability_regions` (Group 2) and `subnet_cidr_range` (Group 2) define the core VPC. Private Service Access automatically peers managed services like Cloud SQL and Memorystore to this private network.
 *   **App CloudRun:** `vpc_egress_setting` (Group 4) configures Direct VPC Egress, allowing the serverless container to securely access internal resources like the database via internal IP addresses.
 *   **App GKE:** Uses native Kubernetes networking, but `enable_network_segmentation` (Group 9) can enforce network policies to restrict internal pod-to-pod communication.
+
+---
 
 ### Choosing and deploying load balancers
 **Concept:** Distributing global traffic, terminating SSL, and providing edge security.
@@ -189,6 +197,8 @@ Navigate to **Network Services > Load balancing**. Inspect the Frontend to see t
 
 **Real-world example:** A global e-commerce application uses a Global External Application Load Balancer. A customer in Tokyo hits the same IP address as a customer in London — the global anycast routing directs each to the nearest Google Point of Presence, reducing latency. A Cloud Armor preconfigured WAF rule blocks SQL injection attempts before they reach the Cloud Run backend. During a DDoS incident, the operations team uses Cloud Armor's adaptive protection feature to automatically generate a rate-limiting rule in response to detected attack patterns.
 
+---
+
 ### Differentiating Network Service Tiers
 **Concept:** Understanding how Google Cloud routes traffic and how Premium vs Standard Tier affects latency, cost, and SLA.
 
@@ -198,14 +208,15 @@ Google Cloud offers two **Network Service Tiers** for egress traffic:
 
 Navigate to **VPC network > Network Service Tiers** to view the project-level default tier and understand how to configure per-resource overrides. Note that Cloud Armor, the Global External Application Load Balancer (used by App CloudRun and App GKE), and global Anycast IPs always use Premium Tier.
 
+---
+
 ### 💡 Additional Networking Objectives & Learning Guidelines
 The ACE exam tests hybrid connectivity and advanced VPC routing.
 
 *   **Cloud VPN & Cloud Interconnect:** These connect on-premises networks to GCP. While hard to simulate without an on-prem environment, review the console for **Hybrid Connectivity > VPN**. Understand the difference between Classic VPN and HA VPN (which requires BGP dynamic routing). HA VPN requires Cloud Router for BGP session management and provides 99.99% availability SLA.
+**Real-world example:** A company migrating to GCP keeps its Active Directory and legacy ERP system on-premises during a multi-year migration. HA VPN (two tunnel pairs for 99.99% SLA) provides a persistent encrypted connection between the on-premises data centre and the GCP VPC, allowing cloud-hosted workloads to query the legacy database until the migration is complete. Dedicated Interconnect is chosen once traffic exceeds 1 Gbps to reduce egress costs.
 
-    > **Real-World Example:** A company migrating to GCP keeps its Active Directory and legacy ERP system on-premises during a multi-year migration. HA VPN (two tunnel pairs for 99.99% SLA) provides a persistent encrypted connection between the on-premises data centre and the GCP VPC, allowing cloud-hosted workloads to query the legacy database until the migration is complete. Dedicated Interconnect is chosen once traffic exceeds 1 Gbps to reduce egress costs.
-
-*   **Cloud DNS & Cloud NAT:** Cloud NAT is provisioned in Services GCP to give private instances outbound internet access without exposing them on a public IP. Explicitly review it under **Network services > Cloud NAT**. Practice creating a Private DNS zone under **Network services > Cloud DNS** — private zones resolve hostnames only within your VPC, allowing internal services to be addressed by name (e.g. `db.internal.example.com`) rather than by IP address.
+*   **Cloud DNS & Cloud NAT:** Cloud NAT is provisioned in GCP Services to give private instances outbound internet access without exposing them on a public IP. Explicitly review it under **Network services > Cloud NAT**. Practice creating a Private DNS zone under **Network services > Cloud DNS** — private zones resolve hostnames only within your VPC, allowing internal services to be addressed by name (e.g. `db.internal.example.com`) rather than by IP address.
 
 ---
 
@@ -219,11 +230,12 @@ The RAD platform deployment portal completely abstracts the underlying Infrastru
 While you don't write the declarative configuration directly, the principles of IaC—idempotent deployments, state management, and declarative resource definitions—power every action.
 
 *   **Custom Implementations:** If your organization needs to build upon this foundation outside the portal, these modules serve as robust reference architectures. Teams can configure remote state backends (e.g., in a GCS bucket) and orchestrate deployments via Cloud Build triggers or Cloud Deploy pipelines by passing the exact same variable configurations you see in the UI into the deployment environment.
-
-    > **Real-World Example:** A platform team manages 20 microservices across three environments (dev, staging, prod). They store Terraform state in a GCS bucket with versioning enabled, and use a Cloud Build trigger connected to their source repository to automatically run `terraform plan` on every pull request and `terraform apply` on merge to main. This gives them a fully auditable, repeatable infrastructure deployment process without any manual console interaction.
+**Real-world example:** A platform team manages 20 microservices across three environments (dev, staging, prod). They store Terraform state in a GCS bucket with versioning enabled, and use a Cloud Build trigger connected to their source repository to automatically run `terraform plan` on every pull request and `terraform apply` on merge to main. This gives them a fully auditable, repeatable infrastructure deployment process without any manual console interaction.
 
 **Console Exploration:**
 Navigate to **Cloud Build > History** to see the automated pipelines executing the IaC deployments. Observe the logs to see how variables from the UI are applied to construct the resulting GCP resources predictably and consistently.
+
+---
 
 ### 💡 Additional IaC Objectives & Learning Guidelines
 The ACE exam tests knowledge of the full Google Cloud IaC toolchain, including tools beyond Terraform.

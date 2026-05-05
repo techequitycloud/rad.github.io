@@ -7,9 +7,9 @@
 
 
 
-This guide helps candidates preparing for the Google Cloud Associate Cloud Engineer (ACE) certification explore Section 3 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
+This guide helps candidates preparing for the Google Cloud Associate Cloud Engineer (ACE) certification explore Section 3 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights ACE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. Variables are organised into numbered groups in the RAD UI deployment form — for example, "(Group 3)" refers to the third collapsible section of settings for that module. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights ACE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
 
 ---
 
@@ -27,6 +27,8 @@ In the GCP Console, navigate to **Cloud Build > Triggers** to see the configured
 
 **Real-world example:** A development team merges a feature branch into `main`. The Cloud Build trigger fires, builds the container image, pushes it to Artifact Registry, and creates a new Cloud Deploy release targeting the `dev` stage. Automated integration tests pass, and the release is automatically promoted to `staging`. A manual approval gate in Cloud Deploy requires the engineering manager to review test results before the release is promoted to `prod` — providing a human checkpoint before production traffic is affected.
 
+---
+
 ### Adjusting application traffic splitting parameters
 **Concept:** Safely routing user traffic between different versions of an application to minimize deployment risk.
 
@@ -39,6 +41,8 @@ Navigate to **Cloud Run** in the GCP Console, select the deployed service, and c
 
 **Real-world example:** A team releases a new checkout page redesign. They deploy it as a new Cloud Run revision but route only 5% of traffic to it using `traffic_split`. Cloud Monitoring dashboards show the new revision's error rate is identical to the stable version. After 30 minutes, traffic is shifted to 50%, then 100% — all with zero downtime. If the error rate had spiked on the new revision, the team would have instantly redirected 100% of traffic back to the previous revision with a single variable change.
 
+---
+
 ### Configuring autoscaling for an application
 **Concept:** Tuning concurrency and instance counts to handle load efficiently while controlling costs.
 
@@ -48,6 +52,8 @@ Navigate to **Cloud Run** in the GCP Console, select the deployed service, and c
 
 **Console Exploration:**
 Still in the **Revisions** tab of your Cloud Run service in the Console, inspect the autoscaling and concurrency settings. For GKE, navigate to **Kubernetes Engine > Workloads**, select the deployment, and view the **Autoscaling** tab to see current CPU/Memory targets driving the HPA.
+
+---
 
 ### 💡 Additional Compute Management Objectives & Learning Guidelines
 The ACE exam extensively tests manual VM management, GKE operations, snapshots, and manual Kubernetes scaling.
@@ -63,12 +69,10 @@ The ACE exam extensively tests manual VM management, GKE operations, snapshots, 
     - Create a snapshot: **Compute Engine > Snapshots > Create snapshot**, or `gcloud compute disks snapshot <disk-name> --snapshot-names=<name>`.
     - Schedule automated snapshots: **Compute Engine > Snapshots > Snapshot schedules** — configure hourly, daily, or weekly snapshots with a retention policy.
     - Create a custom image from a snapshot or existing disk: **Compute Engine > Images > Create image**.
-
-    > **Real-World Example:** Before patching a production VM, an operations team creates an on-demand snapshot. The patch is applied and tested. If the patch causes instability, the team creates a new disk from the snapshot and attaches it to a replacement VM — restoring the system to its pre-patch state within minutes, without relying on a full OS reinstallation.
+**Real-world example:** Before patching a production VM, an operations team creates an on-demand snapshot. The patch is applied and tested. If the patch causes instability, the team creates a new disk from the snapshot and attaches it to a replacement VM — restoring the system to its pre-patch state within minutes, without relying on a full OS reinstallation.
 
 *   **Compute Engine VMs & MIGs:** Practice creating a Managed Instance Group via the **Compute Engine > Instance groups** console. Configure an autoscaling policy based on CPU utilization. Practice connecting to a VM using OS Login or Identity-Aware Proxy (IAP) TCP forwarding.
-
-    > **Real-World Example:** A web application uses a MIG with autoscaling set to maintain 60% average CPU utilisation. During a flash sale, traffic spikes 10× and the MIG automatically scales from 2 to 18 instances within minutes, then scales back down as traffic subsides — all without manual intervention and with costs proportional to actual demand.
+**Real-world example:** A web application uses a MIG with autoscaling set to maintain 60% average CPU utilisation. During a flash sale, traffic spikes 10× and the MIG automatically scales from 2 to 18 instances within minutes, then scales back down as traffic subsides — all without manual intervention and with costs proportional to actual demand.
 
 *   **Viewing current running GKE cluster inventory:** Use `kubectl get nodes`, `kubectl get pods -A` (all namespaces), and `kubectl get services -A` to list the full cluster inventory. In the GCP Console, navigate to **Kubernetes Engine > Clusters** and click into your cluster to see Nodes, Workloads, and Services tabs.
 
@@ -100,12 +104,13 @@ Navigate to **Cloud Storage > Buckets**. Click into a bucket and explore:
 - **Protection tab:** Enable **Versioning** (keeps previous versions of overwritten or deleted objects) and **Retention policies** (prevents objects from being deleted before the retention period expires — useful for compliance).
 - **Lifecycle tab:** Configure transitions between storage classes and deletion rules (see below).
 
+---
+
 ### 💡 Additional Storage & Database Management Objectives & Learning Guidelines
 The ACE exam focuses heavily on object lifecycle management, data backup, querying, and cost management across the full range of Google Cloud database services.
 
 *   **Cloud Storage Object Lifecycle Management:** Navigate to **Cloud Storage > Buckets**. Practice creating a Lifecycle rule on a bucket to transition objects to Nearline storage after 30 days, and Coldline after 90 days.
-
-    > **Real-World Example:** A media company stores video uploads in a Standard storage bucket for immediate access. After 30 days, objects are automatically transitioned to Nearline (for occasional access at reduced cost), then to Coldline at 90 days, and finally deleted at 365 days. This lifecycle policy cuts long-term storage costs by over 80% compared to leaving all objects in Standard storage indefinitely.
+**Real-world example:** A media company stores video uploads in a Standard storage bucket for immediate access. After 30 days, objects are automatically transitioned to Nearline (for occasional access at reduced cost), then to Coldline at 90 days, and finally deleted at 365 days. This lifecycle policy cuts long-term storage costs by over 80% compared to leaving all objects in Standard storage indefinitely.
 
 *   **Database Backups and Restore:** The exam covers backup and restore for multiple database services:
     - **Cloud SQL:** Navigate to **SQL > Backups**. Practice creating an on-demand backup and restoring an instance from a backup. Understand point-in-time recovery (PITR) — restore to any second within the backup retention window (up to 35 days), critical for recovering from accidental data deletion.
@@ -133,8 +138,7 @@ The ACE exam focuses heavily on object lifecycle management, data backup, queryi
     - **BigQuery:** Navigate to **BigQuery > Job history** (personal or project-level) to see all queries run in the project, their duration, bytes processed, and status. Failed jobs include the error message. Use `bq ls -j` in Cloud Shell to list jobs.
 
 *   **Using Database Center to manage the Google Cloud database fleet:** Database Center is a unified dashboard for managing and monitoring all Google Cloud databases (Cloud SQL, AlloyDB, Spanner, Bigtable, Firestore, Memorystore) within a project or fleet. Navigate to **Database Center** in the console to see a consolidated view of database health, security posture, and recommended actions (such as enabling backups or applying security patches). Database Center surfaces insights from Security Command Center and Recommender to flag databases that are not following best practices.
-
-    > **Real-World Example:** A platform team manages 12 Cloud SQL instances and 3 Spanner databases across multiple projects. Rather than navigating to each service individually, they open Database Center to see a unified health dashboard showing which instances have backups disabled, which are approaching storage capacity, and which have recently failed over — all in a single view.
+**Real-world example:** A platform team manages 12 Cloud SQL instances and 3 Spanner databases across multiple projects. Rather than navigating to each service individually, they open Database Center to see a unified health dashboard showing which instances have backups disabled, which are approaching storage capacity, and which have recently failed over — all in a single view.
 
 *   **Storage Transfer Service:** Review the **Storage Transfer > Storage Transfer Service** console. Practice configuring a transfer job to move data between two GCS buckets (for example, from a source project to a backup project in a different region), or to schedule recurring transfers that keep a disaster recovery bucket in sync with your primary bucket. Storage Transfer Service handles large-scale data movement with checksums and retry logic that would be impractical with manual `gcloud storage cp` commands.
 
@@ -145,7 +149,7 @@ The ACE exam focuses heavily on object lifecycle management, data backup, queryi
 ### Adding a subnet to an existing VPC and expanding IP ranges
 **Concept:** Extending the network capacity of a VPC to accommodate new workloads or additional regions without disrupting existing resources.
 
-**In the RAD UI (Services GCP):**
+**In the RAD UI (GCP Services):**
 The `availability_regions` variable provisions subnets in each listed region. Adding a new region re-runs the module and creates the additional subnet without disturbing existing subnets. For the exam, you must also understand how to perform these operations manually.
 
 **Console Exploration and Practice:**
@@ -154,6 +158,8 @@ The `availability_regions` variable provisions subnets in each listed region. Ad
 - **Command line:** `gcloud compute networks subnets expand-ip-range <subnet-name> --region=<region> --prefix-length=<new-prefix>`
 
 **Real-world example:** A rapidly growing application team exhausts their `/24` subnet (256 addresses) as new VMs and pods are added. The network administrator expands the subnet's primary range to `/22` (1024 addresses) with a single console edit — existing resources retain their IPs, new resources can be assigned from the expanded range, and no downtime is required.
+
+---
 
 ### Reserving static external and internal IP addresses
 **Concept:** Holding a specific IP address for a resource so it persists if the resource is deleted or recreated.
@@ -166,6 +172,8 @@ Navigate to **VPC network > IP addresses**. Practice:
 - **Reserving a static external IP:** Click **Reserve external static address**, select regional or global scope, and note that global IPs are required for Global External Application Load Balancers (Premium Tier). Use `gcloud compute addresses create <name> --region=<region>` or `--global`.
 - **Reserving a static internal IP:** Select **Internal** type, choose the VPC and subnet, and optionally specify the exact IP within the subnet range. Static internal IPs are useful for resources that other services reference by IP (e.g. a database that must always be reachable at the same address).
 
+---
+
 ### Adding custom static routes in a VPC
 **Concept:** Directing traffic to specific destinations via custom next hops — for example, routing all traffic to an on-premises network through a VPN gateway.
 
@@ -177,11 +185,12 @@ Navigate to **VPC network > Routes**. Review the system-generated default routes
 
 **Real-world example:** A company connects its GCP VPC to an on-premises network via HA VPN. After the VPN tunnels are established, a custom static route is added with destination `192.168.0.0/16` (on-premises CIDR) and next hop set to the VPN gateway. GCP VMs automatically route traffic destined for on-premises addresses through the VPN tunnel rather than attempting to reach them via the internet.
 
+---
+
 ### 💡 Additional Networking Management Objectives & Learning Guidelines
 
 *   **VPC Firewall Rules and Cloud NGFW Policies:** In the RAD UI, network security is handled at the application layer (Cloud Armor, GKE Network Policies). For the exam, practice creating standard VPC firewall rules under **VPC network > Firewall rules**. Understand priority (lower number = higher priority), source/destination filters, and network tags. Cloud NGFW Firewall Policies (covered in Section 2.3) extend this with hierarchical enforcement.
-
-    > **Real-World Example:** A web application runs on Compute Engine VMs tagged `web-server`. A firewall rule allows TCP port 443 from `0.0.0.0/0` (all internet) to targets with the `web-server` tag, while a separate rule allows TCP 5432 (PostgreSQL) from the subnet CIDR to targets tagged `db-server`. This tag-based approach means adding a new VM to either tier is as simple as assigning the right tag — no IP-based rule updates are needed.
+**Real-world example:** A web application runs on Compute Engine VMs tagged `web-server`. A firewall rule allows TCP port 443 from `0.0.0.0/0` (all internet) to targets with the `web-server` tag, while a separate rule allows TCP 5432 (PostgreSQL) from the subnet CIDR to targets tagged `db-server`. This tag-based approach means adding a new VM to either tier is as simple as assigning the right tag — no IP-based rule updates are needed.
 
 *   **Cloud DNS:** Practice creating Public and Private managed zones under **Network services > Cloud DNS**. Add A, CNAME, and TXT records. Private zones are particularly important — they resolve internal hostnames only within your VPC, enabling services to reference each other by name (e.g. `api.internal.example.com`) rather than by potentially-changing IP addresses.
 
@@ -196,10 +205,12 @@ Navigate to **VPC network > Routes**. Review the system-generated default routes
 
 **In the RAD UI:**
 *   **Threshold-Based Alerts:** Both modules automatically provision synthetic uptime checks. They create threshold-based alert policies tailored to the platform using the `support_users` (Group 1) variable for notification channels. Cloud Run alerts on high latency (p95), CPU starvation, and 5xx errors. GKE alerts on pod restart loops (CrashLoopBackOff), unschedulable pods, CPU/memory usage per container, and high latency.
-*   **Infrastructure Alerts:** In `Services GCP`, `alert_cpu_threshold` (Group 17), `alert_memory_threshold` (Group 17), and `alert_disk_threshold` (Group 17) configure host-level alerts for managed databases and file systems.
+*   **Infrastructure Alerts:** In `GCP Services`, `alert_cpu_threshold` (Group 17), `alert_memory_threshold` (Group 17), and `alert_disk_threshold` (Group 17) configure host-level alerts for managed databases and file systems.
 
 **Console Exploration:**
 Navigate to **Monitoring > Alerting** in the GCP Console. Review the generated alert policies. Click into a policy to view the specific condition. Next, go to **Monitoring > Uptime checks** to see the synthetic monitoring. Finally, check **Monitoring > Dashboards** to view the custom operational dashboards provisioned for holistic visibility.
+
+---
 
 ### Configuring Cloud Monitoring custom metrics and log-based metrics
 **Concept:** Creating metrics beyond the built-in GCP metrics to surface application-specific signals.
@@ -210,6 +221,8 @@ The RAD platform provisions alert policies based on built-in metrics (Cloud Run 
 **Console Exploration:**
 - **Log-Based Metrics:** In **Logging > Logs Explorer**, construct a filter that matches specific log entries (e.g. `resource.type="cloud_run_revision" AND textPayload:"payment_declined"`). Click **Create metric** to define a counter metric that increments each time a matching log line appears. This metric is then available in Cloud Monitoring to create alert policies.
 - **Custom Metrics via API/OpenTelemetry:** Applications can write custom metrics to Cloud Monitoring using the Monitoring API or OpenTelemetry. Navigate to **Monitoring > Metrics explorer** and filter by `custom.googleapis.com/` to see any custom metrics your application emits.
+
+---
 
 ### Configuring log buckets, log analytics, and log routers
 
@@ -226,6 +239,8 @@ Navigate to **Logging > Log router** to view the default `_Default` and `_Requir
 **Log Buckets with Log Analytics:** Navigate to **Logging > Logs storage** to view log buckets. Create a custom log bucket with a longer retention period (up to 3650 days). Enable **Log Analytics** on the bucket to allow SQL queries against the log data using the **Log Analytics** view in the console — this provides BigQuery-compatible querying without exporting the data.
 
 **Real-world example:** A compliance requirement mandates that all Admin Activity audit logs be retained for 7 years. The team creates a custom log bucket with a 2557-day (7-year) retention policy and a locked retention period (prevents early deletion). A log sink routes `cloudaudit.googleapis.com/activity` logs to this bucket. The `_Required` sink continues to exist for the 400-day default — the custom sink provides the extended retention without disrupting normal log access.
+
+---
 
 ### 💡 Additional Observability Objectives & Learning Guidelines
 The ACE exam requires hands-on familiarity with the full observability stack — logging, metrics, tracing, profiling, and diagnostics tools.
@@ -246,24 +261,21 @@ The ACE exam requires hands-on familiarity with the full observability stack —
 *   **Cloud Trace:** Navigate to **Trace > Trace explorer** to visualise end-to-end request latency across microservices. Cloud Trace automatically collects traces from Cloud Run and GKE workloads when the application emits OpenTelemetry-compatible spans. The trace list shows request duration, service name, and number of spans — click on a trace to see the waterfall view of each individual span's latency contribution.
 
 *   **Cloud Profiler:** Navigate to **Profiler** to analyse CPU and memory consumption at the function level inside running applications. Profiler uses statistical sampling — it adds minimal overhead (under 1%) while collecting flame graphs showing which functions consume the most CPU or memory. It supports Go, Java, Node.js, Python, and Ruby runtimes. Profiler is particularly useful for identifying performance bottlenecks in long-running Cloud Run services or GKE workloads.
-
-    > **Real-World Example:** A Cloud Run service that processes API requests is exhibiting consistently high CPU usage, causing frequent autoscaling. An engineer enables Cloud Profiler by adding the Profiler library to the application. After an hour, the flame graph reveals that 40% of CPU time is spent in a JSON serialisation function that is called on every request — the team replaces it with a faster library, reducing CPU usage by 35% and halving the instance count.
+**Real-world example:** A Cloud Run service that processes API requests is exhibiting consistently high CPU usage, causing frequent autoscaling. An engineer enables Cloud Profiler by adding the Profiler library to the application. After an hour, the flame graph reveals that 40% of CPU time is spent in a JSON serialisation function that is called on every request — the team replaces it with a faster library, reducing CPU usage by 35% and halving the instance count.
 
 *   **Query Insights (Cloud SQL):** Navigate to **SQL > &lt;instance&gt; > Query insights** to identify slow queries, high-load queries, and query plans for PostgreSQL instances. Query Insights shows:
     - Top queries ranked by total execution time.
     - The query plan (EXPLAIN ANALYZE output) for any selected query.
     - The application tags and database user associated with each query pattern.
     This is the first tool to reach for when a Cloud SQL database is exhibiting high CPU or slow response times.
-
-    > **Real-World Example:** A Cloud SQL PostgreSQL instance's CPU utilisation has risen from 20% to 80% after a recent deployment. Query Insights reveals that a new query performing a full table scan on the `orders` table is now running 5000 times per minute. The index advisor (available within Query Insights) recommends adding a composite index on `(customer_id, created_at)` — after the index is applied, the query execution time drops from 2.3 seconds to 8 milliseconds, and CPU returns to 22%.
+**Real-world example:** A Cloud SQL PostgreSQL instance's CPU utilisation has risen from 20% to 80% after a recent deployment. Query Insights reveals that a new query performing a full table scan on the `orders` table is now running 5000 times per minute. The index advisor (available within Query Insights) recommends adding a composite index on `(customer_id, created_at)` — after the index is applied, the query execution time drops from 2.3 seconds to 8 milliseconds, and CPU returns to 22%.
 
 *   **Personalized Service Health dashboard:** Navigate to **Home > Service Health** (or search for "Service Health") to view the operational status of all Google Cloud services. The Personalized Service Health dashboard filters the global GCP status page to show only the services and regions used in your project — so instead of scanning 100+ service status entries, you see only the 8–12 services relevant to your deployment. Configure email notifications for service disruptions in regions you depend on.
 
 *   **Configuring and deploying Ops Agent:** The **Ops Agent** is the recommended unified agent for collecting logs and metrics from Compute Engine VMs. It replaces the older Stackdriver Logging and Monitoring agents. Install it on a VM by running the agent install script (available in **Monitoring > Settings > Agent installation instructions** or via the VM's Observability tab), or automate installation fleet-wide using **VM Manager OS Configuration policies**. The Ops Agent collects system metrics (CPU, disk, memory, network), application logs from standard log paths, and can be configured to scrape Prometheus-format metrics endpoints.
 
 *   **Google Cloud Managed Service for Prometheus:** Navigate to **Monitoring > Managed Prometheus** to explore the fully managed Prometheus-compatible metrics service. GKE Autopilot (as used by App GKE) supports Managed Service for Prometheus out of the box — enable it by setting `enableManagedPrometheus: true` in the GKE cluster configuration. Once enabled, applications that expose Prometheus-format metrics endpoints are automatically scraped and their metrics are queryable via PromQL in the Monitoring console. This avoids the need to operate a self-managed Prometheus deployment.
-
-    > **Real-World Example:** A GKE application exposes a `/metrics` endpoint in Prometheus format (tracking queue depth, request rates, and database pool usage). After enabling Managed Service for Prometheus on the cluster, these custom metrics appear in Cloud Monitoring within minutes — the team creates Cloud Monitoring alert policies using PromQL conditions, and the metrics feed into Grafana dashboards via the Managed Prometheus query API.
+**Real-world example:** A GKE application exposes a `/metrics` endpoint in Prometheus format (tracking queue depth, request rates, and database pool usage). After enabling Managed Service for Prometheus on the cluster, these custom metrics appear in Cloud Monitoring within minutes — the team creates Cloud Monitoring alert policies using PromQL conditions, and the metrics feed into Grafana dashboards via the Managed Prometheus query API.
 
 *   **Active Assist — resource utilisation optimisation:** Navigate to **Recommender** (search "Recommender" in the console) or view recommendations inline in the relevant service pages. Active Assist continuously analyses your GCP usage and surfaces actionable recommendations including:
     - **Idle VM recommendations:** VMs with low CPU/memory usage that may be candidates for deletion or resizing.

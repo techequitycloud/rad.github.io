@@ -7,9 +7,9 @@
 
 
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud DevOps Engineer (PDE) certification explore Section 1 of the exam. It walks you through how these concepts are practically implemented in the provided Terraform codebase (`modules/App_CloudRun` and `modules/App_GKE`). By exploring the GCP Console and corresponding code, you will gain hands-on context for these critical DevOps topics.
+This guide helps candidates preparing for the Google Cloud Professional Cloud DevOps Engineer (PDE) certification explore Section 1 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
-Three modules are relevant to this section: **App CloudRun**, which deploys serverless containerised applications on Cloud Run; **App GKE**, which deploys containerised workloads on GKE Autopilot; and **App GCP**, which provides the shared foundational infrastructure consumed by both application modules.
+You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. Variables are organised into numbered groups in the RAD UI deployment form — for example, "(Group 3)" refers to the third collapsible section of settings for that module. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PDE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
 
 ---
 
@@ -28,6 +28,8 @@ Examine `modules/App_Common/main.tf` to understand which APIs are enabled and wh
 *   Navigate to **Billing > Budgets & alerts** to see how billing budgets (configured via the `create_billing_budget` variable) provide financial governance guardrails at the project level.
 
 **Real-world example:** A financial services organization structures its Google Cloud hierarchy as: Organization → `Corp` folder → `Production` and `Non-Production` folders → individual project per application team per environment (e.g., `payments-prod`, `payments-staging`). An organization policy at the `Non-Production` folder level enforces `constraints/compute.restrictCloudRunRegion` to `us-central1` only — keeping developer experimentation costs low. A separate policy at the `Production` folder enforces `constraints/iam.disableServiceAccountKeyCreation` — preventing any JSON key files from being created in production projects. Both policies are defined in Terraform using `google_org_policy_policy` resources and applied to folders, flowing down automatically to all child projects without per-project configuration.
+
+---
 
 ### 💡 Additional Resource Hierarchy Objectives & Learning Guidelines
 
@@ -57,6 +59,8 @@ Key IaC practices demonstrated in the codebase:
 
 **Real-world example:** A platform engineering team manages 12 microservices using shared Terraform modules. Each service team configures their service via a `terraform.tfvars` file — specifying container image, min/max instances, and database size — without touching the underlying module code. When the platform team releases a new module version that adds mandatory security labels to all Cloud Run services, each service team runs `terraform apply` against the new module version. The change is tracked in the module's changelog; the Terraform plan shows exactly which resource attributes will change before any infrastructure is modified. Remote state in Cloud Storage ensures that two engineers cannot simultaneously modify the same service's infrastructure.
 
+---
+
 ### 💡 Additional Infrastructure Management Objectives & Learning Guidelines
 
 *   **Config Connector:** For teams already using Kubernetes, Config Connector allows managing GCP resources (Cloud SQL, Pub/Sub topics, IAM bindings) using Kubernetes-style YAML manifests applied via `kubectl`. Explore Config Connector documentation to understand when it complements or replaces Terraform in a GKE-centric workflow.
@@ -85,6 +89,8 @@ The codebase shows a complete CI/CD lifecycle:
 
 **Real-world example:** A retail company's Cloud Build pipeline runs on every push to the `main` branch. The pipeline: (1) builds the container image with Kaniko and tags it with the commit SHA; (2) runs `gcloud artifacts docker images scan` to check for known CVEs — the build fails if any CRITICAL vulnerabilities are found; (3) creates a Cloud Build attestation confirming the image passed the vulnerability gate; (4) creates a Cloud Deploy release targeting the `dev` stage. The dev deployment is automatic; staging requires a manual promotion in the Cloud Deploy console; production requires two approvers to confirm in the Cloud Deploy approval UI. Binary Authorization enforces that only images with a valid Cloud Build attestation can reach the production Cloud Run service — a developer cannot push an arbitrary image directly to production even with sufficient IAM permissions.
 
+---
+
 ### 💡 Additional CI/CD Architecture Objectives & Learning Guidelines
 
 *   **SLSA Supply Chain Security:** SLSA (Supply-chain Levels for Software Artifacts) is a framework for describing the integrity of a software supply chain. Cloud Build can generate SLSA Level 3 provenance — a signed statement of what was built, from what source, by what build system, with what steps. Navigate to **Artifact Registry**, select an image, and look for the SLSA provenance attestation. Understand how this provenance is used by Binary Authorization to enforce supply chain policies.
@@ -110,6 +116,8 @@ The Terraform modules use variables (`deployment_region`, `min_instance_count`, 
 *   Navigate to **Cloud Run** and compare the revision configuration (min/max instances, environment variables, concurrency) between a development service and a production service to see how the same module produces differently-tuned deployments.
 
 **Real-world example:** A SaaS company runs dev, staging, and production as three separate GCP projects (enforcing network and IAM isolation between environments). All three environments use the identical `App CloudRun` Terraform module. The dev project uses `min_instance_count = 0` (scale to zero, no cost when idle) and `max_instance_count = 2`. Production uses `min_instance_count = 3` (always-warm, no cold starts) and `max_instance_count = 50`. A new payment feature is gated behind a feature flag passed as an environment variable (`ENABLE_NEW_PAYMENT_FLOW=true`). The flag is enabled in dev and staging for testing, but left as `false` in production until the A/B test confirms the rollout is safe — all without a code change or redeployment.
+
+---
 
 ### 💡 Additional Environment Management Objectives & Learning Guidelines
 
