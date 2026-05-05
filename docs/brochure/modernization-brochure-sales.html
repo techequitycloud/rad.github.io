@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Accelerate Every Deal — The ISV Partner Pre-Sales Playbook</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --primary: #1a73e8;
+      --accent: #0d47a1;
+      --dark: #1c2b3a;
+      --mid: #4a6274;
+      --light: #f0f4f8;
+      --border: #d0dce8;
+      --white: #ffffff;
+      --gold: #f9ab00;
+      --green: #1e8e3e;
+      --teal: #00796b;
+      --red: #d93025;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.6;
+      color: var(--dark);
+      background: var(--white);
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    /* ── COVER ── */
+    .cover {
+      background: linear-gradient(150deg, #0a1a2e 0%, var(--accent) 45%, #00695c 100%);
+      min-height: 297mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 0;
+    }
+
+    .cover-top {
+      padding: 56px 60px 40px;
+    }
+
+    .cover-brand {
+      font-size: 10pt;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.65);
+      margin-bottom: 48px;
+    }
+
+    .cover h1 {
+      font-size: 38pt;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+
+    .cover-sub {
+      font-size: 15pt;
+      font-weight: 300;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 40px;
+    }
+
+    .cover-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .cover-tag {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      padding: 5px 16px;
+      font-size: 9pt;
+      color: #fff;
+    }
+
+    .cover-metrics {
+      background: rgba(0, 0, 0, 0.28);
+      padding: 24px 60px;
+      display: flex;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+
+    .cm {
+      color: #fff;
+    }
+
+    .cm-val {
+      font-size: 22pt;
+      font-weight: 700;
+      color: var(--gold);
+      display: block;
+      line-height: 1;
+    }
+
+    .cm-lbl {
+      font-size: 7.5pt;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 3px;
+    }
+
+    .cover-tagline {
+      background: rgba(0, 0, 0, 0.18);
+      padding: 20px 60px;
+    }
+
+    .cover-tagline p {
+      font-size: 13pt;
+      font-weight: 300;
+      color: rgba(255, 255, 255, 0.9);
+      font-style: italic;
+    }
+
+    .cover-footer {
+      background: rgba(0, 0, 0, 0.35);
+      padding: 20px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cover-footer-left {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 9pt;
+    }
+
+    .cover-footer-right {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 8.5pt;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── INNER PAGES ── */
+    .inner {
+      padding: 44px 56px;
+    }
+
+    .section {
+      margin-bottom: 36px;
+    }
+
+    .sh {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .sh-title {
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    .sh-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+    }
+
+    .page-title {
+      font-size: 20pt;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 6px;
+      line-height: 1.2;
+    }
+
+    .page-sub {
+      font-size: 10.5pt;
+      color: var(--mid);
+      margin-bottom: 28px;
+    }
+
+    /* ── TEXT ── */
+    p {
+      margin-bottom: 12px;
+      color: var(--dark);
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    /* ── METRIC CARDS ── */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .metrics-row-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .mc {
+      background: var(--light);
+      border-radius: 10px;
+      padding: 18px 16px;
+      border-top: 3px solid var(--primary);
+      text-align: center;
+    }
+
+    .mc-val {
+      font-size: 18pt;
+      font-weight: 700;
+      color: var(--primary);
+      display: block;
+      line-height: 1;
+    }
+
+    .mc-sub {
+      font-size: 7.5pt;
+      color: var(--mid);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 5px;
+      display: block;
+    }
+
+    .mc-gold {
+      border-top-color: var(--gold);
+    }
+
+    .mc-gold .mc-val {
+      color: #b06000;
+    }
+
+    .mc-green {
+      border-top-color: var(--green);
+    }
+
+    .mc-green .mc-val {
+      color: var(--green);
+    }
+
+    .mc-teal {
+      border-top-color: var(--teal);
+    }
+
+    .mc-teal .mc-val {
+      color: var(--teal);
+    }
+
+    /* ── TWO / THREE COL ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    .col-60-40 {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 28px;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      background: var(--white);
+    }
+
+    .card-accent {
+      border-left: 3px solid var(--primary);
+      background: var(--light);
+    }
+
+    .card-gold {
+      border-left: 3px solid var(--gold);
+      background: #fffdf0;
+    }
+
+    .card-green {
+      border-left: 3px solid var(--green);
+      background: #f0faf3;
+    }
+
+    .card-teal {
+      border-left: 3px solid var(--teal);
+      background: #e0f2f1;
+    }
+
+    .card h4 {
+      font-size: 9.5pt;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      font-size: 8.5pt;
+      color: var(--mid);
+      margin: 0;
+    }
+
+    .card-num {
+      font-size: 7pt;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight {
+      background: linear-gradient(135deg, var(--accent), var(--primary));
+      border-radius: 10px;
+      padding: 24px 28px;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+
+    .highlight h3 {
+      font-size: 13pt;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .highlight p {
+      color: rgba(255, 255, 255, 0.85);
+      margin: 0;
+      font-size: 9.5pt;
+    }
+
+    .highlight-gold {
+      background: linear-gradient(135deg, #b06000, var(--gold));
+    }
+
+    .highlight-green {
+      background: linear-gradient(135deg, #0a5c22, var(--green));
+    }
+
+    .highlight-teal {
+      background: linear-gradient(135deg, #004d40, var(--teal));
+    }
+
+    .highlight-dark {
+      background: linear-gradient(135deg, #0a2540, var(--dark));
+    }
+
+    /* ── JOURNEY / STEP FLOW ── */
+    .journey {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-bottom: 20px;
+    }
+
+    .journey-step {
+      display: flex;
+      gap: 16px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      background: var(--white);
+      align-items: flex-start;
+    }
+
+    .journey-step:first-child {
+      border-radius: 8px 8px 0 0;
+    }
+
+    .journey-step:last-child {
+      border-bottom: 1px solid var(--border);
+      border-radius: 0 0 8px 8px;
+    }
+
+    .journey-step:nth-child(even) {
+      background: var(--light);
+    }
+
+    .step-num {
+      font-size: 16pt;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1;
+      min-width: 28px;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-title {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 2px;
+    }
+
+    .step-desc {
+      font-size: 8.5pt;
+      color: var(--mid);
+    }
+
+    .step-badge {
+      font-size: 7pt;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 10px;
+      background: #e8f0fe;
+      color: var(--accent);
+      white-space: nowrap;
+      align-self: flex-start;
+      margin-top: 2px;
+    }
+
+    .step-badge-gold {
+      background: #fff8e1;
+      color: #7a4900;
+    }
+
+    .step-badge-green {
+      background: #e6f4ea;
+      color: #0a5c22;
+    }
+
+    .step-badge-teal {
+      background: #e0f2f1;
+      color: #004d40;
+    }
+
+    /* ── PHASE FLOW ── */
+    .phase-flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 20px;
+    }
+
+    .phase-step {
+      flex: 1;
+      background: var(--light);
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      text-align: center;
+    }
+
+    .phase-step:first-child {
+      border-radius: 8px 0 0 8px;
+    }
+
+    .phase-step:last-child {
+      border-radius: 0 8px 8px 0;
+    }
+
+    .phase-arrow {
+      color: var(--primary);
+      font-size: 14pt;
+      font-weight: 700;
+      padding: 0 2px;
+      flex-shrink: 0;
+    }
+
+    .phase-title {
+      font-size: 8.5pt;
+      font-weight: 700;
+      color: var(--dark);
+      display: block;
+    }
+
+    .phase-sub {
+      font-size: 7.5pt;
+      color: var(--mid);
+      display: block;
+      margin-top: 2px;
+    }
+
+    /* ── REVENUE TIER CARDS ── */
+    .tier-card {
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      background: var(--white);
+      position: relative;
+    }
+
+    .tier-card h4 {
+      font-size: 12pt;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+
+    .tier-duration {
+      font-size: 8pt;
+      color: var(--mid);
+      margin-bottom: 14px;
+      display: block;
+    }
+
+    .tier-outcome {
+      margin-top: 14px;
+      background: var(--light);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 8.5pt;
+    }
+
+    .tier-outcome strong {
+      color: var(--primary);
+    }
+
+    .tier-featured {
+      border: 2px solid var(--gold);
+    }
+
+    .tier-featured::before {
+      content: 'Highest Impact';
+      position: absolute;
+      top: -11px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gold);
+      color: var(--dark);
+      font-size: 7pt;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 12px;
+      border-radius: 10px;
+    }
+
+    /* ── REVENUE EXAMPLE BOX ── */
+    .revenue-example {
+      background: var(--light);
+      border-radius: 10px;
+      padding: 18px 20px;
+      border-left: 4px solid var(--gold);
+      margin-bottom: 16px;
+    }
+
+    .revenue-example-title {
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #7a4900;
+      margin-bottom: 8px;
+    }
+
+    .revenue-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8.5pt;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .revenue-line:last-child {
+      border-bottom: none;
+      font-weight: 700;
+      color: var(--dark);
+      padding-top: 8px;
+      margin-top: 4px;
+    }
+
+    .revenue-amount {
+      font-weight: 600;
+      color: var(--green);
+    }
+
+    /* ── TABLE ── */
+    .layer-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .layer-table th {
+      background: var(--dark);
+      color: #fff;
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 8pt;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .layer-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 9pt;
+      vertical-align: middle;
+    }
+
+    .layer-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .layer-table tr:nth-child(even) td {
+      background: var(--light);
+    }
+
+    .layer-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 7.5pt;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-blue {
+      background: #e8f0fe;
+      color: var(--accent);
+    }
+
+    .badge-gold {
+      background: #fff8e1;
+      color: #7a4900;
+    }
+
+    .badge-green {
+      background: #e6f4ea;
+      color: #0a5c22;
+    }
+
+    .badge-dark {
+      background: var(--dark);
+      color: #fff;
+    }
+
+    .badge-teal {
+      background: #e0f2f1;
+      color: #004d40;
+    }
+
+    /* ── LIST ── */
+    .bullet-list {
+      list-style: none;
+    }
+
+    .bullet-list li {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 9pt;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .bullet-list li:last-child {
+      border-bottom: none;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      min-width: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      margin-top: 4px;
+    }
+
+    .dot-blue {
+      background: var(--primary);
+    }
+
+    .dot-green {
+      background: var(--green);
+    }
+
+    .dot-teal {
+      background: var(--teal);
+    }
+
+    /* ── FOOTER BAR ── */
+    .footer-bar {
+      background: var(--dark);
+      padding: 14px 56px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .fb-left {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 8pt;
+    }
+
+    .fb-right {
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 7.5pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── UTILITY ── */
+    .cite {
+      font-size: 7pt;
+      color: var(--mid);
+      font-style: italic;
+      margin-top: 8px;
+    }
+
+    .mb-20 {
+      margin-bottom: 20px;
+    }
+
+    .mb-28 {
+      margin-bottom: 28px;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #e8f0fe;
+      color: var(--accent);
+      border-radius: 12px;
+      padding: 3px 10px;
+      font-size: 7.5pt;
+      font-weight: 600;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    .tag-gold {
+      background: #fff8e1;
+      color: #7a4900;
+    }
+
+    .tag-green {
+      background: #e6f4ea;
+      color: #0a5c22;
+    }
+
+    .tag-teal {
+      background: #e0f2f1;
+      color: #004d40;
+    }
+
+    /* ── DEMO CARD GRID ── */
+    .demo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .demo-card {
+      border-radius: 8px;
+      padding: 14px 16px;
+      background: var(--light);
+      border-left: 3px solid var(--primary);
+    }
+
+    .demo-card.gold {
+      border-left-color: var(--gold);
+    }
+
+    .demo-card.green {
+      border-left-color: var(--green);
+    }
+
+    .demo-card.teal {
+      border-left-color: var(--teal);
+    }
+
+    .demo-card h5 {
+      font-size: 9pt;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+
+    .demo-card p {
+      font-size: 8pt;
+      color: var(--mid);
+      margin: 0;
+    }
+
+    /* ── PERSONA ROW ── */
+    .persona-strip {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .persona-card {
+      background: var(--light);
+      border-radius: 8px;
+      padding: 10px 8px;
+      text-align: center;
+      border-top: 2px solid var(--border);
+    }
+
+    .persona-card.active {
+      border-top-color: var(--primary);
+    }
+
+    .persona-icon {
+      font-size: 16pt;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .persona-name {
+      font-size: 7.5pt;
+      font-weight: 700;
+      color: var(--dark);
+      display: block;
+    }
+
+    .persona-role {
+      font-size: 6.5pt;
+      color: var(--mid);
+      display: block;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 1: COVER                                                 -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="cover">
+    <div class="cover-top">
+      <div class="cover-brand">Google Cloud &nbsp;·&nbsp; ISV Partner Programme</div>
+      <h1>Accelerate<br>Every Deal</h1>
+      <div class="cover-sub">The ISV Partner Pre-Sales Playbook — Live Demos, Proof of Concept and<br>Revenue
+        Acceleration with RAD &amp; CAMP</div>
+      <div class="cover-tags">
+        <span class="cover-tag">Live Demo in &lt;2 Hours</span>
+        <span class="cover-tag">Structured POC Framework</span>
+        <span class="cover-tag">ROI Calculator</span>
+        <span class="cover-tag">Partner Revenue Share</span>
+        <span class="cover-tag">Agent Referral Commissions</span>
+        <span class="cover-tag">40+ Demo-Ready Modules</span>
+        <span class="cover-tag">Multi-Tenant SaaS Platform</span>
+      </div>
+    </div>
+    <div class="cover-metrics">
+      <div class="cm"><span class="cm-val">&lt;2 hrs</span><span class="cm-lbl">Time to Live POC</span></div>
+      <div class="cm"><span class="cm-val">40+</span><span class="cm-lbl">Demo-Ready Modules</span></div>
+      <div class="cm"><span class="cm-val">95%</span><span class="cm-lbl">Faster Than Manual</span></div>
+      <div class="cm"><span class="cm-val">3</span><span class="cm-lbl">Partner Revenue Streams</span></div>
+      <div class="cm"><span class="cm-val">6</span><span class="cm-lbl">Buyer Personas Covered</span></div>
+      <div class="cm"><span class="cm-val">13 Years</span><span class="cm-lbl">Google Partnership</span></div>
+    </div>
+    <div class="cover-tagline">
+      <p>&ldquo;Deploy a live, production-grade proof-of-concept into a client&rsquo;s own GCP project before the first
+        meeting ends — and earn revenue from every deployment that follows.&rdquo;</p>
+    </div>
+    <div class="cover-footer">
+      <div class="cover-footer-left">May 2026 &nbsp;·&nbsp; https://radmodules.dev</div>
+      <div class="cover-footer-right">Partner Confidential</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 2: THE PRE-SALES PROBLEM & THE RAD ANSWER               -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="page-break">
+    <div class="inner">
+      <div class="section">
+        <div class="sh">
+          <div class="sh-title">The Pre-Sales Challenge</div>
+          <div class="sh-line"></div>
+        </div>
+        <div class="page-title">Why Modernization Deals Stall</div>
+        <div class="page-sub">Three friction points destroy pipeline velocity — and the gap between partners who solve
+          them and those who don't is widening fast</div>
+
+        <div class="two-col mb-28">
+          <div>
+            <div class="sh">
+              <div class="sh-title">Where ISV Partners Lose Deals</div>
+              <div class="sh-line"></div>
+            </div>
+
+            <div class="card card-accent mb-20">
+              <div class="card-num">Friction 01 &mdash; Proof of Concept Speed</div>
+              <h4>POC environments take 3–5 days to build — per application</h4>
+              <p>A meaningful modernization POC touches VPC, IAM, CI/CD, databases, observability, security controls and
+                a deployed application simultaneously. Getting all of that production-grade before a client can evaluate
+                it burns days of senior consultant time — time you are paying for before a deal is signed. Prospects
+                lose patience. Competitors move faster.</p>
+            </div>
+
+            <div class="card card-gold mb-20">
+              <div class="card-num">Friction 02 &mdash; Repeatability</div>
+              <h4>Every POC starts from a blank page</h4>
+              <p>Without a standardised demo and POC platform, each consultant builds environments differently.
+                Knowledge is trapped in individuals. Best practices are not enforced. Each new deal requires the same
+                expensive ramp-up — and the quality of your proof varies with the experience of whoever happens to be
+                staffed that week.</p>
+            </div>
+
+            <div class="card" style="border-left: 3px solid var(--red); background: #fef6f5;">
+              <div class="card-num" style="color: var(--red);">Friction 03 &mdash; Business Case Clarity</div>
+              <h4>Buyers need numbers — and most partners can't provide them</h4>
+              <p>Decision-makers approve cloud modernization investments on ROI, not architecture diagrams. Without a
+                credible, client-specific business case — quantifying time saved, cost reduced, and risk mitigated —
+                deals stall in procurement. Partners who arrive with proof arrive with power.</p>
+            </div>
+          </div>
+
+          <div>
+            <div class="sh">
+              <div class="sh-title">The RAD Answer</div>
+              <div class="sh-line"></div>
+            </div>
+
+            <div class="highlight mb-20">
+              <h3>The Pre-Sales Platform Your Competitors Don't Have</h3>
+              <p>RAD transforms your pre-sales capability from a liability into a competitive weapon. Deploy a
+                production-grade, fully configured GCP environment into a prospect's own project in under 2 hours —
+                during your first technical meeting. Walk out of the room with a live POC running, not a slide deck
+                promising one.</p>
+            </div>
+
+            <div class="sh">
+              <div class="sh-title">The Proof Hierarchy</div>
+              <div class="sh-line"></div>
+            </div>
+
+            <div class="journey mb-20">
+              <div class="journey-step">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                  <div class="step-title">Discovery Meeting</div>
+                  <div class="step-desc">Assess CAMP maturity, identify modernization targets, review the DORA
+                    baseline — and show RAD live in the meeting</div>
+                </div>
+                <span class="step-badge">~2 hours</span>
+              </div>
+              <div class="journey-step">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                  <div class="step-title">Technical Workshop</div>
+                  <div class="step-desc">Deploy a live RAD module into the client's own GCP project, demonstrate
+                    AI-assisted analysis with Claude Code, show Jules in their repos</div>
+                </div>
+                <span class="step-badge step-badge-gold">Half day</span>
+              </div>
+              <div class="journey-step">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                  <div class="step-title">Structured POC</div>
+                  <div class="step-desc">Full CAMP-aligned pilot — measurable DORA improvement, production-ready IDP,
+                    quantified ROI, team certification initiated</div>
+                </div>
+                <span class="step-badge step-badge-green">4–8 weeks</span>
+              </div>
+              <div class="journey-step">
+                <div class="step-num">4</div>
+                <div class="step-content">
+                  <div class="step-title">Commercial Expansion</div>
+                  <div class="step-desc">Results from POC drive programme-scale commitment; Jules continues improving
+                    the platform between engagements — no knowledge loss</div>
+                </div>
+                <span class="step-badge step-badge-teal">Ongoing</span>
+              </div>
+            </div>
+
+            <div class="card card-teal">
+              <h4>The fundamental shift RAD creates</h4>
+              <p>Your competitors arrive with a proposal. You arrive with a running production-grade system — in the
+                client's own cloud account, with their own data, under their own control. That asymmetry closes
+                deals.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="fb-left">Accelerate Every Deal: The ISV Partner Pre-Sales Playbook &nbsp;·&nbsp;
+        https://radmodules.dev</div>
+      <div class="fb-right">Page 2</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 3: THE PRE-SALES TOOLKIT                                 -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="page-break">
+    <div class="inner">
+      <div class="section">
+        <div class="sh">
+          <div class="sh-title">The Pre-Sales Toolkit</div>
+          <div class="sh-line"></div>
+        </div>
+        <div class="page-title">Everything You Need to Win, in One Platform</div>
+        <div class="page-sub">RAD is not just an infrastructure tool — it is a complete pre-sales system, from the
+          first meeting through to a signed contract</div>
+
+        <!-- Toolkit table -->
+        <table class="layer-table mb-20">
+          <thead>
+            <tr>
+              <th style="width:18%">Tool</th>
+              <th style="width:25%">What It Does</th>
+              <th style="width:30%">How You Use It in Pre-Sales</th>
+              <th style="width:27%">Client Impact</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="layer-badge badge-blue">Live Demo</span></td>
+              <td><strong>40+ instant demo environments</strong> — deploy any module into a live GCP project in under 2
+                hours</td>
+              <td>Run during the first technical meeting. Client watches their own GCP Console light up with
+                production-grade infrastructure in real time</td>
+              <td>Eliminates "we'll get back to you with a prototype" — the POC IS the first meeting</td>
+            </tr>
+            <tr>
+              <td><span class="layer-badge badge-gold">ROI Calculator</span></td>
+              <td><strong>Interactive business case tool</strong> — input client's own numbers; output a quantified
+                annual savings figure with supporting metrics</td>
+              <td>Run before or during the workshop. Input the client's deployment frequency, engineering cost and
+                hours saved — generate a signed-off business case on the spot</td>
+              <td>Transforms the conversation from "interesting technology" to "approved budget"</td>
+            </tr>
+            <tr>
+              <td><span class="layer-badge badge-green">Claude Code</span></td>
+              <td><strong>AI legacy codebase analysis</strong> — analyses the client's existing repositories and
+                produces discovery outputs in hours</td>
+              <td>Point Claude at a client's legacy codebase during Assess phase. Walk out with dependency maps,
+                migration architecture, and test suite proposals a week ahead of any competitor</td>
+              <td>Compresses discovery from 2–3 weeks to hours — demonstrating technical superiority before the
+                contract is signed</td>
+            </tr>
+            <tr>
+              <td><span class="layer-badge badge-teal">Jules</span></td>
+              <td><strong>Autonomous AI execution</strong> — runs continuously in client GitHub repos between consultant
+                sessions</td>
+              <td>Connect Jules to the client's repo during the Workshop. It begins working immediately — opening PRs,
+                bumping dependencies, generating tests. Show progress at the next meeting without booking a consultant
+                day</td>
+              <td>Demonstrates ongoing value between client sessions — without additional engagement cost to you or
+                them</td>
+            </tr>
+            <tr>
+              <td><span class="layer-badge badge-dark">Multi-Persona Demos</span></td>
+              <td><strong>Six role-specific demo flows</strong> — Admin, Finance, Partner, Support, Agent and User —
+                each with video walkthroughs and guided scripts</td>
+              <td>Match the demo to the room. CTO sees the technical architecture. CFO sees the ROI dashboard and
+                invoice export. Head of Platform sees the DORA improvement metrics</td>
+              <td>Every stakeholder in the room sees their specific value — no generic pitch</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="two-col mb-20">
+          <div>
+            <div class="sh">
+              <div class="sh-title">Vertical-Specific Demo Modules</div>
+              <div class="sh-line"></div>
+            </div>
+            <p style="font-size:8.5pt; color: var(--mid); margin-bottom: 12px;">Deploy a demo that matches your
+              prospect's industry — out of the box, no custom build required:</p>
+
+            <div class="demo-grid">
+              <div class="demo-card">
+                <h5>Healthcare</h5>
+                <p>OpenEMR: HIPAA-aligned EHR with private DB, encrypted storage, audit logging — live in minutes</p>
+              </div>
+              <div class="demo-card gold">
+                <h5>Education</h5>
+                <p>Moodle LMS: Scale to thousands of concurrent learners; Cloud Scheduler automation; PDF annotation
+                  support</p>
+              </div>
+              <div class="demo-card green">
+                <h5>Financial Services</h5>
+                <p>Cyclos community banking platform; Bank of Anthos 12-factor microservices reference architecture</p>
+              </div>
+              <div class="demo-card teal">
+                <h5>Enterprise Operations</h5>
+                <p>Odoo 18 ERP: CRM, accounting, inventory, manufacturing — unified on Cloud Run in under 2 hours</p>
+              </div>
+              <div class="demo-card">
+                <h5>AI / LLM</h5>
+                <p>Ollama + RAGFlow + Flowise: Privacy-first local LLM stack with RAG on client's own data</p>
+              </div>
+              <div class="demo-card gold">
+                <h5>Workflow Automation</h5>
+                <p>N8N AI, Kestra, Node-RED, Activepieces: Intelligent process automation with AI node integration</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="sh">
+              <div class="sh-title">The ROI Calculator in Action</div>
+              <div class="sh-line"></div>
+            </div>
+            <div class="highlight highlight-teal mb-20" style="padding: 18px 22px;">
+              <h3 style="font-size: 11pt;">Turn Numbers Into Signatures</h3>
+              <p>Enter the client's own figures: deployments per month, average engineer hours per deployment, hourly
+                engineering cost. The calculator returns annual savings, efficiency gain percentage and payback
+                period — ready to drop into an approval email.</p>
+            </div>
+
+            <div class="revenue-example">
+              <div class="revenue-example-title">Example: Mid-Size Financial Services Client</div>
+              <div class="revenue-line">
+                <span>Monthly deployments</span>
+                <span>50 apps</span>
+              </div>
+              <div class="revenue-line">
+                <span>Manual time per deployment</span>
+                <span>16 hrs (2 days)</span>
+              </div>
+              <div class="revenue-line">
+                <span>RAD time per deployment</span>
+                <span>&lt;2 hrs</span>
+              </div>
+              <div class="revenue-line">
+                <span>Engineering cost</span>
+                <span>£75 / hr</span>
+              </div>
+              <div class="revenue-line">
+                <span>Monthly savings</span>
+                <span class="revenue-amount">£52,500</span>
+              </div>
+              <div class="revenue-line">
+                <span><strong>Projected annual savings</strong></span>
+                <span class="revenue-amount">£630,000+</span>
+              </div>
+            </div>
+            <div class="cite">Figures generated by the RAD ROI Calculator using client-specific inputs.
+              Independently verifiable against GCP billing data after POC.</div>
+          </div>
+        </div>
+
+        <!-- Persona strip -->
+        <div class="sh">
+          <div class="sh-title">Six Buyer Personas — One Demo Platform</div>
+          <div class="sh-line"></div>
+        </div>
+        <div class="persona-strip">
+          <div class="persona-card active">
+            <span class="persona-icon">👔</span>
+            <span class="persona-name">Admin</span>
+            <span class="persona-role">Global config, user management, module publishing</span>
+          </div>
+          <div class="persona-card active">
+            <span class="persona-icon">💰</span>
+            <span class="persona-name">Finance</span>
+            <span class="persona-role">Billing, subscription tiers, revenue reports, invoice export</span>
+          </div>
+          <div class="persona-card active">
+            <span class="persona-icon">🤝</span>
+            <span class="persona-name">Partner</span>
+            <span class="persona-role">Module publishing, GitHub integration, Jules AI, revenue tracking</span>
+          </div>
+          <div class="persona-card active">
+            <span class="persona-icon">🎯</span>
+            <span class="persona-name">Agent</span>
+            <span class="persona-role">Referral links, commission dashboards, revenue CSV export</span>
+          </div>
+          <div class="persona-card active">
+            <span class="persona-icon">🛠️</span>
+            <span class="persona-name">Support</span>
+            <span class="persona-role">All-deployments visibility, log access, troubleshooting</span>
+          </div>
+          <div class="persona-card active">
+            <span class="persona-icon">🚀</span>
+            <span class="persona-name">User</span>
+            <span class="persona-role">Self-service deploy, real-time logs, credits, outputs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="fb-left">Accelerate Every Deal: The ISV Partner Pre-Sales Playbook &nbsp;·&nbsp;
+        https://radmodules.dev</div>
+      <div class="fb-right">Page 3</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 4: THE PARTNER REVENUE MODEL                             -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="page-break">
+    <div class="inner">
+      <div class="section">
+        <div class="sh">
+          <div class="sh-title">Partner Revenue Model</div>
+          <div class="sh-line"></div>
+        </div>
+        <div class="page-title">A Business Model That Compounds</div>
+        <div class="page-sub">Most consulting partnerships pay you once per engagement. RAD creates three parallel
+          revenue streams — two of which generate income whether or not your consultants are in the room</div>
+
+        <div class="three-col mb-20">
+
+          <!-- Revenue Stream 1: Module Revenue Share -->
+          <div class="tier-card tier-featured">
+            <div class="card-num" style="color: #7a4900;">Revenue Stream 01</div>
+            <h4>Module Revenue Share</h4>
+            <span class="tier-duration">Passive income &nbsp;·&nbsp; Scales with user adoption</span>
+            <ul class="bullet-list">
+              <li><span class="dot"></span>Publish your Terraform modules to the RAD marketplace — any application, any
+                vertical, any use case</li>
+              <li><span class="dot"></span>Every deployment of your module by a paying user generates revenue at your
+                configured share percentage</li>
+              <li><span class="dot"></span>Deploy your own modules for free — test, iterate and refine before
+                publishing</li>
+              <li><span class="dot"></span>Jules AI refines module code and documentation with a chat prompt — no
+                manual GitHub workflow</li>
+              <li><span class="dot"></span>Module star ratings and deployment counts build social proof over time —
+                driving organic adoption</li>
+            </ul>
+            <div class="tier-outcome">
+              <strong>Example:</strong> 200 deployments/month at £5 each, 20% revenue share = <strong>£200/month
+                growing passively</strong>
+            </div>
+          </div>
+
+          <!-- Revenue Stream 2: Agent Referral Commissions -->
+          <div class="tier-card">
+            <div class="card-num">Revenue Stream 02</div>
+            <h4>Agent Referral Commission</h4>
+            <span class="tier-duration">Recurring commission &nbsp;·&nbsp; Scales with your network</span>
+            <ul class="bullet-list">
+              <li><span class="dot dot-blue"></span>Receive a unique referral link and QR code — share with prospects,
+                at events, in proposals, on LinkedIn</li>
+              <li><span class="dot dot-blue"></span>Referred users who become paying customers generate commission at
+                your configured Agent Revenue Share percentage — every month, for as long as they remain active</li>
+              <li><span class="dot dot-blue"></span>Real-time dashboard tracks referred users, deployment activity and
+                cumulative commission earned</li>
+              <li><span class="dot dot-blue"></span>CSV export feeds directly into your commission accounting — no
+                manual reconciliation</li>
+              <li><span class="dot dot-blue"></span>No cap on referrals (configurable) — your earning potential scales
+                with your pipeline</li>
+            </ul>
+            <div class="tier-outcome">
+              <strong>Example:</strong> 10 referred clients at £100/month spend, 15% commission = <strong>£150/month
+                recurring — £1,800/year per 10 clients</strong>
+            </div>
+          </div>
+
+          <!-- Revenue Stream 3: Delivery Margin Expansion -->
+          <div class="tier-card">
+            <div class="card-num">Revenue Stream 03</div>
+            <h4>Delivery Margin Expansion</h4>
+            <span class="tier-duration">Immediate return &nbsp;·&nbsp; Scales with engagement volume</span>
+            <ul class="bullet-list">
+              <li><span class="dot dot-green"></span>RAD eliminates the 3–5 days of infrastructure setup that currently
+                burns margin before a single deliverable is produced</li>
+              <li><span class="dot dot-green"></span>Claude Code compresses legacy codebase discovery from weeks to
+                hours — shifting senior consultant hours from execution to oversight</li>
+              <li><span class="dot dot-green"></span>Jules continues delivering between client sessions — your
+                consultants review and approve rather than write, dramatically improving billable hour yield</li>
+              <li><span class="dot dot-green"></span>Small consulting teams run multiple concurrent POC engagements —
+                something impossible with purely manual approaches</li>
+              <li><span class="dot dot-green"></span>Standardised modules enforce quality across all engagements —
+                protecting client CSAT scores without senior oversight on every task</li>
+            </ul>
+            <div class="tier-outcome">
+              <strong>Example:</strong> 10 POC engagements/year, £2,500 saved per setup = <strong>£25,000+ margin
+                recaptured annually</strong>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="two-col">
+          <div>
+            <div class="sh">
+              <div class="sh-title">Revenue Stacking — A Worked Example</div>
+              <div class="sh-line"></div>
+            </div>
+            <div class="revenue-example">
+              <div class="revenue-example-title">ISV Partner: Established Cloud Consultancy (Year 1)</div>
+              <div class="revenue-line">
+                <span>Module Revenue Share (3 modules, 150 deployments/month)</span>
+                <span class="revenue-amount">£1,800 / yr</span>
+              </div>
+              <div class="revenue-line">
+                <span>Agent Commissions (20 referred clients × £100/month × 15%)</span>
+                <span class="revenue-amount">£3,600 / yr</span>
+              </div>
+              <div class="revenue-line">
+                <span>Delivery Margin Recovered (12 POCs, £2,500 saving each)</span>
+                <span class="revenue-amount">£30,000 / yr</span>
+              </div>
+              <div class="revenue-line">
+                <span>Certification Upsell (5 client team enablement programmes)</span>
+                <span class="revenue-amount">£25,000 / yr</span>
+              </div>
+              <div class="revenue-line">
+                <span><strong>Total Incremental Annual Return</strong></span>
+                <span class="revenue-amount"><strong>£60,400+</strong></span>
+              </div>
+            </div>
+            <div class="cite">Illustrative example based on platform-documented metrics. Actual results scale with
+              engagement volume and module adoption.</div>
+          </div>
+
+          <div>
+            <div class="sh">
+              <div class="sh-title">The Financial Infrastructure Behind the Revenue</div>
+              <div class="sh-line"></div>
+            </div>
+            <div class="highlight highlight-teal mb-20" style="padding: 18px 22px;">
+              <h3 style="font-size: 11pt;">Transparent, Auditable, Scalable</h3>
+              <p>The RAD platform includes enterprise-grade financial infrastructure: configurable credit economics,
+                multi-currency payments (Stripe + Flutterwave, 12+ currencies), monthly invoice export for
+                accounting integration, and dry-run mode for billing cycle verification. Every partner and agent
+                revenue calculation is transparent and independently verifiable.</p>
+            </div>
+
+            <ul class="bullet-list">
+              <li><span class="dot"></span><strong>Credit economy configuration:</strong> Set price per credit,
+                sign-up bonuses, referral awards and revenue share percentages — all finance-team configurable
+                without engineering changes</li>
+              <li><span class="dot"></span><strong>True Revenue calculation:</strong> Partner and agent commissions
+                apply only to Purchased Credit deployments — protecting against free-credit inflation in your
+                earnings</li>
+              <li><span class="dot"></span><strong>Invoice export:</strong> Monthly line-item project invoices
+                exportable to CSV — drops directly into QuickBooks, NetSuite or your own accounting system</li>
+              <li><span class="dot"></span><strong>Multi-currency support:</strong> Flutterwave handles 12+ currencies
+                (USD, EUR, GBP, NGN, GHS, KES, ZAR and more) — remove geographic barriers from your market</li>
+              <li><span class="dot"></span><strong>Payment reconciliation:</strong> Automated daily reconciliation
+                across Stripe and Flutterwave flags discrepancies before they become billing disputes</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Metrics strip -->
+        <div class="metrics-row" style="margin-top: 20px; margin-bottom: 0;">
+          <div class="mc mc-gold">
+            <span class="mc-val">3</span>
+            <span class="mc-sub">Parallel revenue streams per partner</span>
+          </div>
+          <div class="mc mc-green">
+            <span class="mc-val">£0</span>
+            <span class="mc-sub">Cost to deploy your own modules</span>
+          </div>
+          <div class="mc">
+            <span class="mc-val">12+</span>
+            <span class="mc-sub">Currencies accepted (Stripe + Flutterwave)</span>
+          </div>
+          <div class="mc mc-teal">
+            <span class="mc-val">Daily</span>
+            <span class="mc-sub">Automated revenue reconciliation</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="fb-left">Accelerate Every Deal: The ISV Partner Pre-Sales Playbook &nbsp;·&nbsp;
+        https://radmodules.dev</div>
+      <div class="fb-right">Page 4</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 5: ENGAGEMENT MODEL & NEXT STEPS                        -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="page-break">
+    <div class="inner">
+      <div class="section">
+        <div class="sh">
+          <div class="sh-title">Partner Engagement Model</div>
+          <div class="sh-line"></div>
+        </div>
+        <div class="page-title">Start Winning Deals This Quarter</div>
+        <div class="page-sub">Three engagement paths — each designed to generate measurable pre-sales impact and revenue
+          from your first live demo onwards</div>
+
+        <div class="three-col mb-28">
+
+          <div class="tier-card">
+            <div class="card-num">Path 01</div>
+            <h4>Pre-Sales Enablement</h4>
+            <span class="tier-duration">Best for: Partners entering modernization &nbsp;·&nbsp; Quick to
+              value</span>
+            <ul class="bullet-list">
+              <li><span class="dot dot-blue"></span>Access to all 40+ RAD demo modules — deploy any vertical into a
+                prospect's GCP project within 2 hours</li>
+              <li><span class="dot dot-blue"></span>Guided ROI Calculator training — build and present a
+                client-specific business case in under 30 minutes</li>
+              <li><span class="dot dot-blue"></span>Six-persona demo script library — tailored to CTO, CFO, Head of
+                Platform, DevOps Lead and Procurement audiences</li>
+              <li><span class="dot dot-blue"></span>CAMP Jumpstart facilitation guide — run your first 2-hour
+                discovery session with a structured script and outcome framework</li>
+            </ul>
+            <div class="tier-outcome">
+              <strong>Outcome:</strong> First live demo delivered within one week of onboarding
+            </div>
+          </div>
+
+          <div class="tier-card" style="border: 2px solid var(--primary);">
+            <div class="card-num" style="color: var(--primary);">Path 02</div>
+            <h4>POC Delivery Partnership</h4>
+            <span class="tier-duration">Best for: Partners with active pipeline &nbsp;·&nbsp; Highest impact</span>
+            <ul class="bullet-list">
+              <li><span class="dot dot-blue"></span>Full access to RAD deployment platform — deliver the Workshop and
+                Pilot engagement tiers with proven infrastructure</li>
+              <li><span class="dot dot-blue"></span>Claude Code integration for client codebase analysis — compress
+                discovery and generate migration architecture in hours, not weeks</li>
+              <li><span class="dot dot-blue"></span>Jules API connection to client GitHub repos — autonomous execution
+                continues between your consultant check-ins</li>
+              <li><span class="dot dot-blue"></span>DORA baseline measurement toolkit — quantify platform maturity
+                before and after POC for evidence-based expansion proposals</li>
+              <li><span class="dot dot-blue"></span>Co-delivery support for the first two engagements — shared
+                expertise until your team is independently capable</li>
+            </ul>
+            <div class="tier-outcome">
+              <strong>Outcome:</strong> First signed POC contract within one sales cycle
+            </div>
+          </div>
+
+          <div class="tier-card">
+            <div class="card-num">Path 03</div>
+            <h4>Revenue Partner Programme</h4>
+            <span class="tier-duration">Best for: Partners scaling Google Cloud practice</span>
+            <ul class="bullet-list">
+              <li><span class="dot dot-blue"></span>Module publishing rights — monetise your proprietary IP as
+                deployable RAD modules with configured revenue share</li>
+              <li><span class="dot dot-blue"></span>Agent programme activation — referral link, QR code and real-time
+                commission dashboard for your business development team</li>
+              <li><span class="dot dot-blue"></span>White-label platform option — deliver RAD under your own brand
+                with custom curriculum and vertical-specific modules</li>
+              <li><span class="dot dot-blue"></span>Priority access to new modules, AI toolchain updates and Google
+                Cloud certification content as it releases</li>
+            </ul>
+            <div class="tier-outcome">
+              <strong>Outcome:</strong> Recurring passive revenue alongside delivery income
+            </div>
+          </div>
+
+        </div>
+
+        <div class="two-col">
+          <div>
+            <div class="sh">
+              <div class="sh-title">Why the Fastest-Growing Partners Choose RAD</div>
+              <div class="sh-line"></div>
+            </div>
+            <ul class="bullet-list mb-20">
+              <li><span class="dot"></span><strong>Speed beats price:</strong> Deploying a live POC in a first meeting
+                is a differentiation no competitor can match with slides. Pipeline velocity accelerates when clients
+                see working infrastructure before they sign anything</li>
+              <li><span class="dot"></span><strong>Revenue that doesn't sleep:</strong> Published modules generate
+                income and referral commissions accumulate whether or not your consultants are billable that week
+                — a structural advantage over purely project-based revenue</li>
+              <li><span class="dot"></span><strong>Vertical coverage without custom builds:</strong> 40+ pre-built
+                modules spanning healthcare, education, banking, ERP, AI/LLM and automation mean you can demo any
+                prospect's vertical on day one — without a single line of custom Terraform</li>
+              <li><span class="dot"></span><strong>AI makes your junior team perform like seniors:</strong> Claude
+                Code analyses legacy codebases at architect level; Jules executes autonomously between sessions.
+                Your best consultants focus on client relationships, not environment setup</li>
+              <li><span class="dot"></span><strong>13-year Google partnership behind every engagement:</strong>
+                4.8/5 CSAT, 500+ client engagements, Google Cloud certification alignment across 5 tracks —
+                credibility that would take years to build independently</li>
+              <li><span class="dot"></span><strong>Compliance built in, not bolted on:</strong> Security controls,
+                audit logging, data isolation and DORA measurement are pre-configured — removing the conversation
+                blocker that kills deals in regulated verticals</li>
+            </ul>
+          </div>
+
+          <div>
+            <div class="highlight mb-20">
+              <h3>The First Deal is the Proof</h3>
+              <p>The fastest way to validate the RAD pre-sales advantage is to run it. Book a 90-minute Partner
+                Discovery Session and we will deploy a live module into your GCP project, walk through the ROI
+                Calculator with your own numbers, and map your current pipeline to the three engagement paths. You
+                leave with a live environment and a pre-sales plan — not a proposal to review.</p>
+            </div>
+
+            <div class="sh">
+              <div class="sh-title">Take the First Step</div>
+              <div class="sh-line"></div>
+            </div>
+
+            <div class="card card-accent mb-20">
+              <h4>Partner Discovery Session (90 Minutes)</h4>
+              <p>Live RAD deployment into your environment · ROI Calculator with your pipeline data · Demo script
+                review for your target verticals · Revenue model configuration · First deal mapping. No long
+                procurement process — one session to go from evaluation to active partner.</p>
+            </div>
+
+            <div class="card" style="border-left: 3px solid var(--teal); background: #e0f2f1;">
+              <h4>Contact</h4>
+              <p style="margin-bottom: 4px;"><strong>Dr. Shiyghan Emmanuel Navti</strong></p>
+              <p style="margin-bottom: 4px;">shiyghan.navti@techequity.cloud</p>
+              <p>+44-7966265130 &nbsp;·&nbsp; https://docs.radmodules.dev</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="fb-left">Accelerate Every Deal: The ISV Partner Pre-Sales Playbook &nbsp;·&nbsp;
+        https://radmodules.dev &nbsp;·&nbsp; May 2026</div>
+      <div class="fb-right">Page 5 &nbsp;·&nbsp; Partner Confidential</div>
+    </div>
+  </div>
+
+</body>
+
+</html>
