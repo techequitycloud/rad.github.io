@@ -130,7 +130,7 @@ The remaining runtime variables (`deploy_application`, `container_image`, `conta
 
 ---
 
-## Group 4: Access & Networking
+## 7. Access & Networking
 
 These variables behave identically to `App_GKE`. See [App_GKE §4](../App_GKE/App_GKE.md#4-advanced-security), [App_GKE §5](../App_GKE/App_GKE.md#5-traffic--ingress), and [App_GKE §3.D](../App_GKE/App_GKE.md#d-networking--network-policies).
 
@@ -160,7 +160,7 @@ The following networking variables are available in `Ghost_GKE`:
 
 ---
 
-## Group 5: Environment Variables & Secrets
+## 8. Environment Variables & Secrets
 
 These variables behave identically to `App_GKE`. See [App_GKE §3](../App_GKE/App_GKE.md#3-core-service-configuration).
 
@@ -201,7 +201,7 @@ The remaining secrets variables (`secret_environment_variables`, `secret_rotatio
 
 ---
 
-## Group 6: Backup & Maintenance
+## 9. Backup & Maintenance
 
 These variables behave identically to `App_GKE`. See [App_GKE §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql).
 
@@ -224,7 +224,7 @@ These variables behave identically to `App_GKE`. See [App_GKE §3.B](../App_GKE/
 
 ---
 
-## Group 7: CI/CD & GitHub Integration
+## 10. CI/CD & GitHub Integration
 
 Identical to `App_GKE`. See [App_GKE §6](../App_GKE/App_GKE.md#6-cicd--delivery).
 
@@ -232,7 +232,7 @@ The following CI/CD variables are available: `enable_cicd_trigger`, `github_repo
 
 ---
 
-## Group 8: Jobs & Scheduled Tasks
+## 11. Jobs & Scheduled Tasks
 
 These variables behave as described in [App_GKE §3.E](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs), with one important Ghost-specific behaviour.
 
@@ -258,7 +258,7 @@ The `cron_jobs` and `additional_services` variables are available and behave ide
 
 ---
 
-## Group 9: Storage & Filesystem — NFS
+## 12. Storage & Filesystem — NFS
 
 These variables behave identically to `App_GKE`. See [App_GKE §3.C](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
@@ -271,7 +271,7 @@ These variables behave identically to `App_GKE`. See [App_GKE §3.C](../App_GKE/
 
 ---
 
-## Group 10: Storage & Filesystem — GCS
+## 13. Storage & Filesystem — GCS
 
 These variables behave identically to `App_GKE`. See [App_GKE Group 9](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
@@ -287,7 +287,7 @@ The `create_cloud_storage`, `storage_buckets`, and `gcs_volumes` variables behav
 
 ---
 
-## Group 11: Database Configuration
+## 14. Database Configuration
 
 These variables behave identically to `App_GKE`. See [App_GKE §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql).
 
@@ -321,13 +321,13 @@ These variables behave identically to `App_GKE`. See [App_GKE §3.B](../App_GKE/
 
 ---
 
-## Group 12: Custom SQL Scripts
+## 15. Custom SQL Scripts
 
 Identical to `App_GKE`. See [App_GKE §3.E](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs).
 
 ---
 
-## Group 13: Observability & Health
+## 16. Observability & Health
 
 These variables behave identically to `App_GKE`. See [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 
@@ -376,7 +376,7 @@ The `uptime_check_config` and `alert_policies` variables behave as described in 
 
 ---
 
-## Group 14: Reliability Policies
+## 17. Reliability Policies
 
 Identical to `App_GKE`. See [App_GKE §7](../App_GKE/App_GKE.md#7-reliability--scheduling).
 

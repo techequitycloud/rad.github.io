@@ -166,7 +166,7 @@ The following variable is **always injected automatically** and must not be set 
 | `organization_id` | `""` | GCP Organization ID for Access Context Manager. Auto-discovered when empty. |
 | `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs. |
 
-### §4.E · Binary Authorization
+### E. Binary Authorization
 
 | Variable | Default | Description |
 |---|---|---|
@@ -174,16 +174,16 @@ The following variable is **always injected automatically** and must not be set 
 
 ---
 
-## §5 · Traffic & Ingress
+## 5. Traffic & Ingress
 
-### §5.A · Ingress Controls
+### A. Ingress Controls
 
 | Variable | Default | Options | Description |
 |---|---|---|---|
 | `ingress_settings` | `"all"` | `all` / `internal` / `internal-and-cloud-load-balancing` | Controls which traffic sources reach the service. |
 | `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | `ALL_TRAFFIC` / `PRIVATE_RANGES_ONLY` | Controls VPC routing for outbound traffic. |
 
-### §5.B · Traffic Management
+### B. Traffic Management
 
 | Variable | Default | Description |
 |---|---|---|
@@ -192,9 +192,9 @@ The following variable is **always injected automatically** and must not be set 
 
 ---
 
-## §6 · CI/CD Integration
+## 6. CI/CD Integration
 
-### §6.A · GitHub & Cloud Build
+### A. GitHub & Cloud Build
 
 Node-RED uses the **prebuilt Docker Hub image** (`enable_image_mirroring = true`). No custom Dockerfile build is required unless extending the base image.
 
@@ -206,7 +206,7 @@ Node-RED uses the **prebuilt Docker Hub image** (`enable_image_mirroring = true`
 | `github_app_installation_id` | `""` | Cloud Build GitHub App installation ID. Alternative to PAT for organisation repositories. |
 | `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Controls branch filter, included/ignored paths, trigger name, and build substitutions. |
 
-### §6.B · Cloud Deploy Pipelines
+### B. Cloud Deploy Pipelines
 
 | Variable | Default | Description |
 |---|---|---|
@@ -215,9 +215,9 @@ Node-RED uses the **prebuilt Docker Hub image** (`enable_image_mirroring = true`
 
 ---
 
-## §7 · Reliability & Data
+## 7. Reliability & Data
 
-### §7.A · Health Probes
+### A. Health Probes
 
 Node-RED responds to HTTP GET on `/` with the editor UI. This path is used for both startup and liveness probes. A 30-second initial delay is sufficient as Node-RED starts quickly.
 
@@ -228,7 +228,7 @@ Node-RED responds to HTTP GET on `/` with the editor UI. This path is used for b
 | `uptime_check_config` | `{ enabled=true, path="/", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check from global locations. |
 | `alert_policies` | `[]` | List of metric-threshold alert policies. Each entry requires `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
 
-### §7.B · Storage (NFS & GCS)
+### B. Storage (NFS & GCS)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -242,7 +242,7 @@ Node-RED responds to HTTP GET on `/` with the editor UI. This path is used for b
 | `manage_storage_kms_iam` | `false` | Creates a CMEK KMS keyring and enables CMEK encryption on all storage buckets. |
 | `enable_artifact_registry_cmek` | `false` | Enables CMEK encryption for the Artifact Registry repository. |
 
-### §7.C · Backup & Recovery
+### C. Backup & Recovery
 
 | Variable | Default | Description |
 |---|---|---|
@@ -255,9 +255,9 @@ Node-RED responds to HTTP GET on `/` with the editor UI. This path is used for b
 
 ---
 
-## §8 · Integrations
+## 8. Integrations
 
-### §8.A · Redis (Context Storage)
+### A. Redis (Context Storage)
 
 Redis allows Node-RED to store flow context data externally, enabling it to persist across restarts and (optionally) be shared between multiple instances. When `enable_redis = true` and `redis_host = ""`, configure `redis_host` explicitly to point at a Redis or Cloud Memorystore instance. Unlike N8N, there is no automatic NFS-server-IP fallback for `redis_host` — the validation guard (`validation.tf`) enforces that at least one of `redis_host` or `enable_nfs` is set when `enable_redis = true`.
 

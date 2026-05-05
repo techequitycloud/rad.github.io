@@ -10,7 +10,7 @@ The database password is not generated here; it is managed by the platform layer
 
 ---
 
-## Architecture
+## 2. Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -42,7 +42,7 @@ The database password is not generated here; it is managed by the platform layer
 
 ---
 
-## GCP Resources Created
+## 3. GCP Resources Created
 
 **None.** This module creates no GCP resources. All outputs are derived from input variables and local expressions.
 
@@ -56,7 +56,7 @@ The database password is not generated here; it is managed by the platform layer
 
 ---
 
-## Module Outputs
+## 4. Module Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
@@ -68,7 +68,7 @@ There are no `secret_ids` or `secret_values` outputs — this module creates no 
 
 ---
 
-## Input Variables
+## 5. Input Variables
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -96,7 +96,7 @@ There are no `secret_ids` or `secret_values` outputs — this module creates no 
 
 ---
 
-## Environment Variables
+## 6. Environment Variables
 
 The module merges caller-supplied `environment_variables` with the following defaults:
 
@@ -111,7 +111,7 @@ The module merges caller-supplied `environment_variables` with the following def
 
 `HA_STORAGE_PATH` is set to `/wiki-storage` to support multi-instance deployments where Wiki.js needs a shared location for sideload modules and assets. This path should be backed by NFS or GCS Fuse in production.
 
-## Secret Environment Variables
+## 7. Secret Environment Variables
 
 The `config.secret_environment_variables` map carries:
 
@@ -123,7 +123,7 @@ Callers may inject additional secret references via `var.secret_environment_vari
 
 ---
 
-## PostgreSQL Extension
+## 8. PostgreSQL Extension
 
 | Extension | Purpose |
 |-----------|---------|
@@ -176,7 +176,7 @@ Both `ROOT_PASSWORD` and `DB_PASSWORD` are bound to the same platform-managed se
 
 ---
 
-## Container Image
+## 11. Container Image
 
 The module wraps the official `requarks/wiki:2` image with Chromium and a custom entrypoint.
 
@@ -206,7 +206,7 @@ No `tini` is used — `requarks/wiki:2` manages its own process lifecycle.
 
 ---
 
-## `entrypoint.sh`
+## 12. `entrypoint.sh`
 
 A thin wrapper that maps platform-standard variable names to Wiki.js's expected names before starting the server:
 
@@ -217,7 +217,7 @@ A thin wrapper that maps platform-standard variable names to Wiki.js's expected 
 
 ---
 
-## Platform-Specific Differences
+## 13. Platform-Specific Differences
 
 | Aspect | Wikijs_CloudRun | Wikijs_GKE |
 |--------|-----------------|------------|
@@ -231,7 +231,7 @@ A thin wrapper that maps platform-standard variable names to Wiki.js's expected 
 
 ---
 
-## Usage Example
+## 14. Usage Example
 
 ```hcl
 module "wikijs_common" {

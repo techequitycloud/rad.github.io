@@ -31,6 +31,18 @@ Ghost is a professional open-source publishing platform for newsletters, members
 
 **MySQL note:** Unlike every other module in this repo, Ghost requires **MySQL 8.0**, not PostgreSQL. `database_type = "MYSQL_8_0"` is fixed by `Ghost_Common` and cannot be overridden.
 
+### Key differences from `App_CloudRun` defaults
+
+| Feature | `App_CloudRun` default | `Ghost_CloudRun` default |
+|---|---|---|
+| `container_port` | `8080` | `2368` |
+| `cpu_limit` | `"1000m"` | `"2000m"` |
+| `memory_limit` | `"512Mi"` | `"4Gi"` |
+| `max_instance_count` | `1` | `5` **[fixed]** |
+| `enable_nfs` | `false` | `true` |
+| `enable_redis` | `false` | `true` |
+| `enable_image_mirroring` | `false` | `true` |
+
 ---
 
 ## 2. IAM & Access Control

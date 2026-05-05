@@ -33,6 +33,15 @@ Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation 
 
 **Naming note:** Unlike Django, which uses `application_display_name` and `application_description`, `Activepieces_CloudRun` uses `display_name` and `description` aliases. These are mapped to the `App_CloudRun` display name and description fields inside `Activepieces_Common`'s config output.
 
+### Key differences from `App_CloudRun` defaults
+
+| Feature | `App_CloudRun` default | `Activepieces_CloudRun` default |
+|---|---|---|
+| `cpu_limit` | `"1000m"` | `"2000m"` |
+| `memory_limit` | `"512Mi"` | `"2Gi"` |
+| `enable_cloudsql_volume` | `false` | `true` |
+| `ingress_settings` | `"internal"` | `"all"` |
+
 ---
 
 ## 2. IAM & Access Control

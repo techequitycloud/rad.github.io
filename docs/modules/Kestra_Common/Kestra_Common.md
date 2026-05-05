@@ -133,7 +133,22 @@ The computed resource naming prefix (`app<application_name><tenant_deployment_id
 
 ---
 
-## 5. Environment Variables (always injected)
+## 5. Non-Configurable Values
+
+The following values are fixed inside `Kestra_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_image` | `"kestra/kestra"` | Always built from the official Kestra base image. |
+| `image_source` | `"custom"` | Requires custom entrypoint injection (`socat` bridge and `entrypoint.sh`). |
+| `container_port` | `8080` | Application's fixed listening port (Micronaut server). |
+| `database_type` | `"POSTGRES_15"` | Kestra requires PostgreSQL 15 as its queue and repository backend. |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` | Fixed Cloud SQL Auth Proxy socket directory. |
+| `enable_postgres_extensions` | `false` | Kestra does not require any PostgreSQL extensions. |
+
+---
+
+## 6. Environment Variables (always injected)
 
 `Kestra_Common` merges the following into `config.environment_variables`, with `var.environment_variables` taking precedence:
 
@@ -155,20 +170,20 @@ The computed resource naming prefix (`app<application_name><tenant_deployment_id
 
 ---
 
-## 6. Initialization Job
+## 7. Initialization Job
 
 When `initialization_jobs` is empty (the default), `Kestra_Common` automatically defines a single bootstrap job:
 
 | Field | Value |
 |---|---|
-| `name` | `"db-init"` |
-| `description` | `"Create Kestra Database and User"` |
-| `image` | `"postgres:15-alpine"` |
+| Name | `"db-init"` |
+| Description | `"Create Kestra Database and User"` |
+| Image | `postgres:15-alpine` |
+| Script | `scripts/db-init.sh` |
 | `execute_on_apply` | `true` |
-| `script_path` | `abspath("${path.module}/scripts/db-init.sh")` |
-| `cpu_limit` | `"1000m"` |
-| `memory_limit` | `"512Mi"` |
-| `timeout_seconds` | `600` |
+| Timeout | `600s` |
+| Max retries | `1` |
+| CPU / Memory | `1000m` / `512Mi` |
 
 The `db-init.sh` script:
 1. Detects the Cloud SQL socket or TCP host.
@@ -183,7 +198,7 @@ When `initialization_jobs` is provided by the caller, the custom jobs replace th
 
 ---
 
-## 7. Scripts Directory
+## 8. Scripts Directory
 
 `Kestra_Common` ships three files in `scripts/`:
 
@@ -197,7 +212,7 @@ When `initialization_jobs` is provided by the caller, the custom jobs replace th
 
 ---
 
-## 8. Input Variables
+## 9. Input Variables
 
 All variables are passed in by the wrapper modules (`Kestra_CloudRun` and `Kestra_GKE`). `Kestra_Common` is not intended to be called directly by end users.
 
@@ -231,7 +246,7 @@ All variables are passed in by the wrapper modules (`Kestra_CloudRun` and `Kestr
 
 ---
 
-## 9. Platform-Specific Differences
+## 10. Platform-Specific Differences
 
 | Aspect | Cloud Run (`Kestra_CloudRun`) | GKE (`Kestra_GKE`) |
 |---|---|---|

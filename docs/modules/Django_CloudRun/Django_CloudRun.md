@@ -31,6 +31,14 @@ Django is a high-level Python web framework that encourages rapid development an
 
 **Django naming note:** Unlike `Cyclos_CloudRun` and `Directus_CloudRun`, which use `display_name`/`description` aliases, `Django_CloudRun` uses `application_display_name` and `application_description` directly — these are the native `App_CloudRun` variable names with no aliasing required.
 
+### Key differences from `App_CloudRun` defaults
+
+| Feature | `App_CloudRun` default | `Django_CloudRun` default |
+|---|---|---|
+| `container_image` | `""` | `'us-docker.pkg.dev/cloudrun/container/hello'` |
+| `enable_cloudsql_volume` | `false` | `true` |
+| `enable_nfs` | `false` | `true` |
+
 ---
 
 ## 2. IAM & Access Control

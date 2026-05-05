@@ -12,7 +12,7 @@ Every variable in this module is passed through to `App_GKE`. The wrapper's role
 
 ---
 
-## Architecture: the Wikijs_Common sub-module
+## 1. Architecture: the Wikijs_Common sub-module
 
 Before variables are forwarded to `App_GKE`, this module calls `Wikijs_Common`, which:
 
@@ -25,7 +25,21 @@ None of the `Wikijs_Common` internals are directly configurable through this mod
 
 ---
 
-## Module Metadata & Configuration
+## 2. Platform-Managed Behaviours
+
+The following behaviours are applied automatically by `Wikijs_GKE` (via the `Wikijs_Common` sub-module) regardless of variable values in your `tfvars` file.
+
+| Behaviour | Detail |
+|---|---|
+| **Environment variables** | `Wikijs_Common` injects: `DB_TYPE=postgres`, `DB_PORT=5432`, `DB_USER` (from `application_database_user`), `DB_NAME` (from `application_database_name`), `DB_SSL=false`, `HA_STORAGE_PATH=/wiki-storage`. `DB_HOST` and `DB_PASSWORD` are injected automatically by the platform at runtime. |
+| **Custom image build** | `Wikijs_Common` sets `image_source = "custom"`. A custom image is always built that layers the Wiki.js configuration onto `requarks/wiki:2`. The source image is mirrored to Artifact Registry when `enable_image_mirroring = true`. |
+| **GCS storage bucket** | `Wikijs_Common` always provisions a `wikijs-storage` GCS bucket mounted via GCS Fuse at `/wiki-storage` for shared asset storage. |
+| **Database initialisation** | The `db-init` Kubernetes Job runs automatically on first apply. It creates the `wikijs` database and user and grants the necessary privileges. The `pg_trgm` extension is installed separately via `enable_postgres_extensions = true`. |
+| **Session affinity** | `session_affinity` defaults to `"ClientIP"` to ensure users are consistently routed to the same pod, preserving in-memory session context. |
+
+---
+
+## 3. Module Metadata & Configuration
 
 The variables in this group are identical in purpose to those in `App_GKE`. See [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) for full descriptions.
 
@@ -41,7 +55,7 @@ All other Group 0 variables (`credit_cost`, `require_credit_purchases`, `enable_
 
 ---
 
-## Project & Identity
+## 4. Project & Identity
 
 All variables in this group are identical to `App_GKE`. See [App_GKE §2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) for full descriptions.
 
@@ -53,7 +67,7 @@ This module adds one variable not present in `App_GKE`:
 
 ---
 
-## Application Identity
+## 5. Application Identity
 
 All variables are identical in purpose to `App_GKE`. See [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) for full descriptions.
 
@@ -68,7 +82,7 @@ The Wiki.js-specific defaults are:
 
 ---
 
-## Runtime & Scaling
+## 6. Runtime & Scaling
 
 All variables are identical in purpose to `App_GKE`. See [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for full descriptions.
 

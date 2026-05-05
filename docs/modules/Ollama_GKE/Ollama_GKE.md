@@ -76,7 +76,7 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 
 ## 3. Core Service Configuration
 
-### §3.A · Application Identity (Group 2)
+### A. Application Identity (Group 2)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -85,7 +85,7 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 | `application_description` | `string` | `"Ollama — standalone open-source LLM inference server on GKE..."` | Brief description surfaced in Kubernetes annotations. |
 | `application_version` | `string` | `"latest"` | Ollama Docker image tag. Use a pinned tag in production. |
 
-### §3.B · Ollama Model Configuration (Group 18)
+### B. Ollama Model Configuration (Group 18)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -96,7 +96,7 @@ When `default_model` is set and `initialization_jobs` is empty, a Kubernetes Job
 `model-pull` is created automatically using the `scripts/model-pull.sh` script from
 `Ollama_Common`. The job mounts the `ollama-models` GCS volume so pulled weights persist.
 
-### §3.C · Runtime & Scaling (Group 3)
+### C. Runtime & Scaling (Group 3)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -120,7 +120,7 @@ When `default_model` is set and `initialization_jobs` is empty, a Kubernetes Job
 | `enable_cloudsql_volume` | `bool` | `false` | Not needed for Ollama. Required by the App_GKE interface. |
 | `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | Cloud SQL Auth Proxy socket path. Present for interface compatibility. |
 
-### §3.D · Automatically Injected Environment Variables
+### D. Automatically Injected Environment Variables
 
 The following environment variables are set automatically by `Ollama_Common`:
 
@@ -130,7 +130,7 @@ The following environment variables are set automatically by `Ollama_Common`:
 | `OLLAMA_HOST` | `"0.0.0.0:11434"` | Binds to all interfaces so the Kubernetes service can forward traffic. |
 | `OLLAMA_KEEP_ALIVE` | `"24h"` | Keeps loaded model resident in memory between requests. |
 
-### §3.E · Environment Variables & Secrets (Group 5)
+### E. Environment Variables & Secrets (Group 5)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -141,7 +141,7 @@ The following environment variables are set automatically by `Ollama_Common`:
 | `enable_auto_password_rotation` | `bool` | `false` | Not applicable for Ollama (no database). |
 | `rotation_propagation_delay_sec` | `number` | `90` | Seconds to wait after rotation before restarting pods. |
 
-### §3.F · Access & Networking (Group 4)
+### F. Access & Networking (Group 4)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -167,7 +167,7 @@ The following environment variables are set automatically by `Ollama_Common`:
 
 ---
 
-## §4 · GKE-Specific Configuration (Group 15)
+## 4. GKE-Specific Configuration (Group 15)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -183,7 +183,7 @@ The following environment variables are set automatically by `Ollama_Common`:
 
 ---
 
-## §5 · StatefulSet Settings (Group 16)
+## 5. StatefulSet Settings (Group 16)
 
 These settings apply only when `workload_type = "StatefulSet"`. The default `"Deployment"`
 workload type with GCS Fuse is recommended and these are not needed.
@@ -200,7 +200,7 @@ workload type with GCS Fuse is recommended and these are not needed.
 
 ---
 
-## §6 · Storage & Filesystem (Group 10)
+## 6. Storage & Filesystem (Group 10)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -224,7 +224,7 @@ workload type with GCS Fuse is recommended and these are not needed.
 
 ---
 
-## §7 · Backup & Maintenance (Group 6)
+## 7. Backup & Maintenance (Group 6)
 
 Ollama has no database — backup settings are present for App_GKE interface compatibility only.
 

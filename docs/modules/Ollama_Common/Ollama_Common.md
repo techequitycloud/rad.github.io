@@ -226,9 +226,9 @@ start within the retry window.
 
 ---
 
-## 7. Input Variables
+## 8. Input Variables
 
-### Project & Identity
+### A. Project & Identity
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -238,7 +238,7 @@ start within the retry window.
 | `common_labels` | `map(string)` | `{}` | Labels applied to resources created by this module. |
 | `deployment_region` | `string` | `"us-central1"` | Region for the GCS models bucket. |
 
-### Application Details
+### B. Application Details
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -247,14 +247,14 @@ start within the retry window.
 | `description` | `string` | `"Ollama — standalone open-source LLM inference server..."` | Application description. |
 | `application_version` | `string` | `"latest"` | Ollama Docker image tag. |
 
-### Model Configuration
+### C. Model Configuration
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `default_model` | `string` | `""` | Ollama model to pull during first deployment (e.g. `"llama3.2:3b"`, `"mistral"`, `"phi3:mini"`). Leave empty to skip the model-pull initialization job. Models are stored in GCS and persist across container restarts. |
 | `model_pull_timeout_seconds` | `number` | `3600` | Timeout in seconds for the model-pull initialization job. Valid range: 300–7200. |
 
-### Resources
+### D. Resources
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -264,7 +264,7 @@ start within the retry window.
 | `min_instance_count` | `number` | `1` | Minimum instances. Set to `1` to keep a warm instance for low-latency inference. |
 | `max_instance_count` | `number` | `3` | Maximum instances. |
 
-### Storage
+### E. Storage
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -282,7 +282,7 @@ start within the retry window.
 
 ---
 
-## 8. GCS Volume Layout
+## 9. GCS Volume Layout
 
 The `<wrapper_prefix>-models` GCS bucket is mounted at `/mnt/gcs` in the container:
 
@@ -308,7 +308,7 @@ The `gcs_volumes` entry appended by this module:
 
 ---
 
-## 9. Platform-Specific Differences
+## 10. Platform-Specific Differences
 
 | Aspect | Ollama_CloudRun | Ollama_GKE |
 |---|---|---|
@@ -322,7 +322,7 @@ The `gcs_volumes` entry appended by this module:
 
 ---
 
-## 10. Implementation Pattern
+## 11. Implementation Pattern
 
 ```hcl
 # Example: how Ollama_CloudRun instantiates Ollama_Common

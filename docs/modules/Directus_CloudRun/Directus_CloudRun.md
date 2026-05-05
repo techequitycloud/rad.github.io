@@ -29,6 +29,16 @@ Directus is an open-source headless CMS and Backend-as-a-Service (BaaS) platform
 
 **Wrapper architecture:** `Directus_CloudRun` calls `Directus_Common` to build an `application_config` object containing Directus environment variables, secrets, probe configuration, the `db-init` job, and the uploads bucket definition. This object is passed to `App_CloudRun` via the `application_config`, `module_env_vars`, `module_secret_env_vars`, and `module_storage_buckets` reserved variables.
 
+### Key differences from `App_CloudRun` defaults
+
+| Feature | `App_CloudRun` default | `Directus_CloudRun` default |
+|---|---|---|
+| `container_port` | `8080` | `8055` |
+| `memory_limit` | `"512Mi"` | `"2Gi"` |
+| `enable_cloudsql_volume` | `true` | `false` |
+| `enable_nfs` | `false` | `true` |
+| `enable_redis` | `false` | `true` |
+
 ---
 
 ## 2. IAM & Access Control
