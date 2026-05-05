@@ -3,11 +3,24 @@ title: Admin Features
 slug: /features/admins
 ---
 
-<YouTubeEmbed videoId="Yc1yQbShlw0" poster="https://storage.googleapis.com/rad-public-2b65/features/admin_features.png" />
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
+<img src="https://storage.googleapis.com/rad-public-2b65/features/admin_features.png" alt="Admin Features Infographic" />
 
 <br/>
 
-<a href="https://storage.googleapis.com/rad-public-2b65/features/admin_features.pdf" target="_blank" rel="noopener noreferrer">Download Feature PDF</a>
+<AudioPlayer src="https://storage.googleapis.com/rad-public-2b65/features/admin_features.m4a" />
+
+<br/>
+
+<video controls width="100%">
+  <source src="https://storage.googleapis.com/rad-public-2b65/features/admin_features.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+[Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/admin_features.pdf)
 
 ## 1. Introduction
 
@@ -36,16 +49,18 @@ Navigate to the **Setup** link in the main navigation bar. Alternatively, you ca
     *   **Billing Account ID:** The Google Cloud Billing Account ID to associate with created projects.
 *   **Notification Settings:**
     *   **Email Notifications:** Enable to send email notifications to Trusted and Owner groups.
+    *   **End User Documentation:** URL for the end user documentation portal (default: `https://docs.radmodules.dev`). This URL is surfaced as a **Documentation** link in the main navigation bar for all authenticated users.
     *   **Support Email:** The email address for the support team.
     *   **Mail Server Email:** The email address used for sending system notifications.
     *   **Mail Server Password:** The application password for the mail server.
 *   **Cleanup & Retention:**
-    *   **Cleanup Schedule:** Define how often automated cleanup jobs run (e.g., Daily, Weekly, Monthly).
+    *   **Cleanup Schedule:** Define how often automated cleanup jobs run: `Daily` (default), `Weekly` (runs on Sundays UTC), or `Monthly` (runs on the 1st of the month UTC). The underlying Cloud Scheduler trigger fires daily; the cleanup function checks this setting and skips if the day doesn't match the configured cadence.
     *   **Retention Period:** Set a period (e.g., 90 days) to automatically delete old deployment records.
     *   **Enable Soft Delete:** Enable a grace period before permanent deletion.
     *   **Soft Delete Grace Period:** The number of days (default: 7) a "deleted" deployment remains in a soft-delete state before permanent removal.
     *   **Enable Orphan Cleanup:** Automatically delete orphaned records in the cloud storage bucket.
     *   **Notify Before Delete:** Enable to notify users before their deployments are permanently deleted.
+    *   **Stuck Deployment Threshold (minutes):** Deployments stuck in `QUEUED` or `WORKING` longer than this threshold are automatically verified against Cloud Build's actual status and reconciled (cancelled if the build is gone, updated to the terminal state if Cloud Build has already finished). Set to `0` to disable. Default: `30`.
 
 ## 3. User Management
 
@@ -109,9 +124,18 @@ You have complete visibility into all activity on the platform. The **Deployment
 *   **Search:** Use the search bar to find deployments by Module Name, Deployment ID, or User Email.
 *   **Ratings:** View the 1-5 star ratings given by users to gauge user satisfaction with specific modules.
 *   **Logs & Debugging:** Click on any Deployment ID to view its full build logs, status history, and configuration variables.
-*   **Purge vs. Delete:**
-    *   **Delete (Soft Delete):** This is the standard action. It marks the deployment for deletion, triggers a resource cleanup, but retains the record for the defined retention period.
-    *   **Purge (Hard Delete):** This is a force-cleanup action. It immediately triggers an aggressive resource removal pipeline (`DEPLOYMENT_ACTIONS.PURGE`) and removes the deployment record once complete. Use this for stuck deployments or when immediate cleanup is required.
+*   **Deployment Statuses:** Deployments move through the following lifecycle states:
+    *   `QUEUED` — Build submitted and waiting for Cloud Build to start.
+    *   `WORKING` — Build actively running.
+    *   `COMPLETED` — Build finished successfully.
+    *   `FAILED` — Build finished with an error.
+    *   `CANCELLED` — Deployment was stopped before or during provisioning. The available follow-up actions depend on context: if the original action was `CREATE` or `PURGE`, only **Purge** is shown (no infrastructure was deployed); if the original action was `UPDATE` or `DELETE`, **Delete** and **Update** are shown (infrastructure may still exist).
+    *   `INTERNAL_ERROR` — A non-transient platform failure occurred during provisioning (e.g., a function crash). The deployment is surfaced as actionable rather than remaining silently stuck in `QUEUED`.
+    *   `DELETED` — Deployment has been soft-deleted and is awaiting permanent removal after the retention period.
+*   **Cancel vs. Purge vs. Delete:**
+    *   **Cancel:** Available for deployments stuck in `QUEUED`. Marks the deployment as `CANCELLED` without triggering any resource teardown. Use this when a build has not started and no infrastructure was provisioned. Accessible to admins and the deployment owner.
+    *   **Delete (Soft Delete):** The standard removal action. Marks the deployment for deletion, triggers a resource cleanup, and retains the record for the defined retention period.
+    *   **Purge (Hard Delete):** A force-cleanup action. Immediately triggers an aggressive resource removal pipeline (`DEPLOYMENT_ACTIONS.PURGE`) and removes the deployment record once complete. Use this for stuck deployments, `CANCELLED` deployments, or when immediate cleanup is required.
 
 ## 6. Publishing Platform Modules
 
