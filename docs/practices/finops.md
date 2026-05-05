@@ -3,7 +3,7 @@ id: finops
 title: FinOps
 ---
 
-# FinOps Adoption
+# FinOps
 
 Cost-awareness is encoded into the platform at every layer: platform credits gate deployments before they start, scale-to-zero defaults eliminate idle spend, lifecycle policies automate storage cleanup, and destroy automation ensures demo workloads do not silently run forever. This document covers cost controls, lifecycle policies, cost allocation, tier-configurable services, and ongoing spend management.
 
@@ -53,7 +53,7 @@ Storage-cost creep is automated away:
 
 Every expensive shared resource is tier-configurable via Platform-module variables:
 
-- Cloud SQL (`db-custom-*` tiers), HA / PITR optional
+- Cloud SQL (`db-custom-*` tiers), High Availability (HA) and Point-in-Time Recovery (PITR) optional
 - Memorystore Redis (`BASIC` vs `STANDARD_HA`)
 - Filestore NFS (`BASIC_HDD` / `BASIC_SSD` / `ZONAL`); `enable_nfs = false` to skip entirely
 - Cloud Run resources (`cpu_limit`, `memory_limit`)
@@ -102,9 +102,11 @@ Lifecycle scripts handle known cleanup paths; broader orphan detection catches w
 - **Unattached persistent disks** — for GKE workloads, Persistent Volume Claims not bound to a running pod should be reviewed monthly.
 - **Stale Artifact Registry images** — validate that no registry exists outside the IaC-managed set by comparing `gcloud artifacts repositories list` output against the Terraform state.
 
-## Rightsizing (planned)
+## Rightsizing
 
-Native Recommender-based rightsizing and Cloud Asset Inventory exports are natural next steps for a FinOps-mature deployment:
+> **Status:** The capabilities below are not yet implemented in any module. They represent the recommended next steps for a FinOps-mature deployment.
+
+Native Recommender-based rightsizing and Cloud Asset Inventory exports are natural next steps:
 
 - **Rightsizing** — Vertical Pod Autoscaler (VPA) in recommendation mode surfaces over-provisioned resource requests without changing anything; pairing VPA recommendations with GKE node autoscaling reduces wasted capacity.
 - **Namespace quotas** — `ResourceQuota` objects per namespace prevent a single workload from consuming disproportionate cluster resources, providing a soft chargeback boundary within a shared cluster.
@@ -124,4 +126,5 @@ Per `BUSINESS_CASE.md` and `IAC_AUTOMATION_BUSINESS_CASE.md`:
 
 - [SRE](./sre.md) — revision pruning as toil reduction, destroy as an SRE concern
 - [CI/CD](./cicd.md) — pipeline notifications (shared Pub/Sub channel for budget alerts)
+- [GitOps & IaC](./gitops-iac.md) — state as inventory, `deployment_id` tracking for cost attribution
 - [IDP](./idp.md) — `app<name><tenant><id>` naming and per-tenant chargeback

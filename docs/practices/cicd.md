@@ -5,7 +5,9 @@ title: CI/CD
 
 # Continuous Integration and Continuous Delivery
 
-Infrastructure is delivered as a product through a managed pipeline of Cloud Build configurations and a Python CLI that automates local apply-cycles. This document covers the full deployment pipeline: Cloud Build configurations, build triggers, image builds, progressive delivery, validation gates, integration tests, and the IaC mechanics that underpin reproducible deployments.
+Infrastructure is delivered as a product through a managed pipeline of Cloud Build configurations and a Python CLI that automates local apply-cycles. Deployments are parameterised, reproducible, and traceable — the same pipeline serves every tenant and module without code changes.
+
+This document covers: Cloud Build configurations, build triggers, image builds, progressive delivery, validation gates, secrets handling, integration tests, branch strategy, rollback, and the IaC mechanics that underpin reproducible deployments.
 
 ## Cloud Build pipelines
 
@@ -42,7 +44,7 @@ tofu plan -var="existing_project_id=my-test-project"
 ```
 
 - **Validation blocks** — `modules/App_CloudRun/validation.tf` and `modules/App_GKE/validation.tf` reject misconfigurations at `tofu plan` time.
-- **Prerequisite resources** — `prerequisites.tf` provisions API enablement, PSA service agents, and IAM bindings before dependents, with retry logic for GCP's async IAM propagation.
+- **Prerequisite resources** — `prerequisites.tf` provisions API enablement, Private Service Access (PSA) service agents, and IAM bindings before dependents, with retry logic for GCP's async IAM propagation.
 - **Lint** — `tofu fmt -check -recursive` is enforced as a pre-merge gate.
 
 These gates are the definition-of-ready for any module change.
@@ -123,12 +125,12 @@ Notification channels are configured in `modules/Services_GCP` and inherited by 
 
 ## Managed Kubernetes upgrades
 
-GKE `release_channel` lets the control plane be upgraded continuously by Google. The `/maintain` workflow in `AGENTS.md` covers promoting a deployment between channels.
+GKE `release_channel` (`RAPID`, `REGULAR`, or `STABLE`) lets Google manage control-plane and node upgrades automatically within a channel, eliminating manual version-bump PRs. To change a cluster's channel — for example, promoting from `REGULAR` to `RAPID` to access a new feature — update `release_channel` in the module variable and run the update pipeline. The `/maintain` workflow in `AGENTS.md` covers promoting a deployment between channels, handling node-pool recreation if the target channel requires a different node image.
 
 ## Cross-references
 
 - [GitOps & IaC](./gitops-iac.md) — OpenTofu, state, drift detection, idempotent re-apply
 - [FinOps](./finops.md) — revision pruning, Artifact Registry cleanup policies
-- [SRE](./sre.md) — DORA-metric impact of fast deploys, incident response
+- [SRE](./sre.md) — DORA (DevOps Research and Assessment) metric impact of fast deploys, incident response
 - [DevSecOps](./devsecops.md) — secret-handling rules in pipelines
 - [IDP](./idp.md) — multi-tenant pipeline parameterisation
