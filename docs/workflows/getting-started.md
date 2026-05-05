@@ -1,14 +1,4 @@
-
-# Getting Started
-
-
-<br/>
-
-<YouTubeEmbed videoId="ohdt12sh7Kk" poster="https://storage.googleapis.com/rad-public-2b65/guides/start_guide.png" />
-
-<br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/guides/start_guide.pdf)
+# Tutorial: Getting Started
 
 ## 1. Introduction
 Welcome to the Rapid Application Deployment (RAD) platform! This tutorial will guide you through your first steps: logging in, exploring the dashboard, and deploying your first module.
