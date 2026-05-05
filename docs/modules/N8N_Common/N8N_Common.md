@@ -32,7 +32,7 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 - Uses `resource_prefix` (not `wrapper_prefix`) for naming, and exposes it as an output.
 - Secrets are output together as a `secret_ids` map rather than as individual outputs.
 - The SMTP secret is seeded with a dummy placeholder value; the real SMTP password is expected to be provided by the caller or set post-deployment.
-- `DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED` is deliberately **not set** — see §4 for the reason.
+- `DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED` is deliberately **not set** — see section 5 for the reason.
 - Default resources: `1000m` CPU / `2Gi` memory (lighter than the AI variant).
 
 ---
@@ -229,7 +229,7 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 
 ## 9. Input Variables
 
-### Project & Identity
+### A. Project & Identity
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -240,7 +240,7 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 | `deployment_id` | `string` | `""` | Unique deployment ID suffix |
 | `deployment_region` | `string` | `"us-central1"` | Region for the storage bucket |
 
-### Application
+### B. Application
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -261,7 +261,7 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 | `enable_cloudsql_volume` | `bool` | `true` | Mount Cloud SQL Auth Proxy sidecar socket |
 | `enable_image_mirroring` | `bool` | `true` | Mirror the container image to the project's Artifact Registry before deployment |
 
-### External Integration
+### C. External Integration
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -273,7 +273,7 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 | `redis_auth` | `string` | `""` | Redis auth password (sensitive) |
 | `nfs_server_ip` | `string` | `null` | NFS server IP for Redis host resolution (when using NFS-hosted Redis) |
 
-### Storage
+### D. Storage
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|

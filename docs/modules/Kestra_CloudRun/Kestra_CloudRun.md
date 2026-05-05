@@ -119,7 +119,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ## 5. Access & Networking
 
-### Identity-Aware Proxy (Group 19)
+### A. Identity-Aware Proxy (Group 19)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -127,7 +127,7 @@ The following behaviours are set automatically and cannot be overridden via user
 | `iap_authorized_users` | `[]` | User allowlist. Format: `"user:email@example.com"`. |
 | `iap_authorized_groups` | `[]` | Group allowlist. Format: `"group:name@example.com"`. |
 
-### Cloud Armor & CDN (Group 9)
+### B. Cloud Armor & CDN (Group 9)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -136,7 +136,7 @@ The following behaviours are set automatically and cannot be overridden via user
 | `application_domains` | `[]` | Custom domain names. Only used when `enable_cloud_armor = true`. |
 | `enable_cdn` | `false` | Enables Cloud CDN. Only active when `enable_cloud_armor = true`. |
 
-### VPC Service Controls (Group 21)
+### C. VPC Service Controls (Group 21)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -177,7 +177,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ## 8. Storage (Groups 8, 10)
 
-### NFS (Group 8)
+### A. NFS (Group 8)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -186,7 +186,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 | `nfs_instance_name` | `""` | Existing NFS GCE VM name. Auto-discovered when empty. |
 | `nfs_instance_base_name` | `"app-nfs"` | Base name for the inline NFS GCE VM. |
 
-### Cloud Storage & GCS Fuse (Group 10)
+### B. Cloud Storage & GCS Fuse (Group 10)
 
 `Kestra_Common` always provisions a `-kestra-storage` bucket. Additional buckets can be added via `storage_buckets`.
 
@@ -320,16 +320,16 @@ Outputs are proxied from `App_CloudRun`:
 
 ---
 
-## Configuration Examples
+## 15. Configuration Examples
 
-### Basic Deployment
+### A. Basic Deployment
 
 ```hcl
 project_id           = "my-project-123"
 tenant_deployment_id = "demo"
 ```
 
-### Production Deployment
+### B. Production Deployment
 
 ```hcl
 project_id           = "my-project-123"
@@ -374,7 +374,7 @@ github_repository_url = "https://github.com/my-org/kestra-flows"
 github_token          = "ghp_***"
 ```
 
-### Deployment with GCS Fuse Volume
+### C. Deployment with GCS Fuse Volume
 
 ```hcl
 project_id           = "my-project-123"

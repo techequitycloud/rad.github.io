@@ -87,8 +87,8 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | CPU/memory limits from variables; no requests set |
 | `min_instance_count` | from `min_instance_count` (default: `1`) |
 | `max_instance_count` | from `max_instance_count` (default: `1`) |
-| `environment_variables` | Merged map — see §5 |
-| `initialization_jobs` | Default `db-init` job or custom override — see §6 |
+| `environment_variables` | Merged map — see §6 |
+| `initialization_jobs` | Default `db-init` job or custom override — see §7 |
 | `startup_probe` | from `startup_probe` variable |
 | `liveness_probe` | from `liveness_probe` variable |
 
@@ -193,7 +193,7 @@ When `initialization_jobs` is provided by the caller, the custom jobs replace th
 |---|---|
 | `Dockerfile` | Wraps `flowiseai/flowise:latest`. Copies `flowise-entrypoint.sh`, makes it executable, exposes port `3000`, and sets it as the container ENTRYPOINT with `flowise start` as the default CMD. |
 | `flowise-entrypoint.sh` | Unconditionally maps platform-injected `DB_*` variables to Flowise's `DATABASE_*` naming convention before calling `exec "$@"`. Handles both Cloud Run (env-var substitution) and GKE (alphabetic ordering). |
-| `create-db-and-user.sh` | Bootstrap job script — see §6. |
+| `create-db-and-user.sh` | Bootstrap job script — see §7. |
 
 > **Entrypoint detail**: `flowise-entrypoint.sh` uses direct shell assignment (`export DATABASE_HOST="${DB_HOST:-127.0.0.1}"`) rather than Kubernetes `$(DB_HOST)` substitution. This is intentional: Kubernetes resolves env var references alphabetically, and `DATABASE_HOST` (prefixed `D`) precedes `DB_HOST` in alphabetical order, so `$(DB_HOST)` would be empty when `DATABASE_HOST` is set.
 

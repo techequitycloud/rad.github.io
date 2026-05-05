@@ -42,7 +42,7 @@ The application configuration object passed to the platform module via `applicat
 | `app_name` | `"ghost"` |
 | `application_version` | Version tag (default: `"6.14.0"`) |
 | `container_image` | `"ghost"` (public Docker Hub image used as build base) |
-| `image_source` | `"custom"` — a custom wrapper image is built (see §6) |
+| `image_source` | `"custom"` — a custom wrapper image is built (see §7) |
 | `enable_image_mirroring` | `var.enable_image_mirroring` (default `false`) — controls whether the image is mirrored to Artifact Registry |
 | `container_build_config` | `dockerfile_path = "Dockerfile"`, `context_path = "."`, `build_args = { APP_VERSION = <version> }` |
 | `container_port` | `2368` |
@@ -57,7 +57,7 @@ The application configuration object passed to the platform module via `applicat
 | `secret_environment_variables` | `var.secret_environment_variables` (default `{}`) — secret env vars passed to the container; managed externally or via wrapper by default |
 | `enable_mysql_plugins` | `false` |
 | `mysql_plugins` | `[]` |
-| `initialization_jobs` | Default `db-init` job or custom override — see §5 |
+| `initialization_jobs` | Default `db-init` job or custom override — see §6 |
 | `startup_probe` | HTTP `GET /`, 90s initial delay, 10s timeout, 10s period, 10 failure threshold |
 | `liveness_probe` | HTTP `GET /`, 60s initial delay, 5s timeout, 30s period, 3 failure threshold |
 | `readiness_probe` | HTTP `GET /`, 30s initial delay, 5s timeout, 10s period, 3 failure threshold |

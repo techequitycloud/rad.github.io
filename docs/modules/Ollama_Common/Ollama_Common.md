@@ -85,10 +85,10 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | From `var.container_resources` if non-null; else `{ cpu_limit, memory_limit }` from top-level variables |
 | `min_instance_count` | From `min_instance_count` |
 | `max_instance_count` | From `max_instance_count` |
-| `environment_variables` | Fixed map — see §4 |
+| `environment_variables` | Fixed map — see section 5 |
 | `enable_postgres_extensions` | `false` |
 | `postgres_extensions` | `[]` |
-| `initialization_jobs` | Auto-generated `model-pull` job or caller-supplied list — see §5 |
+| `initialization_jobs` | Auto-generated `model-pull` job or caller-supplied list — see section 6 |
 | `startup_probe` | From `startup_probe` variable |
 | `liveness_probe` | From `liveness_probe` variable |
 | `additional_services` | `[]` — Ollama has no companion services |

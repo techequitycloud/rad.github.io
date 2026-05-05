@@ -63,7 +63,7 @@ These variables control how the Cyclos deployment is named and described. They c
 | `display_name` | `"Cyclos Community Edition"` | Any string | Human-readable name shown in the platform UI, the Cloud Run service list, and monitoring dashboards. Equivalent to `application_display_name` in App_CloudRun. Can be updated freely without affecting resource names. |
 | `description` | `"Cyclos Banking System on Cloud Run"` | Any string | Brief description of the deployment. Populated into the Cloud Run service description field and platform documentation. Equivalent to `application_description` in App_CloudRun. |
 
-### Validating Application Identity
+### A. Validating Application Identity
 
 ```bash
 # Confirm the Cloud Run service exists with the expected name
@@ -95,7 +95,7 @@ Cyclos is a Java application and requires significantly more CPU and memory than
 | `min_instance_count` | `0` | `1` | Cyclos requires at least one warm instance to avoid cold-start latency on banking transactions. Scale-to-zero is not recommended for production Cyclos deployments. |
 | `max_instance_count` | `1` | `1` | Cyclos in standalone mode (`cyclos.clusterHandler = none`) should run as a single instance to avoid session inconsistency. Increase only after configuring Hazelcast clustering. |
 
-### Validating Runtime Configuration
+### A. Validating Runtime Configuration
 
 ```bash
 # View the CPU and memory limits on the latest revision
@@ -126,7 +126,7 @@ All other database variables (`sql_instance_name`, `database_password_length`, `
 
 > **PostgreSQL extensions** are installed automatically — see [Platform-Managed Behaviours](#platform-managed-behaviours). You do not need to set `enable_postgres_extensions = true` for the Cyclos-required extensions.
 
-### Validating Database Configuration
+### A. Validating Database Configuration
 
 ```bash
 # Confirm the database and user were created
@@ -192,7 +192,7 @@ Both probes target the `/api` endpoint, which reflects the Cyclos application's 
 
 > **Relationship to App_CloudRun probes:** `startup_probe` maps to `startup_probe_config` in App_CloudRun; `liveness_probe` maps to `health_check_config`. Their sub-field structure is identical. `Cyclos_CloudRun` does not expose separate `startup_probe_config` or `health_check_config` variables — `startup_probe` and `liveness_probe` are the only probe variables in this module.
 
-### Validating Health Probe Configuration
+### A. Validating Health Probe Configuration
 
 **Google Cloud Console:** Navigate to **Cloud Run → Services → cyclos → Revisions**, select the latest revision, then click **Container(s)** and view the **Health checks** section.
 
@@ -225,7 +225,7 @@ The backup import variables in `Cyclos_CloudRun` have the same semantics as thos
 | `backup_uri` | `""` | Full GCS URI or Google Drive file ID | For GCS: the full object URI, e.g. `"gs://my-backup-bucket/cyclos-2024-01-15.sql.gz"`. For Google Drive: the file ID from the share URL (the string after `/file/d/` in the URL). Required when `enable_backup_import = true`. |
 | `backup_format` | `"gz"` | `sql` / `tar` / `gz` / `tgz` / `tar.gz` / `zip` | The format of the backup file. The default is `"gz"` (gzip-compressed SQL dump from `pg_dump`), which is the recommended format for Cyclos backups. Use `"sql"` for uncompressed plain-text dumps. Note: unlike `Cyclos_GKE`, this module does not accept `"auto"` — the format must be specified explicitly. |
 
-### Validating Backup Import
+### A. Validating Backup Import
 
 ```bash
 # Confirm the import job completed successfully

@@ -10,7 +10,7 @@ Flowise is an open-source visual AI workflow builder that lets non-developers co
 
 ---
 
-## 0. How This Guide Is Structured
+## How This Guide Is Structured
 
 This guide documents variables that are **unique to `Flowise_GKE`** or that have **Flowise-specific defaults** differing from the `App_GKE` base module. For variables with identical semantics, refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
@@ -34,7 +34,7 @@ This guide documents variables that are **unique to `Flowise_GKE`** or that have
 
 ---
 
-## Platform-Managed Behaviours
+## 1. Platform-Managed Behaviours
 
 The following behaviours are applied automatically and cannot be overridden via user variables.
 
@@ -49,7 +49,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 1. Module Metadata (Group 0)
+## 2. Module Metadata (Group 0)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -66,7 +66,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 2. Project & Identity (Group 1)
+## 3. Project & Identity (Group 1)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -78,7 +78,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 3. Application Identity (Group 2)
+## 4. Application Identity (Group 2)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -91,7 +91,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 4. Runtime & Scaling (Group 3)
+## 5. Runtime & Scaling (Group 3)
 
 | Variable | Default | Options / Format | Description |
 |---|---|---|---|
@@ -125,7 +125,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 5. GKE Backend Configuration (Group 5)
+## 6. GKE Backend Configuration (Group 5)
 
 | Variable | Default | Options / Format | Description |
 |---|---|---|---|
@@ -144,7 +144,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 6. Environment Variables & Secrets (Group 4)
+## 7. Environment Variables & Secrets (Group 4)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -155,7 +155,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 7. Access & Networking
+## 8. Access & Networking
 
 ### Identity-Aware Proxy (Group 19)
 
@@ -199,7 +199,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 8. Storage (Groups 12–13)
+## 9. Storage (Groups 12–13)
 
 ### NFS (Group 12)
 
@@ -224,7 +224,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 9. Database (Group 15)
+## 10. Database (Group 15)
 
 Flowise requires PostgreSQL. All `DATABASE_*` connection variables are injected at container startup by `flowise-entrypoint.sh`.
 
@@ -245,7 +245,7 @@ Flowise requires PostgreSQL. All `DATABASE_*` connection variables are injected 
 
 ---
 
-## 10. Backup & Maintenance (Group 16)
+## 11. Backup & Maintenance (Group 16)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -258,7 +258,7 @@ Flowise requires PostgreSQL. All `DATABASE_*` connection variables are injected 
 
 ---
 
-## 11. CI/CD & GitHub Integration (Group 11)
+## 12. CI/CD & GitHub Integration (Group 11)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -274,7 +274,7 @@ Flowise requires PostgreSQL. All `DATABASE_*` connection variables are injected 
 
 ---
 
-## 12. Custom SQL (Group 17)
+## 13. Custom SQL (Group 17)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -285,7 +285,7 @@ Flowise requires PostgreSQL. All `DATABASE_*` connection variables are injected 
 
 ---
 
-## 13. Workload Automation (Group 10)
+## 14. Workload Automation (Group 10)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -295,7 +295,7 @@ Flowise requires PostgreSQL. All `DATABASE_*` connection variables are injected 
 
 ---
 
-## 14. Reliability Policies (Group 8)
+## 15. Reliability Policies (Group 8)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -306,7 +306,7 @@ Flowise requires PostgreSQL. All `DATABASE_*` connection variables are injected 
 
 ---
 
-## 15. StatefulSet Configuration (Group 6)
+## 16. StatefulSet Configuration (Group 6)
 
 Only relevant when `workload_type = "StatefulSet"`.
 
@@ -322,7 +322,7 @@ Only relevant when `workload_type = "StatefulSet"`.
 
 ---
 
-## 16. Observability & Health (Group 9)
+## 17. Observability & Health (Group 9)
 
 `Flowise_GKE` exposes **two parallel sets** of probe variables:
 
@@ -342,7 +342,7 @@ Both the startup and liveness probes target Flowise's dedicated health endpoint 
 
 ---
 
-## 17. Redis (Application-Specific)
+## 18. Redis (Application-Specific)
 
 Redis is not required for Flowise core functionality. Enable only if your Flowise deployment benefits from a shared cache.
 
@@ -357,7 +357,7 @@ Redis is not required for Flowise core functionality. Enable only if your Flowis
 
 ---
 
-## 18. Resource Quota (Group 7)
+## 19. Resource Quota (Group 7)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -372,7 +372,7 @@ Redis is not required for Flowise core functionality. Enable only if your Flowis
 
 ---
 
-## 19. Validation Guards
+## 20. Validation Guards
 
 `validation.tf` enforces the following cross-variable conditions at plan time:
 
@@ -385,7 +385,7 @@ Redis is not required for Flowise core functionality. Enable only if your Flowis
 
 ---
 
-## 20. Outputs
+## 21. Outputs
 
 | Output | Description | Sensitive |
 |---|---|---|

@@ -57,7 +57,7 @@ A comprehensive application configuration object passed to the platform module v
 | `app_name` | `"directus"` |
 | `application_version` | Directus version tag (e.g., `"11.1.0"`) |
 | `container_image` | `"directus/directus"` (base public image) |
-| `image_source` | `"custom"` — a custom Docker image is built (see §7) |
+| `image_source` | `"custom"` — a custom Docker image is built (see §8) |
 | `container_build_config` | `dockerfile_path = "Dockerfile"`, `context_path = "directus"` (relative to `scripts_dir`), `build_args = { DIRECTUS_VERSION = <version> }` |
 | `container_port` | `8055` |
 | `database_type` | `"POSTGRES"` |

@@ -273,7 +273,7 @@ A complete reference Django 5 project included as a starting point for applicati
 | File | Purpose |
 |------|---------|
 | `basesettings.py` | Development baseline (SQLite, DEBUG=True, standard Django apps) |
-| `settings.py` | Production override using `django-environ` — see §8 |
+| `settings.py` | Production override using `django-environ` — see §9 |
 | `urls.py` | Root URL configuration; includes the sample app |
 | `wsgi.py` | WSGI application entry point for Gunicorn |
 | `sample/` | A minimal sample app with a health check view and index template |

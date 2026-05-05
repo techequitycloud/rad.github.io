@@ -1,6 +1,6 @@
 # Wordpress_Common Module
 
-## Overview
+## 1. Overview
 
 `Wordpress_Common` is a configuration module in the RAD Modules ecosystem that provisions eight WordPress security keys and salts and outputs a `config` object consumed by `App_CloudRun` or `App_GKE` to deploy WordPress — the world's most widely used CMS — on Google Cloud.
 
@@ -10,7 +10,7 @@ The module uses **MySQL 8.0** and deploys WordPress on **Apache** via a `php:8.4
 
 ---
 
-## Architecture
+## 2. Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -43,7 +43,7 @@ The module uses **MySQL 8.0** and deploys WordPress on **Apache** via a `php:8.4
 
 ---
 
-## GCP Resources Created
+## 3. GCP Resources Created
 
 | Resource | Name Pattern | Description |
 |----------|-------------|-------------|
@@ -72,7 +72,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 
 ---
 
-## Module Outputs
+## 4. Module Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
@@ -95,7 +95,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 
 ---
 
-## Input Variables
+## 5. Input Variables
 
 ### A. Identity & Project
 
@@ -159,7 +159,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 
 ---
 
-## Environment Variables
+## 6. Environment Variables
 
 The module merges caller-supplied `environment_variables` with the following defaults:
 

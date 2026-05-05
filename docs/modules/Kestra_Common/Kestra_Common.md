@@ -88,10 +88,10 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | CPU/memory limits; no requests set |
 | `min_instance_count` | from `min_instance_count` (default: `1`) |
 | `max_instance_count` | from `max_instance_count` (default: `1` — see standalone mode note) |
-| `environment_variables` | Merged map — see §5 |
+| `environment_variables` | Merged map — see §6 |
 | `enable_postgres_extensions` | `false` |
 | `postgres_extensions` | `[]` |
-| `initialization_jobs` | Default `db-init` job or custom override — see §6 |
+| `initialization_jobs` | Default `db-init` job or custom override — see §7 |
 | `startup_probe` | from `startup_probe` variable |
 | `liveness_probe` | from `liveness_probe` variable |
 
@@ -206,7 +206,7 @@ When `initialization_jobs` is provided by the caller, the custom jobs replace th
 |---|---|
 | `Dockerfile` | Wraps `kestra/kestra:latest`. Installs `socat`, copies `entrypoint.sh`, and sets it as the container entrypoint. Exposes port `8080`. |
 | `entrypoint.sh` | Bridges the Cloud SQL Unix socket to TCP `127.0.0.1:5432` using `socat` (required for Java JDBC). Constructs `DATASOURCES_POSTGRES_URL`, `DATASOURCES_POSTGRES_USERNAME`, and `DATASOURCES_POSTGRES_PASSWORD` from platform `DB_*` variables. Launches `kestra server standalone`. |
-| `db-init.sh` | Bootstrap job script — see §6. |
+| `db-init.sh` | Bootstrap job script — see §7. |
 
 > **Socket bridge detail**: Cloud Run's Cloud SQL Auth Proxy creates a Unix socket at `${DB_HOST}/.s.PGSQL.5432`. Java JDBC cannot connect via Unix socket, so `entrypoint.sh` uses `socat` to expose the socket as TCP on `127.0.0.1:5432`. A symlink (`/tmp/cloudsql.sock`) is created first because `socat` uses colons as delimiters and the Cloud SQL socket path contains colons (the connection name). On GKE, the Cloud SQL Auth Proxy sidecar already listens on TCP `127.0.0.1:5432`, so the bridge logic is skipped.
 

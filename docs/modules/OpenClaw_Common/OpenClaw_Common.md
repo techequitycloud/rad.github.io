@@ -80,7 +80,7 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | From `var.container_resources` if set, else `cpu_limit`/`memory_limit` |
 | `min_instance_count` | From `var.min_instance_count` (default: `0`) |
 | `max_instance_count` | From `var.max_instance_count` (default: `1`) |
-| `environment_variables` | Fixed set merged with `var.environment_variables` — see §4 |
+| `environment_variables` | Fixed set merged with `var.environment_variables` — see section 5 |
 | `enable_postgres_extensions` | `false` |
 | `postgres_extensions` | `[]` |
 | `initialization_jobs` | `[]` — no default init job |
@@ -271,20 +271,20 @@ The `--bind lan` flag is required for Cloud Run — the runtime maps the externa
 |----------|------|---------|-------------|
 | `environment_variables` | `map(string)` | `{}` | Additional environment variables merged into the container. Module-managed vars always take precedence |
 
-### Health Probes
+### G. Health Probes
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=20, timeout_seconds=5, period_seconds=5, failure_threshold=24 }` | Startup probe. The 20s initial delay and 24-attempt threshold give ~2 minutes for GCS Fuse mount and Node.js startup |
 | `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe targeting `/health` |
 
-### Image
+### H. Image
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `enable_image_mirroring` | `bool` | `true` | Mirror the built image to Artifact Registry |
 
-### Credentials
+### I. Credentials
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|

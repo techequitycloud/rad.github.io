@@ -21,7 +21,7 @@ definitions. The `Flowise_Common` outputs feed into App_CloudRun's `application_
 
 ## 1. Module Overview
 
-### What `Flowise_CloudRun` provides
+### A. What `Flowise_CloudRun` provides
 
 - A **Flowise container** built from the `flowiseai/flowise` base image via a custom
   Dockerfile deployed on Cloud Run listening on port `3000`.
@@ -36,7 +36,7 @@ definitions. The `Flowise_Common` outputs feed into App_CloudRun's `application_
   via `module_secret_env_vars`. This is the Flowise admin password.
 - Health probes target `/api/v1/ping`, which is Flowise's dedicated health endpoint.
 
-### Key differences from `App_CloudRun` defaults
+### B. Key differences from `App_CloudRun` defaults
 
 | Feature | App_CloudRun default | Flowise_CloudRun default |
 |---|---|---|
@@ -334,7 +334,7 @@ workflow executions.
 The following are set automatically by the module and cannot be overridden via input
 variables.
 
-### Environment Variables (always injected)
+### A. Environment Variables (always injected)
 
 | Variable | Value / Source | Notes |
 |---|---|---|
@@ -351,7 +351,7 @@ variables.
 | `DATABASE_PASSWORD` | Secret Manager ref | Mapped from `DB_PASSWORD` by `flowise-entrypoint.sh`. |
 | `FLOWISE_PASSWORD` | Secret Manager ref | Auto-generated admin password from Flowise_Common. |
 
-### Structural Wiring
+### B. Structural Wiring
 
 | Behaviour | Detail |
 |---|---|
