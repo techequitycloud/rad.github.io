@@ -1,6 +1,6 @@
 ---
 title: "EKS_GKE Module Documentation"
-sidebar_label: "EKS_GKE"
+sidebar_label: "AWS"
 ---
 
 # EKS_GKE Module
