@@ -28,6 +28,18 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 
 `Wikijs_Common` manages the container image source, build configuration, and GCS Fuse storage (`wikijs-storage` bucket provisioned for persistent asset storage). The database password is wired from `module.app_cloudrun.database_password_secret` into `module_secret_env_vars` as the key `database_password_secret`, which the platform maps to the `DB_PASS` environment variable consumed by Wiki.js. The `pg_trgm` PostgreSQL extension is installed by `Wikijs_Common` to enable native full-text search.
 
+### Key differences from `App_CloudRun` defaults
+
+| Feature | App_CloudRun default | Wikijs_CloudRun default |
+|---|---|---|
+| `container_port` | `8080` | `3000` (set by `Wikijs_Common`) |
+| `execution_environment` | `"gen1"` | `"gen2"` |
+| `enable_nfs` | `false` | `true` (mount: `/mnt/nfs`) |
+| `enable_redis` | `false` | `false` |
+| Database | none | Cloud SQL PostgreSQL 15 with `pg_trgm` extension |
+| GCS Fuse storage | none | `wikijs-storage` bucket (provisioned by `Wikijs_Common`) |
+| Platform-managed secret | none | `database_password_secret` (wired as `DB_PASS`) |
+
 ---
 
 ## 2. IAM & Project Identity

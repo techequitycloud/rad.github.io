@@ -30,6 +30,18 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 
 **Note on MySQL:** This module uses MySQL 8.0, not PostgreSQL. The Cloud SQL Auth Proxy sidecar (`enable_cloudsql_volume = true`) provides a Unix socket connection. Attempting to disable `enable_cloudsql_volume` without switching to TCP-based connectivity will break the database connection.
 
+### Key differences from `App_CloudRun` defaults
+
+| Feature | App_CloudRun default | Wordpress_CloudRun default |
+|---|---|---|
+| `container_port` | `8080` | `80` |
+| `execution_environment` | `"gen1"` | `"gen2"` |
+| `enable_nfs` | `false` | `true` (mount: `/mnt/nfs`) |
+| `enable_redis` | `false` | `true` (object cache) |
+| `enable_cloudsql_volume` | `false` | `true` (required for MySQL Unix socket) |
+| `container_image_source` | varies | `"custom"` (Cloud Build) |
+| Database | none | Cloud SQL MySQL 8.0 (initialised by `db-init` job) |
+
 ---
 
 ## 2. IAM & Project Identity
