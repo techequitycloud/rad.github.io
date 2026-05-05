@@ -32,6 +32,32 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Platform Tutorials',
+      items: [
+        { type: 'doc', id: 'tutorials/getting-started', label: 'Quick Start' },
+        { type: 'doc', id: 'tutorials/admin', label: 'Admin' },
+        { type: 'doc', id: 'tutorials/partner', label: 'Partner' },
+        { type: 'doc', id: 'tutorials/user', label: 'User' },
+        { type: 'doc', id: 'tutorials/agent', label: 'Agent' },
+        { type: 'doc', id: 'tutorials/finance', label: 'Finance' },
+        { type: 'doc', id: 'tutorials/support', label: 'Support' },
+        { type: 'doc', id: 'tutorials/roi', label: 'ROI' },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Platform Demos',
+      items: [
+        { type: 'doc', id: 'demos/user', label: 'User' },
+        { type: 'doc', id: 'demos/partner', label: 'Partner' },
+        { type: 'doc', id: 'demos/support', label: 'Support' },
+        { type: 'doc', id: 'demos/agent', label: 'Agent' },
+        { type: 'doc', id: 'demos/finance', label: 'Finance' },
+        { type: 'doc', id: 'demos/admin', label: 'Admin' },
+      ],
+    },
+    {
+      type: 'category',
       label: 'Certification Guides',
       items: [
         {
@@ -391,44 +417,6 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Platform Demos',
-      items: [
-        { type: 'doc', id: 'demos/user', label: 'User' },
-        { type: 'doc', id: 'demos/partner', label: 'Partner' },
-        { type: 'doc', id: 'demos/support', label: 'Support' },
-        { type: 'doc', id: 'demos/agent', label: 'Agent' },
-        { type: 'doc', id: 'demos/finance', label: 'Finance' },
-        { type: 'doc', id: 'demos/admin', label: 'Admin' },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Platform Tutorials',
-      items: [
-        { type: 'doc', id: 'tutorials/getting-started', label: 'Quick Start' },
-        { type: 'doc', id: 'tutorials/admin', label: 'Admin' },
-        { type: 'doc', id: 'tutorials/partner', label: 'Partner' },
-        { type: 'doc', id: 'tutorials/user', label: 'User' },
-        { type: 'doc', id: 'tutorials/agent', label: 'Agent' },
-        { type: 'doc', id: 'tutorials/finance', label: 'Finance' },
-        { type: 'doc', id: 'tutorials/support', label: 'Support' },
-        { type: 'doc', id: 'tutorials/roi', label: 'ROI' },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Platform Practices',
-      items: [
-        { type: 'doc', id: 'practices/cicd', label: 'CI/CD' },
-        { type: 'doc', id: 'practices/devsecops', label: 'DevSecOps' },
-        { type: 'doc', id: 'practices/finops', label: 'FinOps' },
-        { type: 'doc', id: 'practices/gitops-iac', label: 'GitOps & IaC' },
-        { type: 'doc', id: 'practices/idp', label: 'IDP' },
-        { type: 'doc', id: 'practices/sre', label: 'SRE' },
-      ],
-    },
-    {
-      type: 'category',
       label: 'Platform Capabilities',
       items: [
         { type: 'doc', id: 'capabilities/ai', label: 'Artificial Intelligence' },
@@ -446,6 +434,18 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'capabilities/serverless', label: 'Serverless' },
         { type: 'doc', id: 'capabilities/service-mesh', label: 'Service Mesh' },
         { type: 'doc', id: 'capabilities/zero-trust', label: 'Zero Trust' },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Platform Practices',
+      items: [
+        { type: 'doc', id: 'practices/cicd', label: 'CI/CD' },
+        { type: 'doc', id: 'practices/devsecops', label: 'DevSecOps' },
+        { type: 'doc', id: 'practices/finops', label: 'FinOps' },
+        { type: 'doc', id: 'practices/gitops-iac', label: 'GitOps & IaC' },
+        { type: 'doc', id: 'practices/idp', label: 'IDP' },
+        { type: 'doc', id: 'practices/sre', label: 'SRE' },
       ],
     },
     {
