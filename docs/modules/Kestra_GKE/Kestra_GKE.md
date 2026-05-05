@@ -6,9 +6,11 @@ Kestra is an open-source data orchestration and scheduling platform (Apache 2.0 
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
+> This guide documents variables that are **unique to `Kestra_GKE`** or that have **Kestra-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
+
 ---
 
-## How This Guide Is Structured
+## 0. How This Guide Is Structured
 
 This guide documents variables that are **unique to `Kestra_GKE`** or that have **Kestra-specific defaults** differing from the `App_GKE` base module. For variables with identical semantics, refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 

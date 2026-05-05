@@ -2,11 +2,13 @@
 
 This guide describes the configuration variables that are **unique to the `Wordpress_GKE` module**. Because `Wordpress_GKE` is a wrapper around `App_GKE`, the vast majority of its variables are passed directly to that base module and are fully documented in the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). This guide explains the WordPress-specific additions, the differences in default values, and what the `Wordpress_Common` sub-module provisions automatically.
 
+> This guide documents variables that are **unique to `Wordpress_GKE`** or that have **WordPress-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
+
 > **Where to look:** If a variable you are configuring is not described here, consult the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). All `App_GKE` features — GKE cluster selection, session affinity, network policies, Cloud Armor, IAP, CI/CD, Cloud Deploy, Binary Authorization, StatefulSets, resource quotas, and VPC Service Controls — are available in `Wordpress_GKE` with identical behaviour and configuration.
 
 ---
 
-## WordPress Application Architecture
+## 1. WordPress Application Architecture
 
 `Wordpress_GKE` composes two modules:
 

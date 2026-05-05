@@ -12,6 +12,8 @@ n8n is an open-source workflow automation platform that lets you connect service
 
 `N8N_GKE` wraps `App_GKE` to deploy n8n workflow automation on GKE Autopilot. It adds n8n-specific application configuration, Redis queue mode support, NFS persistence, and automated database initialisation on top of the standard `App_GKE` infrastructure.
 
+> This guide documents variables that are **unique to `N8N_GKE`** or that have **n8n-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
+
 ### Key differences from `App_GKE` defaults
 
 | Variable | App_GKE Default | N8N_GKE Default |

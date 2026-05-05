@@ -74,7 +74,7 @@ Odoo_CloudRun (variables.tf / odoo.tf / main.tf)
 
 ---
 
-## §3 · Core Service Configuration
+## 3. Core Service Configuration
 
 ### §3.A · Application Identity
 

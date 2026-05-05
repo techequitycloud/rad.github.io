@@ -223,7 +223,7 @@ The `--bind lan` flag is required for Cloud Run — the runtime maps the externa
 
 ## 7. Input Variables
 
-### Project & Identity
+### A. Project & Identity
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -233,7 +233,7 @@ The `--bind lan` flag is required for Cloud Run — the runtime maps the externa
 | `common_labels` | `map(string)` | `{}` | Labels applied to all resources |
 | `deployment_region` | `string` | `"us-central1"` | Region for the GCS workspace bucket |
 
-### Application Details
+### B. Application Details
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -242,7 +242,7 @@ The `--bind lan` flag is required for Cloud Run — the runtime maps the externa
 | `description` | `string` | `"OpenClaw AI Gateway - Serverless multi-tenant AI agent gateway on Cloud Run"` | Application description |
 | `application_version` | `string` | `"latest"` | OpenClaw image tag used as `BASE_IMAGE` build arg |
 
-### Skills Repository
+### C. Skills Repository
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|

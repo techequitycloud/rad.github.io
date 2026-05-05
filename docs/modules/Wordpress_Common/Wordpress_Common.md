@@ -359,7 +359,7 @@ if ($_wp_site_url !== '') {
 
 ---
 
-## Platform-Specific Differences
+## 13. Platform-Specific Differences
 
 | Aspect | Wordpress_CloudRun | Wordpress_GKE |
 |--------|-------------------|---------------|
@@ -373,7 +373,7 @@ if ($_wp_site_url !== '') {
 
 ---
 
-## Usage Example
+## 14. Usage Example
 
 ```hcl
 module "wordpress_common" {
