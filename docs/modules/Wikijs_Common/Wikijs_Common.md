@@ -1,6 +1,6 @@
 # Wikijs_Common Module
 
-## Overview
+## 1. Overview
 
 `Wikijs_Common` is a pure-configuration Terraform module in the RAD Modules ecosystem. It generates a `config` object consumed by platform modules (`App_CloudRun`, `App_GKE`) to deploy Wiki.js — an open-source Node.js wiki platform — on Google Cloud.
 

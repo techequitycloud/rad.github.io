@@ -40,7 +40,6 @@ Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation 
 | `cpu_limit` | `"1000m"` | `"2000m"` |
 | `memory_limit` | `"512Mi"` | `"2Gi"` |
 | `enable_cloudsql_volume` | `false` | `true` |
-| `ingress_settings` | `"internal"` | `"all"` |
 
 ---
 

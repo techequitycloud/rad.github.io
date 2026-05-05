@@ -145,14 +145,14 @@ The following values are fixed inside `Flowise_Common` and cannot be overridden 
 
 `Flowise_Common` merges the following into `config.environment_variables`, with `var.environment_variables` taking precedence:
 
-| Variable | Value | Purpose |
+| Variable | Default Value | Description |
 |---|---|---|
-| `DATABASE_TYPE` | `"postgres"` | Forces PostgreSQL backend |
-| `DATABASE_PORT` | `"5432"` | PostgreSQL default port |
-| `FLOWISE_USERNAME` | `var.flowise_username` (default: `"admin"`) | Flowise admin username |
-| `APIKEY_STORAGE_TYPE` | `"db"` | Stores Flowise API keys in the database |
-| `STORAGE_TYPE` | `"gcs"` | Flowise file storage backend |
-| `GCLOUD_PROJECT` | `var.project_id` | GCP project for GCS access |
+| `DATABASE_TYPE` | `"postgres"` | Forces PostgreSQL backend. |
+| `DATABASE_PORT` | `"5432"` | PostgreSQL default port. |
+| `FLOWISE_USERNAME` | `var.flowise_username` (default: `"admin"`) | Flowise admin username. |
+| `APIKEY_STORAGE_TYPE` | `"db"` | Stores Flowise API keys in the database. |
+| `STORAGE_TYPE` | `"gcs"` | Flowise file storage backend. |
+| `GCLOUD_PROJECT` | `var.project_id` | GCP project for GCS access. |
 
 > **`DATABASE_HOST`, `DATABASE_USER`, `DATABASE_NAME`, `DATABASE_PASSWORD`**: These are **not** set in the Terraform environment map. They are injected at container startup by `flowise-entrypoint.sh` from platform-injected `DB_*` variables. This approach is required for GKE: env vars are ordered alphabetically in the pod spec, so `$(DB_HOST)` in `DATABASE_HOST` would never be resolved by Kubernetes (since `DB_HOST` is defined after `DATABASE_HOST`). Direct shell assignment in the entrypoint sidesteps this ordering constraint. On Cloud Run the `$(DB_HOST)` substitution still runs, but overwriting with the same value is harmless.
 

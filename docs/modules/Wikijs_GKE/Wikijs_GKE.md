@@ -102,7 +102,7 @@ The Wiki.js-specific defaults are:
 
 ---
 
-## Environment Variables & Secrets
+## 7. Environment Variables & Secrets
 
 All variables are identical in purpose to `App_GKE`. See [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for full descriptions.
 
@@ -123,7 +123,7 @@ To add application-level environment variables, add entries to the `environment_
 
 ---
 
-## GKE Backend Configuration
+## 8. GKE Backend Configuration
 
 All variables are identical to `App_GKE`. See [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for full descriptions.
 
@@ -137,7 +137,7 @@ Wiki.js-specific defaults:
 
 ---
 
-## Database Configuration
+## 9. Database Configuration
 
 All variables are identical in purpose to `App_GKE`. See [App_GKE §3.B Database (Cloud SQL)](../App_GKE/App_GKE.md#b-database-cloud-sql) for full descriptions.
 
@@ -155,7 +155,7 @@ The Wiki.js-specific defaults are:
 
 ---
 
-## All Other Configuration Groups
+## 10. All Other Configuration Groups
 
 The following groups are available in `Wikijs_GKE` and behave exactly as documented in the `App_GKE` guide. The Wiki.js application imposes no additional constraints or defaults on them beyond what is noted in that guide.
 
@@ -193,7 +193,7 @@ The following groups are available in `Wikijs_GKE` and behave exactly as documen
 
 ---
 
-## Required Providers
+## 11. Required Providers
 
 `Wikijs_GKE` declares the following required providers in `versions.tf` (minimum versions):
 
@@ -211,7 +211,7 @@ OpenTofu/Terraform `>= 1.0` is required.
 
 ---
 
-## Cross-Variable Validation Guards
+## 12. Cross-Variable Validation Guards
 
 `Wikijs_GKE` includes a `validation.tf` file with lifecycle `precondition` blocks that catch invalid configuration combinations at plan time:
 
@@ -224,7 +224,7 @@ OpenTofu/Terraform `>= 1.0` is required.
 
 ---
 
-## Module Outputs
+## 13. Module Outputs
 
 | Output | Description |
 |--------|-------------|
@@ -233,7 +233,7 @@ OpenTofu/Terraform `>= 1.0` is required.
 
 ---
 
-## Deployment Prerequisites & Dependency Analysis
+## 14. Deployment Prerequisites & Dependency Analysis
 
 `Wikijs_GKE` inherits all prerequisites and dependency requirements from `App_GKE`. See [App_GKE — Deployment Prerequisites & Dependency Analysis](../App_GKE/App_GKE.md#deployment-prerequisites--dependency-analysis) for the full reference.
 

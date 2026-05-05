@@ -97,7 +97,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 
 ## Input Variables
 
-### Identity & Project
+### A. Identity & Project
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -108,7 +108,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 | `deployment_id` | string | `""` | Unique deployment identifier |
 | `service_url` | string | `""` | URL where the service will be accessible |
 
-### Application
+### B. Application
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -121,7 +121,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 | `db_name` | string | `"wp"` | MySQL database name |
 | `db_user` | string | `"wp"` | MySQL database user |
 
-### Resources
+### C. Resources
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -137,7 +137,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 
 > **Note:** `cloudsql_volume_mount_path` is hardcoded to `"/cloudsql"` in the config output — it is not a variable exposed by `Wordpress_Common`. The callers (`Wordpress_CloudRun`, `Wordpress_GKE`) may override it when merging the config into `application_modules`.
 
-### WordPress-Specific
+### D. WordPress-Specific
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -148,7 +148,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 | `redis_host` | string | `""` | Redis host override |
 | `redis_port` | string | `"6379"` | Redis port |
 
-### Health Probes
+### E. Health Probes
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -200,7 +200,26 @@ Callers may inject additional secret references via `var.secret_environment_vari
 
 ---
 
-## Initialization Job: `db-init`
+## 8. Non-Configurable Values
+
+The following values are fixed inside `Wordpress_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_port` | `80` | Apache listens on port 80 inside the container. |
+| `database_type` | `"MYSQL_8_0"` | WordPress requires MySQL 8.0; PostgreSQL is not supported. |
+| `enable_mysql_plugins` | `false` | WordPress does not require MySQL plugins. |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` | Fixed Cloud SQL Auth Proxy socket path. |
+| `WORDPRESS_TABLE_PREFIX` | `"wp_"` | Standard WordPress table prefix. |
+| `WORDPRESS_DEBUG` | `"false"` | PHP debug mode is always off in production. |
+| `secret_count` | 8 secrets | All 8 WordPress security keys and salts. |
+| `secret_length` | 64 characters, with special chars | Largest secrets in the RAD Modules ecosystem. |
+| `secret_propagation_wait` | `30s` | IAM propagation delay after secret creation. |
+| GCS bucket suffix | `"wp-uploads"` | Fixed GCS bucket name suffix for the WordPress media library. |
+
+---
+
+## 9. Initialization Job: `db-init`
 
 | Property | Value |
 |----------|-------|
@@ -384,7 +403,7 @@ module "wordpress_cloudrun" {
 }
 ```
 
-### Aligning `resource_prefix` with `App_GKE`
+### A. Aligning `resource_prefix` with `App_GKE`
 
 When deploying on GKE, pass `App_GKE`'s `resource_prefix` so all secrets and cluster resources share the same naming prefix:
 

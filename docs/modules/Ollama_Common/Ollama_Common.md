@@ -270,7 +270,7 @@ start within the retry window.
 |---|---|---|---|
 | `gcs_volumes` | `list(any)` | `[]` | Additional GCS volume mounts. The `ollama-models` bucket at `/mnt/gcs` is always appended automatically. |
 
-### Environment & Probes
+### F. Environment & Probes
 
 | Variable | Type | Default | Description |
 |---|---|---|---|

@@ -12,9 +12,11 @@ The module uses `Odoo_Common` as a sub-module to resolve application configurati
 secrets, and storage bucket lists, which are then passed into `App_CloudRun` via
 `application_config`, `module_secret_env_vars`, and `module_storage_buckets`.
 
+> This guide documents variables that are **unique to `Odoo_CloudRun`** or that have **Odoo-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
+
 ---
 
-## §1 · Module Overview
+## 1. Module Overview
 
 | Attribute | Value |
 |---|---|
@@ -45,9 +47,21 @@ Odoo_CloudRun (variables.tf / odoo.tf / main.tf)
 - `storage_buckets` → merged into `module_storage_buckets`
 - `path` → used to resolve `scripts_dir`
 
+### Key differences from `App_CloudRun` defaults
+
+| Feature | App_CloudRun default | Odoo_CloudRun default |
+|---|---|---|
+| `container_port` | `8080` | `8069` |
+| `memory_limit` | `"512Mi"` | `"1Gi"` |
+| `enable_cloudsql_volume` | `false` | `true` |
+| `enable_image_mirroring` | `true` | `true` |
+| Database type | user-configured | PostgreSQL (required) |
+| Platform-managed jobs | none | `nfs-init` + `db-init` |
+| Platform-managed secret | none | `ODOO_MASTER_PASS` (auto-generated) |
+
 ---
 
-## §2 · IAM & Project Identity
+## 2. IAM & Project Identity
 
 | Variable | Default | Description |
 |---|---|---|

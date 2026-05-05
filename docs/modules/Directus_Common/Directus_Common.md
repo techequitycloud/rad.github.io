@@ -127,24 +127,24 @@ The following values are fixed inside `Directus_Common` and cannot be overridden
 
 The module sets the following environment variables by default:
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `DB_CLIENT` | `"pg"` | Directus PostgreSQL driver |
-| `DB_USER` | from `db_user` variable | Database application user |
-| `DB_SSL` | `"false"` (with Auth Proxy) / `'{"rejectUnauthorized":false}'` (TCP) | SSL mode; disabled when using the Auth Proxy sidecar, set to skip CA verification for private IP TCP |
-| `STORAGE_LOCATIONS` | `"gcs"` | Enables GCS as the file storage backend |
-| `STORAGE_GCS_DRIVER` | `"gcs"` | GCS driver identifier |
-| `STORAGE_GCS_BUCKET` | `<project_id>-<tenant>-directus-uploads-<deployment_id>` | Uploads bucket name |
-| `BOOTSTRAP` | `"true"` | Triggers `directus bootstrap` on first startup |
-| `AUTO_MIGRATE` | `"true"` | Runs `directus database migrate:latest` on every startup |
-| `ADMIN_EMAIL` | `"admin@example.com"` | Initial admin account email |
+| Variable | Default Value | Description |
+|----------|---------------|-------------|
+| `DB_CLIENT` | `"pg"` | Directus PostgreSQL driver. |
+| `DB_USER` | from `db_user` variable | Database application user. |
+| `DB_SSL` | `"false"` (with Auth Proxy) / `'{"rejectUnauthorized":false}'` (TCP) | SSL mode; disabled when using the Auth Proxy sidecar, set to skip CA verification for private IP TCP. |
+| `STORAGE_LOCATIONS` | `"gcs"` | Enables GCS as the file storage backend. |
+| `STORAGE_GCS_DRIVER` | `"gcs"` | GCS driver identifier. |
+| `STORAGE_GCS_BUCKET` | `<project_id>-<tenant>-directus-uploads-<deployment_id>` | Uploads bucket name. |
+| `BOOTSTRAP` | `"true"` | Triggers `directus bootstrap` on first startup. |
+| `AUTO_MIGRATE` | `"true"` | Runs `directus database migrate:latest` on every startup. |
+| `ADMIN_EMAIL` | `"admin@example.com"` | Initial admin account email. |
 
 **When `enable_redis = true`**, two additional variables are set:
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `CACHE_ENABLED` | `"true"` | Enables Directus response caching |
-| `CACHE_STORE` | `"redis"` | Uses Redis as the cache backend |
+| Variable | Default Value | Description |
+|----------|---------------|-------------|
+| `CACHE_ENABLED` | `"true"` | Enables Directus response caching. |
+| `CACHE_STORE` | `"redis"` | Uses Redis as the cache backend. |
 
 The `REDIS` connection URL is injected as a secret (not a plain env var) via `secret_ids`. The URL format is:
 - With auth: `redis://:<password>@<host>:<port>`

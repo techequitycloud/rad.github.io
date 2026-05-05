@@ -135,11 +135,27 @@ Absolute path to the `OpenClaw_Common` module directory. Wrapper modules set `sc
 
 ---
 
-## 4. Environment Variables
+## 4. Non-Configurable Values
+
+The following values are fixed inside `OpenClaw_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_image` | `"ghcr.io/openclaw/openclaw"` | Base image for the custom wrapper build. |
+| `image_source` | `"custom"` | Requires a custom Dockerfile that layers `entrypoint.sh` and `git` onto the upstream image. |
+| `container_port` | `8080` | OpenClaw's fixed HTTP listening port. |
+| `database_type` | `null` | OpenClaw requires no relational database (wrappers override to `"NONE"`). |
+| `enable_cloudsql_volume` | `false` | No Cloud SQL Auth Proxy is needed. |
+| `OPENCLAW_STATE_DIR` | `"/tmp/openclaw"` | Fixed to local disk to avoid GCS Fuse hard-link failures. |
+| `XDG_CONFIG_HOME` | `"/tmp/openclaw"` | Same reason — XDG config must not target GCS. |
+
+---
+
+## 5. Environment Variables
 
 The module merges caller-provided `environment_variables` with a fixed set injected after the caller values (caller values are overridden by module-managed ones):
 
-### Fixed Variables (always set by the module)
+### A. Fixed Variables (always set by the module)
 
 | Variable | Value | Purpose |
 |----------|-------|---------|
@@ -155,7 +171,7 @@ Agent workspace and `agentDir` are set to `/data` paths in the `openclaw.json` c
 
 ---
 
-## 5. Scripts and Container Image
+## 6. Scripts and Container Image
 
 All supporting files are in `scripts/`. The `scripts/` directory is used as both the Docker build context and the `scripts_dir` for wrapper modules.
 
@@ -205,7 +221,7 @@ The `--bind lan` flag is required for Cloud Run — the runtime maps the externa
 
 ---
 
-## 6. Input Variables
+## 7. Input Variables
 
 ### Project & Identity
 
@@ -282,7 +298,7 @@ The `--bind lan` flag is required for Cloud Run — the runtime maps the externa
 
 ---
 
-## 7. GCS Volume Layout
+## 8. GCS Volume Layout
 
 The `<wrapper_prefix>-storage` GCS bucket is mounted at `/data` in the container:
 
@@ -312,7 +328,7 @@ The `uid=1000,gid=1000` mount options match the container user (UID 1000) set in
 
 ---
 
-## 8. Platform-Specific Differences
+## 9. Platform-Specific Differences
 
 | Aspect | OpenClaw_CloudRun | OpenClaw_GKE |
 |--------|-------------------|--------------|
@@ -327,7 +343,7 @@ The `uid=1000,gid=1000` mount options match the container user (UID 1000) set in
 
 ---
 
-## 9. Implementation Pattern
+## 10. Implementation Pattern
 
 ```hcl
 # Example: how OpenClaw_CloudRun instantiates OpenClaw_Common

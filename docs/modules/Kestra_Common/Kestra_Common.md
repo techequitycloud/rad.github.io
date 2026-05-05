@@ -152,19 +152,19 @@ The following values are fixed inside `Kestra_Common` and cannot be overridden b
 
 `Kestra_Common` merges the following into `config.environment_variables`, with `var.environment_variables` taking precedence:
 
-| Variable | Value | Purpose |
+| Variable | Default Value | Description |
 |---|---|---|
-| `MICRONAUT_SERVER_PORT` | `"8080"` | Kestra/Micronaut HTTP server port |
-| `KESTRA_QUEUE_TYPE` | `"postgres"` | Use PostgreSQL as the internal queue |
-| `KESTRA_REPOSITORY_TYPE` | `"postgres"` | Use PostgreSQL as the flow/execution repository |
-| `KESTRA_STORAGE_TYPE` | `"gcs"` | Use Google Cloud Storage for artifact storage |
-| `KESTRA_STORAGE_GCS_BUCKET` | `<resource_prefix>-kestra-storage` | GCS bucket name for flows and artifacts |
-| `KESTRA_BASICAUTH_ENABLED` | `"true"` | Enables Kestra's built-in basic auth |
-| `KESTRA_BASICAUTH_USERNAME` | `"admin"` | Default admin username |
-| `DATASOURCES_POSTGRES_DRIVERCLASSNAME` | `"org.postgresql.Driver"` | JDBC driver class (required by Micronaut) |
-| `ENDPOINTS_ALL_PORT` | `"8080"` | Exposes management endpoints (including `/health`) on port 8080 so startup/liveness probes can reach them |
-| `FLYWAY_DATASOURCES_POSTGRES_BASELINE_ON_MIGRATE` | `"true"` | Prevents Flyway failure on Cloud SQL's pre-populated public schema |
-| `FLYWAY_DATASOURCES_POSTGRES_BASELINE_VERSION` | `"0"` | Baselines at v0, then applies all Kestra migrations |
+| `MICRONAUT_SERVER_PORT` | `"8080"` | Kestra/Micronaut HTTP server port. |
+| `KESTRA_QUEUE_TYPE` | `"postgres"` | Use PostgreSQL as the internal queue. |
+| `KESTRA_REPOSITORY_TYPE` | `"postgres"` | Use PostgreSQL as the flow/execution repository. |
+| `KESTRA_STORAGE_TYPE` | `"gcs"` | Use Google Cloud Storage for artifact storage. |
+| `KESTRA_STORAGE_GCS_BUCKET` | `<resource_prefix>-kestra-storage` | GCS bucket name for flows and artifacts. |
+| `KESTRA_BASICAUTH_ENABLED` | `"true"` | Enables Kestra's built-in basic auth. |
+| `KESTRA_BASICAUTH_USERNAME` | `"admin"` | Default admin username. |
+| `DATASOURCES_POSTGRES_DRIVERCLASSNAME` | `"org.postgresql.Driver"` | JDBC driver class (required by Micronaut). |
+| `ENDPOINTS_ALL_PORT` | `"8080"` | Exposes management endpoints (including `/health`) on port 8080 so startup/liveness probes can reach them. |
+| `FLYWAY_DATASOURCES_POSTGRES_BASELINE_ON_MIGRATE` | `"true"` | Prevents Flyway failure on Cloud SQL's pre-populated public schema. |
+| `FLYWAY_DATASOURCES_POSTGRES_BASELINE_VERSION` | `"0"` | Baselines at v0, then applies all Kestra migrations. |
 
 > **DATASOURCES_POSTGRES_URL, DATASOURCES_POSTGRES_USERNAME, DATASOURCES_POSTGRES_PASSWORD**: These are **not** set by `Kestra_Common`. They are constructed at container startup by `entrypoint.sh` from the platform-injected `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` variables. Do not set them in `environment_variables`.
 

@@ -268,7 +268,7 @@ Redis allows Node-RED to store flow context data externally, enabling it to pers
 | `redis_port` | `"6379"` | Redis TCP port (string). |
 | `redis_auth` | `""` | Redis authentication password. Sensitive. Leave empty if authentication is not configured. |
 
-### §8.B · Custom SQL (Unused)
+### B. Custom SQL (Unused)
 
 Node-RED has no relational database. These variables are exposed for API compatibility with App_CloudRun and have no effect:
 
@@ -279,7 +279,7 @@ Node-RED has no relational database. These variables are exposed for API compati
 | `custom_sql_scripts_path` | `""` | No-op for Node-RED. |
 | `custom_sql_scripts_use_root` | `false` | No-op for Node-RED. |
 
-### §8.C · Artifact Registry Image Management
+### C. Artifact Registry Image Management
 
 | Variable | Default | Description |
 |---|---|---|
@@ -287,7 +287,7 @@ Node-RED has no relational database. These variables are exposed for API compati
 | `delete_untagged_images` | `true` | Automatically deletes untagged container images. |
 | `image_retention_days` | `30` | Days after which images are eligible for age-based deletion. 0 disables. |
 
-### §8.D · Observability
+### D. Observability
 
 | Variable | Default | Description |
 |---|---|---|
@@ -298,7 +298,7 @@ Node-RED has no relational database. These variables are exposed for API compati
 
 ---
 
-## §9 · Platform-Managed Behaviours
+## 9. Platform-Managed Behaviours
 
 The following are set automatically and cannot be overridden via input variables.
 
@@ -326,7 +326,7 @@ The following are set automatically and cannot be overridden via input variables
 
 ---
 
-## §10 · Variable Reference
+## 10. Variable Reference
 
 Complete list of all input variables, grouped by UI section.
 
@@ -429,7 +429,7 @@ Complete list of all input variables, grouped by UI section.
 
 ---
 
-## §11 · Outputs
+## 11. Outputs
 
 | Output | Description |
 |---|---|
@@ -437,7 +437,7 @@ Complete list of all input variables, grouped by UI section.
 
 ---
 
-## §12 · Configuration Examples
+## 12. Configuration Examples
 
 ### Basic Deployment
 

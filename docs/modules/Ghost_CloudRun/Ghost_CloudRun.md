@@ -41,7 +41,6 @@ Ghost is a professional open-source publishing platform for newsletters, members
 | `max_instance_count` | `1` | `5` **[fixed]** |
 | `enable_nfs` | `false` | `true` |
 | `enable_redis` | `false` | `true` |
-| `enable_image_mirroring` | `false` | `true` |
 
 ---
 

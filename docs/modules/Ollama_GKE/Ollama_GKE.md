@@ -16,6 +16,8 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 > `http://ollama.<namespace>.svc.cluster.local:11434`. For CPU-only, serverless inference
 > use `Ollama_CloudRun`.
 
+> This guide documents variables that are **unique to `Ollama_GKE`** or that have **Ollama-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
+
 ---
 
 ## 1. Module Overview
@@ -239,7 +241,7 @@ Ollama has no database — backup settings are present for App_GKE interface com
 
 ---
 
-## §8 · CI/CD Integration (Group 7)
+## 8. CI/CD Integration (Group 7)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -254,7 +256,7 @@ Ollama has no database — backup settings are present for App_GKE interface com
 
 ---
 
-## §9 · Custom Initialization & Jobs (Group 8)
+## 9. Custom Initialization & Jobs (Group 8)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -268,7 +270,7 @@ Ollama has no database — backup settings are present for App_GKE interface com
 
 ---
 
-## §10 · Database Backend (Group 11)
+## 10. Database Backend (Group 11)
 
 Ollama has no database dependency. Redis is also disabled for this module.
 
@@ -286,7 +288,7 @@ Ollama has no database dependency. Redis is also disabled for this module.
 
 ---
 
-## §11 · Observability & Health (Group 13)
+## 11. Observability & Health (Group 13)
 
 Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is ready.
 
@@ -301,7 +303,7 @@ Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is re
 
 ---
 
-## §12 · Outputs
+## 12. Outputs
 
 | Output | Description |
 |---|---|
@@ -348,7 +350,7 @@ Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is re
 
 ---
 
-## §13 · Platform-Managed Behaviours
+## 13. Platform-Managed Behaviours
 
 | Behaviour | Detail |
 |---|---|
@@ -365,7 +367,7 @@ Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is re
 
 ---
 
-## §14 · Variable Reference
+## 14. Variable Reference
 
 Complete variable reference with UIMeta group assignments.
 
@@ -497,9 +499,9 @@ Complete variable reference with UIMeta group assignments.
 
 ---
 
-## §15 · Configuration Examples
+## 15. Configuration Examples
 
-### Basic Deployment
+### A. Basic Deployment
 
 CPU-only inference for 3B models. Suitable for evaluation and shared internal cluster use.
 
@@ -525,7 +527,7 @@ service_type = "ClusterIP"
 default_model = "llama3.2:3b"
 ```
 
-### Advanced Deployment
+### B. Advanced Deployment
 
 Production inference endpoint for 7B models with pod disruption budget, monitoring, and environment tuning.
 

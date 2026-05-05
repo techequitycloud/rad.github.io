@@ -35,7 +35,6 @@ Directus is an open-source headless CMS and Backend-as-a-Service (BaaS) platform
 |---|---|---|
 | `container_port` | `8080` | `8055` |
 | `memory_limit` | `"512Mi"` | `"2Gi"` |
-| `enable_cloudsql_volume` | `true` | `false` |
 | `enable_nfs` | `false` | `true` |
 | `enable_redis` | `false` | `true` |
 
