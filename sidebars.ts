@@ -134,7 +134,7 @@ const sidebars: SidebarsConfig = {
               label: 'GKE Multi-Cloud',
               items: [
                 { type: 'doc', id: 'modules/AKS_GKE/AKS_GKE', label: 'Azure' },
-                { type: 'doc', id: 'modules/EKS_GKE/EKS_GKE', label: 'GKE' },
+                { type: 'doc', id: 'modules/EKS_GKE/EKS_GKE', label: 'AWS' },
               ],
             },
             {
