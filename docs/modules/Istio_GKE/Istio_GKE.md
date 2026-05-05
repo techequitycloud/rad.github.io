@@ -5,7 +5,7 @@ sidebar_label: "Istio_GKE"
 
 # Istio_GKE Module
 
-## Overview
+## 1. Overview
 
 The Istio_GKE module provisions a complete Google Kubernetes Engine (GKE) Standard cluster and installs the **open-source Istio service mesh** onto it. Unlike Google Cloud Service Mesh (which is Google's managed, commercially supported Istio distribution), this module works directly with upstream Istio — the same project maintained by the Cloud Native Computing Foundation (CNCF) — giving platform engineers hands-on experience with the technology in its original, unmodified form.
 
@@ -25,7 +25,7 @@ The module deploys approximately **10–12 minutes** to a single GCP project and
 
 ---
 
-## What Gets Deployed
+## 2. What Gets Deployed
 
 **On Google Cloud:**
 - Two GCP APIs enabled: Cloud APIs and Container API
@@ -101,7 +101,7 @@ Deployment sequence:
 
 ---
 
-## GCP Networking
+## 3. GCP Networking
 
 The module creates a dedicated VPC network and configures all the networking components that GKE and Istio require to operate. Understanding this layer is important both for appreciating GKE's networking model and for diagnosing connectivity issues in the mesh.
 
@@ -180,7 +180,7 @@ gcloud compute routers nats describe nat-gw-region \
 
 ---
 
-## GKE Standard Cluster
+## 4. GKE Standard Cluster
 
 The module provisions a **GKE Standard** cluster — Google's fully configurable Kubernetes offering where you control node pools, machine types, and cluster-level settings. This is deliberately different from GKE Autopilot, which abstracts all node management away. Using GKE Standard for this module is an intentional learning choice: it exposes the configuration decisions that Autopilot makes automatically, making the trade-offs visible.
 
@@ -383,7 +383,7 @@ gcloud container node-pools describe default-pool \
 
 ---
 
-## Istio Core Concepts
+## 5. Istio Core Concepts
 
 Before exploring the two data plane modes, this section explains what Istio is, how it is structured, and how the module installs it — providing the conceptual foundation for everything that follows.
 
@@ -502,7 +502,7 @@ kubectl top pods -n istio-system -l app=istio-ingressgateway
 
 ---
 
-## Sidecar Mode
+## 6. Sidecar Mode
 
 Sidecar mode is the traditional and most widely deployed Istio architecture. It is the default when `install_ambient_mesh = false`. This section explains exactly how it works, what gets created in the cluster, and what you can observe once it is running.
 
@@ -623,7 +623,7 @@ istioctl analyze -n default
 
 ---
 
-## Ambient Mode
+## 7. Ambient Mode
 
 Ambient mode is Istio's next-generation data plane architecture, introduced as stable in Istio 1.22. It removes the need for per-pod sidecar proxies entirely, reducing resource overhead and operational complexity while preserving the full Istio feature set for workloads that need it.
 
@@ -773,7 +773,7 @@ istioctl ztunnel-config connections
 
 ---
 
-## Traffic Management
+## 8. Traffic Management
 
 Istio's traffic management capabilities give platform engineers fine-grained control over how requests flow between services — without modifying application code. All traffic management rules are expressed as Kubernetes custom resources and take effect through configuration pushed to Envoy proxies (or ztunnel/waypoints in ambient mode) via the xDS protocol.
 
@@ -1047,7 +1047,7 @@ kubectl describe httproute my-route -n default
 
 ---
 
-## Observability
+## 9. Observability
 
 Istio provides first-class integrations with the open-source observability stack. The add-on components installed by this module — Prometheus, Grafana, Kiali, and Jaeger — work together to give platform engineers a complete picture of service health, traffic patterns, and distributed request traces.
 
@@ -1168,7 +1168,7 @@ kubectl patch configmap istio -n istio-system --type=merge \
 
 ---
 
-## Configuration Reference
+## 10. Configuration Reference
 
 The following table covers the key configuration parameters that affect the behaviour of the Istio_GKE module. These are the settings available when using the module.
 
@@ -1217,7 +1217,7 @@ The following table covers the key configuration parameters that affect the beha
 
 ---
 
-## Default Behaviours
+## 11. Default Behaviours
 
 Understanding the module's default configuration helps avoid surprises when exploring or extending what is deployed.
 
@@ -1237,7 +1237,7 @@ Understanding the module's default configuration helps avoid surprises when expl
 
 ---
 
-## Prerequisites
+## 12. Prerequisites
 
 Before deploying the Istio_GKE module, verify the following:
 
@@ -1291,7 +1291,7 @@ gcloud components install kubectl
 
 ---
 
-## Deploying the Module
+## 13. Deploying the Module
 
 ### Initial Deployment
 
@@ -1376,7 +1376,7 @@ gcloud container clusters list
 
 ---
 
-## Further Learning
+## 14. Further Learning
 
 ### Open Source Istio
 - **Istio documentation:** https://istio.io/latest/docs/

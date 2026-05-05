@@ -33,7 +33,7 @@ Services_GCP  →  App_CloudRun / App_GKE  →  *_Common modules
 
 ---
 
-## GCP APIs Enabled
+## 1. GCP APIs Enabled
 
 When `enable_services = true` (default), the module enables 46 APIs by default (the exact count grows when `additional_apis` entries are added). A 360-second `time_sleep` runs after enablement to allow full propagation before any resource is created. Additional project-specific APIs can be passed via the `additional_apis` variable without modifying the module source.
 
@@ -54,7 +54,7 @@ When `enable_services = true` (default), the module enables 46 APIs by default (
 
 ---
 
-## Always-Created Resources
+## 2. Always-Created Resources
 
 These resources are provisioned on every deployment regardless of feature flags.
 
@@ -101,7 +101,7 @@ A shared Docker repository (`shared-repo-{random_id}`) is created in the primary
 
 ---
 
-## Timing & Dependencies
+## 3. Timing & Dependencies
 
 | Resource | Duration | Purpose |
 |----------|----------|---------|
@@ -120,13 +120,13 @@ A shared Docker repository (`shared-repo-{random_id}`) is created in the primary
 
 ---
 
-## Configuration Guide
+## 4. Configuration Guide
 
 > Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
 ---
 
-## Group 0: Module Metadata & Configuration
+## 5. Group 0: Module Metadata & Configuration
 
 These variables describe the module to the platform catalogue and control platform-level behaviours such as credit billing, resource purge protection, and wrapper-module integration. They are *platform-managed* and should not be changed unless you are customising or extending the module itself.
 
@@ -166,7 +166,7 @@ gcloud services describe sqladmin.googleapis.com \
 
 ---
 
-## Group 1: Project & Identity
+## 6. Group 1: Project & Identity
 
 These variables establish the GCP project context and the shared identity settings that apply across all resources created by the module. They must be configured correctly before any deployment can succeed. `project_id` is the only strictly required variable in the module — every resource provisioned by `Services_GCP` is scoped to this project. `support_users` and `resource_labels` are optional but strongly recommended for production deployments to ensure operational visibility and consistent resource tagging.
 
@@ -200,7 +200,7 @@ gcloud beta monitoring channels list --project=PROJECT_ID \
 
 ---
 
-## Group 2: Networking & VPC
+## 7. Group 2: Networking & VPC
 
 These variables control the foundational networking infrastructure — the VPC network, subnets, and region selection — that underpins every other resource provisioned by this module. All services (Cloud SQL, Redis, Filestore, GKE, and the self-managed NFS VM) are attached to this VPC and communicate exclusively over private IP addresses. Getting the CIDR ranges right before first deployment is important: changing subnet ranges after resources are attached requires destroying and recreating the network, which is a disruptive operation.
 
@@ -235,7 +235,7 @@ gcloud compute routers list --project=PROJECT_ID \
 
 ---
 
-## Group 3: Database Configuration
+## 8. Group 3: Database Configuration
 
 These variables configure managed Cloud SQL instances for PostgreSQL and MySQL. Both engines are supported independently — you can provision PostgreSQL only, MySQL only, or both simultaneously if your workload requires it. All instances are configured with private IP addresses on the module VPC and have no public internet exposure. Automated daily backups (starting at 04:00 UTC) with 7-day retention and auto-resizing SSD storage are enabled by default on all instances.
 
@@ -290,7 +290,7 @@ gcloud sql instances list --project=PROJECT_ID \
 
 ---
 
-## Group 4: Network Filesystem
+## 9. Group 4: Network Filesystem
 
 These variables configure a self-managed, combined NFS file server and Redis cache running on a single Compute Engine VM. This is the lower-cost alternative to the fully managed Cloud Filestore (Group 6) and Cloud Memorystore (Group 5). The VM runs on Ubuntu 22.04 LTS, uses a zonal SSD persistent disk for NFS storage, and runs Redis in-process on port 6379. It is deployed as a Managed Instance Group (MIG) of size 1 with an auto-healing policy — if the health check (TCP port 2049) fails, the MIG automatically recreates the VM. Daily snapshots of the data disk are taken automatically with a 7-day retention period. This option is recommended for development environments or cost-sensitive deployments where managed-service SLAs are not required.
 
@@ -325,7 +325,7 @@ gcloud compute disks list --project=PROJECT_ID \
 
 ---
 
-## Group 5: Redis Cache
+## 10. Group 5: Redis Cache
 
 These variables configure Cloud Memorystore for Redis — the fully managed alternative to the self-managed Redis process running on the Group 4 NFS VM. Memorystore provides Google SLA-backed availability, automated patching, and built-in monitoring, at a higher cost than the self-managed option. The instance is provisioned in the primary availability region with a private IP address on the module VPC, accessible only from within the VPC. **Only enable this group when `create_network_filesystem` is `false`** — running both simultaneously creates redundant Redis infrastructure. The module always enables Redis AUTH (`auth_enabled = true`); the auth string is stored in Secret Manager (`redis-auth-{id}`).
 
@@ -364,7 +364,7 @@ gcloud redis instances describe INSTANCE_NAME \
 
 ---
 
-## Group 6: Filestore NFS
+## 11. Group 6: Filestore NFS
 
 These variables configure Cloud Filestore — the fully managed NFS alternative to the self-managed NFS server in Group 4. Filestore provides a dedicated, high-performance NFS file share that can be mounted simultaneously by multiple Compute Engine VMs or GKE pods, making it suitable for workloads that require shared persistent storage at scale. The instance is provisioned in the primary availability region with a private IP address on the module VPC. **Only enable this group when `create_network_filesystem` is `false`** — running both simultaneously creates redundant NFS infrastructure. Note that all Filestore tiers have a significant minimum capacity requirement, making this option considerably more expensive than the self-managed VM for small storage needs.
 
@@ -398,7 +398,7 @@ gcloud filestore instances describe INSTANCE_NAME \
 
 ---
 
-## Group 7: Google Kubernetes Engine
+## 12. Group 7: Google Kubernetes Engine
 
 These variables configure one or more GKE Autopilot clusters that serve as the shared compute environment for containerised application workloads deployed via the `App_GKE` module. Autopilot is a fully managed cluster mode in which Google provisions, scales, and secures nodes automatically — you pay per pod rather than per node, and there is no need to manage node pools or machine types. All clusters are provisioned in the primary availability region of the module VPC and registered to a GKE fleet to enable multi-cluster features. Three optional GKE fleet add-ons — Cloud Service Mesh, Config Management, and Policy Controller — can be enabled independently on each cluster.
 
@@ -444,7 +444,7 @@ gcloud container fleet memberships list --project=PROJECT_ID \
 
 ---
 
-## Group 8: GKE Backup & Restore
+## 13. Group 8: GKE Backup & Restore
 
 These variables configure Backup for GKE, which creates scheduled, application-consistent backups of cluster workloads and persistent volume data to Cloud Storage. Backups capture both the Kubernetes resource state (Deployments, ConfigMaps, Secrets, Services, etc.) and the data held in PersistentVolumeClaims, allowing full workload restoration to the same cluster or to a different cluster in the event of accidental deletion, data corruption, or a disaster recovery scenario. Requires `create_google_kubernetes_engine = true`.
 
@@ -479,7 +479,7 @@ gcloud container backup-restore backups list \
 
 ---
 
-## Group 9: VPC Service Controls
+## 14. Group 9: VPC Service Controls
 
 These variables configure VPC Service Controls (VPC-SC), which establishes a security perimeter around the GCP project to protect against data exfiltration. Once enforced, the perimeter restricts access to Google Cloud APIs (such as Cloud Storage, Cloud SQL, and BigQuery) to requests that originate from within the defined perimeter — requests from IP addresses or identities outside the perimeter are blocked at the API level, even if they hold valid IAM credentials. **VPC-SC is an advanced security control** with a significant risk of locking out legitimate access if misconfigured. Always enable with `vpc_sc_dry_run = true` first to audit the impact before switching to enforcement mode.
 
@@ -517,7 +517,7 @@ gcloud logging read \
 
 ---
 
-## Group 10: Binary Authorization
+## 15. Group 10: Binary Authorization
 
 These variables configure Binary Authorization, a deploy-time security control that ensures only trusted, verified container images can be deployed to GKE or Cloud Run within the project. Binary Authorization works by requiring images to carry a cryptographic attestation — a signed statement from a trusted attestor (such as a CI/CD pipeline or a vulnerability scanner) confirming the image has passed required checks. Any deployment that presents an image without a valid attestation is rejected before the container starts. This provides a strong guarantee that only images built and verified by your authorised pipeline can run in production, protecting against supply chain attacks and accidental deployment of unverified images.
 
@@ -552,7 +552,7 @@ gcloud container binauthz attestations list \
 
 ---
 
-## Group 11: Customer-Managed Encryption Keys
+## 16. Group 11: Customer-Managed Encryption Keys
 
 These variables configure Customer-Managed Encryption Keys (CMEK) via Cloud Key Management Service (KMS). By default, GCP encrypts all data at rest using Google-managed keys, which are rotated and managed entirely by Google. Enabling CMEK replaces Google-managed keys with keys that you control — provisioned in Cloud KMS in the primary region and used to encrypt supported resources including Cloud SQL, Cloud Storage, and GKE. CMEK gives you direct control over the key lifecycle: you can rotate, disable, or destroy keys, and revoking key access immediately renders the encrypted data inaccessible. This is typically required for regulated environments (e.g. financial services, healthcare, government) where organisational policy mandates control over encryption key custody.
 
@@ -591,7 +591,7 @@ gcloud sql instances describe INSTANCE_NAME \
 
 ---
 
-## Group 12: Security Command Center & Auditing
+## 17. Group 12: Security Command Center & Auditing
 
 These variables configure three complementary security and observability features: container image vulnerability scanning via Container Analysis, detailed Cloud Audit Logs for data access events, and Security Command Center (SCC) for centralised security findings. These controls are independent of each other and can be enabled selectively depending on the compliance and observability requirements of the environment. All three are disabled by default as they increase log volume and associated costs — they are most valuable in production environments handling sensitive data.
 
@@ -629,7 +629,7 @@ gcloud pubsub topics list --project=PROJECT_ID \
 
 ---
 
-## Group 13: Cloud Monitoring & Alerting
+## 18. Group 13: Cloud Monitoring & Alerting
 
 These variables configure Cloud Monitoring alert policies and email notification channels for infrastructure resource utilisation — CPU, memory, and disk — across the Compute Engine VMs provisioned by this module (primarily the self-managed NFS/Redis VM from Group 4). Alert policies evaluate the average utilisation of each metric over a rolling window and fire when the value exceeds the configured threshold. Alerts are sent to the email addresses in `notification_alert_emails` via a Cloud Monitoring notification channel. This group is independent of the `support_users` variable in Group 1 — `support_users` receives platform-level notifications, while `notification_alert_emails` receives Cloud Monitoring metric threshold alerts.
 
@@ -666,7 +666,7 @@ gcloud alpha monitoring policies describe POLICY_NAME \
 
 ---
 
-## Group 14: Workload Identity Federation *(In Development)*
+## 19. Group 14: Workload Identity Federation *(In Development)*
 
 > **Status:** Fully implemented in `wif.tf` but not yet activated — variables are commented out in `variables.tf` pending final permission scoping. Will be enabled in an upcoming release. WIF allows GitHub Actions, GitLab CI, and generic OIDC providers to authenticate to GCP using short-lived tokens without any service account key files.
 
@@ -681,7 +681,7 @@ gcloud alpha monitoring policies describe POLICY_NAME \
 
 ---
 
-## Group 15: Billing & Budget *(In Development)*
+## 20. Group 15: Billing & Budget *(In Development)*
 
 > **Status:** Variables defined in `variables.tf` but currently commented out pending billing account permission scoping. Will be activated in an upcoming release.
 
@@ -694,7 +694,7 @@ gcloud alpha monitoring policies describe POLICY_NAME \
 
 ---
 
-## Features Not Yet Active
+## 21. Features Not Yet Active
 
 ### GKE Usage Metering — Removed
 
@@ -711,7 +711,7 @@ A Cloud Armor security policy with OWASP Top 10 rules (SQLi, XSS, LFI, RCE prote
 
 ---
 
-## Outputs Reference
+## 22. Outputs Reference
 
 ### Always Available
 
@@ -764,7 +764,7 @@ A Cloud Armor security policy with OWASP Top 10 rules (SQLi, XSS, LFI, RCE prote
 
 ---
 
-## Required Providers
+## 23. Required Providers
 
 Declared in `versions.tf`:
 
@@ -782,7 +782,7 @@ The Cloud NAT is provisioned via the `terraform-google-modules/cloud-router/goog
 
 ---
 
-## Usage Example
+## 24. Usage Example
 
 ```hcl
 module "services_gcp" {

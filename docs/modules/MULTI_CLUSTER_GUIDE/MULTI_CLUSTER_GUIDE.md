@@ -5,7 +5,7 @@ sidebar_label: "MULTI CLUSTER GUIDE"
 
 # MULTI_CLUSTER_GUIDE Module
 
-## Overview
+## 1. Overview
 
 The Services_GCP module now supports deploying multiple GKE Autopilot clusters with Istio service mesh for high availability, disaster recovery, and geographic distribution of workloads.
 
@@ -20,7 +20,7 @@ The Services_GCP module now supports deploying multiple GKE Autopilot clusters w
 
 ---
 
-## Architecture
+## 2. Architecture
 
 ### Network Topology
 
@@ -55,7 +55,7 @@ The Services_GCP module now supports deploying multiple GKE Autopilot clusters w
 
 ---
 
-## Requirements
+## 3. Requirements
 
 ### Multi-Cluster Prerequisites
 
@@ -80,7 +80,7 @@ For single-cluster deployments (`gke_cluster_count = 1`), Cloud Service Mesh is 
 
 ---
 
-## Configuration
+## 4. Configuration
 
 ### Basic Multi-Cluster Setup (2 Clusters)
 
@@ -156,7 +156,7 @@ module "services_gcp" {
 
 ---
 
-## Deploying Applications
+## 5. Deploying Applications
 
 ### App_GKE Module Integration
 
@@ -221,7 +221,7 @@ module "worker_app" {
 
 ---
 
-## Migration from Single to Multi-Cluster
+## 6. Migration from Single to Multi-Cluster
 
 ### Pre-Migration Checklist
 
@@ -334,7 +334,7 @@ terraform apply
 
 ---
 
-## CIDR Allocation
+## 7. CIDR Allocation
 
 ### Automatic Allocation (Multi-Cluster Mode)
 
@@ -360,7 +360,7 @@ gke_service_base_cidr   = "10.128.0.0/16"  # Services: cidrsubnet with /4 increm
 
 ---
 
-## Troubleshooting
+## 8. Troubleshooting
 
 ### Cluster Not Joining Fleet
 

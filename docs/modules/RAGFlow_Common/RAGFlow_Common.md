@@ -8,7 +8,7 @@ RAGFlow is an open-source document intelligence and Retrieval-Augmented Generati
 
 ---
 
-## §1 · Module Overview
+## 1. Module Overview
 
 ### What `RAGFlow_Common` provides
 
@@ -50,7 +50,27 @@ All probes target the `/v1/health` endpoint. RAGFlow loads embedding models at s
 
 ---
 
-## §2 · Input Variables
+## 2. Architecture
+
+```text
+Layer 3: Application Wrappers
+├── RAGFlow_GKE  ──┐
+                   ├── instantiate RAGFlow_Common
+                   ↓
+        RAGFlow_Common (this module)
+        Creates: GCS bucket (ragflow-documents)
+        Produces: config, storage_buckets, path
+                   ↓
+Layer 2: Platform Modules
+├── App_CloudRun  (serverless deployment)
+└── App_GKE       (Kubernetes deployment)
+                   ↓
+Layer 1: GCP_Services (shared infrastructure)
+```
+
+---
+
+## 3. Input Variables
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -76,7 +96,7 @@ All probes target the `/v1/health` endpoint. RAGFlow loads embedding models at s
 
 ---
 
-## §3 · Outputs
+## 4. Outputs
 
 | Output | Description |
 |---|---|
@@ -86,7 +106,7 @@ All probes target the `/v1/health` endpoint. RAGFlow loads embedding models at s
 
 ---
 
-## §4 · Hard-Coded Values
+## 5. Hard-Coded Values
 
 The following values are fixed inside `RAGFlow_Common` and cannot be overridden by callers:
 
@@ -103,7 +123,7 @@ The following values are fixed inside `RAGFlow_Common` and cannot be overridden 
 
 ---
 
-## §5 · Usage Pattern
+## 6. Usage Pattern
 
 `RAGFlow_Common` is called exclusively by `RAGFlow_GKE`:
 

@@ -51,10 +51,10 @@ A comprehensive application configuration object passed to the platform module v
 | `container_resources` | CPU/memory limits and requests |
 | `min_instance_count` | Minimum running instances (default: `1`) |
 | `max_instance_count` | Maximum running instances (default: `1`) |
-| `environment_variables` | Merged map — see §4 |
+| `environment_variables` | Merged map — see §5 |
 | `enable_postgres_extensions` | `true` |
-| `postgres_extensions` | Required PostgreSQL extensions — see §5 |
-| `initialization_jobs` | List of setup jobs to run on first deploy — see §6 |
+| `postgres_extensions` | Required PostgreSQL extensions — see §6 |
+| `initialization_jobs` | List of setup jobs to run on first deploy — see §7 |
 | `startup_probe` | HTTP probe with extended timeouts to accommodate schema creation |
 | `liveness_probe` | HTTP probe for ongoing health monitoring |
 
@@ -77,49 +77,64 @@ The absolute path to the module directory, used by wrapper modules to locate the
 
 ---
 
-## 3. Input Variables
+## 3. Non-Configurable Values
 
-### Project & Identity
+The following values are fixed inside `Cyclos_Common` and cannot be overridden by callers:
 
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| `project_id` | `string` | required | GCP project ID |
-| `resource_prefix` | `string` | required | Prefix for resource naming (e.g., `appcyclos<tenant><random>`). Computed by the wrapper module from `application_name`, `tenant_deployment_id`, and `deployment_id`. |
-| `labels` | `map(string)` | `{}` | Labels applied to all resources |
-| `deployment_id` | `string` | `""` | Unique deployment identifier |
-| `deployment_id_suffix` | `string` | required | Random suffix used in resource name calculations. Set to the same value as `deployment_id` by wrapper modules. |
-| `service_url` | `string` | `""` | Accessible service URL (empty for GKE — URL is not known at plan time) |
-| `tenant_deployment_id` | `string` | `"demo"` | Deployment environment identifier (1–20 lowercase alphanumeric characters) |
-| `deployment_region` | `string` | `"us-central1"` | Primary GCP region for deployment |
-
-### Application
-
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| `application_version` | `string` | `"4.16.17"` | Cyclos Docker image tag |
-| `display_name` | `string` | `"Cyclos Community Edition"` | Human-readable display name |
-| `description` | `string` | `"Create required PostgreSQL extensions"` | Module description |
-| `db_name` | `string` | `"cyclos"` | PostgreSQL database name |
-| `db_user` | `string` | `"cyclos"` | PostgreSQL application user |
-| `cpu_limit` | `string` | `"2000m"` | Container CPU limit |
-| `memory_limit` | `string` | `"4Gi"` | Container memory limit |
-| `min_instance_count` | `number` | `1` | Minimum running instances |
-| `max_instance_count` | `number` | `1` | Maximum running instances |
-| `application_name` | `string` | `"cyclos"` | Application name used in resource naming |
-| `environment_variables` | `map(string)` | see §4 | Environment variables merged into the container spec |
-| `enable_cloudsql_volume` | `bool` | `false` | Mount a Cloud SQL Auth Proxy sidecar socket |
-| `initialization_jobs` | `list(object)` | `[]` | Custom initialization jobs; if empty, the built-in `db-init` job is used |
-| `startup_probe` | `object` | HTTP `/api`, 90s delay, 30s timeout, 60s period, 10 failures | Startup health probe configuration |
-| `liveness_probe` | `object` | HTTP `/api`, 120s delay, 10s timeout, 60s period, 3 failures | Liveness health probe configuration |
+| Setting | Value | Reason |
+|---|---|---|
+| `container_image` | `"cyclos/cyclos"` | Always pulled from the official public Docker Hub image. |
+| `image_source` | `"prebuilt"` | No custom build step is required. |
+| `container_port` | `8080` | Application's fixed listening port. |
+| `database_type` | `"POSTGRES_15"` | Cyclos requires PostgreSQL 15. |
+| `enable_postgres_extensions` | `true` | Extensions must be created as superuser before Cyclos connects. |
+| `postgres_extensions` | `["pg_trgm","uuid-ossp","cube","earthdistance","postgis","unaccent"]` | Required extensions — see §6. |
 
 ---
 
-## 4. Environment Variables
+## 4. Input Variables
+
+### A. Project & Identity
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `project_id` | `string` | — | Required. GCP project ID. |
+| `resource_prefix` | `string` | — | Required. Prefix for resource naming (e.g., `appcyclos<tenant><random>`). Computed by the wrapper module from `application_name`, `tenant_deployment_id`, and `deployment_id`. |
+| `labels` | `map(string)` | `{}` | Labels applied to all resources. |
+| `deployment_id` | `string` | `""` | Unique deployment identifier. |
+| `deployment_id_suffix` | `string` | — | Required. Random suffix used in resource name calculations. Set to the same value as `deployment_id` by wrapper modules. |
+| `service_url` | `string` | `""` | Accessible service URL (empty for GKE — URL is not known at plan time). |
+| `tenant_deployment_id` | `string` | `"demo"` | Deployment environment identifier (1–20 lowercase alphanumeric characters). |
+| `deployment_region` | `string` | `"us-central1"` | Primary GCP region for deployment. |
+
+### B. Application
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `application_version` | `string` | `"4.16.17"` | Cyclos Docker image tag. |
+| `display_name` | `string` | `"Cyclos Community Edition"` | Human-readable display name. |
+| `description` | `string` | `"Create required PostgreSQL extensions"` | Module description. |
+| `db_name` | `string` | `"cyclos"` | PostgreSQL database name. |
+| `db_user` | `string` | `"cyclos"` | PostgreSQL application user. |
+| `cpu_limit` | `string` | `"2000m"` | Container CPU limit. |
+| `memory_limit` | `string` | `"4Gi"` | Container memory limit. |
+| `min_instance_count` | `number` | `1` | Minimum running instances. |
+| `max_instance_count` | `number` | `1` | Maximum running instances. |
+| `application_name` | `string` | `"cyclos"` | Application name used in resource naming. |
+| `environment_variables` | `map(string)` | see §5 | Environment variables merged into the container spec. |
+| `enable_cloudsql_volume` | `bool` | `false` | Mount a Cloud SQL Auth Proxy sidecar socket. |
+| `initialization_jobs` | `list(object)` | `[]` | Custom initialization jobs; if empty, the built-in `db-init` job is used. |
+| `startup_probe` | `object` | HTTP `/api`, 90s delay, 30s timeout, 60s period, 10 failures | Startup health probe configuration. |
+| `liveness_probe` | `object` | HTTP `/api`, 120s delay, 10s timeout, 60s period, 3 failures | Liveness health probe configuration. |
+
+---
+
+## 5. Environment Variables
 
 The module provides a default set of environment variables that configure the Cyclos runtime:
 
-| Variable | Default Value | Purpose |
-|----------|---------------|---------|
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
 | `DB_HOST` | `/var/run/postgresql` | PostgreSQL socket path (overridden per platform) |
 | `DB_PORT` | `5432` | PostgreSQL port |
 | `CYCLOS_HOME` | `/usr/local/cyclos` | Cyclos home directory inside the container |
@@ -130,7 +145,7 @@ Wrapper modules merge additional platform-specific variables (e.g., database con
 
 ---
 
-## 5. PostgreSQL Extensions
+## 6. PostgreSQL Extensions
 
 Cyclos requires the following extensions to be created as a superuser before the application connects. The `db-init.sh` script handles this during the initialization job.
 
@@ -145,7 +160,7 @@ Cyclos requires the following extensions to be created as a superuser before the
 
 ---
 
-## 6. Initialization Jobs
+## 7. Initialization Jobs
 
 By default, the module defines a `db-init` initialization job that runs the `scripts/db-init.sh` script. This script:
 
@@ -153,7 +168,7 @@ By default, the module defines a `db-init` initialization job that runs the `scr
 2. Polls the database until it is available (timeout-based).
 3. Creates (or updates) the Cyclos database user with `CREATEDB` and `INHERIT` privileges.
 4. Creates the Cyclos database if it does not exist and grants full privileges to the application user.
-5. Creates all required PostgreSQL extensions (listed in §5) as a superuser.
+5. Creates all required PostgreSQL extensions (listed in §6) as a superuser.
 6. Grants schema, table, sequence, and function privileges to the application user and sets defaults for future objects.
 7. Sets the database owner to the application user.
 8. Signals Cloud SQL Proxy to shut down cleanly via the `/quitquitquit` HTTP endpoint.
@@ -162,7 +177,7 @@ Custom jobs can be supplied via the `initialization_jobs` variable to replace or
 
 ---
 
-## 7. Scripts and Configuration Files
+## 8. Scripts and Configuration Files
 
 All supporting files are located in `scripts/`.
 
@@ -193,7 +208,7 @@ Optional Hazelcast cluster configuration for multi-instance deployments:
 
 ---
 
-## 8. Platform-Specific Differences
+## 9. Platform-Specific Differences
 
 | Aspect | Cyclos_CloudRun | Cyclos_GKE |
 |--------|-----------------|------------|
@@ -206,7 +221,7 @@ Optional Hazelcast cluster configuration for multi-instance deployments:
 
 ---
 
-## 9. Implementation Pattern
+## 10. Implementation Pattern
 
 ```hcl
 # Example: how Cyclos_CloudRun instantiates Cyclos_Common

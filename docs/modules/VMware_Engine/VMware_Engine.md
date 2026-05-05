@@ -11,13 +11,13 @@ This module is designed to support **VM migration workflows** and **GCVE lab env
 is deployed directly to an existing GCP project (not through the standard App_CloudRun or
 App_GKE foundation modules) and has no dependency on `Services_GCP`.
 
-> **Provisioning time:** A GCVE private cloud takes **30–90 minutes** to provision.
+> **Important:** A GCVE private cloud takes **30–90 minutes** to provision.
 > `google_vmwareengine_private_cloud` has a 180-minute timeout. Do not interrupt a running
 > apply.
 
 ---
 
-## §1 · Module Overview
+## 1. Module Overview
 
 ### Always-created resources
 
@@ -48,7 +48,7 @@ All resources use the `altostrat-<id>` prefix where `<id>` is either `var.deploy
 
 ---
 
-## §2 · Architecture
+## 2. Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -81,7 +81,7 @@ All resources use the `altostrat-<id>` prefix where `<id>` is either `var.deploy
 
 ---
 
-## §3 · Module Metadata (Group 0)
+## 3. Module Metadata (Group 0)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -97,7 +97,7 @@ All resources use the `altostrat-<id>` prefix where `<id>` is either `var.deploy
 
 ---
 
-## §4 · Project & Region (Group 1)
+## 4. Project & Region (Group 1)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -108,7 +108,7 @@ All resources use the `altostrat-<id>` prefix where `<id>` is either `var.deploy
 
 ---
 
-## §5 · Private Cloud (Group 4)
+## 5. Private Cloud (Group 4)
 
 The private cloud is the central GCVE resource. It provisions vSphere, vSAN, NSX-T Manager,
 and HCX Manager appliances in the specified zone. Provisioning takes **30–90 minutes**.
@@ -126,7 +126,7 @@ and HCX Manager appliances in the specified zone. Provisioning takes **30–90 m
 
 ---
 
-## §6 · Network Peering (Group 5)
+## 6. Network Peering (Group 5)
 
 VPC peering connects the VMware Engine Network to the peer VPC so that GCVE management
 appliances are reachable from the peer VPC (and vice versa). Custom routes are exported and
@@ -145,7 +145,7 @@ The peer VPC created when `create_vpc = true` uses `auto_create_subnetworks = tr
 
 ---
 
-## §7 · Network Policy (Group 6)
+## 7. Network Policy (Group 6)
 
 The network policy controls internet access and external IP allocation for GCVE workload VMs.
 Activation can take up to **15 minutes** after apply. GCVE enforces one network policy per
@@ -172,7 +172,7 @@ will fail with `"Resource for the given network already exists"`.
 
 ---
 
-## §8 · Firewall Rules (Group 7)
+## 8. Firewall Rules (Group 7)
 
 When `create_default_firewall_rules = true`, four firewall rules are created on the peer VPC,
 mirroring the default rules GCP creates on the auto-mode `default` VPC. One additional rule
@@ -193,7 +193,7 @@ mirroring the default rules GCP creates on the auto-mode `default` VPC. One addi
 
 ---
 
-## §9 · Jump Host (Group 8)
+## 9. Jump Host (Group 8)
 
 A Windows Server 2022 Compute Engine VM used to access vCenter, NSX-T Manager, and HCX Manager
 consoles via RDP. The jump host is deployed on the peer VPC and has routed access to GCVE
@@ -212,7 +212,7 @@ management appliances once VPC peering is active.
 
 ---
 
-## §10 · vCenter Credentials (Group 9)
+## 10. vCenter Credentials (Group 9)
 
 When `reset_vcenter_credentials = true`, a `null_resource` provisioner runs
 `gcloud vmware private-clouds vcenter credentials reset` after the private cloud is provisioned.
@@ -229,7 +229,7 @@ reset and prints manual instructions.
 
 ---
 
-## §11 · Outputs
+## 11. Outputs
 
 | Output | Description |
 |---|---|
@@ -245,7 +245,7 @@ reset and prints manual instructions.
 
 ---
 
-## §12 · Required Providers
+## 12. Required Providers
 
 Declared in `versions.tf`:
 
@@ -259,7 +259,7 @@ Declared in `versions.tf`:
 
 ---
 
-## §13 · Notable Behaviour
+## 13. Notable Behaviour
 
 ### CIDR planning
 
@@ -287,7 +287,7 @@ manual instructions are printed.
 
 ---
 
-## §14 · Usage Example
+## 14. Usage Example
 
 ```hcl
 module "vmware_engine" {

@@ -8,9 +8,9 @@ OpenEMR is a leading open-source electronic health records (EHR) and medical pra
 
 ---
 
-## How This Guide Is Structured
+## 1. Module Overview
 
-This guide documents only the variables that are **unique to `OpenEMR_GKE`** or that have **OpenEMR-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, GKE backend configuration, CI/CD, custom SQL scripts, observability alerting, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
+> This guide documents variables that are **unique to `OpenEMR_GKE`** or that have **OpenEMR-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
 **Variables fully covered by the App_GKE guide:**
 
@@ -50,7 +50,7 @@ This guide documents only the variables that are **unique to `OpenEMR_GKE`** or 
 
 ---
 
-## Platform-Managed Behaviours
+## 2. Platform-Managed Behaviours
 
 The following behaviours are applied automatically by `OpenEMR_GKE` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
@@ -66,7 +66,7 @@ The following behaviours are applied automatically by `OpenEMR_GKE` regardless o
 
 ---
 
-## OpenEMR Application Identity
+## 3. OpenEMR Application Identity
 
 These variables define how the OpenEMR deployment is named across GCP and Kubernetes resources.
 
@@ -89,17 +89,17 @@ kubectl get pods -n NAMESPACE -l app=openemr -o jsonpath='{.items[0].spec.contai
 
 ---
 
-## OpenEMR Runtime Configuration
+## 4. OpenEMR Runtime Configuration
 
 OpenEMR is a PHP/MySQL EHR application with an Apache HTTP server front-end. It has higher memory and ephemeral storage requirements than a typical web service, particularly during the initial database installation and on first boot.
 
-### Container Port
+### A. Container Port
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
 | `container_port` | `80` | Integer, 1–65535 | The port Apache listens on inside the container. OpenEMR's Apache configuration binds to port 80 by default. **Do not change this** unless you have modified the Apache configuration. |
 
-### Resource Sizing
+### B. Resource Sizing
 
 The `OpenEMR_GKE` module exposes `cpu_limit`, `memory_limit`, and `ephemeral_storage_limit` as dedicated top-level variables. These are passed into `container_resources` for the underlying `App_GKE` module.
 
@@ -118,26 +118,26 @@ memory_limit           = "4Gi"
 ephemeral_storage_limit = "8Gi"
 ```
 
-### Scaling Defaults
+### C. Scaling Defaults
 
 | Variable | App_GKE Default | OpenEMR_GKE Default | Reason |
 |---|---|---|---|
 | `min_instance_count` | `1` | `1` | OpenEMR should always have at least one running pod to avoid cold starts that impact clinical access. |
 | `max_instance_count` | `1` | `1` | OpenEMR's PHP session handling relies on the local NFS mount. Multi-instance deployments require Redis session storage. Increase `max_instance_count` only after enabling Redis. |
 
-### Session Affinity
+### D. Session Affinity
 
 | Variable | App_GKE Default | OpenEMR_GKE Default | Description & Implications |
 |---|---|---|---|
 | `session_affinity` | `"None"` | `"ClientIP"` | Ensures a given client consistently reaches the same pod. This mitigates cross-pod session inconsistency when Redis is not configured. Change to `"None"` only when Redis session storage is enabled and all pods share session state. |
 
-### Deployment Timeout
+### E. Deployment Timeout
 
 | Variable | App_GKE Default | OpenEMR_GKE Default | Description & Implications |
 |---|---|---|---|
 | `deployment_timeout` | `600` | `1800` | OpenEMR's initial database installation and PHP asset compilation can take 10–20 minutes on first boot. The extended timeout prevents Terraform from reporting a failure during legitimate long-running first deployments. |
 
-### Validating Runtime Configuration
+### F. Validating Runtime Configuration
 
 ```bash
 # View container resource limits on the running pod
