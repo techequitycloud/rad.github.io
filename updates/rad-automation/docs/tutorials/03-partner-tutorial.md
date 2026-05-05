@@ -1,0 +1,33 @@
+# Tutorial: Partner Workflow
+
+## 1. Introduction
+This tutorial is for Partners. You will learn how to connect your own Git repository and publish a private module for deployment.
+
+## 2. Step 1: Connect GitHub
+1.  Click your **Profile Avatar** -> **Profile**.
+2.  Scroll to **Partner Settings**.
+3.  Enter your **GitHub Token** (ensure it has `repo` scope). Click **Save Token**. Your repositories are fetched automatically.
+4.  Select your **GitHub Repository** from the dropdown list that appears. Click **Update Repo**.
+
+> **Security Check:** ensure your token is kept confidential and not committed to any public repository.
+
+## 3. Step 2: Configure Jules (Optional)
+1.  In the same **Partner Settings** section.
+2.  Enter your **Jules API Key** if you wish to use the AI refinement agent.
+3.  Click **Save Key** (or **Update Key** if a key is already configured).
+
+> **Security Check:** Treat your Jules API Key like a password. Rotate it regularly.
+
+## 4. Step 3: Publish a Module
+1.  Click **Publish** in the navigation bar.
+2.  The page will scan your repo and list valid modules.
+3.  Find the module you want to share (e.g., `my-custom-app`).
+4.  **Click the module card** to select it.
+5.  Click the **Publish** (or **Update**) button.
+6.  Success! You are redirected to the Deploy page.
+
+## 5. Step 4: Deploy Your Module
+1.  On the **Deploy** page, click the **Partner Modules** tab.
+2.  You should see `my-custom-app` listed there.
+3.  Click it, configure it, and deploy it just like a standard module.
+4.  Remember: Only **you** and **Administrators** can see this module.
