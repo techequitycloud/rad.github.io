@@ -1,4 +1,4 @@
-# Django on Google Cloud Run
+# Django_CloudRun Module
 
 This document provides a comprehensive reference for the `modules/Django_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Django-specific behaviours, and operational patterns for deploying Django on Google Cloud Run (v2).
 

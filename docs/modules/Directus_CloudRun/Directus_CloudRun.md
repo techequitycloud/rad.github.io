@@ -1,4 +1,4 @@
-# Directus on Google Cloud Run
+# Directus_CloudRun Module
 
 This document provides a comprehensive reference for the `modules/Directus_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Directus-specific behaviours, and operational patterns for deploying Directus on Google Cloud Run (v2).
 
