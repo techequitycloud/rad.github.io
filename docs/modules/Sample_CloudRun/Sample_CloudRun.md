@@ -10,6 +10,8 @@ application-specific configuration object, and `App_CloudRun` provisions all GCP
 infrastructure. You do not interact with `Sample_Common` directly — all inputs are
 exposed as variables on `Sample_CloudRun` itself.
 
+> This guide documents variables that are **unique to `Sample_CloudRun`** or that have **Sample-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
+
 ---
 
 ## 1. Module Overview
@@ -29,7 +31,19 @@ exposed as variables on `Sample_CloudRun` itself.
 | **Platform-managed secret** | `SECRET_KEY` (auto-generated 32-char Flask secret key) |
 | **Platform-managed job** | `db-init` (PostgreSQL schema initialisation) |
 
-### Wrapper Architecture
+### A. Key differences from `App_CloudRun` defaults
+
+| Feature | App_CloudRun default | Sample_CloudRun default |
+|---|---|---|
+| `container_port` | `8080` | `8080` |
+| `min_instance_count` | `0` | `0` (hard-coded in `sample.tf`; cannot be overridden) |
+| `max_instance_count` | `1` | `1` |
+| `enable_nfs` | `false` | `true` |
+| `enable_redis` | `false` | `false` |
+| Database | none | Cloud SQL PostgreSQL 15 (initialised by `db-init` job) |
+| Platform-managed secret | none | `SECRET_KEY` (32-char Flask secret key) |
+
+### B. Wrapper Architecture
 
 ```
 Sample_CloudRun (variables.tf / sample.tf / main.tf)
