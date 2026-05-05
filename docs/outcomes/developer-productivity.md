@@ -1,4 +1,4 @@
-# Enhanced Developer Productivity
+# Developer Productivity
 
 The platform optimises for fast inner-loop feedback and self-service infrastructure so developers spend time on product rather than platform mechanics. A growing application catalogue, scaffolding tools, UI-driven configuration, and one-command local setup all reduce the time from idea to running deployment.
 
@@ -31,7 +31,7 @@ A developer who needs Django on GCP doesn't write Terraform — they apply `modu
 
 ## Convention-over-configuration
 
-Every Application Module follows the same shape (5–6 files, mirrored variables, standard wiring) so a developer who learns one learns them all. Single-flag opinionated defaults pre-integrate everything an app needs — `enable_iap = true`, `enable_cdn = true`, `enable_binary_authorization = true`, `enable_vpc_sc = true`, `enable_pod_disruption_budget = true` — each wiring in a substantial cross-cutting capability without additional configuration.
+Every Application Module follows the same shape (5–6 files, mirrored variables, standard wiring) so a developer who learns one learns them all. Single-flag opinionated defaults pre-integrate everything an app needs. Setting `enable_iap = true`, `enable_cdn = true`, `enable_binary_authorization = true`, `enable_vpc_sc = true`, or `enable_pod_disruption_budget = true` each wires in a substantial cross-cutting capability without additional configuration.
 
 ## One-command local setup
 
@@ -79,9 +79,10 @@ The Jest suite under `rad-ui/webapp/__tests__/` covers health endpoints, admin c
 
 | Metric | Manual | This platform | Improvement |
 |---|---|---|---|
-| Setup time per app | 3–5 days | under 2 hours | ~95% faster |
-| Cost per setup | $3,200 | $200 | $3,000 saved |
-| Maintenance for 10-app fleet | 40 h, $4,000 | 2 h, $200 | 95% reduction |
+| Setup time per app | 3–5 days | Under 2 hours | ~95% faster |
+| Cost per setup | $3,200 | $200 | ~94% lower ($3,000 saved) |
+| Maintenance time — 10-app fleet | 40 h per cycle | 2 h per cycle | ~95% reduction |
+| Maintenance cost — 10-app fleet | $4,000 per cycle | $200 per cycle | ~95% lower ($3,800 saved) |
 
 ## See also
 

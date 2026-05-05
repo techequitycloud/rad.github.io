@@ -1,4 +1,4 @@
-# Application Modernization
+# Modernization
 
 The platform supports a structured modernisation programme from lift-and-shift through replatform to fully managed, scale-to-zero deployments — without requiring application rewrites at any stage.
 
@@ -63,7 +63,7 @@ Migration is rarely a single cutover. The platform supports a hybrid phase:
 
 ## Security uplift as part of modernisation
 
-Modernisation is also a chance to fix security. Private DB IP, IAP, Binary Authorization, VPC-SC, Cloud Armor, and CMEK appear automatically in every modernised deployment — not as optional extras, but as single-flag defaults. Teams arrive at a stronger security posture without a separate security remediation project.
+Modernisation is also a chance to fix security. Private DB IP, IAP, Binary Authorization, VPC-SC, Cloud Armor, and CMEK appear automatically in every modernised deployment as single-flag defaults — not optional extras. Teams arrive at a stronger security posture without needing a separate security remediation project.
 
 ## Programme-level documentation
 
@@ -75,7 +75,13 @@ Modernisation is also a chance to fix security. Private DB IP, IAP, Binary Autho
 
 ## Quantified outcomes
 
-95% faster provisioning, 95% maintenance reduction, and 30–50% compute/egress savings via CDN — see the Developer Productivity outcome for the full breakdown.
+| Outcome | Before | After |
+|---|---|---|
+| VM migration to GCP | Manual re-architecture and weeks of planning per workload | VMware Engine landing zone provisioned via Terraform; structured, phased migration without application rewrites |
+| Application replatform | Bespoke Terraform per app; 3–5 days of setup per deployment | Application catalogue module applied in under 2 hours; consistent, tested configuration across every app |
+| Infrastructure cost | Idle VMs billed 24/7; manual scaling decisions | Scale-to-zero compute; 30–50% compute and egress savings via CDN offload |
+| Security posture | Security hardening treated as a separate follow-on project | IAP, Binary Authorization, VPC-SC, and Cloud Armor enabled by default — security uplift is part of modernisation, not deferred |
+| Maintenance burden | ~40 h per cycle for a 10-app fleet | ~2 h per cycle; 95% reduction in maintenance effort and cost |
 
 ## See also
 

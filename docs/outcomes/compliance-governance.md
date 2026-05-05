@@ -8,7 +8,7 @@ Every change to the platform is a Git commit — reviewed, attributable, and rev
 
 ## IAM and separation of duties
 
-Distinct role bundles — `super_admin`, `developers_infrastructure`, `developers_frontend`, `developers_backend_api` — ensure no single role both authors and approves changes. Per-workload service accounts are narrowly scoped to only the roles required for their function. Application service accounts hold only `secretmanager.secretAccessor`, `cloudsql.client`, or `storage.objectAdmin` as appropriate, and GKE workloads use Workload Identity Federation to eliminate long-lived key files entirely.
+Distinct role bundles — `super_admin`, `developers_infrastructure`, `developers_frontend`, `developers_backend_api` — ensure no single role both authors and approves changes. Per-workload service accounts are narrowly scoped to only the roles required for their function. Application service accounts hold only `secretmanager.secretAccessor`, `cloudsql.client`, or `storage.objectAdmin` as appropriate. GKE workloads use Workload Identity Federation to eliminate long-lived key files entirely.
 
 Role assignments should be reviewed periodically to maintain least-privilege as team membership changes. The structural separation of operational personas (`admin`, `partner`, `support`, `finance`, `user`, `agent`) in `docs/workflows/` provides the segregation-of-duties evidence auditors require.
 
@@ -47,7 +47,9 @@ Three payment providers (Stripe, Paystack, Flutterwave) and GCP managed services
 
 ## Audit workflows
 
-`AGENTS.md` `/security` defines a 30+ point recurring audit checklist designed as the control-evidence collection workflow for SOC 2 / ISO 27001 audits, covering IAM and service accounts, VPC Service Controls, Binary Authorization, secret management, network security, database security, container security, and compliance logging. `AGENTS.md` `/maintain` codifies the change process: pre-change state review and backup, post-change verification and metric monitoring, and critical-change gates for VPC, NFS, and database operations.
+`AGENTS.md` `/security` defines a 30+ point recurring audit checklist designed as the control-evidence collection workflow for SOC 2 / ISO 27001 audits. The checklist covers IAM and service accounts, VPC Service Controls, Binary Authorization, secret management, network security, database security, container security, and compliance logging.
+
+`AGENTS.md` `/maintain` codifies the change process: pre-change state review and backup, post-change verification and metric monitoring, and critical-change gates for VPC, NFS, and database operations.
 
 ## Quantified compliance value
 

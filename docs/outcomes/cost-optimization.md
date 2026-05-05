@@ -4,7 +4,9 @@ The platform is architected to minimise idle compute cost, automate storage life
 
 ## Scale-to-zero compute
 
-Setting `min_instance_count = 0` eliminates compute costs when no traffic is being served. Cloud Run bills per request, per second — idle applications cost nothing. GKE Autopilot bills per pod resource request rather than per provisioned node, with Vertical Pod Autoscaling continuously right-sizing requests to eliminate waste. The platform itself scales to zero between scheduled jobs; Cloud Functions and Cloud Run incur no idle cost outside of active request handling. Phased Cloud Scheduler jobs (00:00–02:00 UTC) batch credit and cleanup work into a narrow window to minimise concurrent function instances.
+Setting `min_instance_count = 0` eliminates compute costs when no traffic is being served. Cloud Run bills per request, per second — idle applications cost nothing. GKE Autopilot bills per pod resource request rather than per provisioned node, with Vertical Pod Autoscaling continuously right-sizing those requests to eliminate waste.
+
+The platform itself scales to zero between scheduled jobs; Cloud Functions and Cloud Run incur no idle cost outside of active request handling. Phased Cloud Scheduler jobs (00:00–02:00 UTC) batch credit and cleanup work into a narrow window to minimise concurrent function instances.
 
 ## Automated storage lifecycle
 
@@ -20,7 +22,9 @@ Storage cost creep is automated away by default:
 
 ## Per-tenant cost attribution and visibility
 
-Every tenant operates in a dedicated GCP project, which means GCP Billing export data is naturally scoped per tenant. The `credit_project` Cloud Function debits user credits from per-project GCP cost on a daily schedule, ensuring spend is attributed to the correct tenant without manual allocation. The `app<name><tenant><id>` resource-naming convention flows directly into Cloud Billing labels, enabling per-tenant chargeback reports via simple BigQuery views — no manual tagging required. `modules/Services_GCP/gke_metering.tf` adds GKE pod-level cost visibility on Autopilot clusters.
+Every tenant operates in a dedicated GCP project, so GCP Billing export data is naturally scoped per tenant. The `credit_project` Cloud Function debits user credits from per-project GCP cost on a daily schedule, ensuring spend is attributed to the correct tenant without manual allocation.
+
+The `app<name><tenant><id>` resource-naming convention flows directly into Cloud Billing labels, enabling per-tenant chargeback reports via simple BigQuery views — no manual tagging required. `modules/Services_GCP/gke_metering.tf` adds GKE pod-level cost visibility on Autopilot clusters.
 
 Cost data is surfaced through API routes at multiple granularities:
 
