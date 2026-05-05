@@ -1,4 +1,4 @@
-# Elasticsearch_GKE Module — Configuration Guide
+# Elasticsearch_GKE Module
 
 Elasticsearch is an open-source distributed search and analytics engine based on Apache Lucene.
 This module deploys a **single-node Elasticsearch cluster** on **GKE Autopilot** as a

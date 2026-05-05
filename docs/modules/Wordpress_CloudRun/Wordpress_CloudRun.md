@@ -1,4 +1,4 @@
-# Wordpress_CloudRun Module — Configuration Guide
+# Wordpress_CloudRun Module
 
 `Wordpress_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [WordPress](https://wordpress.org/) on Google Cloud Run Gen2.
 

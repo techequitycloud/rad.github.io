@@ -1,4 +1,4 @@
-# Odoo_CloudRun Module — Configuration Guide
+# Odoo_CloudRun Module
 
 `Odoo_CloudRun` deploys **Odoo Community Edition** on Google Cloud Run, backed by
 Cloud SQL PostgreSQL and a Cloud Filestore NFS volume for shared file storage.

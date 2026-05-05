@@ -1,4 +1,4 @@
-# Wikijs_CloudRun Module — Configuration Guide
+# Wikijs_CloudRun Module
 
 `Wikijs_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Cloud Run Gen2.
 
