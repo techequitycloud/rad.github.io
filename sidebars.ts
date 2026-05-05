@@ -28,6 +28,11 @@ const sidebars: SidebarsConfig = {
           id: 'workflows/using-rad',
           label: 'Using RAD',
         },
+        {
+          type: 'doc',
+          id: 'workflows/credits',
+          label: 'Credit Management',
+        },
       ],
     },
     {
