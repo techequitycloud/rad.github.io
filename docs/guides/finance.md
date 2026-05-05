@@ -1,3 +1,8 @@
+---
+title: Finance Guide
+slug: /guides/finance
+---
+
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Finance Guide

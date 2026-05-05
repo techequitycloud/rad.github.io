@@ -1,3 +1,8 @@
+---
+title: Admin Guide
+slug: /guides/admin
+---
+
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Admin Guide
@@ -120,7 +125,7 @@ You have complete visibility into all activity on the platform. The **Deployment
 
 You are responsible for the catalog of standard modules available to all users.
 
-1.  **Configure Repo:** Ensure your Platform GitHub Repository is configured in your **Profile** (see section 8).
+1.  **Configure Repo:** Ensure your Platform GitHub Repository is configured in your **Profile** (see section 8 — Profile & Notifications).
 2.  **Publish:** Go to the **Publish** page. You will see a list of modules found in your repo.
 3.  **Refining Modules with Jules:** Click the **Sparkles** icon on any module card to open the Jules AI Refinement tool. Jules can help you improve code, add documentation, or fix bugs before publishing.
 4.  **Select & Save:** Select the modules you want to make public and click "Publish" (or "Update"). These will immediately appear on the "Deploy" page for all users.
@@ -140,6 +145,6 @@ The **Help** page provides tools for communication and platform documentation, o
 Click your avatar in the top right to access your **Profile** page, where you can manage:
 
 *   **Notification Settings:** Toggle **Deployment Notifications** and **Billing Notifications** on or off to control which email alerts you receive.
-*   **Admin Settings:** Configure your Platform GitHub Token, Repository, and Jules API Key (see section 2).
+*   **Admin Settings:** Configure your Platform GitHub Token, Repository, and Jules API Key for the platform module catalog.
 *   **Account Management:** View your account email. If needed, you can delete your account from this page (requires email confirmation).
 *   **Theme:** Toggle between Light and Dark mode using the sun/moon icon in the navigation bar.

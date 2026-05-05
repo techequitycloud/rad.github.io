@@ -1,3 +1,8 @@
+---
+title: Partner Guide
+slug: /guides/partner
+---
+
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Partner Guide
@@ -27,6 +32,8 @@ Before you can publish modules, you need to connect your Git repository and conf
 6.  **Jules API Key:** (Optional) Enter your Jules API Key if you wish to use the AI-powered module refinement agent.
 
 **Note:** The **Publish** link only appears in your navigation bar after your repository has been successfully connected. The **Explore** link (for Jules AI) appears only when both your repository and Jules API Key are configured.
+
+**Important — re-save your GitHub Token if configured before May 2026:** GitHub token secrets are now stored with automatic (global) replication in Secret Manager. If you originally configured your token before this change, Cloud Build workers assigned outside a single region may fail with an "Internal Error" before any build steps run. To fix this, navigate to **Profile > Partner Settings**, re-enter your GitHub token, and save. This updates the secret to use global replication.
 
 ## 3. Publishing Modules
 

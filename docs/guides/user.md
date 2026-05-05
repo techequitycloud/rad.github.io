@@ -1,3 +1,8 @@
+---
+title: User Guide
+slug: /guides/user
+---
+
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # User Guide
@@ -44,8 +49,11 @@ To deploy a new application, click the **Deploy** link in the top navigation bar
 ### 4.1. Monitoring & Actions
 *   **Logs:** Click on a deployment to view real-time build logs. This is essential for troubleshooting if a deployment fails.
 *   **Rating:** After a successful deployment, you can rate the module (1-5 stars) to help others identify high-quality modules.
+*   **Cancel:** For deployments stuck in `QUEUED` that have not started yet, use the **Cancel** button to stop them cleanly. This marks the deployment as `CANCELLED` without triggering any resource teardown, making it the safest option when no infrastructure has been provisioned.
 *   **Delete:** To remove a deployment and destroy its resources, click the **Trash** icon. **Warning:** This action is irreversible.
-*   **Purge:** For deployments that are stuck or require immediate, aggressive cleanup, use the **Purge** option. This forces a hard deletion of all resources and removes the deployment record immediately upon completion.
+*   **Purge:** For deployments that are stuck or require immediate, aggressive cleanup, use the **Purge** option. This forces a hard deletion of all resources and removes the deployment record immediately upon completion. Purge is also the correct action for `CANCELLED` deployments that originated from a `CREATE` operation.
+
+**Note on CANCELLED deployments:** After cancelling, the available follow-up actions are context-sensitive. If the deployment was cancelled during initial creation (nothing was ever deployed), only **Purge** is shown. If it was cancelled during an update or delete operation (existing infrastructure may still be running), **Delete** and **Update** are shown instead.
 
 ## 5. Billing & Credits
 
