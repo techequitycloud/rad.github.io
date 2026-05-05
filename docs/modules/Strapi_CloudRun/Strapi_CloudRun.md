@@ -28,6 +28,18 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 
 `Strapi_Common` generates the Dockerfile, build scripts, and a `db-init` Cloud Run job. It also generates five Strapi application secrets (`APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`) and two GCS environment variables (`GCS_BUCKET_NAME`, `GCS_BASE_URL`).
 
+### Key differences from `App_CloudRun` defaults
+
+| Feature | App_CloudRun default | Strapi_CloudRun default |
+|---|---|---|
+| `container_port` | `8080` | `8080` |
+| `execution_environment` | `"gen1"` | `"gen2"` |
+| `enable_nfs` | `false` | `true` (mount: `/mnt/nfs`) |
+| `enable_redis` | `false` | `false` |
+| `container_image_source` | varies | `"custom"` (Cloud Build) |
+| Database | none | Cloud SQL PostgreSQL 15 (initialised by `db-init` job) |
+| Platform-managed secrets | none | `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET` |
+
 ---
 
 ## 2. IAM & Project Identity
