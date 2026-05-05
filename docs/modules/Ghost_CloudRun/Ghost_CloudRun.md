@@ -1,12 +1,10 @@
 # Ghost_CloudRun Module
 
-This document provides a comprehensive reference for the `modules/Ghost_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Ghost-specific behaviours, and operational patterns for deploying Ghost on Google Cloud Run (v2).
-
----
-
 ## 1. Module Overview
 
 Ghost is a professional open-source publishing platform for newsletters, memberships, and content sites. `Ghost_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Ghost-specific application configuration, database initialisation, and storage configuration via `Ghost_Common`.
+
+> This guide documents variables that are **unique to `Ghost_CloudRun`** or that have **Ghost-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Node.js container, 2 vCPU / 4 Gi by default. Scale-to-zero (`min_instance_count = 0`) with `max_instance_count = 5` — both hardcoded, not user-configurable.
@@ -18,16 +16,16 @@ Ghost is a professional open-source publishing platform for newsletters, members
 
 **Project & Application Identity**
 
-| Variable | Group | Type | Default | Description |
-|---|---|---|---|---|
-| `project_id` | 1 | `string` | — | GCP project ID. **Required.** |
-| `tenant_deployment_id` | 1 | `string` | `'demo'` | Short suffix appended to all resource names. |
-| `support_users` | 1 | `list(string)` | `[]` | Email recipients for monitoring alerts. |
-| `resource_labels` | 1 | `map(string)` | `{}` | Labels applied to all provisioned resources. |
-| `application_name` | 2 | `string` | `'ghost'` | Base resource name. Do not change after initial deployment. |
-| `display_name` | 2 | `string` | `'Ghost Publishing'` | Human-readable name shown in the GCP Console. Maps to `application_display_name` in `App_CloudRun`. |
-| `description` | 2 | `string` | `'Ghost - Professional publishing platform'` | Cloud Run service description. Passed to `Ghost_Common`. |
-| `application_version` | 2 | `string` | `'6.14.0'` | Ghost image version tag. Increment to deploy a new release. |
+| Variable | Default | Description |
+|---|---|---|
+| `project_id` | — | GCP project ID. **Required.** |
+| `tenant_deployment_id` | `'demo'` | Short suffix appended to all resource names. |
+| `support_users` | `[]` | Email recipients for monitoring alerts. |
+| `resource_labels` | `{}` | Labels applied to all provisioned resources. |
+| `application_name` | `'ghost'` | Base resource name. Do not change after initial deployment. |
+| `display_name` | `'Ghost Publishing'` | Human-readable name shown in the GCP Console. Maps to `application_display_name` in `App_CloudRun`. |
+| `description` | `'Ghost - Professional publishing platform'` | Cloud Run service description. Passed to `Ghost_Common`. |
+| `application_version` | `'6.14.0'` | Ghost image version tag. Increment to deploy a new release. |
 
 **Wrapper architecture:** `Ghost_CloudRun` calls `Ghost_Common` to build an `application_config` object containing Ghost-specific environment variables, probe configuration, and the `db-init` job definition. `Ghost_CloudRun` hardcodes `database__client = "mysql"` into the merged config to ensure Ghost 6.x connects to MySQL rather than falling back to SQLite. `module_storage_buckets` carries the `ghost-content` bucket provisioned by `Ghost_Common`. `scripts_dir` is resolved to `abspath("${module.ghost_app.path}/scripts")` at apply time.
 
@@ -61,20 +59,20 @@ Ghost is a Node.js application with significant resource requirements — it run
 
 **Container image:** `container_image_source` defaults to `'custom'`, meaning Cloud Build compiles a custom image using `Ghost_Common`'s Dockerfile (extending the official `ghost` base image). Set `container_image_source = 'prebuilt'` and `container_image = 'ghost:6.14.0'` to skip the build and deploy the upstream image directly.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `deploy_application` | 3 | `true` | Set `false` for infrastructure-only deployment (SQL, storage, secrets). |
-| `container_image_source` | 3 | `'custom'` | `'custom'` builds via Cloud Build (default). `'prebuilt'` deploys an existing image URI. |
-| `container_image` | 3 | `""` | Override image URI. Leave empty for Cloud Build to manage the image. |
-| `cpu_limit` | 3 | `'2000m'` | CPU per instance. 2 vCPU minimum for reliable Ghost operation. |
-| `memory_limit` | 3 | `'4Gi'` | Memory per instance. 4 Gi recommended; do not set below 512 Mi. |
-| `container_port` | 3 | `2368` | Ghost's native HTTP port. Change only if your custom Dockerfile binds Ghost to a different port. |
-| `execution_environment` | 3 | `'gen2'` | Gen2 required for NFS mounts and GCS Fuse. |
-| `timeout_seconds` | 3 | `300` | Max request duration. Increase for long-running newsletter sends or image processing. |
-| `enable_cloudsql_volume` | 3 | `true` | Default `true` — Ghost connects via Unix socket. Set `false` for TCP. |
-| `traffic_split` | 3 | `[]` | Percentage-based canary/blue-green traffic allocation. See §7.B. |
-| `service_annotations` | 3 | `{}` | Advanced Cloud Run annotations. |
-| `service_labels` | 3 | `{}` | Labels applied to the Cloud Run service. |
+| Variable | Default | Description |
+|---|---|---|
+| `deploy_application` | `true` | Set `false` for infrastructure-only deployment (SQL, storage, secrets). |
+| `container_image_source` | `'custom'` | `'custom'` builds via Cloud Build (default). `'prebuilt'` deploys an existing image URI. |
+| `container_image` | `""` | Override image URI. Leave empty for Cloud Build to manage the image. |
+| `cpu_limit` | `'2000m'` | CPU per instance. 2 vCPU minimum for reliable Ghost operation. |
+| `memory_limit` | `'4Gi'` | Memory per instance. 4 Gi recommended; do not set below 512 Mi. |
+| `container_port` | `2368` | Ghost's native HTTP port. Change only if your custom Dockerfile binds Ghost to a different port. |
+| `execution_environment` | `'gen2'` | Gen2 required for NFS mounts and GCS Fuse. |
+| `timeout_seconds` | `300` | Max request duration. Increase for long-running newsletter sends or image processing. |
+| `enable_cloudsql_volume` | `true` | Default `true` — Ghost connects via Unix socket. Set `false` for TCP. |
+| `traffic_split` | `[]` | Percentage-based canary/blue-green traffic allocation. See §7.B. |
+| `service_annotations` | `{}` | Advanced Cloud Run annotations. |
+| `service_labels` | `{}` | Labels applied to the Cloud Run service. |
 
 **Differences from `App_CloudRun` defaults:**
 
@@ -96,13 +94,13 @@ The module uses `db_name` and `db_user` in place of the `application_database_na
 
 **Unix socket connection:** `enable_cloudsql_volume` defaults to `true`. `App_CloudRun` injects the Auth Proxy sidecar and sets `DB_HOST` to the socket path under `/cloudsql`.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `db_name` | 11 | `'ghost'` | MySQL database name. **Do not change after initial deployment.** |
-| `db_user` | 11 | `'ghost'` | MySQL application user. Password auto-generated and stored in Secret Manager. |
-| `database_password_length` | 11 | `32` | Auto-generated password length. Range: 16–64. |
-| `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. See §7.D. |
-| `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
+| Variable | Default | Description |
+|---|---|---|
+| `db_name` | `'ghost'` | MySQL database name. **Do not change after initial deployment.** |
+| `db_user` | `'ghost'` | MySQL application user. Password auto-generated and stored in Secret Manager. |
+| `database_password_length` | `32` | Auto-generated password length. Range: 16–64. |
+| `enable_auto_password_rotation` | `false` | Automated zero-downtime password rotation. See §7.D. |
+| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before restarting the service. |
 
 > `database_type`, `enable_postgres_extensions`, and `enable_mysql_plugins` are not exposed — Ghost only supports MySQL 8.0, and database setup is managed by `Ghost_Common`'s `db-init.sh` script. `sql_instance_name` and `sql_instance_base_name` are not exposed either; Cloud SQL discovery/inline provisioning is handled transparently by `App_CloudRun`.
 
@@ -112,26 +110,26 @@ The module uses `db_name` and `db_user` in place of the `application_database_na
 
 **GCS content bucket:** `Ghost_Common` automatically provisions a dedicated `ghost-content` GCS bucket and configures Ghost to use it for media storage via GCS Fuse. This bucket is separate from any buckets in `storage_buckets`.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `enable_nfs` | 10 | `true` | Provisions an NFS volume for shared content files. Requires `gen2`. Set `false` if using only GCS Fuse for content storage. |
-| `nfs_mount_path` | 10 | `'/mnt/nfs'` | Container path where the NFS share is mounted. |
-| `create_cloud_storage` | 10 | `true` | Set `false` to skip additional bucket creation. The `ghost-content` bucket from `Ghost_Common` is always provisioned. |
-| `storage_buckets` | 10 | `[{ name_suffix = "data" }]` | Additional GCS buckets beyond the auto-provisioned content bucket. |
-| `gcs_volumes` | 10 | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). Each entry: `name`, `bucket_name`, `mount_path`, `readonly`, `mount_options`. |
-| `nfs_instance_name` | 8 | `""` | Name of an existing NFS GCE VM. Leave empty to auto-discover or use inline instance. |
-| `nfs_instance_base_name` | 8 | `'app-nfs'` | Base name for an inline NFS GCE VM when none exists. Deployment ID is appended. |
-| `manage_storage_kms_iam` | 10 | `false` | Creates a CMEK KMS keyring/key and enables CMEK on all storage buckets. |
-| `enable_artifact_registry_cmek` | 10 | `false` | Creates an Artifact Registry KMS key and enables at-rest CMEK encryption of container images. |
+| Variable | Default | Description |
+|---|---|---|
+| `enable_nfs` | `true` | Provisions an NFS volume for shared content files. Requires `gen2`. Set `false` if using only GCS Fuse for content storage. |
+| `nfs_mount_path` | `'/mnt/nfs'` | Container path where the NFS share is mounted. |
+| `create_cloud_storage` | `true` | Set `false` to skip additional bucket creation. The `ghost-content` bucket from `Ghost_Common` is always provisioned. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | Additional GCS buckets beyond the auto-provisioned content bucket. |
+| `gcs_volumes` | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). Each entry: `name`, `bucket_name`, `mount_path`, `readonly`, `mount_options`. |
+| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM. Leave empty to auto-discover or use inline instance. |
+| `nfs_instance_base_name` | `'app-nfs'` | Base name for an inline NFS GCE VM when none exists. Deployment ID is appended. |
+| `manage_storage_kms_iam` | `false` | Creates a CMEK KMS keyring/key and enables CMEK on all storage buckets. |
+| `enable_artifact_registry_cmek` | `false` | Creates an Artifact Registry KMS key and enables at-rest CMEK encryption of container images. |
 
 ### D. Networking
 
 Cloud Run uses Direct VPC Egress to reach Cloud SQL's internal IP. Because `enable_cloudsql_volume = true` is the default, the Auth Proxy sidecar handles the Cloud SQL connection via Unix socket.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `ingress_settings` | 4 | `'all'` | `'all'` — public internet; `'internal'` — VPC only; `'internal-and-cloud-load-balancing'` — forces traffic through the HTTPS Load Balancer. |
-| `vpc_egress_setting` | 4 | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` routes only RFC 1918 traffic via VPC. `'ALL_TRAFFIC'` routes all egress via VPC. |
+| Variable | Default | Description |
+|---|---|---|
+| `ingress_settings` | `'all'` | `'all'` — public internet; `'internal'` — VPC only; `'internal-and-cloud-load-balancing'` — forces traffic through the HTTPS Load Balancer. |
+| `vpc_egress_setting` | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` routes only RFC 1918 traffic via VPC. `'ALL_TRAFFIC'` routes all egress via VPC. |
 
 > `network_name` is not exposed. The module auto-discovers the `Services_GCP` VPC network.
 
@@ -148,10 +146,10 @@ Override `initialization_jobs` with a non-empty list to replace this default wit
 
 Additional recurring cron jobs can be defined via `cron_jobs`:
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Ghost_Common` to supply the default `db-init` job. Non-empty list replaces it entirely. Each entry: `name`, `description`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `execution_mode`, `mount_nfs`, `mount_gcs_volumes`, `depends_on_jobs`, `execute_on_apply`, `script_path`. |
-| `cron_jobs` | 12 | `[]` | Recurring jobs triggered by Cloud Scheduler. Each entry: `name`, `schedule` (cron UTC), `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `parallelism`, `mount_nfs`, `mount_gcs_volumes`, `script_path`, `paused`. |
+| Variable | Default | Description |
+|---|---|---|
+| `initialization_jobs` | `[]` | One-shot Cloud Run Jobs. Leave empty for `Ghost_Common` to supply the default `db-init` job. Non-empty list replaces it entirely. Each entry: `name`, `description`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `execution_mode`, `mount_nfs`, `mount_gcs_volumes`, `depends_on_jobs`, `execute_on_apply`, `script_path`. |
+| `cron_jobs` | `[]` | Recurring jobs triggered by Cloud Scheduler. Each entry: `name`, `schedule` (cron UTC), `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `parallelism`, `mount_nfs`, `mount_gcs_volumes`, `script_path`, `paused`. |
 
 **Backup Import:** If `enable_backup_import = true`, a dedicated Cloud Run Job restores a backup into the MySQL database during the apply. See §8.C for all backup variables.
 
@@ -163,20 +161,20 @@ Additional recurring cron jobs can be defined via `cron_jobs`:
 
 Identical behaviour to `App_CloudRun`. When `enable_cloud_armor = true`, a Global HTTPS Load Balancer with a Cloud Armor WAF policy (OWASP Top 10, adaptive DDoS, 500 req/min rate limiting) is provisioned in front of Cloud Run.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `enable_cloud_armor` | 9 | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. Required for custom domains, CDN, and DDoS protection. |
-| `admin_ip_ranges` | 9 | `[]` | CIDR ranges exempted from WAF rules (e.g., office VPN, CI/CD egress IPs). |
+| Variable | Default | Description |
+|---|---|---|
+| `enable_cloud_armor` | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. Required for custom domains, CDN, and DDoS protection. |
+| `admin_ip_ranges` | `[]` | CIDR ranges exempted from WAF rules (e.g., office VPN, CI/CD egress IPs). |
 
 ### B. Identity-Aware Proxy (IAP)
 
 When `enable_iap = true`, Cloud Run's native IAP integration is enabled directly on the service. Google identity authentication is required before requests reach Ghost. Useful for staging environments or internal Ghost admin access.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `enable_iap` | 4 | `false` | Enables IAP natively on the Cloud Run service. |
-| `iap_authorized_users` | 4 | `[]` | Users/service accounts granted access. Format: `'user:email'` or `'serviceAccount:sa@...'`. |
-| `iap_authorized_groups` | 4 | `[]` | Google Groups granted access. Format: `'group:name@example.com'`. |
+| Variable | Default | Description |
+|---|---|---|
+| `enable_iap` | `false` | Enables IAP natively on the Cloud Run service. |
+| `iap_authorized_users` | `[]` | Users/service accounts granted access. Format: `'user:email'` or `'serviceAccount:sa@...'`. |
+| `iap_authorized_groups` | `[]` | Google Groups granted access. Format: `'group:name@example.com'`. |
 
 See [App_CloudRun §4.B](../App_CloudRun/App_CloudRun.md#b-identity-aware-proxy-iap) for the full IAM role details.
 
@@ -184,17 +182,17 @@ See [App_CloudRun §4.B](../App_CloudRun/App_CloudRun.md#b-identity-aware-proxy-
 
 Identical to `App_CloudRun`. When `enable_binary_authorization = true`, Cloud Run enforces that deployed images carry a valid cryptographic attestation.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `enable_binary_authorization` | 7 | `false` | Enforces image attestation. Requires a Binary Authorization policy and attestor pre-configured in the project. |
+| Variable | Default | Description |
+|---|---|---|
+| `enable_binary_authorization` | `false` | Enforces image attestation. Requires a Binary Authorization policy and attestor pre-configured in the project. |
 
 ### D. VPC Service Controls
 
 Identical to `App_CloudRun`. When `enable_vpc_sc = true`, all GCP API calls from this module are bound within an existing VPC-SC perimeter.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `enable_vpc_sc` | 21 | `false` | Registers module API calls within the project's VPC-SC perimeter. A perimeter must already exist before enabling. |
+| Variable | Default | Description |
+|---|---|---|
+| `enable_vpc_sc` | `false` | Registers module API calls within the project's VPC-SC perimeter. A perimeter must already exist before enabling. |
 
 ### E. Secret Manager Integration
 
@@ -202,11 +200,11 @@ Ghost application secrets are stored in Secret Manager and injected natively by 
 
 Unlike Directus or Django, `Ghost_Common` does not auto-generate application-level secrets. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App_CloudRun`. User-defined secrets can be added via `secret_environment_variables`.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `secret_environment_variables` | 5 | `{}` | Map of env var name → Secret Manager secret ID. Resolved at runtime; never stored in state. (e.g., `{ SMTP_PASSWORD = "ghost-smtp-password" }`) |
-| `secret_rotation_period` | 5 | `'2592000s'` | Frequency at which Secret Manager emits rotation notifications. Default: 30 days. |
-| `secret_propagation_delay` | 5 | `30` | Seconds to wait after secret creation before dependent resources proceed. |
+| Variable | Default | Description |
+|---|---|---|
+| `secret_environment_variables` | `{}` | Map of env var name → Secret Manager secret ID. Resolved at runtime; never stored in state. (e.g., `{ SMTP_PASSWORD = "ghost-smtp-password" }`) |
+| `secret_rotation_period` | `'2592000s'` | Frequency at which Secret Manager emits rotation notifications. Default: 30 days. |
+| `secret_propagation_delay` | `30` | Seconds to wait after secret creation before dependent resources proceed. |
 
 ---
 
@@ -226,20 +224,20 @@ When `enable_cdn = true` (requires `enable_cloud_armor = true`), Cloud CDN is at
 
 **Ghost consideration:** Ghost serves a mix of public cached pages and authenticated member-only content. Cloud CDN is well-suited for Ghost's public pages and static assets (theme CSS/JS, images). Ghost's built-in caching layer (backed by Redis) already handles page-level caching — CDN adds an additional edge layer for public content. Ensure member-gated content responses include appropriate `Cache-Control` or `Vary` headers before enabling.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `enable_cdn` | 9 | `false` | Enables Cloud CDN on the HTTPS LB backend. Only effective when `enable_cloud_armor = true`. |
-| `max_images_to_retain` | 9 | `7` | Maximum number of recent container images to keep in Artifact Registry. Set `0` to disable. |
-| `delete_untagged_images` | 9 | `true` | Automatically deletes untagged (dangling) images from Artifact Registry. |
-| `image_retention_days` | 9 | `30` | Days after which images are eligible for deletion. Set `0` to disable age-based deletion. |
+| Variable | Default | Description |
+|---|---|---|
+| `enable_cdn` | `false` | Enables Cloud CDN on the HTTPS LB backend. Only effective when `enable_cloud_armor = true`. |
+| `max_images_to_retain` | `7` | Maximum number of recent container images to keep in Artifact Registry. Set `0` to disable. |
+| `delete_untagged_images` | `true` | Automatically deletes untagged (dangling) images from Artifact Registry. |
+| `image_retention_days` | `30` | Days after which images are eligible for deletion. Set `0` to disable age-based deletion. |
 
 ### C. Custom Domains
 
 Custom domains are attached to the Global HTTPS Load Balancer via `application_domains`. Google-managed SSL certificates are provisioned automatically. DNS must point to the load balancer IP after apply.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `application_domains` | 9 | `[]` | Custom domain names for the HTTPS LB. Google-managed SSL certificates provisioned per domain. (e.g., `['ghost.example.com']`) |
+| Variable | Default | Description |
+|---|---|---|
+| `application_domains` | `[]` | Custom domain names for the HTTPS LB. Google-managed SSL certificates provisioned per domain. (e.g., `['ghost.example.com']`) |
 
 After the first apply, retrieve the LB IP from the Terraform output `load_balancer_ip` and create an `A` record. SSL certificate provisioning takes 10–30 minutes after DNS propagation.
 
@@ -253,22 +251,22 @@ Identical to `App_CloudRun`. When `enable_cicd_trigger = true`, a Cloud Build Gi
 
 **Typical use case:** The default `container_image_source = 'custom'` already uses Cloud Build to build a Ghost image with `Ghost_Common`'s Dockerfile. Enabling a CI/CD trigger automates this pipeline on repository push — useful when Ghost themes, plugins, or configuration are maintained in source control.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `enable_cicd_trigger` | 7 | `false` | Provisions a Cloud Build GitHub trigger. Requires `github_repository_url` and credentials. |
-| `github_repository_url` | 7 | `""` | Full HTTPS URL of the GitHub repository. |
-| `github_token` | 7 | `""` | GitHub PAT (`repo`, `admin:repo_hook` scopes). Required on first apply. Sensitive. |
-| `github_app_installation_id` | 7 | `""` | GitHub App installation ID (preferred for organisation repos). |
-| `cicd_trigger_config` | 7 | `{ branch_pattern = "^main$" }` | Advanced trigger config: `branch_pattern`, `included_files`, `ignored_files`, `trigger_name`, `substitutions`. |
+| Variable | Default | Description |
+|---|---|---|
+| `enable_cicd_trigger` | `false` | Provisions a Cloud Build GitHub trigger. Requires `github_repository_url` and credentials. |
+| `github_repository_url` | `""` | Full HTTPS URL of the GitHub repository. |
+| `github_token` | `""` | GitHub PAT (`repo`, `admin:repo_hook` scopes). Required on first apply. Sensitive. |
+| `github_app_installation_id` | `""` | GitHub App installation ID (preferred for organisation repos). |
+| `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Advanced trigger config: `branch_pattern`, `included_files`, `ignored_files`, `trigger_name`, `substitutions`. |
 
 ### B. Cloud Deploy Pipeline
 
 When `enable_cloud_deploy = true` (requires `enable_cicd_trigger = true`), the CI/CD pipeline is upgraded to a managed Cloud Deploy delivery pipeline with sequential promotion stages.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `enable_cloud_deploy` | 7 | `false` | Provisions a Cloud Deploy pipeline. Requires `enable_cicd_trigger = true`. |
-| `cloud_deploy_stages` | 7 | `[dev, staging, prod(approval)]` | Ordered promotion stages. Each: `name`, `target_name`, `service_name`, `require_approval`, `auto_promote`. |
+| Variable | Default | Description |
+|---|---|---|
+| `enable_cloud_deploy` | `false` | Provisions a Cloud Deploy pipeline. Requires `enable_cicd_trigger = true`. |
+| `cloud_deploy_stages` | `[dev, staging, prod(approval)]` | Ordered promotion stages. Each: `name`, `target_name`, `service_name`, `require_approval`, `auto_promote`. |
 
 See [App_CloudRun §6.B](../App_CloudRun/App_CloudRun.md#b-cloud-deploy-pipeline) for the approval workflow and multi-project deployment details.
 
@@ -288,9 +286,9 @@ Ghost uses Redis-backed page caching, so multiple instances can serve requests w
 
 Traffic splitting is supported. Ghost's page cache is backed by Redis (shared across instances), making canary deployments safe — cached pages are served consistently regardless of which instance handles the request.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `traffic_split` | 3 | `[]` | Percentage-based traffic allocation across named revisions. All entries must sum to 100. Empty sends 100% to the latest revision. |
+| Variable | Default | Description |
+|---|---|---|
+| `traffic_split` | `[]` | Percentage-based traffic allocation across named revisions. All entries must sum to 100. Empty sends 100% to the latest revision. |
 
 See [App_CloudRun §7.B](../App_CloudRun/App_CloudRun.md#b-traffic-splitting) for the full configuration syntax.
 
@@ -300,12 +298,12 @@ Ghost does not expose a dedicated health endpoint. Both the startup and liveness
 
 **Ghost 6.x performs database migrations and theme compilation on first boot.** The startup probe defaults allow 90 seconds of initial delay plus up to 10 retry periods of 10 seconds each — giving Ghost up to 190 seconds of total startup tolerance on cold deployments.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `startup_probe` | 13 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=90, timeout_seconds=10, period_seconds=10, failure_threshold=10 }` | Startup readiness probe. Container receives no traffic until this succeeds. |
-| `liveness_probe` | 13 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=60, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe. Container is restarted after `failure_threshold` consecutive failures. |
-| `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. Alerts notify `support_users` if unreachable. |
-| `alert_policies` | 13 | `[]` | Cloud Monitoring metric alert policies. Each: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
+| Variable | Default | Description |
+|---|---|---|
+| `startup_probe` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=90, timeout_seconds=10, period_seconds=10, failure_threshold=10 }` | Startup readiness probe. Container receives no traffic until this succeeds. |
+| `liveness_probe` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=60, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe. Container is restarted after `failure_threshold` consecutive failures. |
+| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. Alerts notify `support_users` if unreachable. |
+| `alert_policies` | `[]` | Cloud Monitoring metric alert policies. Each: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
 
 **Differences from `App_CloudRun` probe defaults:**
 
@@ -327,11 +325,11 @@ When `enable_auto_password_rotation = true`, a zero-downtime password rotation p
 
 Ghost re-establishes its database connection on restart and reads the updated `DB_PASSWORD` from Secret Manager. No manual intervention is required.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `enable_auto_password_rotation` | 11 | `false` | Enables automated password rotation. |
-| `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after writing the new secret before restarting the service. |
-| `secret_rotation_period` | 5 | `'2592000s'` | Rotation frequency. Default: 30 days. |
+| Variable | Default | Description |
+|---|---|---|
+| `enable_auto_password_rotation` | `false` | Enables automated password rotation. |
+| `rotation_propagation_delay_sec` | `90` | Seconds to wait after writing the new secret before restarting the service. |
+| `secret_rotation_period` | `'2592000s'` | Rotation frequency. Default: 30 days. |
 
 ---
 
@@ -343,12 +341,12 @@ Redis is **enabled by default** (`enable_redis = true`). `Ghost_Common` configur
 
 When `enable_redis = true` and `redis_host` is not provided, the module defaults to using the NFS server IP as the Redis host (a lightweight Redis instance co-located on the NFS GCE VM). For production deployments, point `redis_host` at a dedicated Google Cloud Memorystore for Redis instance.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `enable_redis` | 20 | `true` | Enables Redis for Ghost page caching. Recommended for all deployments. |
-| `redis_host` | 20 | `""` | Redis server hostname or IP. Leave blank to use the NFS server IP. Override with a Memorystore instance for production. |
-| `redis_port` | 20 | `'6379'` | Redis server TCP port (string). |
-| `redis_auth` | 20 | `""` | Redis AUTH password. Leave empty if the Redis instance does not require authentication. Sensitive — never stored in state. |
+| Variable | Default | Description |
+|---|---|---|
+| `enable_redis` | `true` | Enables Redis for Ghost page caching. Recommended for all deployments. |
+| `redis_host` | `""` | Redis server hostname or IP. Leave blank to use the NFS server IP. Override with a Memorystore instance for production. |
+| `redis_port` | `'6379'` | Redis server TCP port (string). |
+| `redis_auth` | `""` | Redis AUTH password. Leave empty if the Redis instance does not require authentication. Sensitive — never stored in state. |
 
 > Note: Redis is in **group 20** in `Ghost_CloudRun` (vs group 10 in `App_CloudRun`).
 
@@ -387,10 +385,10 @@ secret_environment_variables = {
 
 The `database__client = "mysql"` variable is injected automatically by `main.tf` — do not set it manually in `environment_variables`.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `environment_variables` | 5 | SMTP defaults (see above) | Plain-text env vars. Do not include `database__client` here. |
-| `secret_environment_variables` | 5 | `{}` | Secret Manager references. Use for `SMTP_PASSWORD` and other sensitive values. |
+| Variable | Default | Description |
+|---|---|---|
+| `environment_variables` | SMTP defaults (see above) | Plain-text env vars. Do not include `database__client` here. |
+| `secret_environment_variables` | `{}` | Secret Manager references. Use for `SMTP_PASSWORD` and other sensitive values. |
 
 ### C. Backup Import & Recovery
 
@@ -398,14 +396,14 @@ When `enable_backup_import = true`, a dedicated Cloud Run Job restores an existi
 
 **Ghost uses `backup_uri`** (like Directus, not `backup_file` as in Django). `backup_uri` accepts a full GCS object URI or Google Drive file ID.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `backup_schedule` | 6 | `'0 2 * * *'` | Cron expression (UTC) for automated daily backups. |
-| `backup_retention_days` | 6 | `7` | Days to retain backup files in GCS. |
-| `enable_backup_import` | 6 | `false` | Triggers a one-time restore on apply. Set `false` after a successful import. |
-| `backup_source` | 6 | `'gcs'` | `'gcs'` (full GCS URI) or `'gdrive'` (Drive file ID). |
-| `backup_uri` | 6 | `""` | Full GCS URI (e.g., `'gs://my-bucket/ghost-2024-01.sql'`) or Google Drive file ID. Maps to `backup_file` in `App_CloudRun`. |
-| `backup_format` | 6 | `'sql'` | Backup file format. Options: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
+| Variable | Default | Description |
+|---|---|---|
+| `backup_schedule` | `'0 2 * * *'` | Cron expression (UTC) for automated daily backups. |
+| `backup_retention_days` | `7` | Days to retain backup files in GCS. |
+| `enable_backup_import` | `false` | Triggers a one-time restore on apply. Set `false` after a successful import. |
+| `backup_source` | `'gcs'` | `'gcs'` (full GCS URI) or `'gdrive'` (Drive file ID). |
+| `backup_uri` | `""` | Full GCS URI (e.g., `'gs://my-bucket/ghost-2024-01.sql'`) or Google Drive file ID. Maps to `backup_file` in `App_CloudRun`. |
+| `backup_format` | `'sql'` | Backup file format. Options: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
 
 > **Warning:** If the database already contains data, the import may produce errors. Test in a non-production environment before importing into production.
 
@@ -413,11 +411,11 @@ When `enable_backup_import = true`, a dedicated Cloud Run Job restores an existi
 
 Observability is identical to `App_CloudRun`. A Cloud Monitoring uptime check polls the Ghost endpoint from multiple global locations. Custom alert policies can monitor Cloud Run metrics (latency, error rate, instance count) and notify `support_users`.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Uptime check: `enabled`, `path`, `check_interval` (e.g., `"60s"`), `timeout` (e.g., `"10s"`). |
-| `alert_policies` | 13 | `[]` | Metric alert policies. Each: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`, `aggregation_period`. |
-| `support_users` | 1 | `[]` | Email addresses notified by uptime and alert policy triggers. |
+| Variable | Default | Description |
+|---|---|---|
+| `uptime_check_config` | `{ enabled=true, path="/" }` | Uptime check: `enabled`, `path`, `check_interval` (e.g., `"60s"`), `timeout` (e.g., `"10s"`). |
+| `alert_policies` | `[]` | Metric alert policies. Each: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`, `aggregation_period`. |
+| `support_users` | `[]` | Email addresses notified by uptime and alert policy triggers. |
 
 ---
 
@@ -448,107 +446,107 @@ All user-configurable variables exposed by `Ghost_CloudRun`, sorted by UI group 
 
 Variables marked **[fixed]** are hardcoded by the module and cannot be overridden.
 
-| Variable | Group | Default | Description |
-|---|---|---|---|
-| `module_description` | 0 | (Ghost platform text) | Platform metadata: module description. |
-| `module_documentation` | 0 | (docs URL) | Platform metadata: documentation URL. |
-| `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
-| `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
-| `credit_cost` | 0 | `100` | Platform metadata: deployment credit cost. |
-| `require_credit_purchases` | 0 | `true` | Platform metadata: enforces credit balance check. |
-| `enable_purge` | 0 | `true` | Permits full deletion of module resources on destroy. |
-| `public_access` | 0 | `false` | Platform catalogue visibility. |
-| `deployment_id` | 0 | `""` | Deployment ID suffix. Auto-generated if empty. |
-| `resource_creator_identity` | 0 | (platform SA) | Service account used by Terraform to manage resources. |
-| `project_id` | 1 | — | GCP project ID. **Required.** |
-| `tenant_deployment_id` | 1 | `'demo'` | Short suffix appended to all resource names. |
-| `support_users` | 1 | `[]` | Email addresses for monitoring alerts. |
-| `resource_labels` | 1 | `{}` | Labels applied to all provisioned resources. |
-| `application_name` | 2 | `'ghost'` | Base resource name. Do not change after initial deployment. |
-| `display_name` | 2 | `'Ghost Publishing'` | Human-readable name. Maps to `application_display_name` in `App_CloudRun`. |
-| `description` | 2 | `'Ghost - Professional publishing platform'` | Service description. Passed to `Ghost_Common`. |
-| `application_version` | 2 | `'6.14.0'` | Ghost container image tag. |
-| `deploy_application` | 3 | `true` | Set `false` for infrastructure-only deployment. |
-| `container_image_source` | 3 | `'custom'` | `'custom'` (Cloud Build) or `'prebuilt'` (existing image). |
-| `container_image` | 3 | `""` | Container image URI. Leave empty for Cloud Build to manage. |
-| `cpu_limit` | 3 | `'2000m'` | CPU per instance. 2 vCPU minimum for Ghost. |
-| `memory_limit` | 3 | `'4Gi'` | Memory per instance. 4 Gi recommended for production. |
-| `container_port` | 3 | `2368` | Ghost's native port. |
-| `execution_environment` | 3 | `'gen2'` | Gen2 required for NFS mounts and GCS Fuse. |
-| `timeout_seconds` | 3 | `300` | Max request duration. Increase for newsletter sends. |
-| `enable_cloudsql_volume` | 3 | `true` | Default `true` — Ghost connects via Unix socket. |
-| `cloudsql_volume_mount_path` | 3 | `'/cloudsql'` | Container path for the Auth Proxy Unix socket. |
-| `container_protocol` | 3 | `'http1'` | `'http1'` or `'h2c'`. |
-| `enable_image_mirroring` | 3 | `true` | Mirrors the Ghost image into Artifact Registry. |
-| `traffic_split` | 3 | `[]` | Canary/blue-green traffic allocation. |
-| `max_revisions_to_retain` | 3 | `7` | Maximum number of Cloud Run revisions to keep. Revisions serving traffic are never deleted. Set `0` to disable. |
-| `service_annotations` | 3 | `{}` | Advanced Cloud Run annotations. |
-| `service_labels` | 3 | `{}` | Labels applied to the Cloud Run service. |
-| `min_instance_count` | — | `0` | **[fixed]** Hardcoded in `main.tf`. |
-| `max_instance_count` | — | `5` | **[fixed]** Hardcoded in `main.tf`. |
-| `ingress_settings` | 4 | `'all'` | `'all'`, `'internal'`, or `'internal-and-cloud-load-balancing'`. |
-| `vpc_egress_setting` | 4 | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` or `'ALL_TRAFFIC'`. |
-| `enable_iap` | 4 | `false` | Enables IAP natively on the Cloud Run service. |
-| `iap_authorized_users` | 4 | `[]` | Users/SAs granted IAP access. |
-| `iap_authorized_groups` | 4 | `[]` | Google Groups granted IAP access. |
-| `environment_variables` | 5 | SMTP defaults | Plain-text env vars. `database__client` is injected automatically — do not set it here. |
-| `secret_environment_variables` | 5 | `{}` | Secret Manager references (e.g., `{ SMTP_PASSWORD = "ghost-smtp-password" }`). |
-| `secret_propagation_delay` | 5 | `30` | Seconds to wait after secret creation. |
-| `secret_rotation_period` | 5 | `'2592000s'` | Secret Manager rotation notification frequency. |
-| `backup_schedule` | 6 | `'0 2 * * *'` | Cron expression (UTC) for automated backups. |
-| `backup_retention_days` | 6 | `7` | Days to retain backup files in GCS. |
-| `enable_backup_import` | 6 | `false` | Triggers a one-time restore on apply. |
-| `backup_source` | 6 | `'gcs'` | `'gcs'` (full URI) or `'gdrive'` (file ID). |
-| `backup_uri` | 6 | `""` | Full GCS URI or Google Drive file ID. Maps to `backup_file` in `App_CloudRun`. |
-| `backup_format` | 6 | `'sql'` | Backup format. Options: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
-| `enable_cicd_trigger` | 7 | `false` | Provisions a Cloud Build GitHub trigger. |
-| `github_repository_url` | 7 | `""` | Full HTTPS URL of the GitHub repository. |
-| `github_token` | 7 | `""` | GitHub PAT. Required on first apply. Sensitive. |
-| `github_app_installation_id` | 7 | `""` | GitHub App installation ID. |
-| `cicd_trigger_config` | 7 | `{ branch_pattern = "^main$" }` | Advanced Cloud Build trigger config. |
-| `enable_cloud_deploy` | 7 | `false` | Provisions a Cloud Deploy progressive delivery pipeline. |
-| `cloud_deploy_stages` | 7 | `[dev, staging, prod(approval)]` | Ordered Cloud Deploy promotion stages. |
-| `enable_binary_authorization` | 7 | `false` | Enforces image attestation on deployment. |
-| `enable_custom_sql_scripts` | 8 | `false` | Runs SQL scripts from GCS after provisioning. |
-| `custom_sql_scripts_bucket` | 8 | `""` | GCS bucket containing SQL scripts. |
-| `custom_sql_scripts_path` | 8 | `""` | Path prefix within the bucket. |
-| `custom_sql_scripts_use_root` | 8 | `false` | Run scripts as the root DB user. |
-| `nfs_instance_name` | 8 | `""` | Name of an existing NFS GCE VM. Leave empty to auto-discover. |
-| `nfs_instance_base_name` | 8 | `'app-nfs'` | Base name for inline NFS VM. Deployment ID is appended. |
-| `enable_cloud_armor` | 9 | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. |
-| `admin_ip_ranges` | 9 | `[]` | CIDR ranges exempted from WAF rules. |
-| `application_domains` | 9 | `[]` | Custom domains with Google-managed SSL certificates. |
-| `enable_cdn` | 9 | `false` | Enables Cloud CDN on the HTTPS LB backend. |
-| `max_images_to_retain` | 9 | `7` | Maximum number of recent container images to keep in Artifact Registry. Set `0` to disable. |
-| `delete_untagged_images` | 9 | `true` | Automatically deletes untagged (dangling) images from Artifact Registry. |
-| `image_retention_days` | 9 | `30` | Days after which images are eligible for deletion. Set `0` to disable age-based deletion. |
-| `create_cloud_storage` | 10 | `true` | Set `false` to skip GCS bucket creation. |
-| `storage_buckets` | 10 | `[{ name_suffix = "data" }]` | Additional GCS buckets to provision. |
-| `enable_nfs` | 10 | `true` | Provisions NFS shared storage for Ghost content. Requires `gen2`. |
-| `nfs_mount_path` | 10 | `'/mnt/nfs'` | Container path where NFS is mounted. |
-| `gcs_volumes` | 10 | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). |
-| `manage_storage_kms_iam` | 10 | `false` | Creates CMEK KMS key and enables CMEK on all storage buckets. |
-| `enable_artifact_registry_cmek` | 10 | `false` | Creates Artifact Registry KMS key for at-rest image encryption. |
-| `db_name` | 11 | `'ghost'` | MySQL database name. Do not change after initial deployment. |
-| `db_user` | 11 | `'ghost'` | MySQL application user. |
-| `database_password_length` | 11 | `32` | Auto-generated password length. Range: 16–64. |
-| `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. |
-| `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
-| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Ghost_Common` to supply the default `db-init` job. Each entry: `name`, `description`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `execution_mode`, `mount_nfs`, `mount_gcs_volumes`, `depends_on_jobs`, `execute_on_apply`, `script_path`. |
-| `cron_jobs` | 12 | `[]` | Recurring scheduled Cloud Run Jobs. Each entry includes `parallelism`, `mount_nfs`, `mount_gcs_volumes`, and `script_path` fields in addition to the standard scheduling fields. |
-| `startup_probe` | 13 | `{ path="/", initial_delay_seconds=90, failure_threshold=10, ... }` | Startup probe. Long initial delay for Ghost DB migrations. |
-| `liveness_probe` | 13 | `{ path="/", initial_delay_seconds=60, failure_threshold=3, ... }` | Liveness probe. |
-| `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
-| `alert_policies` | 13 | `[]` | Cloud Monitoring metric alert policies. |
-| `enable_redis` | 20 | `true` | **Enabled by default.** Redis for Ghost page caching. |
-| `redis_host` | 20 | `""` | Redis hostname/IP. Defaults to NFS server IP when empty. |
-| `redis_port` | 20 | `'6379'` | Redis TCP port (string). |
-| `redis_auth` | 20 | `""` | Redis AUTH password. Sensitive. |
-| `enable_vpc_sc` | 21 | `false` | Registers API calls within the project's VPC-SC perimeter. |
-| `vpc_cidr_ranges` | 21 | `[]` | VPC subnet CIDR ranges for VPC-SC network access level. Auto-discovered when empty. |
-| `vpc_sc_dry_run` | 21 | `true` | Logs VPC-SC violations without blocking. Set `false` to enforce. |
-| `organization_id` | 21 | `""` | GCP Organization ID for VPC-SC. Auto-discovered from project when empty. |
-| `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ). |
+| Variable | Default | Description |
+|---|---|---|
+| `module_description` | (Ghost platform text) | Platform metadata: module description. |
+| `module_documentation` | (docs URL) | Platform metadata: documentation URL. |
+| `module_dependency` | `['Services_GCP']` | Platform metadata: required modules. |
+| `module_services` | (GCP service list) | Platform metadata: GCP services consumed. |
+| `credit_cost` | `100` | Platform metadata: deployment credit cost. |
+| `require_credit_purchases` | `true` | Platform metadata: enforces credit balance check. |
+| `enable_purge` | `true` | Permits full deletion of module resources on destroy. |
+| `public_access` | `false` | Platform catalogue visibility. |
+| `deployment_id` | `""` | Deployment ID suffix. Auto-generated if empty. |
+| `resource_creator_identity` | (platform SA) | Service account used by Terraform to manage resources. |
+| `project_id` | — | GCP project ID. **Required.** |
+| `tenant_deployment_id` | `'demo'` | Short suffix appended to all resource names. |
+| `support_users` | `[]` | Email addresses for monitoring alerts. |
+| `resource_labels` | `{}` | Labels applied to all provisioned resources. |
+| `application_name` | `'ghost'` | Base resource name. Do not change after initial deployment. |
+| `display_name` | `'Ghost Publishing'` | Human-readable name. Maps to `application_display_name` in `App_CloudRun`. |
+| `description` | `'Ghost - Professional publishing platform'` | Service description. Passed to `Ghost_Common`. |
+| `application_version` | `'6.14.0'` | Ghost container image tag. |
+| `deploy_application` | `true` | Set `false` for infrastructure-only deployment. |
+| `container_image_source` | `'custom'` | `'custom'` (Cloud Build) or `'prebuilt'` (existing image). |
+| `container_image` | `""` | Container image URI. Leave empty for Cloud Build to manage. |
+| `cpu_limit` | `'2000m'` | CPU per instance. 2 vCPU minimum for Ghost. |
+| `memory_limit` | `'4Gi'` | Memory per instance. 4 Gi recommended for production. |
+| `container_port` | `2368` | Ghost's native port. |
+| `execution_environment` | `'gen2'` | Gen2 required for NFS mounts and GCS Fuse. |
+| `timeout_seconds` | `300` | Max request duration. Increase for newsletter sends. |
+| `enable_cloudsql_volume` | `true` | Default `true` — Ghost connects via Unix socket. |
+| `cloudsql_volume_mount_path` | `'/cloudsql'` | Container path for the Auth Proxy Unix socket. |
+| `container_protocol` | `'http1'` | `'http1'` or `'h2c'`. |
+| `enable_image_mirroring` | `true` | Mirrors the Ghost image into Artifact Registry. |
+| `traffic_split` | `[]` | Canary/blue-green traffic allocation. |
+| `max_revisions_to_retain` | `7` | Maximum number of Cloud Run revisions to keep. Revisions serving traffic are never deleted. Set `0` to disable. |
+| `service_annotations` | `{}` | Advanced Cloud Run annotations. |
+| `service_labels` | `{}` | Labels applied to the Cloud Run service. |
+| `min_instance_count` | `0` | **[fixed]** Hardcoded in `main.tf`. |
+| `max_instance_count` | `5` | **[fixed]** Hardcoded in `main.tf`. |
+| `ingress_settings` | `'all'` | `'all'`, `'internal'`, or `'internal-and-cloud-load-balancing'`. |
+| `vpc_egress_setting` | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` or `'ALL_TRAFFIC'`. |
+| `enable_iap` | `false` | Enables IAP natively on the Cloud Run service. |
+| `iap_authorized_users` | `[]` | Users/SAs granted IAP access. |
+| `iap_authorized_groups` | `[]` | Google Groups granted IAP access. |
+| `environment_variables` | SMTP defaults | Plain-text env vars. `database__client` is injected automatically — do not set it here. |
+| `secret_environment_variables` | `{}` | Secret Manager references (e.g., `{ SMTP_PASSWORD = "ghost-smtp-password" }`). |
+| `secret_propagation_delay` | `30` | Seconds to wait after secret creation. |
+| `secret_rotation_period` | `'2592000s'` | Secret Manager rotation notification frequency. |
+| `backup_schedule` | `'0 2 * * *'` | Cron expression (UTC) for automated backups. |
+| `backup_retention_days` | `7` | Days to retain backup files in GCS. |
+| `enable_backup_import` | `false` | Triggers a one-time restore on apply. |
+| `backup_source` | `'gcs'` | `'gcs'` (full URI) or `'gdrive'` (file ID). |
+| `backup_uri` | `""` | Full GCS URI or Google Drive file ID. Maps to `backup_file` in `App_CloudRun`. |
+| `backup_format` | `'sql'` | Backup format. Options: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
+| `enable_cicd_trigger` | `false` | Provisions a Cloud Build GitHub trigger. |
+| `github_repository_url` | `""` | Full HTTPS URL of the GitHub repository. |
+| `github_token` | `""` | GitHub PAT. Required on first apply. Sensitive. |
+| `github_app_installation_id` | `""` | GitHub App installation ID. |
+| `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Advanced Cloud Build trigger config. |
+| `enable_cloud_deploy` | `false` | Provisions a Cloud Deploy progressive delivery pipeline. |
+| `cloud_deploy_stages` | `[dev, staging, prod(approval)]` | Ordered Cloud Deploy promotion stages. |
+| `enable_binary_authorization` | `false` | Enforces image attestation on deployment. |
+| `enable_custom_sql_scripts` | `false` | Runs SQL scripts from GCS after provisioning. |
+| `custom_sql_scripts_bucket` | `""` | GCS bucket containing SQL scripts. |
+| `custom_sql_scripts_path` | `""` | Path prefix within the bucket. |
+| `custom_sql_scripts_use_root` | `false` | Run scripts as the root DB user. |
+| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM. Leave empty to auto-discover. |
+| `nfs_instance_base_name` | `'app-nfs'` | Base name for inline NFS VM. Deployment ID is appended. |
+| `enable_cloud_armor` | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. |
+| `admin_ip_ranges` | `[]` | CIDR ranges exempted from WAF rules. |
+| `application_domains` | `[]` | Custom domains with Google-managed SSL certificates. |
+| `enable_cdn` | `false` | Enables Cloud CDN on the HTTPS LB backend. |
+| `max_images_to_retain` | `7` | Maximum number of recent container images to keep in Artifact Registry. Set `0` to disable. |
+| `delete_untagged_images` | `true` | Automatically deletes untagged (dangling) images from Artifact Registry. |
+| `image_retention_days` | `30` | Days after which images are eligible for deletion. Set `0` to disable age-based deletion. |
+| `create_cloud_storage` | `true` | Set `false` to skip GCS bucket creation. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | Additional GCS buckets to provision. |
+| `enable_nfs` | `true` | Provisions NFS shared storage for Ghost content. Requires `gen2`. |
+| `nfs_mount_path` | `'/mnt/nfs'` | Container path where NFS is mounted. |
+| `gcs_volumes` | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). |
+| `manage_storage_kms_iam` | `false` | Creates CMEK KMS key and enables CMEK on all storage buckets. |
+| `enable_artifact_registry_cmek` | `false` | Creates Artifact Registry KMS key for at-rest image encryption. |
+| `db_name` | `'ghost'` | MySQL database name. Do not change after initial deployment. |
+| `db_user` | `'ghost'` | MySQL application user. |
+| `database_password_length` | `32` | Auto-generated password length. Range: 16–64. |
+| `enable_auto_password_rotation` | `false` | Automated zero-downtime password rotation. |
+| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before restarting the service. |
+| `initialization_jobs` | `[]` | One-shot Cloud Run Jobs. Leave empty for `Ghost_Common` to supply the default `db-init` job. Each entry: `name`, `description`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `execution_mode`, `mount_nfs`, `mount_gcs_volumes`, `depends_on_jobs`, `execute_on_apply`, `script_path`. |
+| `cron_jobs` | `[]` | Recurring scheduled Cloud Run Jobs. Each entry includes `parallelism`, `mount_nfs`, `mount_gcs_volumes`, and `script_path` fields in addition to the standard scheduling fields. |
+| `startup_probe` | `{ path="/", initial_delay_seconds=90, failure_threshold=10, ... }` | Startup probe. Long initial delay for Ghost DB migrations. |
+| `liveness_probe` | `{ path="/", initial_delay_seconds=60, failure_threshold=3, ... }` | Liveness probe. |
+| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `alert_policies` | `[]` | Cloud Monitoring metric alert policies. |
+| `enable_redis` | `true` | **Enabled by default.** Redis for Ghost page caching. |
+| `redis_host` | `""` | Redis hostname/IP. Defaults to NFS server IP when empty. |
+| `redis_port` | `'6379'` | Redis TCP port (string). |
+| `redis_auth` | `""` | Redis AUTH password. Sensitive. |
+| `enable_vpc_sc` | `false` | Registers API calls within the project's VPC-SC perimeter. |
+| `vpc_cidr_ranges` | `[]` | VPC subnet CIDR ranges for VPC-SC network access level. Auto-discovered when empty. |
+| `vpc_sc_dry_run` | `true` | Logs VPC-SC violations without blocking. Set `false` to enforce. |
+| `organization_id` | `""` | GCP Organization ID for VPC-SC. Auto-discovered from project when empty. |
+| `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ). |
 
 ---
 

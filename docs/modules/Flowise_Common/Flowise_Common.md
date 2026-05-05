@@ -126,7 +126,22 @@ scripts_dir = abspath("${module.flowise_app.path}/scripts")
 
 ---
 
-## 5. Environment Variables (always injected)
+## 5. Non-Configurable Values
+
+The following values are fixed inside `Flowise_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_image` | `""` (empty) | No prebuilt image reference; the image is built from the bundled `Dockerfile`. |
+| `image_source` | `"custom"` | Cloud Build compiles the image from the bundled Dockerfile at deploy time. |
+| `enable_image_mirroring` | `false` | Image is built by Cloud Build directly, not mirrored from an external registry. |
+| `container_port` | `3000` | Application's fixed listening port. |
+| `database_type` | `"POSTGRES_15"` | Flowise requires PostgreSQL 15. |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` | Fixed Cloud SQL Auth Proxy socket directory. |
+
+---
+
+## 6. Environment Variables (always injected)
 
 `Flowise_Common` merges the following into `config.environment_variables`, with `var.environment_variables` taking precedence:
 
@@ -143,21 +158,20 @@ scripts_dir = abspath("${module.flowise_app.path}/scripts")
 
 ---
 
-## 6. Initialization Job
+## 7. Initialization Job
 
 When `initialization_jobs` is empty (the default), `Flowise_Common` automatically defines a single bootstrap job:
 
 | Field | Value |
 |---|---|
-| `name` | `"db-init"` |
-| `description` | `"Create Flowise Database and User"` |
-| `image` | `"postgres:15-alpine"` |
+| Name | `"db-init"` |
+| Description | `"Create Flowise Database and User"` |
+| Image | `postgres:15-alpine` |
+| Script | `scripts/create-db-and-user.sh` |
 | `execute_on_apply` | `true` |
-| `script_path` | `<module_path>/scripts/create-db-and-user.sh` |
-| `cpu_limit` | `"1000m"` |
-| `memory_limit` | `"512Mi"` |
-| `timeout_seconds` | `600` |
-| `max_retries` | `1` |
+| Timeout | `600s` |
+| Max retries | `1` |
+| CPU / Memory | `1000m` / `512Mi` |
 
 The `create-db-and-user.sh` script:
 1. Detects the Cloud SQL Auth Proxy socket (from `DB_HOST`) or falls back to `DB_IP`.
@@ -171,7 +185,7 @@ When `initialization_jobs` is provided by the caller, the custom jobs replace th
 
 ---
 
-## 7. Scripts Directory
+## 8. Scripts Directory
 
 `Flowise_Common` ships three files in `scripts/`:
 
@@ -185,13 +199,13 @@ When `initialization_jobs` is provided by the caller, the custom jobs replace th
 
 ---
 
-## 8. Input Variables
+## 9. Input Variables
 
 All variables are passed in by the wrapper modules (`Flowise_CloudRun` and `Flowise_GKE`). `Flowise_Common` is not intended to be called directly by end users.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `project_id` | string | *(required)* | GCP project ID. |
+| `project_id` | string | — | Required. GCP project ID. |
 | `tenant_deployment_id` | string | `"demo"` | Tenant identifier suffix. |
 | `deployment_region` | string | `"us-central1"` | Region for the GCS storage bucket. |
 | `deployment_id` | string | `""` | Random deployment ID suffix. |
@@ -215,7 +229,7 @@ All variables are passed in by the wrapper modules (`Flowise_CloudRun` and `Flow
 
 ---
 
-## 9. Platform-Specific Differences
+## 10. Platform-Specific Differences
 
 | Aspect | Cloud Run (`Flowise_CloudRun`) | GKE (`Flowise_GKE`) |
 |---|---|---|
@@ -228,7 +242,7 @@ All variables are passed in by the wrapper modules (`Flowise_CloudRun` and `Flow
 
 ---
 
-## 10. Implementation Pattern
+## 11. Implementation Pattern
 
 ```hcl
 # Example: how Flowise_GKE instantiates Flowise_Common

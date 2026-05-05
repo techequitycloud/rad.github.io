@@ -122,7 +122,23 @@ Absolute path to the module directory. Used by wrapper modules to locate `script
 
 ---
 
-## 4. Automatically Injected Environment Variables
+## 4. Non-Configurable Values
+
+The following values are fixed inside `Ollama_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_image` | `"ollama/ollama"` | The official upstream Ollama image. |
+| `image_source` | `"prebuilt"` | No custom build; the upstream image is used directly. |
+| `container_port` | `11434` | Ollama's fixed HTTP listening port. |
+| `database_type` | `"NONE"` | Ollama requires no relational database. |
+| `enable_cloudsql_volume` | `false` | No Cloud SQL Auth Proxy is needed. |
+| `OLLAMA_MODELS` | `"/mnt/gcs/ollama/models"` | Fixed GCS Fuse path for model weight persistence. |
+| `OLLAMA_HOST` | `"0.0.0.0:11434"` | Binds to all interfaces for Cloud Run and Kubernetes ingress. |
+
+---
+
+## 5. Automatically Injected Environment Variables
 
 The following environment variables are always set in the container and must not be overridden
 by caller-supplied `environment_variables` (they would be silently overridden by the merge):
@@ -139,7 +155,7 @@ variables such as `OLLAMA_NUM_PARALLEL`.
 
 ---
 
-## 5. Model-Pull Initialization Job
+## 6. Model-Pull Initialization Job
 
 `Ollama_Common` implements a two-path initialization job strategy:
 
@@ -174,7 +190,7 @@ list is produced. No initialization job is created.
 
 ---
 
-## 6. Scripts
+## 7. Scripts
 
 All supporting scripts are in `scripts/`. The wrapper modules set `scripts_dir` to this
 directory.

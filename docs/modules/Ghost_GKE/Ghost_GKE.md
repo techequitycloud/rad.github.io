@@ -1,14 +1,14 @@
 # Ghost_GKE Module
 
-This guide describes every configuration variable available in the `Ghost_GKE` module. `Ghost_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/Ghost_Common.md) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot.
-
-Most configuration options in `Ghost_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Ghost** are described in full here.
+`Ghost_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/Ghost_Common.md) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot. Where a variable is identical in behaviour to `App_GKE`, this guide references the `App_GKE` guide rather than repeating the same documentation.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
+> This guide documents variables that are **unique to `Ghost_GKE`** or that have **Ghost-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
+
 ---
 
-## Standard Configuration Reference
+## 1. Standard Configuration Reference
 
 The following configuration areas are provided by the underlying `App_GKE` module. Consult the linked sections of the [App_GKE Configuration Guide](../App_GKE/App_GKE.md) for full documentation.
 
@@ -50,9 +50,9 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 
 ---
 
-## How Ghost_GKE Relates to App_GKE
+## 2. Platform-Managed Behaviours
 
-`Ghost_GKE` passes all variables through to `App_GKE` and adds a `Ghost_Common` sub-module that supplies Ghost-specific defaults and application configuration. The main effects are:
+`Ghost_GKE` passes all variables through to `App_GKE` and adds a `Ghost_Common` sub-module that supplies Ghost-specific defaults and application configuration. The following behaviours are applied automatically regardless of variable values in your `tfvars` file:
 
 1. **MySQL 8.0 is required.** Ghost 6.x requires MySQL 8.0 and will not work with PostgreSQL. The `database_type` default is overridden to `"MYSQL_8_0"`.
 2. **`database__client = "mysql"` is injected automatically.** Ghost 6.x will silently fall back to SQLite without this environment variable, even when all other database connection variables are present. The module injects it automatically — you do not need to set it yourself.
@@ -64,7 +64,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 
 ---
 
-## Group 0: Module Metadata & Configuration
+## 3. Module Metadata & Configuration
 
 The behaviour of these variables is identical to `App_GKE`. See [App_GKE §1](../App_GKE/App_GKE.md#1-module-overview) for a full description.
 
@@ -78,7 +78,7 @@ The behaviour of these variables is identical to `App_GKE`. See [App_GKE §1](..
 
 ---
 
-## Group 1: Project & Identity
+## 4. Project & Identity
 
 Identical to `App_GKE`. See [App_GKE §2](../App_GKE/App_GKE.md#2-iam--access-control).
 
@@ -90,7 +90,7 @@ Identical to `App_GKE`. See [App_GKE §2](../App_GKE/App_GKE.md#2-iam--access-co
 
 ---
 
-## Group 2: Application Identity
+## 5. Application Identity
 
 These variables behave identically to `App_GKE`. See [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for descriptions.
 
@@ -107,7 +107,7 @@ These variables behave identically to `App_GKE`. See [App_GKE §3.A](../App_GKE/
 
 ---
 
-## Group 3: Runtime & Scaling
+## 6. Runtime & Scaling
 
 Most variables behave identically to `App_GKE`. See [App_GKE Group 3](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 

@@ -18,7 +18,7 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 
 ---
 
-## §1 · Module Overview
+## 1. Module Overview
 
 ### What `Ollama_GKE` provides
 
@@ -52,7 +52,7 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 
 ---
 
-## §2 · IAM & Project Identity
+## 2. IAM & Project Identity
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -74,7 +74,7 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 
 ---
 
-## §3 · Core Service Configuration
+## 3. Core Service Configuration
 
 ### §3.A · Application Identity (Group 2)
 

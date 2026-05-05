@@ -59,7 +59,7 @@ The Services_GCP module now supports deploying multiple GKE Autopilot clusters w
 
 ### Multi-Cluster Prerequisites
 
-**⚠️ IMPORTANT:** Multi-cluster deployments require the following:
+> **Important:** Multi-cluster deployments require the following:
 
 1. **Cloud Service Mesh** must be enabled (`configure_cloud_service_mesh = true`)
    - Required for Fleet Hub membership registration
@@ -430,7 +430,7 @@ gke_cluster_count = 3  # Reduce from 5 to 3
 
 ---
 
-## Best Practices
+## 9. Best Practices
 
 ### Cluster Count
 
@@ -459,7 +459,7 @@ gke_cluster_count = 3  # Reduce from 5 to 3
 
 ---
 
-## Outputs Reference
+## 10. Outputs Reference
 
 ### Legacy Outputs (Backward Compatible)
 
@@ -515,7 +515,7 @@ output "ingress_cluster" {
 
 ---
 
-## Support
+## 11. Support
 
 For issues or questions:
 
@@ -525,7 +525,7 @@ For issues or questions:
 
 ---
 
-## Changelog
+## 12. Changelog
 
 ### Version 1.0.0 (2025-02-15)
 

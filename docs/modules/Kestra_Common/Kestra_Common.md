@@ -203,8 +203,8 @@ All variables are passed in by the wrapper modules (`Kestra_CloudRun` and `Kestr
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `project_id` | string | *(required)* | GCP project ID. |
-| `resource_prefix` | string | *(required)* | Naming prefix for all resources. Computed by the wrapper as `app<app_name><tenant_id><random_id>`. |
+| `project_id` | string | — | Required. GCP project ID. |
+| `resource_prefix` | string | — | Required. Naming prefix for all resources. Computed by the wrapper as `app<app_name><tenant_id><random_id>`. |
 | `labels` | map(string) | `{}` | Labels applied to created resources. |
 | `tenant_deployment_id` | string | `"demo"` | Tenant identifier suffix. |
 | `deployment_id` | string | `""` | Random deployment ID suffix. |

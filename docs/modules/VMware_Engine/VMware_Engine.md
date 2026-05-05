@@ -113,9 +113,7 @@ All resources use the `altostrat-<id>` prefix where `<id>` is either `var.deploy
 The private cloud is the central GCVE resource. It provisions vSphere, vSAN, NSX-T Manager,
 and HCX Manager appliances in the specified zone. Provisioning takes **30–90 minutes**.
 
-> **`management_cidr` is immutable.** It cannot be changed after the private cloud is created
-> without destroying and recreating the entire private cloud. Plan this CIDR carefully before
-> first deployment.
+> **Warning:** `management_cidr` is immutable. It cannot be changed after the private cloud is created without destroying and recreating the entire private cloud. Plan this CIDR carefully before first deployment.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -133,8 +131,7 @@ appliances are reachable from the peer VPC (and vice versa). Custom routes are e
 imported in both directions so NSX-T segments are automatically propagated to the peered VPC
 routing table.
 
-> Peering activates fully only after the private cloud is provisioned. The `network_peering_state`
-> output shows `"ACTIVE"` once the private cloud is ready.
+> **Note:** Peering activates fully only after the private cloud is provisioned. The `network_peering_state` output shows `"ACTIVE"` once the private cloud is ready.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -199,9 +196,7 @@ A Windows Server 2022 Compute Engine VM used to access vCenter, NSX-T Manager, a
 consoles via RDP. The jump host is deployed on the peer VPC and has routed access to GCVE
 management appliances once VPC peering is active.
 
-> **Administrator password:** The Windows administrator password must be set manually via
-> **"Set Windows Password"** in the GCP Console after the instance is created. The instance
-> uses the `cloud-platform` service account scope for full API access from Cloud Shell.
+> **Important:** The Windows administrator password must be set manually via **"Set Windows Password"** in the GCP Console after the instance is created. The instance uses the `cloud-platform` service account scope for full API access from Cloud Shell.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|

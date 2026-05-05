@@ -10,9 +10,7 @@ storage and full-text search.
 infrastructure provisioning to `App_GKE` and assembles the Elasticsearch-specific configuration
 locally using a `locals` block (there is no separate `*_Common` module).
 
-> `Elasticsearch_GKE` must be deployed **before** `RAGFlow_GKE`. After deployment, run
-> `tofu output elasticsearch_endpoint` and pass the result to `RAGFlow_GKE`'s
-> `elasticsearch_hosts` variable.
+> **Important:** `Elasticsearch_GKE` must be deployed **before** `RAGFlow_GKE`. After deployment, run `tofu output elasticsearch_endpoint` and pass the result to `RAGFlow_GKE`'s `elasticsearch_hosts` variable.
 
 ---
 
@@ -155,7 +153,7 @@ override any of the above.
 | `es_java_heap` | `string` | `"1g"` | JVM heap size (sets both `-Xms` and `-Xmx`). Should be no more than half of `memory_limit`. (e.g. `"1g"`, `"2g"`, `"4g"`) `{{UIMeta group=3 order=22}}` |
 | `enable_xpack_security` | `bool` | `false` | Enable Elasticsearch X-Pack security (authentication). When `false`, the cluster is accessible without credentials. Recommended `false` for initial setup alongside RAGFlow; enable for production after configuring certificates. `{{UIMeta group=3 order=23}}` |
 
-> **Heap sizing rule:** `es_java_heap` ≤ `memory_limit / 2`. Example: `memory_limit = "4Gi"` → `es_java_heap = "2g"`. Elasticsearch also needs memory for the OS page cache to accelerate index segment reads.
+> **Note:** Heap sizing rule: `es_java_heap` ≤ `memory_limit / 2`. Example: `memory_limit = "4Gi"` → `es_java_heap = "2g"`. Elasticsearch also needs memory for the OS page cache to accelerate index segment reads.
 
 ---
 
@@ -265,10 +263,7 @@ Probes use **TCP** (not HTTP) because:
 | `uptime_check_config` | `object` | `{ enabled=false, path="/_cluster/health", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. Disabled by default. `{{UIMeta group=9 order=3}}` |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies. `{{UIMeta group=9 order=4}}` |
 
-> Note: The container-level probes (forwarded via the application config) use TCP, while
-> `startup_probe_config` and `health_check_config` at the App_GKE level default to HTTP
-> with `/_cluster/health`. When `enable_xpack_security = true`, override both configs to
-> use TCP.
+> **Note:** The container-level probes (forwarded via the application config) use TCP, while `startup_probe_config` and `health_check_config` at the App_GKE level default to HTTP with `/_cluster/health`. When `enable_xpack_security = true`, override both configs to use TCP.
 
 ---
 

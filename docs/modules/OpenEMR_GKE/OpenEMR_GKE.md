@@ -152,7 +152,7 @@ kubectl exec -n NAMESPACE deploy/openemr -- env | grep "^K8S="
 
 ---
 
-## OpenEMR Health Probes
+## 5. OpenEMR Health Probes
 
 OpenEMR performs database connection validation and, on first boot, runs the full database installation wizard. This startup phase can take 5–20 minutes on a fresh deployment. The `startup_probe` and `liveness_probe` variables in `OpenEMR_GKE` have OpenEMR-specific defaults.
 
@@ -181,7 +181,7 @@ kubectl exec -n NAMESPACE deploy/openemr -- curl -s -o /dev/null -w "%{http_code
 
 ---
 
-## OpenEMR Database Configuration
+## 6. OpenEMR Database Configuration
 
 OpenEMR requires MySQL 8.0. The database is provisioned by the underlying `App_GKE` module — see [App_GKE §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql) for the full variable reference.
 
@@ -212,7 +212,7 @@ kubectl get pod -n NAMESPACE -l app=openemr -o jsonpath='{.items[0].spec.contain
 
 ---
 
-## OpenEMR Environment Variables
+## 7. OpenEMR Environment Variables
 
 The `environment_variables` variable (documented in [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot)) can be used to set any PHP or SMTP configuration consumed by the OpenEMR container's startup script.
 
@@ -242,7 +242,7 @@ All other `environment_variables` and `secret_environment_variables` behaviour i
 
 ---
 
-## NFS & Patient Document Storage
+## 8. NFS & Patient Document Storage
 
 OpenEMR stores patient-uploaded documents, the `sites` directory configuration, and application state on a shared NFS volume. NFS is **enabled by default** (`enable_nfs = true`) because OpenEMR cannot function correctly without persistent shared storage.
 
@@ -268,7 +268,7 @@ kubectl exec -n NAMESPACE deploy/openemr -- ls /var/www/localhost/htdocs/openemr
 
 ---
 
-## Redis Session Store
+## 9. Redis Session Store
 
 OpenEMR supports Redis as a shared PHP session store. Redis is **enabled by default** (`enable_redis = true`) because the OpenEMR deployment uses the NFS server's co-located Redis instance by default. When `max_instance_count > 1`, Redis is **required** to prevent session loss when requests are routed to different pods. The Redis integration is provided by App_GKE — see [§8.A Redis / Memorystore](../App_GKE/App_GKE.md#a-redis--memorystore) for the full integration reference.
 
@@ -292,7 +292,7 @@ kubectl exec -n NAMESPACE deploy/openemr -- redis-cli -h REDIS_HOST -p 6379 PING
 
 ---
 
-## Backup Import & Recovery
+## 10. Backup Import & Recovery
 
 In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_GKE §8.B](../App_GKE/App_GKE.md#b-backup-import)), `OpenEMR_GKE` supports a one-time backup restoration during deployment via the `nfs-init` job. Use this to migrate an existing OpenEMR instance to GCP or to seed a new environment with production data.
 
@@ -309,7 +309,7 @@ For the full variable reference, refer to [App_GKE §8.B](../App_GKE/App_GKE.md#
 
 ---
 
-## Deployment Prerequisites & Validation
+## 11. Deployment Prerequisites & Validation
 
 After deploying `OpenEMR_GKE`, confirm the deployment is healthy:
 

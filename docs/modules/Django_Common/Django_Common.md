@@ -69,8 +69,8 @@ The application configuration object passed to the platform module via `applicat
 | `max_instance_count` | `10` |
 | `environment_variables` | Passed through directly from `var.environment_variables` — no defaults added by this module |
 | `enable_postgres_extensions` | `true` |
-| `postgres_extensions` | `["pg_trgm", "unaccent", "hstore", "citext"]` — see §5 |
-| `initialization_jobs` | Two default jobs (`db-init`, `db-migrate`) or custom override — see §6 |
+| `postgres_extensions` | `["pg_trgm", "unaccent", "hstore", "citext"]` — see §6 |
+| `initialization_jobs` | Two default jobs (`db-init`, `db-migrate`) or custom override — see §7 |
 | `startup_probe` | Pass-through of `var.startup_probe`; defaults to `null` when caller does not provide a value |
 | `liveness_probe` | Pass-through of `var.liveness_probe`; defaults to `null` when caller does not provide a value |
 
@@ -103,7 +103,22 @@ The absolute path to the `Django_Common` module directory (`path.module`). Note:
 
 ---
 
-## 4. Input Variables
+## 4. Non-Configurable Values
+
+The following values are fixed inside `Django_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_image` | `""` (empty) | No prebuilt image; the image is built entirely from the bundled `Dockerfile`. |
+| `image_source` | `"custom"` | Requires a full Cloud Build from source. |
+| `enable_image_mirroring` | `true` | Image is always mirrored to Artifact Registry. |
+| `container_port` | `8080` | Application's fixed listening port. |
+| `database_type` | `"POSTGRES_15"` | Django requires PostgreSQL 15. |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` | Fixed Cloud SQL Auth Proxy socket directory. |
+
+---
+
+## 5. Input Variables
 
 ### Project & Identity
 
@@ -147,7 +162,7 @@ The absolute path to the `Django_Common` module directory (`path.module`). Note:
 
 ---
 
-## 5. PostgreSQL Extensions
+## 6. PostgreSQL Extensions
 
 The following extensions are created as superuser during the `db-init` job, before the application connects:
 
@@ -160,7 +175,7 @@ The following extensions are created as superuser during the `db-init` job, befo
 
 ---
 
-## 6. Initialization Jobs
+## 7. Initialization Jobs
 
 Two jobs run by default (when `initialization_jobs = []`), executed in order:
 
@@ -171,7 +186,8 @@ Two jobs run by default (when `initialization_jobs = []`), executed in order:
 | Script | `scripts/db-init.sh` |
 | Secrets required | `ROOT_PASSWORD` (PostgreSQL superuser), `DB_PASSWORD` (app user) |
 | `execute_on_apply` | `true` |
-| Timeout | 1200s, 1 retry |
+| Timeout | `1200s` |
+| Max retries | `1` |
 
 `db-init.sh` behavior:
 1. Detects Cloud SQL Auth Proxy: if `DB_SSL=false` and `DB_HOST` is not a Unix socket, forces `DB_HOST=127.0.0.1`.
@@ -190,7 +206,8 @@ Two jobs run by default (when `initialization_jobs = []`), executed in order:
 | Script | `scripts/migrate.sh` |
 | GCS volumes mounted | `["django-media"]` |
 | `execute_on_apply` | `true` |
-| Timeout | 1200s, 1 retry |
+| Timeout | `1200s` |
+| Max retries | `1` |
 
 `migrate.sh` behavior:
 1. Constructs `DATABASE_URL` from `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, and `DB_NAME` if not already set.
@@ -200,7 +217,7 @@ Two jobs run by default (when `initialization_jobs = []`), executed in order:
 
 ---
 
-## 7. Scripts and Container Image
+## 8. Scripts and Container Image
 
 All supporting files are in `scripts/`. The entire `scripts/` directory is used as the Docker build context (`context_path = "."`).
 
@@ -263,7 +280,7 @@ A complete reference Django 5 project included as a starting point for applicati
 
 ---
 
-## 8. Production Settings (`myproject/settings.py`)
+## 9. Production Settings (`myproject/settings.py`)
 
 The production settings extend `basesettings.py` and configure Django for cloud deployment using `django-environ`:
 
@@ -277,7 +294,7 @@ The production settings extend `basesettings.py` and configure Django for cloud 
 
 ---
 
-## 9. Platform-Specific Differences
+## 10. Platform-Specific Differences
 
 | Aspect | Django_CloudRun | Django_GKE |
 |--------|-----------------|-----------|
@@ -292,7 +309,7 @@ The production settings extend `basesettings.py` and configure Django for cloud 
 
 ---
 
-## 10. Implementation Pattern
+## 11. Implementation Pattern
 
 ```hcl
 # Example: how Django_CloudRun instantiates Django_Common

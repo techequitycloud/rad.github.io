@@ -300,7 +300,7 @@ The `rotation_propagation_delay_sec` variable is used together with `enable_auto
 
 ---
 
-## Deployment Prerequisites & Validation
+## 13. Deployment Prerequisites & Validation
 
 After deploying `Cyclos_GKE`, confirm the deployment is healthy:
 

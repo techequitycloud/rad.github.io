@@ -1235,7 +1235,7 @@ When the module is destroyed, resources are removed in reverse dependency order:
 5. Static IP address released
 6. VPC, subnet, firewall rules, Cloud NAT, and Cloud Router deleted
 
-> **Warning**: Destroying the module deletes all persistent volume data in `accounts-db` and `ledger-db`. Any transaction or account data created during the lab is permanently lost.
+> **Warning:** Destroying the module deletes all persistent volume data in `accounts-db` and `ledger-db`. Any transaction or account data created during the lab is permanently lost.
 
 ---
 
@@ -1335,7 +1335,7 @@ gcloud compute network-endpoint-groups list-network-endpoints \
 
 **Objective**: Observe Config Sync automatically restoring a resource that was manually deleted.
 
-> This exercise requires `enable_config_management=true`.
+> **Important:** This exercise requires `enable_config_management=true`.
 
 ```bash
 # Check current sync status

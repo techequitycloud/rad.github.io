@@ -1081,7 +1081,7 @@ From the Cloud Console, confirm all three observability layers are receiving dat
 
 Tearing down the module removes all resources in reverse order: the Connect Agent is uninstalled from EKS, the cluster registration is removed from GCP, the EKS node group and cluster are deleted, and the VPC and IAM roles are removed. The GCP APIs enabled by the module are left in place.
 
-> The teardown requires network access to the EKS API server from the machine running the teardown. If private subnets were used, ensure the same network path that was available during deployment is available during teardown.
+> **Note:** The teardown requires network access to the EKS API server from the machine running the teardown. If private subnets were used, ensure the same network path that was available during deployment is available during teardown.
 
 ---
 

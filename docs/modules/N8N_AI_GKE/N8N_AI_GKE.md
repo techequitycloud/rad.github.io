@@ -8,7 +8,23 @@ n8n is an open-source workflow automation platform that lets you connect service
 
 ---
 
-## How This Guide Is Structured
+## 1. Module Overview
+
+`N8N_AI_GKE` wraps `App_GKE` to deploy n8n workflow automation alongside Qdrant and Ollama on GKE Autopilot. It adds n8n-specific application configuration, AI component orchestration, Redis queue mode support, and automated database initialisation on top of the standard `App_GKE` infrastructure.
+
+> This guide documents variables that are **unique to `N8N_AI_GKE`** or that have **n8n-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, GKE backend configuration, CI/CD, GCS storage, backup, custom SQL, observability, networking, IAP, and Cloud Armor — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
+
+### Key differences from `App_GKE` defaults
+
+| Variable | App_GKE Default | N8N_AI_GKE Default |
+|---|---|---|
+| `container_port` | `8080` | `5678` (set by `N8N_AI_Common`) |
+| `enable_nfs` | `false` | `true` |
+| `enable_redis` | `false` | `true` |
+
+---
+
+## 2. How This Guide Is Structured
 
 This guide documents only the variables that are **unique to `N8N_AI_GKE`** or that have **n8n-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, GKE backend configuration, CI/CD, GCS storage, backup, custom SQL, observability, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
@@ -50,7 +66,7 @@ This guide documents only the variables that are **unique to `N8N_AI_GKE`** or t
 
 ---
 
-## Platform-Managed Behaviours
+## 3. Platform-Managed Behaviours
 
 The following behaviours are applied automatically by `N8N_AI_GKE` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
@@ -71,7 +87,7 @@ The following behaviours are applied automatically by `N8N_AI_GKE` regardless of
 
 ---
 
-## N8N AI Application Identity
+## 4. N8N AI Application Identity
 
 These variables control how the n8n deployment is named and described. They correspond to §3.A variables in App_GKE but carry n8n-specific defaults.
 
@@ -95,7 +111,7 @@ kubectl describe deployment n8nai -n NAMESPACE | grep -A5 Annotations
 
 ---
 
-## N8N Runtime Configuration
+## 5. N8N Runtime Configuration
 
 n8n exposes `cpu_limit` and `memory_limit` as **dedicated top-level variables** rather than requiring users to set the full `container_resources` object.
 
@@ -133,7 +149,7 @@ kubectl get hpa -n NAMESPACE
 
 ---
 
-## AI Components Configuration
+## 6. AI Components Configuration
 
 These variables are **unique to `N8N_AI_GKE`** — they do not exist in `App_GKE`. They control the Qdrant vector database and Ollama LLM server that are deployed as companion Kubernetes Deployments in the same namespace as n8n.
 
@@ -172,7 +188,7 @@ kubectl get services -n NAMESPACE
 
 ---
 
-## Redis Configuration
+## 7. Redis Configuration
 
 These variables configure n8n's Redis integration. The underlying Redis infrastructure support is provided by `App_GKE` (see [App_GKE §8.A](../App_GKE/App_GKE.md#a-redis--memorystore)); the variables below are n8n-specific. Redis is required for n8n **queue mode**, which enables reliable multi-replica workflow execution.
 
@@ -192,7 +208,7 @@ kubectl describe pod -n NAMESPACE -l app=n8nai | grep -E "REDIS"
 
 ---
 
-## N8N Database Configuration
+## 8. N8N Database Configuration
 
 n8n requires PostgreSQL. This module exposes `db_name` and `db_user` as **short top-level variables** in place of the `application_database_name` and `application_database_user` variables documented in [App_GKE §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql).
 
@@ -217,7 +233,7 @@ kubectl describe pod -n NAMESPACE -l app=n8nai | grep -E "DB_POSTGRES"
 
 ---
 
-## N8N Environment Variables
+## 9. N8N Environment Variables
 
 The `environment_variables` variable (documented in [App_GKE §3](../App_GKE/App_GKE.md#3-core-service-configuration)) has n8n-specific defaults that configure email delivery.
 
@@ -240,7 +256,7 @@ Override the SMTP values to enable n8n email notifications (workflow failure ale
 
 ---
 
-## N8N Health Probes
+## 10. N8N Health Probes
 
 `N8N_AI_GKE` exposes **two parallel sets** of probe variables that configure Kubernetes probes via different routing paths:
 
@@ -273,9 +289,9 @@ For full documentation on `uptime_check_config` and `alert_policies`, refer to [
 
 ---
 
-## Configuration Examples
+## 11. Configuration Examples
 
-### Basic Deployment
+### A. Basic Deployment
 
 Deploys n8n with AI components on GKE using default settings. Suitable for evaluation and development.
 
@@ -286,7 +302,7 @@ project_id                = "my-project-123"
 tenant_deployment_id      = "basic"
 ```
 
-### Advanced Deployment
+### B. Advanced Deployment
 
 Production-grade deployment with scaled resources, Redis queue mode, CI/CD, GKE-specific reliability policies, and full observability.
 
@@ -363,7 +379,7 @@ alert_policies = [
 ]
 ```
 
-### Custom Image Deployment
+### C. Custom Image Deployment
 
 Deploys n8n with a custom-built container image, explicit Redis, and custom SMTP configuration.
 

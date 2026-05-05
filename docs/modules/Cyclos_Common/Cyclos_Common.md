@@ -133,13 +133,13 @@ The following values are fixed inside `Cyclos_Common` and cannot be overridden b
 
 The module provides a default set of environment variables that configure the Cyclos runtime:
 
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| `DB_HOST` | `/var/run/postgresql` | PostgreSQL socket path (overridden per platform) |
-| `DB_PORT` | `5432` | PostgreSQL port |
-| `CYCLOS_HOME` | `/usr/local/cyclos` | Cyclos home directory inside the container |
-| `cyclos.storedFileContentManager` | `gcs` | Enables GCS as the file storage backend |
-| `cyclos.storedFileContentManager.bucketName` | `<resource_prefix>-cyclos-storage` | GCS bucket for uploaded files |
+| Variable | Default Value | Description |
+|----------|---------------|-------------|
+| `DB_HOST` | `/var/run/postgresql` | PostgreSQL socket path (overridden per platform). |
+| `DB_PORT` | `5432` | PostgreSQL port. |
+| `CYCLOS_HOME` | `/usr/local/cyclos` | Cyclos home directory inside the container. |
+| `cyclos.storedFileContentManager` | `gcs` | Enables GCS as the file storage backend. |
+| `cyclos.storedFileContentManager.bucketName` | `<resource_prefix>-cyclos-storage` | GCS bucket for uploaded files. |
 
 Wrapper modules merge additional platform-specific variables (e.g., database connection details, Cloud SQL socket path, secret references) on top of these defaults.
 
@@ -162,7 +162,17 @@ Cyclos requires the following extensions to be created as a superuser before the
 
 ## 7. Initialization Jobs
 
-By default, the module defines a `db-init` initialization job that runs the `scripts/db-init.sh` script. This script:
+By default, the module defines a `db-init` initialization job that runs the `scripts/db-init.sh` script.
+
+| Field | Value |
+|---|---|
+| Image | `postgres:15-alpine` |
+| Script | `scripts/db-init.sh` |
+| `execute_on_apply` | `true` |
+| Timeout | `600s` |
+| Max retries | `1` |
+
+The script behavior:
 
 1. Detects Cloud SQL Auth Proxy socket connections (for Cloud Run) and maps them to the standard PostgreSQL socket path.
 2. Polls the database until it is available (timeout-based).

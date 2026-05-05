@@ -133,7 +133,24 @@ Callers may inject additional secret references via `var.secret_environment_vari
 
 ---
 
-## Initialization Job: `db-init`
+## 9. Non-Configurable Values
+
+The following values are fixed inside `Wikijs_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_image` | `"requarks/wiki:2"` | Official Wiki.js image; custom entrypoint is layered on top. |
+| `container_port` | `3000` | Wiki.js Node.js server always listens on port 3000. |
+| `database_type` | `"POSTGRES_15"` | Wiki.js requires PostgreSQL. |
+| `enable_postgres_extensions` | `true` | `pg_trgm` is required for Wiki.js search functionality. |
+| `postgres_extensions` | `["pg_trgm"]` | Trigram extension needed for full-text fuzzy search. |
+| `HA_STORAGE_PATH` | `"/wiki-storage"` | Fixed shared storage path for multi-instance HA deployments. |
+| `DB_PASS` secret reference | `"database_password_secret"` | Symbolic reference resolved by the platform layer at runtime. |
+| GCP resources created | none | This module creates no GCP resources. |
+
+---
+
+## 10. Initialization Job: `db-init`
 
 | Property | Value |
 |----------|-------|
@@ -238,7 +255,7 @@ module "wikijs_cloudrun" {
 }
 ```
 
-### Config Preset Files
+### A. Config Preset Files
 
 The module ships three example `.tfvars` files in `config/` as deployment starting points:
 

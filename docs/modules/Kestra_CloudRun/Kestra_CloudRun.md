@@ -4,6 +4,8 @@ Kestra is an open-source data orchestration and scheduling platform (Apache 2.0 
 
 `Kestra_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP infrastructure provisioning to App_CloudRun (Cloud Run service, Cloud SQL, networking, Secret Manager, GCS, CI/CD) and uses a `Kestra_Common` sub-module to supply Kestra-specific application configuration, secret generation, and storage bucket definitions.
 
+> This guide documents variables that are **unique to `Kestra_CloudRun`** or that have **Kestra-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
+
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
 ---
@@ -48,7 +50,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §1 · Module Metadata (Group 0)
+## 1. Module Metadata (Group 0)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -65,7 +67,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §2 · Project & Identity (Group 1)
+## 2. Project & Identity (Group 1)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -76,7 +78,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §3 · Application Identity (Group 2)
+## 3. Application Identity (Group 2)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -88,7 +90,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §4 · Runtime & Scaling (Group 3)
+## 4. Runtime & Scaling (Group 3)
 
 | Variable | Default | Options / Format | Description |
 |---|---|---|---|
@@ -115,7 +117,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §5 · Access & Networking
+## 5. Access & Networking
 
 ### Identity-Aware Proxy (Group 19)
 
@@ -146,7 +148,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §6 · Environment Variables & Secrets (Group 4)
+## 6. Environment Variables & Secrets (Group 4)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -161,7 +163,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §7 · Database Backend (Group 11)
+## 7. Database Backend (Group 11)
 
 Kestra requires PostgreSQL for both its execution queue and flow repository.
 
@@ -173,7 +175,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## §8 · Storage (Groups 8, 10)
+## 8. Storage (Groups 8, 10)
 
 ### NFS (Group 8)
 
@@ -198,7 +200,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## §9 · Backup & Maintenance (Group 16)
+## 9. Backup & Maintenance (Group 16)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -211,7 +213,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## §10 · CI/CD & GitHub Integration (Group 11)
+## 10. CI/CD & GitHub Integration (Group 11)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -226,7 +228,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## §11 · Custom SQL (Group 17)
+## 11. Custom SQL (Group 17)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -237,7 +239,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## §12 · Jobs & Scheduled Tasks (Group 12)
+## 12. Jobs & Scheduled Tasks (Group 12)
 
 The default `db-init` job is supplied automatically by `Kestra_Common` (using `postgres:15-alpine`) when `initialization_jobs` is empty.
 
@@ -248,7 +250,7 @@ The default `db-init` job is supplied automatically by `Kestra_Common` (using `p
 
 ---
 
-## §13 · Observability & Health (Group 13)
+## 13. Observability & Health (Group 13)
 
 Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — the default startup probe allows up to ~14 minutes (initial_delay=30 + period=20 × failure_threshold=40).
 
@@ -272,7 +274,7 @@ Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — 
 
 ---
 
-## §14 · Outputs
+## 14. Outputs
 
 Outputs are proxied from `App_CloudRun`:
 

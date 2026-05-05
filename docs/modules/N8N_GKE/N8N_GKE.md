@@ -360,7 +360,7 @@ alert_policies = [
 ]
 ```
 
-### StatefulSet Deployment
+### C. StatefulSet Deployment
 
 Deploys n8n as a StatefulSet with a PVC for local data storage, suitable for high-frequency workflow executions with binary file output.
 

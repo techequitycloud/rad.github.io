@@ -154,7 +154,7 @@ The following values are fixed inside `Odoo_Common` and cannot be overridden by 
 
 Two default jobs run at deployment time. They execute in order via explicit dependency:
 
-### Job 1: `nfs-init`
+### A. `nfs-init`
 
 | Property | Value |
 |----------|-------|
@@ -176,7 +176,7 @@ chmod -R 777 /mnt/filestore /mnt/sessions /mnt/extra-addons
 
 Runs as root (no user override) to create NFS directories owned by UID/GID 101 (the `odoo` system user). The `needs_db = false` flag prevents the Cloud SQL Auth Proxy from being injected into this job, since it has no database dependency.
 
-### Job 2: `db-init`
+### B. `db-init`
 
 | Property | Value |
 |----------|-------|
@@ -208,13 +208,13 @@ The `db-init` job waits for `nfs-init` to complete before executing. It creates 
 
 The module builds a custom Docker image from `scripts/Dockerfile` using Ubuntu Noble (24.04) as the base.
 
-### Build Args
+### A. Build Args
 
 | Arg | Value |
 |-----|-------|
 | `ODOO_VERSION` | `var.application_version` (e.g., `18.0`) |
 
-### Dockerfile Summary
+### B. Dockerfile Summary
 
 ```
 Base: ubuntu:noble (24.04)
@@ -254,7 +254,7 @@ CMD:        ["/entrypoint.sh", "odoo", "--http-port=8069"]
 
 ---
 
-## 7. Scripts
+## 8. Scripts
 
 ### `cloudrun-entrypoint.sh`
 
@@ -315,7 +315,7 @@ xmlrpc_port = 8069
 
 ---
 
-## 8. Startup Script (`container_command` / `container_args`)
+## 9. Startup Script (`container_command` / `container_args`)
 
 Rather than a simple entrypoint, Odoo_Common overrides `container_command` and `container_args` in the `config` output with an inline bash script. This script runs as the container's startup command and handles all first-boot initialization:
 
@@ -331,7 +331,7 @@ This inline approach avoids a separate init container while handling the Cloud S
 
 ---
 
-## 9. Redis Support
+## 10. Redis Support
 
 When `enable_redis = true`, the module sets `ENABLE_REDIS=true` in container environment variables. The startup script checks this flag and appends Redis configuration to `odoo.conf`:
 
@@ -344,7 +344,7 @@ The `redis_host_final` local is computed at Terraform plan time: if `var.redis_h
 
 ---
 
-## 10. Platform-Specific Differences
+## 11. Platform-Specific Differences
 
 | Aspect | Odoo_CloudRun | Odoo_GKE |
 |--------|---------------|----------|
@@ -359,7 +359,7 @@ The `redis_host_final` local is computed at Terraform plan time: if `var.redis_h
 
 ---
 
-## 11. Implementation Pattern
+## 12. Implementation Pattern
 
 ```hcl
 module "odoo_common" {
