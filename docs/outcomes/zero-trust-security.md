@@ -1,6 +1,6 @@
 # Zero Trust Security
 
-The platform delivers a zero-trust security posture by default. Rather than relying on network-perimeter assumptions, every access decision is identity-verified, every credential is stored and rotated automatically, every container image is cryptographically attested, and every deployment is surrounded by a data-exfiltration perimeter. These controls are single-flag defaults — not optional extras — so modernised deployments arrive with a strong security posture without a separate security remediation project.
+The platform delivers a zero-trust security posture by default. Rather than relying on network-perimeter assumptions: every access decision is identity-verified, every credential is stored and rotated automatically, every container image is cryptographically attested, and every deployment is wrapped in a data-exfiltration perimeter. These controls are single-flag defaults — not optional extras — so modernised deployments arrive with a strong security posture without a separate security remediation project.
 
 ## Zero-trust access replacing VPN
 
@@ -37,7 +37,7 @@ The platform eliminates credential-in-environment-variable exposure by design:
 - Unsigned, unscanned, or tampered images are rejected at the admission controller before they can run.
 - Artifact Registry vulnerability scanning surfaces CVEs in base images before deployment.
 
-Combined with CMEK (`modules/Services_GCP/cmek.tf`), data at rest is protected with customer-controlled keys across Cloud SQL, Filestore, GCS, and Secret Manager.
+CMEK (`modules/Services_GCP/cmek.tf`) protects data at rest with customer-controlled keys across Cloud SQL, Filestore, GCS, and Secret Manager.
 
 `pnpm audit` in CI blocks PRs with high or critical findings in third-party npm packages. Webhook payloads from payment providers are rejected unless the provider's HMAC or signature validates.
 
@@ -64,6 +64,16 @@ Distinct role bundles across the platform — `super_admin`, `developers_infrast
 `modules/Services_GCP/scc.tf` enables Security Command Center (SCC) to aggregate misconfigurations, vulnerabilities, and threat findings across the project in a single pane. `modules/Services_GCP/audit.tf` enables project-wide Admin Activity, Data Access, and System Event audit logs with an optional BigQuery sink for long-term retention.
 
 The `AGENTS.md` `/security` workflow provides a 30+ point recurring audit checklist covering IAM and service accounts, VPC Service Controls, Binary Authorization, secret management, network security, database security, container security, and compliance logging. This can be executed against any deployment at any time and serves as both an operational control and an auditor-facing evidence artefact.
+
+## Quantified security value
+
+| Area | Without this platform | With this platform |
+|---|---|---|
+| Application access control | VPN clients and open firewall ports per application; access revocation requires firewall rule changes | IAP: Google identity required for every request, zero open ports, instant revocation by removing an IAM binding |
+| Credential exposure | Database passwords and API keys in environment variables, config files, or container images | Secret Manager: no plaintext credentials in environment, Terraform state, or images; automated rotation via Cloud Scheduler |
+| Supply chain integrity | Any container image deployable without verification | Binary Authorization: only cryptographically attested images admitted; unsigned or tampered images rejected at the admission controller |
+| Data exfiltration risk | GCP API plane accessible to any service account with valid credentials | VPC-SC perimeter: API-plane exfiltration blocked even with a compromised credential |
+| Security audit evidence | Manual log correlation; access events scattered across services | SCC + Cloud Audit Logs: all access attributed, timestamped, and queryable from a single pane; `/security` checklist produces auditor-ready evidence |
 
 ## See also
 

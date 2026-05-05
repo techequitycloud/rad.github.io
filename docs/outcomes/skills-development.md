@@ -83,7 +83,7 @@ The same skill files that guide AI contributors serve equally well for human dev
 
 ## Troubleshooting as enablement
 
-`AGENTS.md` `/troubleshoot` maps symptoms to root causes across all known failure modes. This Known Issue Patterns table is itself a teaching resource — diagnostic intuition is built by studying patterns, not just individual incidents. The full SRE runbook is in the SRE practices.
+`AGENTS.md` `/troubleshoot` maps symptoms to root causes across all known failure modes. The Known Issue Patterns table within it is itself a teaching resource — diagnostic intuition is built by studying recurring patterns, not just individual incidents. The full SRE runbook lives in the SRE practices.
 
 ## Quantified enablement value
 
