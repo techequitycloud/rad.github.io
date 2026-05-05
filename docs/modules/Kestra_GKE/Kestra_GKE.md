@@ -6,6 +6,8 @@ Kestra is an open-source data orchestration and scheduling platform (Apache 2.0 
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
+> This guide documents variables that are **unique to `Kestra_GKE`** or that have **Kestra-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
+
 ---
 
 ## How This Guide Is Structured
@@ -33,7 +35,7 @@ This guide documents variables that are **unique to `Kestra_GKE`** or that have 
 
 ---
 
-## Platform-Managed Behaviours
+## 1. Platform-Managed Behaviours
 
 The following behaviours are set automatically and cannot be overridden via user variables.
 
@@ -51,7 +53,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §1 · Module Metadata (Group 0)
+## 2. Module Metadata (Group 0)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -68,7 +70,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §2 · Project & Identity (Group 1)
+## 3. Project & Identity (Group 1)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -80,7 +82,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §3 · Application Identity (Group 2)
+## 4. Application Identity (Group 2)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -92,7 +94,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §4 · Runtime & Scaling (Group 3)
+## 5. Runtime & Scaling (Group 3)
 
 | Variable | Default | Options / Format | Description |
 |---|---|---|---|
@@ -111,7 +113,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §5 · GKE Backend Configuration (Group 5)
+## 6. GKE Backend Configuration (Group 5)
 
 | Variable | Default | Options / Format | Description |
 |---|---|---|---|
@@ -128,7 +130,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §6 · Environment Variables & Secrets (Group 4)
+## 7. Environment Variables & Secrets (Group 4)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -143,7 +145,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §7 · Access & Networking
+## 8. Access & Networking
 
 ### Identity-Aware Proxy (Group 19)
 
@@ -185,7 +187,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §8 · Database Backend (Group 15)
+## 9. Database Backend (Group 15)
 
 Kestra requires PostgreSQL for both its execution queue and flow repository.
 
@@ -208,7 +210,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## §9 · Storage (Groups 12–13)
+## 10. Storage (Groups 12–13)
 
 ### NFS (Group 12)
 
@@ -233,7 +235,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## §10 · Backup & Maintenance (Group 16)
+## 11. Backup & Maintenance (Group 16)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -247,7 +249,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## §11 · CI/CD & GitHub Integration (Group 11)
+## 12. CI/CD & GitHub Integration (Group 11)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -263,7 +265,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## §12 · Custom SQL (Group 17)
+## 13. Custom SQL (Group 17)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -274,7 +276,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## §13 · Workload Automation (Group 10)
+## 14. Workload Automation (Group 10)
 
 The default `db-init` job is supplied automatically by `Kestra_Common` when `initialization_jobs` is empty.
 
@@ -286,7 +288,7 @@ The default `db-init` job is supplied automatically by `Kestra_Common` when `ini
 
 ---
 
-## §14 · Reliability Policies (Group 8)
+## 15. Reliability Policies (Group 8)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -297,7 +299,7 @@ The default `db-init` job is supplied automatically by `Kestra_Common` when `ini
 
 ---
 
-## §15 · StatefulSet Configuration (Group 14)
+## 16. StatefulSet Configuration (Group 14)
 
 Only relevant when `workload_type = "StatefulSet"`.
 
@@ -313,7 +315,7 @@ Only relevant when `workload_type = "StatefulSet"`.
 
 ---
 
-## §16 · Observability & Health (Group 9)
+## 17. Observability & Health (Group 9)
 
 Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — the default startup probe allows up to ~14 minutes (initial_delay=30 + period=20 × failure_threshold=40).
 
@@ -337,7 +339,7 @@ Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — 
 
 ---
 
-## §17 · Resource Quota (Group 7)
+## 18. Resource Quota (Group 7)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -351,7 +353,7 @@ Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — 
 
 ---
 
-## §18 · Validation Guards
+## 19. Validation Guards
 
 `validation.tf` enforces the following cross-variable conditions at plan time:
 
@@ -362,7 +364,7 @@ Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — 
 
 ---
 
-## §19 · Outputs
+## 20. Outputs
 
 | Output | Description | Sensitive |
 |---|---|---|

@@ -32,7 +32,7 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 - Uses `resource_prefix` (not `wrapper_prefix`) for naming, and exposes it as an output.
 - Secrets are output together as a `secret_ids` map rather than as individual outputs.
 - The SMTP secret is seeded with a dummy placeholder value; the real SMTP password is expected to be provided by the caller or set post-deployment.
-- `DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED` is deliberately **not set** — see §4 for the reason.
+- `DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED` is deliberately **not set** — see section 5 for the reason.
 - Default resources: `1000m` CPU / `2Gi` memory (lighter than the AI variant).
 
 ---
@@ -73,10 +73,10 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | CPU/memory limits; no requests set |
 | `min_instance_count` | `0` (scale-to-zero) |
 | `max_instance_count` | `3` |
-| `environment_variables` | Merged map — see §4 |
+| `environment_variables` | Merged map — see section 5 |
 | `enable_postgres_extensions` | `false` |
 | `postgres_extensions` | `[]` |
-| `initialization_jobs` | Default `db-init` job or custom override — see §6 |
+| `initialization_jobs` | Default `db-init` job or custom override — see section 7 |
 | `startup_probe` | HTTP `GET /healthz`, 10s initial delay, 5s timeout, 10s period, 30 failure threshold |
 | `liveness_probe` | HTTP `GET /healthz`, 15s initial delay, 5s timeout, 30s period, 3 failure threshold |
 
@@ -120,7 +120,20 @@ Absolute path to the module directory, used by wrapper modules to locate `script
 
 ---
 
-## 4. Environment Variables
+## 4. Non-Configurable Values
+
+The following values are fixed inside `N8N_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_image` | `"n8nio/n8n"` | Public base image; a custom wrapper is built from this source. |
+| `image_source` | `"custom"` | Requires a custom Dockerfile with entrypoint injection. |
+| `container_port` | `5678` | n8n's fixed listening port. |
+| `database_type` | `"POSTGRES_15"` | n8n requires PostgreSQL 15. |
+
+---
+
+## 5. Environment Variables
 
 The module merges a fixed set of n8n configuration variables with caller-provided `environment_variables` (caller variables take precedence):
 
@@ -146,7 +159,7 @@ The module merges a fixed set of n8n configuration variables with caller-provide
 
 ---
 
-## 5. Database Naming
+## 6. Database Naming
 
 The module computes two local values from `resource_prefix` that are available for use within the module:
 
@@ -159,7 +172,7 @@ These convert the hyphen-separated resource prefix into an underscore-separated 
 
 ---
 
-## 6. Initialization Job
+## 7. Initialization Job
 
 One `db-init` job runs by default (when `initialization_jobs = []`):
 
@@ -169,7 +182,8 @@ One `db-init` job runs by default (when `initialization_jobs = []`):
 | Script | `scripts/db-init.sh` |
 | Secrets required | `ROOT_PASSWORD` (PostgreSQL superuser), `DB_PASSWORD` (app user) |
 | `execute_on_apply` | `true` |
-| Timeout | 600s, 1 retry |
+| Timeout | 600s |
+| Max retries | 1 |
 
 `db-init.sh` behavior:
 1. Detects Cloud SQL Auth Proxy socket: if `/cloudsql` contains a socket file, symlinks it to `/tmp/.s.PGSQL.5432` and sets `DB_HOST=/tmp`.
@@ -183,7 +197,7 @@ One `db-init` job runs by default (when `initialization_jobs = []`):
 
 ---
 
-## 7. Scripts and Container Image
+## 8. Scripts and Container Image
 
 ### `Dockerfile`
 Identical in structure to `N8N_AI_Common`'s Dockerfile, with one difference in the ENTRYPOINT:
@@ -213,9 +227,9 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 
 ---
 
-## 8. Input Variables
+## 9. Input Variables
 
-### Project & Identity
+### A. Project & Identity
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -226,7 +240,7 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 | `deployment_id` | `string` | `""` | Unique deployment ID suffix |
 | `deployment_region` | `string` | `"us-central1"` | Region for the storage bucket |
 
-### Application
+### B. Application
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -247,7 +261,7 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 | `enable_cloudsql_volume` | `bool` | `true` | Mount Cloud SQL Auth Proxy sidecar socket |
 | `enable_image_mirroring` | `bool` | `true` | Mirror the container image to the project's Artifact Registry before deployment |
 
-### External Integration
+### C. External Integration
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -259,7 +273,7 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 | `redis_auth` | `string` | `""` | Redis auth password (sensitive) |
 | `nfs_server_ip` | `string` | `null` | NFS server IP for Redis host resolution (when using NFS-hosted Redis) |
 
-### Storage
+### D. Storage
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -269,7 +283,7 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 
 ---
 
-## 9. Platform-Specific Differences
+## 10. Platform-Specific Differences
 
 | Aspect | N8N_CloudRun | N8N_GKE |
 |--------|--------------|---------|
@@ -283,7 +297,7 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 
 ---
 
-## 10. Implementation Pattern
+## 11. Implementation Pattern
 
 ```hcl
 # Example: how N8N_CloudRun instantiates N8N_Common

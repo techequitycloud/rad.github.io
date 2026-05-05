@@ -17,9 +17,11 @@ scripts, and storage bucket lists, which are passed into `App_CloudRun` via
 `application_config`, `module_env_vars`, `module_secret_env_vars`, and
 `module_storage_buckets`.
 
+> This guide documents variables that are **unique to `OpenEMR_CloudRun`** or that have **OpenEMR-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
+
 ---
 
-## §1 · Module Overview
+## 1. Module Overview
 
 | Attribute | Value |
 |---|---|
@@ -37,7 +39,23 @@ scripts, and storage bucket lists, which are passed into `App_CloudRun` via
 | **Platform-managed job** | `nfs-init` (NFS setup + optional backup restoration) |
 | **Platform-managed secrets** | `OE_PASS` (admin password) + `MYSQL_PASS` (database password) |
 
-### Wrapper Architecture
+### A. Key differences from `App_CloudRun` defaults
+
+| Feature | App_CloudRun default | OpenEMR_CloudRun default |
+|---|---|---|
+| `container_port` | `8080` | `80` (Apache) |
+| `cpu_limit` | `"1000m"` | `"2000m"` |
+| `memory_limit` | `"512Mi"` | `"4Gi"` |
+| `min_instance_count` | `0` | `1` (healthcare availability) |
+| `max_instance_count` | `1` | `1` |
+| `enable_nfs` | `false` | `true` (required for `sites` directory) |
+| `enable_redis` | `false` | `true` (PHP session store) |
+| `health probe path` | `"/healthz"` | `/interface/login/login.php` (HTTP liveness) |
+| `execution_environment` | varies | `"gen2"` (required for NFS) |
+| Database | varies | MySQL 8.0 (required) |
+| Platform-managed secrets | none | `OE_PASS`, `MYSQL_PASS` auto-generated |
+
+### B. Wrapper Architecture
 
 ```
 OpenEMR_CloudRun (variables.tf / openemr.tf / main.tf)
@@ -56,7 +74,7 @@ and injected alongside `OE_PASS` via `module_secret_env_vars`.
 
 ---
 
-## §2 · IAM & Project Identity
+## 2. IAM & Project Identity
 
 | Variable | Default | Description |
 |---|---|---|
@@ -69,9 +87,9 @@ and injected alongside `OE_PASS` via `module_secret_env_vars`.
 
 ---
 
-## §3 · Core Service Configuration
+## 3. Core Service Configuration
 
-### §3.A · Application Identity
+### A. Application Identity
 
 `display_name` and `description` are OpenEMR-specific aliases for
 `application_display_name` and `application_description`, passed directly to
@@ -84,7 +102,7 @@ and injected alongside `OE_PASS` via `module_secret_env_vars`.
 | `description` | `"OpenEMR Electronic Health Records on Cloud Run"` | Brief description. Populates the Cloud Run service description field and platform documentation. |
 | `application_version` | `"7.0.4"` | OpenEMR release version used as the container image tag. Changing this triggers a new image build. Supported values: `"7.0.4"`, `"7.0.3"`. |
 
-### §3.B · Resource Sizing
+### B. Resource Sizing
 
 OpenEMR's PHP-FPM workers and database connection pool consume 1.5–3 Gi under
 normal clinical load. `cpu_limit` and `memory_limit` are built directly into
@@ -99,7 +117,7 @@ normal clinical load. `cpu_limit` and `memory_limit` are built directly into
 | `timeout_seconds` | `300` | Maximum request duration (0–3600 s). Increase for long-running operations (report generation, large file uploads, patient data exports). |
 | `execution_environment` | `"gen2"` | **Must remain `"gen2"`** for NFS volume support. `"gen1"` will prevent NFS mounts and OpenEMR will fail to start. |
 
-### §3.C · Environment Variables & Secrets
+### C. Environment Variables & Secrets
 
 | Variable | Default | Description |
 |---|---|---|
@@ -125,7 +143,7 @@ secret_environment_variables = {
 }
 ```
 
-### §3.D · Networking
+### D. Networking
 
 | Variable | Default | Description |
 |---|---|---|
@@ -135,7 +153,7 @@ secret_environment_variables = {
 | `container_protocol` | `"http1"` | HTTP version: `"http1"` or `"h2c"`. Use `"http1"` for OpenEMR. |
 | `cloudsql_volume_mount_path` | `"/cloudsql"` | Path where the Cloud SQL Auth Proxy Unix socket is mounted. OpenEMR's `sqlconf.php` uses this socket path. |
 
-### §3.E · Container Image & Build
+### E. Container Image & Build
 
 OpenEMR_CloudRun does not expose `container_image_source` or `container_build_config`
 as user variables. Image building is managed entirely by `OpenEMR_Common` based on
@@ -150,9 +168,9 @@ already available in a private registry.
 
 ---
 
-## §4 · Advanced Security
+## 4. Advanced Security
 
-### §4.A · Automated Password Rotation
+### A. Automated Password Rotation
 
 | Variable | Default | Description |
 |---|---|---|
@@ -160,7 +178,7 @@ already available in a private registry.
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts to pick up the new password. |
 | `secret_rotation_period` | `"2592000s"` | Rotation reminder interval. Also used as the trigger period when `enable_auto_password_rotation = true`. |
 
-### §4.B · VPC Service Controls
+### B. VPC Service Controls
 
 | Variable | Default | Description |
 |---|---|---|
@@ -170,7 +188,7 @@ already available in a private registry.
 | `organization_id` | `""` | GCP Organization ID for the VPC-SC Access Context Manager policy. Auto-discovered when empty. |
 | `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ) for compliance-sensitive environments. |
 
-### §4.C · Identity-Aware Proxy
+### C. Identity-Aware Proxy
 
 IAP is particularly valuable for EHR applications — it restricts access to
 authenticated clinical staff before any request reaches OpenEMR.
@@ -181,7 +199,7 @@ authenticated clinical staff before any request reaches OpenEMR.
 | `iap_authorized_users` | `[]` | Users granted access: `"user:doctor@clinic.com"`, `"serviceAccount:sa@project.iam.gserviceaccount.com"`. |
 | `iap_authorized_groups` | `[]` | Google Groups granted access: `"group:clinical-staff@clinic.com"`. Preferred for clinic-level access management. |
 
-### §4.D · Cloud Armor & CDN
+### D. Cloud Armor & CDN
 
 | Variable | Default | Description |
 |---|---|---|
@@ -190,7 +208,7 @@ authenticated clinical staff before any request reaches OpenEMR.
 | `enable_cdn` | `false` | Enables Cloud CDN on the GLB to cache static assets at edge. Only used when `enable_cloud_armor = true`. |
 | `admin_ip_ranges` | `[]` | IP CIDR ranges permitted for direct administrative access. |
 
-### §4.E · Binary Authorization
+### E. Binary Authorization
 
 | Variable | Default | Description |
 |---|---|---|
@@ -198,9 +216,9 @@ authenticated clinical staff before any request reaches OpenEMR.
 
 ---
 
-## §5 · Traffic & Ingress
+## 5. Traffic & Ingress
 
-### §5.A · Traffic Splitting
+### A. Traffic Splitting
 
 | Variable | Default | Description |
 |---|---|---|
@@ -214,7 +232,7 @@ traffic_split = [
 ]
 ```
 
-### §5.B · Service Annotations & Labels
+### B. Service Annotations & Labels
 
 | Variable | Default | Description |
 |---|---|---|
@@ -223,9 +241,9 @@ traffic_split = [
 
 ---
 
-## §6 · CI/CD Integration
+## 6. CI/CD Integration
 
-### §6.A · GitHub Integration
+### A. GitHub Integration
 
 | Variable | Default | Description |
 |---|---|---|
@@ -235,7 +253,7 @@ traffic_split = [
 | `github_app_installation_id` | `""` | Cloud Build GitHub App installation ID. Preferred for organisation repositories. |
 | `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Advanced trigger config: `branch_pattern`, `included_files`, `ignored_files`, `trigger_name`, `substitutions`. |
 
-### §6.B · Cloud Deploy
+### B. Cloud Deploy
 
 | Variable | Default | Description |
 |---|---|---|
@@ -244,9 +262,9 @@ traffic_split = [
 
 ---
 
-## §7 · Reliability & Data
+## 7. Reliability & Data
 
-### §7.A · Health Probes
+### A. Health Probes
 
 OpenEMR performs database connection validation and, on first boot, runs the full
 database installation process (5–20 minutes). `startup_probe` and `liveness_probe`
@@ -258,7 +276,7 @@ are passed both to `OpenEMR_Common` and — as `startup_probe_config` /
 | `startup_probe` | `{ enabled = true, type = "TCP", path = "/", initial_delay_seconds = 0, timeout_seconds = 5, period_seconds = 10, failure_threshold = 12 }` | TCP port check during startup. More reliable than HTTP during Apache/PHP-FPM initialisation. With `period_seconds = 10` and `failure_threshold = 12`, allows 120 s of startup time. **On first deployment** (full DB schema install), increase `failure_threshold` to `30`. |
 | `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/interface/login/login.php", initial_delay_seconds = 0, timeout_seconds = 10, period_seconds = 30, failure_threshold = 10 }` | HTTP check on the OpenEMR login page. Returns 200 only when Apache, PHP-FPM, and the database connection are all operational. `period_seconds = 30` with `failure_threshold = 10` allows 5 min of recovery. |
 
-### §7.B · Storage
+### B. Storage
 
 | Variable | Default | Description |
 |---|---|---|
@@ -272,7 +290,7 @@ are passed both to `OpenEMR_Common` and — as `startup_probe_config` /
 | `manage_storage_kms_iam` | `false` | Creates a CMEK KMS keyring and storage encryption key, enabling CMEK on all GCS buckets. |
 | `enable_artifact_registry_cmek` | `false` | Creates an Artifact Registry KMS key, enabling CMEK encryption of container images. |
 
-### §7.C · Database
+### C. Database
 
 OpenEMR requires MySQL 8.0. `db_name` and `db_user` are aliases for
 `application_database_name` and `application_database_user`. The Cloud SQL
@@ -287,7 +305,7 @@ are not used.
 | `enable_auto_password_rotation` | `false` | Automates password rotation via Cloud Run + Eventarc. See §4.A. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts. |
 
-### §7.D · Backup & Recovery
+### D. Backup & Recovery
 
 `backup_uri` is the OpenEMR-specific name for `backup_file`. The mapping is applied
 in `main.tf` (`backup_file = var.backup_uri`). When `backup_uri` is set, it is also
@@ -305,9 +323,9 @@ during deployment.
 
 ---
 
-## §8 · Integrations
+## 8. Integrations
 
-### §8.A · Redis Session Store
+### A. Redis Session Store
 
 Redis is **enabled by default** (`enable_redis = true`) and is required for
 multi-instance deployments. Without Redis, each Cloud Run instance has its own
@@ -323,7 +341,7 @@ Redis instance).
 | `redis_port` | `"6379"` | Redis TCP port (string). |
 | `redis_auth` | `""` | Redis AUTH password. Leave empty if authentication is not enabled. Treated as sensitive. Passed to `App_CloudRun` but not `OpenEMR_Common`. |
 
-### §8.B · Custom SQL Scripts
+### B. Custom SQL Scripts
 
 | Variable | Default | Description |
 |---|---|---|
@@ -332,7 +350,7 @@ Redis instance).
 | `custom_sql_scripts_path` | `""` | Path prefix within the bucket. Files run in lexicographic order; use numeric prefixes (e.g. `001_schema.sql`). |
 | `custom_sql_scripts_use_root` | `false` | Run scripts as the root database user (for privilege-requiring operations). |
 
-### §8.C · Jobs & Scheduled Tasks
+### C. Jobs & Scheduled Tasks
 
 User-defined initialization and cron jobs supplement the platform-managed `nfs-init`
 job (see §9). Both are passed through to `App_CloudRun` via `initialization_jobs`
@@ -343,7 +361,7 @@ and `cron_jobs`.
 | `initialization_jobs` | `[]` | Cloud Run jobs executed once during deployment. Each job requires at least one of `command`, `args`, or `script_path`. Set `mount_nfs = true` for jobs that need access to the sites directory. |
 | `cron_jobs` | `[]` | Recurring Cloud Scheduler-triggered jobs. Each entry requires `name` and `schedule` (cron format, UTC). Set `mount_nfs = true` for jobs that access patient documents. |
 
-### §8.D · Observability
+### D. Observability
 
 | Variable | Default | Description |
 |---|---|---|
@@ -354,7 +372,7 @@ and `cron_jobs`.
 
 ---
 
-## §9 · Platform-Managed Behaviours
+## 9. Platform-Managed Behaviours
 
 These are set automatically by the module and cannot be overridden via input variables.
 
@@ -384,7 +402,7 @@ These are set automatically by the module and cannot be overridden via input var
 
 ---
 
-## §10 · Variable Reference
+## 10. Variable Reference
 
 Complete list of all input variables, grouped by UI section.
 

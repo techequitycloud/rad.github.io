@@ -16,11 +16,13 @@ and `scripts_dir` inputs.
 > can call `http://<service-url>:11434`. For GPU-accelerated inference use `Ollama_GKE` with an
 > NVIDIA L4 node pool.
 
+> This guide documents variables that are **unique to `Ollama_CloudRun`** or that have **Ollama-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
+
 ---
 
-## §1 · Module Overview
+## 1. Module Overview
 
-### What `Ollama_CloudRun` provides
+### A. What `Ollama_CloudRun` provides
 
 - An **Ollama container** (prebuilt image `ollama/ollama` from Docker Hub,
   `enable_image_mirroring = true` by default) deployed on Cloud Run listening on port `11434`.
@@ -32,7 +34,7 @@ and `scripts_dir` inputs.
   job only runs when `default_model` is non-empty and `initialization_jobs = []`.
 - **No database, no Redis, no NFS** — Ollama is stateless beyond its GCS-backed model cache.
 
-### Key differences from `App_CloudRun` defaults
+### B. Key differences from `App_CloudRun` defaults
 
 | Feature | App_CloudRun default | Ollama_CloudRun default |
 |---|---|---|
@@ -52,7 +54,7 @@ and `scripts_dir` inputs.
 
 ---
 
-## §2 · IAM & Project Identity
+## 2. IAM & Project Identity
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -73,9 +75,9 @@ and `scripts_dir` inputs.
 
 ---
 
-## §3 · Core Service Configuration
+## 3. Core Service Configuration
 
-### §3.A · Application Identity
+### A. Application Identity
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -84,7 +86,7 @@ and `scripts_dir` inputs.
 | `description` | `string` | `"Ollama — standalone open-source LLM inference server..."` | Brief description surfaced in resource metadata. |
 | `application_version` | `string` | `"latest"` | Ollama Docker image tag. Use a pinned tag (e.g. `"0.3.12"`) in production. |
 
-### §3.B · Ollama Model Configuration (Group 18)
+### B. Ollama Model Configuration (Group 18)
 
 These are the Ollama-specific variables that have no equivalent in other wrapper modules.
 
@@ -103,7 +105,7 @@ creates a Cloud Run Job named `model-pull` that:
 The job mounts the `ollama-models` GCS volume so the pulled weights persist into the shared
 models bucket.
 
-### §3.C · Runtime & Scaling (Group 3)
+### C. Runtime & Scaling (Group 3)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -121,7 +123,7 @@ models bucket.
 | `service_labels` | `map(string)` | `{}` | Custom labels applied to the Cloud Run service. |
 | `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | Required by the App_CloudRun interface; not used by Ollama (no database). |
 
-### §3.D · Automatically Injected Environment Variables
+### D. Automatically Injected Environment Variables
 
 The following environment variables are set automatically by `Ollama_Common` and must not be
 overridden in `environment_variables`:
@@ -135,7 +137,7 @@ overridden in `environment_variables`:
 Additional variables can be passed via `environment_variables` (e.g. `OLLAMA_NUM_PARALLEL`
 to allow concurrent inferences on multi-CPU instances).
 
-### §3.E · Environment Variables & Secrets (Group 5)
+### E. Environment Variables & Secrets (Group 5)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -146,7 +148,7 @@ to allow concurrent inferences on multi-CPU instances).
 | `enable_auto_password_rotation` | `bool` | `false` | Not applicable for Ollama (no database). |
 | `rotation_propagation_delay_sec` | `number` | `90` | Seconds to wait after rotation before restarting the service. |
 
-### §3.F · Access & Networking (Group 4)
+### F. Access & Networking (Group 4)
 
 The default `ingress_settings = "internal"` is intentional — the Ollama API is designed to
 be called from within the same VPC by other applications (Flowise, N8N, RAGFlow, Django)
@@ -171,7 +173,7 @@ rather than from the public internet.
 
 ---
 
-## §4 · Storage & Filesystem (Group 10)
+## 4. Storage & Filesystem (Group 10)
 
 The Ollama models bucket is always provisioned automatically — no user configuration is
 required to enable GCS model persistence.
@@ -198,7 +200,7 @@ required to enable GCS model persistence.
 
 ---
 
-## §5 · Backup & Maintenance (Group 6)
+## 5. Backup & Maintenance (Group 6)
 
 Ollama has no database — backup and import settings are present for interface compatibility
 with App_CloudRun but have no operational effect.
@@ -214,7 +216,7 @@ with App_CloudRun but have no operational effect.
 
 ---
 
-## §6 · CI/CD Integration (Group 7)
+## 6. CI/CD Integration (Group 7)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -238,7 +240,7 @@ with App_CloudRun but have no operational effect.
 
 ---
 
-## §7 · Custom Initialization & Jobs (Group 8)
+## 7. Custom Initialization & Jobs (Group 8)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -251,7 +253,7 @@ with App_CloudRun but have no operational effect.
 
 ---
 
-## §8 · Database Backend (Group 11)
+## 8. Database Backend (Group 11)
 
 Ollama has no database dependency. Redis is also disabled for this module.
 
@@ -265,7 +267,7 @@ Ollama has no database dependency. Redis is also disabled for this module.
 
 ---
 
-## §9 · Observability & Health (Group 13)
+## 9. Observability & Health (Group 13)
 
 Ollama's root endpoint (`/`) responds with `"Ollama is running"` once the server is
 ready. Probes target this path.
@@ -281,7 +283,7 @@ ready. Probes target this path.
 
 ---
 
-## §10 · Outputs
+## 10. Outputs
 
 | Output | Description |
 |---|---|
@@ -322,7 +324,7 @@ ready. Probes target this path.
 
 ---
 
-## §11 · Platform-Managed Behaviours
+## 11. Platform-Managed Behaviours
 
 The following behaviours are applied automatically and cannot be overridden via `tfvars`.
 
@@ -340,7 +342,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## §12 · Variable Reference
+## 12. Variable Reference
 
 Complete variable reference with UIMeta group assignments.
 
@@ -442,7 +444,7 @@ Complete variable reference with UIMeta group assignments.
 
 ---
 
-## §13 · Configuration Examples
+## 13. Configuration Examples
 
 ### Basic Deployment
 

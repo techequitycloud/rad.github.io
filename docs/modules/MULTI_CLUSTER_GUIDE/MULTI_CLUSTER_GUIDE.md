@@ -5,7 +5,7 @@ sidebar_label: "MULTI CLUSTER GUIDE"
 
 # MULTI_CLUSTER_GUIDE Module
 
-## Overview
+## 1. Overview
 
 The Services_GCP module now supports deploying multiple GKE Autopilot clusters with Istio service mesh for high availability, disaster recovery, and geographic distribution of workloads.
 
@@ -20,7 +20,7 @@ The Services_GCP module now supports deploying multiple GKE Autopilot clusters w
 
 ---
 
-## Architecture
+## 2. Architecture
 
 ### Network Topology
 
@@ -55,11 +55,11 @@ The Services_GCP module now supports deploying multiple GKE Autopilot clusters w
 
 ---
 
-## Requirements
+## 3. Requirements
 
 ### Multi-Cluster Prerequisites
 
-**⚠️ IMPORTANT:** Multi-cluster deployments require the following:
+> **Important:** Multi-cluster deployments require the following:
 
 1. **Cloud Service Mesh** must be enabled (`configure_cloud_service_mesh = true`)
    - Required for Fleet Hub membership registration
@@ -80,7 +80,7 @@ For single-cluster deployments (`gke_cluster_count = 1`), Cloud Service Mesh is 
 
 ---
 
-## Configuration
+## 4. Configuration
 
 ### Basic Multi-Cluster Setup (2 Clusters)
 
@@ -156,7 +156,7 @@ module "services_gcp" {
 
 ---
 
-## Deploying Applications
+## 5. Deploying Applications
 
 ### App_GKE Module Integration
 
@@ -221,7 +221,7 @@ module "worker_app" {
 
 ---
 
-## Migration from Single to Multi-Cluster
+## 6. Migration from Single to Multi-Cluster
 
 ### Pre-Migration Checklist
 
@@ -334,7 +334,7 @@ terraform apply
 
 ---
 
-## CIDR Allocation
+## 7. CIDR Allocation
 
 ### Automatic Allocation (Multi-Cluster Mode)
 
@@ -360,7 +360,7 @@ gke_service_base_cidr   = "10.128.0.0/16"  # Services: cidrsubnet with /4 increm
 
 ---
 
-## Troubleshooting
+## 8. Troubleshooting
 
 ### Cluster Not Joining Fleet
 
@@ -430,7 +430,7 @@ gke_cluster_count = 3  # Reduce from 5 to 3
 
 ---
 
-## Best Practices
+## 9. Best Practices
 
 ### Cluster Count
 
@@ -459,7 +459,7 @@ gke_cluster_count = 3  # Reduce from 5 to 3
 
 ---
 
-## Outputs Reference
+## 10. Outputs Reference
 
 ### Legacy Outputs (Backward Compatible)
 
@@ -515,7 +515,7 @@ output "ingress_cluster" {
 
 ---
 
-## Support
+## 11. Support
 
 For issues or questions:
 
@@ -525,7 +525,7 @@ For issues or questions:
 
 ---
 
-## Changelog
+## 12. Changelog
 
 ### Version 1.0.0 (2025-02-15)
 

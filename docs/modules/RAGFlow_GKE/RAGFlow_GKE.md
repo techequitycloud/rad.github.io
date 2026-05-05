@@ -14,11 +14,13 @@ database initialization job, and document storage bucket.
 > first. The `elasticsearch_hosts` variable is **mandatory** — Terraform will reject the
 > configuration if it is empty.
 
+> This guide documents variables that are **unique to `RAGFlow_GKE`** or that have **RAGFlow-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
+
 ---
 
-## §1 · Module Overview
+## 1. Module Overview
 
-### What `RAGFlow_GKE` provides
+### A. What `RAGFlow_GKE` provides
 
 - A **RAGFlow Kubernetes Deployment** (custom image built from `infiniflow/ragflow` via
   Cloud Build) running on GKE Autopilot with a **LoadBalancer** service on port 80.
@@ -35,7 +37,7 @@ database initialization job, and document storage bucket.
 - **ClientIP session affinity** by default, ensuring that browser uploads and multi-step
   document processing requests consistently reach the same pod.
 
-### Key differences from `App_GKE` defaults
+### B. Key differences from `App_GKE` defaults
 
 | Feature | App_GKE default | RAGFlow_GKE default |
 |---|---|---|
@@ -53,7 +55,7 @@ database initialization job, and document storage bucket.
 | `module_dependency` | varies | `["Services_GCP", "Elasticsearch_GKE"]` |
 | `credit_cost` | varies | `150` |
 
-### Architecture
+### C. Architecture
 
 ```
 RAGFlow_GKE
@@ -71,7 +73,7 @@ RAGFlow_GKE
     └── Kubernetes resources (Deployment, Service, Jobs, HPA)
 ```
 
-### Platform-managed behaviours
+### D. Platform-Managed Behaviours
 
 | Behaviour | Detail |
 |---|---|
@@ -86,7 +88,7 @@ RAGFlow_GKE
 
 ---
 
-## §2 · IAM & Project Identity (Group 0 & 1)
+## 2. IAM & Project Identity (Group 0 & 1)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -108,7 +110,7 @@ RAGFlow_GKE
 
 ---
 
-## §3 · Application Identity (Group 2)
+## 3. Application Identity (Group 2)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -121,7 +123,7 @@ RAGFlow_GKE
 
 ---
 
-## §4 · Runtime & Scaling (Group 3)
+## 4. Runtime & Scaling (Group 3)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -147,7 +149,7 @@ RAGFlow_GKE
 
 ---
 
-## §5 · GKE Backend Configuration (Group 5)
+## 5. GKE Backend Configuration (Group 5)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -165,9 +167,9 @@ RAGFlow_GKE
 
 ---
 
-## §6 · RAGFlow-Specific Variables
+## 6. RAGFlow-Specific Variables
 
-### §6.A · Database (Group 15)
+### A. Database (Group 15)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -184,7 +186,7 @@ RAGFlow_GKE
 | `enable_auto_password_rotation` | `bool` | `false` | Automatic database password rotation. `{{UIMeta group=15 order=11}}` |
 | `rotation_propagation_delay_sec` | `number` | `90` | Seconds to wait after rotation before restarting pods. `{{UIMeta group=15 order=12}}` |
 
-### §6.B · Elasticsearch & Redis (Group 14)
+### B. Elasticsearch & Redis (Group 14)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -197,7 +199,7 @@ RAGFlow_GKE
 
 ---
 
-## §7 · Environment Variables & Secrets (Group 4)
+## 7. Environment Variables & Secrets (Group 4)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -206,7 +208,7 @@ RAGFlow_GKE
 | `secret_rotation_period` | `string` | `"2592000s"` | Rotation notification period (30 days). Must be a duration in seconds followed by `s`. `{{UIMeta group=4 order=3}}` |
 | `secret_propagation_delay` | `number` | `30` | Seconds to wait after secret creation before proceeding. `{{UIMeta group=4 order=4}}` |
 
-### Automatically Injected Environment Variables
+### A. Automatically Injected Environment Variables
 
 The following variables are always injected by `RAGFlow_GKE` and must not be set in `environment_variables`:
 
@@ -223,7 +225,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## §8 · Access & Networking (Groups 18–21)
+## 8. Access & Networking (Groups 18–21)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -251,7 +253,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## §9 · Storage & Filesystem (Groups 12 & 13)
+## 9. Storage & Filesystem (Groups 12 & 13)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -267,7 +269,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## §10 · Backup & Maintenance (Group 16)
+## 10. Backup & Maintenance (Group 16)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -280,7 +282,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## §11 · CI/CD Integration (Group 11)
+## 11. CI/CD Integration (Group 11)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -295,7 +297,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## §12 · Custom Initialization & Jobs (Group 10 & 17)
+## 12. Custom Initialization & Jobs (Group 10 & 17)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -309,7 +311,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## §13 · Reliability Policies (Group 8)
+## 13. Reliability Policies (Group 8)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -320,7 +322,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## §14 · Resource Quota (Group 7)
+## 14. Resource Quota (Group 7)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -332,7 +334,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## §15 · StatefulSet Settings (Group 6)
+## 15. StatefulSet Settings (Group 6)
 
 These settings apply only when `workload_type = "StatefulSet"`.
 
@@ -348,7 +350,7 @@ These settings apply only when `workload_type = "StatefulSet"`.
 
 ---
 
-## §16 · Observability & Health (Group 9)
+## 16. Observability & Health (Group 9)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -361,7 +363,7 @@ These settings apply only when `workload_type = "StatefulSet"`.
 
 ---
 
-## §17 · Validation Guards
+## 17. Validation Guards
 
 `validation.tf` enforces the following preconditions at plan time:
 
@@ -375,7 +377,7 @@ These settings apply only when `workload_type = "StatefulSet"`.
 
 ---
 
-## §18 · Outputs
+## 18. Outputs
 
 | Output | Description |
 |---|---|
@@ -399,7 +401,7 @@ These settings apply only when `workload_type = "StatefulSet"`.
 
 ---
 
-## §19 · Configuration Examples
+## 19. Configuration Examples
 
 ### Basic Deployment
 

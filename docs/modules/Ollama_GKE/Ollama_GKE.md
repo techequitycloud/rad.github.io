@@ -16,9 +16,11 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 > `http://ollama.<namespace>.svc.cluster.local:11434`. For CPU-only, serverless inference
 > use `Ollama_CloudRun`.
 
+> This guide documents variables that are **unique to `Ollama_GKE`** or that have **Ollama-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
+
 ---
 
-## §1 · Module Overview
+## 1. Module Overview
 
 ### What `Ollama_GKE` provides
 
@@ -52,7 +54,7 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 
 ---
 
-## §2 · IAM & Project Identity
+## 2. IAM & Project Identity
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -74,9 +76,9 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 
 ---
 
-## §3 · Core Service Configuration
+## 3. Core Service Configuration
 
-### §3.A · Application Identity (Group 2)
+### A. Application Identity (Group 2)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -85,7 +87,7 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 | `application_description` | `string` | `"Ollama — standalone open-source LLM inference server on GKE..."` | Brief description surfaced in Kubernetes annotations. |
 | `application_version` | `string` | `"latest"` | Ollama Docker image tag. Use a pinned tag in production. |
 
-### §3.B · Ollama Model Configuration (Group 18)
+### B. Ollama Model Configuration (Group 18)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -96,7 +98,7 @@ When `default_model` is set and `initialization_jobs` is empty, a Kubernetes Job
 `model-pull` is created automatically using the `scripts/model-pull.sh` script from
 `Ollama_Common`. The job mounts the `ollama-models` GCS volume so pulled weights persist.
 
-### §3.C · Runtime & Scaling (Group 3)
+### C. Runtime & Scaling (Group 3)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -120,7 +122,7 @@ When `default_model` is set and `initialization_jobs` is empty, a Kubernetes Job
 | `enable_cloudsql_volume` | `bool` | `false` | Not needed for Ollama. Required by the App_GKE interface. |
 | `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | Cloud SQL Auth Proxy socket path. Present for interface compatibility. |
 
-### §3.D · Automatically Injected Environment Variables
+### D. Automatically Injected Environment Variables
 
 The following environment variables are set automatically by `Ollama_Common`:
 
@@ -130,7 +132,7 @@ The following environment variables are set automatically by `Ollama_Common`:
 | `OLLAMA_HOST` | `"0.0.0.0:11434"` | Binds to all interfaces so the Kubernetes service can forward traffic. |
 | `OLLAMA_KEEP_ALIVE` | `"24h"` | Keeps loaded model resident in memory between requests. |
 
-### §3.E · Environment Variables & Secrets (Group 5)
+### E. Environment Variables & Secrets (Group 5)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -141,7 +143,7 @@ The following environment variables are set automatically by `Ollama_Common`:
 | `enable_auto_password_rotation` | `bool` | `false` | Not applicable for Ollama (no database). |
 | `rotation_propagation_delay_sec` | `number` | `90` | Seconds to wait after rotation before restarting pods. |
 
-### §3.F · Access & Networking (Group 4)
+### F. Access & Networking (Group 4)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -167,7 +169,7 @@ The following environment variables are set automatically by `Ollama_Common`:
 
 ---
 
-## §4 · GKE-Specific Configuration (Group 15)
+## 4. GKE-Specific Configuration (Group 15)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -183,7 +185,7 @@ The following environment variables are set automatically by `Ollama_Common`:
 
 ---
 
-## §5 · StatefulSet Settings (Group 16)
+## 5. StatefulSet Settings (Group 16)
 
 These settings apply only when `workload_type = "StatefulSet"`. The default `"Deployment"`
 workload type with GCS Fuse is recommended and these are not needed.
@@ -200,7 +202,7 @@ workload type with GCS Fuse is recommended and these are not needed.
 
 ---
 
-## §6 · Storage & Filesystem (Group 10)
+## 6. Storage & Filesystem (Group 10)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -224,7 +226,7 @@ workload type with GCS Fuse is recommended and these are not needed.
 
 ---
 
-## §7 · Backup & Maintenance (Group 6)
+## 7. Backup & Maintenance (Group 6)
 
 Ollama has no database — backup settings are present for App_GKE interface compatibility only.
 
@@ -239,7 +241,7 @@ Ollama has no database — backup settings are present for App_GKE interface com
 
 ---
 
-## §8 · CI/CD Integration (Group 7)
+## 8. CI/CD Integration (Group 7)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -254,7 +256,7 @@ Ollama has no database — backup settings are present for App_GKE interface com
 
 ---
 
-## §9 · Custom Initialization & Jobs (Group 8)
+## 9. Custom Initialization & Jobs (Group 8)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -268,7 +270,7 @@ Ollama has no database — backup settings are present for App_GKE interface com
 
 ---
 
-## §10 · Database Backend (Group 11)
+## 10. Database Backend (Group 11)
 
 Ollama has no database dependency. Redis is also disabled for this module.
 
@@ -286,7 +288,7 @@ Ollama has no database dependency. Redis is also disabled for this module.
 
 ---
 
-## §11 · Observability & Health (Group 13)
+## 11. Observability & Health (Group 13)
 
 Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is ready.
 
@@ -301,7 +303,7 @@ Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is re
 
 ---
 
-## §12 · Outputs
+## 12. Outputs
 
 | Output | Description |
 |---|---|
@@ -348,7 +350,7 @@ Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is re
 
 ---
 
-## §13 · Platform-Managed Behaviours
+## 13. Platform-Managed Behaviours
 
 | Behaviour | Detail |
 |---|---|
@@ -365,7 +367,7 @@ Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is re
 
 ---
 
-## §14 · Variable Reference
+## 14. Variable Reference
 
 Complete variable reference with UIMeta group assignments.
 
@@ -497,9 +499,9 @@ Complete variable reference with UIMeta group assignments.
 
 ---
 
-## §15 · Configuration Examples
+## 15. Configuration Examples
 
-### Basic Deployment
+### A. Basic Deployment
 
 CPU-only inference for 3B models. Suitable for evaluation and shared internal cluster use.
 
@@ -525,7 +527,7 @@ service_type = "ClusterIP"
 default_model = "llama3.2:3b"
 ```
 
-### Advanced Deployment
+### B. Advanced Deployment
 
 Production inference endpoint for 7B models with pod disruption budget, monitoring, and environment tuning.
 

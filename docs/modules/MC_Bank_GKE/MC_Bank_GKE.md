@@ -1,6 +1,6 @@
 # MC_Bank_GKE Module
 
-## Overview
+## 1. Overview
 
 The **MC_Bank_GKE** module deploys a production-grade, multi-cluster microservices banking application on Google Kubernetes Engine (GKE). It is designed as a comprehensive learning environment for platform engineers who want to gain hands-on experience with advanced GKE capabilities, including multi-cluster networking, service mesh, global load balancing, and cloud-native observability.
 
@@ -10,7 +10,7 @@ This module is intended for **educational purposes**. It is not a production ban
 
 ---
 
-## What You Will Learn
+## 2. What You Will Learn
 
 By deploying and exploring this module, a platform engineer will gain practical experience with:
 
@@ -28,7 +28,7 @@ By deploying and exploring this module, a platform engineer will gain practical 
 
 ---
 
-## Architecture Overview
+## 3. Architecture Overview
 
 The module creates the following high-level architecture:
 
@@ -72,7 +72,7 @@ GKE Cluster 1          GKE Cluster 2
 
 ---
 
-## GKE Cluster Features
+## 4. GKE Cluster Features
 
 ### Autopilot vs Standard Clusters
 
@@ -271,7 +271,7 @@ kubectl get gateway,httproute -A --context $CTX1
 
 ---
 
-## Networking
+## 5. Networking
 
 ### VPC Design
 
@@ -368,7 +368,7 @@ gcloud compute addresses list --project PROJECT_ID \
 
 ---
 
-## GKE Fleet Management
+## 6. GKE Fleet Management
 
 ### What is a GKE Fleet?
 
@@ -450,7 +450,7 @@ Enabling a feature at the fleet level means you do not need to configure it clus
 
 ---
 
-## Cloud Service Mesh (Anthos Service Mesh)
+## 7. Cloud Service Mesh (Anthos Service Mesh)
 
 ### What is Cloud Service Mesh?
 
@@ -616,7 +616,7 @@ spec:
       weight: 10
 ```
 
-### Observability with ASM
+### 13. Observability with ASM
 
 ASM automatically generates the **golden signals** (latency, traffic, errors, saturation) for every service-to-service call in the mesh, with no instrumentation changes required in the application.
 
@@ -673,7 +673,7 @@ kubectl get serviceexport -n bank-of-anthos --context $CTX1
 
 ---
 
-## Multi-Cluster Ingress and Global Load Balancing
+## 8. Multi-Cluster Ingress and Global Load Balancing
 
 ### The Problem Multi-Cluster Ingress Solves
 
@@ -876,7 +876,7 @@ kubectl get managedcertificate -n bank-of-anthos --context $CTX1 \
 
 ---
 
-## Bank of Anthos Application
+## 9. Bank of Anthos Application
 
 ### Overview
 
@@ -1166,7 +1166,7 @@ kubectl exec -n bank-of-anthos --context $CTX1 \
 
 ---
 
-## Module Configuration Options
+## 10. Module Configuration Options
 
 The following options are available when deploying this module. Defaults reflect the configuration used if no override is provided.
 
@@ -1208,7 +1208,7 @@ The following options are available when deploying this module. Defaults reflect
 
 ---
 
-## GCP APIs Enabled
+## 11. GCP APIs Enabled
 
 This module enables the following Google Cloud APIs on the destination project. These APIs are not disabled on teardown, preventing accidental disruption to other workloads that may depend on them.
 
@@ -1372,7 +1372,7 @@ EOF
 
 ---
 
-## Deployment Lifecycle
+## 12. Deployment Lifecycle
 
 ### Apply Phase
 
@@ -1494,7 +1494,7 @@ Before the VPC is deleted, a cleanup script removes GKE-managed firewall rules (
 
 ---
 
-## Observability
+## 13. Observability
 
 This module enables a comprehensive, multi-layer observability stack. No additional tooling needs to be installed — everything is available immediately after deployment through the Google Cloud Console.
 
@@ -1637,7 +1637,7 @@ Navigate to **Billing → Cost breakdown** and filter by **Label: goog-k8s-clust
 
 ---
 
-## Hands-On Exercises
+## 14. Hands-On Exercises
 
 The following exercises are designed to deepen a platform engineer's understanding of the features deployed by this module. Each exercise uses only `kubectl` and `gcloud` commands against the running deployment. All exercises are non-destructive unless marked **[Destructive]**.
 
@@ -2330,7 +2330,7 @@ kubectl delete clusterpodmonitoring bank-of-anthos-all --context $CTX1
 
 ---
 
-## Troubleshooting Guide
+## 15. Troubleshooting Guide
 
 ### Application Not Reachable After Deployment
 
@@ -2549,7 +2549,7 @@ gcloud compute backend-services list --global --project PROJECT_ID \
 
 ---
 
-## References
+## 16. References
 
 ### Google Kubernetes Engine
 

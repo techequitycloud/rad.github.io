@@ -8,7 +8,26 @@ Moodle is the world's most popular open-source Learning Management System (LMS),
 
 ---
 
-## How This Guide Is Structured
+## 1. Module Overview
+
+`Moodle_GKE` wraps `App_GKE` to deploy Moodle LMS on GKE Autopilot. It adds Moodle-specific application configuration, a cron Cloud Scheduler job, NFS-backed `moodledata`, Redis session handling, and automated database initialisation on top of the standard `App_GKE` infrastructure.
+
+> This guide documents variables that are **unique to `Moodle_GKE`** or that have **Moodle-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
+
+### Key differences from `App_GKE` defaults
+
+| Variable | App_GKE Default | Moodle_GKE Default |
+|---|---|---|
+| `container_port` | `8080` | `8080` (unchanged; Moodle runs on `apache2` proxied by the platform) |
+| `max_instance_count` | `3` | `5` |
+| `enable_nfs` | `false` | `true` |
+| `enable_redis` | `false` | `true` |
+| `enable_custom_domain` | `false` | `true` |
+| `container_image_source` | `"registry"` | `"custom"` |
+
+---
+
+## 2. How This Guide Is Structured
 
 This guide documents only the variables that are **unique to `Moodle_GKE`** or that have **Moodle-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, storage, CI/CD, observability, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
@@ -49,7 +68,7 @@ This guide documents only the variables that are **unique to `Moodle_GKE`** or t
 
 ---
 
-## Platform-Managed Behaviours
+## 3. Platform-Managed Behaviours
 
 The following behaviours are applied automatically by `Moodle_GKE` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
@@ -68,7 +87,7 @@ The following behaviours are applied automatically by `Moodle_GKE` regardless of
 
 ---
 
-## Moodle Application Identity
+## 4. Moodle Application Identity
 
 These variables control how the Moodle deployment is named and described. They correspond to the standard identity variables in App_GKE but have Moodle-specific defaults. An additional `description` variable is also present, used by the `Moodle_Common` sub-module interface.
 
@@ -92,7 +111,7 @@ kubectl describe deployment moodle -n NAMESPACE | grep -A5 Annotations
 
 ---
 
-## Moodle Runtime Configuration
+## 5. Moodle Runtime Configuration
 
 Moodle is a PHP 8.3/Apache application. The module exposes `cpu_limit` and `memory_limit` as **dedicated top-level variables** (passed through the `Moodle_Common` configuration layer) in addition to the standard `container_resources` object which is passed directly to App_GKE.
 
@@ -125,7 +144,7 @@ kubectl get deployment moodle -n NAMESPACE \
 
 ---
 
-## Moodle Database Configuration
+## 6. Moodle Database Configuration
 
 Moodle requires PostgreSQL. The module uses `db_name` and `db_user` (shorter names aligned with the `Moodle_Common` interface) alongside the standard `application_database_name` and `application_database_user` variables from App_GKE. Both naming pairs are present; they serve distinct roles in the module's two-layer architecture.
 
@@ -154,7 +173,7 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep -E "^DB_"
 
 ---
 
-## Moodle Environment Variables
+## 7. Moodle Environment Variables
 
 The `environment_variables` variable (documented in [App_GKE §3](../App_GKE/App_GKE.md#3-core-service-configuration)) is supplemented by a set of Moodle-specific defaults that are **automatically injected** by the module.
 
@@ -214,7 +233,7 @@ All other `environment_variables` and `secret_environment_variables` behaviour i
 
 ---
 
-## Moodle Health Probes
+## 8. Moodle Health Probes
 
 Moodle performs database schema validation and plugin checks on startup. The module exposes **dedicated probe variables** — `startup_probe` and `liveness_probe` — with Moodle-specific defaults targeting the `/health.php` endpoint, which reflects both PHP availability and database connectivity and is more accurate for Moodle's readiness than a generic `/healthz` path.
 
@@ -248,7 +267,7 @@ kubectl logs -n NAMESPACE -l app=moodle --since=15m | head -150
 
 ---
 
-## Redis Cache
+## 9. Redis Cache
 
 Moodle uses Redis as the PHP session handler and application cache. When `enable_redis = true`, the `MOODLE_REDIS_ENABLED`, `MOODLE_REDIS_HOST`, `MOODLE_REDIS_PORT`, and `MOODLE_REDIS_PASSWORD` environment variables are injected automatically. **Redis is enabled by default** in `Moodle_GKE` because session consistency across multiple pod replicas requires a shared external session store — without it, users may be logged out when a request is routed to a different pod.
 
@@ -274,7 +293,7 @@ kubectl run redis-test --rm -it --image=redis:alpine --restart=Never -- \
 
 ---
 
-## Backup Import & Recovery
+## 10. Backup Import & Recovery
 
 In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_GKE §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql)), `Moodle_GKE` supports a **one-time import** of an existing Moodle database backup during deployment. This is designed for migrating an existing Moodle instance to GCP or seeding a new environment with production data.
 
@@ -301,7 +320,7 @@ gcloud sql databases list --instance=INSTANCE_NAME --project=PROJECT_ID
 
 ---
 
-## StatefulSet PVC Configuration
+## 11. StatefulSet PVC Configuration
 
 When `workload_type = "StatefulSet"` is set (see [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot)), the following variables configure the per-pod **PersistentVolumeClaim** created for each replica. For full documentation on each variable, refer to [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 
@@ -321,7 +340,7 @@ The following StatefulSet variables are present in `Moodle_GKE` and pass through
 
 ---
 
-## Deployment Prerequisites & Validation
+## 12. Deployment Prerequisites & Validation
 
 After deploying `Moodle_GKE`, confirm the deployment is healthy:
 

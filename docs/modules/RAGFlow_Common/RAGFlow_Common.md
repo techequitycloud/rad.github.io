@@ -8,27 +8,27 @@ RAGFlow is an open-source document intelligence and Retrieval-Augmented Generati
 
 ---
 
-## §1 · Module Overview
+## 1. Module Overview
 
-### What `RAGFlow_Common` provides
+### A. What `RAGFlow_Common` Provides
 
 - A **`config` output** containing the complete application configuration object consumed by `App_GKE`'s `application_config` input. This includes the container image reference, port, database type, resource limits, health probes, and initialization jobs.
 - A **`storage_buckets` output** — a single GCS bucket with the suffix `ragflow-documents` in the deployment region, used for document ingestion and storage.
 - A **`path` output** — the absolute path to the module directory. `RAGFlow_GKE` uses `"${module.ragflow_app.path}/scripts"` as its `scripts_dir`.
 
-### How the image is built
+### B. How the Image Is Built
 
 Unlike most application modules that pull a prebuilt image, `RAGFlow_Common` sets `image_source = "custom"` unconditionally. The `container_build_config` instructs Cloud Build to run the `Dockerfile` located at `scripts/Dockerfile` using `.` as the context, passing `APP_VERSION` as a build argument. The result is pushed to Artifact Registry and deployed to GKE.
 
-### Database
+### C. Database
 
 RAGFlow requires **MySQL 8.0** (`database_type = "MYSQL_8_0"`). The `db_name` and `db_user` values from the caller are forwarded directly into the config output. The Cloud SQL Auth Proxy sidecar is always enabled (`enable_cloudsql_volume = true`) and mounts the socket at `/cloudsql`. The `MYSQL_HOST` environment variable is set to `127.0.0.1` in `RAGFlow_GKE`'s locals so RAGFlow connects via the proxy.
 
-### Initialization job
+### D. Initialization Job
 
 When `initialization_jobs = []` (the default), `RAGFlow_Common` generates a single `db-init` Kubernetes Job that runs the `scripts/db-init.sh` script using the `mysql:8.0-debian` image. This job is marked `execute_on_apply = true` and has a 600-second timeout and 1 retry. Providing any non-empty `initialization_jobs` list disables the auto-generated job.
 
-### Health probes
+### E. Health Probes
 
 All probes target the `/v1/health` endpoint. RAGFlow loads embedding models at startup, so the startup probe allows up to 180 seconds (`initial_delay_seconds=60` + 18 attempts at 10-second intervals) before the liveness probe takes over.
 
@@ -38,7 +38,7 @@ All probes target the `/v1/health` endpoint. RAGFlow loads embedding models at s
 | Liveness | `/v1/health` | 120 | 30 | 3 |
 | Readiness | `/v1/health` | 30 | 10 | 3 |
 
-### Scripts directory
+### F. Scripts Directory
 
 `RAGFlow_Common` bundles three files in `scripts/`:
 
@@ -50,7 +50,27 @@ All probes target the `/v1/health` endpoint. RAGFlow loads embedding models at s
 
 ---
 
-## §2 · Input Variables
+## 2. Architecture
+
+```text
+Layer 3: Application Wrappers
+├── RAGFlow_GKE  ──┐
+                   ├── instantiate RAGFlow_Common
+                   ↓
+        RAGFlow_Common (this module)
+        Creates: GCS bucket (ragflow-documents)
+        Produces: config, storage_buckets, path
+                   ↓
+Layer 2: Platform Modules
+├── App_CloudRun  (serverless deployment)
+└── App_GKE       (Kubernetes deployment)
+                   ↓
+Layer 1: GCP_Services (shared infrastructure)
+```
+
+---
+
+## 3. Input Variables
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -76,7 +96,7 @@ All probes target the `/v1/health` endpoint. RAGFlow loads embedding models at s
 
 ---
 
-## §3 · Outputs
+## 4. Outputs
 
 | Output | Description |
 |---|---|
@@ -86,7 +106,7 @@ All probes target the `/v1/health` endpoint. RAGFlow loads embedding models at s
 
 ---
 
-## §4 · Hard-Coded Values
+## 5. Hard-Coded Values
 
 The following values are fixed inside `RAGFlow_Common` and cannot be overridden by callers:
 
@@ -103,7 +123,7 @@ The following values are fixed inside `RAGFlow_Common` and cannot be overridden 
 
 ---
 
-## §5 · Usage Pattern
+## 6. Usage Pattern
 
 `RAGFlow_Common` is called exclusively by `RAGFlow_GKE`:
 
