@@ -53,7 +53,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §1 · Module Metadata (Group 0)
+## 1. Module Metadata (Group 0)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -70,7 +70,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §2 · Project & Identity (Group 1)
+## 2. Project & Identity (Group 1)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -82,7 +82,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §3 · Application Identity (Group 2)
+## 3. Application Identity (Group 2)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -94,7 +94,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## §4 · Runtime & Scaling (Group 3)
+## 4. Runtime & Scaling (Group 3)
 
 | Variable | Default | Options / Format | Description |
 |---|---|---|---|

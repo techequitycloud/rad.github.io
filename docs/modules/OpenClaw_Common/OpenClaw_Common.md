@@ -249,7 +249,7 @@ The `--bind lan` flag is required for Cloud Run — the runtime maps the externa
 | `skills_repo_url` | `string` | `""` | GitHub URL of a shared OpenClaw skills repository. Cloned into `/data/workspace/skill-library` on startup. Leave empty to skip |
 | `skills_repo_ref` | `string` | `"main"` | Git ref (branch, tag, or SHA) for the skills repository |
 
-### Resources
+### D. Resources
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -259,13 +259,13 @@ The `--bind lan` flag is required for Cloud Run — the runtime maps the externa
 | `min_instance_count` | `number` | `0` | Minimum instances (0 = scale-to-zero) |
 | `max_instance_count` | `number` | `1` | Maximum instances. OpenClaw is stateful — keep at `1` per tenant to avoid split-state |
 
-### Storage
+### E. Storage
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `gcs_volumes` | `list(any)` | `[]` | Additional GCS Fuse volume mounts beyond the auto-appended `/data` workspace volume |
 
-### Environment Variables
+### F. Environment Variables
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|

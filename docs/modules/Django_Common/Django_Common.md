@@ -262,10 +262,10 @@ The container entrypoint, runs before Gunicorn starts:
 > **Note**: Database migrations and `collectstatic` are handled by the `db-migrate` initialization job, not the entrypoint. This prevents race conditions in horizontally scaled deployments where multiple instances start simultaneously.
 
 ### `migrate.sh`
-Lightweight script used by the `db-migrate` initialization job (see §6). Constructs `DATABASE_URL` and runs `migrate` + `collectstatic`.
+Lightweight script used by the `db-migrate` initialization job (see §7). Constructs `DATABASE_URL` and runs `migrate` + `collectstatic`.
 
 ### `db-init.sh`
-Database setup script used by the `db-init` initialization job (see §6).
+Database setup script used by the `db-init` initialization job (see §7).
 
 ### `myproject/` — Sample Django Project
 A complete reference Django 5 project included as a starting point for application teams:

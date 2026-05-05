@@ -181,7 +181,7 @@ The module merges caller-supplied `environment_variables` with the following def
 
 ---
 
-## Secret Environment Variables
+## 7. Secret Environment Variables
 
 The `config.secret_environment_variables` map carries all 8 WordPress security constants, each mapped to its Secret Manager secret ID (resolved after the 30s propagation sleep):
 
@@ -246,7 +246,7 @@ The following values are fixed inside `Wordpress_Common` and cannot be overridde
 
 ---
 
-## Container Image
+## 10. Container Image
 
 Built from `scripts/Dockerfile` using `php:8.4-apache`.
 
@@ -291,7 +291,7 @@ CMD:        apache2-foreground
 
 ---
 
-## `docker-entrypoint.sh`
+## 11. `docker-entrypoint.sh`
 
 Handles Cloud SQL connection, WordPress installation bootstrap, and `wp-config.php` generation:
 
@@ -321,7 +321,7 @@ Handles Cloud SQL connection, WordPress installation bootstrap, and `wp-config.p
 
 ---
 
-## `wp-config-docker.php`
+## 12. `wp-config-docker.php`
 
 A modified version of WordPress's standard `wp-config-sample.php` adapted for container environments:
 

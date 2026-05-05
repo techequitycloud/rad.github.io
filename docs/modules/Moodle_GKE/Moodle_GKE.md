@@ -12,6 +12,8 @@ Moodle is the world's most popular open-source Learning Management System (LMS),
 
 `Moodle_GKE` wraps `App_GKE` to deploy Moodle LMS on GKE Autopilot. It adds Moodle-specific application configuration, a cron Cloud Scheduler job, NFS-backed `moodledata`, Redis session handling, and automated database initialisation on top of the standard `App_GKE` infrastructure.
 
+> This guide documents variables that are **unique to `Moodle_GKE`** or that have **Moodle-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
+
 ### Key differences from `App_GKE` defaults
 
 | Variable | App_GKE Default | Moodle_GKE Default |
