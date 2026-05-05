@@ -1,11 +1,15 @@
+import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Using RAD
+# Deploying with RAD
 
-<YouTubeEmbed videoId="YPjTzJX2Cak" poster="https://storage.googleapis.com/rad-public-2b65/modules/Using_RAD.png" />
+<img src="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.png" alt="Using RAD" style={{marginBottom: '20px'}} />
 
-<br/>
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.m4a" title="Using RAD Audio" />
 
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Using_RAD.pdf" target="_blank">View Presentation (PDF)</a>
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 ## 1. Introduction
 
@@ -31,8 +35,8 @@ At the top of the page you will see a summary of your account:
 
 Modules are pre-configured, infrastructure-as-code templates (built on Terraform) that provision real cloud applications and services. The catalog is divided into two tabs:
 
-*   **Platform Modules (Basic Deployment):** Curated modules managed by platform administrators, sourced from the global platform repository. Available to all users.
-*   **Partner Modules (Custom Deployment):** Modules published by certified Partners from their own GitHub repositories. Visible only if you are a Partner, or if the module's owner has made it public or granted you explicit access.
+*   **Platform Modules:** Curated modules managed by platform administrators, sourced from the global platform repository. Available to all users.
+*   **Partner Modules:** Modules published by certified Partners from their own GitHub repositories. Visible only if you are a Partner, or if the module's owner has made it public or granted you explicit access.
 
 Each module is shown as a card displaying:
 
@@ -167,6 +171,7 @@ Navigate to **Deployments** in the top navigation. You will see a list of your d
 | `DELETING` | A delete action has been triggered; Terraform destroy is running |
 | `DELETED` | The infrastructure has been destroyed; the record is retained for history |
 | `CANCELLED` | The deployment was cancelled before completion |
+| `SOFT_DELETED` | The deployment has been soft-deleted (retention policy triggered or manually deleted); it can be restored within the grace period (default 7 days) |
 
 ### 3.3. Viewing Real-Time Logs
 
@@ -174,7 +179,7 @@ Click any **Deployment ID** in the list to open the detailed view. This page pro
 
 *   **Progress Steps** — A visual representation of each stage in the pipeline (clone, init, plan, apply, cleanup).
 *   **Live Log Stream** — Logs are streamed in real time directly from Cloud Build. You can watch each Terraform command execute as it happens.
-*   **Outputs Tab** — Terraform outputs (e.g., URLs, IP addresses) displayed after a successful deployment.
+*   **Outputs Tab** — Terraform outputs displayed after a successful deployment. This includes application URLs, IP addresses, service endpoints, and any other values exported by the module's `outputs.tf`. Bookmark or copy these values — they are your primary reference for accessing the deployed resources.
 *   **Builds Tab** — A history of all Cloud Build runs associated with this deployment, including retries and updates.
 
 The status page refreshes automatically every 10 seconds. There is no need to manually reload the page.
@@ -338,7 +343,11 @@ When your credit balance falls below the configured threshold, the platform send
 
 ### 8.6. Automatic Billing Suspension
 
-If your account's credit balance reaches zero and ongoing project costs are being tracked, the platform will automatically **disable Google Cloud billing** for your projects to prevent unexpected charges. Billing is re-enabled automatically once your balance is restored and the system's next billing cycle runs.
+If your account's credit balance reaches zero and ongoing project costs are being tracked, the platform will automatically **disable Google Cloud billing** for your projects to prevent unexpected charges. To restore billing:
+
+1. Top up your credit balance via **Credits > Buy Credits**.
+2. Billing is re-enabled automatically on the system's next billing cycle (runs daily at midnight UTC).
+3. If you need immediate re-enablement, contact your platform administrator.
 
 ### 8.7. Transaction Types Reference
 
@@ -350,3 +359,30 @@ If your account's credit balance reaches zero and ongoing project costs are bein
 | `SPEND` | Credits deducted for a successful module deployment |
 | `PROJECT` | Credits deducted for ongoing Google Cloud infrastructure costs |
 | `PARTNER` | Monthly partner credit allowance (Partners only) |
+
+### 8.8. Multi-Currency Payments
+
+The platform supports payments in multiple currencies through Flutterwave. When you proceed to checkout, you can select your preferred currency from the supported list. The platform converts the credit price to your selected currency using daily-refreshed exchange rates.
+
+**Supported currencies:** USD, EUR, GBP, NGN, GHS, KES, ZAR, TZS, UGX, RWF, XAF, XOF
+
+**How exchange rates work:**
+- Rates are automatically synced from a live exchange-rate feed every day at 1:00 AM UTC.
+- The rate shown at checkout is the rate in effect at that moment.
+- All credit balances and platform pricing are stored in USD internally; the currency conversion applies only to the checkout amount you pay.
+- Stripe transactions are always processed in USD.
+
+> **Note:** If you select a non-USD currency and the exchange rate changes between when you view the price and when you complete payment, the final converted amount may differ slightly. Flutterwave handles currency conversion on their end as part of processing.
+
+### 8.9. Managing Your Subscription
+
+If you subscribe to a credit tier and later cancel or your subscription lapses, you can reinstate it without losing your subscription history.
+
+**To reinstate a cancelled subscription:**
+
+1. Navigate to **Credits > Buy Credits**.
+2. Click the **Subscriptions** tab.
+3. Find your previous plan and click **Reinstate**.
+4. Confirm the action. Your subscription is reactivated with the same tier, and your next billing cycle begins immediately.
+
+> **Note:** Credits from the reinstated cycle are added to your balance at the time of reinstatement, not backdated.
