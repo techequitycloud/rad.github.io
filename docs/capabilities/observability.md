@@ -125,6 +125,16 @@ kubectl get pods --all-namespaces
 
 `null_resource` `local-exec` output is the install log. Provisioners use `set -eo pipefail` on create to fail fast and `set +e` on destroy to finish cleanup despite errors. Provisioner stdout shows the path of any on-disk artefacts (e.g. the Bank of Anthos tarball at `.terraform/bank-of-anthos/`).
 
+## What is not here — and what to add next
+
+| Gap | Notes |
+|---|---|
+| **Burn-rate alerting on Bank of Anthos SLOs** | `google_monitoring_slo` resources exist in `Bank_GKE/monitoring.tf`; `google_monitoring_alert_policy` on SLO burn rate is not yet wired. Add a `condition_threshold` on the SLO burn rate linked to a `google_monitoring_notification_channel`, following the `for_each = toset(local.monitoring_services)` pattern already used |
+| **Log-based metrics for security events** | Cloud Audit Logs are enabled; `google_logging_metric` resources to turn log patterns (e.g. IAM policy changes, `PeerAuthentication` violations) into alertable metrics are not pre-configured |
+| **Error budget burn-rate dashboards** | Per-service SLO dashboards exist; a consolidated error-budget burn-rate dashboard across all Bank of Anthos services is not currently provisioned |
+| **Synthetic monitoring (uptime checks)** | `google_monitoring_uptime_check_config` resources are not provisioned for any module's public ingress |
+| **Cost observability dashboards** | Cloud Billing export to BigQuery is the recommended path; no pre-built cost dashboard is included (cost guidance is in [practices/finops.md](../practices/finops.md)) |
+
 ## Cross-references
 
 - [practices/sre.md](../practices/sre.md) — SLO usage, DORA metrics, incident response (signal-consumption lens)
@@ -133,3 +143,4 @@ kubectl get pods --all-namespaces
 - [practices/cicd.md](../practices/cicd.md) — CI/CD and pipeline observability
 - [practices/finops.md](../practices/finops.md) — cost observability
 - [networking](networking) — service-mesh telemetry context
+- [service-mesh](service-mesh) — mesh L7 metrics and distributed tracing source
