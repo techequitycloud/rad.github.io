@@ -3,11 +3,24 @@ title: Partner Features
 slug: /features/partners
 ---
 
-<YouTubeEmbed videoId="GTbSaXMH4Hw" poster="https://storage.googleapis.com/rad-public-2b65/features/partner_features.png" />
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
+<img src="https://storage.googleapis.com/rad-public-2b65/features/partner_features.png" alt="Partner Features Infographic" />
 
 <br/>
 
-<a href="https://storage.googleapis.com/rad-public-2b65/features/partner_features.pdf" target="_blank" rel="noopener noreferrer">Download Feature PDF</a>
+<AudioPlayer src="https://storage.googleapis.com/rad-public-2b65/features/partner_features.m4a" />
+
+<br/>
+
+<video controls width="100%">
+  <source src="https://storage.googleapis.com/rad-public-2b65/features/partner_features.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+[Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/partner_features.pdf)
 
 ## 1. Introduction
 
@@ -26,6 +39,8 @@ Before you can publish modules, you need to connect your Git repository and conf
 
 **Note:** The **Publish** link only appears in your navigation bar after your repository has been successfully connected. The **Explore** link (for Jules AI) appears only when both your repository and Jules API Key are configured.
 
+**Important — re-save your GitHub Token if configured before May 2026:** GitHub token secrets are now stored with automatic (global) replication in Secret Manager. If you originally configured your token before this change, Cloud Build workers assigned outside a single region may fail with an "Internal Error" before any build steps run. To fix this, navigate to **Profile > Partner Settings**, re-enter your GitHub token, and save. This updates the secret to use global replication.
+
 ## 3. Publishing Modules
 
 Once your repo is connected, you can manage your module catalog.
@@ -38,6 +53,8 @@ Once your repo is connected, you can manage your module catalog.
     *   **Publish:** New modules will be added to the system.
     *   **Update:** Existing modules will be updated with any changes you've made to their code or variables in GitHub.
     *   **Remove:** Deselecting a module and clicking Update will remove it from the deployment list.
+
+**Module variable errors:** If any module's `variables.tf` contains a syntax error or cannot be fetched from GitHub, the Publish page displays a persistent inline error panel listing each affected module and its specific error. A toast notification is also shown. Fix the reported issues in your repository before attempting to publish those modules again.
 
 ## 4. Refining Modules with Jules
 
@@ -55,7 +72,7 @@ You can also access Jules through the **Explore** page in your navigation bar, w
 You can deploy both platform modules and your own partner modules.
 
 1.  **Go to "Deploy":** Navigate to the **Deploy** page from the main navigation.
-2.  **Browse Modules:** You will see tabs for "Free Modules" (available to everyone) and "Premium Modules" (your private modules).
+2.  **Browse Modules:** You will see tabs for "Platform Modules" (available to everyone) and "Partner Modules" (your private modules).
 3.  **Search & Pin:** Use the search bar to find modules by name. Click the **Pin** icon on any module card to save it to the top of your list for quick access.
 4.  **Deploy:** Select a module and configure its variables (e.g., Project ID, Region), review the settings, and submit to start the deployment.
 
@@ -109,4 +126,3 @@ Click your avatar in the top right to access your **Profile** page:
 *   **Partner Settings:** Manage your GitHub Token, Repository, and Jules API Key.
 *   **Account Management:** Delete your account if needed (requires email confirmation).
 *   **Theme:** Toggle between Light and Dark mode using the sun/moon icon in the navigation bar.
-

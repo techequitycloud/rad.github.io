@@ -3,11 +3,24 @@ title: Finance Features
 slug: /features/finance
 ---
 
-<YouTubeEmbed videoId="o3e1ypWFq7M" poster="https://storage.googleapis.com/rad-public-2b65/features/finance_features.png" />
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
+<img src="https://storage.googleapis.com/rad-public-2b65/features/finance_features.png" alt="Finance Features Infographic" />
 
 <br/>
 
-<a href="https://storage.googleapis.com/rad-public-2b65/features/finance_features.pdf" target="_blank" rel="noopener noreferrer">Download Feature PDF</a>
+<AudioPlayer src="https://storage.googleapis.com/rad-public-2b65/features/finance_features.m4a" />
+
+<br/>
+
+<video controls width="100%">
+  <source src="https://storage.googleapis.com/rad-public-2b65/features/finance_features.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+[Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/finance_features.pdf)
 
 ## 1. Introduction
 
@@ -81,4 +94,3 @@ Visit the **Help** page for additional resources:
 *   **Platform Workflows Tab:** Browse documented platform workflows.
 *   **Platform Guides Tab:** Access user guides and documentation.
 *   **Platform Features Tab:** Explore the platform's feature catalog.
-

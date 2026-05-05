@@ -3,11 +3,24 @@ title: User Features
 slug: /features/users
 ---
 
-<YouTubeEmbed videoId="lQeKG77MqKw" poster="https://storage.googleapis.com/rad-public-2b65/features/user_features.png" />
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
+<img src="https://storage.googleapis.com/rad-public-2b65/features/user_features.png" alt="User Features Infographic" />
 
 <br/>
 
-<a href="https://storage.googleapis.com/rad-public-2b65/features/user_features.pdf" target="_blank" rel="noopener noreferrer">Download Feature PDF</a>
+<AudioPlayer src="https://storage.googleapis.com/rad-public-2b65/features/user_features.m4a" />
+
+<br/>
+
+<video controls width="100%">
+  <source src="https://storage.googleapis.com/rad-public-2b65/features/user_features.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+<br/>
+
+[Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/user_features.pdf)
 
 ## 1. Introduction
 
@@ -26,7 +39,7 @@ After logging in, you'll be taken to the **Deployments** page, which is your hom
 To deploy a new application, click the **Deploy** link in the top navigation bar.
 
 ### 3.1. Finding a Module
-*   **Browse:** Explore "Free Modules" (available to everyone) or "Premium Modules" (if you have specific access).
+*   **Browse:** Explore "Platform Modules" (available to everyone) or "Partner Modules" (if you have specific access).
 *   **Search:** Use the search bar to find modules by name.
 *   **Pinning:** Click the **Pin** icon on any module card to save it to the top of your list for quick access.
 *   **Stats:** View deployment counts, your current credit balance (if enabled), and the retention period for deployment history.
@@ -42,8 +55,11 @@ To deploy a new application, click the **Deploy** link in the top navigation bar
 ### 4.1. Monitoring & Actions
 *   **Logs:** Click on a deployment to view real-time build logs. This is essential for troubleshooting if a deployment fails.
 *   **Rating:** After a successful deployment, you can rate the module (1-5 stars) to help others identify high-quality modules.
+*   **Cancel:** For deployments stuck in `QUEUED` that have not started yet, use the **Cancel** button to stop them cleanly. This marks the deployment as `CANCELLED` without triggering any resource teardown, making it the safest option when no infrastructure has been provisioned.
 *   **Delete:** To remove a deployment and destroy its resources, click the **Trash** icon. **Warning:** This action is irreversible.
-*   **Purge:** For deployments that are stuck or require immediate, aggressive cleanup, use the **Purge** option. This forces a hard deletion of all resources and removes the deployment record immediately upon completion.
+*   **Purge:** For deployments that are stuck or require immediate, aggressive cleanup, use the **Purge** option. This forces a hard deletion of all resources and removes the deployment record immediately upon completion. Purge is also the correct action for `CANCELLED` deployments that originated from a `CREATE` operation.
+
+**Note on CANCELLED deployments:** After cancelling, the available follow-up actions are context-sensitive. If the deployment was cancelled during initial creation (nothing was ever deployed), only **Purge** is shown. If it was cancelled during an update or delete operation (existing infrastructure may still be running), **Delete** and **Update** are shown instead.
 
 ## 5. Billing & Credits
 
