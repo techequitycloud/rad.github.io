@@ -5,7 +5,9 @@ title: DevSecOps
 
 # DevSecOps
 
-Security is shifted left across the platform: encoded in module defaults, gated by IAM impersonation, enforced at the mesh layer, and audited by a dedicated review workflow. Every guardrail — IAP, Cloud Armor, Binary Authorization, VPC-SC, CMEK — is a Terraform resource, code-reviewed and version-controlled. This document covers identity, secrets, encryption, perimeters, supply chain, and the `/security` audit workflow.
+DevSecOps shifts security left across the platform: encoding guardrails into module defaults, gating access through IAM impersonation, enforcing policies at the mesh layer, and auditing via a dedicated review workflow. Every guardrail — Identity-Aware Proxy (IAP), Cloud Armor, Binary Authorization, VPC Service Controls (VPC-SC), and Customer-Managed Encryption Keys (CMEK) — is a Terraform resource, code-reviewed and version-controlled alongside the infrastructure it protects.
+
+This document covers: identity and access patterns, secret management and rotation, VPC Service Controls, supply chain security, network controls, TLS management, state integrity, audit logging, and the `/security` audit workflow.
 
 ## Security shifted left into IaC
 
@@ -28,7 +30,7 @@ No secrets enter the IaC state or the repository. This is an absolute invariant 
 
 - **No secret defaults** — `SKILLS.md` §6 invariant: no secrets in variable defaults. `client_secret`, `aws_secret_key`, and equivalent inputs are sourced from environment variables (`ARM_CLIENT_SECRET`, `AWS_SECRET_ACCESS_KEY`) at apply time.
 - **CSI driver mounting** — `modules/App_GKE/secrets.tf` mounts secrets via the GKE Secrets Store CSI driver (`secrets-store-gke.csi.k8s.io`).
-- **GitHub PAT hardening** — tokens are passed only via the `environment` block of `local-exec`, never in `command` strings, `triggers`, or module outputs. This prevents serialisation into `terraform.tfstate`. `git clone` uses the credential-store helper rather than `https://TOKEN@github.com/...` URLs.
+- **GitHub PAT (Personal Access Token) hardening** — tokens are passed only via the `environment` block of `local-exec`, never in `command` strings, `triggers`, or module outputs. This prevents serialisation into `terraform.tfstate`. `git clone` uses the credential-store helper rather than `https://TOKEN@github.com/...` URLs.
 - **Secret-path correctness** — Common modules output `.secret_id` (short form), not `.id` (full path); using `.id` doubles the path in CSI mounts.
 - **Pre-commit secret scanners** — `check_secrets.py` and `check_secrets_cr.py` run as pre-commit hooks.
 
@@ -60,7 +62,7 @@ VPC-SC provides a data-exfiltration perimeter around the project:
 
 ## Network security
 
-- **mTLS by default** — workload-to-workload identity and encryption are mesh-enforced via `PeerAuthentication STRICT` mode and the ASM-managed control plane.
+- **mTLS by default** — workload-to-workload identity and encryption are mesh-enforced via `PeerAuthentication STRICT` mode and the Anthos Service Mesh (ASM)-managed control plane.
 - **Cloud Armor WAF** — `modules/App_CloudRun/security.tf` and `modules/App_GKE/security.tf` provision Cloud Armor policies.
 - **Kubernetes NetworkPolicy** — `modules/App_GKE/network_policy.tf` defines default-deny ingress/egress policies.
 - **Firewall rules** — `modules/App_GKE/firewall.tf` applies deny-by-default rules without `target_tags` (for Autopilot compatibility).
@@ -103,4 +105,5 @@ Policy-as-code admission control (OPA/Gatekeeper, Policy Controller) and runtime
 - [GitOps & IaC](./gitops-iac.md) — secret-out-of-state mechanics, state integrity
 - [SRE](./sre.md) — post-mortem process, on-call model
 - [CI/CD](./cicd.md) — pipeline gates, secret-handling in substitution variables
+- [FinOps](./finops.md) — Artifact Registry lifecycle policies, image retention alongside vulnerability scanning
 - [IDP](./idp.md) — per-tenant perimeter strategy

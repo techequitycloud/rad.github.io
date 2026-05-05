@@ -5,11 +5,13 @@ title: SRE
 
 # Site Reliability Engineering
 
-SRE without SLOs is just ops. This document covers how reliability is codified into the platform, how toil is removed, how incidents are responded to, how the platform improves DORA metrics, and how the on-call model is structured.
+Site Reliability Engineering (SRE) applies software engineering principles to infrastructure and operations — replacing reactive firefighting with measurable reliability targets, automated toil reduction, and a structured incident process. On this platform, reliability decisions are encoded directly into Foundation Modules so every deployment inherits a production-ready baseline without per-team configuration.
+
+This document covers: the SLO/SLI/error-budget framework, alerting policies, reliability features built into Foundation Modules, toil automation, incident response, DORA (DevOps Research and Assessment) metrics alignment, capacity planning, the blameless post-mortem process, and the on-call model.
 
 ## SLO / SLI / error budget framework
 
-The platform establishes the following reliability targets:
+Service Level Objectives (SLOs) define the reliability target for a service; Service Level Indicators (SLIs) are the metrics that measure it; and error budgets are the allowable downtime or degradation within a window. The platform establishes the following reliability targets:
 
 **Platform tier** (`Services_GCP`): 99.9% monthly availability (≤43 minutes downtime/month). SLIs measured on Cloud SQL availability, GKE control-plane reachability, and Artifact Registry pull success rate.
 
@@ -23,9 +25,13 @@ The platform establishes the following reliability targets:
 
 For demo banking workloads (e.g. `Bank_GKE`), a reasonable starting point is 99.5% availability (HTTP 2xx) and 95% of requests completing in under 500ms over a 28-day rolling window — an error budget of ~3.6 hours/month. `MC_Bank_GKE` can justify tighter targets given its multi-region redundancy.
 
-**SLI implementation** — Cloud Monitoring SLOs are defined as `google_monitoring_slo` resources in `modules/Bank_GKE/monitoring.tf`, `modules/App_CloudRun/slo.tf`, and `modules/App_GKE/slo.tf`, measuring request-based availability and latency distributions from Cloud Load Balancing metrics.
+### SLI implementation
 
-**Error budget policy** — when the 30-day error budget is more than 50% consumed, new non-critical feature deploys to that application are paused. When the budget is fully consumed, a reliability sprint is triggered: the next two-week cycle is dedicated to reliability work with no new features merged.
+Cloud Monitoring SLOs are defined as `google_monitoring_slo` resources in `modules/Bank_GKE/monitoring.tf`, `modules/App_CloudRun/slo.tf`, and `modules/App_GKE/slo.tf`, measuring request-based availability and latency distributions from Cloud Load Balancing metrics.
+
+### Error budget policy
+
+When the 30-day error budget is more than 50% consumed, new non-critical feature deploys to that application are paused. When the budget is fully consumed, a reliability sprint is triggered: the next two-week cycle is dedicated to reliability work with no new features merged.
 
 ## Alerting policies
 
@@ -56,7 +62,7 @@ Traffic-management primitives (canary splits, fault injection, timeouts, retries
 
 ## Multi-region availability
 
-`modules/MC_Bank_GKE/` deploys Bank of Anthos across up to four GKE clusters behind a global HTTPS load balancer with Multi-Cluster Ingress and Multi-Cluster Services, enabling geo-redundancy and lower global latency. See the multi-cloud and service-mesh capability documentation for the cluster-fleet model and cross-cluster traffic story.
+`modules/MC_Bank_GKE/` deploys Bank of Anthos across up to four GKE clusters behind a global HTTPS load balancer with Multi-Cluster Ingress (MCI) and Multi-Cluster Services (MCS), enabling geo-redundancy and lower global latency. See the multi-cloud and service-mesh capability documentation for the cluster-fleet model and cross-cluster traffic story.
 
 ## Destroy as a first-class SRE operation
 
@@ -93,7 +99,8 @@ For the cost implications of node sizing choices, see [FinOps](./finops.md).
 
 All P1 (SLO breach) and selected P2 (near-miss, significant toil) incidents result in a blameless post-mortem within 5 business days of resolution:
 
-**Structure:**
+### Post-mortem structure
+
 1. **Timeline** — chronological sequence of events from first symptom to full resolution, sourced from Cloud Logging and Cloud Monitoring.
 2. **Root cause** — the technical and organisational conditions that made the incident possible (use the "5 Whys" method).
 3. **Contributing factors** — what made detection or response slower than it should have been.
@@ -131,5 +138,6 @@ The reliability controls codified in the Foundation Modules (PDBs, health probes
 
 - [CI/CD](./cicd.md) — pipeline and validation gates, build failure notifications
 - [FinOps](./finops.md) — revision pruning and lifecycle automation (cost angle)
+- [GitOps & IaC](./gitops-iac.md) — rollback mechanics, state management for reliability
 - [IDP](./idp.md) — platform SLOs, on-call ownership model
 - [DevSecOps](./devsecops.md) — security incident response and post-mortem integration
