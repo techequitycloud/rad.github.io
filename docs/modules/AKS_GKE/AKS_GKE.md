@@ -1,4 +1,4 @@
-# Module AKS_GKE
+# AKS_GKE Module
 
 ## 1. Overview and Learning Objectives
 
