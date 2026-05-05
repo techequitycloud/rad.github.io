@@ -1,3 +1,8 @@
+---
+title: User Workflow
+slug: /workflows/user
+---
+
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # User Workflow
@@ -14,7 +19,7 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 ## 1. Introduction
 Welcome to the platform! This tutorial covers the core actions you'll perform as a user: deploying applications, managing them, retrieving deployment outputs, and tracking your credits.
 
-## 2. Step 1: Deploy a Module
+## 2. Deploy a Module
 The core feature of the platform is deploying pre-configured software modules.
 
 1.  Click **Deploy** in the top navigation bar.
@@ -31,12 +36,12 @@ The core feature of the platform is deploying pre-configured software modules.
 
 > **Credit check:** The platform verifies your credit balance before queuing the deployment. If the module requires Purchased Credits specifically, your Awarded Credits balance will not satisfy the requirement — you must buy additional credits first.
 
-## 3. Step 2: Manage Your Deployments
+## 3. Manage Your Deployments
 Once you've deployed a module, you can monitor and manage it.
 
 1.  Click **Deployments** in the navigation bar.
 2.  **View Status:**
-    *   You will see a list of your deployments with their current status (e.g., `QUEUED`, `WORKING`, `SUCCESS`, `FAILURE`).
+    *   You will see a list of your deployments with their current status (e.g., `QUEUED`, `WORKING`, `COMPLETED`, `FAILED`).
     *   Use the search bar to find specific deployments by name or ID.
 3.  **View Details, Logs, and Outputs:**
     *   Click on any deployment row to open the details view.
@@ -62,7 +67,7 @@ When the platform's retention policy triggers (or you manually delete a deployme
 
 > **Warning:** After the 7-day grace period, the deployment record and all Cloud Storage artifacts are permanently deleted and cannot be recovered.
 
-## 4. Step 3: Manage Credits & Costs
+## 4. Manage Credits & Costs
 If your platform uses a credit system, you'll need to manage your balance.
 
 1.  Click **Credits** in the navigation bar.
@@ -83,7 +88,7 @@ If your platform uses a credit system, you'll need to manage your balance.
     *   The **Subscriptions** tab (if enabled) shows available plans and your current subscription status.
     *   If your subscription was cancelled and you want to reactivate it, click **Reinstate** on your previous plan. Credits for the new cycle are added immediately.
 
-## 5. Step 4: Get Help
+## 5. Get Help
 Need assistance or more detailed guides?
 
 1.  Click **Help** in the navigation bar.

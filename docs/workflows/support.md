@@ -1,3 +1,8 @@
+---
+title: Support Workflow
+slug: /workflows/support
+---
+
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Support Workflow
@@ -14,7 +19,7 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 ## 1. Introduction
 This tutorial is designed for **Support** users. You will learn how to use your enhanced permissions to troubleshoot user deployments, restore soft-deleted deployments, manage the module catalog, and leverage the Jules AI assistant to debug module issues.
 
-## 2. Step 1: Accessing User Deployments
+## 2. Accessing User Deployments
 The most common task is investigating a user's failed deployment.
 
 1.  Click **Deployments** in the main navigation bar.
@@ -22,15 +27,16 @@ The most common task is investigating a user's failed deployment.
 3.  In the **Search** box, enter the user's **email address** or the **Deployment ID** they provided.
 4.  The list will filter to show relevant records.
 
-## 3. Step 2: Investigating a Failure
-1.  Locate the failed deployment in the list (look for a status like `FAILURE` or `TIMEOUT`).
+## 3. Investigating a Failure
+1.  Locate the failed deployment in the list (look for a status like `FAILED` or `INTERNAL_ERROR`).
 2.  Click on the blue **Deployment ID** link to open the details page.
 3.  Scroll down to the **Build Logs** section.
 4.  Review the text logs to find the error message. Common issues include:
     *   **Invalid Input:** The user provided a variable value that Terraform rejected.
     *   **Permissions:** The service account lacked permission to create a resource.
     *   **Quotas:** The cloud project has reached a resource limit.
-5.  If the deployment is stuck in `QUEUED` or `WORKING` with no progress, use the **Purge** action to force-remove the record so the user can start fresh.
+5.  If the deployment has status `INTERNAL_ERROR`, a platform-level failure occurred before or during Cloud Build submission — review logs and escalate to Engineering if needed.
+6.  If the deployment is stuck in `QUEUED` or `WORKING` with no progress, wait up to 30 minutes for auto-reconciliation. If still unresolved, use the **Purge** action to force-remove the record so the user can start fresh.
 
 ### Viewing Deployment Outputs
 
@@ -40,7 +46,7 @@ After a successful deployment, you can inspect the Terraform outputs to verify w
 2.  Click the **Outputs** tab to see all values exported by the module (URLs, IP addresses, resource names, etc.).
 3.  Share relevant output values with the user if they are unable to find them in their own view.
 
-## 4. Step 3: Restoring a Soft-Deleted Deployment
+## 4. Restoring a Soft-Deleted Deployment
 
 When a deployment is soft-deleted (by the retention policy or a user action), it enters a 7-day grace period during which it can be restored before permanent deletion.
 
@@ -53,7 +59,7 @@ When a deployment is soft-deleted (by the retention policy or a user action), it
 
 > **Warning:** After the 7-day grace period, the deployment record and all Cloud Storage artifacts are permanently deleted and cannot be recovered — not even by Support users. Act promptly when a user reports an accidental deletion.
 
-## 5. Step 4: Managing Modules (Optional)
+## 5. Managing Modules (Optional)
 As a Support user, you can also publish and update modules, just like a Partner.
 
 1.  Go to your **Profile** and ensure your GitHub settings are configured.
@@ -61,7 +67,7 @@ As a Support user, you can also publish and update modules, just like a Partner.
 3.  Select a module and click **Update** to refresh its definition in the system.
 4.  This is useful for rolling out quick fixes to module code or variables without waiting for a Partner or Admin to act.
 
-## 6. Step 5: Using Jules for Debugging
+## 6. Using Jules for Debugging
 
 Jules is an AI assistant that can analyse module Terraform code and suggest fixes for deployment errors. If you have configured your **Jules API Key** in your Profile, you can use it to speed up root cause analysis.
 
