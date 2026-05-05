@@ -1,4 +1,4 @@
-# OpenClaw_Common Shared Configuration Module
+# OpenClaw_Common Module
 
 The `OpenClaw_Common` module defines the OpenClaw AI gateway configuration for the RAD Modules ecosystem. It **creates GCP resources** (Secret Manager secrets for API credentials and optional messaging platform tokens) and produces a `config` output consumed by platform-specific wrapper modules (`OpenClaw_CloudRun` and `OpenClaw_GKE`).
 
