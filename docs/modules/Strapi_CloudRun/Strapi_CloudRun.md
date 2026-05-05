@@ -4,7 +4,7 @@
 
 Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply Strapi-appropriate defaults and to call the `Strapi_Common` sub-module, which generates the application's container build context, database initialisation jobs, Strapi-specific secrets, and GCS bucket configuration. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.
 
-> **Where to look:** If a variable you are configuring is not described here, consult the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md). All `App_CloudRun` features — access and networking, IAP, Cloud Armor, CDN, CI/CD, Cloud Deploy, Binary Authorization, traffic splitting, and VPC Service Controls — are available in `Strapi_CloudRun` with identical behaviour and configuration.
+> This guide documents variables that are **unique to `Strapi_CloudRun`** or that have **Strapi-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
 
 ---
 
@@ -28,7 +28,7 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 
 `Strapi_Common` generates the Dockerfile, build scripts, and a `db-init` Cloud Run job. It also generates five Strapi application secrets (`APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`) and two GCS environment variables (`GCS_BUCKET_NAME`, `GCS_BASE_URL`).
 
-### Key differences from `App_CloudRun` defaults
+### A. Key differences from `App_CloudRun` defaults
 
 | Feature | App_CloudRun default | Strapi_CloudRun default |
 |---|---|---|

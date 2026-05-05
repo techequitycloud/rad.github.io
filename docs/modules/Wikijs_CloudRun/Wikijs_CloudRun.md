@@ -4,7 +4,7 @@
 
 Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply Wiki.js-appropriate defaults and to call the `Wikijs_Common` sub-module, which generates the application's container image configuration, database initialisation logic, GCS Fuse storage mounts, and database password wiring. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.
 
-> **Where to look:** If a variable you are configuring is not described here, consult the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md). All `App_CloudRun` features — access and networking, IAP, Cloud Armor, CDN, CI/CD, Cloud Deploy, Binary Authorization, traffic splitting, and VPC Service Controls — are available in `Wikijs_CloudRun` with identical behaviour and configuration.
+> This guide documents variables that are **unique to `Wikijs_CloudRun`** or that have **Wiki.js-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
 
 ---
 
@@ -28,7 +28,7 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 
 `Wikijs_Common` manages the container image source, build configuration, and GCS Fuse storage (`wikijs-storage` bucket provisioned for persistent asset storage). The database password is wired from `module.app_cloudrun.database_password_secret` into `module_secret_env_vars` as the key `database_password_secret`, which the platform maps to the `DB_PASS` environment variable consumed by Wiki.js. The `pg_trgm` PostgreSQL extension is installed by `Wikijs_Common` to enable native full-text search.
 
-### Key differences from `App_CloudRun` defaults
+### A. Key differences from `App_CloudRun` defaults
 
 | Feature | App_CloudRun default | Wikijs_CloudRun default |
 |---|---|---|

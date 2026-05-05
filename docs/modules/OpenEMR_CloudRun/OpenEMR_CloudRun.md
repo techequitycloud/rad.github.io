@@ -39,7 +39,7 @@ scripts, and storage bucket lists, which are passed into `App_CloudRun` via
 | **Platform-managed job** | `nfs-init` (NFS setup + optional backup restoration) |
 | **Platform-managed secrets** | `OE_PASS` (admin password) + `MYSQL_PASS` (database password) |
 
-### Key differences from `App_CloudRun` defaults
+### A. Key differences from `App_CloudRun` defaults
 
 | Feature | App_CloudRun default | OpenEMR_CloudRun default |
 |---|---|---|
@@ -55,7 +55,7 @@ scripts, and storage bucket lists, which are passed into `App_CloudRun` via
 | Database | varies | MySQL 8.0 (required) |
 | Platform-managed secrets | none | `OE_PASS`, `MYSQL_PASS` auto-generated |
 
-### Wrapper Architecture
+### B. Wrapper Architecture
 
 ```
 OpenEMR_CloudRun (variables.tf / openemr.tf / main.tf)

@@ -22,7 +22,7 @@ and `scripts_dir` inputs.
 
 ## 1. Module Overview
 
-### What `Ollama_CloudRun` provides
+### A. What `Ollama_CloudRun` provides
 
 - An **Ollama container** (prebuilt image `ollama/ollama` from Docker Hub,
   `enable_image_mirroring = true` by default) deployed on Cloud Run listening on port `11434`.
@@ -34,7 +34,7 @@ and `scripts_dir` inputs.
   job only runs when `default_model` is non-empty and `initialization_jobs = []`.
 - **No database, no Redis, no NFS** — Ollama is stateless beyond its GCS-backed model cache.
 
-### Key differences from `App_CloudRun` defaults
+### B. Key differences from `App_CloudRun` defaults
 
 | Feature | App_CloudRun default | Ollama_CloudRun default |
 |---|---|---|

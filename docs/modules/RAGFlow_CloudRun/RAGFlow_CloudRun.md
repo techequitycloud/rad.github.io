@@ -21,7 +21,7 @@ application configuration, database initialization job, and document storage buc
 
 ## 1. Module Overview
 
-### What `RAGFlow_CloudRun` provides
+### A. What `RAGFlow_CloudRun` provides
 
 - A **Cloud Run v2 service** (custom image built from `infiniflow/ragflow` via Cloud Build)
   with a **minimum of one warm instance** — scale-to-zero is disabled because RAGFlow loads
@@ -40,7 +40,7 @@ application configuration, database initialization job, and document storage buc
 - Optional **GCS Fuse** volume mounts for additional document storage access.
 - Optional **Cloud Filestore NFS** mount (requires `execution_environment = "gen2"`).
 
-### Key differences from `App_CloudRun` defaults
+### B. Key differences from `App_CloudRun` defaults
 
 | Feature | App_CloudRun default | RAGFlow_CloudRun default |
 |---|---|---|
@@ -60,7 +60,7 @@ application configuration, database initialization job, and document storage buc
 | `module_dependency` | varies | `["Services_GCP", "Elasticsearch_GKE"]` |
 | `credit_cost` | varies | `150` |
 
-### Architecture
+### C. Architecture
 
 ```
 RAGFlow_CloudRun
@@ -81,7 +81,7 @@ RAGFlow_CloudRun
     └── Optional: CI/CD (Cloud Build trigger / Cloud Deploy pipeline)
 ```
 
-### Platform-managed behaviours
+### D. Platform-managed behaviours
 
 | Behaviour | Detail |
 |---|---|
@@ -184,7 +184,7 @@ RAGFlow_CloudRun
 | `secret_propagation_delay` | `number` | `30` | Seconds to wait after a secret is created before proceeding. Valid range: 0–300. `{{UIMeta group=5 order=3 updatesafe}}` |
 | `secret_rotation_period` | `string` | `"2592000s"` | Secret rotation notification period (default 30 days). Must be a duration in seconds followed by `s`. `{{UIMeta group=5 order=4 updatesafe}}` |
 
-### Automatically Injected Environment Variables
+### A. Automatically Injected Environment Variables
 
 The following variables are always injected by `RAGFlow_CloudRun` and must not be set in
 `environment_variables`:
@@ -408,7 +408,7 @@ The following GCP resources are provisioned when this module is applied:
 
 ## 22. Configuration Examples
 
-### Basic Deployment
+### A. Basic Deployment
 
 ```hcl
 # config/basic.tfvars
@@ -436,7 +436,7 @@ cpu_limit    = "4000m"
 memory_limit = "8Gi"
 ```
 
-### Advanced Deployment
+### B. Advanced Deployment
 
 ```hcl
 # config/advanced.tfvars

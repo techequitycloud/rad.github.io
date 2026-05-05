@@ -4,7 +4,7 @@
 
 Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply WordPress-appropriate defaults and to call the `Wordpress_Common` sub-module, which generates the application's container build context, PHP configuration, MySQL connection settings, Redis object cache configuration, and WordPress-specific secrets. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.
 
-> **Where to look:** If a variable you are configuring is not described here, consult the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md). All `App_CloudRun` features — access and networking, IAP, Cloud Armor, CDN, CI/CD, Cloud Deploy, Binary Authorization, traffic splitting, and VPC Service Controls — are available in `Wordpress_CloudRun` with identical behaviour and configuration.
+> This guide documents variables that are **unique to `Wordpress_CloudRun`** or that have **WordPress-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
 
 ---
 
@@ -30,7 +30,7 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 
 **Note on MySQL:** This module uses MySQL 8.0, not PostgreSQL. The Cloud SQL Auth Proxy sidecar (`enable_cloudsql_volume = true`) provides a Unix socket connection. Attempting to disable `enable_cloudsql_volume` without switching to TCP-based connectivity will break the database connection.
 
-### Key differences from `App_CloudRun` defaults
+### A. Key differences from `App_CloudRun` defaults
 
 | Feature | App_CloudRun default | Wordpress_CloudRun default |
 |---|---|---|

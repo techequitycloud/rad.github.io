@@ -12,6 +12,20 @@ Cyclos is a professional banking and payment system designed for microfinance in
 
 ## 1. How This Guide Is Structured
 
+### Key differences from `App_CloudRun` defaults
+
+| Feature | App_CloudRun default | Cyclos_CloudRun default |
+|---|---|---|
+| `container_port` | `8080` | `8080` |
+| `container_image_source` | varies | `"prebuilt"` |
+| `container_image` | — | `"cyclos/cyclos"` |
+| `enable_nfs` | `false` | `false` (hard-coded off) |
+| `enable_redis` | `false` | `false` (hard-coded off; not supported) |
+| `enable_cloudsql_volume` | varies | `false` (TCP connection to Cloud SQL internal IP) |
+| Database | none | Cloud SQL PostgreSQL 15 (required) |
+| GCS file storage | none | Auto-provisioned; `cyclos.storedFileContentManager = gcs` injected |
+| PostgreSQL extensions | none | `pg_trgm`, `uuid-ossp`, `cube`, `earthdistance`, `postgis`, `unaccent` |
+
 This guide documents only the variables that are **unique to `Cyclos_CloudRun`** or that have **Cyclos-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, runtime scaling, storage, CI/CD, Redis, backup, custom SQL, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
 
 **Variables fully covered by the App_CloudRun guide:**
