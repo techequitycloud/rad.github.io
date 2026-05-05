@@ -3,7 +3,7 @@ title: "Multi-Cluster GKE Deployment Guide"
 sidebar_label: "MULTI CLUSTER GUIDE"
 ---
 
-# Multi-Cluster GKE Deployment Guide
+# MULTI_CLUSTER_GUIDE Module
 
 ## Overview
 

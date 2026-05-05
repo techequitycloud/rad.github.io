@@ -1,4 +1,4 @@
-# Directus_GKE Module — Configuration Guide
+# Directus_GKE Module
 
 `Directus_GKE` is a wrapper module that deploys [Directus](https://directus.io/) — an open-source headless CMS and data API platform — on Google Kubernetes Engine (GKE) Autopilot. It composes two underlying modules:
 

@@ -1,4 +1,4 @@
-# OpenEMR_CloudRun Module — Configuration Guide
+# OpenEMR_CloudRun Module
 
 `OpenEMR_CloudRun` deploys **OpenEMR Community Edition** — an open-source Electronic
 Health Records (EHR) and medical practice management platform — on Google Cloud Run

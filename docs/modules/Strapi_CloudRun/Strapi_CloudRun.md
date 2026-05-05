@@ -1,4 +1,4 @@
-# Strapi_CloudRun Module — Configuration Guide
+# Strapi_CloudRun Module
 
 `Strapi_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Strapi](https://strapi.io/) — an open-source headless CMS — on Google Cloud Run Gen2.
 

@@ -98,11 +98,11 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Platform Modules',
           items: [
-            { type: 'doc', id: 'modules/AKS_GKE/AKS_GKE', label: 'AKS GKE' },
-            { type: 'doc', id: 'modules/Bank_GKE/Bank_GKE', label: 'Bank GKE' },
+            { type: 'doc', id: 'modules/AKS_GKE/AKS_GKE', label: 'AKS_GKE' },
+            { type: 'doc', id: 'modules/Bank_GKE/Bank_GKE', label: 'Bank_GKE' },
             { type: 'doc', id: 'modules/EKS_GKE/EKS_GKE', label: 'EKS GKE' },
             { type: 'doc', id: 'modules/Istio_GKE/Istio_GKE', label: 'Istio GKE' },
-            { type: 'doc', id: 'modules/MC_Bank_GKE/MC_Bank_GKE', label: 'MC Bank GKE' },
+            { type: 'doc', id: 'modules/MC_Bank_GKE/MC_Bank_GKE', label: 'MC_Bank_GKE' },
           ],
         },
         {

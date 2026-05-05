@@ -1,4 +1,4 @@
-# N8N_AI_CloudRun Module — Configuration Guide
+# N8N_AI_CloudRun Module
 
 n8n is an open-source workflow automation platform that lets you connect services, run logic,
 and build AI-powered pipelines through a visual node-based interface. This module deploys n8n
