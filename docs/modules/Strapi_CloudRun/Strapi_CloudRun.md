@@ -8,7 +8,7 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 
 ---
 
-## §1 Module Overview
+## 1. Module Overview
 
 | Property | Value |
 |---|---|
@@ -30,7 +30,7 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 
 ---
 
-## §2 IAM & Project Identity
+## 2. IAM & Project Identity
 
 Behaviour is identical to `App_CloudRun`. The following variables are passed through unchanged.
 
@@ -44,9 +44,9 @@ Behaviour is identical to `App_CloudRun`. The following variables are passed thr
 
 ---
 
-## §3 Core Service Configuration
+## 3. Core Service Configuration
 
-### §3.A Application Identity
+### A. Application Identity
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -57,7 +57,7 @@ Behaviour is identical to `App_CloudRun`. The following variables are passed thr
 
 Note: unlike some other wrapper modules, these variables are named `application_display_name` and `application_description` (not `display_name`/`description`).
 
-### §3.B Resource Sizing
+### B. Resource Sizing
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -67,7 +67,7 @@ Note: unlike some other wrapper modules, these variables are named `application_
 | `max_instance_count` | `1` | Single-instance default; increase after confirming NFS shared state |
 | `timeout_seconds` | `300` | Increase for long-running media processing or migration jobs |
 
-### §3.C Environment Variables & Secrets
+### C. Environment Variables & Secrets
 
 Plain-text variables are injected via `environment_variables`; sensitive values via `secret_environment_variables`.
 
@@ -107,7 +107,7 @@ secret_environment_variables = {
 }
 ```
 
-### §3.D Networking
+### D. Networking
 
 Behaviour is identical to `App_CloudRun`. Key defaults:
 
@@ -121,7 +121,7 @@ Behaviour is identical to `App_CloudRun`. Key defaults:
 
 Set `container_protocol = "h2c"` to enable HTTP/2 (gRPC) communication between the load balancer and the Cloud Run service.
 
-### §3.E Container Image & Build
+### E. Container Image & Build
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -134,22 +134,22 @@ Set `container_protocol = "h2c"` to enable HTTP/2 (gRPC) communication between t
 
 ---
 
-## §4 Advanced Security
+## 4. Advanced Security
 
-### §4.A Identity-Aware Proxy
+### A. Identity-Aware Proxy
 
 ```hcl
 enable_iap            = true
 iap_authorized_groups = ["group:strapi-admins@example.com"]
 ```
 
-### §4.B VPC Service Controls
+### B. VPC Service Controls
 
 ```hcl
 enable_vpc_sc = true  # group=21; requires existing VPC-SC perimeter
 ```
 
-### §4.C Cloud Armor & CDN
+### C. Cloud Armor & CDN
 
 ```hcl
 enable_cloud_armor  = true
@@ -157,13 +157,13 @@ application_domains = ["cms.example.com"]
 enable_cdn          = true
 ```
 
-### §4.D Binary Authorization
+### D. Binary Authorization
 
 ```hcl
 enable_binary_authorization = true
 ```
 
-### §4.E Secret Rotation
+### E. Secret Rotation
 
 ```hcl
 secret_rotation_period         = "2592000s"  # 30-day notification
@@ -173,9 +173,9 @@ rotation_propagation_delay_sec = 90
 
 ---
 
-## §5 Traffic & Ingress
+## 5. Traffic & Ingress
 
-### §5.A Traffic Splitting
+### A. Traffic Splitting
 
 ```hcl
 traffic_split = [
@@ -184,7 +184,7 @@ traffic_split = [
 ]
 ```
 
-### §5.B Ingress Control
+### B. Ingress Control
 
 ```hcl
 ingress_settings   = "internal-and-cloud-load-balancing"
@@ -193,9 +193,9 @@ vpc_egress_setting = "ALL_TRAFFIC"
 
 ---
 
-## §6 CI/CD Integration
+## 6. CI/CD Integration
 
-### §6.A Cloud Build Trigger
+### A. Cloud Build Trigger
 
 ```hcl
 enable_cicd_trigger   = true
@@ -207,7 +207,7 @@ cicd_trigger_config = {
 }
 ```
 
-### §6.B Cloud Deploy Pipeline
+### B. Cloud Deploy Pipeline
 
 ```hcl
 enable_cloud_deploy = true
@@ -220,9 +220,9 @@ cloud_deploy_stages = [
 
 ---
 
-## §7 Reliability & Data
+## 7. Reliability & Data
 
-### §7.A Health Probes
+### A. Health Probes
 
 `Strapi_CloudRun` exposes two independent probe interfaces:
 
@@ -260,7 +260,7 @@ cloud_deploy_stages = [
 
 Both interfaces should be kept consistent. On cold starts with database initialisation, consider increasing `startup_probe_config.failure_threshold` to allow sufficient boot time.
 
-### §7.B Backup & Recovery
+### B. Backup & Recovery
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -273,7 +273,7 @@ Both interfaces should be kept consistent. On cold starts with database initiali
 
 Note: this module uses `backup_file` (not `backup_uri`) — the variable is named directly, not aliased.
 
-### §7.C Scheduled Jobs
+### C. Scheduled Jobs
 
 ```hcl
 cron_jobs = [{
@@ -284,7 +284,7 @@ cron_jobs = [{
 }]
 ```
 
-### §7.D Observability
+### D. Observability
 
 ```hcl
 uptime_check_config = {
@@ -306,9 +306,9 @@ alert_policies = [{
 
 ---
 
-## §8 Integrations
+## 8. Integrations
 
-### §8.A Redis Cache
+### A. Redis Cache
 
 Strapi supports Redis for session caching. When `enable_redis = false` (the default), no Redis environment variables are injected.
 
@@ -321,14 +321,14 @@ redis_auth   = ""
 
 `redis_host` defaults to `null`. When `enable_redis = true`, you must explicitly set `redis_host` to point to a Memorystore instance or other Redis server.
 
-### §8.B NFS Storage
+### B. NFS Storage
 
 ```hcl
 enable_nfs     = true
 nfs_mount_path = "/mnt/nfs"
 ```
 
-### §8.C GCS Fuse Volumes
+### C. GCS Fuse Volumes
 
 ```hcl
 gcs_volumes = [{
@@ -339,7 +339,7 @@ gcs_volumes = [{
 }]
 ```
 
-### §8.D Additional Services
+### D. Additional Services
 
 `Strapi_CloudRun` exposes the `additional_services` variable, enabling co-deployed Cloud Run services (e.g. a background worker or internal Redis):
 
@@ -357,7 +357,7 @@ additional_services = [{
 
 ---
 
-## §9 Platform-Managed Behaviours
+## 9. Platform-Managed Behaviours
 
 The following are set or injected automatically and do not require configuration.
 
@@ -383,7 +383,7 @@ Strapi exposes `/_health` for both startup and liveness checks. This endpoint re
 
 ---
 
-## §10 Variable Reference
+## 10. Variable Reference
 
 The table below covers all variables unique to or with notable defaults in `Strapi_CloudRun`. For the full set of inherited variables, see the [App_CloudRun Variable Reference](../App_CloudRun/App_CloudRun.md#variable-reference).
 

@@ -12,7 +12,7 @@ exposed as variables on `Sample_CloudRun` itself.
 
 ---
 
-## §1 · Module Overview
+## 1. Module Overview
 
 | Attribute | Value |
 |---|---|
@@ -49,7 +49,7 @@ no NFS-server fallback (see §8.A).
 
 ---
 
-## §2 · IAM & Project Identity
+## 2. IAM & Project Identity
 
 | Variable | Default | Description |
 |---|---|---|
@@ -62,9 +62,9 @@ no NFS-server fallback (see §8.A).
 
 ---
 
-## §3 · Core Service Configuration
+## 3. Core Service Configuration
 
-### §3.A · Application Identity
+### A. Application Identity
 
 `application_display_name` and `application_description` are passed to `Sample_Common`
 as `display_name` and `description`, then merged into `application_config` for
@@ -79,7 +79,7 @@ as `display_name` and `description`, then merged into `application_config` for
 | `application_database_name` | `"cloudrunapp"` | PostgreSQL database name. Passed to `Sample_Common` as `db_name`. **Do not change after initial deployment.** |
 | `application_database_user` | `"cloudrunapp"` | PostgreSQL user. Passed to `Sample_Common` as `db_user`. Password auto-generated. |
 
-### §3.B · Resource Sizing
+### B. Resource Sizing
 
 `cpu_limit` and `memory_limit` are flat scalar variables passed to `Sample_Common`,
 which assembles them into the `container_resources` object consumed by `App_CloudRun`.
@@ -93,7 +93,7 @@ which assembles them into the `container_resources` object consumed by `App_Clou
 | `timeout_seconds` | `300` | Maximum request duration (0–3600 s). |
 | `execution_environment` | `"gen2"` | Required for NFS mounts when `enable_nfs = true`. |
 
-### §3.C · Environment Variables & Secrets
+### C. Environment Variables & Secrets
 
 | Variable | Default | Description |
 |---|---|---|
@@ -102,7 +102,7 @@ which assembles them into the `container_resources` object consumed by `App_Clou
 | `secret_rotation_period` | `"2592000s"` | Rotation reminder period (30 days default). Set `null` to disable. |
 | `secret_propagation_delay` | `30` | Seconds to wait after secret creation before dependent operations proceed. |
 
-### §3.D · Networking
+### D. Networking
 
 | Variable | Default | Description |
 |---|---|---|
@@ -113,7 +113,7 @@ which assembles them into the `container_resources` object consumed by `App_Clou
 | `enable_cloudsql_volume` | `true` | Injects Cloud SQL Auth Proxy sidecar for Unix socket connections to Cloud SQL. |
 | `cloudsql_volume_mount_path` | `"/cloudsql"` | Path where the Cloud SQL Auth Proxy Unix socket is mounted. |
 
-### §3.E · Container Image & Build
+### E. Container Image & Build
 
 By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 `container_image_source = "custom"` to build the bundled sample Flask app from the
@@ -129,9 +129,9 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 
 ---
 
-## §4 · Advanced Security
+## 4. Advanced Security
 
-### §4.A · Automated Password Rotation
+### A. Automated Password Rotation
 
 | Variable | Default | Description |
 |---|---|---|
@@ -139,7 +139,7 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts to pick up the new value. |
 | `secret_rotation_period` | `"2592000s"` | Rotation reminder interval (30 days default). Also used as trigger period when rotation is enabled. |
 
-### §4.B · VPC Service Controls
+### B. VPC Service Controls
 
 | Variable | Default | Description |
 |---|---|---|
@@ -149,7 +149,7 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 | `organization_id` | `""` | GCP Organization ID for the Access Context Manager policy. Auto-discovered from the project when empty. |
 | `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ) for all supported services. |
 
-### §4.C · Identity-Aware Proxy
+### C. Identity-Aware Proxy
 
 | Variable | Default | Description |
 |---|---|---|
@@ -157,7 +157,7 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 | `iap_authorized_users` | `[]` | Users granted access: `"user:alice@example.com"`. |
 | `iap_authorized_groups` | `[]` | Google Groups granted access: `"group:engineering@example.com"`. |
 
-### §4.D · Cloud Armor & CDN
+### D. Cloud Armor & CDN
 
 | Variable | Default | Description |
 |---|---|---|
@@ -169,7 +169,7 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 | `delete_untagged_images` | `true` | Automatically deletes untagged images (dangling layers, intermediate build artefacts) from the Artifact Registry repository. |
 | `image_retention_days` | `30` | Days after which container images are eligible for deletion from Artifact Registry. Set `0` to disable age-based deletion. |
 
-### §4.E · Binary Authorization
+### E. Binary Authorization
 
 | Variable | Default | Description |
 |---|---|---|
@@ -177,9 +177,9 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 
 ---
 
-## §5 · Traffic & Ingress
+## 5. Traffic & Ingress
 
-### §5.A · Traffic Splitting
+### A. Traffic Splitting
 
 | Variable | Default | Description |
 |---|---|---|
@@ -194,7 +194,7 @@ traffic_split = [
 ]
 ```
 
-### §5.B · Service Annotations & Labels
+### B. Service Annotations & Labels
 
 | Variable | Default | Description |
 |---|---|---|
@@ -203,9 +203,9 @@ traffic_split = [
 
 ---
 
-## §6 · CI/CD Integration
+## 6. CI/CD Integration
 
-### §6.A · GitHub Integration
+### A. GitHub Integration
 
 | Variable | Default | Description |
 |---|---|---|
@@ -215,7 +215,7 @@ traffic_split = [
 | `github_app_installation_id` | `""` | Cloud Build GitHub App installation ID. Preferred for organisation repositories. |
 | `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Advanced trigger config: `branch_pattern`, `included_files`, `ignored_files`, `trigger_name`, `substitutions`. |
 
-### §6.B · Cloud Deploy
+### B. Cloud Deploy
 
 | Variable | Default | Description |
 |---|---|---|
@@ -224,9 +224,9 @@ traffic_split = [
 
 ---
 
-## §7 · Reliability & Data
+## 7. Reliability & Data
 
-### §7.A · Health Probes
+### A. Health Probes
 
 `Sample_CloudRun` exposes **two distinct sets** of health probe variables:
 
@@ -244,7 +244,7 @@ The `startup_probe_config` / `health_check_config` pair controls Cloud Run's liv
 | `uptime_check_config` | `{ enabled = true, path = "/" }` | Cloud Monitoring uptime check. `check_interval` and `timeout` use `"Ns"` format. |
 | `alert_policies` | `[]` | Metric-threshold alert policies. Each entry: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
 
-### §7.B · Storage
+### B. Storage
 
 | Variable | Default | Description |
 |---|---|---|
@@ -258,7 +258,7 @@ The `startup_probe_config` / `health_check_config` pair controls Cloud Run's liv
 | `manage_storage_kms_iam` | `false` | Creates a CMEK KMS keyring and grants the GCS service account the encrypter/decrypter role, enabling CMEK on all storage buckets. |
 | `enable_artifact_registry_cmek` | `false` | Creates an Artifact Registry KMS key and enables CMEK encryption of container images. |
 
-### §7.C · Database
+### C. Database
 
 | Variable | Default | Description |
 |---|---|---|
@@ -268,7 +268,7 @@ The `startup_probe_config` / `health_check_config` pair controls Cloud Run's liv
 | `enable_auto_password_rotation` | `false` | Automated password rotation. See §4.A. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts. |
 
-### §7.D · Backup & Recovery
+### D. Backup & Recovery
 
 `backup_uri` is aliased to `backup_file` in `main.tf` (`backup_file = var.backup_uri`).
 
@@ -283,9 +283,9 @@ The `startup_probe_config` / `health_check_config` pair controls Cloud Run's liv
 
 ---
 
-## §8 · Integrations
+## 8. Integrations
 
-### §8.A · Redis
+### A. Redis
 
 Redis is **disabled by default** (`enable_redis = false`). When enabled,
 `Sample_Common` deploys an internal `redis:alpine` Cloud Run additional service.
@@ -305,7 +305,7 @@ service).
 | `redis_port` | `6379` | Redis TCP port. **Note: this is a `number` type**, unlike other modules where it is a string. |
 | `redis_auth` | `""` | Redis AUTH password. Treated as sensitive; passed to `App_CloudRun`. Leave empty for unauthenticated Redis. |
 
-### §8.B · Custom SQL Scripts
+### B. Custom SQL Scripts
 
 | Variable | Default | Description |
 |---|---|---|
@@ -314,14 +314,14 @@ service).
 | `custom_sql_scripts_path` | `""` | Path prefix within the bucket. Files run in lexicographic order. |
 | `custom_sql_scripts_use_root` | `false` | Run scripts as the root database user. |
 
-### §8.C · Jobs & Scheduled Tasks
+### C. Jobs & Scheduled Tasks
 
 | Variable | Default | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Cloud Run jobs executed once during deployment. Supplements the platform-managed `db-init` job from `Sample_Common`. |
 | `cron_jobs` | `[]` | Recurring Cloud Scheduler-triggered jobs. Each entry: `name`, `schedule` (cron, UTC). |
 
-### §8.D · Observability
+### D. Observability
 
 | Variable | Default | Description |
 |---|---|---|
@@ -332,7 +332,7 @@ service).
 
 ---
 
-## §9 · Platform-Managed Behaviours
+## 9. Platform-Managed Behaviours
 
 These are set automatically by the module and cannot be overridden via input variables.
 
@@ -385,7 +385,7 @@ service is internal-only (`INGRESS_TRAFFIC_INTERNAL_ONLY`).
 
 ---
 
-## §10 · Variable Reference
+## 10. Variable Reference
 
 Complete list of all input variables, grouped by UI section.
 

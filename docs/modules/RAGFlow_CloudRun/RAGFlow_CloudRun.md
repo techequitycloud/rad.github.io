@@ -15,9 +15,11 @@ application configuration, database initialization job, and document storage buc
 > Terraform will reject the configuration otherwise. Inline Elasticsearch is not supported on
 > Cloud Run.
 
+> This guide documents variables that are **unique to `RAGFlow_CloudRun`** or that have **RAGFlow-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
+
 ---
 
-## §1 · Module Overview
+## 1. Module Overview
 
 ### What `RAGFlow_CloudRun` provides
 
@@ -95,7 +97,7 @@ RAGFlow_CloudRun
 
 ---
 
-## §2 · Module Metadata (Group 0)
+## 2. Module Metadata (Group 0)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -112,7 +114,7 @@ RAGFlow_CloudRun
 
 ---
 
-## §3 · Project & Identity (Group 1)
+## 3. Project & Identity (Group 1)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -123,7 +125,7 @@ RAGFlow_CloudRun
 
 ---
 
-## §4 · Application Identity (Group 2)
+## 4. Application Identity (Group 2)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -134,7 +136,7 @@ RAGFlow_CloudRun
 
 ---
 
-## §5 · Runtime & Scaling (Group 3)
+## 5. Runtime & Scaling (Group 3)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -161,7 +163,7 @@ RAGFlow_CloudRun
 
 ---
 
-## §6 · Access & Networking (Group 4)
+## 6. Access & Networking (Group 4)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -173,7 +175,7 @@ RAGFlow_CloudRun
 
 ---
 
-## §7 · Environment Variables & Secrets (Group 5)
+## 7. Environment Variables & Secrets (Group 5)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -200,7 +202,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## §8 · Backup & Maintenance (Group 6)
+## 8. Backup & Maintenance (Group 6)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -213,7 +215,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## §9 · CI/CD & GitHub Integration (Group 7)
+## 9. CI/CD & GitHub Integration (Group 7)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -228,7 +230,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## §10 · Custom SQL (Group 8)
+## 10. Custom SQL (Group 8)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -239,7 +241,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## §11 · Load Balancer & CDN (Group 9)
+## 11. Load Balancer & CDN (Group 9)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -250,7 +252,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## §12 · Storage & Filesystem (Group 10)
+## 12. Storage & Filesystem (Group 10)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -266,7 +268,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## §13 · Database (Group 11)
+## 13. Database (Group 11)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -278,7 +280,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## §14 · Jobs & Scheduled Tasks (Group 12)
+## 14. Jobs & Scheduled Tasks (Group 12)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -287,7 +289,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## §15 · Observability & Health (Group 13)
+## 15. Observability & Health (Group 13)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -298,7 +300,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## §16 · Elasticsearch & Redis (Group 14)
+## 16. Elasticsearch & Redis (Group 14)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -311,7 +313,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## §17 · VPC Service Controls (Group 21)
+## 17. VPC Service Controls (Group 21)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -323,7 +325,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## §18 · Validation Guards
+## 18. Validation Guards
 
 `validation.tf` enforces the following preconditions at plan time using a `null_resource`
 lifecycle precondition block:
@@ -337,7 +339,7 @@ lifecycle precondition block:
 
 ---
 
-## §19 · Outputs
+## 19. Outputs
 
 | Output | Description |
 |---|---|
@@ -359,7 +361,7 @@ lifecycle precondition block:
 
 ---
 
-## §20 · Notable Differences from `RAGFlow_GKE`
+## 20. Notable Differences from `RAGFlow_GKE`
 
 | Feature | RAGFlow_GKE | RAGFlow_CloudRun |
 |---|---|---|
@@ -381,7 +383,7 @@ lifecycle precondition block:
 
 ---
 
-## §21 · Resources Created
+## 21. Resources Created
 
 The following GCP resources are provisioned when this module is applied:
 
@@ -404,7 +406,7 @@ The following GCP resources are provisioned when this module is applied:
 
 ---
 
-## §22 · Configuration Examples
+## 22. Configuration Examples
 
 ### Basic Deployment
 
