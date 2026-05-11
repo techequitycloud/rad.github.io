@@ -1,5 +1,7 @@
 # AKS GKE Module
 
+The source code for this module is available in the [rad-modules GitHub repository](https://github.com/techequitycloud/rad-modules/tree/main/modules/AKS_GKE).
+
 ## 1. Overview and Learning Objectives
 
 This module deploys a Microsoft Azure Kubernetes Service (AKS) cluster and registers it with Google Cloud as a **GKE Attached Cluster**, making it a full member of a **GKE Fleet**. From that point forward, the cluster is visible and manageable from the Google Cloud Console alongside any native GKE clusters in the same project.

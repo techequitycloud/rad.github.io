@@ -1,5 +1,7 @@
 # MC Bank GKE Module
 
+The source code for this module is available in the [rad-modules GitHub repository](https://github.com/techequitycloud/rad-modules/tree/main/modules/MC_Bank_GKE).
+
 ## 1. Overview
 
 The **MC_Bank_GKE** module deploys a production-grade, multi-cluster microservices banking application on Google Kubernetes Engine (GKE). It is designed as a comprehensive learning environment for platform engineers who want to gain hands-on experience with advanced GKE capabilities, including multi-cluster networking, service mesh, global load balancing, and cloud-native observability.
