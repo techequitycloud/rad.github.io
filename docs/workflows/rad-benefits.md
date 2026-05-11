@@ -124,7 +124,7 @@ RAD provides deployment modules covering **21 application types** across two Goo
 
 ### Platform Modules
 
-In addition to application modules, RAD provides infrastructure modules for advanced deployment patterns:
+In addition to application modules, RAD provides infrastructure modules for advanced deployment patterns. Source code for all platform modules is available in the [rad-modules GitHub repository](https://github.com/techequitycloud/rad-modules/tree/main/modules).
 
 | Module | Description |
 | :--- | :--- |
