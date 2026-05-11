@@ -1,4 +1,4 @@
-# Moodle_CloudRun Module
+# Moodle CloudRun Module
 
 Moodle is the world's most popular open-source Learning Management System (LMS), used by
 educational institutions, corporations, and online learning platforms worldwide. This module

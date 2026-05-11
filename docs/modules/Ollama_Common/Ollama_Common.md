@@ -1,4 +1,4 @@
-# Ollama_Common Module
+# Ollama Common Module
 
 The `Ollama_Common` module defines the Ollama LLM inference server configuration for the RAD
 Modules ecosystem. It **creates one GCP resource** (the GCS models bucket, via the

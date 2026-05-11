@@ -3,7 +3,9 @@ title: "Istio_GKE Module Documentation"
 sidebar_label: "GKE"
 ---
 
-# Istio_GKE Module
+# Istio GKE Module
+
+The source code for this module is available in the [rad-modules GitHub repository](https://github.com/techequitycloud/rad-modules/tree/main/modules/Istio_GKE).
 
 ## 1. Overview
 

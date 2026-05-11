@@ -1,4 +1,4 @@
-# OpenEMR_Common Module
+# OpenEMR Common Module
 
 ## 1. Overview
 

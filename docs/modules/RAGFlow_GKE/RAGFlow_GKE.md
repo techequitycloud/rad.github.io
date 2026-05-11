@@ -1,4 +1,4 @@
-# RAGFlow_GKE Module
+# RAGFlow GKE Module
 
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG)
 platform. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and embeds

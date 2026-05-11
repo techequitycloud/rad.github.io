@@ -1,4 +1,4 @@
-# VMware_Engine Module
+# VMware Engine Module
 
 `VMware_Engine` is a **standalone infrastructure module** that provisions Google Cloud VMware
 Engine (GCVE) resources in an existing GCP project. It deploys a GCVE private cloud, a global

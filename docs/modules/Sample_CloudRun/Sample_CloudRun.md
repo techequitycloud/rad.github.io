@@ -1,4 +1,4 @@
-# Sample_CloudRun Module
+# Sample CloudRun Module
 
 `Sample_CloudRun` is a **reference wrapper module** that sits on top of `App_CloudRun`.
 It deploys a pre-configured Flask application (Python 3.11, PostgreSQL 15, optional

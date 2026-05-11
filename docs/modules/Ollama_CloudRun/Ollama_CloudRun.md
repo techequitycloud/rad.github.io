@@ -1,4 +1,4 @@
-# Ollama_CloudRun Module
+# Ollama CloudRun Module
 
 Ollama is an open-source LLM inference server that serves large language models such as Llama,
 Mistral, Gemma, and Phi via a REST API on port 11434. This module deploys Ollama on **Google

@@ -1,4 +1,4 @@
-# Wikijs_Common Module
+# Wikijs Common Module
 
 ## 1. Overview
 

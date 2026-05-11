@@ -1,4 +1,4 @@
-# Ghost_CloudRun Module
+# Ghost CloudRun Module
 
 ## 1. Module Overview
 

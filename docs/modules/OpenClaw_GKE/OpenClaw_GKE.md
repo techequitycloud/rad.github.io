@@ -1,4 +1,4 @@
-# OpenClaw_GKE Module
+# OpenClaw GKE Module
 
 OpenClaw is a multi-tenant AI agent gateway that provides WebSocket-enabled conversational AI agents with persistent GCS-backed workspace storage. This module deploys OpenClaw on **GKE Autopilot** as a Kubernetes Deployment, backed by GCS Fuse CSI driver for durable agent workspace and Secret Manager for credential management.
 

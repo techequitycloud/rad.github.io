@@ -1,4 +1,4 @@
-# Kestra_CloudRun Module
+# Kestra CloudRun Module
 
 Kestra is an open-source data orchestration and scheduling platform (Apache 2.0 licence). It allows you to build, schedule, and monitor ETL/ELT pipelines, batch jobs, and workflow automation through a YAML-based flow definition and a rich plugin ecosystem. This module deploys Kestra on **Google Cloud Run** in **standalone mode** (server, worker, and scheduler in a single container) with a PostgreSQL 15 backend and GCS artifact storage.
 

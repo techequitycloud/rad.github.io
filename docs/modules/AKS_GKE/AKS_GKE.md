@@ -1,4 +1,6 @@
-# AKS_GKE Module
+# AKS GKE Module
+
+The source code for this module is available in the [rad-modules GitHub repository](https://github.com/techequitycloud/rad-modules/tree/main/modules/AKS_GKE).
 
 ## 1. Overview and Learning Objectives
 

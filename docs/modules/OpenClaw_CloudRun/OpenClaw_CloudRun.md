@@ -1,4 +1,4 @@
-# OpenClaw_CloudRun Module
+# OpenClaw CloudRun Module
 
 OpenClaw is a serverless, multi-tenant AI agent gateway that provides WebSocket-enabled conversational AI agents with persistent GCS-backed workspace storage. `OpenClaw_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects OpenClaw-specific application configuration, secrets, storage, and container build configuration via `OpenClaw_Common`.
 

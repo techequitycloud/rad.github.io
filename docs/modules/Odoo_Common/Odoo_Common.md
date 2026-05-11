@@ -1,4 +1,4 @@
-# Odoo_Common Module
+# Odoo Common Module
 
 `Odoo_Common` is a pure-configuration Terraform module in the RAD Modules ecosystem. It generates a `config` object consumed by platform modules (`App_CloudRun`, `App_GKE`) to deploy Odoo Community Edition on Google Cloud. The module provisions one GCP Secret Manager secret (the Odoo master password), defines one GCS storage bucket for custom addons, and emits all container configuration as Terraform outputs — no compute resources are created directly.
 
