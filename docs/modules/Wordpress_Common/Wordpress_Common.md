@@ -1,4 +1,4 @@
-# Wordpress_Common Module
+# Wordpress Common Module
 
 ## 1. Overview
 

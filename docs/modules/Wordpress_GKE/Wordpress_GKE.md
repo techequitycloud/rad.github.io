@@ -1,4 +1,4 @@
-# Wordpress_GKE Module
+# Wordpress GKE Module
 
 This guide describes the configuration variables that are **unique to the `Wordpress_GKE` module**. Because `Wordpress_GKE` is a wrapper around `App_GKE`, the vast majority of its variables are passed directly to that base module and are fully documented in the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). This guide explains the WordPress-specific additions, the differences in default values, and what the `Wordpress_Common` sub-module provisions automatically.
 

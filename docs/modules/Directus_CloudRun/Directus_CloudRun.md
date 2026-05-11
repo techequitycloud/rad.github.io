@@ -1,4 +1,4 @@
-# Directus_CloudRun Module
+# Directus CloudRun Module
 
 ## 1. Module Overview
 

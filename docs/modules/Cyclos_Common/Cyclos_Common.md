@@ -1,4 +1,4 @@
-# Cyclos_Common Module
+# Cyclos Common Module
 
 The `Cyclos_Common` module defines the Cyclos banking and payment platform configuration for the RAD Modules ecosystem. It is a **configuration library**, not a resource-creating module — it produces a standardized application configuration object consumed by platform-specific wrapper modules (`Cyclos_CloudRun` and `Cyclos_GKE`).
 

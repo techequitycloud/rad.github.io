@@ -1,4 +1,4 @@
-# NodeRED_GKE Module
+# NodeRED GKE Module
 
 Node-RED is a leading open-source flow-based programming tool designed for wiring together IoT devices, APIs, and online services through a browser-based visual editor. This module deploys Node-RED on **GKE Autopilot** with NFS-backed persistent flow storage, optional Redis context storage, and full Kubernetes reliability controls.
 

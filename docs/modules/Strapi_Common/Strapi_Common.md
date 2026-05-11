@@ -1,4 +1,4 @@
-# Strapi_Common Module
+# Strapi Common Module
 
 ## 1. Overview
 

@@ -1,4 +1,4 @@
-# Activepieces_Common Module
+# Activepieces Common Module
 
 The `Activepieces_Common` module defines the Activepieces workflow automation platform configuration for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets for cryptographic keys) and produces a `config` output consumed by the platform-specific wrapper modules (`Activepieces_CloudRun` and `Activepieces_GKE`).
 

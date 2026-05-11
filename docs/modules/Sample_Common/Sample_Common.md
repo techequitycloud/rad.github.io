@@ -1,4 +1,4 @@
-# Sample_Common Module
+# Sample Common Module
 
 ## 1. Overview
 

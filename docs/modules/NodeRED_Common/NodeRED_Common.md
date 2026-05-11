@@ -1,4 +1,4 @@
-# NodeRED_Common Module
+# NodeRED Common Module
 
 The `NodeRED_Common` module defines the Node-RED flow-based programming tool for the RAD Modules ecosystem. It produces a `config` output consumed by platform-specific wrapper modules (`NodeRED_CloudRun` and `NodeRED_GKE`), along with a `storage_buckets` output that provisions the application's GCS bucket.
 

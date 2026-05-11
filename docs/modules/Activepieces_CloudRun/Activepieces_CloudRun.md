@@ -1,4 +1,4 @@
-# Activepieces_CloudRun Module
+# Activepieces CloudRun Module
 
 Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation platform for connecting apps, APIs, and data sources. `Activepieces_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Activepieces-specific application configuration, secrets, database initialisation, and queue configuration via `Activepieces_Common`.
 

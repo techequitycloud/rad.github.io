@@ -1,4 +1,4 @@
-# Activepieces_GKE Module
+# Activepieces GKE Module
 
 Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation platform for connecting apps, APIs, and data sources. This module deploys a production-ready Activepieces application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL 15 instance, GCS data storage, and Secret Manager for cryptographic secrets (`AP_ENCRYPTION_KEY` and `AP_JWT_SECRET`).
 
