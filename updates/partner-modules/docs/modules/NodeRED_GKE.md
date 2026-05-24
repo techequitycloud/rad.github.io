@@ -1,6 +1,6 @@
 # NodeRED_GKE Module — Configuration Guide
 
-Node-RED is a leading open-source flow-based programming tool designed for wiring together IoT devices, APIs, and online services through a browser-based visual editor. This module deploys Node-RED on **GKE Autopilot** with NFS-backed persistent flow storage, optional Redis context storage, and full Kubernetes reliability controls.
+Node-RED is a leading open-source, browser-based flow programming tool originally developed by IBM, with 4,000+ community connector nodes and a growing ecosystem spanning smart manufacturing and edge computing. It is the de facto standard for IoT, IIoT, and industrial automation — integrating legacy OT systems (Modbus, OPC-UA, Siemens S7, MQTT) with modern cloud services. Gartner projects that 70%+ of all applications will use low-code technologies by 2026, and the low-code platform market is tracking toward $16.5B by 2027. This module deploys Node-RED on **GKE Autopilot** with NFS-backed persistent flow storage, optional Redis context storage, and full Kubernetes reliability controls.
 
 `NodeRED_GKE` is a **wrapper module** built on top of `App_GKE`. It delegates all GCP infrastructure provisioning to App_GKE (GKE Autopilot cluster, networking, Cloud Storage, NFS, Secret Manager, CI/CD) and uses a `NodeRED_Common` sub-module to supply Node-RED-specific application configuration. The `NodeRED_Common` outputs feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts_dir` inputs.
 
@@ -58,11 +58,11 @@ Node-RED is a leading open-source flow-based programming tool designed for wirin
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed first. |
 | `module_services` | *(GKE Autopilot, Filestore, GCS, etc.)* | GCP services used by this module. |
 | `credit_cost` | `75` | Platform credits consumed on deployment. |
-| `require_credit_purchases` | `true` | Enforces credit balance check. |
+| `require_credit_purchases` | `false` | Enforces credit balance check. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
-| `public_access` | `false` | Visibility to all platform users. |
+| `public_access` | `true` | Visibility to all platform users. |
 | `deployment_id` | `""` | Optional fixed deployment ID. Auto-generated when blank. |
-| `deployment_region` | `"us-central1"` | GCP region fallback when network auto-discovery cannot determine the region. |
+| `region` | `"us-central1"` | GCP region fallback when network auto-discovery cannot determine the region. |
 
 ---
 
@@ -398,7 +398,7 @@ The following are set automatically and cannot be overridden via input variables
 | `module_secret_env_vars` | Always `{}` — no auto-generated secrets from NodeRED_Common. |
 | `module_storage_buckets` | `module.nodered_app.storage_buckets` — the `"nodered-storage"` GCS bucket. |
 | `scripts_dir` | `abspath("${module.nodered_app.path}/scripts")` — NodeRED_Common's `scripts/` directory. |
-| Region resolution | Region is auto-discovered via `module.network_discovery` before being passed to NodeRED_Common as `deployment_region`. |
+| Region resolution | Region is auto-discovered via `module.network_discovery` before being passed to NodeRED_Common as `region`. |
 | Resource prefix | `"app${application_name}${tenant_deployment_id}${random_id}"` — computed in `main.tf` locals. |
 | `container_image_source` | From `var.container_image_source` (default `"prebuilt"`); user-configurable. |
 | `database_type` | `"NONE"` in the NodeRED_Common config output — always hardcoded. |
@@ -434,16 +434,16 @@ Complete list of all input variables, grouped by UI section.
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
 | 0 | `credit_cost` | number | `75` | — |
-| 0 | `require_credit_purchases` | bool | `true` | — |
+| 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
-| 0 | `public_access` | bool | `false` | — |
+| 0 | `public_access` | bool | `true` | — |
 | 0 | `deployment_id` | string | `""` | yes |
 | 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
 | 1 | `project_id` | string | — | — |
 | 1 | `tenant_deployment_id` | string | `"demo"` | yes |
 | 1 | `support_users` | list(string) | `[]` | yes |
 | 1 | `resource_labels` | map(string) | `{}` | yes |
-| 1 | `deployment_region` | string | `"us-central1"` | yes |
+| 1 | `region` | string | `"us-central1"` | yes |
 | 2 | `application_name` | string | `"nodered"` | yes |
 | 2 | `application_display_name` | string | `"Node-RED"` | yes |
 | 2 | `application_description` | string | `"Node-RED - Flow-based programming…"` | yes |

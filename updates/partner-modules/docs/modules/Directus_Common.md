@@ -154,7 +154,7 @@ Custom environment variables passed via `environment_variables` are merged last 
 | `deployment_id` | `string` | `""` | Unique deployment identifier |
 | `deployment_id_suffix` | `string` | `""` | Random suffix used in resource name calculations |
 | `tenant_deployment_id` | `string` | `"demo"` | Tenant/environment identifier |
-| `deployment_region` | `string` | `"us-central1"` | Primary GCP region |
+| `region` | `string` | `"us-central1"` | Primary GCP region |
 
 ### Application
 

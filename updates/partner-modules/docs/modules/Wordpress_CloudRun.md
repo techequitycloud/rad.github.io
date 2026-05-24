@@ -1,6 +1,6 @@
 # Wordpress_CloudRun Module — Configuration Guide
 
-`Wordpress_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [WordPress](https://wordpress.org/) on Google Cloud Run Gen2.
+`Wordpress_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [WordPress](https://wordpress.org/) on Google Cloud Run Gen2. WordPress is the world's most widely-deployed CMS, powering 43.5% of all websites and holding 62.8% of the CMS market — approximately 480–590 million sites globally. WooCommerce, its e-commerce extension, controls 36% of all online stores with roughly $35B in GMV in 2025, and an ecosystem of 60,000+ plugins makes WordPress the default choice for marketing sites, news publishers, e-commerce, and membership platforms at any scale.
 
 Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply WordPress-appropriate defaults and to call the `Wordpress_Common` sub-module, which generates the application's container build context, PHP configuration, MySQL connection settings, Redis object cache configuration, and WordPress-specific secrets. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.
 
@@ -426,3 +426,24 @@ The table below covers all variables unique to or with notable defaults in `Word
 | `vpc_sc_dry_run` | `bool` | `true` | 21 | Log-only mode; set `false` to enforce |
 | `organization_id` | `string` | `""` | 21 | GCP org ID for VPC-SC; auto-discovered when empty |
 | `enable_audit_logging` | `bool` | `false` | 21 | Enable DATA_READ/WRITE audit logs |
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

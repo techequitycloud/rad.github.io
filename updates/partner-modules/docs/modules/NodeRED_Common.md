@@ -78,7 +78,7 @@ One GCS bucket for Node-RED application data (backups, exports):
 | Field | Value |
 |-------|-------|
 | `name_suffix` | `"nodered-storage"` |
-| `location` | from `deployment_region` variable (default: `"us-central1"`) |
+| `location` | from `region` variable (default: `"us-central1"`) |
 | `storage_class` | `"STANDARD"` |
 | `force_destroy` | `true` |
 | `versioning_enabled` | `false` |
@@ -143,7 +143,7 @@ Unlike database-backed applications, Node-RED requires no schema initialisation,
 | `initialization_jobs` | `list(any)` | `[]` | One-time jobs to run during deployment. |
 | `startup_probe` | `any` | HTTP `/`, 30s initial delay, 5s timeout, 10s period, 3 threshold | Startup probe configuration. |
 | `liveness_probe` | `any` | HTTP `/`, 30s initial delay, 5s timeout, 30s period, 3 threshold | Liveness probe configuration. |
-| `deployment_region` | `string` | `"us-central1"` | GCP region; used as the storage bucket location. |
+| `region` | `string` | `"us-central1"` | GCP region; used as the storage bucket location. |
 | `tenant_deployment_id` | `string` | `"demo"` | Tenant identifier appended to resource names. |
 | `deployment_id` | `string` | `""` | Unique deployment ID. |
 
@@ -155,7 +155,7 @@ Unlike database-backed applications, Node-RED requires no schema initialisation,
 |--------|------------------|-------------|
 | `module_env_vars` passed to Foundation | `{}` (empty) | `{}` (empty) |
 | `module_secret_env_vars` passed to Foundation | `{}` (empty — no auto-generated secrets) | `{}` (empty) |
-| `deployment_region` source | not passed (Foundation auto-discovers region) | resolved from `module.network_discovery` before being passed |
+| `region` source | not passed (Foundation auto-discovers region) | resolved from `module.network_discovery` before being passed |
 | NFS | enabled by default (`enable_nfs = true`, mount at `/data`) | enabled by default (`enable_nfs = true`, mount at `/data`) |
 | Scaling | Serverless; scale-to-zero supported (`min_instance_count = 0`) | Kubernetes Deployment; minimum 1 replica recommended |
 | Credential secret | Managed by App_CloudRun via `database_password_length` | Managed by App_GKE via `database_password_length` |

@@ -34,9 +34,9 @@ All probes target the `/v1/health` endpoint. RAGFlow loads embedding models at s
 
 | Probe | Path | initial_delay_seconds | period_seconds | failure_threshold |
 |---|---|---|---|---|
-| Startup | `/v1/health` | 60 | 10 | 18 |
-| Liveness | `/v1/health` | 120 | 30 | 3 |
-| Readiness | `/v1/health` | 30 | 10 | 3 |
+| Startup | `/v1/health` | 120 | 10 | 60 |
+| Liveness | `/v1/system/version` | 120 | 30 | 3 |
+| Readiness | `/v1/system/version` | 30 | 10 | 3 |
 
 ### Scripts directory
 
@@ -61,18 +61,18 @@ All probes target the `/v1/health` endpoint. RAGFlow loads embedding models at s
 | `db_user` | `string` | `"ragflow"` | MySQL user forwarded into `config.db_user`. |
 | `enable_cloudsql_volume` | `bool` | `true` | Injects the Cloud SQL Auth Proxy sidecar. Should always be `true` for RAGFlow. |
 | `gcs_volumes` | `list(object)` | `[]` | GCS Fuse volumes mounted into the container. Forwarded as-is into `config.gcs_volumes`. |
-| `cpu_limit` | `string` | `"4000m"` | CPU limit for the RAGFlow container. Document parsing is CPU-intensive. |
-| `memory_limit` | `string` | `"8Gi"` | Memory limit for the RAGFlow container. Embedding models require significant RAM. |
+| `cpu_limit` | `string` | `"2000m"` | CPU limit for the RAGFlow container. Document parsing is CPU-intensive. |
+| `memory_limit` | `string` | `"4Gi"` | Memory limit for the RAGFlow container. Embedding models require significant RAM. |
 | `environment_variables` | `map(string)` | `{}` | Additional plain-text env vars merged into `config.environment_variables`. |
 | `secret_environment_variables` | `map(string)` | `{}` | Secret Manager secret references forwarded into `config.secret_environment_variables`. |
 | `initialization_jobs` | `list(object)` | `[]` | Custom initialization jobs. When empty, the auto-generated `db-init` job is used. |
 | `description` | `string` | `"Initialize RAGFlow MySQL 8.0 database"` | Description embedded in the `db-init` job and Kubernetes annotations. |
-| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=60, timeout_seconds=10, period_seconds=10, failure_threshold=18 }` | Startup probe forwarded into `config.startup_probe`. |
-| `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Liveness probe forwarded into `config.liveness_probe`. |
+| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=120, timeout_seconds=10, period_seconds=10, failure_threshold=60 }` | Startup probe forwarded into `config.startup_probe`. |
+| `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/system/version", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Liveness probe forwarded into `config.liveness_probe`. |
 | `enable_image_mirroring` | `bool` | `false` | Mirror the source image to Artifact Registry before the build. |
 | `min_instance_count` | `number` | `1` | Minimum pod replicas forwarded into `config.min_instance_count`. |
 | `max_instance_count` | `number` | `3` | Maximum pod replicas forwarded into `config.max_instance_count`. |
-| `deployment_region` | `string` | `"us-central1"` | GCP region used for the `ragflow-documents` GCS bucket location. |
+| `region` | `string` | `"us-central1"` | GCP region used for the `ragflow-documents` GCS bucket location. |
 
 ---
 
@@ -81,7 +81,7 @@ All probes target the `/v1/health` endpoint. RAGFlow loads embedding models at s
 | Output | Description |
 |---|---|
 | `config` | Complete application configuration object consumed by `App_GKE`'s `application_config` input. Contains `app_name`, `container_image`, `container_port=80`, `database_type="MYSQL_8_0"`, `db_name`, `db_user`, `enable_cloudsql_volume`, `container_resources`, `min_instance_count`, `max_instance_count`, `environment_variables`, `secret_environment_variables`, `initialization_jobs`, `startup_probe`, `liveness_probe`, and `readiness_probe`. |
-| `storage_buckets` | List containing one GCS bucket configuration object: `{ name_suffix = "ragflow-documents", location = var.deployment_region, storage_class = "STANDARD", force_destroy = true, versioning_enabled = false }`. |
+| `storage_buckets` | List containing one GCS bucket configuration object: `{ name_suffix = "ragflow-documents", location = var.region, storage_class = "STANDARD", force_destroy = true, versioning_enabled = false }`. |
 | `path` | Absolute path to the `RAGFlow_Common` module directory. Used by `RAGFlow_GKE` to resolve `scripts_dir`. |
 
 ---
@@ -97,7 +97,7 @@ The following values are fixed inside `RAGFlow_Common` and cannot be overridden 
 | `container_port` | `80` | RAGFlow's Nginx frontend listens on port 80. |
 | `database_type` | `"MYSQL_8_0"` | RAGFlow requires MySQL 8.0. |
 | `enable_mysql_plugins` | `false` | RAGFlow does not require MySQL plugins. |
-| `readiness_probe.path` | `"/v1/health"` | Fixed readiness check endpoint. |
+| `readiness_probe.path` | `"/v1/system/version"` | Fixed readiness check endpoint. |
 | `build_args.APP_VERSION` | `var.application_version` | Version is always passed to the Dockerfile as a build argument. |
 | Default `db-init` job image | `"mysql:8.0-debian"` | Standard MySQL client image for schema initialization. |
 
@@ -109,9 +109,9 @@ The following values are fixed inside `RAGFlow_Common` and cannot be overridden 
 
 ```hcl
 module "ragflow_app" {
-  source              = "../RAGFlow_Common"
-  deployment_id       = local.random_id
-  deployment_region   = local.region
+  source        = "../RAGFlow_Common"
+  deployment_id = local.random_id
+  region        = local.region
   application_name    = var.application_name
   application_version = var.application_version
   db_name             = var.db_name

@@ -6,7 +6,7 @@ This document provides a comprehensive reference for the `modules/Directus_Cloud
 
 ## 1. Module Overview
 
-Directus is an open-source headless CMS and Backend-as-a-Service (BaaS) platform that wraps any SQL database with auto-generated REST and GraphQL APIs and a no-code admin application. `Directus_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Directus-specific application configuration, security secrets, database initialisation, and storage configuration via `Directus_Common`.
+Directus is an open-source composable data platform and Backend-as-a-Service (BaaS) that wraps any SQL database with auto-generated REST and GraphQL APIs and a no-code admin application — without modifying your schema. With 34,500+ GitHub stars and customers including Tripadvisor, Adobe, and Mercedes-Benz, Directus is consistently ranked among the top open-source headless CMS choices in 2026. Its native MCP server support (introduced in v11.13, November 2025) enables direct AI tool integration, making it ideal for Backend-as-a-Service, internal dashboards, and headless CMS use cases. `Directus_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Directus-specific application configuration, security secrets, database initialisation, and storage configuration via `Directus_Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Node.js container, scale-to-zero by default. Custom image build via Cloud Build is the default workflow.
@@ -319,7 +319,7 @@ See [App_CloudRun §7.B](../App_CloudRun/App_CloudRun.md#b-traffic-splitting) fo
 
 ### C. Health Probes & Uptime Monitoring
 
-Directus exposes a `/server/health` endpoint that reflects both application and database readiness. Both the startup and liveness probes target this endpoint. In `Directus_CloudRun`, two separate probe variable pairs exist. `startup_probe` / `liveness_probe` are Directus-specific variables that are passed into `Directus_Common` and forwarded to the application config, with defaults tuned for Directus's Node.js startup behaviour. `startup_probe_config` / `health_check_config` are the `App_CloudRun`-standard variables that control the Cloud Run service-level probes directly; these are passed unchanged to `App_CloudRun`. In practice, tune `startup_probe` and `liveness_probe` for Directus probe behaviour.
+Directus exposes a `/server/health` endpoint that reflects both application and database readiness. Both the startup and liveness probes target this endpoint. In `Directus_CloudRun`, two separate probe variable pairs exist that serve different purposes and do not conflict. `startup_probe` / `liveness_probe` are Directus-specific variables passed into `Directus_Common`, which uses them to configure the application container probe spec with defaults tuned for Directus's Node.js startup behaviour. `startup_probe_config` / `health_check_config` are the `App_CloudRun`-standard variables that control the Cloud Run service-level probes directly; these are passed unchanged to `App_CloudRun`. In practice, tune `startup_probe` and `liveness_probe` for Directus probe behaviour; use `startup_probe_config` and `health_check_config` only for low-level Cloud Run service probe overrides.
 
 **Startup probe:** Fires after a 30-second initial delay. With `failure_threshold = 10` and `period_seconds = 20`, Cloud Run allows up to 3 minutes of additional startup time. On first deployment, when Directus runs `BOOTSTRAP` to seed the database, startup may take longer — consider increasing `failure_threshold`.
 
@@ -329,8 +329,8 @@ Directus exposes a `/server/health` endpoint that reflects both application and 
 |---|---|---|---|
 | `startup_probe` | 13 | `{ enabled=true, type="HTTP", path="/server/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=20, failure_threshold=10 }` | Directus startup probe passed into `Directus_Common`. Container receives no traffic until this succeeds. |
 | `liveness_probe` | 13 | `{ enabled=true, type="HTTP", path="/server/health", initial_delay_seconds=15, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Directus liveness probe passed into `Directus_Common`. Container is restarted after `failure_threshold` consecutive failures. |
-| `startup_probe_config` | 13 | `{ enabled=true, type="TCP", path="/", initial_delay_seconds=0, timeout_seconds=240, period_seconds=240, failure_threshold=1 }` | `App_CloudRun`-standard startup probe passed directly to `App_CloudRun`. Takes precedence over `startup_probe` at the service level. |
-| `health_check_config` | 13 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=0, timeout_seconds=1, period_seconds=10, failure_threshold=3 }` | `App_CloudRun`-standard liveness probe passed directly to `App_CloudRun`. Takes precedence over `liveness_probe` at the service level. |
+| `startup_probe_config` | 13 | `{ enabled=true, type="TCP", path="/", initial_delay_seconds=0, timeout_seconds=240, period_seconds=240, failure_threshold=1 }` | `App_CloudRun`-standard startup probe passed directly to `App_CloudRun`. Controls the Cloud Run service-level probe independently of the Directus-specific `startup_probe` (which configures the application container probe via `Directus_Common`). Tune `startup_probe` for Directus probe behaviour. |
+| `health_check_config` | 13 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=0, timeout_seconds=1, period_seconds=10, failure_threshold=3 }` | `App_CloudRun`-standard liveness probe passed directly to `App_CloudRun`. Controls the Cloud Run service-level probe independently of the Directus-specific `liveness_probe` (which configures the application container probe via `Directus_Common`). Tune `liveness_probe` for Directus probe behaviour. |
 | `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. Alerts notify `support_users` if unreachable. |
 | `alert_policies` | 13 | `[]` | Cloud Monitoring metric alert policies. Each: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
 
@@ -485,9 +485,9 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `100` | Platform metadata: deployment credit cost. |
-| `require_credit_purchases` | 0 | `true` | Platform metadata: enforces credit balance check. |
+| `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
 | `enable_purge` | 0 | `true` | Permits full deletion of module resources on destroy. |
-| `public_access` | 0 | `false` | Platform catalogue visibility. |
+| `public_access` | 0 | `true` | Platform catalogue visibility. |
 | `deployment_id` | 0 | `""` | Deployment ID suffix. Auto-generated if empty. |
 | `resource_creator_identity` | 0 | (platform SA) | Service account used by Terraform to manage resources. |
 | `project_id` | 1 | — | GCP project ID. **Required.** |
@@ -584,3 +584,24 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `vpc_sc_dry_run` | 21 | `true` | When `true`, violations are logged but not blocked. |
 | `organization_id` | 21 | `""` | GCP Organization ID for VPC-SC Access Context Manager. Auto-discovered when empty. |
 | `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs for all supported GCP services. |
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

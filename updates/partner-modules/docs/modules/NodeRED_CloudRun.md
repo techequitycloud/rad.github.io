@@ -1,6 +1,6 @@
 # NodeRED_CloudRun Module — Configuration Guide
 
-Node-RED is a leading open-source flow-based programming tool designed for wiring together IoT devices, APIs, and online services through a browser-based visual editor. This module deploys Node-RED on **Google Cloud Run Gen2** with NFS-backed persistent flow storage and optional Redis context storage.
+Node-RED is a leading open-source, browser-based flow programming tool originally developed by IBM, with 4,000+ community connector nodes and a growing ecosystem spanning smart manufacturing and edge computing. It is the de facto standard for IoT, IIoT, and industrial automation — integrating legacy OT systems (Modbus, OPC-UA, Siemens S7, MQTT) with modern cloud services. Gartner projects that 70%+ of all applications will use low-code technologies by 2026, and the low-code platform market is tracking toward $16.5B by 2027. This module deploys Node-RED on **Google Cloud Run Gen2** with NFS-backed persistent flow storage and optional Redis context storage.
 
 `NodeRED_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP infrastructure provisioning to App_CloudRun (Cloud Run service, networking, Secret Manager, GCS, NFS, CI/CD) and uses a `NodeRED_Common` sub-module to supply Node-RED-specific application configuration. The `NodeRED_Common` outputs feed into App_CloudRun's `application_config`, `module_storage_buckets`, and `scripts_dir` inputs.
 
@@ -54,9 +54,9 @@ Node-RED is a leading open-source flow-based programming tool designed for wirin
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed first. |
 | `module_services` | *(Cloud Run, NFS, GCS, etc.)* | GCP services used by this module. |
 | `credit_cost` | `75` | Platform credits consumed on deployment. |
-| `require_credit_purchases` | `true` | Enforces credit balance check. |
+| `require_credit_purchases` | `false` | Enforces credit balance check. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
-| `public_access` | `false` | Visibility to all platform users. |
+| `public_access` | `true` | Visibility to all platform users. |
 | `deployment_id` | `""` | Optional fixed deployment ID. Auto-generated when blank. |
 
 ---
@@ -337,9 +337,9 @@ Complete list of all input variables, grouped by UI section.
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
 | 0 | `credit_cost` | number | `75` | — |
-| 0 | `require_credit_purchases` | bool | `true` | — |
+| 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
-| 0 | `public_access` | bool | `false` | — |
+| 0 | `public_access` | bool | `true` | — |
 | 0 | `deployment_id` | string | `""` | yes |
 | 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
 | 1 | `project_id` | string | — | — |
@@ -508,3 +508,24 @@ alert_policies = [
   }
 ]
 ```
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

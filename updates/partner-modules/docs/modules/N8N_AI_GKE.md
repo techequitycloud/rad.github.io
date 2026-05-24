@@ -1,6 +1,6 @@
 # N8N_AI_GKE Module — Configuration Guide
 
-n8n is an open-source workflow automation platform that lets you connect services, run logic, and build AI-powered pipelines through a visual node-based interface. This module deploys n8n on **GKE Autopilot** alongside two companion AI services: **Qdrant** (vector database for RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis workflows without external AI API dependencies.
+n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), trusted by a quarter of the Fortune 500. `N8N_AI_GKE` is the AI-augmented variant — pre-configured with native LLM nodes, agent loops, and vector store integrations so teams can build production AI automation pipelines without boilerplate. AI-specific template usage is the fastest-growing segment within the N8N community. This module deploys n8n on **GKE Autopilot** alongside two companion AI services: **Qdrant** (vector database for RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis workflows without external AI API dependencies.
 
 `N8N_AI_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS, secrets, CI/CD) and adds n8n-specific application configuration and AI component orchestration on top.
 
@@ -81,7 +81,7 @@ These variables control how the n8n deployment is named and described. They corr
 | `application_display_name` | `"N8N AI Starter Kit"` | Any string | Human-readable name shown in the platform UI and GKE monitoring dashboards. Equivalent to `application_display_name` in App_GKE. Can be updated freely without affecting resource names. |
 | `description` | `"N8N AI Starter Kit - Workflow automation with Qdrant and Ollama"` | Any string | Brief description of the deployment. Populated into Kubernetes resource annotations and platform documentation. |
 | `application_version` | `"2.4.7"` | n8n version string, e.g. `"2.4.7"`, `"latest"` | Version tag applied to the container image and used for deployment tracking. Increment this value to trigger a new image build and revision. See [n8n releases](https://github.com/n8nio/n8n/releases) for available versions. |
-| `deployment_region` | `"us-central1"` | GCP region string | Fallback region used when network discovery cannot determine the region from existing VPC subnets. Unlike `N8N_AI_CloudRun`, this variable is explicitly declared in `N8N_AI_GKE` and used as a fallback in the `deployment_region` local. |
+| `region` | `"us-central1"` | GCP region string | Fallback region used when network discovery cannot determine the region from existing VPC subnets. Unlike `N8N_AI_CloudRun`, this variable is explicitly declared in `N8N_AI_GKE` and used as a fallback in the region local. |
 
 ### Validating Application Identity
 

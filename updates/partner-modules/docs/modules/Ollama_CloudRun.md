@@ -1,9 +1,15 @@
 # Ollama_CloudRun Module — Configuration Guide
 
-Ollama is an open-source LLM inference server that serves large language models such as Llama,
-Mistral, Gemma, and Phi via a REST API on port 11434. This module deploys Ollama on **Google
+Ollama is the de facto standard runtime for running large language models locally, with 169,000+
+GitHub stars and support for 4,500+ models — including Llama 3.1 (112M+ pulls), DeepSeek-R1
+(82.7M pulls), and Gemma. It attracts 110,000+ monthly developer searches, reflecting its
+dominant position in self-hosted LLM inference. Ollama is critical for financial services,
+healthcare, legal, and government deployments with strict data sovereignty requirements where
+models cannot leave the organisation's infrastructure. This module deploys Ollama on **Google
 Cloud Run** (serverless, CPU-only) with model weights persisted to a GCS Fuse volume so that
-container restarts load models from storage rather than re-downloading them.
+container restarts load models from storage rather than re-downloading them. It is designed as a
+shared AI inference endpoint for Flowise, N8N, RAGFlow, Django, and other applications in the
+same VPC.
 
 `Ollama_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP
 infrastructure provisioning to App_CloudRun (Cloud Run service, networking, Secret Manager, GCS,
@@ -62,13 +68,14 @@ and `scripts_dir` inputs.
 | `support_users` | `list(string)` | `[]` | Email addresses granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `map(string)` | `{}` | Labels applied to all module-managed resources. |
 | `module_description` | `string` | *(Ollama_CloudRun description)* | Platform UI description. |
-| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/applications/ollama"` | External documentation URL. |
+| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/Ollama_CloudRun"` | External documentation URL. |
 | `module_dependency` | `list(string)` | `["Services_GCP"]` | Modules that must be deployed before this one. |
 | `module_services` | `list(string)` | *(GCP service list)* | GCP services consumed by this module. |
 | `credit_cost` | `number` | `100` | Platform credits consumed on deployment. |
-| `require_credit_purchases` | `bool` | `true` | Enforce credit balance check before deployment. |
+| `require_credit_purchases` | `bool` | `false` | Enforce credit balance check before deployment. |
 | `enable_purge` | `bool` | `true` | Permit full deletion of all module resources on destroy. |
-| `public_access` | `bool` | `false` | Controls platform UI visibility. |
+| `public_access` | `bool` | `true` | Controls platform UI visibility. |
+| `shared_users` | `list(string)` | `[]` | Users granted access to this module regardless of `public_access`. Actively enforced by the platform. |
 | `deployment_id` | `string` | `""` | Optional fixed deployment ID. Auto-generated when blank. |
 
 ---
@@ -84,7 +91,7 @@ and `scripts_dir` inputs.
 | `description` | `string` | `"Ollama — standalone open-source LLM inference server..."` | Brief description surfaced in resource metadata. |
 | `application_version` | `string` | `"latest"` | Ollama Docker image tag. Use a pinned tag (e.g. `"0.3.12"`) in production. |
 
-### §3.B · Ollama Model Configuration (Group 18)
+### §3.B · Ollama Model Configuration (Group 19)
 
 These are the Ollama-specific variables that have no equivalent in other wrapper modules.
 
@@ -351,9 +358,10 @@ Complete variable reference with UIMeta group assignments.
 | `module_dependency` | `["Services_GCP"]` | 0 |
 | `module_services` | *(list of GCP services)* | 0 |
 | `credit_cost` | `100` | 0 |
-| `require_credit_purchases` | `true` | 0 |
+| `require_credit_purchases` | `false` | 0 |
 | `enable_purge` | `true` | 0 |
-| `public_access` | `false` | 0 |
+| `public_access` | `true` | 0 |
+| `shared_users` | `[]` | 0 |
 | `deployment_id` | `""` | 0 |
 | `resource_creator_identity` | `"rad-module-creator@..."` | 0 |
 | `project_id` | *(required)* | 1 |
@@ -437,8 +445,8 @@ Complete variable reference with UIMeta group assignments.
 | `delete_untagged_images` | `true` | 13 |
 | `image_retention_days` | `30` | 13 |
 | `max_revisions_to_retain` | `7` | 13 |
-| `default_model` | `""` | 18 |
-| `model_pull_timeout_seconds` | `3600` | 18 |
+| `default_model` | `""` | 19 |
+| `model_pull_timeout_seconds` | `3600` | 19 |
 
 ---
 
@@ -505,3 +513,24 @@ resource_labels = {
 
 enable_image_mirroring = true
 ```
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

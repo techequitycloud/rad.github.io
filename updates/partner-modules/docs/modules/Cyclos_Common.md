@@ -90,7 +90,7 @@ The absolute path to the module directory, used by wrapper modules to locate the
 | `deployment_id_suffix` | `string` | required | Random suffix used in resource name calculations. Set to the same value as `deployment_id` by wrapper modules. |
 | `service_url` | `string` | `""` | Accessible service URL (empty for GKE — URL is not known at plan time) |
 | `tenant_deployment_id` | `string` | `"demo"` | Deployment environment identifier (1–20 lowercase alphanumeric characters) |
-| `deployment_region` | `string` | `"us-central1"` | Primary GCP region for deployment |
+| `region` | `string` | `"us-central1"` | Primary GCP region for deployment |
 
 ### Application
 

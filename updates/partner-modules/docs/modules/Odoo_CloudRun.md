@@ -1,5 +1,7 @@
 # Odoo_CloudRun Module — Configuration Guide
 
+Odoo is an open-source ERP suite with 16M+ users, 170,000+ enterprise customers across 5 continents, and €650M in 2025 billing revenue growing at 42% CAGR — adding 13,000 new clients per month. It controls 5.77% global ERP market share and 12–15% of the SME segment, and is targeting €1B in revenue by 2027. Odoo is the primary open-source disruptor against SAP, Oracle, and Microsoft Dynamics, delivering CRM, accounting, inventory, manufacturing, HR, and e-commerce in one integrated suite with zero licensing cost.
+
 `Odoo_CloudRun` deploys **Odoo Community Edition** on Google Cloud Run, backed by
 Cloud SQL PostgreSQL and a Cloud Filestore NFS volume for shared file storage.
 It is a **wrapper module** built on top of `App_CloudRun`. All GCP infrastructure
@@ -405,9 +407,9 @@ Complete list of all input variables, grouped by UI section.
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
 | 0 | `credit_cost` | number | `100` | — |
-| 0 | `require_credit_purchases` | bool | `true` | — |
+| 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
-| 0 | `public_access` | bool | `false` | — |
+| 0 | `public_access` | bool | `true` | — |
 | 0 | `deployment_id` | string | `""` | yes |
 | 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
 | 1 | `project_id` | string | — | yes |
@@ -505,3 +507,24 @@ Complete list of all input variables, grouped by UI section.
 | 21 | `vpc_sc_dry_run` | bool | `true` | yes |
 | 21 | `organization_id` | string | `""` | yes |
 | 21 | `enable_audit_logging` | bool | `false` | yes |
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

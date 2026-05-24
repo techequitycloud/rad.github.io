@@ -1,6 +1,6 @@
 # Flowise_GKE Module — Configuration Guide
 
-Flowise is an open-source visual AI workflow builder that lets non-developers construct LangChain and LlamaIndex pipelines through a drag-and-drop interface. This module deploys Flowise on **GKE Autopilot** with a managed Cloud SQL PostgreSQL database, GCS-backed file storage, and optional NFS for shared volumes.
+Flowise is an open-source visual AI workflow builder that lets non-developers construct LangChain and LlamaIndex pipelines through a drag-and-drop interface — now backed by Workday for enterprise deployments. It chains models, retrieval tools, prompt templates, and decision logic without boilerplate code, making it the primary entry point for visual AI development at a time when 76% of developers are using or planning to use AI tools. It is ideal for rapidly prototyping chatbots, RAG systems, and multi-agent pipelines. This module deploys Flowise on **GKE Autopilot** with a managed Cloud SQL PostgreSQL database, GCS-backed file storage, and optional NFS for shared volumes.
 
 `Flowise_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS, secrets, CI/CD) and a `Flowise_Common` sub-module to supply Flowise-specific application configuration, secret generation, and storage bucket definitions.
 
@@ -56,9 +56,9 @@ The following behaviours are applied automatically and cannot be overridden via 
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed first. |
 | `module_services` | `["GKE Autopilot", "Cloud SQL (PostgreSQL 15)", "Cloud Storage", "Secret Manager", "Artifact Registry", "Cloud Build"]` | GCP services consumed. |
 | `credit_cost` | `100` | Platform credits consumed on deployment. |
-| `require_credit_purchases` | `true` | Enforces credit balance check before deploy. |
+| `require_credit_purchases` | `false` | Enforces credit balance check before deploy. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
-| `public_access` | `false` | Controls platform catalogue visibility. |
+| `public_access` | `true` | Controls platform catalogue visibility. |
 | `deployment_id` | `""` | Auto-generated suffix. Set explicitly to pin resource names across Terraform runs. |
 | `resource_creator_identity` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform. |
 
@@ -72,7 +72,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 | `tenant_deployment_id` | `"demo"` | Short suffix appended to resource names. 1–20 lowercase alphanumeric characters and hyphens. |
 | `support_users` | `[]` | Emails granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `{}` | Labels applied to all module-managed resources. |
-| `deployment_region` | `"us-central1"` | Fallback region when network discovery cannot determine region from VPC subnets. |
+| `region` | `"us-central1"` | Fallback region when network discovery cannot determine region from VPC subnets. |
 
 ---
 

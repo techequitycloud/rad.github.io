@@ -1,6 +1,6 @@
 # Wikijs_GKE Module — Configuration Guide
 
-`Wikijs_GKE` is a pre-configured wrapper around the [`App_GKE`](../App_GKE/App_GKE.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Kubernetes Engine (GKE) Autopilot.
+`Wikijs_GKE` is a pre-configured wrapper around the [`App_GKE`](../App_GKE/App_GKE.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Kubernetes Engine (GKE) Autopilot. Wiki.js has 28,000+ GitHub stars and is adopted by software teams, healthcare organizations (including the Indonesia Ministry of Health), educational institutions, and government agencies (including Brazil social services). It replaces expensive Confluence licenses — saving $5–10/user/month — with support for Markdown, WYSIWYG editing, LDAP/SAML/OAuth, and Git sync for version-controlled knowledge management.
 
 Every variable in this module is passed through to `App_GKE`. The wrapper's role is to supply Wiki.js-appropriate defaults and to call the `Wikijs_Common` sub-module, which generates the application's Docker build context, database initialisation scripts, and storage configuration. You configure this module exactly as you would `App_GKE`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_GKE`, or that are unique to this wrapper.
 
@@ -47,7 +47,7 @@ This module adds one variable not present in `App_GKE`:
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `deployment_region` | `"us-central1"` | GCP region string | Fallback region used when the network discovery sub-module cannot determine a region from existing VPC subnet metadata. The discovery module inspects the project's VPC subnets and selects the region of the first subnet found. If no subnets exist yet — for example, on a first deployment into a fresh project — this value is used instead. Override this if your infrastructure is in a region other than `us-central1`. This variable has no effect once a VPC with subnets exists in the project. |
+| `region` | `"us-central1"` | GCP region string | Fallback region used when the network discovery sub-module cannot determine a region from existing VPC subnet metadata. The discovery module inspects the project's VPC subnets and selects the region of the first subnet found. If no subnets exist yet — for example, on a first deployment into a fresh project — this value is used instead. Override this if your infrastructure is in a region other than `us-central1`. This variable has no effect once a VPC with subnets exists in the project. |
 
 ---
 

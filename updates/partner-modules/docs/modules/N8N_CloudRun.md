@@ -1,9 +1,6 @@
 # N8N_CloudRun Module — Configuration Guide
 
-n8n is an open-source workflow automation platform that lets you connect services, run logic,
-and build automated pipelines through a visual node-based interface. This module deploys n8n
-on **Google Cloud Run** with a managed Cloud SQL PostgreSQL database and GCS-backed storage
-persistence.
+n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), **230,000+ active users**, and a **$2.5B valuation** as of 2025 — growing from $350M in under four months and serving a quarter of the Fortune 500. With $240M raised across four funding rounds, 400+ integrations, and native AI nodes, n8n connects apps, APIs, and data sources with full code flexibility. It is self-hostable for total data sovereignty and no per-execution fees. This module deploys n8n on **Google Cloud Run** with a managed Cloud SQL PostgreSQL database and GCS-backed storage persistence.
 
 `N8N_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP
 infrastructure provisioning to App_CloudRun (Cloud Run service, Cloud SQL, networking, Secret
@@ -460,9 +457,9 @@ Complete list of all input variables, grouped by UI section.
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
 | 0 | `credit_cost` | number | `100` | — |
-| 0 | `require_credit_purchases` | bool | `true` | — |
+| 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
-| 0 | `public_access` | bool | `false` | — |
+| 0 | `public_access` | bool | `true` | — |
 | 0 | `deployment_id` | string | `""` | yes |
 | 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
 | 1 | `project_id` | string | — | yes |
@@ -555,4 +552,23 @@ Complete list of all input variables, grouped by UI section.
 | 21 | `organization_id` | string | `""` | yes |
 | 21 | `enable_audit_logging` | bool | `false` | yes |
 
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
 

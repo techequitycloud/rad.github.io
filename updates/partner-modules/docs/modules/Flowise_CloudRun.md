@@ -1,7 +1,11 @@
 # Flowise_CloudRun Module — Configuration Guide
 
 Flowise is an open-source visual AI workflow builder that lets non-developers construct
-LangChain and LlamaIndex pipelines through a drag-and-drop interface. This module deploys
+LangChain and LlamaIndex pipelines through a drag-and-drop interface — now backed by Workday
+for enterprise deployments. It chains models, retrieval tools, prompt templates, and decision
+logic without boilerplate code, making it the primary entry point for visual AI development
+at a time when 76% of developers are using or planning to use AI tools. It is ideal for
+rapidly prototyping chatbots, RAG systems, and multi-agent pipelines. This module deploys
 Flowise on **Google Cloud Run** with a managed Cloud SQL PostgreSQL database and GCS-backed
 file storage.
 
@@ -374,9 +378,9 @@ Complete list of all input variables, grouped by UI section.
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
 | 0 | `credit_cost` | number | `100` | — |
-| 0 | `require_credit_purchases` | bool | `true` | — |
+| 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
-| 0 | `public_access` | bool | `false` | — |
+| 0 | `public_access` | bool | `true` | — |
 | 0 | `deployment_id` | string | `""` | yes |
 | 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
 | 1 | `project_id` | string | — | yes |
@@ -518,3 +522,24 @@ Complete list of all input variables, grouped by UI section.
 | `cloudbuild_trigger_name` | Cloud Build trigger name for CI/CD | — |
 | `cloudbuild_trigger_id` | Cloud Build trigger ID for CI/CD | — |
 | `cicd_configuration` | Complete CI/CD configuration details | — |
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

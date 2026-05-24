@@ -108,7 +108,7 @@ The absolute path to the module directory, used by wrapper modules to locate the
 |----------|------|---------|-------------|
 | `enable_cloudsql_volume` | `bool` | `true` | Mount Cloud SQL Auth Proxy sidecar socket |
 | `gcs_volumes` | `list(object)` | `[]` | GCS Fuse volume mounts (name, bucket_name, mount_path, readonly, mount_options) |
-| `deployment_region` | `string` | `"us-central1"` | Region for the storage bucket |
+| `region` | `string` | `"us-central1"` | Region for the storage bucket |
 
 ---
 

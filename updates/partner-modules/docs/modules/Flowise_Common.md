@@ -52,7 +52,7 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 |---|---|
 | `name` | `<resource_prefix>-flowise-uploads` |
 | `name_suffix` | `"flowise-uploads"` |
-| `location` | `var.deployment_region` |
+| `location` | `var.region` |
 | `storage_class` | `"STANDARD"` |
 | `force_destroy` | `true` |
 | `versioning_enabled` | `false` |
@@ -193,7 +193,7 @@ All variables are passed in by the wrapper modules (`Flowise_CloudRun` and `Flow
 |---|---|---|---|
 | `project_id` | string | *(required)* | GCP project ID. |
 | `tenant_deployment_id` | string | `"demo"` | Tenant identifier suffix. |
-| `deployment_region` | string | `"us-central1"` | Region for the GCS storage bucket. |
+| `region` | string | `"us-central1"` | Region for the GCS storage bucket. |
 | `deployment_id` | string | `""` | Random deployment ID suffix. |
 | `resource_labels` | map(string) | `{}` | Labels applied to created resources. |
 | `application_name` | string | `"flowise"` | Application name. |
@@ -239,7 +239,7 @@ module "flowise_app" {
   project_id           = var.project_id
   tenant_deployment_id = var.tenant_deployment_id
   deployment_id        = local.random_id
-  deployment_region    = local.region
+  region               = local.region
   resource_labels      = var.resource_labels
 
   application_name    = var.application_name

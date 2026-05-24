@@ -101,7 +101,7 @@ One entry, always included:
 |---|---|
 | `name_suffix` | `"models"` |
 | `name` | `<wrapper_prefix>-models` |
-| `location` | From `deployment_region` |
+| `location` | From `region` |
 | `storage_class` | `"STANDARD"` |
 | `force_destroy` | `true` |
 | `versioning_enabled` | `false` |
@@ -220,7 +220,7 @@ start within the retry window.
 | `wrapper_prefix` | `string` | **required** | Prefix for GCS bucket names. Must match the `resource_prefix` used by the calling App_CloudRun or App_GKE module. |
 | `deployment_id` | `string` | `""` | Unique deployment identifier. |
 | `common_labels` | `map(string)` | `{}` | Labels applied to resources created by this module. |
-| `deployment_region` | `string` | `"us-central1"` | Region for the GCS models bucket. |
+| `region` | `string` | `"us-central1"` | GCP region for resource deployment. Used as the location for the GCS models bucket. |
 
 ### Application Details
 
@@ -296,7 +296,7 @@ The `gcs_volumes` entry appended by this module:
 
 | Aspect | Ollama_CloudRun | Ollama_GKE |
 |---|---|---|
-| `deployment_region` | Hard-coded to `"us-central1"` in `main.tf` | Auto-discovered from VPC subnets via `app_networking`; falls back to `var.deployment_region` |
+| `region` | Passed as `"us-central1"` from `main.tf` | Auto-discovered from VPC subnets via `app_networking`; falls back to `var.region` |
 | Model-pull job type | Cloud Run Job | Kubernetes Job |
 | `mount_gcs_volumes` | `["ollama-models"]` mounted in the Cloud Run Job | `["ollama-models"]` mounted in the Kubernetes Job |
 | GCS Fuse driver | GCS Fuse (Cloud Run gen2) | GCS Fuse CSI driver (GKE) |
@@ -318,8 +318,8 @@ module "ollama_app" {
   deployment_id = local.random_id
   common_labels = local.common_labels
 
-  wrapper_prefix    = local.wrapper_prefix
-  deployment_region = "us-central1"
+  wrapper_prefix = local.wrapper_prefix
+  region         = var.region
 
   application_name         = var.application_name
   application_display_name = var.application_display_name

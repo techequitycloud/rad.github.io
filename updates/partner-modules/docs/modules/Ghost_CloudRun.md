@@ -6,7 +6,7 @@ This document provides a comprehensive reference for the `modules/Ghost_CloudRun
 
 ## 1. Module Overview
 
-Ghost is a professional open-source publishing platform for newsletters, memberships, and content sites. `Ghost_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Ghost-specific application configuration, database initialisation, and storage configuration via `Ghost_Common`.
+Ghost is a professional open-source publishing platform for newsletters, memberships, and content sites — trusted by Buffer, Cloudflare, DuckDuckGo, Duolingo, FreeCodeCamp, Revolut, and Kickstarter. With 22,000+ active customers and 100,000+ websites growing at roughly 15%/year (ahead of the 11% CMS market average), Ghost's built-in subscription monetization, native SEO, and superior page speed make it the leading alternative to WordPress for content-first businesses. `Ghost_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Ghost-specific application configuration, database initialisation, and storage configuration via `Ghost_Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Node.js container, 2 vCPU / 4 Gi by default. Scale-to-zero (`min_instance_count = 0`) with `max_instance_count = 5` — both hardcoded, not user-configurable.
@@ -455,9 +455,9 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `100` | Platform metadata: deployment credit cost. |
-| `require_credit_purchases` | 0 | `true` | Platform metadata: enforces credit balance check. |
+| `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
 | `enable_purge` | 0 | `true` | Permits full deletion of module resources on destroy. |
-| `public_access` | 0 | `false` | Platform catalogue visibility. |
+| `public_access` | 0 | `true` | Platform catalogue visibility. |
 | `deployment_id` | 0 | `""` | Deployment ID suffix. Auto-generated if empty. |
 | `resource_creator_identity` | 0 | (platform SA) | Service account used by Terraform to manage resources. |
 | `project_id` | 1 | — | GCP project ID. **Required.** |
@@ -571,3 +571,24 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `container_image` | Container image used for the deployment. |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 | `github_repository_url` | GitHub repository URL connected for CI/CD. |
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

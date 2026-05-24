@@ -1,11 +1,6 @@
 # N8N_AI_CloudRun Module — Configuration Guide
 
-n8n is an open-source workflow automation platform that lets you connect services, run logic,
-and build AI-powered pipelines through a visual node-based interface. This module deploys n8n
-on **Google Cloud Run** alongside two companion AI services: **Qdrant** (vector database for
-RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together
-they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis
-workflows without external AI API dependencies.
+n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), trusted by a quarter of the Fortune 500. `N8N_AI_CloudRun` is the AI-augmented variant — pre-configured with native LLM nodes, agent loops, and vector store integrations so teams can build production AI automation pipelines without boilerplate. AI-specific template usage is the fastest-growing segment within the N8N community. This module deploys n8n on **Google Cloud Run** alongside two companion AI services: **Qdrant** (vector database for RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis workflows without external AI API dependencies.
 
 `N8N_AI_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all
 GCP infrastructure provisioning to App_CloudRun (Cloud Run service, Cloud SQL, networking,
@@ -478,9 +473,9 @@ Complete reference of all `N8N_AI_CloudRun` variables, their defaults, and UI me
 | `module_dependency` | `["Services_GCP"]` | 0 |
 | `module_services` | *(list of GCP services)* | 0 |
 | `credit_cost` | `100` | 0 |
-| `require_credit_purchases` | `true` | 0 |
+| `require_credit_purchases` | `false` | 0 |
 | `enable_purge` | `true` | 0 |
-| `public_access` | `false` | 0 |
+| `public_access` | `true` | 0 |
 | `deployment_id` | `""` | 0 |
 | `resource_creator_identity` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | 0 |
 | `project_id` | *(required)* | 1 |
@@ -579,7 +574,23 @@ Complete reference of all `N8N_AI_CloudRun` variables, their defaults, and UI me
 | `image_retention_days` | `30` | 9 |
 | `max_revisions_to_retain` | `7` | 3 |
 
+## Destroying Resources
 
+### Known Deletion Issue: Serverless IPv4 Address Release
 
+When destroying a Cloud Run deployment, you may encounter an error similar to:
 
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
 

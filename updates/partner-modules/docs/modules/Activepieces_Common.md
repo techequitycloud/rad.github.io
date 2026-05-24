@@ -225,7 +225,7 @@ Database setup script used by the default `db-init` initialization job. See §5 
 | `labels` | `map(string)` | `{}` | Labels applied to created resources |
 | `tenant_deployment_id` | `string` | `"demo"` | Tenant/environment identifier |
 | `deployment_id` | `string` | `""` | Random deployment ID suffix |
-| `deployment_region` | `string` | `"us-central1"` | Primary GCP region |
+| `region` | `string` | `"us-central1"` | Primary GCP region |
 
 ### Application
 
@@ -296,7 +296,7 @@ module "activepieces_app" {
   resource_prefix      = local.resource_prefix
   tenant_deployment_id = var.tenant_deployment_id
   deployment_id        = local.random_id
-  deployment_region    = local.region
+  region               = local.region
   labels               = var.resource_labels
 
   application_name    = var.application_name

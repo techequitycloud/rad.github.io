@@ -1,9 +1,16 @@
 # RAGFlow_GKE Module — Configuration Guide
 
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG)
-platform. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and embeds
-them, stores vectors in Elasticsearch, exposes a REST API for question-answering, and provides
-a web UI for knowledge base management and enterprise search.
+platform with 80,000+ GitHub stars and 2,596% year-over-year contributor growth — named one of
+GitHub's fastest-growing open-source projects (Apache 2.0). Unlike generic RAG frameworks,
+RAGFlow is purpose-built for deep document understanding: it correctly parses PDFs, tables, and
+visual layouts before chunking and retrieval, making it significantly more accurate on structured
+enterprise content. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and
+embeds them, stores vectors in Elasticsearch, exposes a REST API for question-answering, and
+provides a web UI for knowledge base management and enterprise search. Typical deployments power
+enterprise knowledge bases, legal research tools, financial document analysis, and customer
+support systems where retrieval accuracy depends on document parsing quality. v0.25 (April 2026)
+added agentic memory, sandbox code execution, and prebuilt ingestion pipelines.
 
 `RAGFlow_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all
 GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS,
@@ -95,16 +102,17 @@ RAGFlow_GKE
 | `module_dependency` | `list(string)` | `["Services_GCP", "Elasticsearch_GKE"]` | Modules that must be deployed first. `{{UIMeta group=0 order=3}}` |
 | `module_services` | `list(string)` | *(GKE, MySQL, Elasticsearch, Redis, etc.)* | GCP services consumed. `{{UIMeta group=0 order=4}}` |
 | `credit_cost` | `number` | `150` | Platform credits consumed on deployment. `{{UIMeta group=0 order=5}}` |
-| `require_credit_purchases` | `bool` | `true` | Enforce credit balance check. `{{UIMeta group=0 order=6}}` |
+| `require_credit_purchases` | `bool` | `false` | Enforce credit balance check. `{{UIMeta group=0 order=6}}` |
 | `enable_purge` | `bool` | `true` | Permit full deletion on destroy. `{{UIMeta group=0 order=7}}` |
-| `public_access` | `bool` | `false` | Platform UI visibility. `{{UIMeta group=0 order=8}}` |
-| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated when blank. `{{UIMeta group=0 order=9}}` |
-| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Terraform service account. `{{UIMeta group=0 order=9}}` |
+| `public_access` | `bool` | `true` | Platform UI visibility. `{{UIMeta group=0 order=8}}` |
+| `shared_users` | `list(string)` | `[]` | Users granted access regardless of `public_access`. Actively enforced by the platform. `{{UIMeta group=0 order=9}}` |
+| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated when blank. `{{UIMeta group=0 order=10}}` |
+| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Terraform service account. `{{UIMeta group=0 order=11}}` |
 | `project_id` | `string` | **required** | GCP project ID. `{{UIMeta group=1 order=1}}` |
 | `tenant_deployment_id` | `string` | `"demo"` | 1–20 lowercase letters, numbers, hyphens. `{{UIMeta group=1 order=2}}` |
 | `support_users` | `list(string)` | `[]` | Email addresses granted IAM access and monitoring alerts. `{{UIMeta group=1 order=3}}` |
 | `resource_labels` | `map(string)` | `{}` | Labels applied to all resources. `{{UIMeta group=1 order=4}}` |
-| `deployment_region` | `string` | `"us-central1"` | GCP region fallback. `{{UIMeta group=1 order=5}}` |
+| `region` | `string` | `"us-central1"` | GCP region fallback. `{{UIMeta group=1 order=2}}` |
 
 ---
 
@@ -356,7 +364,7 @@ These settings apply only when `workload_type = "StatefulSet"`.
 | `health_check_config` | `object` | `{ enabled=true, path="/v1/health", initial_delay_seconds=120, period_seconds=30 }` | App_GKE-standard liveness probe. `{{UIMeta group=9 order=2}}` |
 | `uptime_check_config` | `object` | `{ enabled=false, path="/v1/health", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. `{{UIMeta group=9 order=3}}` |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies. `{{UIMeta group=9 order=4}}` |
-| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=60, timeout_seconds=10, period_seconds=10, failure_threshold=18 }` | Container startup probe forwarded to `RAGFlow_Common`. `{{UIMeta group=9 order=5}}` |
+| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=120, timeout_seconds=10, period_seconds=10, failure_threshold=60 }` | Container startup probe forwarded to `RAGFlow_Common`. `{{UIMeta group=9 order=5}}` |
 | `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Container liveness probe forwarded to `RAGFlow_Common`. `{{UIMeta group=9 order=6}}` |
 
 ---

@@ -1,10 +1,15 @@
 # Elasticsearch_GKE Module — Configuration Guide
 
-Elasticsearch is an open-source distributed search and analytics engine based on Apache Lucene.
-This module deploys a **single-node Elasticsearch cluster** on **GKE Autopilot** as a
-Kubernetes StatefulSet with persistent SSD storage. It is designed as a shared search
-infrastructure dependency — primarily for `RAGFlow_GKE`, which uses it for document vector
-storage and full-text search.
+Elasticsearch is an open-source distributed search and analytics engine based on Apache Lucene,
+used by 58,220+ companies with a 4.43% DBMS market share. Elastic revenue reached $450M in Q3
+FY2026 (+18% YoY), and the managed Elasticsearch market is projected to grow from $1.52B (2024)
+to $11.98B by 2033 at a 21.7% CAGR. Beyond traditional full-text search, Elasticsearch has
+become central to enterprise AI architectures as a vector database powering semantic search and
+RAG pipelines. It drives e-commerce product search, log analytics, application performance
+monitoring (APM), SIEM, and fraud detection at scale. This module deploys a **single-node
+Elasticsearch cluster** on **GKE Autopilot** as a Kubernetes StatefulSet with persistent SSD
+storage. It is designed as a shared search infrastructure dependency — primarily for
+`RAGFlow_GKE`, which uses it for document vector storage and full-text search.
 
 `Elasticsearch_GKE` is a **wrapper module** built on top of `App_GKE`. It delegates all GCP
 infrastructure provisioning to `App_GKE` and assembles the Elasticsearch-specific configuration
@@ -105,16 +110,17 @@ override any of the above.
 | `module_dependency` | `list(string)` | `["Services_GCP"]` | Modules that must be deployed first. `{{UIMeta group=0 order=3}}` |
 | `module_services` | `list(string)` | `["Google Kubernetes Engine", "Persistent Disk", ...]` | GCP services consumed. `{{UIMeta group=0 order=4}}` |
 | `credit_cost` | `number` | `80` | Platform credits consumed on deployment. `{{UIMeta group=0 order=5}}` |
-| `require_credit_purchases` | `bool` | `true` | Enforce credit balance check. `{{UIMeta group=0 order=6}}` |
+| `require_credit_purchases` | `bool` | `false` | Enforce credit balance check. `{{UIMeta group=0 order=6}}` |
 | `enable_purge` | `bool` | `true` | Permit full deletion on destroy. `{{UIMeta group=0 order=7}}` |
-| `public_access` | `bool` | `false` | Platform UI visibility. `{{UIMeta group=0 order=8}}` |
-| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated when blank. `{{UIMeta group=0 order=9}}` |
-| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Terraform service account. `{{UIMeta group=0 order=9}}` |
+| `public_access` | `bool` | `true` | Platform UI visibility. `{{UIMeta group=0 order=8}}` |
+| `shared_users` | `list(string)` | `[]` | Users granted access regardless of `public_access`. Actively enforced by the platform. `{{UIMeta group=0 order=9}}` |
+| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated when blank. `{{UIMeta group=0 order=10}}` |
+| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Terraform service account. `{{UIMeta group=0 order=11}}` |
 | `project_id` | `string` | **required** | GCP project ID. `{{UIMeta group=1 order=1}}` |
 | `tenant_deployment_id` | `string` | `"demo"` | 1–20 lowercase letters, numbers, hyphens. `{{UIMeta group=1 order=2}}` |
 | `support_users` | `list(string)` | `[]` | Email addresses granted IAM access and monitoring alerts. `{{UIMeta group=1 order=3}}` |
 | `resource_labels` | `map(string)` | `{}` | Labels applied to all resources. `{{UIMeta group=1 order=4}}` |
-| `deployment_region` | `string` | `"us-central1"` | GCP region fallback when VPC discovery finds no subnets. `{{UIMeta group=1 order=5}}` |
+| `region` | `string` | `"us-central1"` | GCP region fallback when VPC discovery finds no subnets. `{{UIMeta group=1 order=5}}` |
 
 ---
 

@@ -1,6 +1,6 @@
 # Wikijs_CloudRun Module — Configuration Guide
 
-`Wikijs_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Cloud Run Gen2.
+`Wikijs_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Cloud Run Gen2. Wiki.js has 28,000+ GitHub stars and is adopted by software teams, healthcare organizations (including the Indonesia Ministry of Health), educational institutions, and government agencies (including Brazil social services). It replaces expensive Confluence licenses — saving $5–10/user/month — with support for Markdown, WYSIWYG editing, LDAP/SAML/OAuth, and Git sync for version-controlled knowledge management.
 
 Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply Wiki.js-appropriate defaults and to call the `Wikijs_Common` sub-module, which generates the application's container image configuration, database initialisation logic, GCS Fuse storage mounts, and database password wiring. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.
 
@@ -414,3 +414,24 @@ The table below covers all variables unique to or with notable defaults in `Wiki
 | `organization_id` | `string` | `""` | 21 | GCP Org ID for VPC-SC policy |
 | `enable_audit_logging` | `bool` | `false` | 21 | Enable Cloud Audit Logs |
 | `enable_vpc_sc` | `bool` | `false` | 21 | VPC Service Controls |
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

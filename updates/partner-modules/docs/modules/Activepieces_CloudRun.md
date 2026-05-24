@@ -6,7 +6,7 @@ This document provides a comprehensive reference for the `modules/Activepieces_C
 
 ## 1. Module Overview
 
-Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation platform for connecting apps, APIs, and data sources. `Activepieces_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Activepieces-specific application configuration, secrets, database initialisation, and queue configuration via `Activepieces_Common`.
+Activepieces is a Y Combinator-backed open-source workflow automation platform (Apache 2.0) with **22,000+ GitHub stars** and **100,000+ active installations**. At $1.7M ARR with a team of ~15, it is a lean, high-velocity Zapier/Make alternative with 450+ integrations and native AI/MCP server support — ideal for teams prioritising data sovereignty and avoiding per-task pricing at scale. White-label capability makes it a strong fit for agencies and SaaS builders. `Activepieces_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Activepieces-specific application configuration, secrets, database initialisation, and queue configuration via `Activepieces_Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Node.js container, scale-to-zero supported (`min_instance_count = 0` by default). Custom image build via Cloud Build wraps the upstream `activepieces/activepieces` image.
@@ -144,7 +144,7 @@ The `db-init` job uses `postgres:15-alpine` and executes `Activepieces_Common/sc
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Empty list triggers the default `db-init` job with `execute_on_apply = true`. Custom jobs can be provided to override. |
-| `cron_jobs` | 12 | `[]` | Recurring jobs triggered by Cloud Scheduler. |
+| `cron_jobs` | 12 | `[]` | **Not referenced** — this variable is defined for UI consistency but is not forwarded to `App_CloudRun` in the current module version. Setting it has no effect on the deployed Cloud Run service. Use `initialization_jobs` for one-off tasks. |
 
 ---
 
@@ -373,9 +373,9 @@ All user-configurable variables exposed by `Activepieces_CloudRun`, sorted by UI
 | `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `100` | Platform metadata: deployment credit cost. |
-| `require_credit_purchases` | 0 | `true` | Platform metadata: enforces credit balance check. |
+| `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
 | `enable_purge` | 0 | `true` | Permits full deletion of module resources on destroy. |
-| `public_access` | 0 | `false` | Platform catalogue visibility. |
+| `public_access` | 0 | `true` | Platform catalogue visibility. |
 | `deployment_id` | 0 | `""` | Deployment ID suffix. Auto-generated if empty. |
 | `resource_creator_identity` | 0 | (platform SA) | Service account used by Terraform to manage resources. |
 | `project_id` | 1 | — | GCP project ID. **Required.** |
@@ -451,7 +451,7 @@ All user-configurable variables exposed by `Activepieces_CloudRun`, sorted by UI
 | `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. |
 | `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
 | `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Empty list triggers the default `db-init` job (`execute_on_apply=true`). |
-| `cron_jobs` | 12 | `[]` | Recurring scheduled Cloud Run Jobs. |
+| `cron_jobs` | 12 | `[]` | **Not referenced** — not forwarded to `App_CloudRun`. Has no effect in this module version. |
 | `startup_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=120, failure_threshold=10, ... }` | Activepieces_Common startup probe. Allow 7+ minutes on first boot. |
 | `liveness_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=30, failure_threshold=3, ... }` | Activepieces_Common liveness probe. |
 | `startup_probe_config` | 13 | `{ enabled=false }` | Cloud Run infrastructure startup probe. Disabled — `startup_probe` takes effect. |
@@ -467,3 +467,24 @@ All user-configurable variables exposed by `Activepieces_CloudRun`, sorted by UI
 | `vpc_sc_dry_run` | 21 | `true` | When `true`, VPC-SC violations are logged but not blocked. |
 | `organization_id` | 21 | `""` | GCP Organization ID for the VPC-SC policy. |
 | `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs for all supported services. |
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

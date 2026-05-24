@@ -1,9 +1,12 @@
 # Moodle_CloudRun Module — Configuration Guide
 
-Moodle is the world's most popular open-source Learning Management System (LMS), used by
-educational institutions, corporations, and online learning platforms worldwide. This module
-deploys Moodle on **Google Cloud Run** using a custom PHP 8.3/Apache container, backed by a
-managed Cloud SQL PostgreSQL instance and shared NFS storage for course materials.
+Moodle is the world's most widely deployed open-source Learning Management System (LMS),
+holding 14% global market share and dominant positions in Europe (69%) and Latin America
+(73%). The global LMS market is growing from $24.5B in 2024 to $107.9B by 2033 at a 17.9%
+CAGR, driven by demand for corporate training, higher education, and government certification
+programs. This module deploys Moodle on **Google Cloud Run** using a custom PHP 8.3/Apache
+container, backed by a managed Cloud SQL PostgreSQL instance and shared NFS storage for
+course materials, with auto-scaling to support thousands of concurrent students.
 
 `Moodle_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP
 infrastructure provisioning to App_CloudRun (Cloud Run service, Cloud SQL, networking, Secret
@@ -242,9 +245,9 @@ Google accounts.
 ### §4.C · Cloud Armor & CDN
 
 Cloud Armor provides a WAF security policy fronted by a Global HTTPS Load Balancer. When
-`application_domains` is non-empty, `MOODLE_REVERSE_PROXY` and `ENABLE_REVERSE_PROXY` are
-automatically set to `"true"` / `"TRUE"` so Moodle generates correct HTTPS URLs behind the
-load balancer.
+`application_domains` is non-empty, `ENABLE_REVERSE_PROXY` is automatically set to `"TRUE"` so
+Moodle generates correct HTTPS URLs behind the load balancer. Note: `MOODLE_REVERSE_PROXY` is
+not injected by this module — only `ENABLE_REVERSE_PROXY` is set.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -286,8 +289,8 @@ load balancer.
 
 Custom domains require `enable_cloud_armor = true`. The module provisions a Global HTTPS Load
 Balancer with Google-managed SSL certificates. Setting `application_domains` also activates
-`MOODLE_REVERSE_PROXY = "true"` and `ENABLE_REVERSE_PROXY = "TRUE"` automatically so Moodle
-generates correct HTTPS URLs behind the load balancer.
+`ENABLE_REVERSE_PROXY = "TRUE"` automatically so Moodle generates correct HTTPS URLs behind
+the load balancer. Note: `MOODLE_REVERSE_PROXY` is not injected by this module.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -495,9 +498,9 @@ group they belong to.
 | `module_dependency` | `["Services_GCP"]` | 0 |
 | `module_services` | *(list of GCP services)* | 0 |
 | `credit_cost` | `100` | 0 |
-| `require_credit_purchases` | `true` | 0 |
+| `require_credit_purchases` | `false` | 0 |
 | `enable_purge` | `true` | 0 |
-| `public_access` | `false` | 0 |
+| `public_access` | `true` | 0 |
 | `deployment_id` | `""` | 0 |
 | `resource_creator_identity` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | 0 |
 | `project_id` | *(required)* | 1 |
@@ -587,10 +590,23 @@ group they belong to.
 | `image_retention_days` | `30` | 9 |
 | `max_revisions_to_retain` | `7` | 3 |
 
+## Destroying Resources
 
+### Known Deletion Issue: Serverless IPv4 Address Release
 
+When destroying a Cloud Run deployment, you may encounter an error similar to:
 
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
 
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
 
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
 
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
 

@@ -255,7 +255,7 @@ Translates platform-standard environment variables into n8n's native variable na
 | `wrapper_prefix` | `string` | **required** | Prefix for Secret Manager secret IDs and the storage bucket name |
 | `deployment_id` | `string` | `""` | Unique deployment identifier |
 | `common_labels` | `map(string)` | `{}` | Labels applied to secrets |
-| `deployment_region` | `string` | `"us-central1"` | Region for the storage bucket |
+| `region` | `string` | `"us-central1"` | Region for the storage bucket |
 
 ### Application
 
@@ -351,7 +351,7 @@ module "n8n_app" {
   wrapper_prefix          = local.resource_prefix
   common_labels           = local.labels
   deployment_id           = local.deployment_id
-  deployment_region       = var.deployment_region
+  region                  = var.region
   service_url             = local.service_url
   enable_ai_components    = var.enable_ai_components
   enable_qdrant           = var.enable_qdrant

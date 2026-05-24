@@ -61,7 +61,7 @@ Strapi has specific cryptographic requirements: four distinct secrets must be co
 
 | Bucket Suffix | Location | Purpose |
 |---------------|----------|---------|
-| `strapi-uploads` | `deployment_region` | Strapi media library uploads via GCS provider |
+| `strapi-uploads` | `region` | Strapi media library uploads via GCS provider |
 
 > **`resource_prefix` format:** `"{application_name}-{tenant_deployment_id}-{deployment_id}"` — uses hyphen separators, unlike most other modules which concatenate without separators. Example: `strapi-prod-a1b2c3d4`.
 
@@ -102,7 +102,7 @@ The `secret_ids` output has `depends_on = [time_sleep.secret_propagation]`, ensu
 | `project_id` | string | — | GCP project ID (required) |
 | `tenant_deployment_id` | string | `"demo"` | Tenant identifier used in secret naming |
 | `deployment_id` | string | `""` | Deployment identifier; auto-generated if empty |
-| `deployment_region` | string | `"us-central1"` | Region for the GCS bucket |
+| `region` | string | `"us-central1"` | Region for the GCS bucket |
 | `resource_labels` | map(string) | `{}` | Labels on all GCP resources |
 
 ### Application
@@ -373,7 +373,7 @@ module "strapi_common" {
   project_id           = var.project_id
   tenant_deployment_id = "prod"
   deployment_id        = random_id.deployment.hex
-  deployment_region    = "us-central1"
+  region               = "us-central1"
 
   enable_redis = true
   # redis_host omitted — resolves to NFS_SERVER_IP at runtime

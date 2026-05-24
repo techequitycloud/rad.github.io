@@ -6,7 +6,7 @@ This document provides a comprehensive reference for the `modules/Django_CloudRu
 
 ## 1. Module Overview
 
-Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design. `Django_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Django-specific application configuration, secrets, database initialisation, and storage configuration via `Django_Common`.
+Django is the most mature Python web framework, used by 35,570+ companies including Instagram, Spotify, Dropbox, and NASA. It holds 12.6% developer preference in the 2026 Stack Overflow Survey with 20,000+ job postings growing at 10% YoY. Its "batteries included" philosophy — built-in ORM, admin interface, and authentication — makes it the default choice for building secure, scalable APIs, internal tools, and ML-integrated web services. `Django_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Django-specific application configuration, secrets, database initialisation, and storage configuration via `Django_Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Python container, scale-to-zero by default (`min_instance_count = 0`). Custom image build via Cloud Build is the default workflow.
@@ -464,9 +464,9 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `100` | Platform metadata: deployment credit cost. |
-| `require_credit_purchases` | 0 | `true` | Platform metadata: enforces credit balance check. |
+| `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
 | `enable_purge` | 0 | `true` | Permits full deletion of module resources on destroy. |
-| `public_access` | 0 | `false` | Platform catalogue visibility. |
+| `public_access` | 0 | `true` | Platform catalogue visibility. |
 | `deployment_id` | 0 | `""` | Deployment ID suffix. Auto-generated if empty. |
 | `resource_creator_identity` | 0 | (platform SA) | Service account used by Terraform to manage resources. |
 | `project_id` | 1 | — | GCP project ID. **Required.** |
@@ -561,3 +561,64 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `vpc_sc_dry_run` | 21 | `true` | When `true`, VPC-SC violations are logged but not blocked. Set to `false` to enforce. |
 | `organization_id` | 21 | `""` | GCP Organization ID for the VPC-SC Access Context Manager policy. Auto-discovered when empty. |
 | `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ) for all supported services. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+The table below identifies the variables most commonly misconfigured in `Django_CloudRun` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong. For full variable details see Section 10 (Variable Reference) and the [App_CloudRun configuration guide](App_CloudRun.md).
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `application_name` | `"django"` (default; do not change after first deploy) | **Critical** | Embedded in Cloud Run service name, Artifact Registry repo, Secret Manager secrets, Cloud SQL database. Changing causes all named resources to be recreated — complete data loss. |
+| `tenant_deployment_id` | Match environment: `"prod"`, `"staging"`, `"dev"` | **Critical** | Changing after first deploy recreates all named resources. The old Cloud SQL instance (with all data) is orphaned and a new empty one is created. |
+| `application_version` | A pinned tag (e.g. `"1.2.3"`); avoid `"latest"` in production | **Medium** | `"latest"` makes rollback ambiguous — Cloud Run cannot distinguish between two `"latest"` revisions. Always pin to a meaningful version in production. |
+| `container_port` | `8080` (Django Gunicorn/Uvicorn default) | **Critical** | Mismatch causes the Cloud Run startup probe to fail immediately. All requests return 502. The revision never becomes healthy and continuously restarts. |
+| `min_instance_count` | `0` for dev (scale-to-zero); `1` for production (eliminate cold starts) | **Medium** | `0` in production: cold starts of 3–10 s for Django (image pull + Django setup + DB connection). Users experience slow first-request latency after idle periods. `≥ 1` with `cpu_always_allocated = false` increases cost — CPU is billed even when idle. |
+| `max_instance_count` | `≤ Cloud SQL max_connections ÷ avg_DB_connections_per_instance` | **High** | Exceeding Cloud SQL's connection limit causes `FATAL: sorry, too many clients already` for all instances simultaneously. Django's database backend raises `OperationalError` on every request until a connection is freed. |
+| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` for basic; increase for media processing | **High** | Memory too low: Django is OOMKilled (exit code 137) when processing large uploads or loading large querysets into memory. CPU too low: Gunicorn workers become CPU-throttled — request queuing and high latency. |
+| `application_database_name` | `"django_db"` (default; do not change after first deploy) | **Critical** | Renaming creates a new empty database. Django's `db-init` job runs against the new (empty) database and applies the schema fresh. All production data remains in the old database (now unreferenced) and is eventually deleted. |
+| `application_database_user` | `"django_user"` (default; do not change after first deploy) | **High** | A new user is created without privileges. Django cannot authenticate until `db-init` re-runs grants. Changing in production causes an outage until grants are applied. |
+| `enable_cloudsql_volume` | `true` (default; Cloud SQL Auth Proxy — secure, recommended) | **High** | `false`: Django must reach Cloud SQL's private IP directly over TCP. If Private Service Access is not configured correctly, all DB connections fail. IAM-based auth is lost; password-only auth is required. |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` (default; `db-init.sh` uses this path) | **Critical** | Wrong path: `db-init.sh` cannot find the Auth Proxy socket. DB init fails. The Cloud Run revision starts but crashes on the first database call with `no such file or directory`. |
+| `execution_environment` | `"gen2"` (required for NFS and GCS Fuse mounts) | **High** | `"gen1"` with `enable_nfs = true`: NFS mount fails at container startup. All instances fail to start. Django cannot write media files. |
+| `enable_nfs` | `true` (default; required for shared media files across instances) | **High** | `false` with `max_instance_count > 1`: each Cloud Run instance has its own ephemeral filesystem. Uploaded media files written by one instance are not visible to others. Users get 404 for recently uploaded files. After any instance restart, all files on that instance are gone. |
+| `nfs_mount_path` | `"/mnt/nfs"` (must match `MEDIA_ROOT` in `settings.py`) | **High** | Mismatch with `MEDIA_ROOT`: Django writes media files to the wrong path (ephemeral local storage). Files are lost on instance restart. If `MEDIA_ROOT` points to a non-existent path, `FileNotFoundError` on every file write. |
+| `ingress_settings` | `"all"` for public-facing; `"internal-and-cloud-load-balancing"` when using Cloud Armor | **Medium** | `"all"` with Cloud Armor enabled: traffic can bypass the load balancer via the direct `*.run.app` URL, circumventing WAF protection. Use `"internal-and-cloud-load-balancing"` to force all traffic through the LB+Armor path. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` (default; routes only RFC 1918 addresses via VPC) | **Medium** | `"PRIVATE_RANGES_ONLY"` when Redis or Cloud SQL is on a private IP that is not in RFC 1918: connections fail. Use `"ALL_TRAFFIC"` to route all egress via VPC (required for Memorystore or Cloud SQL on non-RFC-1918 private IP ranges). |
+| `startup_probe_config.path` | `"/healthz"` — implement this endpoint in Django to return HTTP 200 | **Critical** | If `"/healthz"` returns 404 (route not defined in Django): Cloud Run never routes traffic to the instance. Revision is healthy at the infrastructure level but receives a constant restart loop. Implement the view with `return HttpResponse("ok")`. |
+| `health_check_config.path` | `"/healthz"` — must be a fast, non-blocking endpoint | **High** | If the health endpoint makes a database call that times out: all instances are restarted simultaneously by the liveness probe. Cascading restarts can cause a complete outage. |
+| `startup_probe_config.failure_threshold` | `10` (default; ~110 s tolerance) — increase to `20` if Django takes longer than 100 s to start | **High** | Too low with Django running migrations at startup: the probe kills the instance before migrations complete. Restart loop prevents the service from ever becoming healthy. Increase `failure_threshold` or `period_seconds` instead of `initial_delay_seconds` to give Django more time without unnecessarily blocking traffic. |
+| `secret_environment_variables` | Use for `DJANGO_SUPERUSER_PASSWORD` and any API keys | **High** | Credentials in `environment_variables` instead of `secret_environment_variables`: visible in the GCP Console revision details, in Cloud Logging if the app prints env vars (e.g. `manage.py diffsettings`), and in Terraform state in plaintext. |
+| `enable_redis` | `false` (default); set `true` when using Redis-backed Django sessions or Celery | **Medium** | Left `false` when Django is configured to use Redis for sessions or cache (`CACHES`, `SESSION_ENGINE`): Django raises `redis.exceptions.ConnectionRefusedError` on every request that touches the cache/session. Symptom: users cannot log in; uncaught exceptions on cached views. |
+| `redis_host` | Private IP of Cloud Memorystore Redis instance | **High** | Wrong IP: all Django cache reads/writes fail. Sessions are invalidated. If `SESSION_ENGINE` is `django.contrib.sessions.backends.cache`, **all users are logged out on every request**. If using database-backed sessions as fallback, DB load spikes due to session table queries. |
+| `enable_cloud_armor` | `false` for internal; `true` for production public-facing Django | **High** | Leaving `false` for a public Django admin (`/admin/`): no rate limiting, no WAF protection. Django admin is susceptible to brute-force login attacks and SQL injection probes. Enable Cloud Armor and restrict `/admin/` to `admin_ip_ranges`. |
+| `admin_ip_ranges` | Your office VPN CIDR + CI/CD IPs | **High** | Empty with `enable_cloud_armor = true`: no bypass rule. Django's own health check traffic from GCP health probers is allowed (default allow rule), but your admin access may be blocked if a WAF rule matches your traffic pattern during a pentest or unusual browsing session. |
+| `enable_iap` | `false` for public; `true` for internal-only Django deployments | **High** | `true` without entries in `iap_authorized_users`/`iap_authorized_groups`: all requests (including yours) return HTTP 403. Add at least `"user:your-email@example.com"` before enabling. |
+| `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` until CI pipeline attests images; then `"REQUIRE_ATTESTATION"` | **Critical** | `"REQUIRE_ATTESTATION"` without a functioning Cloud Build attestation step: no new Django image can be deployed. Rollbacks also fail. The only recovery is to temporarily revert to `"ALWAYS_ALLOW"`. |
+| `enable_backup_import` | `false` after a successful restore — **set back to `false` immediately** | **High** | Leaving `true` after a successful import: the restore job runs on every `tofu apply`, overwriting live Django data (including new user registrations, orders, and content) with the stale backup. |
+| `backup_format` | `"sql"` for plain SQL; `"auto"` for mixed formats | **High** | `"sql"` for a gzip-compressed dump: import fails with a parse error. The DB remains in its pre-import state (safe, but restore did not succeed). Use `"gz"` or `"auto"` for compressed dumps. |
+| `enable_auto_password_rotation` | `false` initially; enable once validated | **High** | `rotation_propagation_delay_sec = 90` (default) is too short for Django apps with long-lived DB connection pools: the old password is disabled before all Gunicorn workers have re-established connections. Workers throw `authentication failed` errors until they restart. Increase to `120`–`180` for production. |
+| `enable_vpc_sc` | `false` until VPC-SC perimeter exists; then `vpc_sc_dry_run = true` first | **Critical** | `enable_vpc_sc = true` with `vpc_sc_dry_run = false` on first enable: Django Cloud Run SA, Cloud Build SA, and your admin IP must all be in the access level. Any missing identity causes API calls to be blocked immediately — Cloud SQL, Secret Manager, and Artifact Registry access all fail, causing a complete outage. |
+| `enable_audit_logging` | `false` for dev; `true` for regulated production environments | **Low** | `false` in production: `SECRET_KEY` reads, `DB_PASSWORD` accesses, and KMS key usage are not logged. Compliance audits (SOC 2, HIPAA) may flag the absence of these logs. Enabling increases Cloud Logging costs but is strongly recommended for regulated workloads. |
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

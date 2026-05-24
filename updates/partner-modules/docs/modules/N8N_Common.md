@@ -224,7 +224,7 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 | `labels` | `map(string)` | `{}` | Labels applied to secrets |
 | `tenant_deployment_id` | `string` | `"demo"` | Tenant identifier (1–20 lowercase alphanumeric chars) |
 | `deployment_id` | `string` | `""` | Unique deployment ID suffix |
-| `deployment_region` | `string` | `"us-central1"` | Region for the storage bucket |
+| `region` | `string` | `"us-central1"` | Region for the storage bucket |
 
 ### Application
 
@@ -297,7 +297,7 @@ module "n8n_app" {
   labels               = var.resource_labels
   tenant_deployment_id = var.tenant_deployment_id
   deployment_id        = local.random_id
-  deployment_region    = local.region
+  region               = local.region
 
   # Application Details
   application_name    = var.application_name

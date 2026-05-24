@@ -1,6 +1,6 @@
 # Kestra_GKE Module — Configuration Guide
 
-Kestra is an open-source data orchestration and scheduling platform (Apache 2.0 licence). It allows you to build, schedule, and monitor ETL/ELT pipelines, batch jobs, and workflow automation through a YAML-based flow definition and a rich plugin ecosystem. This module deploys Kestra on **GKE Autopilot** in **standalone mode** (server, worker, and scheduler in a single container) with a PostgreSQL 15 backend and GCS artifact storage.
+Kestra is an open-source, declarative, event-driven workflow orchestration platform (Apache 2.0 licence) with **26,000+ GitHub stars**, trusted by more than 30,000 organisations including Bloomberg, Toyota, BHP, JPMorgan Chase, Apple, and Crédit Agricole. The platform executed **2 billion workflows in 2025** (20× year-on-year growth) and raised a **$25M Series A in March 2026**. BHP's adoption replaced VMware vRA entirely and cut infrastructure provisioning from 6 months to 6 days. It allows you to build, schedule, and monitor ETL/ELT pipelines, data quality checks, agentic AI pipelines, and workflow automation through a YAML-based flow definition and a rich plugin ecosystem. This module deploys Kestra on **GKE Autopilot** in **standalone mode** (server, worker, and scheduler in a single container) with a PostgreSQL 15 backend and GCS artifact storage.
 
 `Kestra_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS, secrets, CI/CD) and a `Kestra_Common` sub-module to supply Kestra-specific application configuration, secret generation, and storage bucket definitions.
 
@@ -60,9 +60,9 @@ The following behaviours are set automatically and cannot be overridden via user
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed first. |
 | `module_services` | `["GKE Autopilot", "Kubernetes Deployments", "Kubernetes Services", "Kubernetes Jobs", "HPA", "Cloud Build", "Artifact Registry", "Cloud Storage", "GCS Fuse CSI Driver", "Cloud SQL", "Cloud SQL Auth Proxy", "PostgreSQL 15", "VPC Network", "Workload Identity", "Secret Manager", "Cloud IAM", "Service Accounts", "Cloud Logging", "Cloud Monitoring", "Health Checks", "Webhooks", "Filestore (NFS)"]` | GCP services consumed. |
 | `credit_cost` | `100` | Platform credits consumed on deployment. |
-| `require_credit_purchases` | `true` | Enforces credit balance check before deploy. |
+| `require_credit_purchases` | `false` | Enforces credit balance check before deploy. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
-| `public_access` | `false` | Controls platform catalogue visibility. |
+| `public_access` | `true` | Controls platform catalogue visibility. |
 | `deployment_id` | `""` | Auto-generated suffix. Set explicitly to pin resource names across Terraform runs. |
 | `resource_creator_identity` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform. |
 
@@ -76,7 +76,7 @@ The following behaviours are set automatically and cannot be overridden via user
 | `tenant_deployment_id` | `"demo"` | Short suffix appended to resource names. 1–20 lowercase alphanumeric characters and hyphens. |
 | `support_users` | `[]` | Emails granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `{}` | Labels applied to all module-managed resources. |
-| `deployment_region` | `"us-central1"` | Fallback region when network discovery cannot determine region from VPC subnets. |
+| `region` | `"us-central1"` | Fallback region when network discovery cannot determine region from VPC subnets. |
 
 ---
 
