@@ -1,4 +1,4 @@
-# Kestra Common Module
+# Kestra_Common Shared Configuration Module
 
 The `Kestra_Common` module defines the Kestra workflow orchestration platform for the RAD Modules ecosystem. It **creates GCP resources** (one Secret Manager secret for the admin password) and produces a `config` output consumed by the platform-specific wrapper modules (`Kestra_CloudRun` and `Kestra_GKE`).
 
@@ -88,10 +88,10 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | CPU/memory limits; no requests set |
 | `min_instance_count` | from `min_instance_count` (default: `1`) |
 | `max_instance_count` | from `max_instance_count` (default: `1` — see standalone mode note) |
-| `environment_variables` | Merged map — see §6 |
+| `environment_variables` | Merged map — see §5 |
 | `enable_postgres_extensions` | `false` |
 | `postgres_extensions` | `[]` |
-| `initialization_jobs` | Default `db-init` job or custom override — see §7 |
+| `initialization_jobs` | Default `db-init` job or custom override — see §6 |
 | `startup_probe` | from `startup_probe` variable |
 | `liveness_probe` | from `liveness_probe` variable |
 
@@ -133,57 +133,42 @@ The computed resource naming prefix (`app<application_name><tenant_deployment_id
 
 ---
 
-## 5. Non-Configurable Values
-
-The following values are fixed inside `Kestra_Common` and cannot be overridden by callers:
-
-| Setting | Value | Reason |
-|---|---|---|
-| `container_image` | `"kestra/kestra"` | Always built from the official Kestra base image. |
-| `image_source` | `"custom"` | Requires custom entrypoint injection (`socat` bridge and `entrypoint.sh`). |
-| `container_port` | `8080` | Application's fixed listening port (Micronaut server). |
-| `database_type` | `"POSTGRES_15"` | Kestra requires PostgreSQL 15 as its queue and repository backend. |
-| `cloudsql_volume_mount_path` | `"/cloudsql"` | Fixed Cloud SQL Auth Proxy socket directory. |
-| `enable_postgres_extensions` | `false` | Kestra does not require any PostgreSQL extensions. |
-
----
-
-## 6. Environment Variables (always injected)
+## 5. Environment Variables (always injected)
 
 `Kestra_Common` merges the following into `config.environment_variables`, with `var.environment_variables` taking precedence:
 
-| Variable | Default Value | Description |
+| Variable | Value | Purpose |
 |---|---|---|
-| `MICRONAUT_SERVER_PORT` | `"8080"` | Kestra/Micronaut HTTP server port. |
-| `KESTRA_QUEUE_TYPE` | `"postgres"` | Use PostgreSQL as the internal queue. |
-| `KESTRA_REPOSITORY_TYPE` | `"postgres"` | Use PostgreSQL as the flow/execution repository. |
-| `KESTRA_STORAGE_TYPE` | `"gcs"` | Use Google Cloud Storage for artifact storage. |
-| `KESTRA_STORAGE_GCS_BUCKET` | `<resource_prefix>-kestra-storage` | GCS bucket name for flows and artifacts. |
-| `KESTRA_BASICAUTH_ENABLED` | `"true"` | Enables Kestra's built-in basic auth. |
-| `KESTRA_BASICAUTH_USERNAME` | `"admin"` | Default admin username. |
-| `DATASOURCES_POSTGRES_DRIVERCLASSNAME` | `"org.postgresql.Driver"` | JDBC driver class (required by Micronaut). |
-| `ENDPOINTS_ALL_PORT` | `"8080"` | Exposes management endpoints (including `/health`) on port 8080 so startup/liveness probes can reach them. |
-| `FLYWAY_DATASOURCES_POSTGRES_BASELINE_ON_MIGRATE` | `"true"` | Prevents Flyway failure on Cloud SQL's pre-populated public schema. |
-| `FLYWAY_DATASOURCES_POSTGRES_BASELINE_VERSION` | `"0"` | Baselines at v0, then applies all Kestra migrations. |
+| `MICRONAUT_SERVER_PORT` | `"8080"` | Kestra/Micronaut HTTP server port |
+| `KESTRA_QUEUE_TYPE` | `"postgres"` | Use PostgreSQL as the internal queue |
+| `KESTRA_REPOSITORY_TYPE` | `"postgres"` | Use PostgreSQL as the flow/execution repository |
+| `KESTRA_STORAGE_TYPE` | `"gcs"` | Use Google Cloud Storage for artifact storage |
+| `KESTRA_STORAGE_GCS_BUCKET` | `<resource_prefix>-kestra-storage` | GCS bucket name for flows and artifacts |
+| `KESTRA_BASICAUTH_ENABLED` | `"true"` | Enables Kestra's built-in basic auth |
+| `KESTRA_BASICAUTH_USERNAME` | `"admin"` | Default admin username |
+| `DATASOURCES_POSTGRES_DRIVERCLASSNAME` | `"org.postgresql.Driver"` | JDBC driver class (required by Micronaut) |
+| `ENDPOINTS_ALL_PORT` | `"8080"` | Exposes management endpoints (including `/health`) on port 8080 so startup/liveness probes can reach them |
+| `FLYWAY_DATASOURCES_POSTGRES_BASELINE_ON_MIGRATE` | `"true"` | Prevents Flyway failure on Cloud SQL's pre-populated public schema |
+| `FLYWAY_DATASOURCES_POSTGRES_BASELINE_VERSION` | `"0"` | Baselines at v0, then applies all Kestra migrations |
 
 > **DATASOURCES_POSTGRES_URL, DATASOURCES_POSTGRES_USERNAME, DATASOURCES_POSTGRES_PASSWORD**: These are **not** set by `Kestra_Common`. They are constructed at container startup by `entrypoint.sh` from the platform-injected `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` variables. Do not set them in `environment_variables`.
 
 ---
 
-## 7. Initialization Job
+## 6. Initialization Job
 
 When `initialization_jobs` is empty (the default), `Kestra_Common` automatically defines a single bootstrap job:
 
 | Field | Value |
 |---|---|
-| Name | `"db-init"` |
-| Description | `"Create Kestra Database and User"` |
-| Image | `postgres:15-alpine` |
-| Script | `scripts/db-init.sh` |
+| `name` | `"db-init"` |
+| `description` | `"Create Kestra Database and User"` |
+| `image` | `"postgres:15-alpine"` |
 | `execute_on_apply` | `true` |
-| Timeout | `600s` |
-| Max retries | `1` |
-| CPU / Memory | `1000m` / `512Mi` |
+| `script_path` | `abspath("${path.module}/scripts/db-init.sh")` |
+| `cpu_limit` | `"1000m"` |
+| `memory_limit` | `"512Mi"` |
+| `timeout_seconds` | `600` |
 
 The `db-init.sh` script:
 1. Detects the Cloud SQL socket or TCP host.
@@ -198,7 +183,7 @@ When `initialization_jobs` is provided by the caller, the custom jobs replace th
 
 ---
 
-## 8. Scripts Directory
+## 7. Scripts Directory
 
 `Kestra_Common` ships three files in `scripts/`:
 
@@ -206,20 +191,20 @@ When `initialization_jobs` is provided by the caller, the custom jobs replace th
 |---|---|
 | `Dockerfile` | Wraps `kestra/kestra:latest`. Installs `socat`, copies `entrypoint.sh`, and sets it as the container entrypoint. Exposes port `8080`. |
 | `entrypoint.sh` | Bridges the Cloud SQL Unix socket to TCP `127.0.0.1:5432` using `socat` (required for Java JDBC). Constructs `DATASOURCES_POSTGRES_URL`, `DATASOURCES_POSTGRES_USERNAME`, and `DATASOURCES_POSTGRES_PASSWORD` from platform `DB_*` variables. Launches `kestra server standalone`. |
-| `db-init.sh` | Bootstrap job script — see §7. |
+| `db-init.sh` | Bootstrap job script — see §6. |
 
 > **Socket bridge detail**: Cloud Run's Cloud SQL Auth Proxy creates a Unix socket at `${DB_HOST}/.s.PGSQL.5432`. Java JDBC cannot connect via Unix socket, so `entrypoint.sh` uses `socat` to expose the socket as TCP on `127.0.0.1:5432`. A symlink (`/tmp/cloudsql.sock`) is created first because `socat` uses colons as delimiters and the Cloud SQL socket path contains colons (the connection name). On GKE, the Cloud SQL Auth Proxy sidecar already listens on TCP `127.0.0.1:5432`, so the bridge logic is skipped.
 
 ---
 
-## 9. Input Variables
+## 8. Input Variables
 
 All variables are passed in by the wrapper modules (`Kestra_CloudRun` and `Kestra_GKE`). `Kestra_Common` is not intended to be called directly by end users.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `project_id` | string | — | Required. GCP project ID. |
-| `resource_prefix` | string | — | Required. Naming prefix for all resources. Computed by the wrapper as `app<app_name><tenant_id><random_id>`. |
+| `project_id` | string | *(required)* | GCP project ID. |
+| `resource_prefix` | string | *(required)* | Naming prefix for all resources. Computed by the wrapper as `app<app_name><tenant_id><random_id>`. |
 | `labels` | map(string) | `{}` | Labels applied to created resources. |
 | `tenant_deployment_id` | string | `"demo"` | Tenant identifier suffix. |
 | `deployment_id` | string | `""` | Random deployment ID suffix. |
@@ -246,7 +231,7 @@ All variables are passed in by the wrapper modules (`Kestra_CloudRun` and `Kestr
 
 ---
 
-## 10. Platform-Specific Differences
+## 9. Platform-Specific Differences
 
 | Aspect | Cloud Run (`Kestra_CloudRun`) | GKE (`Kestra_GKE`) |
 |---|---|---|

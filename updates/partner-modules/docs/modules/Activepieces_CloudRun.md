@@ -452,8 +452,8 @@ All user-configurable variables exposed by `Activepieces_CloudRun`, sorted by UI
 | `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
 | `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Empty list triggers the default `db-init` job (`execute_on_apply=true`). |
 | `cron_jobs` | 12 | `[]` | **Not referenced** — not forwarded to `App_CloudRun`. Has no effect in this module version. |
-| `startup_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=120, failure_threshold=10, ... }` | Activepieces_Common startup probe. Allow 7+ minutes on first boot. |
-| `liveness_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=30, failure_threshold=3, ... }` | Activepieces_Common liveness probe. |
+| `startup_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=120, failure_threshold=10, ... }` | Activepieces Common startup probe. Allow 7+ minutes on first boot. |
+| `liveness_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=30, failure_threshold=3, ... }` | Activepieces Common liveness probe. |
 | `startup_probe_config` | 13 | `{ enabled=false }` | Cloud Run infrastructure startup probe. Disabled — `startup_probe` takes effect. |
 | `health_check_config` | 13 | `{ enabled=true }` | Cloud Run infrastructure liveness probe. |
 | `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |

@@ -344,6 +344,14 @@ const sidebars: SidebarsConfig = {
             },
             {
               type: 'category',
+              label: 'Temporal',
+              items: [
+                { type: 'doc', id: 'modules/Temporal_GKE/Temporal_GKE', label: 'GKE' },
+                { type: 'doc', id: 'modules/Temporal_Common/Temporal_Common', label: 'Common' },
+              ],
+            },
+            {
+              type: 'category',
               label: 'VMware Engine',
               items: [
                 { type: 'doc', id: 'modules/VMware_Engine/VMware_Engine', label: 'VMware Engine' },

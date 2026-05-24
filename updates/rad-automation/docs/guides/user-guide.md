@@ -28,14 +28,14 @@ After logging in, you'll be taken to the **Deployments** page, which is your hom
 To deploy a new application, click the **Deploy** link in the top navigation bar.
 
 ### 3.1. Finding a Module
-*   **Browse:** Explore "Platform Modules" (available to everyone) or "Partner Modules" (if you have specific access).
+*   **Browse:** Explore the **Platform Modules** tab, which contains all publicly available modules plus any partner modules you have been granted access to. The **Partner Modules** tab is only visible to users with the Partner role.
 *   **Search:** Use the search bar to find modules by name.
 *   **Pinning:** Click the **Pin** icon on any module card to save it to the top of your list for quick access.
 *   **Stats:** View deployment counts, your current credit balance (if enabled), and the retention period for deployment history.
 
 ### 3.2. Launching a Deployment
 1.  Click on any module card to start the provisioning process.
-2.  **Configure:** Fill out the required variables (e.g., Project ID, Region).
+2.  **Configure:** Fill out the required variables (e.g., Project ID, Region). The form may span multiple pages. If you have not yet purchased credits, only the first page of configuration is shown; purchase credits to unlock **advanced** configuration options.
 3.  **Confirm:** Review your settings. If the module has a credit cost, you will see the amount that will be deducted from your balance.
 4.  **Deploy:** Submit the form. You will be redirected to the status page where you can watch the deployment progress in real-time.
 

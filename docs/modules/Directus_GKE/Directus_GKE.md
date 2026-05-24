@@ -1,24 +1,22 @@
-# Directus GKE Module
+# Directus_GKE Module — Configuration Guide
 
-`Directus_GKE` is a wrapper module that deploys [Directus](https://directus.io/) — an open-source headless CMS and data API platform — on Google Kubernetes Engine (GKE) Autopilot. It composes two underlying modules:
+`Directus_GKE` is a wrapper module that deploys [Directus](https://directus.io/) — an open-source composable data platform and headless CMS with 34,500+ GitHub stars, trusted by Tripadvisor, Adobe, and Mercedes-Benz — on Google Kubernetes Engine (GKE) Autopilot. Directus wraps any SQL database with instant REST and GraphQL APIs and a no-code admin panel without modifying your schema. Its native MCP server support (introduced in v11.13, November 2025) enables direct AI tool integration, and it is consistently ranked among the top open-source headless CMS choices in 2026 for Backend-as-a-Service, internal dashboards, and omnichannel content delivery. It composes two underlying modules:
 
 - **[App_GKE](../App_GKE/App_GKE.md)** — provides all GKE infrastructure: cluster targeting, Kubernetes workloads, networking, security, CI/CD, storage, observability, and backup.
 - **Directus_Common** — generates the Directus application configuration, database initialisation scripts, migration jobs, and Directus-specific environment variables. Its outputs are injected into `App_GKE` via the `application_config`, `module_env_vars`, `module_secret_env_vars`, and `module_storage_buckets` inputs.
 
 > **How to use this guide:** Every variable available in `App_GKE` is also available in `Directus_GKE` under the same name and with the same behaviour, unless noted below. **For the full description of those variables, consult the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).** This guide documents only what is unique to `Directus_GKE`: variables that exist only in this module, variables whose names differ from their `App_GKE` equivalents, and variables whose default values have been tuned for Directus.
 
-> This guide documents variables that are **unique to `Directus_GKE`** or that have **Directus-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
-
 ---
 
-## 1. Standard Configuration Reference
+## Standard Configuration Reference
 
 The following configuration areas are provided by the underlying `App_GKE` module. Consult the linked sections of the [App_GKE Configuration Guide](../App_GKE/App_GKE.md) for full documentation.
 
 | Configuration Area | App_GKE.md Section | Directus-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Directus-specific `module_description`, `module_documentation`, and `module_services` defaults are pre-set. `resource_creator_identity` — see [Resource Creator Identity](#resource-creator-identity) below. |
-| Project & Identity | §2 IAM & Access Control | Identical, plus `deployment_region` unique to this module — see [Project & Identity](#project--identity) below. |
+| Project & Identity | §2 IAM & Access Control | Identical, plus `region` unique to this module — see [Project & Identity](#project--identity) below. |
 | Application Identity | §3.A Compute (GKE Autopilot) | Directus-specific defaults; also exposes `db_name`, `db_user`, and `description` — see [Application & Database Identity](#application--database-identity) below. |
 | Runtime & Scaling | §3.A Compute (GKE Autopilot) | Directus-specific defaults for `container_port`, scaling counts, and `enable_cloudsql_volume`; also exposes `cpu_limit`, `memory_limit`, `startup_probe`, and `liveness_probe` — see [Runtime Configuration](#runtime-configuration) below. |
 | Environment Variables & Secrets | §3 Core Service Configuration | Identical. |
@@ -32,7 +30,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Observability & Health Checks | §3.A Compute (GKE Autopilot) | Directus exposes `startup_probe` and `liveness_probe` pre-tuned for `/server/health` — see [Runtime Configuration](#runtime-configuration) below. |
 | Cloud Armor WAF | §4.A Cloud Armor WAF | `Directus_GKE` additionally exposes `cloud_armor_policy_name` (default `"default-waf-policy"`) to target a named policy. |
 | Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | `Directus_GKE` additionally exposes `iap_oauth_client_id`, `iap_oauth_client_secret` (both sensitive), and `iap_support_email` — required for GKE Gateway-based IAP. |
-| Binary Authorization | §4.C Binary Authorization | `Directus_GKE` additionally exposes `binauthz_evaluation_mode` (default `"ALWAYS_ALLOW"`; options: `ALWAYS_ALLOW`, `REQUIRE_ATTESTATION`, `ALWAYS_DENY`). |
+| Binary Authorization | §4.C Binary Authorization | `Directus_GKE` additionally exposes `binauthz_evaluation_mode` (default `"ALWAYS_ALLOW"`; options: `ALWAYS_ALLOW`, `REQUIRE_ATTESTATION`, `ALWAYS_DENY`) forwarded to App_GKE. |
 | VPC Service Controls | §4.D VPC Service Controls | Identical. |
 | Secrets Store CSI Driver | §4.E Secrets Store CSI Driver | Identical. |
 | Traffic & Ingress | §5 Traffic & Ingress | Identical. |
@@ -52,7 +50,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 
 ---
 
-## 2. Directus-Specific Defaults
+## Directus-Specific Defaults
 
 The following variables are shared with `App_GKE` but have different default values in `Directus_GKE`, pre-tuned for a Directus deployment. Where the variable name differs from its `App_GKE` equivalent, the `App_GKE` name is shown in parentheses.
 
@@ -75,22 +73,7 @@ The following variables are shared with `App_GKE` but have different default val
 
 ---
 
-## 3. Platform-Managed Behaviours
-
-The following behaviours are applied automatically by `Directus_GKE` (via the `Directus_Common` sub-module) regardless of variable values in your `tfvars` file.
-
-| Behaviour | Detail |
-|---|---|
-| **Environment variables** | `Directus_Common` injects: `DB_CLIENT` (`pg`), `DB_PORT` (`5432`), `DB_HOST`, `DB_DATABASE`, `DB_USER`, `DB_PASSWORD`, `STORAGE_LOCATIONS` (`gcs`), `STORAGE_GCS_BUCKET`, `CACHE_STORE` (`redis`, when `enable_redis = true`). |
-| **Secret generation** | A random `SECRET` (used for JWT signing and encryption) is auto-generated and stored in Secret Manager. Injected via `module_secret_env_vars`. Do not set `SECRET` manually in `environment_variables`. |
-| **Database initialisation** | The `db-init` Kubernetes Job runs automatically on first apply, creating the Directus database and user and installing required PostgreSQL extensions. |
-| **GCS bucket** | `Directus_Common` provisions a GCS bucket for Directus file uploads. The bucket name is injected as `STORAGE_GCS_BUCKET`. The application service account is granted storage access by `App_GKE`. |
-| **NFS enabled by default** | `enable_nfs` defaults to `true` for shared asset storage across pod replicas. Disable if using GCS Fuse exclusively. |
-| **Database migration job** | `Directus_Common` injects a database migration job that runs `npx directus database migrate:latest` before the application starts on each deployment. User-defined `initialization_jobs` are appended after it. |
-
----
-
-## 4. Variable Name Differences
+## Variable Name Differences
 
 Several variables in `Directus_GKE` use different names from their `App_GKE` equivalents. This is intentional — the Directus module exposes a simplified interface focused on Directus semantics. The mapping is:
 
@@ -107,7 +90,7 @@ Several variables in `Directus_GKE` use different names from their `App_GKE` equ
 
 ---
 
-## 5. Resource Creator Identity
+## Resource Creator Identity
 
 `resource_creator_identity` is a module-metadata variable present in `Directus_GKE` that is not documented in the `App_GKE` Configuration Guide. It controls which service account Terraform impersonates when provisioning GCP resources in the target project.
 
@@ -130,16 +113,16 @@ gcloud projects get-iam-policy PROJECT_ID \
 
 ---
 
-## 6. Project & Identity
+## Project & Identity
 
 All variables described in [App_GKE.md §2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) apply to `Directus_GKE` unchanged. In addition, `Directus_GKE` exposes the following variables that have no equivalent in `App_GKE`:
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
 | `deployment_id` | `""` | Short alphanumeric string (e.g. `"a1b2c3"`) | Short alphanumeric identifier appended to all resource names. Auto-generated when empty; set explicitly to pin a stable suffix across Terraform runs. |
-| `deployment_region` | `"us-central1"` | GCP region identifier (e.g. `"us-central1"`, `"europe-west1"`) | Fallback GCP region used when the module's network discovery routine cannot determine the deployment region from existing VPC subnets in the project. The module inspects subnet configurations at apply time and derives the region automatically in most environments. Set this explicitly when (1) the project has no pre-existing subnets and `Services_GCP` has not yet been deployed, or (2) the default `"us-central1"` does not match the intended deployment target. If network discovery succeeds, the discovered region takes precedence over this value. |
-| `network_name` | `""` | VPC network name | Name of the VPC network to use. Leave empty to auto-discover a single `Services_GCP`-managed network. Required when more than one network exists in the project. |
-| `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` | CIDR string | CIDR range for the inline GKE subnet created when a `Services_GCP` VPC exists but no GKE cluster is present. Must not overlap with other subnets. Each `App_GKE` deployment sharing the same VPC must use a distinct CIDR. |
+| `region` | `"us-central1"` | GCP region identifier (e.g. `"us-central1"`, `"europe-west1"`) | Fallback GCP region used when the module's network discovery routine cannot determine the deployment region from existing VPC subnets in the project. The module inspects subnet configurations at apply time and derives the region automatically in most environments. Set this explicitly when (1) the project has no pre-existing subnets and `Services_GCP` has not yet been deployed, or (2) the default `"us-central1"` does not match the intended deployment target. If network discovery succeeds, the discovered region takes precedence over this value. |
+| `network_name` | `""` | VPC network name | Defined in the module for interface compatibility but **not forwarded to App_GKE** — the module hardcodes network discovery. Not referenced — setting this variable has no effect on deployment. |
+| `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` | CIDR string | Defined in the module for interface compatibility but **not forwarded to App_GKE**. Not referenced — setting this variable has no effect on deployment. |
 
 **Validating Deployment Region:**
 ```bash
@@ -154,7 +137,7 @@ gcloud sql instances list --project=PROJECT_ID \
 
 ---
 
-## 7. Application & Database Identity
+## Application & Database Identity
 
 The `Directus_GKE` module extends the `App_GKE` [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) with two additional variables that set the Directus database identity. These map directly to `application_database_name` and `application_database_user` in the underlying `App_GKE` module.
 
@@ -167,7 +150,7 @@ For all other application identity variables (`application_name`, `application_d
 
 ---
 
-## 8. Runtime Configuration
+## Runtime Configuration
 
 ### CPU and Memory
 
@@ -246,9 +229,9 @@ kubectl exec -n NAMESPACE POD_NAME -- curl -sf http://localhost:8055/server/heal
 
 ---
 
-## 9. Database Configuration
+## Database Configuration
 
-`Directus_GKE` applies the following defaults that differ from those in `App_GKE`. All other database variables (`sql_instance_name`, `sql_instance_base_name`, `database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`) are available with the same names and behaviour as documented in [App_GKE.md §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql).
+`Directus_GKE` applies the following defaults that differ from those in `App_GKE`. All other database variables (`sql_instance_name`, `sql_instance_base_name`, `database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`) are exposed and forwarded to App_GKE with the same names and behaviour as documented in [App_GKE.md §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql).
 
 | Variable | Directus_GKE Default | App_GKE Default | Notes |
 |---|---|---|---|
@@ -262,7 +245,7 @@ For the full description of `enable_postgres_extensions`, `postgres_extensions`,
 
 ---
 
-## 10. Redis Cache
+## Redis Cache
 
 `Directus_GKE` exposes Redis configuration as first-class variables. Redis is used by Directus for API response caching and rate limiting, and is enabled by default. For the App_GKE-level Redis documentation, see [App_GKE.md §8.A](../App_GKE/App_GKE.md#a-redis). The underlying `App_GKE` module accepts these variables and injects `REDIS_HOST`, `REDIS_PORT`, and optionally `REDIS_AUTH` as environment variables into the Directus pod.
 
@@ -304,7 +287,7 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep REDIS
 
 ---
 
-## 11. StatefulSet Persistent Storage
+## StatefulSet Persistent Storage
 
 When `workload_type` is set to `"StatefulSet"` (see [App_GKE.md §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot)), `Directus_GKE` exposes additional variables to configure a PersistentVolumeClaim (PVC) for each StatefulSet pod. This provides each pod with its own dedicated persistent storage, independent of the shared NFS volume.
 

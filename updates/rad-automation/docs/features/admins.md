@@ -130,10 +130,11 @@ You have complete visibility into all activity on the platform. The **Deployment
     *   `COMPLETED` — Build finished successfully.
     *   `FAILED` — Build finished with an error.
     *   `CANCELLED` — Deployment was stopped before or during provisioning. The available follow-up actions depend on context: if the original action was `CREATE` or `PURGE`, only **Purge** is shown (no infrastructure was deployed); if the original action was `UPDATE` or `DELETE`, **Delete** and **Update** are shown (infrastructure may still exist).
+    *   `TIMEOUT` — The Cloud Build job exceeded its execution time limit, or a stuck `QUEUED` deployment was automatically reconciled and the underlying build no longer exists.
     *   `INTERNAL_ERROR` — A non-transient platform failure occurred during provisioning (e.g., a function crash). The deployment is surfaced as actionable rather than remaining silently stuck in `QUEUED`.
     *   `DELETED` — Deployment has been soft-deleted and is awaiting permanent removal after the retention period.
 *   **Cancel vs. Purge vs. Delete:**
-    *   **Cancel:** Available for deployments stuck in `QUEUED`. Marks the deployment as `CANCELLED` without triggering any resource teardown. Use this when a build has not started and no infrastructure was provisioned. Accessible to admins and the deployment owner.
+    *   **Cancel:** Available for deployments stuck in `QUEUED`. Marks the deployment as `CANCELLED` without triggering any resource teardown. Use this when a build has not started and no infrastructure was provisioned. Accessible to admins and the deployment owner. The Cancel button can be disabled platform-wide via the Global Configuration settings if your workflow requires preventing users from self-cancelling queued deployments.
     *   **Delete (Soft Delete):** The standard removal action. Marks the deployment for deletion, triggers a resource cleanup, and retains the record for the defined retention period.
     *   **Purge (Hard Delete):** A force-cleanup action. Immediately triggers an aggressive resource removal pipeline (`DEPLOYMENT_ACTIONS.PURGE`) and removes the deployment record once complete. Use this for stuck deployments, `CANCELLED` deployments, or when immediate cleanup is required.
 

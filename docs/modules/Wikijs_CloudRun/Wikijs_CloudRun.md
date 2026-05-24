@@ -1,14 +1,14 @@
-# Wikijs CloudRun Module
+# Wikijs_CloudRun Module — Configuration Guide
 
-`Wikijs_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Cloud Run Gen2.
+`Wikijs_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Cloud Run Gen2. Wiki.js has 28,000+ GitHub stars and is adopted by software teams, healthcare organizations (including the Indonesia Ministry of Health), educational institutions, and government agencies (including Brazil social services). It replaces expensive Confluence licenses — saving $5–10/user/month — with support for Markdown, WYSIWYG editing, LDAP/SAML/OAuth, and Git sync for version-controlled knowledge management.
 
 Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply Wiki.js-appropriate defaults and to call the `Wikijs_Common` sub-module, which generates the application's container image configuration, database initialisation logic, GCS Fuse storage mounts, and database password wiring. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.
 
-> This guide documents variables that are **unique to `Wikijs_CloudRun`** or that have **Wiki.js-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
+> **Where to look:** If a variable you are configuring is not described here, consult the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md). All `App_CloudRun` features — access and networking, IAP, Cloud Armor, CDN, CI/CD, Cloud Deploy, Binary Authorization, traffic splitting, and VPC Service Controls — are available in `Wikijs_CloudRun` with identical behaviour and configuration.
 
 ---
 
-## 1. Module Overview
+## §1 Module Overview
 
 | Property | Value |
 |---|---|
@@ -28,21 +28,9 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 
 `Wikijs_Common` manages the container image source, build configuration, and GCS Fuse storage (`wikijs-storage` bucket provisioned for persistent asset storage). The database password is wired from `module.app_cloudrun.database_password_secret` into `module_secret_env_vars` as the key `database_password_secret`, which the platform maps to the `DB_PASS` environment variable consumed by Wiki.js. The `pg_trgm` PostgreSQL extension is installed by `Wikijs_Common` to enable native full-text search.
 
-### A. Key differences from `App_CloudRun` defaults
-
-| Feature | App_CloudRun default | Wikijs_CloudRun default |
-|---|---|---|
-| `container_port` | `8080` | `3000` (set by `Wikijs_Common`) |
-| `execution_environment` | `"gen1"` | `"gen2"` |
-| `enable_nfs` | `false` | `true` (mount: `/mnt/nfs`) |
-| `enable_redis` | `false` | `false` |
-| Database | none | Cloud SQL PostgreSQL 15 with `pg_trgm` extension |
-| GCS Fuse storage | none | `wikijs-storage` bucket (provisioned by `Wikijs_Common`) |
-| Platform-managed secret | none | `database_password_secret` (wired as `DB_PASS`) |
-
 ---
 
-## 2. IAM & Project Identity
+## §2 IAM & Project Identity
 
 Behaviour is identical to `App_CloudRun`. The following variables are passed through unchanged.
 
@@ -56,9 +44,9 @@ Behaviour is identical to `App_CloudRun`. The following variables are passed thr
 
 ---
 
-## 3. Core Service Configuration
+## §3 Core Service Configuration
 
-### A. Application Identity
+### §3.A Application Identity
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -68,7 +56,7 @@ Behaviour is identical to `App_CloudRun`. The following variables are passed thr
 
 Note: there is no `application_display_name` or `description` variable in this module — the Cloud Run wrapper uses `display_name` (passed to `Wikijs_Common`) rather than the `application_display_name` used by `App_GKE`. A `deploy_application` variable (default `true`) controls whether the Cloud Run service is deployed; set to `false` to provision only supporting infrastructure (secrets, storage, IAM).
 
-### B. Resource Sizing
+### §3.B Resource Sizing
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -79,7 +67,7 @@ Note: there is no `application_display_name` or `description` variable in this m
 | `execution_environment` | `"gen2"` | Cloud Run execution environment; gen2 required for NFS mounts |
 | `timeout_seconds` | `300` | Increase for large page exports or asset processing |
 
-### C. Environment Variables & Secrets
+### §3.C Environment Variables & Secrets
 
 `environment_variables` has a non-empty default that configures Wiki.js database connectivity:
 
@@ -112,7 +100,7 @@ secret_environment_variables = {
 }
 ```
 
-### D. Networking
+### §3.D Networking
 
 Key defaults:
 
@@ -126,7 +114,7 @@ Key defaults:
 
 Set `container_protocol = "h2c"` to enable HTTP/2 communication between the load balancer and the Cloud Run service.
 
-### E. Container Image & Build
+### §3.E Container Image & Build
 
 Container image source and build configuration are fully managed by `Wikijs_Common`. The `container_image_source`, `container_image`, and `container_build_config` variables are **not** exposed in this module's `variables.tf`. `Wikijs_Common` always produces `image_source = "custom"` and `container_image = "requarks/wiki:2"` with a Cloud Build context pointing to its own `scripts/` directory.
 
@@ -145,22 +133,22 @@ Additional Artifact Registry lifecycle variables exposed in this module:
 
 ---
 
-## 4. Advanced Security
+## §4 Advanced Security
 
-### A. Identity-Aware Proxy
+### §4.A Identity-Aware Proxy
 
 ```hcl
 enable_iap            = true
 iap_authorized_groups = ["group:wiki-editors@example.com"]
 ```
 
-### B. VPC Service Controls
+### §4.B VPC Service Controls
 
 ```hcl
 enable_vpc_sc = true  # group=21; requires existing VPC-SC perimeter
 ```
 
-### C. Cloud Armor & CDN
+### §4.C Cloud Armor & CDN
 
 ```hcl
 enable_cloud_armor  = true
@@ -168,13 +156,13 @@ application_domains = ["wiki.example.com"]
 enable_cdn          = true
 ```
 
-### D. Binary Authorization
+### §4.D Binary Authorization
 
 ```hcl
 enable_binary_authorization = true
 ```
 
-### E. Secret Rotation
+### §4.E Secret Rotation
 
 ```hcl
 secret_rotation_period         = "2592000s"  # 30-day notification
@@ -184,9 +172,9 @@ rotation_propagation_delay_sec = 90
 
 ---
 
-## 5. Traffic & Ingress
+## §5 Traffic & Ingress
 
-### A. Traffic Splitting
+### §5.A Traffic Splitting
 
 ```hcl
 traffic_split = [
@@ -195,7 +183,7 @@ traffic_split = [
 ]
 ```
 
-### B. Ingress Control
+### §5.B Ingress Control
 
 ```hcl
 ingress_settings   = "internal-and-cloud-load-balancing"
@@ -204,9 +192,9 @@ vpc_egress_setting = "ALL_TRAFFIC"
 
 ---
 
-## 6. CI/CD Integration
+## §6 CI/CD Integration
 
-### A. Cloud Build Trigger
+### §6.A Cloud Build Trigger
 
 ```hcl
 enable_cicd_trigger   = true
@@ -217,7 +205,7 @@ cicd_trigger_config = {
 }
 ```
 
-### B. Cloud Deploy Pipeline
+### §6.B Cloud Deploy Pipeline
 
 ```hcl
 enable_cloud_deploy = true
@@ -230,9 +218,9 @@ cloud_deploy_stages = [
 
 ---
 
-## 7. Reliability & Data
+## §7 Reliability & Data
 
-### A. Health Probes
+### §7.A Health Probes
 
 `Wikijs_CloudRun` uses only `startup_probe` and `liveness_probe` (passed to `Wikijs_Common`). There is no separate `startup_probe_config` / `health_check_config` interface in this module.
 
@@ -253,7 +241,7 @@ cloud_deploy_stages = [
 
 The `/healthz` endpoint reflects both application readiness and live database connection status.
 
-### B. Backup & Recovery
+### §7.B Backup & Recovery
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -266,7 +254,7 @@ The `/healthz` endpoint reflects both application readiness and live database co
 
 Note: this module uses `backup_uri` (aliased to `backup_file` in `main.tf`). The `backup_format` variable has no validation constraint in this module; accepted values are `sql`, `tar`, `gz`, `tgz`, `tar.gz`, and `zip`.
 
-### C. Scheduled Jobs
+### §7.C Scheduled Jobs
 
 ```hcl
 cron_jobs = [{
@@ -277,7 +265,7 @@ cron_jobs = [{
 }]
 ```
 
-### D. Observability
+### §7.D Observability
 
 ```hcl
 uptime_check_config = {
@@ -299,9 +287,9 @@ alert_policies = [{
 
 ---
 
-## 8. Integrations
+## §8 Integrations
 
-### A. Redis Cache
+### §8.A Redis Cache
 
 Wiki.js can use Redis for session caching. When `enable_redis = false` (the default), no Redis environment variables are injected.
 
@@ -312,14 +300,14 @@ redis_port   = "6379"       # string type
 redis_auth   = ""
 ```
 
-### B. NFS Storage
+### §8.B NFS Storage
 
 ```hcl
 enable_nfs     = true
 nfs_mount_path = "/mnt/nfs"
 ```
 
-### C. GCS Fuse Volumes (wikijs-storage)
+### §8.C GCS Fuse Volumes (wikijs-storage)
 
 `Wikijs_Common` provisions a `wikijs-storage` GCS bucket and expects it to be mounted at `/wiki-storage` for persistent asset storage. To wire this up, use `gcs_volumes`:
 
@@ -334,13 +322,13 @@ gcs_volumes = [{
 
 The `HA_STORAGE_PATH = "/wiki-storage"` default in `environment_variables` points Wiki.js to this mount. If you change the mount path, update `HA_STORAGE_PATH` accordingly.
 
-### D. Additional Services & Scheduled Jobs
+### §8.D Additional Services & Scheduled Jobs
 
 `Wikijs_CloudRun` does not expose the `additional_services` variable. However, `cron_jobs` is exposed and allows scheduling recurring Cloud Run jobs (e.g. database backups) using Cloud Scheduler. See §7.C for an example.
 
 ---
 
-## 9. Platform-Managed Behaviours
+## §9 Platform-Managed Behaviours
 
 The following are set or injected automatically and do not require configuration.
 
@@ -366,7 +354,7 @@ Wiki.js exposes `/healthz` for both startup and liveness checks. This endpoint r
 
 ---
 
-## 10. Variable Reference
+## §10 Variable Reference
 
 The table below covers all variables unique to or with notable defaults in `Wikijs_CloudRun`. For the full set of inherited variables, see the [App_CloudRun Variable Reference](../App_CloudRun/App_CloudRun.md#variable-reference).
 
@@ -426,3 +414,24 @@ The table below covers all variables unique to or with notable defaults in `Wiki
 | `organization_id` | `string` | `""` | 21 | GCP Org ID for VPC-SC policy |
 | `enable_audit_logging` | `bool` | `false` | 21 | Enable Cloud Audit Logs |
 | `enable_vpc_sc` | `bool` | `false` | 21 | VPC Service Controls |
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

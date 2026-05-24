@@ -1,20 +1,27 @@
-# Elasticsearch GKE Module
+# Elasticsearch_GKE Module — Configuration Guide
 
-Elasticsearch is an open-source distributed search and analytics engine based on Apache Lucene.
-This module deploys a **single-node Elasticsearch cluster** on **GKE Autopilot** as a
-Kubernetes StatefulSet with persistent SSD storage. It is designed as a shared search
-infrastructure dependency — primarily for `RAGFlow_GKE`, which uses it for document vector
-storage and full-text search.
+Elasticsearch is an open-source distributed search and analytics engine based on Apache Lucene,
+used by 58,220+ companies with a 4.43% DBMS market share. Elastic revenue reached $450M in Q3
+FY2026 (+18% YoY), and the managed Elasticsearch market is projected to grow from $1.52B (2024)
+to $11.98B by 2033 at a 21.7% CAGR. Beyond traditional full-text search, Elasticsearch has
+become central to enterprise AI architectures as a vector database powering semantic search and
+RAG pipelines. It drives e-commerce product search, log analytics, application performance
+monitoring (APM), SIEM, and fraud detection at scale. This module deploys a **single-node
+Elasticsearch cluster** on **GKE Autopilot** as a Kubernetes StatefulSet with persistent SSD
+storage. It is designed as a shared search infrastructure dependency — primarily for
+`RAGFlow_GKE`, which uses it for document vector storage and full-text search.
 
 `Elasticsearch_GKE` is a **wrapper module** built on top of `App_GKE`. It delegates all GCP
 infrastructure provisioning to `App_GKE` and assembles the Elasticsearch-specific configuration
 locally using a `locals` block (there is no separate `*_Common` module).
 
-> **Important:** `Elasticsearch_GKE` must be deployed **before** `RAGFlow_GKE`. After deployment, run `tofu output elasticsearch_endpoint` and pass the result to `RAGFlow_GKE`'s `elasticsearch_hosts` variable.
+> `Elasticsearch_GKE` must be deployed **before** `RAGFlow_GKE`. After deployment, run
+> `tofu output elasticsearch_endpoint` and pass the result to `RAGFlow_GKE`'s
+> `elasticsearch_hosts` variable.
 
 ---
 
-## 1. Module Overview
+## §1 · Module Overview
 
 ### What `Elasticsearch_GKE` provides
 
@@ -94,7 +101,7 @@ override any of the above.
 
 ---
 
-## 2. IAM & Project Identity (Group 0 & 1)
+## §2 · IAM & Project Identity (Group 0 & 1)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -103,20 +110,21 @@ override any of the above.
 | `module_dependency` | `list(string)` | `["Services_GCP"]` | Modules that must be deployed first. `{{UIMeta group=0 order=3}}` |
 | `module_services` | `list(string)` | `["Google Kubernetes Engine", "Persistent Disk", ...]` | GCP services consumed. `{{UIMeta group=0 order=4}}` |
 | `credit_cost` | `number` | `80` | Platform credits consumed on deployment. `{{UIMeta group=0 order=5}}` |
-| `require_credit_purchases` | `bool` | `true` | Enforce credit balance check. `{{UIMeta group=0 order=6}}` |
+| `require_credit_purchases` | `bool` | `false` | Enforce credit balance check. `{{UIMeta group=0 order=6}}` |
 | `enable_purge` | `bool` | `true` | Permit full deletion on destroy. `{{UIMeta group=0 order=7}}` |
-| `public_access` | `bool` | `false` | Platform UI visibility. `{{UIMeta group=0 order=8}}` |
-| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated when blank. `{{UIMeta group=0 order=9}}` |
-| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Terraform service account. `{{UIMeta group=0 order=9}}` |
+| `public_access` | `bool` | `true` | Platform UI visibility. `{{UIMeta group=0 order=8}}` |
+| `shared_users` | `list(string)` | `[]` | Users granted access regardless of `public_access`. Actively enforced by the platform. `{{UIMeta group=0 order=9}}` |
+| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated when blank. `{{UIMeta group=0 order=10}}` |
+| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Terraform service account. `{{UIMeta group=0 order=11}}` |
 | `project_id` | `string` | **required** | GCP project ID. `{{UIMeta group=1 order=1}}` |
 | `tenant_deployment_id` | `string` | `"demo"` | 1–20 lowercase letters, numbers, hyphens. `{{UIMeta group=1 order=2}}` |
 | `support_users` | `list(string)` | `[]` | Email addresses granted IAM access and monitoring alerts. `{{UIMeta group=1 order=3}}` |
 | `resource_labels` | `map(string)` | `{}` | Labels applied to all resources. `{{UIMeta group=1 order=4}}` |
-| `deployment_region` | `string` | `"us-central1"` | GCP region fallback when VPC discovery finds no subnets. `{{UIMeta group=1 order=5}}` |
+| `region` | `string` | `"us-central1"` | GCP region fallback when VPC discovery finds no subnets. `{{UIMeta group=1 order=5}}` |
 
 ---
 
-## 3. Application Identity (Group 2)
+## §3 · Application Identity (Group 2)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -128,7 +136,7 @@ override any of the above.
 
 ---
 
-## 4. Runtime & Scaling (Group 3)
+## §4 · Runtime & Scaling (Group 3)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -153,11 +161,11 @@ override any of the above.
 | `es_java_heap` | `string` | `"1g"` | JVM heap size (sets both `-Xms` and `-Xmx`). Should be no more than half of `memory_limit`. (e.g. `"1g"`, `"2g"`, `"4g"`) `{{UIMeta group=3 order=22}}` |
 | `enable_xpack_security` | `bool` | `false` | Enable Elasticsearch X-Pack security (authentication). When `false`, the cluster is accessible without credentials. Recommended `false` for initial setup alongside RAGFlow; enable for production after configuring certificates. `{{UIMeta group=3 order=23}}` |
 
-> **Note:** Heap sizing rule: `es_java_heap` ≤ `memory_limit / 2`. Example: `memory_limit = "4Gi"` → `es_java_heap = "2g"`. Elasticsearch also needs memory for the OS page cache to accelerate index segment reads.
+> **Heap sizing rule:** `es_java_heap` ≤ `memory_limit / 2`. Example: `memory_limit = "4Gi"` → `es_java_heap = "2g"`. Elasticsearch also needs memory for the OS page cache to accelerate index segment reads.
 
 ---
 
-## 5. GKE Backend Configuration (Group 5)
+## §5 · GKE Backend Configuration (Group 5)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -175,7 +183,7 @@ override any of the above.
 
 ---
 
-## 6. StatefulSet & Persistence (Group 6)
+## §6 · StatefulSet & Persistence (Group 6)
 
 Data persistence is critical for Elasticsearch — all index data lives in the PVC.
 
@@ -192,7 +200,7 @@ Data persistence is critical for Elasticsearch — all index data lives in the P
 
 ---
 
-## 7. Environment Variables & Secrets (Group 4)
+## §7 · Environment Variables & Secrets (Group 4)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -203,7 +211,7 @@ Data persistence is critical for Elasticsearch — all index data lives in the P
 
 ---
 
-## 8. Access & Networking (Groups 18–21)
+## §8 · Access & Networking (Groups 18–21)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -231,7 +239,7 @@ Data persistence is critical for Elasticsearch — all index data lives in the P
 
 ---
 
-## 9. Storage (Group 13) — Not Used
+## §9 · Storage (Group 13) — Not Used
 
 Elasticsearch stores all data in the PVC. No GCS buckets or NFS mounts are needed.
 
@@ -249,7 +257,7 @@ Elasticsearch stores all data in the PVC. No GCS buckets or NFS mounts are neede
 
 ---
 
-## 10. Observability & Health (Group 9)
+## §10 · Observability & Health (Group 9)
 
 Probes use **TCP** (not HTTP) because:
 - HTTP probes would return `401 Unauthorized` when `enable_xpack_security = true`.
@@ -263,11 +271,14 @@ Probes use **TCP** (not HTTP) because:
 | `uptime_check_config` | `object` | `{ enabled=false, path="/_cluster/health", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. Disabled by default. `{{UIMeta group=9 order=3}}` |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies. `{{UIMeta group=9 order=4}}` |
 
-> **Note:** The container-level probes (forwarded via the application config) use TCP, while `startup_probe_config` and `health_check_config` at the App_GKE level default to HTTP with `/_cluster/health`. When `enable_xpack_security = true`, override both configs to use TCP.
+> Note: The container-level probes (forwarded via the application config) use TCP, while
+> `startup_probe_config` and `health_check_config` at the App_GKE level default to HTTP
+> with `/_cluster/health`. When `enable_xpack_security = true`, override both configs to
+> use TCP.
 
 ---
 
-## 11. Reliability Policies (Group 8)
+## §11 · Reliability Policies (Group 8)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -278,7 +289,7 @@ Probes use **TCP** (not HTTP) because:
 
 ---
 
-## 12. Backup & CI/CD (Groups 11 & 16)
+## §12 · Backup & CI/CD (Groups 11 & 16)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -299,7 +310,7 @@ Probes use **TCP** (not HTTP) because:
 
 ---
 
-## 13. Database (Group 15) — Not Used
+## §13 · Database (Group 15) — Not Used
 
 Elasticsearch requires no Cloud SQL. All variables are present for interface compatibility with `App_GKE`.
 
@@ -318,7 +329,7 @@ Elasticsearch requires no Cloud SQL. All variables are present for interface com
 
 ---
 
-## 14. Workload Automation (Group 10 & 17)
+## §14 · Workload Automation (Group 10 & 17)
 
 Elasticsearch requires no initialization jobs or custom SQL.
 
@@ -334,7 +345,7 @@ Elasticsearch requires no initialization jobs or custom SQL.
 
 ---
 
-## 15. Resource Quota (Group 7)
+## §15 · Resource Quota (Group 7)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -346,7 +357,7 @@ Elasticsearch requires no initialization jobs or custom SQL.
 
 ---
 
-## 16. Outputs
+## §16 · Outputs
 
 | Output | Description |
 |---|---|
@@ -367,7 +378,7 @@ Elasticsearch requires no initialization jobs or custom SQL.
 
 ---
 
-## 17. Configuration Examples
+## §17 · Configuration Examples
 
 ### Basic Deployment
 

@@ -5,14 +5,20 @@ slug: /features/admins
 
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-<img src="https://storage.googleapis.com/rad-public-2b65/features/admin_features.png" alt="Admin Features Infographic" style={{marginBottom: '20px'}} />
+<img src="https://storage.googleapis.com/rad-public-2b65/features/admin_features.png" alt="Admin Features Infographic" />
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/features/admin_features.m4a" title="Admin Features Audio" />
+<br/>
 
-<video width="100%" controls style={{marginTop: '20px'}}>
+<AudioPlayer src="https://storage.googleapis.com/rad-public-2b65/features/admin_features.m4a" />
+
+<br/>
+
+<video controls width="100%">
   <source src="https://storage.googleapis.com/rad-public-2b65/features/admin_features.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
+
+<br/>
 
 [Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/admin_features.pdf)
 
@@ -124,10 +130,11 @@ You have complete visibility into all activity on the platform. The **Deployment
     *   `COMPLETED` — Build finished successfully.
     *   `FAILED` — Build finished with an error.
     *   `CANCELLED` — Deployment was stopped before or during provisioning. The available follow-up actions depend on context: if the original action was `CREATE` or `PURGE`, only **Purge** is shown (no infrastructure was deployed); if the original action was `UPDATE` or `DELETE`, **Delete** and **Update** are shown (infrastructure may still exist).
+    *   `TIMEOUT` — The Cloud Build job exceeded its execution time limit, or a stuck `QUEUED` deployment was automatically reconciled and the underlying build no longer exists.
     *   `INTERNAL_ERROR` — A non-transient platform failure occurred during provisioning (e.g., a function crash). The deployment is surfaced as actionable rather than remaining silently stuck in `QUEUED`.
     *   `DELETED` — Deployment has been soft-deleted and is awaiting permanent removal after the retention period.
 *   **Cancel vs. Purge vs. Delete:**
-    *   **Cancel:** Available for deployments stuck in `QUEUED`. Marks the deployment as `CANCELLED` without triggering any resource teardown. Use this when a build has not started and no infrastructure was provisioned. Accessible to admins and the deployment owner.
+    *   **Cancel:** Available for deployments stuck in `QUEUED`. Marks the deployment as `CANCELLED` without triggering any resource teardown. Use this when a build has not started and no infrastructure was provisioned. Accessible to admins and the deployment owner. The Cancel button can be disabled platform-wide via the Global Configuration settings if your workflow requires preventing users from self-cancelling queued deployments.
     *   **Delete (Soft Delete):** The standard removal action. Marks the deployment for deletion, triggers a resource cleanup, and retains the record for the defined retention period.
     *   **Purge (Hard Delete):** A force-cleanup action. Immediately triggers an aggressive resource removal pipeline (`DEPLOYMENT_ACTIONS.PURGE`) and removes the deployment record once complete. Use this for stuck deployments, `CANCELLED` deployments, or when immediate cleanup is required.
 
@@ -135,7 +142,7 @@ You have complete visibility into all activity on the platform. The **Deployment
 
 You are responsible for the catalog of standard modules available to all users.
 
-1.  **Configure Repo:** Ensure your Platform GitHub Repository is configured in your **Profile** (see section 8 — Profile & Notifications).
+1.  **Configure Repo:** Ensure your Platform GitHub Repository is configured in your **Profile** (see section 2.4).
 2.  **Publish:** Go to the **Publish** page. You will see a list of modules found in your repo.
 3.  **Refining Modules with Jules:** Click the **Sparkles** icon on any module card to open the Jules AI Refinement tool. Jules can help you improve code, add documentation, or fix bugs before publishing.
 4.  **Select & Save:** Select the modules you want to make public and click "Publish" (or "Update"). These will immediately appear on the "Deploy" page for all users.
@@ -155,6 +162,6 @@ The **Help** page provides tools for communication and platform documentation, o
 Click your avatar in the top right to access your **Profile** page, where you can manage:
 
 *   **Notification Settings:** Toggle **Deployment Notifications** and **Billing Notifications** on or off to control which email alerts you receive.
-*   **Admin Settings:** Configure your Platform GitHub Token, Repository, and Jules API Key for the platform module catalog.
+*   **Admin Settings:** Configure your Platform GitHub Token, Repository, and Jules API Key (see sections 2.3 and 2.4).
 *   **Account Management:** View your account email. If needed, you can delete your account from this page (requires email confirmation).
 *   **Theme:** Toggle between Light and Dark mode using the sun/moon icon in the navigation bar.

@@ -1,4 +1,4 @@
-# Flowise Common Module
+# Flowise_Common Shared Configuration Module
 
 The `Flowise_Common` module defines the Flowise visual AI workflow builder for the RAD Modules ecosystem. It **creates GCP resources** (one Secret Manager secret for the admin password) and produces a `config` output consumed by the platform-specific wrapper modules (`Flowise_CloudRun` and `Flowise_GKE`).
 
@@ -52,7 +52,7 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 |---|---|
 | `name` | `<resource_prefix>-flowise-uploads` |
 | `name_suffix` | `"flowise-uploads"` |
-| `location` | `var.deployment_region` |
+| `location` | `var.region` |
 | `storage_class` | `"STANDARD"` |
 | `force_destroy` | `true` |
 | `versioning_enabled` | `false` |
@@ -87,8 +87,8 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | CPU/memory limits from variables; no requests set |
 | `min_instance_count` | from `min_instance_count` (default: `1`) |
 | `max_instance_count` | from `max_instance_count` (default: `1`) |
-| `environment_variables` | Merged map — see §6 |
-| `initialization_jobs` | Default `db-init` job or custom override — see §7 |
+| `environment_variables` | Merged map — see §5 |
+| `initialization_jobs` | Default `db-init` job or custom override — see §6 |
 | `startup_probe` | from `startup_probe` variable |
 | `liveness_probe` | from `liveness_probe` variable |
 
@@ -126,52 +126,38 @@ scripts_dir = abspath("${module.flowise_app.path}/scripts")
 
 ---
 
-## 5. Non-Configurable Values
-
-The following values are fixed inside `Flowise_Common` and cannot be overridden by callers:
-
-| Setting | Value | Reason |
-|---|---|---|
-| `container_image` | `""` (empty) | No prebuilt image reference; the image is built from the bundled `Dockerfile`. |
-| `image_source` | `"custom"` | Cloud Build compiles the image from the bundled Dockerfile at deploy time. |
-| `enable_image_mirroring` | `false` | Image is built by Cloud Build directly, not mirrored from an external registry. |
-| `container_port` | `3000` | Application's fixed listening port. |
-| `database_type` | `"POSTGRES_15"` | Flowise requires PostgreSQL 15. |
-| `cloudsql_volume_mount_path` | `"/cloudsql"` | Fixed Cloud SQL Auth Proxy socket directory. |
-
----
-
-## 6. Environment Variables (always injected)
+## 5. Environment Variables (always injected)
 
 `Flowise_Common` merges the following into `config.environment_variables`, with `var.environment_variables` taking precedence:
 
-| Variable | Default Value | Description |
+| Variable | Value | Purpose |
 |---|---|---|
-| `DATABASE_TYPE` | `"postgres"` | Forces PostgreSQL backend. |
-| `DATABASE_PORT` | `"5432"` | PostgreSQL default port. |
-| `FLOWISE_USERNAME` | `var.flowise_username` (default: `"admin"`) | Flowise admin username. |
-| `APIKEY_STORAGE_TYPE` | `"db"` | Stores Flowise API keys in the database. |
-| `STORAGE_TYPE` | `"gcs"` | Flowise file storage backend. |
-| `GCLOUD_PROJECT` | `var.project_id` | GCP project for GCS access. |
+| `DATABASE_TYPE` | `"postgres"` | Forces PostgreSQL backend |
+| `DATABASE_PORT` | `"5432"` | PostgreSQL default port |
+| `FLOWISE_USERNAME` | `var.flowise_username` (default: `"admin"`) | Flowise admin username |
+| `APIKEY_STORAGE_TYPE` | `"db"` | Stores Flowise API keys in the database |
+| `STORAGE_TYPE` | `"gcs"` | Flowise file storage backend |
+| `GCLOUD_PROJECT` | `var.project_id` | GCP project for GCS access |
 
 > **`DATABASE_HOST`, `DATABASE_USER`, `DATABASE_NAME`, `DATABASE_PASSWORD`**: These are **not** set in the Terraform environment map. They are injected at container startup by `flowise-entrypoint.sh` from platform-injected `DB_*` variables. This approach is required for GKE: env vars are ordered alphabetically in the pod spec, so `$(DB_HOST)` in `DATABASE_HOST` would never be resolved by Kubernetes (since `DB_HOST` is defined after `DATABASE_HOST`). Direct shell assignment in the entrypoint sidesteps this ordering constraint. On Cloud Run the `$(DB_HOST)` substitution still runs, but overwriting with the same value is harmless.
 
 ---
 
-## 7. Initialization Job
+## 6. Initialization Job
 
 When `initialization_jobs` is empty (the default), `Flowise_Common` automatically defines a single bootstrap job:
 
 | Field | Value |
 |---|---|
-| Name | `"db-init"` |
-| Description | `"Create Flowise Database and User"` |
-| Image | `postgres:15-alpine` |
-| Script | `scripts/create-db-and-user.sh` |
+| `name` | `"db-init"` |
+| `description` | `"Create Flowise Database and User"` |
+| `image` | `"postgres:15-alpine"` |
 | `execute_on_apply` | `true` |
-| Timeout | `600s` |
-| Max retries | `1` |
-| CPU / Memory | `1000m` / `512Mi` |
+| `script_path` | `<module_path>/scripts/create-db-and-user.sh` |
+| `cpu_limit` | `"1000m"` |
+| `memory_limit` | `"512Mi"` |
+| `timeout_seconds` | `600` |
+| `max_retries` | `1` |
 
 The `create-db-and-user.sh` script:
 1. Detects the Cloud SQL Auth Proxy socket (from `DB_HOST`) or falls back to `DB_IP`.
@@ -185,7 +171,7 @@ When `initialization_jobs` is provided by the caller, the custom jobs replace th
 
 ---
 
-## 8. Scripts Directory
+## 7. Scripts Directory
 
 `Flowise_Common` ships three files in `scripts/`:
 
@@ -193,21 +179,21 @@ When `initialization_jobs` is provided by the caller, the custom jobs replace th
 |---|---|
 | `Dockerfile` | Wraps `flowiseai/flowise:latest`. Copies `flowise-entrypoint.sh`, makes it executable, exposes port `3000`, and sets it as the container ENTRYPOINT with `flowise start` as the default CMD. |
 | `flowise-entrypoint.sh` | Unconditionally maps platform-injected `DB_*` variables to Flowise's `DATABASE_*` naming convention before calling `exec "$@"`. Handles both Cloud Run (env-var substitution) and GKE (alphabetic ordering). |
-| `create-db-and-user.sh` | Bootstrap job script — see §7. |
+| `create-db-and-user.sh` | Bootstrap job script — see §6. |
 
 > **Entrypoint detail**: `flowise-entrypoint.sh` uses direct shell assignment (`export DATABASE_HOST="${DB_HOST:-127.0.0.1}"`) rather than Kubernetes `$(DB_HOST)` substitution. This is intentional: Kubernetes resolves env var references alphabetically, and `DATABASE_HOST` (prefixed `D`) precedes `DB_HOST` in alphabetical order, so `$(DB_HOST)` would be empty when `DATABASE_HOST` is set.
 
 ---
 
-## 9. Input Variables
+## 8. Input Variables
 
 All variables are passed in by the wrapper modules (`Flowise_CloudRun` and `Flowise_GKE`). `Flowise_Common` is not intended to be called directly by end users.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `project_id` | string | — | Required. GCP project ID. |
+| `project_id` | string | *(required)* | GCP project ID. |
 | `tenant_deployment_id` | string | `"demo"` | Tenant identifier suffix. |
-| `deployment_region` | string | `"us-central1"` | Region for the GCS storage bucket. |
+| `region` | string | `"us-central1"` | Region for the GCS storage bucket. |
 | `deployment_id` | string | `""` | Random deployment ID suffix. |
 | `resource_labels` | map(string) | `{}` | Labels applied to created resources. |
 | `application_name` | string | `"flowise"` | Application name. |
@@ -229,7 +215,7 @@ All variables are passed in by the wrapper modules (`Flowise_CloudRun` and `Flow
 
 ---
 
-## 10. Platform-Specific Differences
+## 9. Platform-Specific Differences
 
 | Aspect | Cloud Run (`Flowise_CloudRun`) | GKE (`Flowise_GKE`) |
 |---|---|---|
@@ -242,7 +228,7 @@ All variables are passed in by the wrapper modules (`Flowise_CloudRun` and `Flow
 
 ---
 
-## 11. Implementation Pattern
+## 10. Implementation Pattern
 
 ```hcl
 # Example: how Flowise_GKE instantiates Flowise_Common
@@ -253,7 +239,7 @@ module "flowise_app" {
   project_id           = var.project_id
   tenant_deployment_id = var.tenant_deployment_id
   deployment_id        = local.random_id
-  deployment_region    = local.region
+  region               = local.region
   resource_labels      = var.resource_labels
 
   application_name    = var.application_name

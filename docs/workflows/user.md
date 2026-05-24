@@ -1,8 +1,3 @@
----
-title: User Workflow
-slug: /workflows/user
----
-
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # User Workflow
@@ -19,29 +14,28 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 ## 1. Introduction
 Welcome to the platform! This tutorial covers the core actions you'll perform as a user: deploying applications, managing them, retrieving deployment outputs, and tracking your credits.
 
-## 2. Deploy a Module
+## 2. Step 1: Deploy a Module
 The core feature of the platform is deploying pre-configured software modules.
 
 1.  Click **Deploy** in the top navigation bar.
 2.  **Find a Module:**
-    *   Browse the **Platform Modules** tab for public modules.
+    *   Browse the **Platform Modules** tab for all publicly available modules. The **Partner Modules** tab is only shown to users with the Partner role.
     *   Use the search bar to find modules by name.
-    *   If you have access to partner-specific modules, click the **Partner Modules** tab.
     *   Click the **Pin** icon on any module card to keep frequently-used modules at the top of your list.
 3.  **Start Deployment:**
     *   Click on a module card to start the configuration process.
-    *   Fill in the required variables (e.g., project name, region).
+    *   Fill in the required variables (e.g., project name, region). If you have not yet purchased any credits, you may see only the first page of the form. Purchase credits to unlock **advanced** configuration options.
     *   Review the estimated cost (if credits are enabled).
     *   Click **Deploy** to launch your application.
 
 > **Credit check:** The platform verifies your credit balance before queuing the deployment. If the module requires Purchased Credits specifically, your Awarded Credits balance will not satisfy the requirement — you must buy additional credits first.
 
-## 3. Manage Your Deployments
+## 3. Step 2: Manage Your Deployments
 Once you've deployed a module, you can monitor and manage it.
 
 1.  Click **Deployments** in the navigation bar.
 2.  **View Status:**
-    *   You will see a list of your deployments with their current status (e.g., `QUEUED`, `WORKING`, `COMPLETED`, `FAILED`).
+    *   You will see a list of your deployments with their current status (e.g., `QUEUED`, `WORKING`, `SUCCESS`, `FAILURE`, `TIMEOUT`, `CANCELLED`).
     *   Use the search bar to find specific deployments by name or ID.
 3.  **View Details, Logs, and Outputs:**
     *   Click on any deployment row to open the details view.
@@ -51,7 +45,7 @@ Once you've deployed a module, you can monitor and manage it.
     *   To change a variable on an existing deployment (e.g., upgrade an instance type, fix a bad value), click the **Update** button on the details page.
     *   The configuration form opens pre-filled with the current values. Adjust as needed and submit.
 5.  **Cancel a Deployment:**
-    *   If a deployment is in `QUEUED` or `WORKING` state and you want to stop it, click **Cancel** on the details page.
+    *   If a deployment is stuck in `QUEUED` and has not yet started, click **Cancel** on the details page. This marks the deployment as `CANCELLED` without triggering resource teardown. The Cancel button may be disabled by your platform administrator — if it is not visible, contact your administrator.
 6.  **Delete a Deployment:**
     *   If you no longer need an application, click the **Trash** icon (Delete) to tear down all associated cloud infrastructure.
     *   Deletion runs `terraform destroy` and cannot be undone. The deployment record is retained for history.
@@ -67,7 +61,7 @@ When the platform's retention policy triggers (or you manually delete a deployme
 
 > **Warning:** After the 7-day grace period, the deployment record and all Cloud Storage artifacts are permanently deleted and cannot be recovered.
 
-## 4. Manage Credits & Costs
+## 4. Step 3: Manage Credits & Costs
 If your platform uses a credit system, you'll need to manage your balance.
 
 1.  Click **Credits** in the navigation bar.
@@ -88,7 +82,7 @@ If your platform uses a credit system, you'll need to manage your balance.
     *   The **Subscriptions** tab (if enabled) shows available plans and your current subscription status.
     *   If your subscription was cancelled and you want to reactivate it, click **Reinstate** on your previous plan. Credits for the new cycle are added immediately.
 
-## 5. Get Help
+## 5. Step 4: Get Help
 Need assistance or more detailed guides?
 
 1.  Click **Help** in the navigation bar.

@@ -1,9 +1,6 @@
-# N8N CloudRun Module
+# N8N_CloudRun Module — Configuration Guide
 
-n8n is an open-source workflow automation platform that lets you connect services, run logic,
-and build automated pipelines through a visual node-based interface. This module deploys n8n
-on **Google Cloud Run** with a managed Cloud SQL PostgreSQL database and GCS-backed storage
-persistence.
+n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), **230,000+ active users**, and a **$2.5B valuation** as of 2025 — growing from $350M in under four months and serving a quarter of the Fortune 500. With $240M raised across four funding rounds, 400+ integrations, and native AI nodes, n8n connects apps, APIs, and data sources with full code flexibility. It is self-hostable for total data sovereignty and no per-execution fees. This module deploys n8n on **Google Cloud Run** with a managed Cloud SQL PostgreSQL database and GCS-backed storage persistence.
 
 `N8N_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP
 infrastructure provisioning to App_CloudRun (Cloud Run service, Cloud SQL, networking, Secret
@@ -19,9 +16,9 @@ feed into App_CloudRun's `application_config`, `module_secret_env_vars`,
 
 ---
 
-## 1. Module Overview
+## §1 · Module Overview
 
-### A. What `N8N_CloudRun` provides
+### What `N8N_CloudRun` provides
 
 - An **n8n container** (prebuilt image from Docker Hub, `enable_image_mirroring = true`)
   deployed on Cloud Run listening on port `5678`.
@@ -46,7 +43,7 @@ feed into App_CloudRun's `application_config`, `module_secret_env_vars`,
 > automation deployment. It does not include Qdrant vector database or Ollama LLM server.
 > Use `N8N_AI_CloudRun` when you need the full AI stack (RAG pipelines, local LLMs).
 
-### B. Key differences from `App_CloudRun` defaults
+### Key differences from `App_CloudRun` defaults
 
 | Feature | App_CloudRun default | N8N_CloudRun default |
 |---|---|---|
@@ -63,7 +60,7 @@ feed into App_CloudRun's `application_config`, `module_secret_env_vars`,
 
 ---
 
-## 2. IAM & Project Identity
+## §2 · IAM & Project Identity
 
 These variables configure the GCP project target, deployment identity, and platform metadata.
 Their semantics are identical to the App_CloudRun equivalents — refer to
@@ -83,9 +80,9 @@ Their semantics are identical to the App_CloudRun equivalents — refer to
 
 ---
 
-## 3. Core Service Configuration
+## §3 · Core Service Configuration
 
-### A. Application Identity
+### §3.A · Application Identity
 
 `display_name` and `description` are passed to `N8N_Common` (not directly to App_CloudRun's
 `application_display_name`). `display_name` is an **alias** for `application_display_name` in
@@ -98,7 +95,7 @@ the module interface.
 | `description` | `"n8n Workflow Automation - Workflow automation platform"` | Brief description of the deployment. Passed to `N8N_Common` and surfaced in Cloud Run service metadata. |
 | `application_version` | `"2.4.7"` | Container image version tag. Increment to trigger a new image pull and deploy a new revision. |
 
-### B. Resource Sizing
+### §3.B · Resource Sizing
 
 `cpu_limit` and `memory_limit` are exposed as **dedicated top-level variables**. Workflow
 automation with concurrent node execution and large data processing benefits from the elevated
@@ -117,7 +114,7 @@ defaults.
 | `enable_cloudsql_volume` | `true` | Injects the Cloud SQL Auth Proxy sidecar for Unix socket connections. Set `false` only when connecting to Cloud SQL via TCP. |
 | `enable_image_mirroring` | `true` | Mirrors the n8n image into Artifact Registry. Recommended to avoid Docker Hub rate limits in production. |
 
-### C. Environment Variables & Secrets
+### §3.C · Environment Variables & Secrets
 
 The `environment_variables` variable has n8n-specific SMTP defaults. The following
 platform-managed variables are **automatically injected** and must not be set in
@@ -153,7 +150,7 @@ Override these to enable n8n workflow failure alerts and credential sharing emai
 | `secret_propagation_delay` | `30` | Seconds to wait after secret creation before dependent operations proceed. |
 | `secret_rotation_period` | `"2592000s"` | Pub/Sub rotation notification period (30 days). Set `null` to disable. |
 
-### D. Networking
+### §3.D · Networking
 
 | Variable | Default | Description |
 |---|---|---|
@@ -168,7 +165,7 @@ Override these to enable n8n workflow failure alerts and credential sharing emai
 > front of the Cloud Run URL. This **blocks all public webhook endpoints**. Only enable IAP
 > on internal-only n8n deployments that do not receive external webhook callbacks.
 
-### E. Initialization & Bootstrap
+### §3.E · Initialization & Bootstrap
 
 | Variable | Default | Description |
 |---|---|---|
@@ -180,9 +177,9 @@ For the `initialization_jobs` and `cron_jobs` object schemas refer to
 
 ---
 
-## 4. Advanced Security
+## §4 · Advanced Security
 
-### A. Secret Management
+### §4.A · Secret Management
 
 Two secrets are auto-generated by `N8N_Common` on every deployment and injected via
 `module_secret_env_vars`:
@@ -199,7 +196,7 @@ Two secrets are auto-generated by `N8N_Common` on every deployment and injected 
 | `enable_auto_password_rotation` | `false` | Automates database password rotation via Cloud Run + Eventarc. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts to pick up the new value. |
 
-### B. Identity-Aware Proxy (IAP)
+### §4.B · Identity-Aware Proxy (IAP)
 
 > **Important:** Enabling IAP **blocks all public webhook endpoints**. Only enable for
 > internal-only n8n deployments.
@@ -210,7 +207,7 @@ Two secrets are auto-generated by `N8N_Common` on every deployment and injected 
 | `iap_authorized_users` | `[]` | Individual users or service accounts. Format: `"user:email@example.com"`. |
 | `iap_authorized_groups` | `[]` | Google Groups. Format: `"group:name@example.com"`. |
 
-### C. Cloud Armor & CDN
+### §4.C · Cloud Armor & CDN
 
 | Variable | Default | Description |
 |---|---|---|
@@ -219,13 +216,13 @@ Two secrets are auto-generated by `N8N_Common` on every deployment and injected 
 | `enable_cdn` | `false` | Enables Cloud CDN for n8n static asset caching. Only active when `enable_cloud_armor = true`. |
 | `admin_ip_ranges` | `[]` | CIDR ranges for administrative access bypass. |
 
-### D. VPC Service Controls
+### §4.D · VPC Service Controls
 
 | Variable | Default | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Restricts GCP API access to a VPC-SC perimeter, preventing data exfiltration. |
 
-### E. Binary Authorization
+### §4.E · Binary Authorization
 
 | Variable | Default | Description |
 |---|---|---|
@@ -233,22 +230,22 @@ Two secrets are auto-generated by `N8N_Common` on every deployment and injected 
 
 ---
 
-## 5. Traffic & Ingress
+## §5 · Traffic & Ingress
 
-### A. Ingress Controls
+### §5.A · Ingress Controls
 
 | Variable | Default | Options | Description |
 |---|---|---|---|
 | `ingress_settings` | `"all"` | `all` / `internal` / `internal-and-cloud-load-balancing` | `"all"` is required for n8n to receive external webhook callbacks. Use `"internal"` only when webhooks are not needed. |
 | `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | `ALL_TRAFFIC` / `PRIVATE_RANGES_ONLY` | Routes only RFC 1918 outbound traffic via VPC. Set `"ALL_TRAFFIC"` for strict egress control. |
 
-### B. Traffic Management
+### §5.B · Traffic Management
 
 | Variable | Default | Description |
 |---|---|---|
 | `traffic_split` | `[]` | Allocates traffic across Cloud Run revisions for canary or blue-green deployments. All entries must sum to 100. Empty list sends all traffic to the latest revision. |
 
-### C. Custom Domains & Load Balancer
+### §5.C · Custom Domains & Load Balancer
 
 | Variable | Default | Description |
 |---|---|---|
@@ -258,9 +255,9 @@ Two secrets are auto-generated by `N8N_Common` on every deployment and injected 
 
 ---
 
-## 6. CI/CD Integration
+## §6 · CI/CD Integration
 
-### A. GitHub & Cloud Build
+### §6.A · GitHub & Cloud Build
 
 n8n uses the **prebuilt Docker Hub image** (`enable_image_mirroring = true`). The CI/CD
 pipeline mirrors the image into Artifact Registry and deploys it — no custom Dockerfile build
@@ -274,7 +271,7 @@ is needed unless you extend the base image.
 | `github_app_installation_id` | `""` | Cloud Build GitHub App installation ID. Preferred over PAT for organisation repositories. |
 | `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Controls branch filter, included/ignored paths, trigger name, and build substitutions. |
 
-### B. Cloud Deploy Pipelines
+### §6.B · Cloud Deploy Pipelines
 
 | Variable | Default | Description |
 |---|---|---|
@@ -284,9 +281,9 @@ is needed unless you extend the base image.
 
 ---
 
-## 7. Reliability & Data
+## §7 · Reliability & Data
 
-### A. Health Probes
+### §7.A · Health Probes
 
 `N8N_CloudRun` exposes **two probe interfaces**: flat objects (`startup_probe` /
 `liveness_probe`) and structured objects (`startup_probe_config` / `health_check_config`).
@@ -301,7 +298,7 @@ n8n does not expose a dedicated health endpoint.
 | `health_check_config` | `{ enabled=true }` | Structured liveness probe (takes precedence over `liveness_probe`). Default HTTP on `/` with 10-second period. |
 | `uptime_check_config` | `{ enabled=true, path="/", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check from multiple global locations. |
 
-### B. Storage
+### §7.B · Storage
 
 | Variable | Default | Description |
 |---|---|---|
@@ -311,7 +308,7 @@ n8n does not expose a dedicated health endpoint.
 | `create_cloud_storage` | `true` | Set `false` to skip provisioning `storage_buckets`. |
 | `gcs_volumes` | `[]` | GCS buckets mounted as GCS Fuse volumes into the n8n container. |
 
-### C. Database
+### §7.C · Database
 
 n8n requires PostgreSQL. `db_name` and `db_user` are aliases for `application_database_name`
 and `application_database_user`. All `DB_POSTGRESDB_*` connection variables are injected
@@ -325,7 +322,7 @@ automatically.
 | `enable_auto_password_rotation` | `false` | Automates password rotation via Cloud Run + Eventarc. See §4.A. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts. |
 
-### D. Backup & Recovery
+### §7.D · Backup & Recovery
 
 `backup_uri` is the n8n-specific name for `backup_file` in App_CloudRun. The mapping is
 applied in `main.tf` (`backup_file = var.backup_uri`).
@@ -341,9 +338,9 @@ applied in `main.tf` (`backup_file = var.backup_uri`).
 
 ---
 
-## 8. Integrations
+## §8 · Integrations
 
-### A. Redis (Queue Mode)
+### §8.A · Redis (Queue Mode)
 
 Redis enables n8n queue mode, allowing reliable workflow execution and horizontal
 scaling. When `enable_redis = true` and `redis_host` is left empty, the module
@@ -360,7 +357,7 @@ such as Cloud Memorystore. The injected environment variables are `ENABLE_REDIS`
 | `redis_port` | `"6379"` | Redis TCP port (string). Injected as `QUEUE_BULL_REDIS_PORT`. |
 | `redis_auth` | `""` | Redis AUTH password. Leave empty if authentication is not enabled. |
 
-### B. Custom SQL
+### §8.B · Custom SQL
 
 Custom SQL scripts stored in GCS are run against the database during initialisation,
 before the application starts. Useful for schema migrations or seeding reference data.
@@ -372,7 +369,7 @@ before the application starts. Useful for schema migrations or seeding reference
 | `custom_sql_scripts_path` | `""` | Path prefix within the GCS bucket from which `.sql` files are executed in lexicographic order. |
 | `custom_sql_scripts_use_root` | `false` | Execute scripts as the root database user instead of the application user. Enable for scripts requiring elevated privileges (e.g., creating extensions or roles). |
 
-### C. Observability
+### §8.C · Observability
 
 | Variable | Default | Description |
 |---|---|---|
@@ -381,7 +378,7 @@ before the application starts. Useful for schema migrations or seeding reference
 | `service_annotations` | `{}` | Kubernetes-style annotations applied to the Cloud Run service resource. |
 | `service_labels` | `{}` | Labels applied to the Cloud Run service (in addition to `resource_labels`). |
 
-### D. SMTP / Email
+### §8.D · SMTP / Email
 
 n8n has no dedicated SMTP input variables. Configure SMTP via `environment_variables`:
 
@@ -402,7 +399,7 @@ The SMTP password is auto-generated, stored in Secret Manager, and injected as
 
 ---
 
-## 9. Platform-Managed Behaviours
+## §9 · Platform-Managed Behaviours
 
 The following are set automatically by the module and cannot be overridden via input
 variables. They are listed here for diagnostic and integration reference.
@@ -449,7 +446,7 @@ variables. They are listed here for diagnostic and integration reference.
 
 ---
 
-## 10. Variable Reference
+## §10 · Variable Reference
 
 Complete list of all input variables, grouped by UI section.
 
@@ -460,9 +457,9 @@ Complete list of all input variables, grouped by UI section.
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
 | 0 | `credit_cost` | number | `100` | — |
-| 0 | `require_credit_purchases` | bool | `true` | — |
+| 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
-| 0 | `public_access` | bool | `false` | — |
+| 0 | `public_access` | bool | `true` | — |
 | 0 | `deployment_id` | string | `""` | yes |
 | 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
 | 1 | `project_id` | string | — | yes |
@@ -555,4 +552,23 @@ Complete list of all input variables, grouped by UI section.
 | 21 | `organization_id` | string | `""` | yes |
 | 21 | `enable_audit_logging` | bool | `false` | yes |
 
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
 

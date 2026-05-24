@@ -1,9 +1,16 @@
-# RAGFlow CloudRun Module
+# RAGFlow_CloudRun Module — Configuration Guide
 
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG)
-platform. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and embeds
-them, stores vectors in Elasticsearch, exposes a REST API for question-answering, and provides
-a web UI for knowledge base management and enterprise search.
+platform with 80,000+ GitHub stars and 2,596% year-over-year contributor growth — named one of
+GitHub's fastest-growing open-source projects (Apache 2.0). Unlike generic RAG frameworks,
+RAGFlow is purpose-built for deep document understanding: it correctly parses PDFs, tables, and
+visual layouts before chunking and retrieval, making it significantly more accurate on structured
+enterprise content. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and
+embeds them, stores vectors in Elasticsearch, exposes a REST API for question-answering, and
+provides a web UI for knowledge base management and enterprise search. Typical deployments power
+enterprise knowledge bases, legal research tools, financial document analysis, and customer
+support systems where retrieval accuracy depends on document parsing quality. v0.25 (April 2026)
+added agentic memory, sandbox code execution, and prebuilt ingestion pipelines.
 
 `RAGFlow_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun`
 for all GCP infrastructure provisioning (Cloud Run service, Cloud SQL Auth Proxy, GCS buckets,
@@ -15,13 +22,11 @@ application configuration, database initialization job, and document storage buc
 > Terraform will reject the configuration otherwise. Inline Elasticsearch is not supported on
 > Cloud Run.
 
-> This guide documents variables that are **unique to `RAGFlow_CloudRun`** or that have **RAGFlow-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
-
 ---
 
-## 1. Module Overview
+## §1 · Module Overview
 
-### A. What `RAGFlow_CloudRun` provides
+### What `RAGFlow_CloudRun` provides
 
 - A **Cloud Run v2 service** (custom image built from `infiniflow/ragflow` via Cloud Build)
   with a **minimum of one warm instance** — scale-to-zero is disabled because RAGFlow loads
@@ -40,7 +45,7 @@ application configuration, database initialization job, and document storage buc
 - Optional **GCS Fuse** volume mounts for additional document storage access.
 - Optional **Cloud Filestore NFS** mount (requires `execution_environment = "gen2"`).
 
-### B. Key differences from `App_CloudRun` defaults
+### Key differences from `App_CloudRun` defaults
 
 | Feature | App_CloudRun default | RAGFlow_CloudRun default |
 |---|---|---|
@@ -60,7 +65,7 @@ application configuration, database initialization job, and document storage buc
 | `module_dependency` | varies | `["Services_GCP", "Elasticsearch_GKE"]` |
 | `credit_cost` | varies | `150` |
 
-### C. Architecture
+### Architecture
 
 ```
 RAGFlow_CloudRun
@@ -81,7 +86,7 @@ RAGFlow_CloudRun
     └── Optional: CI/CD (Cloud Build trigger / Cloud Deploy pipeline)
 ```
 
-### D. Platform-managed behaviours
+### Platform-managed behaviours
 
 | Behaviour | Detail |
 |---|---|
@@ -97,7 +102,7 @@ RAGFlow_CloudRun
 
 ---
 
-## 2. Module Metadata (Group 0)
+## §2 · Module Metadata (Group 0)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -106,15 +111,16 @@ RAGFlow_CloudRun
 | `module_dependency` | `list(string)` | `["Services_GCP", "Elasticsearch_GKE"]` | Modules that must be deployed first. `{{UIMeta group=0 order=3}}` |
 | `module_services` | `list(string)` | `["Cloud Run", "Cloud Run Jobs", "Cloud Build", "Artifact Registry", "Cloud Storage", "GCS Fuse", "Cloud SQL (MySQL 8.0)", "VPC Network", "Serverless VPC Access", "Secret Manager", "Cloud IAM", "Cloud Logging", "Cloud Monitoring", "Memorystore (Redis)", "Elasticsearch"]` | GCP services consumed. `{{UIMeta group=0 order=4}}` |
 | `credit_cost` | `number` | `150` | Platform credits consumed on deployment. `{{UIMeta group=0 order=5}}` |
-| `require_credit_purchases` | `bool` | `true` | Enforce credit balance check before deployment. `{{UIMeta group=0 order=6}}` |
+| `require_credit_purchases` | `bool` | `false` | Enforce credit balance check before deployment. `{{UIMeta group=0 order=6}}` |
 | `enable_purge` | `bool` | `true` | Permit full deletion of all resources on destroy. `{{UIMeta group=0 order=7}}` |
-| `public_access` | `bool` | `false` | Platform UI visibility to all users. `{{UIMeta group=0 order=8}}` |
-| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated (4-byte hex) when blank. `{{UIMeta group=0 order=9 updatesafe}}` |
-| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform to create resources. `{{UIMeta group=0 order=10 updatesafe}}` |
+| `public_access` | `bool` | `true` | Platform UI visibility to all users. `{{UIMeta group=0 order=8}}` |
+| `shared_users` | `list(string)` | `[]` | Users granted access regardless of `public_access`. Actively enforced by the platform. `{{UIMeta group=0 order=9}}` |
+| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated (4-byte hex) when blank. `{{UIMeta group=0 order=10 updatesafe}}` |
+| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform to create resources. `{{UIMeta group=0 order=11 updatesafe}}` |
 
 ---
 
-## 3. Project & Identity (Group 1)
+## §3 · Project & Identity (Group 1)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -125,7 +131,7 @@ RAGFlow_CloudRun
 
 ---
 
-## 4. Application Identity (Group 2)
+## §4 · Application Identity (Group 2)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -136,7 +142,7 @@ RAGFlow_CloudRun
 
 ---
 
-## 5. Runtime & Scaling (Group 3)
+## §5 · Runtime & Scaling (Group 3)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -163,7 +169,7 @@ RAGFlow_CloudRun
 
 ---
 
-## 6. Access & Networking (Group 4)
+## §6 · Access & Networking (Group 4)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -175,7 +181,7 @@ RAGFlow_CloudRun
 
 ---
 
-## 7. Environment Variables & Secrets (Group 5)
+## §7 · Environment Variables & Secrets (Group 5)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -184,7 +190,7 @@ RAGFlow_CloudRun
 | `secret_propagation_delay` | `number` | `30` | Seconds to wait after a secret is created before proceeding. Valid range: 0–300. `{{UIMeta group=5 order=3 updatesafe}}` |
 | `secret_rotation_period` | `string` | `"2592000s"` | Secret rotation notification period (default 30 days). Must be a duration in seconds followed by `s`. `{{UIMeta group=5 order=4 updatesafe}}` |
 
-### A. Automatically Injected Environment Variables
+### Automatically Injected Environment Variables
 
 The following variables are always injected by `RAGFlow_CloudRun` and must not be set in
 `environment_variables`:
@@ -202,7 +208,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## 8. Backup & Maintenance (Group 6)
+## §8 · Backup & Maintenance (Group 6)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -215,7 +221,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## 9. CI/CD & GitHub Integration (Group 7)
+## §9 · CI/CD & GitHub Integration (Group 7)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -230,7 +236,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## 10. Custom SQL (Group 8)
+## §10 · Custom SQL (Group 8)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -241,7 +247,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## 11. Load Balancer & CDN (Group 9)
+## §11 · Load Balancer & CDN (Group 9)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -252,7 +258,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## 12. Storage & Filesystem (Group 10)
+## §12 · Storage & Filesystem (Group 10)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -268,7 +274,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## 13. Database (Group 11)
+## §13 · Database (Group 11)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -280,7 +286,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## 14. Jobs & Scheduled Tasks (Group 12)
+## §14 · Jobs & Scheduled Tasks (Group 12)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -289,18 +295,18 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## 15. Observability & Health (Group 13)
+## §15 · Observability & Health (Group 13)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=60, timeout_seconds=10, period_seconds=10, failure_threshold=18 }` | Startup probe configuration. RAGFlow loads embedding models at boot — the default allows up to 180 seconds before failing. `{{UIMeta group=13 order=1 updatesafe}}` |
-| `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Liveness probe configuration. Checks `/v1/health` every 30 seconds after a 120-second initial delay. `{{UIMeta group=13 order=2 updatesafe}}` |
+| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/system/version", initial_delay_seconds=120, timeout_seconds=10, period_seconds=10, failure_threshold=30 }` | Startup probe configuration. RAGFlow loads embedding models at boot — the default allows up to 300 seconds before failing. `{{UIMeta group=13 order=1 updatesafe}}` |
+| `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/system/version", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Liveness probe configuration. Checks `/v1/system/version` every 30 seconds after a 120-second initial delay. `{{UIMeta group=13 order=2 updatesafe}}` |
 | `uptime_check_config` | `object` | `{ enabled=false, path="/v1/health", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. Enable to receive alerts when the service is unreachable. `{{UIMeta group=13 order=3 updatesafe}}` |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies. Each policy requires `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`, and optionally `aggregation_period`. `{{UIMeta group=13 order=4 updatesafe}}` |
 
 ---
 
-## 16. Elasticsearch & Redis (Group 14)
+## §16 · Elasticsearch & Redis (Group 14)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -313,7 +319,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## 17. VPC Service Controls (Group 21)
+## §17 · VPC Service Controls (Group 21)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -325,7 +331,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## 18. Validation Guards
+## §18 · Validation Guards
 
 `validation.tf` enforces the following preconditions at plan time using a `null_resource`
 lifecycle precondition block:
@@ -339,7 +345,7 @@ lifecycle precondition block:
 
 ---
 
-## 19. Outputs
+## §19 · Outputs
 
 | Output | Description |
 |---|---|
@@ -361,7 +367,7 @@ lifecycle precondition block:
 
 ---
 
-## 20. Notable Differences from `RAGFlow_GKE`
+## §20 · Notable Differences from `RAGFlow_GKE`
 
 | Feature | RAGFlow_GKE | RAGFlow_CloudRun |
 |---|---|---|
@@ -383,7 +389,7 @@ lifecycle precondition block:
 
 ---
 
-## 21. Resources Created
+## §21 · Resources Created
 
 The following GCP resources are provisioned when this module is applied:
 
@@ -406,9 +412,9 @@ The following GCP resources are provisioned when this module is applied:
 
 ---
 
-## 22. Configuration Examples
+## §22 · Configuration Examples
 
-### A. Basic Deployment
+### Basic Deployment
 
 ```hcl
 # config/basic.tfvars
@@ -436,7 +442,7 @@ cpu_limit    = "4000m"
 memory_limit = "8Gi"
 ```
 
-### B. Advanced Deployment
+### Advanced Deployment
 
 ```hcl
 # config/advanced.tfvars
@@ -490,3 +496,24 @@ resource_labels = {
   service = "ragflow"
 }
 ```
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

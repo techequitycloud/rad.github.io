@@ -1,6 +1,6 @@
-# OpenClaw GKE Module
+# OpenClaw_GKE Module — Configuration Guide
 
-OpenClaw is a multi-tenant AI agent gateway that provides WebSocket-enabled conversational AI agents with persistent GCS-backed workspace storage. This module deploys OpenClaw on **GKE Autopilot** as a Kubernetes Deployment, backed by GCS Fuse CSI driver for durable agent workspace and Secret Manager for credential management.
+OpenClaw is an open-source local AI agent that takes actions (not just generates responses), gaining rapid GitHub traction in late 2025. Its ecosystem of derivative startups generated approximately $400K/month in revenue within the first quarter of availability. Top use cases include contract review (legal teams report ~40% reduction in document review time), competitor monitoring, AI-powered content research, inbox triage, and DevOps security scanning. This module deploys OpenClaw on **GKE Autopilot** as a Kubernetes Deployment, backed by GCS Fuse CSI driver for durable agent workspace and Secret Manager for credential management, with per-tenant isolation for multi-tenant deployments.
 
 `OpenClaw_GKE` is a **wrapper module** built on top of `App_GKE`. It delegates all GCP infrastructure provisioning to App_GKE (GKE cluster, networking, GCS, Secret Manager, CI/CD) and adds OpenClaw-specific application configuration on top via the `OpenClaw_Common` sub-module.
 
@@ -8,9 +8,9 @@ OpenClaw is a multi-tenant AI agent gateway that provides WebSocket-enabled conv
 
 ---
 
-## 1. Module Overview
+## How This Guide Is Structured
 
-> This guide documents variables that are **unique to `OpenClaw_GKE`** or that have **OpenClaw-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
+This guide documents the variables that are **unique to `OpenClaw_GKE`** or that have **OpenClaw-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, CI/CD, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
 | Configuration Area | OpenClaw-Specific Notes |
 |---|---|
@@ -37,7 +37,7 @@ OpenClaw is a multi-tenant AI agent gateway that provides WebSocket-enabled conv
 
 ---
 
-## 2. Platform-Managed Behaviours
+## Platform-Managed Behaviours
 
 The following behaviours are applied automatically by `OpenClaw_GKE` (via the `OpenClaw_Common` sub-module) regardless of variable values in your `tfvars` file.
 
@@ -55,7 +55,7 @@ The following behaviours are applied automatically by `OpenClaw_GKE` (via the `O
 
 ---
 
-## 3. OpenClaw Application Identity
+## OpenClaw Application Identity
 
 | Variable | Default | Description |
 |---|---|---|
@@ -66,7 +66,7 @@ The following behaviours are applied automatically by `OpenClaw_GKE` (via the `O
 
 ---
 
-## 4. Runtime & Scaling
+## Runtime & Scaling
 
 `OpenClaw_GKE` uses a single structured `container_resources` object (as required by `App_GKE`) rather than separate `cpu_limit` and `memory_limit` top-level variables.
 
@@ -93,7 +93,7 @@ The following behaviours are applied automatically by `OpenClaw_GKE` (via the `O
 
 ---
 
-## 5. GKE Backend Configuration
+## GKE Backend Configuration
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -110,7 +110,7 @@ The following behaviours are applied automatically by `OpenClaw_GKE` (via the `O
 
 ---
 
-## 6. StatefulSet Configuration
+## StatefulSet Configuration
 
 When `workload_type = "StatefulSet"`, these variables control the StatefulSet behavior. OpenClaw normally uses GCS Fuse for state; PVC is only needed when local disk performance is required.
 
@@ -126,7 +126,7 @@ When `workload_type = "StatefulSet"`, these variables control the StatefulSet be
 
 ---
 
-## 7. Reliability Policies
+## Reliability Policies
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -137,7 +137,7 @@ When `workload_type = "StatefulSet"`, these variables control the StatefulSet be
 
 ---
 
-## 8. Health Probes
+## Health Probes
 
 OpenClaw exposes `/health` on port 8080. All probes target this path.
 
@@ -158,7 +158,7 @@ OpenClaw exposes `/health` on port 8080. All probes target this path.
 
 ---
 
-## 9. Workload Automation
+## Workload Automation
 
 OpenClaw has no default initialization job — no database setup is required.
 
@@ -170,16 +170,16 @@ OpenClaw has no default initialization job — no database setup is required.
 
 ---
 
-## 10. OpenClaw Configuration
+## OpenClaw Configuration
 
-### A. Skills Repository
+### Skills Repository
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `skills_repo_url` | 14 | `""` | GitHub URL of a shared OpenClaw skills repository. Cloned into `/data/workspace/skill-library` on every pod startup. Leave empty to skip skill syncing. |
 | `skills_repo_ref` | 14 | `"main"` | Git ref (branch, tag, or SHA) to check out. |
 
-### B. AI Provider & Messaging Credentials
+### AI Provider & Messaging Credentials
 
 All credentials are stored in Secret Manager and injected at pod startup. Plaintext values are never written to Terraform state after the initial secret version is created.
 
@@ -197,7 +197,7 @@ All credentials are stored in Secret Manager and injected at pod startup. Plaint
 
 ---
 
-## 11. Backup & Maintenance
+## Backup & Maintenance
 
 OpenClaw state is natively durable in GCS. These variables are present for interface compatibility with `App_GKE`.
 
@@ -212,7 +212,7 @@ OpenClaw state is natively durable in GCS. These variables are present for inter
 
 ---
 
-## 12. Identity-Aware Proxy (GKE-specific)
+## Identity-Aware Proxy (GKE-specific)
 
 `OpenClaw_GKE` exposes three IAP variables required when `enable_iap = true` and `enable_custom_domain = true`.
 
@@ -226,7 +226,7 @@ OpenClaw state is natively durable in GCS. These variables are present for inter
 
 ---
 
-## 13. Custom Domain
+## Custom Domain (Group 18)
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -237,7 +237,7 @@ OpenClaw state is natively durable in GCS. These variables are present for inter
 
 ---
 
-## 14. Storage
+## Storage (Group 13)
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -249,7 +249,7 @@ OpenClaw state is natively durable in GCS. These variables are present for inter
 
 ---
 
-## 15. NFS
+## NFS (Group 12)
 
 OpenClaw uses GCS Fuse for state. NFS is disabled by default and not required.
 
@@ -262,7 +262,7 @@ OpenClaw uses GCS Fuse for state. NFS is disabled by default and not required.
 
 ---
 
-## 16. Resource Quota
+## Resource Quota (Group 7)
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -277,7 +277,7 @@ OpenClaw uses GCS Fuse for state. NFS is disabled by default and not required.
 
 ---
 
-## 17. Outputs
+## Outputs
 
 | Output | Description |
 |---|---|
@@ -321,7 +321,7 @@ OpenClaw uses GCS Fuse for state. NFS is disabled by default and not required.
 
 ---
 
-## 18. Platform-Specific Comparison
+## Platform-Specific Comparison
 
 | Aspect | OpenClaw_CloudRun | OpenClaw_GKE |
 |---|---|---|

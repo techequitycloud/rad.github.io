@@ -1,13 +1,11 @@
 ---
 title: "EKS_GKE Module Documentation"
-sidebar_label: "AWS"
+sidebar_label: "EKS_GKE"
 ---
 
-# EKS GKE Module
+# EKS_GKE Module
 
-The source code for this module is available in the [rad-modules GitHub repository](https://github.com/techequitycloud/rad-modules/tree/main/modules/EKS_GKE).
-
-## 1. Overview
+## Overview
 
 The EKS_GKE module provisions a complete Amazon Elastic Kubernetes Service (EKS) cluster on AWS and registers it with Google Cloud as a **GKE Attached Cluster**. Once registered, the EKS cluster is visible and manageable from the Google Cloud console alongside any native GKE clusters in the same project — giving platform engineers a single pane of glass across both clouds.
 
@@ -24,7 +22,7 @@ The module takes approximately **10 minutes** to deploy from a single configurat
 
 ---
 
-## 2. What Gets Deployed
+## What Gets Deployed
 
 At a high level, the module creates two sets of resources in parallel and then connects them:
 
@@ -83,7 +81,7 @@ Deployment sequence:
 
 ---
 
-## 3. Google Cloud APIs
+## Google Cloud APIs
 
 Deploying this module enables ten Google Cloud APIs on the target project. Understanding what each API does gives you a map of the Google Cloud capabilities that underpin multi-cloud Kubernetes management.
 
@@ -181,7 +179,7 @@ The Kubernetes Metadata API collects Kubernetes object metadata — namespaces, 
 
 ---
 
-## 4. AWS Infrastructure
+## AWS Infrastructure
 
 This section describes what the module creates on AWS and the design decisions behind each component. Understanding these choices is useful both for operating the deployed environment and for appreciating how AWS networking integrates with GKE Attached Clusters.
 
@@ -279,7 +277,7 @@ kubectl get nodes \
 
 ---
 
-## 5. GKE Attached Clusters
+## GKE Attached Clusters
 
 GKE Attached Clusters is the Google Cloud feature that makes this module's multi-cloud capability possible. It allows any CNCF-conformant Kubernetes cluster — running on AWS, Azure, bare metal, or any other environment — to be registered with Google Cloud and managed as if it were a native GKE cluster. This section explains each dimension of the attached cluster registration that the module configures.
 
@@ -543,7 +541,7 @@ kubectl get rolebindings -A
 
 ---
 
-## 6. Anthos Connect Agent and the Bootstrap Process
+## Anthos Connect Agent and the Bootstrap Process
 
 Before the EKS cluster can be registered with Google Cloud, a small agent must be running inside the cluster to establish the management channel. This section explains how that agent is installed and what it does once running.
 
@@ -695,7 +693,7 @@ If deployment stalls, the most common causes are networking issues preventing th
 
 ---
 
-## 7. Anthos Service Mesh
+## Anthos Service Mesh
 
 The module includes an optional **Anthos Service Mesh (ASM)** installation capability via the `attached-install-mesh` sub-module. This sub-module is not deployed by the core module automatically — it is an additional step that platform engineers can invoke after the cluster is registered to add a full Istio-based service mesh to the EKS workloads.
 
@@ -887,7 +885,7 @@ When both the EKS attached cluster and a native GKE cluster are enrolled in the 
 
 ---
 
-## 8. Configuration Reference
+## Configuration Reference
 
 All configuration options are set before deployment. Options marked **Required** have no default and must be provided. All others have defaults that work for a standard learning environment.
 
@@ -895,7 +893,7 @@ All configuration options are set before deployment. Options marked **Required**
 
 | Option | Required | Default | Description |
 |--------|----------|---------|-------------|
-| `existing_project_id` | **Yes** | — | The Google Cloud project ID where the EKS cluster will be registered. The project must have billing enabled. |
+| `project_id` | **Yes** | — | The Google Cloud project ID where the EKS cluster will be registered. The project must have billing enabled. |
 | `gcp_location` | No | `us-central1` | The GCP region used for cluster registration, Cloud Logging, and Cloud Monitoring. This does not need to be geographically close to the AWS region — it is the Google Cloud control-plane anchor for the cluster. |
 
 ### AWS Settings
@@ -945,7 +943,7 @@ All configuration options are set before deployment. Options marked **Required**
 
 ---
 
-## 9. Default Behaviours
+## Default Behaviours
 
 The following behaviours are fixed within the module and cannot be changed through configuration options. Understanding them helps set expectations for what the deployed environment looks like.
 
@@ -953,7 +951,7 @@ The following behaviours are fixed within the module and cannot be changed throu
 |-----------|--------|
 | **Log components** | Both `SYSTEM_COMPONENTS` and `WORKLOADS` logs are always forwarded to Cloud Logging. There is no option to forward one without the other. |
 | **Managed Prometheus** | Always enabled on the attached cluster. Cloud Managed Prometheus metrics collection is always active. |
-| **Fleet project** | The cluster is enrolled in the fleet of the same Google Cloud project specified in `existing_project_id`. Cross-project fleet registration is not supported by this module. |
+| **Fleet project** | The cluster is enrolled in the fleet of the same Google Cloud project specified in `project_id`. Cross-project fleet registration is not supported by this module. |
 | **Node group distribution** | Worker nodes are placed in all three subnets across all three availability zones. Nodes are spread across AZs for high availability by default. |
 | **API disable on teardown** | The ten GCP APIs enabled by this module are not disabled when the module is torn down. This prevents disruption to other services in the project that may depend on the same APIs. |
 | **GCP APIs propagation** | Newly enabled GCP APIs require time to propagate before dependent resources can be created. The module waits for this automatically — no manual delay is needed. |
@@ -963,7 +961,7 @@ The following behaviours are fixed within the module and cannot be changed throu
 
 ---
 
-## 10. Prerequisites
+## Prerequisites
 
 Before deploying this module, ensure the following are in place:
 
@@ -977,7 +975,7 @@ Before deploying this module, ensure the following are in place:
 
 ---
 
-## 11. Deployment
+## Deployment
 
 ### Deploy the Module
 
@@ -991,7 +989,7 @@ gcloud container attached clusters get-credentials CLUSTER_NAME \
   --project GCP_PROJECT_ID
 ```
 
-Replace `CLUSTER_NAME` with the value of `cluster_name_prefix`, `GCP_REGION` with the value of `gcp_location`, and `GCP_PROJECT_ID` with `existing_project_id`.
+Replace `CLUSTER_NAME` with the value of `cluster_name_prefix`, `GCP_REGION` with the value of `gcp_location`, and `GCP_PROJECT_ID` with `project_id`.
 
 Verify the connection and explore the cluster:
 
@@ -1083,11 +1081,11 @@ From the Cloud Console, confirm all three observability layers are receiving dat
 
 Tearing down the module removes all resources in reverse order: the Connect Agent is uninstalled from EKS, the cluster registration is removed from GCP, the EKS node group and cluster are deleted, and the VPC and IAM roles are removed. The GCP APIs enabled by the module are left in place.
 
-> **Note:** The teardown requires network access to the EKS API server from the machine running the teardown. If private subnets were used, ensure the same network path that was available during deployment is available during teardown.
+> The teardown requires network access to the EKS API server from the machine running the teardown. If private subnets were used, ensure the same network path that was available during deployment is available during teardown.
 
 ---
 
-## 12. Further Learning
+## Further Learning
 
 Deploying this module gives you a working environment to explore the following Google Cloud documentation topics hands-on:
 

@@ -1,14 +1,14 @@
-# Ghost GKE Module
+# Ghost_GKE Module — Configuration Guide
 
-`Ghost_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/Ghost_Common.md) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot. Where a variable is identical in behaviour to `App_GKE`, this guide references the `App_GKE` guide rather than repeating the same documentation.
+This guide describes every configuration variable available in the `Ghost_GKE` module. `Ghost_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/Ghost_Common.md) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot. Ghost is trusted by Buffer, Cloudflare, DuckDuckGo, Duolingo, FreeCodeCamp, Revolut, and Kickstarter — with 22,000+ active customers and 100,000+ websites growing at roughly 15%/year, ahead of the 11% CMS market average. Built-in subscription monetization, native SEO, and superior page speed make it the leading alternative to WordPress for content-first businesses.
+
+Most configuration options in `Ghost_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Ghost** are described in full here.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
-> This guide documents variables that are **unique to `Ghost_GKE`** or that have **Ghost-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
-
 ---
 
-## 1. Standard Configuration Reference
+## Standard Configuration Reference
 
 The following configuration areas are provided by the underlying `App_GKE` module. Consult the linked sections of the [App_GKE Configuration Guide](../App_GKE/App_GKE.md) for full documentation.
 
@@ -43,28 +43,28 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Topology Spread Constraints | §7.B Topology Spread Constraints | Identical. |
 | Resource Quotas | §7.C Resource Quotas | Identical. |
 | Auto Password Rotation | §7.D Auto Password Rotation | See [Group 11: Database Configuration](#group-11-database-configuration). |
-| Redis Cache | §8.A Redis / Memorystore | `enable_redis` defaults to `true`; see [Redis Cache](#22-redis-cache). |
+| Redis Cache | §8.A Redis / Memorystore | `enable_redis` defaults to `true`; see [Group 14: Redis Cache](#group-14-redis-cache). |
 | Backup Import | §8.B Backup Import | Exposes both `backup_uri` (full GCS URI or Drive ID) and `backup_file` (filename in module backup bucket); see [Group 6: Backup & Maintenance](#group-6-backup--maintenance). |
 | Service Mesh (ASM) | §8.C Service Mesh (ASM via Fleet) | Identical. |
 | Multi-Cluster Services | §8.D Multi-Cluster Services (MCS) | Identical. |
 
 ---
 
-## 2. Platform-Managed Behaviours
+## How Ghost_GKE Relates to App_GKE
 
-`Ghost_GKE` passes all variables through to `App_GKE` and adds a `Ghost_Common` sub-module that supplies Ghost-specific defaults and application configuration. The following behaviours are applied automatically regardless of variable values in your `tfvars` file:
+`Ghost_GKE` passes all variables through to `App_GKE` and adds a `Ghost_Common` sub-module that supplies Ghost-specific defaults and application configuration. The main effects are:
 
 1. **MySQL 8.0 is required.** Ghost 6.x requires MySQL 8.0 and will not work with PostgreSQL. The `database_type` default is overridden to `"MYSQL_8_0"`.
 2. **`database__client = "mysql"` is injected automatically.** Ghost 6.x will silently fall back to SQLite without this environment variable, even when all other database connection variables are present. The module injects it automatically — you do not need to set it yourself.
 3. **A `ghost-content` GCS bucket is provisioned automatically.** `Ghost_Common` provides a `ghost-content` bucket definition that is merged into the module's bucket list. You do not need to define it in `storage_buckets`.
 4. **A `db-init` job runs on first deployment.** `Ghost_Common` supplies a default `db-init` Kubernetes Job using a `mysql:8.0-debian` image that initialises the Ghost MySQL schema. Override `initialization_jobs` to replace it with a custom job.
 5. **Resource defaults are sized for Ghost.** The default `cpu_limit` (2 vCPU) and `memory_limit` (4 Gi) are higher than the `App_GKE` defaults to match Ghost 6.x's resource requirements.
-6. **Redis caching is enabled by default.** Ghost uses Redis for page caching. See [Redis Cache](#22-redis-cache) and [App_GKE §8.A](../App_GKE/App_GKE.md#a-redis--memorystore) for details.
+6. **Redis caching is enabled by default.** Ghost uses Redis for page caching. See [Group 14: Redis Cache](#group-14-redis-cache) and [App_GKE §8.A](../App_GKE/App_GKE.md#a-redis--memorystore) for details.
 7. **Health probes are tuned for Ghost's slow startup.** Ghost runs database migrations and compiles themes on first boot. The default startup probe allows 90 seconds of initial delay before checking.
 
 ---
 
-## 3. Module Metadata & Configuration
+## Group 0: Module Metadata & Configuration
 
 The behaviour of these variables is identical to `App_GKE`. See [App_GKE §1](../App_GKE/App_GKE.md#1-module-overview) for a full description.
 
@@ -78,7 +78,7 @@ The behaviour of these variables is identical to `App_GKE`. See [App_GKE §1](..
 
 ---
 
-## 4. Project & Identity
+## Group 1: Project & Identity
 
 Identical to `App_GKE`. See [App_GKE §2](../App_GKE/App_GKE.md#2-iam--access-control).
 
@@ -86,11 +86,11 @@ Identical to `App_GKE`. See [App_GKE §2](../App_GKE/App_GKE.md#2-iam--access-co
 
 | Variable | Default | Description |
 |---|---|---|
-| `deployment_region` | `"us-central1"` | GCP region for resource deployment. Used as a fallback when network discovery cannot determine the region from existing VPC subnets. Also used as the storage bucket location for the `ghost-content` bucket provisioned by `Ghost_Common`. |
+| `region` | `"us-central1"` | GCP region for resource deployment. Used as a fallback when network discovery cannot determine the region from existing VPC subnets. Also used as the storage bucket location for the `ghost-content` bucket provisioned by `Ghost_Common`. |
 
 ---
 
-## 5. Application Identity
+## Group 2: Application Identity
 
 These variables behave identically to `App_GKE`. See [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for descriptions.
 
@@ -107,7 +107,7 @@ These variables behave identically to `App_GKE`. See [App_GKE §3.A](../App_GKE/
 
 ---
 
-## 6. Runtime & Scaling
+## Group 3: Runtime & Scaling
 
 Most variables behave identically to `App_GKE`. See [App_GKE Group 3](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 
@@ -130,7 +130,7 @@ The remaining runtime variables (`deploy_application`, `container_image`, `conta
 
 ---
 
-## 7. Access & Networking
+## Group 4: Access & Networking
 
 These variables behave identically to `App_GKE`. See [App_GKE §4](../App_GKE/App_GKE.md#4-advanced-security), [App_GKE §5](../App_GKE/App_GKE.md#5-traffic--ingress), and [App_GKE §3.D](../App_GKE/App_GKE.md#d-networking--network-policies).
 
@@ -160,7 +160,7 @@ The following networking variables are available in `Ghost_GKE`:
 
 ---
 
-## 8. Environment Variables & Secrets
+## Group 5: Environment Variables & Secrets
 
 These variables behave identically to `App_GKE`. See [App_GKE §3](../App_GKE/App_GKE.md#3-core-service-configuration).
 
@@ -201,7 +201,7 @@ The remaining secrets variables (`secret_environment_variables`, `secret_rotatio
 
 ---
 
-## 9. Backup & Maintenance
+## Group 6: Backup & Maintenance
 
 These variables behave identically to `App_GKE`. See [App_GKE §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql).
 
@@ -224,7 +224,7 @@ These variables behave identically to `App_GKE`. See [App_GKE §3.B](../App_GKE/
 
 ---
 
-## 10. CI/CD & GitHub Integration
+## Group 7: CI/CD & GitHub Integration
 
 Identical to `App_GKE`. See [App_GKE §6](../App_GKE/App_GKE.md#6-cicd--delivery).
 
@@ -232,7 +232,7 @@ The following CI/CD variables are available: `enable_cicd_trigger`, `github_repo
 
 ---
 
-## 11. Jobs & Scheduled Tasks
+## Group 8: Jobs & Scheduled Tasks
 
 These variables behave as described in [App_GKE §3.E](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs), with one important Ghost-specific behaviour.
 
@@ -258,7 +258,7 @@ The `cron_jobs` and `additional_services` variables are available and behave ide
 
 ---
 
-## 12. Storage & Filesystem — NFS
+## Group 9: Storage & Filesystem — NFS
 
 These variables behave identically to `App_GKE`. See [App_GKE §3.C](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
@@ -271,7 +271,7 @@ These variables behave identically to `App_GKE`. See [App_GKE §3.C](../App_GKE/
 
 ---
 
-## 13. Storage & Filesystem — GCS
+## Group 10: Storage & Filesystem — GCS
 
 These variables behave identically to `App_GKE`. See [App_GKE Group 9](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
@@ -287,7 +287,7 @@ The `create_cloud_storage`, `storage_buckets`, and `gcs_volumes` variables behav
 
 ---
 
-## 14. Database Configuration
+## Group 11: Database Configuration
 
 These variables behave identically to `App_GKE`. See [App_GKE §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql).
 
@@ -321,13 +321,13 @@ These variables behave identically to `App_GKE`. See [App_GKE §3.B](../App_GKE/
 
 ---
 
-## 15. Custom SQL Scripts
+## Group 12: Custom SQL Scripts
 
 Identical to `App_GKE`. See [App_GKE §3.E](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs).
 
 ---
 
-## 16. Observability & Health
+## Group 13: Observability & Health
 
 These variables behave identically to `App_GKE`. See [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 
@@ -376,7 +376,7 @@ The `uptime_check_config` and `alert_policies` variables behave as described in 
 
 ---
 
-## 17. Reliability Policies
+## Group 14: Reliability Policies
 
 Identical to `App_GKE`. See [App_GKE §7](../App_GKE/App_GKE.md#7-reliability--scheduling).
 
@@ -384,7 +384,7 @@ Available variables: `enable_pod_disruption_budget`, `pdb_min_available`, `enabl
 
 ---
 
-## 18. Resource Quota
+## Group 15: Resource Quota
 
 Identical to `App_GKE`. See [App_GKE §7.C](../App_GKE/App_GKE.md#c-resource-quotas).
 
@@ -392,7 +392,7 @@ Available variables: `enable_resource_quota`, `quota_cpu_requests`, `quota_cpu_l
 
 ---
 
-## 19. Custom Domain & Static IP
+## Group 16: Custom Domain & Static IP
 
 Identical to `App_GKE`. See [App_GKE §5](../App_GKE/App_GKE.md#5-traffic--ingress).
 
@@ -400,7 +400,7 @@ Identical to `App_GKE`. See [App_GKE §5](../App_GKE/App_GKE.md#5-traffic--ingre
 
 ---
 
-## 20. GKE Backend Configuration
+## Group 17: GKE Backend Configuration
 
 Identical to `App_GKE`. See [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 
@@ -410,7 +410,7 @@ Available variables: `gke_cluster_name`, `namespace_name`, `workload_type`, `ser
 
 ---
 
-## 21. Stateful Workloads
+## Group 18: Stateful Workloads
 
 Identical to `App_GKE`. See the StatefulSet configuration described in [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot) (`workload_type = "StatefulSet"`) and the associated StatefulSet variables.
 
@@ -418,11 +418,11 @@ Available variables: `stateful_pvc_enabled`, `stateful_pvc_size`, `stateful_pvc_
 
 ---
 
-## 22. Redis Cache
+## Group 14: Redis Cache
 
 These variables configure Ghost's Redis integration. The underlying Redis infrastructure support is provided by `App_GKE` (see [App_GKE §8.A](../App_GKE/App_GKE.md#a-redis--memorystore)); the variables below are Ghost-specific overrides and additions. Ghost uses Redis for page caching and session caching, which significantly reduces database load and improves page delivery speed for high-traffic sites.
 
-> **Note:** In `Ghost_GKE`, the Redis variables are in **section 22** (not group 20 as in `Ghost_CloudRun`).
+> **Note:** In `Ghost_GKE`, the Redis variables are in **group 14** (not group 20 as in `Ghost_CloudRun`).
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -431,7 +431,7 @@ These variables configure Ghost's Redis integration. The underlying Redis infras
 | `redis_port` | `"6379"` | Port number string | The TCP port on which the Redis server is listening. The default `6379` is the standard Redis port. Change only if your Redis instance is configured to listen on a non-standard port. |
 | `redis_auth` | `""` | String *(sensitive)* | The authentication password for the Redis server. Leave empty if the Redis instance does not require authentication (typical for the platform's default NFS co-hosted Redis). For production deployments using Google Cloud Memorystore with AUTH enabled, set this to the instance's AUTH string. This value is treated as sensitive and is never stored in Terraform state in plaintext. |
 
-### Validating Redis Cache Settings
+### Validating Group 14 Settings
 
 **Google Cloud Console:**
 - **Memorystore instance (if used):** Navigate to **Memorystore → Redis** to confirm the instance exists, its IP address, port, and AUTH status.
@@ -455,7 +455,7 @@ kubectl exec -n NAMESPACE POD_NAME -- \
 
 ---
 
-## 23. Module Outputs
+## Module Outputs
 
 `Ghost_GKE` exposes the following Terraform outputs:
 

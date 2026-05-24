@@ -1,10 +1,8 @@
-# Kestra CloudRun Module
+# Kestra_CloudRun Module — Configuration Guide
 
-Kestra is an open-source data orchestration and scheduling platform (Apache 2.0 licence). It allows you to build, schedule, and monitor ETL/ELT pipelines, batch jobs, and workflow automation through a YAML-based flow definition and a rich plugin ecosystem. This module deploys Kestra on **Google Cloud Run** in **standalone mode** (server, worker, and scheduler in a single container) with a PostgreSQL 15 backend and GCS artifact storage.
+Kestra is an open-source, declarative, event-driven workflow orchestration platform (Apache 2.0 licence) with **26,000+ GitHub stars**, trusted by more than 30,000 organisations including Bloomberg, Toyota, BHP, JPMorgan Chase, Apple, and Crédit Agricole. The platform executed **2 billion workflows in 2025** (20× year-on-year growth) and raised a **$25M Series A in March 2026**. BHP's adoption replaced VMware vRA entirely and cut infrastructure provisioning from 6 months to 6 days. It allows you to build, schedule, and monitor ETL/ELT pipelines, data quality checks, agentic AI pipelines, and workflow automation through a YAML-based flow definition and a rich plugin ecosystem. This module deploys Kestra on **Google Cloud Run** in **standalone mode** (server, worker, and scheduler in a single container) with a PostgreSQL 15 backend and GCS artifact storage.
 
 `Kestra_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP infrastructure provisioning to App_CloudRun (Cloud Run service, Cloud SQL, networking, Secret Manager, GCS, CI/CD) and uses a `Kestra_Common` sub-module to supply Kestra-specific application configuration, secret generation, and storage bucket definitions.
-
-> This guide documents variables that are **unique to `Kestra_CloudRun`** or that have **Kestra-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -44,13 +42,13 @@ The following behaviours are set automatically and cannot be overridden via user
 | **socat Unix-socket bridge** | The custom Dockerfile installs `socat` and replaces the entrypoint with `entrypoint.sh`. On Cloud Run, the Cloud SQL Auth Proxy creates a Unix socket; Java JDBC cannot connect via Unix sockets natively, so `entrypoint.sh` bridges the socket to TCP `127.0.0.1:5432` using `socat`. On GKE, the Auth Proxy sidecar already exposes TCP, so the bridge is skipped. |
 | **Service URL pre-computed** | The predicted Cloud Run URL (`https://<resource_prefix>-<project_number>.<region>.run.app`) is passed to `Kestra_Common` and injected as a Kestra configuration variable before deployment. |
 | **Fixed environment variables** | `MICRONAUT_SERVER_PORT=8080`, `KESTRA_QUEUE_TYPE=postgres`, `KESTRA_REPOSITORY_TYPE=postgres`, `KESTRA_STORAGE_TYPE=gcs`, `KESTRA_BASICAUTH_ENABLED=true`, `KESTRA_BASICAUTH_USERNAME=admin`, `DATASOURCES_POSTGRES_DRIVERCLASSNAME`, `ENDPOINTS_ALL_PORT`, and two Flyway baseline variables are always injected. |
-| **Scripts directory** | Resolved as `abspath("${module.kestra_app.path}/scripts")` — points to `Kestra_Common`'s bundled scripts directory. |
+| **Scripts directory** | Resolved as `abspath("${path.module}/scripts")` — points to the `Kestra_CloudRun` module's own bundled scripts directory. |
 | **`execution_environment` normalised** | The platform UI may send `"EXECUTION_ENVIRONMENT_GEN2"` — this is normalised to `"gen2"` before passing to App_CloudRun. |
 | **`backup_format` normalised** | Lowercased before passing to App_CloudRun (UI may send uppercase `"SQL"`). |
 
 ---
 
-## 1. Module Metadata (Group 0)
+## §1 · Module Metadata (Group 0)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -59,15 +57,15 @@ The following behaviours are set automatically and cannot be overridden via user
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed first. |
 | `module_services` | `["Cloud Run", "Cloud Run Jobs", "Cloud Build", "Artifact Registry", "Cloud Storage", "Cloud SQL (PostgreSQL 15)", "VPC Network", "Serverless VPC Access", "Secret Manager", "Cloud IAM", "Cloud Logging", "Cloud Monitoring", "Health Checks", "Webhooks", "Filestore (NFS)"]` | GCP services consumed. |
 | `credit_cost` | `100` | Platform credits consumed on deployment. |
-| `require_credit_purchases` | `true` | Enforces credit balance check before deploy. |
+| `require_credit_purchases` | `false` | Enforces credit balance check before deploy. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
-| `public_access` | `false` | Controls platform catalogue visibility. |
+| `public_access` | `true` | Controls platform catalogue visibility. |
 | `deployment_id` | `""` | Auto-generated suffix. Set explicitly to pin resource names across Terraform runs. |
 | `resource_creator_identity` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform. |
 
 ---
 
-## 2. Project & Identity (Group 1)
+## §2 · Project & Identity (Group 1)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -78,7 +76,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## 3. Application Identity (Group 2)
+## §3 · Application Identity (Group 2)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -90,7 +88,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## 4. Runtime & Scaling (Group 3)
+## §4 · Runtime & Scaling (Group 3)
 
 | Variable | Default | Options / Format | Description |
 |---|---|---|---|
@@ -117,9 +115,9 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## 5. Access & Networking
+## §5 · Access & Networking
 
-### A. Identity-Aware Proxy (Group 19)
+### Identity-Aware Proxy (Group 19)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -127,7 +125,7 @@ The following behaviours are set automatically and cannot be overridden via user
 | `iap_authorized_users` | `[]` | User allowlist. Format: `"user:email@example.com"`. |
 | `iap_authorized_groups` | `[]` | Group allowlist. Format: `"group:name@example.com"`. |
 
-### B. Cloud Armor & CDN (Group 9)
+### Cloud Armor & CDN (Group 9)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -136,7 +134,7 @@ The following behaviours are set automatically and cannot be overridden via user
 | `application_domains` | `[]` | Custom domain names. Only used when `enable_cloud_armor = true`. |
 | `enable_cdn` | `false` | Enables Cloud CDN. Only active when `enable_cloud_armor = true`. |
 
-### C. VPC Service Controls (Group 21)
+### VPC Service Controls (Group 21)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -148,7 +146,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## 6. Environment Variables & Secrets (Group 4)
+## §6 · Environment Variables & Secrets (Group 4)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -163,7 +161,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## 7. Database Backend (Group 11)
+## §7 · Database Backend (Group 11)
 
 Kestra requires PostgreSQL for both its execution queue and flow repository.
 
@@ -175,9 +173,9 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## 8. Storage (Groups 8, 10)
+## §8 · Storage (Groups 8, 10)
 
-### A. NFS (Group 8)
+### NFS (Group 8)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -186,7 +184,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 | `nfs_instance_name` | `""` | Existing NFS GCE VM name. Auto-discovered when empty. |
 | `nfs_instance_base_name` | `"app-nfs"` | Base name for the inline NFS GCE VM. |
 
-### B. Cloud Storage & GCS Fuse (Group 10)
+### Cloud Storage & GCS Fuse (Group 10)
 
 `Kestra_Common` always provisions a `-kestra-storage` bucket. Additional buckets can be added via `storage_buckets`.
 
@@ -200,7 +198,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## 9. Backup & Maintenance (Group 16)
+## §9 · Backup & Maintenance (Group 16)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -213,7 +211,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## 10. CI/CD & GitHub Integration (Group 11)
+## §10 · CI/CD & GitHub Integration (Group 11)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -228,7 +226,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## 11. Custom SQL (Group 17)
+## §11 · Custom SQL (Group 17)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -239,7 +237,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## 12. Jobs & Scheduled Tasks (Group 12)
+## §12 · Jobs & Scheduled Tasks (Group 12)
 
 The default `db-init` job is supplied automatically by `Kestra_Common` (using `postgres:15-alpine`) when `initialization_jobs` is empty.
 
@@ -250,7 +248,7 @@ The default `db-init` job is supplied automatically by `Kestra_Common` (using `p
 
 ---
 
-## 13. Observability & Health (Group 13)
+## §13 · Observability & Health (Group 13)
 
 Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — the default startup probe allows up to ~14 minutes (initial_delay=30 + period=20 × failure_threshold=40).
 
@@ -274,23 +272,23 @@ Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — 
 
 ---
 
-## 14. Outputs
+## §14 · Outputs
 
-Outputs are proxied from `App_CloudRun`:
+All 38 outputs are proxied from `App_CloudRun`:
 
 | Output | Description | Sensitive |
 |---|---|---|
-| `service_name` | Cloud Run service name | — |
-| `service_url` | Public URL of the Cloud Run service | — |
-| `service_location` | GCP region of the Cloud Run service | — |
-| `stage_services` | Stage-specific Cloud Run service details | — |
-| `database_instance_name` | Cloud SQL instance name | — |
-| `database_name` | Application database name | — |
-| `database_user` | Application database user | — |
+| `service_name` | Name of the Cloud Run service | — |
+| `service_url` | URL of the Cloud Run service | — |
+| `service_location` | Location of the Cloud Run service | — |
+| `stage_services` | Map of stage names to Cloud Run service details (for Cloud Deploy) | — |
+| `database_instance_name` | Name of the Cloud SQL instance | — |
+| `database_name` | Name of the application database | — |
+| `database_user` | Name of the application database user | — |
 | `database_password_secret` | Secret Manager secret name for database password | — |
-| `database_host` | Database host | yes |
+| `database_host` | Database host IP address | yes |
 | `database_port` | Database port | — |
-| `storage_buckets` | Created GCS buckets | — |
+| `storage_buckets` | Created storage buckets | — |
 | `network_name` | VPC network name | — |
 | `network_exists` | Whether the VPC network exists | — |
 | `regions` | Available regions in the VPC | — |
@@ -301,6 +299,7 @@ Outputs are proxied from `App_CloudRun`:
 | `container_registry` | Artifact Registry repository name | — |
 | `monitoring_enabled` | Whether monitoring is configured | — |
 | `monitoring_notification_channels` | Monitoring notification channel names | — |
+| `uptime_check_names` | Uptime check configuration names | — |
 | `deployment_id` | Unique deployment identifier | — |
 | `tenant_id` | Tenant identifier | — |
 | `resource_prefix` | Resource naming prefix | — |
@@ -310,26 +309,26 @@ Outputs are proxied from `App_CloudRun`:
 | `nfs_setup_job` | NFS setup job name | — |
 | `deployment_summary` | Summary of the deployment | — |
 | `cicd_enabled` | Whether CI/CD pipeline is enabled | — |
-| `github_repository_url` | GitHub repository URL for CI/CD | — |
+| `github_repository_url` | GitHub repository URL connected for CI/CD | — |
 | `github_repository_owner` | GitHub repository owner/organization | — |
 | `github_repository_name` | GitHub repository name | — |
-| `artifact_registry_repository` | Artifact Registry repository | — |
-| `cloudbuild_trigger_name` | Cloud Build trigger name | — |
-| `cloudbuild_trigger_id` | Cloud Build trigger ID | — |
-| `cicd_configuration` | Complete CI/CD configuration | — |
+| `artifact_registry_repository` | Artifact Registry repository for container images | — |
+| `cloudbuild_trigger_name` | Cloud Build trigger name for CI/CD | — |
+| `cloudbuild_trigger_id` | Cloud Build trigger ID for CI/CD | — |
+| `cicd_configuration` | CI/CD pipeline configuration details | — |
 
 ---
 
-## 15. Configuration Examples
+## Configuration Examples
 
-### A. Basic Deployment
+### Basic Deployment
 
 ```hcl
 project_id           = "my-project-123"
 tenant_deployment_id = "demo"
 ```
 
-### B. Production Deployment
+### Production Deployment
 
 ```hcl
 project_id           = "my-project-123"
@@ -374,7 +373,7 @@ github_repository_url = "https://github.com/my-org/kestra-flows"
 github_token          = "ghp_***"
 ```
 
-### C. Deployment with GCS Fuse Volume
+### Deployment with GCS Fuse Volume
 
 ```hcl
 project_id           = "my-project-123"
@@ -391,3 +390,24 @@ gcs_volumes = [
   }
 ]
 ```
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

@@ -1,6 +1,6 @@
-# Cyclos GKE Module
+# Cyclos_GKE Module — Configuration Guide
 
-Cyclos is a professional banking and payment system designed for microfinance institutions, credit unions, complementary currency schemes, and community banks. This module deploys Cyclos on **GKE Autopilot** using the official `cyclos/cyclos` container image, backed by a managed Cloud SQL PostgreSQL instance.
+Cyclos is open-source banking and payment software powering 1,500+ payment systems worldwide, particularly in developing economies and community currency initiatives. It enables financial inclusion for microfinance institutions, local banks, barter networks, and remittance operators where commercial banking software is cost-prohibitive, providing mobile-first online banking, POS integration, QR payments, and marketplace tools. This module deploys Cyclos on **GKE Autopilot** using the official `cyclos/cyclos` container image, backed by a managed Cloud SQL PostgreSQL instance.
 
 `Cyclos_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Cyclos-specific application configuration on top.
 
@@ -8,20 +8,9 @@ Cyclos is a professional banking and payment system designed for microfinance in
 
 ---
 
-## 1. How This Guide Is Structured
+## How This Guide Is Structured
 
 This guide documents only the variables that are **unique to `Cyclos_GKE`** or that have **Cyclos-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, storage, CI/CD, observability, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Module Guide](../App_GKE/App_GKE.md).
-
-### A. Key differences from `App_GKE` defaults
-
-| Variable | App_GKE Default | Cyclos_GKE Default | Reason |
-|---|---|---|---|
-| `container_image_source` | `"custom"` | `"prebuilt"` | The official `cyclos/cyclos` Docker Hub image is production-ready. |
-| `container_image` | `""` | `"cyclos/cyclos"` | Official Cyclos image from Docker Hub. |
-| `min_instance_count` | `1` | `1` | Identical; single instance avoids Hazelcast clustering complexity. |
-| `max_instance_count` | `3` | `1` | Cyclos clustering requires Hazelcast configuration; default is single-instance. |
-| `enable_nfs` | `false` | `false` (forced) | Cyclos stores files in GCS (`cyclos.storedFileContentManager = gcs`). |
-| `enable_redis` | `false` | `false` (fixed) | Redis is not supported; hardcoded in the module. |
 
 **Variables fully covered by the App_GKE guide:**
 
@@ -57,7 +46,7 @@ This guide documents only the variables that are **unique to `Cyclos_GKE`** or t
 
 ---
 
-## 2. Platform-Managed Behaviours
+## Platform-Managed Behaviours
 
 The following behaviours are applied automatically by `Cyclos_GKE` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
@@ -71,7 +60,7 @@ The following behaviours are applied automatically by `Cyclos_GKE` regardless of
 
 ---
 
-## 3. Cyclos Application Identity
+## Cyclos Application Identity
 
 These variables control how the Cyclos deployment is named and described. `Cyclos_GKE` exposes two parallel sets: `display_name`/`description` are passed to `Cyclos_Common` (and surface in the application config object), while `application_display_name`/`application_description` are passed directly to `App_GKE` (and surface in GKE workload annotations and the platform UI).
 
@@ -96,7 +85,7 @@ kubectl describe deployment cyclos -n NAMESPACE | grep -A5 Annotations
 
 ---
 
-## 4. Cyclos Runtime Configuration
+## Cyclos Runtime Configuration
 
 Cyclos is a Java application and requires significantly more CPU and memory than a typical web service. `Cyclos_GKE` exposes **two complementary mechanisms** for setting resource limits:
 
@@ -139,7 +128,7 @@ kubectl get deployment cyclos -n NAMESPACE \
 
 ---
 
-## 5. Cyclos Database Configuration
+## Cyclos Database Configuration
 
 Cyclos requires PostgreSQL. The module uses `db_name` and `db_user` (shorter names aligned with the Cyclos_Common interface) in place of the `application_database_name` and `application_database_user` variables documented in [App_GKE.md §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql).
 
@@ -168,7 +157,7 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep -E "^DB_"
 
 ---
 
-## 6. Cyclos Environment Variables
+## Cyclos Environment Variables
 
 The `environment_variables` variable in `Cyclos_GKE` defaults to an empty map (`{}`). There are no SMTP defaults set at the module level — unlike `Cyclos_CloudRun`, which pre-populates SMTP placeholder values. You must explicitly supply SMTP configuration if Cyclos email delivery is required.
 
@@ -194,7 +183,7 @@ All other `environment_variables` and `secret_environment_variables` behaviour i
 
 ---
 
-## 7. Cyclos Health Probes
+## Cyclos Health Probes
 
 Cyclos is a Java application that performs database schema validation and migration on first boot. This startup phase can take 2–5 minutes on a fresh deployment, much longer than a typical web service.
 
@@ -231,7 +220,7 @@ kubectl logs -n NAMESPACE -l app=cyclos --since=10m | head -100
 
 ---
 
-## 8. Redis
+## Redis
 
 Redis is **not supported** by `Cyclos_GKE`. The `enable_redis` variable is not exposed — it is hardcoded to `false` in the module and passed directly to `App_GKE`. The `redis_host`, `redis_port`, and `redis_auth` variables are not available.
 
@@ -239,7 +228,7 @@ Cyclos manages its own session state and caching internally (via Hazelcast for c
 
 ---
 
-## 9. Backup Import & Recovery
+## Backup Import & Recovery
 
 In addition to the scheduled backup (`backup_schedule` and `backup_retention_days`, documented in [App_GKE.md §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql)), `Cyclos_GKE` supports a **one-time import** of an existing Cyclos database backup during deployment. This is designed for migrating an existing Cyclos instance to GCP or seeding a new environment with production data.
 
@@ -264,7 +253,7 @@ gcloud sql databases list --instance=INSTANCE_NAME --project=PROJECT_ID
 
 ---
 
-## 10. StatefulSet PVC Configuration
+## StatefulSet PVC Configuration
 
 When `workload_type = "StatefulSet"` is set (see [App_GKE.md §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot)), the following variables configure the per-pod **PersistentVolumeClaim** automatically created for each StatefulSet replica.
 
@@ -282,7 +271,7 @@ When `workload_type = "StatefulSet"` is set (see [App_GKE.md §3.A](../App_GKE/A
 
 ---
 
-## 11. Password Rotation Propagation Delay
+## Password Rotation Propagation Delay
 
 The `rotation_propagation_delay_sec` variable is used together with `enable_auto_password_rotation` (documented in [App_GKE.md §7.D](../App_GKE/App_GKE.md#d-auto-password-rotation)) to control how long the module waits after writing a new database password to Secret Manager before restarting the GKE pods to pick up the new credentials.
 
@@ -292,7 +281,7 @@ The `rotation_propagation_delay_sec` variable is used together with `enable_auto
 
 ---
 
-## 12. Resource Creator Identity
+## Resource Creator Identity
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -300,7 +289,7 @@ The `rotation_propagation_delay_sec` variable is used together with `enable_auto
 
 ---
 
-## 13. Deployment Prerequisites & Validation
+## Deployment Prerequisites & Validation
 
 After deploying `Cyclos_GKE`, confirm the deployment is healthy:
 

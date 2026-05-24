@@ -1,12 +1,12 @@
-# Activepieces CloudRun Module
+# Activepieces on Google Cloud Run
 
-Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation platform for connecting apps, APIs, and data sources. `Activepieces_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Activepieces-specific application configuration, secrets, database initialisation, and queue configuration via `Activepieces_Common`.
-
-> This guide documents variables that are **unique to `Activepieces_CloudRun`** or that have **Activepieces-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
+This document provides a comprehensive reference for the `modules/Activepieces_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Activepieces-specific behaviours, and operational patterns for deploying Activepieces on Google Cloud Run (v2).
 
 ---
 
 ## 1. Module Overview
+
+Activepieces is a Y Combinator-backed open-source workflow automation platform (Apache 2.0) with **22,000+ GitHub stars** and **100,000+ active installations**. At $1.7M ARR with a team of ~15, it is a lean, high-velocity Zapier/Make alternative with 450+ integrations and native AI/MCP server support — ideal for teams prioritising data sovereignty and avoiding per-task pricing at scale. White-label capability makes it a strong fit for agencies and SaaS builders. `Activepieces_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Activepieces-specific application configuration, secrets, database initialisation, and queue configuration via `Activepieces_Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Node.js container, scale-to-zero supported (`min_instance_count = 0` by default). Custom image build via Cloud Build wraps the upstream `activepieces/activepieces` image.
@@ -18,27 +18,20 @@ Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation 
 
 **Project & Application Identity**
 
-| Variable | Default | Description |
-|---|---|---|
-| `project_id` | — | GCP project ID. Required. |
-| `tenant_deployment_id` | `'demo'` | Short suffix appended to all resource names. |
-| `support_users` | `[]` | Email recipients for monitoring alerts. |
-| `resource_labels` | `{}` | Labels applied to all provisioned resources. |
-| `application_name` | `'activepieces'` | Base resource name. Do not change after initial deployment. |
-| `display_name` | `'Activepieces Workflow Automation'` | Human-readable name shown in the GCP Console. Note: uses `display_name` alias, not `application_display_name`. |
-| `description` | `'Activepieces - Open source workflow automation platform'` | Cloud Run service description. Note: uses `description` alias, not `application_description`. |
-| `application_version` | `'latest'` | Container image version tag. Increment to deploy a new release. |
+| Variable | Group | Type | Default | Description |
+|---|---|---|---|---|
+| `project_id` | 1 | `string` | — | GCP project ID. **Required.** |
+| `tenant_deployment_id` | 1 | `string` | `'demo'` | Short suffix appended to all resource names. |
+| `support_users` | 1 | `list(string)` | `[]` | Email recipients for monitoring alerts. |
+| `resource_labels` | 1 | `map(string)` | `{}` | Labels applied to all provisioned resources. |
+| `application_name` | 2 | `string` | `'activepieces'` | Base resource name. Do not change after initial deployment. |
+| `display_name` | 2 | `string` | `'Activepieces Workflow Automation'` | Human-readable name shown in the GCP Console. Note: uses `display_name` alias, not `application_display_name`. |
+| `description` | 2 | `string` | `'Activepieces - Open source workflow automation platform'` | Cloud Run service description. Note: uses `description` alias, not `application_description`. |
+| `application_version` | 2 | `string` | `'latest'` | Container image version tag. Increment to deploy a new release. |
 
 **Wrapper architecture:** `Activepieces_CloudRun` calls `Activepieces_Common` to build an `application_config` object containing Activepieces environment variables, the `AP_ENCRYPTION_KEY` and `AP_JWT_SECRET` secrets, database initialisation job configuration, probe settings, and the data GCS bucket definition. `module_env_vars` is empty (all env vars are set inside `Activepieces_Common`). `module_secret_env_vars` carries `Activepieces_Common`-generated secret IDs. `module_storage_buckets` carries the data bucket provisioned by `Activepieces_Common`. `scripts_dir` is resolved to `${module.activepieces_app.path}/scripts`.
 
 **Naming note:** Unlike Django, which uses `application_display_name` and `application_description`, `Activepieces_CloudRun` uses `display_name` and `description` aliases. These are mapped to the `App_CloudRun` display name and description fields inside `Activepieces_Common`'s config output.
-
-### Key differences from `App_CloudRun` defaults
-
-| Feature | `App_CloudRun` default | `Activepieces_CloudRun` default |
-|---|---|---|
-| `cpu_limit` | `"1000m"` | `"2000m"` |
-| `memory_limit` | `"512Mi"` | `"2Gi"` |
 
 ---
 
@@ -70,24 +63,24 @@ Activepieces is a Node.js application with significant memory requirements. The 
 
 **Cloud SQL Auth Proxy:** `enable_cloudsql_volume` defaults to `true`. The Cloud SQL Auth Proxy sidecar is injected. `db-init.sh` detects the socket automatically.
 
-| Variable | Default | Description |
-|---|---|---|
-| `deploy_application` | `true` | Set `false` for infrastructure-only deployment (SQL, storage, secrets). |
-| `cpu_limit` | `'2000m'` | CPU limit per instance (2 vCPUs). Minimum 1 vCPU required; 2 vCPUs recommended for production. |
-| `memory_limit` | `'2Gi'` | Memory limit per instance. Minimum 512Mi; 2Gi recommended for production. |
-| `min_instance_count` | `0` | `0` enables scale-to-zero. Set `≥1` to eliminate cold starts and maintain webhook availability. |
-| `max_instance_count` | `1` | Increase for high-traffic deployments. Requires Redis queue mode for safe horizontal scaling. |
-| `container_port` | `8080` | Activepieces default port. |
-| `execution_environment` | `'gen2'` | Gen2 required for NFS mounts and GCS Fuse. |
-| `timeout_seconds` | `300` | Max request duration. |
-| `enable_cloudsql_volume` | `true` | Injects Cloud SQL Auth Proxy sidecar. `db-init.sh` auto-detects the socket path. |
-| `cloudsql_volume_mount_path` | `'/cloudsql'` | Base path for the Auth Proxy Unix socket mount. |
-| `enable_image_mirroring` | `true` | Mirrors the container image into Artifact Registry. |
-| `max_revisions_to_retain` | `7` | Maximum number of Cloud Run revisions to keep. Set to 0 to disable pruning. |
-| `traffic_split` | `[]` | Percentage-based canary/blue-green traffic allocation. |
-| `container_protocol` | `'http1'` | `'http1'` or `'h2c'`. |
-| `service_annotations` | `{}` | Advanced Cloud Run annotations. |
-| `service_labels` | `{}` | Labels applied to the Cloud Run service. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `deploy_application` | 3 | `true` | Set `false` for infrastructure-only deployment (SQL, storage, secrets). |
+| `cpu_limit` | 3 | `'2000m'` | CPU limit per instance (2 vCPUs). Minimum 1 vCPU required; 2 vCPUs recommended for production. |
+| `memory_limit` | 3 | `'2Gi'` | Memory limit per instance. Minimum 512Mi; 2Gi recommended for production. |
+| `min_instance_count` | 3 | `0` | `0` enables scale-to-zero. Set `≥1` to eliminate cold starts and maintain webhook availability. |
+| `max_instance_count` | 3 | `1` | Increase for high-traffic deployments. Requires Redis queue mode for safe horizontal scaling. |
+| `container_port` | 3 | `8080` | Activepieces default port. |
+| `execution_environment` | 3 | `'gen2'` | Gen2 required for NFS mounts and GCS Fuse. |
+| `timeout_seconds` | 3 | `300` | Max request duration. |
+| `enable_cloudsql_volume` | 3 | `true` | Injects Cloud SQL Auth Proxy sidecar. `db-init.sh` auto-detects the socket path. |
+| `cloudsql_volume_mount_path` | 3 | `'/cloudsql'` | Base path for the Auth Proxy Unix socket mount. |
+| `enable_image_mirroring` | 3 | `true` | Mirrors the container image into Artifact Registry. |
+| `max_revisions_to_retain` | 3 | `7` | Maximum number of Cloud Run revisions to keep. Set to 0 to disable pruning. |
+| `traffic_split` | 3 | `[]` | Percentage-based canary/blue-green traffic allocation. |
+| `container_protocol` | 3 | `'http1'` | `'http1'` or `'h2c'`. |
+| `service_annotations` | 3 | `{}` | Advanced Cloud Run annotations. |
+| `service_labels` | 3 | `{}` | Labels applied to the Cloud Run service. |
 
 **Differences from `App_CloudRun` defaults:**
 
@@ -105,13 +98,13 @@ Activepieces requires **PostgreSQL 15** — `Activepieces_Common` hardcodes `dat
 
 **pgvector extension:** The `db-init.sh` script installs `CREATE EXTENSION IF NOT EXISTS vector` as a PostgreSQL superuser during the `db-init` job. This is required for Activepieces AI piece integrations that use vector similarity search.
 
-| Variable | Default | Description |
-|---|---|---|
-| `db_name` | `'activepieces_db'` | PostgreSQL database name. **Do not change after initial deployment.** |
-| `db_user` | `'ap_user'` | PostgreSQL application user. Password auto-generated and stored in Secret Manager. |
-| `database_password_length` | `32` | Auto-generated password length. Range: 16–64. |
-| `enable_auto_password_rotation` | `false` | Automated zero-downtime password rotation. |
-| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before restarting the service. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `db_name` | 11 | `'activepieces_db'` | PostgreSQL database name. **Do not change after initial deployment.** |
+| `db_user` | 11 | `'ap_user'` | PostgreSQL application user. Password auto-generated and stored in Secret Manager. |
+| `database_password_length` | 11 | `32` | Auto-generated password length. Range: 16–64. |
+| `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. |
+| `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
 
 ### C. Storage (NFS & GCS)
 
@@ -119,26 +112,26 @@ Activepieces requires **PostgreSQL 15** — `Activepieces_Common` hardcodes `dat
 
 **GCS data bucket:** `Activepieces_Common` automatically provisions a dedicated data bucket (suffix `ap-data`). Additional GCS buckets can be defined via `storage_buckets`.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_nfs` | `false` | Provisions an NFS volume. Required only if co-locating Redis with the NFS server. |
-| `nfs_mount_path` | `'/mnt/nfs'` | Container path where the NFS share is mounted. |
-| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to use. |
-| `nfs_instance_base_name` | `'app-nfs'` | Base name for the inline NFS GCE VM. |
-| `create_cloud_storage` | `true` | Set `false` to skip additional bucket creation. The `ap-data` bucket from `Activepieces_Common` is always provisioned. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | Additional GCS buckets beyond the auto-provisioned data bucket. |
-| `gcs_volumes` | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). |
-| `manage_storage_kms_iam` | `false` | Creates CMEK KMS keyring and enables CMEK encryption on storage buckets. |
-| `enable_artifact_registry_cmek` | `false` | Enables CMEK encryption for container images in Artifact Registry. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_nfs` | 10 | `false` | Provisions an NFS volume. Required only if co-locating Redis with the NFS server. |
+| `nfs_mount_path` | 10 | `'/mnt/nfs'` | Container path where the NFS share is mounted. |
+| `nfs_instance_name` | 8 | `""` | Name of an existing NFS GCE VM to use. |
+| `nfs_instance_base_name` | 8 | `'app-nfs'` | Base name for the inline NFS GCE VM. |
+| `create_cloud_storage` | 10 | `true` | Set `false` to skip additional bucket creation. The `ap-data` bucket from `Activepieces_Common` is always provisioned. |
+| `storage_buckets` | 10 | `[{ name_suffix = "data" }]` | Additional GCS buckets beyond the auto-provisioned data bucket. |
+| `gcs_volumes` | 10 | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). |
+| `manage_storage_kms_iam` | 10 | `false` | Creates CMEK KMS keyring and enables CMEK encryption on storage buckets. |
+| `enable_artifact_registry_cmek` | 10 | `false` | Enables CMEK encryption for container images in Artifact Registry. |
 
 ### D. Networking
 
 Public ingress is required for Activepieces webhook endpoints. The default `ingress_settings = 'all'` allows external systems to POST to webhook URLs.
 
-| Variable | Default | Description |
-|---|---|---|
-| `ingress_settings` | `'all'` | `'all'` — required for webhook endpoints; `'internal'` — VPC only (disables webhooks); `'internal-and-cloud-load-balancing'` — forces traffic through the HTTPS LB. |
-| `vpc_egress_setting` | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` routes only RFC 1918 traffic via VPC. `'ALL_TRAFFIC'` routes all egress via VPC. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `ingress_settings` | 4 | `'all'` | `'all'` — required for webhook endpoints; `'internal'` — VPC only (disables webhooks); `'internal-and-cloud-load-balancing'` — forces traffic through the HTTPS LB. |
+| `vpc_egress_setting` | 4 | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` routes only RFC 1918 traffic via VPC. `'ALL_TRAFFIC'` routes all egress via VPC. |
 
 ### E. Initialization & Bootstrap
 
@@ -148,10 +141,10 @@ Unlike Django, there is no separate `db-migrate` job — Activepieces runs its o
 
 The `db-init` job uses `postgres:15-alpine` and executes `Activepieces_Common/scripts/db-init.sh`.
 
-| Variable | Default | Description |
-|---|---|---|
-| `initialization_jobs` | `[]` | One-shot Cloud Run Jobs. Empty list triggers the default `db-init` job with `execute_on_apply = true`. Custom jobs can be provided to override. |
-| `cron_jobs` | `[]` | Recurring jobs triggered by Cloud Scheduler. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Empty list triggers the default `db-init` job with `execute_on_apply = true`. Custom jobs can be provided to override. |
+| `cron_jobs` | 12 | `[]` | **Not referenced** — this variable is defined for UI consistency but is not forwarded to `App_CloudRun` in the current module version. Setting it has no effect on the deployed Cloud Run service. Use `initialization_jobs` for one-off tasks. |
 
 ---
 
@@ -163,46 +156,46 @@ When `enable_cloud_armor = true`, a Global HTTPS Load Balancer with a Cloud Armo
 
 **Activepieces consideration:** Webhook endpoints receive unauthenticated POST requests from external services. Ensure that Cloud Armor WAF rules do not block valid webhook traffic. Add webhook source IPs to `admin_ip_ranges` if needed, or configure WAF rules to allow traffic from trusted sources.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_cloud_armor` | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. Required for custom domains, CDN, and DDoS protection. |
-| `admin_ip_ranges` | `[]` | CIDR ranges exempted from WAF rules. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_cloud_armor` | 9 | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. Required for custom domains, CDN, and DDoS protection. |
+| `admin_ip_ranges` | 9 | `[]` | CIDR ranges exempted from WAF rules. |
 
 ### B. Identity-Aware Proxy (IAP)
 
 > **Warning:** Enabling IAP (`enable_iap = true`) will require Google identity authentication for all requests, including webhook endpoints. This will **block external webhook triggers** from third-party services. Only enable IAP if Activepieces is used in an internal-only context where webhook endpoints are not needed.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_iap` | `false` | Enables IAP natively on the Cloud Run service. Will block public webhook endpoints. |
-| `iap_authorized_users` | `[]` | Users/service accounts granted access. Format: `'user:email'` or `'serviceAccount:sa@...'`. |
-| `iap_authorized_groups` | `[]` | Google Groups granted access. Format: `'group:name@example.com'`. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_iap` | 4 | `false` | Enables IAP natively on the Cloud Run service. Will block public webhook endpoints. |
+| `iap_authorized_users` | 4 | `[]` | Users/service accounts granted access. Format: `'user:email'` or `'serviceAccount:sa@...'`. |
+| `iap_authorized_groups` | 4 | `[]` | Google Groups granted access. Format: `'group:name@example.com'`. |
 
 ### C. Binary Authorization
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_binary_authorization` | `false` | Enforces image attestation. Requires a Binary Authorization policy and attestor pre-configured in the project. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_binary_authorization` | 7 | `false` | Enforces image attestation. Requires a Binary Authorization policy and attestor pre-configured in the project. |
 
 ### D. VPC Service Controls
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_vpc_sc` | `false` | Registers module API calls within the project's VPC-SC perimeter. A perimeter must already exist before enabling. |
-| `vpc_cidr_ranges` | `[]` | VPC subnet CIDR ranges for the VPC-SC network access level. |
-| `vpc_sc_dry_run` | `true` | When `true`, VPC-SC violations are logged but not blocked. |
-| `organization_id` | `""` | GCP Organization ID for the VPC-SC Access Context Manager policy. |
-| `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs for all supported services. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_vpc_sc` | 21 | `false` | Registers module API calls within the project's VPC-SC perimeter. A perimeter must already exist before enabling. |
+| `vpc_cidr_ranges` | 21 | `[]` | VPC subnet CIDR ranges for the VPC-SC network access level. |
+| `vpc_sc_dry_run` | 21 | `true` | When `true`, VPC-SC violations are logged but not blocked. |
+| `organization_id` | 21 | `""` | GCP Organization ID for the VPC-SC Access Context Manager policy. |
+| `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs for all supported services. |
 
 ### E. Secret Manager Integration
 
 `Activepieces_Common` auto-generates two secrets: `AP_ENCRYPTION_KEY` (32-character hex string for credential encryption) and `AP_JWT_SECRET` (32-character random string for JWT signing). These are injected via `module_secret_env_vars`.
 
-| Variable | Default | Description |
-|---|---|---|
-| `secret_environment_variables` | `{}` | Map of env var name → Secret Manager secret ID. Resolved at runtime by Cloud Run. |
-| `secret_rotation_period` | `'2592000s'` | Frequency at which Secret Manager emits rotation notifications. Default: 30 days. |
-| `secret_propagation_delay` | `30` | Seconds to wait after secret creation before dependent resources proceed. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `secret_environment_variables` | 5 | `{}` | Map of env var name → Secret Manager secret ID. Resolved at runtime by Cloud Run. |
+| `secret_rotation_period` | 5 | `'2592000s'` | Frequency at which Secret Manager emits rotation notifications. Default: 30 days. |
+| `secret_propagation_delay` | 5 | `30` | Seconds to wait after secret creation before dependent resources proceed. |
 
 ---
 
@@ -220,15 +213,15 @@ When `enable_cdn = true` (requires `enable_cloud_armor = true`), Cloud CDN is at
 
 **Activepieces consideration:** Cloud CDN is most useful for the Activepieces frontend (static assets). API endpoints and webhooks must not be cached — ensure that Activepieces API responses include appropriate `Cache-Control: no-store` headers before enabling CDN.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_cdn` | `false` | Enables Cloud CDN on the HTTPS LB backend. Only effective when `enable_cloud_armor = true`. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_cdn` | 9 | `false` | Enables Cloud CDN on the HTTPS LB backend. Only effective when `enable_cloud_armor = true`. |
 
 ### C. Custom Domains
 
-| Variable | Default | Description |
-|---|---|---|
-| `application_domains` | `[]` | Custom domain names for the HTTPS LB. Google-managed SSL certificates provisioned per domain. DNS must point to the LB IP. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `application_domains` | 9 | `[]` | Custom domain names for the HTTPS LB. Google-managed SSL certificates provisioned per domain. DNS must point to the LB IP. |
 
 After the first apply, retrieve the LB IP from the Terraform output `load_balancer_ip` and create an `A` record. Then update `AP_FRONTEND_URL` and `AP_WEBHOOK_URL_PREFIX` environment variables to use the custom domain for correct OAuth redirect and webhook URL generation.
 
@@ -240,20 +233,20 @@ After the first apply, retrieve the LB IP from the Terraform output `load_balanc
 
 When `enable_cicd_trigger = true`, a Cloud Build GitHub connection and push trigger are provisioned.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_cicd_trigger` | `false` | Provisions a Cloud Build GitHub trigger. |
-| `github_repository_url` | `""` | Full HTTPS URL of the GitHub repository. |
-| `github_token` | `""` | GitHub PAT (`repo`, `admin:repo_hook` scopes). Sensitive. |
-| `github_app_installation_id` | `""` | GitHub App installation ID. |
-| `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Advanced trigger config. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_cicd_trigger` | 7 | `false` | Provisions a Cloud Build GitHub trigger. |
+| `github_repository_url` | 7 | `""` | Full HTTPS URL of the GitHub repository. |
+| `github_token` | 7 | `""` | GitHub PAT (`repo`, `admin:repo_hook` scopes). Sensitive. |
+| `github_app_installation_id` | 7 | `""` | GitHub App installation ID. |
+| `cicd_trigger_config` | 7 | `{ branch_pattern = "^main$" }` | Advanced trigger config. |
 
 ### B. Cloud Deploy Pipeline
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_cloud_deploy` | `false` | Provisions a Cloud Deploy progressive delivery pipeline. Requires `enable_cicd_trigger = true`. |
-| `cloud_deploy_stages` | `[dev, staging, prod(approval)]` | Ordered promotion stages. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_cloud_deploy` | 7 | `false` | Provisions a Cloud Deploy progressive delivery pipeline. Requires `enable_cicd_trigger = true`. |
+| `cloud_deploy_stages` | 7 | `[dev, staging, prod(approval)]` | Ordered promotion stages. |
 
 ---
 
@@ -263,10 +256,10 @@ When `enable_cicd_trigger = true`, a Cloud Build GitHub connection and push trig
 
 **Important:** In the default memory queue mode (`AP_QUEUE_MODE = MEMORY`), workflow execution state is held in memory. Scaling to `max_instance_count > 1` in memory mode will cause workflows to be split across instances and may produce inconsistent execution. **Enable Redis queue mode before scaling horizontally.**
 
-| Variable | Default | Description |
-|---|---|---|
-| `min_instance_count` | `0` | `0` enables scale-to-zero. Set `≥1` to prevent cold starts on webhook triggers. |
-| `max_instance_count` | `1` | Increase only when `enable_redis = true` for consistent queue management. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `min_instance_count` | 3 | `0` | `0` enables scale-to-zero. Set `≥1` to prevent cold starts on webhook triggers. |
+| `max_instance_count` | 3 | `1` | Increase only when `enable_redis = true` for consistent queue management. |
 
 ### B. Health Probes
 
@@ -278,22 +271,22 @@ When `enable_cicd_trigger = true`, a Cloud Build GitHub connection and push trig
 
 Activepieces connects to PostgreSQL and applies database migrations on **first boot** — allow at least 7 minutes on the initial deployment. The default `startup_probe` settings (`initial_delay_seconds = 120`, `failure_threshold = 10`, `period_seconds = 30`) provide a total startup window of ~5 minutes after the initial delay (120 + 10×30 = 420 seconds).
 
-| Variable | Default | Description |
-|---|---|---|
-| `startup_probe` | `{ enabled=true, type="HTTP", path="/api/v1/flags", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=10 }` | Startup probe used by `Activepieces_Common`. Targets `/api/v1/flags`. Allow 7+ minutes on first boot. |
-| `liveness_probe` | `{ enabled=true, type="HTTP", path="/api/v1/flags", initial_delay_seconds=30, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Liveness probe used by `Activepieces_Common`. |
-| `startup_probe_config` | `{ enabled=false }` | Cloud Run infrastructure startup probe. Disabled by default — `startup_probe` above takes effect instead. |
-| `health_check_config` | `{ enabled=true }` | Cloud Run infrastructure liveness probe. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
-| `alert_policies` | `[]` | Cloud Monitoring metric alert policies. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `startup_probe` | 13 | `{ enabled=true, type="HTTP", path="/api/v1/flags", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=10 }` | Startup probe used by `Activepieces_Common`. Targets `/api/v1/flags`. Allow 7+ minutes on first boot. |
+| `liveness_probe` | 13 | `{ enabled=true, type="HTTP", path="/api/v1/flags", initial_delay_seconds=30, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Liveness probe used by `Activepieces_Common`. |
+| `startup_probe_config` | 13 | `{ enabled=false }` | Cloud Run infrastructure startup probe. Disabled by default — `startup_probe` above takes effect instead. |
+| `health_check_config` | 13 | `{ enabled=true }` | Cloud Run infrastructure liveness probe. |
+| `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `alert_policies` | 13 | `[]` | Cloud Monitoring metric alert policies. |
 
 ### C. Auto Password Rotation
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_auto_password_rotation` | `false` | Enables automated password rotation. |
-| `rotation_propagation_delay_sec` | `90` | Seconds to wait after writing the new secret before restarting the service. |
-| `secret_rotation_period` | `'2592000s'` | Rotation frequency. Default: 30 days. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_auto_password_rotation` | 11 | `false` | Enables automated password rotation. |
+| `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after writing the new secret before restarting the service. |
+| `secret_rotation_period` | 5 | `'2592000s'` | Rotation frequency. Default: 30 days. |
 
 ---
 
@@ -310,12 +303,12 @@ When `enable_redis = true`:
 
 If `redis_host` is left empty and `enable_nfs = true`, the NFS server VM's IP is used as the Redis host (via the `$(NFS_SERVER_IP)` platform placeholder). This enables a simple single-VM deployment where Redis is co-located on the NFS server. For production, provision a dedicated Cloud Memorystore instance and set `redis_host` explicitly.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_redis` | `false` | Switches to Redis queue mode. Requires `redis_host` or `enable_nfs = true`. |
-| `redis_host` | `""` | Redis hostname or IP. Empty defaults to NFS server IP when `enable_nfs = true`. |
-| `redis_port` | `'6379'` | Redis TCP port. Note: type is `string`, not `number`. |
-| `redis_auth` | `""` | Redis AUTH password. Sensitive — never stored in state in plaintext. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_redis` | 20 | `false` | Switches to Redis queue mode. Requires `redis_host` or `enable_nfs = true`. |
+| `redis_host` | 20 | `""` | Redis hostname or IP. Empty defaults to NFS server IP when `enable_nfs = true`. |
+| `redis_port` | 20 | `'6379'` | Redis TCP port. Note: type is `string`, not `number`. |
+| `redis_auth` | 20 | `""` | Redis AUTH password. Sensitive — never stored in state in plaintext. |
 
 > **Validation:** A precondition in `Activepieces_GKE`'s `validation.tf` enforces that when `enable_redis = true`, either `redis_host` must be set or `enable_nfs` must be true. The same logic applies logically for the CloudRun variant.
 
@@ -323,31 +316,31 @@ If `redis_host` is left empty and `enable_nfs = true`, the NFS server VM's IP is
 
 `Activepieces_CloudRun` uses `backup_uri` (not `backup_file` as in Django). `backup_uri` is mapped to `App_CloudRun`'s `backup_file` parameter internally.
 
-| Variable | Default | Description |
-|---|---|---|
-| `backup_schedule` | `'0 2 * * *'` | Cron expression (UTC) for automated daily backups. |
-| `backup_retention_days` | `7` | Days to retain backup files in GCS. |
-| `enable_backup_import` | `false` | Triggers a one-time restore on apply. |
-| `backup_source` | `'gcs'` | `'gcs'` (full GCS URI) or `'gdrive'` (Google Drive file ID). |
-| `backup_uri` | `""` | Full GCS URI (e.g., `gs://my-bucket/backup.sql`) or Google Drive file ID. Maps to `backup_file` in `App_CloudRun`. |
-| `backup_format` | `'sql'` | Backup file format. Options: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `backup_schedule` | 6 | `'0 2 * * *'` | Cron expression (UTC) for automated daily backups. |
+| `backup_retention_days` | 6 | `7` | Days to retain backup files in GCS. |
+| `enable_backup_import` | 6 | `false` | Triggers a one-time restore on apply. |
+| `backup_source` | 6 | `'gcs'` | `'gcs'` (full GCS URI) or `'gdrive'` (Google Drive file ID). |
+| `backup_uri` | 6 | `""` | Full GCS URI (e.g., `gs://my-bucket/backup.sql`) or Google Drive file ID. Maps to `backup_file` in `App_CloudRun`. |
+| `backup_format` | 6 | `'sql'` | Backup file format. Options: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
 
 ### C. Custom SQL Scripts
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_custom_sql_scripts` | `false` | Runs custom SQL scripts from GCS after provisioning. |
-| `custom_sql_scripts_bucket` | `""` | GCS bucket containing SQL scripts. |
-| `custom_sql_scripts_path` | `""` | Path prefix within the bucket. |
-| `custom_sql_scripts_use_root` | `false` | Run scripts as the root DB user. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_custom_sql_scripts` | 8 | `false` | Runs custom SQL scripts from GCS after provisioning. |
+| `custom_sql_scripts_bucket` | 8 | `""` | GCS bucket containing SQL scripts. |
+| `custom_sql_scripts_path` | 8 | `""` | Path prefix within the bucket. |
+| `custom_sql_scripts_use_root` | 8 | `false` | Run scripts as the root DB user. |
 
 ### D. Observability & Alerting
 
-| Variable | Default | Description |
-|---|---|---|
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
-| `alert_policies` | `[]` | Metric alert policies. |
-| `support_users` | `[]` | Email addresses notified by uptime and alert policy triggers. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `alert_policies` | 13 | `[]` | Metric alert policies. |
+| `support_users` | 1 | `[]` | Email addresses notified by uptime and alert policy triggers. |
 
 ---
 
@@ -373,104 +366,125 @@ If `redis_host` is left empty and `enable_nfs = true`, the NFS server VM's IP is
 
 All user-configurable variables exposed by `Activepieces_CloudRun`, sorted by UI group then order. Group 0 variables are reserved for platform metadata.
 
-| Variable | Default | Description |
-|---|---|---|
-| `module_description` | (Activepieces Cloud Run platform text) | Platform metadata: module description. |
-| `module_documentation` | `https://docs.radmodules.dev/docs/applications/activepieces` | Platform metadata: documentation URL. |
-| `module_dependency` | `['Services_GCP']` | Platform metadata: required modules. |
-| `module_services` | (GCP service list) | Platform metadata: GCP services consumed. |
-| `credit_cost` | `100` | Platform metadata: deployment credit cost. |
-| `require_credit_purchases` | `true` | Platform metadata: enforces credit balance check. |
-| `enable_purge` | `true` | Permits full deletion of module resources on destroy. |
-| `public_access` | `false` | Platform catalogue visibility. |
-| `deployment_id` | `""` | Deployment ID suffix. Auto-generated if empty. |
-| `resource_creator_identity` | (platform SA) | Service account used by Terraform to manage resources. |
-| `project_id` | — | GCP project ID. **Required.** |
-| `tenant_deployment_id` | `'demo'` | Short suffix appended to all resource names. |
-| `support_users` | `[]` | Email addresses for monitoring alerts. |
-| `resource_labels` | `{}` | Labels applied to all provisioned resources. |
-| `application_name` | `'activepieces'` | Base resource name. Do not change after initial deployment. |
-| `display_name` | `'Activepieces Workflow Automation'` | Human-readable name. Alias for `application_display_name`. |
-| `description` | `'Activepieces - Open source workflow automation platform'` | Service description. Alias for `application_description`. |
-| `application_version` | `'latest'` | Container image version tag. |
-| `deploy_application` | `true` | Set `false` for infrastructure-only deployment. |
-| `cpu_limit` | `'2000m'` | CPU limit per instance. |
-| `memory_limit` | `'2Gi'` | Memory limit per instance. |
-| `min_instance_count` | `0` | `0` = scale-to-zero. Set `≥1` to eliminate cold starts. |
-| `max_instance_count` | `1` | Set >1 only when `enable_redis = true`. |
-| `container_port` | `8080` | TCP port Activepieces listens on. |
-| `execution_environment` | `'gen2'` | Gen2 required for NFS and GCS Fuse. |
-| `timeout_seconds` | `300` | Max request duration (0–3600). |
-| `enable_cloudsql_volume` | `true` | Injects Cloud SQL Auth Proxy sidecar. |
-| `cloudsql_volume_mount_path` | `'/cloudsql'` | Base path for Auth Proxy Unix socket. |
-| `enable_image_mirroring` | `true` | Mirrors container image into Artifact Registry. |
-| `max_revisions_to_retain` | `7` | Maximum Cloud Run revisions to retain. |
-| `traffic_split` | `[]` | Canary/blue-green traffic allocation. |
-| `container_protocol` | `'http1'` | `'http1'` or `'h2c'`. |
-| `service_annotations` | `{}` | Advanced Cloud Run annotations. |
-| `service_labels` | `{}` | Labels applied to the Cloud Run service. |
-| `ingress_settings` | `'all'` | `'all'` required for webhooks; `'internal'` disables public access. |
-| `vpc_egress_setting` | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` or `'ALL_TRAFFIC'`. |
-| `enable_iap` | `false` | Enables IAP. **Will block webhook endpoints.** |
-| `iap_authorized_users` | `[]` | Users/SAs granted IAP access. |
-| `iap_authorized_groups` | `[]` | Google Groups granted IAP access. |
-| `environment_variables` | `{}` | Additional plain-text env vars. Do not set `AP_ENCRYPTION_KEY`, `AP_JWT_SECRET`, or `AP_POSTGRES_*` here. |
-| `secret_environment_variables` | `{}` | Secret Manager references injected as env vars. |
-| `secret_propagation_delay` | `30` | Seconds to wait after secret creation. |
-| `secret_rotation_period` | `'2592000s'` | Secret Manager rotation notification frequency. |
-| `backup_schedule` | `'0 2 * * *'` | Cron expression (UTC) for automated backups. |
-| `backup_retention_days` | `7` | Days to retain backup files in GCS. |
-| `enable_backup_import` | `false` | Triggers a one-time restore on apply. |
-| `backup_source` | `'gcs'` | `'gcs'` (full GCS URI) or `'gdrive'` (file ID). |
-| `backup_uri` | `""` | GCS URI or Google Drive file ID. Maps to `backup_file` in `App_CloudRun`. |
-| `backup_format` | `'sql'` | Backup format: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
-| `enable_cicd_trigger` | `false` | Provisions a Cloud Build GitHub trigger. |
-| `github_repository_url` | `""` | Full HTTPS URL of the GitHub repository. |
-| `github_token` | `""` | GitHub PAT. Sensitive. |
-| `github_app_installation_id` | `""` | GitHub App installation ID. |
-| `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Advanced Cloud Build trigger config. |
-| `enable_cloud_deploy` | `false` | Provisions a Cloud Deploy progressive delivery pipeline. |
-| `cloud_deploy_stages` | `[dev, staging, prod(approval)]` | Ordered Cloud Deploy promotion stages. |
-| `enable_binary_authorization` | `false` | Enforces image attestation on deployment. |
-| `enable_custom_sql_scripts` | `false` | Runs SQL scripts from GCS after provisioning. |
-| `custom_sql_scripts_bucket` | `""` | GCS bucket containing SQL scripts. |
-| `custom_sql_scripts_path` | `""` | Path prefix within the bucket. |
-| `custom_sql_scripts_use_root` | `false` | Run scripts as the root DB user. |
-| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to use. |
-| `nfs_instance_base_name` | `'app-nfs'` | Base name for the inline NFS GCE VM. |
-| `enable_cloud_armor` | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. |
-| `admin_ip_ranges` | `[]` | CIDR ranges exempted from WAF rules. |
-| `application_domains` | `[]` | Custom domains with Google-managed SSL certificates. |
-| `enable_cdn` | `false` | Enables Cloud CDN on the HTTPS LB backend. |
-| `max_images_to_retain` | `7` | Maximum container images to keep in Artifact Registry. |
-| `delete_untagged_images` | `true` | Automatically deletes untagged container images. |
-| `image_retention_days` | `30` | Days after which images are eligible for deletion. |
-| `create_cloud_storage` | `true` | Set `false` to skip GCS bucket creation. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | Additional GCS buckets to provision. |
-| `enable_nfs` | `false` | Provisions NFS shared storage. Off by default (unlike Django). |
-| `nfs_mount_path` | `'/mnt/nfs'` | Container path where NFS is mounted. |
-| `gcs_volumes` | `[]` | GCS buckets to mount via GCS Fuse. |
-| `manage_storage_kms_iam` | `false` | Creates CMEK KMS keyring and enables CMEK encryption. |
-| `enable_artifact_registry_cmek` | `false` | Enables CMEK encryption for container images. |
-| `db_name` | `'activepieces_db'` | PostgreSQL database name. Do not change after initial deployment. |
-| `db_user` | `'ap_user'` | PostgreSQL application user. |
-| `database_password_length` | `32` | Auto-generated password length (16–64). |
-| `enable_auto_password_rotation` | `false` | Automated zero-downtime password rotation. |
-| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before restarting the service. |
-| `initialization_jobs` | `[]` | One-shot Cloud Run Jobs. Empty list triggers the default `db-init` job (`execute_on_apply=true`). |
-| `cron_jobs` | `[]` | Recurring scheduled Cloud Run Jobs. |
-| `startup_probe` | `{ path="/api/v1/flags", initial_delay_seconds=120, failure_threshold=10, ... }` | Activepieces_Common startup probe. Allow 7+ minutes on first boot. |
-| `liveness_probe` | `{ path="/api/v1/flags", initial_delay_seconds=30, failure_threshold=3, ... }` | Activepieces_Common liveness probe. |
-| `startup_probe_config` | `{ enabled=false }` | Cloud Run infrastructure startup probe. Disabled — `startup_probe` takes effect. |
-| `health_check_config` | `{ enabled=true }` | Cloud Run infrastructure liveness probe. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
-| `alert_policies` | `[]` | Cloud Monitoring metric alert policies. |
-| `enable_redis` | `false` | Switches to Redis queue mode. Required for `max_instance_count > 1`. |
-| `redis_host` | `""` | Redis hostname/IP. Empty defaults to NFS server IP when `enable_nfs = true`. |
-| `redis_port` | `'6379'` | Redis TCP port (string type). |
-| `redis_auth` | `""` | Redis AUTH password. Sensitive. |
-| `enable_vpc_sc` | `false` | Registers API calls within the project's VPC-SC perimeter. |
-| `vpc_cidr_ranges` | `[]` | VPC subnet CIDR ranges for the VPC-SC network access level. |
-| `vpc_sc_dry_run` | `true` | When `true`, VPC-SC violations are logged but not blocked. |
-| `organization_id` | `""` | GCP Organization ID for the VPC-SC policy. |
-| `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs for all supported services. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `module_description` | 0 | (Activepieces Cloud Run platform text) | Platform metadata: module description. |
+| `module_documentation` | 0 | `https://docs.radmodules.dev/docs/applications/activepieces` | Platform metadata: documentation URL. |
+| `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
+| `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
+| `credit_cost` | 0 | `100` | Platform metadata: deployment credit cost. |
+| `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
+| `enable_purge` | 0 | `true` | Permits full deletion of module resources on destroy. |
+| `public_access` | 0 | `true` | Platform catalogue visibility. |
+| `deployment_id` | 0 | `""` | Deployment ID suffix. Auto-generated if empty. |
+| `resource_creator_identity` | 0 | (platform SA) | Service account used by Terraform to manage resources. |
+| `project_id` | 1 | — | GCP project ID. **Required.** |
+| `tenant_deployment_id` | 1 | `'demo'` | Short suffix appended to all resource names. |
+| `support_users` | 1 | `[]` | Email addresses for monitoring alerts. |
+| `resource_labels` | 1 | `{}` | Labels applied to all provisioned resources. |
+| `application_name` | 2 | `'activepieces'` | Base resource name. Do not change after initial deployment. |
+| `display_name` | 2 | `'Activepieces Workflow Automation'` | Human-readable name. Alias for `application_display_name`. |
+| `description` | 2 | `'Activepieces - Open source workflow automation platform'` | Service description. Alias for `application_description`. |
+| `application_version` | 2 | `'latest'` | Container image version tag. |
+| `deploy_application` | 3 | `true` | Set `false` for infrastructure-only deployment. |
+| `cpu_limit` | 3 | `'2000m'` | CPU limit per instance. |
+| `memory_limit` | 3 | `'2Gi'` | Memory limit per instance. |
+| `min_instance_count` | 3 | `0` | `0` = scale-to-zero. Set `≥1` to eliminate cold starts. |
+| `max_instance_count` | 3 | `1` | Set >1 only when `enable_redis = true`. |
+| `container_port` | 3 | `8080` | TCP port Activepieces listens on. |
+| `execution_environment` | 3 | `'gen2'` | Gen2 required for NFS and GCS Fuse. |
+| `timeout_seconds` | 3 | `300` | Max request duration (0–3600). |
+| `enable_cloudsql_volume` | 3 | `true` | Injects Cloud SQL Auth Proxy sidecar. |
+| `cloudsql_volume_mount_path` | 3 | `'/cloudsql'` | Base path for Auth Proxy Unix socket. |
+| `enable_image_mirroring` | 3 | `true` | Mirrors container image into Artifact Registry. |
+| `max_revisions_to_retain` | 3 | `7` | Maximum Cloud Run revisions to retain. |
+| `traffic_split` | 3 | `[]` | Canary/blue-green traffic allocation. |
+| `container_protocol` | 3 | `'http1'` | `'http1'` or `'h2c'`. |
+| `service_annotations` | 3 | `{}` | Advanced Cloud Run annotations. |
+| `service_labels` | 3 | `{}` | Labels applied to the Cloud Run service. |
+| `ingress_settings` | 4 | `'all'` | `'all'` required for webhooks; `'internal'` disables public access. |
+| `vpc_egress_setting` | 4 | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` or `'ALL_TRAFFIC'`. |
+| `enable_iap` | 4 | `false` | Enables IAP. **Will block webhook endpoints.** |
+| `iap_authorized_users` | 4 | `[]` | Users/SAs granted IAP access. |
+| `iap_authorized_groups` | 4 | `[]` | Google Groups granted IAP access. |
+| `environment_variables` | 5 | `{}` | Additional plain-text env vars. Do not set `AP_ENCRYPTION_KEY`, `AP_JWT_SECRET`, or `AP_POSTGRES_*` here. |
+| `secret_environment_variables` | 5 | `{}` | Secret Manager references injected as env vars. |
+| `secret_propagation_delay` | 5 | `30` | Seconds to wait after secret creation. |
+| `secret_rotation_period` | 5 | `'2592000s'` | Secret Manager rotation notification frequency. |
+| `backup_schedule` | 6 | `'0 2 * * *'` | Cron expression (UTC) for automated backups. |
+| `backup_retention_days` | 6 | `7` | Days to retain backup files in GCS. |
+| `enable_backup_import` | 6 | `false` | Triggers a one-time restore on apply. |
+| `backup_source` | 6 | `'gcs'` | `'gcs'` (full GCS URI) or `'gdrive'` (file ID). |
+| `backup_uri` | 6 | `""` | GCS URI or Google Drive file ID. Maps to `backup_file` in `App_CloudRun`. |
+| `backup_format` | 6 | `'sql'` | Backup format: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
+| `enable_cicd_trigger` | 7 | `false` | Provisions a Cloud Build GitHub trigger. |
+| `github_repository_url` | 7 | `""` | Full HTTPS URL of the GitHub repository. |
+| `github_token` | 7 | `""` | GitHub PAT. Sensitive. |
+| `github_app_installation_id` | 7 | `""` | GitHub App installation ID. |
+| `cicd_trigger_config` | 7 | `{ branch_pattern = "^main$" }` | Advanced Cloud Build trigger config. |
+| `enable_cloud_deploy` | 7 | `false` | Provisions a Cloud Deploy progressive delivery pipeline. |
+| `cloud_deploy_stages` | 7 | `[dev, staging, prod(approval)]` | Ordered Cloud Deploy promotion stages. |
+| `enable_binary_authorization` | 7 | `false` | Enforces image attestation on deployment. |
+| `enable_custom_sql_scripts` | 8 | `false` | Runs SQL scripts from GCS after provisioning. |
+| `custom_sql_scripts_bucket` | 8 | `""` | GCS bucket containing SQL scripts. |
+| `custom_sql_scripts_path` | 8 | `""` | Path prefix within the bucket. |
+| `custom_sql_scripts_use_root` | 8 | `false` | Run scripts as the root DB user. |
+| `nfs_instance_name` | 8 | `""` | Name of an existing NFS GCE VM to use. |
+| `nfs_instance_base_name` | 8 | `'app-nfs'` | Base name for the inline NFS GCE VM. |
+| `enable_cloud_armor` | 9 | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. |
+| `admin_ip_ranges` | 9 | `[]` | CIDR ranges exempted from WAF rules. |
+| `application_domains` | 9 | `[]` | Custom domains with Google-managed SSL certificates. |
+| `enable_cdn` | 9 | `false` | Enables Cloud CDN on the HTTPS LB backend. |
+| `max_images_to_retain` | 9 | `7` | Maximum container images to keep in Artifact Registry. |
+| `delete_untagged_images` | 9 | `true` | Automatically deletes untagged container images. |
+| `image_retention_days` | 9 | `30` | Days after which images are eligible for deletion. |
+| `create_cloud_storage` | 10 | `true` | Set `false` to skip GCS bucket creation. |
+| `storage_buckets` | 10 | `[{ name_suffix = "data" }]` | Additional GCS buckets to provision. |
+| `enable_nfs` | 10 | `false` | Provisions NFS shared storage. Off by default (unlike Django). |
+| `nfs_mount_path` | 10 | `'/mnt/nfs'` | Container path where NFS is mounted. |
+| `gcs_volumes` | 10 | `[]` | GCS buckets to mount via GCS Fuse. |
+| `manage_storage_kms_iam` | 10 | `false` | Creates CMEK KMS keyring and enables CMEK encryption. |
+| `enable_artifact_registry_cmek` | 10 | `false` | Enables CMEK encryption for container images. |
+| `db_name` | 11 | `'activepieces_db'` | PostgreSQL database name. Do not change after initial deployment. |
+| `db_user` | 11 | `'ap_user'` | PostgreSQL application user. |
+| `database_password_length` | 11 | `32` | Auto-generated password length (16–64). |
+| `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. |
+| `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
+| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Empty list triggers the default `db-init` job (`execute_on_apply=true`). |
+| `cron_jobs` | 12 | `[]` | **Not referenced** — not forwarded to `App_CloudRun`. Has no effect in this module version. |
+| `startup_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=120, failure_threshold=10, ... }` | Activepieces Common startup probe. Allow 7+ minutes on first boot. |
+| `liveness_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=30, failure_threshold=3, ... }` | Activepieces Common liveness probe. |
+| `startup_probe_config` | 13 | `{ enabled=false }` | Cloud Run infrastructure startup probe. Disabled — `startup_probe` takes effect. |
+| `health_check_config` | 13 | `{ enabled=true }` | Cloud Run infrastructure liveness probe. |
+| `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `alert_policies` | 13 | `[]` | Cloud Monitoring metric alert policies. |
+| `enable_redis` | 20 | `false` | Switches to Redis queue mode. Required for `max_instance_count > 1`. |
+| `redis_host` | 20 | `""` | Redis hostname/IP. Empty defaults to NFS server IP when `enable_nfs = true`. |
+| `redis_port` | 20 | `'6379'` | Redis TCP port (string type). |
+| `redis_auth` | 20 | `""` | Redis AUTH password. Sensitive. |
+| `enable_vpc_sc` | 21 | `false` | Registers API calls within the project's VPC-SC perimeter. |
+| `vpc_cidr_ranges` | 21 | `[]` | VPC subnet CIDR ranges for the VPC-SC network access level. |
+| `vpc_sc_dry_run` | 21 | `true` | When `true`, VPC-SC violations are logged but not blocked. |
+| `organization_id` | 21 | `""` | GCP Organization ID for the VPC-SC policy. |
+| `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs for all supported services. |
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

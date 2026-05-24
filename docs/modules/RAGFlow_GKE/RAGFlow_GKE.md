@@ -1,9 +1,16 @@
-# RAGFlow GKE Module
+# RAGFlow_GKE Module — Configuration Guide
 
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG)
-platform. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and embeds
-them, stores vectors in Elasticsearch, exposes a REST API for question-answering, and provides
-a web UI for knowledge base management and enterprise search.
+platform with 80,000+ GitHub stars and 2,596% year-over-year contributor growth — named one of
+GitHub's fastest-growing open-source projects (Apache 2.0). Unlike generic RAG frameworks,
+RAGFlow is purpose-built for deep document understanding: it correctly parses PDFs, tables, and
+visual layouts before chunking and retrieval, making it significantly more accurate on structured
+enterprise content. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and
+embeds them, stores vectors in Elasticsearch, exposes a REST API for question-answering, and
+provides a web UI for knowledge base management and enterprise search. Typical deployments power
+enterprise knowledge bases, legal research tools, financial document analysis, and customer
+support systems where retrieval accuracy depends on document parsing quality. v0.25 (April 2026)
+added agentic memory, sandbox code execution, and prebuilt ingestion pipelines.
 
 `RAGFlow_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all
 GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS,
@@ -14,13 +21,11 @@ database initialization job, and document storage bucket.
 > first. The `elasticsearch_hosts` variable is **mandatory** — Terraform will reject the
 > configuration if it is empty.
 
-> This guide documents variables that are **unique to `RAGFlow_GKE`** or that have **RAGFlow-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
-
 ---
 
-## 1. Module Overview
+## §1 · Module Overview
 
-### A. What `RAGFlow_GKE` provides
+### What `RAGFlow_GKE` provides
 
 - A **RAGFlow Kubernetes Deployment** (custom image built from `infiniflow/ragflow` via
   Cloud Build) running on GKE Autopilot with a **LoadBalancer** service on port 80.
@@ -37,7 +42,7 @@ database initialization job, and document storage bucket.
 - **ClientIP session affinity** by default, ensuring that browser uploads and multi-step
   document processing requests consistently reach the same pod.
 
-### B. Key differences from `App_GKE` defaults
+### Key differences from `App_GKE` defaults
 
 | Feature | App_GKE default | RAGFlow_GKE default |
 |---|---|---|
@@ -55,7 +60,7 @@ database initialization job, and document storage bucket.
 | `module_dependency` | varies | `["Services_GCP", "Elasticsearch_GKE"]` |
 | `credit_cost` | varies | `150` |
 
-### C. Architecture
+### Architecture
 
 ```
 RAGFlow_GKE
@@ -73,7 +78,7 @@ RAGFlow_GKE
     └── Kubernetes resources (Deployment, Service, Jobs, HPA)
 ```
 
-### D. Platform-Managed Behaviours
+### Platform-managed behaviours
 
 | Behaviour | Detail |
 |---|---|
@@ -88,7 +93,7 @@ RAGFlow_GKE
 
 ---
 
-## 2. IAM & Project Identity (Group 0 & 1)
+## §2 · IAM & Project Identity (Group 0 & 1)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -97,20 +102,21 @@ RAGFlow_GKE
 | `module_dependency` | `list(string)` | `["Services_GCP", "Elasticsearch_GKE"]` | Modules that must be deployed first. `{{UIMeta group=0 order=3}}` |
 | `module_services` | `list(string)` | *(GKE, MySQL, Elasticsearch, Redis, etc.)* | GCP services consumed. `{{UIMeta group=0 order=4}}` |
 | `credit_cost` | `number` | `150` | Platform credits consumed on deployment. `{{UIMeta group=0 order=5}}` |
-| `require_credit_purchases` | `bool` | `true` | Enforce credit balance check. `{{UIMeta group=0 order=6}}` |
+| `require_credit_purchases` | `bool` | `false` | Enforce credit balance check. `{{UIMeta group=0 order=6}}` |
 | `enable_purge` | `bool` | `true` | Permit full deletion on destroy. `{{UIMeta group=0 order=7}}` |
-| `public_access` | `bool` | `false` | Platform UI visibility. `{{UIMeta group=0 order=8}}` |
-| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated when blank. `{{UIMeta group=0 order=9}}` |
-| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Terraform service account. `{{UIMeta group=0 order=9}}` |
+| `public_access` | `bool` | `true` | Platform UI visibility. `{{UIMeta group=0 order=8}}` |
+| `shared_users` | `list(string)` | `[]` | Users granted access regardless of `public_access`. Actively enforced by the platform. `{{UIMeta group=0 order=9}}` |
+| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated when blank. `{{UIMeta group=0 order=10}}` |
+| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Terraform service account. `{{UIMeta group=0 order=11}}` |
 | `project_id` | `string` | **required** | GCP project ID. `{{UIMeta group=1 order=1}}` |
 | `tenant_deployment_id` | `string` | `"demo"` | 1–20 lowercase letters, numbers, hyphens. `{{UIMeta group=1 order=2}}` |
 | `support_users` | `list(string)` | `[]` | Email addresses granted IAM access and monitoring alerts. `{{UIMeta group=1 order=3}}` |
 | `resource_labels` | `map(string)` | `{}` | Labels applied to all resources. `{{UIMeta group=1 order=4}}` |
-| `deployment_region` | `string` | `"us-central1"` | GCP region fallback. `{{UIMeta group=1 order=5}}` |
+| `region` | `string` | `"us-central1"` | GCP region fallback. `{{UIMeta group=1 order=2}}` |
 
 ---
 
-## 3. Application Identity (Group 2)
+## §3 · Application Identity (Group 2)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -123,7 +129,7 @@ RAGFlow_GKE
 
 ---
 
-## 4. Runtime & Scaling (Group 3)
+## §4 · Runtime & Scaling (Group 3)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -149,7 +155,7 @@ RAGFlow_GKE
 
 ---
 
-## 5. GKE Backend Configuration (Group 5)
+## §5 · GKE Backend Configuration (Group 5)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -167,9 +173,9 @@ RAGFlow_GKE
 
 ---
 
-## 6. RAGFlow-Specific Variables
+## §6 · RAGFlow-Specific Variables
 
-### A. Database (Group 15)
+### §6.A · Database (Group 15)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -186,7 +192,7 @@ RAGFlow_GKE
 | `enable_auto_password_rotation` | `bool` | `false` | Automatic database password rotation. `{{UIMeta group=15 order=11}}` |
 | `rotation_propagation_delay_sec` | `number` | `90` | Seconds to wait after rotation before restarting pods. `{{UIMeta group=15 order=12}}` |
 
-### B. Elasticsearch & Redis (Group 14)
+### §6.B · Elasticsearch & Redis (Group 14)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -199,7 +205,7 @@ RAGFlow_GKE
 
 ---
 
-## 7. Environment Variables & Secrets (Group 4)
+## §7 · Environment Variables & Secrets (Group 4)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -208,7 +214,7 @@ RAGFlow_GKE
 | `secret_rotation_period` | `string` | `"2592000s"` | Rotation notification period (30 days). Must be a duration in seconds followed by `s`. `{{UIMeta group=4 order=3}}` |
 | `secret_propagation_delay` | `number` | `30` | Seconds to wait after secret creation before proceeding. `{{UIMeta group=4 order=4}}` |
 
-### A. Automatically Injected Environment Variables
+### Automatically Injected Environment Variables
 
 The following variables are always injected by `RAGFlow_GKE` and must not be set in `environment_variables`:
 
@@ -225,7 +231,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## 8. Access & Networking (Groups 18–21)
+## §8 · Access & Networking (Groups 18–21)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -253,7 +259,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## 9. Storage & Filesystem (Groups 12 & 13)
+## §9 · Storage & Filesystem (Groups 12 & 13)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -269,7 +275,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## 10. Backup & Maintenance (Group 16)
+## §10 · Backup & Maintenance (Group 16)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -282,7 +288,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## 11. CI/CD Integration (Group 11)
+## §11 · CI/CD Integration (Group 11)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -297,7 +303,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## 12. Custom Initialization & Jobs (Group 10 & 17)
+## §12 · Custom Initialization & Jobs (Group 10 & 17)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -311,7 +317,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## 13. Reliability Policies (Group 8)
+## §13 · Reliability Policies (Group 8)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -322,7 +328,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## 14. Resource Quota (Group 7)
+## §14 · Resource Quota (Group 7)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -334,7 +340,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 ---
 
-## 15. StatefulSet Settings (Group 6)
+## §15 · StatefulSet Settings (Group 6)
 
 These settings apply only when `workload_type = "StatefulSet"`.
 
@@ -350,7 +356,7 @@ These settings apply only when `workload_type = "StatefulSet"`.
 
 ---
 
-## 16. Observability & Health (Group 9)
+## §16 · Observability & Health (Group 9)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -358,12 +364,12 @@ These settings apply only when `workload_type = "StatefulSet"`.
 | `health_check_config` | `object` | `{ enabled=true, path="/v1/health", initial_delay_seconds=120, period_seconds=30 }` | App_GKE-standard liveness probe. `{{UIMeta group=9 order=2}}` |
 | `uptime_check_config` | `object` | `{ enabled=false, path="/v1/health", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. `{{UIMeta group=9 order=3}}` |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies. `{{UIMeta group=9 order=4}}` |
-| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=60, timeout_seconds=10, period_seconds=10, failure_threshold=18 }` | Container startup probe forwarded to `RAGFlow_Common`. `{{UIMeta group=9 order=5}}` |
+| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=120, timeout_seconds=10, period_seconds=10, failure_threshold=60 }` | Container startup probe forwarded to `RAGFlow_Common`. `{{UIMeta group=9 order=5}}` |
 | `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Container liveness probe forwarded to `RAGFlow_Common`. `{{UIMeta group=9 order=6}}` |
 
 ---
 
-## 17. Validation Guards
+## §17 · Validation Guards
 
 `validation.tf` enforces the following preconditions at plan time:
 
@@ -377,7 +383,7 @@ These settings apply only when `workload_type = "StatefulSet"`.
 
 ---
 
-## 18. Outputs
+## §18 · Outputs
 
 | Output | Description |
 |---|---|
@@ -401,7 +407,7 @@ These settings apply only when `workload_type = "StatefulSet"`.
 
 ---
 
-## 19. Configuration Examples
+## §19 · Configuration Examples
 
 ### Basic Deployment
 

@@ -1,10 +1,12 @@
-# Django CloudRun Module
+# Django on Google Cloud Run
+
+This document provides a comprehensive reference for the `modules/Django_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Django-specific behaviours, and operational patterns for deploying Django on Google Cloud Run (v2).
+
+---
 
 ## 1. Module Overview
 
-Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design. `Django_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Django-specific application configuration, secrets, database initialisation, and storage configuration via `Django_Common`.
-
-> This guide documents variables that are **unique to `Django_CloudRun`** or that have **Django-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
+Django is the most mature Python web framework, used by 35,570+ companies including Instagram, Spotify, Dropbox, and NASA. It holds 12.6% developer preference in the 2026 Stack Overflow Survey with 20,000+ job postings growing at 10% YoY. Its "batteries included" philosophy — built-in ORM, admin interface, and authentication — makes it the default choice for building secure, scalable APIs, internal tools, and ML-integrated web services. `Django_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Django-specific application configuration, secrets, database initialisation, and storage configuration via `Django_Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Python container, scale-to-zero by default (`min_instance_count = 0`). Custom image build via Cloud Build is the default workflow.
@@ -16,28 +18,20 @@ Django is a high-level Python web framework that encourages rapid development an
 
 **Project & Application Identity**
 
-| Variable | Default | Description |
-|---|---|---|
-| `project_id` | — | GCP project ID. **Required.** |
-| `tenant_deployment_id` | `'demo'` | Short suffix appended to all resource names. |
-| `support_users` | `[]` | Email recipients for monitoring alerts. |
-| `resource_labels` | `{}` | Labels applied to all provisioned resources. |
-| `application_name` | `'django'` | Base resource name. Do not change after initial deployment. |
-| `application_display_name` | `'Django Application'` | Human-readable name shown in the GCP Console. |
-| `application_description` | `'Django Application - High-level Python Web framework'` | Cloud Run service description. |
-| `application_version` | `'latest'` | Container image version tag. Increment to deploy a new release. |
+| Variable | Group | Type | Default | Description |
+|---|---|---|---|---|
+| `project_id` | 1 | `string` | — | GCP project ID. **Required.** |
+| `tenant_deployment_id` | 1 | `string` | `'demo'` | Short suffix appended to all resource names. |
+| `support_users` | 1 | `list(string)` | `[]` | Email recipients for monitoring alerts. |
+| `resource_labels` | 1 | `map(string)` | `{}` | Labels applied to all provisioned resources. |
+| `application_name` | 2 | `string` | `'django'` | Base resource name. Do not change after initial deployment. |
+| `application_display_name` | 2 | `string` | `'Django Application'` | Human-readable name shown in the GCP Console. |
+| `application_description` | 2 | `string` | `'Django Application - High-level Python Web framework'` | Cloud Run service description. |
+| `application_version` | 2 | `string` | `'latest'` | Container image version tag. Increment to deploy a new release. |
 
 **Wrapper architecture:** `Django_CloudRun` calls `Django_Common` to build an `application_config` object containing Django environment variables, the `SECRET_KEY` secret, database initialisation, probe configuration, and the media GCS bucket definition. `module_env_vars` carries `REDIS_HOST`/`REDIS_PORT` when `enable_redis = true`. `module_secret_env_vars` carries `Django_Common`-generated secret IDs. `module_storage_buckets` carries the media bucket provisioned by `Django_Common`. `scripts_dir` is resolved to `Django_Common/scripts`.
 
 **Django naming note:** Unlike `Cyclos_CloudRun` and `Directus_CloudRun`, which use `display_name`/`description` aliases, `Django_CloudRun` uses `application_display_name` and `application_description` directly — these are the native `App_CloudRun` variable names with no aliasing required.
-
-### Key differences from `App_CloudRun` defaults
-
-| Feature | `App_CloudRun` default | `Django_CloudRun` default |
-|---|---|---|
-| `container_image` | `""` | `'us-docker.pkg.dev/cloudrun/container/hello'` |
-| `enable_cloudsql_volume` | `false` | `true` |
-| `enable_nfs` | `false` | `true` |
 
 ---
 
@@ -71,23 +65,23 @@ Django is a Python application. The default resource limits (`cpu_limit = "1000m
 
 **Cloud SQL Auth Proxy:** `enable_cloudsql_volume` defaults to `true`. The Cloud SQL Auth Proxy sidecar is injected. The `db-init.sh` script detects the connection type at runtime: if `DB_HOST` is a Unix socket path it connects directly; if `DB_SSL=false` and `DB_HOST` is a private IP it routes through the proxy at `127.0.0.1`. This differs from `Directus_CloudRun` and `Cyclos_CloudRun`, which default to TCP.
 
-| Variable | Default | Description |
-|---|---|---|
-| `deploy_application` | `true` | Set `false` for infrastructure-only deployment (SQL, storage, secrets). |
-| `container_image_source` | `'custom'` | `'custom'` builds via Cloud Build. `'prebuilt'` deploys an existing image URI. |
-| `container_image` | `'us-docker.pkg.dev/cloudrun/container/hello'` | Override image URI. Defaults to the Cloud Run hello container for initial provisioning. |
-| `container_build_config` | `{ enabled = true }` | Cloud Build configuration used when `container_image_source = 'custom'`. |
-| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | CPU and memory limits per instance. Use `cpu_limit` and `memory_limit` sub-fields. Optional `cpu_request` and `mem_request` for guaranteed minimums. |
-| `min_instance_count` | `0` | `0` enables scale-to-zero. Set `≥1` to eliminate cold starts. |
-| `max_instance_count` | `1` | Increase for high-traffic deployments. |
-| `container_port` | `8080` | Django default port. Change only if your WSGI/ASGI server binds to a different port. |
-| `execution_environment` | `'gen2'` | Gen2 required for NFS mounts and GCS Fuse. |
-| `timeout_seconds` | `300` | Max request duration. Increase for long-running operations such as report generation or file processing. |
-| `enable_cloudsql_volume` | `true` | `true` — injects Cloud SQL Auth Proxy sidecar. `db-init.sh` auto-detects whether to connect via Unix socket or proxy at `127.0.0.1`. |
-| `cloudsql_volume_mount_path` | `'/cloudsql'` | Base path for the Auth Proxy Unix socket mount. Used when Django connects via the socket path. |
-| `traffic_split` | `[]` | Percentage-based canary/blue-green traffic allocation. See §7.B. |
-| `service_annotations` | `{}` | Advanced Cloud Run annotations. |
-| `service_labels` | `{}` | Labels applied to the Cloud Run service. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `deploy_application` | 3 | `true` | Set `false` for infrastructure-only deployment (SQL, storage, secrets). |
+| `container_image_source` | 3 | `'custom'` | `'custom'` builds via Cloud Build. `'prebuilt'` deploys an existing image URI. |
+| `container_image` | 3 | `'us-docker.pkg.dev/cloudrun/container/hello'` | Override image URI. Defaults to the Cloud Run hello container for initial provisioning. |
+| `container_build_config` | 3 | `{ enabled = true }` | Cloud Build configuration used when `container_image_source = 'custom'`. |
+| `container_resources` | 3 | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | CPU and memory limits per instance. Use `cpu_limit` and `memory_limit` sub-fields. Optional `cpu_request` and `mem_request` for guaranteed minimums. |
+| `min_instance_count` | 3 | `0` | `0` enables scale-to-zero. Set `≥1` to eliminate cold starts. |
+| `max_instance_count` | 3 | `1` | Increase for high-traffic deployments. |
+| `container_port` | 3 | `8080` | Django default port. Change only if your WSGI/ASGI server binds to a different port. |
+| `execution_environment` | 3 | `'gen2'` | Gen2 required for NFS mounts and GCS Fuse. |
+| `timeout_seconds` | 3 | `300` | Max request duration. Increase for long-running operations such as report generation or file processing. |
+| `enable_cloudsql_volume` | 3 | `true` | `true` — injects Cloud SQL Auth Proxy sidecar. `db-init.sh` auto-detects whether to connect via Unix socket or proxy at `127.0.0.1`. |
+| `cloudsql_volume_mount_path` | 3 | `'/cloudsql'` | Base path for the Auth Proxy Unix socket mount. Used when Django connects via the socket path. |
+| `traffic_split` | 3 | `[]` | Percentage-based canary/blue-green traffic allocation. See §7.B. |
+| `service_annotations` | 3 | `{}` | Advanced Cloud Run annotations. |
+| `service_labels` | 3 | `{}` | Labels applied to the Cloud Run service. |
 
 **Differences from `App_CloudRun` defaults:**
 
@@ -107,13 +101,13 @@ Django requires **PostgreSQL** — `Django_Common` hardcodes `DB_ENGINE = "djang
 
 **PostgreSQL extensions:** `pg_trgm`, `unaccent`, `hstore`, and `citext` are installed automatically by `Django_Common`'s `db-init.sh` script during the initialisation job, using the `ROOT_PASSWORD` superuser secret.
 
-| Variable | Default | Description |
-|---|---|---|
-| `application_database_name` | `'django_db'` | PostgreSQL database name. Injected as `DB_NAME`. **Do not change after initial deployment.** |
-| `application_database_user` | `'django_user'` | PostgreSQL application user. Injected as `DB_USER`. Password auto-generated and stored in Secret Manager as `DB_PASSWORD`. |
-| `database_password_length` | `32` | Auto-generated password length. Range: 16–64. |
-| `enable_auto_password_rotation` | `false` | Automated zero-downtime password rotation. See §7.D. |
-| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before restarting the service. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `application_database_name` | 11 | `'django_db'` | PostgreSQL database name. Injected as `DB_NAME`. **Do not change after initial deployment.** |
+| `application_database_user` | 11 | `'django_user'` | PostgreSQL application user. Injected as `DB_USER`. Password auto-generated and stored in Secret Manager as `DB_PASSWORD`. |
+| `database_password_length` | 11 | `32` | Auto-generated password length. Range: 16–64. |
+| `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. See §7.D. |
+| `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
 
 > `database_type`, `sql_instance_name`, `sql_instance_base_name`, `enable_postgres_extensions`, and `enable_mysql_plugins` are not exposed — Django only supports PostgreSQL, and extension installation is managed by `Django_Common`'s `db-init.sh` script.
 
@@ -123,22 +117,22 @@ Django requires **PostgreSQL** — `Django_Common` hardcodes `DB_ENGINE = "djang
 
 **GCS media bucket:** `Django_Common` automatically provisions a dedicated media bucket and grants the application SA `roles/storage.objectAdmin` and `roles/storage.legacyBucketReader`. GCS Fuse mounts are configured separately via `gcs_volumes`. The media bucket is separate from any buckets in `storage_buckets`.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_nfs` | `true` | Provisions an NFS volume for shared uploaded assets. Requires `gen2`. Set `false` if using only GCS for file storage. |
-| `nfs_mount_path` | `'/mnt/nfs'` | Container path where the NFS share is mounted. |
-| `create_cloud_storage` | `true` | Set `false` to skip additional bucket creation. The media bucket from `Django_Common` is always provisioned. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | Additional GCS buckets beyond the auto-provisioned media bucket. |
-| `gcs_volumes` | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). Each entry: `name`, `bucket_name`, `mount_path`, `readonly`, `mount_options`. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_nfs` | 10 | `true` | Provisions an NFS volume for shared uploaded assets. Requires `gen2`. Set `false` if using only GCS for file storage. |
+| `nfs_mount_path` | 10 | `'/mnt/nfs'` | Container path where the NFS share is mounted. |
+| `create_cloud_storage` | 10 | `true` | Set `false` to skip additional bucket creation. The media bucket from `Django_Common` is always provisioned. |
+| `storage_buckets` | 10 | `[{ name_suffix = "data" }]` | Additional GCS buckets beyond the auto-provisioned media bucket. |
+| `gcs_volumes` | 10 | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). Each entry: `name`, `bucket_name`, `mount_path`, `readonly`, `mount_options`. |
 
 ### D. Networking
 
 Cloud Run uses Direct VPC Egress to reach Cloud SQL. Because `enable_cloudsql_volume = true` is the default, the Cloud SQL Auth Proxy sidecar is injected. The `db-init.sh` script determines the effective connection target at runtime (socket path or proxy at `127.0.0.1`), not a plain TCP IP address.
 
-| Variable | Default | Description |
-|---|---|---|
-| `ingress_settings` | `'all'` | `'all'` — public internet; `'internal'` — VPC only; `'internal-and-cloud-load-balancing'` — forces traffic through the HTTPS Load Balancer. |
-| `vpc_egress_setting` | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` routes only RFC 1918 traffic via VPC. `'ALL_TRAFFIC'` routes all egress via VPC (required for Redis on private IP or strict NAT setups). |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `ingress_settings` | 4 | `'all'` | `'all'` — public internet; `'internal'` — VPC only; `'internal-and-cloud-load-balancing'` — forces traffic through the HTTPS Load Balancer. |
+| `vpc_egress_setting` | 4 | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` routes only RFC 1918 traffic via VPC. `'ALL_TRAFFIC'` routes all egress via VPC (required for Redis on private IP or strict NAT setups). |
 
 > `network_name` is not exposed. The module auto-discovers the `Services_GCP` VPC network. If multiple VPCs exist in the project, deploy via `App_CloudRun` directly with `network_name` set explicitly.
 
@@ -160,11 +154,11 @@ After `db-init` completes, the Django application applies migrations on startup.
 
 Additional initialization jobs and recurring cron jobs can be defined via the `initialization_jobs` and `cron_jobs` variables:
 
-| Variable | Default | Description |
-|---|---|---|
-| `initialization_jobs` | `[db-init job]` | One-shot Cloud Run Jobs. The default `db-init` job is pre-configured with `execute_on_apply = false`. Additional jobs (e.g., `db-migrate`) can be appended. Each entry: `name`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `execute_on_apply`, `script_path`. When `initialization_jobs = []` is passed, `Django_Common` substitutes two default jobs: `db-init` (execute_on_apply=true) and `db-migrate` (execute_on_apply=true). |
-| `cron_jobs` | `[]` | Recurring jobs triggered by Cloud Scheduler. Each entry: `name`, `schedule` (cron UTC), `image`, `command`, `cpu_limit`, `memory_limit`, `paused`. |
-| `additional_services` | `[]` | Additional Cloud Run services deployed alongside the main Django application. Use for sidecar or helper services (e.g., Celery workers). Each entry: `name`, `image`, `port`, `env_vars`, `cpu_limit`, `memory_limit`, `min_instance_count`, `max_instance_count`, `ingress`, `output_env_var_name`. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `initialization_jobs` | 12 | `[db-init job]` | One-shot Cloud Run Jobs. The default `db-init` job is pre-configured with `execute_on_apply = false`. Additional jobs (e.g., `db-migrate`) can be appended. Each entry: `name`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `execute_on_apply`, `script_path`. When `initialization_jobs = []` is passed, `Django_Common` substitutes two default jobs: `db-init` (execute_on_apply=true) and `db-migrate` (execute_on_apply=true). |
+| `cron_jobs` | 12 | `[]` | Recurring jobs triggered by Cloud Scheduler. Each entry: `name`, `schedule` (cron UTC), `image`, `command`, `cpu_limit`, `memory_limit`, `paused`. |
+| `additional_services` | 12 | `[]` | Additional Cloud Run services deployed alongside the main Django application. Use for sidecar or helper services (e.g., Celery workers). Each entry: `name`, `image`, `port`, `env_vars`, `cpu_limit`, `memory_limit`, `min_instance_count`, `max_instance_count`, `ingress`, `output_env_var_name`. |
 
 **Backup Import:** If `enable_backup_import = true`, a dedicated Cloud Run Job restores a backup into the PostgreSQL database during the apply, after the `db-init` job. See §8.C for all backup variables.
 
@@ -176,10 +170,10 @@ Additional initialization jobs and recurring cron jobs can be defined via the `i
 
 Identical behaviour to `App_CloudRun`. When `enable_cloud_armor = true`, a Global HTTPS Load Balancer with a Cloud Armor WAF policy (OWASP Top 10, adaptive DDoS, 500 req/min rate limiting) is provisioned in front of Cloud Run.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_cloud_armor` | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. Required for custom domains, CDN, and DDoS protection. |
-| `admin_ip_ranges` | `[]` | CIDR ranges exempted from WAF rules (e.g., office VPN, CI/CD egress IPs). |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_cloud_armor` | 9 | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. Required for custom domains, CDN, and DDoS protection. |
+| `admin_ip_ranges` | 9 | `[]` | CIDR ranges exempted from WAF rules (e.g., office VPN, CI/CD egress IPs). |
 
 > Note: Cloud Armor is in **group 9** in `Django_CloudRun` (vs group 16 in `App_CloudRun`).
 
@@ -189,11 +183,11 @@ When `enable_iap = true`, Cloud Run's native IAP integration is enabled directly
 
 IAP does not require `enable_cloud_armor`. See [App_CloudRun §4.B](../App_CloudRun/App_CloudRun.md#b-identity-aware-proxy-iap) for the full IAM role details.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_iap` | `false` | Enables IAP natively on the Cloud Run service. Recommended for admin-facing or internal-only Django deployments. |
-| `iap_authorized_users` | `[]` | Users/service accounts granted access. Format: `'user:email'` or `'serviceAccount:sa@...'`. The Terraform executor is automatically included. |
-| `iap_authorized_groups` | `[]` | Google Groups granted access. Format: `'group:name@example.com'`. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_iap` | 4 | `false` | Enables IAP natively on the Cloud Run service. Recommended for admin-facing or internal-only Django deployments. |
+| `iap_authorized_users` | 4 | `[]` | Users/service accounts granted access. Format: `'user:email'` or `'serviceAccount:sa@...'`. The Terraform executor is automatically included. |
+| `iap_authorized_groups` | 4 | `[]` | Google Groups granted access. Format: `'group:name@example.com'`. |
 
 > Note: IAP is in **group 4** (merged with networking) in `Django_CloudRun` (vs group 15 in `App_CloudRun`).
 
@@ -201,9 +195,9 @@ IAP does not require `enable_cloud_armor`. See [App_CloudRun §4.B](../App_Cloud
 
 Identical to `App_CloudRun`. When `enable_binary_authorization = true`, Cloud Run enforces that deployed images carry a valid cryptographic attestation. The Cloud Build pipeline attests the image before triggering deployment.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_binary_authorization` | `false` | Enforces image attestation. Requires a Binary Authorization policy and attestor pre-configured in the project. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_binary_authorization` | 7 | `false` | Enforces image attestation. Requires a Binary Authorization policy and attestor pre-configured in the project. |
 
 > `binauthz_evaluation_mode` is not exposed in `Django_CloudRun`. To set a custom evaluation mode, deploy via `App_CloudRun` directly.
 
@@ -211,9 +205,9 @@ Identical to `App_CloudRun`. When `enable_binary_authorization = true`, Cloud Ru
 
 Identical to `App_CloudRun`. When `enable_vpc_sc = true`, all GCP API calls from this module are bound within an existing VPC-SC perimeter, creating a security boundary around Cloud Run, Secret Manager, Cloud SQL, and Artifact Registry.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_vpc_sc` | `false` | Registers module API calls within the project's VPC-SC perimeter. A perimeter must already exist before enabling. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_vpc_sc` | 21 | `false` | Registers module API calls within the project's VPC-SC perimeter. A perimeter must already exist before enabling. |
 
 > Note: VPC SC is in **group 21** in `Django_CloudRun` (vs group 17 in `App_CloudRun`).
 
@@ -225,11 +219,11 @@ Django application secrets are stored in Secret Manager and injected natively by
 
 Superuser credentials (`DJANGO_SUPERUSER_PASSWORD`) should be managed via `secret_environment_variables` rather than `environment_variables` to keep them out of Terraform state.
 
-| Variable | Default | Description |
-|---|---|---|
-| `secret_environment_variables` | `{}` | Map of env var name → Secret Manager secret ID. Resolved at runtime by Cloud Run; never stored in state. (e.g., `{ DJANGO_SUPERUSER_PASSWORD = "django-superuser-password" }`) |
-| `secret_rotation_period` | `'2592000s'` | Frequency at which Secret Manager emits rotation notifications. Default: 30 days. |
-| `secret_propagation_delay` | `30` | Seconds to wait after secret creation before dependent resources proceed. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `secret_environment_variables` | 5 | `{}` | Map of env var name → Secret Manager secret ID. Resolved at runtime by Cloud Run; never stored in state. (e.g., `{ DJANGO_SUPERUSER_PASSWORD = "django-superuser-password" }`) |
+| `secret_rotation_period` | 5 | `'2592000s'` | Frequency at which Secret Manager emits rotation notifications. Default: 30 days. |
+| `secret_propagation_delay` | 5 | `30` | Seconds to wait after secret creation before dependent resources proceed. |
 
 ---
 
@@ -249,17 +243,17 @@ When `enable_cdn = true` (requires `enable_cloud_armor = true`), Cloud CDN is at
 
 **Django consideration:** Django serves both authenticated and public content. CDN caching is most effective for Django static files (`STATIC_URL`) and unauthenticated public pages. Ensure that authenticated responses and session-backed views include `Cache-Control: no-store` or `Vary: Cookie` headers before enabling CDN, to prevent private responses from being cached at edge locations.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_cdn` | `false` | Enables Cloud CDN on the HTTPS LB backend. Only effective when `enable_cloud_armor = true`. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_cdn` | 9 | `false` | Enables Cloud CDN on the HTTPS LB backend. Only effective when `enable_cloud_armor = true`. |
 
 ### C. Custom Domains
 
 Custom domains are attached to the Global HTTPS Load Balancer via `application_domains`. Google-managed SSL certificates are provisioned automatically. DNS must point to the load balancer IP after apply.
 
-| Variable | Default | Description |
-|---|---|---|
-| `application_domains` | `[]` | Custom domain names for the HTTPS LB. Google-managed SSL certificates provisioned per domain. DNS must point to the LB IP. (e.g., `['app.example.com']`) |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `application_domains` | 9 | `[]` | Custom domain names for the HTTPS LB. Google-managed SSL certificates provisioned per domain. DNS must point to the LB IP. (e.g., `['app.example.com']`) |
 
 After the first apply, retrieve the LB IP from the Terraform output `load_balancer_ip` and create an `A` record. SSL certificate provisioning takes 10–30 minutes after DNS propagation.
 
@@ -273,13 +267,13 @@ Identical to `App_CloudRun`. When `enable_cicd_trigger = true`, a Cloud Build Gi
 
 **Typical use case:** The default `container_image_source = 'custom'` already uses Cloud Build to build a Django image with `Django_Common`'s Dockerfile. Enabling a CI/CD trigger allows this same pipeline to fire automatically on repository push, for example when application code, templates, or static assets are updated.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_cicd_trigger` | `false` | Provisions a Cloud Build GitHub trigger. Requires `github_repository_url` and credentials. |
-| `github_repository_url` | `""` | Full HTTPS URL of the GitHub repository. |
-| `github_token` | `""` | GitHub PAT (`repo`, `admin:repo_hook` scopes). Required on first apply. Sensitive. |
-| `github_app_installation_id` | `""` | GitHub App installation ID (preferred for organisation repos). |
-| `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Advanced trigger config: `branch_pattern`, `included_files`, `ignored_files`, `trigger_name`, `substitutions`. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_cicd_trigger` | 7 | `false` | Provisions a Cloud Build GitHub trigger. Requires `github_repository_url` and credentials. |
+| `github_repository_url` | 7 | `""` | Full HTTPS URL of the GitHub repository. |
+| `github_token` | 7 | `""` | GitHub PAT (`repo`, `admin:repo_hook` scopes). Required on first apply. Sensitive. |
+| `github_app_installation_id` | 7 | `""` | GitHub App installation ID (preferred for organisation repos). |
+| `cicd_trigger_config` | 7 | `{ branch_pattern = "^main$" }` | Advanced trigger config: `branch_pattern`, `included_files`, `ignored_files`, `trigger_name`, `substitutions`. |
 
 See [App_CloudRun §6.A](../App_CloudRun/App_CloudRun.md#a-cloud-build-triggers) for PAT vs GitHub App authentication details.
 
@@ -287,10 +281,10 @@ See [App_CloudRun §6.A](../App_CloudRun/App_CloudRun.md#a-cloud-build-triggers)
 
 When `enable_cloud_deploy = true` (requires `enable_cicd_trigger = true`), the CI/CD pipeline is upgraded to a managed Cloud Deploy delivery pipeline with sequential promotion stages.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_cloud_deploy` | `false` | Provisions a Cloud Deploy pipeline. Requires `enable_cicd_trigger = true`. |
-| `cloud_deploy_stages` | `[dev, staging, prod(approval)]` | Ordered promotion stages. Each: `name`, `target_name`, `service_name`, `require_approval`, `auto_promote`. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_cloud_deploy` | 7 | `false` | Provisions a Cloud Deploy pipeline. Requires `enable_cicd_trigger = true`. |
+| `cloud_deploy_stages` | 7 | `[dev, staging, prod(approval)]` | Ordered promotion stages. Each: `name`, `target_name`, `service_name`, `require_approval`, `auto_promote`. |
 
 See [App_CloudRun §6.B](../App_CloudRun/App_CloudRun.md#b-cloud-deploy-pipeline) for the approval workflow and multi-project deployment details.
 
@@ -302,10 +296,10 @@ See [App_CloudRun §6.B](../App_CloudRun/App_CloudRun.md#b-cloud-deploy-pipeline
 
 Django is stateless when sessions are stored externally (database or Redis). Scale-to-zero (`min_instance_count = 0`) is the default. Set `min_instance_count = 1` to eliminate cold starts for latency-sensitive applications, and increase `max_instance_count` for high-traffic deployments.
 
-| Variable | Default | Description |
-|---|---|---|
-| `min_instance_count` | `0` | `0` enables scale-to-zero. Set `≥1` to eliminate cold starts. |
-| `max_instance_count` | `1` | Increase for high-traffic deployments. Ensure sessions are stored in the database or Redis before scaling beyond 1. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `min_instance_count` | 3 | `0` | `0` enables scale-to-zero. Set `≥1` to eliminate cold starts. |
+| `max_instance_count` | 3 | `1` | Increase for high-traffic deployments. Ensure sessions are stored in the database or Redis before scaling beyond 1. |
 
 **Startup CPU Boost** is always enabled (hardcoded in `App_CloudRun`).
 
@@ -313,9 +307,9 @@ Django is stateless when sessions are stored externally (database or Redis). Sca
 
 Traffic splitting is supported. Because Django sessions are stored in the database or Redis (not in-process), requests for the same user can be safely routed to different revisions.
 
-| Variable | Default | Description |
-|---|---|---|
-| `traffic_split` | `[]` | Percentage-based traffic allocation across named revisions. All entries must sum to 100. Empty sends 100% to the latest revision. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `traffic_split` | 3 | `[]` | Percentage-based traffic allocation across named revisions. All entries must sum to 100. Empty sends 100% to the latest revision. |
 
 See [App_CloudRun §7.B](../App_CloudRun/App_CloudRun.md#b-traffic-splitting) for the full configuration syntax.
 
@@ -331,19 +325,19 @@ All four probes target `/healthz` by default. Implement a `/healthz` view in you
 
 **`startup_probe` / `liveness_probe` (Django_Common internal):**
 
-| Variable | Default | Description |
-|---|---|---|
-| `startup_probe` | `{ enabled=true, type="HTTP", path="/healthz", initial_delay_seconds=60, timeout_seconds=5, period_seconds=10, failure_threshold=3 }` | Used by `Django_Common` to assess whether Django has started successfully. `initial_delay_seconds=60` accounts for database connection establishment. |
-| `liveness_probe` | `{ enabled=true, type="HTTP", path="/healthz", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Used by `Django_Common` to assess whether a running Django instance is healthy. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `startup_probe` | 13 | `{ enabled=true, type="HTTP", path="/healthz", initial_delay_seconds=60, timeout_seconds=5, period_seconds=10, failure_threshold=3 }` | Used by `Django_Common` to assess whether Django has started successfully. `initial_delay_seconds=60` accounts for database connection establishment. |
+| `liveness_probe` | 13 | `{ enabled=true, type="HTTP", path="/healthz", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Used by `Django_Common` to assess whether a running Django instance is healthy. |
 
 **`startup_probe_config` / `health_check_config` (Cloud Run infrastructure):**
 
-| Variable | Default | Description |
-|---|---|---|
-| `startup_probe_config` | `{ enabled=true, path="/healthz", initial_delay_seconds=10, timeout_seconds=5, period_seconds=10, failure_threshold=10 }` | Cloud Run startup probe. Container receives no traffic until this succeeds. `failure_threshold=10` gives ~110 seconds of startup tolerance. |
-| `health_check_config` | `{ enabled=true, path="/healthz", initial_delay_seconds=15, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Cloud Run liveness probe. Container is restarted after `failure_threshold` consecutive failures. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. Alerts notify `support_users` if unreachable. |
-| `alert_policies` | `[]` | Cloud Monitoring metric alert policies. Each: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `startup_probe_config` | 13 | `{ enabled=true, path="/healthz", initial_delay_seconds=10, timeout_seconds=5, period_seconds=10, failure_threshold=10 }` | Cloud Run startup probe. Container receives no traffic until this succeeds. `failure_threshold=10` gives ~110 seconds of startup tolerance. |
+| `health_check_config` | 13 | `{ enabled=true, path="/healthz", initial_delay_seconds=15, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Cloud Run liveness probe. Container is restarted after `failure_threshold` consecutive failures. |
+| `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. Alerts notify `support_users` if unreachable. |
+| `alert_policies` | 13 | `[]` | Cloud Monitoring metric alert policies. Each: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
 
 **Differences from `App_CloudRun` probe defaults:**
 
@@ -364,11 +358,11 @@ When `enable_auto_password_rotation = true`, a zero-downtime password rotation p
 
 Django re-establishes its database connection pool on restart and reads the updated `DB_PASSWORD` from Secret Manager. No manual intervention is required.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_auto_password_rotation` | `false` | Enables automated password rotation. |
-| `rotation_propagation_delay_sec` | `90` | Seconds to wait after writing the new secret before restarting the service. |
-| `secret_rotation_period` | `'2592000s'` | Rotation frequency. Default: 30 days. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_auto_password_rotation` | 11 | `false` | Enables automated password rotation. |
+| `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after writing the new secret before restarting the service. |
+| `secret_rotation_period` | 5 | `'2592000s'` | Rotation frequency. Default: 30 days. |
 
 ---
 
@@ -382,12 +376,12 @@ Redis is **disabled by default** (`enable_redis = false`). When enabled, `Django
 
 The module does not provision a Redis instance. Provision a Cloud Memorystore for Redis instance separately and set `redis_host` to its private IP. Ensure `vpc_egress_setting = 'PRIVATE_RANGES_ONLY'` (the default) so Cloud Run can reach the private Redis endpoint.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_redis` | `false` | Injects `REDIS_HOST` and `REDIS_PORT` env vars when `true`. Your `settings.py` must consume these. |
-| `redis_host` | `""` | Redis server hostname or IP. Required when `enable_redis = true`. Typically the private IP of a Memorystore instance. |
-| `redis_port` | `6379` | Redis server TCP port. |
-| `redis_auth` | `""` | Redis AUTH password. Leave empty if the Redis instance does not require authentication. Sensitive — never stored in state. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_redis` | 20 | `false` | Injects `REDIS_HOST` and `REDIS_PORT` env vars when `true`. Your `settings.py` must consume these. |
+| `redis_host` | 20 | `""` | Redis server hostname or IP. Required when `enable_redis = true`. Typically the private IP of a Memorystore instance. |
+| `redis_port` | 20 | `6379` | Redis server TCP port. |
+| `redis_auth` | 20 | `""` | Redis AUTH password. Leave empty if the Redis instance does not require authentication. Sensitive — never stored in state. |
 
 > Note: Redis is in **group 20** in `Django_CloudRun` (vs group 10 in `App_CloudRun`).
 
@@ -397,9 +391,9 @@ The module does not provision a Redis instance. Provision a Cloud Memorystore fo
 
 **Typical use cases:** Celery workers, background task processors, Redis proxies, or any auxiliary service that needs to co-exist with the Django application.
 
-| Variable | Default | Description |
-|---|---|---|
-| `additional_services` | `[]` | List of additional Cloud Run services. Each entry: `name`, `image`, `port`, `command`, `args`, `env_vars`, `cpu_limit`, `memory_limit`, `min_instance_count`, `max_instance_count`, `ingress` (default `INGRESS_TRAFFIC_INTERNAL_ONLY`), `output_env_var_name`, `volume_mounts`, `startup_probe`, `liveness_probe`. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `additional_services` | 12 | `[]` | List of additional Cloud Run services. Each entry: `name`, `image`, `port`, `command`, `args`, `env_vars`, `cpu_limit`, `memory_limit`, `min_instance_count`, `max_instance_count`, `ingress` (default `INGRESS_TRAFFIC_INTERNAL_ONLY`), `output_env_var_name`, `volume_mounts`, `startup_probe`, `liveness_probe`. |
 
 The `output_env_var_name` field causes the additional service's URL to be injected into the main Django service as an environment variable — useful for pointing Django at a Celery broker or background worker URL.
 
@@ -409,14 +403,14 @@ When `enable_backup_import = true`, a dedicated Cloud Run Job restores an existi
 
 **Django uses `backup_file`** (not `backup_uri` as in Directus/Cyclos). `backup_file` is the filename relative to the automatically created GCS backups bucket, or the Google Drive file ID when `backup_source = 'gdrive'`.
 
-| Variable | Default | Description |
-|---|---|---|
-| `backup_schedule` | `'0 2 * * *'` | Cron expression (UTC) for automated daily backups. |
-| `backup_retention_days` | `7` | Days to retain backup files in GCS. |
-| `enable_backup_import` | `false` | Triggers a one-time restore on apply. Set `false` after a successful import. |
-| `backup_source` | `'gcs'` | `'gcs'` (filename in the auto-created backups bucket) or `'gdrive'` (Drive file ID). |
-| `backup_file` | `'backup.sql'` | Filename in the GCS backups bucket, or Google Drive file ID. Maps to `backup_file` in `App_CloudRun`. |
-| `backup_format` | `'sql'` | Backup file format. Options: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`, `auto`. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `backup_schedule` | 6 | `'0 2 * * *'` | Cron expression (UTC) for automated daily backups. |
+| `backup_retention_days` | 6 | `7` | Days to retain backup files in GCS. |
+| `enable_backup_import` | 6 | `false` | Triggers a one-time restore on apply. Set `false` after a successful import. |
+| `backup_source` | 6 | `'gcs'` | `'gcs'` (filename in the auto-created backups bucket) or `'gdrive'` (Drive file ID). |
+| `backup_file` | 6 | `'backup.sql'` | Filename in the GCS backups bucket, or Google Drive file ID. Maps to `backup_file` in `App_CloudRun`. |
+| `backup_format` | 6 | `'sql'` | Backup file format. Options: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`, `auto`. |
 
 > **Warning:** If the database already contains data, the import may produce errors. Test in a non-production environment before importing into production.
 
@@ -424,11 +418,11 @@ When `enable_backup_import = true`, a dedicated Cloud Run Job restores an existi
 
 Observability is identical to `App_CloudRun`. A Cloud Monitoring uptime check polls the Django endpoint from multiple global locations. Custom alert policies can monitor Cloud Run metrics (latency, error rate, instance count) and notify `support_users`.
 
-| Variable | Default | Description |
-|---|---|---|
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Uptime check: `enabled`, `path`, `check_interval` (e.g., `"60s"`), `timeout` (e.g., `"10s"`). |
-| `alert_policies` | `[]` | Metric alert policies. Each: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`, `aggregation_period`. |
-| `support_users` | `[]` | Email addresses notified by uptime and alert policy triggers. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Uptime check: `enabled`, `path`, `check_interval` (e.g., `"60s"`), `timeout` (e.g., `"10s"`). |
+| `alert_policies` | 13 | `[]` | Metric alert policies. Each: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`, `aggregation_period`. |
+| `support_users` | 1 | `[]` | Email addresses notified by uptime and alert policy triggers. |
 
 > Note: Observability is in **group 13** in `Django_CloudRun` (vs group 5 in `App_CloudRun`).
 
@@ -463,107 +457,168 @@ All user-configurable variables exposed by `Django_CloudRun`, sorted by UI group
 
 Variables marked **[fixed]** are hardcoded by the module and cannot be overridden.
 
-| Variable | Default | Description |
-|---|---|---|
-| `module_description` | (Django platform text) | Platform metadata: module description. |
-| `module_documentation` | (docs URL) | Platform metadata: documentation URL. |
-| `module_dependency` | `['Services_GCP']` | Platform metadata: required modules. |
-| `module_services` | (GCP service list) | Platform metadata: GCP services consumed. |
-| `credit_cost` | `100` | Platform metadata: deployment credit cost. |
-| `require_credit_purchases` | `true` | Platform metadata: enforces credit balance check. |
-| `enable_purge` | `true` | Permits full deletion of module resources on destroy. |
-| `public_access` | `false` | Platform catalogue visibility. |
-| `deployment_id` | `""` | Deployment ID suffix. Auto-generated if empty. |
-| `resource_creator_identity` | (platform SA) | Service account used by Terraform to manage resources. |
-| `project_id` | — | GCP project ID. **Required.** |
-| `tenant_deployment_id` | `'demo'` | Short suffix appended to all resource names. |
-| `support_users` | `[]` | Email addresses for monitoring alerts. |
-| `resource_labels` | `{}` | Labels applied to all provisioned resources. |
-| `application_name` | `'django'` | Base resource name. Do not change after initial deployment. |
-| `application_display_name` | `'Django Application'` | Human-readable name shown in the GCP Console. |
-| `application_description` | `'Django Application - High-level Python Web framework'` | Cloud Run service description. |
-| `application_version` | `'latest'` | Container image version tag. Pin to a specific version in production. |
-| `deploy_application` | `true` | Set `false` for infrastructure-only deployment. |
-| `container_image_source` | `'custom'` | `'custom'` (Cloud Build) or `'prebuilt'` (existing image). |
-| `container_image` | `'us-docker.pkg.dev/cloudrun/container/hello'` | Container image URI. Override with your Django application image. |
-| `container_build_config` | `{ enabled = true }` | Cloud Build config (used when `container_image_source = 'custom'`). |
-| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | CPU and memory limits. Also accepts optional `cpu_request` and `mem_request`. |
-| `min_instance_count` | `0` | `0` = scale-to-zero. Set `≥1` to eliminate cold starts. |
-| `max_instance_count` | `1` | Increase for high-traffic deployments. |
-| `container_port` | `8080` | TCP port Django listens on. Must match the WSGI/ASGI server binding. |
-| `execution_environment` | `'gen2'` | Gen2 required for NFS mounts and GCS Fuse. |
-| `timeout_seconds` | `300` | Max request duration. Increase for long reports or file processing. |
-| `enable_cloudsql_volume` | `true` | Default `true` — Auth Proxy sidecar injected; `db-init.sh` auto-detects socket vs. `127.0.0.1`. Set `false` for direct TCP. |
-| `cloudsql_volume_mount_path` | `'/cloudsql'` | Base path for the Auth Proxy Unix socket mount. |
-| `container_protocol` | `'http1'` | `'http1'` or `'h2c'`. |
-| `enable_image_mirroring` | `true` | Mirrors the container image into Artifact Registry. |
-| `max_revisions_to_retain` | `7` | Maximum number of Cloud Run revisions to keep after each deployment. Set to 0 to disable pruning. |
-| `traffic_split` | `[]` | Canary/blue-green traffic allocation. |
-| `service_annotations` | `{}` | Advanced Cloud Run annotations. |
-| `service_labels` | `{}` | Labels applied to the Cloud Run service. |
-| `ingress_settings` | `'all'` | `'all'`, `'internal'`, or `'internal-and-cloud-load-balancing'`. |
-| `vpc_egress_setting` | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` or `'ALL_TRAFFIC'`. |
-| `enable_iap` | `false` | Enables IAP natively on the Cloud Run service (BETA). |
-| `iap_authorized_users` | `[]` | Users/SAs granted IAP access. |
-| `iap_authorized_groups` | `[]` | Google Groups granted IAP access. |
-| `environment_variables` | `{}` | Plain-text env vars. Do not include `SECRET_KEY`, `DB_*`, or Redis credentials here. |
-| `secret_environment_variables` | `{}` | Secret Manager references (e.g., `{ DJANGO_SUPERUSER_PASSWORD = "django-superuser-password" }`). |
-| `secret_propagation_delay` | `30` | Seconds to wait after secret creation. |
-| `secret_rotation_period` | `'2592000s'` | Secret Manager rotation notification frequency. |
-| `backup_schedule` | `'0 2 * * *'` | Cron expression (UTC) for automated backups. |
-| `backup_retention_days` | `7` | Days to retain backup files in GCS. |
-| `enable_backup_import` | `false` | Triggers a one-time restore on apply. |
-| `backup_source` | `'gcs'` | `'gcs'` (filename in auto-created bucket) or `'gdrive'` (file ID). |
-| `backup_file` | `'backup.sql'` | Filename in the GCS backups bucket, or Google Drive file ID. |
-| `backup_format` | `'sql'` | Backup format. Options: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`, `auto`. |
-| `enable_cicd_trigger` | `false` | Provisions a Cloud Build GitHub trigger. |
-| `github_repository_url` | `""` | Full HTTPS URL of the GitHub repository. |
-| `github_token` | `""` | GitHub PAT. Required on first apply. Sensitive. |
-| `github_app_installation_id` | `""` | GitHub App installation ID. |
-| `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Advanced Cloud Build trigger config. |
-| `enable_cloud_deploy` | `false` | Provisions a Cloud Deploy progressive delivery pipeline. |
-| `cloud_deploy_stages` | `[dev, staging, prod(approval)]` | Ordered Cloud Deploy promotion stages. |
-| `enable_binary_authorization` | `false` | Enforces image attestation on deployment. |
-| `enable_custom_sql_scripts` | `false` | Runs SQL scripts from GCS after provisioning. |
-| `custom_sql_scripts_bucket` | `""` | GCS bucket containing SQL scripts. |
-| `custom_sql_scripts_path` | `""` | Path prefix within the bucket. |
-| `custom_sql_scripts_use_root` | `false` | Run scripts as the root DB user. |
-| `enable_cloud_armor` | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. |
-| `admin_ip_ranges` | `[]` | CIDR ranges exempted from WAF rules. |
-| `application_domains` | `[]` | Custom domains with Google-managed SSL certificates. |
-| `enable_cdn` | `false` | Enables Cloud CDN on the HTTPS LB backend. |
-| `max_images_to_retain` | `7` | Maximum number of recent container images to keep in Artifact Registry. Set to 0 to disable. |
-| `delete_untagged_images` | `true` | Automatically deletes untagged container images from Artifact Registry. |
-| `image_retention_days` | `30` | Days after which images are eligible for deletion from Artifact Registry. Set to 0 to disable age-based deletion. |
-| `create_cloud_storage` | `true` | Set `false` to skip GCS bucket creation. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | Additional GCS buckets to provision. |
-| `enable_nfs` | `true` | Provisions NFS shared storage for media files. Requires `gen2`. |
-| `nfs_mount_path` | `'/mnt/nfs'` | Container path where NFS is mounted. |
-| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to use instead of auto-discovering one. |
-| `nfs_instance_base_name` | `'app-nfs'` | Base name for the inline NFS GCE VM when no existing server is found. |
-| `gcs_volumes` | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). |
-| `manage_storage_kms_iam` | `false` | Creates CMEK KMS keyring and enables CMEK encryption on storage buckets. |
-| `enable_artifact_registry_cmek` | `false` | Enables CMEK encryption for container images in Artifact Registry. |
-| `application_database_name` | `'django_db'` | PostgreSQL database name. Injected as `DB_NAME`. Do not change after initial deployment. |
-| `application_database_user` | `'django_user'` | PostgreSQL application user. Injected as `DB_USER`. |
-| `database_password_length` | `32` | Auto-generated password length. Range: 16–64. |
-| `enable_auto_password_rotation` | `false` | Automated zero-downtime password rotation. |
-| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before restarting the service. |
-| `initialization_jobs` | `[db-init job (execute_on_apply=false)]` | One-shot Cloud Run Jobs. The `db-init` job is pre-configured with `execute_on_apply = false`. Pass `[]` to let `Django_Common` substitute both `db-init` and `db-migrate` jobs, each with `execute_on_apply = true`. |
-| `cron_jobs` | `[]` | Recurring scheduled Cloud Run Jobs (e.g., `clearsessions`). |
-| `additional_services` | `[]` | Additional Cloud Run services (e.g., Celery workers). Unique to `Django_CloudRun`. |
-| `startup_probe` | `{ path="/healthz", initial_delay_seconds=60, failure_threshold=3, ... }` | Django_Common startup probe. |
-| `liveness_probe` | `{ path="/healthz", initial_delay_seconds=30, failure_threshold=3, ... }` | Django_Common liveness probe. |
-| `startup_probe_config` | `{ path="/healthz", initial_delay_seconds=10, failure_threshold=10, ... }` | Cloud Run infrastructure startup probe. Maps to `startup_probe_config` in `App_CloudRun`. |
-| `health_check_config` | `{ path="/healthz", initial_delay_seconds=15, failure_threshold=3, ... }` | Cloud Run infrastructure liveness probe. Maps to `health_check_config` in `App_CloudRun`. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
-| `alert_policies` | `[]` | Cloud Monitoring metric alert policies. |
-| `enable_redis` | `false` | **Disabled by default.** Set `true` to inject `REDIS_HOST`/`REDIS_PORT`. |
-| `redis_host` | `""` | Redis hostname/IP. Required when `enable_redis = true`. |
-| `redis_port` | `6379` | Redis TCP port. |
-| `redis_auth` | `""` | Redis AUTH password. Sensitive. |
-| `enable_vpc_sc` | `false` | Registers API calls within the project's VPC-SC perimeter. |
-| `vpc_cidr_ranges` | `[]` | VPC subnet CIDR ranges for the VPC-SC network access level. Auto-discovered from the VPC when empty. |
-| `vpc_sc_dry_run` | `true` | When `true`, VPC-SC violations are logged but not blocked. Set to `false` to enforce. |
-| `organization_id` | `""` | GCP Organization ID for the VPC-SC Access Context Manager policy. Auto-discovered when empty. |
-| `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ) for all supported services. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `module_description` | 0 | (Django platform text) | Platform metadata: module description. |
+| `module_documentation` | 0 | (docs URL) | Platform metadata: documentation URL. |
+| `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
+| `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
+| `credit_cost` | 0 | `100` | Platform metadata: deployment credit cost. |
+| `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
+| `enable_purge` | 0 | `true` | Permits full deletion of module resources on destroy. |
+| `public_access` | 0 | `true` | Platform catalogue visibility. |
+| `deployment_id` | 0 | `""` | Deployment ID suffix. Auto-generated if empty. |
+| `resource_creator_identity` | 0 | (platform SA) | Service account used by Terraform to manage resources. |
+| `project_id` | 1 | — | GCP project ID. **Required.** |
+| `tenant_deployment_id` | 1 | `'demo'` | Short suffix appended to all resource names. |
+| `support_users` | 1 | `[]` | Email addresses for monitoring alerts. |
+| `resource_labels` | 1 | `{}` | Labels applied to all provisioned resources. |
+| `application_name` | 2 | `'django'` | Base resource name. Do not change after initial deployment. |
+| `application_display_name` | 2 | `'Django Application'` | Human-readable name shown in the GCP Console. |
+| `application_description` | 2 | `'Django Application - High-level Python Web framework'` | Cloud Run service description. |
+| `application_version` | 2 | `'latest'` | Container image version tag. Pin to a specific version in production. |
+| `deploy_application` | 3 | `true` | Set `false` for infrastructure-only deployment. |
+| `container_image_source` | 3 | `'custom'` | `'custom'` (Cloud Build) or `'prebuilt'` (existing image). |
+| `container_image` | 3 | `'us-docker.pkg.dev/cloudrun/container/hello'` | Container image URI. Override with your Django application image. |
+| `container_build_config` | 3 | `{ enabled = true }` | Cloud Build config (used when `container_image_source = 'custom'`). |
+| `container_resources` | 3 | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | CPU and memory limits. Also accepts optional `cpu_request` and `mem_request`. |
+| `min_instance_count` | 3 | `0` | `0` = scale-to-zero. Set `≥1` to eliminate cold starts. |
+| `max_instance_count` | 3 | `1` | Increase for high-traffic deployments. |
+| `container_port` | 3 | `8080` | TCP port Django listens on. Must match the WSGI/ASGI server binding. |
+| `execution_environment` | 3 | `'gen2'` | Gen2 required for NFS mounts and GCS Fuse. |
+| `timeout_seconds` | 3 | `300` | Max request duration. Increase for long reports or file processing. |
+| `enable_cloudsql_volume` | 3 | `true` | Default `true` — Auth Proxy sidecar injected; `db-init.sh` auto-detects socket vs. `127.0.0.1`. Set `false` for direct TCP. |
+| `cloudsql_volume_mount_path` | 3 | `'/cloudsql'` | Base path for the Auth Proxy Unix socket mount. |
+| `container_protocol` | 3 | `'http1'` | `'http1'` or `'h2c'`. |
+| `enable_image_mirroring` | 3 | `true` | Mirrors the container image into Artifact Registry. |
+| `max_revisions_to_retain` | 3 | `7` | Maximum number of Cloud Run revisions to keep after each deployment. Set to 0 to disable pruning. |
+| `traffic_split` | 3 | `[]` | Canary/blue-green traffic allocation. |
+| `service_annotations` | 3 | `{}` | Advanced Cloud Run annotations. |
+| `service_labels` | 3 | `{}` | Labels applied to the Cloud Run service. |
+| `ingress_settings` | 4 | `'all'` | `'all'`, `'internal'`, or `'internal-and-cloud-load-balancing'`. |
+| `vpc_egress_setting` | 4 | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` or `'ALL_TRAFFIC'`. |
+| `enable_iap` | 4 | `false` | Enables IAP natively on the Cloud Run service (BETA). |
+| `iap_authorized_users` | 4 | `[]` | Users/SAs granted IAP access. |
+| `iap_authorized_groups` | 4 | `[]` | Google Groups granted IAP access. |
+| `environment_variables` | 5 | `{}` | Plain-text env vars. Do not include `SECRET_KEY`, `DB_*`, or Redis credentials here. |
+| `secret_environment_variables` | 5 | `{}` | Secret Manager references (e.g., `{ DJANGO_SUPERUSER_PASSWORD = "django-superuser-password" }`). |
+| `secret_propagation_delay` | 5 | `30` | Seconds to wait after secret creation. |
+| `secret_rotation_period` | 5 | `'2592000s'` | Secret Manager rotation notification frequency. |
+| `backup_schedule` | 6 | `'0 2 * * *'` | Cron expression (UTC) for automated backups. |
+| `backup_retention_days` | 6 | `7` | Days to retain backup files in GCS. |
+| `enable_backup_import` | 6 | `false` | Triggers a one-time restore on apply. |
+| `backup_source` | 6 | `'gcs'` | `'gcs'` (filename in auto-created bucket) or `'gdrive'` (file ID). |
+| `backup_file` | 6 | `'backup.sql'` | Filename in the GCS backups bucket, or Google Drive file ID. |
+| `backup_format` | 6 | `'sql'` | Backup format. Options: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`, `auto`. |
+| `enable_cicd_trigger` | 7 | `false` | Provisions a Cloud Build GitHub trigger. |
+| `github_repository_url` | 7 | `""` | Full HTTPS URL of the GitHub repository. |
+| `github_token` | 7 | `""` | GitHub PAT. Required on first apply. Sensitive. |
+| `github_app_installation_id` | 7 | `""` | GitHub App installation ID. |
+| `cicd_trigger_config` | 7 | `{ branch_pattern = "^main$" }` | Advanced Cloud Build trigger config. |
+| `enable_cloud_deploy` | 7 | `false` | Provisions a Cloud Deploy progressive delivery pipeline. |
+| `cloud_deploy_stages` | 7 | `[dev, staging, prod(approval)]` | Ordered Cloud Deploy promotion stages. |
+| `enable_binary_authorization` | 7 | `false` | Enforces image attestation on deployment. |
+| `enable_custom_sql_scripts` | 8 | `false` | Runs SQL scripts from GCS after provisioning. |
+| `custom_sql_scripts_bucket` | 8 | `""` | GCS bucket containing SQL scripts. |
+| `custom_sql_scripts_path` | 8 | `""` | Path prefix within the bucket. |
+| `custom_sql_scripts_use_root` | 8 | `false` | Run scripts as the root DB user. |
+| `enable_cloud_armor` | 9 | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. |
+| `admin_ip_ranges` | 9 | `[]` | CIDR ranges exempted from WAF rules. |
+| `application_domains` | 9 | `[]` | Custom domains with Google-managed SSL certificates. |
+| `enable_cdn` | 9 | `false` | Enables Cloud CDN on the HTTPS LB backend. |
+| `max_images_to_retain` | 9 | `7` | Maximum number of recent container images to keep in Artifact Registry. Set to 0 to disable. |
+| `delete_untagged_images` | 9 | `true` | Automatically deletes untagged container images from Artifact Registry. |
+| `image_retention_days` | 9 | `30` | Days after which images are eligible for deletion from Artifact Registry. Set to 0 to disable age-based deletion. |
+| `create_cloud_storage` | 10 | `true` | Set `false` to skip GCS bucket creation. |
+| `storage_buckets` | 10 | `[{ name_suffix = "data" }]` | Additional GCS buckets to provision. |
+| `enable_nfs` | 10 | `true` | Provisions NFS shared storage for media files. Requires `gen2`. |
+| `nfs_mount_path` | 10 | `'/mnt/nfs'` | Container path where NFS is mounted. |
+| `nfs_instance_name` | 8 | `""` | Name of an existing NFS GCE VM to use instead of auto-discovering one. |
+| `nfs_instance_base_name` | 8 | `'app-nfs'` | Base name for the inline NFS GCE VM when no existing server is found. |
+| `gcs_volumes` | 10 | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). |
+| `manage_storage_kms_iam` | 10 | `false` | Creates CMEK KMS keyring and enables CMEK encryption on storage buckets. |
+| `enable_artifact_registry_cmek` | 10 | `false` | Enables CMEK encryption for container images in Artifact Registry. |
+| `application_database_name` | 11 | `'django_db'` | PostgreSQL database name. Injected as `DB_NAME`. Do not change after initial deployment. |
+| `application_database_user` | 11 | `'django_user'` | PostgreSQL application user. Injected as `DB_USER`. |
+| `database_password_length` | 11 | `32` | Auto-generated password length. Range: 16–64. |
+| `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. |
+| `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
+| `initialization_jobs` | 12 | `[db-init job (execute_on_apply=false)]` | One-shot Cloud Run Jobs. The `db-init` job is pre-configured with `execute_on_apply = false`. Pass `[]` to let `Django_Common` substitute both `db-init` and `db-migrate` jobs, each with `execute_on_apply = true`. |
+| `cron_jobs` | 12 | `[]` | Recurring scheduled Cloud Run Jobs (e.g., `clearsessions`). |
+| `additional_services` | 12 | `[]` | Additional Cloud Run services (e.g., Celery workers). Unique to `Django_CloudRun`. |
+| `startup_probe` | 13 | `{ path="/healthz", initial_delay_seconds=60, failure_threshold=3, ... }` | Django_Common startup probe. |
+| `liveness_probe` | 13 | `{ path="/healthz", initial_delay_seconds=30, failure_threshold=3, ... }` | Django_Common liveness probe. |
+| `startup_probe_config` | 13 | `{ path="/healthz", initial_delay_seconds=10, failure_threshold=10, ... }` | Cloud Run infrastructure startup probe. Maps to `startup_probe_config` in `App_CloudRun`. |
+| `health_check_config` | 13 | `{ path="/healthz", initial_delay_seconds=15, failure_threshold=3, ... }` | Cloud Run infrastructure liveness probe. Maps to `health_check_config` in `App_CloudRun`. |
+| `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `alert_policies` | 13 | `[]` | Cloud Monitoring metric alert policies. |
+| `enable_redis` | 20 | `false` | **Disabled by default.** Set `true` to inject `REDIS_HOST`/`REDIS_PORT`. |
+| `redis_host` | 20 | `""` | Redis hostname/IP. Required when `enable_redis = true`. |
+| `redis_port` | 20 | `6379` | Redis TCP port. |
+| `redis_auth` | 20 | `""` | Redis AUTH password. Sensitive. |
+| `enable_vpc_sc` | 21 | `false` | Registers API calls within the project's VPC-SC perimeter. |
+| `vpc_cidr_ranges` | 21 | `[]` | VPC subnet CIDR ranges for the VPC-SC network access level. Auto-discovered from the VPC when empty. |
+| `vpc_sc_dry_run` | 21 | `true` | When `true`, VPC-SC violations are logged but not blocked. Set to `false` to enforce. |
+| `organization_id` | 21 | `""` | GCP Organization ID for the VPC-SC Access Context Manager policy. Auto-discovered when empty. |
+| `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ) for all supported services. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+The table below identifies the variables most commonly misconfigured in `Django_CloudRun` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong. For full variable details see Section 10 (Variable Reference) and the [App_CloudRun configuration guide](../App_CloudRun/App_CloudRun.md).
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `application_name` | `"django"` (default; do not change after first deploy) | **Critical** | Embedded in Cloud Run service name, Artifact Registry repo, Secret Manager secrets, Cloud SQL database. Changing causes all named resources to be recreated — complete data loss. |
+| `tenant_deployment_id` | Match environment: `"prod"`, `"staging"`, `"dev"` | **Critical** | Changing after first deploy recreates all named resources. The old Cloud SQL instance (with all data) is orphaned and a new empty one is created. |
+| `application_version` | A pinned tag (e.g. `"1.2.3"`); avoid `"latest"` in production | **Medium** | `"latest"` makes rollback ambiguous — Cloud Run cannot distinguish between two `"latest"` revisions. Always pin to a meaningful version in production. |
+| `container_port` | `8080` (Django Gunicorn/Uvicorn default) | **Critical** | Mismatch causes the Cloud Run startup probe to fail immediately. All requests return 502. The revision never becomes healthy and continuously restarts. |
+| `min_instance_count` | `0` for dev (scale-to-zero); `1` for production (eliminate cold starts) | **Medium** | `0` in production: cold starts of 3–10 s for Django (image pull + Django setup + DB connection). Users experience slow first-request latency after idle periods. `≥ 1` with `cpu_always_allocated = false` increases cost — CPU is billed even when idle. |
+| `max_instance_count` | `≤ Cloud SQL max_connections ÷ avg_DB_connections_per_instance` | **High** | Exceeding Cloud SQL's connection limit causes `FATAL: sorry, too many clients already` for all instances simultaneously. Django's database backend raises `OperationalError` on every request until a connection is freed. |
+| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` for basic; increase for media processing | **High** | Memory too low: Django is OOMKilled (exit code 137) when processing large uploads or loading large querysets into memory. CPU too low: Gunicorn workers become CPU-throttled — request queuing and high latency. |
+| `application_database_name` | `"django_db"` (default; do not change after first deploy) | **Critical** | Renaming creates a new empty database. Django's `db-init` job runs against the new (empty) database and applies the schema fresh. All production data remains in the old database (now unreferenced) and is eventually deleted. |
+| `application_database_user` | `"django_user"` (default; do not change after first deploy) | **High** | A new user is created without privileges. Django cannot authenticate until `db-init` re-runs grants. Changing in production causes an outage until grants are applied. |
+| `enable_cloudsql_volume` | `true` (default; Cloud SQL Auth Proxy — secure, recommended) | **High** | `false`: Django must reach Cloud SQL's private IP directly over TCP. If Private Service Access is not configured correctly, all DB connections fail. IAM-based auth is lost; password-only auth is required. |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` (default; `db-init.sh` uses this path) | **Critical** | Wrong path: `db-init.sh` cannot find the Auth Proxy socket. DB init fails. The Cloud Run revision starts but crashes on the first database call with `no such file or directory`. |
+| `execution_environment` | `"gen2"` (required for NFS and GCS Fuse mounts) | **High** | `"gen1"` with `enable_nfs = true`: NFS mount fails at container startup. All instances fail to start. Django cannot write media files. |
+| `enable_nfs` | `true` (default; required for shared media files across instances) | **High** | `false` with `max_instance_count > 1`: each Cloud Run instance has its own ephemeral filesystem. Uploaded media files written by one instance are not visible to others. Users get 404 for recently uploaded files. After any instance restart, all files on that instance are gone. |
+| `nfs_mount_path` | `"/mnt/nfs"` (must match `MEDIA_ROOT` in `settings.py`) | **High** | Mismatch with `MEDIA_ROOT`: Django writes media files to the wrong path (ephemeral local storage). Files are lost on instance restart. If `MEDIA_ROOT` points to a non-existent path, `FileNotFoundError` on every file write. |
+| `ingress_settings` | `"all"` for public-facing; `"internal-and-cloud-load-balancing"` when using Cloud Armor | **Medium** | `"all"` with Cloud Armor enabled: traffic can bypass the load balancer via the direct `*.run.app` URL, circumventing WAF protection. Use `"internal-and-cloud-load-balancing"` to force all traffic through the LB+Armor path. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` (default; routes only RFC 1918 addresses via VPC) | **Medium** | `"PRIVATE_RANGES_ONLY"` when Redis or Cloud SQL is on a private IP that is not in RFC 1918: connections fail. Use `"ALL_TRAFFIC"` to route all egress via VPC (required for Memorystore or Cloud SQL on non-RFC-1918 private IP ranges). |
+| `startup_probe_config.path` | `"/healthz"` — implement this endpoint in Django to return HTTP 200 | **Critical** | If `"/healthz"` returns 404 (route not defined in Django): Cloud Run never routes traffic to the instance. Revision is healthy at the infrastructure level but receives a constant restart loop. Implement the view with `return HttpResponse("ok")`. |
+| `health_check_config.path` | `"/healthz"` — must be a fast, non-blocking endpoint | **High** | If the health endpoint makes a database call that times out: all instances are restarted simultaneously by the liveness probe. Cascading restarts can cause a complete outage. |
+| `startup_probe_config.failure_threshold` | `10` (default; ~110 s tolerance) — increase to `20` if Django takes longer than 100 s to start | **High** | Too low with Django running migrations at startup: the probe kills the instance before migrations complete. Restart loop prevents the service from ever becoming healthy. Increase `failure_threshold` or `period_seconds` instead of `initial_delay_seconds` to give Django more time without unnecessarily blocking traffic. |
+| `secret_environment_variables` | Use for `DJANGO_SUPERUSER_PASSWORD` and any API keys | **High** | Credentials in `environment_variables` instead of `secret_environment_variables`: visible in the GCP Console revision details, in Cloud Logging if the app prints env vars (e.g. `manage.py diffsettings`), and in Terraform state in plaintext. |
+| `enable_redis` | `false` (default); set `true` when using Redis-backed Django sessions or Celery | **Medium** | Left `false` when Django is configured to use Redis for sessions or cache (`CACHES`, `SESSION_ENGINE`): Django raises `redis.exceptions.ConnectionRefusedError` on every request that touches the cache/session. Symptom: users cannot log in; uncaught exceptions on cached views. |
+| `redis_host` | Private IP of Cloud Memorystore Redis instance | **High** | Wrong IP: all Django cache reads/writes fail. Sessions are invalidated. If `SESSION_ENGINE` is `django.contrib.sessions.backends.cache`, **all users are logged out on every request**. If using database-backed sessions as fallback, DB load spikes due to session table queries. |
+| `enable_cloud_armor` | `false` for internal; `true` for production public-facing Django | **High** | Leaving `false` for a public Django admin (`/admin/`): no rate limiting, no WAF protection. Django admin is susceptible to brute-force login attacks and SQL injection probes. Enable Cloud Armor and restrict `/admin/` to `admin_ip_ranges`. |
+| `admin_ip_ranges` | Your office VPN CIDR + CI/CD IPs | **High** | Empty with `enable_cloud_armor = true`: no bypass rule. Django's own health check traffic from GCP health probers is allowed (default allow rule), but your admin access may be blocked if a WAF rule matches your traffic pattern during a pentest or unusual browsing session. |
+| `enable_iap` | `false` for public; `true` for internal-only Django deployments | **High** | `true` without entries in `iap_authorized_users`/`iap_authorized_groups`: all requests (including yours) return HTTP 403. Add at least `"user:your-email@example.com"` before enabling. |
+| `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` until CI pipeline attests images; then `"REQUIRE_ATTESTATION"` | **Critical** | `"REQUIRE_ATTESTATION"` without a functioning Cloud Build attestation step: no new Django image can be deployed. Rollbacks also fail. The only recovery is to temporarily revert to `"ALWAYS_ALLOW"`. |
+| `enable_backup_import` | `false` after a successful restore — **set back to `false` immediately** | **High** | Leaving `true` after a successful import: the restore job runs on every `tofu apply`, overwriting live Django data (including new user registrations, orders, and content) with the stale backup. |
+| `backup_format` | `"sql"` for plain SQL; `"auto"` for mixed formats | **High** | `"sql"` for a gzip-compressed dump: import fails with a parse error. The DB remains in its pre-import state (safe, but restore did not succeed). Use `"gz"` or `"auto"` for compressed dumps. |
+| `enable_auto_password_rotation` | `false` initially; enable once validated | **High** | `rotation_propagation_delay_sec = 90` (default) is too short for Django apps with long-lived DB connection pools: the old password is disabled before all Gunicorn workers have re-established connections. Workers throw `authentication failed` errors until they restart. Increase to `120`–`180` for production. |
+| `enable_vpc_sc` | `false` until VPC-SC perimeter exists; then `vpc_sc_dry_run = true` first | **Critical** | `enable_vpc_sc = true` with `vpc_sc_dry_run = false` on first enable: Django Cloud Run SA, Cloud Build SA, and your admin IP must all be in the access level. Any missing identity causes API calls to be blocked immediately — Cloud SQL, Secret Manager, and Artifact Registry access all fail, causing a complete outage. |
+| `enable_audit_logging` | `false` for dev; `true` for regulated production environments | **Low** | `false` in production: `SECRET_KEY` reads, `DB_PASSWORD` accesses, and KMS key usage are not logged. Compliance audits (SOC 2, HIPAA) may flag the absence of these logs. Enabling increases Cloud Logging costs but is strongly recommended for regulated workloads. |
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

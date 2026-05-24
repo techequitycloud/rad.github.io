@@ -1,12 +1,10 @@
-# Kestra GKE Module
+# Kestra_GKE Module — Configuration Guide
 
-Kestra is an open-source data orchestration and scheduling platform (Apache 2.0 licence). It allows you to build, schedule, and monitor ETL/ELT pipelines, batch jobs, and workflow automation through a YAML-based flow definition and a rich plugin ecosystem. This module deploys Kestra on **GKE Autopilot** in **standalone mode** (server, worker, and scheduler in a single container) with a PostgreSQL 15 backend and GCS artifact storage.
+Kestra is an open-source, declarative, event-driven workflow orchestration platform (Apache 2.0 licence) with **26,000+ GitHub stars**, trusted by more than 30,000 organisations including Bloomberg, Toyota, BHP, JPMorgan Chase, Apple, and Crédit Agricole. The platform executed **2 billion workflows in 2025** (20× year-on-year growth) and raised a **$25M Series A in March 2026**. BHP's adoption replaced VMware vRA entirely and cut infrastructure provisioning from 6 months to 6 days. It allows you to build, schedule, and monitor ETL/ELT pipelines, data quality checks, agentic AI pipelines, and workflow automation through a YAML-based flow definition and a rich plugin ecosystem. This module deploys Kestra on **GKE Autopilot** in **standalone mode** (server, worker, and scheduler in a single container) with a PostgreSQL 15 backend and GCS artifact storage.
 
 `Kestra_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS, secrets, CI/CD) and a `Kestra_Common` sub-module to supply Kestra-specific application configuration, secret generation, and storage bucket definitions.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
-
-> This guide documents variables that are **unique to `Kestra_GKE`** or that have **Kestra-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
 ---
 
@@ -35,7 +33,7 @@ This guide documents variables that are **unique to `Kestra_GKE`** or that have 
 
 ---
 
-## 1. Platform-Managed Behaviours
+## Platform-Managed Behaviours
 
 The following behaviours are set automatically and cannot be overridden via user variables.
 
@@ -53,7 +51,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## 2. Module Metadata (Group 0)
+## §1 · Module Metadata (Group 0)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -62,15 +60,15 @@ The following behaviours are set automatically and cannot be overridden via user
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed first. |
 | `module_services` | `["GKE Autopilot", "Kubernetes Deployments", "Kubernetes Services", "Kubernetes Jobs", "HPA", "Cloud Build", "Artifact Registry", "Cloud Storage", "GCS Fuse CSI Driver", "Cloud SQL", "Cloud SQL Auth Proxy", "PostgreSQL 15", "VPC Network", "Workload Identity", "Secret Manager", "Cloud IAM", "Service Accounts", "Cloud Logging", "Cloud Monitoring", "Health Checks", "Webhooks", "Filestore (NFS)"]` | GCP services consumed. |
 | `credit_cost` | `100` | Platform credits consumed on deployment. |
-| `require_credit_purchases` | `true` | Enforces credit balance check before deploy. |
+| `require_credit_purchases` | `false` | Enforces credit balance check before deploy. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
-| `public_access` | `false` | Controls platform catalogue visibility. |
+| `public_access` | `true` | Controls platform catalogue visibility. |
 | `deployment_id` | `""` | Auto-generated suffix. Set explicitly to pin resource names across Terraform runs. |
 | `resource_creator_identity` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform. |
 
 ---
 
-## 3. Project & Identity (Group 1)
+## §2 · Project & Identity (Group 1)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -78,11 +76,11 @@ The following behaviours are set automatically and cannot be overridden via user
 | `tenant_deployment_id` | `"demo"` | Short suffix appended to resource names. 1–20 lowercase alphanumeric characters and hyphens. |
 | `support_users` | `[]` | Emails granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `{}` | Labels applied to all module-managed resources. |
-| `deployment_region` | `"us-central1"` | Fallback region when network discovery cannot determine region from VPC subnets. |
+| `region` | `"us-central1"` | Fallback region when network discovery cannot determine region from VPC subnets. |
 
 ---
 
-## 4. Application Identity (Group 2)
+## §3 · Application Identity (Group 2)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -94,7 +92,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## 5. Runtime & Scaling (Group 3)
+## §4 · Runtime & Scaling (Group 3)
 
 | Variable | Default | Options / Format | Description |
 |---|---|---|---|
@@ -113,7 +111,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## 6. GKE Backend Configuration (Group 5)
+## §5 · GKE Backend Configuration (Group 5)
 
 | Variable | Default | Options / Format | Description |
 |---|---|---|---|
@@ -130,7 +128,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## 7. Environment Variables & Secrets (Group 4)
+## §6 · Environment Variables & Secrets (Group 4)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -145,7 +143,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## 8. Access & Networking
+## §7 · Access & Networking
 
 ### Identity-Aware Proxy (Group 19)
 
@@ -187,7 +185,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 ---
 
-## 9. Database Backend (Group 15)
+## §8 · Database Backend (Group 15)
 
 Kestra requires PostgreSQL for both its execution queue and flow repository.
 
@@ -210,7 +208,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## 10. Storage (Groups 12–13)
+## §9 · Storage (Groups 12–13)
 
 ### NFS (Group 12)
 
@@ -235,7 +233,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## 11. Backup & Maintenance (Group 16)
+## §10 · Backup & Maintenance (Group 16)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -249,7 +247,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## 12. CI/CD & GitHub Integration (Group 11)
+## §11 · CI/CD & GitHub Integration (Group 11)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -265,7 +263,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## 13. Custom SQL (Group 17)
+## §12 · Custom SQL (Group 17)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -276,7 +274,7 @@ Kestra requires PostgreSQL for both its execution queue and flow repository.
 
 ---
 
-## 14. Workload Automation (Group 10)
+## §13 · Workload Automation (Group 10)
 
 The default `db-init` job is supplied automatically by `Kestra_Common` when `initialization_jobs` is empty.
 
@@ -288,7 +286,7 @@ The default `db-init` job is supplied automatically by `Kestra_Common` when `ini
 
 ---
 
-## 15. Reliability Policies (Group 8)
+## §14 · Reliability Policies (Group 8)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -299,7 +297,7 @@ The default `db-init` job is supplied automatically by `Kestra_Common` when `ini
 
 ---
 
-## 16. StatefulSet Configuration (Group 14)
+## §15 · StatefulSet Configuration (Group 14)
 
 Only relevant when `workload_type = "StatefulSet"`.
 
@@ -315,7 +313,7 @@ Only relevant when `workload_type = "StatefulSet"`.
 
 ---
 
-## 17. Observability & Health (Group 9)
+## §16 · Observability & Health (Group 9)
 
 Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — the default startup probe allows up to ~14 minutes (initial_delay=30 + period=20 × failure_threshold=40).
 
@@ -339,7 +337,7 @@ Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — 
 
 ---
 
-## 18. Resource Quota (Group 7)
+## §17 · Resource Quota (Group 7)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -353,7 +351,7 @@ Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — 
 
 ---
 
-## 19. Validation Guards
+## §18 · Validation Guards
 
 `validation.tf` enforces the following cross-variable conditions at plan time:
 
@@ -364,7 +362,7 @@ Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — 
 
 ---
 
-## 20. Outputs
+## §19 · Outputs
 
 | Output | Description | Sensitive |
 |---|---|---|

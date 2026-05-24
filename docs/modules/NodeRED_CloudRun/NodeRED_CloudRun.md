@@ -1,6 +1,6 @@
-# NodeRED CloudRun Module
+# NodeRED_CloudRun Module — Configuration Guide
 
-Node-RED is a leading open-source flow-based programming tool designed for wiring together IoT devices, APIs, and online services through a browser-based visual editor. This module deploys Node-RED on **Google Cloud Run Gen2** with NFS-backed persistent flow storage and optional Redis context storage.
+Node-RED is a leading open-source, browser-based flow programming tool originally developed by IBM, with 4,000+ community connector nodes and a growing ecosystem spanning smart manufacturing and edge computing. It is the de facto standard for IoT, IIoT, and industrial automation — integrating legacy OT systems (Modbus, OPC-UA, Siemens S7, MQTT) with modern cloud services. Gartner projects that 70%+ of all applications will use low-code technologies by 2026, and the low-code platform market is tracking toward $16.5B by 2027. This module deploys Node-RED on **Google Cloud Run Gen2** with NFS-backed persistent flow storage and optional Redis context storage.
 
 `NodeRED_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP infrastructure provisioning to App_CloudRun (Cloud Run service, networking, Secret Manager, GCS, NFS, CI/CD) and uses a `NodeRED_Common` sub-module to supply Node-RED-specific application configuration. The `NodeRED_Common` outputs feed into App_CloudRun's `application_config`, `module_storage_buckets`, and `scripts_dir` inputs.
 
@@ -9,9 +9,9 @@ Node-RED is a leading open-source flow-based programming tool designed for wirin
 
 ---
 
-## 1. Module Overview
+## §1 · Module Overview
 
-### A. What `NodeRED_CloudRun` provides
+### What `NodeRED_CloudRun` provides
 
 - A **Node-RED container** (prebuilt `nodered/node-red` image from Docker Hub, `enable_image_mirroring = true`) deployed on Cloud Run Gen2, listening on port `1880`.
 - **NFS (Cloud Filestore)** enabled by default (`enable_nfs = true`) and mounted at `/data`. Node-RED stores all persistent data in `/data` — flows, credentials, installed nodes, and settings. NFS is the recommended backend as it survives container restarts and new deployments.
@@ -21,7 +21,7 @@ Node-RED is a leading open-source flow-based programming tool designed for wirin
 - Scale-to-zero support (`min_instance_count = 0`). Because Node-RED flows are stateful, `max_instance_count` defaults to `1` — increase only if using Redis-backed external context storage.
 - No Cloud SQL is required or used. `enable_cloudsql_volume` defaults to `false`.
 
-### B. Key differences from `App_CloudRun` defaults
+### Key differences from `App_CloudRun` defaults
 
 | Feature | App_CloudRun default | NodeRED_CloudRun default |
 |---|---|---|
@@ -40,7 +40,7 @@ Node-RED is a leading open-source flow-based programming tool designed for wirin
 
 ---
 
-## 2. IAM & Project Identity
+## §2 · IAM & Project Identity
 
 | Variable | Default | Description |
 |---|---|---|
@@ -54,16 +54,16 @@ Node-RED is a leading open-source flow-based programming tool designed for wirin
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed first. |
 | `module_services` | *(Cloud Run, NFS, GCS, etc.)* | GCP services used by this module. |
 | `credit_cost` | `75` | Platform credits consumed on deployment. |
-| `require_credit_purchases` | `true` | Enforces credit balance check. |
+| `require_credit_purchases` | `false` | Enforces credit balance check. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
-| `public_access` | `false` | Visibility to all platform users. |
+| `public_access` | `true` | Visibility to all platform users. |
 | `deployment_id` | `""` | Optional fixed deployment ID. Auto-generated when blank. |
 
 ---
 
-## 3. Core Service Configuration
+## §3 · Core Service Configuration
 
-### A. Application Identity
+### §3.A · Application Identity
 
 | Variable | Default | Description |
 |---|---|---|
@@ -71,7 +71,7 @@ Node-RED is a leading open-source flow-based programming tool designed for wirin
 | `display_name` | `"Node-RED"` | Human-readable name in the platform UI and Cloud Run console. |
 | `application_version` | `"latest"` | Container image version tag. Maps to the `nodered/node-red` Docker Hub tag (e.g. `"4.0.9"`, `"3.1.14"`, `"latest"`). |
 
-### B. Resource Sizing & Runtime
+### §3.B · Resource Sizing & Runtime
 
 | Variable | Default | Description |
 |---|---|---|
@@ -90,7 +90,7 @@ Node-RED is a leading open-source flow-based programming tool designed for wirin
 | `service_annotations` | `{}` | Custom annotations applied to the Cloud Run service resource. |
 | `service_labels` | `{}` | Custom labels applied to the Cloud Run service resource. |
 
-### C. Environment Variables & Secrets
+### §3.C · Environment Variables & Secrets
 
 The following variable is **always injected automatically** and must not be set manually in `environment_variables`:
 
@@ -105,7 +105,7 @@ The following variable is **always injected automatically** and must not be set 
 | `secret_propagation_delay` | `30` | Seconds to wait after secret creation before dependent operations proceed. |
 | `secret_rotation_period` | `"2592000s"` | Rotation notification period (30 days). Set `null` to disable. Must use `"Ns"` format. |
 
-### D. Networking
+### §3.D · Networking
 
 | Variable | Default | Description |
 |---|---|---|
@@ -116,7 +116,7 @@ The following variable is **always injected automatically** and must not be set 
 
 > **IAP and Node-RED:** Enabling `enable_iap = true` adds Google identity authentication in front of the Cloud Run URL. This is **recommended for production** — the Node-RED editor exposes full flow editing and credential management and should not be left publicly accessible without authentication.
 
-### E. Initialization & Bootstrap
+### §3.E · Initialization & Bootstrap
 
 | Variable | Default | Description |
 |---|---|---|
@@ -125,9 +125,9 @@ The following variable is **always injected automatically** and must not be set 
 
 ---
 
-## 4. Advanced Security
+## §4 · Advanced Security
 
-### A. Credential Secret Management
+### §4.A · Credential Secret Management
 
 `NODE_RED_CREDENTIAL_SECRET` is auto-generated by App_CloudRun using a random password of `database_password_length` characters. This secret encrypts all credentials stored in Node-RED flows (passwords, API keys). **Back up this secret value before destroying the module** — flows with encrypted credentials cannot be restored without the original key.
 
@@ -139,7 +139,7 @@ The following variable is **always injected automatically** and must not be set 
 | `secret_rotation_period` | `"2592000s"` | Duration between Secret Manager rotation notifications (30 days). |
 | `secret_propagation_delay` | `30` | Seconds to wait after secret creation before dependent operations proceed. |
 
-### B. Identity-Aware Proxy (IAP)
+### §4.B · Identity-Aware Proxy (IAP)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -147,7 +147,7 @@ The following variable is **always injected automatically** and must not be set 
 | `iap_authorized_users` | `[]` | Individual users or service accounts. Format: `"user:email@example.com"`. |
 | `iap_authorized_groups` | `[]` | Google Groups. Format: `"group:name@example.com"`. |
 
-### C. Cloud Armor & CDN
+### §4.C · Cloud Armor & CDN
 
 | Variable | Default | Description |
 |---|---|---|
@@ -156,7 +156,7 @@ The following variable is **always injected automatically** and must not be set 
 | `enable_cdn` | `false` | Enables Cloud CDN. Only active when `enable_cloud_armor = true`. |
 | `admin_ip_ranges` | `[]` | CIDR ranges for administrative access bypass. |
 
-### D. VPC Service Controls
+### §4.D · VPC Service Controls
 
 | Variable | Default | Description |
 |---|---|---|
@@ -166,7 +166,7 @@ The following variable is **always injected automatically** and must not be set 
 | `organization_id` | `""` | GCP Organization ID for Access Context Manager. Auto-discovered when empty. |
 | `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs. |
 
-### E. Binary Authorization
+### §4.E · Binary Authorization
 
 | Variable | Default | Description |
 |---|---|---|
@@ -174,16 +174,16 @@ The following variable is **always injected automatically** and must not be set 
 
 ---
 
-## 5. Traffic & Ingress
+## §5 · Traffic & Ingress
 
-### A. Ingress Controls
+### §5.A · Ingress Controls
 
 | Variable | Default | Options | Description |
 |---|---|---|---|
 | `ingress_settings` | `"all"` | `all` / `internal` / `internal-and-cloud-load-balancing` | Controls which traffic sources reach the service. |
 | `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | `ALL_TRAFFIC` / `PRIVATE_RANGES_ONLY` | Controls VPC routing for outbound traffic. |
 
-### B. Traffic Management
+### §5.B · Traffic Management
 
 | Variable | Default | Description |
 |---|---|---|
@@ -192,9 +192,9 @@ The following variable is **always injected automatically** and must not be set 
 
 ---
 
-## 6. CI/CD Integration
+## §6 · CI/CD Integration
 
-### A. GitHub & Cloud Build
+### §6.A · GitHub & Cloud Build
 
 Node-RED uses the **prebuilt Docker Hub image** (`enable_image_mirroring = true`). No custom Dockerfile build is required unless extending the base image.
 
@@ -206,7 +206,7 @@ Node-RED uses the **prebuilt Docker Hub image** (`enable_image_mirroring = true`
 | `github_app_installation_id` | `""` | Cloud Build GitHub App installation ID. Alternative to PAT for organisation repositories. |
 | `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Controls branch filter, included/ignored paths, trigger name, and build substitutions. |
 
-### B. Cloud Deploy Pipelines
+### §6.B · Cloud Deploy Pipelines
 
 | Variable | Default | Description |
 |---|---|---|
@@ -215,9 +215,9 @@ Node-RED uses the **prebuilt Docker Hub image** (`enable_image_mirroring = true`
 
 ---
 
-## 7. Reliability & Data
+## §7 · Reliability & Data
 
-### A. Health Probes
+### §7.A · Health Probes
 
 Node-RED responds to HTTP GET on `/` with the editor UI. This path is used for both startup and liveness probes. A 30-second initial delay is sufficient as Node-RED starts quickly.
 
@@ -228,7 +228,7 @@ Node-RED responds to HTTP GET on `/` with the editor UI. This path is used for b
 | `uptime_check_config` | `{ enabled=true, path="/", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check from global locations. |
 | `alert_policies` | `[]` | List of metric-threshold alert policies. Each entry requires `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
 
-### B. Storage (NFS & GCS)
+### §7.B · Storage (NFS & GCS)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -242,7 +242,7 @@ Node-RED responds to HTTP GET on `/` with the editor UI. This path is used for b
 | `manage_storage_kms_iam` | `false` | Creates a CMEK KMS keyring and enables CMEK encryption on all storage buckets. |
 | `enable_artifact_registry_cmek` | `false` | Enables CMEK encryption for the Artifact Registry repository. |
 
-### C. Backup & Recovery
+### §7.C · Backup & Recovery
 
 | Variable | Default | Description |
 |---|---|---|
@@ -255,9 +255,9 @@ Node-RED responds to HTTP GET on `/` with the editor UI. This path is used for b
 
 ---
 
-## 8. Integrations
+## §8 · Integrations
 
-### A. Redis (Context Storage)
+### §8.A · Redis (Context Storage)
 
 Redis allows Node-RED to store flow context data externally, enabling it to persist across restarts and (optionally) be shared between multiple instances. When `enable_redis = true` and `redis_host = ""`, configure `redis_host` explicitly to point at a Redis or Cloud Memorystore instance. Unlike N8N, there is no automatic NFS-server-IP fallback for `redis_host` — the validation guard (`validation.tf`) enforces that at least one of `redis_host` or `enable_nfs` is set when `enable_redis = true`.
 
@@ -268,7 +268,7 @@ Redis allows Node-RED to store flow context data externally, enabling it to pers
 | `redis_port` | `"6379"` | Redis TCP port (string). |
 | `redis_auth` | `""` | Redis authentication password. Sensitive. Leave empty if authentication is not configured. |
 
-### B. Custom SQL (Unused)
+### §8.B · Custom SQL (Unused)
 
 Node-RED has no relational database. These variables are exposed for API compatibility with App_CloudRun and have no effect:
 
@@ -279,7 +279,7 @@ Node-RED has no relational database. These variables are exposed for API compati
 | `custom_sql_scripts_path` | `""` | No-op for Node-RED. |
 | `custom_sql_scripts_use_root` | `false` | No-op for Node-RED. |
 
-### C. Artifact Registry Image Management
+### §8.C · Artifact Registry Image Management
 
 | Variable | Default | Description |
 |---|---|---|
@@ -287,7 +287,7 @@ Node-RED has no relational database. These variables are exposed for API compati
 | `delete_untagged_images` | `true` | Automatically deletes untagged container images. |
 | `image_retention_days` | `30` | Days after which images are eligible for age-based deletion. 0 disables. |
 
-### D. Observability
+### §8.D · Observability
 
 | Variable | Default | Description |
 |---|---|---|
@@ -298,7 +298,7 @@ Node-RED has no relational database. These variables are exposed for API compati
 
 ---
 
-## 9. Platform-Managed Behaviours
+## §9 · Platform-Managed Behaviours
 
 The following are set automatically and cannot be overridden via input variables.
 
@@ -326,7 +326,7 @@ The following are set automatically and cannot be overridden via input variables
 
 ---
 
-## 10. Variable Reference
+## §10 · Variable Reference
 
 Complete list of all input variables, grouped by UI section.
 
@@ -337,9 +337,9 @@ Complete list of all input variables, grouped by UI section.
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
 | 0 | `credit_cost` | number | `75` | — |
-| 0 | `require_credit_purchases` | bool | `true` | — |
+| 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
-| 0 | `public_access` | bool | `false` | — |
+| 0 | `public_access` | bool | `true` | — |
 | 0 | `deployment_id` | string | `""` | yes |
 | 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
 | 1 | `project_id` | string | — | — |
@@ -429,7 +429,7 @@ Complete list of all input variables, grouped by UI section.
 
 ---
 
-## 11. Outputs
+## §11 · Outputs
 
 | Output | Description |
 |---|---|
@@ -437,7 +437,7 @@ Complete list of all input variables, grouped by UI section.
 
 ---
 
-## 12. Configuration Examples
+## §12 · Configuration Examples
 
 ### Basic Deployment
 
@@ -508,3 +508,24 @@ alert_policies = [
   }
 ]
 ```
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

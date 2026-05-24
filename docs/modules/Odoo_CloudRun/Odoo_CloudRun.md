@@ -1,4 +1,6 @@
-# Odoo CloudRun Module
+# Odoo_CloudRun Module — Configuration Guide
+
+Odoo is an open-source ERP suite with 16M+ users, 170,000+ enterprise customers across 5 continents, and €650M in 2025 billing revenue growing at 42% CAGR — adding 13,000 new clients per month. It controls 5.77% global ERP market share and 12–15% of the SME segment, and is targeting €1B in revenue by 2027. Odoo is the primary open-source disruptor against SAP, Oracle, and Microsoft Dynamics, delivering CRM, accounting, inventory, manufacturing, HR, and e-commerce in one integrated suite with zero licensing cost.
 
 `Odoo_CloudRun` deploys **Odoo Community Edition** on Google Cloud Run, backed by
 Cloud SQL PostgreSQL and a Cloud Filestore NFS volume for shared file storage.
@@ -12,11 +14,9 @@ The module uses `Odoo_Common` as a sub-module to resolve application configurati
 secrets, and storage bucket lists, which are then passed into `App_CloudRun` via
 `application_config`, `module_secret_env_vars`, and `module_storage_buckets`.
 
-> This guide documents variables that are **unique to `Odoo_CloudRun`** or that have **Odoo-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
-
 ---
 
-## 1. Module Overview
+## §1 · Module Overview
 
 | Attribute | Value |
 |---|---|
@@ -33,7 +33,7 @@ secrets, and storage bucket lists, which are then passed into `App_CloudRun` via
 | **Platform-managed jobs** | `nfs-init` (directory setup) + `db-init` (database creation) |
 | **Platform-managed secret** | `ODOO_MASTER_PASS` (auto-generated, stored in Secret Manager) |
 
-### A. Wrapper Architecture
+### Wrapper Architecture
 
 ```
 Odoo_CloudRun (variables.tf / odoo.tf / main.tf)
@@ -47,21 +47,9 @@ Odoo_CloudRun (variables.tf / odoo.tf / main.tf)
 - `storage_buckets` → merged into `module_storage_buckets`
 - `path` → used to resolve `scripts_dir`
 
-### B. Key differences from `App_CloudRun` defaults
-
-| Feature | App_CloudRun default | Odoo_CloudRun default |
-|---|---|---|
-| `container_port` | `8080` | `8069` |
-| `memory_limit` | `"512Mi"` | `"1Gi"` |
-| `enable_cloudsql_volume` | `false` | `true` |
-| `enable_image_mirroring` | `true` | `true` |
-| Database type | user-configured | PostgreSQL (required) |
-| Platform-managed jobs | none | `nfs-init` + `db-init` |
-| Platform-managed secret | none | `ODOO_MASTER_PASS` (auto-generated) |
-
 ---
 
-## 2. IAM & Project Identity
+## §2 · IAM & Project Identity
 
 | Variable | Default | Description |
 |---|---|---|
@@ -74,9 +62,9 @@ Odoo_CloudRun (variables.tf / odoo.tf / main.tf)
 
 ---
 
-## 3. Core Service Configuration
+## §3 · Core Service Configuration
 
-### A. Application Identity
+### §3.A · Application Identity
 
 | Variable | Default | Description |
 |---|---|---|
@@ -89,7 +77,7 @@ Odoo_CloudRun (variables.tf / odoo.tf / main.tf)
 as `display_name` and `description`, then merged into the `application_config` object
 consumed by `App_CloudRun`.
 
-### B. Resource Sizing
+### §3.B · Resource Sizing
 
 Odoo is memory-intensive. Its Python workers and database connection pool typically
 consume 1.5–3 Gi under normal load. `cpu_limit` and `memory_limit` are dedicated
@@ -113,7 +101,7 @@ min_instance_count = 1
 max_instance_count = 3   # only after configuring Redis
 ```
 
-### C. Environment Variables & Secrets
+### §3.C · Environment Variables & Secrets
 
 | Variable | Default | Description |
 |---|---|---|
@@ -147,7 +135,7 @@ explicit_secret_values = {
 }
 ```
 
-### D. Networking
+### §3.D · Networking
 
 | Variable | Default | Description |
 |---|---|---|
@@ -158,7 +146,7 @@ explicit_secret_values = {
 | `cloudsql_volume_mount_path` | `"/cloudsql"` | Path where the Cloud SQL Auth Proxy Unix socket is mounted. Only used when `enable_cloudsql_volume = true`. |
 | `enable_cloudsql_volume` | `true` | Injects Cloud SQL Auth Proxy sidecar for Unix socket connections to Cloud SQL. Disable only when connecting via TCP. |
 
-### E. Container Image & Build
+### §3.E · Container Image & Build
 
 Odoo_CloudRun defaults to building a custom container image from the official Odoo
 nightly packages via Cloud Build. Set `container_image_source = "prebuilt"` to
@@ -174,9 +162,9 @@ skip the build and deploy a pre-existing image directly.
 
 ---
 
-## 4. Advanced Security
+## §4 · Advanced Security
 
-### A. Automated Password Rotation
+### §4.A · Automated Password Rotation
 
 | Variable | Default | Description |
 |---|---|---|
@@ -184,7 +172,7 @@ skip the build and deploy a pre-existing image directly.
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts to pick up the new value. |
 | `secret_rotation_period` | `"2592000s"` | Rotation reminder interval. Also used as the trigger period when `enable_auto_password_rotation = true`. |
 
-### B. VPC Service Controls
+### §4.B · VPC Service Controls
 
 | Variable | Default | Description |
 |---|---|---|
@@ -194,7 +182,7 @@ skip the build and deploy a pre-existing image directly.
 | `organization_id` | `""` | GCP Organization ID for the VPC-SC Access Context Manager policy. Auto-discovered when empty. Must be set explicitly when the project is nested under a folder. |
 | `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ) for all supported GCP services. Recommended for compliance-sensitive environments. |
 
-### C. Identity-Aware Proxy
+### §4.C · Identity-Aware Proxy
 
 | Variable | Default | Description |
 |---|---|---|
@@ -202,7 +190,7 @@ skip the build and deploy a pre-existing image directly.
 | `iap_authorized_users` | `[]` | Users granted access: `"user:alice@example.com"`, `"serviceAccount:sa@project.iam.gserviceaccount.com"`. |
 | `iap_authorized_groups` | `[]` | Google Groups granted access: `"group:engineering@example.com"`. |
 
-### D. Cloud Armor & CDN
+### §4.D · Cloud Armor & CDN
 
 | Variable | Default | Description |
 |---|---|---|
@@ -211,7 +199,7 @@ skip the build and deploy a pre-existing image directly.
 | `enable_cdn` | `false` | Enables Cloud CDN on the GLB to cache static assets at edge. Only used when `enable_cloud_armor = true`. |
 | `admin_ip_ranges` | `[]` | IP CIDR ranges permitted for direct administrative access. |
 
-### E. Binary Authorization
+### §4.E · Binary Authorization
 
 | Variable | Default | Description |
 |---|---|---|
@@ -219,9 +207,9 @@ skip the build and deploy a pre-existing image directly.
 
 ---
 
-## 5. Traffic & Ingress
+## §5 · Traffic & Ingress
 
-### A. Traffic Splitting
+### §5.A · Traffic Splitting
 
 Canary or blue-green deployments can be configured by splitting traffic across
 Cloud Run revisions. All entries must sum to exactly 100%.
@@ -238,7 +226,7 @@ traffic_split = [
 ]
 ```
 
-### B. Service Annotations & Labels
+### §5.B · Service Annotations & Labels
 
 | Variable | Default | Description |
 |---|---|---|
@@ -247,9 +235,9 @@ traffic_split = [
 
 ---
 
-## 6. CI/CD Integration
+## §6 · CI/CD Integration
 
-### A. GitHub Integration
+### §6.A · GitHub Integration
 
 | Variable | Default | Description |
 |---|---|---|
@@ -259,7 +247,7 @@ traffic_split = [
 | `github_app_installation_id` | `""` | Cloud Build GitHub App installation ID. Preferred for organisation repositories. |
 | `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Advanced trigger config: `branch_pattern`, `included_files`, `ignored_files`, `trigger_name`, `substitutions`. |
 
-### B. Cloud Deploy
+### §6.B · Cloud Deploy
 
 | Variable | Default | Description |
 |---|---|---|
@@ -268,9 +256,9 @@ traffic_split = [
 
 ---
 
-## 7. Reliability & Data
+## §7 · Reliability & Data
 
-### A. Health Probes
+### §7.A · Health Probes
 
 Odoo performs database schema validation and full module installation on first boot,
 taking 2–10 minutes. The module exposes **two sets of probe variable names**:
@@ -290,7 +278,7 @@ on the App_CloudRun side; `startup_probe` / `liveness_probe` apply via Odoo_Comm
 | `startup_probe_config` | `{ enabled = true, path = "/web/health", initial_delay_seconds = 180, timeout_seconds = 60, period_seconds = 120, failure_threshold = 3 }` | Structured App_CloudRun startup probe with Odoo-tuned defaults. |
 | `health_check_config` | `{ enabled = true, path = "/web/health", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Structured App_CloudRun liveness probe with Odoo-tuned defaults. |
 
-### B. Storage
+### §7.B · Storage
 
 | Variable | Default | Description |
 |---|---|---|
@@ -304,7 +292,7 @@ on the App_CloudRun side; `startup_probe` / `liveness_probe` apply via Odoo_Comm
 | `manage_storage_kms_iam` | `false` | Creates a CMEK KMS keyring and storage key, grants the GCS service account the Cloud KMS encrypter/decrypter role, and enables CMEK encryption on all storage buckets. |
 | `enable_artifact_registry_cmek` | `false` | Creates an Artifact Registry KMS key and grants the Artifact Registry service identity the encrypter/decrypter role, enabling CMEK at-rest encryption for container images. |
 
-### C. Database
+### §7.C · Database
 
 Odoo requires PostgreSQL. `application_database_name` and `application_database_user`
 are the Odoo-specific defaults for the database and user provisioned by `App_CloudRun`.
@@ -319,7 +307,7 @@ automatically — see §9 Platform-Managed Behaviours.
 | `enable_auto_password_rotation` | `false` | Automates password rotation via Cloud Run + Eventarc. See §4.A. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts. |
 
-### D. Backup & Recovery
+### §7.D · Backup & Recovery
 
 | Variable | Default | Description |
 |---|---|---|
@@ -332,9 +320,9 @@ automatically — see §9 Platform-Managed Behaviours.
 
 ---
 
-## 8. Integrations
+## §8 · Integrations
 
-### A. Redis Session Store
+### §8.A · Redis Session Store
 
 When `max_instance_count > 1`, Redis is required. Without it each instance has its
 own session store and users are logged out on requests landing on different instances.
@@ -346,7 +334,7 @@ own session store and users are logged out on requests landing on different inst
 | `redis_port` | `"6379"` | Redis TCP port (string). |
 | `redis_auth` | `""` | Redis AUTH password. Leave empty if authentication is not enabled. Treated as sensitive. |
 
-### B. Custom SQL Scripts
+### §8.B · Custom SQL Scripts
 
 | Variable | Default | Description |
 |---|---|---|
@@ -355,7 +343,7 @@ own session store and users are logged out on requests landing on different inst
 | `custom_sql_scripts_path` | `""` | Path prefix within the bucket. Files are run in lexicographic order; use numeric prefixes (e.g. `001_schema.sql`). |
 | `custom_sql_scripts_use_root` | `false` | Run scripts as the root database user (for extension creation, role management). |
 
-### C. Jobs & Scheduled Tasks
+### §8.C · Jobs & Scheduled Tasks
 
 User-defined initialization and cron jobs are passed through to `App_CloudRun` in
 addition to the two platform-managed jobs (`nfs-init` and `db-init` — see §9).
@@ -366,7 +354,7 @@ addition to the two platform-managed jobs (`nfs-init` and `db-init` — see §9)
 | `cron_jobs` | `[]` | Recurring Cloud Scheduler-triggered jobs. Each entry requires `name` and `schedule` (cron format, UTC). |
 | `additional_services` | `[]` | Additional Cloud Run services deployed alongside Odoo (e.g. Celery workers, background processors). Each service URL can be injected into Odoo via `output_env_var_name`. |
 
-### D. Observability
+### §8.D · Observability
 
 | Variable | Default | Description |
 |---|---|---|
@@ -377,7 +365,7 @@ addition to the two platform-managed jobs (`nfs-init` and `db-init` — see §9)
 
 ---
 
-## 9. Platform-Managed Behaviours
+## §9 · Platform-Managed Behaviours
 
 These are set automatically by the module and cannot be overridden via input variables.
 
@@ -408,7 +396,7 @@ These are set automatically by the module and cannot be overridden via input var
 
 ---
 
-## 10. Variable Reference
+## §10 · Variable Reference
 
 Complete list of all input variables, grouped by UI section.
 
@@ -419,9 +407,9 @@ Complete list of all input variables, grouped by UI section.
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
 | 0 | `credit_cost` | number | `100` | — |
-| 0 | `require_credit_purchases` | bool | `true` | — |
+| 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
-| 0 | `public_access` | bool | `false` | — |
+| 0 | `public_access` | bool | `true` | — |
 | 0 | `deployment_id` | string | `""` | yes |
 | 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
 | 1 | `project_id` | string | — | yes |
@@ -519,3 +507,24 @@ Complete list of all input variables, grouped by UI section.
 | 21 | `vpc_sc_dry_run` | bool | `true` | yes |
 | 21 | `organization_id` | string | `""` | yes |
 | 21 | `enable_audit_logging` | bool | `false` | yes |
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

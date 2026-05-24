@@ -1,4 +1,4 @@
-# Sample CloudRun Module
+# Sample_CloudRun Module — Configuration Guide
 
 `Sample_CloudRun` is a **reference wrapper module** that sits on top of `App_CloudRun`.
 It deploys a pre-configured Flask application (Python 3.11, PostgreSQL 15, optional
@@ -10,11 +10,9 @@ application-specific configuration object, and `App_CloudRun` provisions all GCP
 infrastructure. You do not interact with `Sample_Common` directly — all inputs are
 exposed as variables on `Sample_CloudRun` itself.
 
-> This guide documents variables that are **unique to `Sample_CloudRun`** or that have **Sample-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
-
 ---
 
-## 1. Module Overview
+## §1 · Module Overview
 
 | Attribute | Value |
 |---|---|
@@ -31,19 +29,7 @@ exposed as variables on `Sample_CloudRun` itself.
 | **Platform-managed secret** | `SECRET_KEY` (auto-generated 32-char Flask secret key) |
 | **Platform-managed job** | `db-init` (PostgreSQL schema initialisation) |
 
-### A. Key differences from `App_CloudRun` defaults
-
-| Feature | App_CloudRun default | Sample_CloudRun default |
-|---|---|---|
-| `container_port` | `8080` | `8080` |
-| `min_instance_count` | `0` | `0` (hard-coded in `sample.tf`; cannot be overridden) |
-| `max_instance_count` | `1` | `1` |
-| `enable_nfs` | `false` | `true` |
-| `enable_redis` | `false` | `false` |
-| Database | none | Cloud SQL PostgreSQL 15 (initialised by `db-init` job) |
-| Platform-managed secret | none | `SECRET_KEY` (32-char Flask secret key) |
-
-### B. Wrapper Architecture
+### Wrapper Architecture
 
 ```
 Sample_CloudRun (variables.tf / sample.tf / main.tf)
@@ -63,7 +49,7 @@ no NFS-server fallback (see §8.A).
 
 ---
 
-## 2. IAM & Project Identity
+## §2 · IAM & Project Identity
 
 | Variable | Default | Description |
 |---|---|---|
@@ -76,9 +62,9 @@ no NFS-server fallback (see §8.A).
 
 ---
 
-## 3. Core Service Configuration
+## §3 · Core Service Configuration
 
-### A. Application Identity
+### §3.A · Application Identity
 
 `application_display_name` and `application_description` are passed to `Sample_Common`
 as `display_name` and `description`, then merged into `application_config` for
@@ -90,10 +76,10 @@ as `display_name` and `description`, then merged into `application_config` for
 | `application_display_name` | `"Cloudrun Application"` | Human-readable name shown in the platform UI and Cloud Run console. Safe to update at any time. |
 | `application_description` | `"Sample application to showcase Cloudrun features"` | Brief description of the application. Populates the Cloud Run service description field. |
 | `application_version` | `"latest"` | Version tag applied to the container image. Increment to trigger a new image build or revision. |
-| `application_database_name` | `"cloudrunapp"` | PostgreSQL database name. Passed to `Sample_Common` as `db_name`. **Do not change after initial deployment.** |
+| `application_database_name` | `"sampleapp"` | PostgreSQL database name. Passed to `Sample_Common` as `db_name`. **Do not change after initial deployment.** |
 | `application_database_user` | `"cloudrunapp"` | PostgreSQL user. Passed to `Sample_Common` as `db_user`. Password auto-generated. |
 
-### B. Resource Sizing
+### §3.B · Resource Sizing
 
 `cpu_limit` and `memory_limit` are flat scalar variables passed to `Sample_Common`,
 which assembles them into the `container_resources` object consumed by `App_CloudRun`.
@@ -107,7 +93,7 @@ which assembles them into the `container_resources` object consumed by `App_Clou
 | `timeout_seconds` | `300` | Maximum request duration (0–3600 s). |
 | `execution_environment` | `"gen2"` | Required for NFS mounts when `enable_nfs = true`. |
 
-### C. Environment Variables & Secrets
+### §3.C · Environment Variables & Secrets
 
 | Variable | Default | Description |
 |---|---|---|
@@ -116,7 +102,7 @@ which assembles them into the `container_resources` object consumed by `App_Clou
 | `secret_rotation_period` | `"2592000s"` | Rotation reminder period (30 days default). Set `null` to disable. |
 | `secret_propagation_delay` | `30` | Seconds to wait after secret creation before dependent operations proceed. |
 
-### D. Networking
+### §3.D · Networking
 
 | Variable | Default | Description |
 |---|---|---|
@@ -127,7 +113,7 @@ which assembles them into the `container_resources` object consumed by `App_Clou
 | `enable_cloudsql_volume` | `true` | Injects Cloud SQL Auth Proxy sidecar for Unix socket connections to Cloud SQL. |
 | `cloudsql_volume_mount_path` | `"/cloudsql"` | Path where the Cloud SQL Auth Proxy Unix socket is mounted. |
 
-### E. Container Image & Build
+### §3.E · Container Image & Build
 
 By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 `container_image_source = "custom"` to build the bundled sample Flask app from the
@@ -143,9 +129,9 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 
 ---
 
-## 4. Advanced Security
+## §4 · Advanced Security
 
-### A. Automated Password Rotation
+### §4.A · Automated Password Rotation
 
 | Variable | Default | Description |
 |---|---|---|
@@ -153,7 +139,7 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts to pick up the new value. |
 | `secret_rotation_period` | `"2592000s"` | Rotation reminder interval (30 days default). Also used as trigger period when rotation is enabled. |
 
-### B. VPC Service Controls
+### §4.B · VPC Service Controls
 
 | Variable | Default | Description |
 |---|---|---|
@@ -163,7 +149,7 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 | `organization_id` | `""` | GCP Organization ID for the Access Context Manager policy. Auto-discovered from the project when empty. |
 | `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ) for all supported services. |
 
-### C. Identity-Aware Proxy
+### §4.C · Identity-Aware Proxy
 
 | Variable | Default | Description |
 |---|---|---|
@@ -171,7 +157,7 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 | `iap_authorized_users` | `[]` | Users granted access: `"user:alice@example.com"`. |
 | `iap_authorized_groups` | `[]` | Google Groups granted access: `"group:engineering@example.com"`. |
 
-### D. Cloud Armor & CDN
+### §4.D · Cloud Armor & CDN
 
 | Variable | Default | Description |
 |---|---|---|
@@ -183,7 +169,7 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 | `delete_untagged_images` | `true` | Automatically deletes untagged images (dangling layers, intermediate build artefacts) from the Artifact Registry repository. |
 | `image_retention_days` | `30` | Days after which container images are eligible for deletion from Artifact Registry. Set `0` to disable age-based deletion. |
 
-### E. Binary Authorization
+### §4.E · Binary Authorization
 
 | Variable | Default | Description |
 |---|---|---|
@@ -191,9 +177,9 @@ By default the module deploys the Cloud Run hello container (`prebuilt`). Set
 
 ---
 
-## 5. Traffic & Ingress
+## §5 · Traffic & Ingress
 
-### A. Traffic Splitting
+### §5.A · Traffic Splitting
 
 | Variable | Default | Description |
 |---|---|---|
@@ -208,7 +194,7 @@ traffic_split = [
 ]
 ```
 
-### B. Service Annotations & Labels
+### §5.B · Service Annotations & Labels
 
 | Variable | Default | Description |
 |---|---|---|
@@ -217,9 +203,9 @@ traffic_split = [
 
 ---
 
-## 6. CI/CD Integration
+## §6 · CI/CD Integration
 
-### A. GitHub Integration
+### §6.A · GitHub Integration
 
 | Variable | Default | Description |
 |---|---|---|
@@ -229,7 +215,7 @@ traffic_split = [
 | `github_app_installation_id` | `""` | Cloud Build GitHub App installation ID. Preferred for organisation repositories. |
 | `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Advanced trigger config: `branch_pattern`, `included_files`, `ignored_files`, `trigger_name`, `substitutions`. |
 
-### B. Cloud Deploy
+### §6.B · Cloud Deploy
 
 | Variable | Default | Description |
 |---|---|---|
@@ -238,9 +224,9 @@ traffic_split = [
 
 ---
 
-## 7. Reliability & Data
+## §7 · Reliability & Data
 
-### A. Health Probes
+### §7.A · Health Probes
 
 `Sample_CloudRun` exposes **two distinct sets** of health probe variables:
 
@@ -258,7 +244,7 @@ The `startup_probe_config` / `health_check_config` pair controls Cloud Run's liv
 | `uptime_check_config` | `{ enabled = true, path = "/" }` | Cloud Monitoring uptime check. `check_interval` and `timeout` use `"Ns"` format. |
 | `alert_policies` | `[]` | Metric-threshold alert policies. Each entry: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
 
-### B. Storage
+### §7.B · Storage
 
 | Variable | Default | Description |
 |---|---|---|
@@ -272,17 +258,17 @@ The `startup_probe_config` / `health_check_config` pair controls Cloud Run's liv
 | `manage_storage_kms_iam` | `false` | Creates a CMEK KMS keyring and grants the GCS service account the encrypter/decrypter role, enabling CMEK on all storage buckets. |
 | `enable_artifact_registry_cmek` | `false` | Creates an Artifact Registry KMS key and enables CMEK encryption of container images. |
 
-### C. Database
+### §7.C · Database
 
 | Variable | Default | Description |
 |---|---|---|
-| `application_database_name` | `"cloudrunapp"` | PostgreSQL database name, passed to `Sample_Common` as `db_name`. Initialised by the `db-init` job on first deployment. |
+| `application_database_name` | `"sampleapp"` | PostgreSQL database name, passed to `Sample_Common` as `db_name`. Initialised by the `db-init` job on first deployment. |
 | `application_database_user` | `"cloudrunapp"` | PostgreSQL user, passed as `db_user`. Password auto-generated. |
 | `database_password_length` | `32` | Auto-generated password length (16–64 characters). Default is `32`. |
 | `enable_auto_password_rotation` | `false` | Automated password rotation. See §4.A. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before Cloud Run restarts. |
 
-### D. Backup & Recovery
+### §7.D · Backup & Recovery
 
 `backup_uri` is aliased to `backup_file` in `main.tf` (`backup_file = var.backup_uri`).
 
@@ -297,9 +283,9 @@ The `startup_probe_config` / `health_check_config` pair controls Cloud Run's liv
 
 ---
 
-## 8. Integrations
+## §8 · Integrations
 
-### A. Redis
+### §8.A · Redis
 
 Redis is **disabled by default** (`enable_redis = false`). When enabled,
 `Sample_Common` deploys an internal `redis:alpine` Cloud Run additional service.
@@ -319,7 +305,7 @@ service).
 | `redis_port` | `6379` | Redis TCP port. **Note: this is a `number` type**, unlike other modules where it is a string. |
 | `redis_auth` | `""` | Redis AUTH password. Treated as sensitive; passed to `App_CloudRun`. Leave empty for unauthenticated Redis. |
 
-### B. Custom SQL Scripts
+### §8.B · Custom SQL Scripts
 
 | Variable | Default | Description |
 |---|---|---|
@@ -328,14 +314,14 @@ service).
 | `custom_sql_scripts_path` | `""` | Path prefix within the bucket. Files run in lexicographic order. |
 | `custom_sql_scripts_use_root` | `false` | Run scripts as the root database user. |
 
-### C. Jobs & Scheduled Tasks
+### §8.C · Jobs & Scheduled Tasks
 
 | Variable | Default | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Cloud Run jobs executed once during deployment. Supplements the platform-managed `db-init` job from `Sample_Common`. |
 | `cron_jobs` | `[]` | Recurring Cloud Scheduler-triggered jobs. Each entry: `name`, `schedule` (cron, UTC). |
 
-### D. Observability
+### §8.D · Observability
 
 | Variable | Default | Description |
 |---|---|---|
@@ -346,7 +332,7 @@ service).
 
 ---
 
-## 9. Platform-Managed Behaviours
+## §9 · Platform-Managed Behaviours
 
 These are set automatically by the module and cannot be overridden via input variables.
 
@@ -399,111 +385,132 @@ service is internal-only (`INGRESS_TRAFFIC_INTERNAL_ONLY`).
 
 ---
 
-## 10. Variable Reference
+## §10 · Variable Reference
 
 Complete list of all input variables, grouped by UI section.
 
 | Group | Variable | Type | Default | Updatable |
 |---|---|---|---|---|
 | 0 | `module_description` | string | *(long description)* | — |
-| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/applications/cloud-run-app"` | — |
+| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/modules/Sample_CloudRun"` | — |
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
 | 0 | `credit_cost` | number | `100` | — |
-| 0 | `require_credit_purchases` | bool | `true` | — |
+| 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
-| 0 | `public_access` | bool | `false` | — |
+| 0 | `public_access` | bool | `true` | — |
 | 0 | `deployment_id` | string | `""` | yes |
 | 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
 | 1 | `project_id` | string | — | yes |
-| 1 | `tenant_deployment_id` | string | `"demo"` | yes |
-| 1 | `support_users` | list(string) | `[]` | yes |
-| 1 | `resource_labels` | map(string) | `{}` | yes |
-| 2 | `application_name` | string | `"cloudrunapp"` | — |
-| 2 | `application_display_name` | string | `"Cloudrun Application"` | yes |
-| 2 | `application_description` | string | `"Sample application to showcase Cloudrun features"` | yes |
-| 2 | `application_version` | string | `"latest"` | yes |
-| 3 | `deploy_application` | bool | `true` | yes |
-| 3 | `container_image_source` | string | `"prebuilt"` | yes |
-| 3 | `container_image` | string | `"us-docker.pkg.dev/cloudrun/container/hello"` | yes |
-| 3 | `container_build_config` | object | `{ enabled = false }` | yes |
-| 3 | `enable_image_mirroring` | bool | `true` | yes |
-| 3 | `cpu_limit` | string | `"1000m"` | yes |
-| 3 | `memory_limit` | string | `"512Mi"` | yes |
-| 3 | `min_instance_count` | number | `0` (hardcoded to `0` in `sample.tf`) | yes |
-| 3 | `max_instance_count` | number | `1` | yes |
-| 3 | `container_port` | number | `8080` | yes |
-| 3 | `container_protocol` | string | `"http1"` | yes |
-| 3 | `execution_environment` | string | `"gen2"` | yes |
-| 3 | `timeout_seconds` | number | `300` | yes |
-| 3 | `enable_cloudsql_volume` | bool | `true` | yes |
-| 3 | `cloudsql_volume_mount_path` | string | `"/cloudsql"` | yes |
-| 3 | `traffic_split` | list(object) | `[]` | yes |
-| 3 | `max_revisions_to_retain` | number | `7` | yes |
-| 3 | `service_annotations` | map(string) | `{}` | yes |
-| 3 | `service_labels` | map(string) | `{}` | yes |
-| 4 | `ingress_settings` | string | `"all"` | yes |
-| 4 | `vpc_egress_setting` | string | `"PRIVATE_RANGES_ONLY"` | yes |
-| 4 | `enable_iap` | bool | `false` | yes |
-| 4 | `iap_authorized_users` | list(string) | `[]` | yes |
-| 4 | `iap_authorized_groups` | list(string) | `[]` | yes |
-| 5 | `environment_variables` | map(string) | `{}` | yes |
-| 5 | `secret_environment_variables` | map(string) | `{}` | yes |
-| 5 | `secret_rotation_period` | string | `"2592000s"` | yes |
-| 5 | `secret_propagation_delay` | number | `30` | yes |
-| 6 | `backup_schedule` | string | `"0 2 * * *"` | yes |
-| 6 | `backup_retention_days` | number | `7` | yes |
-| 6 | `enable_backup_import` | bool | `false` | yes |
-| 6 | `backup_source` | string | `"gcs"` | yes |
-| 6 | `backup_uri` | string | `""` | yes |
-| 6 | `backup_format` | string | `"sql"` | yes |
-| 7 | `enable_cicd_trigger` | bool | `false` | yes |
-| 7 | `github_repository_url` | string | `""` | yes |
-| 7 | `github_token` | string | `""` | yes |
-| 7 | `github_app_installation_id` | string | `""` | yes |
-| 7 | `cicd_trigger_config` | object | `{ branch_pattern = "^main$" }` | yes |
-| 7 | `enable_cloud_deploy` | bool | `false` | yes |
-| 7 | `cloud_deploy_stages` | list(object) | `[dev, staging, prod]` | yes |
-| 7 | `enable_binary_authorization` | bool | `false` | yes |
-| 8 | `enable_custom_sql_scripts` | bool | `false` | yes |
-| 8 | `custom_sql_scripts_bucket` | string | `""` | yes |
-| 8 | `custom_sql_scripts_path` | string | `""` | yes |
-| 8 | `custom_sql_scripts_use_root` | bool | `false` | yes |
-| 9 | `enable_cloud_armor` | bool | `false` | yes |
-| 9 | `admin_ip_ranges` | list(string) | `[]` | yes |
-| 9 | `application_domains` | list(string) | `[]` | yes |
-| 9 | `enable_cdn` | bool | `false` | yes |
-| 9 | `max_images_to_retain` | number | `7` | yes |
-| 9 | `delete_untagged_images` | bool | `true` | yes |
-| 9 | `image_retention_days` | number | `30` | yes |
-| 8 | `nfs_instance_name` | string | `""` | yes |
-| 8 | `nfs_instance_base_name` | string | `"app-nfs"` | yes |
-| 10 | `create_cloud_storage` | bool | `true` | yes |
-| 10 | `storage_buckets` | list(object) | `[{ name_suffix = "data" }]` | yes |
-| 10 | `enable_nfs` | bool | `true` | yes |
-| 10 | `nfs_mount_path` | string | `"/mnt/nfs"` | yes |
-| 10 | `gcs_volumes` | list(object) | `[]` | yes |
-| 10 | `manage_storage_kms_iam` | bool | `false` | yes |
-| 10 | `enable_artifact_registry_cmek` | bool | `false` | yes |
-| 11 | `application_database_name` | string | `"cloudrunapp"` | — |
-| 11 | `application_database_user` | string | `"cloudrunapp"` | — |
-| 11 | `database_password_length` | number | `32` | yes |
-| 11 | `enable_auto_password_rotation` | bool | `false` | yes |
-| 11 | `rotation_propagation_delay_sec` | number | `90` | yes |
-| 12 | `initialization_jobs` | list(object) | `[]` | yes |
-| 12 | `cron_jobs` | list(object) | `[]` | yes |
-| 13 | `startup_probe` | object | `{ type = "HTTP", path = "/healthz", initial_delay_seconds = 60, … }` | yes |
-| 13 | `liveness_probe` | object | `{ type = "HTTP", path = "/healthz", initial_delay_seconds = 30, … }` | yes |
-| 13 | `startup_probe_config` | object | `{ enabled = true }` (TCP, timeout=240, period=240, threshold=1) | yes |
-| 13 | `health_check_config` | object | `{ enabled = true }` (HTTP, path="/", timeout=1, period=10, threshold=3) | yes |
-| 13 | `uptime_check_config` | object | `{ enabled = true, path = "/" }` | yes |
-| 13 | `alert_policies` | list(object) | `[]` | yes |
-| 20 | `enable_redis` | bool | `false` | yes |
-| 20 | `redis_host` | string | `""` | yes |
-| 20 | `redis_port` | **number** | `6379` | yes |
-| 20 | `redis_auth` | string | `""` | yes |
-| 21 | `enable_vpc_sc` | bool | `false` | yes |
-| 21 | `vpc_cidr_ranges` | list(string) | `[]` | yes |
-| 21 | `vpc_sc_dry_run` | bool | `true` | yes |
-| 21 | `organization_id` | string | `""` | yes |
-| 21 | `enable_audit_logging` | bool | `false` | yes |
+| 2 | `tenant_deployment_id` | string | `"demo"` | yes |
+| 2 | `support_users` | list(string) | `[]` | yes |
+| 2 | `resource_labels` | map(string) | `{}` | yes |
+| 3 | `application_name` | string | `"cloudrunapp"` | — |
+| 3 | `application_display_name` | string | `"Cloudrun Application"` | yes |
+| 3 | `application_description` | string | `"Sample application to showcase Cloudrun features"` | yes |
+| 3 | `application_version` | string | `"latest"` | yes |
+| 4 | `deploy_application` | bool | `true` | yes |
+| 4 | `container_image_source` | string | `"prebuilt"` | yes |
+| 4 | `container_image` | string | `"us-docker.pkg.dev/cloudrun/container/hello"` | yes |
+| 4 | `container_build_config` | object | `{ enabled = false }` | yes |
+| 4 | `enable_image_mirroring` | bool | `true` | yes |
+| 4 | `cpu_limit` | string | `"1000m"` | yes |
+| 4 | `memory_limit` | string | `"512Mi"` | yes |
+| 4 | `min_instance_count` | number | `0` (hardcoded to `0` in `sample.tf`) | yes |
+| 4 | `max_instance_count` | number | `1` | yes |
+| 4 | `container_port` | number | `8080` | yes |
+| 4 | `container_protocol` | string | `"http1"` | yes |
+| 4 | `execution_environment` | string | `"gen2"` | yes |
+| 4 | `timeout_seconds` | number | `300` | yes |
+| 4 | `enable_cloudsql_volume` | bool | `true` | yes |
+| 4 | `cloudsql_volume_mount_path` | string | `"/cloudsql"` | yes |
+| 4 | `traffic_split` | list(object) | `[]` | yes |
+| 4 | `max_revisions_to_retain` | number | `7` | yes |
+| 4 | `service_annotations` | map(string) | `{}` | yes |
+| 4 | `service_labels` | map(string) | `{}` | yes |
+| 5 | `ingress_settings` | string | `"all"` | yes |
+| 5 | `vpc_egress_setting` | string | `"PRIVATE_RANGES_ONLY"` | yes |
+| 5 | `enable_iap` | bool | `false` | yes |
+| 5 | `iap_authorized_users` | list(string) | `[]` | yes |
+| 5 | `iap_authorized_groups` | list(string) | `[]` | yes |
+| 6 | `environment_variables` | map(string) | `{}` | yes |
+| 6 | `secret_environment_variables` | map(string) | `{}` | yes |
+| 6 | `secret_rotation_period` | string | `"2592000s"` | yes |
+| 6 | `secret_propagation_delay` | number | `30` | yes |
+| 7 | `backup_schedule` | string | `"0 2 * * *"` | yes |
+| 7 | `backup_retention_days` | number | `7` | yes |
+| 7 | `enable_backup_import` | bool | `false` | yes |
+| 7 | `backup_source` | string | `"gcs"` | yes |
+| 7 | `backup_uri` | string | `""` | yes |
+| 7 | `backup_format` | string | `"sql"` | yes |
+| 8 | `enable_cicd_trigger` | bool | `false` | yes |
+| 8 | `github_repository_url` | string | `""` | yes |
+| 8 | `github_token` | string | `""` | yes |
+| 8 | `github_app_installation_id` | string | `""` | yes |
+| 8 | `cicd_trigger_config` | object | `{ branch_pattern = "^main$" }` | yes |
+| 8 | `enable_cloud_deploy` | bool | `false` | yes |
+| 8 | `cloud_deploy_stages` | list(object) | `[dev, staging, prod]` | yes |
+| 8 | `enable_binary_authorization` | bool | `false` | yes |
+| 9 | `enable_custom_sql_scripts` | bool | `false` | yes |
+| 9 | `custom_sql_scripts_bucket` | string | `""` | yes |
+| 9 | `custom_sql_scripts_path` | string | `""` | yes |
+| 9 | `custom_sql_scripts_use_root` | bool | `false` | yes |
+| 10 | `enable_cloud_armor` | bool | `false` | yes |
+| 10 | `admin_ip_ranges` | list(string) | `[]` | yes |
+| 10 | `application_domains` | list(string) | `[]` | yes |
+| 10 | `enable_cdn` | bool | `false` | yes |
+| 10 | `max_images_to_retain` | number | `7` | yes |
+| 10 | `delete_untagged_images` | bool | `true` | yes |
+| 10 | `image_retention_days` | number | `30` | yes |
+| 9 | `nfs_instance_name` | string | `""` | yes |
+| 9 | `nfs_instance_base_name` | string | `"app-nfs"` | yes |
+| 11 | `create_cloud_storage` | bool | `true` | yes |
+| 11 | `storage_buckets` | list(object) | `[{ name_suffix = "data" }]` | yes |
+| 11 | `enable_nfs` | bool | `true` | yes |
+| 11 | `nfs_mount_path` | string | `"/mnt/nfs"` | yes |
+| 11 | `gcs_volumes` | list(object) | `[]` | yes |
+| 11 | `manage_storage_kms_iam` | bool | `false` | yes |
+| 11 | `enable_artifact_registry_cmek` | bool | `false` | yes |
+| 12 | `application_database_name` | string | `"sampleapp"` | — |
+| 12 | `application_database_user` | string | `"cloudrunapp"` | — |
+| 12 | `database_password_length` | number | `32` | yes |
+| 12 | `enable_auto_password_rotation` | bool | `false` | yes |
+| 12 | `rotation_propagation_delay_sec` | number | `90` | yes |
+| 13 | `initialization_jobs` | list(object) | `[]` | yes |
+| 13 | `cron_jobs` | list(object) | `[]` | yes |
+| 14 | `startup_probe` | object | `{ type = "HTTP", path = "/healthz", initial_delay_seconds = 60, … }` | yes |
+| 14 | `liveness_probe` | object | `{ type = "HTTP", path = "/healthz", initial_delay_seconds = 30, … }` | yes |
+| 14 | `startup_probe_config` | object | `{ enabled = true }` (TCP, timeout=240, period=240, threshold=1) | yes |
+| 14 | `health_check_config` | object | `{ enabled = true }` (HTTP, path="/", timeout=1, period=10, threshold=3) | yes |
+| 14 | `uptime_check_config` | object | `{ enabled = true, path = "/" }` | yes |
+| 14 | `alert_policies` | list(object) | `[]` | yes |
+| 21 | `enable_redis` | bool | `false` | yes |
+| 21 | `redis_host` | string | `""` | yes |
+| 21 | `redis_port` | **number** | `6379` | yes |
+| 21 | `redis_auth` | string | `""` | yes |
+| 22 | `enable_vpc_sc` | bool | `false` | yes |
+| 22 | `vpc_cidr_ranges` | list(string) | `[]` | yes |
+| 22 | `vpc_sc_dry_run` | bool | `true` | yes |
+| 22 | `organization_id` | string | `""` | yes |
+| 22 | `enable_audit_logging` | bool | `false` | yes |
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

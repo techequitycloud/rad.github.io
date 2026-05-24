@@ -1,9 +1,14 @@
-# Ollama GKE Module
+# Ollama_GKE Module — Configuration Guide
 
-Ollama is an open-source LLM inference server that serves large language models such as Llama,
-Mistral, Gemma, and Phi via a REST API on port 11434. This module deploys Ollama on **GKE
+Ollama is the de facto standard runtime for running large language models locally, with 169,000+
+GitHub stars and support for 4,500+ models — including Llama 3.1 (112M+ pulls), DeepSeek-R1
+(82.7M pulls), and Gemma. It attracts 110,000+ monthly developer searches, reflecting its
+dominant position in self-hosted LLM inference. Ollama is critical for financial services,
+healthcare, legal, and government deployments with strict data sovereignty requirements where
+models cannot leave the organisation's infrastructure. This module deploys Ollama on **GKE
 Autopilot** as a Kubernetes Deployment with model weights persisted to a GCS Fuse volume so
-that pod restarts load models from storage rather than re-downloading them.
+that pod restarts load models from storage rather than re-downloading them. It is designed as a
+shared in-cluster AI inference endpoint for Flowise, N8N, RAGFlow, Django, and other workloads.
 
 `Ollama_GKE` is a **wrapper module** built on top of `App_GKE`. It delegates all GCP
 infrastructure provisioning to App_GKE (GKE cluster, networking, GCS, Secret Manager, CI/CD)
@@ -16,11 +21,9 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 > `http://ollama.<namespace>.svc.cluster.local:11434`. For CPU-only, serverless inference
 > use `Ollama_CloudRun`.
 
-> This guide documents variables that are **unique to `Ollama_GKE`** or that have **Ollama-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
-
 ---
 
-## 1. Module Overview
+## §1 · Module Overview
 
 ### What `Ollama_GKE` provides
 
@@ -54,7 +57,7 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 
 ---
 
-## 2. IAM & Project Identity
+## §2 · IAM & Project Identity
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -63,22 +66,23 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 | `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform. |
 | `support_users` | `list(string)` | `[]` | Email addresses granted IAM access and monitoring alert recipients. |
 | `resource_labels` | `map(string)` | `{}` | Labels applied to all module-managed resources. |
-| `deployment_region` | `string` | `"us-central1"` | GCP region fallback when network discovery cannot determine region from VPC subnets. Also used as the GCS bucket region. |
+| `region` | `string` | `"us-central1"` | GCP region fallback when network discovery cannot determine region from VPC subnets. Also used as the GCS bucket region. |
 | `module_description` | `string` | *(Ollama_GKE description)* | Platform UI description. |
-| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/applications/ollama-gke"` | External documentation URL. |
+| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/Ollama_GKE"` | External documentation URL. |
 | `module_dependency` | `list(string)` | `["Services_GCP"]` | Modules that must be deployed before this one. |
 | `module_services` | `list(string)` | *(GCP service list)* | GCP services consumed by this module. |
 | `credit_cost` | `number` | `100` | Platform credits consumed on deployment. |
-| `require_credit_purchases` | `bool` | `true` | Enforce credit balance check before deployment. |
+| `require_credit_purchases` | `bool` | `false` | Enforce credit balance check before deployment. |
 | `enable_purge` | `bool` | `true` | Permit full deletion of all module resources on destroy. |
-| `public_access` | `bool` | `false` | Controls platform UI visibility. |
+| `public_access` | `bool` | `true` | Controls platform UI visibility. |
+| `shared_users` | `list(string)` | `[]` | Users granted access to this module regardless of `public_access`. Actively enforced by the platform. |
 | `deployment_id` | `string` | `""` | Optional fixed deployment ID. Auto-generated when blank. |
 
 ---
 
-## 3. Core Service Configuration
+## §3 · Core Service Configuration
 
-### A. Application Identity (Group 2)
+### §3.A · Application Identity (Group 2)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -87,7 +91,7 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 | `application_description` | `string` | `"Ollama — standalone open-source LLM inference server on GKE..."` | Brief description surfaced in Kubernetes annotations. |
 | `application_version` | `string` | `"latest"` | Ollama Docker image tag. Use a pinned tag in production. |
 
-### B. Ollama Model Configuration (Group 18)
+### §3.B · Ollama Model Configuration (Group 18)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -98,7 +102,7 @@ When `default_model` is set and `initialization_jobs` is empty, a Kubernetes Job
 `model-pull` is created automatically using the `scripts/model-pull.sh` script from
 `Ollama_Common`. The job mounts the `ollama-models` GCS volume so pulled weights persist.
 
-### C. Runtime & Scaling (Group 3)
+### §3.C · Runtime & Scaling (Group 3)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -122,7 +126,7 @@ When `default_model` is set and `initialization_jobs` is empty, a Kubernetes Job
 | `enable_cloudsql_volume` | `bool` | `false` | Not needed for Ollama. Required by the App_GKE interface. |
 | `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | Cloud SQL Auth Proxy socket path. Present for interface compatibility. |
 
-### D. Automatically Injected Environment Variables
+### §3.D · Automatically Injected Environment Variables
 
 The following environment variables are set automatically by `Ollama_Common`:
 
@@ -132,7 +136,7 @@ The following environment variables are set automatically by `Ollama_Common`:
 | `OLLAMA_HOST` | `"0.0.0.0:11434"` | Binds to all interfaces so the Kubernetes service can forward traffic. |
 | `OLLAMA_KEEP_ALIVE` | `"24h"` | Keeps loaded model resident in memory between requests. |
 
-### E. Environment Variables & Secrets (Group 5)
+### §3.E · Environment Variables & Secrets (Group 5)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -143,7 +147,7 @@ The following environment variables are set automatically by `Ollama_Common`:
 | `enable_auto_password_rotation` | `bool` | `false` | Not applicable for Ollama (no database). |
 | `rotation_propagation_delay_sec` | `number` | `90` | Seconds to wait after rotation before restarting pods. |
 
-### F. Access & Networking (Group 4)
+### §3.F · Access & Networking (Group 4)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -169,7 +173,7 @@ The following environment variables are set automatically by `Ollama_Common`:
 
 ---
 
-## 4. GKE-Specific Configuration (Group 15)
+## §4 · GKE-Specific Configuration (Group 15)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -185,7 +189,7 @@ The following environment variables are set automatically by `Ollama_Common`:
 
 ---
 
-## 5. StatefulSet Settings (Group 16)
+## §5 · StatefulSet Settings (Group 16)
 
 These settings apply only when `workload_type = "StatefulSet"`. The default `"Deployment"`
 workload type with GCS Fuse is recommended and these are not needed.
@@ -202,7 +206,7 @@ workload type with GCS Fuse is recommended and these are not needed.
 
 ---
 
-## 6. Storage & Filesystem (Group 10)
+## §6 · Storage & Filesystem (Group 10)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -226,7 +230,7 @@ workload type with GCS Fuse is recommended and these are not needed.
 
 ---
 
-## 7. Backup & Maintenance (Group 6)
+## §7 · Backup & Maintenance (Group 6)
 
 Ollama has no database — backup settings are present for App_GKE interface compatibility only.
 
@@ -241,7 +245,7 @@ Ollama has no database — backup settings are present for App_GKE interface com
 
 ---
 
-## 8. CI/CD Integration (Group 7)
+## §8 · CI/CD Integration (Group 7)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -256,7 +260,7 @@ Ollama has no database — backup settings are present for App_GKE interface com
 
 ---
 
-## 9. Custom Initialization & Jobs (Group 8)
+## §9 · Custom Initialization & Jobs (Group 8)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -270,7 +274,7 @@ Ollama has no database — backup settings are present for App_GKE interface com
 
 ---
 
-## 10. Database Backend (Group 11)
+## §10 · Database Backend (Group 11)
 
 Ollama has no database dependency. Redis is also disabled for this module.
 
@@ -288,7 +292,7 @@ Ollama has no database dependency. Redis is also disabled for this module.
 
 ---
 
-## 11. Observability & Health (Group 13)
+## §11 · Observability & Health (Group 13)
 
 Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is ready.
 
@@ -303,7 +307,7 @@ Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is re
 
 ---
 
-## 12. Outputs
+## §12 · Outputs
 
 | Output | Description |
 |---|---|
@@ -350,7 +354,7 @@ Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is re
 
 ---
 
-## 13. Platform-Managed Behaviours
+## §13 · Platform-Managed Behaviours
 
 | Behaviour | Detail |
 |---|---|
@@ -361,33 +365,34 @@ Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is re
 | **GCS volume always mounted** | The `ollama-models` volume is always appended to `gcs_volumes` inside Ollama_Common. |
 | **No database, no Redis** | `enable_redis = false` and `database_type = "NONE"` are hard-coded. |
 | **Model-pull job auto-generated** | When `default_model` is set and `initialization_jobs = []`, a Kubernetes Job (`model-pull`) is created using `scripts/model-pull.sh`. Providing any entry in `initialization_jobs` disables it. |
-| **Network discovery** | The module uses the `App_Common/modules/app_networking` module to discover the VPC region from existing subnets. The first discovered region is used as `deployment_region`. Falls back to `var.deployment_region` when no subnets are found. |
+| **Network discovery** | The module uses the `App_Common/modules/app_networking` module to discover the VPC region from existing subnets. The first discovered region is used as the deployment region. Falls back to `var.region` when no subnets are found. |
 | **Namespace auto-generated** | When `namespace_name = ""`, the namespace defaults to `<resource_prefix>` (the full `app<name><tenant><id>` string). |
 | **`scripts_dir`** | Set to `Ollama_Common`'s bundled `scripts/` directory. |
 
 ---
 
-## 14. Variable Reference
+## §14 · Variable Reference
 
 Complete variable reference with UIMeta group assignments.
 
 | Variable | Default | Group |
 |---|---|---|
 | `module_description` | *(Ollama GKE description)* | 0 |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/ollama-gke"` | 0 |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/Ollama_GKE"` | 0 |
 | `module_dependency` | `["Services_GCP"]` | 0 |
 | `module_services` | *(list of GCP services)* | 0 |
 | `credit_cost` | `100` | 0 |
-| `require_credit_purchases` | `true` | 0 |
+| `require_credit_purchases` | `false` | 0 |
 | `enable_purge` | `true` | 0 |
-| `public_access` | `false` | 0 |
+| `public_access` | `true` | 0 |
+| `shared_users` | `[]` | 0 |
 | `deployment_id` | `""` | 0 |
 | `resource_creator_identity` | `"rad-module-creator@..."` | 0 |
 | `project_id` | *(required)* | 1 |
 | `tenant_deployment_id` | `"demo"` | 1 |
 | `support_users` | `[]` | 1 |
 | `resource_labels` | `{}` | 1 |
-| `deployment_region` | `"us-central1"` | 1 |
+| `region` | `"us-central1"` | 1 |
 | `application_name` | `"ollama"` | 2 |
 | `application_display_name` | `"Ollama LLM Server"` | 2 |
 | `application_description` | `"Ollama — standalone open-source LLM inference server on GKE..."` | 2 |
@@ -499,9 +504,9 @@ Complete variable reference with UIMeta group assignments.
 
 ---
 
-## 15. Configuration Examples
+## §15 · Configuration Examples
 
-### A. Basic Deployment
+### Basic Deployment
 
 CPU-only inference for 3B models. Suitable for evaluation and shared internal cluster use.
 
@@ -527,7 +532,7 @@ service_type = "ClusterIP"
 default_model = "llama3.2:3b"
 ```
 
-### B. Advanced Deployment
+### Advanced Deployment
 
 Production inference endpoint for 7B models with pod disruption budget, monitoring, and environment tuning.
 
