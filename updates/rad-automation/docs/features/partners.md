@@ -72,7 +72,9 @@ You can also access Jules through the **Explore** page in your navigation bar, w
 You can deploy both platform modules and your own partner modules.
 
 1.  **Go to "Deploy":** Navigate to the **Deploy** page from the main navigation.
-2.  **Browse Modules:** You will see tabs for "Platform Modules" (available to everyone) and "Partner Modules" (your private modules).
+2.  **Browse Modules:**
+    *   **Partner Modules tab (shown first):** Contains only the modules you have published from your own repository. This is your primary workspace for testing and iterating on your own work.
+    *   **Platform Modules tab:** Contains platform-curated modules plus any partner modules from other publishers that you have been granted access to.
 3.  **Search & Pin:** Use the search bar to find modules by name. Click the **Pin** icon on any module card to save it to the top of your list for quick access.
 4.  **Deploy:** Select a module and configure its variables (e.g., Project ID, Region), review the settings, and submit to start the deployment.
 
@@ -97,6 +99,8 @@ Track your credit usage and project costs on the **Credits** page.
 *   **Project Costs Tab:** View detailed costs associated with your running projects.
 *   **Project Invoices Tab:** Access monthly invoices for your project costs.
 *   **Subscriptions Tab:** View and manage subscription tiers to receive monthly credit allowances (if enabled).
+
+**Partner Credit Exemptions:** As a Partner you are exempt from the credit purchase restriction that applies to standard users — you can deploy any module regardless of your Purchased Credits balance. Additionally, when you deploy a module that you own, the credit cost is always zero; no credits are deducted from your balance regardless of the module's defined cost.
 
 ## 8. Earning Revenue
 

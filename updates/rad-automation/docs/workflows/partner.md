@@ -57,10 +57,10 @@ Once configured, the Jules sparkle icon (✨) will appear on module cards in the
 > **Module visibility:** By default, a newly published Partner Module is visible only to you and platform Administrators. To grant access to specific users, contact your platform administrator.
 
 ## 5. Step 4: Deploy and Test Your Module
-1.  On the **Deploy** page, click the **Partner Modules** tab.
-2.  You should see `my-custom-app` listed there.
-3.  Click it, configure the variables, and deploy it just like a standard module.
-4.  **Partner exemption:** When you deploy a module you own, the credit cost is always zero — no credits are deducted from your balance regardless of the module's defined `credit_cost`.
+1.  On the **Deploy** page, the **Partner Modules** tab is shown first by default. It lists only the modules you have published from your own repository.
+2.  You should see `my-custom-app` listed there. To deploy platform modules or partner modules from other publishers, click the **Platform Modules** tab.
+3.  Click the module card, configure the variables, and deploy it just like a standard module.
+4.  **Partner exemption:** When you deploy a module you own, the credit cost is always zero — no credits are deducted from your balance regardless of the module's defined `credit_cost`. You are also exempt from the credit purchase restriction, meaning you can deploy any module regardless of your Purchased Credits balance.
 
 ### Viewing Deployment Outputs
 

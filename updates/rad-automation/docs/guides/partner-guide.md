@@ -57,7 +57,7 @@ You can also access Jules through the **Explore** page in your navigation bar, w
 You can deploy both platform modules and your own partner modules.
 
 1.  **Go to "Deploy":** Navigate to the **Deploy** page from the main navigation.
-2.  **Browse Modules:** You will see tabs for "Platform Modules" (available to everyone) and "Partner Modules" (your private modules).
+2.  **Browse Modules:** The **Partner Modules** tab is shown first and contains only the modules you have published from your own repository. The **Platform Modules** tab contains platform-curated modules plus any partner modules from other publishers you have been granted access to.
 3.  **Search & Pin:** Use the search bar to find modules by name. Click the **Pin** icon on any module card to save it to the top of your list for quick access.
 4.  **Deploy:** Select a module and configure its variables (e.g., Project ID, Region), review the settings, and submit to start the deployment.
 

@@ -50,12 +50,13 @@ Your primary workspace for support activities is the **Deployments** page.
         *   `QUEUED` — Waiting for Cloud Build to pick up the build.
         *   `WORKING` — Build actively running.
         *   `COMPLETED` / `FAILED` — Terminal build states.
+        *   `TIMEOUT` — The Cloud Build job exceeded its execution time limit, or a stuck `QUEUED` deployment was auto-reconciled and the build no longer exists.
         *   `CANCELLED` — Stopped before or during provisioning. Available follow-up actions depend on context (see below).
         *   `INTERNAL_ERROR` — A non-transient platform-level failure during provisioning. The deployment surfaces as actionable rather than silently stuck in `QUEUED`.
         *   `DELETED` — Soft-deleted, awaiting permanent removal.
     *   **Configuration:** The specific variables the user provided.
-5.  **Auto-Reconciliation:** A scheduled job runs every 30 minutes to verify deployments stuck in `QUEUED` or `WORKING` against Cloud Build's actual status. If Cloud Build reports a terminal state the deployment is updated accordingly; if the build no longer exists (404) the deployment is cancelled. Wait one reconciliation cycle (up to 30 minutes) before manually intervening on a stuck deployment — it may self-resolve.
-6.  **Cancel Action:** For deployments stuck in `QUEUED`, a **Cancel** button is available (visible to admins and the deployment owner). This marks the deployment as `CANCELLED` without triggering resource teardown. It is the safest first step when a build has not yet started.
+5.  **Auto-Reconciliation:** A scheduled job runs every 30 minutes to verify deployments stuck in `QUEUED` or `WORKING` against Cloud Build's actual status. If Cloud Build reports a terminal state the deployment is updated accordingly; if the build no longer exists (404) the deployment is marked `TIMEOUT`. Wait one reconciliation cycle (up to 30 minutes) before manually intervening on a stuck deployment — it may self-resolve.
+6.  **Cancel Action:** For deployments stuck in `QUEUED`, a **Cancel** button is available (visible to admins and the deployment owner). This marks the deployment as `CANCELLED` without triggering resource teardown. It is the safest first step when a build has not yet started. **Note:** The Cancel button may be disabled platform-wide by an administrator. If it is not visible, the user must wait for auto-reconciliation or an admin must use the Purge action.
 
 ## 4. Publishing & Updating Modules
 
@@ -71,10 +72,11 @@ When a user reports an issue:
 
 1.  **Ask for the Deployment ID:** This is the fastest way to locate their specific problem.
 2.  **Search in "All Deployments":** Locate the record using the search bar.
-3.  **Check the Status:** Is it `FAILED`, `INTERNAL_ERROR`, `QUEUED`, or stuck in `WORKING`?
+3.  **Check the Status:** Is it `FAILED`, `INTERNAL_ERROR`, `TIMEOUT`, `QUEUED`, or stuck in `WORKING`?
     *   `FAILED` — Build started and errored. Review build logs for the root cause.
     *   `INTERNAL_ERROR` — The deployment function crashed before or during Cloud Build submission. Review logs for a platform-level error and escalate to Engineering if needed.
-    *   `QUEUED` (prolonged) — Build never started. Wait up to 30 minutes for auto-reconciliation, or use **Cancel** to unblock the user immediately.
+    *   `TIMEOUT` — Cloud Build job exceeded its time limit, or the stuck deployment was auto-reconciled. Review logs for slow Terraform steps; advise the user to contact the module publisher if the module itself is the cause.
+    *   `QUEUED` (prolonged) — Build never started. Wait up to 30 minutes for auto-reconciliation, or use **Cancel** to unblock the user immediately (if the Cancel button is enabled).
     *   `WORKING` (prolonged) — Build is running but appears stuck. Wait for auto-reconciliation to verify the Cloud Build status.
     *   `CANCELLED` — Deployment was stopped. Check whether infrastructure was deployed (if the original action was `UPDATE` or `DELETE`, resources may still be running).
 4.  **Review Logs:** Identify the root cause (e.g., quota exceeded, bad configuration, API error).

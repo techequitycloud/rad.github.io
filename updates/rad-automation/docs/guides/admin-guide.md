@@ -112,9 +112,11 @@ You have complete visibility into all activity on the platform. The **Deployment
 *   **Search:** Use the search bar to find deployments by Module Name, Deployment ID, or User Email.
 *   **Ratings:** View the 1-5 star ratings given by users to gauge user satisfaction with specific modules.
 *   **Logs & Debugging:** Click on any Deployment ID to view its full build logs, status history, and configuration variables.
-*   **Purge vs. Delete:**
-    *   **Delete (Soft Delete):** This is the standard action. It marks the deployment for deletion, triggers a resource cleanup, but retains the record for the defined retention period.
-    *   **Purge (Hard Delete):** This is a force-cleanup action. It immediately triggers an aggressive resource removal pipeline (`DEPLOYMENT_ACTIONS.PURGE`) and removes the deployment record once complete. Use this for stuck deployments or when immediate cleanup is required.
+*   **Deployment Statuses:** Key states include `QUEUED`, `WORKING`, `SUCCESS`, `FAILURE`, `TIMEOUT` (build exceeded its time limit or stuck deployment auto-reconciled), `CANCELLED`, `INTERNAL_ERROR` (platform-level failure), and `DELETED`.
+*   **Cancel, Purge vs. Delete:**
+    *   **Cancel:** Available for `QUEUED` deployments. Marks the deployment as `CANCELLED` without triggering resource teardown. The Cancel button can be disabled platform-wide via the Global Configuration settings.
+    *   **Delete (Soft Delete):** The standard removal action. Marks the deployment for deletion, triggers a resource cleanup, and retains the record for the configured retention period.
+    *   **Purge (Hard Delete):** A force-cleanup action. Immediately triggers an aggressive resource removal pipeline and removes the deployment record once complete. Use for stuck deployments, `CANCELLED` deployments from `CREATE` actions, or when immediate cleanup is required.
 
 ## 6. Publishing Platform Modules
 

@@ -35,7 +35,15 @@ Your primary workspace for support activities is the **Deployments** page.
     *   **Module Name:** Find all instances of a specific module.
 4.  **Inspect Logs:** Click on any **Deployment ID** to open the detailed view. Here you can see:
     *   **Build Logs:** Raw output from the Cloud Build and Terraform processes. Look here for error messages (e.g., "Permissions denied", "Invalid variable").
-    *   **Status History:** The timeline of the deployment's lifecycle (QUEUED, WORKING, COMPLETED, FAILED, DELETED, PURGE). **PURGE** indicates an admin-initiated force-cleanup: an aggressive resource removal pipeline was triggered and the deployment record will be removed once it completes. This is distinct from a normal soft delete.
+    *   **Status History:** The timeline of the deployment's lifecycle. Key statuses:
+        *   `QUEUED` — Waiting for Cloud Build to start.
+        *   `WORKING` — Build actively running.
+        *   `COMPLETED` / `FAILED` — Terminal build states.
+        *   `TIMEOUT` — Cloud Build job exceeded its time limit, or the stuck deployment was auto-reconciled and the build no longer exists.
+        *   `CANCELLED` — Stopped before or during provisioning. Available follow-up actions depend on the original action type.
+        *   `INTERNAL_ERROR` — A platform-level failure during provisioning; the deployment is surfaced as actionable.
+        *   `DELETED` — Soft-deleted, awaiting permanent removal.
+        *   `PURGE` — Admin-initiated force-cleanup in progress; the deployment record will be removed once it completes.
     *   **Configuration:** The specific variables the user provided.
 
 ## 4. Publishing & Updating Modules
@@ -54,7 +62,13 @@ When a user reports an issue:
 
 1.  **Ask for the Deployment ID:** This is the fastest way to locate their specific problem.
 2.  **Search in "All Deployments":** Locate the record using the search bar.
-3.  **Check the Status:** Is it `FAILED`, `QUEUED`, stuck in `WORKING`, or showing `PURGE`?
+3.  **Check the Status:** Is it `FAILED`, `INTERNAL_ERROR`, `TIMEOUT`, `QUEUED`, stuck in `WORKING`, or showing `PURGE`?
+    *   `FAILED` — Build started and errored. Review build logs for the root cause.
+    *   `INTERNAL_ERROR` — Platform-level failure before or during build submission. Escalate to Engineering if needed.
+    *   `TIMEOUT` — Build exceeded its time limit. Review logs for slow Terraform steps and advise the user to contact the module publisher.
+    *   `QUEUED` (prolonged) — Build never started. Wait up to 30 minutes for auto-reconciliation.
+    *   `WORKING` (prolonged) — Build appears stuck. Wait for auto-reconciliation to verify Cloud Build status.
+    *   `PURGE` — Force-cleanup in progress; no action needed.
 4.  **Review Logs:** Identify the root cause (e.g., quota exceeded, bad configuration, API error).
 5.  **Advise the User:** Based on your findings, guide the user to retry with different variables or escalate the issue to Engineering/Admin if it's a platform bug.
 

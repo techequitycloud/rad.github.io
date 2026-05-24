@@ -35,8 +35,8 @@ At the top of the page you will see a summary of your account:
 
 Modules are pre-configured, infrastructure-as-code templates (built on Terraform) that provision real cloud applications and services. The catalog is divided into two tabs:
 
-*   **Platform Modules:** Curated modules managed by platform administrators, sourced from the global platform repository. Available to all users.
-*   **Partner Modules:** Modules published by certified Partners from their own GitHub repositories. Visible only if you are a Partner, or if the module's owner has made it public or granted you explicit access.
+*   **Platform Modules:** Curated modules managed by platform administrators, plus any partner modules from other publishers that you have been granted access to. Available to all authenticated users.
+*   **Partner Modules:** Only visible to users with the **Partner** role. If you are a Partner, this tab is shown first and contains exclusively the modules you have published from your own repository. Non-partner users do not see this tab.
 
 Each module is shown as a card displaying:
 
@@ -77,7 +77,7 @@ The platform enforces a credit balance check before any deployment is queued.
 | **Partner deploying their own module** | No credits required — the cost is always zero for the module owner |
 | **Credits disabled platform-wide** | No credit check is performed |
 
-If your balance is insufficient, the deployment will be blocked at submission with an error. Navigate to **Credits > Buy Credits** to top up your balance before retrying.
+If your balance is insufficient, the deployment will be blocked at submission with an error. The platform provides a **Top up your credits** link that takes you directly to the Buy Credits tab — click it to top up your balance before retrying.
 
 > **Tip:** Your current credit balance is visible in the dashboard stats at the top of the Deploy page. Check it before selecting a module to confirm you have enough to cover the cost shown on the module card.
 
@@ -170,7 +170,9 @@ Navigate to **Deployments** in the top navigation. You will see a list of your d
 | `FAILURE` | The deployment failed — view the logs to identify the cause |
 | `DELETING` | A delete action has been triggered; Terraform destroy is running |
 | `DELETED` | The infrastructure has been destroyed; the record is retained for history |
+| `TIMEOUT` | The Cloud Build job exceeded its execution time limit, or the stuck deployment was auto-reconciled and the underlying build no longer exists |
 | `CANCELLED` | The deployment was cancelled before completion |
+| `INTERNAL_ERROR` | A non-transient platform-level failure occurred during provisioning; the deployment is surfaced as actionable |
 | `SOFT_DELETED` | The deployment has been soft-deleted (retention policy triggered or manually deleted); it can be restored within the grace period (default 7 days) |
 
 ### 3.3. Viewing Real-Time Logs
