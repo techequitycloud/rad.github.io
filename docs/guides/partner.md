@@ -1,8 +1,3 @@
----
-title: Partner Guide
-slug: /guides/partner
----
-
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Partner Guide
@@ -33,8 +28,6 @@ Before you can publish modules, you need to connect your Git repository and conf
 
 **Note:** The **Publish** link only appears in your navigation bar after your repository has been successfully connected. The **Explore** link (for Jules AI) appears only when both your repository and Jules API Key are configured.
 
-**Important — re-save your GitHub Token if configured before May 2026:** GitHub token secrets are now stored with automatic (global) replication in Secret Manager. If you originally configured your token before this change, Cloud Build workers assigned outside a single region may fail with an "Internal Error" before any build steps run. To fix this, navigate to **Profile > Partner Settings**, re-enter your GitHub token, and save. This updates the secret to use global replication.
-
 ## 3. Publishing Modules
 
 Once your repo is connected, you can manage your module catalog.
@@ -64,7 +57,7 @@ You can also access Jules through the **Explore** page in your navigation bar, w
 You can deploy both platform modules and your own partner modules.
 
 1.  **Go to "Deploy":** Navigate to the **Deploy** page from the main navigation.
-2.  **Browse Modules:** You will see tabs for "Platform Modules" (available to everyone) and "Partner Modules" (your private modules).
+2.  **Browse Modules:** The **Partner Modules** tab is shown first and contains only the modules you have published from your own repository. The **Platform Modules** tab contains platform-curated modules plus any partner modules from other publishers you have been granted access to.
 3.  **Search & Pin:** Use the search bar to find modules by name. Click the **Pin** icon on any module card to save it to the top of your list for quick access.
 4.  **Deploy:** Select a module and configure its variables (e.g., Project ID, Region), review the settings, and submit to start the deployment.
 

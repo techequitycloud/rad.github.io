@@ -1,8 +1,3 @@
----
-title: Partner Workflow
-slug: /workflows/partner
----
-
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Partner Workflow
@@ -19,7 +14,7 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 ## 1. Introduction
 This tutorial is for Partners. You will learn how to connect your own Git repository, publish private modules, deploy and test them, retrieve deployment outputs, and use the Jules AI assistant to refine your modules.
 
-## 2. Connect GitHub
+## 2. Step 1: Connect GitHub
 1.  Click your **Profile Avatar** -> **Profile**.
 2.  Scroll to **Partner Settings**.
 3.  Enter your **GitHub Access Token** (ensure it has `repo` scope).
@@ -29,7 +24,7 @@ This tutorial is for Partners. You will learn how to connect your own Git reposi
 
 > **Multiple repositories:** You can connect more than one repository. Repeat the steps above for each additional repository — each saved token/repo pair is stored separately, and modules from all connected repositories appear on the Publish page.
 
-## 3. Configure Jules (Optional)
+## 3. Step 2: Configure Jules (Optional)
 Jules is an AI assistant that can help you analyse and improve your Terraform modules directly within the platform.
 
 1.  In the same **Partner Settings** section, scroll to **API Settings**.
@@ -51,7 +46,7 @@ Once configured, the Jules sparkle icon (✨) will appear on module cards in the
 5.  Click **Approve** on any suggestion you want to apply, or dismiss ones that don't apply.
 6.  After applying improvements, return to the Publish page and click **Update** to push the refreshed module definition to the platform.
 
-## 4. Publish a Module
+## 4. Step 3: Publish a Module
 1.  Click **Publish** in the navigation bar.
 2.  The page will scan your connected repositories and list valid modules.
 3.  Find the module you want to share (e.g., `my-custom-app`).
@@ -61,11 +56,11 @@ Once configured, the Jules sparkle icon (✨) will appear on module cards in the
 
 > **Module visibility:** By default, a newly published Partner Module is visible only to you and platform Administrators. To grant access to specific users, contact your platform administrator.
 
-## 5. Deploy and Test Your Module
-1.  On the **Deploy** page, click the **Partner Modules** tab.
-2.  You should see `my-custom-app` listed there.
-3.  Click it, configure the variables, and deploy it just like a standard module.
-4.  **Partner exemption:** When you deploy a module you own, the credit cost is always zero — no credits are deducted from your balance regardless of the module's defined `credit_cost`.
+## 5. Step 4: Deploy and Test Your Module
+1.  On the **Deploy** page, the **Partner Modules** tab is shown first by default. It lists only the modules you have published from your own repository.
+2.  You should see `my-custom-app` listed there. To deploy platform modules or partner modules from other publishers, click the **Platform Modules** tab.
+3.  Click the module card, configure the variables, and deploy it just like a standard module.
+4.  **Partner exemption:** When you deploy a module you own, the credit cost is always zero — no credits are deducted from your balance regardless of the module's defined `credit_cost`. You are also exempt from the credit purchase restriction, meaning you can deploy any module regardless of your Purchased Credits balance.
 
 ### Viewing Deployment Outputs
 
@@ -78,7 +73,7 @@ After a successful deployment, the Terraform outputs from your module are availa
 
 > **Tip:** If an output is missing, check that it is defined in `outputs.tf` and that `terraform apply` completed without errors. Partial apply failures can result in some outputs being unavailable.
 
-## 6. Contact a Module Publisher
+## 6. Step 5: Contact a Module Publisher
 
 If you need to reach the publisher of a platform module (for example, to report an issue or request a feature):
 
