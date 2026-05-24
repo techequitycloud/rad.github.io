@@ -564,7 +564,7 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 
 ## Configuration Pitfalls & Sensible Defaults
 
-The table below identifies the variables most commonly misconfigured in `Django_CloudRun` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong. For full variable details see Section 10 (Variable Reference) and the [App_CloudRun configuration guide](App_CloudRun.md).
+The table below identifies the variables most commonly misconfigured in `Django_CloudRun` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong. For full variable details see Section 10 (Variable Reference) and the [App_CloudRun configuration guide](../App_CloudRun/App_CloudRun.md).
 
 > Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
 
