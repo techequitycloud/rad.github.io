@@ -1,4 +1,4 @@
-# Temporal_GKE Module
+# Temporal GKE Module
 
 The `Temporal_GKE` module deploys [Temporal Workflow Engine](https://temporal.io/) to GKE Autopilot using the official `temporalio/auto-setup` all-in-one image. It provisions all four Temporal services — Frontend, History, Matching, and Worker — in a single pod, backed by Cloud SQL PostgreSQL for persistence and visibility. An optional Elasticsearch integration unlocks advanced visibility for full-text workflow search and custom search attributes.
 
@@ -211,8 +211,8 @@ The Web UI uses HTTP GET `/` probes on port 8081.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `application_database_name` | `string` | `"none"` | Passed through to App_GKE. The actual Temporal database name is always derived from the deployment resource prefix; this value does not override it. |
-| `application_database_user` | `string` | `"none"` | Passed through to App_GKE. The actual Temporal database user is always derived from the deployment resource prefix; this value does not override it. |
+| `application_database_name` | `string` | `"none"` | Passed through to App GKE. The actual Temporal database name is always derived from the deployment resource prefix; this value does not override it. |
+| `application_database_user` | `string` | `"none"` | Passed through to App GKE. The actual Temporal database user is always derived from the deployment resource prefix; this value does not override it. |
 | `database_password_length` | `number` | `32` | Length in characters of the randomly generated database user password. Valid range: 16–64 characters. |
 
 ### Reliability

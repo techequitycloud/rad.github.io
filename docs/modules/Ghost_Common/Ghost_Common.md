@@ -1,4 +1,4 @@
-# Ghost_Common Shared Configuration Module
+# Ghost Common Shared Configuration Module
 
 The `Ghost_Common` module defines the Ghost publishing platform configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates no GCP resources and produces a `config` output consumed by platform-specific wrapper modules (`Ghost_CloudRun` and `Ghost_GKE`).
 
@@ -218,7 +218,7 @@ environment_variables = {
 
 ## 8. Platform-Specific Differences
 
-| Aspect | Ghost_CloudRun | Ghost_GKE |
+| Aspect | Ghost CloudRun | Ghost GKE |
 |--------|----------------|-----------|
 | `service_url` | `entrypoint.sh` auto-detects from GCE metadata API (checks `K_SERVICE` env var) | `entrypoint.sh` falls back to `http://localhost:2368` — GKE pods do not set `K_SERVICE`, so the URL must be configured via a Ghost `url` environment variable |
 | `min_instance_count` | `0` (scale-to-zero) — hardcoded in `Ghost_CloudRun/main.tf`, overrides Common default | `1` (always one pod running) — hardcoded in `Ghost_GKE/main.tf`, overrides Common default |

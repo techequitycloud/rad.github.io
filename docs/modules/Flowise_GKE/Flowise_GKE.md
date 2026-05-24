@@ -1,4 +1,4 @@
-# Flowise_GKE Module — Configuration Guide
+# Flowise GKE Module — Configuration Guide
 
 Flowise is an open-source visual AI workflow builder that lets non-developers construct LangChain and LlamaIndex pipelines through a drag-and-drop interface — now backed by Workday for enterprise deployments. It chains models, retrieval tools, prompt templates, and decision logic without boilerplate code, making it the primary entry point for visual AI development at a time when 76% of developers are using or planning to use AI tools. It is ideal for rapidly prototyping chatbots, RAG systems, and multi-agent pipelines. This module deploys Flowise on **GKE Autopilot** with a managed Cloud SQL PostgreSQL database, GCS-backed file storage, and optional NFS for shared volumes.
 
@@ -14,7 +14,7 @@ This guide documents variables that are **unique to `Flowise_GKE`** or that have
 
 **Key differences from `App_GKE` defaults:**
 
-| Feature | App_GKE default | Flowise_GKE default |
+| Feature | App GKE default | Flowise GKE default |
 |---|---|---|
 | `container_port` | `8080` | `3000` |
 | `cpu_limit` | `"1000m"` | `"1000m"` |
@@ -327,7 +327,7 @@ Only relevant when `workload_type = "StatefulSet"`.
 | Variable set | Routed to | Configures |
 |---|---|---|
 | `startup_probe_config`, `health_check_config` | `Flowise_Common` → `config.startup_probe` / `config.liveness_probe` | Kubernetes pod probe spec |
-| (also `startup_probe_config`, `health_check_config`) | `App_GKE` directly | App_GKE infrastructure probes |
+| (also `startup_probe_config`, `health_check_config`) | `App_GKE` directly | App GKE infrastructure probes |
 
 Both the startup and liveness probes target Flowise's dedicated health endpoint `/api/v1/ping`.
 

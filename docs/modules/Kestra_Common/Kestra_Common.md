@@ -1,4 +1,4 @@
-# Kestra_Common Shared Configuration Module
+# Kestra Common Shared Configuration Module
 
 The `Kestra_Common` module defines the Kestra workflow orchestration platform for the RAD Modules ecosystem. It **creates GCP resources** (one Secret Manager secret for the admin password) and produces a `config` output consumed by the platform-specific wrapper modules (`Kestra_CloudRun` and `Kestra_GKE`).
 

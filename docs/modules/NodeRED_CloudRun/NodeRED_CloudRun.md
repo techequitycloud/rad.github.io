@@ -1,4 +1,4 @@
-# NodeRED_CloudRun Module — Configuration Guide
+# NodeRED CloudRun Module — Configuration Guide
 
 Node-RED is a leading open-source, browser-based flow programming tool originally developed by IBM, with 4,000+ community connector nodes and a growing ecosystem spanning smart manufacturing and edge computing. It is the de facto standard for IoT, IIoT, and industrial automation — integrating legacy OT systems (Modbus, OPC-UA, Siemens S7, MQTT) with modern cloud services. Gartner projects that 70%+ of all applications will use low-code technologies by 2026, and the low-code platform market is tracking toward $16.5B by 2027. This module deploys Node-RED on **Google Cloud Run Gen2** with NFS-backed persistent flow storage and optional Redis context storage.
 
@@ -23,7 +23,7 @@ Node-RED is a leading open-source, browser-based flow programming tool originall
 
 ### Key differences from `App_CloudRun` defaults
 
-| Feature | App_CloudRun default | NodeRED_CloudRun default |
+| Feature | App CloudRun default | NodeRED CloudRun default |
 |---|---|---|
 | `container_port` | `8080` | `1880` |
 | `cpu_limit` | `"1000m"` | `"1000m"` |

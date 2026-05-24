@@ -3,7 +3,7 @@ title: "Istio_GKE Module Documentation"
 sidebar_label: "Istio_GKE"
 ---
 
-# Istio_GKE Module
+# Istio GKE Module
 
 ## Overview
 

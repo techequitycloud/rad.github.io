@@ -1,4 +1,4 @@
-# OpenEMR_Common Module
+# OpenEMR Common Module
 
 ## Overview
 
@@ -392,7 +392,7 @@ The following environment variables are always set by the module (merged with `v
 
 ## Platform-Specific Differences
 
-| Aspect | OpenEMR_CloudRun | OpenEMR_GKE |
+| Aspect | OpenEMR CloudRun | OpenEMR GKE |
 |--------|------------------|------------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | `true` (defaults from Common; CloudRun uses Auth Proxy socket) | `true` (forced in GKE wrapper; Cloud SQL Proxy sidecar) |

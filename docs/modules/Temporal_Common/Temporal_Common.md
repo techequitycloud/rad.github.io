@@ -1,4 +1,4 @@
-# Temporal_Common Shared Infrastructure Module
+# Temporal Common Shared Infrastructure Module
 
 The `Temporal_Common` module provisions the database infrastructure required by the Temporal Workflow Engine on Google Cloud Platform. It **creates Cloud SQL resources** (a database user, two PostgreSQL databases, and one Secret Manager secret) and exposes outputs consumed by `Temporal_GKE`.
 
@@ -96,7 +96,7 @@ This script is retained for use-cases where manual or external schema management
 
 ---
 
-## 5. Relationship to Temporal_GKE
+## 5. Relationship to Temporal GKE
 
 `Temporal_GKE` calls `Temporal_Common` after running `sql_discovery` to locate the Services_GCP-managed Cloud SQL instance:
 

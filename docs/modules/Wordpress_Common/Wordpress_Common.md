@@ -1,4 +1,4 @@
-# Wordpress_Common Module
+# Wordpress Common Module
 
 ## Overview
 
@@ -342,7 +342,7 @@ if ($_wp_site_url !== '') {
 
 ## Platform-Specific Differences
 
-| Aspect | Wordpress_CloudRun | Wordpress_GKE |
+| Aspect | Wordpress CloudRun | Wordpress GKE |
 |--------|-------------------|---------------|
 | `service_url` | Computed Cloud Run URL injected as `CLOUDRUN_SERVICE_URL` | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Optional (Auth Proxy sidecar) | Optional (Auth Proxy sidecar) |

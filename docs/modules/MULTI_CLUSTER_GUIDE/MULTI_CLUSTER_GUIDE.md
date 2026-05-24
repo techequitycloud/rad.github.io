@@ -158,7 +158,7 @@ module "services_gcp" {
 
 ## 5. Deploying Applications
 
-### App_GKE Module Integration
+### App GKE Module Integration
 
 #### Explicit Cluster Selection
 
@@ -233,7 +233,7 @@ module "worker_app" {
 
 ### Migration Steps
 
-#### Step 1: Update Services_GCP Configuration
+#### Step 1: Update Services GCP Configuration
 
 ```hcl
 # Before (single cluster)

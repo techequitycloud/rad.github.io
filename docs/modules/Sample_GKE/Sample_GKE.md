@@ -1,4 +1,4 @@
-# Sample_GKE Module — Configuration Guide
+# Sample GKE Module — Configuration Guide
 
 `Sample_GKE` is a **wrapper module** that sits on top of [`App_GKE`](../App_GKE/App_GKE.md). It deploys a pre-configured reference Flask application (Python 3.11, PostgreSQL 15, optional Redis, optional NFS) on GKE Autopilot. Its purpose is to serve as a working example of how to build a custom application module on top of `App_GKE`.
 
@@ -48,7 +48,7 @@ The `db-init` job and the `SECRET_KEY` secret are managed entirely by the module
 
 ---
 
-## Behaviours Unique to Sample_GKE
+## Behaviours Unique to Sample GKE
 
 ### 1. Minimum Instance Count Override
 
@@ -162,7 +162,7 @@ The table below summarises the three Redis-related variables and how they intera
 
 ---
 
-## Validating a Sample_GKE Deployment
+## Validating a Sample GKE Deployment
 
 Because `Sample_GKE` delegates all infrastructure to `App_GKE`, validation follows the same procedures described in the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). The additional resources managed by `Sample_Common` can be validated as follows:
 

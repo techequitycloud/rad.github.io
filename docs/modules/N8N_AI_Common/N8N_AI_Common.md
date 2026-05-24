@@ -1,4 +1,4 @@
-# N8N_AI_Common Shared Configuration Module
+# N8N AI Common Shared Configuration Module
 
 The `N8N_AI_Common` module defines the n8n workflow automation platform with an integrated AI stack (Qdrant vector database and Ollama LLM provider) for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`N8N_AI_CloudRun` and `N8N_AI_GKE`).
 
@@ -326,7 +326,7 @@ The default `gcs_volumes` variable mounts the bucket at `/home/node/.n8n` with `
 
 ## 10. Platform-Specific Differences
 
-| Aspect | N8N_AI_CloudRun | N8N_AI_GKE |
+| Aspect | N8N AI CloudRun | N8N AI GKE |
 |--------|-----------------|-----------|
 | `service_url` | Computed Cloud Run service URL | Internal ClusterIP URL (or first custom domain when `enable_custom_domain = true`) |
 | `enable_cloudsql_volume` | `true` (Auth Proxy sidecar) | `true` by default (Auth Proxy sidecar); can be set to `false` for TCP |

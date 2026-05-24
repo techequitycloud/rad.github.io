@@ -1,4 +1,4 @@
-# OpenEMR_CloudRun Module — Configuration Guide
+# OpenEMR CloudRun Module — Configuration Guide
 
 `OpenEMR_CloudRun` deploys **OpenEMR Community Edition** — the world's most widely
 deployed open-source Electronic Health Records (EHR) and medical practice management
@@ -269,7 +269,7 @@ are passed both to `OpenEMR_Common` and — as `startup_probe_config` /
 |---|---|---|
 | `enable_nfs` | `true` | **Must remain `true`** for a functional OpenEMR deployment. Provisions Cloud Filestore NFS. OpenEMR cannot persist patient data without shared NFS storage. |
 | `nfs_mount_path` | `"/var/www/localhost/htdocs/openemr/sites"` | Container mount path for the NFS volume. Maps directly to OpenEMR's `sites` directory. Do not change unless the container uses a different path. |
-| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to use. Leave empty to auto-discover a Services_GCP-managed instance. |
+| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to use. Leave empty to auto-discover a Services GCP-managed instance. |
 | `nfs_instance_base_name` | `"app-nfs"` | Base name for the inline NFS GCE VM when no existing instance is found. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. `OpenEMR_Common` may provision additional buckets via `module_storage_buckets`. |
 | `create_cloud_storage` | `true` | Set `false` to skip GCS bucket provisioning. |

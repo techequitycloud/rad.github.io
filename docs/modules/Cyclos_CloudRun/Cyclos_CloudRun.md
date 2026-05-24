@@ -1,4 +1,4 @@
-# Cyclos_CloudRun Module — Configuration Guide
+# Cyclos CloudRun Module — Configuration Guide
 
 Cyclos is open-source banking and payment software powering 1,500+ payment systems worldwide, particularly in developing economies and community currency initiatives. It enables financial inclusion for microfinance institutions, local banks, barter networks, and remittance operators where commercial banking software is cost-prohibitive, providing mobile-first online banking, POS integration, QR payments, and marketplace tools. This module deploys Cyclos on **Google Cloud Run** using the official `cyclos/cyclos` container image, backed by a managed Cloud SQL PostgreSQL instance.
 
@@ -14,24 +14,24 @@ This guide documents only the variables that are **unique to `Cyclos_CloudRun`**
 
 **Variables fully covered by the App_CloudRun guide:**
 
-| Configuration Area | App_CloudRun Section | Cyclos-Specific Notes |
+| Configuration Area | App CloudRun Section | Cyclos-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | Group 0 | Different defaults for `module_description` and `module_documentation`. `resource_creator_identity` is the same — see Group 0. |
-| Project & Identity | Group 1 | Refer to base App_CloudRun module documentation. |
+| Project & Identity | Group 1 | Refer to base App CloudRun module documentation. |
 | Runtime & Scaling | Group 3 | See [Cyclos Runtime Configuration](#cyclos-runtime-configuration) below for `cpu_limit`, `memory_limit`, and Cyclos-specific scaling defaults. `container_image` defaults to `cyclos/cyclos`; `container_image_source` defaults to `prebuilt`. `enable_cloudsql_volume` defaults to `false` (Cyclos uses TCP, not Unix socket). |
 | Environment Variables & Secrets | Group 4 | See [Cyclos Environment Variables](#cyclos-environment-variables) below for SMTP defaults. |
 | Observability & Health | Group 5 | See [Cyclos Health Probes](#cyclos-health-probes) below for renamed variables and Cyclos-specific defaults. |
-| Jobs & Scheduled Tasks | Group 6 | Refer to base App_CloudRun module documentation. |
-| CI/CD & GitHub Integration | Group 7 | Refer to base App_CloudRun module documentation. |
+| Jobs & Scheduled Tasks | Group 6 | Refer to base App CloudRun module documentation. |
+| CI/CD & GitHub Integration | Group 7 | Refer to base App CloudRun module documentation. |
 | Storage — NFS | Group 8 | NFS is **disabled by this module**. See [Platform-Managed Behaviours](#platform-managed-behaviours). `enable_nfs` defaults to `false`. |
-| Storage — GCS | Group 9 | Refer to base App_CloudRun module documentation. |
+| Storage — GCS | Group 9 | Refer to base App CloudRun module documentation. |
 | Redis Cache | Group 10 | Redis is **not supported** by `Cyclos_CloudRun`. `enable_redis` is hardcoded to `false` and is not exposed as a variable. Do not configure Redis for this module. |
 | Backup & Maintenance | Group 12 | Refer to base App_CloudRun module documentation for `backup_schedule` and `backup_retention_days`. See [Backup Import & Recovery](#backup-import--recovery) below for `enable_backup_import` and related variables. |
-| Custom Initialisation & SQL | Group 13 | Refer to base App_CloudRun module documentation. |
+| Custom Initialisation & SQL | Group 13 | Refer to base App CloudRun module documentation. |
 | Access & Networking | Group 14 | Refer to base App_CloudRun module documentation (`ingress_settings`, `vpc_egress_setting`, `network_name`). |
-| Identity-Aware Proxy | Group 15 | Refer to base App_CloudRun module documentation. |
-| Cloud Armor & CDN | Group 16 | Refer to base App_CloudRun module documentation. |
-| VPC Service Controls | Group 17 | Refer to base App_CloudRun module documentation. |
+| Identity-Aware Proxy | Group 15 | Refer to base App CloudRun module documentation. |
+| Cloud Armor & CDN | Group 16 | Refer to base App CloudRun module documentation. |
+| VPC Service Controls | Group 17 | Refer to base App CloudRun module documentation. |
 
 ---
 
@@ -85,7 +85,7 @@ Cyclos is a Java application and requires significantly more CPU and memory than
 
 **Cyclos-specific runtime defaults that differ from App_CloudRun:**
 
-| Variable | App_CloudRun Default | Cyclos_CloudRun Default | Reason |
+| Variable | App CloudRun Default | Cyclos CloudRun Default | Reason |
 |---|---|---|---|
 | `container_image_source` | `"custom"` | `"prebuilt"` | The official `cyclos/cyclos` Docker Hub image is production-ready and pre-configured. |
 | `container_image` | `""` | `"cyclos/cyclos"` | The official Cyclos image from Docker Hub. |

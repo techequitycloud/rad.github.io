@@ -1,4 +1,4 @@
-# Cyclos_GKE Module — Configuration Guide
+# Cyclos GKE Module — Configuration Guide
 
 Cyclos is open-source banking and payment software powering 1,500+ payment systems worldwide, particularly in developing economies and community currency initiatives. It enables financial inclusion for microfinance institutions, local banks, barter networks, and remittance operators where commercial banking software is cost-prohibitive, providing mobile-first online banking, POS integration, QR payments, and marketplace tools. This module deploys Cyclos on **GKE Autopilot** using the official `cyclos/cyclos` container image, backed by a managed Cloud SQL PostgreSQL instance.
 
@@ -14,34 +14,34 @@ This guide documents only the variables that are **unique to `Cyclos_GKE`** or t
 
 **Variables fully covered by the App_GKE guide:**
 
-| Configuration Area | App_GKE.md Section | Cyclos-Specific Notes |
+| Configuration Area | App GKE.md Section | Cyclos-Specific Notes |
 |---|---|---|
-| Project & Identity | §2 IAM & Access Control | Refer to base App_GKE module documentation. |
+| Project & Identity | §2 IAM & Access Control | Refer to base App GKE module documentation. |
 | Runtime & Scaling | §3.A Compute (GKE Autopilot) | See [Cyclos Runtime Configuration](#cyclos-runtime-configuration) below for Cyclos-specific resource sizing. `container_image` defaults to `cyclos/cyclos`; `container_image_source` defaults to `prebuilt`. |
 | Environment Variables & Secrets | (General config) | See [Cyclos Environment Variables](#cyclos-environment-variables) below for Cyclos-specific defaults. |
-| GKE Backend Configuration | §3.A, §3.D | Refer to base App_GKE module documentation. |
-| Jobs & Scheduled Tasks | §3.E Initialization Jobs & CronJobs | Refer to base App_GKE module documentation. |
-| Additional Services | §3.F Additional Services | Refer to base App_GKE module documentation. |
+| GKE Backend Configuration | §3.A, §3.D | Refer to base App GKE module documentation. |
+| Jobs & Scheduled Tasks | §3.E Initialization Jobs & CronJobs | Refer to base App GKE module documentation. |
+| Additional Services | §3.F Additional Services | Refer to base App GKE module documentation. |
 | Storage — NFS | §3.C Storage | NFS is **disabled by this module**. See [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| Storage — GCS | §3.C Storage | Refer to base App_GKE module documentation. |
-| Cloud Armor WAF | §4.A Cloud Armor WAF | Refer to base App_GKE module documentation. |
-| Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Refer to base App_GKE module documentation. |
-| Binary Authorization | §4.C Binary Authorization | Refer to base App_GKE module documentation. |
-| VPC Service Controls | §4.D VPC Service Controls | Refer to base App_GKE module documentation. |
-| Secrets Store CSI Driver | §4.E Secrets Store CSI Driver | Refer to base App_GKE module documentation. |
-| Traffic & Ingress | §5 Traffic & Ingress | Refer to base App_GKE module documentation. |
-| CI/CD & Cloud Build | §6.A Cloud Build Triggers | Refer to base App_GKE module documentation. |
-| Cloud Deploy Pipeline | §6.B Cloud Deploy Pipeline | Refer to base App_GKE module documentation. |
-| Image Mirroring | §6.C Image Mirroring | Refer to base App_GKE module documentation. |
-| Pod Disruption Budgets | §7.A Pod Disruption Budgets | Refer to base App_GKE module documentation. |
-| Topology Spread Constraints | §7.B Topology Spread Constraints | Refer to base App_GKE module documentation. |
-| Resource Quotas | §7.C Resource Quotas | Refer to base App_GKE module documentation. |
+| Storage — GCS | §3.C Storage | Refer to base App GKE module documentation. |
+| Cloud Armor WAF | §4.A Cloud Armor WAF | Refer to base App GKE module documentation. |
+| Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Refer to base App GKE module documentation. |
+| Binary Authorization | §4.C Binary Authorization | Refer to base App GKE module documentation. |
+| VPC Service Controls | §4.D VPC Service Controls | Refer to base App GKE module documentation. |
+| Secrets Store CSI Driver | §4.E Secrets Store CSI Driver | Refer to base App GKE module documentation. |
+| Traffic & Ingress | §5 Traffic & Ingress | Refer to base App GKE module documentation. |
+| CI/CD & Cloud Build | §6.A Cloud Build Triggers | Refer to base App GKE module documentation. |
+| Cloud Deploy Pipeline | §6.B Cloud Deploy Pipeline | Refer to base App GKE module documentation. |
+| Image Mirroring | §6.C Image Mirroring | Refer to base App GKE module documentation. |
+| Pod Disruption Budgets | §7.A Pod Disruption Budgets | Refer to base App GKE module documentation. |
+| Topology Spread Constraints | §7.B Topology Spread Constraints | Refer to base App GKE module documentation. |
+| Resource Quotas | §7.C Resource Quotas | Refer to base App GKE module documentation. |
 | Auto Password Rotation | §7.D Auto Password Rotation | See [Password Rotation Propagation Delay](#password-rotation-propagation-delay) below for Cyclos-specific notes. |
 | Backup Import & Recovery | §8.B Backup Import | See [Backup Import & Recovery](#backup-import--recovery) below. |
-| Service Mesh (ASM) | §8.C Service Mesh (ASM via Fleet) | Refer to base App_GKE module documentation. |
-| Multi-Cluster Services | §8.D Multi-Cluster Services (MCS) | Refer to base App_GKE module documentation. |
-| Backup Schedule & Retention | (General config) | Refer to base App_GKE module documentation. |
-| Custom SQL Scripts | §3.E Initialization Jobs & CronJobs | Refer to base App_GKE module documentation. |
+| Service Mesh (ASM) | §8.C Service Mesh (ASM via Fleet) | Refer to base App GKE module documentation. |
+| Multi-Cluster Services | §8.D Multi-Cluster Services (MCS) | Refer to base App GKE module documentation. |
+| Backup Schedule & Retention | (General config) | Refer to base App GKE module documentation. |
+| Custom SQL Scripts | §3.E Initialization Jobs & CronJobs | Refer to base App GKE module documentation. |
 | Observability & Health | (General config) | See [Cyclos Health Probes](#cyclos-health-probes) below for Cyclos-specific defaults. |
 
 ---
@@ -109,7 +109,7 @@ container_resources = {
 
 **Cyclos-specific runtime defaults that differ from App_GKE:**
 
-| Variable | App_GKE Default | Cyclos_GKE Default | Reason |
+| Variable | App GKE Default | Cyclos GKE Default | Reason |
 |---|---|---|---|
 | `container_image_source` | `"custom"` | `"prebuilt"` | The official `cyclos/cyclos` Docker Hub image is production-ready and pre-configured. |
 | `container_image` | `""` | `"cyclos/cyclos"` | The official Cyclos image from Docker Hub. |

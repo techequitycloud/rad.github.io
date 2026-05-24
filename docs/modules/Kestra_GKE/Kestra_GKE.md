@@ -1,4 +1,4 @@
-# Kestra_GKE Module — Configuration Guide
+# Kestra GKE Module — Configuration Guide
 
 Kestra is an open-source, declarative, event-driven workflow orchestration platform (Apache 2.0 licence) with **26,000+ GitHub stars**, trusted by more than 30,000 organisations including Bloomberg, Toyota, BHP, JPMorgan Chase, Apple, and Crédit Agricole. The platform executed **2 billion workflows in 2025** (20× year-on-year growth) and raised a **$25M Series A in March 2026**. BHP's adoption replaced VMware vRA entirely and cut infrastructure provisioning from 6 months to 6 days. It allows you to build, schedule, and monitor ETL/ELT pipelines, data quality checks, agentic AI pipelines, and workflow automation through a YAML-based flow definition and a rich plugin ecosystem. This module deploys Kestra on **GKE Autopilot** in **standalone mode** (server, worker, and scheduler in a single container) with a PostgreSQL 15 backend and GCS artifact storage.
 
@@ -14,7 +14,7 @@ This guide documents variables that are **unique to `Kestra_GKE`** or that have 
 
 **Key differences from `App_GKE` defaults:**
 
-| Feature | App_GKE default | Kestra_GKE default |
+| Feature | App GKE default | Kestra GKE default |
 |---|---|---|
 | `container_port` | `8080` | `8080` |
 | `cpu_limit` | `"1000m"` | `"2000m"` |
@@ -115,7 +115,7 @@ The following behaviours are set automatically and cannot be overridden via user
 
 | Variable | Default | Options / Format | Description |
 |---|---|---|---|
-| `gke_cluster_name` | `""` | Cluster name string | GKE cluster name. Leave empty to auto-discover a Services_GCP-managed cluster. |
+| `gke_cluster_name` | `""` | Cluster name string | GKE cluster name. Leave empty to auto-discover a Services GCP-managed cluster. |
 | `namespace_name` | `""` | Namespace string | Kubernetes namespace. Leave empty to auto-generate from `application_name` and `tenant_deployment_id`. |
 | `workload_type` | `"Deployment"` | `Deployment`, `StatefulSet` | Use `"StatefulSet"` if Kestra flows are stored locally rather than in GCS. |
 | `service_type` | `"LoadBalancer"` | `ClusterIP`, `LoadBalancer`, `NodePort` | Kubernetes Service type. |
@@ -323,15 +323,15 @@ Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — 
 |---|---|---|
 | `startup_probe` | `Kestra_Common` → `config.startup_probe` | Application container startup probe |
 | `liveness_probe` | `Kestra_Common` → `config.liveness_probe` | Application container liveness probe |
-| `startup_probe_config` | `App_GKE` directly | App_GKE infrastructure startup probe |
-| `health_check_config` | `App_GKE` directly | App_GKE infrastructure liveness probe |
+| `startup_probe_config` | `App_GKE` directly | App GKE infrastructure startup probe |
+| `health_check_config` | `App_GKE` directly | App GKE infrastructure liveness probe |
 
 | Variable | Default | Description |
 |---|---|---|
 | `startup_probe` | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=20, failure_threshold=40 }` | Application startup probe. |
 | `liveness_probe` | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=180, timeout_seconds=5, period_seconds=30, failure_threshold=5 }` | Application liveness probe. |
-| `startup_probe_config` | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=30, period_seconds=20, failure_threshold=40 }` | App_GKE startup probe. |
-| `health_check_config` | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=180, period_seconds=30, failure_threshold=5 }` | App_GKE liveness probe. |
+| `startup_probe_config` | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=30, period_seconds=20, failure_threshold=40 }` | App GKE startup probe. |
+| `health_check_config` | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=180, period_seconds=30, failure_threshold=5 }` | App GKE liveness probe. |
 | `uptime_check_config` | `{ enabled=false, path="/health" }` | Cloud Monitoring uptime check. Disabled by default in GKE (unlike CloudRun where it defaults to enabled). |
 | `alert_policies` | `[]` | Custom metric alert policies. |
 

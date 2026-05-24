@@ -1,4 +1,4 @@
-# Strapi_Common Module
+# Strapi Common Module
 
 ## Overview
 
@@ -351,7 +351,7 @@ Node.js requirement: `>=18.0.0 <=20.x.x`.
 
 ## Platform-Specific Differences
 
-| Aspect | Strapi_CloudRun | Strapi_GKE |
+| Aspect | Strapi CloudRun | Strapi GKE |
 |--------|-----------------|------------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Optional (Auth Proxy sidecar) | Not used (TCP to Cloud SQL private IP) |

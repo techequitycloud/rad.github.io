@@ -1,4 +1,4 @@
-# Wikijs_GKE Module — Configuration Guide
+# Wikijs GKE Module — Configuration Guide
 
 `Wikijs_GKE` is a pre-configured wrapper around the [`App_GKE`](../App_GKE/App_GKE.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Kubernetes Engine (GKE) Autopilot. Wiki.js has 28,000+ GitHub stars and is adopted by software teams, healthcare organizations (including the Indonesia Ministry of Health), educational institutions, and government agencies (including Brazil social services). It replaces expensive Confluence licenses — saving $5–10/user/month — with support for Markdown, WYSIWYG editing, LDAP/SAML/OAuth, and Git sync for version-controlled knowledge management.
 
@@ -10,7 +10,7 @@ Every variable in this module is passed through to `App_GKE`. The wrapper's role
 
 ---
 
-## Architecture: the Wikijs_Common sub-module
+## Architecture: the Wikijs Common sub-module
 
 Before variables are forwarded to `App_GKE`, this module calls `Wikijs_Common`, which:
 
@@ -29,7 +29,7 @@ The variables in this group are identical in purpose to those in `App_GKE`. See 
 
 The Wiki.js-specific defaults for this module are:
 
-| Variable | Wikijs_GKE Default | App_GKE Default |
+| Variable | Wikijs GKE Default | App GKE Default |
 |---|---|---|
 | `module_description` | `"Wiki.js: Deploy powerful open-source wiki software on Google Kubernetes Engine (GKE)."` | `"App_GKE: A production-ready module…"` |
 | `module_documentation` | `"https://docs.radmodules.dev/docs/applications/wiki-js"` | `"https://docs.radmodules.dev/docs/applications/gke-app"` |
@@ -57,7 +57,7 @@ All variables are identical in purpose to `App_GKE`. See [App_GKE §1 Module Ove
 
 The Wiki.js-specific defaults are:
 
-| Variable | Wikijs_GKE Default | App_GKE Default | Notes |
+| Variable | Wikijs GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `application_name` | `"wikijs"` | `"gkeapp"` | Used as a base for all resource names. Do not change after initial deployment. |
 | `application_display_name` | `"Wiki.js"` | `"App_GKE Application"` | Human-readable name; safe to change at any time. |
@@ -72,7 +72,7 @@ All variables are identical in purpose to `App_GKE`. See [App_GKE §3.A Compute 
 
 The Wiki.js-specific defaults are:
 
-| Variable | Wikijs_GKE Default | App_GKE Default | Notes |
+| Variable | Wikijs GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `container_image_source` | `"custom"` | `"custom"` | Wiki.js uses a custom build by default, producing a pre-configured image via Cloud Build. |
 | `container_image` | `"requarks/wiki:2"` | `""` | The upstream Docker Hub image used as the base when `container_image_source = "custom"`. With `enable_image_mirroring = true` (the default), this image is mirrored into Artifact Registry before the build. |
@@ -113,7 +113,7 @@ All variables are identical to `App_GKE`. See [App_GKE §3.A Compute (GKE Autopi
 
 Wiki.js-specific defaults:
 
-| Variable | Wikijs_GKE Default | App_GKE Default | Notes |
+| Variable | Wikijs GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `workload_type` | `"Deployment"` | `"Deployment"` | Wiki.js uses a standard Deployment; switch to `StatefulSet` only if you require per-pod persistent storage beyond GCS/NFS. |
 | `service_type` | `"LoadBalancer"` | `"LoadBalancer"` | Exposes Wiki.js via an external load balancer IP. |
@@ -127,7 +127,7 @@ All variables are identical in purpose to `App_GKE`. See [App_GKE §3.B Database
 
 The Wiki.js-specific defaults are:
 
-| Variable | Wikijs_GKE Default | App_GKE Default | Notes |
+| Variable | Wikijs GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `database_type` | `"POSTGRES_15"` | `"POSTGRES"` | Wiki.js requires PostgreSQL. Do not change to MySQL or NONE — the application will fail to start. Pinning to `POSTGRES_15` ensures version consistency across deployments. |
 | `application_database_name` | `"wikijs"` | `"gkeappdb"` | Must match `DB_NAME` in `environment_variables`. Do not change after initial deployment. |
@@ -143,7 +143,7 @@ The Wiki.js-specific defaults are:
 
 The following groups are available in `Wikijs_GKE` and behave exactly as documented in the `App_GKE` guide. The Wiki.js application imposes no additional constraints or defaults on them beyond what is noted in that guide.
 
-| Configuration Area | Wikijs_GKE Variables | App_GKE.md Section |
+| Configuration Area | Wikijs GKE Variables | App GKE.md Section |
 |---|---|---|
 | CI/CD & GitHub Integration | `enable_cicd_trigger`, `github_repository_url`, `github_token`, `github_app_installation_id`, `cicd_trigger_config`, `enable_cloud_deploy`, `cloud_deploy_stages` | [App_GKE §6 CI/CD & Delivery](../App_GKE/App_GKE.md#6-cicd--delivery) |
 | Binary Authorization | `enable_binary_authorization`, `binauthz_evaluation_mode` | [App_GKE §4.C Binary Authorization](../App_GKE/App_GKE.md#c-binary-authorization) |

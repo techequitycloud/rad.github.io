@@ -1,4 +1,4 @@
-# Directus_GKE Module — Configuration Guide
+# Directus GKE Module — Configuration Guide
 
 `Directus_GKE` is a wrapper module that deploys [Directus](https://directus.io/) — an open-source composable data platform and headless CMS with 34,500+ GitHub stars, trusted by Tripadvisor, Adobe, and Mercedes-Benz — on Google Kubernetes Engine (GKE) Autopilot. Directus wraps any SQL database with instant REST and GraphQL APIs and a no-code admin panel without modifying your schema. Its native MCP server support (introduced in v11.13, November 2025) enables direct AI tool integration, and it is consistently ranked among the top open-source headless CMS choices in 2026 for Backend-as-a-Service, internal dashboards, and omnichannel content delivery. It composes two underlying modules:
 
@@ -13,7 +13,7 @@
 
 The following configuration areas are provided by the underlying `App_GKE` module. Consult the linked sections of the [App_GKE Configuration Guide](../App_GKE/App_GKE.md) for full documentation.
 
-| Configuration Area | App_GKE.md Section | Directus-Specific Notes |
+| Configuration Area | App GKE.md Section | Directus-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Directus-specific `module_description`, `module_documentation`, and `module_services` defaults are pre-set. `resource_creator_identity` — see [Resource Creator Identity](#resource-creator-identity) below. |
 | Project & Identity | §2 IAM & Access Control | Identical, plus `region` unique to this module — see [Project & Identity](#project--identity) below. |
@@ -54,7 +54,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 
 The following variables are shared with `App_GKE` but have different default values in `Directus_GKE`, pre-tuned for a Directus deployment. Where the variable name differs from its `App_GKE` equivalent, the `App_GKE` name is shown in parentheses.
 
-| Variable | Directus_GKE Default | App_GKE Default | Reason |
+| Variable | Directus GKE Default | App GKE Default | Reason |
 |---|---|---|---|
 | `application_name` | `"directus"` | `"gkeapp"` | Identifies the Directus workload across all resource names. |
 | `application_version` | `"11.1.0"` | `"1.0.0"` | Pins the Directus container image version. |
@@ -77,7 +77,7 @@ The following variables are shared with `App_GKE` but have different default val
 
 Several variables in `Directus_GKE` use different names from their `App_GKE` equivalents. This is intentional — the Directus module exposes a simplified interface focused on Directus semantics. The mapping is:
 
-| Directus_GKE Variable | App_GKE Equivalent | Notes |
+| Directus GKE Variable | App GKE Equivalent | Notes |
 |---|---|---|
 | `db_name` | `application_database_name` | Name of the database created within Cloud SQL. Default: `"directus"`. Passed to App_GKE as `application_database_name`. |
 | `db_user` | `application_database_user` | Username of the database user. Default: `"directus"`. Passed to App_GKE as `application_database_user`. |
@@ -121,8 +121,8 @@ All variables described in [App_GKE.md §2 IAM & Access Control](../App_GKE/App_
 |---|---|---|---|
 | `deployment_id` | `""` | Short alphanumeric string (e.g. `"a1b2c3"`) | Short alphanumeric identifier appended to all resource names. Auto-generated when empty; set explicitly to pin a stable suffix across Terraform runs. |
 | `region` | `"us-central1"` | GCP region identifier (e.g. `"us-central1"`, `"europe-west1"`) | Fallback GCP region used when the module's network discovery routine cannot determine the deployment region from existing VPC subnets in the project. The module inspects subnet configurations at apply time and derives the region automatically in most environments. Set this explicitly when (1) the project has no pre-existing subnets and `Services_GCP` has not yet been deployed, or (2) the default `"us-central1"` does not match the intended deployment target. If network discovery succeeds, the discovered region takes precedence over this value. |
-| `network_name` | `""` | VPC network name | Defined in the module for interface compatibility but **not forwarded to App_GKE** — the module hardcodes network discovery. Not referenced — setting this variable has no effect on deployment. |
-| `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` | CIDR string | Defined in the module for interface compatibility but **not forwarded to App_GKE**. Not referenced — setting this variable has no effect on deployment. |
+| `network_name` | `""` | VPC network name | Defined in the module for interface compatibility but **not forwarded to App GKE** — the module hardcodes network discovery. Not referenced — setting this variable has no effect on deployment. |
+| `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` | CIDR string | Defined in the module for interface compatibility but **not forwarded to App GKE**. Not referenced — setting this variable has no effect on deployment. |
 
 **Validating Deployment Region:**
 ```bash
@@ -233,7 +233,7 @@ kubectl exec -n NAMESPACE POD_NAME -- curl -sf http://localhost:8055/server/heal
 
 `Directus_GKE` applies the following defaults that differ from those in `App_GKE`. All other database variables (`sql_instance_name`, `sql_instance_base_name`, `database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`) are exposed and forwarded to App_GKE with the same names and behaviour as documented in [App_GKE.md §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql).
 
-| Variable | Directus_GKE Default | App_GKE Default | Notes |
+| Variable | Directus GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `database_type` | `"POSTGRES_15"` | `"POSTGRES"` | Directus is tested and optimised against PostgreSQL. The version is pinned to `POSTGRES_15` for production consistency. MySQL deployments are supported but PostGIS and some extensions require PostgreSQL. |
 | `db_name` | `"directus"` | `"gkeappdb"` | See [Application & Database Identity](#application--database-identity). |

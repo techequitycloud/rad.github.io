@@ -1,4 +1,4 @@
-# MC_Bank_GKE Module
+# MC Bank GKE Module
 
 ## Overview
 

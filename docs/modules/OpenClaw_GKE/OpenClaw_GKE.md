@@ -1,4 +1,4 @@
-# OpenClaw_GKE Module — Configuration Guide
+# OpenClaw GKE Module — Configuration Guide
 
 OpenClaw is an open-source local AI agent that takes actions (not just generates responses), gaining rapid GitHub traction in late 2025. Its ecosystem of derivative startups generated approximately $400K/month in revenue within the first quarter of availability. Top use cases include contract review (legal teams report ~40% reduction in document review time), competitor monitoring, AI-powered content research, inbox triage, and DevOps security scanning. This module deploys OpenClaw on **GKE Autopilot** as a Kubernetes Deployment, backed by GCS Fuse CSI driver for durable agent workspace and Secret Manager for credential management, with per-tenant isolation for multi-tenant deployments.
 
@@ -83,7 +83,7 @@ The following behaviours are applied automatically by `OpenClaw_GKE` (via the `O
 
 **Key differences from `App_GKE` defaults:**
 
-| Variable | App_GKE default | OpenClaw_GKE default | Reason |
+| Variable | App GKE default | OpenClaw GKE default | Reason |
 |---|---|---|---|
 | `container_resources.cpu_limit` | `"1000m"` | `"2000m"` | OpenClaw Node.js gateway benefits from at least 2 vCPU. |
 | `container_resources.memory_limit` | `"512Mi"` | `"2Gi"` | Agent state and plugin staging require more memory. |
@@ -97,7 +97,7 @@ The following behaviours are applied automatically by `OpenClaw_GKE` (via the `O
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `gke_cluster_name` | 5 | `""` | GKE Autopilot cluster name. Auto-discovers the Services_GCP-managed cluster when empty. |
+| `gke_cluster_name` | 5 | `""` | GKE Autopilot cluster name. Auto-discovers the Services GCP-managed cluster when empty. |
 | `namespace_name` | 5 | `""` | Kubernetes namespace. Auto-generated from resource prefix when empty. |
 | `workload_type` | 5 | `"Deployment"` | `"Deployment"` for stateless replicas with GCS-backed state, or `"StatefulSet"` for sticky pod identity. |
 | `service_type` | 5 | `"ClusterIP"` | `"ClusterIP"` for internal-only access; `"LoadBalancer"` for direct external access. |
@@ -323,7 +323,7 @@ OpenClaw uses GCS Fuse for state. NFS is disabled by default and not required.
 
 ## Platform-Specific Comparison
 
-| Aspect | OpenClaw_CloudRun | OpenClaw_GKE |
+| Aspect | OpenClaw CloudRun | OpenClaw GKE |
 |---|---|---|
 | Compute | Cloud Run v2 (serverless) | GKE Autopilot (Kubernetes) |
 | `min_instance_count` default | `0` (scale-to-zero) | `1` (always warm) |

@@ -1,4 +1,4 @@
-# Wordpress_CloudRun Module — Configuration Guide
+# Wordpress CloudRun Module — Configuration Guide
 
 `Wordpress_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [WordPress](https://wordpress.org/) on Google Cloud Run Gen2. WordPress is the world's most widely-deployed CMS, powering 43.5% of all websites and holding 62.8% of the CMS market — approximately 480–590 million sites globally. WooCommerce, its e-commerce extension, controls 36% of all online stores with roughly $35B in GMV in 2025, and an ecosystem of 60,000+ plugins makes WordPress the default choice for marketing sites, news publishers, e-commerce, and membership platforms at any scale.
 
@@ -373,7 +373,7 @@ The table below covers all variables unique to or with notable defaults in `Word
 |---|---|---|---|---|
 | `application_name` | `string` | `"wordpress"` | 2 | Base resource name |
 | `display_name` | `string` | `"Wordpress"` | 2 | UI display name (forwarded as `application_display_name`) |
-| `description` | `string` | `"Wordpress CMS on Cloud Run"` | 2 | Used by Wordpress_Common only |
+| `description` | `string` | `"Wordpress CMS on Cloud Run"` | 2 | Used by Wordpress Common only |
 | `application_version` | `string` | `"latest"` | 2 | Image tag |
 | `php_memory_limit` | `string` | `"512M"` | 2 | PHP memory limit |
 | `upload_max_filesize` | `string` | `"64M"` | 2 | Max upload file size |

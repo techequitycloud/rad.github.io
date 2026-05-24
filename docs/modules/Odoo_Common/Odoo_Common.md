@@ -1,4 +1,4 @@
-# Odoo_Common Module
+# Odoo Common Module
 
 ## Overview
 
@@ -341,7 +341,7 @@ The `redis_host_final` local is computed at Terraform plan time: if `var.redis_h
 
 ## Platform-Specific Differences
 
-| Aspect | Odoo_CloudRun | Odoo_GKE |
+| Aspect | Odoo CloudRun | Odoo GKE |
 |--------|---------------|----------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Optional (Auth Proxy sidecar); default `true` | Optional (Auth Proxy sidecar); default `true` — GKE pods can use either socket or TCP depending on cluster networking |

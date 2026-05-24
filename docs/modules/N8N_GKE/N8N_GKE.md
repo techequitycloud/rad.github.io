@@ -1,4 +1,4 @@
-# N8N_GKE Module — Configuration Guide
+# N8N GKE Module — Configuration Guide
 
 n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), **230,000+ active users**, and a **$2.5B valuation** as of 2025 — growing from $350M in under four months and serving a quarter of the Fortune 500. With $240M raised across four funding rounds, 400+ integrations, and native AI nodes, n8n connects apps, APIs, and data sources with full code flexibility. It is self-hostable for total data sovereignty and no per-execution fees. This module deploys n8n on **GKE Autopilot** with a managed PostgreSQL database, GCS-backed storage persistence, and optional NFS for shared volumes.
 
@@ -14,34 +14,34 @@ This guide documents only the variables that are **unique to `N8N_GKE`** or that
 
 **Variables fully covered by the App_GKE guide:**
 
-| Configuration Area | App_GKE.md Section | N8N-Specific Notes |
+| Configuration Area | App GKE.md Section | N8N-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Different defaults for `module_description` and `module_documentation`. |
-| Project & Identity | §2 IAM & Access Control | Refer to base App_GKE module documentation. |
+| Project & Identity | §2 IAM & Access Control | Refer to base App GKE module documentation. |
 | Application Identity | §3.A Compute (GKE Autopilot) | See [N8N Application Identity](#n8n-application-identity) below for n8n-specific defaults. |
 | Runtime & Scaling | §3.A Compute (GKE Autopilot) | See [N8N Runtime Configuration](#n8n-runtime-configuration) below. `cpu_limit` and `memory_limit` are top-level variables. |
 | Environment Variables & Secrets | §3 Core Service Configuration | See [N8N Environment Variables](#n8n-environment-variables) below for SMTP defaults. |
 | GKE Backend Configuration | §3.A Compute (GKE Autopilot) | Refer to base App_GKE module documentation (`service_type`, `workload_type`, `session_affinity`, `gke_cluster_name`, `namespace_name`, etc.). See [StatefulSet Configuration](#statefulset-configuration) for n8n StatefulSet-specific variables. |
 | Networking & Network Policies | §3.D Networking & Network Policies | Identical. |
-| Jobs & Scheduled Tasks | §3.E Initialization Jobs & CronJobs | Refer to base App_GKE module documentation. |
+| Jobs & Scheduled Tasks | §3.E Initialization Jobs & CronJobs | Refer to base App GKE module documentation. |
 | Additional Services | §3.F Additional Services | Identical. |
-| CI/CD & GitHub Integration | §6 CI/CD & Delivery | Refer to base App_GKE module documentation. |
+| CI/CD & GitHub Integration | §6 CI/CD & Delivery | Refer to base App GKE module documentation. |
 | Storage — NFS | §3.C Storage (NFS / GCS / GCS Fuse) | NFS is **enabled by default** (`enable_nfs = true`). See [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| Storage — GCS | §3.C Storage (NFS / GCS / GCS Fuse) | Refer to base App_GKE module documentation. |
+| Storage — GCS | §3.C Storage (NFS / GCS / GCS Fuse) | Refer to base App GKE module documentation. |
 | Database Configuration | §3.B Database (Cloud SQL) | See [N8N Database Configuration](#n8n-database-configuration) below. `db_name` and `db_user` replace `application_database_name` and `application_database_user`. |
-| Backup Schedule & Retention | §3.B Database (Cloud SQL) | Refer to base App_GKE module documentation. |
-| Custom SQL Scripts | §3.E Initialization Jobs & CronJobs | Refer to base App_GKE module documentation. |
+| Backup Schedule & Retention | §3.B Database (Cloud SQL) | Refer to base App GKE module documentation. |
+| Custom SQL Scripts | §3.E Initialization Jobs & CronJobs | Refer to base App GKE module documentation. |
 | Observability & Health | §3.A Compute (GKE Autopilot) | See [N8N Health Probes](#n8n-health-probes) below for the two-path probe system. `startup_probe_config`, `health_check_config`, `uptime_check_config`, and `alert_policies` pass directly to App_GKE. |
-| Cloud Armor WAF | §4.A Cloud Armor WAF | Refer to base App_GKE module documentation. |
+| Cloud Armor WAF | §4.A Cloud Armor WAF | Refer to base App GKE module documentation. |
 | Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Refer to base App_GKE module documentation. Note: GKE IAP requires `iap_oauth_client_id` and `iap_oauth_client_secret`. |
 | Binary Authorization | §4.C Binary Authorization | Identical. |
 | VPC Service Controls | §4.D VPC Service Controls | Identical. |
 | Secrets Store CSI Driver | §4.E Secrets Store CSI Driver | Identical. |
-| Traffic & Ingress | §5 Traffic & Ingress | Refer to base App_GKE module documentation. |
+| Traffic & Ingress | §5 Traffic & Ingress | Refer to base App GKE module documentation. |
 | CDN | §5.B CDN | Identical. |
 | Pod Disruption Budgets | §7.A Pod Disruption Budgets | `enable_pod_disruption_budget` defaults to `true`. |
 | Topology Spread Constraints | §7.B Topology Spread Constraints | Identical. |
-| Resource Quotas | §7.C Resource Quotas | Refer to base App_GKE module documentation. |
+| Resource Quotas | §7.C Resource Quotas | Refer to base App GKE module documentation. |
 | Auto Password Rotation | §7.D Auto Password Rotation | See [N8N Database Configuration](#n8n-database-configuration). |
 | Redis Cache | §8.A Redis / Memorystore | `enable_redis` defaults to `true`. See [Redis Configuration](#redis-configuration) for n8n-specific details. |
 | Backup Import | §8.B Backup Import | Uses `backup_uri` instead of `backup_file` — mapped internally to App_GKE's `backup_file` input. |
@@ -107,7 +107,7 @@ n8n exposes `cpu_limit` and `memory_limit` as **dedicated top-level variables** 
 
 **N8N-specific runtime defaults that differ from App_GKE:**
 
-| Variable | App_GKE Default | N8N_GKE Default | Reason |
+| Variable | App GKE Default | N8N GKE Default | Reason |
 |---|---|---|---|
 | `container_port` | `8080` | `5678` | n8n's native port. |
 | `cpu_limit` | `"1000m"` | `"2000m"` | Workflow automation is CPU-intensive for concurrent node execution. |
@@ -237,7 +237,7 @@ Override the SMTP values to enable n8n email notifications (workflow failure ale
 | Variable set | Passed to | Configures |
 |---|---|---|
 | `startup_probe`, `liveness_probe` | `N8N_Common` sub-module | The application container's Kubernetes probe spec (`initialDelaySeconds`, `path`, `failureThreshold`, etc.) |
-| `startup_probe_config`, `health_check_config` | `App_GKE` directly | The App_GKE-standard probe configuration used for load balancer health checks and GKE infrastructure probes |
+| `startup_probe_config`, `health_check_config` | `App_GKE` directly | The App GKE-standard probe configuration used for load balancer health checks and GKE infrastructure probes |
 
 These are parallel paths, not aliases. Changing `startup_probe` does not affect `startup_probe_config`, and vice versa.
 

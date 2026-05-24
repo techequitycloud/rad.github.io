@@ -14,7 +14,7 @@ This guide documents variables that are **unique to `Activepieces_GKE`** or that
 
 **Variables fully covered by the App_GKE guide:**
 
-| Configuration Area | App_GKE.md Section | Activepieces-Specific Notes |
+| Configuration Area | App GKE.md Section | Activepieces-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Different defaults for `module_description` and `module_documentation`. |
 | Project & Identity | §2 IAM & Access Control | Identical. Plus `deployment_region` for fallback region. |

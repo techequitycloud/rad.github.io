@@ -1,4 +1,4 @@
-# App_GKE on Google Cloud Platform
+# App GKE on Google Cloud Platform
 
 This document provides a comprehensive analysis of the `modules/App_GKE` Terraform module on Google Cloud Platform. It details the architecture, IAM configuration, service integrations, and potential enhancements.
 
@@ -401,16 +401,16 @@ When no Services_GCP dependency is detected, the module is fully self-contained 
 
 | Resource | Terraform resource | Condition |
 |---|---|---|
-| VPC network + subnets | `google_compute_network`, `google_compute_subnetwork` | No Services_GCP VPC found |
-| Cloud Router + Cloud NAT | `google_compute_router`, `google_compute_router_nat` | No Services_GCP VPC found |
+| VPC network + subnets | `google_compute_network`, `google_compute_subnetwork` | No Services GCP VPC found |
+| Cloud Router + Cloud NAT | `google_compute_router`, `google_compute_router_nat` | No Services GCP VPC found |
 | GKE Autopilot cluster | `google_container_cluster.inline_gke` | `prereq_needs_gke = true` |
 | NFS server (GCE MIG) | `google_compute_instance_group_manager` + `google_compute_instance_template` | No existing NFS server found (`prereq_needs_nfs = true`) |
 | Cloud SQL — PostgreSQL | `google_sql_database_instance.inline_postgres` | `prereq_needs_postgres = true` |
 | Cloud SQL — MySQL | `google_sql_database_instance.inline_mysql` | `prereq_needs_mysql = true` |
 | ASM via Fleet Hub | `google_gke_hub_membership`, `google_gke_hub_feature` | `configure_service_mesh = true` and inline GKE |
-| PSA connection | `null_resource.inline_psa` (via `gcloud services vpc-peerings connect`) | No Services_GCP VPC found |
-| PSA subnet-route export | `null_resource.inline_psa_subnet_routes` | No Services_GCP VPC found |
-| Service Networking service agent | `google_project_service_identity.servicenetworking_sa`, `google_project_iam_member.servicenetworking_service_agent` | No Services_GCP VPC found (PSA connection required) |
+| PSA connection | `null_resource.inline_psa` (via `gcloud services vpc-peerings connect`) | No Services GCP VPC found |
+| PSA subnet-route export | `null_resource.inline_psa_subnet_routes` | No Services GCP VPC found |
+| Service Networking service agent | `google_project_service_identity.servicenetworking_sa`, `google_project_iam_member.servicenetworking_service_agent` | No Services GCP VPC found (PSA connection required) |
 
 **Startup sequencing**: After the GKE cluster reports `RUNNING`, a `time_sleep` of 90 seconds (`wait_for_gke_api`) ensures the Autopilot control plane is fully reachable before any Kubernetes resources are created. This prevents transient `connection refused` errors during initial cluster warm-up.
 
@@ -487,7 +487,7 @@ These variables are consumed by the platform UI / billing system and do not affe
 | `deployment_id` | `string` | `""` | Optional deployment ID; auto-generated if empty |
 | `support_users` | `list(string)` | `[]` | Email addresses of monitoring alert recipients |
 | `resource_labels` | `map(string)` | `{env="dev"}` | Common labels applied to all resources |
-| `region` | `string` | `"us-central1"` | GCP region used when no Services_GCP subnet mapping can be auto-discovered |
+| `region` | `string` | `"us-central1"` | GCP region used when no Services GCP subnet mapping can be auto-discovered |
 | `impersonation_service_account` | `string` | `""` | Service account email to impersonate in discovery / mirror scripts (cross-project deployments) |
 | `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform to create resources |
 | `explicit_secret_values` | `map(string)` | `{}` | Raw secret values provided directly by a wrapper module; bypasses plan-time Secret Manager lookups. **Note**: `sensitive = true` is intentionally absent — enabling it causes `CreateContainerConfigError: secret "<prefix>-secrets" not found` on every GKE deployment because pods start before the Kubernetes Secret is materialised. This is a platform UI constraint, not an oversight; the interim mitigation is GCS CMEK encryption on the state backend. |
@@ -542,9 +542,9 @@ These variables are consumed by the platform UI / billing system and do not affe
 | `sql_instance_name` | `string` | `""` | Target an existing Cloud SQL instance by name |
 | `database_password_length` | `number` | `32` | Length of the generated DB password (16–64) |
 | `db_password_env_var_name` | `string` | `""` | Additional env var name alongside `DB_PASSWORD` for apps that expect a non-standard name (e.g. `"WORDPRESS_DB_PASSWORD"`) |
-| `enable_postgres_extensions` | `bool` | `false` | Enable installation of PostgreSQL extensions after DB provisioning. **Not referenced in deployment resources** — used for input validation only when deploying App_GKE standalone. The extension flag and list flow from the application module configuration when called from a wrapper module. |
+| `enable_postgres_extensions` | `bool` | `false` | Enable installation of PostgreSQL extensions after DB provisioning. **Not referenced in deployment resources** — used for input validation only when deploying App GKE standalone. The extension flag and list flow from the application module configuration when called from a wrapper module. |
 | `postgres_extensions` | `list(string)` | `[]` | PostgreSQL extensions to install (e.g. `['postgis', 'uuid-ossp']`). **Not referenced directly** — the extension list is derived from the application module configuration (`local.selected_module.postgres_extensions`), not this variable. Setting it when deploying standalone has no effect. |
-| `enable_mysql_plugins` | `bool` | `false` | Enable installation of MySQL plugins after DB provisioning. **Not referenced in deployment resources** — used for input validation only when deploying App_GKE standalone. Plugin configuration flows from the application module when called from a wrapper module. |
+| `enable_mysql_plugins` | `bool` | `false` | Enable installation of MySQL plugins after DB provisioning. **Not referenced in deployment resources** — used for input validation only when deploying App GKE standalone. Plugin configuration flows from the application module when called from a wrapper module. |
 | `mysql_plugins` | `list(string)` | `[]` | MySQL plugins to install (e.g. `['audit_log']`). **Not referenced directly** — the plugin list is derived from the application module configuration (`local.selected_module.mysql_plugins`). Setting it when deploying standalone has no effect. |
 
 ### Storage (§3.C)
@@ -566,11 +566,11 @@ These variables are consumed by the platform UI / billing system and do not affe
 |---|---|---|---|
 | `gke_cluster_selection_mode` | `string` | `"primary"` | `primary`, `explicit`, or `round-robin` |
 | `gke_cluster_name` | `string` | `""` | Explicit cluster name (for `explicit` mode) |
-| `network_name` | `string` | `""` | Name of the VPC network to use. Leave empty to auto-discover a single Services_GCP-managed network |
+| `network_name` | `string` | `""` | Name of the VPC network to use. Leave empty to auto-discover a single Services GCP-managed network |
 | `network_tags` | `list(string)` | `["nfsserver"]` | Network tags applied to GKE nodes and pods for firewall targeting |
 | `enable_network_segmentation` | `bool` | `false` | Enable Kubernetes NetworkPolicies (also sets `ADVANCED_DATAPATH` on inline clusters) |
 | `namespace_name` | `string` | `""` | Kubernetes namespace (auto-generated if empty) |
-| `prereq_gke_subnet_cidr` | `string` | `"10.201.0.0/24"` | Subnet CIDR for the GKE subnet when a Services_GCP VPC exists but no GKE cluster is present |
+| `prereq_gke_subnet_cidr` | `string` | `"10.201.0.0/24"` | Subnet CIDR for the GKE subnet when a Services GCP VPC exists but no GKE cluster is present |
 | `prereq_subnet_cidr_override` | `string` | `""` | Override for the inline VPC primary subnet CIDR (pin to previously-applied value to avoid replacement) |
 | `prereq_gke_pod_cidr_override` | `string` | `""` | Override for the inline GKE pod secondary range CIDR |
 | `prereq_gke_service_cidr_override` | `string` | `""` | Override for the inline GKE service secondary range CIDR |

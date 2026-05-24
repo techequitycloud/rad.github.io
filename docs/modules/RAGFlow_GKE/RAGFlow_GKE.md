@@ -1,4 +1,4 @@
-# RAGFlow_GKE Module — Configuration Guide
+# RAGFlow GKE Module — Configuration Guide
 
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG)
 platform with 80,000+ GitHub stars and 2,596% year-over-year contributor growth — named one of
@@ -44,7 +44,7 @@ database initialization job, and document storage bucket.
 
 ### Key differences from `App_GKE` defaults
 
-| Feature | App_GKE default | RAGFlow_GKE default |
+| Feature | App GKE default | RAGFlow GKE default |
 |---|---|---|
 | `container_port` | `8080` | `80` (set by RAGFlow_Common) |
 | `image_source` | varies | `"custom"` (always builds via Dockerfile) |

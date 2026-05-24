@@ -1,4 +1,4 @@
-# Kestra_CloudRun Module — Configuration Guide
+# Kestra CloudRun Module — Configuration Guide
 
 Kestra is an open-source, declarative, event-driven workflow orchestration platform (Apache 2.0 licence) with **26,000+ GitHub stars**, trusted by more than 30,000 organisations including Bloomberg, Toyota, BHP, JPMorgan Chase, Apple, and Crédit Agricole. The platform executed **2 billion workflows in 2025** (20× year-on-year growth) and raised a **$25M Series A in March 2026**. BHP's adoption replaced VMware vRA entirely and cut infrastructure provisioning from 6 months to 6 days. It allows you to build, schedule, and monitor ETL/ELT pipelines, data quality checks, agentic AI pipelines, and workflow automation through a YAML-based flow definition and a rich plugin ecosystem. This module deploys Kestra on **Google Cloud Run** in **standalone mode** (server, worker, and scheduler in a single container) with a PostgreSQL 15 backend and GCS artifact storage.
 
@@ -14,7 +14,7 @@ This guide documents variables that are **unique to `Kestra_CloudRun`** or that 
 
 **Key differences from `App_CloudRun` defaults:**
 
-| Feature | App_CloudRun default | Kestra_CloudRun default |
+| Feature | App CloudRun default | Kestra CloudRun default |
 |---|---|---|
 | `container_port` | `8080` | `8080` |
 | `cpu_limit` | `"1000m"` | `"2000m"` |
@@ -258,15 +258,15 @@ Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — 
 |---|---|---|
 | `startup_probe` | `Kestra_Common` → `config.startup_probe` | Application container startup probe |
 | `liveness_probe` | `Kestra_Common` → `config.liveness_probe` | Application container liveness probe |
-| `startup_probe_config` | `App_CloudRun` directly | App_CloudRun infrastructure startup probe |
-| `health_check_config` | `App_CloudRun` directly | App_CloudRun infrastructure liveness probe |
+| `startup_probe_config` | `App_CloudRun` directly | App CloudRun infrastructure startup probe |
+| `health_check_config` | `App_CloudRun` directly | App CloudRun infrastructure liveness probe |
 
 | Variable | Default | Description |
 |---|---|---|
 | `startup_probe` | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=20, failure_threshold=40 }` | Application startup probe. |
 | `liveness_probe` | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=180, timeout_seconds=5, period_seconds=30, failure_threshold=5 }` | Application liveness probe. |
-| `startup_probe_config` | `{ enabled=true, type="TCP", initial_delay_seconds=0, timeout_seconds=300, period_seconds=300, failure_threshold=1 }` | App_CloudRun startup probe (TCP, no path). |
-| `health_check_config` | `{ enabled=true, type="HTTP", path="/health" }` | App_CloudRun liveness probe. |
+| `startup_probe_config` | `{ enabled=true, type="TCP", initial_delay_seconds=0, timeout_seconds=300, period_seconds=300, failure_threshold=1 }` | App CloudRun startup probe (TCP, no path). |
+| `health_check_config` | `{ enabled=true, type="HTTP", path="/health" }` | App CloudRun liveness probe. |
 | `uptime_check_config` | `{ enabled=true, path="/health" }` | Cloud Monitoring uptime check from multiple global locations. |
 | `alert_policies` | `[]` | Custom metric alert policies. Each requires `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
 
