@@ -1,6 +1,4 @@
-# AKS GKE Module
-
-The source code for this module is available in the [rad-modules GitHub repository](https://github.com/techequitycloud/rad-modules/tree/main/modules/AKS_GKE).
+# AKS_GKE Module: Google Kubernetes Engine Multi-Cloud Deep Dive
 
 ## 1. Overview and Learning Objectives
 
@@ -39,13 +37,13 @@ An `attached-install-mesh` sub-module is included in the repository but is **not
 
 ## 3. GKE Attached Clusters
 
-### A. What Problem This Solves
+### 3.1 What Problem This Solves
 
 Many organisations run Kubernetes on multiple cloud providers simultaneously. Managing these clusters typically means learning separate tooling for each: Azure Portal and `az` CLI for AKS, and the Google Cloud Console and `gcloud` for GKE. Observability, access control, and policy enforcement are each siloed per cloud.
 
 GKE Attached Clusters solves this by extending Google Cloud's Kubernetes management plane to clusters that Google did not provision. The AKS cluster continues to run entirely in Azure — its control plane, nodes, and networking are unchanged — but Google Cloud gains the ability to observe, access, and manage it through the same interfaces used for native GKE clusters.
 
-### B. Platform Version
+### 3.2 Platform Version
 
 Every GKE Attached Cluster is assigned a **platform version** — the version of the GKE Connect agent and supporting components installed on the cluster. The platform version must be compatible with the AKS cluster's Kubernetes version. An AKS cluster running Kubernetes 1.34 uses platform version `1.34.0-gke.1`.
 
@@ -55,7 +53,7 @@ To explore available platform versions for any Google Cloud region:
 gcloud alpha container attached get-server-config --location=us-central1
 ```
 
-### C. Viewing the Attached Cluster in the Console
+### 3.3 Viewing the Attached Cluster in the Console
 
 After deployment, the AKS cluster appears in the Google Cloud Console at:
 
@@ -79,7 +77,7 @@ gcloud container attached clusters describe azure-aks-cluster \
 
 The `describe` output shows the cluster's OIDC issuer URL, platform version, fleet project, logging and monitoring configuration, and admin user list — the complete picture of how Google Cloud sees the cluster.
 
-### D. Default Configuration
+### 3.4 Default Configuration
 
 | Configuration | Default Value | Notes |
 |---|---|---|
@@ -95,13 +93,13 @@ The `describe` output shows the cluster's OIDC issuer URL, platform version, fle
 
 ## 4. OIDC Federation: Cross-Cloud Identity Without Shared Secrets
 
-### A. The Core Concept
+### 4.1 The Core Concept
 
 One of the most architecturally significant features demonstrated by this module is **OIDC-based cross-cloud federation**. This is the mechanism by which Google Cloud trusts tokens issued by the AKS cluster without any service account keys, certificates, or passwords being shared between Azure and Google Cloud.
 
 AKS exposes a public **OpenID Connect Discovery Endpoint** — a URL that publishes the cluster's cryptographic public keys (JSON Web Key Set, or JWKS). When the AKS cluster is attached to Google Cloud, GCP fetches these public keys and stores them in its trust configuration. From that point, whenever the GKE Connect agent presents a Kubernetes service account token to Google Cloud, GCP validates the token's cryptographic signature against the stored keys. If valid, GCP knows the token genuinely originated from that AKS cluster — no Azure credentials required.
 
-### B. Inspecting the OIDC Configuration
+### 4.2 Inspecting the OIDC Configuration
 
 After deployment, the OIDC trust relationship can be inspected directly:
 
@@ -129,11 +127,11 @@ The Workload Identity Pool is visible in the Google Cloud Console at:
 
 Each attached cluster that joins the fleet contributes an OIDC provider to this pool, representing the trust relationship between the cluster and Google Cloud.
 
-### C. Why This Matters for Platform Engineers
+### 4.3 Why This Matters for Platform Engineers
 
 This pattern — **Workload Identity Federation** — is the modern approach to cross-cloud authentication. The alternative, distributing service account key files, creates operational risk: keys can be leaked, forgotten, or left unrotated for years. OIDC federation eliminates the secret entirely. The same pattern underpins how GitHub Actions authenticates to Google Cloud, how Terraform Cloud authenticates to GCP, and how native GKE Workload Identity works. Understanding it here provides a transferable mental model for all of these systems.
 
-### D. Enabling Application Workloads to Access Google Cloud APIs
+### 4.4 Enabling Application Workloads to Access Google Cloud APIs
 
 Once the cluster is fleet-enrolled with OIDC, individual pods running on AKS can authenticate directly to Google Cloud APIs — Cloud Storage, Pub/Sub, BigQuery — without credential files. The setup involves annotating a Kubernetes service account on AKS to link it to a Google Cloud service account:
 
@@ -167,13 +165,13 @@ Pods using this annotated service account will automatically receive short-lived
 
 ## 5. GKE Fleet: Unified Multi-Cluster Management
 
-### A. What is a Fleet?
+### 5.1 What is a Fleet?
 
 A **GKE Fleet** is a Google Cloud construct that groups Kubernetes clusters — regardless of where they run — into a single management boundary. Any cluster enrolled in a fleet can be governed, observed, and configured uniformly alongside every other fleet member.
 
 Fleets are scoped to a Google Cloud project. In this module, the AKS cluster is enrolled in the fleet of the destination GCP project specified at deployment time.
 
-### B. Viewing Fleet Membership in the Console
+### 5.2 Viewing Fleet Membership in the Console
 
 After deployment, the fleet membership is visible in the Google Cloud Console at:
 
@@ -193,7 +191,7 @@ gcloud container fleet memberships describe azure-aks-cluster \
   --project=my-gcp-project
 ```
 
-### C. What Fleet Membership Enables
+### 5.3 What Fleet Membership Enables
 
 Fleet enrollment activates a range of Google Cloud platform features that are not available to unregistered clusters:
 
@@ -209,7 +207,7 @@ Fleet enrollment activates a range of Google Cloud platform features that are no
 
 **Service Mesh** — Anthos Service Mesh can be managed fleet-wide, providing uniform mTLS, traffic management, and distributed tracing across all member clusters.
 
-### D. Accessing the AKS Cluster via Connect Gateway
+### 5.4 Accessing the AKS Cluster via Connect Gateway
 
 Connect Gateway is one of the most practical fleet features. After deployment, admin users connect to the AKS cluster using only their Google Cloud identity:
 
@@ -236,7 +234,7 @@ kubectl config current-context
 kubectl config view --minify
 ```
 
-### E. Exploring Fleet Features in the Console
+### 5.5 Exploring Fleet Features in the Console
 
 Each fleet feature has a dedicated section in the Fleet page:
 
@@ -248,13 +246,13 @@ Each fleet feature has a dedicated section in the Fleet page:
 
 ## 6. Google Cloud Managed Logging for AKS
 
-### A. The Multi-Cloud Observability Problem
+### 6.1 The Multi-Cloud Observability Problem
 
 AKS logs flow natively to Azure Monitor and Log Analytics. GKE logs flow to Google Cloud Logging. Teams operating both must maintain expertise in two separate query languages, two alerting systems, and two retention configurations. Cross-cloud incident investigation means switching between Azure Portal and the Google Cloud Console, correlating timestamps manually.
 
 This module routes AKS logs to Google Cloud Logging alongside any GKE cluster logs in the same project. The AKS cluster continues to run in Azure, but its logs arrive in one centralised place.
 
-### B. What Gets Logged
+### 6.2 What Gets Logged
 
 Two categories of logs are collected from the AKS cluster:
 
@@ -262,7 +260,7 @@ Two categories of logs are collected from the AKS cluster:
 
 **Workload Logs** capture the stdout and stderr of every container running in user namespaces. Any application writing to stdout has its logs forwarded automatically — no log shippers, sidecar containers, or application changes required.
 
-### C. Exploring Logs in the Console
+### 6.3 Exploring Logs in the Console
 
 Open the Google Cloud Console and navigate to:
 
@@ -297,7 +295,7 @@ resource.labels.cluster_name="azure-aks-cluster"
 severity>=ERROR
 ```
 
-### D. Querying Logs from the Command Line
+### 6.4 Querying Logs from the Command Line
 
 ```bash
 # All recent logs from the AKS cluster
@@ -320,7 +318,7 @@ gcloud logging read \
   --freshness=1h
 ```
 
-### E. Creating a Log-Based Metric
+### 6.5 Creating a Log-Based Metric
 
 Log-based metrics turn log entries into numeric signals that can be charted and alerted on. Navigate to **Logging > Log-based Metrics > Create Metric**, or use the CLI:
 
@@ -336,7 +334,7 @@ gcloud logging metrics list --project=my-gcp-project
 
 Once created, this metric appears in Cloud Monitoring and can be used in dashboards and alerting policies.
 
-### F. Creating a Log-Based Alert
+### 6.6 Creating a Log-Based Alert
 
 In **Log Explorer**, run the following query to find BackOff events on the AKS cluster:
 
@@ -352,13 +350,13 @@ Click **Create alert** in the Log Explorer toolbar to open the alerting policy w
 
 ## 7. Google Cloud Managed Prometheus for AKS
 
-### A. What Managed Prometheus Provides
+### 7.1 What Managed Prometheus Provides
 
 This module enables **Google Cloud Managed Service for Prometheus (GMP)** on the AKS cluster. GMP accepts metrics in Prometheus format and stores them durably with up to 24 months of retention, without requiring engineers to run or maintain any Prometheus infrastructure.
 
 When enabled, GMP installs a collector DaemonSet on AKS nodes. This collector scrapes Prometheus metrics from pods and forwards them to Cloud Monitoring. Scrape targets are configured using `PodMonitoring` and `ClusterPodMonitoring` custom resources, which follow the same specification as on native GKE clusters.
 
-### B. Exploring Metrics in the Console
+### 7.2 Exploring Metrics in the Console
 
 After deployment, navigate to:
 
@@ -371,7 +369,7 @@ In the **Select a metric** field, search for `kubernetes` to browse the Kubernet
 - `kubernetes.io/node/cpu/total_cores` — Total CPU capacity per node
 - `kubernetes.io/pod/network/received_bytes_count` — Network ingress per pod
 
-### C. Querying Metrics from the Command Line
+### 7.3 Querying Metrics from the Command Line
 
 ```bash
 # Confirm Kubernetes metrics are flowing from the AKS cluster
@@ -386,7 +384,7 @@ gcloud monitoring metrics list \
   --format="value(metric.type)"
 ```
 
-### D. Querying with PromQL in the Console
+### 7.4 Querying with PromQL in the Console
 
 In **Monitoring > Metrics Explorer**, switch the query mode from **MQL** to **PromQL**. Enter these expressions to explore AKS cluster metrics:
 
@@ -403,7 +401,7 @@ sum by (namespace_name) (
 kubernetes_io:container_restart_count{cluster_name="azure-aks-cluster"}
 ```
 
-### E. Scraping Custom Application Metrics
+### 7.5 Scraping Custom Application Metrics
 
 To configure GMP to scrape a custom application on the AKS cluster, first connect to the cluster, then apply a `PodMonitoring` resource:
 
@@ -438,7 +436,7 @@ kubectl get podmonitoring -n default
 
 Custom metrics appear in Cloud Monitoring within a few minutes under the `prometheus.googleapis.com` metric prefix.
 
-### F. Viewing Built-in Kubernetes Dashboards
+### 7.6 Viewing Built-in Kubernetes Dashboards
 
 Navigate to **Monitoring > Dashboards** and look for dashboards prefixed with **GKE**:
 
@@ -452,13 +450,13 @@ These dashboards are populated automatically from Managed Prometheus metrics wit
 
 ## 8. GKE Connect and the Connect Agent
 
-### A. How the Connect Agent Works
+### 8.1 How the Connect Agent Works
 
 The GKE Connect agent is a lightweight Deployment installed on the AKS cluster during the attachment process. It maintains a persistent, encrypted, outbound-only connection from AKS to Google Cloud's `gkeconnect.googleapis.com` endpoint.
 
 The significance of outbound-only cannot be overstated. It means the AKS API server does not need a public endpoint. No inbound firewall rules need to be opened in Azure. No VPN or VPC peering is required between Azure and Google Cloud. The cluster can sit behind a NAT gateway with no public IP and the Connect agent will still function. All management traffic — `kubectl` commands via Connect Gateway, log collection, metrics — is multiplexed over this single outbound gRPC stream. The agent reconnects automatically after network interruptions.
 
-### B. Viewing the Connect Agent in the Console
+### 8.2 Viewing the Connect Agent in the Console
 
 After deployment, navigate to:
 
@@ -472,7 +470,7 @@ Fleet membership status is also visible at:
 
 Each cluster entry shows its connection health, last heartbeat time, and which fleet features are active.
 
-### C. Verifying the Connect Agent from the Command Line
+### 8.3 Verifying the Connect Agent from the Command Line
 
 ```bash
 # Connect to the cluster via Connect Gateway
@@ -494,7 +492,7 @@ kubectl get all -n gke-connect
 
 A healthy agent shows a Running pod and log lines confirming an active connection to `gkeconnect.googleapis.com`.
 
-### D. Exploring the Cluster via Connect Gateway
+### 8.4 Exploring the Cluster via Connect Gateway
 
 With credentials fetched via `get-credentials`, all standard `kubectl` commands work against the AKS cluster through the Connect Gateway tunnel:
 
@@ -518,7 +516,7 @@ kubectl get events --all-namespaces --sort-by='.lastTimestamp'
 kubectl get clusterrolebindings | grep gke-connect
 ```
 
-### E. Understanding the Bootstrap Manifests
+### 8.5 Understanding the Bootstrap Manifests
 
 The Kubernetes resources installed by the bootstrap process are all scoped to the `gke-connect` namespace. Exploring them reveals how Google Cloud establishes and maintains the cluster relationship:
 
@@ -540,7 +538,7 @@ kubectl describe clusterrole gke-connect-agent-cluster-role
 
 Deploying this module enables ten Google Cloud APIs on the destination project. Understanding what each one does gives platform engineers a clear picture of Google Cloud's multi-cloud Kubernetes management capabilities.
 
-### A. Viewing Enabled APIs in the Console
+### 9.1 Viewing Enabled APIs in the Console
 
 Navigate to:
 
@@ -548,7 +546,7 @@ Navigate to:
 
 Filter by `gke` or `anthos` to see the APIs activated by this module. Each API entry shows its current usage, quota limits, and a link to its documentation.
 
-### B. Inspecting Enabled APIs from the Command Line
+### 9.2 Inspecting Enabled APIs from the Command Line
 
 ```bash
 # List all APIs enabled on the project
@@ -564,7 +562,7 @@ gcloud services describe gkemulticloud.googleapis.com \
   --project=my-gcp-project
 ```
 
-### C. What Each API Enables
+### 9.3 What Each API Enables
 
 | API | What It Enables |
 |---|---|
@@ -585,11 +583,11 @@ These APIs are enabled non-destructively. Removing the module deployment does no
 
 ## 10. Google Cloud Service Mesh on Attached Clusters
 
-### A. What Anthos Service Mesh Brings to AKS
+### 10.1 What Anthos Service Mesh Brings to AKS
 
 The `attached-install-mesh` sub-module, located at `modules/attached-install-mesh/`, can install **Google Cloud Service Mesh (ASM)** — Google's distribution of Istio — on the AKS cluster. This sub-module is **not invoked automatically** by the root module; it must be called separately with the cluster kubeconfig and context variables. Once invoked, it gives workloads running in Azure the full Istio service mesh feature set, managed through the same Google Cloud interfaces used for service mesh on GKE.
 
-### B. Core Service Mesh Capabilities
+### 10.2 Core Service Mesh Capabilities
 
 **Mutual TLS (mTLS)** encrypts all pod-to-pod communication at the Envoy sidecar layer automatically. Applications do not implement TLS themselves. mTLS applies even to applications that predate the mesh deployment.
 
@@ -599,7 +597,7 @@ The `attached-install-mesh` sub-module, located at `modules/attached-install-mes
 
 **Security Policies** use AuthorizationPolicy resources to define which services may communicate with which others, implementing zero-trust networking at the application layer.
 
-### C. Viewing the Service Mesh in the Console
+### 10.3 Viewing the Service Mesh in the Console
 
 After installing the service mesh, navigate to:
 
@@ -611,7 +609,7 @@ The mesh dashboard is also accessible from:
 
 **Kubernetes Engine > Clusters > azure-aks-cluster > Observability**
 
-### D. Exploring the Mesh from the Command Line
+### 10.4 Exploring the Mesh from the Command Line
 
 ```bash
 # Confirm Istio control plane is running
@@ -636,7 +634,7 @@ kubectl describe pod my-pod | grep istio-proxy
 kubectl get meshconfig -n istio-system -o yaml
 ```
 
-### E. Exploring mTLS Enforcement
+### 10.5 Exploring mTLS Enforcement
 
 ```bash
 # Check the current mTLS mode across the mesh
@@ -654,7 +652,7 @@ kubectl exec my-pod -c istio-proxy -- \
   pilot-agent request GET clusters | grep tls
 ```
 
-### F. Certificate Authority Options
+### 10.6 Certificate Authority Options
 
 When installing the service mesh, the certificate authority for mTLS certificates is selected from three options:
 
@@ -664,7 +662,7 @@ When installing the service mesh, the certificate authority for mTLS certificate
 
 **Citadel** (Istiod CA) uses Istio's built-in CA. Primarily useful when migrating an existing open-source Istio installation to Anthos Service Mesh.
 
-### G. Exploring Traffic Management
+### 10.7 Exploring Traffic Management
 
 ```bash
 # List all Istio traffic management resources
@@ -696,7 +694,7 @@ EOF
 kubectl get virtualservice my-app -o yaml
 ```
 
-### H. Tool Bootstrapping and Air-Gap Support
+### 10.8 Tool Bootstrapping and Air-Gap Support
 
 The service mesh sub-module downloads `asmcli`, the Google Cloud SDK, and `jq` at installation time. All three download sources are configurable, enabling the URLs to point to an internal artifact repository. This makes the module deployable in air-gapped environments where direct internet access is restricted by security policy.
 
@@ -704,7 +702,7 @@ The service mesh sub-module downloads `asmcli`, the Google Cloud SDK, and `jq` a
 
 ## 11. Configuration Reference
 
-### A. Cluster Configuration
+### 11.1 Cluster Configuration
 
 | Option | Default | Description |
 |---|---|---|
@@ -716,13 +714,13 @@ The service mesh sub-module downloads `asmcli`, the Google Cloud SDK, and `jq` a
 | Node VM size | `Standard_D2s_v3` | Azure VM SKU for all nodes in the default node pool |
 | GCP region | `us-central1` | Google Cloud region where the attached cluster record and fleet membership are stored |
 
-### B. Access Control
+### 11.2 Access Control
 
 | Option | Default | Description |
 |---|---|---|
 | Trusted users | *(deploying user)* | List of Google Cloud user email addresses granted cluster-admin access via Connect Gateway. The identity running the deployment is always included automatically. |
 
-### C. Azure Authentication
+### 11.3 Azure Authentication
 
 These four values are required to allow the module to create and manage resources in Azure. They are always treated as sensitive and never appear in logs or plan output.
 
@@ -733,13 +731,13 @@ These four values are required to allow the module to create and manage resource
 | Azure Tenant ID | Azure Active Directory tenant that owns the Service Principal |
 | Azure Subscription ID | Azure subscription where resources will be created |
 
-### D. GCP Project
+### 11.4 GCP Project
 
 | Option | Description |
 |---|---|
 | GCP Project ID | Destination Google Cloud project where the attached cluster is registered and fleet membership is created |
 
-### E. Service Mesh Options (attached-install-mesh sub-module)
+### 11.5 Service Mesh Options (attached-install-mesh sub-module)
 
 | Option | Default | Description |
 |---|---|---|
@@ -761,7 +759,7 @@ These four values are required to allow the module to create and manage resource
 
 ## 12. Deployment Workflow
 
-### A. Prerequisites
+### 12.1 Prerequisites
 
 1. A Google Cloud project with billing enabled.
 2. An Azure subscription and a Service Principal with Contributor access.
@@ -781,7 +779,7 @@ export ARM_TENANT_ID="your-tenant-id"
 export ARM_SUBSCRIPTION_ID="your-subscription-id"
 ```
 
-### B. Deployment Steps
+### 12.2 Deployment Steps
 
 ```bash
 # Initialise and deploy
@@ -792,7 +790,7 @@ terraform apply
 
 Expect approximately 12–15 minutes. The longest phase is AKS cluster provisioning in Azure (6–9 minutes).
 
-### C. Expected Deployment Duration
+### 12.3 Expected Deployment Duration
 
 | Phase | Duration |
 |---|---|
@@ -803,7 +801,7 @@ Expect approximately 12–15 minutes. The longest phase is AKS cluster provision
 | GKE attached cluster registration | 1–2 min |
 | **Total** | **~12–15 min** |
 
-### D. Verifying a Successful Deployment
+### 12.4 Verifying a Successful Deployment
 
 After `terraform apply` completes, run these commands to confirm every layer is working:
 
@@ -846,7 +844,7 @@ Then open the Google Cloud Console and verify visually:
 - **Logging > Log Explorer** — Logs are visible with `resource.labels.cluster_name="azure-aks-cluster"`.
 - **Monitoring > Metrics Explorer** — Kubernetes metrics are queryable for the cluster.
 
-### E. Teardown
+### 12.5 Teardown
 
 ```bash
 terraform destroy
@@ -858,27 +856,27 @@ This deregisters the cluster from Google Cloud, removes the Connect agent from A
 
 ## 13. Key Learning Outcomes for Platform Engineers
 
-### A. Multi-Cloud Kubernetes Management
+### 13.1 Multi-Cloud Kubernetes Management
 
 This module demonstrates Google Cloud's core multi-cloud insight: **the management plane can be decoupled from the data plane**. Workloads run in Azure on AKS infrastructure. The management plane — access control, observability, policy, service mesh — runs in Google Cloud and applies uniformly to the Azure cluster. Engineers who internalise this separation are equipped to design platform strategies for organisations with heterogeneous cloud environments.
 
-### B. Zero-Trust Cross-Cloud Authentication
+### 13.2 Zero-Trust Cross-Cloud Authentication
 
 The OIDC federation pattern shown here is the foundation of zero-trust authentication across cloud environments. Understanding how OIDC issuer endpoints, JWKS, and token validation eliminate the need for shared credentials is a transferable skill that applies to GKE Workload Identity, GitHub Actions, Terraform Cloud, and any other system that uses federated identity.
 
-### C. Centralised Observability Architecture
+### 13.3 Centralised Observability Architecture
 
 Routing AKS logs and metrics to Cloud Logging and Cloud Monitoring demonstrates that Google Cloud's observability stack is not limited to GKE. It is designed to be the observability backend for any Kubernetes cluster, regardless of where it runs. The single-pane-of-glass this creates reduces the operational burden on platform teams managing mixed cloud environments.
 
-### D. Service Mesh as a Platform Concern
+### 13.4 Service Mesh as a Platform Concern
 
 Installing Anthos Service Mesh on an AKS cluster shows that service mesh is a platform-level concern, not a per-cluster one. The same mesh management interfaces, certificate authorities, traffic policies, and observability signals apply whether workloads run on GKE or on a fleet-enrolled AKS cluster — the foundation for portable microservice architectures that span cloud providers.
 
-### E. GKE Fleet as a Platform Primitive
+### 13.5 GKE Fleet as a Platform Primitive
 
 Fleet is the most important concept for platform engineers building multi-cluster environments on Google Cloud. This module's single attached cluster is the simplest possible fleet topology, but it establishes the mental model that scales to dozens of clusters across multiple clouds and on-premises environments — all governed, observed, and configured from a single GCP project.
 
-### F. Console Navigation Summary
+### 13.6 Console Navigation Summary
 
 | Feature | Console Location |
 |---|---|
@@ -904,13 +902,13 @@ Fleet is the most important concept for platform engineers building multi-cluste
 
 ## 14. Cloud Trace: Distributed Tracing via the Service Mesh
 
-### A. What Cloud Trace Captures
+### 14.1 What Cloud Trace Captures
 
 When Anthos Service Mesh is installed, the Envoy sidecar proxies automatically generate distributed traces for every request that passes through the mesh — without any instrumentation in application code. Each trace records the full path a request takes across services: which pods handled it, how long each hop took, and whether any errors occurred.
 
 These traces are forwarded to **Cloud Trace**, Google Cloud's managed distributed tracing backend. Cloud Trace stores them with sub-millisecond precision and provides a UI for exploring latency, identifying bottlenecks, and correlating slow requests with specific service versions.
 
-### B. Viewing Traces in the Console
+### 14.2 Viewing Traces in the Console
 
 After the service mesh is installed and workloads are generating traffic, navigate to:
 
@@ -928,7 +926,7 @@ Clicking any individual trace opens a waterfall diagram showing every service ho
 
 To view traces linked to a specific log entry, open a log entry in **Logging > Log Explorer** and click **View in Trace** if a trace ID is present — this jumps directly to the corresponding trace waterfall.
 
-### C. Exploring Traces from the Command Line
+### 14.3 Exploring Traces from the Command Line
 
 ```bash
 # List recent traces for the project (last 1 hour)
@@ -947,7 +945,7 @@ gcloud trace traces list \
   --start-time=$(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ)
 ```
 
-### D. Confirming Trace Collection is Active
+### 14.4 Confirming Trace Collection is Active
 
 After the mesh is installed, verify the trace export is working:
 
@@ -973,7 +971,7 @@ gcloud trace traces list \
 
 ## 15. Fleet Feature Management
 
-### A. Enabling and Inspecting Fleet Features
+### 15.1 Enabling and Inspecting Fleet Features
 
 Fleet features are optional capabilities that apply to all clusters in a fleet simultaneously. They are managed independently of cluster provisioning — a feature can be enabled on an existing fleet at any time without redeploying clusters.
 
@@ -994,7 +992,7 @@ gcloud container fleet features list \
   --project=my-gcp-project
 ```
 
-### B. Anthos Config Management
+### 15.2 Anthos Config Management
 
 Anthos Config Management (ACM) synchronises Kubernetes configuration from a Git repository to all fleet clusters. A single policy commit can update namespace definitions, RBAC bindings, resource quotas, and network policies across both GKE and the AKS cluster simultaneously.
 
@@ -1051,7 +1049,7 @@ gcloud container fleet config-management fetch-for-apply \
   --project=my-gcp-project
 ```
 
-### C. Policy Controller
+### 15.3 Policy Controller
 
 Policy Controller enforces organisational policies across all fleet clusters using OPA Gatekeeper constraint templates. Policies defined once apply identically to the AKS cluster and any GKE clusters in the same fleet.
 
@@ -1088,13 +1086,13 @@ Navigate to **Kubernetes Engine > Policy**. This page lists all active constrain
 
 ## 16. Service Mesh Security: Authorization Policies
 
-### A. What AuthorizationPolicy Does
+### 16.1 What AuthorizationPolicy Does
 
 An `AuthorizationPolicy` is an Istio resource that defines which workloads are permitted to communicate with which others within the mesh. Without an AuthorizationPolicy, all mTLS-authenticated traffic between mesh-enrolled pods is allowed. With one applied, only explicitly permitted traffic flows — implementing zero-trust networking at the application layer.
 
 This is the service mesh equivalent of a firewall rule, but it operates at the workload identity level rather than the IP level. Policies are evaluated by the Envoy sidecar on the receiving pod, enforced before the request reaches the application container.
 
-### B. Viewing Existing Policies
+### 16.2 Viewing Existing Policies
 
 ```bash
 # Connect to the cluster
@@ -1108,7 +1106,7 @@ kubectl get authorizationpolicy --all-namespaces
 kubectl describe authorizationpolicy POLICY_NAME -n NAMESPACE
 ```
 
-### C. Creating and Testing an Authorization Policy
+### 16.3 Creating and Testing an Authorization Policy
 
 This example creates a policy that allows only the `frontend` service account to call the `backend` service, and denies all other callers:
 
@@ -1158,7 +1156,7 @@ kubectl exec -n default deploy/frontend -- curl -s http://backend/health
 kubectl exec -n default deploy/other-service -- curl -s http://backend/health
 ```
 
-### D. Viewing Policy Effects in the Console
+### 16.4 Viewing Policy Effects in the Console
 
 After applying authorization policies, their effects appear in the Anthos Service Mesh topology view:
 
@@ -1179,7 +1177,7 @@ gcloud logging read \
 
 ## 17. Mesh Diagnostics with istioctl
 
-### A. Installing istioctl
+### 17.1 Installing istioctl
 
 `istioctl` is the primary command-line tool for inspecting, diagnosing, and troubleshooting an Istio service mesh installation. It works against any cluster that `kubectl` is configured to access, including the AKS cluster connected via Connect Gateway.
 
@@ -1194,7 +1192,7 @@ export PATH=$HOME/.istioctl/bin:$PATH
 istioctl version
 ```
 
-### B. Verifying the Mesh Installation
+### 17.2 Verifying the Mesh Installation
 
 ```bash
 # Run the full pre-check for mesh installation health
@@ -1207,7 +1205,7 @@ istioctl proxy-status
 istioctl proxy-status | grep -v SYNCED
 ```
 
-### C. Inspecting Sidecar Configuration
+### 17.3 Inspecting Sidecar Configuration
 
 ```bash
 # Check whether a specific pod has a sidecar injected
@@ -1229,7 +1227,7 @@ istioctl proxy-config routes my-pod -n default
 istioctl proxy-config secret my-pod -n default
 ```
 
-### D. Diagnosing Traffic and Policy Issues
+### 17.4 Diagnosing Traffic and Policy Issues
 
 ```bash
 # Analyse the mesh configuration for misconfigurations
@@ -1248,7 +1246,7 @@ istioctl experimental describe service my-service -n default
 istioctl experimental describe pod my-pod -n default
 ```
 
-### E. Generating a Mesh Bug Report
+### 17.5 Generating a Mesh Bug Report
 
 When escalating a mesh issue to Google Cloud Support or filing a bug, `istioctl` can collect all relevant diagnostics in one command:
 
@@ -1265,13 +1263,13 @@ istioctl bug-report --istio-namespace istio-system
 
 ## 18. Multi-Cluster Services
 
-### A. What Multi-Cluster Services Enables
+### 18.1 What Multi-Cluster Services Enables
 
 **Multi-Cluster Services (MCS)** is a GKE fleet feature that allows a Kubernetes Service defined in one cluster to be discovered and consumed by workloads in other clusters in the same fleet — without VPN tunnels, manual DNS entries, or shared network configuration. Once a Service is exported from a cluster, other fleet members see it as if it were a local Service.
 
 This is particularly powerful in a mixed-cloud fleet: a workload running on the AKS cluster in Azure can consume a Service exported from a GKE cluster in Google Cloud, and vice versa, using standard Kubernetes DNS.
 
-### B. Enabling Multi-Cluster Services on the Fleet
+### 18.2 Enabling Multi-Cluster Services on the Fleet
 
 ```bash
 # Enable the Multi-Cluster Services fleet feature
@@ -1288,7 +1286,7 @@ gcloud projects add-iam-policy-binding my-gcp-project \
   --role="roles/compute.networkViewer"
 ```
 
-### C. Exporting a Service from One Cluster
+### 18.3 Exporting a Service from One Cluster
 
 On the cluster that owns the Service, create a `ServiceExport` resource. This signals to the fleet that the Service should be made available to other members:
 
@@ -1311,7 +1309,7 @@ kubectl get serviceexport -n default
 kubectl describe serviceexport my-backend -n default
 ```
 
-### D. Consuming the Exported Service from AKS
+### 18.4 Consuming the Exported Service from AKS
 
 On the AKS cluster, the exported Service is automatically imported and becomes reachable via a predictable DNS name:
 
@@ -1332,7 +1330,7 @@ kubectl exec -n default deploy/my-app -- \
   curl -s http://my-backend.default.svc.clusterset.local/health
 ```
 
-### E. Viewing MCS in the Console
+### 18.5 Viewing MCS in the Console
 
 Navigate to **Kubernetes Engine > Fleet > Feature manager** and select **Multi-Cluster Services**. This page shows which clusters have MCS enabled, which Services are exported, and the import status on each fleet member.
 
@@ -1340,11 +1338,11 @@ Navigate to **Kubernetes Engine > Fleet > Feature manager** and select **Multi-C
 
 ## 19. Metric-Based Alerting with Managed Prometheus
 
-### A. Why Metric-Based Alerts Complement Log-Based Alerts
+### 19.1 Why Metric-Based Alerts Complement Log-Based Alerts
 
 Log-based alerts (covered in §6.6) fire when a specific log entry appears. Metric-based alerts fire when a numeric threshold is crossed — for example, when CPU usage exceeds 80% for five minutes, or when the container restart count on the AKS cluster increases by more than three in an hour. Both patterns are necessary for comprehensive cluster monitoring.
 
-### B. Creating a Metric-Based Alert in the Console
+### 19.2 Creating a Metric-Based Alert in the Console
 
 Navigate to **Monitoring > Alerting > Create Policy**.
 
@@ -1355,7 +1353,7 @@ Navigate to **Monitoring > Alerting > Create Policy**.
 5. Set the notification channel (email, PagerDuty, Slack, etc.).
 6. Name the policy: `AKS Container Restart Spike`.
 
-### C. Creating a Metric-Based Alert from the Command Line
+### 19.3 Creating a Metric-Based Alert from the Command Line
 
 ```bash
 # Create a notification channel (email) first
@@ -1386,7 +1384,7 @@ gcloud alpha monitoring policies create \
 gcloud alpha monitoring policies list --project=my-gcp-project
 ```
 
-### D. Creating a PromQL-Based Alert
+### 19.4 Creating a PromQL-Based Alert
 
 For more expressive conditions, alerting policies can use PromQL directly against Managed Prometheus data:
 
@@ -1405,7 +1403,7 @@ For more expressive conditions, alerting policies can use PromQL directly agains
 
 In the Console, navigate to **Monitoring > Alerting > Create Policy**, set the condition type to **Prometheus Query Language (PromQL)**, and paste the expression above. PromQL-based alert conditions support any metric available in Managed Prometheus, including custom application metrics scraped via `PodMonitoring` resources.
 
-### E. Listing and Managing Alert Policies
+### 19.5 Listing and Managing Alert Policies
 
 ```bash
 # List all alerting policies in the project
@@ -1423,13 +1421,13 @@ gcloud alpha monitoring policies describe POLICY_ID \
 
 ## 20. Custom Monitoring Dashboards
 
-### A. Creating a Custom Dashboard
+### 20.1 Creating a Custom Dashboard
 
 The built-in GKE dashboards (§7.6) show standard Kubernetes metrics. Custom dashboards allow engineers to combine AKS cluster metrics with GKE cluster metrics on the same chart — making cross-cloud comparisons visible at a glance.
 
 Navigate to **Monitoring > Dashboards > Create Dashboard**. Add a chart, select **Metrics Explorer** as the chart type, and filter by `cluster_name` to add series for both the AKS cluster and any GKE clusters. A single chart can show CPU or memory usage across all fleet clusters simultaneously.
 
-### B. Creating a Dashboard from the Command Line
+### 20.2 Creating a Dashboard from the Command Line
 
 ```bash
 # Create a minimal custom dashboard for the AKS cluster
@@ -1465,7 +1463,7 @@ gcloud monitoring dashboards describe DASHBOARD_ID \
   --project=my-gcp-project
 ```
 
-### C. Exploring Dashboards in the Console
+### 20.3 Exploring Dashboards in the Console
 
 Navigate to **Monitoring > Dashboards**. The custom dashboard appears alongside the built-in GKE dashboards. Use the **Add chart** button to add new panels, and the **Variables** feature to create a dashboard-level filter that toggles between the AKS cluster and any GKE clusters with a single dropdown.
 
@@ -1473,7 +1471,7 @@ Navigate to **Monitoring > Dashboards**. The custom dashboard appears alongside 
 
 ## 21. Workload Identity: Console Exploration
 
-### A. Viewing Identity Bindings in the Console
+### 21.1 Viewing Identity Bindings in the Console
 
 Section 4.4 covers the CLI commands for setting up Workload Identity Federation for application pods. The Console provides a complementary view of the full identity chain.
 
@@ -1486,7 +1484,7 @@ The page lists all Workload Identity Pools in the project. The fleet creates a p
 
 To inspect the IAM bindings that link Kubernetes service accounts to Google Cloud service accounts, navigate to **IAM & Admin > Service Accounts**, select the Google Cloud service account, and click the **Permissions** tab. Any Workload Identity User bindings granted to fleet principals are listed here.
 
-### B. Verifying Workload Identity End-to-End
+### 21.2 Verifying Workload Identity End-to-End
 
 After completing the setup in §4.4, deploy a test pod to confirm the identity exchange is working:
 
@@ -1532,7 +1530,7 @@ A successful token response confirms the full OIDC exchange is working: the pod'
 
 ## 22. Service Mesh Observability UIs
 
-### A. Opening Mesh UIs with istioctl Dashboard
+### 22.1 Opening Mesh UIs with istioctl Dashboard
 
 `istioctl` can open local browser-based UIs for mesh observability tools that are deployed as part of the Istio installation. These provide richer visualisations than the terminal and complement the Cloud Console views.
 
@@ -1555,7 +1553,7 @@ istioctl dashboard envoy my-pod.default
 
 Each command establishes a port-forward to the relevant service in the `istio-system` namespace and opens the UI in the default browser.
 
-### B. What Each UI Shows
+### 22.2 What Each UI Shows
 
 **Kiali** provides an interactive graph of all services in the mesh, with real-time traffic flow, error rates, and health indicators on each edge. It shows which services have mTLS enabled, which have VirtualService or DestinationRule resources applied, and highlights misconfigurations. This is the fastest way to get a topological view of how services are communicating.
 
@@ -1563,7 +1561,7 @@ Each command establishes a port-forward to the relevant service in the `istio-sy
 
 **Grafana** (if deployed alongside Istio) provides pre-built dashboards for Istio control plane health, sidecar injection rates, and per-service request metrics — using data from the local Prometheus instance rather than Cloud Monitoring.
 
-### C. Verifying UI Availability
+### 22.3 Verifying UI Availability
 
 ```bash
 # Check which observability tools are deployed in the mesh

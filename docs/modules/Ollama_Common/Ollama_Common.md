@@ -1,4 +1,4 @@
-# Ollama Common Module
+# Ollama_Common Shared Configuration Module
 
 The `Ollama_Common` module defines the Ollama LLM inference server configuration for the RAD
 Modules ecosystem. It **creates one GCP resource** (the GCS models bucket, via the
@@ -85,10 +85,10 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | From `var.container_resources` if non-null; else `{ cpu_limit, memory_limit }` from top-level variables |
 | `min_instance_count` | From `min_instance_count` |
 | `max_instance_count` | From `max_instance_count` |
-| `environment_variables` | Fixed map — see section 5 |
+| `environment_variables` | Fixed map — see §4 |
 | `enable_postgres_extensions` | `false` |
 | `postgres_extensions` | `[]` |
-| `initialization_jobs` | Auto-generated `model-pull` job or caller-supplied list — see section 6 |
+| `initialization_jobs` | Auto-generated `model-pull` job or caller-supplied list — see §5 |
 | `startup_probe` | From `startup_probe` variable |
 | `liveness_probe` | From `liveness_probe` variable |
 | `additional_services` | `[]` — Ollama has no companion services |
@@ -101,7 +101,7 @@ One entry, always included:
 |---|---|
 | `name_suffix` | `"models"` |
 | `name` | `<wrapper_prefix>-models` |
-| `location` | From `deployment_region` |
+| `location` | From `region` |
 | `storage_class` | `"STANDARD"` |
 | `force_destroy` | `true` |
 | `versioning_enabled` | `false` |
@@ -122,23 +122,7 @@ Absolute path to the module directory. Used by wrapper modules to locate `script
 
 ---
 
-## 4. Non-Configurable Values
-
-The following values are fixed inside `Ollama_Common` and cannot be overridden by callers:
-
-| Setting | Value | Reason |
-|---|---|---|
-| `container_image` | `"ollama/ollama"` | The official upstream Ollama image. |
-| `image_source` | `"prebuilt"` | No custom build; the upstream image is used directly. |
-| `container_port` | `11434` | Ollama's fixed HTTP listening port. |
-| `database_type` | `"NONE"` | Ollama requires no relational database. |
-| `enable_cloudsql_volume` | `false` | No Cloud SQL Auth Proxy is needed. |
-| `OLLAMA_MODELS` | `"/mnt/gcs/ollama/models"` | Fixed GCS Fuse path for model weight persistence. |
-| `OLLAMA_HOST` | `"0.0.0.0:11434"` | Binds to all interfaces for Cloud Run and Kubernetes ingress. |
-
----
-
-## 5. Automatically Injected Environment Variables
+## 4. Automatically Injected Environment Variables
 
 The following environment variables are always set in the container and must not be overridden
 by caller-supplied `environment_variables` (they would be silently overridden by the merge):
@@ -155,7 +139,7 @@ variables such as `OLLAMA_NUM_PARALLEL`.
 
 ---
 
-## 6. Model-Pull Initialization Job
+## 5. Model-Pull Initialization Job
 
 `Ollama_Common` implements a two-path initialization job strategy:
 
@@ -190,7 +174,7 @@ list is produced. No initialization job is created.
 
 ---
 
-## 7. Scripts
+## 6. Scripts
 
 All supporting scripts are in `scripts/`. The wrapper modules set `scripts_dir` to this
 directory.
@@ -226,9 +210,9 @@ start within the retry window.
 
 ---
 
-## 8. Input Variables
+## 7. Input Variables
 
-### A. Project & Identity
+### Project & Identity
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -236,9 +220,9 @@ start within the retry window.
 | `wrapper_prefix` | `string` | **required** | Prefix for GCS bucket names. Must match the `resource_prefix` used by the calling App_CloudRun or App_GKE module. |
 | `deployment_id` | `string` | `""` | Unique deployment identifier. |
 | `common_labels` | `map(string)` | `{}` | Labels applied to resources created by this module. |
-| `deployment_region` | `string` | `"us-central1"` | Region for the GCS models bucket. |
+| `region` | `string` | `"us-central1"` | GCP region for resource deployment. Used as the location for the GCS models bucket. |
 
-### B. Application Details
+### Application Details
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -247,14 +231,14 @@ start within the retry window.
 | `description` | `string` | `"Ollama — standalone open-source LLM inference server..."` | Application description. |
 | `application_version` | `string` | `"latest"` | Ollama Docker image tag. |
 
-### C. Model Configuration
+### Model Configuration
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `default_model` | `string` | `""` | Ollama model to pull during first deployment (e.g. `"llama3.2:3b"`, `"mistral"`, `"phi3:mini"`). Leave empty to skip the model-pull initialization job. Models are stored in GCS and persist across container restarts. |
 | `model_pull_timeout_seconds` | `number` | `3600` | Timeout in seconds for the model-pull initialization job. Valid range: 300–7200. |
 
-### D. Resources
+### Resources
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -264,13 +248,13 @@ start within the retry window.
 | `min_instance_count` | `number` | `1` | Minimum instances. Set to `1` to keep a warm instance for low-latency inference. |
 | `max_instance_count` | `number` | `3` | Maximum instances. |
 
-### E. Storage
+### Storage
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `gcs_volumes` | `list(any)` | `[]` | Additional GCS volume mounts. The `ollama-models` bucket at `/mnt/gcs` is always appended automatically. |
 
-### F. Environment & Probes
+### Environment & Probes
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -282,7 +266,7 @@ start within the retry window.
 
 ---
 
-## 9. GCS Volume Layout
+## 8. GCS Volume Layout
 
 The `<wrapper_prefix>-models` GCS bucket is mounted at `/mnt/gcs` in the container:
 
@@ -308,11 +292,11 @@ The `gcs_volumes` entry appended by this module:
 
 ---
 
-## 10. Platform-Specific Differences
+## 9. Platform-Specific Differences
 
 | Aspect | Ollama_CloudRun | Ollama_GKE |
 |---|---|---|
-| `deployment_region` | Hard-coded to `"us-central1"` in `main.tf` | Auto-discovered from VPC subnets via `app_networking`; falls back to `var.deployment_region` |
+| `region` | Passed as `"us-central1"` from `main.tf` | Auto-discovered from VPC subnets via `app_networking`; falls back to `var.region` |
 | Model-pull job type | Cloud Run Job | Kubernetes Job |
 | `mount_gcs_volumes` | `["ollama-models"]` mounted in the Cloud Run Job | `["ollama-models"]` mounted in the Kubernetes Job |
 | GCS Fuse driver | GCS Fuse (Cloud Run gen2) | GCS Fuse CSI driver (GKE) |
@@ -322,7 +306,7 @@ The `gcs_volumes` entry appended by this module:
 
 ---
 
-## 11. Implementation Pattern
+## 10. Implementation Pattern
 
 ```hcl
 # Example: how Ollama_CloudRun instantiates Ollama_Common
@@ -334,8 +318,8 @@ module "ollama_app" {
   deployment_id = local.random_id
   common_labels = local.common_labels
 
-  wrapper_prefix    = local.wrapper_prefix
-  deployment_region = "us-central1"
+  wrapper_prefix = local.wrapper_prefix
+  region         = var.region
 
   application_name         = var.application_name
   application_display_name = var.application_display_name

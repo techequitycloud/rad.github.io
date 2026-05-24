@@ -1,26 +1,12 @@
-# OpenClaw CloudRun Module
+# OpenClaw on Google Cloud Run
 
-OpenClaw is a serverless, multi-tenant AI agent gateway that provides WebSocket-enabled conversational AI agents with persistent GCS-backed workspace storage. `OpenClaw_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects OpenClaw-specific application configuration, secrets, storage, and container build configuration via `OpenClaw_Common`.
+This document provides a comprehensive reference for the `modules/OpenClaw_CloudRun` Terraform module. It covers architecture, configuration variables, OpenClaw-specific behaviors, and operational patterns for deploying the OpenClaw AI agent gateway on Google Cloud Run (v2).
 
-> This guide documents variables that are **unique to `OpenClaw_CloudRun`** or that have **OpenClaw-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
+---
 
 ## 1. Module Overview
 
-### A. Key differences from `App_CloudRun` defaults
-
-| Feature | App_CloudRun default | OpenClaw_CloudRun default |
-|---|---|---|
-| `container_port` | `8080` | `8080` |
-| `cpu_limit` | `"1000m"` | `"2000m"` |
-| `memory_limit` | `"512Mi"` | `"2Gi"` |
-| `min_instance_count` | `0` | `0` |
-| `max_instance_count` | `1` | `1` |
-| `execution_environment` | varies | `"gen2"` (required for GCS Fuse) |
-| `timeout_seconds` | varies | `3600` |
-| `cpu_always_allocated` | varies | `true` (required for WebSockets) |
-| `ingress_settings` | varies | `"internal"` |
-| `enable_cloudsql_volume` | varies | `false` (no database) |
-| GCS workspace bucket | none | auto-provisioned via `OpenClaw_Common` |
+OpenClaw is an open-source local AI agent that takes actions (not just generates responses), gaining rapid GitHub traction in late 2025. Its ecosystem of derivative startups generated approximately $400K/month in revenue within the first quarter of availability. Top use cases include contract review (legal teams report ~40% reduction in document review time), competitor monitoring, AI-powered content research, inbox triage, and DevOps security scanning. `OpenClaw_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects OpenClaw-specific application configuration, secrets, storage, and container build configuration via `OpenClaw_Common`, with per-tenant isolation for multi-tenant deployments.
 
 **Key Capabilities:**
 - **Compute**: Cloud Run v2 (Gen2), custom container image built from `ghcr.io/openclaw/openclaw`, scale-to-zero by default (`min_instance_count = 0`). CPU is always allocated (`cpu_always_allocated = true`) to support WebSocket connections and async agent operations.
@@ -61,37 +47,37 @@ OpenClaw is a Node.js gateway. The default resource limits (`cpu_limit = "2000m"
 
 **Custom image build:** `container_image_source = "custom"` (via `OpenClaw_Common`) is always used. The module builds a custom image layering `entrypoint.sh` onto `ghcr.io/openclaw/openclaw:<version>`. Set `application_version` to pin a specific release.
 
-| Variable | Default | Description |
-|---|---|---|
-| `deploy_application` | `true` | Set `false` for infrastructure-only deployment (GCS bucket, secrets). |
-| `cpu_limit` | `"2000m"` | CPU limit per container instance. Minimum 1 vCPU recommended. |
-| `memory_limit` | `"2Gi"` | Memory limit per container instance. |
-| `min_instance_count` | `0` | `0` enables scale-to-zero (15–20s cold start). Set `≥1` to eliminate cold starts for latency-sensitive agents. |
-| `max_instance_count` | `1` | Keep at `1` per tenant to avoid split-state. Increase only with sticky session routing. |
-| `container_port` | `8080` | TCP port the OpenClaw gateway listens on. Must match the `PORT` env var. |
-| `execution_environment` | `"gen2"` | Gen2 **required** for GCS Fuse. Do not change to `"gen1"`. |
-| `cpu_always_allocated` | `true` | CPU always allocated. Required for WebSocket connections and async operations. Do not set to `false`. |
-| `timeout_seconds` | `3600` | Maximum request duration. Agent sessions can be long-running; 3600s is the maximum. |
-| `enable_cloudsql_volume` | `false` | Not used by OpenClaw. Set to `false`. |
-| `service_annotations` | `{}` | Custom Cloud Run service annotations. |
-| `service_labels` | `{}` | Custom labels applied to the Cloud Run service. |
-| `enable_image_mirroring` | `true` | Mirror the built image to Artifact Registry. |
-| `container_protocol` | `"http1"` | HTTP protocol. Use `"h2c"` only if all callers support HTTP/2 cleartext. |
-| `cloudsql_volume_mount_path` | `"/cloudsql"` | Not used by OpenClaw; retained for `App_CloudRun` interface compatibility. |
-| `traffic_split` | `[]` | Percentage-based canary/blue-green traffic allocation. All entries must sum to 100. |
-| `max_revisions_to_retain` | `7` | Maximum Cloud Run revisions to keep after each deployment. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `deploy_application` | 3 | `true` | Set `false` for infrastructure-only deployment (GCS bucket, secrets). |
+| `cpu_limit` | 3 | `"2000m"` | CPU limit per container instance. Minimum 1 vCPU recommended. |
+| `memory_limit` | 3 | `"2Gi"` | Memory limit per container instance. |
+| `min_instance_count` | 3 | `0` | `0` enables scale-to-zero (15–20s cold start). Set `≥1` to eliminate cold starts for latency-sensitive agents. |
+| `max_instance_count` | 3 | `1` | Keep at `1` per tenant to avoid split-state. Increase only with sticky session routing. |
+| `container_port` | 3 | `8080` | TCP port the OpenClaw gateway listens on. Must match the `PORT` env var. |
+| `execution_environment` | 3 | `"gen2"` | Gen2 **required** for GCS Fuse. Do not change to `"gen1"`. |
+| `cpu_always_allocated` | 3 | `true` | CPU always allocated. Required for WebSocket connections and async operations. Do not set to `false`. |
+| `timeout_seconds` | 3 | `3600` | Maximum request duration. Agent sessions can be long-running; 3600s is the maximum. |
+| `enable_cloudsql_volume` | 3 | `false` | Not used by OpenClaw. Set to `false`. |
+| `service_annotations` | 3 | `{}` | Custom Cloud Run service annotations. |
+| `service_labels` | 3 | `{}` | Custom labels applied to the Cloud Run service. |
+| `enable_image_mirroring` | 3 | `true` | Mirror the built image to Artifact Registry. |
+| `container_protocol` | 3 | `"http1"` | HTTP protocol. Use `"h2c"` only if all callers support HTTP/2 cleartext. |
+| `cloudsql_volume_mount_path` | 3 | `"/cloudsql"` | Not used by OpenClaw; retained for `App_CloudRun` interface compatibility. |
+| `traffic_split` | 3 | `[]` | Percentage-based canary/blue-green traffic allocation. All entries must sum to 100. |
+| `max_revisions_to_retain` | 3 | `7` | Maximum Cloud Run revisions to keep after each deployment. |
 
 ### B. Networking
 
 The default `ingress_settings = "internal"` is intentional — the OpenClaw agent is typically deployed behind a shared router that handles external traffic. Set to `"all"` for direct public access.
 
-| Variable | Default | Description |
-|---|---|---|
-| `ingress_settings` | `"internal"` | `"internal"` — VPC only; `"all"` — public internet; `"internal-and-cloud-load-balancing"` — forces traffic through the HTTPS LB. Recommended: `"internal"` for router-fronted deployments. |
-| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | `"PRIVATE_RANGES_ONLY"` routes only RFC 1918 traffic via VPC. |
-| `enable_iap` | `false` | Enables IAP on the Cloud Run service. Note: IAP blocks router service-to-service calls unless the router SA is added to `iap_authorized_users`. |
-| `iap_authorized_users` | `[]` | Users/SAs granted IAP access. |
-| `iap_authorized_groups` | `[]` | Google Groups granted IAP access. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `ingress_settings` | 4 | `"internal"` | `"internal"` — VPC only; `"all"` — public internet; `"internal-and-cloud-load-balancing"` — forces traffic through the HTTPS LB. Recommended: `"internal"` for router-fronted deployments. |
+| `vpc_egress_setting` | 4 | `"PRIVATE_RANGES_ONLY"` | `"PRIVATE_RANGES_ONLY"` routes only RFC 1918 traffic via VPC. |
+| `enable_iap` | 4 | `false` | Enables IAP on the Cloud Run service. Note: IAP blocks router service-to-service calls unless the router SA is added to `iap_authorized_users`. |
+| `iap_authorized_users` | 4 | `[]` | Users/SAs granted IAP access. |
+| `iap_authorized_groups` | 4 | `[]` | Google Groups granted IAP access. |
 
 ### C. Storage (GCS)
 
@@ -99,17 +85,17 @@ OpenClaw requires no NFS. All state is persisted via GCS Fuse at `/data`. NFS is
 
 The workspace GCS bucket is always provisioned by `OpenClaw_Common` regardless of `create_cloud_storage` or `storage_buckets` settings.
 
-| Variable | Default | Description |
-|---|---|---|
-| `create_cloud_storage` | `true` | Provision additional GCS buckets defined in `storage_buckets`. The workspace bucket is always created. |
-| `storage_buckets` | `[]` | Additional GCS buckets beyond the auto-provisioned workspace bucket. |
-| `enable_nfs` | `false` | OpenClaw uses GCS Fuse for state; NFS is not required. |
-| `nfs_mount_path` | `"/mnt/nfs"` | NFS mount path. Only used when `enable_nfs = true`. |
-| `nfs_instance_name` | `""` | Existing NFS GCE VM name. Auto-discovered when empty. |
-| `nfs_instance_base_name` | `"app-nfs"` | Base name for inline NFS GCE VM. |
-| `gcs_volumes` | `[]` | Additional GCS Fuse volumes. The `openclaw-data` workspace volume at `/data` is always appended automatically. |
-| `manage_storage_kms_iam` | `false` | Creates a CMEK KMS key for GCS encryption. |
-| `enable_artifact_registry_cmek` | `false` | CMEK encryption for Artifact Registry. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `create_cloud_storage` | 10 | `true` | Provision additional GCS buckets defined in `storage_buckets`. The workspace bucket is always created. |
+| `storage_buckets` | 10 | `[]` | Additional GCS buckets beyond the auto-provisioned workspace bucket. |
+| `enable_nfs` | 10 | `false` | OpenClaw uses GCS Fuse for state; NFS is not required. |
+| `nfs_mount_path` | 10 | `"/mnt/nfs"` | NFS mount path. Only used when `enable_nfs = true`. |
+| `nfs_instance_name` | 10 | `""` | Existing NFS GCE VM name. Auto-discovered when empty. |
+| `nfs_instance_base_name` | 10 | `"app-nfs"` | Base name for inline NFS GCE VM. |
+| `gcs_volumes` | 10 | `[]` | Additional GCS Fuse volumes. The `openclaw-data` workspace volume at `/data` is always appended automatically. |
+| `manage_storage_kms_iam` | 10 | `false` | Creates a CMEK KMS key for GCS encryption. |
+| `enable_artifact_registry_cmek` | 10 | `false` | CMEK encryption for Artifact Registry. |
 
 ---
 
@@ -117,35 +103,35 @@ The workspace GCS bucket is always provisioned by `OpenClaw_Common` regardless o
 
 ### A. Application Identity
 
-| Variable | Default | Description |
-|---|---|---|
-| `application_name` | `"openclaw"` | Internal identifier for the Cloud Run service and GCS bucket. Do not change after initial deployment. |
-| `application_display_name` | `"OpenClaw Gateway"` | Human-readable name shown in the platform UI. |
-| `description` | `"OpenClaw AI Gateway - Serverless multi-tenant AI agent gateway on Cloud Run"` | Cloud Run service description. |
-| `application_version` | `"latest"` | OpenClaw image tag used as `BASE_IMAGE` in the Cloud Build. Pin to a specific release (e.g. `"1.2.3"`) for reproducible deployments. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `application_name` | 2 | `"openclaw"` | Internal identifier for the Cloud Run service and GCS bucket. Do not change after initial deployment. |
+| `application_display_name` | 2 | `"OpenClaw Gateway"` | Human-readable name shown in the platform UI. |
+| `description` | 2 | `"OpenClaw AI Gateway - Serverless multi-tenant AI agent gateway on Cloud Run"` | Cloud Run service description. |
+| `application_version` | 2 | `"latest"` | OpenClaw image tag used as `BASE_IMAGE` in the Cloud Build. Pin to a specific release (e.g. `"1.2.3"`) for reproducible deployments. |
 
 ### B. Skills Repository (Group 14)
 
 The skills repository is cloned or updated on every container startup by `entrypoint.sh`. This makes the latest skills available without requiring a container rebuild.
 
-| Variable | Default | Description |
-|---|---|---|
-| `skills_repo_url` | `""` | GitHub URL of a shared OpenClaw skills repository. Cloned into `/data/workspace/skill-library` on startup. Leave empty to skip skill syncing. |
-| `skills_repo_ref` | `"main"` | Git ref (branch, tag, or SHA) to check out. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `skills_repo_url` | 14 | `""` | GitHub URL of a shared OpenClaw skills repository. Cloned into `/data/workspace/skill-library` on startup. Leave empty to skip skill syncing. |
+| `skills_repo_ref` | 14 | `"main"` | Git ref (branch, tag, or SHA) to check out. |
 
 ### C. AI Provider & Messaging Credentials (Group 14)
 
 All credentials are stored in Secret Manager and injected at runtime. Plaintext values are never written to Terraform state after the initial secret version is created.
 
-| Variable | Default | Description |
-|---|---|---|
-| `anthropic_api_key` | `""` | Anthropic API key. Stored as `<prefix>-anthropic-api-key` in Secret Manager; injected as `ANTHROPIC_API_KEY`. Required on initial deployment; omit on updates to retain stored value. Sensitive. |
-| `enable_telegram` | `false` | Provision Telegram secrets. Requires `telegram_bot_token` and `telegram_webhook_secret`. |
-| `telegram_bot_token` | `""` | Telegram bot token from @BotFather. Injected as `TELEGRAM_BOT_TOKEN`. Sensitive. |
-| `telegram_webhook_secret` | `""` | Webhook validation secret for the router (not the agent). Stored separately; not injected into the agent container. Generate with: `openssl rand -hex 32`. Sensitive. |
-| `enable_slack` | `false` | Provision Slack secrets. Requires `slack_bot_token` and `slack_signing_secret`. |
-| `slack_bot_token` | `""` | Slack bot token (`xoxb-...`). Injected as `SLACK_BOT_TOKEN`. Sensitive. |
-| `slack_signing_secret` | `""` | Slack signing secret for the router (not the agent). Stored separately; not injected into the agent container. Sensitive. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `anthropic_api_key` | 14 | `""` | Anthropic API key. Stored as `<prefix>-anthropic-api-key` in Secret Manager; injected as `ANTHROPIC_API_KEY`. Required on initial deployment; omit on updates to retain stored value. Sensitive. |
+| `enable_telegram` | 14 | `false` | Provision Telegram secrets. Requires `telegram_bot_token` and `telegram_webhook_secret`. |
+| `telegram_bot_token` | 14 | `""` | Telegram bot token from @BotFather. Injected as `TELEGRAM_BOT_TOKEN`. Sensitive. |
+| `telegram_webhook_secret` | 14 | `""` | Webhook validation secret for the router (not the agent). Stored separately; not injected into the agent container. Generate with: `openssl rand -hex 32`. Sensitive. |
+| `enable_slack` | 14 | `false` | Provision Slack secrets. Requires `slack_bot_token` and `slack_signing_secret`. |
+| `slack_bot_token` | 14 | `""` | Slack bot token (`xoxb-...`). Injected as `SLACK_BOT_TOKEN`. Sensitive. |
+| `slack_signing_secret` | 14 | `""` | Slack signing secret for the router (not the agent). Stored separately; not injected into the agent container. Sensitive. |
 
 **Validation:** `enable_slack = true` requires both `slack_bot_token` and `slack_signing_secret` to be non-empty. `enable_telegram = true` requires both `telegram_bot_token` and `telegram_webhook_secret` to be non-empty. Violations are caught by `validation.tf` preconditions before apply.
 
@@ -157,58 +143,58 @@ All credentials are stored in Secret Manager and injected at runtime. Plaintext 
 
 When `enable_cloud_armor = true`, a Global HTTPS Load Balancer with a Cloud Armor WAF policy is provisioned in front of Cloud Run.
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_cloud_armor` | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. |
-| `admin_ip_ranges` | `[]` | CIDR ranges exempted from WAF rules. |
-| `application_domains` | `[]` | Custom domains with Google-managed SSL certificates. DNS must point to the LB IP. |
-| `enable_cdn` | `false` | Enables Cloud CDN on the HTTPS LB backend. |
-| `max_images_to_retain` | `7` | Maximum recent container images to keep in Artifact Registry. |
-| `delete_untagged_images` | `true` | Automatically delete untagged container images. |
-| `image_retention_days` | `30` | Days after which images are eligible for deletion. `0` disables age-based deletion. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_cloud_armor` | 9 | `false` | Provisions Global HTTPS LB + Cloud Armor WAF. |
+| `admin_ip_ranges` | 9 | `[]` | CIDR ranges exempted from WAF rules. |
+| `application_domains` | 9 | `[]` | Custom domains with Google-managed SSL certificates. DNS must point to the LB IP. |
+| `enable_cdn` | 9 | `false` | Enables Cloud CDN on the HTTPS LB backend. |
+| `max_images_to_retain` | 9 | `7` | Maximum recent container images to keep in Artifact Registry. |
+| `delete_untagged_images` | 9 | `true` | Automatically delete untagged container images. |
+| `image_retention_days` | 9 | `30` | Days after which images are eligible for deletion. `0` disables age-based deletion. |
 
 ### B. VPC Service Controls
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_vpc_sc` | `false` | Registers API calls within the project's VPC-SC perimeter. |
-| `vpc_cidr_ranges` | `[]` | VPC subnet CIDR ranges. Auto-discovered when empty. |
-| `vpc_sc_dry_run` | `true` | Log violations without blocking. Set `false` to enforce. |
-| `organization_id` | `""` | GCP Organization ID. Auto-discovered when empty. |
-| `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_vpc_sc` | 4 | `false` | Registers API calls within the project's VPC-SC perimeter. |
+| `vpc_cidr_ranges` | 4 | `[]` | VPC subnet CIDR ranges. Auto-discovered when empty. |
+| `vpc_sc_dry_run` | 4 | `true` | Log violations without blocking. Set `false` to enforce. |
+| `organization_id` | 4 | `""` | GCP Organization ID. Auto-discovered when empty. |
+| `enable_audit_logging` | 4 | `false` | Enables detailed Cloud Audit Logs. |
 
 ### C. Binary Authorization
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_binary_authorization` | `false` | Enforces image attestation before deployment. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_binary_authorization` | 7 | `false` | Enforces image attestation before deployment. |
 
 ---
 
 ## 6. Environment Variables & Secrets
 
-| Variable | Default | Description |
-|---|---|---|
-| `environment_variables` | `{}` | Plain-text environment variables. Module-managed vars (`OPENCLAW_STATE_DIR`, `XDG_CONFIG_HOME`, `NODE_ENV`, `NODE_OPTIONS`, `PORT`, `SKILLS_REPO_URL`, `SKILLS_REPO_REF`) always take precedence. |
-| `secret_environment_variables` | `{}` | Additional Secret Manager references (env var name → secret name). Anthropic, Telegram, and Slack credentials are managed automatically via `OpenClaw_Common`. |
-| `secret_propagation_delay` | `30` | Seconds to wait after secret creation. Valid range: 0–300. |
-| `secret_rotation_period` | `"2592000s"` | Secret Manager rotation notification period (30 days). |
-| `enable_auto_password_rotation` | `false` | Not applicable for OpenClaw (no database). |
-| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before restarting the service. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `environment_variables` | 5 | `{}` | Plain-text environment variables. Module-managed vars (`OPENCLAW_STATE_DIR`, `XDG_CONFIG_HOME`, `NODE_ENV`, `NODE_OPTIONS`, `PORT`, `SKILLS_REPO_URL`, `SKILLS_REPO_REF`) always take precedence. |
+| `secret_environment_variables` | 5 | `{}` | Additional Secret Manager references (env var name → secret name). Anthropic, Telegram, and Slack credentials are managed automatically via `OpenClaw_Common`. |
+| `secret_propagation_delay` | 5 | `30` | Seconds to wait after secret creation. Valid range: 0–300. |
+| `secret_rotation_period` | 5 | `"2592000s"` | Secret Manager rotation notification period (30 days). |
+| `enable_auto_password_rotation` | 5 | `false` | Not applicable for OpenClaw (no database). |
+| `rotation_propagation_delay_sec` | 5 | `90` | Seconds to wait after rotation before restarting the service. |
 
 ---
 
 ## 7. CI/CD & Delivery
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_cicd_trigger` | `false` | Provisions a Cloud Build GitHub trigger. |
-| `github_repository_url` | `""` | Full HTTPS URL of the GitHub repository. |
-| `github_token` | `""` | GitHub PAT. Sensitive. |
-| `github_app_installation_id` | `""` | GitHub App installation ID (preferred for org repos). |
-| `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Advanced trigger config. |
-| `enable_cloud_deploy` | `false` | Upgrades to a Cloud Deploy pipeline. Requires `enable_cicd_trigger`. |
-| `cloud_deploy_stages` | `[dev, staging, prod(approval)]` | Ordered Cloud Deploy promotion stages. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `enable_cicd_trigger` | 7 | `false` | Provisions a Cloud Build GitHub trigger. |
+| `github_repository_url` | 7 | `""` | Full HTTPS URL of the GitHub repository. |
+| `github_token` | 7 | `""` | GitHub PAT. Sensitive. |
+| `github_app_installation_id` | 7 | `""` | GitHub App installation ID (preferred for org repos). |
+| `cicd_trigger_config` | 7 | `{ branch_pattern = "^main$" }` | Advanced trigger config. |
+| `enable_cloud_deploy` | 7 | `false` | Upgrades to a Cloud Deploy pipeline. Requires `enable_cicd_trigger`. |
+| `cloud_deploy_stages` | 7 | `[dev, staging, prod(approval)]` | Ordered Cloud Deploy promotion stages. |
 
 ---
 
@@ -216,13 +202,13 @@ When `enable_cloud_armor = true`, a Global HTTPS Load Balancer with a Cloud Armo
 
 OpenClaw has no database — backup settings are present for interface compatibility with `App_CloudRun`.
 
-| Variable | Default | Description |
-|---|---|---|
-| `backup_schedule` | `"0 2 * * *"` | Cron expression for automated workspace backup. OpenClaw state lives in GCS and is natively durable. |
-| `backup_retention_days` | `7` | Days to retain backup files. |
-| `enable_backup_import` | `false` | Triggers a one-time workspace import on apply. |
-| `backup_source` | `"gcs"` | Import source: `"gcs"` or `"gdrive"`. |
-| `backup_format` | `"tar"` | Import format: `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `backup_schedule` | 6 | `"0 2 * * *"` | Cron expression for automated workspace backup. OpenClaw state lives in GCS and is natively durable. |
+| `backup_retention_days` | 6 | `7` | Days to retain backup files. |
+| `enable_backup_import` | 6 | `false` | Triggers a one-time workspace import on apply. |
+| `backup_source` | 6 | `"gcs"` | Import source: `"gcs"` or `"gdrive"`. |
+| `backup_format` | 6 | `"tar"` | Import format: `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
 
 ---
 
@@ -230,14 +216,14 @@ OpenClaw has no database — backup settings are present for interface compatibi
 
 OpenClaw exposes `/health` on port 8080. All probes target this path.
 
-| Variable | Default | Description |
-|---|---|---|
-| `startup_probe` | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=20, timeout_seconds=5, period_seconds=5, failure_threshold=24 }` | Passed to `OpenClaw_Common`. 20s initial delay and 24-attempt threshold give ~2 minutes for GCS Fuse mount and Node.js startup. |
-| `liveness_probe` | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Passed to `OpenClaw_Common`. |
-| `startup_probe_config` | `{ enabled=true }` | Structured startup probe passed directly to `App_CloudRun`. |
-| `health_check_config` | `{ enabled=true }` | Structured liveness probe passed directly to `App_CloudRun`. |
-| `uptime_check_config` | `{ enabled=true, path="/health" }` | Cloud Monitoring uptime check from multiple global locations. |
-| `alert_policies` | `[]` | Cloud Monitoring metric alert policies. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `startup_probe` | 13 | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=20, timeout_seconds=5, period_seconds=5, failure_threshold=24 }` | Passed to `OpenClaw_Common`. 20s initial delay and 24-attempt threshold give ~2 minutes for GCS Fuse mount and Node.js startup. |
+| `liveness_probe` | 13 | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Passed to `OpenClaw_Common`. |
+| `startup_probe_config` | 13 | `{ enabled=true }` | Structured startup probe passed directly to `App_CloudRun`. |
+| `health_check_config` | 13 | `{ enabled=true }` | Structured liveness probe passed directly to `App_CloudRun`. |
+| `uptime_check_config` | 13 | `{ enabled=true, path="/health" }` | Cloud Monitoring uptime check from multiple global locations. |
+| `alert_policies` | 13 | `[]` | Cloud Monitoring metric alert policies. |
 
 ---
 
@@ -245,14 +231,14 @@ OpenClaw exposes `/health` on port 8080. All probes target this path.
 
 OpenClaw has no default initialization job — no database setup is required.
 
-| Variable | Default | Description |
-|---|---|---|
-| `initialization_jobs` | `[]` | Cloud Run jobs executed once during deployment for custom workspace seeding. No default job. |
-| `cron_jobs` | `[]` | Recurring Cloud Run jobs triggered by Cloud Scheduler. |
-| `enable_custom_sql_scripts` | `false` | Not applicable for OpenClaw. |
-| `custom_sql_scripts_bucket` | `""` | Not used. |
-| `custom_sql_scripts_path` | `""` | Not used. |
-| `custom_sql_scripts_use_root` | `false` | Not used. |
+| Variable | Group | Default | Description |
+|---|---|---|---|
+| `initialization_jobs` | 8 | `[]` | Cloud Run jobs executed once during deployment for custom workspace seeding. No default job. |
+| `cron_jobs` | 8 | `[]` | Recurring Cloud Run jobs triggered by Cloud Scheduler. |
+| `enable_custom_sql_scripts` | 8 | `false` | Not applicable for OpenClaw. |
+| `custom_sql_scripts_bucket` | 8 | `""` | Not used. |
+| `custom_sql_scripts_path` | 8 | `""` | Not used. |
+| `custom_sql_scripts_use_root` | 8 | `false` | Not used. |
 
 ---
 
@@ -287,9 +273,9 @@ Complete variable reference with UIMeta group assignments.
 | `module_dependency` | 0 | `["Services_GCP"]` |
 | `module_services` | 0 | *(GCP service list)* |
 | `credit_cost` | 0 | `100` |
-| `require_credit_purchases` | 0 | `true` |
+| `require_credit_purchases` | 0 | `false` |
 | `enable_purge` | 0 | `true` |
-| `public_access` | 0 | `false` |
+| `public_access` | 0 | `true` |
 | `deployment_id` | 0 | `""` |
 | `resource_creator_identity` | 0 | `"rad-module-creator@..."` |
 | `project_id` | 1 | *(required)* |
@@ -466,3 +452,24 @@ telegram_webhook_secret = "a1b2c3d4..."  # openssl rand -hex 32
 skills_repo_url = "https://github.com/my-org/openclaw-skills"
 skills_repo_ref = "main"
 ```
+
+## Destroying Resources
+
+### Known Deletion Issue: Serverless IPv4 Address Release
+
+When destroying a Cloud Run deployment, you may encounter an error similar to:
+
+```
+Error: Error waiting for Subnetwork to be deleted: The following serverless IPv4 address(es) on subnet ... are still in use.
+```
+
+**Cause:** GCP holds serverless IPv4 addresses on the VPC subnet asynchronously after a Cloud Run service is deleted. These addresses are released by GCP approximately **20–30 minutes** after the Cloud Run service is removed. Terraform/OpenTofu cannot complete the subnet or VPC deletion until they are fully released.
+
+**Resolution:** Wait 20–30 minutes after the initial destroy attempt, then re-run the destroy command:
+
+```bash
+tofu destroy
+```
+
+The second run will succeed once GCP has released the reserved addresses.
+

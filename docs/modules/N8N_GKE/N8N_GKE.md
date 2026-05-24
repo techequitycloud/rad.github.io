@@ -1,6 +1,6 @@
-# N8N GKE Module
+# N8N_GKE Module — Configuration Guide
 
-n8n is an open-source workflow automation platform that lets you connect services, run logic, and build automated pipelines through a visual node-based interface. This module deploys n8n on **GKE Autopilot** with a managed PostgreSQL database, GCS-backed storage persistence, and optional NFS for shared volumes.
+n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), **230,000+ active users**, and a **$2.5B valuation** as of 2025 — growing from $350M in under four months and serving a quarter of the Fortune 500. With $240M raised across four funding rounds, 400+ integrations, and native AI nodes, n8n connects apps, APIs, and data sources with full code flexibility. It is self-hostable for total data sovereignty and no per-execution fees. This module deploys n8n on **GKE Autopilot** with a managed PostgreSQL database, GCS-backed storage persistence, and optional NFS for shared volumes.
 
 `N8N_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS, secrets, CI/CD) and adds n8n-specific application configuration on top.
 
@@ -8,24 +8,7 @@ n8n is an open-source workflow automation platform that lets you connect service
 
 ---
 
-## 1. Module Overview
-
-`N8N_GKE` wraps `App_GKE` to deploy n8n workflow automation on GKE Autopilot. It adds n8n-specific application configuration, Redis queue mode support, NFS persistence, and automated database initialisation on top of the standard `App_GKE` infrastructure.
-
-> This guide documents variables that are **unique to `N8N_GKE`** or that have **n8n-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
-
-### Key differences from `App_GKE` defaults
-
-| Variable | App_GKE Default | N8N_GKE Default |
-|---|---|---|
-| `container_port` | `8080` | `5678` |
-| `enable_nfs` | `false` | `true` |
-| `enable_redis` | `false` | `true` |
-| `session_affinity` | `"None"` | `"ClientIP"` |
-
----
-
-## 2. How This Guide Is Structured
+## How This Guide Is Structured
 
 This guide documents only the variables that are **unique to `N8N_GKE`** or that have **n8n-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, GKE backend configuration, CI/CD, GCS storage, backup, custom SQL, observability, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
@@ -67,7 +50,7 @@ This guide documents only the variables that are **unique to `N8N_GKE`** or that
 
 ---
 
-## 3. Platform-Managed Behaviours
+## Platform-Managed Behaviours
 
 The following behaviours are applied automatically by `N8N_GKE` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
@@ -85,7 +68,7 @@ The following behaviours are applied automatically by `N8N_GKE` regardless of th
 
 ---
 
-## 4. N8N Application Identity
+## N8N Application Identity
 
 These variables control how the n8n deployment is named and described. They correspond to §3.A variables in App_GKE but carry n8n-specific defaults.
 
@@ -108,7 +91,7 @@ kubectl describe deployment n8n -n NAMESPACE | grep -A5 Annotations
 
 ---
 
-## 5. N8N Runtime Configuration
+## N8N Runtime Configuration
 
 n8n exposes `cpu_limit` and `memory_limit` as **dedicated top-level variables** rather than requiring users to set the full `container_resources` object.
 
@@ -146,7 +129,7 @@ kubectl get hpa -n NAMESPACE
 
 ---
 
-## 6. StatefulSet Configuration
+## StatefulSet Configuration
 
 When `workload_type = "StatefulSet"` (see [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot)), `N8N_GKE` exposes additional variables to configure the StatefulSet's persistent volume claim and Pod management behaviour. These variables are **unique to `N8N_GKE`** — they do not exist in `App_GKE`.
 
@@ -177,7 +160,7 @@ kubectl exec -n NAMESPACE <any-pod> -- nslookup n8n-0.n8n.NAMESPACE.svc.cluster.
 
 ---
 
-## 7. Redis Configuration
+## Redis Configuration
 
 These variables configure n8n's Redis integration. The underlying Redis infrastructure support is provided by `App_GKE` (see [App_GKE §8.A](../App_GKE/App_GKE.md#a-redis--memorystore)); the variables below are n8n-specific. Redis is required for n8n **queue mode**, which enables reliable multi-replica workflow execution.
 
@@ -199,7 +182,7 @@ kubectl describe pod -n NAMESPACE -l app=n8n | grep -E "REDIS"
 
 ---
 
-## 8. N8N Database Configuration
+## N8N Database Configuration
 
 n8n requires PostgreSQL. This module exposes `db_name` and `db_user` as **short top-level variables** in place of the `application_database_name` and `application_database_user` variables documented in [App_GKE §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql).
 
@@ -224,7 +207,7 @@ kubectl describe pod -n NAMESPACE -l app=n8n | grep -E "DB_POSTGRES"
 
 ---
 
-## 9. N8N Environment Variables
+## N8N Environment Variables
 
 The `environment_variables` variable (documented in [App_GKE §3](../App_GKE/App_GKE.md#3-core-service-configuration)) has n8n-specific defaults that configure email delivery.
 
@@ -247,7 +230,7 @@ Override the SMTP values to enable n8n email notifications (workflow failure ale
 
 ---
 
-## 10. N8N Health Probes
+## N8N Health Probes
 
 `N8N_GKE` exposes **two parallel sets** of probe variables that configure Kubernetes probes via different routing paths:
 
@@ -280,9 +263,9 @@ For full documentation on `uptime_check_config` and `alert_policies`, refer to [
 
 ---
 
-## 11. Configuration Examples
+## Configuration Examples
 
-### A. Basic Deployment
+### Basic Deployment
 
 Deploys n8n on GKE using default settings. Suitable for evaluation and development.
 
@@ -293,7 +276,7 @@ project_id                = "my-project-123"
 tenant_deployment_id      = "basic"
 ```
 
-### B. Advanced Deployment
+### Advanced Deployment
 
 Production-grade deployment with Redis queue mode, CI/CD, GKE-specific reliability policies, and full observability.
 
@@ -362,7 +345,7 @@ alert_policies = [
 ]
 ```
 
-### C. StatefulSet Deployment
+### StatefulSet Deployment
 
 Deploys n8n as a StatefulSet with a PVC for local data storage, suitable for high-frequency workflow executions with binary file output.
 

@@ -1,6 +1,6 @@
-# Wikijs Common Module
+# Wikijs_Common Module
 
-## 1. Overview
+## Overview
 
 `Wikijs_Common` is a pure-configuration Terraform module in the RAD Modules ecosystem. It generates a `config` object consumed by platform modules (`App_CloudRun`, `App_GKE`) to deploy Wiki.js — an open-source Node.js wiki platform — on Google Cloud.
 
@@ -10,7 +10,7 @@ The database password is not generated here; it is managed by the platform layer
 
 ---
 
-## 2. Architecture
+## Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -42,7 +42,7 @@ The database password is not generated here; it is managed by the platform layer
 
 ---
 
-## 3. GCP Resources Created
+## GCP Resources Created
 
 **None.** This module creates no GCP resources. All outputs are derived from input variables and local expressions.
 
@@ -50,13 +50,13 @@ The database password is not generated here; it is managed by the platform layer
 
 | Bucket Suffix | Location | Storage Class | `force_destroy` | `versioning_enabled` | `public_access_prevention` | Purpose |
 |---------------|----------|---------------|-----------------|----------------------|----------------------------|---------|
-| `wikijs-storage` | `var.deployment_region` | `STANDARD` | `true` | `false` | `"inherited"` | Wiki.js asset storage and uploads |
+| `wikijs-storage` | `var.region` | `STANDARD` | `true` | `false` | `"inherited"` | Wiki.js asset storage and uploads |
 
 > **Note:** `public_access_prevention = "inherited"` means the bucket follows the organisation or project-level policy rather than enforcing a private-only setting. This differs from the `"enforced"` default used by most other modules. It allows GCS Fuse (which mounts the bucket into the container) to work without additional IAM overrides in some configurations.
 
 ---
 
-## 4. Module Outputs
+## Module Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
@@ -68,7 +68,7 @@ There are no `secret_ids` or `secret_values` outputs — this module creates no 
 
 ---
 
-## 5. Input Variables
+## Input Variables
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -81,7 +81,7 @@ There are no `secret_ids` or `secret_values` outputs — this module creates no 
 | `memory_limit` | string | `"2Gi"` | Memory limit (higher than most — Chromium/Puppeteer) |
 | `min_instance_count` | number | `1` | Minimum instances (stays warm) |
 | `max_instance_count` | number | `3` | Maximum instances |
-| `deployment_region` | string | `"us-central1"` | Region for the GCS bucket |
+| `region` | string | `"us-central1"` | Region for the GCS bucket |
 | `tenant_deployment_id` | string | `"demo"` | Tenant identifier |
 | `deployment_id` | string | `""` | Deployment identifier |
 | `enable_cloudsql_volume` | bool | `true` | Enable Cloud SQL Auth Proxy sidecar |
@@ -96,7 +96,7 @@ There are no `secret_ids` or `secret_values` outputs — this module creates no 
 
 ---
 
-## 6. Environment Variables
+## Environment Variables
 
 The module merges caller-supplied `environment_variables` with the following defaults:
 
@@ -111,7 +111,7 @@ The module merges caller-supplied `environment_variables` with the following def
 
 `HA_STORAGE_PATH` is set to `/wiki-storage` to support multi-instance deployments where Wiki.js needs a shared location for sideload modules and assets. This path should be backed by NFS or GCS Fuse in production.
 
-## 7. Secret Environment Variables
+## Secret Environment Variables
 
 The `config.secret_environment_variables` map carries:
 
@@ -123,7 +123,7 @@ Callers may inject additional secret references via `var.secret_environment_vari
 
 ---
 
-## 8. PostgreSQL Extension
+## PostgreSQL Extension
 
 | Extension | Purpose |
 |-----------|---------|
@@ -133,24 +133,7 @@ Callers may inject additional secret references via `var.secret_environment_vari
 
 ---
 
-## 9. Non-Configurable Values
-
-The following values are fixed inside `Wikijs_Common` and cannot be overridden by callers:
-
-| Setting | Value | Reason |
-|---|---|---|
-| `container_image` | `"requarks/wiki:2"` | Official Wiki.js image; custom entrypoint is layered on top. |
-| `container_port` | `3000` | Wiki.js Node.js server always listens on port 3000. |
-| `database_type` | `"POSTGRES_15"` | Wiki.js requires PostgreSQL. |
-| `enable_postgres_extensions` | `true` | `pg_trgm` is required for Wiki.js search functionality. |
-| `postgres_extensions` | `["pg_trgm"]` | Trigram extension needed for full-text fuzzy search. |
-| `HA_STORAGE_PATH` | `"/wiki-storage"` | Fixed shared storage path for multi-instance HA deployments. |
-| `DB_PASS` secret reference | `"database_password_secret"` | Symbolic reference resolved by the platform layer at runtime. |
-| GCP resources created | none | This module creates no GCP resources. |
-
----
-
-## 10. Initialization Job: `db-init`
+## Initialization Job: `db-init`
 
 | Property | Value |
 |----------|-------|
@@ -176,7 +159,7 @@ Both `ROOT_PASSWORD` and `DB_PASSWORD` are bound to the same platform-managed se
 
 ---
 
-## 11. Container Image
+## Container Image
 
 The module wraps the official `requarks/wiki:2` image with Chromium and a custom entrypoint.
 
@@ -206,7 +189,7 @@ No `tini` is used — `requarks/wiki:2` manages its own process lifecycle.
 
 ---
 
-## 12. `entrypoint.sh`
+## `entrypoint.sh`
 
 A thin wrapper that maps platform-standard variable names to Wiki.js's expected names before starting the server:
 
@@ -217,7 +200,7 @@ A thin wrapper that maps platform-standard variable names to Wiki.js's expected 
 
 ---
 
-## 13. Platform-Specific Differences
+## Platform-Specific Differences
 
 | Aspect | Wikijs_CloudRun | Wikijs_GKE |
 |--------|-----------------|------------|
@@ -231,13 +214,13 @@ A thin wrapper that maps platform-standard variable names to Wiki.js's expected 
 
 ---
 
-## 14. Usage Example
+## Usage Example
 
 ```hcl
 module "wikijs_common" {
   source = "./modules/Wikijs_Common"
 
-  deployment_region    = "us-central1"
+  region               = "us-central1"
   tenant_deployment_id = "prod"
   application_version  = "2.5.311"
 
@@ -255,7 +238,7 @@ module "wikijs_cloudrun" {
 }
 ```
 
-### A. Config Preset Files
+### Config Preset Files
 
 The module ships three example `.tfvars` files in `config/` as deployment starting points:
 

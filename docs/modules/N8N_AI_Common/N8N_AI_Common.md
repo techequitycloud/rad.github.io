@@ -1,4 +1,4 @@
-# N8N AI Common Module
+# N8N_AI_Common Shared Configuration Module
 
 The `N8N_AI_Common` module defines the n8n workflow automation platform with an integrated AI stack (Qdrant vector database and Ollama LLM provider) for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`N8N_AI_CloudRun` and `N8N_AI_GKE`).
 
@@ -67,13 +67,13 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | From `var.container_resources` if set, else `cpu_limit`/`memory_limit` |
 | `min_instance_count` | `0` (scale-to-zero) |
 | `max_instance_count` | `3` |
-| `environment_variables` | Merged map — see section 5 |
+| `environment_variables` | Merged map — see §4 |
 | `enable_postgres_extensions` | `false` |
 | `postgres_extensions` | `[]` |
-| `initialization_jobs` | Default `db-init` job or custom override — see section 7 |
+| `initialization_jobs` | Default `db-init` job or custom override — see §6 |
 | `startup_probe` | HTTP `GET /`, 120s initial delay, 3s timeout, 10s period, 3 failure threshold |
 | `liveness_probe` | HTTP `GET /`, 30s initial delay, 5s timeout, 30s period, 3 failure threshold |
-| `additional_services` | Conditional list of Qdrant and/or Ollama sidecar services — see section 6 |
+| `additional_services` | Conditional list of Qdrant and/or Ollama sidecar services — see §5 |
 
 ### `storage_buckets`
 One GCS bucket for shared n8n, Qdrant, and Ollama data:
@@ -105,24 +105,11 @@ Absolute path to the module directory, used by wrapper modules to locate `script
 
 ---
 
-## 4. Non-Configurable Values
-
-The following values are fixed inside `N8N_AI_Common` and cannot be overridden by callers:
-
-| Setting | Value | Reason |
-|---|---|---|
-| `container_image` | `"n8nio/n8n"` | Public base image used to build the custom wrapper image. |
-| `image_source` | `"custom"` | Requires a custom Dockerfile with entrypoint injection. |
-| `container_port` | `5678` | n8n's fixed listening port. |
-| `database_type` | `"POSTGRES_15"` | n8n requires PostgreSQL 15. |
-
----
-
-## 5. Environment Variables
+## 4. Environment Variables
 
 The module merges caller-provided `environment_variables` with a fixed set of n8n runtime configuration:
 
-### A. Default Variables (from `var.environment_variables`)
+### Default Variables (from `var.environment_variables`)
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
@@ -141,7 +128,7 @@ The module merges caller-provided `environment_variables` with a fixed set of n8
 | `N8N_SMTP_SENDER` | `""` | From address (caller must set) |
 | `N8N_SMTP_SSL` | `"false"` | Use STARTTLS rather than SSL |
 
-### B. Fixed Variables (always set by the module)
+### Fixed Variables (always set by the module)
 
 | Variable | Value | Purpose |
 |----------|-------|---------|
@@ -161,11 +148,11 @@ The module merges caller-provided `environment_variables` with a fixed set of n8
 
 ---
 
-## 6. AI Sidecar Services (`additional_services`)
+## 5. AI Sidecar Services (`additional_services`)
 
 This is the defining feature of `N8N_AI_Common`. When `enable_ai_components = true`, the `config.additional_services` list includes one or both of the following companion services, deployed alongside n8n:
 
-### A. Qdrant (Vector Database)
+### Qdrant (Vector Database)
 Enabled when `enable_qdrant = true` (default).
 
 | Field | Value |
@@ -180,7 +167,7 @@ Enabled when `enable_qdrant = true` (default).
 | Volume mount | `n8n-data` GCS bucket at `/mnt/gcs` (shared with n8n) |
 | Startup probe | `GET /readyz`, 15s delay, 5s timeout, 10s period, 10 threshold |
 
-### B. Ollama (Local LLM Provider)
+### Ollama (Local LLM Provider)
 Enabled when `enable_ollama = true` (default).
 
 | Field | Value |
@@ -199,7 +186,7 @@ Both sidecars store their data on the shared `n8n-data` GCS Fuse volume under de
 
 ---
 
-## 7. Initialization Job
+## 6. Initialization Job
 
 One `db-init` job runs by default (when `initialization_jobs = []`):
 
@@ -209,8 +196,7 @@ One `db-init` job runs by default (when `initialization_jobs = []`):
 | Script | `scripts/db-init.sh` |
 | Secrets required | `ROOT_PASSWORD` (PostgreSQL superuser), `DB_PASSWORD` (app user) |
 | `execute_on_apply` | `true` |
-| Timeout | 600s |
-| Max retries | 1 |
+| Timeout | 600s, 1 retry |
 
 `db-init.sh` behavior:
 1. Detects Cloud SQL Auth Proxy socket: if `/cloudsql` directory contains a socket file, symlinks it to `/tmp/.s.PGSQL.5432` and sets `DB_HOST=/tmp`.
@@ -224,7 +210,7 @@ One `db-init` job runs by default (when `initialization_jobs = []`):
 
 ---
 
-## 8. Scripts and Container Image
+## 7. Scripts and Container Image
 
 All supporting files are in `scripts/`. The `scripts/` directory is used as the Docker build context.
 
@@ -259,9 +245,9 @@ Translates platform-standard environment variables into n8n's native variable na
 
 ---
 
-## 9. Input Variables
+## 8. Input Variables
 
-### A. Project & Identity
+### Project & Identity
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -269,9 +255,9 @@ Translates platform-standard environment variables into n8n's native variable na
 | `wrapper_prefix` | `string` | **required** | Prefix for Secret Manager secret IDs and the storage bucket name |
 | `deployment_id` | `string` | `""` | Unique deployment identifier |
 | `common_labels` | `map(string)` | `{}` | Labels applied to secrets |
-| `deployment_region` | `string` | `"us-central1"` | Region for the storage bucket |
+| `region` | `string` | `"us-central1"` | Region for the storage bucket |
 
-### B. Application
+### Application
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -280,12 +266,12 @@ Translates platform-standard environment variables into n8n's native variable na
 | `description` | `string` | `"N8N AI Starter Kit - Workflow automation with Qdrant and Ollama"` | Description |
 | `application_version` | `string` | `"2.4.7"` | n8n version (pinned in both Dockerfile and config) |
 | `service_url` | `string` | `""` | Public service URL; set as `WEBHOOK_URL` and `N8N_EDITOR_BASE_URL` |
-| `environment_variables` | `map(string)` | see section 5 | Default n8n environment variables |
+| `environment_variables` | `map(string)` | see §4 | Default n8n environment variables |
 | `initialization_jobs` | `list(any)` | `[]` | Custom init jobs; empty triggers default `db-init` |
-| `startup_probe` | `object` | see section 3 | Startup health probe |
-| `liveness_probe` | `object` | see section 3 | Liveness health probe |
+| `startup_probe` | `object` | see §3 | Startup health probe |
+| `liveness_probe` | `object` | see §3 | Liveness health probe |
 
-### C. AI Components
+### AI Components
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -295,7 +281,7 @@ Translates platform-standard environment variables into n8n's native variable na
 | `enable_ollama` | `bool` | `true` | Enable Ollama LLM provider sidecar |
 | `ollama_version` | `string` | `"latest"` | Ollama Docker image tag |
 
-### D. Database & Resources
+### Database & Resources
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -310,7 +296,7 @@ Translates platform-standard environment variables into n8n's native variable na
 | `min_instance_count` | `number` | `0` | Minimum instances (scale-to-zero) |
 | `max_instance_count` | `number` | `3` | Maximum instances |
 
-### E. Redis
+### Redis
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -321,7 +307,7 @@ Translates platform-standard environment variables into n8n's native variable na
 
 ---
 
-## 10. GCS Volume Layout
+## 9. GCS Volume Layout
 
 The shared `n8n-data` GCS bucket (`<wrapper_prefix>-storage`) is mounted at `/mnt/gcs` in all three containers and at `/home/node/.n8n` in n8n, using the following directory structure:
 
@@ -338,7 +324,7 @@ The default `gcs_volumes` variable mounts the bucket at `/home/node/.n8n` with `
 
 ---
 
-## 11. Platform-Specific Differences
+## 10. Platform-Specific Differences
 
 | Aspect | N8N_AI_CloudRun | N8N_AI_GKE |
 |--------|-----------------|-----------|
@@ -353,7 +339,7 @@ The default `gcs_volumes` variable mounts the bucket at `/home/node/.n8n` with `
 
 ---
 
-## 12. Implementation Pattern
+## 11. Implementation Pattern
 
 ```hcl
 # Example: how N8N_AI_CloudRun instantiates N8N_AI_Common
@@ -365,7 +351,7 @@ module "n8n_app" {
   wrapper_prefix          = local.resource_prefix
   common_labels           = local.labels
   deployment_id           = local.deployment_id
-  deployment_region       = var.deployment_region
+  region                  = var.region
   service_url             = local.service_url
   enable_ai_components    = var.enable_ai_components
   enable_qdrant           = var.enable_qdrant

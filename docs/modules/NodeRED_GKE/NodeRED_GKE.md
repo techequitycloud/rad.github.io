@@ -1,6 +1,6 @@
-# NodeRED GKE Module
+# NodeRED_GKE Module — Configuration Guide
 
-Node-RED is a leading open-source flow-based programming tool designed for wiring together IoT devices, APIs, and online services through a browser-based visual editor. This module deploys Node-RED on **GKE Autopilot** with NFS-backed persistent flow storage, optional Redis context storage, and full Kubernetes reliability controls.
+Node-RED is a leading open-source, browser-based flow programming tool originally developed by IBM, with 4,000+ community connector nodes and a growing ecosystem spanning smart manufacturing and edge computing. It is the de facto standard for IoT, IIoT, and industrial automation — integrating legacy OT systems (Modbus, OPC-UA, Siemens S7, MQTT) with modern cloud services. Gartner projects that 70%+ of all applications will use low-code technologies by 2026, and the low-code platform market is tracking toward $16.5B by 2027. This module deploys Node-RED on **GKE Autopilot** with NFS-backed persistent flow storage, optional Redis context storage, and full Kubernetes reliability controls.
 
 `NodeRED_GKE` is a **wrapper module** built on top of `App_GKE`. It delegates all GCP infrastructure provisioning to App_GKE (GKE Autopilot cluster, networking, Cloud Storage, NFS, Secret Manager, CI/CD) and uses a `NodeRED_Common` sub-module to supply Node-RED-specific application configuration. The `NodeRED_Common` outputs feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts_dir` inputs.
 
@@ -9,7 +9,7 @@ Node-RED is a leading open-source flow-based programming tool designed for wirin
 
 ---
 
-## 1. Module Overview
+## §1 · Module Overview
 
 ### What `NodeRED_GKE` provides
 
@@ -44,7 +44,7 @@ Node-RED is a leading open-source flow-based programming tool designed for wirin
 
 ---
 
-## 2. IAM & Project Identity
+## §2 · IAM & Project Identity
 
 | Variable | Default | Description |
 |---|---|---|
@@ -58,17 +58,17 @@ Node-RED is a leading open-source flow-based programming tool designed for wirin
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed first. |
 | `module_services` | *(GKE Autopilot, Filestore, GCS, etc.)* | GCP services used by this module. |
 | `credit_cost` | `75` | Platform credits consumed on deployment. |
-| `require_credit_purchases` | `true` | Enforces credit balance check. |
+| `require_credit_purchases` | `false` | Enforces credit balance check. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
-| `public_access` | `false` | Visibility to all platform users. |
+| `public_access` | `true` | Visibility to all platform users. |
 | `deployment_id` | `""` | Optional fixed deployment ID. Auto-generated when blank. |
-| `deployment_region` | `"us-central1"` | GCP region fallback when network auto-discovery cannot determine the region. |
+| `region` | `"us-central1"` | GCP region fallback when network auto-discovery cannot determine the region. |
 
 ---
 
-## 3. Core Service Configuration
+## §3 · Core Service Configuration
 
-### A. Application Identity
+### §3.A · Application Identity
 
 | Variable | Default | Description |
 |---|---|---|
@@ -78,7 +78,7 @@ Node-RED is a leading open-source flow-based programming tool designed for wirin
 | `application_version` | `"latest"` | Container image tag for `nodered/node-red`. |
 | `deploy_application` | `true` | Set `false` to provision infrastructure without deploying the Kubernetes workload. |
 
-### B. Container & Scaling
+### §3.B · Container & Scaling
 
 `NodeRED_GKE` uses the full `container_resources` object (as documented in App_GKE). The top-level `cpu_limit` and `memory_limit` shorthand variables used by NodeRED_CloudRun are not present — pass resource sizing via `container_resources`.
 
@@ -104,7 +104,7 @@ Node-RED is a leading open-source flow-based programming tool designed for wirin
 | `service_annotations` | `{}` | Custom annotations applied to the Kubernetes Service resource. |
 | `service_labels` | `{}` | Custom labels applied to the Kubernetes Service resource. |
 
-### C. Environment Variables & Secrets
+### §3.C · Environment Variables & Secrets
 
 The following variable is **always injected automatically** and must not be set manually:
 
@@ -121,7 +121,7 @@ The following variable is **always injected automatically** and must not be set 
 | `enable_auto_password_rotation` | `false` | Automates credential secret rotation. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before the application restarts. |
 
-### D. GKE Backend Configuration
+### §3.D · GKE Backend Configuration
 
 | Variable | Default | Description |
 |---|---|---|
@@ -137,7 +137,7 @@ The following variable is **always injected automatically** and must not be set 
 | `deployment_timeout` | `1800` | Seconds Terraform waits for the Kubernetes rollout to complete. |
 | `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` | CIDR for inline GKE subnet. Must not overlap with existing subnets. |
 
-### E. Kubernetes Cluster Networking
+### §3.E · Kubernetes Cluster Networking
 
 | Variable | Default | Description |
 |---|---|---|
@@ -147,7 +147,7 @@ The following variable is **always injected automatically** and must not be set 
 | `static_ip_name` | `""` | Name for the static IP. Auto-generated when empty. |
 | `network_name` | `""` | VPC network name. Auto-discovered when empty. |
 
-### F. StatefulSet Configuration
+### §3.F · StatefulSet Configuration
 
 When `workload_type = "StatefulSet"`, the following variables configure per-pod persistent volumes. For most Node-RED deployments, the default `Deployment` with NFS-backed `/data` is sufficient.
 
@@ -163,9 +163,9 @@ When `workload_type = "StatefulSet"`, the following variables configure per-pod 
 
 ---
 
-## 4. Advanced Security
+## §4 · Advanced Security
 
-### A. Credential Secret Management
+### §4.A · Credential Secret Management
 
 | Variable | Default | Description |
 |---|---|---|
@@ -175,7 +175,7 @@ When `workload_type = "StatefulSet"`, the following variables configure per-pod 
 | `secret_rotation_period` | `"2592000s"` | Secret Manager rotation notification period (30 days). |
 | `secret_propagation_delay` | `30` | Seconds to wait after secret creation before proceeding. |
 
-### B. Identity-Aware Proxy (IAP)
+### §4.B · Identity-Aware Proxy (IAP)
 
 GKE IAP requires OAuth client credentials, unlike Cloud Run IAP. All four IAP variables must be set when enabling IAP.
 
@@ -190,7 +190,7 @@ GKE IAP requires OAuth client credentials, unlike Cloud Run IAP. All four IAP va
 
 **Validation guard:** When `enable_iap = true`, both `iap_oauth_client_id` and `iap_oauth_client_secret` must be provided. Without them, Terraform rejects the configuration.
 
-### C. Cloud Armor
+### §4.C · Cloud Armor
 
 | Variable | Default | Description |
 |---|---|---|
@@ -198,7 +198,7 @@ GKE IAP requires OAuth client credentials, unlike Cloud Run IAP. All four IAP va
 | `admin_ip_ranges` | `[]` | IP CIDR ranges for administrative access. |
 | `cloud_armor_policy_name` | `"default-waf-policy"` | Cloud Armor security policy name. Only used when `enable_cloud_armor = true`. |
 
-### D. VPC Service Controls
+### §4.D · VPC Service Controls
 
 | Variable | Default | Description |
 |---|---|---|
@@ -208,7 +208,7 @@ GKE IAP requires OAuth client credentials, unlike Cloud Run IAP. All four IAP va
 | `organization_id` | `""` | GCP Organization ID for Access Context Manager. Auto-discovered when empty. |
 | `enable_audit_logging` | `false` | Enables detailed Cloud Audit Logs. |
 
-### E. Binary Authorization
+### §4.E · Binary Authorization
 
 | Variable | Default | Description |
 |---|---|---|
@@ -217,23 +217,23 @@ GKE IAP requires OAuth client credentials, unlike Cloud Run IAP. All four IAP va
 
 ---
 
-## 5. Reliability
+## §5 · Reliability
 
-### A. Pod Disruption Budget
+### §5.A · Pod Disruption Budget
 
 | Variable | Default | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Creates a PodDisruptionBudget. |
 | `pdb_min_available` | `"1"` | Minimum pods that must remain available during voluntary disruptions. |
 
-### B. Topology Spread Constraints
+### §5.B · Topology Spread Constraints
 
 | Variable | Default | Description |
 |---|---|---|
 | `enable_topology_spread` | `false` | Adds TopologySpreadConstraints to distribute pods across zones. |
 | `topology_spread_strict` | `false` | When `true`, pods are rejected (`DoNotSchedule`) if spread constraints cannot be satisfied. When `false`, pods are placed anyway (`ScheduleAnyway`). |
 
-### C. Resource Quotas
+### §5.C · Resource Quotas
 
 | Variable | Default | Description |
 |---|---|---|
@@ -248,9 +248,9 @@ GKE IAP requires OAuth client credentials, unlike Cloud Run IAP. All four IAP va
 
 ---
 
-## 6. CI/CD Integration
+## §6 · CI/CD Integration
 
-### A. GitHub & Cloud Build
+### §6.A · GitHub & Cloud Build
 
 | Variable | Default | Description |
 |---|---|---|
@@ -260,7 +260,7 @@ GKE IAP requires OAuth client credentials, unlike Cloud Run IAP. All four IAP va
 | `github_app_installation_id` | `""` | Cloud Build GitHub App installation ID. Alternative to PAT. |
 | `cicd_trigger_config` | `{ branch_pattern = "^main$" }` | Branch filter, included/ignored paths, trigger name, and substitutions. |
 
-### B. Cloud Deploy Pipelines
+### §6.B · Cloud Deploy Pipelines
 
 | Variable | Default | Description |
 |---|---|---|
@@ -269,9 +269,9 @@ GKE IAP requires OAuth client credentials, unlike Cloud Run IAP. All four IAP va
 
 ---
 
-## 7. Storage
+## §7 · Storage
 
-### A. NFS (Recommended for Flow Persistence)
+### §7.A · NFS (Recommended for Flow Persistence)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -280,7 +280,7 @@ GKE IAP requires OAuth client credentials, unlike Cloud Run IAP. All four IAP va
 | `nfs_instance_name` | `""` | Name of an existing NFS GCE VM. Auto-discovers or creates when empty. |
 | `nfs_instance_base_name` | `"app-nfs"` | Base name for a newly created NFS GCE VM. |
 
-### B. Cloud Storage (GCS)
+### §7.B · Cloud Storage (GCS)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -291,7 +291,7 @@ GKE IAP requires OAuth client credentials, unlike Cloud Run IAP. All four IAP va
 | `enable_artifact_registry_cmek` | `false` | Enables CMEK for the Artifact Registry repository. |
 | `enable_cdn` | `false` | Enables Cloud CDN on the GKE Ingress backend. Only applies when `enable_custom_domain = true`. |
 
-### C. Backup & Recovery
+### §7.C · Backup & Recovery
 
 | Variable | Default | Description |
 |---|---|---|
@@ -304,7 +304,7 @@ GKE IAP requires OAuth client credentials, unlike Cloud Run IAP. All four IAP va
 
 ---
 
-## 8. Database (Compatibility Stubs)
+## §8 · Database (Compatibility Stubs)
 
 Node-RED does not use a relational database. The following variables are present for API compatibility with App_GKE and have no operational effect:
 
@@ -328,7 +328,7 @@ Node-RED does not use a relational database. The following variables are present
 
 ---
 
-## 9. Redis (Context Storage)
+## §9 · Redis (Context Storage)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -341,9 +341,9 @@ Node-RED does not use a relational database. The following variables are present
 
 ---
 
-## 10. Observability & Health
+## §10 · Observability & Health
 
-### A. Health Probes
+### §10.A · Health Probes
 
 Node-RED responds to HTTP GET on `/` with the editor UI. Both probe types use this path. A 30-second initial delay is sufficient as Node-RED starts quickly.
 
@@ -354,7 +354,7 @@ Node-RED responds to HTTP GET on `/` with the editor UI. Both probe types use th
 | `uptime_check_config` | `{ enabled=true, path="/", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | List of metric-threshold alert policies. Each entry requires `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
 
-### B. Additional Services
+### §10.B · Additional Services
 
 | Variable | Default | Description |
 |---|---|---|
@@ -362,15 +362,15 @@ Node-RED responds to HTTP GET on `/` with the editor UI. Both probe types use th
 
 ---
 
-## 11. Workload Automation
+## §11 · Workload Automation
 
-### A. Initialization Jobs
+### §11.A · Initialization Jobs
 
 | Variable | Default | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Kubernetes Jobs executed once during deployment. Node-RED requires no initialization jobs — use for custom flow imports or palette installations. |
 
-### B. CronJobs
+### §11.B · CronJobs
 
 | Variable | Default | Description |
 |---|---|---|
@@ -378,7 +378,7 @@ Node-RED responds to HTTP GET on `/` with the editor UI. Both probe types use th
 
 ---
 
-## 12. Platform-Managed Behaviours
+## §12 · Platform-Managed Behaviours
 
 The following are set automatically and cannot be overridden via input variables.
 
@@ -398,7 +398,7 @@ The following are set automatically and cannot be overridden via input variables
 | `module_secret_env_vars` | Always `{}` — no auto-generated secrets from NodeRED_Common. |
 | `module_storage_buckets` | `module.nodered_app.storage_buckets` — the `"nodered-storage"` GCS bucket. |
 | `scripts_dir` | `abspath("${module.nodered_app.path}/scripts")` — NodeRED_Common's `scripts/` directory. |
-| Region resolution | Region is auto-discovered via `module.network_discovery` before being passed to NodeRED_Common as `deployment_region`. |
+| Region resolution | Region is auto-discovered via `module.network_discovery` before being passed to NodeRED_Common as `region`. |
 | Resource prefix | `"app${application_name}${tenant_deployment_id}${random_id}"` — computed in `main.tf` locals. |
 | `container_image_source` | From `var.container_image_source` (default `"prebuilt"`); user-configurable. |
 | `database_type` | `"NONE"` in the NodeRED_Common config output — always hardcoded. |
@@ -414,7 +414,7 @@ The following are set automatically and cannot be overridden via input variables
 
 ---
 
-## 13. Outputs
+## §13 · Outputs
 
 | Output | Description |
 |---|---|
@@ -423,7 +423,7 @@ The following are set automatically and cannot be overridden via input variables
 
 ---
 
-## 14. Variable Reference
+## §14 · Variable Reference
 
 Complete list of all input variables, grouped by UI section.
 
@@ -434,16 +434,16 @@ Complete list of all input variables, grouped by UI section.
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
 | 0 | `credit_cost` | number | `75` | — |
-| 0 | `require_credit_purchases` | bool | `true` | — |
+| 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
-| 0 | `public_access` | bool | `false` | — |
+| 0 | `public_access` | bool | `true` | — |
 | 0 | `deployment_id` | string | `""` | yes |
 | 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
 | 1 | `project_id` | string | — | — |
 | 1 | `tenant_deployment_id` | string | `"demo"` | yes |
 | 1 | `support_users` | list(string) | `[]` | yes |
 | 1 | `resource_labels` | map(string) | `{}` | yes |
-| 1 | `deployment_region` | string | `"us-central1"` | yes |
+| 1 | `region` | string | `"us-central1"` | yes |
 | 2 | `application_name` | string | `"nodered"` | yes |
 | 2 | `application_display_name` | string | `"Node-RED"` | yes |
 | 2 | `application_description` | string | `"Node-RED - Flow-based programming…"` | yes |
@@ -572,9 +572,9 @@ Complete list of all input variables, grouped by UI section.
 
 ---
 
-## 15. Configuration Examples
+## §15 · Configuration Examples
 
-### A. Basic Deployment
+### Basic Deployment
 
 Deploys Node-RED on GKE using default settings. Suitable for evaluation and development.
 
@@ -585,7 +585,7 @@ project_id                = "my-project-123"
 tenant_deployment_id      = "basic"
 ```
 
-### B. Advanced Deployment
+### Advanced Deployment
 
 Production-grade deployment with Redis context storage, CI/CD, GKE reliability policies, and full observability.
 
@@ -661,7 +661,7 @@ alert_policies = [
 ]
 ```
 
-### C. StatefulSet Deployment
+### StatefulSet Deployment
 
 Deploys Node-RED as a StatefulSet with a PVC for per-pod local data storage.
 

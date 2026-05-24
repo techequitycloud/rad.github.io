@@ -1,12 +1,10 @@
-# Flowise GKE Module
+# Flowise_GKE Module — Configuration Guide
 
-Flowise is an open-source visual AI workflow builder that lets non-developers construct LangChain and LlamaIndex pipelines through a drag-and-drop interface. This module deploys Flowise on **GKE Autopilot** with a managed Cloud SQL PostgreSQL database, GCS-backed file storage, and optional NFS for shared volumes.
+Flowise is an open-source visual AI workflow builder that lets non-developers construct LangChain and LlamaIndex pipelines through a drag-and-drop interface — now backed by Workday for enterprise deployments. It chains models, retrieval tools, prompt templates, and decision logic without boilerplate code, making it the primary entry point for visual AI development at a time when 76% of developers are using or planning to use AI tools. It is ideal for rapidly prototyping chatbots, RAG systems, and multi-agent pipelines. This module deploys Flowise on **GKE Autopilot** with a managed Cloud SQL PostgreSQL database, GCS-backed file storage, and optional NFS for shared volumes.
 
 `Flowise_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS, secrets, CI/CD) and a `Flowise_Common` sub-module to supply Flowise-specific application configuration, secret generation, and storage bucket definitions.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
-
-> This guide documents variables that are **unique to `Flowise_GKE`** or that have **Flowise-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
 ---
 
@@ -34,7 +32,7 @@ This guide documents variables that are **unique to `Flowise_GKE`** or that have
 
 ---
 
-## 1. Platform-Managed Behaviours
+## Platform-Managed Behaviours
 
 The following behaviours are applied automatically and cannot be overridden via user variables.
 
@@ -49,7 +47,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 2. Module Metadata (Group 0)
+## §1 · Module Metadata (Group 0)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -58,15 +56,15 @@ The following behaviours are applied automatically and cannot be overridden via 
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed first. |
 | `module_services` | `["GKE Autopilot", "Cloud SQL (PostgreSQL 15)", "Cloud Storage", "Secret Manager", "Artifact Registry", "Cloud Build"]` | GCP services consumed. |
 | `credit_cost` | `100` | Platform credits consumed on deployment. |
-| `require_credit_purchases` | `true` | Enforces credit balance check before deploy. |
+| `require_credit_purchases` | `false` | Enforces credit balance check before deploy. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
-| `public_access` | `false` | Controls platform catalogue visibility. |
+| `public_access` | `true` | Controls platform catalogue visibility. |
 | `deployment_id` | `""` | Auto-generated suffix. Set explicitly to pin resource names across Terraform runs. |
 | `resource_creator_identity` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform. |
 
 ---
 
-## 3. Project & Identity (Group 1)
+## §2 · Project & Identity (Group 1)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -74,11 +72,11 @@ The following behaviours are applied automatically and cannot be overridden via 
 | `tenant_deployment_id` | `"demo"` | Short suffix appended to resource names. 1–20 lowercase alphanumeric characters and hyphens. |
 | `support_users` | `[]` | Emails granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `{}` | Labels applied to all module-managed resources. |
-| `deployment_region` | `"us-central1"` | Fallback region when network discovery cannot determine region from VPC subnets. |
+| `region` | `"us-central1"` | Fallback region when network discovery cannot determine region from VPC subnets. |
 
 ---
 
-## 4. Application Identity (Group 2)
+## §3 · Application Identity (Group 2)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -91,7 +89,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 5. Runtime & Scaling (Group 3)
+## §4 · Runtime & Scaling (Group 3)
 
 | Variable | Default | Options / Format | Description |
 |---|---|---|---|
@@ -125,7 +123,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 6. GKE Backend Configuration (Group 5)
+## §5 · GKE Backend Configuration (Group 5)
 
 | Variable | Default | Options / Format | Description |
 |---|---|---|---|
@@ -144,7 +142,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 7. Environment Variables & Secrets (Group 4)
+## §6 · Environment Variables & Secrets (Group 4)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -155,7 +153,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 8. Access & Networking
+## §7 · Access & Networking
 
 ### Identity-Aware Proxy (Group 19)
 
@@ -199,7 +197,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 9. Storage (Groups 12–13)
+## §8 · Storage (Groups 12–13)
 
 ### NFS (Group 12)
 
@@ -224,7 +222,7 @@ The following behaviours are applied automatically and cannot be overridden via 
 
 ---
 
-## 10. Database (Group 15)
+## §9 · Database (Group 15)
 
 Flowise requires PostgreSQL. All `DATABASE_*` connection variables are injected at container startup by `flowise-entrypoint.sh`.
 
@@ -245,7 +243,7 @@ Flowise requires PostgreSQL. All `DATABASE_*` connection variables are injected 
 
 ---
 
-## 11. Backup & Maintenance (Group 16)
+## §10 · Backup & Maintenance (Group 16)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -258,7 +256,7 @@ Flowise requires PostgreSQL. All `DATABASE_*` connection variables are injected 
 
 ---
 
-## 12. CI/CD & GitHub Integration (Group 11)
+## §11 · CI/CD & GitHub Integration (Group 11)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -274,7 +272,7 @@ Flowise requires PostgreSQL. All `DATABASE_*` connection variables are injected 
 
 ---
 
-## 13. Custom SQL (Group 17)
+## §12 · Custom SQL (Group 17)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -285,7 +283,7 @@ Flowise requires PostgreSQL. All `DATABASE_*` connection variables are injected 
 
 ---
 
-## 14. Workload Automation (Group 10)
+## §13 · Workload Automation (Group 10)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -295,7 +293,7 @@ Flowise requires PostgreSQL. All `DATABASE_*` connection variables are injected 
 
 ---
 
-## 15. Reliability Policies (Group 8)
+## §14 · Reliability Policies (Group 8)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -306,7 +304,7 @@ Flowise requires PostgreSQL. All `DATABASE_*` connection variables are injected 
 
 ---
 
-## 16. StatefulSet Configuration (Group 6)
+## §15 · StatefulSet Configuration (Group 6)
 
 Only relevant when `workload_type = "StatefulSet"`.
 
@@ -322,7 +320,7 @@ Only relevant when `workload_type = "StatefulSet"`.
 
 ---
 
-## 17. Observability & Health (Group 9)
+## §16 · Observability & Health (Groups 9)
 
 `Flowise_GKE` exposes **two parallel sets** of probe variables:
 
@@ -342,7 +340,7 @@ Both the startup and liveness probes target Flowise's dedicated health endpoint 
 
 ---
 
-## 18. Redis (Application-Specific)
+## §17 · Redis (Application-Specific)
 
 Redis is not required for Flowise core functionality. Enable only if your Flowise deployment benefits from a shared cache.
 
@@ -357,7 +355,7 @@ Redis is not required for Flowise core functionality. Enable only if your Flowis
 
 ---
 
-## 19. Resource Quota (Group 7)
+## §18 · Resource Quota (Group 7)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -372,7 +370,7 @@ Redis is not required for Flowise core functionality. Enable only if your Flowis
 
 ---
 
-## 20. Validation Guards
+## §19 · Validation Guards
 
 `validation.tf` enforces the following cross-variable conditions at plan time:
 
@@ -385,7 +383,7 @@ Redis is not required for Flowise core functionality. Enable only if your Flowis
 
 ---
 
-## 21. Outputs
+## §20 · Outputs
 
 | Output | Description | Sensitive |
 |---|---|---|

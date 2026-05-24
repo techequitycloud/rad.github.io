@@ -1,4 +1,4 @@
-# GCP Services Module
+# Services_GCP Module
 
 `Services_GCP` is the **foundational infrastructure module** in the RAD Modules ecosystem. It runs before any application module and provisions the shared GCP services that all applications depend on: VPC networking, Cloud SQL databases, NFS file storage, Redis cache, Artifact Registry, IAM service accounts, and optional security controls (CMEK, Binary Authorization, VPC Service Controls).
 
@@ -33,7 +33,7 @@ Services_GCP  →  App_CloudRun / App_GKE  →  *_Common modules
 
 ---
 
-## 1. GCP APIs Enabled
+## GCP APIs Enabled
 
 When `enable_services = true` (default), the module enables 46 APIs by default (the exact count grows when `additional_apis` entries are added). A 360-second `time_sleep` runs after enablement to allow full propagation before any resource is created. Additional project-specific APIs can be passed via the `additional_apis` variable without modifying the module source.
 
@@ -54,7 +54,7 @@ When `enable_services = true` (default), the module enables 46 APIs by default (
 
 ---
 
-## 2. Always-Created Resources
+## Always-Created Resources
 
 These resources are provisioned on every deployment regardless of feature flags.
 
@@ -101,7 +101,7 @@ A shared Docker repository (`shared-repo-{random_id}`) is created in the primary
 
 ---
 
-## 3. Timing & Dependencies
+## Timing & Dependencies
 
 | Resource | Duration | Purpose |
 |----------|----------|---------|
@@ -120,24 +120,24 @@ A shared Docker repository (`shared-repo-{random_id}`) is created in the primary
 
 ---
 
-## 4. Configuration Guide
+## Configuration Guide
 
 > Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
 ---
 
-## 5. Group 0: Module Metadata & Configuration
+## Group 0: Module Metadata & Configuration
 
 These variables describe the module to the platform catalogue and control platform-level behaviours such as credit billing, resource purge protection, and wrapper-module integration. They are *platform-managed* and should not be changed unless you are customising or extending the module itself.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
 | `module_description` | *(long string)* | Any string | Human-readable description of the module's purpose, displayed in the platform catalogue. The default describes the foundational GCP infrastructure this module provisions. Change only when forking or white-labelling the module. |
-| `module_documentation` | `'https://docs.radmodules.dev/docs/applications/gcp-services'` | Valid URL | URL shown as a help link in the platform UI. Points to the external documentation for this module. Update if you host your own documentation. |
+| `module_documentation` | `'https://docs.radmodules.dev/docs/modules/GCP_Services'` | Valid URL | URL shown as a help link in the platform UI. Points to the external documentation for this module. Update if you host your own documentation. |
 | `module_dependency` | `['GCP_Project']` | List of module names | Declares which platform modules must be deployed before this one. The platform uses this to enforce deployment ordering. `GCP_Project` must exist before `Services_GCP` can provision resources. Metadata only — changing this does not alter any GCP resource. |
 | `module_services` | `['VPC Networking', 'Cloud SQL', 'Redis Cache', 'Cloud IAM', 'NFS Storage']` | List of strings | Informational list of GCP services enabled or consumed by this module, shown in the platform catalogue. No operational effect — changing this does not enable or disable any GCP API or resource. |
 | `credit_cost` | `100` | Positive integer | Number of platform credits deducted when a deployment is created. Set by the platform administrator. Metadata only. |
-| `require_credit_purchases` | `true` | `true` / `false` | Determines whether purchased credits (credits bought by the user or assigned via a subscription plan) are consumed for this deployment, as opposed to free credits which are awarded at no charge. When `true`, the platform deducts from the user's purchased credit balance. When `false`, the platform uses free credits instead. |
+| `require_credit_purchases` | `false` | `true` / `false` | Determines whether purchased credits (credits bought by the user or assigned via a subscription plan) are consumed for this deployment, as opposed to free credits which are awarded at no charge. When `true`, the platform deducts from the user's purchased credit balance. When `false`, the platform uses free credits instead. |
 | `enable_purge` | `true` | `true` / `false` | Permits full deletion of all module-managed resources on destroy. When `true`, a `terraform destroy` removes all provisioned GCP resources. When `false`, resources are retained after the module is removed, protecting against accidental data loss. Metadata only — enforced by the platform layer. |
 | `public_access` | `true` | `true` / `false` | When `true`, the module is listed in the public platform catalogue and any user can deploy it. When `false`, the module is visible only to platform administrators and the module owner or publisher. |
 | `enable_services` | `true` | `true` / `false` | Enables the required Google Cloud APIs in the target project when set to `true`. Set to `false` only if all required APIs are already enabled and managed externally. **Disabling this may cause downstream resource provisioning to fail** if the APIs are not present — only use this option in environments where API enablement is governed separately (e.g. via an organisation policy or a separate Terraform root module). |
@@ -166,15 +166,21 @@ gcloud services describe sqladmin.googleapis.com \
 
 ---
 
-## 6. Group 1: Project & Identity
+## Group 1: Project & Identity
 
-These variables establish the GCP project context and the shared identity settings that apply across all resources created by the module. They must be configured correctly before any deployment can succeed. `project_id` is the only strictly required variable in the module — every resource provisioned by `Services_GCP` is scoped to this project. `support_users` and `resource_labels` are optional but strongly recommended for production deployments to ensure operational visibility and consistent resource tagging.
+These variables establish the GCP project context and the shared identity settings that apply across all resources created by the module. They must be configured correctly before any deployment can succeed. `project_id` is the only strictly required variable in the module — every resource provisioned by `Services_GCP` is scoped to this project. The feature-flag variables (`create_postgres`, `create_mysql`, `create_alloydb`, `create_redis`, `create_filestore_nfs`, `create_google_kubernetes_engine`) are the primary switches that control which optional services are provisioned. `support_users` and `resource_labels` are optional but strongly recommended for production deployments to ensure operational visibility and consistent resource tagging.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
 | `project_id` | *(required)* | `[a-z][a-z0-9-]{4,28}[a-z0-9]` | The GCP project ID into which all module resources are deployed. Select an existing project on the RAD platform or enter the ID of an external GCP project. When deploying into an external project, you must grant the Owner role to the RAD GCP Project agent service account (`rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com`). **All resource names, IAM bindings, and API calls are scoped to this project.** Changing this after initial deployment will cause all resources to be recreated in the new project. |
 | `support_users` | `[]` | List of email addresses | Email addresses of users granted IAM access to the project and added as recipients for budget alerts and Cloud Monitoring notifications. These addresses are added to a notification channel in Cloud Monitoring so they receive alerts for CPU, memory, and disk threshold policies. Leave empty to suppress all alert emails. (e.g., `['admin@example.com', 'ops@example.com']`) |
 | `resource_labels` | `{}` | Map of `key = "value"` pairs | Key-value labels applied to every GCP resource created by this module (VPC network, Cloud SQL instances, Redis, Filestore, GKE clusters, Compute Engine VMs, etc.). Use labels to enforce organisational tagging policies — for example cost centre, environment, team ownership, or compliance classification. Labels are visible in Billing reports and can be used to filter resources in the Console. GCP label keys and values must be lowercase, 1–63 characters, and may contain letters, numbers, hyphens, and underscores. (e.g., `{ environment = "prod", team = "platform" }`) |
+| `create_postgres` | `true` | `true` / `false` | Provisions a Cloud SQL PostgreSQL instance in the primary availability region. The instance is configured with a private IP address on the module VPC. Set to `false` to skip PostgreSQL provisioning when only MySQL or no database is required. The root password is automatically generated and stored in Secret Manager. |
+| `create_mysql` | `false` | `true` / `false` | Provisions a Cloud SQL MySQL instance in the primary availability region. The instance is configured with a private IP address on the module VPC and is not publicly accessible. Set to `true` when deploying applications that require MySQL, such as WordPress, Moodle, or Odoo. The root password is automatically generated and stored in Secret Manager. |
+| `create_alloydb` | `false` | `true` / `false` | Provisions an AlloyDB for PostgreSQL cluster in the primary availability region. AlloyDB is PostgreSQL-compatible and optimised for analytics and AI/vector workloads — it includes a columnar engine, pgvector support with SCANN indexing, and delivers significantly higher performance than Cloud SQL for mixed OLTP/OLAP workloads. The cluster uses private IP on the module VPC. A primary read-write instance is always created; an optional read pool is controlled by `create_alloydb_read_pool`. Mutually exclusive with `create_postgres` for most application needs. Root password and primary IP are stored in Secret Manager. |
+| `create_redis` | `false` | `true` / `false` | Provisions a Cloud Memorystore for Redis instance in the primary availability region with a private IP address on the module VPC. Use as the managed alternative to the self-managed Redis VM in Group 4 when you require an SLA-backed service, automated patching, and built-in failover. Set to `true` for production caching and session storage workloads where availability and operational simplicity outweigh the additional cost. |
+| `create_filestore_nfs` | `false` | `true` / `false` | Provisions a Cloud Filestore NFS instance in the primary availability region. The instance exports a single NFS share that can be mounted by multiple clients simultaneously over the module VPC. Use as the managed alternative to the self-managed NFS VM in Group 4 when you require SLA-backed availability, higher and more consistent NFS throughput, or reduced operational overhead. Set to `true` for production workloads that depend on shared file storage, such as content management systems, media processing pipelines, or applications with shared upload directories. |
+| `create_google_kubernetes_engine` | `false` | `true` / `false` | Provisions one or more GKE Autopilot clusters in the primary availability region. Set to `true` when deploying containerised workloads via the `App_GKE` module — the App_GKE module will automatically discover and use clusters provisioned here. When `false`, no GKE infrastructure is created and all GKE-dependent variables in this group are ignored. Each cluster is registered to a GKE fleet automatically, enabling fleet-level features such as multi-cluster services and Config Management. |
 
 ### Validating Group 1 Settings
 
@@ -200,7 +206,7 @@ gcloud beta monitoring channels list --project=PROJECT_ID \
 
 ---
 
-## 7. Group 2: Networking & VPC
+## Group 2: Networking & VPC
 
 These variables control the foundational networking infrastructure — the VPC network, subnets, and region selection — that underpins every other resource provisioned by this module. All services (Cloud SQL, Redis, Filestore, GKE, and the self-managed NFS VM) are attached to this VPC and communicate exclusively over private IP addresses. Getting the CIDR ranges right before first deployment is important: changing subnet ranges after resources are attached requires destroying and recreating the network, which is a disruptive operation.
 
@@ -235,7 +241,7 @@ gcloud compute routers list --project=PROJECT_ID \
 
 ---
 
-## 8. Group 3: Database Configuration
+## Group 3: Database Configuration
 
 These variables configure managed Cloud SQL instances for PostgreSQL and MySQL. Both engines are supported independently — you can provision PostgreSQL only, MySQL only, or both simultaneously if your workload requires it. All instances are configured with private IP addresses on the module VPC and have no public internet exposure. Automated daily backups (starting at 04:00 UTC) with 7-day retention and auto-resizing SSD storage are enabled by default on all instances.
 
@@ -256,11 +262,10 @@ These variables configure managed Cloud SQL instances for PostgreSQL and MySQL. 
 | `create_mysql_read_replica` | `false` | `true` / `false` | Provisions one or more read replicas for the MySQL Cloud SQL instance. Read replicas serve read-only queries, offloading read-heavy workloads from the primary. A replica can be promoted to primary in a disaster recovery scenario. Requires `create_mysql = true`. Configure the number of replicas with `mysql_read_replica_count`. |
 | `mysql_read_replica_count` | `1` | Integer | Number of read replica instances to create for the MySQL Cloud SQL instance. Each replica is provisioned in the same region as the primary and replicates data asynchronously. Only used when `create_mysql_read_replica` is `true`. (e.g., `1`, `2`) |
 | `enable_cloudsql_iam_auth` | `false` | `true` / `false` | Enables Cloud SQL IAM database authentication on all provisioned Cloud SQL instances (both MySQL and PostgreSQL). When enabled, the Cloud Run and Cloud Build service accounts are granted `roles/cloudsql.instanceUser`, allowing them to authenticate using short-lived IAM tokens instead of long-lived passwords stored in Secret Manager. Eliminates the need to rotate DB passwords. See [Cloud SQL IAM authentication docs](https://cloud.google.com/sql/docs/postgres/iam-authentication). |
-| `enable_alloydb` | `false` | `true` / `false` | Provisions an AlloyDB for PostgreSQL cluster in the primary availability region. AlloyDB is PostgreSQL-compatible and optimised for analytics and AI/vector workloads — it includes a columnar engine, pgvector support with SCANN indexing, and delivers significantly higher performance than Cloud SQL for mixed OLTP/OLAP workloads. The cluster uses private IP on the module VPC. A primary read-write instance is always created; an optional read pool is controlled by `enable_alloydb_read_pool`. Mutually exclusive with `create_postgres` for most application needs. Root password and primary IP are stored in Secret Manager. |
-| `alloydb_cpu_count` | `2` | `2` / `4` / `8` / `16` / `32` / `64` | Number of vCPUs to allocate to each AlloyDB instance (primary and, if enabled, read pool). Must be one of the supported AlloyDB machine sizes. Only used when `enable_alloydb = true`. (e.g., `2`, `8`, `16`) |
-| `alloydb_database_flags` | `[]` | List of `{ name, value }` objects | PostgreSQL database flags to apply to the AlloyDB primary instance. Each entry maps a PostgreSQL server parameter name to a string value. Only used when `enable_alloydb = true`. (e.g., `[{ name = "max_connections", value = "500" }]`) |
-| `enable_alloydb_read_pool` | `false` | `true` / `false` | Provisions an AlloyDB read pool instance alongside the primary for analytic offload and read-scale workloads. The read pool is horizontally scalable via `alloydb_read_pool_node_count`. Only used when `enable_alloydb = true`. |
-| `alloydb_read_pool_node_count` | `1` | Integer `1`–`20` | Number of nodes in the AlloyDB read pool. Each node is an independent replica that can serve read queries. Increase for higher read throughput. Only used when `enable_alloydb_read_pool = true`. (e.g., `1`, `2`, `3`) |
+| `alloydb_cpu_count` | `2` | `2` / `4` / `8` / `16` / `32` / `64` | Number of vCPUs to allocate to each AlloyDB instance (primary and, if enabled, read pool). Must be one of the supported AlloyDB machine sizes. Only used when `create_alloydb = true`. (e.g., `2`, `8`, `16`) |
+| `alloydb_database_flags` | `[]` | List of `{ name, value }` objects | PostgreSQL database flags to apply to the AlloyDB primary instance. Each entry maps a PostgreSQL server parameter name to a string value. Only used when `create_alloydb = true`. (e.g., `[{ name = "max_connections", value = "500" }]`) |
+| `create_alloydb_read_pool` | `false` | `true` / `false` | Provisions an AlloyDB read pool instance alongside the primary for analytic offload and read-scale workloads. The read pool is horizontally scalable via `alloydb_read_pool_node_count`. Only used when `create_alloydb = true`. |
+| `alloydb_read_pool_node_count` | `1` | Integer `1`–`20` | Number of nodes in the AlloyDB read pool. Each node is an independent replica that can serve read queries. Increase for higher read throughput. Only used when `create_alloydb_read_pool = true`. (e.g., `1`, `2`, `3`) |
 
 ### Validating Group 3 Settings
 
@@ -290,7 +295,7 @@ gcloud sql instances list --project=PROJECT_ID \
 
 ---
 
-## 9. Group 4: Network Filesystem
+## Group 4: Network Filesystem
 
 These variables configure a self-managed, combined NFS file server and Redis cache running on a single Compute Engine VM. This is the lower-cost alternative to the fully managed Cloud Filestore (Group 6) and Cloud Memorystore (Group 5). The VM runs on Ubuntu 22.04 LTS, uses a zonal SSD persistent disk for NFS storage, and runs Redis in-process on port 6379. It is deployed as a Managed Instance Group (MIG) of size 1 with an auto-healing policy — if the health check (TCP port 2049) fails, the MIG automatically recreates the VM. Daily snapshots of the data disk are taken automatically with a 7-day retention period. This option is recommended for development environments or cost-sensitive deployments where managed-service SLAs are not required.
 
@@ -325,13 +330,12 @@ gcloud compute disks list --project=PROJECT_ID \
 
 ---
 
-## 10. Group 5: Redis Cache
+## Group 5: Redis Cache
 
 These variables configure Cloud Memorystore for Redis — the fully managed alternative to the self-managed Redis process running on the Group 4 NFS VM. Memorystore provides Google SLA-backed availability, automated patching, and built-in monitoring, at a higher cost than the self-managed option. The instance is provisioned in the primary availability region with a private IP address on the module VPC, accessible only from within the VPC. **Only enable this group when `create_network_filesystem` is `false`** — running both simultaneously creates redundant Redis infrastructure. The module always enables Redis AUTH (`auth_enabled = true`); the auth string is stored in Secret Manager (`redis-auth-{id}`).
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `create_redis` | `false` | `true` / `false` | Provisions a Cloud Memorystore for Redis instance in the primary availability region with a private IP address on the module VPC. Use as the managed alternative to the self-managed Redis VM in Group 4 when you require an SLA-backed service, automated patching, and built-in failover. Set to `true` for production caching and session storage workloads where availability and operational simplicity outweigh the additional cost. |
 | `redis_tier` | `'BASIC'` | `BASIC` / `STANDARD_HA` | Service tier for the Cloud Memorystore Redis instance. **`BASIC`**: a single-node instance with no replication. If the node fails, data is lost and the instance is unavailable until it recovers. Suitable for non-critical caching workloads where cache misses are acceptable. **`STANDARD_HA`**: a high-availability instance with an automatic replica in a second zone within the same region; failover is automatic and typically completes within a few seconds. Recommended for session storage, rate-limiting counters, or any use case where Redis unavailability would directly affect users. Note that `STANDARD_HA` approximately doubles the cost of the instance. |
 | `redis_memory_size_gb` | `1` | Integer `1`–`300` | Memory capacity in GB allocated to the Cloud Memorystore Redis instance. This is the total amount of memory available for storing keys, values, and Redis overhead. **Set this based on your expected dataset size plus headroom for growth** — when memory is exhausted Redis evicts keys according to the configured eviction policy, which can cause unexpected cache misses or data loss. Valid range: 1–300 GB. (e.g., `1` for small caches, `4` for moderate session stores, `16` for high-throughput caching workloads) |
 | `redis_version` | `'REDIS_7_2'` | `REDIS_7_2` / `REDIS_7_0` / `REDIS_6_X` | Redis engine version to deploy on Cloud Memorystore. Use the most recent version for new deployments to benefit from the latest performance improvements, commands, and security fixes. Downgrading after deployment is not supported. (e.g., `'REDIS_7_2'`, `'REDIS_7_0'`, `'REDIS_6_X'`) |
@@ -364,13 +368,12 @@ gcloud redis instances describe INSTANCE_NAME \
 
 ---
 
-## 11. Group 6: Filestore NFS
+## Group 6: Filestore NFS
 
 These variables configure Cloud Filestore — the fully managed NFS alternative to the self-managed NFS server in Group 4. Filestore provides a dedicated, high-performance NFS file share that can be mounted simultaneously by multiple Compute Engine VMs or GKE pods, making it suitable for workloads that require shared persistent storage at scale. The instance is provisioned in the primary availability region with a private IP address on the module VPC. **Only enable this group when `create_network_filesystem` is `false`** — running both simultaneously creates redundant NFS infrastructure. Note that all Filestore tiers have a significant minimum capacity requirement, making this option considerably more expensive than the self-managed VM for small storage needs.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `create_filestore_nfs` | `false` | `true` / `false` | Provisions a Cloud Filestore NFS instance in the primary availability region. The instance exports a single NFS share that can be mounted by multiple clients simultaneously over the module VPC. Use as the managed alternative to the self-managed NFS VM in Group 4 when you require SLA-backed availability, higher and more consistent NFS throughput, or reduced operational overhead. Set to `true` for production workloads that depend on shared file storage, such as content management systems, media processing pipelines, or applications with shared upload directories. |
 | `filestore_tier` | `'BASIC_HDD'` | `BASIC_HDD` / `BASIC_SSD` / `ENTERPRISE` | Service tier for the Cloud Filestore instance, determining performance characteristics, minimum capacity, and availability model. **`BASIC_HDD`**: cost-effective standard performance suitable for workloads with moderate throughput requirements; minimum capacity 1024 GB. **`BASIC_SSD`**: significantly higher IOPS and throughput for latency-sensitive or high-concurrency workloads; minimum capacity 2560 GB. **`ENTERPRISE`**: highest performance with regional (multi-zone) availability — the instance survives a full zone outage; minimum capacity 1024 GB. Use `ENTERPRISE` for production workloads where NFS availability is critical. Note that the tier **cannot be changed after provisioning** — migrating between tiers requires creating a new instance and copying data. |
 | `filestore_capacity_gb` | `1024` | Integer (GB) | Storage capacity in GB for the Cloud Filestore instance. **Minimum capacity is enforced by the tier**: 1024 GB for `BASIC_HDD` and `ENTERPRISE`, 2560 GB for `BASIC_SSD`. **Capacity can be increased after provisioning but not decreased** — provision with enough headroom for expected data growth to avoid disruptive resize operations later. All capacity is billed continuously regardless of how much is actually used, so avoid over-provisioning on `BASIC_SSD` in particular. (e.g., `1024` for BASIC_HDD, `2560` for BASIC_SSD) |
 
@@ -398,13 +401,12 @@ gcloud filestore instances describe INSTANCE_NAME \
 
 ---
 
-## 12. Group 7: Google Kubernetes Engine
+## Group 7: Google Kubernetes Engine
 
 These variables configure one or more GKE Autopilot clusters that serve as the shared compute environment for containerised application workloads deployed via the `App_GKE` module. Autopilot is a fully managed cluster mode in which Google provisions, scales, and secures nodes automatically — you pay per pod rather than per node, and there is no need to manage node pools or machine types. All clusters are provisioned in the primary availability region of the module VPC and registered to a GKE fleet to enable multi-cluster features. Three optional GKE fleet add-ons — Cloud Service Mesh, Config Management, and Policy Controller — can be enabled independently on each cluster.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `create_google_kubernetes_engine` | `false` | `true` / `false` | Provisions one or more GKE Autopilot clusters in the primary availability region. Set to `true` when deploying containerised workloads via the `App_GKE` module — the App_GKE module will automatically discover and use clusters provisioned here. When `false`, no GKE infrastructure is created and all GKE-dependent variables in this group are ignored. Each cluster is registered to a GKE fleet automatically, enabling fleet-level features such as multi-cluster services and Config Management. |
 | `gke_cluster_name_prefix` | `'gke-cluster'` | Lowercase string | Prefix applied to the name of each GKE Autopilot cluster. A **1-based** cluster index is appended to generate unique names — for example, a prefix of `'gke-cluster'` with `gke_cluster_count = 2` produces `gke-cluster-1` and `gke-cluster-2`. A single cluster is always named `{prefix}-1`. Must be lowercase and contain only letters, numbers, and hyphens. **Do not change this after clusters are provisioned** — renaming requires destroying and recreating all clusters, which is a disruptive operation for running workloads. (e.g., `'gke-cluster'`, `'autopilot'`, `'platform'`) |
 | `gke_cluster_count` | `1` | Integer `1`–`10` | Number of GKE Autopilot clusters to provision in the primary availability region. Each cluster is independent with its own node pool, networking, and workload namespace. Use `1` for most deployments. Increase for multi-tenant architectures where workloads must be isolated at the cluster level (e.g. separate clusters per environment or per customer tier), or to distribute load across multiple clusters using the `round-robin` selection mode in `App_GKE`. Valid range: 1–10. |
 | `gke_subnet_base_cidr` | `'10.128.0.0/12'` | CIDR notation | Base CIDR block used to generate the node subnet range for each GKE cluster. When multiple clusters are provisioned, subnets for additional clusters are automatically derived by incrementing the third octet of this base. **Must not overlap** with `subnet_cidr_range` (Group 2), `gke_pod_base_cidr`, or `gke_service_base_cidr`. The `/12` default provides a large address space suitable for multi-cluster deployments. (e.g., `'10.128.0.0/12'`) |
@@ -444,7 +446,7 @@ gcloud container fleet memberships list --project=PROJECT_ID \
 
 ---
 
-## 13. Group 8: GKE Backup & Restore
+## Group 8: GKE Backup & Restore
 
 These variables configure Backup for GKE, which creates scheduled, application-consistent backups of cluster workloads and persistent volume data to Cloud Storage. Backups capture both the Kubernetes resource state (Deployments, ConfigMaps, Secrets, Services, etc.) and the data held in PersistentVolumeClaims, allowing full workload restoration to the same cluster or to a different cluster in the event of accidental deletion, data corruption, or a disaster recovery scenario. Requires `create_google_kubernetes_engine = true`.
 
@@ -479,7 +481,7 @@ gcloud container backup-restore backups list \
 
 ---
 
-## 14. Group 9: VPC Service Controls
+## Group 9: VPC Service Controls
 
 These variables configure VPC Service Controls (VPC-SC), which establishes a security perimeter around the GCP project to protect against data exfiltration. Once enforced, the perimeter restricts access to Google Cloud APIs (such as Cloud Storage, Cloud SQL, and BigQuery) to requests that originate from within the defined perimeter — requests from IP addresses or identities outside the perimeter are blocked at the API level, even if they hold valid IAM credentials. **VPC-SC is an advanced security control** with a significant risk of locking out legitimate access if misconfigured. Always enable with `vpc_sc_dry_run = true` first to audit the impact before switching to enforcement mode.
 
@@ -517,7 +519,7 @@ gcloud logging read \
 
 ---
 
-## 15. Group 10: Binary Authorization
+## Group 10: Binary Authorization
 
 These variables configure Binary Authorization, a deploy-time security control that ensures only trusted, verified container images can be deployed to GKE or Cloud Run within the project. Binary Authorization works by requiring images to carry a cryptographic attestation — a signed statement from a trusted attestor (such as a CI/CD pipeline or a vulnerability scanner) confirming the image has passed required checks. Any deployment that presents an image without a valid attestation is rejected before the container starts. This provides a strong guarantee that only images built and verified by your authorised pipeline can run in production, protecting against supply chain attacks and accidental deployment of unverified images.
 
@@ -552,7 +554,7 @@ gcloud container binauthz attestations list \
 
 ---
 
-## 16. Group 11: Customer-Managed Encryption Keys
+## Group 11: Customer-Managed Encryption Keys
 
 These variables configure Customer-Managed Encryption Keys (CMEK) via Cloud Key Management Service (KMS). By default, GCP encrypts all data at rest using Google-managed keys, which are rotated and managed entirely by Google. Enabling CMEK replaces Google-managed keys with keys that you control — provisioned in Cloud KMS in the primary region and used to encrypt supported resources including Cloud SQL, Cloud Storage, and GKE. CMEK gives you direct control over the key lifecycle: you can rotate, disable, or destroy keys, and revoking key access immediately renders the encrypted data inaccessible. This is typically required for regulated environments (e.g. financial services, healthcare, government) where organisational policy mandates control over encryption key custody.
 
@@ -591,7 +593,7 @@ gcloud sql instances describe INSTANCE_NAME \
 
 ---
 
-## 17. Group 12: Security Command Center & Auditing
+## Group 12: Security Command Center & Auditing
 
 These variables configure three complementary security and observability features: container image vulnerability scanning via Container Analysis, detailed Cloud Audit Logs for data access events, and Security Command Center (SCC) for centralised security findings. These controls are independent of each other and can be enabled selectively depending on the compliance and observability requirements of the environment. All three are disabled by default as they increase log volume and associated costs — they are most valuable in production environments handling sensitive data.
 
@@ -629,7 +631,7 @@ gcloud pubsub topics list --project=PROJECT_ID \
 
 ---
 
-## 18. Group 13: Cloud Monitoring & Alerting
+## Group 13: Cloud Monitoring & Alerting
 
 These variables configure Cloud Monitoring alert policies and email notification channels for infrastructure resource utilisation — CPU, memory, and disk — across the Compute Engine VMs provisioned by this module (primarily the self-managed NFS/Redis VM from Group 4). Alert policies evaluate the average utilisation of each metric over a rolling window and fire when the value exceeds the configured threshold. Alerts are sent to the email addresses in `notification_alert_emails` via a Cloud Monitoring notification channel. This group is independent of the `support_users` variable in Group 1 — `support_users` receives platform-level notifications, while `notification_alert_emails` receives Cloud Monitoring metric threshold alerts.
 
@@ -666,7 +668,7 @@ gcloud alpha monitoring policies describe POLICY_NAME \
 
 ---
 
-## 19. Group 14: Workload Identity Federation *(In Development)*
+## Group 14: Workload Identity Federation *(In Development)*
 
 > **Status:** Fully implemented in `wif.tf` but not yet activated — variables are commented out in `variables.tf` pending final permission scoping. Will be enabled in an upcoming release. WIF allows GitHub Actions, GitLab CI, and generic OIDC providers to authenticate to GCP using short-lived tokens without any service account key files.
 
@@ -681,7 +683,7 @@ gcloud alpha monitoring policies describe POLICY_NAME \
 
 ---
 
-## 20. Group 15: Billing & Budget *(In Development)*
+## Group 15: Billing & Budget *(In Development)*
 
 > **Status:** Variables defined in `variables.tf` but currently commented out pending billing account permission scoping. Will be activated in an upcoming release.
 
@@ -694,7 +696,7 @@ gcloud alpha monitoring policies describe POLICY_NAME \
 
 ---
 
-## 21. Features Not Yet Active
+## Features Not Yet Active
 
 ### GKE Usage Metering — Removed
 
@@ -711,14 +713,14 @@ A Cloud Armor security policy with OWASP Top 10 rules (SQLi, XSS, LFI, RCE prote
 
 ---
 
-## 22. Outputs Reference
+## Outputs Reference
 
 ### Always Available
 
 | Output | Description |
 |--------|-------------|
 | `deployment_id` | Random hex ID used as a suffix in all resource names |
-| `primary_deployment_region` | First region from `availability_regions` |
+| `primary_region` | First region from `availability_regions` |
 | `host_project_id` | GCP project ID |
 | `vpc_network_name` | VPC network name |
 | `vpc_network_id` | VPC network resource ID |
@@ -755,16 +757,16 @@ A Cloud Armor security policy with OWASP Top 10 rules (SQLi, XSS, LFI, RCE prote
 | `gke_mci_config_cluster` | Multi-cluster GKE | Config cluster name for Multi-Cluster Ingress |
 | `gke_fleet_membership_ids` | GKE + (`configure_config_management` or `configure_cloud_service_mesh`) | List of Fleet membership IDs |
 | `storage_kms_key_name` | `enable_cmek` | KMS key resource name for Cloud Storage |
-| `alloydb_cluster_name` | `enable_alloydb` | AlloyDB cluster name |
-| `alloydb_primary_ip` | `enable_alloydb` | Private IP of the AlloyDB primary instance (sensitive) |
-| `alloydb_read_pool_ip` | `enable_alloydb` + `enable_alloydb_read_pool` | Private IP of the AlloyDB read pool instance (sensitive) |
+| `alloydb_cluster_name` | `create_alloydb` | AlloyDB cluster name |
+| `alloydb_primary_ip` | `create_alloydb` | Private IP of the AlloyDB primary instance (sensitive) |
+| `alloydb_read_pool_ip` | `create_alloydb` + `create_alloydb_read_pool` | Private IP of the AlloyDB read pool instance (sensitive) |
 | `binauthz_attestor_name` | `enable_binary_authorization` | Binary Authorization attestor name |
 | `binauthz_kms_key_id` | `enable_binary_authorization` | KMS key ID for attestation signing |
 | `binauthz_note_id` | `enable_binary_authorization` | Container Analysis note ID |
 
 ---
 
-## 23. Required Providers
+## Required Providers
 
 Declared in `versions.tf`:
 
@@ -782,7 +784,7 @@ The Cloud NAT is provisioned via the `terraform-google-modules/cloud-router/goog
 
 ---
 
-## 24. Usage Example
+## Usage Example
 
 ```hcl
 module "services_gcp" {
@@ -815,7 +817,7 @@ module "app_cloudrun" {
   source = "./modules/App_CloudRun"
 
   project_id                  = module.services_gcp.host_project_id
-  deployment_region           = module.services_gcp.primary_deployment_region
+  deployment_region           = module.services_gcp.primary_region
   vpc_network_name            = module.services_gcp.vpc_network_name
   service_account_email       = module.services_gcp.cloudrun_service_account
   cloudbuild_sa_email         = module.services_gcp.cloudbuild_service_account

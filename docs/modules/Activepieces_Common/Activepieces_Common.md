@@ -1,4 +1,4 @@
-# Activepieces Common Module
+# Activepieces_Common Shared Configuration Module
 
 The `Activepieces_Common` module defines the Activepieces workflow automation platform configuration for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets for cryptographic keys) and produces a `config` output consumed by the platform-specific wrapper modules (`Activepieces_CloudRun` and `Activepieces_GKE`).
 
@@ -72,10 +72,10 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | CPU/memory limits from `var.cpu_limit` and `var.memory_limit` |
 | `min_instance_count` | Passed from `var.min_instance_count` |
 | `max_instance_count` | Passed from `var.max_instance_count` |
-| `environment_variables` | Merged Activepieces defaults plus caller's `var.environment_variables` (see section 5) |
+| `environment_variables` | Merged Activepieces defaults plus caller's `var.environment_variables` (see §4) |
 | `enable_postgres_extensions` | `false` — Activepieces does not require standard extensions; `pgvector` is installed by `db-init.sh` |
 | `postgres_extensions` | `[]` |
-| `initialization_jobs` | Default `db-init` job or custom override (see section 6) |
+| `initialization_jobs` | Default `db-init` job or custom override (see §5) |
 | `startup_probe` | Passed from `var.startup_probe` |
 | `liveness_probe` | Passed from `var.liveness_probe` |
 
@@ -119,22 +119,7 @@ The resource naming prefix passed into the module. Exposed for downstream use by
 
 ---
 
-## 4. Non-Configurable Values
-
-The following values are fixed inside `Activepieces_Common` and cannot be overridden by callers:
-
-| Setting | Value | Reason |
-|---|---|---|
-| `container_image` | `"activepieces/activepieces"` | Always built from this upstream source image. |
-| `image_source` | `"custom"` | Requires custom entrypoint injection via Dockerfile. |
-| `container_port` | `8080` | Application's fixed listening port. |
-| `database_type` | `"POSTGRES_15"` | Application requires PostgreSQL 15. |
-| `enable_postgres_extensions` | `false` | No extensions required by platform; `pgvector` installed by `db-init.sh`. |
-| `cloudsql_volume_mount_path` | `"/cloudsql"` | Fixed Cloud SQL Auth Proxy socket directory. |
-
----
-
-## 5. Environment Variables
+## 4. Environment Variables Injected by Activepieces_Common
 
 `Activepieces_Common` merges the following default environment variables into the `config.environment_variables` field. User-supplied `var.environment_variables` are merged last and take precedence over any of these defaults.
 
@@ -160,7 +145,7 @@ The following values are fixed inside `Activepieces_Common` and cannot be overri
 
 ---
 
-## 6. Initialization Job
+## 5. Initialization Job
 
 When `initialization_jobs = []` (the default), `Activepieces_Common` substitutes a single default `db-init` job:
 
@@ -175,7 +160,7 @@ When `initialization_jobs = []` (the default), `Activepieces_Common` substitutes
 
 When a non-empty `initialization_jobs` list is provided, each job is normalized (type-coerced, optional fields filled with defaults) and passed through verbatim to the platform module.
 
-### A. `db-init.sh` Behavior
+### `db-init.sh` Behavior
 
 The script runs inside a `postgres:15-alpine` container with platform-injected `DB_*` and `ROOT_PASSWORD` environment variables available:
 
@@ -193,11 +178,11 @@ The script is **idempotent** — re-running it against an already-initialised da
 
 ---
 
-## 7. Scripts and Container Image
+## 6. Scripts and Container Image
 
 All supporting files are in `scripts/`. The entire `scripts/` directory is used as the Docker build context (`context_path = "."`).
 
-### A. `Dockerfile`
+### `Dockerfile`
 
 A minimal single-stage image wrapping the upstream `activepieces/activepieces:latest` image:
 
@@ -212,7 +197,7 @@ ENTRYPOINT ["/bin/sh", "/ap-entrypoint.sh"]
 
 Unlike Django or Moodle, **no Python dependencies or build steps are added** — the image is the official Activepieces image with only the platform entrypoint wrapper overlaid. This means the custom build step exists solely to inject `entrypoint.sh` and to push the image into the project's Artifact Registry.
 
-### B. `entrypoint.sh`
+### `entrypoint.sh`
 
 The container entrypoint. Runs before the Activepieces Node.js server starts:
 
@@ -223,26 +208,26 @@ The container entrypoint. Runs before the Activepieces Node.js server starts:
 5. **Locates the Activepieces entry point**: Searches for `main.js` under `/usr/src/app` and `/app`, excluding `node_modules/` and `engine/` paths, preferring files under `backend/` or `server/` directories. This handles version-to-version relocations of the server entrypoint.
 6. **Launches the server** with `exec node <entry>` (replaces the shell process as PID 1).
 
-### C. `db-init.sh`
+### `db-init.sh`
 
-Database setup script used by the default `db-init` initialization job. See section 6 for full behavior.
+Database setup script used by the default `db-init` initialization job. See §5 for full behavior.
 
 ---
 
-## 8. Input Variables
+## 7. Input Variables
 
-### A. Project & Identity
+### Project & Identity
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `project_id` | `string` | — | Required. GCP project ID. |
-| `resource_prefix` | `string` | — | Required. Prefix for resource naming. |
+| `project_id` | `string` | required | GCP project ID |
+| `resource_prefix` | `string` | required | Prefix for resource naming |
 | `labels` | `map(string)` | `{}` | Labels applied to created resources |
 | `tenant_deployment_id` | `string` | `"demo"` | Tenant/environment identifier |
 | `deployment_id` | `string` | `""` | Random deployment ID suffix |
-| `deployment_region` | `string` | `"us-central1"` | Primary GCP region |
+| `region` | `string` | `"us-central1"` | Primary GCP region |
 
-### B. Application
+### Application
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -262,7 +247,7 @@ Database setup script used by the default `db-init` initialization job. See sect
 | `liveness_probe` | object | (structured default) | Liveness probe configuration; passed through to `config` |
 | `enable_image_mirroring` | `bool` | `true` | Mirror image to Artifact Registry |
 
-### C. Storage & Volumes
+### Storage & Volumes
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -271,7 +256,7 @@ Database setup script used by the default `db-init` initialization job. See sect
 | `bucket_name` | `string` | `""` | GCS bucket name (legacy / optional pass-through) |
 | `service_account_email` | `string` | `""` | Service account email (legacy / optional) |
 
-### D. External Integration
+### External Integration
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -285,7 +270,7 @@ Database setup script used by the default `db-init` initialization job. See sect
 
 ---
 
-## 9. Platform-Specific Differences
+## 8. Platform-Specific Differences
 
 | Aspect | Activepieces_CloudRun | Activepieces_GKE |
 |--------|-----------------------|------------------|
@@ -299,7 +284,7 @@ Database setup script used by the default `db-init` initialization job. See sect
 
 ---
 
-## 10. Implementation Pattern
+## 9. Implementation Pattern
 
 ```hcl
 # How Activepieces_CloudRun instantiates Activepieces_Common
@@ -311,7 +296,7 @@ module "activepieces_app" {
   resource_prefix      = local.resource_prefix
   tenant_deployment_id = var.tenant_deployment_id
   deployment_id        = local.random_id
-  deployment_region    = local.region
+  region               = local.region
   labels               = var.resource_labels
 
   application_name    = var.application_name

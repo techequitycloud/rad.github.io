@@ -1,10 +1,8 @@
-# Wikijs GKE Module
+# Wikijs_GKE Module — Configuration Guide
 
-`Wikijs_GKE` is a pre-configured wrapper around the [`App_GKE`](../App_GKE/App_GKE.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Kubernetes Engine (GKE) Autopilot.
+`Wikijs_GKE` is a pre-configured wrapper around the [`App_GKE`](../App_GKE/App_GKE.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Kubernetes Engine (GKE) Autopilot. Wiki.js has 28,000+ GitHub stars and is adopted by software teams, healthcare organizations (including the Indonesia Ministry of Health), educational institutions, and government agencies (including Brazil social services). It replaces expensive Confluence licenses — saving $5–10/user/month — with support for Markdown, WYSIWYG editing, LDAP/SAML/OAuth, and Git sync for version-controlled knowledge management.
 
 Every variable in this module is passed through to `App_GKE`. The wrapper's role is to supply Wiki.js-appropriate defaults and to call the `Wikijs_Common` sub-module, which generates the application's Docker build context, database initialisation scripts, and storage configuration. You configure this module exactly as you would `App_GKE`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_GKE`, or that are unique to this wrapper.
-
-> This guide documents variables that are **unique to `Wikijs_GKE`** or that have **Wiki.js-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
 > **Full reference:** For complete descriptions, validation steps, and gcloud CLI examples for any variable not covered here, see the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
@@ -12,7 +10,7 @@ Every variable in this module is passed through to `App_GKE`. The wrapper's role
 
 ---
 
-## 1. Architecture: the Wikijs_Common sub-module
+## Architecture: the Wikijs_Common sub-module
 
 Before variables are forwarded to `App_GKE`, this module calls `Wikijs_Common`, which:
 
@@ -25,21 +23,7 @@ None of the `Wikijs_Common` internals are directly configurable through this mod
 
 ---
 
-## 2. Platform-Managed Behaviours
-
-The following behaviours are applied automatically by `Wikijs_GKE` (via the `Wikijs_Common` sub-module) regardless of variable values in your `tfvars` file.
-
-| Behaviour | Detail |
-|---|---|
-| **Environment variables** | `Wikijs_Common` injects: `DB_TYPE=postgres`, `DB_PORT=5432`, `DB_USER` (from `application_database_user`), `DB_NAME` (from `application_database_name`), `DB_SSL=false`, `HA_STORAGE_PATH=/wiki-storage`. `DB_HOST` and `DB_PASSWORD` are injected automatically by the platform at runtime. |
-| **Custom image build** | `Wikijs_Common` sets `image_source = "custom"`. A custom image is always built that layers the Wiki.js configuration onto `requarks/wiki:2`. The source image is mirrored to Artifact Registry when `enable_image_mirroring = true`. |
-| **GCS storage bucket** | `Wikijs_Common` always provisions a `wikijs-storage` GCS bucket mounted via GCS Fuse at `/wiki-storage` for shared asset storage. |
-| **Database initialisation** | The `db-init` Kubernetes Job runs automatically on first apply. It creates the `wikijs` database and user and grants the necessary privileges. The `pg_trgm` extension is installed separately via `enable_postgres_extensions = true`. |
-| **Session affinity** | `session_affinity` defaults to `"ClientIP"` to ensure users are consistently routed to the same pod, preserving in-memory session context. |
-
----
-
-## 3. Module Metadata & Configuration
+## Module Metadata & Configuration
 
 The variables in this group are identical in purpose to those in `App_GKE`. See [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) for full descriptions.
 
@@ -55,7 +39,7 @@ All other Group 0 variables (`credit_cost`, `require_credit_purchases`, `enable_
 
 ---
 
-## 4. Project & Identity
+## Project & Identity
 
 All variables in this group are identical to `App_GKE`. See [App_GKE §2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) for full descriptions.
 
@@ -63,11 +47,11 @@ This module adds one variable not present in `App_GKE`:
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `deployment_region` | `"us-central1"` | GCP region string | Fallback region used when the network discovery sub-module cannot determine a region from existing VPC subnet metadata. The discovery module inspects the project's VPC subnets and selects the region of the first subnet found. If no subnets exist yet — for example, on a first deployment into a fresh project — this value is used instead. Override this if your infrastructure is in a region other than `us-central1`. This variable has no effect once a VPC with subnets exists in the project. |
+| `region` | `"us-central1"` | GCP region string | Fallback region used when the network discovery sub-module cannot determine a region from existing VPC subnet metadata. The discovery module inspects the project's VPC subnets and selects the region of the first subnet found. If no subnets exist yet — for example, on a first deployment into a fresh project — this value is used instead. Override this if your infrastructure is in a region other than `us-central1`. This variable has no effect once a VPC with subnets exists in the project. |
 
 ---
 
-## 5. Application Identity
+## Application Identity
 
 All variables are identical in purpose to `App_GKE`. See [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) for full descriptions.
 
@@ -82,7 +66,7 @@ The Wiki.js-specific defaults are:
 
 ---
 
-## 6. Runtime & Scaling
+## Runtime & Scaling
 
 All variables are identical in purpose to `App_GKE`. See [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for full descriptions.
 
@@ -102,7 +86,7 @@ The Wiki.js-specific defaults are:
 
 ---
 
-## 7. Environment Variables & Secrets
+## Environment Variables & Secrets
 
 All variables are identical in purpose to `App_GKE`. See [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for full descriptions.
 
@@ -123,7 +107,7 @@ To add application-level environment variables, add entries to the `environment_
 
 ---
 
-## 8. GKE Backend Configuration
+## GKE Backend Configuration
 
 All variables are identical to `App_GKE`. See [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for full descriptions.
 
@@ -137,7 +121,7 @@ Wiki.js-specific defaults:
 
 ---
 
-## 9. Database Configuration
+## Database Configuration
 
 All variables are identical in purpose to `App_GKE`. See [App_GKE §3.B Database (Cloud SQL)](../App_GKE/App_GKE.md#b-database-cloud-sql) for full descriptions.
 
@@ -155,7 +139,7 @@ The Wiki.js-specific defaults are:
 
 ---
 
-## 10. All Other Configuration Groups
+## All Other Configuration Groups
 
 The following groups are available in `Wikijs_GKE` and behave exactly as documented in the `App_GKE` guide. The Wiki.js application imposes no additional constraints or defaults on them beyond what is noted in that guide.
 
@@ -193,7 +177,7 @@ The following groups are available in `Wikijs_GKE` and behave exactly as documen
 
 ---
 
-## 11. Required Providers
+## Required Providers
 
 `Wikijs_GKE` declares the following required providers in `versions.tf` (minimum versions):
 
@@ -211,7 +195,7 @@ OpenTofu/Terraform `>= 1.0` is required.
 
 ---
 
-## 12. Cross-Variable Validation Guards
+## Cross-Variable Validation Guards
 
 `Wikijs_GKE` includes a `validation.tf` file with lifecycle `precondition` blocks that catch invalid configuration combinations at plan time:
 
@@ -224,7 +208,7 @@ OpenTofu/Terraform `>= 1.0` is required.
 
 ---
 
-## 13. Module Outputs
+## Module Outputs
 
 | Output | Description |
 |--------|-------------|
@@ -233,7 +217,7 @@ OpenTofu/Terraform `>= 1.0` is required.
 
 ---
 
-## 14. Deployment Prerequisites & Dependency Analysis
+## Deployment Prerequisites & Dependency Analysis
 
 `Wikijs_GKE` inherits all prerequisites and dependency requirements from `App_GKE`. See [App_GKE — Deployment Prerequisites & Dependency Analysis](../App_GKE/App_GKE.md#deployment-prerequisites--dependency-analysis) for the full reference.
 

@@ -1,16 +1,14 @@
-# Activepieces GKE Module
+# Activepieces_GKE Module — Configuration Guide
 
-Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation platform for connecting apps, APIs, and data sources. This module deploys a production-ready Activepieces application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL 15 instance, GCS data storage, and Secret Manager for cryptographic secrets (`AP_ENCRYPTION_KEY` and `AP_JWT_SECRET`).
+Activepieces is a Y Combinator-backed open-source workflow automation platform (Apache 2.0) with **22,000+ GitHub stars** and **100,000+ active installations**. At $1.7M ARR with a team of ~15, it is a lean, high-velocity Zapier/Make alternative with 450+ integrations and native AI/MCP server support — ideal for teams prioritising data sovereignty and avoiding per-task pricing at scale. White-label capability makes it a strong fit for agencies and SaaS builders. This module deploys a production-ready Activepieces application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL 15 instance, GCS data storage, and Secret Manager for cryptographic secrets (`AP_ENCRYPTION_KEY` and `AP_JWT_SECRET`).
 
 `Activepieces_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, Filestore, secrets, CI/CD) and adds Activepieces-specific application configuration via the `Activepieces_Common` sub-module.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
-> This guide documents variables that are **unique to `Activepieces_GKE`** or that have **Activepieces-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
-
 ---
 
-## 1. How This Guide Is Structured
+## How This Guide Is Structured
 
 This guide documents variables that are **unique to `Activepieces_GKE`** or that have **Activepieces-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, CI/CD, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
@@ -53,7 +51,7 @@ This guide documents variables that are **unique to `Activepieces_GKE`** or that
 
 ---
 
-## 2. Platform-Managed Behaviours
+## Platform-Managed Behaviours
 
 The following behaviours are applied automatically by `Activepieces_GKE` (via the `Activepieces_Common` sub-module) regardless of the variable values in your `tfvars` file.
 
@@ -72,23 +70,23 @@ The following behaviours are applied automatically by `Activepieces_GKE` (via th
 
 ---
 
-## 3. Identity-Aware Proxy (GKE-specific)
+## Identity-Aware Proxy (GKE-specific)
 
 > **Warning:** Enabling IAP (`enable_iap = true`) requires Google identity authentication for all inbound requests, including **webhook endpoints**. Third-party services that POST to Activepieces webhook URLs will receive authentication errors. Only enable IAP if webhooks are not needed or are called exclusively by internal services.
 
-`Activepieces_GKE` exposes three GKE-specific IAP variables not present in `Activepieces_CloudRun`. These are required when `enable_iap = true`:
+`Activepieces_GKE` exposes GKE-specific IAP variables not present in `Activepieces_CloudRun`. Two are required when `enable_iap = true`:
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `iap_oauth_client_id` | 19 | `""` | OAuth client ID. Create in Google Cloud Console > APIs & Services > Credentials. Sensitive. |
-| `iap_oauth_client_secret` | 19 | `""` | OAuth client secret. Sensitive. |
-| `iap_support_email` | 19 | `""` | Support email shown on the OAuth consent screen. Must be a valid email address or empty. Validated by regex. |
+| `iap_oauth_client_id` | 19 | `""` | OAuth client ID. Create in Google Cloud Console > APIs & Services > Credentials. Sensitive. Required when `enable_iap = true`. |
+| `iap_oauth_client_secret` | 19 | `""` | OAuth client secret. Sensitive. Required when `enable_iap = true`. |
+| `iap_support_email` | 19 | `""` | **Not referenced** — this variable is defined for UI consistency but is not forwarded to `App_GKE` in the current module version. Has no effect on the deployed IAP configuration. |
 
 A `validation.tf` precondition enforces that both `iap_oauth_client_id` and `iap_oauth_client_secret` are non-empty when `enable_iap = true`.
 
 ---
 
-## 4. Webhook Access
+## Webhook Access
 
 Activepieces receives webhook calls from external services. For GKE deployments, the default `service_type = "LoadBalancer"` exposes the Kubernetes Service on an external IP. Webhook endpoints are accessible at the LoadBalancer IP (or custom domain when `enable_custom_domain = true`).
 
@@ -103,7 +101,7 @@ environment_variables = {
 
 ---
 
-## 5. Activepieces Application Identity
+## Activepieces Application Identity
 
 These variables have Activepieces-specific defaults.
 
@@ -118,25 +116,25 @@ These variables have Activepieces-specific defaults.
 
 ---
 
-## 6. Activepieces Database Configuration
+## Activepieces Database Configuration
 
 Activepieces requires PostgreSQL 15 (`database_type = "POSTGRES"` by default in `Activepieces_GKE`). `Activepieces_Common` hardcodes `database_type = "POSTGRES_15"` in the `config` output regardless of what is passed via `application_database_name`/`application_database_user`.
 
-**Note:** `Activepieces_GKE` exposes **two sets** of database name and user variables:
-- `application_database_name` / `application_database_user` — passed to `App_GKE` for Cloud SQL instance provisioning.
-- `db_name` / `db_user` — passed to `Activepieces_Common` for the application-level database and user configuration.
+**Note:** `Activepieces_GKE` exposes **two sets** of database name and user variables, but only `db_name` / `db_user` are actively used:
+- `application_database_name` / `application_database_user` — **not referenced** in this wrapper module. These variables exist for UI consistency with other modules but are not forwarded to `App_GKE`. Cloud SQL provisioning uses the values passed internally through `Activepieces_Common`'s config output.
+- `db_name` / `db_user` — passed to `Activepieces_Common` for the application-level database and user configuration. These are the **authoritative** variables for Activepieces database configuration.
 
-Both sets should be set to the same values. The defaults differ between the two (see table below).
+Set `db_name` and `db_user` to the desired values. The `application_database_name`/`application_database_user` variables have no effect on the deployed infrastructure.
 
 | Variable | Default | Description & Implications |
 |---|---|---|
-| `application_database_name` | `"activepieces_db"` | Passed to `App_GKE` for Cloud SQL provisioning. Must match `db_name`. |
-| `application_database_user` | `"ap_user"` | Passed to `App_GKE` for Cloud SQL user provisioning. Must match `db_user`. |
-| `db_name` | `"activepieces_db"` | Passed to `Activepieces_Common` for app configuration. |
-| `db_user` | `"ap_user"` | Passed to `Activepieces_Common` for app configuration. |
-| `database_type` | `"POSTGRES"` | Cloud SQL database engine. Activepieces requires PostgreSQL. `Activepieces_Common` overrides to `"POSTGRES_15"` in the app config. |
-| `enable_postgres_extensions` | `false` | Not required for Activepieces — `pgvector` is installed directly by the `db-init.sh` script. Set to `true` only for additional extensions. |
-| `postgres_extensions` | `[]` | Additional extensions beyond `pgvector`. |
+| `application_database_name` | `"activepieces_db"` | **Not referenced** — not forwarded to `App_GKE`. Has no effect on the deployed Cloud SQL instance. |
+| `application_database_user` | `"ap_user"` | **Not referenced** — not forwarded to `App_GKE`. Has no effect on the deployed Cloud SQL user. |
+| `db_name` | `"activepieces_db"` | Passed to `Activepieces_Common` for app configuration. This is the authoritative database name variable. Do not change after initial deployment. |
+| `db_user` | `"ap_user"` | Passed to `Activepieces_Common` for app configuration. This is the authoritative database user variable. |
+| `database_type` | `"POSTGRES"` | **Not referenced** — not forwarded to `App_GKE`. `Activepieces_Common` hardcodes `"POSTGRES_15"` in the app config regardless of this value. |
+| `enable_postgres_extensions` | `false` | **Not referenced** — not forwarded to `App_GKE`. `pgvector` is installed directly by the `db-init.sh` script regardless of this setting. |
+| `postgres_extensions` | `[]` | **Not referenced** — not forwarded to `App_GKE`. Has no effect. |
 
 ### Validating Database Configuration
 
@@ -154,7 +152,7 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep -E "^(AP_ENCRYPTION_KEY|AP_JWT_
 
 ---
 
-## 7. Activepieces Health Probes
+## Activepieces Health Probes
 
 `Activepieces_GKE` exposes **two separate sets** of probe variables with different routing:
 
@@ -194,7 +192,7 @@ kubectl logs -n NAMESPACE -l app=activepieces --since=10m | head -100
 
 ---
 
-## 8. Redis Queue Mode
+## Redis Queue Mode
 
 Activepieces supports two queue modes:
 
@@ -226,7 +224,7 @@ kubectl logs -n NAMESPACE POD_NAME | grep "Resolved AP_REDIS_URL"
 
 ---
 
-## 9. Session Affinity
+## Session Affinity
 
 Activepieces is primarily a stateful server-side application. User sessions and ongoing workflow execution context are tracked per-connection.
 
@@ -236,7 +234,7 @@ Activepieces is primarily a stateful server-side application. User sessions and 
 
 ---
 
-## 10. Scaling Considerations
+## Scaling Considerations
 
 | Variable | Default | Description & Implications |
 |---|---|---|
@@ -245,7 +243,7 @@ Activepieces is primarily a stateful server-side application. User sessions and 
 
 ---
 
-## 11. Initialization Jobs
+## Initialization Jobs
 
 `Activepieces_GKE` does **not** configure a non-empty default `initialization_jobs` list — when `initialization_jobs = []` (the default), `Activepieces_Common` substitutes a single default `db-init` job (`execute_on_apply = true`). Unlike Django, there is no separate `db-migrate` job — Activepieces runs database migrations automatically on startup.
 
@@ -298,7 +296,7 @@ gcloud sql connect INSTANCE_NAME --user=postgres --project=PROJECT_ID \
 
 ---
 
-## 12. StatefulSet PVC Configuration
+## StatefulSet PVC Configuration
 
 Activepieces stores all workflow state in PostgreSQL. A StatefulSet with per-pod PVCs is **not recommended** for standard deployments. Use the default `Deployment` workload type with PostgreSQL for state persistence.
 
@@ -316,7 +314,7 @@ If your deployment requires per-pod local storage (e.g., for custom piece artifa
 
 ---
 
-## 13. Password Rotation Propagation Delay
+## Password Rotation Propagation Delay
 
 | Variable | Default | Description & Implications |
 |---|---|---|
@@ -324,7 +322,7 @@ If your deployment requires per-pod local storage (e.g., for custom piece artifa
 
 ---
 
-## 14. Validation Rules
+## Validation Rules
 
 `Activepieces_GKE` includes a `validation.tf` with three cross-variable preconditions enforced at `terraform apply` time:
 
@@ -336,7 +334,7 @@ If your deployment requires per-pod local storage (e.g., for custom piece artifa
 
 ---
 
-## 15. Deployment Prerequisites & Validation
+## Deployment Prerequisites & Validation
 
 After deploying `Activepieces_GKE`, confirm the deployment is healthy:
 
@@ -368,7 +366,7 @@ kubectl exec -n NAMESPACE POD_NAME -- curl -s http://localhost:8080/api/v1/flags
 
 ---
 
-## 16. Resource Creator Identity
+## Resource Creator Identity
 
 | Variable | Default | Description & Implications |
 |---|---|---|

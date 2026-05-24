@@ -1,4 +1,4 @@
-# NodeRED Common Module
+# NodeRED_Common Shared Configuration Module
 
 The `NodeRED_Common` module defines the Node-RED flow-based programming tool for the RAD Modules ecosystem. It produces a `config` output consumed by platform-specific wrapper modules (`NodeRED_CloudRun` and `NodeRED_GKE`), along with a `storage_buckets` output that provisions the application's GCS bucket.
 
@@ -78,7 +78,7 @@ One GCS bucket for Node-RED application data (backups, exports):
 | Field | Value |
 |-------|-------|
 | `name_suffix` | `"nodered-storage"` |
-| `location` | from `deployment_region` variable (default: `"us-central1"`) |
+| `location` | from `region` variable (default: `"us-central1"`) |
 | `storage_class` | `"STANDARD"` |
 | `force_destroy` | `true` |
 | `versioning_enabled` | `false` |
@@ -94,21 +94,7 @@ scripts_dir = abspath("${module.nodered_app.path}/scripts")
 
 ---
 
-## 4. Non-Configurable Values
-
-The following values are fixed inside `NodeRED_Common` and cannot be overridden by callers:
-
-| Setting | Value | Reason |
-|---|---|---|
-| `container_image` | `"nodered/node-red:<application_version>"` | Uses the official Docker Hub image directly. |
-| `image_source` | `"prebuilt"` | No custom build; the upstream image is used as-is. |
-| `container_port` | `1880` | Node-RED's native HTTP port. |
-| `database_type` | `"NONE"` | Node-RED requires no relational database. |
-| `enable_cloudsql_volume` | `false` | No Cloud SQL Auth Proxy is needed. |
-
----
-
-## 5. Environment Variables
+## 4. Environment Variables
 
 The module merges a fixed set of Node-RED defaults with caller-provided `environment_variables`. Caller-supplied values take precedence.
 
@@ -122,7 +108,7 @@ All other Node-RED runtime configuration (e.g. `NODE_OPTIONS`, `NODE_RED_ENABLE_
 
 ---
 
-## 6. Container Image
+## 5. Container Image
 
 Node-RED uses the official `nodered/node-red` image published on Docker Hub. No custom Dockerfile is bundled with this module. The image is selected at runtime using the `application_version` variable as the image tag:
 
@@ -134,13 +120,13 @@ Image mirroring into Artifact Registry is controlled by `enable_image_mirroring`
 
 ---
 
-## 7. No Initialization Jobs
+## 6. No Initialization Jobs
 
 Unlike database-backed applications, Node-RED requires no schema initialisation, user creation, or data seeding before first start. The `initialization_jobs` variable defaults to an empty list. Pass custom jobs only for specific post-deployment automation tasks such as importing a flow archive or configuring a custom palette.
 
 ---
 
-## 8. Input Variables
+## 7. Input Variables
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -157,26 +143,26 @@ Unlike database-backed applications, Node-RED requires no schema initialisation,
 | `initialization_jobs` | `list(any)` | `[]` | One-time jobs to run during deployment. |
 | `startup_probe` | `any` | HTTP `/`, 30s initial delay, 5s timeout, 10s period, 3 threshold | Startup probe configuration. |
 | `liveness_probe` | `any` | HTTP `/`, 30s initial delay, 5s timeout, 30s period, 3 threshold | Liveness probe configuration. |
-| `deployment_region` | `string` | `"us-central1"` | GCP region; used as the storage bucket location. |
+| `region` | `string` | `"us-central1"` | GCP region; used as the storage bucket location. |
 | `tenant_deployment_id` | `string` | `"demo"` | Tenant identifier appended to resource names. |
 | `deployment_id` | `string` | `""` | Unique deployment ID. |
 
 ---
 
-## 9. Platform-Specific Differences
+## 8. Platform-Specific Differences
 
 | Aspect | NodeRED_CloudRun | NodeRED_GKE |
 |--------|------------------|-------------|
 | `module_env_vars` passed to Foundation | `{}` (empty) | `{}` (empty) |
 | `module_secret_env_vars` passed to Foundation | `{}` (empty — no auto-generated secrets) | `{}` (empty) |
-| `deployment_region` source | not passed (Foundation auto-discovers region) | resolved from `module.network_discovery` before being passed |
+| `region` source | not passed (Foundation auto-discovers region) | resolved from `module.network_discovery` before being passed |
 | NFS | enabled by default (`enable_nfs = true`, mount at `/data`) | enabled by default (`enable_nfs = true`, mount at `/data`) |
 | Scaling | Serverless; scale-to-zero supported (`min_instance_count = 0`) | Kubernetes Deployment; minimum 1 replica recommended |
 | Credential secret | Managed by App_CloudRun via `database_password_length` | Managed by App_GKE via `database_password_length` |
 
 ---
 
-## 10. Implementation Pattern
+## 9. Implementation Pattern
 
 ```hcl
 # How NodeRED_CloudRun instantiates NodeRED_Common

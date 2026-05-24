@@ -1,6 +1,6 @@
-# Wordpress Common Module
+# Wordpress_Common Module
 
-## 1. Overview
+## Overview
 
 `Wordpress_Common` is a configuration module in the RAD Modules ecosystem that provisions eight WordPress security keys and salts and outputs a `config` object consumed by `App_CloudRun` or `App_GKE` to deploy WordPress — the world's most widely used CMS — on Google Cloud.
 
@@ -10,7 +10,7 @@ The module uses **MySQL 8.0** and deploys WordPress on **Apache** via a `php:8.4
 
 ---
 
-## 2. Architecture
+## Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -43,7 +43,7 @@ The module uses **MySQL 8.0** and deploys WordPress on **Apache** via a `php:8.4
 
 ---
 
-## 3. GCP Resources Created
+## GCP Resources Created
 
 | Resource | Name Pattern | Description |
 |----------|-------------|-------------|
@@ -72,7 +72,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 
 ---
 
-## 4. Module Outputs
+## Module Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
@@ -95,9 +95,9 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 
 ---
 
-## 5. Input Variables
+## Input Variables
 
-### A. Identity & Project
+### Identity & Project
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -108,7 +108,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 | `deployment_id` | string | `""` | Unique deployment identifier |
 | `service_url` | string | `""` | URL where the service will be accessible |
 
-### B. Application
+### Application
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -121,7 +121,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 | `db_name` | string | `"wp"` | MySQL database name |
 | `db_user` | string | `"wp"` | MySQL database user |
 
-### C. Resources
+### Resources
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -137,7 +137,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 
 > **Note:** `cloudsql_volume_mount_path` is hardcoded to `"/cloudsql"` in the config output — it is not a variable exposed by `Wordpress_Common`. The callers (`Wordpress_CloudRun`, `Wordpress_GKE`) may override it when merging the config into `application_modules`.
 
-### D. WordPress-Specific
+### WordPress-Specific
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -148,7 +148,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 | `redis_host` | string | `""` | Redis host override |
 | `redis_port` | string | `"6379"` | Redis port |
 
-### E. Health Probes
+### Health Probes
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -159,7 +159,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 
 ---
 
-## 6. Environment Variables
+## Environment Variables
 
 The module merges caller-supplied `environment_variables` with the following defaults:
 
@@ -181,7 +181,7 @@ The module merges caller-supplied `environment_variables` with the following def
 
 ---
 
-## 7. Secret Environment Variables
+## Secret Environment Variables
 
 The `config.secret_environment_variables` map carries all 8 WordPress security constants, each mapped to its Secret Manager secret ID (resolved after the 30s propagation sleep):
 
@@ -200,26 +200,7 @@ Callers may inject additional secret references via `var.secret_environment_vari
 
 ---
 
-## 8. Non-Configurable Values
-
-The following values are fixed inside `Wordpress_Common` and cannot be overridden by callers:
-
-| Setting | Value | Reason |
-|---|---|---|
-| `container_port` | `80` | Apache listens on port 80 inside the container. |
-| `database_type` | `"MYSQL_8_0"` | WordPress requires MySQL 8.0; PostgreSQL is not supported. |
-| `enable_mysql_plugins` | `false` | WordPress does not require MySQL plugins. |
-| `cloudsql_volume_mount_path` | `"/cloudsql"` | Fixed Cloud SQL Auth Proxy socket path. |
-| `WORDPRESS_TABLE_PREFIX` | `"wp_"` | Standard WordPress table prefix. |
-| `WORDPRESS_DEBUG` | `"false"` | PHP debug mode is always off in production. |
-| `secret_count` | 8 secrets | All 8 WordPress security keys and salts. |
-| `secret_length` | 64 characters, with special chars | Largest secrets in the RAD Modules ecosystem. |
-| `secret_propagation_wait` | `30s` | IAM propagation delay after secret creation. |
-| GCS bucket suffix | `"wp-uploads"` | Fixed GCS bucket name suffix for the WordPress media library. |
-
----
-
-## 9. Initialization Job: `db-init`
+## Initialization Job: `db-init`
 
 | Property | Value |
 |----------|-------|
@@ -239,14 +220,14 @@ The following values are fixed inside `Wordpress_Common` and cannot be overridde
 3. Writes `~/.my.cnf` with root credentials — password is double-escaped (`\` → `\\`, `"` → `\"`) then wrapped in double quotes, preventing `#` and `;` from being silently treated as MySQL option file comment characters
 4. For TCP connections: appends `ssl-mode=PREFERRED` to `~/.my.cnf`
 5. Creates MySQL user: `CREATE USER IF NOT EXISTS … IDENTIFIED WITH mysql_native_password BY '${SAFE_DB_PASS}'` then `ALTER USER` (idempotent password update)
-6. Creates database: `` CREATE DATABASE IF NOT EXISTS `${DB_NAME}` ``
-7. Grants `` ALL PRIVILEGES ON `${DB_NAME}`.* TO '${DB_USER}'@'%' ``
+6. Creates database: `CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\``
+7. Grants `ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'%'`
 8. Removes `~/.my.cnf`
 9. Signals Cloud SQL Auth Proxy shutdown via `POST http://localhost:9091/quitquitquit` (30 retries, 2s intervals)
 
 ---
 
-## 10. Container Image
+## Container Image
 
 Built from `scripts/Dockerfile` using `php:8.4-apache`.
 
@@ -291,7 +272,7 @@ CMD:        apache2-foreground
 
 ---
 
-## 11. `docker-entrypoint.sh`
+## `docker-entrypoint.sh`
 
 Handles Cloud SQL connection, WordPress installation bootstrap, and `wp-config.php` generation:
 
@@ -321,7 +302,7 @@ Handles Cloud SQL connection, WordPress installation bootstrap, and `wp-config.p
 
 ---
 
-## 12. `wp-config-docker.php`
+## `wp-config-docker.php`
 
 A modified version of WordPress's standard `wp-config-sample.php` adapted for container environments:
 
@@ -359,7 +340,7 @@ if ($_wp_site_url !== '') {
 
 ---
 
-## 13. Platform-Specific Differences
+## Platform-Specific Differences
 
 | Aspect | Wordpress_CloudRun | Wordpress_GKE |
 |--------|-------------------|---------------|
@@ -373,7 +354,7 @@ if ($_wp_site_url !== '') {
 
 ---
 
-## 14. Usage Example
+## Usage Example
 
 ```hcl
 module "wordpress_common" {
@@ -403,7 +384,7 @@ module "wordpress_cloudrun" {
 }
 ```
 
-### A. Aligning `resource_prefix` with `App_GKE`
+### Aligning `resource_prefix` with `App_GKE`
 
 When deploying on GKE, pass `App_GKE`'s `resource_prefix` so all secrets and cluster resources share the same naming prefix:
 

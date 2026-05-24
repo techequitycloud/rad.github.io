@@ -1,4 +1,6 @@
-# App GKE Module
+# App_GKE on Google Cloud Platform
+
+This document provides a comprehensive analysis of the `modules/App_GKE` Terraform module on Google Cloud Platform. It details the architecture, IAM configuration, service integrations, and potential enhancements.
 
 ---
 
@@ -108,6 +110,7 @@ The module implements a least-privilege IAM strategy using dedicated Service Acc
 *   **`db-init`**: Runs custom scripts for database schema migration and seeding.
 *   **Cloud SQL Auth Proxy sidecar**: Jobs with `needs_db = true` get a proxy sidecar with `--quitquitquit` for graceful termination.
 *   **Script ConfigMaps**: Job scripts are mounted via Kubernetes ConfigMaps from the module's `scripts/` directory.
+*   **Resource limits**: Each job accepts `cpu_limit` (default `"1000m"`) and `memory_limit` (default `"512Mi"`). The optional `ephemeral_storage_limit` field (default `null`) sets a Kubernetes ephemeral-storage resource limit on the job container — useful for jobs that write large temporary files to the container's writable layer. When `null`, no ephemeral-storage limit is applied.
 *   **Execution control**: `execute_on_apply` maps to the Kubernetes provider's `wait_for_completion` flag. When `true` (default), Terraform blocks until the job completes before proceeding. When `false`, Terraform submits the job and continues without waiting.
 *   **Job ordering**: `depends_on_jobs` is declared in the variable type and preserved in the merged job configuration, but job ordering is currently enforced implicitly through the Terraform resource dependency graph (e.g. nfs-setup completes before initialization jobs run) rather than via per-job `depends_on_jobs` chains.
 
@@ -379,12 +382,14 @@ Controlled by `configure_service_mesh`. Behaviour differs based on whether the m
 
 ### D. Multi-Cluster Services (MCS)
 
-Setting `enable_multi_cluster_service = true` enables GKE Multi-Cluster Services for the application namespace. MCS allows Kubernetes Services to be exported from one cluster and consumed by other clusters registered in the same GKE Fleet, enabling cross-cluster service discovery without requiring an external load balancer or custom DNS.
+> **Note:** The `enable_multi_cluster_service` variable is **not currently wired** to any deployment resource in this module. Setting it to `true` has no effect on deployment. The feature is documented here for reference and future implementation.
+
+When implemented, setting `enable_multi_cluster_service = true` would enable GKE Multi-Cluster Services for the application namespace by creating a Kubernetes `ServiceExport` resource. MCS allows Kubernetes Services to be exported from one cluster and consumed by other clusters registered in the same GKE Fleet, enabling cross-cluster service discovery without requiring an external load balancer or custom DNS.
 
 *   **Prerequisites**: All participating clusters must be registered with the same GKE Fleet. Fleet registration is managed by Services_GCP or by the inline ASM provisioning path in this module (§8.C).
 *   **DNS**: Exported services become reachable at `<service>.<namespace>.svc.clusterset.local` from any cluster in the fleet.
 *   **Use case**: Multi-region deployments where a service in one region must call a service in another region using a stable internal name, without traversing a public load balancer.
-*   **Key variable**: `enable_multi_cluster_service`
+*   **Key variable**: `enable_multi_cluster_service` *(accepted but not referenced — no effect on current deployment)*
 
 ---
 
@@ -461,13 +466,13 @@ These variables are consumed by the platform UI / billing system and do not affe
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `module_description` | `string` | (long default) | Human-readable description of the module's purpose |
-| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/applications/gke-app"` | URL to external documentation |
+| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/App_GKE"` | URL to external documentation |
 | `module_dependency` | `list(string)` | `["Services_GCP"]` | Other modules that must be deployed first |
 | `module_services` | `list(string)` | (long list) | GCP services consumed by this module |
 | `credit_cost` | `number` | `100` | Platform credits consumed on deployment |
-| `require_credit_purchases` | `bool` | `true` | Enforce credit balance check before deployment |
+| `require_credit_purchases` | `bool` | `false` | Enforce credit balance check before deployment |
 | `enable_purge` | `bool` | `true` | Permit full deletion of resources on destroy |
-| `public_access` | `bool` | `false` | Make the module publicly visible in the platform catalogue |
+| `public_access` | `bool` | `true` | Make the module publicly visible in the platform catalogue |
 
 ### Core Identity & Project
 
@@ -481,11 +486,11 @@ These variables are consumed by the platform UI / billing system and do not affe
 | `tenant_deployment_id` | `string` | `"demo"` | Deployment environment suffix (e.g. `prod`, `dev`) |
 | `deployment_id` | `string` | `""` | Optional deployment ID; auto-generated if empty |
 | `support_users` | `list(string)` | `[]` | Email addresses of monitoring alert recipients |
-| `resource_labels` | `map(string)` | `{}` | Common labels applied to all resources |
-| `fallback_region` | `string` | `"us-central1"` | GCP region used when no Services_GCP subnet mapping can be auto-discovered |
+| `resource_labels` | `map(string)` | `{env="dev"}` | Common labels applied to all resources |
+| `region` | `string` | `"us-central1"` | GCP region used when no Services_GCP subnet mapping can be auto-discovered |
 | `impersonation_service_account` | `string` | `""` | Service account email to impersonate in discovery / mirror scripts (cross-project deployments) |
 | `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform to create resources |
-| `explicit_secret_values` | `map(string)` | `{}` | Raw secret values provided directly by a wrapper module; bypasses plan-time Secret Manager lookups |
+| `explicit_secret_values` | `map(string)` | `{}` | Raw secret values provided directly by a wrapper module; bypasses plan-time Secret Manager lookups. **Note**: `sensitive = true` is intentionally absent — enabling it causes `CreateContainerConfigError: secret "<prefix>-secrets" not found` on every GKE deployment because pods start before the Kubernetes Secret is materialised. This is a platform UI constraint, not an oversight; the interim mitigation is GCS CMEK encryption on the state backend. |
 | `scripts_dir` | `string` | `""` | Path to initialisation scripts directory; defaults to module's built-in scripts |
 
 ### Compute & Scaling (§3.A)
@@ -499,7 +504,7 @@ These variables are consumed by the platform UI / billing system and do not affe
 | `container_image_source` | `string` | `"custom"` | `prebuilt` (use `container_image` directly) or `custom` (build from source) |
 | `container_build_config` | `object` | `{enabled=true}` | Cloud Build configuration for `custom` source (Dockerfile, context, build args, repo) |
 | `container_port` | `number` | `8080` | Port the container listens on |
-| `container_protocol` | `string` | `"http1"` | HTTP protocol version: `http1` or `h2c` (gRPC) |
+| `container_protocol` | `string` | `"http1"` | HTTP protocol version: `http1` or `h2c` (gRPC). **Not referenced** — the protocol is hardcoded to `http1` internally; changing this value has no effect on deployment. Accepted for input validation only. |
 | `container_resources` | `object` | `{cpu_limit="1000m", memory_limit="512Mi"}` | CPU/memory requests and limits; also accepts `ephemeral_storage_limit/request` |
 | `timeout_seconds` | `number` | `300` | Load balancer backend timeout in seconds (0–3600) |
 | `service_type` | `string` | `"LoadBalancer"` | Kubernetes Service type |
@@ -522,7 +527,7 @@ These variables are consumed by the platform UI / billing system and do not affe
 | `stateful_headless_service` | `bool` | `null` | Create a headless Service for stable pod DNS |
 | `stateful_pod_management_policy` | `string` | `null` | `OrderedReady` or `Parallel` |
 | `stateful_update_strategy` | `string` | `null` | `RollingUpdate` or `OnDelete` |
-| `stateful_fs_group` | `number` | `null` | GID set as pod-level `fsGroup` in the security context; Kubernetes chowns PVC mount to this GID on attach |
+| `stateful_fs_group` | `number` | `0` | GID set as pod-level `fsGroup` in the security context; Kubernetes chowns PVC mount to this GID on attach |
 
 ### Database (§3.B)
 
@@ -537,10 +542,10 @@ These variables are consumed by the platform UI / billing system and do not affe
 | `sql_instance_name` | `string` | `""` | Target an existing Cloud SQL instance by name |
 | `database_password_length` | `number` | `32` | Length of the generated DB password (16–64) |
 | `db_password_env_var_name` | `string` | `""` | Additional env var name alongside `DB_PASSWORD` for apps that expect a non-standard name (e.g. `"WORDPRESS_DB_PASSWORD"`) |
-| `enable_postgres_extensions` | `bool` | `false` | Enable installation of PostgreSQL extensions after DB provisioning |
-| `postgres_extensions` | `list(string)` | `[]` | PostgreSQL extensions to install (e.g. `['postgis', 'uuid-ossp']`) |
-| `enable_mysql_plugins` | `bool` | `false` | Enable installation of MySQL plugins after DB provisioning |
-| `mysql_plugins` | `list(string)` | `[]` | MySQL plugins to install (e.g. `['audit_log']`) |
+| `enable_postgres_extensions` | `bool` | `false` | Enable installation of PostgreSQL extensions after DB provisioning. **Not referenced in deployment resources** — used for input validation only when deploying App_GKE standalone. The extension flag and list flow from the application module configuration when called from a wrapper module. |
+| `postgres_extensions` | `list(string)` | `[]` | PostgreSQL extensions to install (e.g. `['postgis', 'uuid-ossp']`). **Not referenced directly** — the extension list is derived from the application module configuration (`local.selected_module.postgres_extensions`), not this variable. Setting it when deploying standalone has no effect. |
+| `enable_mysql_plugins` | `bool` | `false` | Enable installation of MySQL plugins after DB provisioning. **Not referenced in deployment resources** — used for input validation only when deploying App_GKE standalone. Plugin configuration flows from the application module when called from a wrapper module. |
+| `mysql_plugins` | `list(string)` | `[]` | MySQL plugins to install (e.g. `['audit_log']`). **Not referenced directly** — the plugin list is derived from the application module configuration (`local.selected_module.mysql_plugins`). Setting it when deploying standalone has no effect. |
 
 ### Storage (§3.C)
 
@@ -622,11 +627,11 @@ These variables are consumed by the platform UI / billing system and do not affe
 | `enable_topology_spread` | `bool` | `false` | Add zone and node spread constraints |
 | `topology_spread_strict` | `bool` | `false` | Use `DoNotSchedule` for zone constraint |
 | `enable_resource_quota` | `bool` | `false` | Apply ResourceQuota to all namespaces |
-| `quota_cpu_requests` | `string` | `""` | Total CPU requests limit |
-| `quota_cpu_limits` | `string` | `""` | Total CPU limits cap |
-| `quota_memory_requests` | `string` | `""` | Total memory requests limit |
-| `quota_memory_limits` | `string` | `""` | Total memory limits cap |
-| `quota_max_pods` | `string` | `""` | Maximum pod count |
+| `quota_cpu_requests` | `string` | `"4"` | Total CPU requests limit |
+| `quota_cpu_limits` | `string` | `"4"` | Total CPU limits cap |
+| `quota_memory_requests` | `string` | `"4Gi"` | Total memory requests limit |
+| `quota_memory_limits` | `string` | `"8Gi"` | Total memory limits cap |
+| `quota_max_pods` | `string` | `"20"` | Maximum pod count |
 | `enable_auto_password_rotation` | `bool` | `false` | Enable automated DB password rotation |
 | `rotation_propagation_delay_sec` | `number` | `90` | Seconds to wait before disabling old secret version |
 | `secret_rotation_period` | `string` | `"2592000s"` | Rotation frequency (default: 30 days) |
@@ -672,7 +677,7 @@ These variables are consumed by the platform UI / billing system and do not affe
 | `backup_file` | `string` | `"backup.sql"` | Filename of backup to import |
 | `backup_format` | `string` | `"sql"` | `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`, or `auto` |
 | `configure_service_mesh` | `bool` | `false` | Enable ASM / Fleet Hub integration |
-| `enable_multi_cluster_service` | `bool` | `false` | Enable GKE Multi-Cluster Services |
+| `enable_multi_cluster_service` | `bool` | `false` | Enable GKE Multi-Cluster Services — **not referenced in current version; has no effect** |
 
 ---
 
@@ -762,3 +767,140 @@ Key outputs exported by the module. Full list in `outputs.tf`.
 | `nfs_setup_job` | NFS setup job name |
 | `db_import_job` | Database import job name |
 | `statefulset_name` | StatefulSet name (when `workload_type = "StatefulSet"`) |
+
+---
+
+## 12. Sensible Defaults & Configuration Consequences Reference
+
+This section consolidates sensible starting values and the consequences of misconfiguration for every major variable group. Risk levels: **Critical** (data loss, full outage, or security breach), **High** (service unavailability or significant degradation), **Medium** (degraded functionality or increased cost), **Low** (minor operational impact).
+
+---
+
+### Identity & Naming
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `tenant_deployment_id` | `"prod"` / `"staging"` / `"dev"` (match environment) | **Critical** | **Do not change after initial deployment.** The value is embedded in every resource name (Cloud SQL instance, GCS buckets, secrets, service accounts). Changing it causes Terraform to destroy and recreate all named resources, resulting in data loss and a new, empty database. |
+| `application_name` | Short, lowercase, hyphen-safe identifier (e.g. `"myapp"`) | **Critical** | **Do not change after initial deployment.** Embedded in Kubernetes namespace, service names, and GCP resource names. Renaming orphans existing resources and creates new ones with an empty state. |
+| `region` | The GCP region where your workloads run (e.g. `"europe-west1"`) | **High** | If left as `"us-central1"` when your Services_GCP stack is in a different region, inline infrastructure (NFS VM, Cloud SQL instance, GKE cluster) is provisioned in the wrong region. Cross-region latency increases significantly; costs rise due to cross-region egress. |
+| `deployment_id` | `""` (auto-generate on first apply; never change) | **Critical** | Auto-generation is safe. If you set a value manually and then change it, every resource whose name includes the deployment ID is destroyed and recreated, causing complete data loss. |
+| `support_users` | List of on-call email addresses | **Medium** | Empty list suppresses all Cloud Monitoring alert emails. Outages go unnotified until a user reports them. |
+
+---
+
+### Compute & Scaling
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `workload_type` | `"Deployment"` for stateless apps; `"StatefulSet"` for apps that require a stable filesystem identity (databases, Elasticsearch) | **High** | Using `"Deployment"` for a workload that requires persistent volume identity causes data inconsistency — pods get different PVCs on restart. Using `"StatefulSet"` for a stateless app adds unnecessary scheduling overhead. |
+| `min_instance_count` | `1` for production (eliminates cold starts); `0` for dev/batch workloads | **Medium** | Setting `0` in production causes cold-start delays (pod scheduling + image pull can take 30–90 s). Setting very high values (e.g. `10`) wastes cluster resources and increases costs when traffic is low. |
+| `max_instance_count` | `3` for most apps; size to `≤ Cloud SQL max_connections / connections_per_pod` | **High** | Too low: limits throughput under load — requests queue and latency spikes. Too high: exhausts Cloud SQL connection limits (default 25 per db-user on shared-core instances), causing `FATAL: sorry, too many clients already` errors for all pods. |
+| `container_port` | Must match what the application actually listens on (e.g. `8080`) | **Critical** | Port mismatch causes Kubernetes liveness probes to fail immediately. All traffic is rejected with a connection refused error. The Deployment never becomes Ready and the pod restarts indefinitely. |
+| `container_resources.cpu_limit` | `"1000m"` to start; profile under load and adjust | **Medium** | Too low (e.g. `"100m"`): CPU throttling causes high request latency. Application may timeout. Too high: wastes GKE Autopilot billing units (Autopilot charges per requested resource, not per used). |
+| `container_resources.memory_limit` | `"512Mi"` minimum; increase if app uses in-memory caching | **High** | Too low: pod is OOMKilled (exit code 137), causing a restart loop. Kubernetes back-off extends restart intervals up to 5 minutes, causing extended outages. Too high: GKE Autopilot charges for the full requested amount. |
+| `deployment_timeout` | `1800` (default); increase to `3600` for large images or apps with slow startup | **Medium** | Too low: Terraform times out waiting for rollout and marks the apply as failed even though the pod eventually starts. Confusing error messages. Too high: a genuinely broken deployment (e.g. wrong image tag) takes longer to surface as a failure. |
+| `termination_grace_period_seconds` | `60` (default); increase for apps that need to drain connections (e.g. `120`) | **Medium** | Too low: in-flight requests are forcibly terminated (SIGKILL) before the app can finish serving them. Results in HTTP 502 errors visible to users during rolling updates. |
+| `enable_vertical_pod_autoscaling` | `false` by default; enable only after load testing | **Medium** | VPA may set resource requests above what the app actually uses, increasing costs, or below what it needs, causing OOMKills. Do not enable with HPA on the same metric — the combination causes scaling oscillation. |
+
+---
+
+### Database
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `database_type` | `"POSTGRES"` for most apps; `"NONE"` if the app uses an external database | **Critical** | **Changing `database_type` after initial deployment replaces the Cloud SQL instance.** All data in the existing database is lost. Never change this after the first apply unless you have a validated backup and a restore plan. |
+| `enable_cloudsql_volume` | `true` (use Cloud SQL Auth Proxy — the secure, recommended path) | **High** | Setting `false` switches to direct TCP. The pod must reach the Cloud SQL instance's private IP directly. If firewall rules do not permit this, database connections fail silently. Auth Proxy IAM authentication is also lost, requiring password-only auth. |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` (default; only change if the application framework requires a different path) | **Critical** | If changed without updating the application's database connection string, the app cannot find the Auth Proxy Unix socket. All database connections fail with `no such file or directory` or `connection refused`. |
+| `application_database_name` | A short lowercase name tied to the app (e.g. `"myappdb"`) | **Critical** | **Do not change after initial deployment.** Renaming the database requires manual data migration. Terraform will create a new empty database with the new name, and the application will start against an empty schema, causing runtime errors. |
+| `application_database_user` | A short lowercase name (e.g. `"myappuser"`) | **High** | **Do not change after initial deployment.** A new database user is created; the old user retains its grants. The new user starts with no privileges until `db-init` is re-run. Application connections may fail until grants are applied. |
+| `database_password_length` | `32` (minimum recommended for production) | **Medium** | Values below `16` are rejected by validation. Values between `16`–`31` are weaker than recommended. Values above `64` are rejected by validation. |
+| `cloud_sql_proxy_version` | `"2-alpine"` (current stable) | **Medium** | Using an old tag may expose known CVEs. Using a non-existent tag causes the mirroring job to fail, blocking the deployment. |
+| `enable_auto_password_rotation` | `false` initially; enable once the rotation pipeline is validated | **High** | Enabling with `database_type = "NONE"` is rejected at plan time. Enabling with too short a `rotation_propagation_delay_sec` can cause connection failures during rotation if pods pick up the old credential after it is disabled. |
+| `rotation_propagation_delay_sec` | `90` (default); increase to `120`–`180` for high-concurrency apps | **High** | Too short: the old secret version is disabled before all running pods have restarted with the new credential. Results in authentication failures and HTTP 500 errors until the pod restarts again. |
+
+---
+
+### Storage
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `enable_nfs` | `true` for apps with shared file uploads; `false` for fully stateless apps | **Medium** | Enabling NFS for a stateless app adds latency and unnecessary cost (NFS VM or Filestore). Disabling NFS for an app that writes shared files causes data inconsistency — each pod has its own ephemeral filesystem, and files written by one pod are not visible to others. |
+| `nfs_mount_path` | `"/mnt/nfs"` (default); must match where the application expects its shared storage | **High** | Wrong path: application writes files to the ephemeral container filesystem instead of NFS. Files survive only as long as the pod runs. After restart or scaling, previously uploaded files are not found. |
+| `nfs_volume_name` | `"nfs-data-volume"` (default; only change when using two NFS mounts) | **Medium** | Changing after initial deployment: Kubernetes treats this as a volume removal + add, causing the Deployment to rollout with a brief disruption. Always keep the same value once set. |
+| `create_cloud_storage` | `true` unless buckets are managed externally | **Medium** | Setting `false` skips bucket provisioning. Any application code that writes to the expected bucket names will get `403 Forbidden` or `404 Not Found` errors if the buckets were not created externally. |
+| `manage_storage_kms_iam` | `false` initially; enable when CMEK is a compliance requirement | **Medium** | Enabling without the `${project_id}-cmek-keyring` existing: the module auto-creates it. Disabling after buckets were encrypted: new objects cannot be written (key access revoked), existing objects cannot be read. |
+
+---
+
+### Networking
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `gke_cluster_selection_mode` | `"primary"` (auto-discover the single Services_GCP cluster) | **High** | Using `"explicit"` without a valid `gke_cluster_name` causes the provider to fail at plan time with a cluster-not-found error. Using `"round-robin"` without multiple clusters in the same network deploys to a single cluster anyway (not an error, but misleading). |
+| `gke_cluster_name` | `""` (auto-discover); only set when `gke_cluster_selection_mode = "explicit"` | **High** | Wrong cluster name in `explicit` mode: Terraform targets the wrong cluster, deploying the application to the wrong environment. All Kubernetes resources are created on the wrong cluster. |
+| `enable_network_segmentation` | `false` (start without segmentation; enable after validating NetworkPolicies) | **High** | Enabling without understanding inter-namespace traffic patterns blocks legitimate pod-to-pod communication. Symptoms: database connections timeout, initialization jobs hang, health checks fail. Debug with `kubectl describe networkpolicy -n NAMESPACE`. |
+| `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` (default; only relevant when inline GKE provisioning is needed) | **Critical** | **Do not change after the inline GKE cluster has been created.** Changing the CIDR causes the existing subnet to be destroyed and recreated, which requires the GKE cluster to be recreated — resulting in complete data loss of all workloads on that cluster. |
+| `prereq_subnet_cidr_override` | `""` (auto-assign; pin to the applied value if re-applying after initial deploy) | **Critical** | If left blank on subsequent applies when the inline VPC subnet has been created, Terraform may attempt to replace the subnet with a new auto-assigned CIDR. This destroys and recreates the GKE cluster. Always pin to the CIDR from the first apply's output. |
+
+---
+
+### Advanced Security
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `enable_cloud_armor` | `false` for internal/dev; `true` for production internet-facing services | **High** | Leaving `false` in production: no WAF protection against SQLi, XSS, LFI, RCE, or DDoS. Enabling mid-deployment adds a new Global Load Balancer — ensure `admin_ip_ranges` includes your CI/CD and admin IPs before enabling, or valid traffic may be blocked. |
+| `admin_ip_ranges` | Your office VPN CIDR + CI/CD egress IPs (e.g. `["203.0.113.0/24"]`) | **High** | Empty with `enable_cloud_armor = true`: no bypass rule is created. If your own IP accidentally matches a WAF rule (e.g. during pentest), you will be denied (403). With `enable_vpc_sc = true`, an empty list is an auto-skip condition — VPC-SC perimeter is not created and a warning is emitted instead of an error. |
+| `enable_iap` | `false` (start open; enable IAP for internal-only or admin interfaces) | **High** | Enabling IAP without setting `iap_oauth_client_id` and `iap_oauth_client_secret`: deployment fails. Enabling without adding authorised users/groups: no one can access the app — all requests return HTTP 403. |
+| `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` initially; promote to `"REQUIRE_ATTESTATION"` only after CI pipeline produces valid attestations | **Critical** | Setting `"REQUIRE_ATTESTATION"` before the CI/CD pipeline attests images: **all pod deployments are blocked**. The error `Image is not attested` appears in pod events. Setting `"ALWAYS_DENY"` blocks all image deployments immediately, including emergency rollbacks. |
+| `enable_vpc_sc` | `false` initially; only enable when `vpc_sc_dry_run = true` has been validated with zero violations | **Critical** | Setting `enable_vpc_sc = true` with `vpc_sc_dry_run = false` without validating: GCP API calls from outside the perimeter are blocked. Pod pulls from external registries fail; Secret Manager calls from unapproved IPs fail. Complete service outage until perimeter is updated. |
+| `vpc_sc_dry_run` | `true` always until you have read and validated the Cloud Audit Logs for violations | **Critical** | Setting `false` on first enable enforces the perimeter immediately. Any unexpected traffic pattern (e.g. Cloud Build SA not in access level) results in API call denial and deployment failures. |
+| `enable_audit_logging` | `false` for dev; `true` for production | **Low** | Enabling increases Cloud Logging ingestion volume and cost. Disabling in production means secret access and key usage are not logged — a compliance risk for regulated environments (SOC 2, PCI-DSS, HIPAA). |
+
+---
+
+### Traffic & Ingress
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `enable_custom_domain` | `false` until DNS is configured; then `true` | **Medium** | Enabling before DNS records point to the static IP: SSL certificate provisioning fails. Certificate Manager will continuously retry and the domain will be inaccessible via HTTPS until DNS is correctly pointed at the Gateway IP. |
+| `application_domains` | Your validated domain names (e.g. `["app.example.com"]`) | **High** | Typos in domain names cause SSL certificate provisioning for the wrong domain. The correct domain has no certificate and HTTPS traffic fails. Certificates for misspelled domains are wasted but cannot be automatically cleaned up. |
+| `reserve_static_ip` | `true` (default; strongly recommended) | **Medium** | Setting `false`: Cloud Run/GKE receives an ephemeral IP. DNS `A` records cannot be reliably set. The IP changes on each deployment, breaking bookmarks, allowlists, and cached DNS records. |
+| `gateway_backend_stage` | `"dev"` initially; change to `"staging"` or `"prod"` as pipeline matures | **High** | Setting to a stage that does not yet exist (e.g. `"prod"` before prod is promoted to): the HTTPRoute backend has no valid endpoint. All external traffic receives HTTP 502 or 404. |
+
+---
+
+### CI/CD & Delivery
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `enable_image_mirroring` | `true` (default; strongly recommended) | **High** | Setting `false`: GKE nodes pull directly from external registries (Docker Hub, GitHub Container Registry). Affected by pull rate limits (429 errors during deployments). In VPC-SC environments, external registry access is blocked — pods fail to start with `ErrImagePull`. |
+| `cicd_trigger_config.branch_pattern` | `"^main$"` for a single production branch; `"^(main\|develop)$"` for GitFlow | **Medium** | Wrong regex: trigger never fires (builds must be run manually). Overly broad regex (e.g. `".*"`): every branch push triggers a build and deployment, including feature branches — possible accidental production deployments. |
+| `enable_cloud_deploy` | `false` until a proper staging pipeline is needed | **Medium** | Enabling `enable_cloud_deploy` without `enable_cicd_trigger`: no automated trigger creates releases. Releases must be created manually via `gcloud deploy releases create`. The pipeline exists but is never fed automatically. |
+| `cloud_deploy_stages` | Default `[dev, staging, prod]` with `require_approval = true` on `prod` | **Critical** | Setting `require_approval = false` on `prod` allows any successful `staging` build to automatically promote to production without human review. Combine with `auto_promote = true` and a broken build reaches production automatically. |
+
+---
+
+### Reliability & Scheduling
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `enable_pod_disruption_budget` | `true` (default; always keep enabled in production) | **High** | Setting `false`: during GKE Autopilot node upgrades, Kubernetes may evict all pods simultaneously. If `min_instance_count = 1`, the single pod is evicted and the application is completely unavailable during the upgrade window (can last minutes). |
+| `pdb_min_available` | `"1"` for single-replica; `"50%"` for multi-replica (3+) | **High** | Setting `"1"` with `max_instance_count = 1`: GKE cannot drain the node for upgrades because evicting the only pod would violate the budget. Node upgrade is indefinitely blocked — cluster falls behind on security patches. Set `"0"` for single-replica workloads where a brief upgrade disruption is acceptable. |
+| `enable_topology_spread` | `false` initially; enable for production HA deployments with `min_instance_count ≥ 3` | **Medium** | Enabling with `topology_spread_strict = true` and `min_instance_count < 3`: pods cannot be scheduled across 3 zones with a max skew of 1. Pods remain `Pending` indefinitely. Check with `kubectl describe pod` for `FailedScheduling` events referencing topology constraints. |
+| `enable_resource_quota` | `false` for standalone deployments; `true` for shared multi-tenant clusters | **Medium** | Enabling with quota values lower than what the workload requests: pods fail to schedule with `exceeded quota` events. Initialization jobs and cron jobs also fail. Always set `quota_cpu_limits` and `quota_memory_limits` ≥ the sum of all containers' limits in the namespace. |
+| `backup_schedule` | `"0 2 * * *"` (daily at 02:00 UTC; adjust to a low-traffic window in your timezone) | **Low** | Running backup during peak traffic increases DB load. Using `"*/5 * * * *"` (every 5 min) creates excessive backup files and storage costs. |
+| `backup_retention_days` | `7` for dev; `30` for production | **Medium** | `1` or `0`: almost no recovery window. A mistake is only reversible within 24 hours. `365+`: storage costs grow unboundedly. Strike a balance based on your RPO requirements. |
+
+---
+
+### Integrations
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `enable_redis` | `false` if the application does not use Redis (avoid injecting unused env vars) | **Medium** | Leaving `true` for a non-Redis application: `REDIS_HOST` defaults to the NFS server IP. If the NFS VM has no Redis service, the application may log connection errors on startup. Set `false` explicitly for apps that do not use Redis. |
+| `redis_host` | The private IP of your Cloud Memorystore instance (e.g. `"10.0.0.5"`) | **High** | Wrong IP: all Redis `GET`/`SET` operations fail. Session data is lost, cache misses spike, and any queue-backed async tasks stop processing. If the application falls back to database-backed caching, DB load increases significantly. |
+| `redis_port` | `"6379"` (default; only change if Memorystore is configured on a non-standard port) | **Medium** | Wrong port: Redis client receives `connection refused`. Same impact as wrong `redis_host`. |
+| `redis_auth` | The Memorystore auth string (leave `""` only for private-VPC dev instances) | **Medium** | Setting `""` when the Redis instance has AUTH enabled: all connections are rejected with `NOAUTH Authentication required`. The application cannot use Redis at all. Setting a wrong value: same outcome. |
+| `enable_backup_import` | `false` (default; only set `true` on the apply where you want to restore) | **High** | Leaving `true` after a successful import: the import job runs on every subsequent `terraform apply`, potentially overwriting live data with stale backup data. **Set back to `false` immediately after a successful restore.** |
+| `backup_format` | `"sql"` for plain SQL dumps; `"auto"` when file extension is reliable | **High** | Wrong format (e.g. `"sql"` for a gzipped dump): import fails with a parse error. The `"auto"` setting detects format from file extension and is safe for most cases. |
+| `configure_service_mesh` | `false` (default); only enable when ASM is required for mTLS or traffic management | **Medium** | Enabling on a project without the required Fleet/ASM APIs enabled: the apply fails with `API not enabled` errors. Enabling without existing ASM infrastructure in a shared cluster: Istio sidecar injection label is applied but no control plane serves it — pods start but sidecar containers remain in `ContainerCreating`. |

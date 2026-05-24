@@ -1,4 +1,4 @@
-# Moodle Common Module
+# Moodle_Common Shared Configuration Module
 
 The `Moodle_Common` module defines the Moodle Learning Management System (LMS) configuration for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`Moodle_CloudRun` and `Moodle_GKE`).
 
@@ -72,7 +72,7 @@ The application configuration object passed to the platform module via `applicat
 | `environment_variables` | Passed through from `var.environment_variables` |
 | `enable_postgres_extensions` | `true` |
 | `postgres_extensions` | `["pg_trgm"]` |
-| `initialization_jobs` | Two default jobs or custom override — see section 7 |
+| `initialization_jobs` | Two default jobs or custom override — see §6 |
 | `startup_probe` | `null` — caller must provide |
 | `liveness_probe` | `null` — caller must provide |
 | `module_storage_buckets` | Passed through from `var.module_storage_buckets` |
@@ -101,23 +101,7 @@ The absolute path to the module directory, used by wrapper modules to locate the
 
 ---
 
-## 4. Non-Configurable Values
-
-The following values are fixed inside `Moodle_Common` and cannot be overridden by callers:
-
-| Setting | Value | Reason |
-|---|---|---|
-| `container_image` | `""` (built from source) | Always built from Ubuntu 24.04 with a custom Apache + PHP 8.3 + Moodle stack; no upstream Moodle Docker image is used. |
-| `image_source` | `"custom"` | Requires custom Dockerfile and build context. |
-| `container_port` | `8080` | Apache is configured to listen on `$PORT`, defaulting to 8080. |
-| `database_type` | `"POSTGRES_15"` | Moodle requires PostgreSQL 15. |
-| `enable_postgres_extensions` | `true` | The `pg_trgm` extension is always created during `db-init`. |
-| `postgres_extensions` | `["pg_trgm"]` | Required for Moodle full-text search. |
-
----
-
-## 5. Input Variables
-
+## 4. Input Variables
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -145,7 +129,7 @@ The following values are fixed inside `Moodle_Common` and cannot be overridden b
 
 ---
 
-## 6. PostgreSQL Extension
+## 5. PostgreSQL Extension
 
 One extension is created during `db-init`:
 
@@ -157,11 +141,11 @@ The database is created with explicit `UTF8` encoding, `en_US.UTF-8` collation a
 
 ---
 
-## 7. Initialization Jobs
+## 6. Initialization Jobs
 
 Two jobs run by default (when `initialization_jobs = []`):
 
-### A. `db-init`
+### Job 1: `db-init`
 
 | Field | Value |
 |-------|-------|
@@ -170,8 +154,7 @@ Two jobs run by default (when `initialization_jobs = []`):
 | Secrets required | `DB_PASSWORD`, `ROOT_PASSWORD` |
 | `execute_on_apply` | `true` |
 | CPU / Memory | `1000m` / `512Mi` |
-| Timeout | 600s |
-| Max retries | 3 |
+| Timeout | 600s, 3 retries |
 | `needs_db` | `true` (Cloud SQL proxy sidecar injected) |
 
 `db-init.sh` behavior:
@@ -184,7 +167,7 @@ Two jobs run by default (when `initialization_jobs = []`):
 7. Creates the `pg_trgm` extension as superuser.
 8. Signals Cloud SQL Proxy shutdown via `wget POST http://127.0.0.1:9091/quitquitquit`.
 
-### B. `nfs-init`
+### Job 2: `nfs-init`
 
 | Field | Value |
 |-------|-------|
@@ -193,8 +176,7 @@ Two jobs run by default (when `initialization_jobs = []`):
 | Secrets required | None |
 | `execute_on_apply` | `true` |
 | CPU / Memory | `500m` / `256Mi` |
-| Timeout | 300s |
-| Max retries | 3 |
+| Timeout | 300s, 3 retries |
 | `mount_nfs` | `true` — the NFS volume is mounted at `/mnt` |
 | `needs_db` | `false` — Cloud SQL proxy sidecar is **not** injected |
 
@@ -205,7 +187,7 @@ Two jobs run by default (when `initialization_jobs = []`):
 
 ---
 
-## 8. Scripts and Container Image
+## 7. Scripts and Container Image
 
 All supporting files are in `scripts/`. The entire `scripts/` directory is used as the Docker build context.
 
@@ -292,7 +274,7 @@ A simpler alternative entrypoint (not used by default — `cloudrun-entrypoint.s
 
 ---
 
-## 9. Moodle Runtime Environment Variables
+## 8. Moodle Runtime Environment Variables
 
 Key environment variables consumed by `moodle-config.php` and `cloudrun-entrypoint.sh` at runtime (set by wrapper modules):
 
@@ -319,7 +301,7 @@ Key environment variables consumed by `moodle-config.php` and `cloudrun-entrypoi
 
 ---
 
-## 10. Platform-Specific Differences
+## 9. Platform-Specific Differences
 
 | Aspect | Moodle_CloudRun | Moodle_GKE |
 |--------|-----------------|-----------|
@@ -334,7 +316,7 @@ Key environment variables consumed by `moodle-config.php` and `cloudrun-entrypoi
 
 ---
 
-## 11. Implementation Pattern
+## 10. Implementation Pattern
 
 ```hcl
 # Example: how Moodle_CloudRun instantiates Moodle_Common
