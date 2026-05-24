@@ -1,4 +1,4 @@
-# Django_GKE Module
+# Django GKE Module
 
 Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design. This module deploys a production-ready Django application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL instance, GCS media storage, and Secret Manager for secrets including the Django `SECRET_KEY`.
 
@@ -8,7 +8,7 @@ Django is a high-level Python web framework that encourages rapid development an
 
 ---
 
-## How This Guide Is Structured
+## 1. How This Guide Is Structured
 
 This guide documents only the variables that are **unique to `Django_GKE`** or that have **Django-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, CI/CD, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
@@ -51,7 +51,7 @@ This guide documents only the variables that are **unique to `Django_GKE`** or t
 
 ---
 
-## Platform-Managed Behaviours
+## 2. Platform-Managed Behaviours
 
 The following behaviours are applied automatically by `Django_GKE` (via the `Django_Common` sub-module) regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
@@ -67,7 +67,7 @@ The following behaviours are applied automatically by `Django_GKE` (via the `Dja
 
 ---
 
-## Identity-Aware Proxy (GKE-specific)
+## 3. Identity-Aware Proxy (GKE-specific)
 
 `Django_GKE` exposes three IAP variables not present in `Django_CloudRun` or `App_GKE`'s default IAP configuration. These are required when `enable_iap = true`:
 
@@ -81,7 +81,7 @@ A `validation.tf` precondition enforces that both `iap_oauth_client_id` and `iap
 
 ---
 
-## Django Application Identity
+## 4. Django Application Identity
 
 These variables have Django-specific defaults. Their semantics are identical to the equivalents in [App_GKE.md §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 
@@ -104,7 +104,7 @@ kubectl describe deployment django -n NAMESPACE | grep -A5 Annotations
 
 ---
 
-## Django Database Configuration
+## 5. Django Database Configuration
 
 Django requires PostgreSQL. All database variables behave identically to those documented in [App_GKE.md §3.B](../App_GKE/App_GKE.md#b-database-cloud-sql), with the following Django-specific notes.
 
@@ -137,7 +137,7 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep SECRET_KEY
 
 ---
 
-## Django Health Probes
+## 6. Django Health Probes
 
 `Django_GKE` exposes **two separate sets** of probe variables with different routing:
 
@@ -184,7 +184,7 @@ kubectl logs -n NAMESPACE -l app=django --since=10m | head -100
 
 ---
 
-## Redis Configuration
+## 7. Redis Configuration
 
 Django uses Redis as a session store and caching backend via `django-redis`. When `enable_redis = true`, the `REDIS_HOST` and `REDIS_PORT` environment variables are injected automatically into the Django container by `Django_Common`.
 
@@ -209,7 +209,7 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep REDIS
 
 ---
 
-## Session Affinity
+## 8. Session Affinity
 
 Django applications that rely on in-process session storage or local caching benefit from routing a given user's requests consistently to the same pod.
 
@@ -221,7 +221,7 @@ Django applications that rely on in-process session storage or local caching ben
 
 ---
 
-## Initialization Jobs
+## 9. Initialization Jobs
 
 Django deployments typically require database setup and schema migration jobs to run before (or immediately after) the application starts. `Django_GKE` supports these via the `initialization_jobs` variable (documented in [App_GKE.md §3.E](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs)).
 
@@ -279,7 +279,7 @@ gcloud sql databases list --instance=INSTANCE_NAME --project=PROJECT_ID
 
 ---
 
-## StatefulSet PVC Configuration
+## 10. StatefulSet PVC Configuration
 
 When `workload_type = "StatefulSet"` is set (see [App_GKE.md §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot)), the following variables configure the per-pod **PersistentVolumeClaim** automatically created for each StatefulSet replica.
 
@@ -297,7 +297,7 @@ When `workload_type = "StatefulSet"` is set (see [App_GKE.md §3.A](../App_GKE/A
 
 ---
 
-## Password Rotation Propagation Delay
+## 11. Password Rotation Propagation Delay
 
 The `rotation_propagation_delay_sec` variable controls how long the module waits after writing a new database password to Secret Manager before restarting the GKE pods to pick up the new credentials. It is used together with `enable_auto_password_rotation` (documented in [App_GKE.md §7.D](../App_GKE/App_GKE.md#d-auto-password-rotation)).
 
@@ -307,7 +307,7 @@ The `rotation_propagation_delay_sec` variable controls how long the module waits
 
 ---
 
-## Resource Creator Identity
+## 12. Resource Creator Identity
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -315,7 +315,7 @@ The `rotation_propagation_delay_sec` variable controls how long the module waits
 
 ---
 
-## Deployment Prerequisites & Validation
+## 13. Deployment Prerequisites & Validation
 
 After deploying `Django_GKE`, confirm the deployment is healthy:
 

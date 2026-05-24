@@ -1,4 +1,4 @@
-# Directus_Common Module
+# Directus Common Module
 
 The `Directus_Common` module defines the Directus headless CMS and Backend-as-a-Service (BaaS) platform configuration for the RAD Modules ecosystem. Unlike a purely configuration-only module, it **also creates GCP resources** — specifically the Secret Manager secrets required by the Directus runtime. Its outputs are consumed by platform-specific wrapper modules (`Directus_CloudRun` and `Directus_GKE`).
 
@@ -57,7 +57,7 @@ A comprehensive application configuration object passed to the platform module v
 | `app_name` | `"directus"` |
 | `application_version` | Directus version tag (e.g., `"11.1.0"`) |
 | `container_image` | `"directus/directus"` (base public image) |
-| `image_source` | `"custom"` — a custom Docker image is built (see §7) |
+| `image_source` | `"custom"` — a custom Docker image is built (see §8) |
 | `container_build_config` | `dockerfile_path = "Dockerfile"`, `context_path = "directus"` (relative to `scripts_dir`), `build_args = { DIRECTUS_VERSION = <version> }` |
 | `container_port` | `8055` |
 | `database_type` | `"POSTGRES"` |
@@ -71,10 +71,10 @@ A comprehensive application configuration object passed to the platform module v
 | `container_resources` | CPU/memory limits and requests |
 | `min_instance_count` | Minimum running instances (default: `0` — scale-to-zero) |
 | `max_instance_count` | Maximum running instances (default: `10`) |
-| `environment_variables` | Merged map — see §4 |
+| `environment_variables` | Merged map — see §5 |
 | `enable_postgres_extensions` | `false` by default (Directus does not require extensions as a prerequisite) |
 | `postgres_extensions` | Empty by default; override if needed |
-| `initialization_jobs` | Default `db-init` job or custom override — see §6 |
+| `initialization_jobs` | Default `db-init` job or custom override — see §7 |
 | `startup_probe` | HTTP `GET /server/ping`, 30s initial delay, 5s timeout, 10s period, 30 failure threshold |
 | `liveness_probe` | HTTP `GET /server/ping`, 15s initial delay, 5s timeout, 30s period, 3 failure threshold |
 
@@ -110,28 +110,41 @@ The absolute path to the module directory, used by wrapper modules to locate the
 
 ---
 
-## 4. Environment Variables
+## 4. Non-Configurable Values
+
+The following values are fixed inside `Directus_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_image` | `"directus/directus"` | Always built from this base public image. |
+| `image_source` | `"custom"` | Requires custom entrypoint and GCS storage driver injection. |
+| `container_port` | `8055` | Application's fixed listening port. |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` | Fixed Cloud SQL Auth Proxy socket directory. |
+
+---
+
+## 5. Environment Variables
 
 The module sets the following environment variables by default:
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `DB_CLIENT` | `"pg"` | Directus PostgreSQL driver |
-| `DB_USER` | from `db_user` variable | Database application user |
-| `DB_SSL` | `"false"` (with Auth Proxy) / `'{"rejectUnauthorized":false}'` (TCP) | SSL mode; disabled when using the Auth Proxy sidecar, set to skip CA verification for private IP TCP |
-| `STORAGE_LOCATIONS` | `"gcs"` | Enables GCS as the file storage backend |
-| `STORAGE_GCS_DRIVER` | `"gcs"` | GCS driver identifier |
-| `STORAGE_GCS_BUCKET` | `<project_id>-<tenant>-directus-uploads-<deployment_id>` | Uploads bucket name |
-| `BOOTSTRAP` | `"true"` | Triggers `directus bootstrap` on first startup |
-| `AUTO_MIGRATE` | `"true"` | Runs `directus database migrate:latest` on every startup |
-| `ADMIN_EMAIL` | `"admin@example.com"` | Initial admin account email |
+| Variable | Default Value | Description |
+|----------|---------------|-------------|
+| `DB_CLIENT` | `"pg"` | Directus PostgreSQL driver. |
+| `DB_USER` | from `db_user` variable | Database application user. |
+| `DB_SSL` | `"false"` (with Auth Proxy) / `'{"rejectUnauthorized":false}'` (TCP) | SSL mode; disabled when using the Auth Proxy sidecar, set to skip CA verification for private IP TCP. |
+| `STORAGE_LOCATIONS` | `"gcs"` | Enables GCS as the file storage backend. |
+| `STORAGE_GCS_DRIVER` | `"gcs"` | GCS driver identifier. |
+| `STORAGE_GCS_BUCKET` | `<project_id>-<tenant>-directus-uploads-<deployment_id>` | Uploads bucket name. |
+| `BOOTSTRAP` | `"true"` | Triggers `directus bootstrap` on first startup. |
+| `AUTO_MIGRATE` | `"true"` | Runs `directus database migrate:latest` on every startup. |
+| `ADMIN_EMAIL` | `"admin@example.com"` | Initial admin account email. |
 
 **When `enable_redis = true`**, two additional variables are set:
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `CACHE_ENABLED` | `"true"` | Enables Directus response caching |
-| `CACHE_STORE` | `"redis"` | Uses Redis as the cache backend |
+| Variable | Default Value | Description |
+|----------|---------------|-------------|
+| `CACHE_ENABLED` | `"true"` | Enables Directus response caching. |
+| `CACHE_STORE` | `"redis"` | Uses Redis as the cache backend. |
 
 The `REDIS` connection URL is injected as a secret (not a plain env var) via `secret_ids`. The URL format is:
 - With auth: `redis://:<password>@<host>:<port>`
@@ -142,64 +155,64 @@ Custom environment variables passed via `environment_variables` are merged last 
 
 ---
 
-## 5. Input Variables
+## 6. Input Variables
 
-### Project & Identity
-
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| `project_id` | `string` | required | GCP project ID |
-| `resource_prefix` | `string` | `""` | Prefix for resource naming |
-| `labels` | `map(string)` | `{}` | Labels applied to all resources |
-| `deployment_id` | `string` | `""` | Unique deployment identifier |
-| `deployment_id_suffix` | `string` | `""` | Random suffix used in resource name calculations |
-| `tenant_deployment_id` | `string` | `"demo"` | Tenant/environment identifier |
-| `deployment_region` | `string` | `"us-central1"` | Primary GCP region |
-
-### Application
+### A. Project & Identity
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `application_name` | `string` | `"directus"` | Application name |
-| `application_version` | `string` | `"11.1.0"` | Directus Docker image tag |
-| `description` | `string` | `"Directus - Open Source Headless CMS..."` | Module description |
-| `container_port` | `number` | `8055` | Port the container listens on |
-| `database_type` | `string` | `"POSTGRES"` | Database type |
-| `db_name` | `string` | `"directus"` | PostgreSQL database name |
-| `db_user` | `string` | `"directus"` | PostgreSQL application user |
-| `cpu_limit` | `string` | `"1000m"` | Container CPU limit |
-| `memory_limit` | `string` | `"512Mi"` | Container memory limit |
-| `min_instance_count` | `number` | `0` | Minimum instances (0 = scale-to-zero) |
-| `max_instance_count` | `number` | `10` | Maximum instances |
-| `environment_variables` | `map(string)` | `{}` | Additional environment variables merged over defaults |
-| `initialization_jobs` | `list(object)` | `[]` | Custom init jobs; empty triggers default `db-init` job |
-| `enable_image_mirroring` | `bool` | `true` | Enable image mirroring to Artifact Registry |
-| `enable_postgres_extensions` | `bool` | `false` | Whether to create PostgreSQL extensions as a prerequisite |
-| `postgres_extensions` | `list(string)` | `[]` | PostgreSQL extensions to create |
-| `startup_probe` | `object` | see above | Startup health probe |
-| `liveness_probe` | `object` | see above | Liveness health probe |
+| `project_id` | `string` | — | Required. GCP project ID. |
+| `resource_prefix` | `string` | `""` | Prefix for resource naming. |
+| `labels` | `map(string)` | `{}` | Labels applied to all resources. |
+| `deployment_id` | `string` | `""` | Unique deployment identifier. |
+| `deployment_id_suffix` | `string` | `""` | Random suffix used in resource name calculations. |
+| `tenant_deployment_id` | `string` | `"demo"` | Tenant/environment identifier. |
+| `deployment_region` | `string` | `"us-central1"` | Primary GCP region. |
 
-### Storage & Volumes
+### B. Application
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `enable_cloudsql_volume` | `bool` | `true` | Mount Cloud SQL Auth Proxy sidecar socket |
-| `enable_nfs` | `bool` | `true` | Mount an NFS (Cloud Filestore) volume |
-| `nfs_mount_path` | `string` | `"/mnt/nfs"` | NFS mount path inside the container |
-| `gcs_volumes` | `list(object)` | `[]` | Additional GCS Fuse volume mounts (name, bucket, mount_path, readonly, mount_options) |
+| `application_name` | `string` | `"directus"` | Application name. |
+| `application_version` | `string` | `"11.1.0"` | Directus Docker image tag. |
+| `description` | `string` | `"Directus - Open Source Headless CMS..."` | Module description. |
+| `container_port` | `number` | `8055` | Port the container listens on. |
+| `database_type` | `string` | `"POSTGRES"` | Database type. |
+| `db_name` | `string` | `"directus"` | PostgreSQL database name. |
+| `db_user` | `string` | `"directus"` | PostgreSQL application user. |
+| `cpu_limit` | `string` | `"1000m"` | Container CPU limit. |
+| `memory_limit` | `string` | `"512Mi"` | Container memory limit. |
+| `min_instance_count` | `number` | `0` | Minimum instances (0 = scale-to-zero). |
+| `max_instance_count` | `number` | `10` | Maximum instances. |
+| `environment_variables` | `map(string)` | `{}` | Additional environment variables merged over defaults. |
+| `initialization_jobs` | `list(object)` | `[]` | Custom init jobs; empty triggers default `db-init` job. |
+| `enable_image_mirroring` | `bool` | `true` | Enable image mirroring to Artifact Registry. |
+| `enable_postgres_extensions` | `bool` | `false` | Whether to create PostgreSQL extensions as a prerequisite. |
+| `postgres_extensions` | `list(string)` | `[]` | PostgreSQL extensions to create. |
+| `startup_probe` | `object` | see above | Startup health probe. |
+| `liveness_probe` | `object` | see above | Liveness health probe. |
 
-### Redis
+### C. Storage & Volumes
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `enable_redis` | `bool` | `false` | Enable Redis caching |
-| `redis_host` | `string` | `""` | Redis host; if empty, uses `$(NFS_SERVER_IP)` at runtime |
-| `redis_port` | `string` | `"6379"` | Redis port |
-| `redis_auth` | `string` | `""` | Redis authentication password (sensitive) |
+| `enable_cloudsql_volume` | `bool` | `true` | Mount Cloud SQL Auth Proxy sidecar socket. |
+| `enable_nfs` | `bool` | `true` | Mount an NFS (Cloud Filestore) volume. |
+| `nfs_mount_path` | `string` | `"/mnt/nfs"` | NFS mount path inside the container. |
+| `gcs_volumes` | `list(object)` | `[]` | Additional GCS Fuse volume mounts (name, bucket, mount_path, readonly, mount_options). |
+
+### D. Redis
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `enable_redis` | `bool` | `false` | Enable Redis caching. |
+| `redis_host` | `string` | `""` | Redis host; if empty, uses `$(NFS_SERVER_IP)` at runtime. |
+| `redis_port` | `string` | `"6379"` | Redis port. |
+| `redis_auth` | `string` | `""` | Redis authentication password (sensitive). |
 
 ---
 
-## 6. Initialization Jobs
+## 7. Initialization Jobs
 
 By default (when `initialization_jobs = []`), the module defines a single `db-init` job:
 
@@ -209,8 +222,9 @@ By default (when `initialization_jobs = []`), the module defines a single `db-in
 | Script | `scripts/directus/db-init.sh` |
 | Secret | `ROOT_PASSWORD` (PostgreSQL superuser password) |
 | CPU / Memory | `1000m` / `512Mi` |
-| Timeout | 600s, max 3 retries |
-| `execute_on_apply` | `true` (runs automatically on `terraform apply`) |
+| `execute_on_apply` | `true` |
+| Timeout | `600s` |
+| Max retries | `3` |
 
 The `db-init.sh` script:
 1. Detects Cloud SQL Auth Proxy usage: if `DB_SSL = "false"` and `DB_HOST` is not a Unix socket, forces `DB_HOST=127.0.0.1` to route through the proxy sidecar.
@@ -223,7 +237,7 @@ The `db-init.sh` script:
 
 ---
 
-## 7. Scripts and Container Image
+## 8. Scripts and Container Image
 
 All supporting files are in `scripts/directus/`.
 
@@ -260,7 +274,7 @@ A lighter-weight bootstrap script (used by the `directus-bootstrap` initializati
 
 ---
 
-## 8. Platform-Specific Differences
+## 9. Platform-Specific Differences
 
 | Aspect | Directus_CloudRun | Directus_GKE |
 |--------|------------------|--------------|
@@ -274,7 +288,7 @@ A lighter-weight bootstrap script (used by the `directus-bootstrap` initializati
 
 ---
 
-## 9. Implementation Pattern
+## 10. Implementation Pattern
 
 ```hcl
 # Example: how Directus_CloudRun instantiates Directus_Common

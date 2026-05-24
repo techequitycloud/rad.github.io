@@ -1,19 +1,29 @@
-import AudioPlayer from '@site/src/components/AudioPlayer';
+---
+title: "Using RAD"
+sidebar_label: "Using RAD"
+---
 
-# Deploying with RAD
+# Using RAD
 
-<img src="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.png" alt="Using RAD" style={{marginBottom: '20px'}} />
+<YouTubeEmbed videoId="YPjTzJX2Cak" poster="https://storage.googleapis.com/rad-public-2b65/workflows/user_workflow.png" />
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.m4a" title="Using RAD Audio" />
+<br/>
 
-<video width="100%" controls style={{marginTop: '20px'}}>
-  <source src="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<a href="https://storage.googleapis.com/rad-public-2b65/workflows/user_workflow.pdf" target="_blank">View Presentation (PDF)</a>
 
 ## 1. Introduction
 
 This guide covers the full deployment lifecycle on the Rapid Application Deployment (RAD) platform — from browsing and deploying a module for the first time, to monitoring progress, fixing failures, updating or removing deployments, and managing your credit balance.
+
+**What this guide covers:**
+
+- Browsing the module catalog and understanding credit requirements
+- Configuring and submitting a deployment
+- Tracking progress and reading real-time build logs
+- Diagnosing and fixing failures
+- Updating, deleting, and purging deployments
+- Understanding the retention policy and automated cleanup
+- Credit balance and transaction management
 
 ---
 
@@ -173,6 +183,18 @@ Navigate to **Deployments** in the top navigation. You will see a list of your d
 | `CANCELLED` | The deployment was cancelled before completion |
 | `SOFT_DELETED` | The deployment has been soft-deleted (retention policy triggered or manually deleted); it can be restored within the grace period (default 7 days) |
 
+**Deployment lifecycle — normal flow:**
+
+```
+Submit ──► QUEUED ──► WORKING ──► SUCCESS
+                         │
+                         └──► FAILURE ──► (Update) ──► QUEUED (retry)
+
+Delete  ──► DELETING ──► DELETED
+Purge   ──► (immediate hard removal)
+Retain  ──► SOFT_DELETED ──► (restore within grace period, or permanent removal)
+```
+
 ### 3.3. Viewing Real-Time Logs
 
 Click any **Deployment ID** in the list to open the detailed view. This page provides:
@@ -196,7 +218,9 @@ When a deployment status shows `FAILURE`, use the following approach to diagnose
 2.  Navigate to the **Logs** tab.
 3.  Scroll through the output to find the first error message. Terraform errors are clearly marked and explain which resource failed and why.
 
-### 4.2. Common Fixes
+### 4.2. Common Log Errors
+
+The table below covers errors that appear in the Terraform build logs. For failures that occur before or during pipeline submission — such as credit errors, stuck deployments, or build timeouts — see the [failure scenarios table in Step 7](#step-7--submit-the-deployment).
 
 | Log Error | Cause | Fix |
 | :--- | :--- | :--- |
@@ -277,9 +301,11 @@ Purge is a more aggressive cleanup action that forcibly removes both the cloud r
 
 > **Warning:** Purge bypasses the normal destruction pipeline. Use it only when the standard Delete action has failed or the deployment is irrecoverably stuck.
 
-### Retention Policy and Automated Cleanup
+---
 
-The platform also enforces an automated retention policy:
+## 8. Retention Policy and Automated Cleanup
+
+The platform enforces an automated retention policy that runs independently of manual delete and purge actions.
 
 *   **Retention Period:** Deployments older than the configured retention period (30, 90, 180, or 365 days, or never) are automatically soft-deleted.
 *   **Grace Period:** After soft deletion, you have a grace period (default 7 days) to restore the deployment before it is permanently removed.
@@ -288,101 +314,16 @@ The platform also enforces an automated retention policy:
 
 ---
 
-## 8. Credit Management
+## 9. Credit Management
 
-The credit system controls access to paid module deployments. Understanding how credits are allocated and consumed helps you plan your usage and avoid interrupted deployments.
+Credits are the platform's deployment currency. The two credit types — **Awarded Credits** (from sign-up bonuses and referrals) and **Purchased Credits** (from Stripe or Flutterwave) — are held separately and consumed in that order. Credits are only deducted after a deployment succeeds.
 
-### 8.1. Credit Types
+For full details on credit allocation, transaction history, subscription management, multi-currency payments, low-credit alerts, and automatic billing suspension, see the [Credit Management](./credits) reference page.
 
-The platform distinguishes between two types of credits, stored separately in your account:
+---
 
-| Type | Source | Priority | Special Rules |
-| :--- | :--- | :--- | :--- |
-| **Awarded Credits** | Sign-up bonuses, referrals, admin grants | Consumed **first** by default | Cannot be cashed out; do not contribute to Partner/Agent revenue calculations |
-| **Purchased Credits** | One-time purchases or monthly subscriptions via Stripe or Flutterwave | Consumed **second** (after Awarded Credits are exhausted) | Count as "True Revenue" for Partners and Agents; required exclusively by some modules |
+## Next Steps
 
-**Total Balance** = Awarded Credits + Purchased Credits
-
-### 8.2. How Credits Are Allocated
-
-Credits reach your account through several channels:
-
-*   **Sign-Up Bonus:** New accounts are automatically provisioned with a configurable number of Awarded Credits.
-*   **Referral Program:** Share your unique referral link or QR code from the **Help > Support** tab. When a referred user signs up, both you and the new user receive Awarded Credits (subject to a maximum referral cap).
-*   **Subscriptions:** Subscribe to a tier on the **Credits > Buy Credits** tab. A monthly allowance of Purchased Credits is added to your account on each billing cycle.
-*   **One-Time Purchases:** Buy a specific credit bundle via Stripe or Flutterwave from the **Buy Credits** tab.
-*   **Admin Grants:** Platform administrators can manually add or adjust credits on your account at any time.
-
-### 8.3. How Credits Are Consumed
-
-Credits are deducted **after** a deployment succeeds, not when it is submitted. Failed deployments do not consume credits.
-
-The deduction order is:
-
-1. **Awarded Credits are deducted first** until exhausted.
-2. **Purchased Credits are deducted** for any remaining balance.
-
-**Exception:** If a module has the `require_credit_purchases` flag set to `true`, the full cost is deducted exclusively from Purchased Credits. Awarded Credits are not used, even if your Awarded balance is high.
-
-**Partner Exemption:** If you are a Partner deploying a module that you own, the credit cost is always zero — no credits are deducted regardless of the module's defined cost.
-
-### 8.4. Viewing Your Balance and History
-
-Navigate to the **Credits** page from the top navigation bar:
-
-*   **Credit Balance:** Displayed in the header stats area and at the top of the Credits page.
-*   **Credit Transactions Tab:** A searchable, filterable history of every credit award, purchase, and spend event. Each transaction shows the date, amount, type (Awarded or Purchased), Deployment ID (as a clickable link), and running balance. Export the full history as a CSV file.
-*   **Module Costs Tab:** (If enabled) A breakdown of credit spending by module across all your deployments.
-*   **Project Costs Tab:** (If enabled) Historical infrastructure costs from Google Cloud, converted to credits using the platform's `price per credit` rate.
-*   **Project Invoices Tab:** (If enabled) Monthly invoices for your projects' cloud spending, queryable by month and exportable to CSV.
-*   **Subscriptions Tab:** (If enabled) View available subscription tiers and manage your current subscription.
-
-### 8.5. Low Credit Alerts
-
-When your credit balance falls below the configured threshold, the platform sends an automated email alert. To avoid deployment interruptions, top up your balance via the **Buy Credits** tab before the balance reaches zero.
-
-### 8.6. Automatic Billing Suspension
-
-If your account's credit balance reaches zero and ongoing project costs are being tracked, the platform will automatically **disable Google Cloud billing** for your projects to prevent unexpected charges. To restore billing:
-
-1. Top up your credit balance via **Credits > Buy Credits**.
-2. Billing is re-enabled automatically on the system's next billing cycle (runs daily at midnight UTC).
-3. If you need immediate re-enablement, contact your platform administrator.
-
-### 8.7. Transaction Types Reference
-
-| Transaction Type | Description |
-| :--- | :--- |
-| `SIGNUP` | Initial sign-up bonus credited to your account |
-| `AWARD` | Free credits granted by an admin or earned via referral |
-| `PURCHASE` | Credits added from a Stripe or Flutterwave payment |
-| `SPEND` | Credits deducted for a successful module deployment |
-| `PROJECT` | Credits deducted for ongoing Google Cloud infrastructure costs |
-| `PARTNER` | Monthly partner credit allowance (Partners only) |
-
-### 8.8. Multi-Currency Payments
-
-The platform supports payments in multiple currencies through Flutterwave. When you proceed to checkout, you can select your preferred currency from the supported list. The platform converts the credit price to your selected currency using daily-refreshed exchange rates.
-
-**Supported currencies:** USD, EUR, GBP, NGN, GHS, KES, ZAR, TZS, UGX, RWF, XAF, XOF
-
-**How exchange rates work:**
-- Rates are automatically synced from a live exchange-rate feed every day at 1:00 AM UTC.
-- The rate shown at checkout is the rate in effect at that moment.
-- All credit balances and platform pricing are stored in USD internally; the currency conversion applies only to the checkout amount you pay.
-- Stripe transactions are always processed in USD.
-
-> **Note:** If you select a non-USD currency and the exchange rate changes between when you view the price and when you complete payment, the final converted amount may differ slightly. Flutterwave handles currency conversion on their end as part of processing.
-
-### 8.9. Managing Your Subscription
-
-If you subscribe to a credit tier and later cancel or your subscription lapses, you can reinstate it without losing your subscription history.
-
-**To reinstate a cancelled subscription:**
-
-1. Navigate to **Credits > Buy Credits**.
-2. Click the **Subscriptions** tab.
-3. Find your previous plan and click **Reinstate**.
-4. Confirm the action. Your subscription is reactivated with the same tier, and your next billing cycle begins immediately.
-
-> **Note:** Credits from the reinstated cycle are added to your balance at the time of reinstatement, not backdated.
+- **Deploy your first module:** Follow the [Quick Start Tutorial](../tutorials/getting-started) for a step-by-step walkthrough of your first login and deployment.
+- **Explore platform features:** Browse the [Feature Guides](../features/user.md) to understand what each platform role can do.
+- **Prepare for certification:** Use the [Certification Guides](../ace/section1) to map your deployments to Google Cloud exam topics.

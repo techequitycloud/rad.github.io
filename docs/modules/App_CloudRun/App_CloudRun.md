@@ -1,8 +1,24 @@
-# App_CloudRun Module
+# App CloudRun Module
 
-This guide describes every configuration variable available in the `App_CloudRun` module, organized into functional groups. For each variable it explains the available options, the implications of each choice, and how to validate the resulting configuration in the Google Cloud Console or using the `gcloud` CLI.
+The `App_CloudRun` module is the foundational serverless deployment building block in the RAD Modules ecosystem. It provisions and manages a complete Cloud Run v2 service along with its surrounding GCP infrastructure — database, storage, networking, security, and CI/CD — and is designed to be consumed by application wrapper modules such as `Ghost_CloudRun`, `N8N_CloudRun`, and `Activepieces_CloudRun`.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
+
+---
+
+## Architecture Overview
+
+`App_CloudRun` sits at Layer 2 of the RAD Modules deployment stack:
+
+```
+GCP_Services (Layer 1 — shared infrastructure: VPC, Cloud SQL, NFS, Redis)
+       ↓
+App_CloudRun (Layer 2 — Cloud Run service, IAM, networking, CI/CD)
+       ↓
+Application Wrappers (Layer 3 — Ghost_CloudRun, N8N_CloudRun, Moodle_CloudRun, …)
+```
+
+When deployed standalone, `App_CloudRun` uses built-in presets. When instantiated by a wrapper module, the wrapper supplies `application_config`, `module_env_vars`, `module_secret_env_vars`, and `scripts_dir` to customise the deployment for a specific application.
 
 ---
 
@@ -21,7 +37,7 @@ This guide describes every configuration variable available in the `App_CloudRun
 
 ---
 
-## Group 0: Module Metadata & Configuration
+## 0. Module Metadata & Configuration
 
 These variables describe the module to the platform catalogue and control platform-level behaviours such as credit billing, resource purge protection, and wrapper-module integration. They are *platform-managed* and should not be changed unless you are customising or extending the module itself.
 
@@ -45,7 +61,7 @@ These variables describe the module to the platform catalogue and control platfo
 | `scripts_dir` | `""` *(built-in)* | Filesystem path | Path to the initialisation scripts directory. Leave blank to use the built-in scripts. Override only when a wrapper module supplies custom scripts. |
 | `application_config` | `{}` | Map (any) | Application-specific configuration map injected by a wrapper module (e.g. `Cyclos_CloudRun`, `Ghost_CloudRun`). When non-empty, this map replaces the built-in `cloudrunapp` preset and allows wrapper modules to supply their own container image, database type, initialization jobs, and other application defaults without needing to pass every value as a top-level variable. Leave empty when deploying `App_CloudRun` standalone. |
 
-### Validating Group 0 Settings
+### Validating Module Metadata Settings
 
 These variables do not create GCP resources directly, so there is nothing to validate in the console. The effects of `enable_purge` and `public_access` are enforced by the platform layer, not by GCP.
 
@@ -64,9 +80,11 @@ gcloud projects get-iam-policy PROJECT_ID \
 
 ---
 
-## Group 1: Project & Identity
+## 1. Project & Identity
 
 These variables establish the GCP project context and the shared identity settings that apply across all resources created by the module. They must be configured correctly before any deployment can succeed.
+
+> **Warning:** `tenant_deployment_id` and `deployment_id` are baked into every GCP resource name created by this module. Changing either value after the initial deployment will cause all resources to be recreated with new names, leaving the originals orphaned and resulting in data loss. Set these values once and treat them as immutable for the lifetime of the deployment.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -75,7 +93,7 @@ These variables establish the GCP project context and the shared identity settin
 | `support_users` | `[]` | List of email addresses | Email addresses that receive Cloud Monitoring alert notifications (uptime failures, high latency, error rate spikes). These addresses are added to a notification channel in Cloud Monitoring. Leave empty to suppress all alert emails. Adding addresses here does not grant any GCP IAM permissions. |
 | `resource_labels` | `{}` | Map of `key = "value"` pairs | Key-value labels applied to every GCP resource created by this module (Cloud Run service, Cloud SQL instance, GCS buckets, secrets, etc.). Use labels to enforce organisational tagging policies — for example cost centre, environment, team ownership, or compliance classification. Labels are visible in the Billing reports and can be used to filter resources in the Console. GCP label keys and values must be lowercase, 1–63 characters, and may contain letters, numbers, hyphens, and underscores. |
 
-### Validating Group 1 Settings
+### Validating Project & Identity Settings
 
 **Google Cloud Console:**
 - **Project confirmation:** The project name and ID are shown in the top navigation bar. Navigate to **Home → Dashboard** to confirm you are in the correct project.
@@ -98,7 +116,7 @@ gcloud beta monitoring channels list --project=PROJECT_ID \
 
 ---
 
-## Group 2: Application Identity
+## 2. Application Identity
 
 These variables define the identity of the application being deployed. They control how the application is named across GCP services, how it appears in the console and monitoring dashboards, and how deployments are versioned and tracked.
 
@@ -109,7 +127,7 @@ These variables define the identity of the application being deployed. They cont
 | `application_description` | `"App_CloudRun Custom Application…"` | Any string | A brief description of the application's purpose. Populated into the Cloud Run service description field and used in platform documentation. Visible in the Cloud Run console under the service details. Update this to accurately describe your application — it is particularly useful for audit and governance purposes when multiple services exist in the same project. |
 | `application_version` | `"1.0.0"` | Any string (e.g. `v1.2.3`, `latest`, `sha-8f2b1a`) | The version tag applied to the container image and used for deployment tracking. When `container_image_source` is `custom`, incrementing this value triggers a new Cloud Build run and creates a new tagged image in Artifact Registry. When using `prebuilt`, this value is informational only. Using a versioning convention such as [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`) is strongly recommended to maintain a clear audit trail of what is deployed. Avoid using `latest` in production as it makes it impossible to determine exactly which code is running. |
 
-### Validating Group 2 Settings
+### Validating Application Identity Settings
 
 **Google Cloud Console:**
 - **Cloud Run service name:** Navigate to **Cloud Run → Services** and confirm the service is listed with the expected name (derived from `application_name`).
@@ -138,7 +156,7 @@ gcloud secrets list --project=PROJECT_ID \
 
 ---
 
-## Group 3: Runtime & Scaling
+## 3. Runtime & Scaling
 
 These variables control how the application container is sourced, built, deployed, and scaled on Cloud Run. They are the core settings that determine the runtime behaviour of your application.
 
@@ -162,7 +180,7 @@ These variables control how the application container is sourced, built, deploye
 | `traffic_split` | `[]` *(all traffic to latest)* | List of objects | Defines how incoming traffic is distributed across Cloud Run revisions. Leave empty to send 100% of traffic to the latest revision (default behaviour). Configure this for **canary deployments** (e.g. 90% to stable, 10% to new revision) or **blue-green deployments** (switch 100% to a specific revision on demand). Each entry requires: **`type`** — `TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST` (latest revision) or `TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION` (a named revision). **`percent`** — percentage of traffic (0–100; all entries must sum to exactly 100). **`revision`** — required when type is `REVISION`; the Cloud Run revision name. **`tag`** — optional stable URL tag (e.g. `canary`, `stable`) that creates a dedicated URL for that revision for testing before shifting traffic. |
 | `max_revisions_to_retain` | `7` | Integer `0`–`100` | The maximum number of Cloud Run revisions to keep after each deployment. After every successful `terraform apply`, the module runs `prune-old-revisions.sh` which deletes revisions beyond this limit (sorted oldest-first). **Revisions actively serving traffic are never deleted** — `gcloud` automatically skips them. Set to `0` to disable automatic pruning entirely and retain all revisions indefinitely. Reducing this value limits API quota consumption and keeps the revision list manageable. Only applies to non-Cloud Deploy deployments; Cloud Deploy–managed services are handled separately per stage. Must be between `0` and `100`. |
 
-### Validating Group 3 Settings
+### Validating Runtime & Scaling Settings
 
 **Google Cloud Console:**
 - **Service deployment & scaling:** Navigate to **Cloud Run → Services → *your service*** to confirm the service is deployed. The **Revisions** tab shows all deployed revisions, their traffic split, and scaling configuration.
@@ -205,7 +223,7 @@ gcloud run revisions list \
 
 ---
 
-## Group 4: Environment Variables & Secrets
+## 4. Environment Variables & Secrets
 
 These variables control how configuration and sensitive credentials are delivered to the running container. A key principle here is the separation of **plain-text configuration** (non-sensitive settings injected directly as environment variables) from **sensitive credentials** (injected securely via Secret Manager references, never stored in plaintext).
 
@@ -218,7 +236,7 @@ These variables control how configuration and sensitive credentials are delivere
 | `secret_rotation_period` | `"2592000s"` *(30 days)* | Duration string in seconds, e.g. `"2592000s"` | How frequently Secret Manager publishes a **rotation notification** event via Pub/Sub to prompt the application or a rotation handler to update the secret value. Common values: `"604800s"` (7 days), `"2592000s"` (30 days), `"7776000s"` (90 days). **Important:** this setting does not rotate the secret automatically — it only triggers a notification. The actual rotation logic (generating a new value and updating the secret) must be implemented separately, either via `enable_auto_password_rotation` (for the database password) or a custom Cloud Function/Cloud Run Job. Applies to all secrets managed by this module. |
 | `secret_propagation_delay` | `30` | Integer (seconds) | The number of seconds to wait after a secret is created or updated before proceeding with dependent operations (e.g. deploying a new Cloud Run revision). Secret Manager uses global replication, and a brief delay ensures the new secret version has fully propagated to all regions before instances attempt to read it. **Increase this value** (e.g. to `60` or `90`) if you experience deployment failures with errors indicating a secret version cannot be found, particularly in multi-region deployments. |
 
-### Validating Group 4 Settings
+### Validating Environment Variables & Secrets Settings
 
 **Google Cloud Console:**
 - **Environment variables:** Navigate to **Cloud Run → Services → *your service* → Revisions**, select the latest revision, then click **Container(s)**. Plain-text environment variables are listed under **Environment variables**. Secret references are listed separately under **Secrets**.
@@ -255,7 +273,7 @@ gcloud secrets versions list SECRET_NAME \
 
 ---
 
-## Group 5: Observability & Health
+## 5. Observability & Health
 
 These variables configure how Cloud Run monitors the health of individual container instances and how Cloud Monitoring observes the application from the outside. Properly configured health checks prevent unhealthy instances from serving traffic; uptime checks and alert policies surface failures to your team before users notice them.
 
@@ -266,7 +284,7 @@ These variables configure how Cloud Run monitors the health of individual contai
 | `uptime_check_config` | `{ enabled = true, path = "/" }` | Object | Configures a **Google Cloud Monitoring uptime check** that sends periodic HTTP requests to the application from multiple global locations (typically 6 Google points of presence worldwide). If the application becomes unreachable from a majority of locations, an alert is triggered and sent to `support_users`. Sub-fields: **`enabled`** (`true`/`false`). **`path`** — the HTTP path to probe from the outside, e.g. `/healthz` or `/`. **`check_interval`** — how frequently to probe, in seconds with an `s` suffix (default: `"60s"`; minimum `"60s"`). **`timeout`** — maximum response time before the check is marked as failed (default: `"10s"`; must be less than `check_interval`). Unlike the startup and liveness probes — which are internal container-level checks — the uptime check validates end-to-end reachability from the public internet. This means it also validates DNS, load balancers, and Cloud Armor rules where applicable. |
 | `alert_policies` | `[]` | List of objects | A list of Cloud Monitoring alert policies that trigger email notifications to `support_users` when application metrics exceed defined thresholds. Leave empty to deploy no custom alert policies. Each policy object requires: **`name`** — a descriptive label for the policy (e.g. `"high-latency"`, `"5xx-errors"`). **`metric_type`** — the Cloud Monitoring metric to monitor (see common values below). **`comparison`** — `COMPARISON_GT` (greater than) or `COMPARISON_LT` (less than). **`threshold_value`** — the numeric threshold that triggers the alert. **`duration_seconds`** — how long the condition must be sustained before the alert fires (use `0` to alert immediately). **`aggregation_period`** — the time window for metric aggregation (default: `"60s"`). Common `metric_type` values for Cloud Run: `run.googleapis.com/request_latencies` (request latency in ms), `run.googleapis.com/request_count` (requests per second, filter by `response_code_class` for 5xx), `run.googleapis.com/container/cpu/utilizations` (CPU utilisation, 0–1), `run.googleapis.com/container/memory/utilizations` (memory utilisation, 0–1). |
 
-### Validating Group 5 Settings
+### Validating Observability & Health Settings
 
 **Google Cloud Console:**
 - **Startup & liveness probes:** Navigate to **Cloud Run → Services → *your service* → Revisions**, select the latest revision, then click **Container(s)**. Probe configuration is shown under **Health checks**.
@@ -300,17 +318,17 @@ gcloud monitoring uptime list-configs \
 
 ---
 
-## Group 6: Jobs & Scheduled Tasks
+## 6. Jobs & Scheduled Tasks
 
 These variables define workloads that run alongside the main Cloud Run service but outside the request-response cycle. Initialization jobs run once at deployment time to bootstrap the application; cron jobs handle recurring background work on a schedule; additional services deploy supplementary Cloud Run services that the main application depends on.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `initialization_jobs` | `[{ name = "db-init", … }]` | List of objects | Cloud Run Jobs executed **once during or after deployment** to initialise the application. The default includes a `db-init` job that runs database initialisation scripts. Each job runs sequentially in list order unless dependencies are specified. Key sub-fields: **`name`** — unique identifier for the job (used as the Cloud Run Job name). **`description`** — human-readable label shown in the console. **`image`** — container image to use for the job; defaults to the application image if left blank. **`command`** / **`args`** — the entrypoint command and arguments to run. **`script_path`** — path to a script file relative to the module's scripts directory; used instead of `command`/`args` when running bundled scripts. **`env_vars`** / **`secret_env_vars`** — job-specific environment variables and Secret Manager references (same format as Group 4). **`cpu_limit`** / **`memory_limit`** — resource limits for the job container (default: `1000m` / `512Mi`). **`timeout_seconds`** — maximum duration for the job (default: `600`). **`max_retries`** — number of retry attempts on failure (default: `1`). **`task_count`** — number of parallel tasks (default: `1`; increase for parallel workloads). **`mount_nfs`** — whether to mount the NFS volume (requires `enable_nfs = true`). **`mount_gcs_volumes`** — list of GCS volume names to mount. **`depends_on_jobs`** — list of other job names that must complete successfully before this job runs. **`execute_on_apply`** — when `true`, the job is re-executed on every deployment; when `false`, it runs only once on first deployment. |
+| `initialization_jobs` | `[{ name = "db-init", … }]` | List of objects | Cloud Run Jobs executed **once during or after deployment** to initialise the application. The default includes a `db-init` job that runs database initialisation scripts. Each job runs sequentially in list order unless dependencies are specified. Key sub-fields: **`name`** — unique identifier for the job (used as the Cloud Run Job name). **`description`** — human-readable label shown in the console. **`image`** — container image to use for the job; defaults to the application image if left blank. **`command`** / **`args`** — the entrypoint command and arguments to run. **`script_path`** — path to a script file relative to the module's scripts directory; used instead of `command`/`args` when running bundled scripts. **`env_vars`** / **`secret_env_vars`** — job-specific environment variables and Secret Manager references (same format as §4). **`cpu_limit`** / **`memory_limit`** — resource limits for the job container (default: `1000m` / `512Mi`). **`timeout_seconds`** — maximum duration for the job (default: `600`). **`max_retries`** — number of retry attempts on failure (default: `1`). **`task_count`** — number of parallel tasks (default: `1`; increase for parallel workloads). **`mount_nfs`** — whether to mount the NFS volume (requires `enable_nfs = true`). **`mount_gcs_volumes`** — list of GCS volume names to mount. **`depends_on_jobs`** — list of other job names that must complete successfully before this job runs. **`execute_on_apply`** — when `true`, the job is re-executed on every deployment; when `false`, it runs only once on first deployment. |
 | `cron_jobs` | `[]` | List of objects | Recurring scheduled tasks deployed as Cloud Run Jobs and triggered by **Cloud Scheduler** on a cron schedule. Each job creates a Cloud Run Job resource and a Cloud Scheduler job that invokes it. Key sub-fields: **`name`** — unique identifier for the job. **`schedule`** — cron expression in UTC, e.g. `"0 2 * * *"` (daily at 02:00 UTC), `"*/15 * * * *"` (every 15 minutes), `"0 9 * * 1"` (every Monday at 09:00 UTC). **`image`** — container image; defaults to the application image if blank. **`command`** / **`args`** / **`script_path`** — as per `initialization_jobs`. **`env_vars`** / **`secret_env_vars`** — job-specific configuration and secrets. **`cpu_limit`** / **`memory_limit`** — resource limits (default: `1000m` / `512Mi`). **`timeout_seconds`** — maximum duration (default: `600`). **`max_retries`** — retry attempts on failure (default: `3`). **`task_count`** / **`parallelism`** — number of tasks and how many run in parallel (default: `1` / `0` meaning use Cloud Run default). **`mount_nfs`** / **`mount_gcs_volumes`** — storage volume mounts. **`paused`** — set to `true` to disable the scheduler trigger without removing the job definition. Useful for temporarily suspending a job during maintenance. |
-| `additional_services` | `[]` | List of objects | Supplementary Cloud Run services deployed alongside the main application. Use this for **sidecar-style patterns** where a separate service handles a specific function — for example a dedicated worker process, a Redis-compatible cache proxy, a background queue consumer, or an internal admin interface. Each additional service is a fully independent Cloud Run service. Key sub-fields: **`name`** — unique identifier appended to the application name (e.g. `worker` produces `APPLICATION_NAME-worker`). **`image`** — container image URI (required). **`port`** — port the additional service listens on. **`command`** / **`args`** — entrypoint override. **`env_vars`** — plain-text environment variables for this service. **`cpu_limit`** / **`memory_limit`** — resource limits (default: `1000m` / `512Mi`). **`min_instance_count`** / **`max_instance_count`** — scaling bounds (default: `0` / `1`). **`ingress`** — traffic source restriction for this service; default is `INGRESS_TRAFFIC_INTERNAL_ONLY`, meaning only the main service and other internal GCP services can call it — it is not publicly accessible. **`output_env_var_name`** — if set, the URL of this additional service is automatically injected into the **main** application container as an environment variable with this name, allowing the main app to discover and call it without hardcoding URLs. **`volume_mounts`** — NFS or GCS volumes to mount. **`startup_probe`** / **`liveness_probe`** — per-service health check configuration (same structure as Group 5 probes). |
+| `additional_services` | `[]` | List of objects | Supplementary Cloud Run services deployed alongside the main application. Use this for **sidecar-style patterns** where a separate service handles a specific function — for example a dedicated worker process, a Redis-compatible cache proxy, a background queue consumer, or an internal admin interface. Each additional service is a fully independent Cloud Run service. Key sub-fields: **`name`** — unique identifier appended to the application name (e.g. `worker` produces `APPLICATION_NAME-worker`). **`image`** — container image URI (required). **`port`** — port the additional service listens on. **`command`** / **`args`** — entrypoint override. **`env_vars`** — plain-text environment variables for this service. **`cpu_limit`** / **`memory_limit`** — resource limits (default: `1000m` / `512Mi`). **`min_instance_count`** / **`max_instance_count`** — scaling bounds (default: `0` / `1`). **`ingress`** — traffic source restriction for this service; default is `INGRESS_TRAFFIC_INTERNAL_ONLY`, meaning only the main service and other internal GCP services can call it — it is not publicly accessible. **`output_env_var_name`** — if set, the URL of this additional service is automatically injected into the **main** application container as an environment variable with this name, allowing the main app to discover and call it without hardcoding URLs. **`volume_mounts`** — NFS or GCS volumes to mount. **`startup_probe`** / **`liveness_probe`** — per-service health check configuration (same structure as §5 probes). |
 
-### Validating Group 6 Settings
+### Validating Jobs & Scheduled Tasks Settings
 
 **Google Cloud Console:**
 - **Initialization & cron jobs:** Navigate to **Cloud Run → Jobs** to view all Cloud Run Jobs, their last execution status, and execution history.
@@ -352,7 +370,7 @@ gcloud run services list \
 
 ---
 
-## Group 7: CI/CD & GitHub Integration
+## 7. CI/CD & GitHub Integration
 
 These variables configure automated build and deployment pipelines. The module supports two pipeline models: a simple **Cloud Build** model where every qualifying code push builds and deploys directly to Cloud Run, and a more advanced **Cloud Deploy** model that introduces a promotion-based pipeline with defined stages and optional manual approvals between them.
 
@@ -369,7 +387,7 @@ These variables configure automated build and deployment pipelines. The module s
 | `enable_binary_authorization` | `false` | `true` / `false` | Enforces **Binary Authorization** on the Cloud Run service, requiring all container images to carry a valid cryptographic attestation before they can be deployed. This prevents unverified, unsigned, or tampered images from running. When `true`, the module's `app_security` sub-module automatically creates the KMS signing keyring, attestor, and Binary Authorization policy if they do not already exist — no manual pre-configuration is required. If `Services_GCP` has already provisioned these resources, they are detected and reused. Use in regulated environments (financial services, healthcare) where supply chain security and image provenance must be enforced. |
 | `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` | `ALWAYS_ALLOW` / `REQUIRE_ATTESTATION` / `ALWAYS_DENY` | Enforcement mode for the Binary Authorization policy. Only applies when `enable_binary_authorization` is `true` and `Services_GCP` has not already configured the policy. **`ALWAYS_ALLOW`:** permits any image; useful while setting up the pipeline. **`REQUIRE_ATTESTATION`:** enforces that every deployed image carries a valid cryptographic signature from the CI/CD pipeline attestor. **`ALWAYS_DENY`:** blocks all deployments; use only for lockdown scenarios. Start with `ALWAYS_ALLOW`, verify that your pipeline produces valid attestations, then promote to `REQUIRE_ATTESTATION` for production. |
 
-### Validating Group 7 Settings
+### Validating CI/CD & GitHub Integration Settings
 
 **Google Cloud Console:**
 - **Cloud Build triggers:** Navigate to **Cloud Build → Triggers** to view the trigger, its connected repository, branch pattern, and last build status.
@@ -421,7 +439,7 @@ gcloud container binauthz policy export \
 
 ---
 
-## Group 8: Storage & Filesystem — NFS
+## 8. Storage & Filesystem — NFS
 
 These variables configure **Network File System (NFS)** shared storage for the application, backed by Google Cloud Filestore. NFS provides a POSIX-compliant shared filesystem that is simultaneously accessible by all Cloud Run instances, making it suitable for workloads that require shared persistent state across multiple container instances — such as user-uploaded media files, shared caches, or application data that must survive container restarts.
 
@@ -435,7 +453,7 @@ These variables configure **Network File System (NFS)** shared storage for the a
 | `nfs_instance_name` | `""` *(auto-discover)* | String | The name of a specific existing NFS server (GCE VM) to connect to. When set, the module targets this instance directly and skips auto-discovery. Leave blank to allow the module to auto-discover a `Services_GCP`-managed NFS instance in the project, or to create a new inline NFS VM if none is found. Use this when you have multiple NFS servers in the project and need to explicitly control which one this deployment connects to, or when the auto-discovery would select the wrong instance. |
 | `nfs_instance_base_name` | `"app-nfs"` | String | The base name for a new inline NFS GCE VM created when no existing NFS server is found in the project. The deployment ID is appended automatically to ensure uniqueness (e.g. `app-nfs-prod`). Change this only if the default name conflicts with an existing resource or if your naming convention requires a different prefix. Only relevant when no existing NFS instance is discovered and the module needs to provision one. |
 
-### Validating Group 8 Settings
+### Validating Storage & Filesystem — NFS Settings
 
 **Google Cloud Console:**
 - **NFS instance (Filestore):** If using Cloud Filestore, navigate to **Filestore → Instances** to confirm the instance exists, its tier, capacity, and IP address.
@@ -476,7 +494,7 @@ gcloud logging read \
 
 ---
 
-## Group 9: Storage, Filesystem & Image Registry
+## 9. Storage, Filesystem & Image Registry
 
 These variables configure **Google Cloud Storage (GCS)** and **Artifact Registry** image lifecycle management for the application. GCS provides two distinct integration patterns: standard **object storage** (buckets the application reads and writes via the GCS API or client libraries), and **GCS Fuse** mounts (buckets surfaced as a POSIX filesystem path directly inside the container). A KMS encryption option is available for buckets that require customer-managed encryption keys. The Artifact Registry cleanup policy variables at the end of this group govern automatic image pruning for the inline-created repository.
 
@@ -493,7 +511,7 @@ These variables configure **Google Cloud Storage (GCS)** and **Artifact Registry
 | `delete_untagged_images` | `true` | `true` / `false` | When `true`, automatically deletes untagged container images (dangling build layers and intermediate artefacts) from the inline-created Artifact Registry repository. Images protected by `max_images_to_retain` are never deleted regardless of tag state. Only affects images scoped to this deployment's application name — other image names in the same repository are not touched. Disable this (`false`) only if your build pipeline intentionally relies on untagged manifests as intermediaries. |
 | `image_retention_days` | `30` | Integer `0`–`3650` | Number of days after which container images are eligible for deletion from the inline-created Artifact Registry repository. Images within the `max_images_to_retain` count are always preserved regardless of age. Only affects images scoped to this deployment's application name. Set to `0` to disable age-based deletion. **For production environments**, a value of `30`–`90` days keeps a reasonable history for rollback while preventing unbounded registry growth. Must be between `0` and `3650` (10 years). |
 
-### Validating Group 9 Settings
+### Validating Storage, Filesystem & Image Registry Settings
 
 **Google Cloud Console:**
 - **GCS buckets:** Navigate to **Cloud Storage → Buckets** to confirm buckets are created with the expected names, locations, and storage classes. Click a bucket to view its configuration including versioning, lifecycle rules, and access settings.
@@ -543,7 +561,7 @@ gcloud artifacts docker images list \
 
 ---
 
-## Group 10: Redis Cache
+## 10. Redis Cache
 
 These variables configure Redis connectivity for the application. Rather than provisioning a Redis instance directly, the module injects the Redis connection details as environment variables (`REDIS_HOST`, `REDIS_PORT`, and optionally `REDIS_AUTH`) into the Cloud Run container. The application is responsible for reading these variables and establishing the connection. This design allows the module to connect to any Redis-compatible service — Google Cloud Memorystore, a self-hosted Redis VM, or a third-party Redis provider.
 
@@ -554,7 +572,7 @@ These variables configure Redis connectivity for the application. Rather than pr
 | `redis_port` | `"6379"` | Port number as string | The TCP port of the Redis server, injected as the `REDIS_PORT` environment variable. The default `6379` is the standard Redis port and is correct for most deployments including Cloud Memorystore. Change only if your Redis instance is configured to listen on a non-standard port. Only used when `enable_redis` is `true`. |
 | `redis_auth` | `""` *(no authentication)* | Password string *(sensitive)* | The authentication password for the Redis server. When set, this value is stored in Secret Manager and injected securely into the container — it is never stored in plaintext. Leave empty if the Redis instance does not require authentication (acceptable for development environments or instances only accessible within a private VPC). **For production deployments using Cloud Memorystore with AUTH enabled**, set this to the instance's auth string (found in **Memorystore → Redis → *instance* → AUTH string**). For self-hosted Redis, set this to the value configured in the `requirepass` directive. Enabling AUTH is strongly recommended for any Redis instance accessible over a network, even a private one, as it provides defence in depth. |
 
-### Validating Group 10 Settings
+### Validating Redis Cache Settings
 
 **Google Cloud Console:**
 - **Memorystore Redis instance:** Navigate to **Memorystore → Redis** to confirm the instance exists, its IP address, port, and AUTH status.
@@ -587,7 +605,7 @@ gcloud run services describe SERVICE_NAME \
 
 ---
 
-## Group 11: Database Backend
+## 11. Database Backend
 
 These variables configure the Cloud SQL database backend for the application. The module supports PostgreSQL, MySQL, and SQL Server. It can provision a new Cloud SQL instance automatically, connect to an existing instance, or skip database provisioning entirely. Database credentials are generated securely and injected into the application via Secret Manager — the application receives `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` as environment variables.
 
@@ -604,10 +622,10 @@ These variables configure the Cloud SQL database backend for the application. Th
 | `postgres_extensions` | `[]` | List of extension name strings | The PostgreSQL extensions to install in the application database. Only used when `enable_postgres_extensions` is `true`. Common extensions: `postgis` (geospatial data), `uuid-ossp` (UUID generation), `pg_trgm` (trigram text search), `pgcrypto` (cryptographic functions), `hstore` (key-value storage), `pg_stat_statements` (query performance tracking). Ensure the extension is supported by the Cloud SQL PostgreSQL version in use — not all extensions available in self-hosted PostgreSQL are available in Cloud SQL. |
 | `enable_mysql_plugins` | `false` | `true` / `false` | When `true`, the MySQL plugins listed in `mysql_plugins` are installed in the application database after provisioning. Only applies when `database_type` is a MySQL variant. Functions similarly to `enable_postgres_extensions` for MySQL environments. |
 | `mysql_plugins` | `[]` | List of plugin name strings | The MySQL plugins to install in the application database. Only used when `enable_mysql_plugins` is `true`. Common plugins: `audit_log` (audit logging for compliance), `validate_password` (password strength enforcement). Verify plugin availability for your specific MySQL version in Cloud SQL before enabling. |
-| `enable_auto_password_rotation` | `false` | `true` / `false` | When `true`, deploys an automated password rotation mechanism consisting of a Cloud Run rotation Job and an Eventarc trigger that fires when Secret Manager publishes a rotation notification. The rotation job generates a new database password, updates both the Cloud SQL user and the Secret Manager secret, then restarts the Cloud Run service to pick up the new credentials. The rotation frequency is governed by `secret_rotation_period` (Group 4). **Recommended for production environments** to limit the blast radius of a leaked database credential. Only applies when `database_type` is not `NONE`. |
+| `enable_auto_password_rotation` | `false` | `true` / `false` | When `true`, deploys an automated password rotation mechanism consisting of a Cloud Run rotation Job and an Eventarc trigger that fires when Secret Manager publishes a rotation notification. The rotation job generates a new database password, updates both the Cloud SQL user and the Secret Manager secret, then restarts the Cloud Run service to pick up the new credentials. The rotation frequency is governed by `secret_rotation_period` (§4). **Recommended for production environments** to limit the blast radius of a leaked database credential. Only applies when `database_type` is not `NONE`. |
 | `rotation_propagation_delay_sec` | `90` | Integer (seconds) | The number of seconds to wait after a new database password is written to Secret Manager before restarting the Cloud Run service. This delay allows Secret Manager's global replication to complete so the new secret version is available in all regions before instances attempt to read it. **Increase this value** (e.g. to `120`) in multi-region deployments or if you observe rotation failures where instances start with the new credentials before the secret has fully propagated. Only used when `enable_auto_password_rotation` is `true`. |
 
-### Validating Group 11 Settings
+### Validating Database Backend Settings
 
 **Google Cloud Console:**
 - **Cloud SQL instance:** Navigate to **SQL** to confirm the instance exists, its database engine, version, region, and connection name.
@@ -655,7 +673,7 @@ gcloud eventarc triggers list \
 
 ---
 
-## Group 12: Backup & Maintenance
+## 12. Backup & Maintenance
 
 These variables configure automated database backup scheduling and one-time backup import. The module provisions a Cloud Run Job to perform database dumps, a Cloud Scheduler trigger to run it on a defined schedule, and a GCS bucket to store the resulting backup files. A separate one-time import mechanism allows an existing backup to be restored into the database during deployment — useful for seeding a new environment with production data.
 
@@ -670,7 +688,7 @@ These variables configure automated database backup scheduling and one-time back
 | `backup_file` | `"backup.sql"` | Filename string | The filename of the backup file to import into the database. The file must exist at the configured source (`backup_source`) before deployment begins. For GCS, the file must be present in the module's backup bucket. Examples: `"backup.sql"`, `"2024-01-15-dump.sql.gz"`, `"production-snapshot.tar"`. Only used when `enable_backup_import` is `true`. Ensure the filename exactly matches the file present in the source, including extension — a mismatch will cause the import job to fail. |
 | `backup_format` | `"sql"` | `sql` / `tar` / `gz` / `tgz` / `tar.gz` / `zip` / `auto` | The format of the backup file to be imported. Must match the actual format of `backup_file`. **`sql`**: plain-text SQL dump (e.g. `pg_dump` or `mysqldump` output). **`gz`**: gzip-compressed SQL dump. **`tar`** / **`tgz`** / **`tar.gz`**: tar archive (optionally compressed). **`zip`**: ZIP archive. **`auto`**: the import job attempts to detect the format automatically from the file extension — use this when the format may vary between runs, but explicit values are preferred for reliability. Only used when `enable_backup_import` is `true`. |
 
-### Validating Group 12 Settings
+### Validating Backup & Maintenance Settings
 
 **Google Cloud Console:**
 - **Backup schedule (Cloud Scheduler):** Navigate to **Cloud Scheduler** to confirm the backup job trigger exists, its schedule, last run time, and status (enabled/paused).
@@ -708,7 +726,7 @@ gcloud scheduler jobs run SCHEDULER_JOB_NAME \
 
 ---
 
-## Group 13: Custom Initialisation & SQL
+## 13. Custom Initialisation & SQL
 
 These variables enable the execution of custom SQL scripts against the application database during deployment. This provides a flexible mechanism for applying schema changes, installing stored procedures, creating roles, or loading seed data that cannot be handled by the application's own migration framework. Scripts are retrieved from a GCS bucket and executed in lexicographic (alphabetical) order, making it straightforward to version and sequence migrations.
 
@@ -721,7 +739,7 @@ These variables enable the execution of custom SQL scripts against the applicati
 | `custom_sql_scripts_path` | `""` | GCS path prefix string | The path prefix within the GCS bucket from which SQL scripts are retrieved. All `.sql` files found under this prefix are executed in **lexicographic (alphabetical) order**. Use a naming convention such as `001_create_tables.sql`, `002_add_indexes.sql`, `003_seed_data.sql` to control execution order precisely. Examples: `"init/"` — runs all `.sql` files in the `init/` folder; `"migrations/v2/"` — runs all `.sql` files in a versioned subfolder. Required when `enable_custom_sql_scripts` is `true`. Ensure no unwanted `.sql` files exist under the prefix, as all matching files will be executed. |
 | `custom_sql_scripts_use_root` | `false` | `true` / `false` | Controls which database user executes the custom SQL scripts. **`false` (default):** scripts run as the application database user (`application_database_user`), which has permissions scoped to the application database only. This is the **recommended setting** for most scripts. **`true`:** scripts run as the root (superuser) database account. Enable only when scripts require elevated privileges not available to the application user — for example, creating PostgreSQL extensions (`CREATE EXTENSION`), creating additional roles (`CREATE ROLE`), or modifying database-level configuration. **Use with caution:** running arbitrary SQL as root carries a higher risk of accidental or destructive changes to the database instance. |
 
-### Validating Group 13 Settings
+### Validating Custom Initialisation & SQL Settings
 
 **Google Cloud Console:**
 - **Script execution job:** Navigate to **Cloud Run → Jobs** and look for the SQL scripts job (named after the application). Select the job and click **Executions** to view run history, status, and logs.
@@ -756,7 +774,7 @@ gcloud logging read \
 
 ---
 
-## Group 14: Access & Networking
+## 14. Access & Networking
 
 These variables control how traffic reaches the Cloud Run service and how the service connects outbound to other GCP resources. Correct configuration here is essential for both security (restricting public internet exposure) and connectivity (ensuring the service can reach private Cloud SQL instances, Memorystore, or NFS volumes over VPC).
 
@@ -767,7 +785,7 @@ These variables control how traffic reaches the Cloud Run service and how the se
 | `network_name` | `""` *(auto-discovered)* | VPC network name string | The name of the VPC network to attach the Cloud Run service to for egress routing and Direct VPC Egress. Leave empty to allow the module to auto-discover the single Services_GCP-managed network in the project. **Specify a value** when more than one Services_GCP-managed network exists in the project, or when you want to attach the service to a specific network. The network must exist in the same project. Changing this value will trigger a new Cloud Run revision. |
 | `fallback_region` | `"us-central1"` | GCP region string | The GCP region used when no Services_GCP subnet mapping can be auto-discovered for the project. Override this when deploying to a project whose primary region is not `us-central1` and where Services_GCP has not been deployed (or its region data is not yet propagated). Example: `"europe-west1"`, `"asia-northeast1"`. Has no effect when a Services_GCP-managed subnet is successfully auto-discovered, as the region is inferred from the subnet. |
 
-### Validating Group 14 Settings
+### Validating Access & Networking Settings
 
 **Google Cloud Console:**
 - **Ingress settings:** Navigate to **Cloud Run → Services → *your service* → Details** tab. Under **Networking**, confirm the ingress setting matches the configured value.
@@ -788,11 +806,11 @@ gcloud run services describe SERVICE_NAME \
 
 ---
 
-## Group 15: Identity-Aware Proxy
+## 15. Identity-Aware Proxy
 
 These variables configure Identity-Aware Proxy (IAP) in front of the Cloud Run service, requiring Google-identity authentication before users can access the application. IAP enforces access at the proxy layer — no application code changes are needed to add authentication. It is recommended for internal tools, admin interfaces, or any application where access should be restricted to known Google identities. `enable_iap` is the master switch; `iap_authorized_users` and `iap_authorized_groups` define who is permitted access.
 
-> **Note:** For IAP to function correctly, `ingress_settings` (Group 14) should be set to `internal-and-cloud-load-balancing` when the service is fronted by a GCLB, or `all` for direct IAP-protected Cloud Run services.
+> **Note:** For IAP to function correctly, `ingress_settings` (§14) should be set to `internal-and-cloud-load-balancing` when the service is fronted by a GCLB, or `all` for direct IAP-protected Cloud Run services.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -800,7 +818,7 @@ These variables configure Identity-Aware Proxy (IAP) in front of the Cloud Run s
 | `iap_authorized_users` | `[]` | List of `"user:email"` or `"serviceAccount:email"` strings | Individual users or service accounts granted the `IAP-secured Web App User` role, permitting them to access the application through IAP. Only active when `enable_iap` is `true`. Each entry must use the IAM member format: `"user:alice@example.com"` for a Google account, or `"serviceAccount:ci-runner@project.iam.gserviceaccount.com"` for a service account (e.g. to allow CI/CD pipelines or health check agents to bypass the sign-in page). Adding an address here does **not** grant any other GCP IAM permissions on the project — it only controls access to the IAP-protected application. For team-level access management, prefer `iap_authorized_groups` over individual user entries. |
 | `iap_authorized_groups` | `[]` | List of `"group:name@domain"` strings | Google Groups granted the `IAP-secured Web App User` role. Only active when `enable_iap` is `true`. Each entry must use the IAM member format: `"group:engineering@example.com"`. Using groups is the recommended approach for granting access to teams, as membership can be managed centrally in Google Workspace or Cloud Identity without requiring a Terraform re-apply. Combining `iap_authorized_groups` with `iap_authorized_users` is supported — access is granted to the union of both lists. |
 
-### Validating Group 15 Settings
+### Validating Identity-Aware Proxy Settings
 
 **Google Cloud Console:**
 - **IAP status:** Navigate to **Security → Identity-Aware Proxy**. The Cloud Run service should appear in the list with IAP enabled. The **Access** column shows the number of authorised principals.
@@ -821,13 +839,13 @@ gcloud compute backend-services list \
 
 ---
 
-## Group 16: Cloud Armor & CDN
+## 16. Cloud Armor & CDN
 
 These variables configure a Global HTTPS Load Balancer fronting the Cloud Run service, with optional Cloud Armor WAF protection, custom domain SSL termination, and Cloud CDN edge caching. Enabling this group is required whenever the application needs a stable custom domain with a Google-managed SSL certificate, DDoS mitigation, IP-based access controls, or globally cached static content. All four variables work together as a unit — `enable_cloud_armor` is the master switch, and the remaining variables refine its behaviour.
 
 > **Note:** Provisioning a Global HTTPS Load Balancer and Cloud Armor policy incurs additional GCP costs beyond Cloud Run pricing. Review the [Cloud Armor pricing page](https://cloud.google.com/armor/pricing) before enabling in production.
 
-> **Note:** When `enable_cloud_armor` is `true`, set `ingress_settings` (Group 14) to `internal-and-cloud-load-balancing` to ensure the Cloud Run service only accepts traffic that has passed through the load balancer and Cloud Armor policy.
+> **Note:** When `enable_cloud_armor` is `true`, set `ingress_settings` (§14) to `internal-and-cloud-load-balancing` to ensure the Cloud Run service only accepts traffic that has passed through the load balancer and Cloud Armor policy.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -836,7 +854,7 @@ These variables configure a Global HTTPS Load Balancer fronting the Cloud Run se
 | `application_domains` | `[]` | List of domain name strings (e.g. `["app.example.com", "www.example.com"]`) | Custom domain names to associate with the load balancer. A Google-managed SSL certificate is provisioned automatically for each domain, handling certificate issuance and renewal without manual intervention. After deployment, the load balancer's external IP address is output by Terraform — **DNS A records for each domain must be pointed to this IP** before the certificate can be issued and the domain will serve traffic. Certificate provisioning typically takes 10–60 minutes after DNS propagation. Leave empty if you do not need a custom domain and are content with the default `*.run.app` URL. Only used when `enable_cloud_armor` is `true`. |
 | `enable_cdn` | `false` | `true` / `false` | Enables Cloud CDN on the load balancer backend, caching HTTP responses at Google's global edge network. When `true`, cacheable responses (those with appropriate `Cache-Control` headers) are served from the nearest edge PoP, reducing latency for geographically distributed users and reducing load on the Cloud Run origin. Only applies when `enable_cloud_armor` is `true`. **Recommended for** applications serving static assets, images, or public API responses that change infrequently. **Not recommended for** applications with session-based or highly personalised responses where caching would cause users to receive incorrect content. Ensure your application sets correct `Cache-Control` headers to control what is and is not cached at the edge. |
 
-### Validating Group 16 Settings
+### Validating Cloud Armor & CDN Settings
 
 **Google Cloud Console:**
 - **Load balancer:** Navigate to **Network services → Load balancing** and confirm a HTTPS load balancer named after the application is listed. Click it to view frontends, backends, and the associated Cloud Armor policy.
@@ -874,7 +892,7 @@ dig +short app.example.com
 
 ---
 
-## Group 17: VPC Service Controls & Audit Logging
+## 17. VPC Service Controls & Audit Logging
 
 These variables control VPC Service Controls (VPC-SC) perimeter enforcement and project-level audit logging. Setting `enable_vpc_sc = true` causes the module to **self-provision** a full VPC-SC perimeter via `App_Common/modules/app_vpc_sc` — Services_GCP and a pre-existing Access Context Manager policy are **no longer required**. `enable_audit_logging` expands the default `ADMIN_WRITE`-only audit log capture to include `ADMIN_READ`, `DATA_READ`, and `DATA_WRITE` for all GCP services plus per-service overrides for Secret Manager and Cloud KMS.
 
@@ -886,13 +904,13 @@ These variables control VPC Service Controls (VPC-SC) perimeter enforcement and 
 |---|---|---|---|
 | `enable_vpc_sc` | `false` | `true` / `false` | When `true`, the module provisions a complete VPC-SC perimeter around the GCP APIs it consumes — access policy (reused if one already exists at the org), four access levels (VPC network, admin IPs, IAP service agent, CI/CD Cloud Build SA), and a `PERIMETER_TYPE_REGULAR` service perimeter restricting Cloud Run, Cloud SQL, Secret Manager, Cloud Storage, Artifact Registry, Cloud Build, KMS, Pub/Sub, Redis, Filestore, Firestore, IAP, Certificate Manager, and Compute. This is primarily a **data exfiltration prevention** control — it blocks API access from outside the perimeter regardless of IAM permissions. Auto-skips with a warning when the project has no organization (standalone), when it is folder-nested without an explicit `organization_id`, or when `admin_ip_ranges` is empty (lockout protection). Perimeter and access-level names are suffixed with `deployment_id` to avoid collisions across deployments. |
 | `vpc_sc_dry_run` | `true` | `true` / `false` | When `true`, perimeter violations are logged but **not enforced** — recommended for the initial rollout of every deployment. Validate that the dry-run log is free of denied calls before flipping to `false` to activate enforcement. Flipping back to `true` disables enforcement without deleting the perimeter. Only effective when `enable_vpc_sc = true`. |
-| `vpc_cidr_ranges` | `[]` | List of CIDR strings | Explicit VPC subnet CIDR ranges to include in the VPC network access level. When empty (default), the module auto-discovers the subnets of the VPC network used for this deployment (see `network_name` in Group 14) and uses their CIDR ranges. Falls back to `10.0.0.0/8` if neither an explicit list nor an auto-discoverable network is available. Only effective when `enable_vpc_sc = true`. |
+| `vpc_cidr_ranges` | `[]` | List of CIDR strings | Explicit VPC subnet CIDR ranges to include in the VPC network access level. When empty (default), the module auto-discovers the subnets of the VPC network used for this deployment (see `network_name` in §14) and uses their CIDR ranges. Falls back to `10.0.0.0/8` if neither an explicit list nor an auto-discoverable network is available. Only effective when `enable_vpc_sc = true`. |
 | `organization_id` | `""` | GCP numeric org ID (e.g. `"123456789012"`) | GCP Organization ID used for the Access Context Manager policy parent. Auto-discovered from the project when it sits directly under an organization. **Must be set explicitly when the project is nested under a folder** — the org ID cannot be auto-discovered for folder-nested projects and `enable_vpc_sc = true` will log a warning and skip provisioning until it is supplied. Leave empty for projects with no organization (standalone) — VPC-SC is unavailable in that case regardless. |
 | `enable_audit_logging` | `false` | `true` / `false` | When `true`, the module enables detailed Cloud Audit Logs for the entire project: `ADMIN_READ`, `DATA_READ`, and `DATA_WRITE` for all GCP services, plus explicit per-service overrides for Secret Manager and Cloud KMS to guarantee sensitive access is always logged. Equivalent to `Services_GCP enable_audit_logging = true`. **Recommended for** compliance-sensitive environments (PCI, HIPAA, SOC 2). **Trade-off:** Significantly increases Cloud Logging storage volume and associated costs — apps with high request throughput or heavy Secret Manager / KMS usage should budget for the extra log ingestion. Safe to toggle at any time; does not affect running workloads. |
 
-> **Note:** `admin_ip_ranges` (Group 16) is **dual-purpose**: besides exempting trusted IPs from Cloud Armor WAF rules, those same CIDRs are used as the admin-access level CIDRs in the VPC-SC perimeter when `enable_vpc_sc = true`. An empty `admin_ip_ranges` will cause `enable_vpc_sc = true` to skip provisioning with a warning, to prevent an admin lockout.
+> **Note:** `admin_ip_ranges` (§16) is **dual-purpose**: besides exempting trusted IPs from Cloud Armor WAF rules, those same CIDRs are used as the admin-access level CIDRs in the VPC-SC perimeter when `enable_vpc_sc = true`. An empty `admin_ip_ranges` will cause `enable_vpc_sc = true` to skip provisioning with a warning, to prevent an admin lockout.
 
-### Validating Group 17 Settings
+### Validating VPC Service Controls & Audit Logging Settings
 
 **Google Cloud Console:**
 - **VPC-SC perimeter:** Navigate to **Security → VPC Service Controls**. Confirm that a perimeter named `perimeter_<project_id>_<deployment_id>` exists and that its **Restricted services** list includes the APIs used by this module (Cloud Run, Cloud SQL, Cloud Storage, Secret Manager, Artifact Registry, Cloud Build, KMS, Pub/Sub, etc.).

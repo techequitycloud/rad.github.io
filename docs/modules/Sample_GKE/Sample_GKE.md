@@ -1,14 +1,14 @@
-# Sample_GKE Module
+# Sample GKE Module
 
 `Sample_GKE` is a **wrapper module** that sits on top of [`App_GKE`](../App_GKE/App_GKE.md). It deploys a pre-configured reference Flask application (Python 3.11, PostgreSQL 15, optional Redis, optional NFS) on GKE Autopilot. Its purpose is to serve as a working example of how to build a custom application module on top of `App_GKE`.
 
-Most configuration variables in `Sample_GKE` are passed through unchanged to `App_GKE`. For the meaning, options, validation steps, and `gcloud` CLI commands for any variable that appears in `App_GKE`, refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). This guide documents only what is **unique to `Sample_GKE`**: its layered architecture, the pre-configured application it ships, and the specific behaviours it imposes on top of `App_GKE`.
+> This guide documents variables that are **unique to `Sample_GKE`** or that have **Sample-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
 ---
 
-## Module Architecture
+## 1. Module Architecture
 
 `Sample_GKE` composes two internal layers:
 
@@ -31,7 +31,7 @@ You do not interact with `Sample_Common` directly. All inputs are exposed as var
 
 ---
 
-## Pre-configured Application
+## 2. Pre-configured Application
 
 When deployed with default settings, `Sample_GKE` provides:
 
@@ -48,9 +48,11 @@ The `db-init` job and the `SECRET_KEY` secret are managed entirely by the module
 
 ---
 
-## Behaviours Unique to Sample_GKE
+## 3. Platform-Managed Behaviours
 
-### 1. Minimum Instance Count Override
+The following behaviours are applied automatically by `Sample_GKE` (via the `Sample_Common` sub-module) regardless of variable values in your `tfvars` file.
+
+### A. Minimum Instance Count Override
 
 The `min_instance_count` variable is exposed so you can tune it, but `Sample_GKE` internally overrides the value passed to `App_GKE` to be at least `1`:
 
@@ -63,7 +65,7 @@ sample_module = merge(module.sample_app.config, {
 
 **Why:** Unlike Cloud Run, GKE Autopilot does not natively support true scale-to-zero for standard Deployments. Setting `min_instance_count = 1` ensures at least one pod is always ready to serve traffic without a cold-start delay. If you set `min_instance_count = 0` in your configuration, the module overrides it to `1` internally.
 
-### 2. Redis Host Fallback to Sidecar (`127.0.0.1`)
+### B. Redis Host Fallback to Sidecar (`127.0.0.1`)
 
 When `enable_redis = true` and `redis_host` is not set (or is empty), `Sample_GKE` injects `REDIS_HOST=127.0.0.1` into the application:
 
@@ -78,7 +80,7 @@ REDIS_HOST = var.enable_redis ? (
 
 **Contrast with `Sample_CloudRun`:** Cloud Run does not support pod-level co-location, so `Sample_CloudRun` does **not** fall back to `127.0.0.1` — you must always provide an explicit `redis_host` when using Redis with Cloud Run.
 
-### 3. Explicit Secret Value Injection (`explicit_secret_values`)
+### C. Explicit Secret Value Injection (`explicit_secret_values`)
 
 `Sample_GKE` passes the raw value of the Flask `SECRET_KEY` directly to `App_GKE` via the `explicit_secret_values` mechanism:
 
@@ -93,7 +95,7 @@ explicit_secret_values = {
 
 This is a GKE-specific pattern. `Sample_CloudRun` does not use `explicit_secret_values` because Cloud Run fetches secrets from Secret Manager at instance startup (after propagation is complete), avoiding this timing issue.
 
-### 4. Resource Naming (`resource_prefix`)
+### D. Resource Naming (`resource_prefix`)
 
 `Sample_GKE` computes a deterministic `resource_prefix` and passes it to `Sample_Common` so that the Flask `SECRET_KEY` secret name is aligned with the naming convention used by `App_GKE` for all other resources:
 
@@ -105,7 +107,7 @@ This ensures the Secret Manager secret created by `Sample_Common` is named consi
 
 ---
 
-## Configuration Reference
+## 4. Configuration Reference
 
 All configuration variables in `Sample_GKE` are passed through to `App_GKE`. The table below maps each configuration group to the corresponding section of the `App_GKE` Configuration Guide, noting any `Sample_GKE`-specific defaults or overrides.
 
@@ -149,7 +151,7 @@ All configuration variables in `Sample_GKE` are passed through to `App_GKE`. The
 
 ---
 
-## Redis Configuration Summary
+## 5. Redis Configuration Summary
 
 The table below summarises the three Redis-related variables and how they interact with the module's behaviour. The Redis integration is provided by App_GKE — see [§8.A Redis / Memorystore](../App_GKE/App_GKE.md#a-redis--memorystore) for the full integration reference.
 
@@ -162,7 +164,7 @@ The table below summarises the three Redis-related variables and how they intera
 
 ---
 
-## Validating a Sample_GKE Deployment
+## 6. Validating a Sample_GKE Deployment
 
 Because `Sample_GKE` delegates all infrastructure to `App_GKE`, validation follows the same procedures described in the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). The additional resources managed by `Sample_Common` can be validated as follows:
 

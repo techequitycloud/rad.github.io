@@ -48,7 +48,9 @@ GCS-backed state uses native object locking. When a lock is unexpectedly held (e
 3. **Release the lock** — `tofu force-unlock <LOCK_ID>` from within the module directory with the same backend configuration as the pipeline. Only the deployment owner or a platform engineer should do this.
 4. **Inspect state before re-applying** — run `tofu plan` and review the diff carefully before re-running `apply`. A crashed mid-apply may have partially created resources.
 
-Never delete the lock file directly — this corrupts the state metadata.
+:::danger
+Never delete the lock file directly — this corrupts the state metadata and can cause state divergence that is difficult to recover without manual state surgery.
+:::
 
 ## Developer self-service
 
@@ -156,3 +158,5 @@ Each module ships two markdown files:
 - [IDP](./idp.md) — four-tier module pattern (the structural side of "infrastructure as code")
 - [CI/CD](./cicd.md) — the pipeline that runs `tofu apply`, validation gates, integration tests
 - [DevSecOps](./devsecops.md) — secret-out-of-state mechanics, state integrity
+- [FinOps](./finops.md) — lifecycle policies, cost allocation via `deployment_id`
+- [SRE](./sre.md) — rollback procedures, DORA metric tracking via pipeline events

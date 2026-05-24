@@ -1,6 +1,6 @@
-# Strapi_Common Module
+# Strapi Common Module
 
-## Overview
+## 1. Overview
 
 `Strapi_Common` is a pure-configuration Terraform module in the RAD Modules ecosystem. It generates a `config` object consumed by platform modules (`App_CloudRun`, `App_GKE`) to deploy Strapi — an open-source headless CMS — on Google Cloud. The module provisions five GCP Secret Manager secrets (JWT signing keys, token salts, and application keys), defines one GCS bucket for media uploads, and emits all container configuration as Terraform outputs.
 
@@ -8,7 +8,7 @@ Strapi has specific cryptographic requirements: four distinct secrets must be co
 
 ---
 
-## Architecture
+## 2. Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -44,7 +44,7 @@ Strapi has specific cryptographic requirements: four distinct secrets must be co
 
 ---
 
-## GCP Resources Created
+## 3. GCP Resources Created
 
 | Resource | Name Pattern | Description |
 |----------|-------------|-------------|
@@ -69,7 +69,7 @@ Strapi has specific cryptographic requirements: four distinct secrets must be co
 
 ---
 
-## Module Outputs
+## 4. Module Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
@@ -93,9 +93,9 @@ The `secret_ids` output has `depends_on = [time_sleep.secret_propagation]`, ensu
 
 ---
 
-## Input Variables
+## 5. Input Variables
 
-### Identity & Project
+### A. Identity & Project
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -105,7 +105,7 @@ The `secret_ids` output has `depends_on = [time_sleep.secret_propagation]`, ensu
 | `deployment_region` | string | `"us-central1"` | Region for the GCS bucket |
 | `resource_labels` | map(string) | `{}` | Labels on all GCP resources |
 
-### Application
+### B. Application
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -116,7 +116,7 @@ The `secret_ids` output has `depends_on = [time_sleep.secret_propagation]`, ensu
 | `db_name` | string | `"strapi"` | PostgreSQL database name |
 | `db_user` | string | `"strapi"` | PostgreSQL database user |
 
-### Resources
+### C. Resources
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -128,7 +128,7 @@ The `secret_ids` output has `depends_on = [time_sleep.secret_propagation]`, ensu
 | `environment_variables` | map(string) | `{ NODE_ENV = "production" }` | Base environment variables |
 | `initialization_jobs` | list(any) | `[]` | Override default jobs (empty = use `db-init`) |
 
-### Health Probes
+### D. Health Probes
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -137,7 +137,7 @@ The `secret_ids` output has `depends_on = [time_sleep.secret_propagation]`, ensu
 
 > **`failure_threshold = 30` on startup probe:** Strapi runs database migrations and rebuilds its plugin registry on first boot. The high threshold (30 × 10s = 300s maximum tolerance) prevents premature pod termination while the application initialises.
 
-### Redis (Optional)
+### E. Redis (Optional)
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -159,7 +159,24 @@ The `$(NFS_SERVER_IP)` placeholder is expanded at container startup by `strapi-e
 
 ---
 
-## Initialization Job: `db-init`
+## 6. Non-Configurable Values
+
+The following values are fixed inside `Strapi_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_port` | `1337` | Strapi always listens on port 1337. |
+| `database_type` | `"POSTGRES_15"` | Strapi uses PostgreSQL 15 via Knex. |
+| `image_source` | `"custom"` | Strapi requires a custom build for the admin panel compilation. |
+| `storage_buckets` bucket suffix | `"strapi-uploads"` | Fixed GCS bucket name suffix for the media library. |
+| `secret_count` | 5 secrets | JWT secret, admin JWT secret, API token salt, transfer token salt, app keys. |
+| `secret_propagation_wait` | `30s` | IAM propagation delay after secret creation. |
+| `APP_KEYS` format | 4 × 32-char keys, comma-joined | Strapi reads this as an array via `env.array('APP_KEYS')`. |
+| `proxy` | `true` | Required for Strapi to read `X-Forwarded-Proto` behind load balancers. |
+
+---
+
+## 7. Initialization Job: `db-init`
 
 | Property | Value |
 |----------|-------|
@@ -185,11 +202,11 @@ The `$(NFS_SERVER_IP)` placeholder is expanded at container startup by `strapi-e
 
 ---
 
-## Container Image
+## 8. Container Image
 
 The module builds from `scripts/Dockerfile` using a **two-stage build** on `node:20-alpine`.
 
-### Build stages
+### A. Build Stages
 
 **Stage 1 (build):**
 ```
@@ -225,9 +242,9 @@ Build tools (`build-base`, `gcc`, `autoconf`, `automake`, `zlib-dev`, `libpng-de
 
 ---
 
-## Scripts
+## 9. Scripts
 
-### `strapi-entrypoint.sh`
+### A. `strapi-entrypoint.sh`
 
 Minimal entrypoint that resolves the `$(NFS_SERVER_IP)` placeholder in `REDIS_HOST` before starting Strapi:
 
@@ -243,9 +260,9 @@ Strapi is started via direct `node` invocation of the Strapi CLI rather than `np
 
 ---
 
-## Strapi Configuration Files
+## 10. Strapi Configuration Files
 
-### `config/database.js`
+### A. `config/database.js`
 
 Supports both Strapi-native (`DATABASE_*`) and platform-standard (`DB_*`) environment variables, with Strapi-native taking priority:
 
@@ -260,7 +277,7 @@ Supports both Strapi-native (`DATABASE_*`) and platform-standard (`DB_*`) enviro
 
 `DATABASE_SSL` accepts `"true"`, `"false"`, or a JSON-encoded SSL options object (e.g. `{"rejectUnauthorized": false}`).
 
-### `config/admin.js`
+### B. `config/admin.js`
 
 Maps secrets to Strapi admin configuration:
 
@@ -270,7 +287,7 @@ Maps secrets to Strapi admin configuration:
 | `API_TOKEN_SALT` | `{prefix}-api-token-salt` | Salts generated API tokens |
 | `TRANSFER_TOKEN_SALT` | `{prefix}-transfer-token-salt` | Salts data transfer tokens |
 
-### `config/server.js`
+### C. `config/server.js`
 
 | Env var | Default | Purpose |
 |---------|---------|---------|
@@ -282,7 +299,7 @@ Maps secrets to Strapi admin configuration:
 
 `proxy: true` is hardcoded — required for Strapi to correctly read `X-Forwarded-Proto` and `X-Forwarded-For` headers behind the Cloud Run load balancer.
 
-### `config/plugins.js`
+### D. `config/plugins.js`
 
 Configures three plugin areas conditionally:
 
@@ -326,7 +343,7 @@ When `SMTP_HOST` is set, enables the `nodemailer` email provider:
 
 ---
 
-## npm Dependencies
+## 11. npm Dependencies
 
 | Package | Version | Purpose |
 |---------|---------|---------|
@@ -349,7 +366,7 @@ Node.js requirement: `>=18.0.0 <=20.x.x`.
 
 ---
 
-## Platform-Specific Differences
+## 12. Platform-Specific Differences
 
 | Aspect | Strapi_CloudRun | Strapi_GKE |
 |--------|-----------------|------------|
@@ -364,7 +381,7 @@ Node.js requirement: `>=18.0.0 <=20.x.x`.
 
 ---
 
-## Usage Example
+## 13. Usage Example
 
 ```hcl
 module "strapi_common" {

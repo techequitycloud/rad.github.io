@@ -1,4 +1,4 @@
-# Elasticsearch_GKE Module
+# Elasticsearch GKE Module
 
 Elasticsearch is an open-source distributed search and analytics engine based on Apache Lucene.
 This module deploys a **single-node Elasticsearch cluster** on **GKE Autopilot** as a
@@ -10,13 +10,11 @@ storage and full-text search.
 infrastructure provisioning to `App_GKE` and assembles the Elasticsearch-specific configuration
 locally using a `locals` block (there is no separate `*_Common` module).
 
-> `Elasticsearch_GKE` must be deployed **before** `RAGFlow_GKE`. After deployment, run
-> `tofu output elasticsearch_endpoint` and pass the result to `RAGFlow_GKE`'s
-> `elasticsearch_hosts` variable.
+> **Important:** `Elasticsearch_GKE` must be deployed **before** `RAGFlow_GKE`. After deployment, run `tofu output elasticsearch_endpoint` and pass the result to `RAGFlow_GKE`'s `elasticsearch_hosts` variable.
 
 ---
 
-## §1 · Module Overview
+## 1. Module Overview
 
 ### What `Elasticsearch_GKE` provides
 
@@ -96,7 +94,7 @@ override any of the above.
 
 ---
 
-## §2 · IAM & Project Identity (Group 0 & 1)
+## 2. IAM & Project Identity (Group 0 & 1)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -118,7 +116,7 @@ override any of the above.
 
 ---
 
-## §3 · Application Identity (Group 2)
+## 3. Application Identity (Group 2)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -130,7 +128,7 @@ override any of the above.
 
 ---
 
-## §4 · Runtime & Scaling (Group 3)
+## 4. Runtime & Scaling (Group 3)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -155,11 +153,11 @@ override any of the above.
 | `es_java_heap` | `string` | `"1g"` | JVM heap size (sets both `-Xms` and `-Xmx`). Should be no more than half of `memory_limit`. (e.g. `"1g"`, `"2g"`, `"4g"`) `{{UIMeta group=3 order=22}}` |
 | `enable_xpack_security` | `bool` | `false` | Enable Elasticsearch X-Pack security (authentication). When `false`, the cluster is accessible without credentials. Recommended `false` for initial setup alongside RAGFlow; enable for production after configuring certificates. `{{UIMeta group=3 order=23}}` |
 
-> **Heap sizing rule:** `es_java_heap` ≤ `memory_limit / 2`. Example: `memory_limit = "4Gi"` → `es_java_heap = "2g"`. Elasticsearch also needs memory for the OS page cache to accelerate index segment reads.
+> **Note:** Heap sizing rule: `es_java_heap` ≤ `memory_limit / 2`. Example: `memory_limit = "4Gi"` → `es_java_heap = "2g"`. Elasticsearch also needs memory for the OS page cache to accelerate index segment reads.
 
 ---
 
-## §5 · GKE Backend Configuration (Group 5)
+## 5. GKE Backend Configuration (Group 5)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -177,7 +175,7 @@ override any of the above.
 
 ---
 
-## §6 · StatefulSet & Persistence (Group 6)
+## 6. StatefulSet & Persistence (Group 6)
 
 Data persistence is critical for Elasticsearch — all index data lives in the PVC.
 
@@ -194,7 +192,7 @@ Data persistence is critical for Elasticsearch — all index data lives in the P
 
 ---
 
-## §7 · Environment Variables & Secrets (Group 4)
+## 7. Environment Variables & Secrets (Group 4)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -205,7 +203,7 @@ Data persistence is critical for Elasticsearch — all index data lives in the P
 
 ---
 
-## §8 · Access & Networking (Groups 18–21)
+## 8. Access & Networking (Groups 18–21)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -233,7 +231,7 @@ Data persistence is critical for Elasticsearch — all index data lives in the P
 
 ---
 
-## §9 · Storage (Group 13) — Not Used
+## 9. Storage (Group 13) — Not Used
 
 Elasticsearch stores all data in the PVC. No GCS buckets or NFS mounts are needed.
 
@@ -251,7 +249,7 @@ Elasticsearch stores all data in the PVC. No GCS buckets or NFS mounts are neede
 
 ---
 
-## §10 · Observability & Health (Group 9)
+## 10. Observability & Health (Group 9)
 
 Probes use **TCP** (not HTTP) because:
 - HTTP probes would return `401 Unauthorized` when `enable_xpack_security = true`.
@@ -265,14 +263,11 @@ Probes use **TCP** (not HTTP) because:
 | `uptime_check_config` | `object` | `{ enabled=false, path="/_cluster/health", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. Disabled by default. `{{UIMeta group=9 order=3}}` |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies. `{{UIMeta group=9 order=4}}` |
 
-> Note: The container-level probes (forwarded via the application config) use TCP, while
-> `startup_probe_config` and `health_check_config` at the App_GKE level default to HTTP
-> with `/_cluster/health`. When `enable_xpack_security = true`, override both configs to
-> use TCP.
+> **Note:** The container-level probes (forwarded via the application config) use TCP, while `startup_probe_config` and `health_check_config` at the App_GKE level default to HTTP with `/_cluster/health`. When `enable_xpack_security = true`, override both configs to use TCP.
 
 ---
 
-## §11 · Reliability Policies (Group 8)
+## 11. Reliability Policies (Group 8)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -283,7 +278,7 @@ Probes use **TCP** (not HTTP) because:
 
 ---
 
-## §12 · Backup & CI/CD (Groups 11 & 16)
+## 12. Backup & CI/CD (Groups 11 & 16)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -304,7 +299,7 @@ Probes use **TCP** (not HTTP) because:
 
 ---
 
-## §13 · Database (Group 15) — Not Used
+## 13. Database (Group 15) — Not Used
 
 Elasticsearch requires no Cloud SQL. All variables are present for interface compatibility with `App_GKE`.
 
@@ -323,7 +318,7 @@ Elasticsearch requires no Cloud SQL. All variables are present for interface com
 
 ---
 
-## §14 · Workload Automation (Group 10 & 17)
+## 14. Workload Automation (Group 10 & 17)
 
 Elasticsearch requires no initialization jobs or custom SQL.
 
@@ -339,7 +334,7 @@ Elasticsearch requires no initialization jobs or custom SQL.
 
 ---
 
-## §15 · Resource Quota (Group 7)
+## 15. Resource Quota (Group 7)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -351,7 +346,7 @@ Elasticsearch requires no initialization jobs or custom SQL.
 
 ---
 
-## §16 · Outputs
+## 16. Outputs
 
 | Output | Description |
 |---|---|
@@ -372,7 +367,7 @@ Elasticsearch requires no initialization jobs or custom SQL.
 
 ---
 
-## §17 · Configuration Examples
+## 17. Configuration Examples
 
 ### Basic Deployment
 

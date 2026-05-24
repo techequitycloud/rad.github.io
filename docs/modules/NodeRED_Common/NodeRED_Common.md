@@ -1,4 +1,4 @@
-# NodeRED_Common Module
+# NodeRED Common Module
 
 The `NodeRED_Common` module defines the Node-RED flow-based programming tool for the RAD Modules ecosystem. It produces a `config` output consumed by platform-specific wrapper modules (`NodeRED_CloudRun` and `NodeRED_GKE`), along with a `storage_buckets` output that provisions the application's GCS bucket.
 
@@ -94,7 +94,21 @@ scripts_dir = abspath("${module.nodered_app.path}/scripts")
 
 ---
 
-## 4. Environment Variables
+## 4. Non-Configurable Values
+
+The following values are fixed inside `NodeRED_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_image` | `"nodered/node-red:<application_version>"` | Uses the official Docker Hub image directly. |
+| `image_source` | `"prebuilt"` | No custom build; the upstream image is used as-is. |
+| `container_port` | `1880` | Node-RED's native HTTP port. |
+| `database_type` | `"NONE"` | Node-RED requires no relational database. |
+| `enable_cloudsql_volume` | `false` | No Cloud SQL Auth Proxy is needed. |
+
+---
+
+## 5. Environment Variables
 
 The module merges a fixed set of Node-RED defaults with caller-provided `environment_variables`. Caller-supplied values take precedence.
 
@@ -108,7 +122,7 @@ All other Node-RED runtime configuration (e.g. `NODE_OPTIONS`, `NODE_RED_ENABLE_
 
 ---
 
-## 5. Container Image
+## 6. Container Image
 
 Node-RED uses the official `nodered/node-red` image published on Docker Hub. No custom Dockerfile is bundled with this module. The image is selected at runtime using the `application_version` variable as the image tag:
 
@@ -120,13 +134,13 @@ Image mirroring into Artifact Registry is controlled by `enable_image_mirroring`
 
 ---
 
-## 6. No Initialization Jobs
+## 7. No Initialization Jobs
 
 Unlike database-backed applications, Node-RED requires no schema initialisation, user creation, or data seeding before first start. The `initialization_jobs` variable defaults to an empty list. Pass custom jobs only for specific post-deployment automation tasks such as importing a flow archive or configuring a custom palette.
 
 ---
 
-## 7. Input Variables
+## 8. Input Variables
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -149,7 +163,7 @@ Unlike database-backed applications, Node-RED requires no schema initialisation,
 
 ---
 
-## 8. Platform-Specific Differences
+## 9. Platform-Specific Differences
 
 | Aspect | NodeRED_CloudRun | NodeRED_GKE |
 |--------|------------------|-------------|
@@ -162,7 +176,7 @@ Unlike database-backed applications, Node-RED requires no schema initialisation,
 
 ---
 
-## 9. Implementation Pattern
+## 10. Implementation Pattern
 
 ```hcl
 # How NodeRED_CloudRun instantiates NodeRED_Common

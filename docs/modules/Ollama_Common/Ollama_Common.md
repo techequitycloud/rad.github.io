@@ -1,4 +1,4 @@
-# Ollama_Common Module
+# Ollama Common Module
 
 The `Ollama_Common` module defines the Ollama LLM inference server configuration for the RAD
 Modules ecosystem. It **creates one GCP resource** (the GCS models bucket, via the
@@ -85,10 +85,10 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | From `var.container_resources` if non-null; else `{ cpu_limit, memory_limit }` from top-level variables |
 | `min_instance_count` | From `min_instance_count` |
 | `max_instance_count` | From `max_instance_count` |
-| `environment_variables` | Fixed map — see §4 |
+| `environment_variables` | Fixed map — see section 5 |
 | `enable_postgres_extensions` | `false` |
 | `postgres_extensions` | `[]` |
-| `initialization_jobs` | Auto-generated `model-pull` job or caller-supplied list — see §5 |
+| `initialization_jobs` | Auto-generated `model-pull` job or caller-supplied list — see section 6 |
 | `startup_probe` | From `startup_probe` variable |
 | `liveness_probe` | From `liveness_probe` variable |
 | `additional_services` | `[]` — Ollama has no companion services |
@@ -122,7 +122,23 @@ Absolute path to the module directory. Used by wrapper modules to locate `script
 
 ---
 
-## 4. Automatically Injected Environment Variables
+## 4. Non-Configurable Values
+
+The following values are fixed inside `Ollama_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_image` | `"ollama/ollama"` | The official upstream Ollama image. |
+| `image_source` | `"prebuilt"` | No custom build; the upstream image is used directly. |
+| `container_port` | `11434` | Ollama's fixed HTTP listening port. |
+| `database_type` | `"NONE"` | Ollama requires no relational database. |
+| `enable_cloudsql_volume` | `false` | No Cloud SQL Auth Proxy is needed. |
+| `OLLAMA_MODELS` | `"/mnt/gcs/ollama/models"` | Fixed GCS Fuse path for model weight persistence. |
+| `OLLAMA_HOST` | `"0.0.0.0:11434"` | Binds to all interfaces for Cloud Run and Kubernetes ingress. |
+
+---
+
+## 5. Automatically Injected Environment Variables
 
 The following environment variables are always set in the container and must not be overridden
 by caller-supplied `environment_variables` (they would be silently overridden by the merge):
@@ -139,7 +155,7 @@ variables such as `OLLAMA_NUM_PARALLEL`.
 
 ---
 
-## 5. Model-Pull Initialization Job
+## 6. Model-Pull Initialization Job
 
 `Ollama_Common` implements a two-path initialization job strategy:
 
@@ -174,7 +190,7 @@ list is produced. No initialization job is created.
 
 ---
 
-## 6. Scripts
+## 7. Scripts
 
 All supporting scripts are in `scripts/`. The wrapper modules set `scripts_dir` to this
 directory.
@@ -210,9 +226,9 @@ start within the retry window.
 
 ---
 
-## 7. Input Variables
+## 8. Input Variables
 
-### Project & Identity
+### A. Project & Identity
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -222,7 +238,7 @@ start within the retry window.
 | `common_labels` | `map(string)` | `{}` | Labels applied to resources created by this module. |
 | `deployment_region` | `string` | `"us-central1"` | Region for the GCS models bucket. |
 
-### Application Details
+### B. Application Details
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -231,14 +247,14 @@ start within the retry window.
 | `description` | `string` | `"Ollama — standalone open-source LLM inference server..."` | Application description. |
 | `application_version` | `string` | `"latest"` | Ollama Docker image tag. |
 
-### Model Configuration
+### C. Model Configuration
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `default_model` | `string` | `""` | Ollama model to pull during first deployment (e.g. `"llama3.2:3b"`, `"mistral"`, `"phi3:mini"`). Leave empty to skip the model-pull initialization job. Models are stored in GCS and persist across container restarts. |
 | `model_pull_timeout_seconds` | `number` | `3600` | Timeout in seconds for the model-pull initialization job. Valid range: 300–7200. |
 
-### Resources
+### D. Resources
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -248,13 +264,13 @@ start within the retry window.
 | `min_instance_count` | `number` | `1` | Minimum instances. Set to `1` to keep a warm instance for low-latency inference. |
 | `max_instance_count` | `number` | `3` | Maximum instances. |
 
-### Storage
+### E. Storage
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `gcs_volumes` | `list(any)` | `[]` | Additional GCS volume mounts. The `ollama-models` bucket at `/mnt/gcs` is always appended automatically. |
 
-### Environment & Probes
+### F. Environment & Probes
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -266,7 +282,7 @@ start within the retry window.
 
 ---
 
-## 8. GCS Volume Layout
+## 9. GCS Volume Layout
 
 The `<wrapper_prefix>-models` GCS bucket is mounted at `/mnt/gcs` in the container:
 
@@ -292,7 +308,7 @@ The `gcs_volumes` entry appended by this module:
 
 ---
 
-## 9. Platform-Specific Differences
+## 10. Platform-Specific Differences
 
 | Aspect | Ollama_CloudRun | Ollama_GKE |
 |---|---|---|
@@ -306,7 +322,7 @@ The `gcs_volumes` entry appended by this module:
 
 ---
 
-## 10. Implementation Pattern
+## 11. Implementation Pattern
 
 ```hcl
 # Example: how Ollama_CloudRun instantiates Ollama_Common

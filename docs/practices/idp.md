@@ -3,7 +3,7 @@ id: idp
 title: IDP
 ---
 
-# Platform Engineering
+# Internal Developer Platform (IDP)
 
 This repository is a platform-engineering deliverable: a curated catalog of opinionated, self-service golden paths exposed through both a CLI and a web UI. It functions as an Internal Developer Platform (IDP) — providing the four-tier module pattern, standardised scaffolding, a self-service surface, and the operating model that lets application teams deploy and manage production workloads without deep infrastructure expertise. The IaC mechanics (state, OpenTofu, drift) are in [GitOps & IaC](./gitops-iac.md).
 
@@ -11,7 +11,7 @@ This repository is a platform-engineering deliverable: a curated catalog of opin
 
 The platform is structured as four tiers with clear contracts between them:
 
-```
+```text
 Platform (Services_GCP)
   └── Foundation (App_CloudRun / App_GKE)
         └── Application (<App>_CloudRun / <App>_GKE)
@@ -35,7 +35,7 @@ The platform provides paved roads for the most common archetypes:
 |---|---|
 | `Istio_GKE` | Open-source Istio on GKE Standard with full observability |
 | `Bank_GKE` | Cloud Service Mesh + Bank of Anthos on a single cluster |
-| `MC_Bank_GKE` | Fleet-wide CSM + MCI/MCS across up to 4 GKE clusters |
+| `MC_Bank_GKE` | Fleet-wide Cloud Service Mesh (CSM) + Multi-Cluster Ingress/Services (MCI/MCS) across up to 4 GKE clusters |
 | `AKS_GKE` | Azure AKS attached as a GKE Attached Cluster via Fleet |
 | `EKS_GKE` | AWS EKS attached as a GKE Attached Cluster via Fleet |
 

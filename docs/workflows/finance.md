@@ -1,3 +1,8 @@
+---
+title: Finance Workflow
+slug: /workflows/finance
+---
+
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Finance Workflow
@@ -14,11 +19,11 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 ## 1. Introduction
 The Finance role provides deep visibility into the platform's economics — revenue by partner and user, credit spending, project infrastructure costs, payment provider activity, and automated reconciliation.
 
-## 2. Step 1: Access Billing Dashboard
+## 2. Access Billing Dashboard
 1.  Click **Billing** in the navigation bar.
 2.  You will see several tabs including **Subscription Tiers**, **Credit Settings**, **Project Costs**, **User Revenue**, **Partner Revenue**, and more.
 
-## 3. Step 2: Analyze Revenue
+## 3. Analyze Revenue
 
 ### Partner and User Revenue
 
@@ -38,18 +43,18 @@ The Finance role provides deep visibility into the platform's economics — reve
 
 > **Important:** Partner and Agent commission calculations are based on **True Revenue** only. Awarded Credits consumed by a referred user do not generate commission for the referrer.
 
-## 4. Step 3: Credit Management
+## 4. Credit Management
 1.  Click **Credit Settings** to adjust global rates (Price Per Credit, Sign-up Bonus, Low Credit Threshold, Monthly Top-Up).
 2.  Click **Credit Management** to search for and adjust individual user credit balances.
 
-## 5. Step 4: Invoices and Project Costs
+## 5. Invoices and Project Costs
 
 1.  Click **Project Invoices**.
 2.  Select a month from the filter to view that month's invoices for all Google Cloud projects linked to the platform.
 3.  Click **Export CSV** to download the invoice data for accounting and compliance purposes.
 4.  Click **Project Costs** to see a breakdown of infrastructure costs by project, converted to credits using the platform's configured Price Per Credit rate.
 
-## 6. Step 5: Payment Providers and Multi-Currency
+## 6. Payment Providers and Multi-Currency
 
 The platform accepts payments through two providers: **Stripe** and **Flutterwave**. As a Finance user you should understand how each provider is configured and which currencies each supports.
 
@@ -65,7 +70,7 @@ Exchange rates used for Flutterwave currency conversion are updated automaticall
 1.  Contact your platform administrator to trigger a manual currency sync from the Admin panel.
 2.  The sync fetches the latest rates and updates the platform's rate table; the new rates take effect for any checkout initiated after the sync completes.
 
-## 7. Step 6: Payment Reconciliation
+## 7. Payment Reconciliation
 
 The platform runs an automatic payment reconciliation job every day at 2:00 AM UTC. This job cross-references payment provider records against internal credit transaction logs and flags:
 
@@ -81,7 +86,7 @@ The platform runs an automatic payment reconciliation job every day at 2:00 AM U
 
 > **Tip:** Run a manual reconciliation if a user reports that a payment went through but their balance was not updated. The reconciliation report will surface the missing transaction.
 
-## 8. Step 7: Subscription Management
+## 8. Subscription Management
 
 Finance users can view and manage all subscriptions across providers.
 

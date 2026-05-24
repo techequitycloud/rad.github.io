@@ -1,4 +1,4 @@
-# Ghost_Common Module
+# Ghost Common Module
 
 The `Ghost_Common` module defines the Ghost publishing platform configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates no GCP resources and produces a `config` output consumed by platform-specific wrapper modules (`Ghost_CloudRun` and `Ghost_GKE`).
 
@@ -42,7 +42,7 @@ The application configuration object passed to the platform module via `applicat
 | `app_name` | `"ghost"` |
 | `application_version` | Version tag (default: `"6.14.0"`) |
 | `container_image` | `"ghost"` (public Docker Hub image used as build base) |
-| `image_source` | `"custom"` — a custom wrapper image is built (see §6) |
+| `image_source` | `"custom"` — a custom wrapper image is built (see §7) |
 | `enable_image_mirroring` | `var.enable_image_mirroring` (default `false`) — controls whether the image is mirrored to Artifact Registry |
 | `container_build_config` | `dockerfile_path = "Dockerfile"`, `context_path = "."`, `build_args = { APP_VERSION = <version> }` |
 | `container_port` | `2368` |
@@ -57,7 +57,7 @@ The application configuration object passed to the platform module via `applicat
 | `secret_environment_variables` | `var.secret_environment_variables` (default `{}`) — secret env vars passed to the container; managed externally or via wrapper by default |
 | `enable_mysql_plugins` | `false` |
 | `mysql_plugins` | `[]` |
-| `initialization_jobs` | Default `db-init` job or custom override — see §5 |
+| `initialization_jobs` | Default `db-init` job or custom override — see §6 |
 | `startup_probe` | HTTP `GET /`, 90s initial delay, 10s timeout, 10s period, 10 failure threshold |
 | `liveness_probe` | HTTP `GET /`, 60s initial delay, 5s timeout, 30s period, 3 failure threshold |
 | `readiness_probe` | HTTP `GET /`, 30s initial delay, 5s timeout, 10s period, 3 failure threshold |
@@ -79,40 +79,55 @@ The absolute path to the module directory, used by wrapper modules to locate the
 
 ---
 
-## 3. Input Variables
+## 3. Non-Configurable Values
 
-### Application
+The following values are fixed inside `Ghost_Common` and cannot be overridden by callers:
 
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| `application_name` | `string` | `"ghost"` | Application name |
-| `application_version` | `string` | `"6.14.0"` | Ghost Docker image tag |
-| `description` | `string` | `"Initialize Ghost Database with MySQL 8.0 settings"` | Init job description |
-| `deployment_id` | `string` | `""` | Unique deployment identifier |
-| `db_name` | `string` | `"ghost"` | MySQL database name |
-| `db_user` | `string` | `"ghost"` | MySQL application user |
-| `cpu_limit` | `string` | `"2000m"` | Container CPU limit |
-| `memory_limit` | `string` | `"4Gi"` | Container memory limit |
-| `environment_variables` | `map(string)` | `{}` | Environment variables passed directly to the container. Note: wrapper modules (`Ghost_CloudRun`, `Ghost_GKE`) default this to SMTP stub values; `Ghost_Common` itself defaults to an empty map. |
-| `initialization_jobs` | `list(object)` | `[]` | Custom init jobs; empty triggers the default `db-init` job |
-| `startup_probe` | `object` | see above | Startup health probe |
-| `liveness_probe` | `object` | see above | Liveness health probe |
-| `enable_image_mirroring` | `bool` | `false` | Mirror the container image to Artifact Registry before deployment |
-| `min_instance_count` | `number` | `0` | Minimum number of running instances (0 enables scale-to-zero). Overridden to `0` by `Ghost_CloudRun` and `1` by `Ghost_GKE` via hardcoded locals. |
-| `max_instance_count` | `number` | `3` | Maximum number of running instances. Overridden to `5` by both `Ghost_CloudRun` and `Ghost_GKE` via hardcoded locals. |
-| `secret_environment_variables` | `map(string)` | `{}` | Secret environment variables passed to the container |
-
-### Storage & Volumes
-
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| `enable_cloudsql_volume` | `bool` | `true` | Mount Cloud SQL Auth Proxy sidecar socket |
-| `gcs_volumes` | `list(object)` | `[]` | GCS Fuse volume mounts (name, bucket_name, mount_path, readonly, mount_options) |
-| `deployment_region` | `string` | `"us-central1"` | Region for the storage bucket |
+| Setting | Value | Reason |
+|---|---|---|
+| `container_image` | `"ghost"` | Always built from the official public Ghost Docker Hub image. |
+| `image_source` | `"custom"` | A custom wrapper image is built to inject the platform entrypoint. |
+| `container_port` | `2368` | Application's fixed listening port. |
+| `database_type` | `"MYSQL_8_0"` | Ghost 6.x requires MySQL 8.0+. |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` | Fixed Cloud SQL Auth Proxy socket directory. |
+| `enable_mysql_plugins` | `false` | No MySQL plugins required by default. |
 
 ---
 
-## 4. Health Probes
+## 4. Input Variables
+
+### A. Application
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `application_name` | `string` | `"ghost"` | Application name. |
+| `application_version` | `string` | `"6.14.0"` | Ghost Docker image tag. |
+| `description` | `string` | `"Initialize Ghost Database with MySQL 8.0 settings"` | Init job description. |
+| `deployment_id` | `string` | `""` | Unique deployment identifier. |
+| `db_name` | `string` | `"ghost"` | MySQL database name. |
+| `db_user` | `string` | `"ghost"` | MySQL application user. |
+| `cpu_limit` | `string` | `"2000m"` | Container CPU limit. |
+| `memory_limit` | `string` | `"4Gi"` | Container memory limit. |
+| `environment_variables` | `map(string)` | `{}` | Environment variables passed directly to the container. Note: wrapper modules (`Ghost_CloudRun`, `Ghost_GKE`) default this to SMTP stub values; `Ghost_Common` itself defaults to an empty map. |
+| `initialization_jobs` | `list(object)` | `[]` | Custom init jobs; empty triggers the default `db-init` job. |
+| `startup_probe` | `object` | see above | Startup health probe. |
+| `liveness_probe` | `object` | see above | Liveness health probe. |
+| `enable_image_mirroring` | `bool` | `false` | Mirror the container image to Artifact Registry before deployment. |
+| `min_instance_count` | `number` | `0` | Minimum number of running instances (0 enables scale-to-zero). Overridden to `0` by `Ghost_CloudRun` and `1` by `Ghost_GKE` via hardcoded locals. |
+| `max_instance_count` | `number` | `3` | Maximum number of running instances. Overridden to `5` by both `Ghost_CloudRun` and `Ghost_GKE` via hardcoded locals. |
+| `secret_environment_variables` | `map(string)` | `{}` | Secret environment variables passed to the container. |
+
+### B. Storage & Volumes
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `enable_cloudsql_volume` | `bool` | `true` | Mount Cloud SQL Auth Proxy sidecar socket. |
+| `gcs_volumes` | `list(object)` | `[]` | GCS Fuse volume mounts (name, bucket_name, mount_path, readonly, mount_options). |
+| `deployment_region` | `string` | `"us-central1"` | Region for the storage bucket. |
+
+---
+
+## 5. Health Probes
 
 Ghost_Common is the only `*_Common` module that defines all three probe types. All probes target `GET /` (the Ghost homepage, which returns 200 when the application is fully ready):
 
@@ -126,7 +141,7 @@ The generous startup probe thresholds accommodate Ghost's schema migration proce
 
 ---
 
-## 5. Initialization Job
+## 6. Initialization Job
 
 One `db-init` job runs by default (when `initialization_jobs = []`):
 
@@ -136,7 +151,8 @@ One `db-init` job runs by default (when `initialization_jobs = []`):
 | Script | `scripts/db-init.sh` |
 | Secrets required | `ROOT_PASSWORD` (MySQL root, optional), `DB_PASSWORD` (app user) |
 | `execute_on_apply` | `true` |
-| Timeout | 600s, 1 retry |
+| Timeout | `600s` |
+| Max retries | `1` |
 
 `db-init.sh` behavior:
 1. Resolves the target host from `DB_HOST` (preferred — may carry `127.0.0.1` for the Auth Proxy) or falls back to `DB_IP`.
@@ -153,7 +169,7 @@ One `db-init` job runs by default (when `initialization_jobs = []`):
 
 ---
 
-## 6. Scripts and Container Image
+## 7. Scripts and Container Image
 
 All supporting files are in `scripts/`. The `scripts/` directory is used as the Docker build context.
 
@@ -199,7 +215,7 @@ Runs before the original Ghost entrypoint to configure the runtime environment:
 
 ---
 
-## 7. Ghost Configuration via Environment Variables
+## 8. Ghost Configuration via Environment Variables
 
 Ghost reads its configuration from environment variables using double-underscore notation. The entrypoint maps platform-injected variables, but wrapper modules can pass any Ghost config key directly via `environment_variables`:
 
@@ -216,7 +232,7 @@ environment_variables = {
 
 ---
 
-## 8. Platform-Specific Differences
+## 9. Platform-Specific Differences
 
 | Aspect | Ghost_CloudRun | Ghost_GKE |
 |--------|----------------|-----------|
@@ -231,7 +247,7 @@ environment_variables = {
 
 ---
 
-## 9. Implementation Pattern
+## 10. Implementation Pattern
 
 ```hcl
 # Example: how Ghost_CloudRun instantiates Ghost_Common

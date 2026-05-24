@@ -1,14 +1,14 @@
-# Wordpress_CloudRun Module
+# Wordpress CloudRun Module
 
 `Wordpress_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [WordPress](https://wordpress.org/) on Google Cloud Run Gen2.
 
 Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply WordPress-appropriate defaults and to call the `Wordpress_Common` sub-module, which generates the application's container build context, PHP configuration, MySQL connection settings, Redis object cache configuration, and WordPress-specific secrets. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.
 
-> **Where to look:** If a variable you are configuring is not described here, consult the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md). All `App_CloudRun` features — access and networking, IAP, Cloud Armor, CDN, CI/CD, Cloud Deploy, Binary Authorization, traffic splitting, and VPC Service Controls — are available in `Wordpress_CloudRun` with identical behaviour and configuration.
+> This guide documents variables that are **unique to `Wordpress_CloudRun`** or that have **WordPress-specific defaults** that differ from the `App_CloudRun` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md).
 
 ---
 
-## §1 Module Overview
+## 1. Module Overview
 
 | Property | Value |
 |---|---|
@@ -30,9 +30,21 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 
 **Note on MySQL:** This module uses MySQL 8.0, not PostgreSQL. The Cloud SQL Auth Proxy sidecar (`enable_cloudsql_volume = true`) provides a Unix socket connection. Attempting to disable `enable_cloudsql_volume` without switching to TCP-based connectivity will break the database connection.
 
+### A. Key differences from `App_CloudRun` defaults
+
+| Feature | App_CloudRun default | Wordpress_CloudRun default |
+|---|---|---|
+| `container_port` | `8080` | `80` |
+| `execution_environment` | `"gen1"` | `"gen2"` |
+| `enable_nfs` | `false` | `true` (mount: `/mnt/nfs`) |
+| `enable_redis` | `false` | `true` (object cache) |
+| `enable_cloudsql_volume` | `false` | `true` (required for MySQL Unix socket) |
+| `container_image_source` | varies | `"custom"` (Cloud Build) |
+| Database | none | Cloud SQL MySQL 8.0 (initialised by `db-init` job) |
+
 ---
 
-## §2 IAM & Project Identity
+## 2. IAM & Project Identity
 
 Behaviour is identical to `App_CloudRun`. The following variables are passed through unchanged.
 
@@ -46,9 +58,9 @@ Behaviour is identical to `App_CloudRun`. The following variables are passed thr
 
 ---
 
-## §3 Core Service Configuration
+## 3. Core Service Configuration
 
-### §3.A Application Identity
+### A. Application Identity
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -67,7 +79,7 @@ Note: this module uses `display_name` and `description` (not `application_displa
 | `upload_max_filesize` | `"64M"` | Max single upload file size |
 | `post_max_size` | `"64M"` | Max POST body size; must be ≥ `upload_max_filesize` |
 
-### §3.B Resource Sizing
+### B. Resource Sizing
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -88,7 +100,7 @@ container_resources = {
 
 When `container_resources` is set (non-null), it takes precedence over the flat `cpu_limit` and `memory_limit` variables.
 
-### §3.C Environment Variables & Secrets
+### C. Environment Variables & Secrets
 
 Plain-text variables via `environment_variables`; sensitive values via `secret_environment_variables`.
 
@@ -115,7 +127,7 @@ secret_environment_variables = {
 }
 ```
 
-### §3.D Networking
+### D. Networking
 
 Key defaults:
 
@@ -130,7 +142,7 @@ Key defaults:
 
 The Cloud SQL Auth Proxy sidecar is required for MySQL Unix socket connectivity. Disable only when switching to TCP-based MySQL access. Set `container_protocol = "h2c"` to enable HTTP/2 communication between the load balancer and the Cloud Run service.
 
-### §3.E Container Image & Build
+### E. Container Image & Build
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -142,22 +154,22 @@ There is no `container_build_config` user variable in this module; the build con
 
 ---
 
-## §4 Advanced Security
+## 4. Advanced Security
 
-### §4.A Identity-Aware Proxy
+### A. Identity-Aware Proxy
 
 ```hcl
 enable_iap            = true
 iap_authorized_groups = ["group:wordpress-admins@example.com"]
 ```
 
-### §4.B VPC Service Controls
+### B. VPC Service Controls
 
 ```hcl
 enable_vpc_sc = true  # group=21; requires existing VPC-SC perimeter
 ```
 
-### §4.C Cloud Armor & CDN
+### C. Cloud Armor & CDN
 
 ```hcl
 enable_cloud_armor  = true
@@ -165,13 +177,13 @@ application_domains = ["www.example.com"]
 enable_cdn          = true
 ```
 
-### §4.D Binary Authorization
+### D. Binary Authorization
 
 ```hcl
 enable_binary_authorization = true
 ```
 
-### §4.E Secret Rotation
+### E. Secret Rotation
 
 ```hcl
 secret_rotation_period         = "2592000s"  # 30-day notification
@@ -181,9 +193,9 @@ rotation_propagation_delay_sec = 90
 
 ---
 
-## §5 Traffic & Ingress
+## 5. Traffic & Ingress
 
-### §5.A Traffic Splitting
+### A. Traffic Splitting
 
 ```hcl
 traffic_split = [
@@ -192,7 +204,7 @@ traffic_split = [
 ]
 ```
 
-### §5.B Ingress Control
+### B. Ingress Control
 
 ```hcl
 ingress_settings   = "internal-and-cloud-load-balancing"
@@ -201,9 +213,9 @@ vpc_egress_setting = "ALL_TRAFFIC"
 
 ---
 
-## §6 CI/CD Integration
+## 6. CI/CD Integration
 
-### §6.A Cloud Build Trigger
+### A. Cloud Build Trigger
 
 ```hcl
 enable_cicd_trigger   = true
@@ -215,7 +227,7 @@ cicd_trigger_config = {
 }
 ```
 
-### §6.B Cloud Deploy Pipeline
+### B. Cloud Deploy Pipeline
 
 ```hcl
 enable_cloud_deploy = true
@@ -228,9 +240,9 @@ cloud_deploy_stages = [
 
 ---
 
-## §7 Reliability & Data
+## 7. Reliability & Data
 
-### §7.A Health Probes
+### A. Health Probes
 
 `Wordpress_CloudRun` uses only `startup_probe` and `liveness_probe` (passed to `Wordpress_Common`). There is no separate `startup_probe_config` / `health_check_config` interface in this module.
 
@@ -250,7 +262,7 @@ cloud_deploy_stages = [
 
 The `liveness_probe` uses `/wp-admin/install.php` because this page requires a working PHP runtime and database connection, making it a reliable indicator of application health.
 
-### §7.B Backup & Recovery
+### B. Backup & Recovery
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -263,7 +275,7 @@ The `liveness_probe` uses `/wp-admin/install.php` because this page requires a w
 
 Note: this module uses `backup_uri` (aliased to `backup_file` in `main.tf`).
 
-### §7.C Scheduled Jobs
+### C. Scheduled Jobs
 
 ```hcl
 cron_jobs = [{
@@ -274,7 +286,7 @@ cron_jobs = [{
 }]
 ```
 
-### §7.D Observability
+### D. Observability
 
 ```hcl
 uptime_check_config = {
@@ -296,9 +308,9 @@ alert_policies = [{
 
 ---
 
-## §8 Integrations
+## 8. Integrations
 
-### §8.A Redis Object Cache
+### A. Redis Object Cache
 
 Redis is **enabled by default** (`enable_redis = true`). `Wordpress_Common` injects Redis connection details when enabled. Leave `redis_host` empty to use the default Redis configuration supplied by `Wordpress_Common`.
 
@@ -311,7 +323,7 @@ redis_auth   = ""
 
 When `enable_redis = false`, no Redis environment variables are injected and the WordPress object cache operates in memory-only mode.
 
-### §8.B NFS Storage
+### B. NFS Storage
 
 NFS is used for the WordPress `wp-content` directory (uploads, themes, plugins).
 
@@ -322,7 +334,7 @@ nfs_mount_path = "/mnt/nfs"
 
 `Wordpress_Common` configures WordPress to use this mount path for persistent file storage. Disable NFS only for single-container, stateless deployments where uploads are stored externally.
 
-### §8.C GCS Fuse Volumes
+### C. GCS Fuse Volumes
 
 ```hcl
 gcs_volumes = [{
@@ -333,13 +345,13 @@ gcs_volumes = [{
 }]
 ```
 
-### §8.D Additional Services
+### D. Additional Services
 
 `Wordpress_CloudRun` does not expose the `additional_services` variable. Co-deployed services are not supported in this module's interface. (This variable is available in `Wordpress_GKE`.)
 
 ---
 
-## §9 Platform-Managed Behaviours
+## 9. Platform-Managed Behaviours
 
 The following are set or injected automatically and do not require configuration.
 
@@ -365,7 +377,7 @@ The liveness probe uses `/wp-admin/install.php`, which returns 200 when WordPres
 
 ---
 
-## §10 Variable Reference
+## 10. Variable Reference
 
 The table below covers all variables unique to or with notable defaults in `Wordpress_CloudRun`. For the full set of inherited variables, see the [App_CloudRun Variable Reference](../App_CloudRun/App_CloudRun.md#variable-reference).
 

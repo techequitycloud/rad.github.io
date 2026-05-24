@@ -9,7 +9,7 @@
 
 This guide helps candidates preparing for the Google Cloud Professional Cloud Security Engineer (PSE) certification explore Section 1 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PSE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. Variables are organised into numbered groups in the RAD UI deployment form — for example, "(Group 3)" refers to the third collapsible section of settings for that module. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PSE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
 
 ---
 
@@ -42,6 +42,8 @@ Navigate to **IAM & Admin > Service Accounts** to view each dedicated service ac
 
 **Real-world example:** A financial services firm eliminates 40 long-lived JSON service account keys previously stored on developer laptops by migrating all GKE pods to Workload Identity. Each pod now automatically receives a short-lived OAuth token from the GKE metadata server that expires within an hour — reducing the credential compromise blast radius from a standing key providing persistent access to a transient token that is useless within 60 minutes.
 
+---
+
 ### 💡 Additional Service Account Objectives & Learning Guidelines
 *   **Protecting Default Service Accounts:** The default Compute Engine service account (`[PROJECT_NUMBER]-compute@developer.gserviceaccount.com`) is automatically granted `roles/editor` at the project level. Apply the Organization Policy `constraints/iam.automaticIamGrantsForDefaultServiceAccounts` to prevent this grant on all new projects. Navigate to **IAM & Admin > Service Accounts** to audit which workloads still use the default service account and plan migration to dedicated accounts.
 *   **Securing and Auditing Service Account Keys:** Navigate to **IAM & Admin > Service Accounts** and inspect existing keys. Keys older than 90 days or with no recent usage (visible in the **Last used** column) should be rotated or deleted immediately. The Organization Policy `constraints/iam.disableServiceAccountKeyCreation` prevents new keys from being created entirely — use this on all projects where Workload Identity or impersonation can serve the same purpose.
@@ -64,6 +66,8 @@ Navigate to **Security > Identity-Aware Proxy**. Review which backends are prote
 
 **Real-world example:** A consulting firm protects its internal project management tool with IAP, removing the need for a VPN entirely. Remote contractors authenticate with their corporate Google Workspace accounts. When a contractor's engagement ends, removing them from the authorized IAP group in the GCP Console immediately revokes access — no VPN certificate revocation or firewall rule change is needed, and the change takes effect within seconds.
 
+---
+
 ### 💡 Additional Authentication Objectives & Learning Guidelines
 *   **Password and Session Management Policies:** Navigate to **Admin Console > Security > Password management** to configure minimum password length, strength enforcement, and reuse prevention across the organization. Understand how IAP session length controls (`--session-length` flag or Console setting) determine how frequently users must re-authenticate — a typical compliance requirement is 8 hours for standard users and 1 hour for privileged users accessing sensitive systems.
 *   **Configuring SAML:** Study how to configure SAML 2.0 for applications that implement their own authentication rather than delegating to Google OAuth. In this model, Google Cloud Identity acts as the Identity Provider and asserts user attributes (email, groups, roles) to the application (Service Provider) via a signed SAML assertion. Contrast this with the federated SSO scenario where Google is the Service Provider and an external IdP is the authenticator.
@@ -84,6 +88,8 @@ Navigate to **Security > Identity-Aware Proxy**. Review which backends are prote
 Navigate to **Security > Secret Manager**, select a specific secret, and open its **Permissions** tab — observe that only the designated workload service account holds `roles/secretmanager.secretAccessor`, not the broader project-level IAM. Navigate to **Cloud Storage > Buckets**, select a bucket, open **Permissions**, and verify **Access Control: Uniform** is enforced.
 
 **Real-world example:** A healthcare provider's ETL pipeline needs to read patient records from Cloud SQL and write output to a specific Cloud Storage bucket. Rather than granting `roles/editor` at the project level, the security team grants `roles/cloudsql.client` on the specific Cloud SQL instance and `roles/storage.objectCreator` on the one destination bucket. If the pipeline service account is compromised, the attacker can only access those two specific resources — not the entire project, other databases, or other buckets.
+
+---
 
 ### 💡 Additional Authorization Objectives & Learning Guidelines
 *   **IAM Conditions:** Research how IAM Conditions add attribute-based access control (ABAC) to IAM bindings. A condition can restrict a binding so it only applies during business hours (`request.time`), for resources matching a tag or name pattern (`resource.name`), or from a specific IP range. Navigate to **IAM & Admin > IAM**, click "Edit" on any principal, and explore the **Add condition** option. IAM Conditions are frequently tested in PSE exam scenarios involving time-limited access and environment-based restrictions.
@@ -107,6 +113,8 @@ Navigate to **Security > Secret Manager**, select a specific secret, and open it
 Navigate to **IAM & Admin > Organization Policies**. Review the constraints that apply to the project housing your deployed resources. Look specifically for: `constraints/compute.vmExternalIpAccess` (prevents external IP assignment to VMs), `constraints/iam.disableServiceAccountKeyCreation` (blocks SA key creation), and `constraints/gcp.resourceLocations` (restricts resource deployment to specific regions). Note whether each constraint was set at the org, folder, or project level.
 
 **Real-world example:** A multinational bank creates a Google Cloud organization structure: `org > EMEA > Production` and `org > EMEA > Development`. They apply an Organization Policy at the `EMEA` folder restricting all resource locations to EU regions (`constraints/gcp.resourceLocations: in:europe-locations`). Every project created under EMEA — now and in the future — automatically inherits this constraint. A developer attempting to provision a Cloud SQL instance in `us-central1` from a project in this folder receives an immediate policy violation error, preventing accidental cross-border data residency violations without per-project configuration.
+
+---
 
 ### 💡 Additional Resource Hierarchy Objectives & Learning Guidelines
 *   **Managing Folders and Projects at Scale:** Understand how to design a folder hierarchy that reflects the organization's governance structure (e.g., by business unit, by environment type, by compliance tier). Use the Cloud Resource Manager API to automate project creation with pre-approved billing accounts, IAM bindings, and Organization Policy constraints baked in — ensuring every new project starts in a known-good security state rather than relying on manual post-creation hardening.

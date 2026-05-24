@@ -7,9 +7,9 @@
 
 
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud Developer (PCD) certification explore Section 1 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
+This guide helps candidates preparing for the Google Cloud Professional Cloud Developer (PCD) certification explore Section 1 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCD objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. Variables are organised into numbered groups in the RAD UI deployment form — for example, "(Group 3)" refers to the third collapsible section of settings for that module. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCD objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
 
 ---
 
@@ -19,7 +19,7 @@ You interact with each module by configuring its variables in the RAD UI deploym
 **Concept:** Choosing the appropriate platform based on use case and implementing traffic splitting strategies (gradual rollouts, rollbacks, A/B testing).
 
 **In the RAD UI:**
-*   **Platform Choice:** The RAD platform provides templates for **App CloudRun** (serverless, event-driven HTTP workloads that scale to zero) and **App GKE** (container orchestration for workloads that need persistent connections, StatefulSets, or fine-grained networking). For workloads requiring direct OS access, custom hardware, or persistent long-running background processes, Compute Engine VMs are the appropriate choice — these are provisioned via the Services GCP module infrastructure layer.
+*   **Platform Choice:** The RAD platform provides templates for **App CloudRun** (serverless, event-driven HTTP workloads that scale to zero) and **App GKE** (container orchestration for workloads that need persistent connections, StatefulSets, or fine-grained networking). For workloads requiring direct OS access, custom hardware, or persistent long-running background processes, Compute Engine VMs are the appropriate choice — these are provisioned via the GCP Services module infrastructure layer.
 *   **Traffic Splitting:** In Cloud Run, the `traffic_split` variable (Group 5) dictates how traffic is divided across container revisions for A/B testing and canary rollouts.
 
 **Console Exploration:**
@@ -27,12 +27,14 @@ Navigate to **Cloud Run**, select the service, and review the **Revisions** tab 
 
 **Real-world example:** A team wants to validate a new recommendation algorithm on 10% of live traffic before a full rollout. They deploy the new algorithm as a new Cloud Run revision and set `traffic_split` to route 10% there and 90% to the stable revision. Cloud Monitoring dashboards compare click-through rates between the two revisions over 24 hours. If the new revision performs better, traffic is shifted to 100% with a single configuration change. If it underperforms, the rollback is instant — simply route 100% back to the previous revision.
 
+---
+
 ### Geographic Distribution and High Availability
 **Concept:** Understanding how Google Cloud services are distributed across regions and zones, and designing applications that survive zonal and regional failures.
 
 **In the RAD UI:**
-*   **Multi-Region Deployment:** The `availability_regions` variable (Group 2 in Services GCP) controls which regions receive subnets, Cloud NAT, and Cloud Router. Adding a second region deploys the full networking stack there, enabling application deployments in multiple regions behind a single global load balancer.
-*   **Database Replication:** The `postgres_database_availability_type` variable (Group 3 in Services GCP) switches between `ZONAL` (single zone, primary only) and `REGIONAL` (synchronous standby in a second zone — automatic failover within ~60 seconds on zone failure). For production workloads, `REGIONAL` is always recommended.
+*   **Multi-Region Deployment:** The `availability_regions` variable (Group 2 in GCP Services) controls which regions receive subnets, Cloud NAT, and Cloud Router. Adding a second region deploys the full networking stack there, enabling application deployments in multiple regions behind a single global load balancer.
+*   **Database Replication:** The `postgres_database_availability_type` variable (Group 3 in GCP Services) switches between `ZONAL` (single zone, primary only) and `REGIONAL` (synchronous standby in a second zone — automatic failover within ~60 seconds on zone failure). For production workloads, `REGIONAL` is always recommended.
 
 **Console Exploration:**
 Navigate to **Cloud Run** and observe that a Cloud Run service is regional — it runs across multiple zones within the selected region automatically. Navigate to **SQL** and inspect the instance details: a REGIONAL instance shows a primary zone and a failover zone. Navigate to **Network Services > Load balancing** to see how a global anycast IP routes users to the nearest region.
@@ -44,16 +46,20 @@ Navigate to **Cloud Run** and observe that a Cloud Run service is regional — i
 - **Regional services:** Cloud SQL REGIONAL, GKE Autopilot, Cloud Run — redundant across multiple zones within a region. Survive individual zone failures.
 - **Global services:** Cloud Storage (multi-region), Cloud Spanner (multi-region), Global Load Balancing — distributed across regions. Highest availability, highest cost.
 
+---
+
 ### Caching Solutions
 **Concept:** Implementing in-memory caching to reduce database load and improve application response times.
 
 **In the RAD UI:**
-*   **Memorystore (Redis):** In **Services GCP**, `create_redis` (Group 5) and `redis_tier` (Group 5) configure managed in-memory caching. Set `enable_redis` (Group 14 for App CloudRun, Group 20 for App GKE) to dynamically pass the Redis host and port into the container as environment variables.
+*   **Memorystore (Redis):** In **GCP Services**, `create_redis` (Group 5) and `redis_tier` (Group 5) configure managed in-memory caching. Set `enable_redis` (Group 14 for App CloudRun, Group 20 for App GKE) to dynamically pass the Redis host and port into the container as environment variables.
 
 **Console Exploration:**
 Navigate to **Memorystore > Redis** to view the Redis instance. Observe the instance tier (`BASIC` for single-node, `STANDARD_HA` for primary-replica with automatic failover), the memory size, and the private IP address accessible only from within the VPC. In your application code, use this private IP with the Redis client library — all traffic stays within Google's private network.
 
 **Real-world example:** A Cloud Run service queries the same product catalogue data for 80% of its requests. Without caching, every request hits Cloud SQL, consuming database connection pool slots and adding 20–50ms of query latency. After connecting to Memorystore, the application checks Redis first: a cache hit returns data in under 1ms and skips the database entirely. Cache miss rate drops to under 5% after warm-up, reducing Cloud SQL CPU utilisation by 60% and cutting p99 latency in half.
+
+---
 
 ### Session Affinity and Content Delivery
 **Concept:** Configuring load balancers to route a user's requests consistently to the same backend, and using Cloud CDN to cache responses at the edge for lower latency.
@@ -76,6 +82,8 @@ Both App CloudRun and App GKE provision a Global External Application Load Balan
 - `FORCE_CACHE_ALL` — caches all responses regardless of origin headers (use with caution for dynamic content).
 
 Navigate to **Network Services > Cloud CDN** to view cache hit rates and invalidate specific URL patterns when deploying new static assets.
+
+---
 
 ### Creating and Deploying APIs (HTTP REST and gRPC)
 **Concept:** Designing and exposing well-structured APIs for both browser clients (REST) and service-to-service communication (gRPC).
@@ -101,6 +109,8 @@ gRPC is a high-performance RPC framework using Protocol Buffers (protobuf) for s
 
 Navigate to **Cloud Run**, select your service, and under **Networking > HTTP/2** confirm that HTTP/2 end-to-end is enabled for gRPC workloads. For internal gRPC between GKE services, the Kubernetes Gateway API and Cloud Service Mesh handle HTTP/2 routing natively.
 
+---
+
 ### API Rate Limiting, Authentication, and Observability
 **Concept:** Protecting APIs from abuse, enforcing authentication, and gaining visibility into API usage patterns.
 
@@ -111,11 +121,13 @@ For **Apigee**, navigate to **Apigee > Analytics > API Metrics** to view traffic
 
 **Real-world example:** An API team notices a spike in 4xx errors on their Cloud Run API. In Cloud API Gateway's monitoring tab, they filter by response code and see that one specific API key is generating 95% of the errors — the key belongs to a partner integration that recently deployed a bug causing malformed requests. The team revokes that key temporarily, notifies the partner, and the error rate drops to baseline within seconds.
 
+---
+
 ### Asynchronous and Event-Driven Integration
 **Concept:** Decoupling services using message queues and event triggers to build resilient, scalable architectures.
 
 **In the RAD UI:**
-Services GCP enables `pubsub.googleapis.com` automatically. The `enable_scc_notifications` variable (Group 11) demonstrates the Pub/Sub pattern in practice — Security Command Center findings are published to a Pub/Sub topic, which downstream systems subscribe to.
+GCP Services enables `pubsub.googleapis.com` automatically. The `enable_scc_notifications` variable (Group 11) demonstrates the Pub/Sub pattern in practice — Security Command Center findings are published to a Pub/Sub topic, which downstream systems subscribe to.
 
 **Console Exploration:**
 Navigate to **Pub/Sub > Topics** to see topics provisioned by the platform. Navigate to **Eventarc > Triggers** to explore how events from GCP services are routed to Cloud Run or other targets.
@@ -130,6 +142,8 @@ Navigate to **Pub/Sub > Topics** to see topics provisioned by the platform. Navi
 - **Pub/Sub triggers:** Route Pub/Sub messages directly to a Cloud Run service as HTTP POST requests in CloudEvents format.
 
 **Real-world example:** A document processing platform receives PDF uploads to a Cloud Storage bucket. An Eventarc trigger fires a Cloud Run service on every `objectFinalized` event. The service extracts text using Document AI, stores structured results in Firestore, and publishes a `document.processed` message to a Pub/Sub topic. Three downstream services subscribe independently: one sends an email notification, one updates a search index, and one triggers a compliance review workflow. No service is coupled to any other — each can be deployed, scaled, and updated independently.
+
+---
 
 ### Orchestrating Application Services
 **Concept:** Coordinating multi-step workflows across services using managed orchestration tools.
@@ -154,6 +168,8 @@ Navigate to **Workflows > Workflows** to explore the visual workflow editor and 
 
 **Real-world example:** An e-commerce order fulfilment system uses all three tools together. Cloud Scheduler triggers a Workflow every night at midnight to process all pending orders. The Workflow calls an inventory check service, a payment service, and a shipping service in sequence, handling errors at each step. For each order, the Workflow enqueues a Cloud Task to send a confirmation email — Cloud Tasks rate-limits email dispatch to 50/minute to respect the email provider's API limits. Eventarc separately triggers a real-time inventory update whenever a Cloud Storage import file lands.
 
+---
+
 ### Cost and Resource Optimisation
 **Concept:** Designing applications and infrastructure configurations that minimise cost while meeting performance requirements.
 
@@ -161,7 +177,7 @@ Navigate to **Workflows > Workflows** to explore the visual workflow editor and 
 *   **Scale to zero:** Setting `min_instance_count = 0` (Group 3, App CloudRun) means the service incurs zero compute cost when idle. Cloud Run bills per request, per vCPU-second and GB-second of memory allocation — a service with no traffic costs nothing.
 *   **Instance bounds:** `max_instance_count` (Group 3, both modules) caps the maximum concurrent instances, preventing unbounded cost growth during traffic spikes.
 *   **Resource right-sizing:** The `container_resources` variable (Group 3, both modules) sets CPU and memory requests. Over-provisioning CPU/memory wastes money; under-provisioning causes throttling. Use Cloud Profiler and container metrics to right-size over time.
-*   **Shared infrastructure:** In Services GCP, `create_network_filesystem = true` runs both Redis and an NFS server on a single shared `e2-small` VM instead of separate managed services — reducing cost significantly for development and test environments.
+*   **Shared infrastructure:** In GCP Services, `create_network_filesystem = true` runs both Redis and an NFS server on a single shared `e2-small` VM instead of separate managed services — reducing cost significantly for development and test environments.
 
 **Real-world example:** A development team deploys all non-production environments with `min_instance_count = 0` and `max_instance_count = 2`. Production uses `min_instance_count = 1` (to avoid cold start latency) and `max_instance_count = 50`. This configuration means dev and staging environments cost nothing when not in use, while production maintains a warm instance at all times. The team uses Active Assist recommendations to identify that their `container_resources` setting is 40% over-provisioned based on actual usage — reducing memory from 512Mi to 256Mi cuts per-request billing in half.
 
@@ -203,12 +219,14 @@ Navigate to **IAM & Admin > Service Accounts**, select a service account, and ex
 
 **Workload Identity Federation** extends ADC to workloads running *outside* Google Cloud (e.g. CI/CD pipelines on other cloud providers, on-premises servers). Instead of downloading a service account key, you configure a trust relationship between Google Cloud and an external identity provider (AWS IAM, GitHub Actions OIDC, Azure AD). The external workload exchanges its native identity token for a short-lived Google access token — no long-lived credentials are stored anywhere. Navigate to **IAM & Admin > Workload Identity Federation** to explore pool and provider configuration.
 
+---
+
 ### Secrets Management and Software Supply Chain
 **Concept:** Storing, accessing, and rotating secrets and encryption keys, and securing the container build pipeline.
 
 **In the RAD UI:**
 *   **Secret Manager Integration:** The `enable_auto_password_rotation` (Group 11 for Cloud Run, Group 17 for GKE) variable automates credential rotation. Secret values are fetched by the Cloud Run/GKE workload at startup via the Secret Manager API — the plaintext value is never written to a config file, container image layer, or Terraform state file.
-*   **Binary Authorization:** In **Services GCP**, `enable_binary_authorization` (Group 11) configures a cluster admission policy requiring all container images to be signed by a trusted Cloud Build attestor. Unsigned images are rejected at deploy time.
+*   **Binary Authorization:** In **GCP Services**, `enable_binary_authorization` (Group 11) configures a cluster admission policy requiring all container images to be signed by a trusted Cloud Build attestor. Unsigned images are rejected at deploy time.
 *   **Micro-segmentation:** In **App GKE**, `enable_network_segmentation` (Group 9) enforces Kubernetes Network Policies that restrict pod-to-pod traffic — only pods with matching label selectors can communicate within the namespace.
 
 **Console Exploration:**
@@ -218,11 +236,13 @@ Navigate to **Security > Secret Manager**. View a secret and note that you canno
 
 **Real-world example:** A fintech application stores sensitive customer data in Cloud Storage. Compliance requirements mandate that the company can provably delete all customer data within 24 hours of a deletion request. Rather than locating and deleting individual objects (impractical at scale), the team encrypts each customer's data with a unique CMEK key in Cloud KMS. When a deletion request arrives, they destroy the customer's KMS key — all objects encrypted with that key become permanently inaccessible within minutes, across every storage location.
 
+---
+
 ### Security Mechanisms, Vulnerability Detection, and Service-to-Service Security
 **Concept:** Proactively identifying vulnerabilities in running services and container images, and securing communication between microservices.
 
 **In the RAD UI:**
-The `enable_security_command_center` variable (Group 11, Services GCP) activates Security Command Center (SCC), which continuously scans all deployed resources for security misconfigurations and active threats.
+The `enable_security_command_center` variable (Group 11, GCP Services) activates Security Command Center (SCC), which continuously scans all deployed resources for security misconfigurations and active threats.
 
 **Console Exploration:**
 
@@ -238,6 +258,8 @@ The `enable_security_command_center` variable (Group 11, Services GCP) activates
 - Service-level metrics (request rate, error rate, latency) are collected automatically for every service without manual instrumentation.
 
 Navigate to **Kubernetes Engine > Service Mesh** to explore the mesh topology and traffic health dashboard. For simpler pod-to-pod security without a full service mesh, Kubernetes Network Policies (enabled via `enable_network_segmentation`) provide L3/L4 firewall rules based on pod label selectors.
+
+---
 
 ### Data Retention, Compliance, and Identity Platform
 **Concept:** Enforcing data retention policies for compliance, and managing end-user authentication at scale.
@@ -260,12 +282,14 @@ Navigate to **Kubernetes Engine > Service Mesh** to explore the mesh topology an
 **Concept:** Selecting purpose-built storage based on data structure, access patterns, volume, and consistency requirements.
 
 **In the RAD UI:**
-*   **Cloud SQL (Relational):** The `create_postgres` / `create_mysql` variables (Group 3 in Services GCP) provision fully managed PostgreSQL or MySQL. Cloud SQL provides strong consistency — a committed write is immediately visible to all readers.
+*   **Cloud SQL (Relational):** The `create_postgres` / `create_mysql` variables (Group 3 in GCP Services) provision fully managed PostgreSQL or MySQL. Cloud SQL provides strong consistency — a committed write is immediately visible to all readers.
 *   **Cloud Storage (Object Storage):** The `storage_buckets` variable (Group 10 for Cloud Run, Group 17 for GKE) provisions GCS buckets for unstructured data (files, images, backups, exported data). Multi-region Cloud Storage buckets provide eventual consistency for metadata operations (bucket listing) but strong read-after-write consistency for object operations since November 2020.
 *   **Memorystore (Redis):** Covered in section 1.1 — used for ephemeral caching, not durable storage.
 
 **Console Exploration:**
 Navigate to **Cloud Storage** and **SQL** in the GCP Console to review storage tiers and regional configurations.
+
+---
 
 ### Database Selection and Schema Design
 **Concept:** Choosing the right database engine for structured and unstructured workloads, and designing schemas that align with each engine's data model and scalability characteristics.
@@ -303,6 +327,8 @@ Navigate to **Spanner > `<instance>` > Spanner Studio** to explore schema views 
 
 Navigate to **Bigtable > &lt;instance&gt; > Bigtable Studio** to query tables and inspect row structure.
 
+---
+
 ### Consistency Implications Across Data Services
 **Concept:** Understanding the consistency guarantee each service provides and designing applications accordingly.
 
@@ -316,6 +342,8 @@ Navigate to **Bigtable > &lt;instance&gt; > Bigtable Studio** to query tables an
 | Cloud Storage | **Strong** for object reads (since Nov 2020) | Read-after-write consistency for all object operations. Bucket listing (metadata) may still have eventual consistency behaviour under high mutation rates. |
 
 **Real-world example:** An IoT platform writes sensor readings to Bigtable using a multi-cluster replication setup for regional availability. Application code that reads from the replica cluster must account for potential replication lag — a sensor's latest reading may not yet be present in the replica. The team adds a `X-Read-Consistency: strong` routing policy for user-facing reads (which routes to the primary cluster) while allowing background analytics to read from the replica, accepting stale data in exchange for lower latency.
+
+---
 
 ### Signed URLs and BigQuery
 **Concept:** Granting temporary, delegated access to Cloud Storage objects, and writing data to BigQuery for analytics.

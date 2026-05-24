@@ -1,6 +1,4 @@
-# Odoo_Common Module
-
-## Overview
+# Odoo Common Module
 
 `Odoo_Common` is a pure-configuration Terraform module in the RAD Modules ecosystem. It generates a `config` object consumed by platform modules (`App_CloudRun`, `App_GKE`) to deploy Odoo Community Edition on Google Cloud. The module provisions one GCP Secret Manager secret (the Odoo master password), defines one GCS storage bucket for custom addons, and emits all container configuration as Terraform outputs — no compute resources are created directly.
 
@@ -8,39 +6,27 @@ Odoo is a comprehensive open-source ERP platform. This module handles its specif
 
 ---
 
-## Architecture
+## 1. Overview
 
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                          Odoo_Common (Layer 1)                               │
-│                                                                              │
-│  Inputs: project_id, tenant_deployment_id, deployment_id,                   │
-│          application_version, enable_redis, ...                              │
-│                                                                              │
-│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐    │
-│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │    │
-│  │                      │    │                                         │    │
-│  │  Secret Manager API  │    │  container_image: "odoo" (custom build) │    │
-│  │  master-password     │    │  container_port: 8069                   │    │
-│  │    secret (16-char   │    │  container_command: ["/bin/bash", "-c"] │    │
-│  │    alphanumeric)     │    │  container_args: [inline startup script]│    │
-│  │                      │    │  database_type: POSTGRES_15             │    │
-│  │  GCS Bucket          │    │  enable_nfs: true                       │    │
-│  │    odoo-addons       │    │  nfs_mount_path: /mnt                   │    │
-│  │    (/mnt/extra-      │    │  gcs_volumes: [odoo-addons]             │    │
-│  │     addons)          │    │  initialization_jobs: [nfs-init,        │    │
-│  │                      │    │                        db-init]         │    │
-│  └──────────────────────┘    │  startup_probe: TCP/180s                │    │
-│                              │  liveness_probe: HTTP /web/health/120s  │    │
-│                              └─────────────────────────────────────────┘    │
-│                                                                              │
-│  wrapper_prefix = "app{application_name}{tenant_deployment_id}{             │
-│                         random_hex}"   (always internal random_id.hex)      │
-└──────────────────────────────────────────────────────────────────────────────┘
-                    │
-                    ▼
-        App_CloudRun / App_GKE (Layer 2)
-        (Cloud Run service, Cloud SQL, NFS, GCS, jobs)
+**Purpose**: To centralize all Odoo-specific configuration — a full Ubuntu 24.04-based Odoo Community Edition stack installed from the official nightly .deb repository, NFS-backed filestore and sessions, an inline startup script for `odoo.conf` generation, and optional Redis session store support — in a single module shared by both Cloud Run and GKE deployments.
+
+**Architecture**:
+
+```text
+Layer 3: Application Wrappers
+├── Odoo_CloudRun  ──┐
+└── Odoo_GKE       ──┤── instantiate Odoo_Common
+                      ↓
+          Odoo_Common (this module)
+          Creates: 1 Secret Manager secret (master-password)
+          Produces: config, storage_buckets, path,
+                    odoo_master_pass_secret_id, odoo_master_pass_secret_value
+                      ↓
+Layer 2: Platform Modules
+├── App_CloudRun  (serverless deployment)
+└── App_GKE       (Kubernetes deployment)
+                      ↓
+Layer 1: App_Common (networking, database, NFS, storage, secrets, IAM)
 ```
 
 **Volume mounts at runtime:**
@@ -53,7 +39,7 @@ Odoo is a comprehensive open-source ERP platform. This module handles its specif
 
 ---
 
-## GCP Resources Created
+## 2. GCP Resources Created
 
 | Resource | Name Pattern | Description |
 |----------|-------------|-------------|
@@ -72,7 +58,7 @@ Odoo is a comprehensive open-source ERP platform. This module handles its specif
 
 ---
 
-## Module Outputs
+## 3. Module Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
@@ -86,9 +72,25 @@ The `config` object contains all fields required by the platform module includin
 
 ---
 
-## Input Variables
+## 4. Non-Configurable Values
 
-### Section 1: Project & Identity
+The following values are fixed inside `Odoo_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_image` | `"odoo"` (Ubuntu 24.04-based custom build) | Built from source via the official nightly .deb repository. |
+| `image_source` | `"custom"` | Requires custom entrypoint and config injection. |
+| `container_port` | `8069` | Odoo's fixed HTTP listening port. |
+| `container_command` | `["/bin/bash", "-c"]` | Required to run the inline startup script as a shell command. |
+| `database_type` | `"POSTGRES_15"` | Odoo requires PostgreSQL 15. |
+| `enable_nfs` | `true` | Odoo requires a shared writable NFS filesystem for filestore and sessions. |
+| `nfs_mount_path` | `"/mnt"` | Odoo filestore, sessions, and odoo.conf are all written under `/mnt`. |
+
+---
+
+## 5. Input Variables
+
+### A. Project & Identity
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -98,7 +100,7 @@ The `config` object contains all fields required by the platform module includin
 | `deployment_region` | string | `"us-central1"` | GCP region for GCS bucket and secrets |
 | `common_labels` | map(string) | `{}` | Labels applied to all GCP resources |
 
-### Section 2: Application Details
+### B. Application Details
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -129,16 +131,16 @@ The `config` object contains all fields required by the platform module includin
 }
 ```
 
-### Section 3: Health Probes
+### C. Health Probes
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `startup_probe` | TCP, 180s initial delay, 60s timeout, 120s period, 3 failures | TCP check on container port |
-| `liveness_probe` | HTTP `/web/health`, 120s initial delay, 60s timeout, 120s period | HTTP health endpoint |
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `startup_probe` | `any` | TCP, 180s initial delay, 60s timeout, 120s period, 3 failures | TCP check on container port |
+| `liveness_probe` | `any` | HTTP `/web/health`, 120s initial delay, 60s timeout, 120s period | HTTP health endpoint |
 
 > **Note:** Odoo uses a **TCP startup probe** (not HTTP) because the HTTP layer is not available until after the database is initialized and the base module installed, which can take several minutes on first boot. The 180s initial delay accommodates this.
 
-### Section 4: Redis (Optional)
+### D. Redis (Optional)
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -148,20 +150,22 @@ The `config` object contains all fields required by the platform module includin
 
 ---
 
-## Initialization Jobs
+## 6. Initialization Jobs
 
 Two default jobs run at deployment time. They execute in order via explicit dependency:
 
-### Job 1: `nfs-init`
+### A. `nfs-init`
 
 | Property | Value |
 |----------|-------|
 | Image | `alpine:3.19` |
+| Script | inline command (no script file) |
+| `execute_on_apply` | `true` |
+| Timeout | 1200s |
+| Max retries | 0 |
 | `needs_db` | `false` (no Cloud SQL proxy injected) |
 | `mount_nfs` | `true` |
-| `execute_on_apply` | `true` |
 | `depends_on_jobs` | `[]` (runs first) |
-| Timeout | 1200s |
 
 **Inline command:**
 ```sh
@@ -172,17 +176,18 @@ chmod -R 777 /mnt/filestore /mnt/sessions /mnt/extra-addons
 
 Runs as root (no user override) to create NFS directories owned by UID/GID 101 (the `odoo` system user). The `needs_db = false` flag prevents the Cloud SQL Auth Proxy from being injected into this job, since it has no database dependency.
 
-### Job 2: `db-init`
+### B. `db-init`
 
 | Property | Value |
 |----------|-------|
 | Image | `postgres:15-alpine` |
 | Script | `scripts/db-init.sh` |
+| `execute_on_apply` | `true` |
+| Timeout | 600s |
+| Max retries | 0 |
 | `needs_db` | `true` |
 | `mount_nfs` | `false` |
-| `execute_on_apply` | `true` |
 | `depends_on_jobs` | `["nfs-init"]` |
-| Timeout | 600s |
 | Secret env vars | `DB_PASSWORD`, `ROOT_PASSWORD` |
 
 The `db-init` job waits for `nfs-init` to complete before executing. It creates the PostgreSQL database user and database, then signals the Cloud SQL Auth Proxy to shut down via `POST http://127.0.0.1:9091/quitquitquit`.
@@ -199,17 +204,17 @@ The `db-init` job waits for `nfs-init` to complete before executing. It creates 
 
 ---
 
-## Container Image
+## 7. Container Image
 
 The module builds a custom Docker image from `scripts/Dockerfile` using Ubuntu Noble (24.04) as the base.
 
-### Build Args
+### A. Build Args
 
 | Arg | Value |
 |-----|-------|
 | `ODOO_VERSION` | `var.application_version` (e.g., `18.0`) |
 
-### Dockerfile Summary
+### B. Dockerfile Summary
 
 ```
 Base: ubuntu:noble (24.04)
@@ -249,7 +254,7 @@ CMD:        ["/entrypoint.sh", "odoo", "--http-port=8069"]
 
 ---
 
-## Scripts
+## 8. Scripts
 
 ### `cloudrun-entrypoint.sh`
 
@@ -310,7 +315,7 @@ xmlrpc_port = 8069
 
 ---
 
-## Startup Script (`container_command` / `container_args`)
+## 9. Startup Script (`container_command` / `container_args`)
 
 Rather than a simple entrypoint, Odoo_Common overrides `container_command` and `container_args` in the `config` output with an inline bash script. This script runs as the container's startup command and handles all first-boot initialization:
 
@@ -326,7 +331,7 @@ This inline approach avoids a separate init container while handling the Cloud S
 
 ---
 
-## Redis Support
+## 10. Redis Support
 
 When `enable_redis = true`, the module sets `ENABLE_REDIS=true` in container environment variables. The startup script checks this flag and appends Redis configuration to `odoo.conf`:
 
@@ -339,7 +344,7 @@ The `redis_host_final` local is computed at Terraform plan time: if `var.redis_h
 
 ---
 
-## Platform-Specific Differences
+## 11. Platform-Specific Differences
 
 | Aspect | Odoo_CloudRun | Odoo_GKE |
 |--------|---------------|----------|
@@ -354,7 +359,7 @@ The `redis_host_final` local is computed at Terraform plan time: if `var.redis_h
 
 ---
 
-## Usage Example
+## 12. Implementation Pattern
 
 ```hcl
 module "odoo_common" {

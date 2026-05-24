@@ -9,7 +9,9 @@
 
 This guide helps candidates preparing for the Google Cloud Professional Cloud Architect (PCA) certification explore Section 5 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCA objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. Variables are organised into numbered groups in the RAD UI deployment form — for example, "(Group 3)" refers to the third collapsible section of settings for that module. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCA objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+
+📌 **Case study connection — Altostrat Media:** Section 5 topics (advising on implementation, interacting with Google APIs, testing) map most directly to the Altostrat Media case study. Altostrat is adopting cloud-native architecture for global-scale content delivery and streaming — a context where a Cloud Architect must advise multiple engineering teams on deployment patterns, API integration strategies, and test automation approaches that can scale to millions of concurrent users. As you explore this section, consider what implementation guidance you would give Altostrat's development teams about deployment tooling, API client library selection, and the testing pyramid for a high-throughput media streaming platform.
 
 ---
 
@@ -26,6 +28,8 @@ You interact with each module by configuring its variables in the RAD UI deploym
 Navigate to **Artifact Registry** to view the repository of container images deployed by the pipelines.
 
 **Real-world example:** A platform engineering team standardizes all application images on Artifact Registry with automatic vulnerability scanning enabled. When a critical CVE is detected in a base image, Security Command Center raises a finding that links directly to the affected image digest in Artifact Registry. The team's Cloud Build trigger is configured to rebuild and redeploy the image automatically on a nightly schedule, ensuring all running services consume patched base images without manual intervention.
+
+---
 
 ### 💡 Additional Advising Objectives & Learning Guidelines
 *   **API Management Best Practices (Apigee):** Understand when to use Apigee (for monetization, complex rate limiting, developer portals, and legacy SOAP-to-REST translation) versus a simple API Gateway or Cloud Endpoints.
@@ -48,6 +52,8 @@ Navigate to **Artifact Registry** to view the repository of container images dep
 Navigate to **Cloud Build > History** to see the automated pipelines executing the IaC deployments via Terraform.
 
 **Real-world example:** A large enterprise stores all Terraform state in a versioned GCS bucket with Object Versioning enabled, and locks the state using a Cloud Storage backend. When a misconfigured firewall rule causes a production incident, the operations team uses `terraform state` commands from Cloud Shell to inspect drift and rolls back the firewall configuration by reverting the Terraform code in the repository and triggering a fresh Cloud Build pipeline — restoring the known-good state with a full audit trail in Cloud Build history.
+
+---
 
 ### 💡 Additional Programmatic Interaction Objectives & Learning Guidelines
 The PCA exam heavily tests raw Cloud SDK (`gcloud`), `gsutil`, `bq`, and programmatic environments.

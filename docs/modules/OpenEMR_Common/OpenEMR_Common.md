@@ -1,6 +1,6 @@
-# OpenEMR_Common Module
+# OpenEMR Common Module
 
-## Overview
+## 1. Overview
 
 `OpenEMR_Common` is a pure-configuration Terraform module in the RAD Modules ecosystem. It generates a `config` object consumed by platform modules (`App_CloudRun`, `App_GKE`) to deploy OpenEMR — an open-source electronic health record (EHR) and medical practice management system — on Google Cloud. The module provisions one GCP Secret Manager secret (the OpenEMR admin password) and emits all container configuration as Terraform outputs. No compute resources or GCS buckets are created directly.
 
@@ -8,7 +8,7 @@ OpenEMR has specific infrastructure requirements: **MySQL 8.0** (not PostgreSQL)
 
 ---
 
-## Architecture
+## 2. Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -52,7 +52,7 @@ OpenEMR has specific infrastructure requirements: **MySQL 8.0** (not PostgreSQL)
 
 ---
 
-## GCP Resources Created
+## 3. GCP Resources Created
 
 | Resource | Name Pattern | Description |
 |----------|-------------|-------------|
@@ -67,7 +67,7 @@ OpenEMR has specific infrastructure requirements: **MySQL 8.0** (not PostgreSQL)
 
 ---
 
-## Module Outputs
+## 4. Module Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
@@ -79,9 +79,27 @@ OpenEMR has specific infrastructure requirements: **MySQL 8.0** (not PostgreSQL)
 
 ---
 
-## Input Variables
+## 5. Non-Configurable Values
 
-### Identity & Project
+The following values are fixed inside `OpenEMR_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_port` | `80` | Apache listens on port 80 inside the container. |
+| `database_type` | `"MYSQL_8_0"` | OpenEMR requires MySQL 8.0; PostgreSQL is not supported. |
+| `enable_nfs` | `true` | NFS is mandatory for OpenEMR site files (sqlconf.php, documents, caches). |
+| `nfs_mount_path` | `"/var/www/localhost/htdocs/openemr/sites"` | Fixed OpenEMR sites directory path baked into the image. |
+| `storage_buckets` | `[]` | No GCS buckets are provisioned; callers may inject via `gcs_volumes`. |
+| `admin_password length` | `20` characters, alphanumeric | Sufficient entropy for the initial admin credential. |
+| `MYSQL_ROOT_PASS` | `"BLANK"` | Forces OpenEMR to skip root DB access during auto-configuration. |
+| `MANUAL_SETUP` | `"no"` | Always enables automatic setup via `auto_configure.php`. |
+| `SWARM_MODE` | `"no"` | Disables multi-instance swarm coordination by default. |
+
+---
+
+## 6. Input Variables
+
+### A. Identity & Project
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -90,7 +108,7 @@ OpenEMR has specific infrastructure requirements: **MySQL 8.0** (not PostgreSQL)
 | `deployment_id` | string | `""` | Unique deployment identifier; auto-generated if empty |
 | `resource_labels` | map(string) | `{}` | Labels applied to all GCP resources |
 
-### Application
+### B. Application
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -101,7 +119,7 @@ OpenEMR has specific infrastructure requirements: **MySQL 8.0** (not PostgreSQL)
 | `db_name` | string | `"openemr"` | MySQL database name |
 | `db_user` | string | `"openemr"` | MySQL database user |
 
-### Resources
+### C. Resources
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -119,14 +137,14 @@ OpenEMR has specific infrastructure requirements: **MySQL 8.0** (not PostgreSQL)
 
 > **Singleton default:** `max_instance_count = 1` reflects that OpenEMR's NFS-based leadership election (`docker-leader` file) works correctly for single instances. Multi-instance or Kubernetes deployments require `SWARM_MODE=yes` or `K8S` environment variable.
 
-### Health Probes
+### D. Health Probes
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `startup_probe` | TCP, 0s delay, 5s timeout, 10s period, 12 failures | TCP port check (allows up to 120s for startup) |
 | `liveness_probe` | HTTP `GET /interface/login/login.php`, 0s delay, 10s timeout, 30s period, 10 failures | Full HTTP health check against the login page |
 
-### Redis
+### E. Redis
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -138,11 +156,11 @@ OpenEMR has specific infrastructure requirements: **MySQL 8.0** (not PostgreSQL)
 
 ---
 
-## Initialization Jobs
+## 7. Initialization Jobs
 
 Two default jobs run at deployment time. Unlike the Odoo module, they have **no explicit ordering** — both run independently.
 
-### Job 1: `nfs-init`
+### A. Job: `nfs-init`
 
 | Property | Value |
 |----------|-------|
@@ -177,7 +195,7 @@ The `gcr.io/google.com/cloudsdktool/google-cloud-cli:alpine` image is used speci
 
 > **Socket remapping:** When `DB_HOST` is a Unix socket path (Cloud Run), `nfs-init.sh` writes `localhost` into `sqlconf.php` instead of the raw socket path. The actual socket routing is handled by PHP's `mysqli.default_socket` / `pdo_mysql.default_socket` overrides at runtime.
 
-### Job 2: `db-init`
+### B. Job: `db-init`
 
 | Property | Value |
 |----------|-------|
@@ -203,7 +221,7 @@ The `gcr.io/google.com/cloudsdktool/google-cloud-cli:alpine` image is used speci
 
 ---
 
-## Container Image
+## 8. Container Image
 
 The module builds a custom Docker image from `scripts/Dockerfile` using Alpine 3.20 as the base.
 
@@ -260,13 +278,13 @@ EXPOSE: 80
 
 ---
 
-## `openemr.sh` — Startup Orchestration
+## 9. `openemr.sh` — Startup Orchestration
 
 The `openemr.sh` script handles all aspects of OpenEMR startup. It is the primary difference from other `*_Common` modules: rather than a thin entrypoint, it performs a full installation/upgrade orchestration.
 
 **Key behaviors:**
 
-### 1. Variable Mapping
+### A. Variable Mapping
 Maps platform-standard `DB_*` variables to OpenEMR's `MYSQL_*` variables:
 - `DB_HOST` → `MYSQL_HOST`
 - `DB_USER` → `MYSQL_USER`
@@ -277,7 +295,7 @@ Expands the `$(NFS_SERVER_IP)` placeholder in `REDIS_SERVER` at startup.
 
 For Unix socket connections (Cloud Run), sets `MYSQL_UNIX_PORT=$MYSQL_HOST` and overrides `MYSQL_HOST=localhost`.
 
-### 2. Temporary Health Probe Server
+### B. Temporary Health Probe Server
 During installation (which can take several minutes), OpenEMR starts a **PHP built-in web server** on port 80 serving stub `login.php` and `index.php` endpoints that return HTTP 200. This prevents startup/liveness probe failures while `auto_configure.php` runs:
 
 ```sh
@@ -287,7 +305,7 @@ HEALTH_PROBE_PID=$!
 
 The probe server is killed after setup completes and Apache takes over.
 
-### 3. Authority / Operator Model
+### C. Authority / Operator Model
 | Role | AUTHORITY | OPERATOR | When |
 |------|-----------|----------|------|
 | Singleton / Cloud Run | yes | yes | Default (`SWARM_MODE=no`, `K8S` unset) |
@@ -298,7 +316,7 @@ The probe server is killed after setup completes and Apache takes over.
 
 Only `AUTHORITY=yes` instances run `auto_configure.php` and database migrations.
 
-### 4. Version-Aware Upgrade
+### D. Version-Aware Upgrade
 Compares three version stamps:
 - `/root/docker-version` (image version)
 - `/var/www/localhost/htdocs/openemr/docker-version` (code version)
@@ -313,7 +331,7 @@ If the image version is newer than the NFS version, runs the appropriate `fsupgr
 - `fsupgrade-6.sh`: 7.0.1 → current
 - `fsupgrade-7.sh`: 7.0.2 → current
 
-### 5. Auto-Configuration
+### E. Auto-Configuration
 On first boot (when `sqlconf.php` has `$config = 0`), runs `auto_configure.php` as the `apache` user via `su`:
 
 ```sh
@@ -324,7 +342,7 @@ Uses a temporary PHP file cache (`/tmp/php-file-cache`) with opcache enabled to 
 
 Includes a **race condition guard**: if multiple Cloud Run instances start simultaneously, only the first to complete setup proceeds; others detect `$config = 1` and skip.
 
-### 6. Apache + PHP-FPM Startup
+### F. Apache + PHP-FPM Startup
 After setup and upgrade, starts PHP-FPM and Apache as the final step:
 ```sh
 php-fpm83 && httpd -D FOREGROUND
@@ -332,7 +350,7 @@ php-fpm83 && httpd -D FOREGROUND
 
 ---
 
-## Utility Scripts
+## 10. Utility Scripts
 
 ### `unlock_admin.sh` / `unlock_admin.php`
 Re-activates the `admin` account and resets the password. Used for recovery when the admin account is locked due to failed login attempts:
@@ -356,7 +374,7 @@ Bash function library sourced by `openemr.sh`. Key functions:
 
 ---
 
-## `auto_configure.php`
+## 11. `auto_configure.php`
 
 PHP script run during first boot to perform database initialization via the OpenEMR `Installer` class. Reads configuration from environment variables:
 
@@ -373,7 +391,7 @@ The `no_root_db_access=1` flag prevents the installer from attempting to create 
 
 ---
 
-## Environment Variables (Module Defaults)
+## 12. Environment Variables (Module Defaults)
 
 The following environment variables are always set by the module (merged with `var.environment_variables`):
 
@@ -390,7 +408,7 @@ The following environment variables are always set by the module (merged with `v
 
 ---
 
-## Platform-Specific Differences
+## 13. Platform-Specific Differences
 
 | Aspect | OpenEMR_CloudRun | OpenEMR_GKE |
 |--------|------------------|------------|
@@ -405,7 +423,7 @@ The following environment variables are always set by the module (merged with `v
 
 ---
 
-## Usage Example
+## 14. Usage Example
 
 ```hcl
 module "openemr_common" {

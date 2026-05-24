@@ -1,3 +1,8 @@
+---
+title: Agent Guide
+slug: /guides/agent
+---
+
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Agent Guide

@@ -7,11 +7,9 @@
 
 
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud DevOps Engineer (PDE) certification explore Section 2 of the exam. It maps the official exam guide domains to practical implementations in the provided Terraform codebase (`modules/App_CloudRun` and `modules/App_GKE`), which rely on the shared `modules/App_Common` module.
+This guide helps candidates preparing for the Google Cloud Professional Cloud DevOps Engineer (PDE) certification explore Section 2 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
-Three modules are relevant to this section: **App CloudRun**, which deploys serverless containerised applications on Cloud Run; **App GKE**, which deploys containerised workloads on GKE Autopilot; and **App GCP**, which provides the shared foundational infrastructure consumed by both application modules.
-
-By exploring the GCP Console and the corresponding Terraform code, you will gain hands-on context for these critical DevOps topics.
+You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. Variables are organised into numbered groups in the RAD UI deployment form — for example, "(Group 3)" refers to the third collapsible section of settings for that module. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PDE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
 
 ---
 
@@ -101,6 +99,8 @@ Audit logging is largely automatic in Google Cloud — Cloud Audit Logs capture 
 5. Navigate to **IAM & Admin > Audit Logs**. Review which services have Data Access audit logging enabled. For compliance-sensitive environments, enable `DATA_READ` and `DATA_WRITE` audit logging for Cloud Build, Artifact Registry, and Cloud Deploy — these generate logs for every API call, not just administrative changes.
 
 **Real-world example:** A software company receives a security incident notification that an unexpected container image was deployed to their production Cloud Run service. Using Cloud Audit Logs, the security team queries for all `google.cloud.run.v1.Services.ReplaceService` events in the past 7 days. The logs reveal that a deployment was made directly via `gcloud run deploy` by a developer's personal account — bypassing the Cloud Deploy pipeline entirely. The team immediately: (1) rolls back to the last known-good Cloud Deploy release; (2) removes `roles/run.developer` from individual user accounts, requiring all deployments to go through the Cloud Build + Cloud Deploy pipeline using dedicated service accounts; (3) enables Binary Authorization on the Cloud Run service to prevent deployments of images without a valid Cloud Build attestation. The Cloud Audit Log entry provided the exact timestamp, principal email, and request parameters needed to scope the incident.
+
+---
 
 ### 💡 Additional CI/CD Pipeline Objectives & Learning Guidelines
 

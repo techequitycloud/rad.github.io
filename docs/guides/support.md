@@ -1,3 +1,8 @@
+---
+title: Support Guide
+slug: /guides/support
+---
+
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Support Guide

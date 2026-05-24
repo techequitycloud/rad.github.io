@@ -1,6 +1,6 @@
-# Sample_Common Module
+# Sample Common Module
 
-## Overview
+## 1. Overview
 
 `Sample_Common` is a **reference implementation** of a `*_Common` module in the RAD Modules ecosystem. It deploys a minimal Flask web application backed by PostgreSQL to demonstrate the correct structure, patterns, and conventions that all `*_Common` modules follow.
 
@@ -10,7 +10,7 @@ The module provisions one GCP Secret Manager secret (the Flask `SECRET_KEY`), de
 
 ---
 
-## Architecture
+## 2. Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -44,7 +44,7 @@ The module provisions one GCP Secret Manager secret (the Flask `SECRET_KEY`), de
 
 ---
 
-## GCP Resources Created
+## 3. GCP Resources Created
 
 | Resource | Name Pattern | Description |
 |----------|-------------|-------------|
@@ -58,7 +58,7 @@ The module provisions one GCP Secret Manager secret (the Flask `SECRET_KEY`), de
 
 ---
 
-## Module Outputs
+## 4. Module Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
@@ -72,9 +72,9 @@ The `SECRET_KEY` is also wired directly into the `config.secret_env_vars` map, s
 
 ---
 
-## Input Variables
+## 5. Input Variables
 
-### Identity & Project
+### A. Identity & Project
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -84,7 +84,7 @@ The `SECRET_KEY` is also wired directly into the `config.secret_env_vars` map, s
 | `resource_prefix` | string | `""` | Override secret prefix (pass `App_GKE.resource_prefix` to align names) |
 | `resource_labels` | map(string) | `{}` | Labels applied to all GCP resources |
 
-### Application
+### B. Application
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -95,7 +95,7 @@ The `SECRET_KEY` is also wired directly into the `config.secret_env_vars` map, s
 | `db_name` | string | `"sampledb"` | PostgreSQL database name |
 | `db_user` | string | `"sampleuser"` | PostgreSQL database user |
 
-### Resources
+### C. Resources
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -106,14 +106,14 @@ The `SECRET_KEY` is also wired directly into the `config.secret_env_vars` map, s
 | `environment_variables` | map(string) | `{ FLASK_ENV = "production" }` | Container environment variables |
 | `initialization_jobs` | list(any) | `[]` | Override default jobs (empty = use default `db-init`) |
 
-### Health Probes
+### D. Health Probes
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `startup_probe` | HTTP `GET /healthz`, 10s delay, 5s timeout, 10s period, 3 failures | Startup readiness check |
 | `liveness_probe` | HTTP `GET /healthz`, 15s delay, 5s timeout, 30s period, 3 failures | Ongoing liveness check |
 
-### Redis
+### E. Redis
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -123,7 +123,21 @@ The `SECRET_KEY` is also wired directly into the `config.secret_env_vars` map, s
 
 ---
 
-## Initialization Job: `db-init`
+## 6. Non-Configurable Values
+
+The following values are fixed inside `Sample_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_port` | `8080` | Gunicorn binds to `$PORT`, defaulting to 8080. |
+| `database_type` | `"POSTGRES_15"` | Sample app uses PostgreSQL 15. |
+| `storage_buckets` | `[]` | No GCS buckets are provisioned by this module. |
+| `secret_key_length` | `32` characters, alphanumeric | Flask `SECRET_KEY` generated at provision time. |
+| `secret_propagation_wait` | `30s` | IAM propagation delay after secret creation. |
+
+---
+
+## 7. Initialization Job: `db-init`
 
 | Property | Value |
 |----------|-------|
@@ -146,7 +160,7 @@ The `SECRET_KEY` is also wired directly into the `config.secret_env_vars` map, s
 
 ---
 
-## Redis Sidecar (`additional_services`)
+## 8. Redis Sidecar (`additional_services`)
 
 When `enable_redis = true`, a Redis sidecar is added to the `config.additional_services` list:
 
@@ -167,7 +181,7 @@ The Flask app reads `ENABLE_REDIS`, `REDIS_HOST`, and `REDIS_PORT` from environm
 
 ---
 
-## Container Image
+## 9. Container Image
 
 Built from `scripts/Dockerfile` using `python:3.11-slim`.
 
@@ -196,11 +210,11 @@ No `ENTRYPOINT` is defined — the image uses `CMD` directly. No `tini`.
 
 ---
 
-## Flask Application (`app.py`)
+## 10. Flask Application (`app.py`)
 
 A minimal working application demonstrating all integration patterns:
 
-### Database
+### A. Database
 - Connects to PostgreSQL via `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_PORT`
 - URL-encodes user and password with `urllib.parse.quote_plus` to handle special characters in SQLAlchemy connection strings
 - Supports both **Unix socket** (`DB_HOST` starts with `/`) and **TCP** connections:
@@ -214,7 +228,7 @@ A minimal working application demonstrating all integration patterns:
 - `Visitor` ORM model with a persistent counter table
 - `init_db()` runs at startup to create the table and seed an initial row
 
-### Routes
+### B. Routes
 
 | Route | Method | Description |
 |-------|--------|-------------|
@@ -222,13 +236,13 @@ A minimal working application demonstrating all integration patterns:
 | `/healthz` | GET | Returns `{"status": "healthy"}` — used by both startup and liveness probes |
 | `/db` | GET | Executes `SELECT version()` and returns the PostgreSQL version |
 
-### Sessions
+### C. Sessions
 - When `ENABLE_REDIS=true` and `REDIS_HOST` is set: uses `Flask-Session` with Redis backend (`SESSION_TYPE=redis`, signed sessions via `SECRET_KEY`)
 - Otherwise: falls back to Flask's default cookie-based sessions
 
 ---
 
-## Platform-Specific Differences
+## 11. Platform-Specific Differences
 
 | Aspect | Sample_CloudRun | Sample_GKE |
 |--------|-----------------|------------|
@@ -242,7 +256,7 @@ A minimal working application demonstrating all integration patterns:
 
 ---
 
-## Usage Example
+## 12. Usage Example
 
 ```hcl
 module "sample_common" {
@@ -265,7 +279,7 @@ module "sample_cloudrun" {
 }
 ```
 
-### Aligning Secret Names with App_GKE
+### A. Aligning Secret Names with App_GKE
 
 When deploying on GKE, pass `App_GKE`'s `resource_prefix` output so the secret name matches all other cluster resources:
 

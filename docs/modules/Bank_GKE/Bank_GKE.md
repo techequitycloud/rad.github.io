@@ -1,6 +1,8 @@
-# Bank_GKE Module
+# Bank GKE Module
 
-## Overview
+The source code for this module is available in the [rad-modules GitHub repository](https://github.com/techequitycloud/rad-modules/tree/main/modules/Bank_GKE).
+
+## 1. Overview
 
 The **Bank_GKE** module deploys a production-grade microservices banking application on a single Google Kubernetes Engine (GKE) cluster. It is designed as a focused learning environment for platform engineers who want hands-on experience with core GKE capabilities, Cloud Service Mesh, Anthos Config Management, and cloud-native observability — within a single-region, single-cluster deployment that is simpler to reason about than a multi-cluster setup.
 
@@ -12,7 +14,7 @@ This module is intended for **educational purposes**. It is not a production ban
 
 ---
 
-## What You Will Learn
+## 2. What You Will Learn
 
 By deploying and exploring this module, a platform engineer will gain practical experience with:
 
@@ -32,7 +34,7 @@ By deploying and exploring this module, a platform engineer will gain practical 
 
 ---
 
-## Architecture Overview
+## 3. Architecture Overview
 
 The module creates the following architecture:
 
@@ -78,7 +80,7 @@ GKE Cluster (single region)
 
 ---
 
-## GKE Cluster Features
+## 4. GKE Cluster Features
 
 ### Autopilot vs Standard Clusters
 
@@ -268,7 +270,7 @@ kubectl get gateway,httproute -A
 
 ---
 
-## Networking
+## 5. Networking
 
 ### VPC Design
 
@@ -362,7 +364,7 @@ gcloud compute addresses list --global --project PROJECT_ID \
 
 ---
 
-## GKE Fleet and Cloud Service Mesh
+## 6. GKE Fleet and Cloud Service Mesh
 
 ### GKE Fleet
 
@@ -467,7 +469,7 @@ kubectl get authorizationpolicy -n bank-of-anthos
 
 ---
 
-## Anthos Config Management
+## 7. Anthos Config Management
 
 Anthos Config Management (ACM) brings GitOps-style configuration synchronisation to GKE clusters. In this module, **Config Sync** watches a Git repository and automatically reconciles the desired Kubernetes state declared in that repository with the live state in the cluster. This enables repeatable, auditable, and version-controlled configuration management without manual `kubectl apply` operations.
 
@@ -601,7 +603,7 @@ Restore sync by fixing the underlying cause (e.g. correcting the manifest in Git
 
 ---
 
-## GKE Ingress and Load Balancing
+## 8. GKE Ingress and Load Balancing
 
 Bank_GKE exposes the frontend microservice to the internet using the **GKE Ingress controller** backed by a Google Cloud External HTTP(S) Load Balancer. This is a single-cluster ingress pattern — it differs from the `MC_Bank_GKE` module which uses Multi-Cluster Ingress (MCI). The GKE Ingress approach is simpler and is appropriate when high availability across multiple clusters or regions is not required.
 
@@ -785,7 +787,7 @@ gcloud compute target-https-proxies list \
 
 ---
 
-## Bank of Anthos Application
+## 9. Bank of Anthos Application
 
 Bank of Anthos is a microservices banking simulation built by Google Cloud Platform as a reference implementation for cloud-native Kubernetes applications. It provides realistic workloads that exercise service mesh capabilities, persistent storage, inter-service authentication, and observability features.
 
@@ -969,7 +971,7 @@ kubectl get configmap istio-asm-managed -n istio-system -o yaml
 
 ---
 
-## Service Level Objectives
+## 10. Service Level Objectives
 
 Service Level Objectives (SLOs) express a reliability or resource-efficiency target for each service in measurable terms. This module defines SLOs for all nine Bank of Anthos microservices using Cloud Monitoring SLO capabilities. Engineers can observe each service's current SLI value against its declared target and configure alerting when services breach their error budget.
 
@@ -1087,7 +1089,7 @@ gcloud monitoring services slos describe ${SLO_ID} \
 
 ---
 
-## Module Configuration Options
+## 11. Module Configuration Options
 
 The following options are available when deploying the Bank_GKE module. Engineers who do not have access to the underlying Terraform code configure these options through the platform UI or deployment parameters.
 
@@ -1147,7 +1149,7 @@ The following options are available when deploying the Bank_GKE module. Engineer
 
 ---
 
-## GCP APIs Enabled
+## 12. GCP APIs Enabled
 
 The module enables the following 20 Google Cloud APIs in the destination project:
 
@@ -1182,7 +1184,7 @@ gcloud services list --enabled --project=${PROJECT_ID} | grep -E \
 
 ---
 
-## Deployment Lifecycle
+## 13. Deployment Lifecycle
 
 ### Initial Deployment
 
@@ -1235,11 +1237,11 @@ When the module is destroyed, resources are removed in reverse dependency order:
 5. Static IP address released
 6. VPC, subnet, firewall rules, Cloud NAT, and Cloud Router deleted
 
-> **Warning**: Destroying the module deletes all persistent volume data in `accounts-db` and `ledger-db`. Any transaction or account data created during the lab is permanently lost.
+> **Warning:** Destroying the module deletes all persistent volume data in `accounts-db` and `ledger-db`. Any transaction or account data created during the lab is permanently lost.
 
 ---
 
-## Hands-On Exercises
+## 14. Hands-On Exercises
 
 These exercises develop practical skills with GKE, Cloud Service Mesh, Anthos Config Management, and SLOs using the live Bank of Anthos deployment. Each exercise is self-contained and can be completed independently.
 
@@ -1335,7 +1337,7 @@ gcloud compute network-endpoint-groups list-network-endpoints \
 
 **Objective**: Observe Config Sync automatically restoring a resource that was manually deleted.
 
-> This exercise requires `enable_config_management=true`.
+> **Important:** This exercise requires `enable_config_management=true`.
 
 ```bash
 # Check current sync status
@@ -1533,7 +1535,7 @@ gcloud logging read \
 
 ---
 
-## Troubleshooting Guide
+## 15. Troubleshooting Guide
 
 ### Pods Stuck in Pending State
 
@@ -1692,7 +1694,7 @@ gcloud compute addresses list \
 
 ---
 
-## References
+## 16. References
 
 ### Google Cloud Documentation
 

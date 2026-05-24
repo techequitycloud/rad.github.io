@@ -7,15 +7,17 @@
 
 
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud Developer (PCD) certification explore Section 2 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
+This guide helps candidates preparing for the Google Cloud Professional Cloud Developer (PCD) certification explore Section 2 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCD objectives that are not currently implemented by these modules, providing guidelines for self-guided research and exploration.
+You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. Variables are organised into numbered groups in the RAD UI deployment form — for example, "(Group 3)" refers to the third collapsible section of settings for that module. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCD objectives that are not currently implemented by these modules, providing guidelines for self-guided research and exploration.
 
 ---
 
 ## 2.1 Setting up your development environment
 
 The RAD platform abstracts the local development environment behind the deployment portal. For the PCD exam, you must also be familiar with the full Google Cloud developer toolchain used to build, test, and debug applications locally and in the cloud.
+
+---
 
 ### Google Cloud CLI and Service Emulators
 **Concept:** Using the gcloud CLI for local authentication and deployment, and running local emulators to test against GCP services without incurring cloud costs.
@@ -35,6 +37,8 @@ Install the Cloud SDK locally and authenticate with `gcloud auth login`. Configu
 Emulators are critical for fast local development cycles and CI unit tests — they avoid network latency, authentication setup, and per-operation costs.
 
 **Real-world example:** A development team writes unit tests for a service that publishes to Pub/Sub and reads from Firestore. In their CI pipeline, the test setup script starts both the Pub/Sub and Datastore emulators, sets the corresponding environment variables, and runs `pytest`. The tests run in under 10 seconds — 15× faster than tests that hit live GCP services — and work in any environment with no credentials configured.
+
+---
 
 ### Cloud Code, Cloud Shell, and Cloud Workstations
 **Concept:** Using Google-provided developer tooling to write, debug, and deploy cloud-native applications from any environment.
@@ -57,6 +61,8 @@ Install Cloud Code from your IDE's extension marketplace and sign in with your G
 - Access is controlled via IAP — the workstation is never exposed to the public internet.
 
 Navigate to **Cloud Workstations > Workstation clusters** to explore configuration. Workstations are particularly valuable for teams with strict data security requirements (financial services, healthcare) where code must not leave the corporate cloud environment.
+
+---
 
 ### Gemini Cloud Assist and Gemini Code Assist
 **Concept:** Using AI assistance for development tasks and infrastructure operations.
@@ -87,7 +93,7 @@ Navigate to **Cloud Workstations > Workstation clusters** to explore configurati
 **In the RAD UI:**
 *   **Continuous Integration (CI):** The `enable_cicd_trigger` variable (Group 7) integrates the source repository (`github_repository_url`) with Cloud Build. When a commit is pushed to the configured branch, Cloud Build automatically runs the pipeline defined in `cloudbuild.yaml`.
 *   **Container Image Storage:** Cloud Build uses Kaniko to compile the container image and pushes it to Artifact Registry. The image is referenced by the `container_image` variable (Group 3), which specifies the Artifact Registry path including the image digest or tag.
-*   **Binary Authorization Provenance:** The `enable_binary_authorization` variable (Group 11 in Services GCP) configures Cloud Build to create a cryptographic attestation after successfully building and testing an image. Only images with a valid attestation from the trusted Cloud Build attestor can be deployed to the GKE cluster or Cloud Run service.
+*   **Binary Authorization Provenance:** The `enable_binary_authorization` variable (Group 11 in GCP Services) configures Cloud Build to create a cryptographic attestation after successfully building and testing an image. Only images with a valid attestation from the trusted Cloud Build attestor can be deployed to the GKE cluster or Cloud Run service.
 
 **Console Exploration:**
 Navigate to **Cloud Build > Triggers** to see the repository integration and trigger configuration. Navigate to **Cloud Build > History** to view build logs — each step in `cloudbuild.yaml` is a separate log entry. Navigate to **Artifact Registry > Repositories** to view stored container images, their tags, and the **Vulnerabilities** column showing Artifact Analysis scan results.
@@ -119,11 +125,12 @@ Navigate to **Cloud Build > History**, select a recent build, and expand the ind
 
 **Real-world example:** A Cloud Run service's `cloudbuild.yaml` defines three steps: (1) `docker build` to build the container, (2) `pytest integration_tests/` to run integration tests against a Cloud SQL test instance, (3) `docker push` to push the image to Artifact Registry. If step 2 fails, step 3 never executes — the broken image never reaches Artifact Registry and cannot be deployed. The build failure notification is sent to the team's chat channel via a Cloud Build Pub/Sub notification topic.
 
+---
+
 ### 💡 Additional Testing Objectives & Learning Guidelines
 
 *   **Unit Tests with Gemini Code Assist:** Practice writing a Python or Node.js function, then use Gemini Code Assist in your IDE to automatically generate a suite of unit tests. In the IDE chat panel, select the function and prompt: "Generate pytest unit tests for this function covering all code paths, including error cases and boundary conditions." Review the generated tests, add any missing cases, and run them against the Pub/Sub or Datastore emulator where applicable.
-
-    > **Real-World Example:** A developer writes a function that parses a CloudEvents payload from an Eventarc trigger and extracts the Cloud Storage object name and bucket. They use Gemini Code Assist to generate unit tests with a variety of valid and malformed payloads. The generated tests catch an edge case where the function raises an unhandled `KeyError` when the `data` field is absent — a real scenario when testing with manually crafted test events.
+**Real-world example:** A developer writes a function that parses a CloudEvents payload from an Eventarc trigger and extracts the Cloud Storage object name and bucket. They use Gemini Code Assist to generate unit tests with a variety of valid and malformed payloads. The generated tests catch an edge case where the function raises an unhandled `KeyError` when the `data` field is absent — a real scenario when testing with manually crafted test events.
 
 *   **Testing Cloud Run services locally:** Use the Cloud Run emulator in Cloud Code to run your Cloud Run container locally with the same environment variables and service account bindings as the deployed service. This allows end-to-end local testing including Secret Manager access and Cloud SQL Auth Proxy connections, without deploying to GCP.
 

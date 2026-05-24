@@ -1,4 +1,4 @@
-# Activepieces_GKE Module
+# Activepieces GKE Module
 
 Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation platform for connecting apps, APIs, and data sources. This module deploys a production-ready Activepieces application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL 15 instance, GCS data storage, and Secret Manager for cryptographic secrets (`AP_ENCRYPTION_KEY` and `AP_JWT_SECRET`).
 
@@ -6,9 +6,11 @@ Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation 
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
+> This guide documents variables that are **unique to `Activepieces_GKE`** or that have **Activepieces-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, IAM, networking, security, and CI/CD — refer to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
+
 ---
 
-## How This Guide Is Structured
+## 1. How This Guide Is Structured
 
 This guide documents variables that are **unique to `Activepieces_GKE`** or that have **Activepieces-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, CI/CD, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
@@ -51,7 +53,7 @@ This guide documents variables that are **unique to `Activepieces_GKE`** or that
 
 ---
 
-## Platform-Managed Behaviours
+## 2. Platform-Managed Behaviours
 
 The following behaviours are applied automatically by `Activepieces_GKE` (via the `Activepieces_Common` sub-module) regardless of the variable values in your `tfvars` file.
 
@@ -70,7 +72,7 @@ The following behaviours are applied automatically by `Activepieces_GKE` (via th
 
 ---
 
-## Identity-Aware Proxy (GKE-specific)
+## 3. Identity-Aware Proxy (GKE-specific)
 
 > **Warning:** Enabling IAP (`enable_iap = true`) requires Google identity authentication for all inbound requests, including **webhook endpoints**. Third-party services that POST to Activepieces webhook URLs will receive authentication errors. Only enable IAP if webhooks are not needed or are called exclusively by internal services.
 
@@ -86,7 +88,7 @@ A `validation.tf` precondition enforces that both `iap_oauth_client_id` and `iap
 
 ---
 
-## Webhook Access
+## 4. Webhook Access
 
 Activepieces receives webhook calls from external services. For GKE deployments, the default `service_type = "LoadBalancer"` exposes the Kubernetes Service on an external IP. Webhook endpoints are accessible at the LoadBalancer IP (or custom domain when `enable_custom_domain = true`).
 
@@ -101,7 +103,7 @@ environment_variables = {
 
 ---
 
-## Activepieces Application Identity
+## 5. Activepieces Application Identity
 
 These variables have Activepieces-specific defaults.
 
@@ -116,7 +118,7 @@ These variables have Activepieces-specific defaults.
 
 ---
 
-## Activepieces Database Configuration
+## 6. Activepieces Database Configuration
 
 Activepieces requires PostgreSQL 15 (`database_type = "POSTGRES"` by default in `Activepieces_GKE`). `Activepieces_Common` hardcodes `database_type = "POSTGRES_15"` in the `config` output regardless of what is passed via `application_database_name`/`application_database_user`.
 
@@ -152,7 +154,7 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep -E "^(AP_ENCRYPTION_KEY|AP_JWT_
 
 ---
 
-## Activepieces Health Probes
+## 7. Activepieces Health Probes
 
 `Activepieces_GKE` exposes **two separate sets** of probe variables with different routing:
 
@@ -192,7 +194,7 @@ kubectl logs -n NAMESPACE -l app=activepieces --since=10m | head -100
 
 ---
 
-## Redis Queue Mode
+## 8. Redis Queue Mode
 
 Activepieces supports two queue modes:
 
@@ -224,7 +226,7 @@ kubectl logs -n NAMESPACE POD_NAME | grep "Resolved AP_REDIS_URL"
 
 ---
 
-## Session Affinity
+## 9. Session Affinity
 
 Activepieces is primarily a stateful server-side application. User sessions and ongoing workflow execution context are tracked per-connection.
 
@@ -234,7 +236,7 @@ Activepieces is primarily a stateful server-side application. User sessions and 
 
 ---
 
-## Scaling Considerations
+## 10. Scaling Considerations
 
 | Variable | Default | Description & Implications |
 |---|---|---|
@@ -243,7 +245,7 @@ Activepieces is primarily a stateful server-side application. User sessions and 
 
 ---
 
-## Initialization Jobs
+## 11. Initialization Jobs
 
 `Activepieces_GKE` does **not** configure a non-empty default `initialization_jobs` list — when `initialization_jobs = []` (the default), `Activepieces_Common` substitutes a single default `db-init` job (`execute_on_apply = true`). Unlike Django, there is no separate `db-migrate` job — Activepieces runs database migrations automatically on startup.
 
@@ -296,7 +298,7 @@ gcloud sql connect INSTANCE_NAME --user=postgres --project=PROJECT_ID \
 
 ---
 
-## StatefulSet PVC Configuration
+## 12. StatefulSet PVC Configuration
 
 Activepieces stores all workflow state in PostgreSQL. A StatefulSet with per-pod PVCs is **not recommended** for standard deployments. Use the default `Deployment` workload type with PostgreSQL for state persistence.
 
@@ -314,7 +316,7 @@ If your deployment requires per-pod local storage (e.g., for custom piece artifa
 
 ---
 
-## Password Rotation Propagation Delay
+## 13. Password Rotation Propagation Delay
 
 | Variable | Default | Description & Implications |
 |---|---|---|
@@ -322,7 +324,7 @@ If your deployment requires per-pod local storage (e.g., for custom piece artifa
 
 ---
 
-## Validation Rules
+## 14. Validation Rules
 
 `Activepieces_GKE` includes a `validation.tf` with three cross-variable preconditions enforced at `terraform apply` time:
 
@@ -334,7 +336,7 @@ If your deployment requires per-pod local storage (e.g., for custom piece artifa
 
 ---
 
-## Deployment Prerequisites & Validation
+## 15. Deployment Prerequisites & Validation
 
 After deploying `Activepieces_GKE`, confirm the deployment is healthy:
 
@@ -366,7 +368,7 @@ kubectl exec -n NAMESPACE POD_NAME -- curl -s http://localhost:8080/api/v1/flags
 
 ---
 
-## Resource Creator Identity
+## 16. Resource Creator Identity
 
 | Variable | Default | Description & Implications |
 |---|---|---|

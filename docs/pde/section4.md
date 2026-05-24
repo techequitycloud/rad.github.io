@@ -9,7 +9,7 @@
 
 This guide helps candidates preparing for the Google Cloud Professional Cloud DevOps Engineer (PDE) certification explore Section 4 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
 
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PDE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. Variables are organised into numbered groups in the RAD UI deployment form — for example, "(Group 3)" refers to the third collapsible section of settings for that module. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PDE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
 
 ---
 
@@ -26,6 +26,8 @@ Navigate to **Monitoring > Uptime checks**. Review the deployed uptime check tar
 
 **Real-world example:** An e-commerce platform deploys Cloud Run services across three regions. Their Cloud Monitoring uptime checks probe all three endpoints every 60 seconds from 6 global regions. When a misconfigured deployment causes the Frankfurt endpoint to return HTTP 503, the uptime check detects the failure within 60 seconds from 3 of 6 probe regions, triggers a P1 alert to the on-call engineer via PagerDuty (configured as a notification channel), and the team rolls back before a single customer in EMEA reports an error.
 
+---
+
 ### Cloud Monitoring Notification Channels
 **Concept:** Routing alert notifications to designated operators through structured, auditable channels.
 
@@ -36,6 +38,8 @@ Navigate to **Monitoring > Uptime checks**. Review the deployed uptime check tar
 Navigate to **Monitoring > Alerting > Notification channels**. Review the provisioned email channels and confirm which alert policies are routed to each. Navigate to **Monitoring > Alerting** and inspect a specific alert policy to trace the full path from condition trigger → notification channel → recipient.
 
 **Real-world example:** A DevOps team configures `notification_alert_emails` to route to their team's shared ops mailbox and a dedicated PagerDuty webhook (added as a webhook notification channel). When GKE pod CPU exceeds 90% for 5 minutes, Cloud Monitoring triggers the alert, sends email to the ops mailbox for logging, and simultaneously pages the on-call engineer via PagerDuty — ensuring the right person is notified without relying on anyone monitoring dashboards manually at 02:00.
+
+---
 
 ### 💡 Additional Telemetry Objectives & Learning Guidelines
 *   **Ops Agent for Compute Engine:** Research the Ops Agent, which collects logs and metrics from Compute Engine VMs at higher fidelity than the legacy Monitoring and Logging agents it replaces. The Ops Agent uses OpenTelemetry under the hood and supports third-party application metrics (e.g., MySQL, Nginx, Redis) via built-in receivers. Navigate to **Compute Engine > VM instances > [instance] > Observability** to install the Ops Agent and immediately see rich memory, disk I/O, and process-level metrics that are not available from the hypervisor alone.
@@ -61,6 +65,8 @@ Navigate to **Logging > Logs Explorer**. In the query editor, filter logs by res
 
 **Real-world example:** A team deploys a new Cloud Run revision that introduces a bug causing `NullPointerException` in the payment processing path. The application writes structured JSON logs to stdout. Within 2 minutes of deployment, Error Reporting surfaces a new error group with the full stack trace, labels it as "First seen 4 minutes ago," and notes the error is occurring 200 times per minute — correlated with the traffic split to the new revision. The on-call engineer identifies the problem, triggers a rollback to the previous revision via Cloud Run traffic splitting, and the error rate drops to zero within 90 seconds — without requiring any log query expertise.
 
+---
+
 ### 💡 Additional Troubleshooting Objectives & Learning Guidelines
 *   **Logs Explorer — Advanced Filtering and Analysis:** Research the Logs Explorer query language for complex log investigation. Key operators include: `severity>=WARNING` (threshold filtering), `jsonPayload.user_id="12345"` (structured field extraction), `timestamp>="2024-01-01T00:00:00Z"` (time bounding), and `resource.labels.service_name="checkout"` (resource scoping). Practice creating log queries that pinpoint the exact request causing a failure — combining resource labels, severity, and structured payload fields. Use the **Histogram** view to visualize log volume spikes correlated with deployment events.
 *   **Cloud Trace for Latency Troubleshooting:** Beyond instrumentation, use Cloud Trace's analysis tools to troubleshoot latency issues. Navigate to **Trace > Analysis reports** to see latency distribution percentiles (p50, p95, p99) and automatically identified latency outliers. Use the **Trace comparison** feature to compare latency profiles between two time windows — for example, the 30 minutes before and after a deployment — to isolate whether a latency regression is specific to a new code path, a downstream dependency, or infrastructure contention.
@@ -84,6 +90,8 @@ Navigate to **Logging > Logs Explorer**. In the query editor, filter logs by res
 Navigate to **Monitoring > Dashboards** to find the custom operational dashboard created by the module. Explore each chart — hover over data points to inspect precise metric values, change the time range to compare current behavior against historical baselines, and use the **Compare** feature to overlay metrics from different time windows. Navigate to **Monitoring > Alerting** to review active alert policies. Click into an alert policy to inspect its MQL condition, the evaluation window (e.g., 5 minutes), the threshold value, and the notification channels it targets. Review the **Incidents** tab to see a history of triggered alerts and their resolution status.
 
 **Real-world example:** A platform engineering team sets `alert_cpu_threshold = 80` and `alert_memory_threshold = 85` for their GKE-based order processing service. During a flash sale, order volume triples. Cloud Monitoring's alert policy detects that average pod CPU has exceeded 80% for 5 consecutive minutes and fires an alert to the team's Slack channel (configured as a notification channel). The on-call engineer pulls up the custom dashboard, observes the correlated memory and CPU spike across all pods, and scales up the node pool — resolving the pressure before any user-facing latency degradation occurs.
+
+---
 
 ### 💡 Additional Metrics and Alerting Objectives & Learning Guidelines
 *   **SLO-Based Alerting and Error Budget Burn Rate:** Research Cloud Monitoring's native SLO monitoring, which defines availability and latency SLOs directly in Cloud Monitoring and automatically calculates error budget consumption. Navigate to **Monitoring > Services > Create SLO** to define a request-based SLO (e.g., 99.9% of requests respond within 500ms). Configure burn rate alerts that fire when the error budget is being consumed faster than sustainable — for example, a 14x burn rate alert that fires when 2% of the monthly error budget has been spent in the last 60 minutes (the Google SRE "multiwindow, multi-burn-rate" alerting pattern).

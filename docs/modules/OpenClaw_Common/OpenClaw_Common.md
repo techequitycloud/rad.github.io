@@ -1,4 +1,4 @@
-# OpenClaw_Common Module
+# OpenClaw Common Module
 
 The `OpenClaw_Common` module defines the OpenClaw AI gateway configuration for the RAD Modules ecosystem. It **creates GCP resources** (Secret Manager secrets for API credentials and optional messaging platform tokens) and produces a `config` output consumed by platform-specific wrapper modules (`OpenClaw_CloudRun` and `OpenClaw_GKE`).
 
@@ -80,7 +80,7 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | From `var.container_resources` if set, else `cpu_limit`/`memory_limit` |
 | `min_instance_count` | From `var.min_instance_count` (default: `0`) |
 | `max_instance_count` | From `var.max_instance_count` (default: `1`) |
-| `environment_variables` | Fixed set merged with `var.environment_variables` — see §4 |
+| `environment_variables` | Fixed set merged with `var.environment_variables` — see section 5 |
 | `enable_postgres_extensions` | `false` |
 | `postgres_extensions` | `[]` |
 | `initialization_jobs` | `[]` — no default init job |
@@ -135,11 +135,27 @@ Absolute path to the `OpenClaw_Common` module directory. Wrapper modules set `sc
 
 ---
 
-## 4. Environment Variables
+## 4. Non-Configurable Values
+
+The following values are fixed inside `OpenClaw_Common` and cannot be overridden by callers:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `container_image` | `"ghcr.io/openclaw/openclaw"` | Base image for the custom wrapper build. |
+| `image_source` | `"custom"` | Requires a custom Dockerfile that layers `entrypoint.sh` and `git` onto the upstream image. |
+| `container_port` | `8080` | OpenClaw's fixed HTTP listening port. |
+| `database_type` | `null` | OpenClaw requires no relational database (wrappers override to `"NONE"`). |
+| `enable_cloudsql_volume` | `false` | No Cloud SQL Auth Proxy is needed. |
+| `OPENCLAW_STATE_DIR` | `"/tmp/openclaw"` | Fixed to local disk to avoid GCS Fuse hard-link failures. |
+| `XDG_CONFIG_HOME` | `"/tmp/openclaw"` | Same reason — XDG config must not target GCS. |
+
+---
+
+## 5. Environment Variables
 
 The module merges caller-provided `environment_variables` with a fixed set injected after the caller values (caller values are overridden by module-managed ones):
 
-### Fixed Variables (always set by the module)
+### A. Fixed Variables (always set by the module)
 
 | Variable | Value | Purpose |
 |----------|-------|---------|
@@ -155,7 +171,7 @@ Agent workspace and `agentDir` are set to `/data` paths in the `openclaw.json` c
 
 ---
 
-## 5. Scripts and Container Image
+## 6. Scripts and Container Image
 
 All supporting files are in `scripts/`. The `scripts/` directory is used as both the Docker build context and the `scripts_dir` for wrapper modules.
 
@@ -205,9 +221,9 @@ The `--bind lan` flag is required for Cloud Run — the runtime maps the externa
 
 ---
 
-## 6. Input Variables
+## 7. Input Variables
 
-### Project & Identity
+### A. Project & Identity
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -217,7 +233,7 @@ The `--bind lan` flag is required for Cloud Run — the runtime maps the externa
 | `common_labels` | `map(string)` | `{}` | Labels applied to all resources |
 | `deployment_region` | `string` | `"us-central1"` | Region for the GCS workspace bucket |
 
-### Application Details
+### B. Application Details
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -226,14 +242,14 @@ The `--bind lan` flag is required for Cloud Run — the runtime maps the externa
 | `description` | `string` | `"OpenClaw AI Gateway - Serverless multi-tenant AI agent gateway on Cloud Run"` | Application description |
 | `application_version` | `string` | `"latest"` | OpenClaw image tag used as `BASE_IMAGE` build arg |
 
-### Skills Repository
+### C. Skills Repository
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `skills_repo_url` | `string` | `""` | GitHub URL of a shared OpenClaw skills repository. Cloned into `/data/workspace/skill-library` on startup. Leave empty to skip |
 | `skills_repo_ref` | `string` | `"main"` | Git ref (branch, tag, or SHA) for the skills repository |
 
-### Resources
+### D. Resources
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -243,32 +259,32 @@ The `--bind lan` flag is required for Cloud Run — the runtime maps the externa
 | `min_instance_count` | `number` | `0` | Minimum instances (0 = scale-to-zero) |
 | `max_instance_count` | `number` | `1` | Maximum instances. OpenClaw is stateful — keep at `1` per tenant to avoid split-state |
 
-### Storage
+### E. Storage
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `gcs_volumes` | `list(any)` | `[]` | Additional GCS Fuse volume mounts beyond the auto-appended `/data` workspace volume |
 
-### Environment Variables
+### F. Environment Variables
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `environment_variables` | `map(string)` | `{}` | Additional environment variables merged into the container. Module-managed vars always take precedence |
 
-### Health Probes
+### G. Health Probes
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=20, timeout_seconds=5, period_seconds=5, failure_threshold=24 }` | Startup probe. The 20s initial delay and 24-attempt threshold give ~2 minutes for GCS Fuse mount and Node.js startup |
 | `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe targeting `/health` |
 
-### Image
+### H. Image
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `enable_image_mirroring` | `bool` | `true` | Mirror the built image to Artifact Registry |
 
-### Credentials
+### I. Credentials
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -282,7 +298,7 @@ The `--bind lan` flag is required for Cloud Run — the runtime maps the externa
 
 ---
 
-## 7. GCS Volume Layout
+## 8. GCS Volume Layout
 
 The `<wrapper_prefix>-storage` GCS bucket is mounted at `/data` in the container:
 
@@ -312,7 +328,7 @@ The `uid=1000,gid=1000` mount options match the container user (UID 1000) set in
 
 ---
 
-## 8. Platform-Specific Differences
+## 9. Platform-Specific Differences
 
 | Aspect | OpenClaw_CloudRun | OpenClaw_GKE |
 |--------|-------------------|--------------|
@@ -327,7 +343,7 @@ The `uid=1000,gid=1000` mount options match the container user (UID 1000) set in
 
 ---
 
-## 9. Implementation Pattern
+## 10. Implementation Pattern
 
 ```hcl
 # Example: how OpenClaw_CloudRun instantiates OpenClaw_Common
