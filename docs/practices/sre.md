@@ -58,7 +58,7 @@ Per `BUSINESS_CASE.md`, the framework directly improves the four DORA metrics:
 | Deployment frequency | Cloud Build pipelines make deploys a one-trigger operation — see [practices/cicd.md](cicd.md) | Cloud Build `builds` metric; target ≥1 deploy/day per active application |
 | Lead time for changes | Tofu apply on a thin Application Module; minutes not days | Time from PR merge to successful `cloudbuild-update.yaml` completion; target < 30 min |
 | Change failure rate | Standardised Foundation Modules eliminate per-app drift; plan-time validation catches misconfigurations early | Ratio of builds requiring rollback or hotfix within 24 h of deploy; target < 5% |
-| Mean time to recovery | Revision rollback + scripted backup/restore — see [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md) | Time from alert fire to SLO restoration; target < 1 h for P1 |
+| Mean time to recovery | Revision rollback + scripted backup/restore — see [capabilities/disaster-recovery.md](../capabilities/disaster-recovery.md) | Time from alert fire to SLO restoration; target < 1 h for P1 |
 
 DORA metrics are tracked via the [DORA metrics BigQuery + Looker Studio template](https://cloud.google.com/architecture/devops/measuring-devops) using Cloud Build pub/sub events as the data source. The Four Keys project schema maps Cloud Build `build.status` events to deployment and incident records.
 
@@ -105,10 +105,10 @@ The reliability controls codified in the Foundation Modules (PDBs, health probes
 ## Cross-references
 
 - [capabilities/observability.md](../capabilities/observability.md) — dashboards, alerts, Cloud Logging, Audit Logs, SCC
-- [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md) — rollback, backup/restore, multi-cluster HA
+- [capabilities/disaster-recovery.md](../capabilities/disaster-recovery.md) — rollback, backup/restore, multi-cluster HA
 - [capabilities/serverless.md](../capabilities/serverless.md) — Cloud Run / GKE Autopilot / VPA mechanics
 - [capabilities/networking.md](../capabilities/networking.md) — multi-cluster topology for HA
 - [practices/finops.md](finops.md) — revision pruning and lifecycle automation (cost angle)
 - [practices/cicd.md](cicd.md) — pipeline and validation gates, build failure notifications
-- [practices/platform_engineering.md](platform_engineering.md) — platform SLOs, on-call ownership model
+- [practices/idp.md](idp.md) — platform SLOs, on-call ownership model
 - [practices/devsecops.md](devsecops.md) — security incident response and post-mortem integration

@@ -42,7 +42,7 @@ Django is the most mature Python web framework, used by 35,570+ companies includ
 
 ## 2. IAM & Access Control
 
-`Django_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in [App_CloudRun §2](../App_CloudRun/App_CloudRun.md#2-iam--access-control).
+`Django_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in [App_CloudRun §2](../App_CloudRun/../App_CloudRun/App_CloudRun.md#2-iam--access-control).
 
 **Django auto-generated secrets and IAM:** `Django_Common` creates one Secret Manager secret during provisioning: `SECRET_KEY`. This is injected into the Cloud Run revision via `module_secret_env_vars`. The Cloud Run SA requires `roles/secretmanager.secretAccessor`, which is already granted by `App_CloudRun`. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App_CloudRun`.
 
@@ -52,7 +52,7 @@ Django is the most mature Python web framework, used by 35,570+ companies includ
 
 **120-second IAM propagation delay:** Inherited from `App_CloudRun` — the Django service is not deployed until the delay completes, preventing secret-read failures on the first revision start.
 
-For the complete role tables and IAP, password rotation, and public access details, see [App_CloudRun §2](../App_CloudRun/App_CloudRun.md#2-iam--access-control).
+For the complete role tables and IAP, password rotation, and public access details, see [App_CloudRun §2](../App_CloudRun/../App_CloudRun/App_CloudRun.md#2-iam--access-control).
 
 ---
 
@@ -186,7 +186,7 @@ Identical behaviour to `App_CloudRun`. When `enable_cloud_armor = true`, a Globa
 
 When `enable_iap = true`, Cloud Run's native IAP integration is enabled directly on the service. Google identity authentication is required before requests reach Django. The public `allUsers` invoker binding is removed. Both `roles/iap.httpsResourceAccessor` (project-level) and `roles/run.invoker` (service-level) are granted to authorised principals.
 
-IAP does not require `enable_cloud_armor`. See [App_CloudRun §4.B](../App_CloudRun/App_CloudRun.md#b-identity-aware-proxy-iap) for the full IAM role details.
+IAP does not require `enable_cloud_armor`. See [App_CloudRun §4.B](../App_CloudRun/../App_CloudRun/App_CloudRun.md#b-identity-aware-proxy-iap) for the full IAM role details.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -240,7 +240,7 @@ Identical to `App_CloudRun`. When `enable_cloud_armor = true`, a Global HTTPS Lo
 
 Setting `ingress_settings = 'internal-and-cloud-load-balancing'` forces all Django traffic through the LB, preventing direct `*.run.app` URL access.
 
-See [App_CloudRun §5.A](../App_CloudRun/App_CloudRun.md#a-https-load-balancer) for full architecture details.
+See [App_CloudRun §5.A](../App_CloudRun/../App_CloudRun/App_CloudRun.md#a-https-load-balancer) for full architecture details.
 
 ### B. Cloud CDN
 
@@ -280,7 +280,7 @@ Identical to `App_CloudRun`. When `enable_cicd_trigger = true`, a Cloud Build Gi
 | `github_app_installation_id` | 7 | `""` | GitHub App installation ID (preferred for organisation repos). |
 | `cicd_trigger_config` | 7 | `{ branch_pattern = "^main$" }` | Advanced trigger config: `branch_pattern`, `included_files`, `ignored_files`, `trigger_name`, `substitutions`. |
 
-See [App_CloudRun §6.A](../App_CloudRun/App_CloudRun.md#a-cloud-build-triggers) for PAT vs GitHub App authentication details.
+See [App_CloudRun §6.A](../App_CloudRun/../App_CloudRun/App_CloudRun.md#a-cloud-build-triggers) for PAT vs GitHub App authentication details.
 
 ### B. Cloud Deploy Pipeline
 
@@ -291,7 +291,7 @@ When `enable_cloud_deploy = true` (requires `enable_cicd_trigger = true`), the C
 | `enable_cloud_deploy` | 7 | `false` | Provisions a Cloud Deploy pipeline. Requires `enable_cicd_trigger = true`. |
 | `cloud_deploy_stages` | 7 | `[dev, staging, prod(approval)]` | Ordered promotion stages. Each: `name`, `target_name`, `service_name`, `require_approval`, `auto_promote`. |
 
-See [App_CloudRun §6.B](../App_CloudRun/App_CloudRun.md#b-cloud-deploy-pipeline) for the approval workflow and multi-project deployment details.
+See [App_CloudRun §6.B](../App_CloudRun/../App_CloudRun/App_CloudRun.md#b-cloud-deploy-pipeline) for the approval workflow and multi-project deployment details.
 
 ---
 
@@ -316,7 +316,7 @@ Traffic splitting is supported. Because Django sessions are stored in the databa
 |---|---|---|---|
 | `traffic_split` | 3 | `[]` | Percentage-based traffic allocation across named revisions. All entries must sum to 100. Empty sends 100% to the latest revision. |
 
-See [App_CloudRun §7.B](../App_CloudRun/App_CloudRun.md#b-traffic-splitting) for the full configuration syntax.
+See [App_CloudRun §7.B](../App_CloudRun/../App_CloudRun/App_CloudRun.md#b-traffic-splitting) for the full configuration syntax.
 
 ### C. Health Probes & Uptime Monitoring
 
@@ -452,7 +452,7 @@ The following behaviours are applied automatically by `Django_CloudRun` regardle
 | **Default db-init job** | `initialization_jobs` variable default includes a single `db-init` entry with `execute_on_apply = false` | The `db-init` job runs once on initial deployment. To also run `db-migrate` automatically, pass `initialization_jobs = []` — `Django_Common` then substitutes both jobs with `execute_on_apply = true`. Set `execute_on_apply = true` on the `db-init` entry to re-run it on every apply (safe — the script is idempotent). |
 | **Scripts directory** | `scripts_dir = abspath("${path.module}/../Django_Common/scripts")` | Initialization and utility scripts are sourced from `Django_Common`, not from the deployment directory. |
 
-**Inline infrastructure** (when no `Services_GCP` stack is present) is identical to `App_CloudRun` §9 — `App_CloudRun` provisions an inline VPC, Cloud NAT, Cloud SQL instance, service accounts, and GCP APIs as required. See [App_CloudRun §9](../App_CloudRun/App_CloudRun.md#9-inline-infrastructure-provisioning) for the full inline resource inventory and teardown notes.
+**Inline infrastructure** (when no `Services_GCP` stack is present) is identical to `App_CloudRun` §9 — `App_CloudRun` provisions an inline VPC, Cloud NAT, Cloud SQL instance, service accounts, and GCP APIs as required. See [App_CloudRun §9](../App_CloudRun/../App_CloudRun/App_CloudRun.md#9-inline-infrastructure-provisioning) for the full inline resource inventory and teardown notes.
 
 ---
 
@@ -569,7 +569,7 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 
 ## Configuration Pitfalls & Sensible Defaults
 
-The table below identifies the variables most commonly misconfigured in `Django_CloudRun` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong. For full variable details see Section 10 (Variable Reference) and the [App_CloudRun configuration guide](App_CloudRun.md).
+The table below identifies the variables most commonly misconfigured in `Django_CloudRun` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong. For full variable details see Section 10 (Variable Reference) and the [App_CloudRun configuration guide](../App_CloudRun/App_CloudRun.md).
 
 > Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
 

@@ -11,12 +11,12 @@ sidebar_label: "Multicloud"
 
 ### 1. Cloud-agnostic IaC engine
 
-OpenTofu is the engine — see [practices/gitops_iac.md](../practices/gitops_iac.md) for the canonical detail. The four-tier module pattern (canonical in [practices/platform_engineering.md](../practices/platform_engineering.md)) hard-binds only the Platform tier to GCP; sibling `Services_AWS` / `Services_Azure` modules would slot in without changing Common or Application contracts.
+OpenTofu is the engine — see [practices/gitops-iac.md](../practices/gitops-iac.md) for the canonical detail. The four-tier module pattern (canonical in [practices/idp.md](../practices/idp.md)) hard-binds only the Platform tier to GCP; sibling `Services_AWS` / `Services_Azure` modules would slot in without changing Common or Application contracts.
 
 ### 2. Container-portable workloads
 
 - Application source lives in `modules/<App>_Common/scripts/` as standard `Dockerfile`s — no GCP-specific runtime assumptions baked into application images.
-- The application catalogue is the open-source ecosystem itself (see [outcomes/developer_productivity.md](../outcomes/developer_productivity.md)) — none of these apps are GCP-locked.
+- The application catalogue is the open-source ecosystem itself (see [outcomes/developer-productivity.md](../outcomes/developer-productivity.md)) — none of these apps are GCP-locked.
 - OCI images are the unit of portability; Artifact Registry happens to be where they live today. The image source is parameterised (`container_image_source`, `container_image`) — swapping to another registry requires only a variable change.
 - GCP-specific concerns in `App_CloudRun` (Workload Identity, Cloud SQL Auth Proxy, GCS Fuse, Binary Authorization) are isolated to a handful of files, making them natural seams for replacement strategies when targeting non-GCP runtimes.
 
@@ -30,7 +30,7 @@ OpenTofu is the engine — see [practices/gitops_iac.md](../practices/gitops_iac
 
 ### 5. Hybrid surface
 
-- **VMware Engine** — canonical in [outcomes/modernisation.md](../outcomes/modernisation.md). The standard hybrid landing zone for migrating on-prem VMware workloads into GCP without refactoring.
+- **VMware Engine** — canonical in [outcomes/modernization.md](../outcomes/modernization.md). The standard hybrid landing zone for migrating on-prem VMware workloads into GCP without refactoring.
 - **Workload Identity Federation** — canonical in [practices/devsecops.md](../practices/devsecops.md) §2. Federates AWS, Azure AD, Okta, GitHub Actions identities into GCP — the same federation pattern is the bridge for multicloud CI/CD.
 - VPN/Interconnect-friendly VPC topology — see [capabilities/networking.md](networking.md).
 
@@ -48,9 +48,9 @@ This repository does not today ship sibling Platform modules for AWS or Azure �
 
 ## Cross-references
 
-- [practices/gitops_iac.md](../practices/gitops_iac.md) — OpenTofu rationale (the cloud-agnostic engine)
-- [practices/platform_engineering.md](../practices/platform_engineering.md) — four-tier pattern that scopes vendor binding to the Platform tier
+- [practices/gitops-iac.md](../practices/gitops-iac.md) — OpenTofu rationale (the cloud-agnostic engine)
+- [practices/idp.md](../practices/idp.md) — four-tier pattern that scopes vendor binding to the Platform tier
 - [capabilities/networking.md](networking.md) — multi-cluster mesh, hybrid VPC topology
-- [outcomes/modernisation.md](../outcomes/modernisation.md) — VMware Engine hybrid landing zone
+- [outcomes/modernization.md](../outcomes/modernization.md) — VMware Engine hybrid landing zone
 - [practices/devsecops.md](../practices/devsecops.md) — Workload Identity Federation for multicloud CI/CD
-- [outcomes/developer_productivity.md](../outcomes/developer_productivity.md) — open-source application catalogue
+- [outcomes/developer-productivity.md](../outcomes/developer-productivity.md) — open-source application catalogue

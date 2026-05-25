@@ -19,7 +19,7 @@ The canonical "Phase 1" — get the existing VMware estate into Google Cloud wit
 
 ### 2. Replatform via the application catalogue (cross-ref)
 
-Once on GCP, the catalogue (canonical in [outcomes/developer_productivity.md](developer_productivity.md)) replaces hand-rolled VM stacks with managed, scale-to-zero or auto-scaled containers — without rewriting the application:
+Once on GCP, the catalogue (canonical in [outcomes/developer-productivity.md](developer-productivity.md)) replaces hand-rolled VM stacks with managed, scale-to-zero or auto-scaled containers — without rewriting the application:
 
 | Legacy stack | Modernised module |
 |---|---|
@@ -38,9 +38,9 @@ Modernisation replaces self-hosted dependencies with managed equivalents:
 
 | Self-hosted | Managed replacement | Canonical home |
 |---|---|---|
-| MySQL/PostgreSQL on a VM | Cloud SQL (private IP, PITR, HA, CMEK) | [capabilities/data_and_databases.md](../capabilities/data_and_databases.md) |
-| Redis on a VM | Memorystore | [capabilities/data_and_databases.md](../capabilities/data_and_databases.md) |
-| NFS server on a VM | Filestore | [capabilities/data_and_databases.md](../capabilities/data_and_databases.md) |
+| MySQL/PostgreSQL on a VM | Cloud SQL (private IP, PITR, HA, CMEK) | [capabilities/data-and-databases.md](../capabilities/data-and-databases.md) |
+| Redis on a VM | Memorystore | [capabilities/data-and-databases.md](../capabilities/data-and-databases.md) |
+| NFS server on a VM | Filestore | [capabilities/data-and-databases.md](../capabilities/data-and-databases.md) |
 | Self-hosted Docker registry | Artifact Registry | [practices/cicd.md](../practices/cicd.md) |
 | Self-hosted CI/CD (Jenkins) | Cloud Build | [practices/cicd.md](../practices/cicd.md) |
 | Self-hosted secrets vault | Secret Manager | [practices/devsecops.md](../practices/devsecops.md) |
@@ -53,7 +53,7 @@ Cloud Run + GKE Autopilot remove the last vestiges of pre-provisioned compute. R
 
 ### 5. Data migration tooling (cross-ref)
 
-`export-backup.sh`, `import-gcs-backup.sh`, `import-gdrive-backup.sh` plus the per-app `db-init.sh` and `install-{mysql-plugins,postgres-extensions}.sh` scripts handle the data-migration cutover. Canonical in [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md) and [capabilities/data_and_databases.md](../capabilities/data_and_databases.md).
+`export-backup.sh`, `import-gcs-backup.sh`, `import-gdrive-backup.sh` plus the per-app `db-init.sh` and `install-{mysql-plugins,postgres-extensions}.sh` scripts handle the data-migration cutover. Canonical in [capabilities/disaster-recovery.md](../capabilities/disaster-recovery.md) and [capabilities/data-and-databases.md](../capabilities/data-and-databases.md).
 
 ### 6. Hybrid-during-migration support
 
@@ -75,13 +75,13 @@ Modernisation is also a chance to fix security: private DB IP, IAP, Binary Autho
 
 ### 9. Quantified outcomes (cross-ref)
 
-95% faster provisioning, 95% maintenance reduction, 30–50% compute/egress savings via CDN — canonical in [outcomes/developer_productivity.md](developer_productivity.md) §4.
+95% faster provisioning, 95% maintenance reduction, 30–50% compute/egress savings via CDN — canonical in [outcomes/developer-productivity.md](developer-productivity.md) §4.
 
 ## Cross-references
 
-- [outcomes/developer_productivity.md](developer_productivity.md) — application catalogue (the modernisation targets)
+- [outcomes/developer-productivity.md](developer-productivity.md) — application catalogue (the modernisation targets)
 - [capabilities/serverless.md](../capabilities/serverless.md) — Cloud Run / Autopilot as the replatform endpoint (§1–3)
-- [capabilities/data_and_databases.md](../capabilities/data_and_databases.md) — managed-data substitutions
-- [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md) — data-migration tooling (§1)
+- [capabilities/data-and-databases.md](../capabilities/data-and-databases.md) — managed-data substitutions
+- [capabilities/disaster-recovery.md](../capabilities/disaster-recovery.md) — data-migration tooling (§1)
 - [capabilities/networking.md](../capabilities/networking.md) — hybrid VPC and VMware Engine peering
 - [practices/devsecops.md](../practices/devsecops.md) — security uplift controls (§2 identity, §3 secrets, §5 supply chain, §6 network)

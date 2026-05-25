@@ -13,7 +13,7 @@ A consolidated view of the security controls the repo implements, what is intent
 
 - **SA impersonation** — `provider-auth.tf` modules never hold long-lived credentials; the provider mints a short-lived token (1800–3600s) for `var.resource_creator_identity`. See [devsecops](../practices/devsecops.md).
 - **Workload Identity** — Bank_GKE and MC_Bank_GKE pods reach Cloud APIs via Workload Identity binding rather than mounted key files (`gke.tf` `workload_identity_config` block).
-- **Least-privilege node SAs** — node pool service accounts hold only the four roles required for logging/monitoring plus `artifactregistry.reader`. See [kubernetes](./kubernetes.md).
+- **Least-privilege node SAs** — node pool service accounts hold only the four roles required for logging/monitoring plus `artifactregistry.reader`. See [kubernetes](./container-orchestration.md).
 - **No secrets in defaults** — `client_secret` (AKS_GKE) and `aws_secret_key` (EKS_GKE) have no defaults; sourced from environment variables at apply time.
 
 ### Network
@@ -23,7 +23,7 @@ A consolidated view of the security controls the repo implements, what is intent
 - Single public ingress per module (Istio Ingress Gateway or global HTTPS LB with Google-managed certificate).
 - Connect Gateway for attached cluster API access instead of exposed AKS/EKS endpoints.
 
-See [networking-zero-trust](./networking-zero-trust.md).
+See [networking-zero-trust](./networking.md).
 
 ### Workload identity and mTLS
 
