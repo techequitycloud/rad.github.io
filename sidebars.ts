@@ -37,32 +37,6 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Platform Tutorials',
-      items: [
-        { type: 'doc', id: 'tutorials/getting-started', label: 'Quick Start' },
-        { type: 'doc', id: 'tutorials/admin', label: 'Admin' },
-        { type: 'doc', id: 'tutorials/partner', label: 'Partner' },
-        { type: 'doc', id: 'tutorials/user', label: 'User' },
-        { type: 'doc', id: 'tutorials/agent', label: 'Agent' },
-        { type: 'doc', id: 'tutorials/finance', label: 'Finance' },
-        { type: 'doc', id: 'tutorials/support', label: 'Support' },
-        { type: 'doc', id: 'tutorials/roi', label: 'ROI' },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Platform Demos',
-      items: [
-        { type: 'doc', id: 'demos/user', label: 'User' },
-        { type: 'doc', id: 'demos/partner', label: 'Partner' },
-        { type: 'doc', id: 'demos/support', label: 'Support' },
-        { type: 'doc', id: 'demos/agent', label: 'Agent' },
-        { type: 'doc', id: 'demos/finance', label: 'Finance' },
-        { type: 'doc', id: 'demos/admin', label: 'Admin' },
-      ],
-    },
-    {
-      type: 'category',
       label: 'Certification Guides',
       items: [
         {
@@ -714,6 +688,32 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'outcomes/modernization', label: 'Modernization' },
         { type: 'doc', id: 'outcomes/skills-development', label: 'Skills Development' },
         { type: 'doc', id: 'outcomes/zero-trust-security', label: 'Zero Trust Security' },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Platform Tutorials',
+      items: [
+        { type: 'doc', id: 'tutorials/getting-started', label: 'Quick Start' },
+        { type: 'doc', id: 'tutorials/admin', label: 'Admin' },
+        { type: 'doc', id: 'tutorials/partner', label: 'Partner' },
+        { type: 'doc', id: 'tutorials/user', label: 'User' },
+        { type: 'doc', id: 'tutorials/agent', label: 'Agent' },
+        { type: 'doc', id: 'tutorials/finance', label: 'Finance' },
+        { type: 'doc', id: 'tutorials/support', label: 'Support' },
+        { type: 'doc', id: 'tutorials/roi', label: 'ROI' },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Platform Demos',
+      items: [
+        { type: 'doc', id: 'demos/user', label: 'User' },
+        { type: 'doc', id: 'demos/partner', label: 'Partner' },
+        { type: 'doc', id: 'demos/support', label: 'Support' },
+        { type: 'doc', id: 'demos/agent', label: 'Agent' },
+        { type: 'doc', id: 'demos/finance', label: 'Finance' },
+        { type: 'doc', id: 'demos/admin', label: 'Admin' },
       ],
     },
   ],
