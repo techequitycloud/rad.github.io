@@ -2,179 +2,189 @@
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Cyclos_GKE)**
 
-## Overview
-
-**Estimated time:** 1–2 hours
-
-Cyclos is a comprehensive digital banking platform for managing custom currencies, community banking, savings, loans, payment channels, and digital wallets. This lab deploys Cyclos Community Edition on GKE Autopilot, backed by Cloud SQL PostgreSQL 15 with automated database initialization (PostGIS, pg_trgm extensions), Workload Identity, and Kubernetes-native horizontal scaling.
-
-### What the Module Automates
-
-- GKE Autopilot cluster discovery and namespace creation
-- Cloud SQL PostgreSQL 15 instance provisioning with private IP
-- Database user, password, and extensions (PostGIS, pg_trgm) via initialization Kubernetes Job
-- Artifact Registry repository and container image mirroring from Docker Hub
-- Secret Manager secrets for database credentials (with 30-day rotation notifications)
-- Kubernetes Deployment, Service (LoadBalancer), and HPA
-- Cloud Storage bucket for application data
-- Workload Identity binding between the Kubernetes service account and GCP IAM
-- Cloud Monitoring uptime check and notification channels
-- Optional NFS Filestore mount (disabled by default; Cyclos uses GCS)
-- Static external IP reservation
-
-### What You Do Manually
-
-- Note the deployment outputs (external IP, namespace, etc.) from the RAD UI deployment panel
-- Retrieve the admin password from Secret Manager
-- Complete the initial Cyclos configuration wizard in the browser
-- Configure payment channels, currencies, and account types
-- Create test users and perform sample transactions
-- Explore Cloud Logging and Cloud Monitoring dashboards
+This lab guide walks you through deploying, exploring, and operating **Cyclos Community Edition**
+on Google Kubernetes Engine Autopilot with the **Cyclos_GKE** module. You will explore a
+production-grade digital banking platform on Kubernetes, including Workload Identity, Horizontal
+Pod Autoscaling, payment channel configuration, user management, transaction processing, and
+Google Cloud observability.
 
 ---
 
-## CLI and REST API Overview
+## Table of Contents
 
-This lab uses `gcloud` CLI and `kubectl` to inspect deployed resources. The equivalent REST API calls are shown where relevant.
-
-**Get service external IP:**
-```bash
-# gcloud
-gcloud compute addresses list --project=PROJECT_ID
-
-# REST
-GET https://compute.googleapis.com/compute/v1/projects/PROJECT_ID/global/addresses
-```
-
-**Get a secret value:**
-```bash
-# gcloud
-gcloud secrets versions access latest --secret=SECRET_NAME --project=PROJECT_ID
-
-# REST
-GET https://secretmanager.googleapis.com/v1/projects/PROJECT_ID/secrets/SECRET_NAME/versions/latest:access
-```
-
-**List GKE pods:**
-```bash
-# gcloud (get cluster credentials first)
-gcloud container clusters get-credentials CLUSTER_NAME --region=REGION --project=PROJECT_ID
-
-# kubectl
-kubectl get pods -n NAMESPACE
-```
-
-**Describe a Kubernetes deployment:**
-```bash
-kubectl describe deployment cyclos -n NAMESPACE
-
-# REST (via GKE API)
-GET https://container.googleapis.com/v1/projects/PROJECT_ID/locations/REGION/clusters/CLUSTER_NAME
-```
+1. [Overview](#1-overview)
+2. [Architecture](#2-architecture)
+3. [Prerequisites](#3-prerequisites)
+4. [Lab Setup](#4-lab-setup)
+5. [Exercise 1 — Access Cyclos](#exercise-1--access-cyclos)
+6. [Exercise 2 — User Management and Payment Channels](#exercise-2--user-management-and-payment-channels)
+7. [Exercise 3 — Transactions and API](#exercise-3--transactions-and-api)
+8. [Exercise 4 — Kubernetes Workloads](#exercise-4--kubernetes-workloads)
+9. [Exercise 5 — Security and Workload Identity](#exercise-5--security-and-workload-identity)
+10. [Exercise 6 — Cloud Logging](#exercise-6--cloud-logging)
+11. [Exercise 7 — Cloud Monitoring and Scaling](#exercise-7--cloud-monitoring-and-scaling)
+12. [Cleanup](#cleanup)
+13. [Reference](#reference)
 
 ---
 
-## Prerequisites
+## 1. Overview
 
-Before beginning this lab, ensure the following are in place:
+### What Is Cyclos?
 
-1. **Services_GCP module deployed** — Cyclos_GKE depends on `Services_GCP` for the VPC network, Cloud SQL instance, GKE Autopilot cluster, and Artifact Registry.
-2. **GCP project with billing enabled.**
-3. **Access to the RAD UI** with permission to deploy modules in the target GCP project.
-4. **`gcloud` CLI installed and authenticated** (`gcloud auth login && gcloud auth application-default login`).
-5. **`kubectl` installed** — available via `gcloud components install kubectl`.
-6. **Sufficient IAM permissions** — Owner or equivalent role on the target project.
+Cyclos is open-source banking and payment software powering 1,500+ payment systems worldwide,
+particularly in developing economies and community currency initiatives. It enables financial
+inclusion for microfinance institutions, local banks, barter networks, and remittance operators,
+providing mobile-first online banking, POS integration, QR payments, and marketplace tools.
+The `Cyclos_GKE` module deploys **Cyclos Community Edition v4.16.17** on GKE Autopilot, backed
+by Cloud SQL PostgreSQL 15, Workload Identity for keyless GCP access, and a LoadBalancer Service
+with optional static external IP.
 
----
+### Key Capabilities Demonstrated
 
-## Phase 1 — Deploy [AUTOMATED]
-
-Deployment is initiated from the RAD UI. Fill in the variable form and click **Deploy**.
-
-**Key variables to configure in the RAD UI form:**
-
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `project_id` | Yes | — | GCP project ID (6–30 chars, lowercase) |
-| `deployment_id` | No | auto | Short suffix appended to all resource names |
-| `region` | No | `us-central1` | GCP region for resource deployment |
-| `application_name` | No | `cyclos` | Base name for K8s deployment and secrets |
-| `application_version` | No | `4.16.17` | Cyclos image version tag |
-| `deploy_application` | No | `true` | Set `false` to provision infra without deploying |
-| `min_instance_count` | No | `1` | Minimum HPA pod replicas |
-| `max_instance_count` | No | `1` | Maximum HPA pod replicas |
-| `gke_cluster_name` | No | auto | Target GKE cluster name (auto-discovers if empty) |
-| `db_name` | No | `cyclos` | PostgreSQL database name |
-| `db_user` | No | `cyclos` | PostgreSQL database username |
-| `database_password_length` | No | `32` | Generated password length (16–64) |
-| `cpu_limit` | No | `2000m` | Container CPU limit (min 2 vCPU recommended) |
-| `memory_limit` | No | `4Gi` | Container memory limit (min 2Gi; 4Gi recommended) |
-| `backup_schedule` | No | `0 2 * * *` | Cron schedule for automated backups |
-| `backup_retention_days` | No | `7` | Days to retain backup files in GCS |
-| `enable_nfs` | No | `false` | Enable NFS mount (Cyclos uses GCS by default) |
-
-**What the deployment creates:**
-- Kubernetes namespace derived from `application_name` and `tenant_deployment_id`
-- Cloud SQL PostgreSQL 15 database `cyclos` with user `cyclos` (password in Secret Manager)
-- A Kubernetes init Job that creates the DB user, database, and installs PostGIS and pg_trgm
-- Cyclos Deployment with startup probe (HTTP `/api`, 90s initial delay) and liveness probe (HTTP `/api`, 120s initial delay)
-- LoadBalancer Service with `ClientIP` session affinity
-- Static external IP (reserved by default via `reserve_static_ip = true`)
-- GCS bucket (`<prefix>-data`) for application data
-- Cloud Monitoring uptime check against `/`
-
-**Estimated provisioning duration:**
-
-| Resource | Estimated Time |
+| Capability | What It Demonstrates |
 |---|---|
-| Cloud SQL PostgreSQL 15 instance | 5–8 min |
-| Container image mirroring (Cloud Build) | 3–5 min |
-| Kubernetes Deployment rollout | 3–5 min |
-| Secret Manager secrets | < 1 min |
-| Static IP reservation | < 1 min |
-| **Total** | **~12–20 min** |
+| **GKE Autopilot** | Managed Kubernetes with automatic node provisioning and security hardening |
+| **Workload Identity** | Keyless GCP service access binding Kubernetes SA to GCP SA |
+| **Private Database** | Cloud SQL PostgreSQL 15 with private IP (TCP connection from pods) |
+| **HPA** | Horizontal Pod Autoscaler for Cyclos replica scaling |
+| **Payment Channels** | Web, Mobile, POS, and REST API channels with transfer types and fees |
+| **Secret Management** | DB credentials in Secret Manager, injected into pods at runtime |
+| **GCS File Storage** | Uploaded files stored in Cloud Storage via GCS content manager |
+| **Observability** | Cloud Logging (container logs) and Cloud Monitoring (GKE workload metrics) |
 
-### Record Outputs
+---
 
-After deployment completes, the following outputs are available in the RAD UI deployment panel.
+## 2. Architecture
 
-| Output | Description |
-|---|---|
-| `service_url` | External URL for the Cyclos service |
-| `service_external_ip` | LoadBalancer IP |
-| `namespace` | Kubernetes namespace |
-| `database_instance_name` | Cloud SQL instance name |
-| `database_password_secret` | Secret Manager secret name for the DB password |
+```
+Browser / Mobile App / REST Client
+         │
+         ▼
+LoadBalancer Service (cyclos, port 8080)
+  └── static external IP (reserved)
+         │
+         ▼
+GKE Autopilot Pod (cyclos)
+  ├── Cyclos 4.16.17 (Apache Tomcat + Java)
+  ├── Startup probe: HTTP /api, 90s delay
+  ├── Liveness probe: HTTP /api, 120s delay
+  └── Workload Identity (GCP SA binding)
+         │
+         ├── Cloud SQL PostgreSQL 15 (TCP private IP)
+         │     └── database: cyclos, user: cyclos
+         │         extensions: pg_trgm, uuid-ossp,
+         │                     postgis, earthdistance
+         │
+         ├── Cloud Storage bucket (cyclos-storage)
+         │     └── Uploaded files via GCS content manager
+         │
+         └── Secret Manager
+               └── DB password (injected via K8s secret)
+```
 
-Set shell variables for use in later steps using discovery commands:
+### Infrastructure
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Google Cloud Project                                            │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  GKE Autopilot Cluster                                    │   │
+│  │                                                           │   │
+│  │  ┌───────────────────────────────────────────────────┐   │   │
+│  │  │  appcyclos<tenant><id> namespace                   │   │   │
+│  │  │  ┌────────────────────────────────────────────┐   │   │   │
+│  │  │  │  Deployment: cyclos                         │   │   │   │
+│  │  │  │  replicas: 1 (HPA: 1–1 default)             │   │   │   │
+│  │  │  │  ServiceAccount: cyclos (Workload Identity)  │   │   │   │
+│  │  │  └────────────────────────────────────────────┘   │   │   │
+│  │  │  ┌────────────────────────────────────────────┐   │   │   │
+│  │  │  │  Service: cyclos (LoadBalancer, port 8080)  │   │   │   │
+│  │  │  │  static external IP reserved                │   │   │   │
+│  │  │  └────────────────────────────────────────────┘   │   │   │
+│  │  │  ┌────────────────────────────────────────────┐   │   │   │
+│  │  │  │  Job: cyclos-db-init (completed)            │   │   │   │
+│  │  │  │  HPA: cyclos (min=1, max=1)                  │   │   │   │
+│  │  │  └────────────────────────────────────────────┘   │   │   │
+│  │  └───────────────────────────────────────────────────┘   │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌───────────────┐  │
+│  │  Cloud SQL        │  │  Secret Manager  │  │  Cloud        │  │
+│  │  PostgreSQL 15    │  │  (db password)   │  │  Storage      │  │
+│  │  (private IP)     │  │                  │  │  (cyclos-     │  │
+│  │                   │  │                  │  │   storage)    │  │
+│  └──────────────────┘  └──────────────────┘  └───────────────┘  │
+│                                                                  │
+│  ┌──────────────────┐  ┌──────────────────────────────────────┐  │
+│  │  Cloud Logging   │  │  Cloud Monitoring (GKE workload       │  │
+│  │  (k8s_container) │  │   metrics, uptime check, alerts)      │  │
+│  └──────────────────┘  └──────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────┘
+
+Module variable wiring:
+
+  Cyclos_GKE
+    application_version     = "4.16.17"  → cyclos/cyclos:4.16.17
+    min_instance_count      = 1          → HPA minimum replicas
+    max_instance_count      = 1          → single-instance (standalone)
+    container_resources     = { cpu_limit = "2000m", memory_limit = "4Gi" }
+    enable_nfs              = false      → GCS file storage
+    reserve_static_ip       = true       → static external IP
+```
+
+---
+
+## 3. Prerequisites
+
+### Required Tools
+
+| Tool | Minimum Version | Install |
+|---|---|---|
+| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
+| `kubectl` | 1.29+ | `gcloud components install kubectl` |
+| `curl` / `jq` | Any | System package manager |
+
+### GCP Permissions
+
+```
+roles/owner                    # or the following fine-grained set:
+roles/container.admin
+roles/cloudsql.admin
+roles/secretmanager.admin
+roles/iam.serviceAccountAdmin
+roles/monitoring.admin
+roles/logging.admin
+roles/storage.admin
+```
+
+### Environment Variables
 
 ```bash
-export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
-export REGION="us-central1"             # the region you deployed into
-export TOKEN=$(gcloud auth print-access-token)
+export PROJECT="${PROJECT_ID}"   # your GCP project ID
+export REGION="us-central1"      # region you deployed into
+
+gcloud config set project "${PROJECT}"
+gcloud config set compute/region "${REGION}"
 
 # Discover the GKE cluster
 export CLUSTER=$(gcloud container clusters list \
-  --project=${PROJECT} \
+  --project="${PROJECT}" \
   --format="value(name)" \
   --limit=1)
 
-# Configure kubectl
-gcloud container clusters get-credentials ${CLUSTER} \
-  --region=${REGION} \
-  --project=${PROJECT}
-
-# Discover the namespace (pattern: app<appname><tenant><deploymentid>)
+# Discover the Cyclos namespace
 export NAMESPACE=$(kubectl get namespaces --no-headers \
   -o custom-columns=":metadata.name" | grep "^appcyclos" | head -1)
 
 # Discover the external IP
-export EXTERNAL_IP=$(kubectl get svc -n ${NAMESPACE} \
+export EXTERNAL_IP=$(kubectl get svc -n "${NAMESPACE}" \
   -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
 
 # Discover the database password secret
 export DB_SECRET=$(gcloud secrets list \
-  --project=${PROJECT} \
+  --project="${PROJECT}" \
   --filter="name~cyclos" \
   --format="value(name)" \
   --limit=1)
@@ -182,292 +192,756 @@ export DB_SECRET=$(gcloud secrets list \
 
 ---
 
-## Phase 2 — Access the GKE Cluster [MANUAL]
+## 4. Lab Setup
 
-Configure `kubectl` access and verify that the Cyclos pods are running before proceeding.
+### 4.1 Deploy via RAD UI
 
-**Step 1 — Get GKE cluster credentials:**
+Deploy the `Cyclos_GKE` module via the RAD UI. In the variable form, set:
+
+| Variable | Value | Notes |
+|---|---|---|
+| `project_id` | `your-gcp-project-id` | Required |
+| `region` | `us-central1` | GCP region |
+| `application_name` | `cyclos` | Base name for K8s resources |
+| `application_version` | `4.16.17` | Cyclos image tag |
+| `min_instance_count` | `1` | Minimum HPA replicas |
+| `max_instance_count` | `1` | Maximum replicas (standalone mode) |
+| `container_resources` | `{cpu_limit="2000m", memory_limit="4Gi"}` | Java needs 2+ vCPU |
+| `db_name` | `cyclos` | PostgreSQL database name |
+| `db_user` | `cyclos` | PostgreSQL user |
+| `enable_nfs` | `false` | Uses GCS storage instead |
+| `reserve_static_ip` | `true` | Reserve static external IP |
+
+Click **Deploy** and wait for provisioning to complete (approximately 12–20 minutes).
+
+> **What this provisions:** GKE namespace and workloads, Cloud SQL PostgreSQL 15, db-init job
+> for extensions, LoadBalancer Service with static IP, Secret Manager credential, GCS bucket
+> for file storage, Workload Identity IAM bindings, and Cloud Monitoring uptime check.
+
+### 4.2 Configure Shell Environment
+
 ```bash
-# List available clusters
-gcloud container clusters list --project=${PROJECT}
+# Configure kubectl access
+gcloud container clusters get-credentials "${CLUSTER}" \
+  --region="${REGION}" \
+  --project="${PROJECT}"
 
-# Fetch credentials for the Cyclos cluster
-gcloud container clusters get-credentials ${CLUSTER} \
-  --region=${REGION} \
-  --project=${PROJECT}
+kubectl cluster-info
+kubectl get nodes
 ```
 
-**Step 2 — Verify pods are running:**
+### 4.3 Configure kubectl
+
 ```bash
-# List all pods in the Cyclos namespace
-kubectl get pods -n ${NAMESPACE}
+# Discover namespace after deployment
+export NAMESPACE=$(kubectl get namespaces --no-headers \
+  -o custom-columns=":metadata.name" | grep "^appcyclos" | head -1)
+echo "Namespace: ${NAMESPACE}"
 
-# Expected output: one pod with STATUS = Running
-# NAME                      READY   STATUS    RESTARTS   AGE
-# cyclos-xxxxxxxxx-xxxxx    1/1     Running   0          5m
+# Verify pods are running
+kubectl get pods -n "${NAMESPACE}"
 
-# Check the init job completed successfully
-kubectl get jobs -n ${NAMESPACE}
-
-# View pod logs if the pod is not yet Running
-kubectl logs -n ${NAMESPACE} -l app=cyclos --tail=50
+# Get external IP
+export EXTERNAL_IP=$(kubectl get svc -n "${NAMESPACE}" \
+  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
+echo "Cyclos URL: http://${EXTERNAL_IP}:8080/cyclos"
 ```
-
-**Step 3 — Confirm the external IP is assigned:**
-```bash
-kubectl get svc -n ${NAMESPACE}
-
-# Note the EXTERNAL-IP column value
-# NAME     TYPE           CLUSTER-IP    EXTERNAL-IP    PORT(S)
-# cyclos   LoadBalancer   10.x.x.x      34.x.x.x       8080:xxxxx/TCP
-```
-
-The Cyclos UI is accessible at `http://${EXTERNAL_IP}:8080/cyclos` once the startup probe passes (allow 2–5 minutes for first-boot schema creation).
 
 ---
 
-## Phase 3 — Initial Cyclos Configuration [MANUAL]
+## Exercise 1 — Access Cyclos
 
-Complete the one-time Cyclos setup wizard and explore the admin panel.
+### Objective
 
-**Step 1 — Retrieve admin credentials from Secret Manager:**
+Use kubectl to find the external IP, verify the Cyclos pod is running, complete the initial
+configuration wizard, and explore the admin panel.
+
+### Step 1.1 — Verify Pods and Get External IP
+
+**kubectl:**
 ```bash
-# List secrets managed by this deployment
-gcloud secrets list --filter="name~cyclos" --project=${PROJECT}
+kubectl get pods -n "${NAMESPACE}"
+# Expected: cyclos-xxxxxxxxx-xxxxx  1/1  Running
 
-# Access the database password secret
+kubectl get svc -n "${NAMESPACE}"
+# Copy the EXTERNAL-IP value
+
+kubectl get jobs -n "${NAMESPACE}"
+# db-init job should show Completed
+```
+
+**gcloud:**
+```bash
+gcloud compute addresses list \
+  --project="${PROJECT}" \
+  --filter="name~cyclos"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://compute.googleapis.com/compute/v1/projects/${PROJECT}/regions/${REGION}/addresses" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.items[] | select(.name | test("cyclos")) | {name, address, status}'
+```
+
+**Expected result:** One pod in `Running` state with `1/1` containers ready. The service shows a public external IP.
+
+### Step 1.2 — Check Pod Readiness
+
+```bash
+# Monitor pod until running
+kubectl get pods -n "${NAMESPACE}" -w
+
+# View startup logs
+kubectl logs -n "${NAMESPACE}" -l app=cyclos --tail=50
+```
+
+Allow 2–5 minutes for first-boot schema creation (startup probe allows up to ~8 minutes).
+
+**Expected result:** Logs show Tomcat startup, database schema creation, and Cyclos initialization messages. The pod transitions to `Running` and `1/1` ready.
+
+### Step 1.3 — Retrieve Admin Credentials
+
+```bash
+# List secrets
+gcloud secrets list --project="${PROJECT}" --filter="name~cyclos"
+
+# Access the database password
 gcloud secrets versions access latest \
-  --secret=${DB_SECRET} \
-  --project=${PROJECT}
-
-# REST equivalent
-curl -H "Authorization: Bearer ${TOKEN}" \
-  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}/versions/latest:access"
+  --secret="${DB_SECRET}" \
+  --project="${PROJECT}"
 ```
 
-The default Cyclos admin credentials after first boot are `admin` / `1234`. You should change this password immediately.
+**REST API:**
+```bash
+curl -s \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}/versions/latest:access" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq -r '.payload.data' | base64 -d
+```
 
-**Step 2 — Navigate to the Cyclos UI:**
+Default Cyclos admin credentials: `admin` / `1234` (change immediately after login).
+
+### Step 1.4 — Log In and Complete Setup Wizard
+
 1. Open `http://${EXTERNAL_IP}:8080/cyclos` in your browser.
-2. Wait for the startup probe to succeed if the page is not yet reachable (allow up to 5 minutes on first boot while the schema is created).
-3. Log in with `admin` / `1234`.
+2. Log in with `admin` / `1234`.
+3. Accept the licence agreement.
+4. Set the **Network name**, administrator email, and change the default password.
+5. Configure **Time zone** and **Language**, then click **Finish**.
 
-**Step 3 — Complete the initial configuration wizard:**
-1. Accept the licence agreement when prompted.
-2. Set the **Network name** and **Network description** for your Cyclos instance.
-3. Configure the administrator email address and change the default password.
-4. Select your **Time zone** and **Language** settings.
-5. Click **Finish** to complete the wizard.
+**Expected result:** The Cyclos admin dashboard loads with System, Users, and Products navigation.
 
-**Step 4 — Explore the admin panel structure:**
-1. Navigate to **System** in the top navigation bar.
-2. Review the following sections:
-   - **Network configuration** — global settings, themes, and branding
-   - **Products & Services** — account types, currencies, and fee structures
-   - **Users** — user management, groups, and access controls
+### Step 1.5 — Explore the Admin Panel Structure
+
+1. Navigate to **System > Channels** — verify Web, Mobile App, POS, REST API, and WebServices are present.
+2. Navigate to **System > Account types** — review Member Account and System Account.
+3. Navigate to **System > Currencies** — note the default currency symbol and settings.
+
+**Expected result:** All default Cyclos configuration is in place and accessible from the admin panel.
 
 ---
 
-## Phase 4 — Configure Payment Channels [MANUAL]
+## Exercise 2 — User Management and Payment Channels
 
-Cyclos supports multiple payment channels (web, mobile, POS, REST API). This phase walks through reviewing and configuring them.
+### Objective
 
-**Step 1 — Navigate to System > Channels:**
-1. Go to **System** > **Channels** in the left sidebar.
-2. Review the list of preconfigured channels: Web, Mobile App, POS, REST API, WebServices.
+Create users, assign groups and accounts, configure payment channels, and explore the Cyclos
+currency and transfer type model.
 
-**Step 2 — Explore channel configuration settings:**
-1. Click on the **Web** channel.
-2. Review the following settings:
-   - **Enabled** — whether the channel is active
-   - **Allowed payment types** — which transfer types can be performed via this channel
-   - **Session timeout** — inactivity expiry for web sessions
-   - **Max concurrent sessions** — concurrent session limit per user
+### Step 2.1 — Create Test Users
 
-**Step 3 — Review the REST API channel:**
-1. Click on the **REST API** channel.
-2. Note the API base URL — this is the endpoint external applications will call.
-3. Review the **Access clients** settings for token-based API authentication.
+1. Navigate to **Users > Search users > New user**.
+2. Create `testuser1`: Name `Test User One`, email `testuser1@example.com`.
+3. Create `testuser2`: Name `Test User Two`, email `testuser2@example.com`.
+4. Assign both to the **Members** group.
+5. Create Member accounts for each with initial credits: `testuser1 = 100.00`, `testuser2 = 50.00`.
 
-**Step 4 — Create a test payment channel configuration:**
-1. Click **Edit** on the Web channel.
-2. Modify the **Session timeout** to a value of your choice (e.g., 60 minutes).
-3. Click **Save**.
-4. Observe that the change is reflected immediately without a restart.
+**Expected result:** Both users appear in the user list with Member accounts and configured balances.
 
----
+### Step 2.2 — Review User Group Permissions
 
-## Phase 5 — User Management and Accounts [MANUAL]
+1. Navigate to **System > User groups > Members**.
+2. Review the permission matrix: payment visibility, account access, and channel restrictions.
+3. Navigate to **System > Transfer types** and review which transfer types are available to Members.
 
-Create a test user, assign a currency account, and perform a sample payment.
+**Expected result:** Members can perform member-to-member payments on the Web and REST API channels.
 
-**Step 1 — Create a test user:**
-1. Navigate to **Users** > **Search users**.
-2. Click **New user**.
-3. Fill in the required fields:
-   - **Name:** Test User One
-   - **Username:** testuser1
-   - **Email:** testuser1@example.com
-   - **Password:** set a temporary password
-4. Click **Save**.
-5. Repeat to create a second user: `testuser2`.
+### Step 2.3 — Configure Payment Channel Settings
 
-**Step 2 — Create a user account and assign a currency:**
-1. Open the profile of `testuser1`.
-2. Navigate to the **Accounts** tab.
-3. Click **New account**.
-4. Select an **Account type** (e.g., Member account).
-5. Set the initial credit balance to `100.00` of the default currency.
-6. Click **Save**.
+1. Navigate to **System > Channels > Web**.
+2. Edit: set **Session timeout** to 60 minutes; review **Allowed payment types**.
+3. Navigate to **System > Channels > REST API**.
+4. Review the API base URL and **Access clients** for token authentication.
 
-**Step 3 — Perform a test payment between users:**
-1. From the `testuser1` profile, click **Make payment**.
-2. Set the recipient to `testuser2`.
-3. Enter an amount (e.g., `25.00`).
-4. Add a description: "Test payment".
-5. Click **Submit payment**.
-6. Confirm the payment in the confirmation dialog.
+**Expected result:** Web channel timeout updated. REST API channel shows the `/api` endpoint for programmatic access.
 
-**Step 4 — View transaction history:**
-1. Navigate to **Users** > **testuser1** > **Accounts**.
-2. Click on the account to see the transaction history.
-3. Verify the debit of `25.00` appears correctly.
-4. Navigate to `testuser2`'s account to verify the corresponding credit.
+### Step 2.4 — Review Transfer Types and Fees
+
+1. Navigate to **System > Transfer types**.
+2. Click on a member-to-member transfer type.
+3. Review: From/To account types, available channels, and the **Fees** tab.
+4. Review **Limits**: minimum and maximum payment amounts.
+
+**Expected result:** Transfer type is configured for Web and REST API channels with optional fee structures.
+
+### Step 2.5 — Inspect Deployment Environment
+
+```bash
+# View environment variables injected into the Cyclos pod
+kubectl exec -n "${NAMESPACE}" \
+  "$(kubectl get pod -n "${NAMESPACE}" -l app=cyclos -o jsonpath='{.items[0].metadata.name}')" \
+  -- env | grep -E "^DB_|^cyclos\."
+```
+
+**Expected result:** `DB_HOST` shows the Cloud SQL private IP, `DB_NAME=cyclos`, `DB_USER=cyclos`, and `cyclos.storedFileContentManager=gcs` are set.
 
 ---
 
-## Phase 6 — Currency and Product Configuration [MANUAL]
+## Exercise 3 — Transactions and API
 
-Explore the financial product configuration to understand how Cyclos models currencies, fees, and account types.
+### Objective
 
-**Step 1 — Navigate to Products & Plans:**
-1. Go to **System** > **Account types**.
-2. Review the existing account types (Member Account, System Account).
-3. Note the currency assigned to each account type.
+Perform payments between users, view transaction history, access Cyclos via the REST API,
+and make payment API calls programmatically.
 
-**Step 2 — Review default currency setup:**
-1. Go to **System** > **Currencies**.
-2. Click on the default currency.
-3. Review:
-   - **Symbol** and **Decimal places**
-   - **Enabled channels** for this currency
+### Step 3.1 — Create a Payment via UI
 
-**Step 3 — Explore transfer types and fee configurations:**
-1. Go to **System** > **Transfer types**.
-2. Click on a transfer type (e.g., member-to-member payment).
-3. Review:
-   - **From** and **To** account types
-   - **Channels** where this transfer type is available
-   - **Fees** tab — review any configured transaction fees
+1. Open `testuser1` profile and click **Make payment**.
+2. Set recipient to `testuser2`, amount `25.00`, description `Lab payment`.
+3. Submit and confirm.
+4. Verify: testuser1 balance = 75.00, testuser2 balance = 75.00.
 
-**Step 4 — Explore account limits:**
-1. Go to **System** > **Account types** > click an account type.
-2. Review the **Limits** tab:
-   - **Upper credit limit** — maximum positive balance
-   - **Lower credit limit** — maximum overdraft (negative balance)
-   - **Custom limits** — per-user overrides
+**Expected result:** Payment processed; both account balances updated.
+
+### Step 3.2 — View Transaction History
+
+1. Open **Users > testuser1 > Accounts > Member account**.
+2. Review the transaction listing showing the 25.00 debit.
+3. Open testuser2's account and verify the 25.00 credit with matching timestamp.
+
+**Expected result:** Transaction history is consistent across both accounts.
+
+### Step 3.3 — Access the REST API
+
+```bash
+# Check the API reference page
+curl -s -o /dev/null -w "%{http_code}" \
+  "http://${EXTERNAL_IP}:8080/api"
+# Expected: 200
+
+# Authenticate
+curl -s "http://${EXTERNAL_IP}:8080/api/auth" \
+  -u "admin:your-new-password" \
+  -H "Accept: application/json" \
+  | jq '{sessionToken: .sessionToken}'
+```
+
+**REST API — list users:**
+```bash
+export SESSION_TOKEN="your-session-token"
+
+curl -s "http://${EXTERNAL_IP}:8080/api/users?fields=id,username,display" \
+  -H "Session-Token: ${SESSION_TOKEN}" \
+  | jq '.[]'
+```
+
+**Expected result:** Session token returned; user list includes testuser1 and testuser2.
+
+### Step 3.4 — Make a Payment via REST API
+
+```bash
+# Get user IDs
+U1=$(curl -s "http://${EXTERNAL_IP}:8080/api/users?username=testuser1&fields=id" \
+  -H "Session-Token: ${SESSION_TOKEN}" | jq -r '.[0].id')
+U2=$(curl -s "http://${EXTERNAL_IP}:8080/api/users?username=testuser2&fields=id" \
+  -H "Session-Token: ${SESSION_TOKEN}" | jq -r '.[0].id')
+
+# Make a payment
+curl -s -X POST "http://${EXTERNAL_IP}:8080/api/${U1}/payments" \
+  -H "Session-Token: ${SESSION_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"type\": \"member-to-member\",
+    \"amount\": 10.00,
+    \"subject\": \"${U2}\",
+    \"description\": \"API test payment\"
+  }" | jq '{id: .id, amount: .amount, status: .status}'
+```
+
+**Expected result:** Payment created with `PROCESSED` status and a transaction ID.
+
+### Step 3.5 — Query Account Balance via API
+
+```bash
+curl -s "http://${EXTERNAL_IP}:8080/api/${U1}/accounts" \
+  -H "Session-Token: ${SESSION_TOKEN}" \
+  | jq '.[] | {type: .type.name, balance: .status.balance}'
+```
+
+**Expected result:** Account balance reflects all completed transactions.
 
 ---
 
-## Phase 7 — Explore Cloud Logging [MANUAL]
+## Exercise 4 — Kubernetes Workloads
 
-Cyclos runs on Apache Tomcat. Review the Tomcat application logs in Cloud Logging.
+### Objective
 
-**Step 1 — Access Cloud Logging via the console:**
-1. Open the Google Cloud Console at [console.cloud.google.com](https://console.cloud.google.com).
-2. Navigate to **Logging** > **Log Explorer**.
-3. Set the project to your deployment project.
+Explore the GKE Deployment, Service, HPA, and init Job that the module creates, and understand
+how Kubernetes manages the Cyclos application lifecycle.
 
-**Step 2 — Filter Cyclos Tomcat logs:**
+### Step 4.1 — Inspect the Cyclos Deployment
 
-Use the following filter in the Log Explorer query field:
+```bash
+kubectl describe deployment cyclos -n "${NAMESPACE}"
+
+# View the pod spec
+kubectl get deployment cyclos -n "${NAMESPACE}" -o yaml \
+  | grep -A20 "containers:"
+```
+
+**gcloud:**
+```bash
+gcloud container clusters describe "${CLUSTER}" \
+  --region="${REGION}" \
+  --project="${PROJECT}" \
+  --format="table(name, currentNodeCount, status)"
+```
+
+**Expected result:** Deployment shows 1 replica, resource limits (2000m CPU, 4Gi memory), startup and liveness probes targeting `/api`.
+
+### Step 4.2 — Inspect the LoadBalancer Service
+
+```bash
+kubectl get svc -n "${NAMESPACE}" -o wide
+kubectl describe svc cyclos -n "${NAMESPACE}"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '{name: .name, status: .status, nodeCount: .currentNodeCount}'
+```
+
+**Expected result:** Service type is LoadBalancer with `ClientIP` session affinity and the assigned external IP.
+
+### Step 4.3 — Review the HPA
+
+```bash
+kubectl get hpa -n "${NAMESPACE}"
+kubectl describe hpa -n "${NAMESPACE}"
+```
+
+**Expected result:** HPA shows `minReplicas=1`, `maxReplicas=1`, current replicas=1. Cyclos standalone mode requires a single instance.
+
+### Step 4.4 — Inspect the db-init Job
+
+```bash
+kubectl get jobs -n "${NAMESPACE}"
+kubectl describe job cyclos-db-init -n "${NAMESPACE}" 2>/dev/null || \
+  kubectl get jobs -n "${NAMESPACE}" -o wide
+
+# View db-init job logs
+kubectl logs -n "${NAMESPACE}" \
+  -l job-name=$(kubectl get jobs -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}') \
+  --tail=30
+```
+
+**Expected result:** The db-init job completed successfully. Logs show extension installation (pg_trgm, uuid-ossp, postgis, earthdistance, cube, unaccent) and user/database creation.
+
+### Step 4.5 — Perform a Rolling Restart
+
+```bash
+# Trigger a rolling restart of the Cyclos deployment
+kubectl rollout restart deployment/cyclos -n "${NAMESPACE}"
+
+# Watch the rollout progress
+kubectl rollout status deployment/cyclos -n "${NAMESPACE}"
+
+# After rollout completes, verify pod is running
+kubectl get pods -n "${NAMESPACE}"
+```
+
+**Expected result:** A new pod starts while the old one terminates. After ~3–5 minutes, the new pod is `Running` and `1/1` ready. Cyclos flows survive the restart.
+
+---
+
+## Exercise 5 — Security and Workload Identity
+
+### Objective
+
+Explore Workload Identity binding between the Kubernetes service account and the GCP service
+account, verify Secret Manager access, and review IAM bindings.
+
+### Step 5.1 — Inspect Workload Identity
+
+```bash
+# List service accounts in the Cyclos namespace
+kubectl get serviceaccounts -n "${NAMESPACE}"
+
+# View the Workload Identity annotation
+kubectl get serviceaccount cyclos -n "${NAMESPACE}" -o yaml \
+  | grep -A3 "annotations:"
+```
+
+**Expected result:** The `cyclos` Kubernetes service account has an `iam.gke.io/gcp-service-account` annotation pointing to the GCP service account.
+
+### Step 5.2 — Verify GCP Service Account
+
+```bash
+# List service accounts related to Cyclos
+gcloud iam service-accounts list \
+  --project="${PROJECT}" \
+  --filter="email~cyclos"
+
+# Get the SA email
+CYCLOS_SA=$(gcloud iam service-accounts list \
+  --project="${PROJECT}" \
+  --filter="email~cyclos" \
+  --format="value(email)" \
+  --limit=1)
+
+echo "Cyclos SA: ${CYCLOS_SA}"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://iam.googleapis.com/v1/projects/${PROJECT}/serviceAccounts" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.accounts[] | select(.email | test("cyclos")) | {name, email}'
+```
+
+**Expected result:** A GCP service account named after the deployment exists with the Workload Identity User binding.
+
+### Step 5.3 — Review IAM Bindings
+
+```bash
+# View IAM roles granted to the Cyclos SA
+gcloud projects get-iam-policy "${PROJECT}" \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:${CYCLOS_SA}" \
+  --format="table(bindings.role)"
+```
+
+**Expected result:** The Cyclos SA has roles: `cloudsql.client`, `secretmanager.secretAccessor`, `storage.objectAdmin`.
+
+### Step 5.4 — Verify Secret Manager Access from Pod
+
+```bash
+# Get pod name
+CYCLOS_POD=$(kubectl get pod -n "${NAMESPACE}" -l app=cyclos \
+  -o jsonpath='{.items[0].metadata.name}')
+
+# Confirm DB_PASSWORD is injected (via Workload Identity + Secret Manager)
+kubectl exec -n "${NAMESPACE}" "${CYCLOS_POD}" -- \
+  env | grep DB_PASSWORD | head -c 20
+echo "..."
+```
+
+**Expected result:** The `DB_PASSWORD` environment variable is populated (value hidden). This confirms Workload Identity successfully accessed Secret Manager.
+
+### Step 5.5 — Check Network Policy
+
+```bash
+# List network policies in the namespace
+kubectl get networkpolicies -n "${NAMESPACE}" 2>/dev/null || \
+  echo "No NetworkPolicies defined (GKE Autopilot default)"
+
+# Verify private database connection (no public IP on Cloud SQL)
+gcloud sql instances describe \
+  "$(gcloud sql instances list --project=${PROJECT} --filter='name~cyclos' --format='value(name)' --limit=1)" \
+  --project="${PROJECT}" \
+  --format="table(name, settings.ipConfiguration.authorizedNetworks[0].value, ipAddresses[0].ipAddress)"
+```
+
+**Expected result:** Cloud SQL has only a private IP address; no public IP is configured. All database traffic stays within the VPC.
+
+---
+
+## Exercise 6 — Cloud Logging
+
+### Objective
+
+Query Cyclos container logs from GKE, filter Tomcat application messages, view db-init job
+output, and stream live logs via gcloud.
+
+### Step 6.1 — View Logs in Log Explorer
+
+Navigate to **Cloud Console > Logging > Log Explorer** and use this filter:
+
 ```
 resource.type="k8s_container"
 resource.labels.namespace_name="${NAMESPACE}"
 resource.labels.container_name="cyclos"
 ```
 
-**Step 3 — Review log entries:**
-1. Observe Tomcat startup messages and Cyclos initialization output.
-2. Filter for `severity=ERROR` to check for any application errors.
-3. Look for database connection pool messages confirming PostgreSQL connectivity.
+**Expected result:** Tomcat startup messages, Cyclos initialization output, and HTTP request logs appear.
 
-**Step 4 — Stream logs via gcloud:**
+### Step 6.2 — Filter Application Logs via gcloud
+
+**gcloud:**
 ```bash
-# Stream logs from the Cyclos container
 gcloud logging read \
-  'resource.type="k8s_container" AND resource.labels.namespace_name="'${NAMESPACE}'"' \
-  --project=${PROJECT} \
+  'resource.type="k8s_container" AND resource.labels.namespace_name="'"${NAMESPACE}"'"' \
+  --project="${PROJECT}" \
   --freshness=1h \
+  --limit=50 \
   --format="table(timestamp,severity,textPayload)"
+```
 
-# REST equivalent
-GET https://logging.googleapis.com/v2/entries:list
-# with filter and resourceNames in the request body
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://logging.googleapis.com/v2/entries:list" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"projectIds\": [\"${PROJECT}\"],
+    \"filter\": \"resource.type=k8s_container AND resource.labels.namespace_name=${NAMESPACE}\",
+    \"pageSize\": 20
+  }" | jq '.entries[] | {timestamp: .timestamp, text: .textPayload}'
+```
+
+**Expected result:** Tomcat/Cyclos log entries including database connection pool messages.
+
+### Step 6.3 — Stream Live Logs via kubectl
+
+```bash
+kubectl logs -n "${NAMESPACE}" -l app=cyclos -f --tail=20
+```
+
+Make requests to the Cyclos UI and observe access log entries appear in real time.
+
+**Expected result:** Access log entries appear as you interact with the Cyclos web interface.
+
+### Step 6.4 — View db-init Job Logs
+
+```bash
+INIT_JOB=$(kubectl get jobs -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')
+
+gcloud logging read \
+  'resource.type="k8s_container" AND resource.labels.namespace_name="'"${NAMESPACE}"'" AND resource.labels.container_name~"init"' \
+  --project="${PROJECT}" \
+  --freshness=24h \
+  --limit=30 \
+  --format="table(timestamp,textPayload)"
+```
+
+**Expected result:** db-init job logs show extension installation, user creation, and privilege grants confirming successful database initialization.
+
+### Step 6.5 — Filter for Errors
+
+```bash
+gcloud logging read \
+  'resource.type="k8s_container" AND resource.labels.namespace_name="'"${NAMESPACE}"'" AND severity>=ERROR' \
+  --project="${PROJECT}" \
+  --freshness=24h \
+  --format="table(timestamp,severity,textPayload)"
+```
+
+**Expected result:** Under normal operation, no application errors should appear.
+
+---
+
+## Exercise 7 — Cloud Monitoring and Scaling
+
+### Objective
+
+Explore GKE workload metrics, review the uptime check, inspect the HPA behavior, and
+understand how to scale Cyclos in a Kubernetes environment.
+
+### Step 7.1 — View GKE Workload Metrics
+
+Navigate to **Cloud Console > Kubernetes Engine > Workloads > cyclos** and review the
+metrics panel for CPU, memory, and pod restarts.
+
+```bash
+# List available GKE container metrics
+gcloud monitoring metrics list \
+  --filter="metric.type:kubernetes.io/container" \
+  --project="${PROJECT}" \
+  | grep -E "cpu|memory|restart"
+```
+
+**Expected result:** Cyclos CPU utilisation is low during idle periods. Memory usage reflects the JVM heap (typically 1–2 Gi).
+
+### Step 7.2 — Query GKE Metrics via REST API
+
+**REST API — CPU utilisation:**
+```bash
+curl -s -X POST \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"query\": \"fetch k8s_container::kubernetes.io/container/cpu/limit_utilization | filter resource.namespace_name = '${NAMESPACE}' | within 30m | group_by [resource.container_name], mean(val())\"
+  }" | jq '.timeSeriesData[] | {container: .labelValues[0].stringValue, cpu: .pointData[-1].values[0].doubleValue}'
+```
+
+**Expected result:** Cyclos container CPU utilisation is returned as a decimal fraction (e.g., 0.05 = 5%).
+
+### Step 7.3 — Review the Uptime Check
+
+```bash
+gcloud monitoring uptime list-configs --project="${PROJECT}"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.uptimeCheckConfigs[] | {name: .displayName, period: .period}'
+```
+
+**Expected result:** An uptime check targeting the Cyclos LoadBalancer IP runs every 60 seconds. Status shows passing from multiple global locations.
+
+### Step 7.4 — Scale the Deployment (Test Only)
+
+```bash
+# Scale to 2 replicas to observe GKE Autopilot node provisioning
+kubectl scale deployment cyclos --replicas=2 -n "${NAMESPACE}"
+
+# Watch pods come up
+kubectl get pods -n "${NAMESPACE}" -w
+
+# Scale back to 1 (Cyclos requires Hazelcast for multi-instance clustering)
+kubectl scale deployment cyclos --replicas=1 -n "${NAMESPACE}"
+kubectl rollout status deployment/cyclos -n "${NAMESPACE}"
+```
+
+> **Note:** Cyclos requires Hazelcast configuration (`cyclos.clusterHandler = hazelcast`) before
+> running multiple replicas. The scale-up above is for observation only; revert to 1 replica.
+
+**Expected result:** GKE Autopilot provisions an additional node within 2–3 minutes. The second Cyclos pod starts but may show session inconsistency without Hazelcast clustering enabled.
+
+### Step 7.5 — Create an Alert Policy
+
+**gcloud:**
+```bash
+gcloud alpha monitoring policies create \
+  --display-name="Cyclos GKE - Pod Restart Alert" \
+  --condition-filter="metric.type=\"kubernetes.io/container/restart_count\" resource.label.\"namespace_name\"=\"${NAMESPACE}\"" \
+  --condition-threshold-value=3 \
+  --condition-threshold-duration=300s \
+  --condition-threshold-comparison=COMPARISON_GT \
+  --project="${PROJECT}"
+```
+
+**Expected result:** Alert policy created. It will fire if the Cyclos pod restarts more than 3 times within 5 minutes.
+
+---
+
+## Cleanup
+
+Return to the RAD UI and click **Undeploy** on the `Cyclos_GKE` deployment. This removes the
+Kubernetes namespace and workloads, Cloud SQL instance, GCS bucket, Secret Manager secrets,
+static IP, and all IAM bindings.
+
+### Manual Cleanup (if needed)
+
+**kubectl:**
+```bash
+# Delete the namespace (removes all resources within it)
+kubectl delete namespace "${NAMESPACE}"
+```
+
+**gcloud:**
+```bash
+# Delete Cloud SQL instance
+INSTANCE=$(gcloud sql instances list --project="${PROJECT}" \
+  --filter="name~cyclos" --format="value(name)" --limit=1)
+gcloud sql instances delete "${INSTANCE}" --project="${PROJECT}" --quiet
+
+# Delete Secret Manager secrets
+gcloud secrets delete "${DB_SECRET}" --project="${PROJECT}" --quiet
+
+# Release static IP
+gcloud compute addresses list --project="${PROJECT}" --filter="name~cyclos"
+gcloud compute addresses delete <address-name> \
+  --region="${REGION}" --project="${PROJECT}" --quiet
+```
+
+**REST API — delete GKE namespace:**
+```bash
+curl -s -X DELETE \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)"
 ```
 
 ---
 
-## Phase 8 — Explore Cloud Monitoring [MANUAL]
+## Reference
 
-Review the Cloud Monitoring metrics and uptime check configured by the deployment.
+### Key Module Variables
 
-**Step 1 — Access the Monitoring dashboard:**
-1. Navigate to **Monitoring** > **Dashboards** in the Cloud Console.
-2. Click on **GKE** to view the pre-built Kubernetes dashboard.
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `project_id` | string | — | GCP project ID (required) |
+| `region` | string | `us-central1` | GCP region for all resources |
+| `application_name` | string | `cyclos` | Base name for K8s and GCP resources |
+| `application_version` | string | `4.16.17` | Cyclos Docker image tag |
+| `min_instance_count` | number | `1` | Minimum HPA pod replicas |
+| `max_instance_count` | number | `1` | Maximum replicas (standalone mode) |
+| `container_resources` | object | `{cpu_limit="1000m", memory_limit="2Gi"}` | Container CPU/memory limits |
+| `cpu_limit` | string | `2000m` | Passed to Cyclos_Common (override via container_resources) |
+| `memory_limit` | string | `4Gi` | Passed to Cyclos_Common (override via container_resources) |
+| `db_name` | string | `cyclos` | PostgreSQL database name |
+| `db_user` | string | `cyclos` | PostgreSQL application user |
+| `database_password_length` | number | `32` | Generated password length |
+| `enable_nfs` | bool | `false` | NFS disabled; GCS used for file storage |
+| `reserve_static_ip` | bool | `true` | Reserve a static external IP |
+| `gke_cluster_name` | string | auto | Target GKE cluster name (auto-discovers if empty) |
+| `backup_schedule` | string | `0 2 * * *` | Cron schedule for automated backups |
+| `backup_retention_days` | number | `7` | Days to retain backup files |
+| `deploy_application` | bool | `true` | Set `false` to provision infra only |
 
-**Step 2 — Review GKE workload metrics:**
-1. Navigate to **Monitoring** > **Metrics Explorer**.
-2. Select resource type **Kubernetes Container**.
-3. Plot the following metrics for the Cyclos namespace:
-   - `kubernetes.io/container/cpu/usage_time` — CPU usage
-   - `kubernetes.io/container/memory/used_bytes` — memory usage
-   - `kubernetes.io/container/restart_count` — container restarts
+### Useful Commands
 
-**Step 3 — Review the uptime check:**
-1. Navigate to **Monitoring** > **Uptime checks**.
-2. Find the uptime check created by the deployment (named after the deployment).
-3. Review the check configuration: path `/`, interval 60s, timeout 10s.
-4. Observe the global check status — green indicates the service is reachable from all probe locations.
-
-**Step 4 — Review alert policies:**
-1. Navigate to **Monitoring** > **Alerting**.
-2. Review any alert policies configured by the deployment.
-3. Note the notification channels (email addresses from `support_users`).
-
-**Step 5 — Query metrics via gcloud:**
 ```bash
+# Get all resources in Cyclos namespace
+kubectl get all -n ${NAMESPACE}
+
+# View pod logs
+kubectl logs -n ${NAMESPACE} -l app=cyclos --tail=50
+
+# View startup probe config
+kubectl get deployment cyclos -n ${NAMESPACE} \
+  -o jsonpath='{.spec.template.spec.containers[0].startupProbe}' | jq .
+
+# Get external IP
+kubectl get svc -n ${NAMESPACE} -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
+
+# Scale deployment
+kubectl scale deployment cyclos --replicas=1 -n ${NAMESPACE}
+
+# Rolling restart
+kubectl rollout restart deployment/cyclos -n ${NAMESPACE}
+
+# Access secret
+gcloud secrets versions access latest --secret=${DB_SECRET} --project=${PROJECT}
+
+# List Cloud SQL instances
+gcloud sql instances list --project=${PROJECT} --filter="name~cyclos"
+
+# View Workload Identity annotation
+kubectl get sa cyclos -n ${NAMESPACE} -o yaml | grep iam.gke.io
+
 # List uptime checks
 gcloud monitoring uptime list-configs --project=${PROJECT}
-
-# REST
-GET https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs
 ```
 
----
+### Further Reading
 
-## Phase 9 — Undeploy [AUTOMATED]
-
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
-
-**Expected result:** All Kubernetes workloads, Cloud SQL instance, GCS buckets, Secret Manager secrets, static IP, and IAM bindings are removed.
-
-> Note: `enable_purge = true` (default) allows full deletion. If set to `false`, resources are retained after undeployment.
-
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
-
----
-
-## Summary
-
-| Phase | Type | Key Action |
-|---|---|---|
-| Phase 1 — Deploy | AUTOMATED | RAD UI provisions GKE workload, Cloud SQL, GCS, IAM, monitoring |
-| Phase 2 — Cluster Access | MANUAL | `kubectl` access, verify pods and external IP |
-| Phase 3 — Initial Config | MANUAL | Log into Cyclos, complete setup wizard, change admin password |
-| Phase 4 — Payment Channels | MANUAL | Review and configure web/mobile/POS/API channels |
-| Phase 5 — Users & Accounts | MANUAL | Create users, assign accounts, perform test payment |
-| Phase 6 — Currency & Products | MANUAL | Explore account types, currencies, transfer types, fees |
-| Phase 7 — Cloud Logging | MANUAL | View Tomcat logs in Log Explorer |
-| Phase 8 — Cloud Monitoring | MANUAL | Review GKE metrics, uptime check, alert policies |
-| Phase 9 — Undeploy | AUTOMATED | RAD UI removes all resources |
+- [Cyclos official documentation](https://www.cyclos.org/documentation/)
+- [Cyclos REST API reference](https://demo.cyclos.org/api)
+- [GKE Autopilot overview](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
+- [Workload Identity documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+- [Cloud SQL for PostgreSQL](https://cloud.google.com/sql/docs/postgres)
+- [Secret Manager overview](https://cloud.google.com/secret-manager/docs)
+- [Cloud Monitoring for GKE](https://cloud.google.com/stackdriver/docs/solutions/gke)
+- [Kubernetes HPA documentation](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)

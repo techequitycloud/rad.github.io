@@ -2,155 +2,238 @@
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Wordpress_CloudRun)**
 
-## Overview
-
-Deploy WordPress, the world's most popular CMS, to Google Cloud Run with managed Cloud SQL (MySQL 8.0), optional Filestore NFS persistence, Redis object caching, Serverless VPC Access, and full observability via Cloud Logging and Cloud Monitoring.
-
-**Estimated time:** 1–2 hours
-
-### What the Module Automates
-
-- Cloud Run service with Cloud SQL Auth Proxy sidecar
-- Cloud SQL MySQL 8.0 instance, database, and application user
-- Serverless VPC Access connector for private Cloud SQL connectivity
-- Optional Cloud Filestore (NFS) volume mounted into the service (gen2 execution environment)
-- GCS bucket for data storage with optional GCS Fuse mounts
-- Artifact Registry repository and Cloud Build image build
-- Secret Manager secrets for database password and WordPress auth keys
-- IAM bindings for the Cloud Run service account
-- Cloud Monitoring uptime checks and notification channels
-- Automated database backup Cloud Run Job (daily at 02:00 UTC by default)
-
-### What You Do Manually
-
-- Note the service URL and other deployment outputs from the RAD UI deployment panel
-- Open WordPress in a browser and complete the install wizard (if required) or log in to wp-admin
-- Retrieve admin credentials from Secret Manager
-- Create content, upload media, and install plugins
-- Explore Cloud SQL database integration via Cloud SQL Auth Proxy
-- Explore Cloud Run revision management and traffic splitting
-- Review application logs in Cloud Logging
-- Explore request and scaling metrics in Cloud Monitoring
+This lab guide walks you through deploying, exploring, and operating **WordPress** on Google Cloud Run using the **Wordpress_CloudRun** module. You will explore a Cloud Run service backed by Cloud SQL MySQL 8.0, Secret Manager, Redis object caching, NFS shared storage, and the full Google Cloud observability stack — including revision management, traffic splitting, and live monitoring.
 
 ---
 
-## CLI and REST API Overview
+## Table of Contents
 
-Set these shell variables before running any `gcloud` or `curl` commands in this guide:
+1. [Overview](#1-overview)
+2. [Architecture](#2-architecture)
+3. [Prerequisites](#3-prerequisites)
+4. [Lab Setup](#4-lab-setup)
+5. [Exercise 1 — Access WordPress](#exercise-1--access-wordpress)
+6. [Exercise 2 — Content Management](#exercise-2--content-management)
+7. [Exercise 3 — Database Integration](#exercise-3--database-integration)
+8. [Exercise 4 — Cloud Run Revisions and Scaling](#exercise-4--cloud-run-revisions-and-scaling)
+9. [Exercise 5 — Redis Object Caching](#exercise-5--redis-object-caching)
+10. [Exercise 6 — Security and Secrets](#exercise-6--security-and-secrets)
+11. [Exercise 7 — Cloud Logging](#exercise-7--cloud-logging)
+12. [Exercise 8 — Cloud Monitoring](#exercise-8--cloud-monitoring)
+13. [Cleanup](#13-cleanup)
+14. [Reference](#14-reference)
+
+---
+
+## 1. Overview
+
+### What Is WordPress on Cloud Run?
+
+WordPress is the world's most widely-deployed CMS, powering 43.5% of all websites. The `Wordpress_CloudRun` module deploys WordPress on Google Cloud Run Gen2, backed by Cloud SQL MySQL 8.0, Cloud Filestore NFS for shared `wp-content` persistence, Redis object caching, and Secret Manager for WordPress authentication keys and database credentials.
+
+The module builds a custom container image via Cloud Build using a PHP 8.4 + Apache base, runs a `db-init` Cloud Run Job to create the MySQL database and user, and configures Cloud Monitoring uptime checks automatically. The eight WordPress cryptographic security keys and salts are auto-generated and stored in Secret Manager.
+
+WordPress is not inherently stateless — user uploads, plugins, and themes must persist across container revisions and restarts. NFS shared storage (`/mnt/nfs` mounted as the `wp-content` directory) ensures all Cloud Run instances share the same filesystem state. Direct VPC Egress provides private connectivity to Cloud SQL and Redis.
+
+### Key Capabilities Demonstrated
+
+| Capability | What It Demonstrates |
+|---|---|
+| **Cloud Run Gen2** | Serverless WordPress with NFS mounts and Direct VPC Egress |
+| **Cloud SQL Auth Proxy** | Sidecar providing Unix socket MySQL connection |
+| **MySQL 8.0** | Managed relational database with automatic user and DB creation |
+| **Secret Manager** | 8 WordPress auth keys/salts + DB password stored securely |
+| **Redis Object Cache** | Plugin-level object caching for reduced database load |
+| **NFS Persistence** | Shared `wp-content` (plugins, themes, uploads) across instances |
+| **Traffic Splitting** | Canary deployments via Cloud Run revision traffic management |
+| **Scale-to-Zero** | Cost-efficient operation with configurable `min_instance_count` |
+
+---
+
+## 2. Architecture
+
+```
+Internet
+   │
+   ▼ HTTPS
+Cloud Run Service (Gen2)
+   ├── WordPress container (PHP 8.4 + Apache, port 80)
+   │     ├── wp-content/: /mnt/nfs (Filestore NFS)
+   │     ├── wp-config.php: generated by docker-entrypoint.sh
+   │     ├── Redis cache: WP_REDIS_HOST:6379
+   │     └── DB: WORDPRESS_DB_HOST → Auth Proxy socket
+   └── cloud-sql-proxy sidecar
+         └── Unix socket → /cloudsql/PROJECT:REGION:INSTANCE
+               │
+               ▼
+         Cloud SQL (MySQL 8.0)
+               Database: wp
+               User: wp
+
+Supporting Services:
+  Secret Manager  → AUTH_KEY, SECURE_AUTH_KEY, LOGGED_IN_KEY (×8) + DB_PASSWORD
+  GCS Bucket      → wp-uploads + data bucket
+  Filestore NFS   → /mnt/nfs shared across all instances
+  Redis           → Object cache (WP_REDIS_HOST/WP_REDIS_PORT)
+  Artifact Registry → Custom WordPress image (Cloud Build)
+  Cloud Monitoring  → Uptime check, alert policies
+```
+
+### Infrastructure
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  Google Cloud                                                │
+│                                                              │
+│  ┌──────────────────────┐   ┌──────────────────────────┐    │
+│  │  Cloud Run (Gen2)    │   │  Secret Manager          │    │
+│  │  WordPress + Proxy   │   │  8 auth keys/salts       │    │
+│  │  Direct VPC Egress   │   │  DB_PASSWORD             │    │
+│  └──────────┬───────────┘   └──────────────────────────┘    │
+│             │ Private VPC                                    │
+│  ┌──────────▼───────────┐   ┌──────────────────────────┐    │
+│  │  Cloud SQL (MySQL 8) │   │  Cloud Filestore NFS     │    │
+│  │  Database: wp        │   │  /mnt/nfs (wp-content)   │    │
+│  └──────────────────────┘   └──────────────────────────┘    │
+│                                                              │
+│  ┌──────────────────────┐   ┌──────────────────────────┐    │
+│  │  Redis               │   │  GCS Bucket              │    │
+│  │  Object cache        │   │  wp-uploads              │    │
+│  └──────────────────────┘   └──────────────────────────┘    │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 3. Prerequisites
+
+### Required Tools
+
+| Tool | Minimum Version | Install/Command |
+|---|---|---|
+| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
+| `curl` / `jq` | Any | System package manager |
+| `gsutil` / `gcloud storage` | Any | Included with gcloud SDK |
+
+### GCP Permissions
+
+```
+roles/owner                    # or the following fine-grained set:
+roles/run.admin
+roles/cloudsql.admin
+roles/secretmanager.admin
+roles/storage.admin
+roles/monitoring.admin
+roles/logging.viewer
+```
+
+### Environment Variables
 
 ```bash
-export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
+export PROJECT="your-gcp-project-id"   # your GCP project ID
 export REGION="us-central1"             # the region you deployed into
 export TOKEN=$(gcloud auth print-access-token)
 
-# Discover the Cloud Run service (filter by app name "wordpress")
+gcloud config set project "${PROJECT}"
+gcloud config set compute/region "${REGION}"
+```
+
+---
+
+## 4. Lab Setup
+
+### 4.1 Deploy via RAD UI
+
+Deploy the `Wordpress_CloudRun` module via the RAD UI. In the variable form, set:
+
+| Variable | Value | Notes |
+|---|---|---|
+| `project_id` | `your-gcp-project-id` | Required |
+| `region` | `us-central1` | GCP region |
+| `tenant_deployment_id` | `demo` | Short environment label |
+| `application_name` | `wordpress` | Do not change after first deploy |
+| `application_version` | `latest` | Use a pinned WP version in production |
+| `min_instance_count` | `0` | Scale-to-zero; set to `1` to avoid cold starts |
+| `max_instance_count` | `1` | NFS required before increasing |
+| `db_name` | `wp` | MySQL database name |
+| `db_user` | `wp` | MySQL application user |
+| `enable_nfs` | `true` | Shared wp-content persistence (gen2 required) |
+| `enable_redis` | `true` | Redis object caching (on by default) |
+| `php_memory_limit` | `512M` | PHP memory limit |
+| `upload_max_filesize` | `64M` | Maximum single upload size |
+
+Click **Deploy** and wait for provisioning to complete (approximately 10–20 minutes).
+
+> **What this provisions:** Cloud Run service (Gen2), Cloud Build custom WordPress PHP 8.4 image, Cloud SQL MySQL 8.0 instance with `wp` database and `wp` user, `db-init` Cloud Run Job, Secret Manager secrets (8 WordPress auth keys/salts + `DB_PASSWORD`), GCS `wp-uploads` and `data` buckets, Cloud Filestore NFS instance, IAM bindings, Cloud Monitoring uptime check, and alert policies.
+
+### 4.2 Configure Shell Environment
+
+```bash
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
+export TOKEN=$(gcloud auth print-access-token)
+
+# Discover the Cloud Run service
 export SERVICE=$(gcloud run services list \
   --project=${PROJECT} \
   --region=${REGION} \
   --format="value(metadata.name)" \
+  --filter="metadata.name~wordpress" \
   --limit=1)
+
+# Get the service URL
 export SERVICE_URL=$(gcloud run services describe ${SERVICE} \
   --project=${PROJECT} \
   --region=${REGION} \
   --format="value(status.url)")
 
-# Discover the database password secret (filter by app name)
+# Discover the database password secret
 export DB_SECRET=$(gcloud secrets list \
   --project=${PROJECT} \
   --filter="name~wordpress" \
   --format="value(name)" \
   --limit=1)
+
+# Discover the Cloud SQL instance
+export DB_INSTANCE=$(gcloud sql instances list \
+  --project=${PROJECT} \
+  --filter="name~wordpress" \
+  --format="value(name)" \
+  --limit=1)
+
+echo "Service:     ${SERVICE}"
+echo "Service URL: ${SERVICE_URL}"
 ```
 
 ---
 
-## Prerequisites
+## Exercise 1 — Access WordPress
 
-| Requirement | Details |
-|---|---|
-| gcloud CLI | Authenticated (`gcloud auth application-default login`) |
-| GCP project | Billing enabled |
-| Services_GCP | Must be deployed first — provides VPC, Serverless VPC Access connector, Cloud SQL instance, and optional Filestore |
-| Service account | `roles/owner` on the target project (or a tightly scoped equivalent) |
-| RAD UI access | Permission to deploy modules in the target GCP project |
+### Objective
 
----
+Retrieve the WordPress service URL, open the site in a browser, complete the install wizard if needed, and log in to wp-admin.
 
-## Phase 1 — Deploy [AUTOMATED]
+### Step 1.1 — Get the Service URL
 
-### Variables
+**gcloud:**
+```bash
+gcloud run services describe ${SERVICE} \
+  --region=${REGION} \
+  --project=${PROJECT} \
+  --format="table(metadata.name, status.url, status.conditions[0].status)"
+```
 
-Variables are configured in the RAD UI form before deploying. The table below describes each variable you can fill in.
+**REST API:**
+```bash
+curl -s \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '{name: .name, uri: .urls[0], latestRevision: .latestReadyRevision}'
+```
 
-| Variable | Default | Description |
-|---|---|---|
-| `project_id` | _(required)_ | GCP project ID. Must match the project where Services_GCP is deployed. |
-| `deployment_id` | _(auto-generated)_ | Short suffix appended to all resource names. Leave empty to auto-generate. |
-| `region` | `"us-central1"` | GCP region for all resources. |
-| `tenant_deployment_id` | `"demo"` | Short environment label (e.g. `"prod"`, `"dev"`). |
-| `application_name` | `"wordpress"` | Base name for the Cloud Run service, secrets, and registry. |
-| `application_version` | `"latest"` | Container image version tag. |
-| `deploy_application` | `true` | Set to `false` to provision infrastructure only without deploying the service. |
-| `min_instance_count` | `0` | Minimum instances (0 = scale-to-zero). Set to `1` to avoid cold starts. |
-| `max_instance_count` | `1` | Maximum concurrent instances. |
-| `cpu_limit` | `"1000m"` | CPU limit per container instance (millicores). |
-| `memory_limit` | `"2Gi"` | Memory limit per container instance. |
-| `php_memory_limit` | `"512M"` | PHP memory limit inside the container. |
-| `upload_max_filesize` | `"64M"` | Maximum single file upload size. |
-| `post_max_size` | `"64M"` | Maximum HTTP POST body size (must be >= `upload_max_filesize`). |
-| `db_name` | `"wp"` | MySQL database name. |
-| `db_user` | `"wp"` | MySQL database user. |
-| `enable_nfs` | `true` | Mount a Cloud Filestore NFS share for wp-content persistence. Requires gen2 execution environment. |
-| `nfs_mount_path` | `"/mnt/nfs"` | Container path where the NFS share is mounted. |
-| `enable_redis` | `true` | Enable Redis object caching for WordPress. |
-| `redis_host` | `""` | Redis hostname (leave empty to use auto-discovered Memorystore). |
-| `ingress_settings` | `"all"` | Traffic ingress: `"all"` (public), `"internal"`, or `"internal-and-cloud-load-balancing"`. |
-| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | VPC egress routing: `"PRIVATE_RANGES_ONLY"` or `"ALL_TRAFFIC"`. |
-| `execution_environment` | `"gen2"` | Cloud Run execution environment. Use `"gen2"` for NFS support. |
-| `timeout_seconds` | `300` | Request timeout in seconds (max 3600). |
-| `backup_schedule` | `"0 2 * * *"` | Cron schedule for automated database backups (UTC). |
-| `backup_retention_days` | `7` | Number of days to retain backup files in GCS. |
-| `support_users` | `[]` | Email addresses for monitoring alert notifications. |
-| `container_resources` | `null` | Structured CPU/memory override (takes precedence over `cpu_limit`/`memory_limit`). |
+**Expected result:** The service shows `READY = True` and a URL in the form `https://<hash>-<region>.a.run.app`.
 
-### Deploy
-
-Deployment is initiated from the RAD UI. After filling in the variable form, click **Deploy** to start the deployment.
-
-### Deployment Duration
-
-| Operation | Typical duration |
-|---|---|
-| Cloud SQL provisioning | 8–12 minutes |
-| Cloud Build image build | 3–5 minutes |
-| Cloud Run service deployment | 1–2 minutes |
-| **Total (first deploy)** | **10–20 minutes** |
-| Subsequent deploys | 2–5 minutes |
-
-### Key Outputs
-
-After deployment completes, the following outputs are available in the RAD UI deployment panel:
-
-| Output | Description |
-|---|---|
-| `service_url` | Cloud Run service URL (HTTPS) |
-| `service_name` | Name of the Cloud Run service |
-| `service_location` | Cloud Run region |
-| `database_instance_name` | Cloud SQL instance name |
-| `database_password_secret` | Secret Manager secret name for the DB password |
-| `deployment_id` | Generated deployment suffix |
-| `resource_prefix` | Prefix used for all GCP resource names |
-| `nfs_mount_path` | NFS mount path inside the container |
-| `storage_buckets` | GCS bucket names |
-| `container_registry` | Artifact Registry repository |
-
-Set shell variables for use in later steps (see the CLI and REST API Overview section at the top of this guide).
-
----
-
-## Phase 2 — Access WordPress [MANUAL]
-
-### Step 2.1 — Open WordPress in a Browser
+### Step 1.2 — Open WordPress in a Browser
 
 ```bash
 echo "WordPress URL: ${SERVICE_URL}"
@@ -158,36 +241,9 @@ echo "WordPress URL: ${SERVICE_URL}"
 
 Open the URL in your browser.
 
-**Expected result:** You see the WordPress 5-minute install page, or the WordPress homepage if the install was completed automatically during the Cloud Build/initialization job.
+**Expected result:** You see the WordPress 5-minute install page, or the WordPress homepage if install was completed automatically during initialisation.
 
-### Step 2.2 — Retrieve Admin Credentials from Secret Manager
-
-The WordPress admin password is stored in Secret Manager. Retrieve it:
-
-```bash
-# Retrieve the admin password
-gcloud secrets versions access latest \
-  --secret="${DB_SECRET}" \
-  --project=${PROJECT}
-```
-
-If you do not know the exact secret name, list all secrets with the WordPress prefix:
-
-```bash
-gcloud secrets list \
-  --project=${PROJECT} \
-  --filter="name~wordpress" \
-  --format='value(name)'
-```
-
-**REST API equivalent:**
-```bash
-curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}/versions/latest:access" \
-  | jq -r '.payload.data' | base64 -d
-```
-
-### Step 2.3 — Complete the Install Wizard (If Required)
+### Step 1.3 — Complete the Install Wizard (If Required)
 
 If the install wizard appears, fill in:
 
@@ -201,352 +257,653 @@ If the install wizard appears, fill in:
 
 Click **Install WordPress**.
 
-### Step 2.4 — Log in to wp-admin
-
-Navigate to:
-
-```
-${SERVICE_URL}/wp-admin
-```
-
-Log in with the admin username and the password retrieved in Step 2.2.
-
-**Expected result:** The WordPress administration dashboard appears.
-
----
-
-## Phase 3 — Explore WordPress Admin [MANUAL]
-
-### Step 3.1 — Create a Test Post
-
-1. Navigate to **Posts > Add New**.
-2. Enter a title and some body text in the block editor.
-3. Click **Publish**, then **View Post** to confirm the post is live.
-
-### Step 3.2 — Upload a Media File
-
-1. Navigate to **Media > Add New**.
-2. Upload an image file (PNG or JPEG, under 64 MB by default).
-3. Click the uploaded file to view its URL and metadata.
-
-Media files are written to the NFS-backed `wp-content/uploads` directory (or an alternative GCS Fuse mount if configured), ensuring they persist across container restarts and scaling events.
-
-### Step 3.3 — Install a Plugin
-
-1. Navigate to **Plugins > Add New**.
-2. Search for a lightweight plugin such as `Hello Dolly`.
-3. Click **Install Now**, then **Activate**.
-4. Confirm the plugin appears under **Plugins > Installed Plugins**.
-
-> Plugins are installed into the `wp-content/plugins` directory which is backed by NFS when `enable_nfs = true`, ensuring plugins persist across container revisions.
-
-### Step 3.4 — Explore Theme Management
-
-1. Navigate to **Appearance > Themes**.
-2. Click **Add New Theme** to browse the WordPress theme directory.
-3. Preview a theme and optionally activate it.
-
----
-
-## Phase 4 — Explore Database Integration [MANUAL]
-
-### Step 4.1 — Verify Cloud SQL Instance
+### Step 1.4 — Retrieve Admin Credentials from Secret Manager
 
 ```bash
-# Discover the Cloud SQL instance name
-export DB_INSTANCE=$(gcloud sql instances list \
+# List secrets for this deployment
+gcloud secrets list \
   --project=${PROJECT} \
   --filter="name~wordpress" \
-  --format="value(name)" \
-  --limit=1)
+  --format="table(name)"
 
-# Describe the Cloud SQL instance
-gcloud sql instances describe ${DB_INSTANCE} \
-  --project=${PROJECT} \
-  --format='table(name,databaseVersion,settings.tier,ipAddresses[0].ipAddress,state)'
-```
-
-**Expected result:** A MySQL 8.0 instance in `RUNNABLE` state.
-
-**REST API equivalent:**
-```bash
-curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://sqladmin.googleapis.com/sql/v1beta4/projects/${PROJECT}/instances/${DB_INSTANCE}" \
-  | jq '{name: .name, version: .databaseVersion, state: .state}'
-```
-
-### Step 4.2 — Verify Database and User
-
-```bash
-# List databases in the Cloud SQL instance
-gcloud sql databases list \
-  --instance=${DB_INSTANCE} \
-  --project=${PROJECT}
-
-# List database users
-gcloud sql users list \
-  --instance=${DB_INSTANCE} \
-  --project=${PROJECT}
-```
-
-**Expected result:** A database named `wp` and a user named `wp` are present.
-
-### Step 4.3 — Verify Cloud SQL Auth Proxy Sidecar
-
-The Cloud Run service uses the Cloud SQL Auth Proxy as a sidecar container to provide secure Unix socket connections to Cloud SQL. This avoids exposing the database over a public IP.
-
-```bash
-# Inspect the Cloud Run service configuration
-gcloud run services describe ${SERVICE} \
-  --region=${REGION} \
-  --project=${PROJECT} \
-  --format='json' | jq '.spec.template.spec.containers[].name'
-```
-
-**Expected result:** Two containers — `wordpress` and `cloud-sql-proxy`.
-
-### Step 4.4 — Retrieve Database Password from Secret Manager
-
-```bash
-# Retrieve the database password
+# Retrieve the database/admin password
 gcloud secrets versions access latest \
   --secret="${DB_SECRET}" \
   --project=${PROJECT}
 ```
 
-The database password is injected into the WordPress container as an environment variable sourced from Secret Manager — the plaintext value is never stored in deployment state.
+**REST API:**
+```bash
+curl -s \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}/versions/latest:access" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq -r '.payload.data' | base64 --decode
+```
+
+### Step 1.5 — Log In to wp-admin
+
+Navigate to `${SERVICE_URL}/wp-admin`. Log in with the admin username and password.
+
+**Expected result:** The WordPress administration dashboard appears.
 
 ---
 
-## Phase 5 — Explore Cloud Run Features [MANUAL]
+## Exercise 2 — Content Management
 
-### Step 5.1 — View Service Revisions
+### Objective
 
-Each deployment that changes the container configuration creates a new Cloud Run revision.
+Create a post, upload media, install a plugin, and explore theme management using the WordPress Admin interface.
+
+### Step 2.1 — Create a Test Post
+
+1. Navigate to **Posts > Add New**.
+2. Enter a title (e.g. `Lab Test Post`) and some body text in the block editor.
+3. Click **Publish**, then **View Post** to confirm the post is live.
+
+**Expected result:** The post appears on the WordPress frontend at `${SERVICE_URL}`.
+
+### Step 2.2 — Upload a Media File
+
+1. Navigate to **Media > Add New**.
+2. Upload an image file (PNG or JPEG, under 64 MB).
+3. Click the uploaded file to view its URL and metadata.
+
+Media files are written to the NFS-backed `wp-content/uploads` directory, ensuring they persist across container restarts and scaling events.
+
+**Verify the file is on NFS (Cloud Shell approach):**
+```bash
+# Check that the file URL resolves correctly
+curl -s -o /dev/null -w "HTTP %{http_code}\n" "${SERVICE_URL}/wp-content/uploads/$(date +%Y/%m)/"
+```
+
+### Step 2.3 — Install a Plugin
+
+1. Navigate to **Plugins > Add New**.
+2. Search for `Hello Dolly` (a lightweight test plugin).
+3. Click **Install Now**, then **Activate**.
+4. Confirm the plugin appears under **Plugins > Installed Plugins**.
+
+Plugins are installed into `wp-content/plugins`, which is backed by NFS when `enable_nfs = true`, ensuring plugins persist across container revisions.
+
+### Step 2.4 — Manage Themes
+
+1. Navigate to **Appearance > Themes**.
+2. Click **Add New Theme** to browse the WordPress theme directory.
+3. Click **Preview** on any theme to see it in action.
+4. Optionally click **Install**, then **Activate** to apply the theme.
+
+**Expected result:** Theme files are stored on the NFS share and persist across deployments.
+
+---
+
+## Exercise 3 — Database Integration
+
+### Objective
+
+Inspect the Cloud SQL MySQL 8.0 instance, verify the database and user, and confirm the Cloud SQL Auth Proxy sidecar configuration.
+
+### Step 3.1 — Verify the Cloud SQL Instance
+
+**gcloud:**
+```bash
+gcloud sql instances describe ${DB_INSTANCE} \
+  --project=${PROJECT} \
+  --format="table(name, databaseVersion, settings.tier, state)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://sqladmin.googleapis.com/sql/v1beta4/projects/${PROJECT}/instances/${DB_INSTANCE}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '{name, version: .databaseVersion, state}'
+```
+
+**Expected result:** A MySQL 8.0 instance in `RUNNABLE` state.
+
+### Step 3.2 — Verify Database and User
+
+**gcloud:**
+```bash
+# List databases
+gcloud sql databases list \
+  --instance=${DB_INSTANCE} \
+  --project=${PROJECT}
+
+# List users
+gcloud sql users list \
+  --instance=${DB_INSTANCE} \
+  --project=${PROJECT}
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances/${DB_INSTANCE}/databases" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.items[] | {name, charset}'
+```
+
+**Expected result:** A database named `wp` and a user named `wp` are present.
+
+### Step 3.3 — Verify Cloud SQL Auth Proxy Sidecar
 
 ```bash
-# List revisions
+# Inspect the Cloud Run service containers
+gcloud run services describe ${SERVICE} \
+  --region=${REGION} \
+  --project=${PROJECT} \
+  --format="json" \
+  | jq '.template.containers[].name'
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.template.containers[].name'
+```
+
+**Expected result:** Two containers: `wordpress` and `cloud-sql-proxy`. The proxy provides a Unix socket at `/cloudsql/PROJECT:REGION:INSTANCE`; the `docker-entrypoint.sh` script symlinks it to `/tmp/mysqld.sock` and sets `WORDPRESS_DB_HOST=localhost:/tmp/mysqld.sock`.
+
+### Step 3.4 — Retrieve Database Password
+
+```bash
+gcloud secrets versions access latest \
+  --secret="${DB_SECRET}" \
+  --project=${PROJECT}
+```
+
+**Expected result:** The database password is printed. This same password is injected into the WordPress container as `WORDPRESS_DB_PASSWORD` — it is never stored in deployment state.
+
+---
+
+## Exercise 4 — Cloud Run Revisions and Scaling
+
+### Objective
+
+List Cloud Run revisions, inspect traffic allocation, demonstrate traffic splitting, and observe scale-to-zero and concurrency settings.
+
+### Step 4.1 — List Revisions
+
+**gcloud:**
+```bash
 gcloud run revisions list \
   --service=${SERVICE} \
   --region=${REGION} \
   --project=${PROJECT} \
-  --format='table(name,status.conditions[0].status,spec.containerConcurrency,metadata.annotations."autoscaling.knative.dev/minScale",metadata.annotations."autoscaling.knative.dev/maxScale")'
+  --format="table(metadata.name, status.conditions[0].status, metadata.annotations.'autoscaling.knative.dev/minScale', metadata.annotations.'autoscaling.knative.dev/maxScale', metadata.creationTimestamp)"
 ```
 
-**REST API equivalent:**
+**REST API:**
 ```bash
-curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+curl -s \
   "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}/revisions" \
-  | jq '.revisions[] | {name: .name, state: .conditions[0].state}'
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.revisions[] | {name, state: .conditions[0].state, createTime}'
 ```
 
-### Step 5.2 — Inspect Traffic Allocation
+### Step 4.2 — Inspect Traffic Allocation
 
+**gcloud:**
 ```bash
 gcloud run services describe ${SERVICE} \
   --region=${REGION} \
   --project=${PROJECT} \
-  --format='json' | jq '.status.traffic'
+  --format="json" | jq '.status.traffic'
 ```
 
-**Expected result:** 100% of traffic is routed to the latest revision.
+**REST API:**
+```bash
+curl -s \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.traffic'
+```
 
-### Step 5.3 — Traffic Splitting (Canary Deployment)
+**Expected result:** 100% of traffic routes to `TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST`.
 
-You can split traffic between revisions using the `traffic_split` variable in the RAD UI. This is useful for canary or blue-green deployments.
+### Step 4.3 — Traffic Splitting (Canary Deployment)
 
-Example configuration (set via the RAD UI `traffic_split` variable):
+To demonstrate traffic splitting with two revisions:
 
-- Latest revision: 90%
-- Previous revision (e.g. `wordpress-00001-abc`): 10%
-
-To update traffic splits, modify the `traffic_split` variable in the RAD UI and redeploy.
-
-To verify the current traffic allocation:
+1. In the Cloud Console, navigate to **Cloud Run > your service > Revisions**.
+2. Note the current revision name (e.g. `wordpress-00001-abc`).
+3. Click **Edit & Deploy New Revision** and change an environment variable (e.g. `WORDPRESS_DEBUG=false`) to create a new revision.
+4. Click **Manage Traffic** and set: latest 90%, previous 10%.
 
 ```bash
+# Verify the traffic split
 gcloud run services describe ${SERVICE} \
   --region=${REGION} \
   --project=${PROJECT} \
-  --format='json' | jq '.status.traffic'
+  --format="yaml(spec.traffic)"
+
+# Send requests to observe distribution
+for i in {1..10}; do
+  curl -s -o /dev/null -w "Request ${i}: HTTP %{http_code}\n" "${SERVICE_URL}"
+done
 ```
 
-### Step 5.4 — Concurrency and Scaling
+**Expected result:** Traffic split shows two revision entries summing to 100%. All requests return HTTP 200.
 
-Cloud Run scales horizontally by launching additional container instances when concurrent requests exceed the configured concurrency limit.
+### Step 4.4 — Concurrency and Scale-to-Zero
 
 ```bash
-# View current instance count (requires a few seconds of traffic)
+# Inspect scaling annotations
 gcloud run services describe ${SERVICE} \
   --region=${REGION} \
   --project=${PROJECT} \
-  --format='value(status.observedGeneration,status.conditions[0].status)'
+  --format="yaml(spec.template.metadata.annotations)"
+
+# Demonstrate scale-to-zero (wait for idle, then time first request)
+time curl -s -o /dev/null -w "HTTP %{http_code}, total: %{time_total}s\n" "${SERVICE_URL}"
 ```
 
-WordPress is not naturally concurrency-safe when sharing the same `wp-content` directory from multiple instances. The default `max_instance_count = 1` prevents split-brain issues. Increase this only when NFS or GCS Fuse shared storage is confirmed.
-
-### Step 5.5 — Scale to Zero
-
-With `min_instance_count = 0`, the Cloud Run service scales to zero after a period of inactivity. The next request triggers a cold start.
-
-To demonstrate scale-to-zero:
-
-```bash
-# Wait a few minutes without sending requests, then:
-curl -w "\nTotal time: %{time_total}s\n" -s -o /dev/null ${SERVICE_URL}/
-```
-
-A cold start typically adds 5–15 seconds on first request. Set `min_instance_count = 1` in the RAD UI to eliminate cold starts in production.
+**Expected result:** Key annotations include `autoscaling.knative.dev/minScale=0` and `autoscaling.knative.dev/maxScale=1`. After idle, the first request triggers a cold start of 5–15 seconds.
 
 ---
 
-## Phase 6 — Explore Cloud Logging [MANUAL]
+## Exercise 5 — Redis Object Caching
 
-### Step 6.1 — View WordPress Application Logs
+### Objective
+
+Verify the Redis configuration injected into WordPress, inspect cache environment variables, and observe caching behaviour.
+
+### Step 5.1 — Verify Redis Environment Variables
+
+**gcloud:**
+```bash
+gcloud run services describe ${SERVICE} \
+  --region=${REGION} \
+  --project=${PROJECT} \
+  --format="yaml(spec.template.spec.containers[0].env)" \
+  | grep -A2 -E "REDIS|WP_REDIS|ENABLE_REDIS"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.template.containers[0].env[] | select(.name | test("REDIS"))'
+```
+
+**Expected result:** Three Redis variables injected: `ENABLE_REDIS=true`, `WP_REDIS_HOST=<host>`, `WP_REDIS_PORT=6379`.
+
+### Step 5.2 — Check NFS Server IP Resolution
+
+The Redis host may use the `$(NFS_SERVER_IP)` placeholder, resolved at runtime by `docker-entrypoint.sh`:
 
 ```bash
-# View WordPress logs (Apache/PHP output) — last 50 entries
+# Check the WordPress logs for Redis connection messages
 gcloud logging read \
-  "resource.type=cloud_run_revision AND resource.labels.service_name=${SERVICE} AND resource.labels.location=${REGION}" \
+  "resource.type=\"cloud_run_revision\" \
+   AND resource.labels.service_name=\"${SERVICE}\" \
+   AND textPayload=~\"redis\"" \
+  --project=${PROJECT} \
+  --limit=10
+```
+
+### Step 5.3 — Inspect Cache Behaviour in WordPress Admin
+
+1. In wp-admin, navigate to **Plugins > Installed Plugins**.
+2. Look for **Redis Object Cache** — if installed, it shows connection status.
+3. Click **Settings** to view cache statistics and connection details.
+
+**Expected result:** The Redis Object Cache plugin shows `Connected` if Redis is properly configured and reachable.
+
+### Step 5.4 — Compare Response Times
+
+```bash
+# First request (cache cold)
+time curl -s -o /dev/null "${SERVICE_URL}/?p=1"
+
+# Second request (cache warm)
+time curl -s -o /dev/null "${SERVICE_URL}/?p=1"
+```
+
+**Expected result:** Subsequent requests with Redis caching are faster due to cached database query results.
+
+---
+
+## Exercise 6 — Security and Secrets
+
+### Objective
+
+List all WordPress secrets stored in Secret Manager, inspect IAM bindings, and examine how environment variables are injected into the container.
+
+### Step 6.1 — List WordPress Secrets
+
+**gcloud:**
+```bash
+gcloud secrets list \
+  --project=${PROJECT} \
+  --filter="name~wordpress" \
+  --format="table(name, createTime)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets?filter=name:wordpress" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.secrets[] | {name}'
+```
+
+**Expected result:** At least nine secrets: eight WordPress auth keys/salts (`auth-key`, `secure-auth-key`, `logged-in-key`, `nonce-key`, and their `-salt` counterparts) plus the database password.
+
+### Step 6.2 — Inspect IAM Bindings on the Service
+
+**gcloud:**
+```bash
+gcloud run services get-iam-policy ${SERVICE} \
+  --region=${REGION} \
+  --project=${PROJECT}
+```
+
+**Expected result:** The `roles/run.invoker` binding shows `allUsers` for a publicly accessible service. The Cloud Run service account has `roles/secretmanager.secretAccessor` and `roles/cloudsql.client`.
+
+### Step 6.3 — Check Secret Environment Variable Injection
+
+```bash
+gcloud run services describe ${SERVICE} \
+  --region=${REGION} \
+  --project=${PROJECT} \
+  --format="yaml(spec.template.spec.containers[0].env)" \
+  | grep -A3 "secretKeyRef"
+```
+
+**Expected result:** WordPress auth constants (`WORDPRESS_AUTH_KEY`, etc.) reference Secret Manager secrets via `secretKeyRef`. The database password is also injected this way — no plaintext credentials appear in the container configuration.
+
+### Step 6.4 — Inspect wp-config Environment Variables
+
+The `wp-config-docker.php` template reads WordPress constants from these environment variables:
+
+| WordPress Constant | Environment Variable |
+|---|---|
+| `AUTH_KEY` | `WORDPRESS_AUTH_KEY` |
+| `DB_NAME` | `WORDPRESS_DB_NAME` → `DB_NAME` |
+| `DB_USER` | `WORDPRESS_DB_USER` → `DB_USER` |
+| `DB_PASSWORD` | `WORDPRESS_DB_PASSWORD` → `DB_PASSWORD` |
+| `DB_HOST` | `WORDPRESS_DB_HOST` (set by entrypoint to socket path) |
+| `WP_HOME` / `WP_SITEURL` | Auto-set from `CLOUDRUN_SERVICE_URL` |
+
+---
+
+## Exercise 7 — Cloud Logging
+
+### Objective
+
+Query Cloud Run logs for WordPress application output, HTTP request logs, PHP error logs, and Cloud SQL Auth Proxy sidecar logs.
+
+### Step 7.1 — View All Service Logs
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"cloud_run_revision\" \
+   AND resource.labels.service_name=\"${SERVICE}\" \
+   AND resource.labels.location=\"${REGION}\"" \
   --project=${PROJECT} \
   --limit=50 \
-  --format='value(timestamp, textPayload)'
+  --format="value(timestamp, textPayload)"
 ```
 
-### Step 6.2 — Filter for HTTP Requests
-
-```bash
-# View HTTP access log entries
-gcloud logging read \
-  "resource.type=cloud_run_revision AND resource.labels.service_name=${SERVICE} AND httpRequest.status:*" \
-  --project=${PROJECT} \
-  --limit=30 \
-  --format='value(timestamp, httpRequest.status, httpRequest.requestUrl)'
-```
-
-### Step 6.3 — Filter for PHP Errors
-
-```bash
-gcloud logging read \
-  "resource.type=cloud_run_revision AND resource.labels.service_name=${SERVICE} AND (textPayload:\"PHP\" OR textPayload:\"Fatal\" OR textPayload:\"Warning\")" \
-  --project=${PROJECT} \
-  --limit=20
-```
-
-### Step 6.4 — View Logs in Cloud Console
-
-Navigate to **Cloud Console > Logging > Logs Explorer**. Use the pre-built query:
-
-```
-resource.type="cloud_run_revision"
-resource.labels.service_name="${SERVICE}"
-```
-
-**REST API equivalent:**
+**REST API:**
 ```bash
 curl -s -X POST \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  -H "Content-Type: application/json" \
   "https://logging.googleapis.com/v2/entries:list" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
   -d "{
     \"resourceNames\": [\"projects/${PROJECT}\"],
-    \"filter\": \"resource.type=cloud_run_revision AND resource.labels.service_name=${SERVICE}\",
+    \"filter\": \"resource.type=\\\"cloud_run_revision\\\" AND resource.labels.service_name=\\\"${SERVICE}\\\"\",
     \"orderBy\": \"timestamp desc\",
     \"pageSize\": 20
   }" | jq '.entries[].textPayload'
 ```
 
+### Step 7.2 — Filter HTTP Request Logs
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"cloud_run_revision\" \
+   AND resource.labels.service_name=\"${SERVICE}\" \
+   AND httpRequest.status:*" \
+  --project=${PROJECT} \
+  --limit=30 \
+  --format="table(timestamp, httpRequest.status, httpRequest.requestUrl)"
+```
+
+**Logs Explorer query:**
+```
+resource.type="cloud_run_revision"
+resource.labels.service_name="${SERVICE}"
+httpRequest.status>=400
+```
+
+### Step 7.3 — Filter for PHP Errors
+
+```bash
+gcloud logging read \
+  "resource.type=\"cloud_run_revision\" \
+   AND resource.labels.service_name=\"${SERVICE}\" \
+   AND (textPayload=~\"PHP\" OR textPayload=~\"Fatal\" OR textPayload=~\"Warning\")" \
+  --project=${PROJECT} \
+  --limit=20
+```
+
+**Logs Explorer query:**
+```
+resource.type="cloud_run_revision"
+resource.labels.service_name="${SERVICE}"
+textPayload=~"PHP Fatal|PHP Warning|PHP Notice"
+```
+
+### Step 7.4 — View Cloud SQL Auth Proxy Logs
+
+```bash
+gcloud logging read \
+  "resource.type=\"cloud_run_revision\" \
+   AND resource.labels.service_name=\"${SERVICE}\" \
+   AND textPayload=~\"cloud_sql_proxy|ready for new connections|Listening\"" \
+  --project=${PROJECT} \
+  --limit=20
+```
+
+**Expected result:** The Auth Proxy startup log shows successful connection to the Cloud SQL Unix socket.
+
 ---
 
-## Phase 7 — Explore Cloud Monitoring [MANUAL]
+## Exercise 8 — Cloud Monitoring
 
-### Step 7.1 — Request Metrics
+### Objective
 
-In the Google Cloud Console, navigate to **Cloud Run > Services > ${SERVICE} > Metrics**. Explore:
+View request metrics, inspect uptime checks, monitor error rates, and observe instance scaling events.
 
-- **Request count** — total requests per minute
+### Step 8.1 — View Request Metrics
+
+Navigate to the Cloud Console: `https://console.cloud.google.com/run?project=${PROJECT}`
+
+Click your service, then the **Metrics** tab. Explore:
+- **Request count** — total HTTP requests per minute
 - **Request latencies** — p50, p95, p99 percentiles
-- **Container instance count** — number of running instances
+- **Container instance count** — active vs. idle instances
 
+**REST API (request count, last 10 minutes):**
 ```bash
-# Fetch request count via Monitoring API (last 10 minutes)
-curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries?filter=metric.type%3D%22run.googleapis.com%2Frequest_count%22%20AND%20resource.labels.service_name%3D%22${SERVICE}%22&interval.endTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)&interval.startTime=$(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ)" \
-  | jq '[.timeSeries[].points[0].value.int64Value | tonumber] | add'
+START=$(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-10M +%Y-%m-%dT%H:%M:%SZ)
+END=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+curl -s \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries?filter=metric.type%3D%22run.googleapis.com%2Frequest_count%22%20AND%20resource.labels.service_name%3D%22${SERVICE}%22&interval.startTime=${START}&interval.endTime=${END}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '[.timeSeries[].points[].value.int64Value | tonumber] | add // 0'
 ```
 
-### Step 7.2 — Uptime Checks
+### Step 8.2 — Uptime Checks
 
+**gcloud:**
 ```bash
-# List uptime checks
 gcloud monitoring uptime list-configs \
   --project=${PROJECT} \
-  --format='table(displayName, httpCheck.path, period, selectedRegions)'
+  --format="table(displayName, httpCheck.path, period, selectedRegions)"
 ```
 
-The WordPress service URL is monitored every 60 seconds from multiple global locations. An alert fires if the endpoint becomes unreachable or returns a non-2xx status.
+**REST API:**
+```bash
+curl -s \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.uptimeCheckConfigs[] | {displayName, path: .httpCheck.path, period}'
+```
 
-### Step 7.3 — Error Rate Monitoring
+**Expected result:** The WordPress service URL is monitored every 60 seconds from multiple global locations. An alert fires if the endpoint becomes unreachable or returns a non-2xx status.
+
+### Step 8.3 — Check Error Rate (5xx Logs)
 
 ```bash
-# Check for 5xx errors in the last hour
 gcloud logging read \
-  "resource.type=cloud_run_revision AND resource.labels.service_name=${SERVICE} AND httpRequest.status>=500" \
+  "resource.type=\"cloud_run_revision\" \
+   AND resource.labels.service_name=\"${SERVICE}\" \
+   AND httpRequest.status>=500" \
   --project=${PROJECT} \
   --freshness=1h \
   --limit=10 \
-  --format='value(timestamp, httpRequest.status, textPayload)'
+  --format="table(timestamp, httpRequest.status, textPayload)"
 ```
 
-### Step 7.4 — Instance Scaling Events
+### Step 8.4 — Observe Scaling Events
+
+Generate load to observe instance scaling:
 
 ```bash
-# View instance count over time
-gcloud logging read \
-  "resource.type=cloud_run_revision AND resource.labels.service_name=${SERVICE} AND logName:\"requests\"" \
-  --project=${PROJECT} \
-  --limit=20 \
-  --format='table(timestamp, resource.labels.revision_name)'
+# Send concurrent requests
+for i in {1..50}; do
+  curl -s -o /dev/null "${SERVICE_URL}/" &
+done
+wait
+
+# Check instance count
+curl -s \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries?filter=metric.type%3D%22run.googleapis.com%2Fcontainer%2Finstance_count%22%20AND%20resource.labels.service_name%3D%22${SERVICE}%22&interval.startTime=${START}&interval.endTime=${END}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.timeSeries[].points[0].value'
 ```
 
-Each unique revision name in the log output corresponds to a running container instance.
+**Expected result:** Instance count rises from 0 to 1+ under load. With `max_instance_count=1` (default), a single instance handles all requests with internal concurrency.
 
 ---
 
-## Phase 8 — Undeploy [AUTOMATED]
+## 13. Cleanup
 
-When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+Return to the RAD UI and click **Undeploy** on the `Wordpress_CloudRun` deployment. This removes the Cloud Run service, Cloud Run Jobs, Secret Manager secrets (all eight auth keys/salts + DB password), GCS buckets, Cloud SQL database and user, Artifact Registry images, Filestore NFS instance, and Cloud Monitoring checks.
 
-**Typical duration:** 8–15 minutes
+### Manual Cleanup (if needed)
 
-> **Warning:** This permanently deletes the Cloud Run service, Cloud SQL database, GCS buckets, NFS Filestore instance, Artifact Registry images, and all associated secrets. Ensure any data you want to keep has been exported or backed up before undeploying.
+**gcloud:**
+```bash
+# Delete the Cloud Run service
+gcloud run services delete ${SERVICE} \
+  --region=${REGION} \
+  --project=${PROJECT} --quiet
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+# List and delete secrets
+gcloud secrets list --project=${PROJECT} --filter="name~wordpress"
+# gcloud secrets delete <secret-name> --project=${PROJECT} --quiet
+
+# List and delete uptime checks
+gcloud monitoring uptime list-configs --project=${PROJECT}
+```
+
+**REST API — delete the service:**
+```bash
+curl -s -X DELETE \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}" \
+  -H "Authorization: Bearer ${TOKEN}"
+```
+
+> **Warning:** Undeploying permanently deletes all WordPress data in Cloud SQL and file uploads stored in NFS. Export any content you want to keep before undeploying.
+
+> **Note:** Resources provisioned by the `Services_GCP` module (VPC, shared Cloud SQL instance, Filestore) are managed separately.
 
 ---
 
-## Summary
+## 14. Reference
 
-| Phase | Action | Mode |
-|---|---|---|
-| Phase 1 | Deploy infrastructure via RAD UI | Automated |
-| Phase 2 | Access WordPress and retrieve admin credentials from Secret Manager | Manual |
-| Phase 3 | Explore WordPress admin: posts, media, plugins, themes | Manual |
-| Phase 4 | Explore Cloud SQL MySQL 8.0 integration and Auth Proxy sidecar | Manual |
-| Phase 5 | Explore Cloud Run revisions, traffic splitting, concurrency, scale-to-zero | Manual |
-| Phase 6 | Explore Cloud Logging: WordPress logs, HTTP access, PHP errors | Manual |
-| Phase 7 | Explore Cloud Monitoring: request metrics, error rates, uptime checks | Manual |
-| Phase 8 | Undeploy all infrastructure via RAD UI | Automated |
+### Key Module Variables
 
-| Resource | Notes |
-|---|---|
-| Cloud Run | Serverless — billed per request and CPU/memory during active execution |
-| Cloud SQL MySQL 8.0 | Managed — patching and backups handled by GCP |
-| Cloud SQL Auth Proxy | Sidecar provides secure Unix socket connections; no public DB IP required |
-| Serverless VPC Access | Routes Cloud Run egress through the private VPC |
-| Cloud Filestore NFS | Optional shared persistent storage for wp-content (gen2 required) |
-| Cloud Storage | GCS bucket for data and backups |
-| Secret Manager | Database password and WordPress auth keys |
-| Cloud Build | Builds the custom WordPress Docker image |
-| Artifact Registry | Stores the built container image |
-| Cloud Monitoring | Uptime checks, request metrics, alerting |
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `project_id` | string | — | GCP project ID (required) |
+| `tenant_deployment_id` | string | `demo` | Short environment label; embedded in resource names |
+| `application_name` | string | `wordpress` | Base resource name; do not change after first deploy |
+| `application_version` | string | `latest` | Container image / WordPress version tag |
+| `deploy_application` | bool | `true` | Set `false` for infrastructure-only deployment |
+| `min_instance_count` | number | `0` | Scale-to-zero; set to 1 to eliminate cold starts |
+| `max_instance_count` | number | `1` | Increase only after confirming NFS shared storage |
+| `cpu_limit` | string | `1000m` | 1 vCPU per container instance |
+| `memory_limit` | string | `2Gi` | 2 GiB per container instance |
+| `php_memory_limit` | string | `512M` | PHP `memory_limit` inside the container |
+| `upload_max_filesize` | string | `64M` | Maximum single upload size |
+| `post_max_size` | string | `64M` | Maximum HTTP POST body size |
+| `db_name` | string | `wp` | MySQL database name |
+| `db_user` | string | `wp` | MySQL application user |
+| `enable_nfs` | bool | `true` | Shared wp-content persistence (gen2 required) |
+| `nfs_mount_path` | string | `/mnt/nfs` | Container path for NFS mount |
+| `enable_redis` | bool | `true` | Redis object caching (on by default) |
+| `redis_host` | string | `""` | Redis hostname (leave empty for default) |
+| `redis_port` | string | `6379` | Redis TCP port (string type) |
+| `ingress_settings` | string | `all` | `all`, `internal`, or `internal-and-cloud-load-balancing` |
+| `backup_schedule` | string | `0 2 * * *` | Cron expression for automated DB backups (UTC) |
+| `backup_retention_days` | number | `7` | Days to retain backup files in GCS |
+
+### Useful Commands Reference
+
+```bash
+# Get service URL
+gcloud run services describe ${SERVICE} --region=${REGION} --project=${PROJECT} \
+  --format="value(status.url)"
+
+# List revisions
+gcloud run revisions list --service=${SERVICE} --region=${REGION} --project=${PROJECT}
+
+# Check traffic split
+gcloud run services describe ${SERVICE} --region=${REGION} --project=${PROJECT} \
+  --format="yaml(spec.traffic)"
+
+# List secrets
+gcloud secrets list --project=${PROJECT} --filter="name~wordpress"
+
+# Retrieve DB password
+gcloud secrets versions access latest --secret="${DB_SECRET}" --project=${PROJECT}
+
+# List Cloud SQL instances
+gcloud sql instances list --project=${PROJECT}
+
+# List databases
+gcloud sql databases list --instance=${DB_INSTANCE} --project=${PROJECT}
+
+# View service logs
+gcloud logging read "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${SERVICE}\"" \
+  --project=${PROJECT} --limit=50
+
+# List uptime checks
+gcloud monitoring uptime list-configs --project=${PROJECT}
+
+# List GCS buckets
+gcloud storage buckets list --project=${PROJECT} --filter="name~wordpress"
+```
+
+### Further Reading
+
+- [WordPress on Cloud Run — Configuration Guide](https://docs.radmodules.dev/docs/modules/Wordpress_CloudRun)
+- [WordPress documentation](https://wordpress.org/documentation/)
+- [Cloud Run Gen2 documentation](https://cloud.google.com/run/docs/about-execution-environments)
+- [Cloud SQL Auth Proxy for MySQL](https://cloud.google.com/sql/docs/mysql/sql-proxy)
+- [Redis Object Cache plugin](https://wordpress.org/plugins/redis-cache/)
+- [Cloud Run traffic splitting](https://cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration)
+- [Secret Manager for Cloud Run](https://cloud.google.com/run/docs/configuring/secrets)
