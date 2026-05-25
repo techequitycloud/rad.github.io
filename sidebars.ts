@@ -173,6 +173,13 @@ const sidebars: SidebarsConfig = {
           items: [
             {
               type: 'category',
+              label: 'Foundation',
+              items: [
+                { type: 'doc', id: 'modules/GCP_Services/GCP_Services', label: 'Services' },
+              ],
+            },
+            {
+              type: 'category',
               label: 'Activepieces',
               items: [
                 { type: 'doc', id: 'modules/Activepieces_CloudRun/Activepieces_CloudRun', label: 'Cloud Run' },
@@ -375,13 +382,6 @@ const sidebars: SidebarsConfig = {
                 { type: 'doc', id: 'modules/Wordpress_Common/Wordpress_Common', label: 'Common' },
               ],
             },
-            {
-              type: 'category',
-              label: 'Foundation',
-              items: [
-                { type: 'doc', id: 'modules/GCP_Services/GCP_Services', label: 'Services' },
-              ],
-            },
           ],
         },
       ],
@@ -436,6 +436,13 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Partner Modules',
           items: [
+            {
+              type: 'category',
+              label: 'Foundation',
+              items: [
+                { type: 'doc', id: 'labs/Services_GCP/Services_GCP', label: 'Services' },
+              ],
+            },
             {
               type: 'category',
               label: 'Activepieces',
@@ -616,13 +623,6 @@ const sidebars: SidebarsConfig = {
               items: [
                 { type: 'doc', id: 'labs/Wordpress_CloudRun/Wordpress_CloudRun', label: 'Cloud Run' },
                 { type: 'doc', id: 'labs/Wordpress_GKE/Wordpress_GKE', label: 'GKE' },
-              ],
-            },
-            {
-              type: 'category',
-              label: 'Foundation',
-              items: [
-                { type: 'doc', id: 'labs/Services_GCP/Services_GCP', label: 'Services' },
               ],
             },
           ],
