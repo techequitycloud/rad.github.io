@@ -9,7 +9,7 @@ sidebar_label: "Wordpress CloudRun"
 
 <br/>
 
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/WordPress_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
 
 
 `Wordpress_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [WordPress](https://wordpress.org/) on Google Cloud Run Gen2. WordPress is the world's most widely-deployed CMS, powering 43.5% of all websites and holding 62.8% of the CMS market — approximately 480–590 million sites globally. WooCommerce, its e-commerce extension, controls 36% of all online stores with roughly $35B in GMV in 2025, and an ecosystem of 60,000+ plugins makes WordPress the default choice for marketing sites, news publishers, e-commerce, and membership platforms at any scale.
