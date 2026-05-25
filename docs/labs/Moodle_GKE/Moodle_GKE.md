@@ -1,3 +1,8 @@
+---
+title: "Moodle on GKE — Lab Guide"
+sidebar_label: "Moodle GKE"
+---
+
 # Moodle on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Moodle_GKE)**

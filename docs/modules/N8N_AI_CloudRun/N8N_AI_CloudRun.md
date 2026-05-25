@@ -1,4 +1,9 @@
-# N8N AI CloudRun Module — Configuration Guide
+---
+title: "N8N_AI_CloudRun Module — Configuration Guide"
+sidebar_label: "N8N AI CloudRun"
+---
+
+# N8N_AI_CloudRun Module — Configuration Guide
 
 n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), trusted by a quarter of the Fortune 500. `N8N_AI_CloudRun` is the AI-augmented variant — pre-configured with native LLM nodes, agent loops, and vector store integrations so teams can build production AI automation pipelines without boilerplate. AI-specific template usage is the fastest-growing segment within the N8N community. This module deploys n8n on **Google Cloud Run** alongside two companion AI services: **Qdrant** (vector database for RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis workflows without external AI API dependencies.
 
@@ -46,7 +51,7 @@ inputs.
 
 ### Key differences from `App_CloudRun` defaults
 
-| Feature | App CloudRun default | N8N AI CloudRun default |
+| Feature | App_CloudRun default | N8N_AI_CloudRun default |
 |---|---|---|
 | `container_port` | `8080` | `5678` |
 | `cpu_limit` | `"1000m"` | `"2000m"` |

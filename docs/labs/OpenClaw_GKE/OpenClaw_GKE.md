@@ -1,3 +1,8 @@
+---
+title: "OpenClaw on GKE — Lab Guide"
+sidebar_label: "OpenClaw GKE"
+---
+
 # OpenClaw on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/OpenClaw_GKE)**

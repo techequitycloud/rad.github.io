@@ -1,4 +1,9 @@
-# Strapi GKE Module — Configuration Guide
+---
+title: "Strapi_GKE Module — Configuration Guide"
+sidebar_label: "Strapi GKE"
+---
+
+# Strapi_GKE Module — Configuration Guide
 
 Strapi is the leading open-source headless CMS — with 71,000+ GitHub stars and a 4.5/5 rating on G2 from 189+ reviews — that gives developers the freedom to choose their favourite tools and frameworks while enabling content editors to manage their content independently. Trusted by Adidas, Airbus, Amazon, Cisco, and Toyota for omnichannel content delivery across websites, mobile apps, digital signage, and IoT surfaces, Strapi's fully customizable API layer with no vendor lock-in positions it at the forefront of a headless CMS market growing at 22.1% CAGR toward $5.53B by 2032. This module deploys Strapi on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL instance, a Cloud Filestore NFS volume for media uploads, and a GCS bucket for object storage.
 
@@ -14,27 +19,27 @@ This guide documents only the variables that are **unique to `Strapi_GKE`** or t
 
 **Variables fully covered by the App_GKE guide:**
 
-| Configuration Area | App GKE.md Section | Strapi-Specific Notes |
+| Configuration Area | App_GKE.md Section | Strapi-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) | Different defaults for `module_description` and `module_documentation`. |
-| Project & Identity | [App_GKE §2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) | Refer to base App GKE module documentation. |
+| Project & Identity | [App_GKE §2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) | Refer to base App_GKE module documentation. |
 | Application Identity | [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) | See [Strapi Application Identity](#strapi-application-identity) below for Strapi-specific defaults. |
 | Runtime & Scaling | [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | See [Strapi Runtime Configuration](#strapi-runtime-configuration) below. `container_image_source` defaults to `"custom"`; `container_port` defaults to `1337`. |
 | Environment Variables & Secrets | [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | See [Strapi Environment Variables](#strapi-environment-variables) below for email and GCS defaults. |
-| GKE Backend Configuration | [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | Refer to base App GKE module documentation. |
+| GKE Backend Configuration | [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | Refer to base App_GKE module documentation. |
 | Jobs & Scheduled Tasks | [App_GKE §3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | A `db-init` job runs automatically — see [Platform-Managed Behaviours](#platform-managed-behaviours). Refer to App_GKE for customising additional jobs. |
-| CI/CD & GitHub Integration | [App_GKE §6 CI/CD & Delivery](../App_GKE/App_GKE.md#6-cicd--delivery) | Refer to base App GKE module documentation. |
+| CI/CD & GitHub Integration | [App_GKE §6 CI/CD & Delivery](../App_GKE/App_GKE.md#6-cicd--delivery) | Refer to base App_GKE module documentation. |
 | Storage — NFS | [App_GKE §3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) | NFS is **enabled by default** in this module. See [NFS Storage](#nfs-storage) below. |
 | Storage — GCS | [App_GKE §3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) | A default `data` bucket is provisioned. Refer to App_GKE module documentation for bucket configuration. |
 | Database Configuration | [App_GKE §3.B Database (Cloud SQL)](../App_GKE/App_GKE.md#b-database-cloud-sql) | See [Strapi Database Configuration](#strapi-database-configuration) below. |
-| Backup Schedule & Retention | [App_GKE §8.B Backup Import & Recovery](../App_GKE/App_GKE.md#b-backup-import) | Refer to base App GKE module documentation. See also [Backup Import & Recovery](#backup-import--recovery) below. |
-| Custom SQL Scripts | [App_GKE §3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | Refer to base App GKE module documentation. |
+| Backup Schedule & Retention | [App_GKE §8.B Backup Import & Recovery](../App_GKE/App_GKE.md#b-backup-import) | Refer to base App_GKE module documentation. See also [Backup Import & Recovery](#backup-import--recovery) below. |
+| Custom SQL Scripts | [App_GKE §3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | Refer to base App_GKE module documentation. |
 | Observability & Health | [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) | See [Strapi Health Probes](#strapi-health-probes) below for Strapi-specific defaults. |
-| Reliability Policies | [App_GKE §7 Reliability & Scheduling](../App_GKE/App_GKE.md#7-reliability--scheduling) | Refer to base App GKE module documentation. |
-| Resource Quota | [App_GKE §7.C Resource Quotas](../App_GKE/App_GKE.md#c-resource-quotas) | Refer to base App GKE module documentation. |
-| Custom Domain, Static IP & Network | [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) | Refer to base App GKE module documentation. |
-| Identity-Aware Proxy | [App_GKE §4.B Identity-Aware Proxy (IAP)](../App_GKE/App_GKE.md#b-identity-aware-proxy-iap) | Refer to base App GKE module documentation. |
-| Cloud Armor | [App_GKE §4.A Cloud Armor WAF](../App_GKE/App_GKE.md#a-cloud-armor-waf) | Refer to base App GKE module documentation. |
+| Reliability Policies | [App_GKE §7 Reliability & Scheduling](../App_GKE/App_GKE.md#7-reliability--scheduling) | Refer to base App_GKE module documentation. |
+| Resource Quota | [App_GKE §7.C Resource Quotas](../App_GKE/App_GKE.md#c-resource-quotas) | Refer to base App_GKE module documentation. |
+| Custom Domain, Static IP & Network | [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) | Refer to base App_GKE module documentation. |
+| Identity-Aware Proxy | [App_GKE §4.B Identity-Aware Proxy (IAP)](../App_GKE/App_GKE.md#b-identity-aware-proxy-iap) | Refer to base App_GKE module documentation. |
+| Cloud Armor | [App_GKE §4.A Cloud Armor WAF](../App_GKE/App_GKE.md#a-cloud-armor-waf) | Refer to base App_GKE module documentation. |
 
 ---
 
@@ -84,7 +89,7 @@ Strapi is a Node.js application. The module defaults are sized for a development
 
 **Strapi-specific runtime defaults that differ from App_GKE:**
 
-| Variable | App GKE Default | Strapi GKE Default | Reason |
+| Variable | App_GKE Default | Strapi_GKE Default | Reason |
 |---|---|---|---|
 | `container_image_source` | `"custom"` | `"custom"` | The included Strapi Dockerfile provides a production-ready build. |
 | `container_port` | `8080` | `1337` | Strapi listens on port `1337` by default (configurable via the `PORT` environment variable). |

@@ -1,3 +1,8 @@
+---
+title: "Django on Cloud Run — Lab Guide"
+sidebar_label: "Django CloudRun"
+---
+
 # Django on Cloud Run — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Django_CloudRun)**

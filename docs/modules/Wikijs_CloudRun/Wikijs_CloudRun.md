@@ -1,4 +1,9 @@
-# Wikijs CloudRun Module — Configuration Guide
+---
+title: "Wikijs_CloudRun Module — Configuration Guide"
+sidebar_label: "Wikijs CloudRun"
+---
+
+# Wikijs_CloudRun Module — Configuration Guide
 
 `Wikijs_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Cloud Run Gen2. Wiki.js has 28,000+ GitHub stars and is adopted by software teams, healthcare organizations (including the Indonesia Ministry of Health), educational institutions, and government agencies (including Brazil social services). It replaces expensive Confluence licenses — saving $5–10/user/month — with support for Markdown, WYSIWYG editing, LDAP/SAML/OAuth, and Git sync for version-controlled knowledge management.
 
@@ -361,7 +366,7 @@ The table below covers all variables unique to or with notable defaults in `Wiki
 | Variable | Type | Default | Group | Notes |
 |---|---|---|---|---|
 | `application_name` | `string` | `"wikijs"` | 2 | Base resource name |
-| `display_name` | `string` | `"Wiki.js"` | 2 | Passed to Wikijs Common |
+| `display_name` | `string` | `"Wiki.js"` | 2 | Passed to Wikijs_Common |
 | `application_version` | `string` | `"2.5.311"` | 2 | Image tag |
 | `deployment_id` | `string` | `""` | 0 | Auto-generated when empty; pin to stabilise resource names across runs |
 | `db_name` | `string` | `"wikijs"` | 11 | PostgreSQL DB name |

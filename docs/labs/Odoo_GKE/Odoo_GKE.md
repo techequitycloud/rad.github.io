@@ -1,3 +1,8 @@
+---
+title: "Odoo on GKE — Lab Guide"
+sidebar_label: "Odoo GKE"
+---
+
 # Odoo on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Odoo_GKE)**

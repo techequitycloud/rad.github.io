@@ -1,3 +1,8 @@
+---
+title: "Wiki.js on Cloud Run — Lab Guide"
+sidebar_label: "Wikijs CloudRun"
+---
+
 # Wiki.js on Cloud Run — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Wikijs_CloudRun)**

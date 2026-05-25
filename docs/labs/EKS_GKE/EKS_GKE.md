@@ -1,3 +1,8 @@
+---
+title: "AWS Elastic Kubernetes Service on GKE Fleet — Lab Guide"
+sidebar_label: "EKS GKE"
+---
+
 # AWS Elastic Kubernetes Service on GKE Fleet — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/EKS_GKE)**

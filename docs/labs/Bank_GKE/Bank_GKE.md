@@ -1,3 +1,8 @@
+---
+title: "Bank of Anthos on GKE — Lab Guide"
+sidebar_label: "Bank GKE"
+---
+
 # Bank of Anthos on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Bank_GKE)**

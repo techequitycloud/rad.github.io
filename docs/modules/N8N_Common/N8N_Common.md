@@ -1,4 +1,9 @@
-# N8N Common Shared Configuration Module
+---
+title: "N8N_Common Shared Configuration Module"
+sidebar_label: "N8N Common"
+---
+
+# N8N_Common Shared Configuration Module
 
 The `N8N_Common` module defines the n8n workflow automation platform (without AI components) for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`N8N_CloudRun` and `N8N_GKE`).
 
@@ -271,7 +276,7 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 
 ## 9. Platform-Specific Differences
 
-| Aspect | N8N CloudRun | N8N GKE |
+| Aspect | N8N_CloudRun | N8N_GKE |
 |--------|--------------|---------|
 | `service_url` | Predicted Cloud Run service URL (`https://<prefix>-<project_number>.<region>.run.app`) | Internal ClusterIP URL (`http://<service>.<namespace>.svc.cluster.local`), computed before deployment |
 | `enable_cloudsql_volume` | `true` (Auth Proxy sidecar, default) | `true` (Auth Proxy sidecar, default) |

@@ -1,4 +1,9 @@
-# Wikijs Common Module
+---
+title: "Wikijs_Common Module"
+sidebar_label: "Wikijs Common"
+---
+
+# Wikijs_Common Module
 
 ## Overview
 
@@ -202,7 +207,7 @@ A thin wrapper that maps platform-standard variable names to Wiki.js's expected 
 
 ## Platform-Specific Differences
 
-| Aspect | Wikijs CloudRun | Wikijs GKE |
+| Aspect | Wikijs_CloudRun | Wikijs_GKE |
 |--------|-----------------|------------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Optional (Auth Proxy sidecar, default `true`) | Optional (Auth Proxy sidecar, default `true`) |

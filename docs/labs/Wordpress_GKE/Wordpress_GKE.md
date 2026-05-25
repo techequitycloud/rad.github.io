@@ -1,3 +1,8 @@
+---
+title: "WordPress on GKE — Lab Guide"
+sidebar_label: "Wordpress GKE"
+---
+
 # WordPress on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Wordpress_GKE)**

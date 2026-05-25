@@ -1,3 +1,8 @@
+---
+title: "Directus on Cloud Run — Lab Guide"
+sidebar_label: "Directus CloudRun"
+---
+
 # Directus on Cloud Run — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Directus_CloudRun)**

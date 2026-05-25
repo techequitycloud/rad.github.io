@@ -1,4 +1,9 @@
-# Odoo GKE Module — Configuration Guide
+---
+title: "Odoo_GKE Module — Configuration Guide"
+sidebar_label: "Odoo GKE"
+---
+
+# Odoo_GKE Module — Configuration Guide
 
 Odoo is a comprehensive open-source ERP platform covering CRM, accounting, inventory, manufacturing, HR, eCommerce, and more — with 16M+ users, 170,000+ enterprise customers across 5 continents, and €650M in 2025 billing revenue growing at 42% CAGR (13,000 new clients per month). It controls 5.77% global ERP market share and 12–15% of the SME segment, making it the primary open-source disruptor against SAP, Oracle, and Microsoft Dynamics, with zero licensing cost and a target of €1B in revenue by 2027. This module deploys Odoo Community Edition on **GKE Autopilot** using a custom container image built from the official Odoo nightly packages, backed by a managed Cloud SQL PostgreSQL instance and a Filestore NFS volume for shared file storage.
 
@@ -14,39 +19,39 @@ This guide documents only the variables that are **unique to `Odoo_GKE`** or tha
 
 **Variables fully covered by the App_GKE guide:**
 
-| Configuration Area | App GKE.md Section | Odoo-Specific Notes |
+| Configuration Area | App_GKE.md Section | Odoo-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | [§1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) | Different defaults for `module_description` and `module_documentation`. `resource_creator_identity` behaves identically. |
-| Project & Identity | [§2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) | Refer to base App GKE module documentation. |
+| Project & Identity | [§2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) | Refer to base App_GKE module documentation. |
 | Runtime & Scaling | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | See [Odoo Runtime Configuration](#odoo-runtime-configuration) below. `container_port` defaults to `8069`. `session_affinity` defaults to `"ClientIP"`. |
 | Environment Variables & Secrets | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | See [Odoo Environment Variables](#odoo-environment-variables) below for SMTP defaults. |
 | GKE Backend Configuration | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | Refer to base App_GKE module documentation. Note: `session_affinity` defaults to `"ClientIP"` for Odoo. |
-| Jobs & Scheduled Tasks | [§3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | Refer to base App GKE module documentation. The module also injects two platform-managed initialisation jobs — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
+| Jobs & Scheduled Tasks | [§3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | Refer to base App_GKE module documentation. The module also injects two platform-managed initialisation jobs — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
 | CI/CD & GitHub Integration | [§6 CI/CD & Delivery](../App_GKE/App_GKE.md#6-cicd--delivery) | Refer to base App_GKE module documentation. The module injects `ODOO_VERSION` as a Cloud Build substitution variable automatically. |
 | Storage — NFS | [§3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) | NFS is **enabled by default** (`enable_nfs = true`). See [Platform-Managed Behaviours](#platform-managed-behaviours) for the NFS initialisation job. |
-| Storage — GCS | [§3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) | Refer to base App GKE module documentation. |
-| Backup Schedule & Retention | [§8.B Backup Import & Recovery](../App_GKE/App_GKE.md#b-backup-import) | Refer to base App GKE module documentation. See also [Backup Import & Recovery](#backup-import--recovery) below. |
-| Custom SQL Scripts | [§3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | Refer to base App GKE module documentation. |
+| Storage — GCS | [§3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) | Refer to base App_GKE module documentation. |
+| Backup Schedule & Retention | [§8.B Backup Import & Recovery](../App_GKE/App_GKE.md#b-backup-import) | Refer to base App_GKE module documentation. See also [Backup Import & Recovery](#backup-import--recovery) below. |
+| Custom SQL Scripts | [§3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | Refer to base App_GKE module documentation. |
 | Observability & Health | [§5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) | See [Odoo Health Probes](#odoo-health-probes) below for Odoo-specific probe paths and timing defaults. |
 | Reliability Policies | [§7 Reliability & Scheduling](../App_GKE/App_GKE.md#7-reliability--scheduling) | Refer to base App_GKE module documentation. `enable_pod_disruption_budget` defaults to `true`. |
-| Resource Quota | [§7.C Resource Quotas](../App_GKE/App_GKE.md#c-resource-quotas) | Refer to base App GKE module documentation. |
-| Custom Domain, Static IP & Network | [§5.C Static IP](../App_GKE/App_GKE.md#c-static-ip) | Refer to base App GKE module documentation. |
-| Identity-Aware Proxy | [§4.B Identity-Aware Proxy (IAP)](../App_GKE/App_GKE.md#b-identity-aware-proxy-iap) | Refer to base App GKE module documentation. |
-| Cloud Armor WAF | [§4.A Cloud Armor WAF](../App_GKE/App_GKE.md#a-cloud-armor-waf) | Refer to base App GKE module documentation. |
-| VPC Service Controls | [§4.D VPC Service Controls](../App_GKE/App_GKE.md#d-vpc-service-controls) | Refer to base App GKE module documentation. |
-| StatefulSet Configuration | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | Refer to base App GKE module documentation. |
+| Resource Quota | [§7.C Resource Quotas](../App_GKE/App_GKE.md#c-resource-quotas) | Refer to base App_GKE module documentation. |
+| Custom Domain, Static IP & Network | [§5.C Static IP](../App_GKE/App_GKE.md#c-static-ip) | Refer to base App_GKE module documentation. |
+| Identity-Aware Proxy | [§4.B Identity-Aware Proxy (IAP)](../App_GKE/App_GKE.md#b-identity-aware-proxy-iap) | Refer to base App_GKE module documentation. |
+| Cloud Armor WAF | [§4.A Cloud Armor WAF](../App_GKE/App_GKE.md#a-cloud-armor-waf) | Refer to base App_GKE module documentation. |
+| VPC Service Controls | [§4.D VPC Service Controls](../App_GKE/App_GKE.md#d-vpc-service-controls) | Refer to base App_GKE module documentation. |
+| StatefulSet Configuration | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | Refer to base App_GKE module documentation. |
 | Database Configuration | [§3.B Database (Cloud SQL)](../App_GKE/App_GKE.md#b-database-cloud-sql) | `database_type` must be `"POSTGRES"`. See [Odoo Database Configuration](#odoo-database-configuration) below. |
-| Networking & Network Policies | [§3.D Networking & Network Policies](../App_GKE/App_GKE.md#d-networking--network-policies) | Refer to base App GKE module documentation. |
-| Additional Services | [§3.F Additional Services](../App_GKE/App_GKE.md#f-additional-services) | Refer to base App GKE module documentation. |
-| Binary Authorization | [§4.C Binary Authorization](../App_GKE/App_GKE.md#c-binary-authorization) | Refer to base App GKE module documentation. |
-| Secrets Store CSI | [§4.E Secrets Store CSI](../App_GKE/App_GKE.md#e-secrets-store-csi-driver) | Refer to base App GKE module documentation. |
-| Cloud CDN | [§5.B Cloud CDN](../App_GKE/App_GKE.md#b-cloud-cdn) | Refer to base App GKE module documentation. |
+| Networking & Network Policies | [§3.D Networking & Network Policies](../App_GKE/App_GKE.md#d-networking--network-policies) | Refer to base App_GKE module documentation. |
+| Additional Services | [§3.F Additional Services](../App_GKE/App_GKE.md#f-additional-services) | Refer to base App_GKE module documentation. |
+| Binary Authorization | [§4.C Binary Authorization](../App_GKE/App_GKE.md#c-binary-authorization) | Refer to base App_GKE module documentation. |
+| Secrets Store CSI | [§4.E Secrets Store CSI](../App_GKE/App_GKE.md#e-secrets-store-csi-driver) | Refer to base App_GKE module documentation. |
+| Cloud CDN | [§5.B Cloud CDN](../App_GKE/App_GKE.md#b-cloud-cdn) | Refer to base App_GKE module documentation. |
 | Pod Disruption Budget | [§7.A Pod Disruption Budget](../App_GKE/App_GKE.md#a-pod-disruption-budgets) | `enable_pod_disruption_budget` defaults to `true`. |
-| Topology Spread | [§7.B Topology Spread](../App_GKE/App_GKE.md#b-topology-spread-constraints) | Refer to base App GKE module documentation. |
-| Auto Password Rotation | [§7.D Auto Password Rotation](../App_GKE/App_GKE.md#d-auto-password-rotation) | Refer to base App GKE module documentation. |
+| Topology Spread | [§7.B Topology Spread](../App_GKE/App_GKE.md#b-topology-spread-constraints) | Refer to base App_GKE module documentation. |
+| Auto Password Rotation | [§7.D Auto Password Rotation](../App_GKE/App_GKE.md#d-auto-password-rotation) | Refer to base App_GKE module documentation. |
 | Redis / Memorystore | [§8.A Redis / Memorystore](../App_GKE/App_GKE.md#a-redis--memorystore) | `enable_redis` defaults to `false`. See [Redis Session Store](#redis-session-store) below. |
-| Service Mesh | [§8.C Service Mesh](../App_GKE/App_GKE.md#c-service-mesh-asm-via-fleet) | Refer to base App GKE module documentation. |
-| Multi-Cluster Services | [§8.D Multi-Cluster Services](../App_GKE/App_GKE.md#d-multi-cluster-services-mcs) | Refer to base App GKE module documentation. |
+| Service Mesh | [§8.C Service Mesh](../App_GKE/App_GKE.md#c-service-mesh-asm-via-fleet) | Refer to base App_GKE module documentation. |
+| Multi-Cluster Services | [§8.D Multi-Cluster Services](../App_GKE/App_GKE.md#d-multi-cluster-services-mcs) | Refer to base App_GKE module documentation. |
 
 ---
 
@@ -123,7 +128,7 @@ container_resources = {
 
 ### Session Affinity
 
-| Variable | App GKE Default | Odoo GKE Default | Description & Implications |
+| Variable | App_GKE Default | Odoo_GKE Default | Description & Implications |
 |---|---|---|---|
 | `session_affinity` | `"None"` | `"ClientIP"` | Odoo stores HTTP session data on the local filesystem (`/mnt/sessions` on NFS) keyed by session ID, but worker processes are assigned by the xmlrpc load balancer. Setting `"ClientIP"` ensures a given client consistently reaches the same pod, avoiding cross-pod session lookup overhead. Change to `"None"` only if Redis session storage is configured and all workers share session state. |
 
@@ -174,7 +179,7 @@ Odoo requires PostgreSQL. The database is provisioned by the underlying `App_GKE
 
 The following defaults are **Odoo-specific** and differ from the App_GKE defaults:
 
-| Variable | App GKE Default | Odoo GKE Default | Recommendation |
+| Variable | App_GKE Default | Odoo_GKE Default | Recommendation |
 |---|---|---|---|
 | `application_database_name` | `"gkeappdb"` | `"gkeappdb"` | Set to `"odoo"` to match Odoo conventions. |
 | `application_database_user` | `"gkeappuser"` | `"gkeappuser"` | Set to `"odoo"` to match Odoo conventions. |

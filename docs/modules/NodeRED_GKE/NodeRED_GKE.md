@@ -1,4 +1,9 @@
-# NodeRED GKE Module — Configuration Guide
+---
+title: "NodeRED_GKE Module — Configuration Guide"
+sidebar_label: "NodeRED GKE"
+---
+
+# NodeRED_GKE Module — Configuration Guide
 
 Node-RED is a leading open-source, browser-based flow programming tool originally developed by IBM, with 4,000+ community connector nodes and a growing ecosystem spanning smart manufacturing and edge computing. It is the de facto standard for IoT, IIoT, and industrial automation — integrating legacy OT systems (Modbus, OPC-UA, Siemens S7, MQTT) with modern cloud services. Gartner projects that 70%+ of all applications will use low-code technologies by 2026, and the low-code platform market is tracking toward $16.5B by 2027. This module deploys Node-RED on **GKE Autopilot** with NFS-backed persistent flow storage, optional Redis context storage, and full Kubernetes reliability controls.
 
@@ -25,7 +30,7 @@ Node-RED is a leading open-source, browser-based flow programming tool originall
 
 ### Key differences from `App_GKE` defaults
 
-| Feature | App GKE default | NodeRED GKE default |
+| Feature | App_GKE default | NodeRED_GKE default |
 |---|---|---|
 | `container_port` | `8080` | `1880` |
 | `container_resources.cpu_limit` | `"1000m"` | `"500m"` |
@@ -349,8 +354,8 @@ Node-RED responds to HTTP GET on `/` with the editor UI. Both probe types use th
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe_config` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=30, timeout_seconds=5, period_seconds=10, failure_threshold=3 }` | Kubernetes startup probe (passed directly to App GKE). |
-| `health_check_config` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Kubernetes liveness probe (passed directly to App GKE). |
+| `startup_probe_config` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=30, timeout_seconds=5, period_seconds=10, failure_threshold=3 }` | Kubernetes startup probe (passed directly to App_GKE). |
+| `health_check_config` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Kubernetes liveness probe (passed directly to App_GKE). |
 | `uptime_check_config` | `{ enabled=true, path="/", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | List of metric-threshold alert policies. Each entry requires `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
 

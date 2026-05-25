@@ -1,3 +1,8 @@
+---
+title: "Node-RED on GKE — Lab Guide"
+sidebar_label: "NodeRED GKE"
+---
+
 # Node-RED on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/NodeRED_GKE)**

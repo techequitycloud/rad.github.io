@@ -1,3 +1,8 @@
+---
+title: "Azure Kubernetes Service on GKE Fleet — Lab Guide"
+sidebar_label: "AKS GKE"
+---
+
 # Azure Kubernetes Service on GKE Fleet — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/AKS_GKE)**

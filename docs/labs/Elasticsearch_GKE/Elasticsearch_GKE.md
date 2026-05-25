@@ -1,3 +1,8 @@
+---
+title: "Elasticsearch on GKE — Lab Guide"
+sidebar_label: "Elasticsearch GKE"
+---
+
 # Elasticsearch on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Elasticsearch_GKE)**

@@ -1,4 +1,9 @@
-# Elasticsearch GKE Module — Configuration Guide
+---
+title: "Elasticsearch_GKE Module — Configuration Guide"
+sidebar_label: "Elasticsearch GKE"
+---
+
+# Elasticsearch_GKE Module — Configuration Guide
 
 Elasticsearch is an open-source distributed search and analytics engine based on Apache Lucene,
 used by 58,220+ companies with a 4.43% DBMS market share. Elastic revenue reached $450M in Q3
@@ -37,7 +42,7 @@ locally using a `locals` block (there is no separate `*_Common` module).
 
 ### Key differences from `App_GKE` defaults
 
-| Feature | App GKE default | Elasticsearch GKE default |
+| Feature | App_GKE default | Elasticsearch_GKE default |
 |---|---|---|
 | `container_port` | `8080` | `9200` |
 | `workload_type` | `"Deployment"` | `"StatefulSet"` |

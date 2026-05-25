@@ -1,10 +1,12 @@
-# Developer Productivity
+# Enhanced Developer Productivity
 
-The platform optimises for fast inner-loop feedback and self-service infrastructure so developers spend time on product rather than platform mechanics. A growing application catalogue, scaffolding tools, UI-driven configuration, and one-command local setup all reduce the time from idea to running deployment.
+> **Scope.** Canonical home for the developer-facing surface — the application catalogue, scaffolding, the UIMeta-driven configuration UI, and the quantified business case for self-service infrastructure. The architectural intent of the IDP is in [practices/platform_engineering.md](../practices/platform_engineering.md); the agent-driven enablement is in [outcomes/education_enablement.md](education_enablement.md).
 
-## Application catalogue
+## What this repo uniquely brings to developer productivity
 
-A growing library of pre-built application modules ships with the platform, each available in Cloud Run and GKE flavours with a shared Common module:
+### 1. Application catalogue (canonical)
+
+A growing library of pre-built application modules ships with the repo. Each exists in CloudRun and GKE flavours with a shared Common module:
 
 | Category | Modules |
 |---|---|
@@ -14,82 +16,53 @@ A growing library of pre-built application modules ships with the platform, each
 | Healthcare | `OpenEMR_*` |
 | Legal | `OpenClaw_*` |
 | Workflow / automation | `N8N_*`, `Activepieces_*`, `Kestra_*`, `NodeRED_*` |
-| AI / LLM | `Ollama_*`, `Flowise_*`, `RAGFlow_*`, `N8N_AI_*` |
+| AI / LLM | `Ollama_*`, `Flowise_*`, `RAGFlow_*`, `N8N_AI_*` (see [capabilities/ai.md](../capabilities/ai.md)) |
 | Search | `Elasticsearch_GKE` |
 | Frameworks | `Django_*` |
 | Reference | `Sample_*` |
 
 A developer who needs Django on GCP doesn't write Terraform — they apply `modules/Django_CloudRun` (or `_GKE`) and supply tfvars.
 
-## Self-service scaffolding
+### 2. Self-service scaffolding (canonical)
 
-`scripts/create_modules.sh` generates a new Cloud Run + GKE + Common triple in one command, with all wiring, file structure, and variable mirroring already correct. `modules/Sample_CloudRun` and `modules/Sample_GKE` are deployable starting points for new modules.
+- **`scripts/create_modules.sh`** — generates a new CloudRun + GKE + Common triple in one command, with all wiring, file structure, and variable mirroring already correct.
+- **Reference modules** — `modules/Sample_CloudRun`, `modules/Sample_GKE` are deployable starting points.
 
-## UI-driven configuration
+### 3. UI-driven configuration (canonical)
 
-`UIMeta` tags on every Application Module variable (`{{UIMeta group=N order=M}}`) drive a generated configuration UI. Variables auto-organise into groups with deterministic ordering, keeping the self-service portal in sync with the Terraform variables without manual maintenance.
+`UIMeta` tags on every Application Module variable (`{{UIMeta group=N order=M}}`) drive a generated configuration UI. Variables auto-organise into groups (0–22 for Cloud Run, 0–21 for GKE) with deterministic ordering. Tooling: `update_uimeta.py`, `VARIABLE_GROUPING_RECOMMENDATIONS.md`, `.agent/VARIABLE_GROUPING_UPDATE.md`. Convention details canonical in [practices/platform_engineering.md](../practices/platform_engineering.md) §3.
 
-## Convention-over-configuration
+### 4. Quantified productivity gains (canonical)
 
-Every Application Module follows the same shape (5–6 files, mirrored variables, standard wiring) so a developer who learns one learns them all. Single-flag opinionated defaults pre-integrate everything an app needs. Setting `enable_iap = true`, `enable_cdn = true`, `enable_binary_authorization = true`, `enable_vpc_sc = true`, or `enable_pod_disruption_budget = true` each wires in a substantial cross-cutting capability without additional configuration.
+Per `BUSINESS_CASE.md`:
 
-## One-command local setup
-
-New contributors can have a running local stack from a single setup script:
-
-- `scripts/01-setup-cli.sh` — bootstraps the `rad-launcher` CLI environment.
-- `scripts/02-setup-ui.sh` — bootstraps the webapp environment.
-- `rad-ui/webapp/setup_local_dev.sh` — configures Application Default Credentials and starts `pnpm dev`.
-- `rad-ui/webapp/gen_local_config.sh` — reads live Terraform outputs and Firebase SDK config to generate `.env.development.local` and `.env.production.local`, eliminating manual environment wiring.
-
-## Fast inner loop
-
-The `pnpm` scripts cover the full feedback cycle for webapp development:
-
-| Command | Purpose |
-|---|---|
-| `pnpm dev` | Next.js dev server with hot reload (`localhost:3000`) |
-| `pnpm test` | Jest suite |
-| `pnpm test-interactive` | Jest watch mode |
-| `pnpm build-types` | `tsc --noEmit` strict typecheck |
-| `pnpm lint` | ESLint |
-| `pnpm format` | Prettier |
-| `pnpm build` | Production build with full type check |
-
-Pre-commit gates use `lint-staged` so formatting and linting run only on changed files. For `rad-launcher/` work, `python3 -m pytest tests/` runs the full suite. Tailwind + DaisyUI keeps styling to utility classes; three page-layout shell templates (`Authenticated.tsx`, `Main.tsx`, `Unauthenticated.tsx`) provide consistent starting points for new pages.
-
-## AI-assisted development
-
-`CLAUDE.md` is loaded automatically at the start of every Claude Code session, giving AI contributors immediate knowledge of the command set, architecture, auth flow, and conventions. Domain-specific skill files for performance, security, and UX work are loaded on top for focused tasks. The result is that AI-generated code matches repo conventions from the first commit and flows through the same CI gates as human PRs.
-
-## Platform developer tooling
-
-Contributors working on the platform have additional tools:
-
-- `tools/service-catalog.py` — manages the module catalogue; registers new deployment modules so they appear in the webapp and `rad-launcher`.
-- `tools/tfdoc.py` — generates and validates Terraform module documentation.
-- `tools/check_documentation.py` — validates that every Terraform module has an up-to-date README with described and alphabetically ordered variables and outputs.
-- `tools/check-license.py` — validates Apache 2.0 boilerplate headers on every contributed file.
-
-## Test coverage
-
-The Jest suite under `rad-ui/webapp/__tests__/` covers health endpoints, admin cache stats, cost analysis, and GitHub integration. New API routes and utility modules should include unit tests. End-to-end testing uses Playwright (`verify_restore.py`) for the restore flow.
-
-## Quantified productivity gains
-
-| Metric | Manual | This platform | Improvement |
+| Metric | Manual | This repo | Improvement |
 |---|---|---|---|
-| Setup time per app | 3–5 days | Under 2 hours | ~95% faster |
-| Cost per setup | $3,200 | $200 | ~94% lower ($3,000 saved) |
-| Maintenance time — 10-app fleet | 40 h per cycle | 2 h per cycle | ~95% reduction |
-| Maintenance cost — 10-app fleet | $4,000 per cycle | $200 per cycle | ~95% lower ($3,800 saved) |
+| Setup time per app | 3–5 days | &lt;2 hours | ~95% faster |
+| Cost per setup | $3,200 | $200 | $3,000 saved |
+| Maintenance for 10-app fleet | 40 h, $4,000 | 2 h, $200 | 95% reduction |
 
-## See also
+Full quantification: `BUSINESS_CASE.md`, `IAC_AUTOMATION_BUSINESS_CASE.md`. Cost-tier specifics in [practices/finops.md](../practices/finops.md).
 
-- Platform Engineering practices — IDP architecture, conventions, and golden paths
-- CI/CD practices — the pipeline that delivers the developer experience
-- Skills Development outcome — agent workflows, certification material, and onboarding guides
-- AI capability — AI assistant configuration and skill files
-- Multitenancy & SaaS capability — catalogue as marketplace surface
-- Modernization outcome — catalogue as modernisation target
-- Cost Optimization outcome — cost-tier specifics and provisioning savings
+### 5. Convention-over-configuration
+
+Every Application Module follows the same shape (5–6 files, mirrored variables, standard wiring) so a developer who learns one learns them all. Convention details in [practices/platform_engineering.md](../practices/platform_engineering.md) §3.
+
+### 6. Single-flag opinionated defaults
+
+The Foundation Modules pre-integrate everything an app needs — `enable_iap = true`, `enable_cdn = true`, `enable_binary_authorization = true`, `enable_vpc_sc = true`, `enable_pod_disruption_budget = true`. Each flag wires in a substantial cross-cutting capability covered in its canonical topic ([practices/devsecops.md](../practices/devsecops.md), [capabilities/networking.md](../capabilities/networking.md), etc.).
+
+### 7. Fast feedback loop
+
+- `tofu fmt` / `tofu validate` for static checks.
+- Cloud Build pipelines for one-trigger deploys (canonical in [practices/cicd.md](../practices/cicd.md)).
+- Integration tests in `tests/` for regression coverage.
+
+## Cross-references
+
+- [practices/platform_engineering.md](../practices/platform_engineering.md) — IDP architecture, conventions, golden paths (the engineering view of self-service)
+- [outcomes/education_enablement.md](education_enablement.md) — agent workflows, skill guides, certification material (the learning view)
+- [practices/cicd.md](../practices/cicd.md) — pipeline that delivers the developer experience
+- [capabilities/ai.md](../capabilities/ai.md) — AI subset of the catalogue
+- [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) — catalogue as marketplace surface
+- [outcomes/modernisation.md](modernisation.md) — catalogue as modernisation target

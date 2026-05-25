@@ -1,3 +1,8 @@
+---
+title: "Ghost on GKE — Lab Guide"
+sidebar_label: "Ghost GKE"
+---
+
 # Ghost on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Ghost_GKE)**

@@ -1,4 +1,9 @@
-# Wordpress GKE Module — Configuration Guide
+---
+title: "Wordpress_GKE Module — Configuration Guide"
+sidebar_label: "Wordpress GKE"
+---
+
+# Wordpress_GKE Module — Configuration Guide
 
 This guide describes the configuration variables that are **unique to the `Wordpress_GKE` module**. Because `Wordpress_GKE` is a wrapper around `App_GKE`, the vast majority of its variables are passed directly to that base module and are fully documented in the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). This guide explains the WordPress-specific additions, the differences in default values, and what the `Wordpress_Common` sub-module provisions automatically. WordPress is the world's most widely-deployed CMS, powering 43.5% of all websites and holding 62.8% of the CMS market — approximately 480–590 million sites globally. WooCommerce controls 36% of all online stores with roughly $35B in GMV in 2025, and an ecosystem of 60,000+ plugins makes WordPress the default choice for marketing sites, news publishers, e-commerce, and membership platforms at any scale.
 
@@ -34,7 +39,7 @@ On first deployment the `db-init` job (using `mysql:8.0-debian`) runs a script t
 
 The groups below are **fully inherited from `App_GKE`** and behave identically. Refer to the linked sections of the [App_GKE Configuration Guide](../App_GKE/App_GKE.md) for complete documentation, including all option values, validation commands, and Console navigation paths.
 
-| Configuration Area | App GKE.md Section |
+| Configuration Area | App_GKE.md Section |
 |---|---|
 | Module Metadata & Configuration | [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) |
 | Project & Identity | [App_GKE §2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) |
@@ -103,7 +108,7 @@ kubectl exec -n NAMESPACE POD_NAME -- php -r "
 
 All variables in this group behave as documented in [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot). The table below highlights the defaults that `Wordpress_GKE` changes from the base module values.
 
-| Variable | WordPress Default | App GKE Default | Note |
+| Variable | WordPress Default | App_GKE Default | Note |
 |---|---|---|---|
 | `container_image_source` | `"custom"` | `"custom"` | WordPress always builds a custom PHP 8.4 + Apache image via Cloud Build. Override with `"prebuilt"` only when supplying your own pre-built WordPress image via `container_image`. |
 | `container_port` | `80` | `8080` | Apache in the WordPress container listens on port 80. Do not change unless you have modified the Apache configuration inside the container. |
@@ -164,7 +169,7 @@ The WordPress database is always **MySQL 8.0** (`MYSQL_8_0`), locked in by `Word
 
 The variables below behave identically to their `App_GKE` counterparts but carry WordPress-appropriate defaults.
 
-| Variable | WordPress Default | App GKE Default | Description |
+| Variable | WordPress Default | App_GKE Default | Description |
 |---|---|---|---|
 | `database_type` | `null` *(defaults to `"MYSQL_8_0"` from `Wordpress_Common`)* | `"POSTGRES"` | WordPress requires MySQL. The `Wordpress_Common` config provides `"MYSQL_8_0"` as the base default, but the caller can override this via `var.database_type` (the GKE wrapper merges a non-null value). Setting this to a non-MySQL type will prevent WordPress from connecting to the database and should only be done with a corresponding custom `wp-config.php`. |
 | `application_database_name` | `"wp"` | `"gkeappdb"` | Name of the MySQL database created inside the Cloud SQL instance. Injected into pods as `DB_NAME`. **Do not change after initial deployment** without first migrating the database contents. |
@@ -230,7 +235,7 @@ Refer to [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingres
 
 `Wordpress_GKE` exposes two additional internal probe variables (`startup_probe` and `liveness_probe`) that are passed to `Wordpress_Common` and control the probe configuration embedded in the WordPress application configuration object. These have WordPress-specific defaults that are tuned for WordPress's startup behaviour:
 
-| Variable | WordPress Default | App GKE Default | Rationale |
+| Variable | WordPress Default | App_GKE Default | Rationale |
 |---|---|---|---|
 | `startup_probe` | `type = "TCP"`, `initial_delay_seconds = 30`, `period_seconds = 15`, `failure_threshold = 20` | N/A *(internal to Wordpress_Common)* | Uses **TCP** rather than HTTP because WordPress may not yet respond to HTTP requests while the database connection is being established on first boot. The high `failure_threshold` (20 × 15s = 300 seconds of grace) accommodates the `db-init` job and WordPress's initialisation phase. **Do not reduce `failure_threshold` below 10** for production deployments — premature startup probe failures cause pod restarts during database initialisation, leading to a restart loop. |
 | `liveness_probe` | `type = "HTTP"`, `path = "/wp-admin/install.php"`, `initial_delay_seconds = 300`, `timeout_seconds = 60`, `failure_threshold = 3` | N/A *(internal to Wordpress_Common)* | Uses `/wp-admin/install.php` as the health endpoint. This WordPress-managed page returns HTTP 200 whether WordPress is freshly installed or already configured, making it a reliable liveness indicator that does not depend on an application-specific `/healthz` route. The 300-second initial delay ensures liveness checks do not begin until after the database initialisation job has had time to complete. |

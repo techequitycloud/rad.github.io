@@ -1,3 +1,8 @@
+---
+title: "OpenEMR on GKE — Lab Guide"
+sidebar_label: "OpenEMR GKE"
+---
+
 # OpenEMR on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/OpenEMR_GKE)**

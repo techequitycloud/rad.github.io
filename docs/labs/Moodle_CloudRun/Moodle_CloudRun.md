@@ -1,3 +1,8 @@
+---
+title: "Moodle on Cloud Run — Lab Guide"
+sidebar_label: "Moodle CloudRun"
+---
+
 # Moodle on Cloud Run — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Moodle_CloudRun)**

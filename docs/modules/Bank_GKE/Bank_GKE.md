@@ -1,4 +1,9 @@
-# Bank GKE Module
+---
+title: "Bank_GKE Module"
+sidebar_label: "Bank GKE"
+---
+
+# Bank_GKE Module
 
 ## Overview
 
@@ -900,7 +905,7 @@ Common patterns used across the application:
 | QoS Class | Condition | Services |
 |---|---|---|
 | Guaranteed | requests == limits | `accounts-db`, `ledger-db` |
-| Burstable | requests < limits | Most application services |
+| Burstable | requests &lt; limits | Most application services |
 | BestEffort | No requests/limits set | None — all services have defined resources |
 
 ```bash

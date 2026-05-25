@@ -1,4 +1,9 @@
-# Ollama CloudRun Module — Configuration Guide
+---
+title: "Ollama_CloudRun Module — Configuration Guide"
+sidebar_label: "Ollama CloudRun"
+---
+
+# Ollama_CloudRun Module — Configuration Guide
 
 Ollama is the de facto standard runtime for running large language models locally, with 169,000+
 GitHub stars and support for 4,500+ models — including Llama 3.1 (112M+ pulls), DeepSeek-R1
@@ -40,7 +45,7 @@ and `scripts_dir` inputs.
 
 ### Key differences from `App_CloudRun` defaults
 
-| Feature | App CloudRun default | Ollama CloudRun default |
+| Feature | App_CloudRun default | Ollama_CloudRun default |
 |---|---|---|
 | `container_port` | `8080` | `11434` |
 | `cpu_limit` | `"1000m"` | `"4000m"` |
@@ -52,7 +57,7 @@ and `scripts_dir` inputs.
 | `timeout_seconds` | `60` | `3600` |
 | `enable_redis` | varies | **always `false`** (hard-coded) |
 | Database | varies | **`NONE`** (hard-coded, no Cloud SQL) |
-| GCS models bucket | none | auto-provisioned via Ollama Common |
+| GCS models bucket | none | auto-provisioned via Ollama_Common |
 | Model-pull job | none | auto-generated when `default_model` is set |
 | Auto-injected env vars | none | `OLLAMA_MODELS`, `OLLAMA_HOST`, `OLLAMA_KEEP_ALIVE` |
 
@@ -67,7 +72,7 @@ and `scripts_dir` inputs.
 | `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform. |
 | `support_users` | `list(string)` | `[]` | Email addresses granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `map(string)` | `{}` | Labels applied to all module-managed resources. |
-| `module_description` | `string` | *(Ollama CloudRun description)* | Platform UI description. |
+| `module_description` | `string` | *(Ollama_CloudRun description)* | Platform UI description. |
 | `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/Ollama_CloudRun"` | External documentation URL. |
 | `module_dependency` | `list(string)` | `["Services_GCP"]` | Modules that must be deployed before this one. |
 | `module_services` | `list(string)` | *(GCP service list)* | GCP services consumed by this module. |
@@ -126,7 +131,7 @@ models bucket.
 | `enable_image_mirroring` | `bool` | `true` | Mirror `ollama/ollama` to Artifact Registry before deployment to avoid Docker Hub rate limits. |
 | `service_annotations` | `map(string)` | `{}` | Custom annotations applied to the Cloud Run service. |
 | `service_labels` | `map(string)` | `{}` | Custom labels applied to the Cloud Run service. |
-| `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | Required by the App CloudRun interface; not used by Ollama (no database). |
+| `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | Required by the App_CloudRun interface; not used by Ollama (no database). |
 
 ### §3.D · Automatically Injected Environment Variables
 
@@ -264,7 +269,7 @@ Ollama has no database dependency. Redis is also disabled for this module.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `database_password_length` | `number` | `32` | Not used by Ollama. Present for App CloudRun interface compatibility. Valid range: 16–64. |
+| `database_password_length` | `number` | `32` | Not used by Ollama. Present for App_CloudRun interface compatibility. Valid range: 16–64. |
 
 **Hard-coded values (not user-configurable):**
 - `enable_redis = false`
@@ -279,10 +284,10 @@ ready. Probes target this path.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=30, timeout_seconds=5, period_seconds=15, failure_threshold=20 }` | Startup probe forwarded through Ollama Common. The 30 s initial delay and 20-attempt threshold allow up to ~5 minutes for model loading from GCS on first start. |
+| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=30, timeout_seconds=5, period_seconds=15, failure_threshold=20 }` | Startup probe forwarded through Ollama_Common. The 30 s initial delay and 20-attempt threshold allow up to ~5 minutes for model loading from GCS on first start. |
 | `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=60, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe. 60 s initial delay avoids false restarts during the model-load phase. |
-| `startup_probe_config` | `object` | `{ enabled=true }` | Structured startup probe passed directly to App CloudRun (240 s timeout by default). |
-| `health_check_config` | `object` | `{ enabled=true }` | Structured liveness probe passed directly to App CloudRun. |
+| `startup_probe_config` | `object` | `{ enabled=true }` | Structured startup probe passed directly to App_CloudRun (240 s timeout by default). |
+| `health_check_config` | `object` | `{ enabled=true }` | Structured liveness probe passed directly to App_CloudRun. |
 | `uptime_check_config` | `object` | `{ enabled=true, path="/", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check from multiple global locations. |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies notifying `support_users`. |
 

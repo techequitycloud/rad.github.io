@@ -1,3 +1,8 @@
+---
+title: "Istio Service Mesh on GKE — Lab Guide"
+sidebar_label: "Istio GKE"
+---
+
 # Istio Service Mesh on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Istio_GKE)**

@@ -1,3 +1,8 @@
+---
+title: "Multi-Cluster Bank of Anthos on GKE — Lab Guide"
+sidebar_label: "MC Bank GKE"
+---
+
 # Multi-Cluster Bank of Anthos on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/MC_Bank_GKE)**

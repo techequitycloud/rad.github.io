@@ -3,7 +3,7 @@ title: "EKS_GKE Module Documentation"
 sidebar_label: "EKS_GKE"
 ---
 
-# EKS GKE Module
+# EKS_GKE Module
 
 ## Overview
 

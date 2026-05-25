@@ -5,7 +5,7 @@ sidebar_label: "Disaster Recovery"
 
 # Disaster Recovery & Business Continuity
 
-> **Scope.** Canonical home for backup/restore tooling, GKE Backup, PodDisruptionBudgets, application-level rollback, and DR-aware change management. The IaC reproducibility property that underlies "re-provision in a new region" is canonical in [practices/gitops_iac.md](../practices/gitops-iac.md); the multi-cluster HA topology is canonical in [networking](networking) §4.
+> **Scope.** Canonical home for backup/restore tooling, GKE Backup, PodDisruptionBudgets, application-level rollback, and DR-aware change management. The IaC reproducibility property that underlies "re-provision in a new region" is canonical in [practices/gitops_iac.md](../practices/gitops_iac.md); the multi-cluster HA topology is canonical in [capabilities/networking.md](networking.md) §4.
 
 ## What this repo uniquely brings to DR & BC
 
@@ -32,7 +32,7 @@ Run as Cloud Run Jobs / Kubernetes Jobs orchestrated by the Foundation Modules' 
 - **GCS** object versioning on critical buckets.
 - **Secret Manager** versioned by design.
 
-Detailed module references in [data-and-databases](data-and-databases).
+Detailed module references in [capabilities/data_and_databases.md](data_and_databases.md).
 
 ### 3. GKE Backup for Apps (canonical)
 
@@ -71,11 +71,11 @@ Together they support the "destroy in region A, recreate in region B with the sa
 
 ### 7. Reproducibility through IaC (cross-ref)
 
-Per `BUSINESS_CASE.md`: *"the entire infrastructure can be re-provisioned in a new region in minutes."* The mechanics — commit-pinned deploys, per-deployment GCS state, idempotent re-apply — are canonical in [practices/gitops_iac.md](../practices/gitops-iac.md).
+Per `BUSINESS_CASE.md`: *"the entire infrastructure can be re-provisioned in a new region in minutes."* The mechanics — commit-pinned deploys, per-deployment GCS state, idempotent re-apply — are canonical in [practices/gitops_iac.md](../practices/gitops_iac.md).
 
 ### 8. Multi-cluster HA (cross-ref)
 
-The 2–10 cluster topology with multi-primary Istio is the foundation for active/active or cross-region DR. Canonical in [networking](networking) §4.
+The 2–10 cluster topology with multi-primary Istio is the foundation for active/active or cross-region DR. Canonical in [capabilities/networking.md](networking.md) §4.
 
 ### 9. Change-management discipline
 
@@ -87,9 +87,9 @@ The 2–10 cluster topology with multi-primary Istio is the foundation for activ
 
 ## Cross-references
 
-- [practices/gitops_iac.md](../practices/gitops-iac.md) — IaC reproducibility, state versioning (the "re-provision anywhere" property)
-- [networking](networking) — multi-cluster topology for HA/DR
-- [data-and-databases](data-and-databases) — DB-level backup/PITR configuration
+- [practices/gitops_iac.md](../practices/gitops_iac.md) — IaC reproducibility, state versioning (the "re-provision anywhere" property)
+- [capabilities/networking.md](networking.md) — multi-cluster topology for HA/DR
+- [capabilities/data_and_databases.md](data_and_databases.md) — DB-level backup/PITR configuration
 - [practices/finops.md](../practices/finops.md) — revision retention as rollback enabler
 - [practices/sre.md](../practices/sre.md) — MTTR framing
 - [practices/cicd.md](../practices/cicd.md) — destroy / purge pipelines

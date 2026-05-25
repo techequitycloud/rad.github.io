@@ -1,4 +1,9 @@
-# Moodle GKE Module — Configuration Guide
+---
+title: "Moodle_GKE Module — Configuration Guide"
+sidebar_label: "Moodle GKE"
+---
+
+# Moodle_GKE Module — Configuration Guide
 
 Moodle is the world's most widely deployed open-source Learning Management System (LMS), holding 14% global market share and dominant positions in Europe (69%) and Latin America (73%). The global LMS market is growing from $24.5B in 2024 to $107.9B by 2033 at a 17.9% CAGR, driven by demand for corporate training, higher education, and government certification programs. This module deploys Moodle on **GKE Autopilot** using a custom PHP 8.3/Apache container, backed by a managed Cloud SQL PostgreSQL instance and shared NFS storage for course materials, with horizontal pod autoscaling to support thousands of concurrent students.
 
@@ -14,24 +19,24 @@ This guide documents only the variables that are **unique to `Moodle_GKE`** or t
 
 **Variables fully covered by the App_GKE guide:**
 
-| Configuration Area | App GKE.md Section | Moodle-Specific Notes |
+| Configuration Area | App_GKE.md Section | Moodle-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Different defaults for `module_description` and `module_documentation`. |
-| Project & Identity | §2 IAM & Access Control | Refer to base App GKE module documentation. |
+| Project & Identity | §2 IAM & Access Control | Refer to base App_GKE module documentation. |
 | Runtime & Scaling | §3.A Compute (GKE Autopilot) | See [Moodle Runtime Configuration](#moodle-runtime-configuration) below for `cpu_limit`, `memory_limit`, and Moodle-specific scaling defaults. `container_image_source` defaults to `"custom"` — Moodle is built from a Dockerfile. |
 | Environment Variables & Secrets | §3 Core Service Configuration | See [Moodle Environment Variables](#moodle-environment-variables) below for Moodle-specific injected defaults. |
 | GKE Backend Configuration | §3.A Compute (GKE Autopilot) | `enable_custom_domain` defaults to `true` and `reserve_static_ip` defaults to `true`. See [Platform-Managed Behaviours](#platform-managed-behaviours). |
 | Networking & Network Policies | §3.D Networking & Network Policies | Identical. |
 | Jobs & Scheduled Tasks | §3.E Initialization Jobs & CronJobs | See [Platform-Managed Behaviours](#platform-managed-behaviours) for the auto-provisioned Moodle cron Cloud Scheduler job. Two default init jobs are defined: `db-init` (first) and `nfs-init` (second, `needs_db = false`). |
 | Additional Services | §3.F Additional Services | Identical. |
-| CI/CD & GitHub Integration | §6 CI/CD & Delivery | Refer to base App GKE module documentation. |
+| CI/CD & GitHub Integration | §6 CI/CD & Delivery | Refer to base App_GKE module documentation. |
 | Storage — NFS | §3.C Storage (NFS / GCS / GCS Fuse) | `enable_nfs` defaults to `true`. NFS is the active Moodle data directory (`moodledata`). See [Platform-Managed Behaviours](#platform-managed-behaviours). |
 | Storage — GCS | §3.C Storage (NFS / GCS / GCS Fuse) | Refer to base App_GKE module documentation. An additional `moodle-data` GCS bucket is provisioned automatically. |
 | Database Configuration | §3.B Database (Cloud SQL) | See [Moodle Database Configuration](#moodle-database-configuration) below for the `db_name` and `db_user` variable naming. |
 | Backup Schedule & Retention | §3.B Database (Cloud SQL) | Refer to base App_GKE module documentation. See [Backup Import & Recovery](#backup-import--recovery) below for the `backup_uri` naming difference. |
-| Custom SQL Scripts | §3.E Initialization Jobs & CronJobs | Refer to base App GKE module documentation. |
+| Custom SQL Scripts | §3.E Initialization Jobs & CronJobs | Refer to base App_GKE module documentation. |
 | Observability & Health | §3.A Compute (GKE Autopilot) | See [Moodle Health Probes](#moodle-health-probes) below for the `startup_probe` and `liveness_probe` variables and their `/health.php` defaults. |
-| Cloud Armor WAF | §4.A Cloud Armor WAF | Refer to base App GKE module documentation. |
+| Cloud Armor WAF | §4.A Cloud Armor WAF | Refer to base App_GKE module documentation. |
 | Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Requires `iap_oauth_client_id`, `iap_oauth_client_secret`, and optionally `iap_support_email` — enforced by `validation.tf` precondition. Refer to base App_GKE module documentation. |
 | Binary Authorization | §4.C Binary Authorization | Includes `binauthz_evaluation_mode` variable (default `"ALWAYS_ALLOW"`). Refer to base App_GKE module documentation. |
 | VPC Service Controls | §4.D VPC Service Controls | Identical. |
@@ -40,7 +45,7 @@ This guide documents only the variables that are **unique to `Moodle_GKE`** or t
 | CDN | §5.B CDN | Identical. |
 | Pod Disruption Budgets | §7.A Pod Disruption Budgets | `enable_pod_disruption_budget` defaults to `true`. |
 | Topology Spread Constraints | §7.B Topology Spread Constraints | Identical. |
-| Resource Quotas | §7.C Resource Quotas | Refer to base App GKE module documentation. |
+| Resource Quotas | §7.C Resource Quotas | Refer to base App_GKE module documentation. |
 | Auto Password Rotation | §7.D Auto Password Rotation | See [Moodle Database Configuration](#moodle-database-configuration). |
 | Redis Cache | §8.A Redis / Memorystore | `enable_redis` defaults to `true`. See [Redis Cache](#redis-cache) for Moodle-specific configuration. |
 | Backup Import | §8.B Backup Import | Uses `backup_uri` instead of `backup_file` — see [Backup Import & Recovery](#backup-import--recovery). |
@@ -105,7 +110,7 @@ Moodle is a PHP 8.3/Apache application. The module exposes `cpu_limit` and `memo
 
 **Moodle-specific runtime defaults that differ from App_GKE:**
 
-| Variable | App GKE Default | Moodle GKE Default | Reason |
+| Variable | App_GKE Default | Moodle_GKE Default | Reason |
 |---|---|---|---|
 | `application_name` | `"gkeapp"` | `"moodle"` | Moodle-specific application identifier. |
 | `application_version` | `"1.0.0"` | `"4.5.1"` | Default Moodle release version. |
@@ -254,7 +259,7 @@ Moodle uses Redis as the PHP session handler and application cache. When `enable
 
 For detailed documentation on the Redis variables `enable_redis`, `redis_host`, `redis_port`, and `redis_auth`, refer to [App_GKE §8.A](../App_GKE/App_GKE.md#a-redis--memorystore) — the variable semantics are identical, but the defaults differ:
 
-| Variable | App GKE Default | Moodle GKE Default | Reason |
+| Variable | App_GKE Default | Moodle_GKE Default | Reason |
 |---|---|---|---|
 | `enable_redis` | — | `true` | Redis session handling is critical for Moodle with multiple pod replicas. |
 | `redis_host` | `""` | `""` | Defaults to NFS server IP when blank. Override with a Cloud Memorystore instance IP for production. |

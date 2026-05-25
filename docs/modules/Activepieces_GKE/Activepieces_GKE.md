@@ -1,3 +1,8 @@
+---
+title: "Activepieces GKE Module — Configuration Guide"
+sidebar_label: "Activepieces GKE"
+---
+
 # Activepieces GKE Module — Configuration Guide
 
 Activepieces is a Y Combinator-backed open-source workflow automation platform (Apache 2.0) with **22,000+ GitHub stars** and **100,000+ active installations**. At $1.7M ARR with a team of ~15, it is a lean, high-velocity Zapier/Make alternative with 450+ integrations and native AI/MCP server support — ideal for teams prioritising data sovereignty and avoiding per-task pricing at scale. White-label capability makes it a strong fit for agencies and SaaS builders. This module deploys a production-ready Activepieces application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL 15 instance, GCS data storage, and Secret Manager for cryptographic secrets (`AP_ENCRYPTION_KEY` and `AP_JWT_SECRET`).
@@ -14,7 +19,7 @@ This guide documents variables that are **unique to `Activepieces_GKE`** or that
 
 **Variables fully covered by the App_GKE guide:**
 
-| Configuration Area | App GKE.md Section | Activepieces-Specific Notes |
+| Configuration Area | App_GKE.md Section | Activepieces-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Different defaults for `module_description` and `module_documentation`. |
 | Project & Identity | §2 IAM & Access Control | Identical. Plus `deployment_region` for fallback region. |

@@ -1,4 +1,9 @@
-# Ollama GKE Module — Configuration Guide
+---
+title: "Ollama_GKE Module — Configuration Guide"
+sidebar_label: "Ollama GKE"
+---
+
+# Ollama_GKE Module — Configuration Guide
 
 Ollama is the de facto standard runtime for running large language models locally, with 169,000+
 GitHub stars and support for 4,500+ models — including Llama 3.1 (112M+ pulls), DeepSeek-R1
@@ -39,7 +44,7 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 
 ### Key differences from `App_GKE` defaults
 
-| Feature | App GKE default | Ollama GKE default |
+| Feature | App_GKE default | Ollama_GKE default |
 |---|---|---|
 | `container_port` | `8080` | `11434` (set by Ollama_Common) |
 | `container_resources.cpu_limit` | `"1000m"` | `"8"` |
@@ -51,7 +56,7 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 | `service_type` | `"ClusterIP"` | `"ClusterIP"` |
 | `enable_redis` | varies | **always `false`** (hard-coded) |
 | Database | varies | **`NONE`** (via `database_type`) |
-| GCS models bucket | none | auto-provisioned via Ollama Common |
+| GCS models bucket | none | auto-provisioned via Ollama_Common |
 | Model-pull job | none | auto-generated when `default_model` is set |
 | Auto-injected env vars | none | `OLLAMA_MODELS`, `OLLAMA_HOST`, `OLLAMA_KEEP_ALIVE` |
 
@@ -67,7 +72,7 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 | `support_users` | `list(string)` | `[]` | Email addresses granted IAM access and monitoring alert recipients. |
 | `resource_labels` | `map(string)` | `{}` | Labels applied to all module-managed resources. |
 | `region` | `string` | `"us-central1"` | GCP region fallback when network discovery cannot determine region from VPC subnets. Also used as the GCS bucket region. |
-| `module_description` | `string` | *(Ollama GKE description)* | Platform UI description. |
+| `module_description` | `string` | *(Ollama_GKE description)* | Platform UI description. |
 | `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/Ollama_GKE"` | External documentation URL. |
 | `module_dependency` | `list(string)` | `["Services_GCP"]` | Modules that must be deployed before this one. |
 | `module_services` | `list(string)` | *(GCP service list)* | GCP services consumed by this module. |
@@ -123,7 +128,7 @@ When `default_model` is set and `initialization_jobs` is empty, a Kubernetes Job
 | `container_protocol` | `string` | `"http1"` | HTTP protocol version. |
 | `service_annotations` | `map(string)` | `{}` | Custom annotations applied to the Kubernetes service. |
 | `service_labels` | `map(string)` | `{}` | Custom labels applied to the Kubernetes service. |
-| `enable_cloudsql_volume` | `bool` | `false` | Not needed for Ollama. Required by the App GKE interface. |
+| `enable_cloudsql_volume` | `bool` | `false` | Not needed for Ollama. Required by the App_GKE interface. |
 | `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | Cloud SQL Auth Proxy socket path. Present for interface compatibility. |
 
 ### §3.D · Automatically Injected Environment Variables
@@ -177,7 +182,7 @@ The following environment variables are set automatically by `Ollama_Common`:
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `gke_cluster_name` | `string` | `""` | Name of an existing GKE Autopilot cluster. Uses the Services GCP-managed cluster when empty. |
+| `gke_cluster_name` | `string` | `""` | Name of an existing GKE Autopilot cluster. Uses the Services_GCP-managed cluster when empty. |
 | `namespace_name` | `string` | `""` | Kubernetes namespace for the Ollama deployment. Auto-generated from the application name when empty. |
 | `enable_pod_disruption_budget` | `bool` | `true` | Create a PodDisruptionBudget to maintain availability during node upgrades. |
 | `pdb_min_available` | `number` | `1` | Minimum pods available during voluntary disruptions. |
@@ -298,10 +303,10 @@ Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is re
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=30, timeout_seconds=5, period_seconds=15, failure_threshold=20 }` | Startup probe forwarded through Ollama Common to the container spec. The 20-attempt threshold allows up to ~5 minutes for model loading from GCS. |
+| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=30, timeout_seconds=5, period_seconds=15, failure_threshold=20 }` | Startup probe forwarded through Ollama_Common to the container spec. The 20-attempt threshold allows up to ~5 minutes for model loading from GCS. |
 | `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=60, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe. 60 s initial delay avoids false restarts during model loading. |
-| `startup_probe_config` | `object` | `{ enabled=true }` | Structured startup probe passed directly to App GKE (300 s timeout by default). |
-| `health_check_config` | `object` | `{ enabled=true, initial_delay_seconds=60 }` | Structured liveness probe passed directly to App GKE. |
+| `startup_probe_config` | `object` | `{ enabled=true }` | Structured startup probe passed directly to App_GKE (300 s timeout by default). |
+| `health_check_config` | `object` | `{ enabled=true, initial_delay_seconds=60 }` | Structured liveness probe passed directly to App_GKE. |
 | `uptime_check_config` | `object` | `{ enabled=true, path="/", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies. |
 

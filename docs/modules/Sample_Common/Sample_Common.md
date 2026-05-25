@@ -1,4 +1,9 @@
-# Sample Common Module
+---
+title: "Sample_Common Module"
+sidebar_label: "Sample Common"
+---
+
+# Sample_Common Module
 
 ## Overview
 
@@ -230,7 +235,7 @@ A minimal working application demonstrating all integration patterns:
 
 ## Platform-Specific Differences
 
-| Aspect | Sample CloudRun | Sample GKE |
+| Aspect | Sample_CloudRun | Sample_GKE |
 |--------|-----------------|------------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `resource_prefix` | Auto-computed from app/tenant/deployment | Explicitly set (typically `App_GKE.resource_prefix`) |
@@ -265,7 +270,7 @@ module "sample_cloudrun" {
 }
 ```
 
-### Aligning Secret Names with App GKE
+### Aligning Secret Names with App_GKE
 
 When deploying on GKE, pass `App_GKE`'s `resource_prefix` output so the secret name matches all other cluster resources:
 

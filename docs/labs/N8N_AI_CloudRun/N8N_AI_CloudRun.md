@@ -1,3 +1,8 @@
+---
+title: "n8n AI on Cloud Run — Lab Guide"
+sidebar_label: "N8N AI CloudRun"
+---
+
 # n8n AI on Cloud Run — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/N8N_AI_CloudRun)**

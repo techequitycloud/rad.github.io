@@ -1,3 +1,8 @@
+---
+title: "Ghost on Google Cloud Run"
+sidebar_label: "Ghost CloudRun"
+---
+
 # Ghost on Google Cloud Run
 
 This document provides a comprehensive reference for the `modules/Ghost_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Ghost-specific behaviours, and operational patterns for deploying Ghost on Google Cloud Run (v2).
