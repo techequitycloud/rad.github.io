@@ -5,6 +5,13 @@ sidebar_label: "Kestra CloudRun"
 
 # Kestra CloudRun Module — Configuration Guide
 
+<YouTubeEmbed videoId="qGjdB4rxSGQ" poster="https://storage.googleapis.com/rad-public-2b65/modules/Kestra_CloudRun.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Kestra_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 Kestra is an open-source, declarative, event-driven workflow orchestration platform (Apache 2.0 licence) with **26,000+ GitHub stars**, trusted by more than 30,000 organisations including Bloomberg, Toyota, BHP, JPMorgan Chase, Apple, and Crédit Agricole. The platform executed **2 billion workflows in 2025** (20× year-on-year growth) and raised a **$25M Series A in March 2026**. BHP's adoption replaced VMware vRA entirely and cut infrastructure provisioning from 6 months to 6 days. It allows you to build, schedule, and monitor ETL/ELT pipelines, data quality checks, agentic AI pipelines, and workflow automation through a YAML-based flow definition and a rich plugin ecosystem. This module deploys Kestra on **Google Cloud Run** in **standalone mode** (server, worker, and scheduler in a single container) with a PostgreSQL 15 backend and GCS artifact storage.
 
 `Kestra_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP infrastructure provisioning to App_CloudRun (Cloud Run service, Cloud SQL, networking, Secret Manager, GCS, CI/CD) and uses a `Kestra_Common` sub-module to supply Kestra-specific application configuration, secret generation, and storage bucket definitions.

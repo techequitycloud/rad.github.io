@@ -5,6 +5,13 @@ sidebar_label: "Wordpress CloudRun"
 
 # Wordpress CloudRun Module — Configuration Guide
 
+<YouTubeEmbed videoId="-8LVMoWDoZ0" poster="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_CloudRun.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/WordPress_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 `Wordpress_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [WordPress](https://wordpress.org/) on Google Cloud Run Gen2. WordPress is the world's most widely-deployed CMS, powering 43.5% of all websites and holding 62.8% of the CMS market — approximately 480–590 million sites globally. WooCommerce, its e-commerce extension, controls 36% of all online stores with roughly $35B in GMV in 2025, and an ecosystem of 60,000+ plugins makes WordPress the default choice for marketing sites, news publishers, e-commerce, and membership platforms at any scale.
 
 Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply WordPress-appropriate defaults and to call the `Wordpress_Common` sub-module, which generates the application's container build context, PHP configuration, MySQL connection settings, Redis object cache configuration, and WordPress-specific secrets. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.

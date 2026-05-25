@@ -5,6 +5,13 @@ sidebar_label: "VMware Engine"
 
 # VMware Engine Module — Configuration Guide
 
+<YouTubeEmbed videoId="jTtmQW5AlL0" poster="https://storage.googleapis.com/rad-public-2b65/modules/VMWare_Engine.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/VMWare_Engine.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 `VMware_Engine` is a **standalone infrastructure module** that provisions Google Cloud VMware
 Engine (GCVE) resources in an existing GCP project. It deploys a GCVE private cloud, a global
 VMware Engine Network (VEN), a VPC network for peering and jump host access, VPC network

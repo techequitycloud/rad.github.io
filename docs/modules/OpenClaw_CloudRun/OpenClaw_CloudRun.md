@@ -5,6 +5,13 @@ sidebar_label: "OpenClaw CloudRun"
 
 # OpenClaw on Google Cloud Run
 
+<YouTubeEmbed videoId="Uu_1bO4NLsI" poster="https://storage.googleapis.com/rad-public-2b65/modules/OpenClaw_CloudRun.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/OpenClaw_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 This document provides a comprehensive reference for the `modules/OpenClaw_CloudRun` Terraform module. It covers architecture, configuration variables, OpenClaw-specific behaviors, and operational patterns for deploying the OpenClaw AI agent gateway on Google Cloud Run (v2).
 
 ---

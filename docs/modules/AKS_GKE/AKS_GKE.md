@@ -5,6 +5,13 @@ sidebar_label: "AKS GKE"
 
 # AKS GKE Module: Google Kubernetes Engine Multi-Cloud Deep Dive
 
+<YouTubeEmbed videoId="a_o79iS9CO4" poster="https://storage.googleapis.com/rad-public-2b65/modules/AKS_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/AKS_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 ## 1. Overview and Learning Objectives
 
 This module deploys a Microsoft Azure Kubernetes Service (AKS) cluster and registers it with Google Cloud as a **GKE Attached Cluster**, making it a full member of a **GKE Fleet**. From that point forward, the cluster is visible and manageable from the Google Cloud Console alongside any native GKE clusters in the same project.

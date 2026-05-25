@@ -5,6 +5,13 @@ sidebar_label: "Moodle CloudRun"
 
 # Moodle CloudRun Module — Configuration Guide
 
+<YouTubeEmbed videoId="OaymmxOTJps" poster="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_CloudRun.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 Moodle is the world's most widely deployed open-source Learning Management System (LMS),
 holding 14% global market share and dominant positions in Europe (69%) and Latin America
 (73%). The global LMS market is growing from $24.5B in 2024 to $107.9B by 2033 at a 17.9%

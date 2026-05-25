@@ -5,6 +5,13 @@ sidebar_label: "MC Bank GKE"
 
 # MC Bank GKE Module
 
+<YouTubeEmbed videoId="z1tJ16izvpY" poster="https://storage.googleapis.com/rad-public-2b65/modules/MC_Bank_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/MC_Bank_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 ## Overview
 
 The **MC Bank GKE** module deploys a production-grade, multi-cluster microservices banking application on Google Kubernetes Engine (GKE). It is designed as a comprehensive learning environment for platform engineers who want to gain hands-on experience with advanced GKE capabilities, including multi-cluster networking, service mesh, global load balancing, and cloud-native observability.

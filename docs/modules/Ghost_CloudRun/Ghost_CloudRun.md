@@ -5,6 +5,13 @@ sidebar_label: "Ghost CloudRun"
 
 # Ghost on Google Cloud Run
 
+<YouTubeEmbed videoId="DHyeZ8q7xhU" poster="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_CloudRun.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 This document provides a comprehensive reference for the `modules/Ghost_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Ghost-specific behaviours, and operational patterns for deploying Ghost on Google Cloud Run (v2).
 
 ---
