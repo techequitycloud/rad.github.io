@@ -495,7 +495,7 @@ With `min_instance_count = 0`, the service scales to zero after ~5 minutes of in
 time curl -s -o /dev/null -w "HTTP %{http_code}, total time: %{time_total}s\n" "${SERVICE_URL}"
 ```
 
-**Expected result:** First request after idle period takes 3–10 seconds (cold start includes image pull, Django startup, and database connection). Subsequent requests are fast (<200ms).
+**Expected result:** First request after idle period takes 3–10 seconds (cold start includes image pull, Django startup, and database connection). Subsequent requests are fast (&lt;200ms).
 
 ---
 
