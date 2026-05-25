@@ -1,10 +1,10 @@
 # Deploying with RAD
 
-<YouTubeEmbed videoId="U4oU0Z8jH3Q" poster="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.png" />
+<YouTubeEmbed videoId="KhqI2xG8kPo" poster="https://storage.googleapis.com/rad-public-2b65/getting_started/Using_RAD.png" />
 
 <br/>
 
-<a href="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.pdf" target="_blank" rel="noopener noreferrer">Download Workflow PDF</a>
+<a href="https://storage.googleapis.com/rad-public-2b65/getting_started/Using_RAD.pdf" target="_blank">View Presentation (PDF)</a>
 
 ## 1. Introduction
 
