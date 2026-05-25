@@ -1,9 +1,9 @@
 # Azure Kubernetes Service on GKE Fleet — Lab Guide
 
-📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/AKS_GKE)**
+📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/AKS GKE)**
 
 This lab guide walks you through deploying an **Azure Kubernetes Service (AKS)** cluster and
-registering it as a GKE Attached Cluster in **Google Cloud Fleet** using the **AKS_GKE** module.
+registering it as a GKE Attached Cluster in **Google Cloud Fleet** using the **AKS GKE** module.
 You will then explore unified multi-cloud operations: accessing the AKS cluster via Google Cloud's
 Connect Gateway, centralised logging and monitoring through Google Cloud Observability, and fleet-
 wide access control — all without leaving Google Cloud.

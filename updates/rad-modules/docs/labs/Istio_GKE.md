@@ -1,10 +1,10 @@
 # Istio Service Mesh on GKE — Lab Guide
 
-📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Istio_GKE)**
+📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Istio GKE)**
 
 This lab guide walks you through the full lifecycle of deploying, configuring, and observing a
 service mesh on Google Kubernetes Engine using **open-source Istio** — installed via `istioctl`
-on a GKE Standard cluster. You will use the **Istio_GKE** module to provision the platform, then
+on a GKE Standard cluster. You will use the **Istio GKE** module to provision the platform, then
 explore traffic management, security, and observability capabilities hands-on. The module supports
 both **sidecar mode** (Envoy per-pod) and **ambient mode** (ztunnel per-node).
 

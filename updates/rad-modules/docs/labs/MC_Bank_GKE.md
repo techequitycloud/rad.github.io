@@ -1,9 +1,9 @@
 # Multi-Cluster Bank of Anthos on GKE — Lab Guide
 
-📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/MC_Bank_GKE)**
+📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/MC Bank GKE)**
 
 This lab guide walks you through deploying and operating the **Bank of Anthos** reference
-application across **multiple GKE clusters in multiple regions** using the **MC_Bank_GKE**
+application across **multiple GKE clusters in multiple regions** using the **MC Bank GKE**
 module. You will explore active-active geo-redundant architecture, fleet-wide Cloud Service
 Mesh, Multi-Cluster Ingress for global load balancing, Multi-Cluster Services for cross-cluster
 service discovery, and resilience testing through deliberate failure injection.

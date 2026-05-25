@@ -1,9 +1,9 @@
 # AWS Elastic Kubernetes Service on GKE Fleet — Lab Guide
 
-📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/EKS_GKE)**
+📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/EKS GKE)**
 
 This lab guide walks you through deploying an **AWS Elastic Kubernetes Service (EKS)** cluster
-and registering it as a GKE Attached Cluster in **Google Cloud Fleet** using the **EKS_GKE**
+and registering it as a GKE Attached Cluster in **Google Cloud Fleet** using the **EKS GKE**
 module. You will then explore unified multi-cloud operations: accessing the EKS cluster via
 Google Cloud's Connect Gateway, centralised logging and monitoring through Google Cloud
 Observability, and fleet-wide access control — all from a single Google Cloud control plane.
