@@ -66,13 +66,13 @@ Browser / API Client
        ▼ HTTPS (Cloud Run ingress)
 ┌──────────────────────────────────────────────────────────────────┐
 │  Cloud Run (gen2)                                                │
-│  kestra service — standalone mode                               │
-│  ┌─────────────┐  ┌──────────────────┐  ┌────────────────────┐  │
-│  │  Kestra JVM │  │  Cloud SQL Auth  │  │  GCS Fuse (opt.)   │  │
-│  │  Server     │  │  Proxy sidecar   │  │  flow storage      │  │
-│  │  Worker     │  │  socat TCP bridge│  │                    │  │
-│  │  Scheduler  │  │  → PostgreSQL    │  │                    │  │
-│  └─────────────┘  └──────────────────┘  └────────────────────┘  │
+│  kestra service — standalone mode                                │
+│  ┌─────────────┐  ┌──────────────────┐  ┌────────────────────┐   │
+│  │  Kestra JVM │  │  Cloud SQL Auth  │  │  GCS Fuse (opt.)   │   │
+│  │  Server     │  │  Proxy sidecar   │  │  flow storage      │   │
+│  │  Worker     │  │  socat TCP bridge│  │                    │   │
+│  │  Scheduler  │  │  → PostgreSQL    │  │                    │   │
+│  └─────────────┘  └──────────────────┘  └────────────────────┘   │
 └──────────────────────────────────────────────────────────────────┘
        │                    │
        ▼                    ▼

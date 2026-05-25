@@ -93,21 +93,21 @@ loadgenerator               ← Synthetic traffic for telemetry
 │  │  │  bank-of-anthos namespace                                │  │  │
 │  │  │  (label: istio.io/rev=asm-managed)                       │  │  │
 │  │  │                                                          │  │  │
-│  │  │  All 9 pods: 2/2 READY (app + Envoy sidecar)            │  │  │
+│  │  │  All 9 pods: 2/2 READY (app + Envoy sidecar)            │  │   │
 │  │  └──────────────────────────────────────────────────────────┘  │  │
 │  │                                                                │  │
-│  │  ┌────────────────┐  ┌────────────────┐  ┌─────────────────┐  │  │
-│  │  │  Cloud Service │  │  GKE Fleet Hub │  │  Global L4 LB   │  │  │
-│  │  │  Mesh (managed │  │  (membership)  │  │  (frontend IP)  │  │  │
-│  │  │  istiod)       │  │                │  │                 │  │  │
-│  │  └────────────────┘  └────────────────┘  └─────────────────┘  │  │
+│  │  ┌────────────────┐  ┌────────────────┐  ┌─────────────────┐  │   │
+│  │  │  Cloud Service │  │  GKE Fleet Hub │  │  Global L4 LB   │  │   │
+│  │  │  Mesh (managed │  │  (membership)  │  │  (frontend IP)  │  │   │
+│  │  │  istiod)       │  │                │  │                 │  │   │
+│  │  └────────────────┘  └────────────────┘  └─────────────────┘  │   │
 │  └────────────────────────────────────────────────────────────────┘  │
 │                                                                      │
-│  ┌──────────────────┐  ┌───────────────────┐  ┌───────────────────┐ │
-│  │  Cloud Logging   │  │  Cloud Monitoring │  │  Cloud Trace      │ │
-│  │  (structured     │  │  (Managed         │  │  (auto-sampled    │ │
-│  │   workload logs) │  │   Prometheus SLOs)│  │   traces)         │ │
-│  └──────────────────┘  └───────────────────┘  └───────────────────┘ │
+│  ┌──────────────────┐  ┌───────────────────┐  ┌───────────────────┐  │
+│  │  Cloud Logging   │  │  Cloud Monitoring │  │  Cloud Trace      │  │
+│  │  (structured     │  │  (Managed         │  │  (auto-sampled    │  │
+│  │   workload logs) │  │   Prometheus SLOs)│  │   traces)         │  │
+│  └──────────────────┘  └───────────────────┘  └───────────────────┘  │
 └──────────────────────────────────────────────────────────────────────┘
 
 Module variable wiring:

@@ -65,24 +65,24 @@ Internet / Client
 ┌──────────────────────────────────────────────────────────────────┐
 │  Cloud Run v2 Service (cloudrunapp)                              │
 │                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
+│  ┌──────────────────────────────────────────────────────────┐    │
 │  │  Revision: cloudrunapp-xxxxx                              │   │
 │  │  Container: sample Flask app (port 8080)                  │   │
-│  │  SECRET_KEY ← Secret Manager (injected at runtime)       │   │
-│  │  REDIS_HOST / REDIS_PORT ← env vars (if enabled)         │   │
+│  │  SECRET_KEY ← Secret Manager (injected at runtime)       │    │
+│  │  REDIS_HOST / REDIS_PORT ← env vars (if enabled)         │    │
 │  │  min_instances=0  max_instances=1                         │   │
-│  └──────────────────────────────────────────────────────────┘   │
+│  └──────────────────────────────────────────────────────────┘    │
 │                                                                  │
 │  Volumes:                                                        │
-│  ├── /cloudsql  (Cloud SQL Auth Proxy Unix socket)              │
-│  ├── /mnt/nfs   (Cloud Filestore NFS)                           │
-│  └── /mnt/gcs   (GCS Fuse application bucket)                  │
+│  ├── /cloudsql  (Cloud SQL Auth Proxy Unix socket)               │
+│  ├── /mnt/nfs   (Cloud Filestore NFS)                            │
+│  └── /mnt/gcs   (GCS Fuse application bucket)                    │
 └──────────────────────────────────────────────────────────────────┘
        │ Direct VPC Egress → VPC
        ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │  Cloud SQL PostgreSQL (via Auth Proxy)                           │
-│  Database: sampleapp  │  DB password → Secret Manager           │
+│  Database: sampleapp  │  DB password → Secret Manager            │
 └──────────────────────────────────────────────────────────────────┘
 
 Flask Endpoints:

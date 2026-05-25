@@ -19,27 +19,27 @@ Strapi has specific cryptographic requirements: four distinct secrets must be co
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                         Strapi_Common (Layer 1)                              │
 │                                                                              │
-│  Inputs: project_id, tenant_deployment_id, deployment_id,                   │
+│  Inputs: project_id, tenant_deployment_id, deployment_id,                    │
 │          enable_redis, redis_auth, ...                                       │
 │                                                                              │
-│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐    │
-│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │    │
-│  │                      │    │                                         │    │
-│  │  Secret Manager API  │    │  container_image: "" (custom build)     │    │
-│  │  5 secrets:          │    │  container_port: 1337                   │    │
-│  │   jwt-secret         │    │  database_type: POSTGRES_15             │    │
-│  │   admin-jwt-secret   │    │  initialization_jobs: [db-init]         │    │
-│  │   api-token-salt     │    │  startup_probe: HTTP /_health 30s       │    │
-│  │   transfer-token-salt│    │  liveness_probe: HTTP /_health 15s      │    │
-│  │   app-keys (4×32)    │    │  REDIS_HOST/PORT/PASSWORD (opt.)        │    │
-│  │  30s propagation     │    │                                         │    │
-│  │  wait                │    │                                         │    │
-│  │                      │    │                                         │    │
-│  │  GCS Bucket          │    │                                         │    │
-│  │   strapi-uploads     │    │                                         │    │
-│  └──────────────────────┘    └─────────────────────────────────────────┘    │
+│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐     │
+│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │     │
+│  │                      │    │                                         │     │
+│  │  Secret Manager API  │    │  container_image: "" (custom build)     │     │
+│  │  5 secrets:          │    │  container_port: 1337                   │     │
+│  │   jwt-secret         │    │  database_type: POSTGRES_15             │     │
+│  │   admin-jwt-secret   │    │  initialization_jobs: [db-init]         │     │
+│  │   api-token-salt     │    │  startup_probe: HTTP /_health 30s       │     │
+│  │   transfer-token-salt│    │  liveness_probe: HTTP /_health 15s      │     │
+│  │   app-keys (4×32)    │    │  REDIS_HOST/PORT/PASSWORD (opt.)        │     │
+│  │  30s propagation     │    │                                         │     │
+│  │  wait                │    │                                         │     │
+│  │                      │    │                                         │     │
+│  │  GCS Bucket          │    │                                         │     │
+│  │   strapi-uploads     │    │                                         │     │
+│  └──────────────────────┘    └─────────────────────────────────────────┘     │
 │                                                                              │
-│  resource_prefix = "{application_name}-{tenant_deployment_id}-{             │
+│  resource_prefix = "{application_name}-{tenant_deployment_id}-{              │
 │                          deployment_id}"                                     │
 └──────────────────────────────────────────────────────────────────────────────┘
                     │

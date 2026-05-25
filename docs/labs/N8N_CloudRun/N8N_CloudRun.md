@@ -92,25 +92,25 @@ External HTTP/Webhook Traffic
 │                                                                  │
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │  Cloud Run Service (gen2)   region: us-central1            │  │
-│  │  n8n 2.4.7 · port 5678 · min=0 · max=1                    │  │
+│  │  n8n 2.4.7 · port 5678 · min=0 · max=1                    │   │
 │  │  Sidecar: Cloud SQL Auth Proxy (Unix socket)               │  │
 │  │  NFS mount: /mnt/nfs (Cloud Filestore)                     │  │
 │  └──────────────────────┬─────────────────────────────────────┘  │
-│                          │ Serverless VPC Access Connector        │
-│  ┌───────────────────────▼─────────────────────────────────────┐  │
-│  │  VPC Network (Services_GCP)                                  │  │
+│                          │ Serverless VPC Access Connector       │
+│  ┌───────────────────────▼─────────────────────────────────────┐ │
+│  │  VPC Network (Services_GCP)                                  ││
 │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │  │
 │  │  │  Cloud SQL   │  │  Filestore   │  │  Redis (NFS VM)  │  │  │
 │  │  │  PostgreSQL  │  │  NFS share   │  │  port 6379       │  │  │
 │  │  │  15          │  │              │  │  queue mode      │  │  │
 │  │  └──────────────┘  └──────────────┘  └──────────────────┘  │  │
-│  └─────────────────────────────────────────────────────────────┘  │
+│  └─────────────────────────────────────────────────────────────┘ │
 │                                                                  │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐  │
-│  │  Secret Manager  │  │  Cloud Logging   │  │  Monitoring  │  │
-│  │  N8N_ENCRYPTION  │  │  structured logs │  │  uptime check│  │
-│  │  _KEY, SMTP pass │  │  Cloud Run       │  │  alert policy│  │
-│  └──────────────────┘  └──────────────────┘  └──────────────┘  │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐    │
+│  │  Secret Manager  │  │  Cloud Logging   │  │  Monitoring  │    │
+│  │  N8N_ENCRYPTION  │  │  structured logs │  │  uptime check│    │
+│  │  _KEY, SMTP pass │  │  Cloud Run       │  │  alert policy│    │
+│  └──────────────────┘  └──────────────────┘  └──────────────┘    │
 └──────────────────────────────────────────────────────────────────┘
 
 Module variable wiring:

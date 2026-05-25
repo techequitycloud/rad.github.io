@@ -86,7 +86,7 @@ OpenEMR Deployment (GKE Autopilot)
 │  │  GKE Autopilot Cluster                                             │  │
 │  │                                                                    │  │
 │  │  ┌──────────────────────────────────────────────────────────────┐  │  │
-│  │  │  openemr namespace (appopenemr<tenant><id>)                   │  │  │
+│  │  │  openemr namespace (appopenemr<tenant><id>)                   │  │ │
 │  │  │                                                              │  │  │
 │  │  │  OpenEMR Deployment                                          │  │  │
 │  │  │    containers: [openemr, cloud-sql-proxy]                    │  │  │
@@ -97,23 +97,23 @@ OpenEMR Deployment (GKE Autopilot)
 │  │  │  db-init Job (mysql:8.0-debian)                              │  │  │
 │  │  └──────────────────────────────────────────────────────────────┘  │  │
 │  │                                                                    │  │
-│  │  ┌────────────────┐  ┌────────────────────┐  ┌─────────────────┐  │  │
-│  │  │  LoadBalancer  │  │  Workload Identity │  │  Static IP      │  │  │
-│  │  │  Service       │  │  (SA → GCP SA IAM) │  │  (reserved)     │  │  │
-│  │  └────────────────┘  └────────────────────┘  └─────────────────┘  │  │
+│  │  ┌────────────────┐  ┌────────────────────┐  ┌─────────────────┐  │   │
+│  │  │  LoadBalancer  │  │  Workload Identity │  │  Static IP      │  │   │
+│  │  │  Service       │  │  (SA → GCP SA IAM) │  │  (reserved)     │  │   │
+│  │  └────────────────┘  └────────────────────┘  └─────────────────┘  │   │
 │  └────────────────────────────────────────────────────────────────────┘  │
 │                                                                          │
-│  ┌──────────────┐  ┌────────────────┐  ┌──────────────┐  ┌───────────┐  │
-│  │  Cloud SQL   │  │  NFS Server    │  │  Redis       │  │  Secret   │  │
-│  │  MySQL 8.0   │  │  (VM)          │  │  (PHP sess.) │  │  Manager  │  │
-│  │  private IP  │  │  /sites dir    │  │  port 6379   │  │  secrets  │  │
-│  └──────────────┘  └────────────────┘  └──────────────┘  └───────────┘  │
+│  ┌──────────────┐  ┌────────────────┐  ┌──────────────┐  ┌───────────┐   │
+│  │  Cloud SQL   │  │  NFS Server    │  │  Redis       │  │  Secret   │   │
+│  │  MySQL 8.0   │  │  (VM)          │  │  (PHP sess.) │  │  Manager  │   │
+│  │  private IP  │  │  /sites dir    │  │  port 6379   │  │  secrets  │   │
+│  └──────────────┘  └────────────────┘  └──────────────┘  └───────────┘   │
 │                                                                          │
 │  Module variable wiring:                                                 │
 │    OpenEMR_GKE                                                           │
-│      session_affinity = ClientIP  → PHP sessions stick to same pod      │
-│      reserve_static_ip = true     → stable external IP                  │
-│      enable_nfs = true            → required for OpenEMR sites dir      │
+│      session_affinity = ClientIP  → PHP sessions stick to same pod       │
+│      reserve_static_ip = true     → stable external IP                   │
+│      enable_nfs = true            → required for OpenEMR sites dir       │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
