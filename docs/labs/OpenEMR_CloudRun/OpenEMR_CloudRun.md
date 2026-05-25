@@ -2,261 +2,300 @@
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/OpenEMR_CloudRun)**
 
-## Overview
+OpenEMR is a HIPAA-compliant, open-source Electronic Health Records (EHR) and medical practice
+management application trusted by clinics worldwide. The `OpenEMR_CloudRun` module deploys
+version **7.0.4** on Cloud Run Gen2 backed by Cloud SQL MySQL 8.0 (accessed via Unix socket
+with Cloud SQL Auth Proxy), NFS storage for the patient sites directory, Redis for PHP session
+management, and Direct VPC Egress for private networking.
 
-**Estimated time:** 1–2 hours
-
-OpenEMR is a HIPAA-compliant, open-source Electronic Health Records (EHR) and medical practice management solution. This lab deploys OpenEMR on Cloud Run Gen 2, backed by Cloud SQL MySQL 8.0 (accessed via Unix socket with Cloud SQL Auth Proxy), NFS storage for the patient sites directory, Redis for PHP session management, and Direct VPC Egress for private networking.
-
-> **Healthcare Security Note:** This module is designed for HIPAA-compliant-ready deployments. All database credentials are stored in Secret Manager, all storage uses enforced public access prevention, and service accounts are scoped to minimum required permissions. For a production HIPAA deployment, also enable `enable_audit_logging = true`, `manage_storage_kms_iam = true`, and `ingress_settings = "internal-and-cloud-load-balancing"`.
-
-### What the Module Automates
-
-- Cloud Run Gen 2 service with TCP startup probe and HTTP liveness probe
-- Cloud SQL MySQL 8.0 instance provisioning with private IP and Unix socket access
-- Database user and password creation (stored in Secret Manager)
-- NFS server (Compute Engine VM) provisioning and NFS init Cloud Run Job
-- Redis integration for PHP session storage (defaults to NFS server IP)
-- Artifact Registry repository and container image mirroring
-- Secret Manager secrets for all credentials with rotation notifications
-- Serverless VPC Access and Direct VPC Egress for private connectivity
-- Cloud Storage bucket for application data and backups
-- Cloud Monitoring uptime check and notification channels
-- Automated daily backup via Cloud Run Job and Cloud Scheduler
-
-### What You Do Manually
-
-- Note the service URL and admin credentials from the RAD UI deployment panel
-- Log in and review the OpenEMR main dashboard
-- Create a patient record and schedule an appointment
-- Explore clinical features: prescriptions, problem list, immunizations
-- Review the billing and insurance workflow
-- Explore the patient portal configuration
-- Configure and test automated Google Drive backup
-- Explore Cloud Logging and Cloud Monitoring dashboards
+> **Healthcare Security Note:** All database credentials are stored in Secret Manager, all
+> storage uses enforced public access prevention, and service accounts are scoped to minimum
+> required permissions. For production HIPAA deployments, also enable `enable_audit_logging =
+> true`, `manage_storage_kms_iam = true`, and `ingress_settings = "internal-and-cloud-load-
+> balancing"`.
 
 ---
 
-## CLI and REST API Overview
+## Table of Contents
 
-This lab uses `gcloud` CLI to inspect deployed Cloud Run, Cloud SQL, and NFS resources. The equivalent REST API calls are shown where relevant.
-
-**Get the Cloud Run service URL:**
-```bash
-# gcloud
-gcloud run services describe SERVICE_NAME \
-  --region=REGION \
-  --project=PROJECT_ID \
-  --format="value(status.url)"
-
-# REST
-GET https://run.googleapis.com/v2/projects/PROJECT_ID/locations/REGION/services/SERVICE_NAME
-```
-
-**Get a secret value:**
-```bash
-# gcloud
-gcloud secrets versions access latest --secret=SECRET_NAME --project=PROJECT_ID
-
-# REST
-GET https://secretmanager.googleapis.com/v1/projects/PROJECT_ID/secrets/SECRET_NAME/versions/latest:access
-```
-
-**Trigger a manual Cloud Run job:**
-```bash
-# gcloud
-gcloud run jobs execute JOB_NAME --region=REGION --project=PROJECT_ID
-
-# REST
-POST https://run.googleapis.com/v2/projects/PROJECT_ID/locations/REGION/jobs/JOB_NAME:run
-```
-
-**List Cloud Run revisions:**
-```bash
-# gcloud
-gcloud run revisions list --service=SERVICE_NAME --region=REGION --project=PROJECT_ID
-
-# REST
-GET https://run.googleapis.com/v2/projects/PROJECT_ID/locations/REGION/services/SERVICE_NAME/revisions
-```
+1. [Overview](#1-overview)
+2. [Architecture](#2-architecture)
+3. [Prerequisites](#3-prerequisites)
+4. [Lab Setup](#4-lab-setup)
+5. [Exercise 1 — Access OpenEMR](#exercise-1--access-openemr)
+6. [Exercise 2 — Patient Management](#exercise-2--patient-management)
+7. [Exercise 3 — Appointments and Scheduling](#exercise-3--appointments-and-scheduling)
+8. [Exercise 4 — Clinical Documentation](#exercise-4--clinical-documentation)
+9. [Exercise 5 — Administration](#exercise-5--administration)
+10. [Exercise 6 — Database and Security](#exercise-6--database-and-security)
+11. [Exercise 7 — Cloud Logging](#exercise-7--cloud-logging)
+12. [Exercise 8 — Cloud Monitoring](#exercise-8--cloud-monitoring)
+13. [Cleanup](#cleanup)
+14. [Reference](#reference)
 
 ---
 
-## Prerequisites
+## 1. Overview
 
-Before beginning this lab, ensure the following are in place:
+### What Is OpenEMR?
 
-1. **Services_GCP module deployed** — OpenEMR_CloudRun depends on `Services_GCP` for the VPC network, Cloud SQL instance, and Artifact Registry. The `module_dependency` variable confirms this: `["Services_GCP"]`.
-2. **GCP project with billing enabled.**
-3. **`gcloud` CLI installed and authenticated** (`gcloud auth login && gcloud auth application-default login`).
-4. **Sufficient IAM permissions** — Owner or equivalent role on the target project.
-5. Access to the RAD UI with permission to deploy modules in the target GCP project.
+OpenEMR is an open-source **Electronic Health Records (EHR) and medical practice management**
+platform. It provides patient records, appointment scheduling, clinical documentation (SOAP
+notes, prescriptions, problem lists), billing workflows, and a patient-facing portal. The
+`OpenEMR_CloudRun` module deploys version 7.0.4 on Cloud Run Gen2 with a multi-step startup
+sequence that performs automatic database installation on first boot.
 
----
+### Key Capabilities Demonstrated
 
-## Phase 1 — Deploy [AUTOMATED]
-
-Variables are configured in the RAD UI form before deploying. The table below describes each variable you can fill in.
-
-**Key variables to set before deploying:**
-
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `project_id` | Yes | — | GCP project ID (6–30 chars, lowercase) |
-| `deployment_id` | No | auto | Short suffix appended to all resource names |
-| `region` | No | `us-central1` | GCP region for resource deployment |
-| `application_name` | No | `openemr` | Base name for the Cloud Run service and secrets |
-| `application_version` | No | `7.0.4` | OpenEMR image version tag |
-| `deploy_application` | No | `true` | Set `false` to provision infra without deploying |
-| `min_instance_count` | No | `1` | Minimum Cloud Run instances (1 avoids cold starts for clinicians) |
-| `max_instance_count` | No | `1` | Maximum Cloud Run instances (limit to 1 unless NFS confirmed for multi-instance) |
-| `cpu_limit` | No | `2000m` | Container CPU limit (min 2 vCPU recommended) |
-| `memory_limit` | No | `4Gi` | Container memory limit (min 1Gi; 4Gi recommended for production) |
-| `container_port` | No | `80` | Apache listens on port 80 inside the container |
-| `db_name` | No | `openemr` | MySQL database name |
-| `db_user` | No | `openemr` | MySQL database username |
-| `database_password_length` | No | `32` | Generated password length (16–64) |
-| `enable_nfs` | No | `true` | Mount NFS for sites directory (required for OpenEMR persistence) |
-| `nfs_mount_path` | No | `/var/www/localhost/htdocs/openemr/sites` | Container path for NFS mount |
-| `enable_redis` | No | `true` | Enable Redis for PHP session storage |
-| `redis_host` | No | NFS server IP | Redis host (defaults to NFS server IP) |
-| `redis_port` | No | `6379` | Redis port |
-| `backup_schedule` | No | `0 2 * * *` | Cron schedule for automated backups |
-| `backup_retention_days` | No | `7` | Days to retain backup files in GCS |
-| `ingress_settings` | No | `all` | Traffic ingress: `all`, `internal`, or `internal-and-cloud-load-balancing` |
-| `vpc_egress_setting` | No | `PRIVATE_RANGES_ONLY` | VPC egress routing for private NFS and DB connectivity |
-
-Deployment is initiated from the RAD UI. After filling in the variable form, click **Deploy** to start the deployment.
-
-**What the module creates:**
-- Cloud Run Gen 2 service with TCP startup probe and HTTP liveness probe (`/interface/login/login.php`)
-- Cloud SQL MySQL 8.0 database `openemr` with user `openemr` (password in Secret Manager)
-- Cloud SQL Auth Proxy sidecar (Unix socket) for secure database connectivity
-- NFS server (Compute Engine VM) and NFS init Cloud Run Job for directory setup
-- Redis session store at the NFS server IP (port 6379)
-- Serverless VPC Access and Direct VPC Egress for private IP routing
-- GCS bucket (`<prefix>-data`) for application data and backups
-- Cloud Monitoring uptime check against `/`
-- Admin password secret: `admin_password_secret_id` output
-
-After deployment completes, the following outputs are available in the RAD UI deployment panel:
-
-| Output | Description |
+| Capability | What It Demonstrates |
 |---|---|
-| `service_url` | HTTPS URL of the Cloud Run service |
-| `service_name` | Cloud Run service name |
-| `admin_password_secret_id` | Secret Manager secret name for the admin password |
-| `database_password_secret` | Secret Manager secret name for the DB password |
-| `database_instance_name` | Cloud SQL instance name |
-| `nfs_server_ip` | NFS server internal IP (sensitive) |
+| **Patient Records** | Full demographic, insurance, and clinical chart management |
+| **Appointment Scheduling** | Calendar-based scheduling with appointment types and providers |
+| **Clinical Documentation** | SOAP notes, prescriptions, problem list, immunizations |
+| **Billing Workflow** | Fee sheets, CPT/ICD-10 coding, insurance eligibility, claim generation |
+| **Patient Portal** | Secure patient-facing access to health records and messaging |
+| **HIPAA Security Posture** | Secret Manager credentials, NFS-backed sites, audit logging |
+| **Cloud Logging** | PHP/Apache access logs and database connectivity events |
+| **Cloud Monitoring** | Request metrics, latency, uptime check, and Redis session metrics |
 
-Set shell variables for use in later steps:
+---
+
+## 2. Architecture
+
+```
+Browser (Clinician or Patient)
+        │
+        ▼
+Cloud Run Gen2 Service (min=1 instance)
+   ├── OpenEMR container (port 80, Apache + PHP-FPM + OpenEMR 7.0.4)
+   │       ├── Clinical UI (/openemr/interface/...)
+   │       ├── Patient Portal (/openemr/portal/...)
+   │       └── openemr.sh startup orchestration
+   └── Cloud SQL Auth Proxy sidecar (Unix socket at /cloudsql)
+```
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  Google Cloud                                                            │
+│                                                                          │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │  Cloud Run Gen2 (OpenEMR)                                          │  │
+│  │  ingress: all  ·  min=1  ·  execution_environment: gen2            │  │
+│  │  TCP startup probe (allows 120s for first-boot DB install)         │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
+│           │  Serverless VPC Access / Direct VPC Egress                   │
+│  ┌────────┴──────────────────────────────────────────────────────────┐   │
+│  │  Private VPC                                                      │   │
+│  │  ┌──────────────────┐  ┌────────────────────┐  ┌───────────────┐  │   │
+│  │  │  Cloud SQL MySQL │  │  NFS Server (VM)   │  │  Redis        │  │   │
+│  │  │  8.0 (private IP)│  │  /sites directory  │  │  (PHP session)│  │   │
+│  │  │  Auth Proxy sock │  │  sqlconf.php       │  │  port 6379    │  │   │
+│  │  └──────────────────┘  └────────────────────┘  └───────────────┘  │   │
+│  └────────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+│  ┌──────────────────┐  ┌───────────────────────┐  ┌───────────────────┐ │
+│  │  Secret Manager  │  │  GCS Bucket           │  │  Artifact Registry│ │
+│  │  admin-password  │  │  data + backups       │  │  Custom image     │ │
+│  │  db-password     │  │                       │  │  (Alpine + PHP83) │ │
+│  └──────────────────┘  └───────────────────────┘  └───────────────────┘ │
+│                                                                          │
+│  Module variable wiring:                                                 │
+│    OpenEMR_CloudRun                                                      │
+│      enable_nfs   = true  → NFS required for OpenEMR sites directory    │
+│      enable_redis = true  → PHP session storage                         │
+│      min_instance_count = 1 → avoids cold starts for clinicians         │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 3. Prerequisites
+
+### Required Tools
+
+| Tool | Minimum Version | Install |
+|---|---|---|
+| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
+| `curl` / `jq` | Any | System package manager |
+
+### GCP Permissions
+
+```
+roles/owner                    # or the following fine-grained set:
+roles/run.admin
+roles/cloudsql.admin
+roles/secretmanager.admin
+roles/storage.admin
+roles/monitoring.viewer
+roles/logging.viewer
+```
+
+### Environment Variables
 
 ```bash
-export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
-export REGION="us-central1"             # the region you deployed into
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
+
+gcloud config set project "${PROJECT}"
+gcloud config set compute/region "${REGION}"
+gcloud auth application-default login
+```
+
+---
+
+## 4. Lab Setup
+
+### 4.1 Deploy via RAD UI
+
+Deploy the `OpenEMR_CloudRun` module via the RAD UI. **Prerequisite:** `Services_GCP` must be
+deployed first. In the variable form, set:
+
+| Variable | Value | Notes |
+|---|---|---|
+| `project_id` | `your-gcp-project-id` | Required |
+| `region` | `us-central1` | GCP region |
+| `application_version` | `7.0.4` | OpenEMR version |
+| `enable_nfs` | `true` | Required for OpenEMR sites directory |
+| `enable_redis` | `true` | PHP session management |
+| `min_instance_count` | `1` | Avoid cold starts for clinicians |
+| `max_instance_count` | `1` | Singleton until NFS multi-instance confirmed |
+| `cpu_limit` | `2000m` | Minimum 2 vCPU recommended |
+| `memory_limit` | `4Gi` | Minimum 4Gi recommended |
+| `ingress_settings` | `all` | Allow direct access for this lab |
+
+Click **Deploy** and wait for provisioning (approximately 15–25 minutes, including Cloud Build
+for the custom Alpine + PHP 8.3 image).
+
+> **What this provisions:** Cloud Run Gen2 service, Cloud SQL MySQL 8.0, Cloud SQL Auth Proxy
+> sidecar, NFS server (Compute Engine VM) with NFS init Cloud Run Job, Redis session store,
+> Secret Manager secrets for admin and DB passwords, Serverless VPC Access, GCS bucket, and
+> Cloud Monitoring uptime check.
+
+### 4.2 Configure Shell Environment
+
+```bash
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
 export TOKEN=$(gcloud auth print-access-token)
 
-# Discover the Cloud Run service (filter by app name "openemr")
+# Discover the Cloud Run service
 export SERVICE=$(gcloud run services list \
-  --project=${PROJECT} \
-  --region=${REGION} \
+  --project="${PROJECT}" \
+  --region="${REGION}" \
   --format="value(metadata.name)" \
+  --filter="metadata.name~openemr" \
   --limit=1)
-export SERVICE_URL=$(gcloud run services describe ${SERVICE} \
-  --project=${PROJECT} \
-  --region=${REGION} \
+
+export SERVICE_URL=$(gcloud run services describe "${SERVICE}" \
+  --project="${PROJECT}" \
+  --region="${REGION}" \
   --format="value(status.url)")
 
-# Discover the admin password secret (filter by app name)
-export DB_SECRET=$(gcloud secrets list \
-  --project=${PROJECT} \
-  --filter="name~openemr" \
+echo "OpenEMR service: ${SERVICE}"
+echo "OpenEMR URL: ${SERVICE_URL}"
+
+# Discover the admin password secret
+export ADMIN_SECRET=$(gcloud secrets list \
+  --project="${PROJECT}" \
+  --filter="name~openemr AND name~admin" \
   --format="value(name)" \
   --limit=1)
 ```
 
 ---
 
-## Phase 2 — Get the Service URL [MANUAL]
+## Exercise 1 — Access OpenEMR
 
-Retrieve the Cloud Run service URL and confirm the application is reachable.
+### Objective
 
-**Step 1 — Get the service URL:**
+Retrieve the service URL, wait for the startup probe to pass (first-boot database installation),
+retrieve admin credentials from Secret Manager, and log in to the OpenEMR dashboard.
+
+### Step 1.1 — Verify Service Status
+
+**gcloud:**
 ```bash
-echo "OpenEMR URL: ${SERVICE_URL}"
-# Expected: https://openemr-XXXX-XX.a.run.app
-```
-
-**Step 2 — Confirm the service is serving traffic:**
-```bash
-# Check the OpenEMR login page
-curl -I "${SERVICE_URL}/openemr/interface/login/login.php"
-# Expected: HTTP/2 200
-
-# Or check the root path
-curl -I "${SERVICE_URL}/"
-
-# REST equivalent via gcloud
-gcloud run services describe ${SERVICE} \
-  --region=${REGION} \
-  --project=${PROJECT} \
+gcloud run services describe "${SERVICE}" \
+  --region="${REGION}" \
+  --project="${PROJECT}" \
   --format="table(status.url, status.conditions)"
 ```
 
-**Step 3 — Review the Cloud Run service details:**
+**REST API:**
 ```bash
-gcloud run services describe ${SERVICE} \
-  --region=${REGION} \
-  --project=${PROJECT}
+curl -s \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '{url: .uri, state: .terminalCondition.state}'
 ```
 
-The OpenEMR UI is accessible at `${SERVICE_URL}/openemr`. Allow 5–10 minutes after the first deploy for the startup probe to pass (OpenEMR performs database installation and NFS directory initialization on first boot).
-
----
-
-## Phase 3 — Complete OpenEMR Setup [MANUAL]
-
-Log in to OpenEMR and review the main clinical dashboard.
-
-**Step 1 — Retrieve admin credentials from Secret Manager:**
+**Check the login page:**
 ```bash
-# List OpenEMR-related secrets
-gcloud secrets list --project=${PROJECT} --filter="name~openemr"
+curl -I "${SERVICE_URL}/openemr/interface/login/login.php"
+# Expected: HTTP/2 200
+```
+
+> **First-boot note:** Allow 5–10 minutes after the initial deployment for the startup probe
+> to pass. OpenEMR runs `auto_configure.php` on first boot to initialize the MySQL database.
+> A PHP built-in health probe server serves stub responses during this window.
+
+**Expected result:** HTTP 200 from the login page confirms the first-boot installation is
+complete and OpenEMR is serving requests.
+
+### Step 1.2 — Retrieve Admin Credentials
+
+**gcloud:**
+```bash
+gcloud secrets list \
+  --project="${PROJECT}" \
+  --filter="name~openemr" \
+  --format="table(name, createTime)"
 
 # Access the admin password
 gcloud secrets versions access latest \
-  --secret="${DB_SECRET}" \
-  --project=${PROJECT}
-
-# REST equivalent
-curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}/versions/latest:access"
+  --secret="${ADMIN_SECRET}" \
+  --project="${PROJECT}"
 ```
 
-**Step 2 — Navigate to OpenEMR:**
-1. Open `${SERVICE_URL}/openemr` in your browser.
-2. If the page is not yet reachable, wait for the startup probe to pass (first-boot database installation takes 5–10 minutes).
-3. Log in with username `admin` and the password retrieved from Secret Manager.
+**REST API:**
+```bash
+curl -s \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${ADMIN_SECRET}/versions/latest:access" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq -r '.payload.data' | base64 -d
+```
 
-**Step 3 — Review the main dashboard:**
-1. Observe the main dashboard layout:
-   - **Patient Summary** widgets (recent appointments, messages, alerts)
-   - **Top navigation**: Patient, Fees, Reports, Modules, Administration
+**Expected result:** The admin password is returned. The admin username is `admin`.
+
+### Step 1.3 — Log In and Explore the Dashboard
+
+Navigate to `${SERVICE_URL}/openemr` in your browser:
+
+1. Log in with username `admin` and the retrieved password.
+2. Review the main dashboard:
+   - **Patient Summary** widgets (appointments, messages, alerts)
+   - **Top navigation:** Patient, Fees, Reports, Modules, Administration
    - **Calendar** view for appointment scheduling
-2. Navigate to **Administration** > **Globals** to review site-level settings.
-3. Under **Administration** > **Users**, confirm the admin user is configured correctly.
 
-> **HIPAA Note:** The admin account has full access to all patient records. In a production environment, create role-specific accounts with minimum necessary privileges. For Cloud Run, also consider setting `ingress_settings = "internal-and-cloud-load-balancing"` and fronting OpenEMR with a Google Cloud Load Balancer + Cloud Armor WAF for additional protection.
+**Expected result:** The OpenEMR main clinical dashboard loads. The system is ready for use.
+
+### Step 1.4 — Review Administration Settings
+
+1. Navigate to **Administration > Globals** to review site-level settings.
+2. Under **Administration > Users**, confirm the admin user is configured correctly.
 
 ---
 
-## Phase 4 — Patient Management [MANUAL]
+## Exercise 2 — Patient Management
 
-Create a patient record, schedule an appointment, and document a clinical encounter.
+### Objective
 
-**Step 1 — Create a new patient:**
-1. Navigate to **Patient** > **New Patient** (or click **New Patient** in the top navigation).
+Create a patient record with demographics and insurance information, and verify the patient
+chart is properly created.
+
+### Step 2.1 — Create a New Patient
+
+1. Navigate to **Patient > New Patient** (or click **New Patient** in the top navigation).
 2. Fill in the **Demographics** tab:
    - **First Name:** Jane
    - **Last Name:** Doe
@@ -267,324 +306,659 @@ Create a patient record, schedule an appointment, and document a clinical encoun
    - Add a primary insurance plan
    - Enter the policy holder name and policy number
 4. Click **Save** to create the patient record.
-5. Note the auto-assigned **PID** (Patient ID) number.
+5. Note the auto-assigned **PID** (Patient ID).
 
-**Step 2 — Schedule an appointment:**
-1. From the patient's chart, click **New Appointment**.
+**Expected result:** Patient record is created and a chart is available with tabs for Summary,
+Demographics, Documents, Insurance, and History.
+
+### Step 2.2 — Search and Open the Patient Chart
+
+1. Navigate to **Patient > Patient Finder**.
+2. Search for "Doe".
+3. Click the patient name to open the full chart.
+
+**Expected result:** Full patient chart opens showing all tabs and the patient's demographic
+information.
+
+### Step 2.3 — Review Chart Navigation
+
+From the patient chart, explore:
+- **Summary** — recent encounters, problem list, medications, and allergies
+- **Documents** — uploaded patient documents
+- **History** — medical history and family history forms
+
+**gcloud (verify NFS is serving patient data):**
+```bash
+gcloud logging read \
+  "resource.type=\"cloud_run_revision\" \
+   resource.labels.service_name=\"${SERVICE}\" \
+   textPayload=~\"nfs|sites|documents\"" \
+  --project="${PROJECT}" \
+  --limit=20 \
+  --format="table(timestamp,textPayload)"
+```
+
+---
+
+## Exercise 3 — Appointments and Scheduling
+
+### Objective
+
+Schedule a patient appointment, view it in the calendar, and explore appointment management.
+
+### Step 3.1 — Schedule an Appointment
+
+1. From the patient chart (Jane Doe), click **New Appointment**.
 2. Set the appointment details:
    - **Date/Time:** select a near-future slot
    - **Appointment type:** Office Visit
    - **Provider:** select the admin user or a configured provider
+   - **Duration:** 30 minutes
 3. Click **Save Appointment**.
-4. Navigate to **Modules** > **Calendar** and confirm the appointment appears.
 
-**Step 3 — View the patient chart:**
-1. Search for the patient using **Patient** > **Patient Finder**.
-2. Open the patient chart.
-3. Review the chart tabs: Summary, Demographics, Documents, Insurance, History.
+**Expected result:** Appointment is saved and appears in the provider's calendar.
 
-**Step 4 — Create a SOAP note encounter:**
-1. From the patient chart, click **Encounter** > **New Encounter**.
-2. Set the encounter date and reason for visit.
-3. Click **New Encounter** to open the encounter form.
-4. Navigate to the **SOAP** section:
-   - **Subjective:** "Patient presents with mild headache for 3 days."
-   - **Objective:** "BP 120/80, HR 72, Temp 98.6F"
-   - **Assessment:** "Tension headache"
-   - **Plan:** "Rest, hydration, ibuprofen PRN"
-5. Click **Save** to record the encounter.
+### Step 3.2 — View the Calendar
+
+1. Navigate to **Modules > Calendar** (or click the Calendar shortcut on the dashboard).
+2. Locate the appointment just created.
+3. Click the appointment to view details.
+
+**Expected result:** The calendar view shows the scheduled appointment with patient name,
+appointment type, and duration.
+
+### Step 3.3 — Manage Appointment Status
+
+From the calendar:
+1. Right-click (or click) the appointment to view options.
+2. Note the available status transitions: Scheduled → Arrived → In Room → Complete.
+
+**Expected result:** Appointment workflow status options are available for clinic staff to
+track patient progress through the visit.
+
+### Step 3.4 — View Provider Schedule
+
+1. In the Calendar, use the provider selector to view a specific provider's schedule.
+2. Review the appointment slots and availability.
+
+**gcloud (verify Cloud Run is handling session state):**
+```bash
+gcloud logging read \
+  "resource.type=\"cloud_run_revision\" \
+   resource.labels.service_name=\"${SERVICE}\" \
+   textPayload=~\"redis|session\"" \
+  --project="${PROJECT}" \
+  --limit=10 \
+  --format="table(timestamp,textPayload)"
+```
 
 ---
 
-## Phase 5 — Clinical Features [MANUAL]
+## Exercise 4 — Clinical Documentation
 
-Explore the clinical modules: prescriptions, problem list, immunizations, and medication management.
+### Objective
 
-**Step 1 — Write a prescription:**
-1. From within an open encounter (or from the patient chart), navigate to **Rx** > **New Prescription**.
-2. Fill in the prescription details:
+Create a clinical encounter with a SOAP note, write a prescription, add a problem list entry,
+and record an immunization.
+
+### Step 4.1 — Create an Encounter
+
+1. From the patient chart, click **Encounter > New Encounter**.
+2. Set the encounter date (today) and reason for visit: "Routine follow-up".
+3. Click **New Encounter** to open the encounter form.
+
+**Expected result:** The encounter form opens with sections for SOAP, vitals, assessments, and
+plan documentation.
+
+### Step 4.2 — Document a SOAP Note
+
+In the encounter form, navigate to the **SOAP** section:
+- **Subjective:** "Patient presents with mild headache for 3 days. No fever."
+- **Objective:** "BP 120/80, HR 72, Temp 98.6°F, Weight 68 kg"
+- **Assessment:** "Tension headache, rule out hypertension"
+- **Plan:** "Rest, hydration, ibuprofen 400mg PRN, follow-up in 2 weeks"
+
+Click **Save** to record the encounter note.
+
+**Expected result:** SOAP note is saved with timestamp and provider signature.
+
+### Step 4.3 — Write a Prescription
+
+1. From within the encounter or patient chart, navigate to **Rx > New Prescription**.
+2. Fill in prescription details:
    - **Drug:** Ibuprofen 400mg
    - **Directions:** 1 tablet every 6 hours as needed
    - **Quantity:** 30 tablets
    - **Refills:** 0
-3. Click **Save** to record the prescription.
-4. Optionally, click **Print** to preview the printable prescription format.
+3. Click **Save**.
 
-**Step 2 — Create a problem list entry:**
-1. From the patient chart, navigate to the **Problems** tab (or via **Encounter** > **Problem List**).
+**Expected result:** Prescription is recorded and appears in the patient's medication list.
+
+### Step 4.4 — Add a Problem List Entry
+
+1. From the patient chart, navigate to the **Problems** tab.
 2. Click **Add Problem**.
-3. Search for a diagnosis code (e.g., search "headache" to find ICD-10 code `R51`).
-4. Select the code and set the **Status** to `Active`.
+3. Search for "headache" to find ICD-10 code `R51`.
+4. Select the code, set **Status** to `Active`.
 5. Click **Save**.
 
-**Step 3 — Explore the immunization record:**
+**Expected result:** The problem appears in the Active Problem List with the ICD-10 code.
+
+### Step 4.5 — Record an Immunization
+
 1. From the patient chart, navigate to **Immunizations**.
 2. Click **Add Immunization**.
-3. Select a vaccine type (e.g., Influenza).
+3. Select vaccine type: Influenza.
 4. Fill in the administration date and lot number.
 5. Click **Save**.
 
-**Step 4 — Review medication list management:**
-1. From the patient chart, navigate to **Medications**.
-2. Review the active medications list.
-3. Click **Add Medication** to add a non-prescription supplement.
-4. Note how the medication list integrates with the encounter documentation.
+**Expected result:** The immunization record is added with date, vaccine type, and lot number.
 
 ---
 
-## Phase 6 — Billing and Insurance [MANUAL]
+## Exercise 5 — Administration
 
-Navigate the billing workflow: fee sheets, insurance eligibility, and claim generation.
+### Objective
 
-**Step 1 — Navigate to Billing Manager:**
-1. Go to **Fees** > **Billing Manager** in the top navigation.
-2. Review the list of encounters pending billing.
-3. Note the status column: `unprocessed`, `complete`, `waiting`.
+Explore administration settings for users, roles, practice configuration, and fee schedules.
 
-**Step 2 — Create a fee sheet entry:**
-1. From the patient's encounter, navigate to **Fee Sheet**.
-2. Click **Add CPT Code**:
-   - Search for code `99213` (Office visit, established patient, low complexity)
-   - Set units to `1`
-3. Add a diagnosis pointer linking to the ICD-10 code created in Phase 5.
-4. Click **Save Fee Sheet**.
+### Step 5.1 — User and Role Management
 
-**Step 3 — Explore insurance eligibility checking:**
-1. From the Billing Manager, locate the patient encounter.
-2. Click **Eligibility** to check insurance eligibility (requires a configured clearinghouse in production; in this lab, observe the form fields).
-3. Review the eligibility request format: payer ID, patient demographics, insurance policy.
+1. Navigate to **Administration > Users**.
+2. Review the admin user's role and permissions.
+3. Click **Add User** to see the user creation form (do not save).
+4. Note role options: Administrator, Doctor, Nurse, Medical Assistant, Receptionist.
 
-**Step 4 — Review billing claim generation:**
-1. From the Billing Manager, select the encounter.
-2. Click **Generate Claim** to preview the billing claim.
-3. Review the claim format (CMS 1500 structure): patient info, provider NPI, diagnosis codes, procedure codes, charges.
-4. Note the claim ID assigned for tracking.
+**Expected result:** User management interface shows granular role-based access controls for
+HIPAA-compliant least-privilege access.
 
----
+### Step 5.2 — Practice Settings
 
-## Phase 7 — Patient Portal [MANUAL]
+1. Navigate to **Administration > Globals**.
+2. Review key settings:
+   - **Practice Name** and contact information
+   - **Default Language** and locale
+   - **Time zone** configuration
+   - **Session timeout** settings (security-relevant for HIPAA)
 
-Review the patient portal configuration and understand how patients access their records securely.
-
-**Step 1 — Navigate to Administration > Portal:**
-1. Go to **Administration** > **Globals** > **Portal** tab.
-2. Review the portal settings:
-   - **Portal Site Address** — the URL patients will use (should be the OpenEMR Cloud Run service URL)
-   - **Allow portal patient signup** — controls self-registration
-   - **Portal Message** — displayed on the portal landing page
-
-**Step 2 — Review patient portal settings:**
-1. Navigate to **Administration** > **Portal** > **Portal Dashboard**.
-2. Review the portal modules enabled for patients:
-   - Appointment requests
-   - Secure messaging
-   - Health summaries and lab results
-   - Prescription requests
-   - Demographic updates
-
-**Step 3 — How patients access their records securely:**
-1. Patients access the portal at `${SERVICE_URL}/openemr/portal`.
-2. Initial portal credentials are provided by the clinic (via printed instructions or secure email).
-3. Patients authenticate with a separate portal username and password.
-4. For HIPAA-compliant production use, front the Cloud Run service with a Global HTTPS Load Balancer (enable `enable_cloud_armor = true` with `application_domains`) to enforce TLS termination and WAF protection.
-
-**Step 4 — Explore the patient portal URL:**
-1. In a separate browser window (or incognito), navigate to `${SERVICE_URL}/openemr/portal`.
-2. Observe the patient-facing login page.
-3. Note the difference in interface between the clinician portal and the patient portal.
-
----
-
-## Phase 8 — Backup Configuration [MANUAL]
-
-Review the automated Google Drive backup integration and verify the backup schedule.
-
-**Step 1 — Review the backup Cloud Run Job:**
+**gcloud (verify admin login created a Cloud Run request):**
 ```bash
-# List Cloud Run Jobs in the region
-gcloud run jobs list --region=${REGION} --project=${PROJECT}
+gcloud run services describe "${SERVICE}" \
+  --region="${REGION}" \
+  --project="${PROJECT}" \
+  --format="value(status.observedGeneration, status.latestCreatedRevisionName)"
+```
+
+### Step 5.3 — Fee Schedules
+
+1. Navigate to **Administration > Fee Schedules**.
+2. Review or create a fee schedule.
+3. Navigate to **Fees > Billing Manager** to see the billing workflow.
+
+**Expected result:** Fee schedule management is available for CPT code pricing and insurance
+rate configuration.
+
+### Step 5.4 — Explore Backup Configuration
+
+Review the Cloud Run Job that handles automated backups:
+
+**gcloud:**
+```bash
+# List Cloud Run Jobs
+gcloud run jobs list \
+  --region="${REGION}" \
+  --project="${PROJECT}" \
+  --filter="name~openemr"
 
 # Describe the backup job
-gcloud run jobs describe BACKUP_JOB_NAME \
-  --region=${REGION} \
-  --project=${PROJECT}
-
-# REST
-GET https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/jobs/BACKUP_JOB_NAME
+gcloud run jobs describe \
+  $(gcloud run jobs list \
+    --region="${REGION}" \
+    --project="${PROJECT}" \
+    --filter="name~openemr AND name~backup" \
+    --format="value(name)" --limit=1) \
+  --region="${REGION}" \
+  --project="${PROJECT}"
 ```
 
-**Step 2 — Review Google Drive backup integration:**
-The backup is configured at the infrastructure level by the module. The Cloud Run backup job:
-1. Dumps the MySQL database using `mysqldump` via the Cloud SQL Unix socket.
-2. Archives the NFS sites directory (patient documents and configuration).
-3. Uploads the compressed archive to the GCS backup bucket.
-4. Optionally syncs to Google Drive when the Google Drive API is configured.
-
-**Step 3 — Verify automated backup schedule:**
+**REST API:**
 ```bash
-# List Cloud Scheduler jobs (backup schedule is managed by Cloud Scheduler)
-gcloud scheduler jobs list --project=${PROJECT} --location=${REGION}
-
-# REST
-GET https://cloudscheduler.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/jobs
-
-# List backup files in GCS
-gcloud storage ls gs://BACKUP_BUCKET_NAME/ --project=${PROJECT}
-
-# REST
-GET https://storage.googleapis.com/storage/v1/b/BACKUP_BUCKET_NAME/o
+curl -s \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/jobs" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.jobs[] | select(.name | test("openemr")) | {name, latestCreatedExecution}'
 ```
 
-**Step 4 — Manually trigger a backup and verify in GCS:**
-```bash
-# Trigger the backup job immediately
-gcloud run jobs execute BACKUP_JOB_NAME \
-  --region=${REGION} \
-  --project=${PROJECT}
-
-# REST
-POST https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/jobs/BACKUP_JOB_NAME:run
-
-# Watch the job execution status
-gcloud run jobs executions list \
-  --job=BACKUP_JOB_NAME \
-  --region=${REGION} \
-  --project=${PROJECT}
-
-# Verify the backup file appeared in GCS
-gcloud storage ls gs://BACKUP_BUCKET_NAME/ --project=${PROJECT}
-```
-
-> **HIPAA Note:** For compliance, set `backup_retention_days` to meet your organization's data retention policy. Healthcare records often require 6–10 years of retention. Consider enabling versioning (`versioning_enabled = true`) on the backup bucket and `manage_storage_kms_iam = true` for CMEK encryption of backup data.
+**Expected result:** A backup Cloud Run Job configured with a daily cron schedule
+(`0 2 * * *`) for automated MySQL dumps and NFS directory archives.
 
 ---
 
-## Phase 9 — Explore Cloud Logging [MANUAL]
+## Exercise 6 — Database and Security
 
-Review OpenEMR PHP/Apache logs and audit logs in Cloud Logging.
+### Objective
 
-**Step 1 — Access Cloud Logging via the console:**
-1. Open the Google Cloud Console at [console.cloud.google.com](https://console.cloud.google.com).
-2. Navigate to **Logging** > **Log Explorer**.
-3. Set the project to your deployment project.
+Inspect the Cloud SQL instance, review HIPAA-relevant Secret Manager secrets, and examine
+audit logs for access control verification.
 
-**Step 2 — Filter OpenEMR Cloud Run logs:**
+### Step 6.1 — Inspect the Cloud SQL Instance
 
-Use the following filter in the Log Explorer query field:
+**gcloud:**
+```bash
+DB_INSTANCE=$(gcloud sql instances list \
+  --project="${PROJECT}" \
+  --filter="name~openemr" \
+  --format="value(name)" \
+  --limit=1)
+
+gcloud sql instances describe "${DB_INSTANCE}" \
+  --project="${PROJECT}" \
+  --format="table(name, databaseVersion, settings.tier, region, state)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances/${DB_INSTANCE}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '{name, databaseVersion, state, region}'
+```
+
+**Expected result:** Cloud SQL MySQL 8.0 instance in `RUNNABLE` state with private IP and the
+database `openemr` accessible via Cloud SQL Auth Proxy Unix socket.
+
+### Step 6.2 — Review Secret Manager Secrets
+
+**gcloud:**
+```bash
+gcloud secrets list \
+  --project="${PROJECT}" \
+  --filter="name~openemr" \
+  --format="table(name, createTime)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets?filter=name%3Aopenemr" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.secrets[] | {name, createTime}'
+```
+
+**Expected result:** At minimum, secrets for the admin password and the database user password.
+These are injected into the Cloud Run service via Secret Manager references.
+
+### Step 6.3 — Verify Cloud SQL Auth Proxy Connectivity
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"cloud_run_revision\" \
+   resource.labels.service_name=\"${SERVICE}\" \
+   textPayload=~\"cloudsql|proxy|mysql|socket\"" \
+  --project="${PROJECT}" \
+  --limit=20 \
+  --format="table(timestamp,textPayload)"
+```
+
+**Expected result:** Log entries confirming Cloud SQL Auth Proxy established the Unix socket
+connection to MySQL at `/cloudsql`, and OpenEMR successfully connected on first boot.
+
+### Step 6.4 — Review IAM and Audit Logs
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "protoPayload.serviceName=secretmanager.googleapis.com \
+   AND protoPayload.methodName=~\"AccessSecretVersion\"" \
+  --project="${PROJECT}" \
+  --limit=10 \
+  --format="json" \
+  | jq '.[] | {
+    timestamp,
+    caller: .protoPayload.authenticationInfo.principalEmail,
+    resource: .protoPayload.resourceName
+  }'
+```
+
+**Expected result:** The OpenEMR Cloud Run service account accessing the admin and database
+password secrets during startup — no hardcoded credentials in the container.
+
+> **HIPAA Note:** Enable `enable_audit_logging = true` in the module configuration to capture
+> all DATA_READ, DATA_WRITE, and ADMIN_READ events. This is required for HIPAA audit trail
+> requirements.
+
+---
+
+## Exercise 7 — Cloud Logging
+
+### Objective
+
+Query Cloud Run structured logs for PHP/Apache access events, database connectivity
+confirmations, and error-level entries.
+
+### Step 7.1 — View Application Logs in the Console
+
+```bash
+echo "https://console.cloud.google.com/logs?project=${PROJECT}"
+```
+
+Use the following filter:
 ```
 resource.type="cloud_run_revision"
 resource.labels.service_name="${SERVICE}"
 ```
 
-**Step 3 — Review PHP/Apache log entries:**
-1. Observe Apache access logs showing clinical interface and patient portal requests.
-2. Filter for PHP errors:
-   ```
-   resource.type="cloud_run_revision"
-   resource.labels.service_name="${SERVICE}"
-   textPayload=~"PHP.*Error|Fatal error|Warning"
-   ```
-3. Review database connection log entries confirming Cloud SQL Unix socket connectivity.
+### Step 7.2 — Query Application Logs via gcloud
 
-**Step 4 — Stream logs via gcloud:**
+**gcloud:**
 ```bash
-# Tail live logs from the OpenEMR Cloud Run service
-gcloud run services logs tail ${SERVICE} \
-  --region=${REGION} \
-  --project=${PROJECT}
-
-# Historical logs
 gcloud logging read \
-  'resource.type="cloud_run_revision" AND resource.labels.service_name="'${SERVICE}'"' \
-  --project=${PROJECT} \
-  --freshness=1h \
+  "resource.type=\"cloud_run_revision\" \
+   resource.labels.service_name=\"${SERVICE}\"" \
+  --project="${PROJECT}" \
+  --limit=100 \
   --format="table(timestamp,severity,textPayload)"
+```
 
-# Filter for errors only
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://logging.googleapis.com/v2/entries:list" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"resourceNames\": [\"projects/${PROJECT}\"],
+    \"filter\": \"resource.type=\\\"cloud_run_revision\\\" resource.labels.service_name=\\\"${SERVICE}\\\"\",
+    \"pageSize\": 50
+  }" | jq '.entries[] | {timestamp, severity, textPayload}'
+```
+
+### Step 7.3 — Filter for PHP and Apache Events
+
+**gcloud:**
+```bash
+# Apache access logs
 gcloud logging read \
-  'resource.type="cloud_run_revision" AND resource.labels.service_name="'${SERVICE}'" AND severity>=ERROR' \
-  --project=${PROJECT} \
+  "resource.type=\"cloud_run_revision\" \
+   resource.labels.service_name=\"${SERVICE}\" \
+   textPayload=~\"GET /openemr|POST /openemr|Apache\"" \
+  --project="${PROJECT}" \
+  --limit=30 \
+  --format="table(timestamp,textPayload)"
+
+# PHP errors
+gcloud logging read \
+  "resource.type=\"cloud_run_revision\" \
+   resource.labels.service_name=\"${SERVICE}\" \
+   textPayload=~\"PHP.*Error|Fatal error|Warning\"" \
+  --project="${PROJECT}" \
+  --limit=20 \
+  --format="table(timestamp,severity,textPayload)"
+```
+
+**Expected result:** Apache access log entries for clinician logins and chart accesses, and
+PHP-FPM process logs confirming request routing.
+
+### Step 7.4 — View First-Boot Installation Logs
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"cloud_run_revision\" \
+   resource.labels.service_name=\"${SERVICE}\" \
+   textPayload=~\"auto_configure|install|database|setup\"" \
+  --project="${PROJECT}" \
+  --limit=30 \
+  --format="table(timestamp,textPayload)"
+```
+
+**Expected result:** Log entries from the `openemr.sh` startup sequence showing the
+`auto_configure.php` database installation, the health probe server startup, and the final
+Apache + PHP-FPM startup.
+
+### Step 7.5 — Tail Live Logs
+
+```bash
+gcloud run services logs tail "${SERVICE}" \
+  --region="${REGION}" \
+  --project="${PROJECT}"
+```
+
+While tailing, navigate pages in OpenEMR and observe the real-time access log output.
+
+### Step 7.6 — Filter for Error Logs
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"cloud_run_revision\" \
+   resource.labels.service_name=\"${SERVICE}\" \
+   severity>=ERROR" \
+  --project="${PROJECT}" \
+  --limit=20 \
   --freshness=6h
 ```
 
-> **HIPAA Note:** For a full audit trail of GCP API calls (DATA_READ, DATA_WRITE, ADMIN_READ events), set `enable_audit_logging = true` in your module configuration. This is required to meet HIPAA's audit control requirements and captures who accessed what patient-related GCP resources and when.
+---
+
+## Exercise 8 — Cloud Monitoring
+
+### Objective
+
+Review Cloud Run service metrics, inspect the uptime check, and view Redis session metrics
+in Cloud Monitoring.
+
+### Step 8.1 — View Cloud Run Metrics in the Console
+
+```bash
+echo "https://console.cloud.google.com/run/detail/${REGION}/${SERVICE}/metrics?project=${PROJECT}"
+```
+
+Review:
+- **Requests** — request count and latency (watch P99 during report generation)
+- **Container** — CPU and memory utilization
+- **Instances** — active instance count
+
+### Step 8.2 — Query Request Count
+
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"query\": \"fetch cloud_run_revision::run.googleapis.com/request_count | filter resource.service_name = '${SERVICE}' | within 1h | group_by [], sum(val())\"
+  }" | jq '.timeSeriesData[].pointData[-1].values'
+```
+
+**gcloud:**
+```bash
+gcloud monitoring metrics list \
+  --filter="metric.type=starts_with(\"run.googleapis.com\")" \
+  --project="${PROJECT}" \
+  --format="table(metric.type)" | grep -E "request|instance|cpu|memory"
+```
+
+### Step 8.3 — Review the Uptime Check
+
+**gcloud:**
+```bash
+gcloud monitoring uptime list-configs \
+  --project="${PROJECT}" \
+  --format="table(name, displayName, httpCheck.path, period)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.uptimeCheckConfigs[] | {name, displayName, httpCheck}'
+```
+
+**Expected result:** An uptime check polling `/` at 60-second intervals from multiple global
+probe locations, showing green (passing) status.
+
+### Step 8.4 — Query Request Latency
+
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"query\": \"fetch cloud_run_revision::run.googleapis.com/request_latencies | filter resource.service_name = '${SERVICE}' | within 1h | group_by [], percentile(val(), 99)\"
+  }" | jq '.timeSeriesData[].pointData[-1].values[0].distributionValue'
+```
+
+**Expected result:** P99 latency is higher during report generation or large patient chart loads
+compared to simple navigation requests.
+
+### Step 8.5 — Review Alert Policies
+
+**gcloud:**
+```bash
+gcloud alpha monitoring policies list \
+  --project="${PROJECT}" \
+  --filter="displayName~openemr" \
+  --format="table(name, displayName, enabled)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/alertPolicies" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.alertPolicies[] | {name, displayName, enabled}'
+```
+
+**Expected result:** Alert policies configured by the module for uptime check failures and
+high error rates.
 
 ---
 
-## Phase 10 — Explore Cloud Monitoring [MANUAL]
+## Cleanup
 
-Review service health metrics and Redis cache metrics in Cloud Monitoring.
+Return to the RAD UI and click **Undeploy** on the `OpenEMR_CloudRun` deployment. This removes
+the Cloud Run service and revisions, Cloud SQL instance, NFS server VM, GCS buckets, Secret
+Manager secrets, Serverless VPC Access connector, Cloud Scheduler jobs, and IAM bindings.
 
-**Step 1 — Access Cloud Run metrics:**
-1. Navigate to **Cloud Run** > **Services** in the Cloud Console.
-2. Click on the OpenEMR service.
-3. Review the built-in metrics tabs:
-   - **Requests** — request count and latency distribution
-   - **Container** — CPU and memory utilisation
-   - **Instances** — active instance count over time
+> **Note:** `enable_purge = true` (default) allows full deletion. For production healthcare
+> environments, consider setting `enable_purge = false` to protect against accidental deletion
+> of patient data.
 
-**Step 2 — Review OpenEMR Cloud Run metrics via Metrics Explorer:**
-1. Navigate to **Monitoring** > **Metrics Explorer**.
-2. Select resource type **Cloud Run Revision**.
-3. Plot the following metrics:
-   - `run.googleapis.com/request_count` — requests per second
-   - `run.googleapis.com/request_latencies` — response time percentiles (watch for P99 latency during large report generation)
-   - `run.googleapis.com/container/instance_count` — active instances
+### Manual Cleanup (if needed)
 
-**Step 3 — Review the uptime check:**
-1. Navigate to **Monitoring** > **Uptime checks**.
-2. Find the uptime check created by the module.
-3. Review the check configuration: path `/`, interval 60s, timeout 10s.
-4. Confirm the check shows green (service healthy) from multiple probe locations.
-
-**Step 4 — Review Redis session metrics (if Memorystore is used):**
-If Redis is backed by Cloud Memorystore rather than the NFS server, navigate to:
-1. **Monitoring** > **Metrics Explorer** > Resource type **Redis Instance**.
-2. Plot:
-   - `redis.googleapis.com/stats/connected_clients` — active PHP sessions
-   - `redis.googleapis.com/stats/memory/usage_ratio` — memory utilisation
-   - `redis.googleapis.com/stats/keyspace_hits` — session cache hit rate
-
-**Step 5 — Review alert policies:**
-1. Navigate to **Monitoring** > **Alerting**.
-2. Review any alert policies configured by the module.
-3. Note the notification channels (email addresses from `support_users`).
-
-**Step 6 — Query metrics via gcloud:**
+**gcloud:**
 ```bash
-# List uptime checks
-gcloud monitoring uptime list-configs --project=${PROJECT}
+# Delete Cloud Run service
+gcloud run services delete "${SERVICE}" \
+  --region="${REGION}" \
+  --project="${PROJECT}" \
+  --quiet
 
-# REST
-GET https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs
+# Delete secrets
+gcloud secrets list \
+  --project="${PROJECT}" \
+  --filter="name~openemr" \
+  --format="value(name)" \
+  | xargs -I{} gcloud secrets delete {} --project="${PROJECT}" --quiet
+
+# Delete Cloud SQL instance
+gcloud sql instances delete "${DB_INSTANCE}" \
+  --project="${PROJECT}" --quiet
+```
+
+**REST API — delete Cloud Run service:**
+```bash
+curl -s -X DELETE \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}" \
+  -H "Authorization: Bearer ${TOKEN}"
 ```
 
 ---
 
-## Phase 11 — Undeploy [AUTOMATED]
+## Reference
 
-When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+### Key Module Variables
 
-The module removes all resources in reverse dependency order: Cloud Run service and jobs, Cloud SQL instance, NFS server VM, GCS buckets, Secret Manager secrets, VPC connectors, Cloud Scheduler jobs, and IAM bindings.
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `project_id` | string | — | GCP project ID (required) |
+| `region` | string | `us-central1` | GCP region for all resources |
+| `application_version` | string | `7.0.4` | OpenEMR version tag |
+| `min_instance_count` | number | `1` | Minimum Cloud Run instances (1 avoids cold starts) |
+| `max_instance_count` | number | `1` | Maximum instances (1 until NFS multi-instance confirmed) |
+| `cpu_limit` | string | `2000m` | Container CPU limit (min 2 vCPU recommended) |
+| `memory_limit` | string | `4Gi` | Container memory limit (min 4Gi recommended) |
+| `db_name` | string | `openemr` | MySQL database name |
+| `db_user` | string | `openemr` | MySQL database user |
+| `database_password_length` | number | `32` | Auto-generated password length |
+| `enable_nfs` | bool | `true` | NFS for OpenEMR sites directory (required) |
+| `nfs_mount_path` | string | `/var/www/localhost/htdocs/openemr/sites` | NFS mount path |
+| `enable_redis` | bool | `true` | Redis for PHP session storage |
+| `redis_host` | string | `""` | Redis host (defaults to NFS server IP) |
+| `redis_port` | string | `6379` | Redis port |
+| `ingress_settings` | string | `all` | Traffic source: `all`, `internal`, `internal-and-cloud-load-balancing` |
+| `vpc_egress_setting` | string | `PRIVATE_RANGES_ONLY` | VPC egress for private NFS and DB |
+| `backup_schedule` | string | `0 2 * * *` | Cron schedule for daily backups |
+| `backup_retention_days` | number | `7` | Days to retain backup files in GCS |
+| `enable_audit_logging` | bool | `false` | Set `true` for HIPAA audit trail compliance |
 
-> Note: `enable_purge = true` (default) allows full deletion. If set to `false`, resources are retained after undeploy. For production healthcare environments, consider setting `enable_purge = false` to protect against accidental deletion of patient data.
+### Key Module Outputs
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+| Output | Description |
+|---|---|
+| `service_url` | HTTPS URL of the Cloud Run service |
+| `service_name` | Cloud Run service name |
+| `admin_password_secret_id` | Secret Manager secret name for admin password |
+| `database_password_secret` | Secret Manager secret name for DB password |
+| `database_instance_name` | Cloud SQL instance name |
+| `nfs_server_ip` | NFS server internal IP (sensitive) |
 
----
+### Useful Commands
 
-## Summary
+```bash
+# Get service URL
+gcloud run services describe ${SERVICE} \
+  --region="${REGION}" --project="${PROJECT}" \
+  --format="value(status.url)"
 
-| Phase | Type | Key Action |
-|---|---|---|
-| Phase 1 — Deploy | AUTOMATED | RAD UI deploys Cloud Run Gen 2, Cloud SQL MySQL, NFS, Redis, IAM, monitoring |
-| Phase 2 — Service URL | MANUAL | Retrieve and verify Cloud Run service URL, confirm startup probe |
-| Phase 3 — OpenEMR Setup | MANUAL | Log in with admin credentials from Secret Manager, review dashboard |
-| Phase 4 — Patient Management | MANUAL | Create patient, schedule appointment, document SOAP note encounter |
-| Phase 5 — Clinical Features | MANUAL | Write prescription, problem list, immunizations, medication management |
-| Phase 6 — Billing & Insurance | MANUAL | Fee sheet, eligibility check, billing claim generation |
-| Phase 7 — Patient Portal | MANUAL | Review portal settings, patient-facing access, HTTPS/security controls |
-| Phase 8 — Backup Configuration | MANUAL | Review Google Drive backup, verify Cloud Scheduler, trigger manual backup |
-| Phase 9 — Cloud Logging | MANUAL | View PHP/Apache logs, audit logs, database connection logs |
-| Phase 10 — Cloud Monitoring | MANUAL | Cloud Run metrics, uptime check, Redis session metrics |
-| Phase 11 — Undeploy | AUTOMATED | RAD UI removes all resources |
+# Get admin password
+gcloud secrets versions access latest \
+  --secret="${ADMIN_SECRET}" --project="${PROJECT}"
+
+# View live logs
+gcloud run services logs tail "${SERVICE}" \
+  --region="${REGION}" --project="${PROJECT}"
+
+# List Cloud Run jobs
+gcloud run jobs list \
+  --region="${REGION}" --project="${PROJECT}" \
+  --filter="name~openemr"
+
+# Trigger backup job manually
+gcloud run jobs execute <backup-job-name> \
+  --region="${REGION}" --project="${PROJECT}"
+
+# List Cloud SQL instances
+gcloud sql instances list --project="${PROJECT}" --filter="name~openemr"
+
+# List secrets
+gcloud secrets list --project="${PROJECT}" --filter="name~openemr"
+
+# Check uptime
+gcloud monitoring uptime list-configs --project="${PROJECT}"
+```
+
+### Further Reading
+
+- [OpenEMR documentation](https://www.open-emr.org/wiki/index.php/OpenEMR_Wiki_Home_Page)
+- [Cloud Run documentation](https://cloud.google.com/run/docs)
+- [Cloud SQL Auth Proxy on Cloud Run](https://cloud.google.com/sql/docs/mysql/connect-run)
+- [HIPAA on Google Cloud](https://cloud.google.com/security/compliance/hipaa)
+- [Secret Manager documentation](https://cloud.google.com/secret-manager/docs)
+- [Cloud Monitoring uptime checks](https://cloud.google.com/monitoring/uptime-checks)
