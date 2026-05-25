@@ -5,6 +5,13 @@ sidebar_label: "OpenClaw GKE"
 
 # OpenClaw GKE Module — Configuration Guide
 
+<YouTubeEmbed videoId="bdwW1VbvuBM" poster="https://storage.googleapis.com/rad-public-2b65/modules/OpenClaw_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/OpenClaw_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 OpenClaw is an open-source local AI agent that takes actions (not just generates responses), gaining rapid GitHub traction in late 2025. Its ecosystem of derivative startups generated approximately $400K/month in revenue within the first quarter of availability. Top use cases include contract review (legal teams report ~40% reduction in document review time), competitor monitoring, AI-powered content research, inbox triage, and DevOps security scanning. This module deploys OpenClaw on **GKE Autopilot** as a Kubernetes Deployment, backed by GCS Fuse CSI driver for durable agent workspace and Secret Manager for credential management, with per-tenant isolation for multi-tenant deployments.
 
 `OpenClaw_GKE` is a **wrapper module** built on top of `App_GKE`. It delegates all GCP infrastructure provisioning to App_GKE (GKE cluster, networking, GCS, Secret Manager, CI/CD) and adds OpenClaw-specific application configuration on top via the `OpenClaw_Common` sub-module.

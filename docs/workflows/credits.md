@@ -5,6 +5,9 @@ sidebar_label: "Credit Management"
 
 # Credit Management
 
+<YouTubeEmbed videoId="KcVygBU4tfc" />
+
+
 The credit system controls access to paid module deployments. This page explains how credits are allocated, consumed, and managed — including subscription options, multi-currency payments, and automatic billing controls.
 
 ---

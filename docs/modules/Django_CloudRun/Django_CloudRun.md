@@ -5,6 +5,13 @@ sidebar_label: "Django CloudRun"
 
 # Django on Google Cloud Run
 
+<YouTubeEmbed videoId="cayP_zxYRbg" poster="https://storage.googleapis.com/rad-public-2b65/modules/Django_CloudRun.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Django_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 This document provides a comprehensive reference for the `modules/Django_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Django-specific behaviours, and operational patterns for deploying Django on Google Cloud Run (v2).
 
 ---

@@ -5,6 +5,13 @@ sidebar_label: "Flowise GKE"
 
 # Flowise GKE Module — Configuration Guide
 
+<YouTubeEmbed videoId="O0ZdeBnpuKA" poster="https://storage.googleapis.com/rad-public-2b65/modules/Flowise_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Flowise_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 Flowise is an open-source visual AI workflow builder that lets non-developers construct LangChain and LlamaIndex pipelines through a drag-and-drop interface — now backed by Workday for enterprise deployments. It chains models, retrieval tools, prompt templates, and decision logic without boilerplate code, making it the primary entry point for visual AI development at a time when 76% of developers are using or planning to use AI tools. It is ideal for rapidly prototyping chatbots, RAG systems, and multi-agent pipelines. This module deploys Flowise on **GKE Autopilot** with a managed Cloud SQL PostgreSQL database, GCS-backed file storage, and optional NFS for shared volumes.
 
 `Flowise_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS, secrets, CI/CD) and a `Flowise_Common` sub-module to supply Flowise-specific application configuration, secret generation, and storage bucket definitions.

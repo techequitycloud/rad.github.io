@@ -5,6 +5,13 @@ sidebar_label: "Wordpress GKE"
 
 # Wordpress GKE Module — Configuration Guide
 
+<YouTubeEmbed videoId="D53ep0Eb6IU" poster="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/WordPress_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 This guide describes the configuration variables that are **unique to the `Wordpress_GKE` module**. Because `Wordpress_GKE` is a wrapper around `App_GKE`, the vast majority of its variables are passed directly to that base module and are fully documented in the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). This guide explains the WordPress-specific additions, the differences in default values, and what the `Wordpress_Common` sub-module provisions automatically. WordPress is the world's most widely-deployed CMS, powering 43.5% of all websites and holding 62.8% of the CMS market — approximately 480–590 million sites globally. WooCommerce controls 36% of all online stores with roughly $35B in GMV in 2025, and an ecosystem of 60,000+ plugins makes WordPress the default choice for marketing sites, news publishers, e-commerce, and membership platforms at any scale.
 
 > **Where to look:** If a variable you are configuring is not described here, consult the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). All `App_GKE` features — GKE cluster selection, session affinity, network policies, Cloud Armor, IAP, CI/CD, Cloud Deploy, Binary Authorization, StatefulSets, resource quotas, and VPC Service Controls — are available in `Wordpress_GKE` with identical behaviour and configuration.

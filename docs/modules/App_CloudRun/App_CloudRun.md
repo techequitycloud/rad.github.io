@@ -5,6 +5,13 @@ sidebar_label: "App CloudRun"
 
 # App CloudRun Module — Configuration Guide
 
+<YouTubeEmbed videoId="fiwpG-QdwXU" poster="https://storage.googleapis.com/rad-public-2b65/modules/App_CloudRun.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/App_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 This guide describes every configuration variable available in the `App_CloudRun` module, organized into functional groups. For each variable it explains the available options, the implications of each choice, and how to validate the resulting configuration in the Google Cloud Console or using the `gcloud` CLI.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.

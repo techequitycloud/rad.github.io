@@ -1,11 +1,6 @@
 # Partner Workflow
 
-<img src="https://storage.googleapis.com/rad-public-2b65/workflows/partner_workflow.png" alt="Partner Workflow" style={{marginBottom: '20px'}} />
-
-<video width="100%" controls style={{marginTop: '20px'}}>
-  <source src="https://storage.googleapis.com/rad-public-2b65/workflows/partner_workflow.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="BpX2epB2E0A" poster="https://storage.googleapis.com/rad-public-2b65/workflows/partner_workflow.png" />
 
 ## 1. Introduction
 This tutorial is for Partners. You will learn how to connect your own Git repository, publish private modules, deploy and test them, retrieve deployment outputs, and use the Jules AI assistant to refine your modules.

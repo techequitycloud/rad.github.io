@@ -5,6 +5,13 @@ sidebar_label: "Istio GKE"
 
 # Istio GKE Module
 
+<YouTubeEmbed videoId="xBcB4IG23uY" poster="https://storage.googleapis.com/rad-public-2b65/modules/Istio_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Istio_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 ## Overview
 
 The Istio GKE module provisions a complete Google Kubernetes Engine (GKE) Standard cluster and installs the **open-source Istio service mesh** onto it. Unlike Google Cloud Service Mesh (which is Google's managed, commercially supported Istio distribution), this module works directly with upstream Istio — the same project maintained by the Cloud Native Computing Foundation (CNCF) — giving platform engineers hands-on experience with the technology in its original, unmodified form.

@@ -3,14 +3,7 @@ title: User Features
 slug: /features/users
 ---
 
-<img src="https://storage.googleapis.com/rad-public-2b65/features/user_features.png" alt="User Features Infographic" />
-
-<br/>
-
-<video controls width="100%">
-  <source src="https://storage.googleapis.com/rad-public-2b65/features/user_features.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="MFWoEOnCcSs" poster="https://storage.googleapis.com/rad-public-2b65/features/user_features.png" />
 
 <br/>
 

@@ -5,6 +5,13 @@ sidebar_label: "RAGFlow GKE"
 
 # RAGFlow GKE Module — Configuration Guide
 
+<YouTubeEmbed videoId="_nyxsxS_XCU" poster="https://storage.googleapis.com/rad-public-2b65/modules/RAGFlow_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/RAGFlow_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG)
 platform with 80,000+ GitHub stars and 2,596% year-over-year contributor growth — named one of
 GitHub's fastest-growing open-source projects (Apache 2.0). Unlike generic RAG frameworks,

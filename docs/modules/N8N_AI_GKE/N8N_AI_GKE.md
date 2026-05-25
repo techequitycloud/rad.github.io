@@ -5,6 +5,13 @@ sidebar_label: "N8N AI GKE"
 
 # N8N AI GKE Module — Configuration Guide
 
+<YouTubeEmbed videoId="DSUTweOEKBo" poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_AI_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/N8N_AI_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), trusted by a quarter of the Fortune 500. `N8N_AI_GKE` is the AI-augmented variant — pre-configured with native LLM nodes, agent loops, and vector store integrations so teams can build production AI automation pipelines without boilerplate. AI-specific template usage is the fastest-growing segment within the N8N community. This module deploys n8n on **GKE Autopilot** alongside two companion AI services: **Qdrant** (vector database for RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis workflows without external AI API dependencies.
 
 `N8N_AI_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS, secrets, CI/CD) and adds n8n-specific application configuration and AI component orchestration on top.

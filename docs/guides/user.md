@@ -1,11 +1,6 @@
 # User Guide
 
-<img src="https://storage.googleapis.com/rad-public-2b65/guides/user_guide.png" alt="User Guide" style={{marginBottom: '20px'}} />
-
-<video width="100%" controls style={{marginTop: '20px'}}>
-  <source src="https://storage.googleapis.com/rad-public-2b65/guides/user_guide.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="9_SMSMTrcsY" poster="https://storage.googleapis.com/rad-public-2b65/guides/user_guide.png" />
 
 ## 1. Introduction
 
