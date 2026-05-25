@@ -1,10 +1,10 @@
 # Bank of Anthos on GKE — Lab Guide
 
-📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Bank_GKE)**
+📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Bank GKE)**
 
 This lab guide walks you through deploying, exploring, and operating the **Bank of Anthos**
 reference application on Google Kubernetes Engine with **Cloud Service Mesh (CSM)** using the
-**Bank_GKE** module. You will explore a production-grade microservices architecture representing
+**Bank GKE** module. You will explore a production-grade microservices architecture representing
 a PCI-DSS-relevant financial services workload, including service mesh security, traffic
 management, observability, and GitOps-driven configuration management.
 

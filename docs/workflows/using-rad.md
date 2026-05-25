@@ -11,6 +11,10 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
   Your browser does not support the video tag.
 </video>
 
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.pdf" target="_blank" rel="noopener noreferrer">Download Workflow PDF</a>
+
 ## 1. Introduction
 
 This guide covers the full deployment lifecycle on the Rapid Application Deployment (RAD) platform — from browsing and deploying a module for the first time, to monitoring progress, fixing failures, updating or removing deployments, and managing your credit balance.
