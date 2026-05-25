@@ -21,7 +21,7 @@ Storage-cost creep is automated away:
 
 ### 2. Cost-allocation labels (canonical)
 
-The `app<name><tenant><id>` naming convention (canonical in [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md)) flows into Cloud Billing, enabling per-tenant chargeback via simple BigQuery views over the billing export.
+The `app<name><tenant><id>` naming convention (canonical in [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md)) flows into Cloud Billing, enabling per-tenant chargeback via simple BigQuery views over the billing export.
 
 `modules/Services_GCP/gke_metering.tf` documents the recommended Autopilot cost-visibility path: Cloud Billing export to BigQuery + GKE cost-allocation labels + Monitoring dashboards (the legacy resource-usage export API is not available on Autopilot).
 
@@ -34,7 +34,7 @@ Every expensive shared resource is tier-configurable via Platform-module variabl
 - Filestore NFS (`BASIC_HDD` / `BASIC_SSD` / `ZONAL`); `enable_nfs = false` to skip entirely
 - Cloud Run resources (`cpu_limit`, `memory_limit`)
 
-Full tier list and module locations: [capabilities/data_and_databases.md](../capabilities/data_and_databases.md).
+Full tier list and module locations: [capabilities/data-and-databases.md](../capabilities/data-and-databases.md).
 
 ### 4. Cost vs performance trade-offs (canonical)
 
@@ -90,8 +90,8 @@ Lifecycle scripts handle known cleanup paths; broader orphan detection catches w
 ## Cross-references
 
 - [capabilities/serverless.md](../capabilities/serverless.md) — scale-to-zero, VPA, per-second billing (the runtime mechanics enabling these savings)
-- [capabilities/data_and_databases.md](../capabilities/data_and_databases.md) — tier-configurable backing services
-- [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) — `app<name><tenant><id>` naming and per-tenant chargeback
+- [capabilities/data-and-databases.md](../capabilities/data-and-databases.md) — tier-configurable backing services
+- [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) — `app<name><tenant><id>` naming and per-tenant chargeback
 - [capabilities/networking.md](../capabilities/networking.md) — CDN configuration
 - [practices/sre.md](sre.md) — revision pruning as toil reduction (operational lens)
 - [practices/cicd.md](cicd.md) — pipeline notifications (shared Pub/Sub channel for budget alerts)

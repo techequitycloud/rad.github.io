@@ -5,7 +5,7 @@ title: GitOps & IaC
 
 # GitOps & Infrastructure as Code (IaC)
 
-> **Scope.** Canonical home for the IaC engine and GitOps mechanics: OpenTofu, per-deployment state, drift detection, idempotent re-apply, and rollback via Git. The pipeline that runs `tofu apply` is in [practices/cicd.md](cicd.md); the four-tier module pattern is in [practices/platform_engineering.md](platform_engineering.md).
+> **Scope.** Canonical home for the IaC engine and GitOps mechanics: OpenTofu, per-deployment state, drift detection, idempotent re-apply, and rollback via Git. The pipeline that runs `tofu apply` is in [practices/cicd.md](cicd.md); the four-tier module pattern is in [practices/idp.md](idp.md).
 
 > **Last reviewed:** 2026-05-04
 
@@ -43,7 +43,7 @@ GitHub PAT and similar high-value secrets must never be serialised into `terrafo
 ### 6. Push-button rollback
 
 - **Git revert + pipeline run** — infrastructure converges back to the prior state.
-- **Application-level rollback** — `gcloud run services update-traffic --to-revisions=...` and `kubectl rollout undo`. See [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md).
+- **Application-level rollback** — `gcloud run services update-traffic --to-revisions=...` and `kubectl rollout undo`. See [capabilities/disaster-recovery.md](../capabilities/disaster-recovery.md).
 
 ### 7. Module versioning strategy
 
@@ -51,7 +51,7 @@ All modules use local relative paths (`source = "../App_CloudRun"`) within a sin
 
 - **Git tags as version markers** — stable releases are tagged `vMAJOR.MINOR.PATCH` on `main`. Application teams consuming modules from a separate repository can pin to a tag: `source = "git::https://github.com/org/partner-modules.git//modules/App_CloudRun?ref=v1.2.0"`.
 - **CHANGELOG.md** — maintained at the repo root; every tag entry notes breaking changes, new variables, and deprecated variables with migration instructions.
-- **Semver contract** — PATCH: bug fixes, no variable changes. MINOR: new optional variables (backward-compatible). MAJOR: removed or renamed variables, output schema changes. Foundation-tier MAJOR bumps require propagation to all Application Modules (see [practices/platform_engineering.md](platform_engineering.md) §6 for the deprecation policy).
+- **Semver contract** — PATCH: bug fixes, no variable changes. MINOR: new optional variables (backward-compatible). MAJOR: removed or renamed variables, output schema changes. Foundation-tier MAJOR bumps require propagation to all Application Modules (see [practices/idp.md](idp.md) §6 for the deprecation policy).
 
 ### 8. Provider version pinning
 
@@ -87,8 +87,8 @@ Changes that add or remove variables in Foundation or Platform tiers trigger the
 
 ## Cross-references
 
-- [practices/platform_engineering.md](platform_engineering.md) — four-tier module pattern (the structural side of "infrastructure as code")
+- [practices/idp.md](idp.md) — four-tier module pattern (the structural side of "infrastructure as code")
 - [practices/cicd.md](cicd.md) — the pipeline that runs `tofu apply`, validation gates, integration tests
 - [practices/devsecops.md](devsecops.md) — secret-out-of-state mechanics
-- [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md) — IaC reproducibility as a DR property
-- [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) — per-deployment state isolation as a multi-tenancy primitive
+- [capabilities/disaster-recovery.md](../capabilities/disaster-recovery.md) — IaC reproducibility as a DR property
+- [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) — per-deployment state isolation as a multi-tenancy primitive

@@ -1,6 +1,6 @@
 # Enhanced Developer Productivity
 
-> **Scope.** Canonical home for the developer-facing surface — the application catalogue, scaffolding, the UIMeta-driven configuration UI, and the quantified business case for self-service infrastructure. The architectural intent of the IDP is in [practices/platform_engineering.md](../practices/platform_engineering.md); the agent-driven enablement is in [outcomes/education_enablement.md](education_enablement.md).
+> **Scope.** Canonical home for the developer-facing surface — the application catalogue, scaffolding, the UIMeta-driven configuration UI, and the quantified business case for self-service infrastructure. The architectural intent of the IDP is in [practices/idp.md](../practices/idp.md); the agent-driven enablement is in [outcomes/skills-development.md](skills-development.md).
 
 ## What this repo uniquely brings to developer productivity
 
@@ -30,7 +30,7 @@ A developer who needs Django on GCP doesn't write Terraform — they apply `modu
 
 ### 3. UI-driven configuration (canonical)
 
-`UIMeta` tags on every Application Module variable (`{{UIMeta group=N order=M}}`) drive a generated configuration UI. Variables auto-organise into groups (0–22 for Cloud Run, 0–21 for GKE) with deterministic ordering. Tooling: `update_uimeta.py`, `VARIABLE_GROUPING_RECOMMENDATIONS.md`, `.agent/VARIABLE_GROUPING_UPDATE.md`. Convention details canonical in [practices/platform_engineering.md](../practices/platform_engineering.md) §3.
+`UIMeta` tags on every Application Module variable (`{{UIMeta group=N order=M}}`) drive a generated configuration UI. Variables auto-organise into groups (0–22 for Cloud Run, 0–21 for GKE) with deterministic ordering. Tooling: `update_uimeta.py`, `VARIABLE_GROUPING_RECOMMENDATIONS.md`, `.agent/VARIABLE_GROUPING_UPDATE.md`. Convention details canonical in [practices/idp.md](../practices/idp.md) §3.
 
 ### 4. Quantified productivity gains (canonical)
 
@@ -46,7 +46,7 @@ Full quantification: `BUSINESS_CASE.md`, `IAC_AUTOMATION_BUSINESS_CASE.md`. Cost
 
 ### 5. Convention-over-configuration
 
-Every Application Module follows the same shape (5–6 files, mirrored variables, standard wiring) so a developer who learns one learns them all. Convention details in [practices/platform_engineering.md](../practices/platform_engineering.md) §3.
+Every Application Module follows the same shape (5–6 files, mirrored variables, standard wiring) so a developer who learns one learns them all. Convention details in [practices/idp.md](../practices/idp.md) §3.
 
 ### 6. Single-flag opinionated defaults
 
@@ -60,9 +60,9 @@ The Foundation Modules pre-integrate everything an app needs — `enable_iap = t
 
 ## Cross-references
 
-- [practices/platform_engineering.md](../practices/platform_engineering.md) — IDP architecture, conventions, golden paths (the engineering view of self-service)
-- [outcomes/education_enablement.md](education_enablement.md) — agent workflows, skill guides, certification material (the learning view)
+- [practices/idp.md](../practices/idp.md) — IDP architecture, conventions, golden paths (the engineering view of self-service)
+- [outcomes/skills-development.md](skills-development.md) — agent workflows, skill guides, certification material (the learning view)
 - [practices/cicd.md](../practices/cicd.md) — pipeline that delivers the developer experience
 - [capabilities/ai.md](../capabilities/ai.md) — AI subset of the catalogue
-- [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) — catalogue as marketplace surface
-- [outcomes/modernisation.md](modernisation.md) — catalogue as modernisation target
+- [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) — catalogue as marketplace surface
+- [outcomes/modernization.md](modernization.md) — catalogue as modernisation target

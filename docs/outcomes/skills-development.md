@@ -1,6 +1,6 @@
 # Education & Enablement
 
-> **Scope.** Canonical home for the learning material in this repo — Google Cloud certification tracks, lab walkthroughs, deep-dive analyses, role-based workflow docs, and structured agent skill guides. The architecture they teach is canonical in [practices/platform_engineering.md](../practices/platform_engineering.md); the developer-facing self-service surface is in [outcomes/developer_productivity.md](developer_productivity.md).
+> **Scope.** Canonical home for the learning material in this repo — Google Cloud certification tracks, lab walkthroughs, deep-dive analyses, role-based workflow docs, and structured agent skill guides. The architecture they teach is canonical in [practices/idp.md](../practices/idp.md); the developer-facing self-service surface is in [outcomes/developer-productivity.md](developer-productivity.md).
 
 ## What this repo uniquely brings to education & enablement
 
@@ -20,7 +20,7 @@ These tie certification curriculum directly to working code in this repo — lea
 
 ### 2. Hands-on lab guide (canonical)
 
-`modules/VMware_Engine/LAB_GUIDE.md` — a 2–3 hour walkthrough that documents what Terraform automates vs what the learner does manually, with timing estimates and prerequisites. A model for IaC-paired hands-on labs. Modernisation context in [outcomes/modernisation.md](modernisation.md).
+`modules/VMware_Engine/LAB_GUIDE.md` — a 2–3 hour walkthrough that documents what Terraform automates vs what the learner does manually, with timing estimates and prerequisites. A model for IaC-paired hands-on labs. Modernisation context in [outcomes/modernization.md](modernization.md).
 
 ### 3. Deep-dive architecture analyses
 
@@ -37,7 +37,7 @@ For learners (or AI assistants) who need *why*, not just *what*:
 
 ### 4. Role-based workflow documentation (canonical)
 
-`docs/workflows/` — `getting-started.md`, `admin.md`, `partner.md`, `support.md`, `finance.md`, `user.md`, `agent.md`. Multi-tenancy / segregation-of-duties context in [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) and [outcomes/compliance_governance.md](compliance_governance.md).
+`docs/workflows/` — `getting-started.md`, `admin.md`, `partner.md`, `support.md`, `finance.md`, `user.md`, `agent.md`. Multi-tenancy / segregation-of-duties context in [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) and [outcomes/compliance-governance.md](compliance-governance.md).
 
 ### 5. Agent-native enablement (canonical)
 
@@ -60,11 +60,11 @@ These are equally useful for human developers onboarding the codebase.
 
 ### 7. Reference implementations (cross-ref)
 
-`modules/Sample_CloudRun`, `modules/Sample_GKE`, `examples/bank-of-anthos-multi-cluster/` — see [outcomes/developer_productivity.md](developer_productivity.md) and [capabilities/networking.md](../capabilities/networking.md).
+`modules/Sample_CloudRun`, `modules/Sample_GKE`, `examples/bank-of-anthos-multi-cluster/` — see [outcomes/developer-productivity.md](developer-productivity.md) and [capabilities/networking.md](../capabilities/networking.md).
 
 ### 8. Business / partner enablement materials
 
-- `BUSINESS_CASE.md`, `IAC_AUTOMATION_BUSINESS_CASE.md` — quantified ROI (cross-ref to [outcomes/developer_productivity.md](developer_productivity.md) §4 for the headline numbers).
+- `BUSINESS_CASE.md`, `IAC_AUTOMATION_BUSINESS_CASE.md` — quantified ROI (cross-ref to [outcomes/developer-productivity.md](developer-productivity.md) §4 for the headline numbers).
 - `ITEMIZED_PROPOSAL.md`, `PROPOSAL_DRAFT.md` — partner-facing proposal templates.
 - `articles/cyclos-business-overview.md`, `cyclos-technical-deep-dive.md` — published case study.
 
@@ -74,7 +74,7 @@ These are equally useful for human developers onboarding the codebase.
 |---|---|---|
 | Certification preparation | Separate training purchase; abstract study against documentation | Five certification tracks tied directly to running infrastructure; hands-on exploration in the RAD UI |
 | Developer onboarding | Days reading unstructured docs and tribal knowledge | Layered agent skill guides, worked examples, and reference modules; new contributor productive within hours |
-| Application setup time | 3–5 days manual provisioning | &lt;2 hours via self-service scaffold — see [outcomes/developer_productivity.md](developer_productivity.md) §4 |
+| Application setup time | 3–5 days manual provisioning | &lt;2 hours via self-service scaffold — see [outcomes/developer-productivity.md](developer-productivity.md) §4 |
 | Security knowledge transfer | Ad-hoc; depends on individual expertise | `/security` audit workflow encodes 30+ control checkpoints as executable documentation |
 
 ### 10. Troubleshooting as enablement (cross-ref)
@@ -83,9 +83,9 @@ These are equally useful for human developers onboarding the codebase.
 
 ## Cross-references
 
-- [practices/platform_engineering.md](../practices/platform_engineering.md) — architecture being taught
-- [outcomes/developer_productivity.md](developer_productivity.md) — self-service surface; quantified ROI (§4)
-- [outcomes/modernisation.md](modernisation.md) — VMware Engine lab context (§1)
-- [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) — persona docs as segregation evidence (§9)
-- [outcomes/compliance_governance.md](compliance_governance.md) — `/security` workflow and audit framing (§4, §6)
+- [practices/idp.md](../practices/idp.md) — architecture being taught
+- [outcomes/developer-productivity.md](developer-productivity.md) — self-service surface; quantified ROI (§4)
+- [outcomes/modernization.md](modernization.md) — VMware Engine lab context (§1)
+- [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) — persona docs as segregation evidence (§9)
+- [outcomes/compliance-governance.md](compliance-governance.md) — `/security` workflow and audit framing (§4, §6)
 - [practices/sre.md](../practices/sre.md) — `/troubleshoot` as enablement (§3)

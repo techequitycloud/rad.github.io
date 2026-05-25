@@ -84,6 +84,6 @@ review — prefer a revert PR through the standard GitOps pipeline.
 - [CI/CD](../practices/cicd.md) — pipeline configuration and health check
   parameters.
 - [SRE](../practices/sre.md) — health endpoints and resilience patterns.
-- [GitOps & IaC](../practices/gitops_iac.md) — Terraform state management.
-- [Disaster Recovery](../capabilities/disaster_recovery.md) — snapshot and
+- [GitOps & IaC](../practices/gitops-iac.md) — Terraform state management.
+- [Disaster Recovery](../capabilities/disaster-recovery.md) — snapshot and
   restore for data-layer recovery.

@@ -28,7 +28,7 @@ Full implementation in [practices/finops.md](../practices/finops.md) §1.
 
 The `app<name><tenant><id>` resource-naming convention flows directly into Cloud Billing labels, enabling per-tenant chargeback reports via simple BigQuery views over the billing export — no manual tagging required. `modules/Services_GCP/gke_metering.tf` adds GKE pod-level cost visibility on Autopilot clusters.
 
-Canonical in [practices/finops.md](../practices/finops.md) §2 and [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) §1.
+Canonical in [practices/finops.md](../practices/finops.md) §2 and [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) §1.
 
 ### 5. Tier-configurable shared services
 
@@ -41,7 +41,7 @@ Every expensive shared resource exposes cost/performance trade-off variables:
 | Filestore NFS | `BASIC_HDD` / `BASIC_SSD` / `ZONAL`; `enable_nfs = false` to skip entirely |
 | Cloud Run | `cpu_limit`, `memory_limit`, `min_instance_count`, `max_instance_count`, concurrency |
 
-Full tier reference in [capabilities/data_and_databases.md](../capabilities/data_and_databases.md).
+Full tier reference in [capabilities/data-and-databases.md](../capabilities/data-and-databases.md).
 
 ### 6. Cost vs performance profiles
 
@@ -70,7 +70,7 @@ Per `BUSINESS_CASE.md` §3.C and `IAC_AUTOMATION_BUSINESS_CASE.md`:
 
 - [practices/finops.md](../practices/finops.md) — implementation mechanics (scale-to-zero, lifecycle policies, cost-allocation labels, tier trade-offs)
 - [capabilities/serverless.md](../capabilities/serverless.md) — Cloud Run / GKE Autopilot per-second billing mechanics (§1–3)
-- [capabilities/data_and_databases.md](../capabilities/data_and_databases.md) — tier-configurable backing services
+- [capabilities/data-and-databases.md](../capabilities/data-and-databases.md) — tier-configurable backing services
 - [capabilities/networking.md](../capabilities/networking.md) — CDN configuration and cost offload
-- [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) — per-tenant chargeback via resource naming (§1)
-- [outcomes/developer_productivity.md](developer_productivity.md) — quantified provisioning and maintenance savings (§4)
+- [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) — per-tenant chargeback via resource naming (§1)
+- [outcomes/developer-productivity.md](developer-productivity.md) — quantified provisioning and maintenance savings (§4)
