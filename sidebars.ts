@@ -618,6 +618,13 @@ const sidebars: SidebarsConfig = {
                 { type: 'doc', id: 'labs/Wordpress_GKE/Wordpress_GKE', label: 'GKE' },
               ],
             },
+            {
+              type: 'category',
+              label: 'Foundation',
+              items: [
+                { type: 'doc', id: 'labs/Services_GCP/Services_GCP', label: 'Services' },
+              ],
+            },
           ],
         },
       ],
