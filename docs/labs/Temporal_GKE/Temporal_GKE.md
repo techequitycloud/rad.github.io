@@ -2,566 +2,958 @@
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Temporal_GKE)**
 
-## Overview
-
-**Estimated time:** 2–3 hours
-
-This lab deploys Temporal, a durable workflow orchestration platform, as a self-hosted service on GKE Autopilot. Temporal provides workflow execution with automatic retries, timers, signals, and queries — backed by PostgreSQL for durable workflow history storage.
-
-### What the Module Automates
-
-- Creates a PostgreSQL database user and two databases (primary persistence and visibility) inside the Services_GCP Cloud SQL instance
-- Stores the database password in Secret Manager
-- Creates a Kubernetes namespace for Temporal
-- Deploys the `temporalio/auto-setup` all-in-one container running all four Temporal services (Frontend, History, Matching, Worker) in a single pod
-- Runs a `temporal-db-init` Kubernetes Job to create the PostgreSQL role with `CREATEDB` privilege before the server pod starts
-- Deploys the Temporal Web UI (`ubuntu/temporal-ui`) as a separate pod with an external LoadBalancer on port 8081
-- Configures Workload Identity for the Temporal service account
-- Enables Cloud Logging and Cloud Monitoring for all pods
-
-### What You Do Manually
-
-- Note the deployment outputs (namespace, frontend address, etc.) from the RAD UI deployment panel
-- Obtain GKE cluster credentials with `gcloud`
-- Verify all Temporal pods are running
-- Access the Web UI via its external LoadBalancer IP on port 8081
-- Execute a sample workflow using the Temporal CLI inside the main Temporal pod
-- Manage Temporal namespaces using operator commands
-- Explore workflow event history
-- Review structured logs in Cloud Logging
-- Inspect workflow metrics in Cloud Monitoring
+This lab guide walks you through deploying, exploring, and operating **Temporal** on Google
+Kubernetes Engine Autopilot using the **Temporal_GKE** module. You will explore a durable
+workflow orchestration platform backed by Cloud SQL PostgreSQL, with the Temporal Web UI,
+CLI-driven workflow execution, and full observability via Cloud Logging and Monitoring.
 
 ---
 
-## CLI and REST API Overview
+## Table of Contents
 
-Most interactions with Temporal use `kubectl` to reach the cluster and the `temporal` CLI (available inside the main Temporal pod). GCP-level management uses `gcloud`.
+1. [Overview](#1-overview)
+2. [Architecture](#2-architecture)
+3. [Prerequisites](#3-prerequisites)
+4. [Lab Setup](#4-lab-setup)
+5. [Exercise 1 — Access Temporal Web UI](#exercise-1--access-temporal-web-ui)
+6. [Exercise 2 — Explore Namespaces and Workflows](#exercise-2--explore-namespaces-and-workflows)
+7. [Exercise 3 — Run a Sample Workflow](#exercise-3--run-a-sample-workflow)
+8. [Exercise 4 — Workflow History and Visibility](#exercise-4--workflow-history-and-visibility)
+9. [Exercise 5 — Workers and Task Queues](#exercise-5--workers-and-task-queues)
+10. [Exercise 6 — Cluster Components](#exercise-6--cluster-components)
+11. [Exercise 7 — Database Persistence](#exercise-7--database-persistence)
+12. [Exercise 8 — Cloud Logging and Monitoring](#exercise-8--cloud-logging-and-monitoring)
+13. [Cleanup](#cleanup)
+14. [Reference](#reference)
 
-```bash
-# Kubernetes
-kubectl get pods -n <namespace>
-kubectl exec -it <pod-name> -n <namespace> -- bash
-kubectl get svc -n <namespace>
+---
 
-# Temporal CLI (inside main Temporal pod)
-temporal workflow list --namespace default
-temporal operator namespace list
+## 1. Overview
 
-# GCP
-gcloud container clusters get-credentials <cluster> --region <region> --project <project>
-gcloud logging read 'resource.type="k8s_container"' --project <project>
+### What Is Temporal?
+
+Temporal is an open-source **durable execution platform** for reliable distributed workflows.
+It provides workflow execution with automatic retries, timers, signals, and queries — backed
+by PostgreSQL for durable workflow history storage. If a worker crashes mid-workflow, Temporal
+replays the event history to restore workflow state on any available worker, guaranteeing
+exactly-once semantics. The `Temporal_GKE` module deploys **version 1.25.0** (`temporalio/auto-setup`)
+on GKE Autopilot with the Temporal Web UI (`temporal-ui`).
+
+### Key Capabilities Demonstrated
+
+| Capability | What It Demonstrates |
+|---|---|
+| **Durable Execution** | Workflow state persisted in PostgreSQL — survives pod restarts |
+| **Event History** | Immutable event log of every workflow state transition |
+| **Temporal CLI** | `temporal workflow start/list/describe/show/signal` |
+| **Namespace Isolation** | Multiple namespaces for application or environment separation |
+| **Web UI** | Visual workflow management, task queue inspection, search |
+| **Task Queues** | Worker registration and task dispatch |
+| **Kubernetes Integration** | GKE Autopilot, Workload Identity, Cloud SQL Auth Proxy |
+| **Observability** | Structured JSON logs in Cloud Logging, pod metrics in Cloud Monitoring |
+
+---
+
+## 2. Architecture
+
+```
+Browser / Client
+       │
+       ▼ HTTP port 8081 (LoadBalancer)
+┌──────────────────────────────────────────────────────────────────┐
+│  GKE Autopilot Cluster                                            │
+│                                                                   │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │  Namespace: apptemporal<tenant><deploymentid>              │  │
+│  │                                                            │  │
+│  │  ┌──────────────────────────────────────────────────────┐  │  │
+│  │  │  Pod: temporal-<hash>  (READY 2/2)                    │  │  │
+│  │  │  Container: temporalio/auto-setup:1.25.0              │  │  │
+│  │  │  ├── Frontend service  (gRPC port 7233)               │  │  │
+│  │  │  ├── History service   (workflow state)               │  │  │
+│  │  │  ├── Matching service  (task queue dispatch)          │  │  │
+│  │  │  └── Worker service    (workflow/activity workers)    │  │  │
+│  │  │  Sidecar: cloud-sql-proxy (Unix socket /cloudsql)     │  │  │
+│  │  └──────────────────────────────────────────────────────┘  │  │
+│  │                                                            │  │
+│  │  ┌──────────────────────────────────────────────────────┐  │  │
+│  │  │  Pod: temporal-ui-<hash>  (READY 1/1)                 │  │  │
+│  │  │  Container: ubuntu/temporal-ui                        │  │  │
+│  │  │  Port: 8080 → LoadBalancer port 8081                  │  │  │
+│  │  └──────────────────────────────────────────────────────┘  │  │
+│  │                                                            │  │
+│  │  Services:                                                 │  │
+│  │  ├── temporal (ClusterIP port 7233 — gRPC frontend)       │  │
+│  │  └── temporal-ui (LoadBalancer port 8081)                 │  │
+│  └────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────┘
+       │ Cloud SQL Auth Proxy
+       ▼
+Cloud SQL PostgreSQL → temporal (persistence) + temporal_vis (visibility)
+```
+
+Module variable wiring:
+
+```
+  Temporal_GKE
+    application_name    = "temporal"         →  Kubernetes resource names
+    application_version = "1.25.0"           →  temporalio/auto-setup tag
+    num_history_shards  = 4                  →  CANNOT change after deploy
+    service_type        = "ClusterIP"        →  gRPC frontend (cluster-internal)
+    enable_elasticsearch = false             →  basic visibility mode
 ```
 
 ---
 
-## Prerequisites
+## 3. Prerequisites
 
-- Services_GCP deployed in the same GCP project (provides the VPC, GKE Autopilot cluster, and Cloud SQL PostgreSQL instance)
-- `gcloud` CLI installed and authenticated (`gcloud auth login`)
-- `kubectl` installed
-- GCP project ID
-- Access to the RAD UI with permission to deploy modules in the target GCP project
+### Required Tools
+
+| Tool | Minimum Version | Install |
+|---|---|---|
+| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
+| `kubectl` | 1.29+ | `gcloud components install kubectl` |
+| `curl` / `jq` | Any | System package manager |
+
+### GCP Permissions
+
+```
+roles/owner                    # or the following fine-grained set:
+roles/container.admin
+roles/cloudsql.admin
+roles/secretmanager.admin
+roles/iam.serviceAccountAdmin
+roles/monitoring.admin
+roles/logging.admin
+```
+
+### Environment Variables
+
+```bash
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
+export TOKEN=$(gcloud auth print-access-token)
+
+gcloud config set project "${PROJECT}"
+gcloud config set compute/region "${REGION}"
+```
 
 ---
 
-## Phase 1 — Deploy [AUTOMATED]
+## 4. Lab Setup
 
-### Variables
+### 4.1 Deploy via RAD UI
 
-In the RAD UI, open the Temporal_GKE module and fill in the deployment form:
+Deploy the `Temporal_GKE` module via the RAD UI. In the variable form, set:
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `project_id` | Yes | — | GCP project ID |
-| `deployment_id` | No | auto-generated | Suffix appended to resource names |
-| `region` | No | `us-central1` | GCP region for deployment |
-| `tenant_deployment_id` | No | `demo` | Tenant identifier used in resource naming |
-| `application_name` | No | `temporal` | Base name for GKE resources |
-| `application_version` | No | `1.25.0` | Temporal server image tag (maps to `temporalio/auto-setup`) |
-| `deploy_application` | No | `true` | Set `false` to provision infrastructure only |
-| `min_instance_count` | No | `1` | Minimum pod replicas |
-| `max_instance_count` | No | `1` | Maximum pod replicas |
-| `cpu_limit` | No | `2000m` | CPU limit per pod |
-| `memory_limit` | No | `4Gi` | Memory limit per pod |
-| `gke_cluster_name` | No | `""` | Target GKE cluster name (auto-discovered when empty) |
-| `num_history_shards` | No | `4` | History shard count — **cannot be changed after deployment**. Use `512` or higher for production |
-| `service_type` | No | `ClusterIP` | Kubernetes Service type for the gRPC frontend. Use `LoadBalancer` only if SDK workers connect from outside the cluster |
-| `enable_elasticsearch` | No | `false` | Enable Elasticsearch for advanced workflow visibility and full-text search |
-| `elasticsearch_url` | No | `""` | Elasticsearch URL (required when `enable_elasticsearch = true`) |
-| `elasticsearch_version` | No | `v7` | Elasticsearch major version (`v7` or `v8`) |
-| `resource_labels` | No | `{}` | Labels applied to all resources |
+| Variable | Value | Notes |
+|---|---|---|
+| `project_id` | `your-gcp-project-id` | Required |
+| `region` | `us-central1` | GCP region |
+| `application_name` | `temporal` | Base resource name |
+| `application_version` | `1.25.0` | Temporal server version |
+| `num_history_shards` | `4` | Cannot change after deploy |
+| `min_instance_count` | `1` | Minimum pod replicas |
+| `service_type` | `ClusterIP` | gRPC frontend access |
+| `enable_elasticsearch` | `false` | Basic visibility |
 
-> **Note on history shards:** `num_history_shards` must be a power of two and **cannot be changed** after the first deployment. The default value of `4` is suitable for development and demo use. Set to `512` or higher for production workloads with many concurrent workflows.
+Click **Deploy** and wait for provisioning to complete (approximately 9–20 minutes).
 
-### Deploy
+> **What this provisions:** GKE namespace, Temporal all-in-one deployment (Frontend, History,
+> Matching, Worker services), Temporal Web UI deployment, Cloud SQL databases (persistence +
+> visibility), db-init Job, Workload Identity, Secret Manager secret, ClusterIP gRPC service,
+> Web UI LoadBalancer service, uptime check.
 
-Click **Deploy** in the RAD UI.
+> **First-deployment note:** `temporalio/auto-setup` runs full schema initialisation on first
+> boot. Allow up to 15 minutes for the startup probe to pass.
 
-### Estimated Deployment Duration
-
-| Phase | Duration |
-|---|---|
-| Cloud SQL database user and secrets | 1–2 min |
-| Kubernetes namespace creation | < 1 min |
-| Container image mirroring (Cloud Build) | 3–5 min |
-| `temporal-db-init` job (create PostgreSQL role) | 1–2 min |
-| Temporal server pod startup (schema init on first deploy) | 3–8 min |
-| Temporal Web UI pod startup | 1–2 min |
-| **Total** | **9–20 min** |
-
-> **Note:** On the first deployment, `temporalio/auto-setup` runs full schema initialisation for both the persistence and visibility databases. This can take several minutes depending on the Cloud SQL tier. The startup probe allows up to 15 minutes (`initial_delay_seconds=30` + `failure_threshold=90` × `period_seconds=10`).
-
-### Key Outputs
-
-After deployment completes, the following outputs are available in the RAD UI deployment panel:
-
-| Output | Description |
-|---|---|
-| `temporal_frontend_address` | gRPC address for SDK/worker connections (cluster-internal when `service_type = ClusterIP`) |
-| `namespace` | Kubernetes namespace where Temporal is deployed |
-| `temporal_db_user` | PostgreSQL user for Temporal databases |
-| `temporal_db_name` | Name of the primary persistence database |
-| `temporal_visibility_db_name` | Name of the visibility database (`<temporal_db_name>_vis`) |
-| `temporal_db_password_secret_id` | Secret Manager secret ID holding the database password |
-| `deployment_id` | Generated deployment suffix used in all resource names |
-| `kubernetes_ready` | Whether all Kubernetes resources were fully deployed |
-
-Set shell variables for use in later steps:
+### 4.2 Configure Shell Environment
 
 ```bash
-export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
-export REGION="us-central1"             # the region you deployed into
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
 export TOKEN=$(gcloud auth print-access-token)
 
 # Discover the GKE cluster
 export CLUSTER=$(gcloud container clusters list \
-  --project=${PROJECT} \
+  --project="${PROJECT}" \
   --format="value(name)" \
   --limit=1)
 
-# Configure kubectl
-gcloud container clusters get-credentials ${CLUSTER} \
-  --region=${REGION} \
-  --project=${PROJECT}
+# Discover the DB secret
+export DB_SECRET=$(gcloud secrets list \
+  --project="${PROJECT}" \
+  --filter="name~temporal" \
+  --format="value(name)" \
+  --limit=1)
+
+echo "Cluster: ${CLUSTER}"
+echo "DB Secret: ${DB_SECRET}"
+```
+
+### 4.3 Configure kubectl
+
+```bash
+gcloud container clusters get-credentials "${CLUSTER}" \
+  --region="${REGION}" \
+  --project="${PROJECT}"
+
+kubectl cluster-info
 
 # Discover the namespace (pattern: apptemporal<tenant><deploymentid>)
 export NAMESPACE=$(kubectl get namespaces --no-headers \
   -o custom-columns=":metadata.name" | grep "^apptemporal" | head -1)
 
+# Get Web UI external IP
+export WEB_UI_IP=$(kubectl get svc -n "${NAMESPACE}" \
+  -o jsonpath='{.items[?(@.spec.ports[0].port==8081)].status.loadBalancer.ingress[0].ip}')
+
 echo "Namespace: ${NAMESPACE}"
+echo "Temporal Web UI: http://${WEB_UI_IP}:8081"
 ```
 
 ---
 
-## Phase 2 — Configure kubectl Access and Verify Pods [MANUAL]
+## Exercise 1 — Access Temporal Web UI
 
-**Objective:** Connect to the GKE cluster and verify all Temporal pods are running.
+### Objective
 
-### Steps
+Retrieve the Web UI external IP, verify both Temporal pods are running, access the Web UI
+dashboard, and explore the default namespace.
 
-1. Verify kubectl is configured (credentials retrieved in Phase 1):
+### Step 1.1 — Verify Pods Are Running
 
-   ```bash
-   kubectl get namespace ${NAMESPACE}
-   ```
+```bash
+kubectl get pods -n "${NAMESPACE}"
+```
 
-   **Expected result:** The namespace appears with status `Active`.
+Expected output:
+```
+NAME                            READY   STATUS    RESTARTS   AGE
+temporal-<hash>                 2/2     Running   0          10m
+temporal-ui-<hash>              1/1     Running   0          10m
+```
 
-2. Verify pods are running:
+The `2/2` for the main pod indicates `temporalio/auto-setup` (all four services) plus the
+Cloud SQL Auth Proxy sidecar.
 
-   ```bash
-   kubectl get pods -n ${NAMESPACE}
-   ```
+### Step 1.2 — Get the Web UI External IP
 
-   **Expected result:** Two pods in `Running` status:
+```bash
+kubectl get svc -n "${NAMESPACE}"
+```
 
-   ```
-   NAME                            READY   STATUS    RESTARTS   AGE
-   temporal-<hash>                 2/2     Running   0          8m
-   temporal-ui-<hash>              1/1     Running   0          8m
-   ```
+**gcloud:**
+```bash
+gcloud compute addresses list \
+  --project="${PROJECT}" \
+  --filter="region:${REGION}" \
+  --format="table(name, address, status)"
+```
 
-   > The `2/2` for the main Temporal pod indicates the `temporalio/auto-setup` container (running all four services: Frontend, History, Matching, Worker) plus the Cloud SQL Auth Proxy sidecar.
+**REST API:**
+```bash
+curl -s \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '{name, status, endpoint}'
+```
 
-3. Check the services:
+**Expected result:** The Web UI LoadBalancer Service shows an `EXTERNAL-IP` on port 8081.
 
-   ```bash
-   kubectl get svc -n ${NAMESPACE}
-   ```
+### Step 1.3 — Access the Web UI
 
-   **Expected result:** At minimum two services — the Temporal gRPC service (ClusterIP on port 7233 by default) and the Web UI service (LoadBalancer on port 8081).
+Open `http://${WEB_UI_IP}:8081` in a browser.
 
-4. Retrieve the Web UI external IP:
+**Expected result:** The Temporal Web UI loads showing the namespace list with `default` and
+`temporal-system` namespaces.
 
-   ```bash
-   export WEB_UI_IP=$(kubectl get svc -n ${NAMESPACE} \
-     -o jsonpath='{.items[?(@.spec.ports[0].port==8081)].status.loadBalancer.ingress[0].ip}')
-   echo "Temporal Web UI: http://${WEB_UI_IP}:8081"
-   ```
+### Step 1.4 — Explore the Dashboard
 
-   **Expected result:** An external IP address.
+1. Click the **default** namespace.
+2. Explore the **Workflows** tab (empty until you run a workflow in Exercise 3).
+3. Navigate to **Task Queues** to see available queues.
+4. Navigate to **Search Attributes** to see workflow metadata fields.
 
-5. View logs from the main Temporal pod:
+**Expected result:** Dashboard loads successfully, demonstrating all four Temporal services
+(Frontend, History, Matching, Worker) are operational.
 
-   ```bash
-   TEMPORAL_POD=$(kubectl get pods -n ${NAMESPACE} --no-headers | grep -v temporal-ui | head -1 | awk '{print $1}')
-   kubectl logs ${TEMPORAL_POD} -c temporal -n ${NAMESPACE} --tail=50
-   ```
+### Step 1.5 — View Temporal Service Logs
 
-   **Expected result:** Structured JSON log entries showing Temporal service startup, schema initialisation, and service readiness messages.
+```bash
+TEMPORAL_POD=$(kubectl get pods -n "${NAMESPACE}" --no-headers \
+  | grep -v temporal-ui | head -1 | awk '{print $1}')
 
-   > **REST API equivalent:**
-   > ```
-   > GET https://container.googleapis.com/v1/projects/{project}/locations/{region}/clusters/{cluster}
-   > ```
+kubectl logs "${TEMPORAL_POD}" -c temporal -n "${NAMESPACE}" --tail=50
+```
 
----
-
-## Phase 3 — Explore the Temporal Web UI [MANUAL]
-
-**Objective:** Access the Temporal Web UI and explore namespaces and workflows.
-
-The Temporal Web UI is deployed as a separate pod and exposed via a LoadBalancer service on port **8081**.
-
-### Steps
-
-1. Open the Web UI in a browser:
-
-   ```
-   http://<WEB_UI_IP>:8081
-   ```
-
-   Use the `WEB_UI_IP` discovered in Phase 2.
-
-   **Expected result:** The Temporal Web UI loads showing the namespace list.
-
-2. Explore the **Namespaces** section. You will see the `default` namespace created during schema initialisation.
-
-3. Click into the `default` namespace and review the **Workflows** tab. It will be empty until you execute a workflow in Phase 4.
-
-4. Explore the **Task Queues** section to see available queues.
-
-5. Explore **Search Attributes** — these define the metadata fields available for advanced workflow filtering.
+**Expected result:** Structured JSON log entries showing Temporal service startup, PostgreSQL
+schema initialisation completion, and all four services entering SERVING state.
 
 ---
 
-## Phase 4 — Execute a Sample Workflow [MANUAL]
+## Exercise 2 — Explore Namespaces and Workflows
 
-**Objective:** Use the Temporal CLI inside the main Temporal pod to submit a workflow and observe it in the Web UI.
+### Objective
 
-### Steps
+Connect to the Temporal CLI inside the main pod, list namespaces, verify cluster health, and
+explore the default namespace configuration.
 
-1. Discover the main Temporal pod name and open a shell:
+### Step 2.1 — Open a Shell in the Temporal Pod
 
-   ```bash
-   TEMPORAL_POD=$(kubectl get pods -n ${NAMESPACE} --no-headers | grep -v temporal-ui | head -1 | awk '{print $1}')
-   kubectl exec -it ${TEMPORAL_POD} -c temporal -n ${NAMESPACE} -- bash
-   ```
+```bash
+TEMPORAL_POD=$(kubectl get pods -n "${NAMESPACE}" --no-headers \
+  | grep -v temporal-ui | head -1 | awk '{print $1}')
 
-2. Verify the Temporal CLI can reach the Frontend service:
+kubectl exec -it "${TEMPORAL_POD}" -c temporal -n "${NAMESPACE}" -- bash
+```
 
-   ```bash
-   temporal operator cluster health
-   ```
+### Step 2.2 — Check Cluster Health
 
-   **Expected result:** Health check returns `SERVING`.
+Inside the pod:
+```bash
+temporal operator cluster health
+```
 
-3. Start a sample workflow:
+**Expected result:** `SERVING` — all four Temporal services are healthy.
 
-   ```bash
-   temporal workflow start \
-     --task-queue my-task-queue \
-     --type MyWorkflow \
-     --namespace default \
-     --workflow-id my-first-workflow
-   ```
+### Step 2.3 — List Temporal Namespaces
 
-   **Expected result:** Output shows the workflow ID and run ID:
-   ```
-   Running execution:
-     WorkflowId  my-first-workflow
-     RunId       <uuid>
-     Type        MyWorkflow
-     Namespace   default
-     TaskQueue   my-task-queue
-   ```
+```bash
+temporal operator namespace list
+```
 
-   > **Note:** Without an application worker connected to `my-task-queue`, the workflow will remain in `Running` state — it is waiting for a worker to pick up the task. This is expected and demonstrates Temporal's durability: the workflow state is persisted in PostgreSQL regardless of whether a worker is available.
+**Expected result:** Two namespaces appear:
+- `default` — for application workflows
+- `temporal-system` — for internal Temporal system operations
 
-4. List running workflows:
+### Step 2.4 — Describe the Default Namespace
 
-   ```bash
-   temporal workflow list --namespace default
-   ```
+```bash
+temporal operator namespace describe --namespace default
+```
 
-   **Expected result:** `my-first-workflow` appears with status `Running`.
+**Expected result:** Namespace configuration including retention period (default 72 hours),
+replication config, registered cluster name, and visibility settings.
 
-5. Open the Web UI at `http://<WEB_UI_IP>:8081` and navigate to the `default` namespace. The workflow appears in the list.
+### Step 2.5 — List Workflows in the Default Namespace
 
-6. Click the workflow to view its **Event History** — every state transition (`WorkflowExecutionStarted`, `WorkflowTaskScheduled`, etc.) is recorded durably in PostgreSQL.
+```bash
+temporal workflow list --namespace default
+```
 
-7. Describe the workflow from the CLI:
+**Expected result:** Empty list (no workflows executed yet). You will create one in Exercise 3.
 
-   ```bash
-   temporal workflow describe \
-     --workflow-id my-first-workflow \
-     --namespace default
-   ```
-
-   **Expected result:** Workflow metadata including status, task queue, type, and start time.
-
-8. Exit the pod:
-
-   ```bash
-   exit
-   ```
+```bash
+exit
+```
 
 ---
 
-## Phase 5 — Namespace Management [MANUAL]
+## Exercise 3 — Run a Sample Workflow
 
-**Objective:** Create and manage Temporal namespaces to understand isolation between applications.
+### Objective
 
-Temporal namespaces provide isolation between different applications or environments sharing the same cluster.
+Use the Temporal CLI to submit a workflow execution, observe it in the Web UI, verify it
+appears in the visibility database, and explore workflow status.
 
-### Steps
+### Step 3.1 — Open a Shell in the Temporal Pod
 
-1. Open a shell inside the main Temporal pod:
+```bash
+TEMPORAL_POD=$(kubectl get pods -n "${NAMESPACE}" --no-headers \
+  | grep -v temporal-ui | head -1 | awk '{print $1}')
 
-   ```bash
-   TEMPORAL_POD=$(kubectl get pods -n ${NAMESPACE} --no-headers | grep -v temporal-ui | head -1 | awk '{print $1}')
-   kubectl exec -it ${TEMPORAL_POD} -c temporal -n ${NAMESPACE} -- bash
-   ```
+kubectl exec -it "${TEMPORAL_POD}" -c temporal -n "${NAMESPACE}" -- bash
+```
 
-2. List all Temporal namespaces:
+### Step 3.2 — Start a Sample Workflow
 
-   ```bash
-   temporal operator namespace list
-   ```
+```bash
+temporal workflow start \
+  --task-queue my-task-queue \
+  --type MyWorkflow \
+  --namespace default \
+  --workflow-id my-first-workflow \
+  --input '"hello-from-lab"'
+```
 
-   **Expected result:** The `default` namespace and the `temporal-system` namespace are listed.
+**Expected result:**
+```
+Running execution:
+  WorkflowId  my-first-workflow
+  RunId       <uuid>
+  Type        MyWorkflow
+  Namespace   default
+  TaskQueue   my-task-queue
+```
 
-3. Create a new namespace:
+> **Note:** Without a worker connected to `my-task-queue`, the workflow remains in `Running`
+> state waiting for a worker. This demonstrates Temporal's durability — the workflow state is
+> persisted in PostgreSQL regardless of worker availability.
 
-   ```bash
-   temporal operator namespace create \
-     --namespace my-namespace \
-     --retention 7d \
-     --description "Lab namespace for testing"
-   ```
+### Step 3.3 — List Running Workflows
 
-   **Expected result:** `Namespace my-namespace successfully registered.`
+```bash
+temporal workflow list --namespace default
+```
 
-4. Describe the new namespace to see its configuration:
+**Expected result:** `my-first-workflow` appears with status `Running`.
 
-   ```bash
-   temporal operator namespace describe --namespace my-namespace
-   ```
+### Step 3.4 — Describe the Workflow
 
-   **Expected result:** Namespace details including retention period (7 days), replication config, and registered cluster name.
+```bash
+temporal workflow describe \
+  --workflow-id my-first-workflow \
+  --namespace default
+```
 
-5. Update the namespace retention period:
+**Expected result:** Workflow metadata including status, task queue, type, start time, and
+execution ID.
 
-   ```bash
-   temporal operator namespace update \
-     --namespace my-namespace \
-     --retention 14d
-   ```
+### Step 3.5 — View in the Web UI
 
-6. Exit the pod:
+Open `http://${WEB_UI_IP}:8081/namespaces/default/workflows` in a browser.
 
-   ```bash
-   exit
-   ```
+**Expected result:** `my-first-workflow` appears in the workflow list with status `Running`.
+Click the workflow to see its event history and execution details.
 
----
+### Step 3.6 — Start a Second Workflow
 
-## Phase 6 — Explore Workflow History [MANUAL]
+```bash
+temporal workflow start \
+  --task-queue test-queue \
+  --type TestWorkflow \
+  --namespace default \
+  --workflow-id my-second-workflow
+```
 
-**Objective:** Inspect the immutable event history that underpins Temporal's durability guarantees.
+```bash
+temporal workflow list --namespace default
+```
 
-Temporal persists every workflow state transition as an immutable event in PostgreSQL. This is the foundation of Temporal's durability — if a worker crashes mid-workflow, Temporal can replay the history to restore workflow state on any available worker.
+**Expected result:** Two workflows appear in the `Running` state.
 
-### Steps
-
-1. Open a shell inside the main Temporal pod:
-
-   ```bash
-   TEMPORAL_POD=$(kubectl get pods -n ${NAMESPACE} --no-headers | grep -v temporal-ui | head -1 | awk '{print $1}')
-   kubectl exec -it ${TEMPORAL_POD} -c temporal -n ${NAMESPACE} -- bash
-   ```
-
-2. List workflows by status:
-
-   ```bash
-   # List running workflows
-   temporal workflow list --namespace default --query 'ExecutionStatus="Running"'
-
-   # List all workflows (any status)
-   temporal workflow list --namespace default --archived
-   ```
-
-3. View the full event history for the workflow started in Phase 4:
-
-   ```bash
-   temporal workflow show \
-     --workflow-id my-first-workflow \
-     --namespace default
-   ```
-
-   **Expected result:** A table of all events with sequence numbers, event types (e.g., `WorkflowExecutionStarted`, `WorkflowTaskScheduled`), timestamps, and attributes.
-
-4. Send a signal to the running workflow:
-
-   ```bash
-   temporal workflow signal \
-     --workflow-id my-first-workflow \
-     --namespace default \
-     --name my-signal \
-     --input '"signal-data"'
-   ```
-
-5. Exit the pod:
-
-   ```bash
-   exit
-   ```
+```bash
+exit
+```
 
 ---
 
-## Phase 7 — Explore Cloud Logging [MANUAL]
+## Exercise 4 — Workflow History and Visibility
 
-**Objective:** Find Temporal application logs in Cloud Logging.
+### Objective
 
-The `temporalio/auto-setup` container emits structured JSON logs. All four Temporal services (Frontend, History, Matching, Worker) log to stdout and are captured by the GKE node logging agent.
+Inspect the immutable event history that underpins Temporal's durability guarantees, send
+signals to running workflows, and query workflows using the visibility API.
 
-### Steps
+### Step 4.1 — View Full Event History
 
-1. In the Google Cloud Console, navigate to **Logging > Log Explorer**.
+```bash
+TEMPORAL_POD=$(kubectl get pods -n "${NAMESPACE}" --no-headers \
+  | grep -v temporal-ui | head -1 | awk '{print $1}')
 
-2. Filter logs to the Temporal namespace:
+kubectl exec -it "${TEMPORAL_POD}" -c temporal -n "${NAMESPACE}" -- \
+  temporal workflow show \
+    --workflow-id my-first-workflow \
+    --namespace default
+```
 
-   ```
-   resource.type="k8s_container"
-   resource.labels.namespace_name="${NAMESPACE}"
-   resource.labels.container_name="temporal"
-   ```
+**Expected result:** A table of all events with sequence numbers, event types
+(`WorkflowExecutionStarted`, `WorkflowTaskScheduled`), timestamps, and attributes.
 
-3. Filter for errors:
+### Step 4.2 — Send a Signal to a Running Workflow
 
-   ```
-   resource.type="k8s_container"
-   resource.labels.namespace_name="${NAMESPACE}"
-   severity>=ERROR
-   ```
+```bash
+kubectl exec -it "${TEMPORAL_POD}" -c temporal -n "${NAMESPACE}" -- \
+  temporal workflow signal \
+    --workflow-id my-first-workflow \
+    --namespace default \
+    --name my-signal \
+    --input '"signal-payload"'
+```
 
-4. Using the `gcloud` CLI:
+**Expected result:** Signal is accepted. In the Web UI, view the workflow event history — a
+`WorkflowExecutionSignaled` event appears in the log.
 
-   ```bash
-   gcloud logging read \
-     'resource.type="k8s_container" AND resource.labels.namespace_name="'${NAMESPACE}'"' \
-     --project=${PROJECT} \
-     --limit=50 \
-     --format=json | jq '.[].jsonPayload'
-   ```
+### Step 4.3 — Query Workflows by Status
 
-   > **REST API equivalent:**
-   > ```
-   > POST https://logging.googleapis.com/v2/entries:list
-   > {
-   >   "resourceNames": ["projects/<project-id>"],
-   >   "filter": "resource.type=\"k8s_container\" resource.labels.namespace_name=\"<namespace>\"",
-   >   "orderBy": "timestamp desc",
-   >   "pageSize": 50
-   > }
-   > ```
+```bash
+kubectl exec -it "${TEMPORAL_POD}" -c temporal -n "${NAMESPACE}" -- bash -c "
+  temporal workflow list \
+    --namespace default \
+    --query 'ExecutionStatus=\"Running\"'
+"
+```
 
-5. Look for log entries containing `"level":"error"` to identify any issues with database connections or schema initialisation.
+**Expected result:** Only running workflows appear (filtered from all workflows).
 
-6. Filter for workflow execution events from the Frontend service:
+### Step 4.4 — Terminate a Workflow
 
-   ```
-   resource.type="k8s_container"
-   resource.labels.namespace_name="${NAMESPACE}"
-   jsonPayload.msg=~"workflow"
-   ```
+```bash
+kubectl exec -it "${TEMPORAL_POD}" -c temporal -n "${NAMESPACE}" -- \
+  temporal workflow terminate \
+    --workflow-id my-second-workflow \
+    --namespace default \
+    --reason "lab cleanup"
+```
 
-   **Expected result:** Log entries showing incoming gRPC calls and workflow state changes.
+```bash
+# Verify termination
+kubectl exec -it "${TEMPORAL_POD}" -c temporal -n "${NAMESPACE}" -- \
+  temporal workflow describe \
+    --workflow-id my-second-workflow \
+    --namespace default \
+  | grep -i status
+```
 
----
+**Expected result:** `my-second-workflow` shows status `Terminated`.
 
-## Phase 8 — Explore Cloud Monitoring [MANUAL]
+### Step 4.5 — View Archived Workflows
 
-**Objective:** Review pod-level metrics in Cloud Monitoring.
+```bash
+kubectl exec -it "${TEMPORAL_POD}" -c temporal -n "${NAMESPACE}" -- \
+  temporal workflow list \
+    --namespace default \
+    --archived
+```
 
-### Steps
-
-1. Open Cloud Monitoring in the GCP console:
-   `https://console.cloud.google.com/monitoring?project=<project-id>`
-
-2. Navigate to **Metrics Explorer** and explore the following metrics:
-   - `kubernetes.io/container/cpu/request_utilization` — CPU usage vs request
-   - `kubernetes.io/container/memory/request_utilization` — Memory usage vs request
-   - `kubernetes.io/pod/network/received_bytes_count` — Network ingress
-
-3. Filter by:
-   - `resource.namespace_name = ${NAMESPACE}`
-   - `resource.pod_name =~ temporal.*`
-
-   **Expected result:** Charts showing CPU and memory consumption for the Temporal pods.
-
-4. Check HPA scaling activity:
-
-   ```bash
-   kubectl describe hpa -n ${NAMESPACE}
-   ```
-
-5. View pod resource usage:
-
-   ```bash
-   kubectl top pods -n ${NAMESPACE}
-   ```
-
-   **Expected result:** CPU and memory usage for the Temporal server pod and Web UI pod.
-
-   > **gcloud equivalent:**
-   > ```bash
-   > gcloud monitoring time-series list \
-   >   --project=${PROJECT} \
-   >   --filter='metric.type="kubernetes.io/container/cpu/core_usage_time"'
-   > ```
+**Expected result:** Both running and terminated workflows appear in the complete list.
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Exercise 5 — Workers and Task Queues
 
-When you are finished with the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module: the Kubernetes namespace and workloads, Cloud SQL databases and user, and the Secret Manager secret.
+### Objective
 
-**Expected result:** All Kubernetes workloads, Cloud SQL databases, Secret Manager secrets, and supporting IAM resources are deleted.
+Explore task queues in the Temporal Web UI, understand worker registration, and observe
+task queue polling behaviour.
 
-> **Note:** If `enable_purge = false`, certain resources such as the database will be retained after undeployment to prevent accidental data loss.
+### Step 5.1 — List Task Queues via Web UI
 
-> The Cloud SQL PostgreSQL instance itself is managed by Services_GCP and is not affected. Resources provisioned by the `Services_GCP` module must be undeployed via their own RAD UI deployment entry.
+Open `http://${WEB_UI_IP}:8081/namespaces/default/task-queues` in a browser.
 
-**Expected duration:** 3–6 minutes.
+**Expected result:** Task queues `my-task-queue` and `test-queue` appear — they were
+registered implicitly when workflows were started targeting them.
+
+### Step 5.2 — Describe a Task Queue via CLI
+
+```bash
+TEMPORAL_POD=$(kubectl get pods -n "${NAMESPACE}" --no-headers \
+  | grep -v temporal-ui | head -1 | awk '{print $1}')
+
+kubectl exec -it "${TEMPORAL_POD}" -c temporal -n "${NAMESPACE}" -- \
+  temporal task-queue describe \
+    --task-queue my-task-queue \
+    --namespace default
+```
+
+**Expected result:** Task queue details showing partitions, polling workers (none if no
+application worker is connected), and pending task counts.
+
+### Step 5.3 — Observe Task Queue Backlog
+
+```bash
+kubectl exec -it "${TEMPORAL_POD}" -c temporal -n "${NAMESPACE}" -- \
+  temporal workflow list \
+    --namespace default \
+    --query 'TaskQueue="my-task-queue"'
+```
+
+**Expected result:** All workflows targeting `my-task-queue` appear — they remain in
+`Running` state because no worker is polling the queue.
+
+### Step 5.4 — Understand Worker Registration
+
+In Temporal, workers are application processes that:
+1. Connect to the Temporal Frontend service on gRPC port 7233
+2. Register with a specific task queue and namespace
+3. Poll for workflow/activity tasks
+4. Execute business logic and report results back to Temporal
+
+The Temporal cluster in this lab has no application workers — only the built-in Temporal
+internal worker (for system workflows). External workers connect using the frontend address:
+
+```bash
+kubectl exec -it "${TEMPORAL_POD}" -c temporal -n "${NAMESPACE}" -- \
+  temporal operator cluster describe
+```
+
+**Expected result:** Cluster info including the frontend address (`temporal.<namespace>.svc.cluster.local:7233`)
+that SDK workers would use to connect from within the cluster.
 
 ---
 
-## Summary
+## Exercise 6 — Cluster Components
 
-| Action | Phase | Automated |
-|---|---|---|
-| Provision GKE namespace and Temporal deployment | 1 | Yes |
-| Create Cloud SQL databases and Secret Manager secret | 1 | Yes |
-| Run `temporal-db-init` job (PostgreSQL role creation) | 1 | Yes |
-| Run schema initialisation (`temporalio/auto-setup`) | 1 | Yes |
-| Deploy Temporal Web UI (`ubuntu/temporal-ui`) | 1 | Yes |
-| Set up Workload Identity and IAM | 1 | Yes |
-| Verify kubectl access and pod status | 2 | No |
-| Access Web UI via external IP on port 8081 | 3 | No |
-| Execute sample workflow via Temporal CLI | 4 | No |
-| Create and configure Temporal namespaces | 5 | No |
-| Inspect workflow event history | 6 | No |
-| Explore logs in Cloud Logging | 7 | No |
-| Review metrics in Cloud Monitoring | 8 | No |
-| Undeploy all resources | 9 | Yes |
+### Objective
+
+Inspect the four Temporal service components running in the all-in-one pod, verify GKE
+Autopilot node provisioning, and review Kubernetes resources.
+
+### Step 6.1 — View All Namespace Resources
+
+```bash
+kubectl get all -n "${NAMESPACE}"
+```
+
+Expected resources:
+```
+NAME                              READY   STATUS    RESTARTS   AGE
+pod/temporal-<hash>               2/2     Running   0          15m
+pod/temporal-ui-<hash>            1/1     Running   0          15m
+
+NAME                  TYPE           CLUSTER-IP    EXTERNAL-IP    PORT(S)
+service/temporal      ClusterIP      10.96.xx.xx   <none>         7233/TCP
+service/temporal-ui   LoadBalancer   10.96.yy.yy   34.xx.xx.xx    8081:31234/TCP
+
+NAME                          READY   UP-TO-DATE   AVAILABLE
+deployment.apps/temporal         1/1     1            1
+deployment.apps/temporal-ui      1/1     1            1
+```
+
+### Step 6.2 — Describe the Temporal Deployment
+
+```bash
+kubectl describe deployment -l app=temporal -n "${NAMESPACE}"
+```
+
+Note:
+- Two containers: `temporal` (gRPC 7233) and `cloud-sql-proxy` (Unix socket)
+- Environment variables: `DB_PLUGIN=postgres12`, `DB_PORT=5432`, `NUM_HISTORY_SHARDS=4`
+- Startup probe: HTTP `/health` with 15-minute timeout window
+
+### Step 6.3 — View Temporal Pod Containers
+
+```bash
+TEMPORAL_POD=$(kubectl get pods -n "${NAMESPACE}" --no-headers \
+  | grep -v temporal-ui | head -1 | awk '{print $1}')
+
+kubectl get pod "${TEMPORAL_POD}" -n "${NAMESPACE}" \
+  -o jsonpath='{.spec.containers[*].name}' | tr ' ' '\n'
+```
+
+**Expected result:** `temporal` and `cloud-sql-proxy` — the all-in-one image runs all four
+Temporal services as goroutines within a single container process.
+
+### Step 6.4 — Check Resource Allocation
+
+```bash
+kubectl top pods -n "${NAMESPACE}"
+```
+
+**Expected result:** CPU and memory consumption for both the Temporal server pod and Web UI
+pod. The Temporal server typically uses 200–600 mCPU and 1–2 GiB memory.
+
+### Step 6.5 — View GKE Node Provisioning
+
+**gcloud:**
+```bash
+gcloud container clusters describe "${CLUSTER}" \
+  --region="${REGION}" \
+  --project="${PROJECT}" \
+  --format="yaml(nodeConfig, autoscaling)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '{name, status, autopilot}'
+```
+
+**Expected result:** GKE Autopilot configuration showing automatic node management.
+
+---
+
+## Exercise 7 — Database Persistence
+
+### Objective
+
+Inspect the Cloud SQL PostgreSQL databases backing Temporal's durable workflow storage,
+verify the db-init job, and understand the persistence and visibility databases.
+
+### Step 7.1 — List Cloud SQL Instances
+
+**gcloud:**
+```bash
+gcloud sql instances list \
+  --project="${PROJECT}" \
+  --format="table(name, state, databaseVersion, region)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.items[] | {name, state, databaseVersion}'
+```
+
+**Expected result:** Cloud SQL PostgreSQL instance with state `RUNNABLE`.
+
+### Step 7.2 — List Temporal Databases
+
+```bash
+SQL_INSTANCE=$(gcloud sql instances list \
+  --project="${PROJECT}" \
+  --format="value(name)" --limit=1)
+
+gcloud sql databases list \
+  --instance="${SQL_INSTANCE}" \
+  --project="${PROJECT}"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances/${SQL_INSTANCE}/databases" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.items[] | {name}'
+```
+
+**Expected result:** Two Temporal databases appear:
+- `temporal` — primary persistence database (workflow history, task queues, timers)
+- `temporal_vis` — visibility database (workflow execution records for search and listing)
+
+### Step 7.3 — Verify the db-init Job
+
+```bash
+kubectl get jobs -n "${NAMESPACE}"
+kubectl logs job/temporal-db-init -n "${NAMESPACE}" 2>/dev/null || \
+  kubectl logs -l job-name=temporal-db-init -n "${NAMESPACE}"
+```
+
+**Expected result:** Job `COMPLETIONS: 1/1`. Logs show the PostgreSQL role creation with
+`CREATEDB` privilege — required before `temporalio/auto-setup` initialises the schema.
+
+### Step 7.4 — Access the DB Password Secret
+
+**gcloud:**
+```bash
+gcloud secrets versions access latest \
+  --secret="${DB_SECRET}" \
+  --project="${PROJECT}"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}/versions/latest:access" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq -r '.payload.data' | base64 --decode
+```
+
+**Expected result:** The database password for the Temporal PostgreSQL user.
+
+### Step 7.5 — Verify Workload Identity
+
+**gcloud:**
+```bash
+GSA=$(gcloud iam service-accounts list \
+  --project="${PROJECT}" \
+  --filter="email~temporal" \
+  --format="value(email)" --limit=1)
+
+gcloud iam service-accounts get-iam-policy "${GSA}" \
+  --project="${PROJECT}" \
+  --format="json" | jq '.bindings[] | select(.role == "roles/iam.workloadIdentityUser")'
+```
+
+**Expected result:** The Temporal Kubernetes ServiceAccount is bound to the GCP ServiceAccount
+via Workload Identity, with `roles/iam.workloadIdentityUser`.
+
+---
+
+## Exercise 8 — Cloud Logging and Monitoring
+
+### Objective
+
+Find Temporal application logs in Cloud Logging, explore structured JSON workflow event logs,
+and review pod metrics in Cloud Monitoring.
+
+### Step 8.1 — View Temporal Pod Logs
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
+   AND resource.labels.container_name=\"temporal\"" \
+  --project="${PROJECT}" \
+  --limit=50 \
+  --format=json | jq '.[].jsonPayload'
+```
+
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://logging.googleapis.com/v2/entries:list" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"resourceNames\": [\"projects/${PROJECT}\"],
+    \"filter\": \"resource.type=\\\"k8s_container\\\" AND resource.labels.namespace_name=\\\"${NAMESPACE}\\\"\",
+    \"orderBy\": \"timestamp desc\",
+    \"pageSize\": 20
+  }" | jq '.entries[] | {timestamp, severity, jsonPayload}'
+```
+
+### Step 8.2 — Filter for Workflow Events
+
+In the Cloud Console Log Explorer:
+```
+resource.type="k8s_container"
+resource.labels.namespace_name="${NAMESPACE}"
+resource.labels.container_name="temporal"
+jsonPayload.msg=~"workflow|execution|task"
+```
+
+**Expected result:** Structured JSON log entries showing gRPC calls for `StartWorkflowExecution`
+and `PollWorkflowTaskQueue` from the CLI commands executed in Exercise 3.
+
+### Step 8.3 — Filter for Errors
+
+```bash
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
+   AND severity>=ERROR" \
+  --project="${PROJECT}" \
+  --limit=10
+```
+
+**Expected result:** No errors under normal operation. Database connection failures would
+appear as `"level":"error"` JSON entries.
+
+### Step 8.4 — View Cloud Monitoring Pod Metrics
+
+**REST API (MQL — CPU):**
+```bash
+curl -s -X POST \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"query\": \"fetch k8s_container | metric 'kubernetes.io/container/cpu/request_utilization' | filter resource.namespace_name = '${NAMESPACE}' | within 30m | group_by [resource.pod_name], mean(val())\"
+  }" | jq '.timeSeriesData[] | {pod: .labelValues[0].stringValue, cpu: .pointData[-1].values[0].doubleValue}'
+```
+
+**REST API (MQL — memory):**
+```bash
+curl -s -X POST \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"query\": \"fetch k8s_container | metric 'kubernetes.io/container/memory/used_bytes' | filter resource.namespace_name = '${NAMESPACE}' | within 30m | group_by [resource.pod_name], mean(val())\"
+  }" | jq '.timeSeriesData[] | {pod: .labelValues[0].stringValue, memory: .pointData[-1].values[0].int64Value}'
+```
+
+### Step 8.5 — Check HPA Scaling Activity
+
+```bash
+kubectl describe hpa -n "${NAMESPACE}"
+```
+
+**Expected result:** HPA showing current/desired replicas and CPU target (Temporal is a
+single-instance all-in-one in this lab configuration).
+
+---
+
+## Cleanup
+
+Return to the RAD UI and click **Undeploy** on the `Temporal_GKE` deployment. This removes
+the Kubernetes namespace, Temporal workloads, Cloud SQL databases (`temporal`, `temporal_vis`)
+and user, Secret Manager secret, Workload Identity bindings, and monitoring resources.
+
+> **Note:** If `enable_purge=false`, the Cloud SQL databases are retained after undeploy.
+> The Cloud SQL instance itself is managed by `Services_GCP` and is not affected.
+
+### Manual Cleanup (if needed)
+
+**kubectl:**
+```bash
+kubectl delete namespace "${NAMESPACE}"
+```
+
+**gcloud:**
+```bash
+# Delete the DB secret
+gcloud secrets delete "${DB_SECRET}" \
+  --project="${PROJECT}" --quiet
+
+# Delete Temporal databases from the shared Cloud SQL instance
+SQL_INSTANCE=$(gcloud sql instances list \
+  --project="${PROJECT}" \
+  --format="value(name)" --limit=1)
+
+gcloud sql databases delete temporal \
+  --instance="${SQL_INSTANCE}" \
+  --project="${PROJECT}" --quiet
+
+gcloud sql databases delete temporal_vis \
+  --instance="${SQL_INSTANCE}" \
+  --project="${PROJECT}" --quiet
+```
+
+---
+
+## Reference
+
+### Key Module Variables
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `project_id` | string | — | GCP project ID (required) |
+| `region` | string | `us-central1` | GCP region for all resources |
+| `application_name` | string | `temporal` | Base name for Kubernetes and GCP resources |
+| `application_version` | string | `1.25.0` | Temporal server image tag |
+| `num_history_shards` | number | `4` | History shard count — cannot change after deploy |
+| `min_instance_count` | number | `1` | Minimum pod replicas |
+| `max_instance_count` | number | `1` | Maximum pod replicas |
+| `cpu_limit` | string | `2000m` | CPU limit per pod (2 vCPU) |
+| `memory_limit` | string | `4Gi` | Memory limit per pod |
+| `service_type` | string | `ClusterIP` | gRPC frontend service type |
+| `enable_elasticsearch` | bool | `false` | Enable Elasticsearch advanced visibility |
+| `elasticsearch_url` | string | `""` | Elasticsearch URL (required when enabled) |
+| `gke_cluster_name` | string | `""` | Target GKE cluster (auto-discovered when empty) |
+| `tenant_deployment_id` | string | `demo` | Tenant identifier in resource names |
+| `deploy_application` | bool | `true` | Deploy the Temporal workload |
+| `resource_labels` | map | `{}` | Labels applied to all GCP resources |
+
+### Useful Commands
+
+```bash
+# Access Temporal CLI inside pod
+TEMPORAL_POD=$(kubectl get pods -n ${NAMESPACE} --no-headers | grep -v temporal-ui | head -1 | awk '{print $1}')
+kubectl exec -it ${TEMPORAL_POD} -c temporal -n ${NAMESPACE} -- bash
+
+# Inside pod:
+temporal operator cluster health
+temporal operator namespace list
+temporal workflow list --namespace default
+temporal workflow start --task-queue q --type T --namespace default --workflow-id wf1
+temporal workflow describe --workflow-id wf1 --namespace default
+temporal workflow show --workflow-id wf1 --namespace default
+temporal workflow signal --workflow-id wf1 --namespace default --name sig --input '"data"'
+
+# Web UI URL
+echo "http://$(kubectl get svc -n ${NAMESPACE} -o jsonpath='{.items[?(@.spec.ports[0].port==8081)].status.loadBalancer.ingress[0].ip}'):8081"
+
+# View Temporal logs
+kubectl logs -l app=temporal -c temporal -n ${NAMESPACE} --tail=100
+
+# DB secret
+gcloud secrets versions access latest --secret="${DB_SECRET}" --project=${PROJECT}
+```
+
+### Further Reading
+
+- [Temporal documentation](https://docs.temporal.io/)
+- [Temporal `temporalio/auto-setup` image](https://hub.docker.com/r/temporalio/auto-setup)
+- [Temporal Web UI](https://github.com/temporalio/ui)
+- [Temporal CLI reference](https://docs.temporal.io/cli)
+- [Temporal workflow execution model](https://docs.temporal.io/workflows)
+- [GKE Autopilot overview](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
+- [Cloud SQL for PostgreSQL](https://cloud.google.com/sql/docs/postgres)

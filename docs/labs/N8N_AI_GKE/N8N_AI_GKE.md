@@ -2,175 +2,240 @@
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/N8N_AI_GKE)**
 
-## Overview
-
-**Estimated time:** 1–2 hours
-
-n8n AI extends the standard n8n workflow automation platform with integrated AI capabilities. This module deploys the n8n AI Starter Kit on GKE Autopilot, adding a **Qdrant** vector database (for embeddings and semantic search) and an **Ollama** LLM server (for local model inference) as separate Kubernetes Deployments alongside n8n. Together they enable building AI agent workflows, RAG (Retrieval-Augmented Generation) pipelines, and intelligent chatbots — all running on your own infrastructure with no external AI API dependencies.
-
-### What the Module Automates
-
-All GKE services from N8N_GKE, plus:
-- Qdrant vector database Kubernetes Deployment and ClusterIP Service
-- Ollama LLM server Kubernetes Deployment and ClusterIP Service
-- ClusterIP-based service discovery for Qdrant (port 6333) and Ollama (port 11434)
-- HPA for n8n; Qdrant and Ollama run as fixed-replica Deployments
-- Cloud SQL PostgreSQL 15, NFS Filestore, GCS Fuse persistence
-- Workload Identity, Secret Manager, and IAM for all components
-- Private VPC networking between n8n, Qdrant, and Ollama
-
-### What You Do Manually
-
-- Note the deployment outputs (external IP, namespace, etc.) from the RAD UI deployment panel
-- Complete the n8n initial account setup on first login
-- Build standard workflows (webhook, trigger, HTTP)
-- Create AI Agent workflows connecting to Ollama
-- Configure Qdrant as a vector store for embeddings
-- Build a complete RAG pipeline
+This lab guide walks you through deploying, exploring, and operating the **n8n AI Starter Kit**
+on Google Kubernetes Engine Autopilot using the **N8N_AI_GKE** module. You will build AI agent
+workflows, manage Kubernetes workloads for Qdrant and Ollama, configure Workload Identity for
+secure GCP access, and explore GKE-native scaling and observability.
 
 ---
 
-## CLI and REST API Overview
+## Table of Contents
 
-**Tools used:**
-- `gcloud` CLI — GCP resource management
-- `kubectl` — Kubernetes cluster operations
-- `curl` — webhook, HTTP, and AI API testing
+1. [Overview](#1-overview)
+2. [Architecture](#2-architecture)
+3. [Prerequisites](#3-prerequisites)
+4. [Lab Setup](#4-lab-setup)
+5. [Exercise 1 — Access n8n AI on GKE](#exercise-1--access-n8n-ai-on-gke)
+6. [Exercise 2 — Build an AI Workflow](#exercise-2--build-an-ai-workflow)
+7. [Exercise 3 — AI Memory and Context](#exercise-3--ai-memory-and-context)
+8. [Exercise 4 — Kubernetes Workloads](#exercise-4--kubernetes-workloads)
+9. [Exercise 5 — Security and Workload Identity](#exercise-5--security-and-workload-identity)
+10. [Exercise 6 — Cloud Logging](#exercise-6--cloud-logging)
+11. [Exercise 7 — Cloud Monitoring and Scaling](#exercise-7--cloud-monitoring-and-scaling)
+12. [Cleanup](#cleanup)
+13. [Reference](#reference)
 
 ---
 
-## Prerequisites
+## 1. Overview
 
-- A GCP project with the Services_GCP platform module already deployed
-- `gcloud` CLI authenticated: `gcloud auth login && gcloud config set project PROJECT_ID`
-- `kubectl` installed
-- Owner or Editor role on the target GCP project
-- Access to the RAD UI with permission to deploy modules in the target GCP project
+### What Is n8n AI on GKE?
 
----
+n8n AI is the AI-augmented variant of the popular open-source workflow automation platform.
+The `N8N_AI_GKE` module deploys n8n version **2.4.7** on GKE Autopilot with **Qdrant** and
+**Ollama** running as dedicated Kubernetes Deployments in the same namespace. Unlike the Cloud
+Run variant where AI services run as separate Cloud Run services, on GKE all three workloads
+share the same Kubernetes namespace and communicate via ClusterIP services over the pod network.
+The Horizontal Pod Autoscaler (HPA) manages n8n replica scaling while Qdrant and Ollama run
+as fixed-replica Deployments.
 
-## Phase 1 — Deploy [AUTOMATED]
+### Key Capabilities Demonstrated
 
-### Variables
-
-In the RAD UI, open the N8N_AI_GKE module and fill in the deployment form:
-
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `project_id` | Yes | — | GCP project ID (6–30 chars, lowercase) |
-| `deployment_id` | No | auto-generated | Short alphanumeric suffix for resource names |
-| `region` | No | `us-central1` | GCP region for deployment |
-| `tenant_deployment_id` | No | `demo` | Unique tenant identifier (1–20 chars) |
-| `application_name` | No | `n8nai` | Base name for Kubernetes and Artifact Registry resources |
-| `application_version` | No | `2.4.7` | n8n image version tag |
-| `deploy_application` | No | `true` | Set to `false` to provision infrastructure only |
-| `min_instance_count` | No | `0` | HPA minimum pod replicas |
-| `max_instance_count` | No | `3` | HPA maximum pod replicas |
-| `cpu_limit` | No | `2000m` | CPU limit per n8n pod |
-| `memory_limit` | No | `4Gi` | Memory limit per n8n pod |
-| `enable_redis` | No | `true` | Enable Redis queue mode backend |
-| `redis_host` | No | `""` | Redis host (defaults to NFS server IP when empty) |
-| `redis_port` | No | `6379` | Redis server port |
-| `db_name` | No | `n8n_db` | PostgreSQL database name |
-| `db_user` | No | `n8n_user` | PostgreSQL database username |
-| `enable_nfs` | No | `true` | Provision Cloud Filestore NFS |
-| `nfs_mount_path` | No | `/mnt/nfs` | Container mount path for NFS volume |
-| `enable_ai_components` | No | `true` | Master toggle for Qdrant + Ollama |
-| `enable_qdrant` | No | `true` | Deploy Qdrant vector database |
-| `qdrant_version` | No | `latest` | Qdrant Docker image tag |
-| `enable_ollama` | No | `true` | Deploy Ollama LLM server |
-| `ollama_version` | No | `latest` | Ollama Docker image tag |
-| `ollama_model` | No | `llama3.2` | Default LLM model to load on startup |
-| `service_type` | No | `LoadBalancer` | Kubernetes Service type for n8n |
-| `session_affinity` | No | `None` | Session stickiness (None for AI workloads) |
-| `backup_schedule` | No | `0 2 * * *` | Cron schedule for automated backups |
-| `support_users` | No | `[]` | Email addresses for monitoring alerts |
-
-### Deploy
-
-Click **Deploy** in the RAD UI. Deployment takes approximately 12–18 minutes. Ollama downloads the model on first startup, which may add an additional few minutes.
-
-After deployment completes, the following outputs are available in the RAD UI deployment panel:
-
-| Output | Description |
+| Capability | What It Demonstrates |
 |---|---|
-| `service_external_ip` | External LoadBalancer IP |
-| `service_url` | Application URL |
-| `database_instance_name` | Cloud SQL instance name |
-| `nfs_server_ip` | NFS server IP (sensitive) |
-| `deployment_id` | Unique deployment suffix |
+| **AI Agent Workflows** | LangChain-style agent loops with Ollama as the local LLM via ClusterIP service discovery |
+| **Kubernetes Workloads** | Deployments, Services, HPA, resource limits, pod lifecycle management |
+| **Workload Identity** | GKE Workload Identity binding Kubernetes service accounts to GCP service accounts |
+| **Internal Networking** | ClusterIP services for Qdrant (port 6333) and Ollama (port 11434) with cluster-local DNS |
+| **NFS Persistence** | Cloud Filestore NFS for n8n workflow data, shared across replicas |
+| **GCS Fuse Volumes** | Shared GCS bucket for Qdrant vector indices and Ollama model weights |
+| **Observability** | kubectl log aggregation, Cloud Logging for k8s_container, Cloud Monitoring pod metrics |
+| **Queue Mode** | Redis-backed n8n queue mode with HPA for reliable multi-replica execution |
 
-Set shell variables for use in later steps:
+---
+
+## 2. Architecture
+
+### Kubernetes Namespace Map
+
+```
+GKE Autopilot Cluster
+  │
+  └── Namespace: appn8naidemo<id>
+        │
+        ├── Deployment: appn8naidemo<id>        (n8n)
+        │     containers: n8n + cloud-sql-proxy
+        │     service:    LoadBalancer  port 5678
+        │     HPA:        min=0, max=3, CPU target=80%
+        │
+        ├── Deployment: appn8naidemo<id>-qdrant  (Qdrant)
+        │     container: qdrant/qdrant
+        │     service:   ClusterIP  port 6333, 6334
+        │     storage:   GCS Fuse at /mnt/gcs/qdrant
+        │
+        └── Deployment: appn8naidemo<id>-ollama  (Ollama)
+              container: ollama/ollama
+              service:   ClusterIP  port 11434
+              storage:   GCS Fuse at /mnt/gcs/ollama/models
+```
+
+### Infrastructure
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  Google Cloud Project                                               │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  GKE Autopilot Cluster (Services_GCP)                        │   │
+│  │                                                              │   │
+│  │  Namespace: appn8naidemo<id>                                 │   │
+│  │  ┌────────────────────────────────────────────────────────┐  │   │
+│  │  │  n8n Pod (2/2)      Qdrant Pod (1/1)  Ollama Pod (1/1) │  │   │
+│  │  │  n8n + sql-proxy    qdrant             ollama           │  │   │
+│  │  └────────────────────────────────────────────────────────┘  │   │
+│  │                                                              │   │
+│  │  HPA ──► n8n Deployment                                      │   │
+│  │  LoadBalancer ──► n8n Service (external IP:5678)             │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  Cloud SQL PostgreSQL 15    NFS Filestore       GCS Bucket         │
+│  db: n8n_db                 /mnt/nfs (n8n data) /mnt/gcs           │
+│  Auth Proxy via socket      Redis on NFS IP     qdrant + ollama     │
+│                                                                     │
+│  Secret Manager             Cloud Logging       Cloud Monitoring   │
+│  ├── encryption-key         k8s_container       pod CPU/memory     │
+│  └── smtp-password          namespace filter    HPA metrics        │
+└─────────────────────────────────────────────────────────────────────┘
+
+Module variable wiring:
+
+  N8N_AI_GKE
+    enable_ai_components = true  →  Qdrant + Ollama Kubernetes Deployments
+    enable_qdrant        = true  →  ClusterIP Service on port 6333
+    enable_ollama        = true  →  ClusterIP Service on port 11434
+    enable_redis         = true  →  queue mode, NFS_SERVER_IP placeholder
+    enable_nfs           = true  →  Cloud Filestore NFS mount
+    min_instance_count   = 0     →  HPA minimum replicas
+    max_instance_count   = 3     →  HPA maximum replicas
+```
+
+---
+
+## 3. Prerequisites
+
+### Required Tools
+
+| Tool | Minimum Version | Install |
+|---|---|---|
+| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
+| `kubectl` | 1.29+ | `gcloud components install kubectl` |
+| `curl` | Any | System package manager |
+| `jq` | 1.6+ | `apt install jq` / `brew install jq` |
+
+### GCP Permissions
+
+```
+roles/owner                    # or the following fine-grained set:
+roles/container.admin
+roles/secretmanager.admin
+roles/logging.viewer
+roles/monitoring.viewer
+roles/iam.serviceAccountUser
+```
+
+### Environment Variables
 
 ```bash
-export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
-export REGION="us-central1"             # the region you deployed into
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
 export TOKEN=$(gcloud auth print-access-token)
 
+gcloud config set project "${PROJECT}"
+gcloud config set compute/region "${REGION}"
+```
+
+---
+
+## 4. Lab Setup
+
+### 4.1 Deploy via RAD UI
+
+Deploy the `N8N_AI_GKE` module via the RAD UI. In the variable form, set:
+
+| Variable | Value | Notes |
+|---|---|---|
+| `project_id` | `your-gcp-project-id` | Required |
+| `region` | `us-central1` | GCP region |
+| `application_name` | `n8nai` | Base name for all resources |
+| `application_version` | `2.4.7` | n8n version |
+| `min_instance_count` | `0` | HPA minimum (set `1` to keep webhooks live) |
+| `max_instance_count` | `3` | HPA maximum replicas |
+| `cpu_limit` | `2000m` | CPU limit per n8n pod |
+| `memory_limit` | `4Gi` | Memory limit per n8n pod |
+| `enable_ai_components` | `true` | Deploys Qdrant + Ollama |
+| `enable_qdrant` | `true` | Qdrant vector database |
+| `enable_ollama` | `true` | Local LLM inference |
+| `ollama_model` | `llama3.2` | Default model |
+| `enable_redis` | `true` | Queue mode for multi-replica |
+| `enable_nfs` | `true` | NFS for Redis + workflow data |
+
+Click **Deploy** and wait for provisioning to complete (approximately 12–18 minutes). Ollama downloads the model on first startup, which may add a few minutes.
+
+> **What this provisions:** GKE namespace with n8n (LoadBalancer), Qdrant (ClusterIP), and
+> Ollama (ClusterIP) Deployments; HPA for n8n; Cloud SQL PostgreSQL 15 with Auth Proxy sidecar;
+> NFS Filestore; GCS bucket for AI data persistence; Workload Identity bindings; Secret Manager
+> secrets for encryption key and SMTP password; Redis on NFS.
+
+### 4.2 Configure Shell Environment
+
+```bash
 # Discover the GKE cluster
 export CLUSTER=$(gcloud container clusters list \
-  --project=${PROJECT} \
+  --project="${PROJECT}" \
   --format="value(name)" \
   --limit=1)
 
-# Configure kubectl
-gcloud container clusters get-credentials ${CLUSTER} \
-  --region=${REGION} \
-  --project=${PROJECT}
+echo "Cluster: ${CLUSTER}"
+```
 
-# Discover the namespace (pattern: appn8naidemo<deploymentid>)
+### 4.3 Configure kubectl
+
+```bash
+gcloud container clusters get-credentials "${CLUSTER}" \
+  --region="${REGION}" \
+  --project="${PROJECT}"
+
+kubectl cluster-info
+
+# Discover the n8n namespace
 export NAMESPACE=$(kubectl get namespaces --no-headers \
   -o custom-columns=":metadata.name" | grep "^appn8nai" | head -1)
 
-# Discover the external IP
-export EXTERNAL_IP=$(kubectl get svc -n ${NAMESPACE} \
-  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
+echo "Namespace: ${NAMESPACE}"
 
-# Discover the database password secret
-export DB_SECRET=$(gcloud secrets list \
-  --project=${PROJECT} \
-  --filter="name~n8nai" \
-  --format="value(name)" \
-  --limit=1)
+# Discover the external IP
+export EXTERNAL_IP=$(kubectl get service -n "${NAMESPACE}" \
+  -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
+
+echo "n8n URL: http://${EXTERNAL_IP}:5678"
 ```
 
 ---
 
-## Phase 2 — Configure kubectl and Verify Pods [MANUAL]
+## Exercise 1 — Access n8n AI on GKE
 
-### Step 2.1 — Get GKE Credentials
+### Objective
 
+Use kubectl to retrieve the n8n LoadBalancer external IP, verify all three Kubernetes Deployments are running, and complete the initial n8n account setup.
+
+### Step 1.1 — List All Services in the Namespace
+
+**kubectl:**
 ```bash
-gcloud container clusters get-credentials <cluster-name> \
-  --region <region> \
-  --project <project-id>
+kubectl get services -n "${NAMESPACE}"
 ```
 
-### Step 2.2 — Verify All Pods are Running
-
-```bash
-kubectl get pods --all-namespaces | grep n8nai
-# Or with the namespace directly:
-kubectl get pods -n ${NAMESPACE}
-```
-
-**Expected result:** Three running pods — n8n (with Cloud SQL Auth Proxy sidecar), Qdrant, and Ollama:
-
-```
-NAME                                  READY   STATUS    RESTARTS   AGE
-appn8naidemo<id>-xxx-yyy              2/2     Running   0          5m
-appn8naidemo<id>-qdrant-xxx-yyy       1/1     Running   0          5m
-appn8naidemo<id>-ollama-xxx-yyy       1/1     Running   0          5m
-```
-
-### Step 2.3 — Verify Qdrant and Ollama Services
-
-```bash
-kubectl get services -n ${NAMESPACE}
-```
-
-**Expected result:** ClusterIP services for Qdrant (port 6333) and Ollama (port 11434) alongside the n8n LoadBalancer service:
-
+**Expected result:**
 ```
 NAME                          TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)
 appn8naidemo<id>              LoadBalancer   10.x.x.x      34.x.x.x      5678:XXX/TCP
@@ -178,407 +243,713 @@ appn8naidemo<id>-qdrant       ClusterIP      10.x.x.x      <none>        6333/TC
 appn8naidemo<id>-ollama       ClusterIP      10.x.x.x      <none>        11434/TCP
 ```
 
-### Step 2.4 — Get Internal Service Endpoints
-
-Note the internal DNS names for Qdrant and Ollama — you will use these when configuring n8n AI nodes:
-
-- **Qdrant:** `http://appn8naidemo<id>-qdrant.appn8naidemo<id>.svc.cluster.local:6333`
-- **Ollama:** `http://appn8naidemo<id>-ollama.appn8naidemo<id>.svc.cluster.local:11434`
-
-**gcloud equivalent:**
+**gcloud:**
 ```bash
-gcloud container clusters list --project <project-id>
+gcloud container clusters describe "${CLUSTER}" \
+  --region="${REGION}" \
+  --project="${PROJECT}" \
+  --format="value(status)"
 ```
 
----
+**REST API:**
+```bash
+curl -s \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '{name: .name, status: .status, nodeCount: .currentNodeCount}'
+```
 
-## Phase 3 — Explore the n8n Workflow Editor [MANUAL]
-
-### Step 3.1 — Access the n8n UI
+### Step 1.2 — Verify All Pods Are Running
 
 ```bash
-kubectl get service -n ${NAMESPACE}
+kubectl get pods -n "${NAMESPACE}"
 ```
+
+**Expected pods:**
+```
+NAME                                    READY   STATUS    RESTARTS   AGE
+appn8naidemo<id>-xxx-yyy                2/2     Running   0          5m
+appn8naidemo<id>-qdrant-xxx-yyy         1/1     Running   0          5m
+appn8naidemo<id>-ollama-xxx-yyy         1/1     Running   0          5m
+```
+
+n8n shows `2/2` because it runs with a Cloud SQL Auth Proxy sidecar.
+
+### Step 1.3 — Get Internal Service DNS Names
+
+Note the Kubernetes cluster-local DNS names for the AI services:
+
+```bash
+# Qdrant internal DNS
+echo "Qdrant: http://${NAMESPACE}-qdrant.${NAMESPACE}.svc.cluster.local:6333"
+
+# Ollama internal DNS
+echo "Ollama: http://${NAMESPACE}-ollama.${NAMESPACE}.svc.cluster.local:11434"
+```
+
+These DNS names are used when configuring n8n AI nodes to connect to Qdrant and Ollama.
+
+### Step 1.4 — Access n8n UI and Create Admin Account
 
 Open your browser and navigate to `http://${EXTERNAL_IP}:5678`.
 
-For local port-forward access:
+On first launch:
+1. Complete the account setup wizard with your email and a strong password
+2. Select your usage preferences and click **Get started**
+3. You are redirected to the n8n canvas
+
+Alternatively, use port-forward for local access:
 ```bash
-kubectl port-forward service/${NAMESPACE} 5678:5678 -n ${NAMESPACE}
+kubectl port-forward service/"${NAMESPACE}" 5678:5678 -n "${NAMESPACE}"
 # Then open http://localhost:5678
 ```
 
-### Step 3.2 — Create an Admin Account
+### Step 1.5 — Verify Ollama Model is Loaded
 
-On first launch, create an owner account with your email and a strong password. The n8n encryption key is stored in Secret Manager; credentials are stored in PostgreSQL.
+Test Ollama from within the cluster using a temporary pod:
 
-**Expected result:** You are redirected to the n8n canvas.
+```bash
+kubectl run curl-test \
+  --image=curlimages/curl \
+  --restart=Never \
+  -n "${NAMESPACE}" -- \
+  curl -s "http://${NAMESPACE}-ollama.${NAMESPACE}.svc.cluster.local:11434/api/tags"
 
-### Step 3.3 — Tour the Canvas and Create a Simple Workflow
+kubectl logs curl-test -n "${NAMESPACE}"
+kubectl delete pod curl-test -n "${NAMESPACE}"
+```
 
-1. Click **+ New workflow**.
-2. Add a **Manual Trigger** node, then an **HTTP Request** node (URL: `https://httpbin.org/get`).
-3. Add a **Set** node and set a value: Name = `message`, Value = `Hello from n8n AI`.
-4. **Save** and **Execute workflow**.
-
-**Expected result:** All nodes turn green. Each node shows its input/output data.
+**Expected result:** JSON response listing the loaded model, e.g. `{"models":[{"name":"llama3.2",...}]}`.
 
 ---
 
-## Phase 4 — Webhooks and Triggers [MANUAL]
+## Exercise 2 — Build an AI Workflow
 
-### Step 4.1 — Create a Webhook Workflow
+### Objective
 
-1. Create a new workflow with a **Webhook** node (Method: `POST`, Path: `ai-test`).
-2. Add a **Set** node to record the payload: `received = {{ $json.body }}`
-3. **Save** and click **Listen for Test Event**.
+Build a working AI agent workflow in n8n that uses the Ollama LLM via Kubernetes ClusterIP service discovery, demonstrating the full prompt-chain from user input to AI-generated output on GKE.
 
-### Step 4.2 — Test the Webhook
+### Step 2.1 — Verify n8n Has the Ollama Environment Variable
+
+Check that `OLLAMA_HOST` was injected into the n8n pod:
 
 ```bash
-curl -X POST http://${EXTERNAL_IP}:5678/webhook-test/ai-test \
+kubectl exec -n "${NAMESPACE}" \
+  "$(kubectl get pod -n "${NAMESPACE}" -l app="${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')" \
+  -c "${NAMESPACE}" -- env | grep OLLAMA
+```
+
+**Expected result:** `OLLAMA_HOST=http://<namespace>-ollama.<namespace>.svc.cluster.local:11434`
+
+### Step 2.2 — Build the AI Agent Workflow
+
+1. In n8n, click **+ New workflow** and name it `AI Agent Demo`
+2. Add a **Manual Trigger** node
+3. Add a **Set** node to inject a test question:
+   - Name: `question`
+   - Value: `What is Kubernetes and how does it differ from Docker?`
+4. Add an **AI Agent** node:
+   - Click **Chat Model** → select **Ollama Chat Model**
+   - Set **Base URL** to the Ollama ClusterIP DNS name:
+     `http://${NAMESPACE}-ollama.${NAMESPACE}.svc.cluster.local:11434`
+   - Set **Model** to `llama3.2`
+5. Set the AI Agent **System Prompt**: `You are a concise technical assistant for cloud infrastructure topics.`
+6. Set the **User Prompt** to: `{{ $json.question }}`
+7. Connect: Manual Trigger → Set → AI Agent
+8. Click **Save** and **Execute workflow**
+
+**Expected result:** The AI Agent returns a text answer generated locally by Ollama. Response time on CPU is 5–60 seconds depending on question complexity and model size.
+
+### Step 2.3 — Add a Prompt Chain
+
+Add a second LLM call to extract key points from the first response:
+
+1. After the AI Agent, add a **Set** node:
+   - Name: `summary_prompt`
+   - Value: `List exactly 3 key points from: {{ $json.output }}`
+2. Add a second **AI Agent** node with the same Ollama configuration
+3. Set its prompt to: `{{ $json.summary_prompt }}`
+4. Connect the chain: AI Agent → Set → second AI Agent
+5. **Save** and **Execute**
+
+**Expected result:** The second AI Agent returns a three-point summary of the first response.
+
+### Step 2.4 — Activate and Test via Webhook
+
+1. Replace the Manual Trigger with a **Webhook** node: Path = `ask-ai`, Method = `POST`
+2. Update the first AI Agent prompt to: `{{ $json.body.question }}`
+3. Add **Respond to Webhook** at the end
+4. **Save** and **Activate**
+
+```bash
+curl -X POST "http://${EXTERNAL_IP}:5678/webhook/ask-ai" \
   -H "Content-Type: application/json" \
-  -d '{"query": "Tell me about vector databases", "user": "lab-user"}'
-```
-
-**Expected result:** The Webhook node receives the payload and displays it in the UI.
-
-### Step 4.3 — Scheduled Trigger
-
-Create a workflow with a **Schedule Trigger** (every 1 minute) → **HTTP Request** → **Save and Activate**. Verify an execution appears after one minute, then deactivate.
-
----
-
-## Phase 5 — Credential Management [MANUAL]
-
-### Step 5.1 — Add Credentials
-
-In any workflow, add an **HTTP Request** node. Click **Authentication → Basic Auth → Create New Credential**. Enter credentials and save.
-
-### Step 5.2 — View Secrets in Secret Manager
-
-```bash
-gcloud secrets list --project <project-id> | grep n8nai
-```
-
-**Expected result:** Secrets for the n8n encryption key and database password appear, encrypted at rest.
-
----
-
-## Phase 6 — Workflow History and Error Handling [MANUAL]
-
-### Step 6.1 — View Execution History
-
-Open any workflow and click **Executions** (clock icon). View completed and failed execution records.
-
-```bash
-# View pod logs for execution events
-kubectl logs -n ${NAMESPACE} deployment/${NAMESPACE} -c ${NAMESPACE} --tail=100
-```
-
-### Step 6.2 — Add Error Handling
-
-1. Add an **Error Trigger** node to a workflow.
-2. Connect it to a **Set** node that records `error = true`.
-3. Deliberately fail the main workflow (use an invalid URL in HTTP Request).
-4. Execute and verify the error branch fires.
-
----
-
-## Phase 7 — Explore Cloud Logging [MANUAL]
-
-### Step 7.1 — View n8n Logs
-
-```bash
-gcloud logging read \
-  'resource.type="k8s_container" AND resource.labels.namespace_name="'${NAMESPACE}'"' \
-  --project <project-id> \
-  --limit 50 \
-  --format "value(timestamp, jsonPayload.message)"
-```
-
-### Step 7.2 — View Ollama Logs
-
-```bash
-kubectl logs -n ${NAMESPACE} deployment/${NAMESPACE}-ollama --tail=50
-```
-
-**Expected result:** Ollama startup logs showing model loading and inference server ready messages.
-
-### Step 7.3 — View Qdrant Logs
-
-```bash
-kubectl logs -n ${NAMESPACE} deployment/${NAMESPACE}-qdrant --tail=50
-```
-
-**Expected result:** Qdrant startup logs confirming the vector database is ready and listening on port 6333.
-
----
-
-## Phase 8 — Explore Cloud Monitoring [MANUAL]
-
-### Step 8.1 — View Pod Metrics
-
-Navigate to **Cloud Monitoring → Metrics Explorer**:
-- **Resource type:** `k8s_container`
-- **Metric:** `kubernetes.io/container/cpu/core_usage_time`
-- **Filter:** `namespace_name = ${NAMESPACE}`
-
-**Expected result:** CPU time-series for n8n, Qdrant, and Ollama pods.
-
-### Step 8.2 — Check HPA Status
-
-```bash
-kubectl get hpa -n ${NAMESPACE}
-kubectl describe hpa -n ${NAMESPACE}
-```
-
-**Expected result:** HPA details for the n8n deployment showing current/target CPU utilization and replica counts.
-
----
-
-## Phase 9 — Scaling [MANUAL]
-
-### Step 9.1 — Examine HPA Configuration
-
-```bash
-kubectl get hpa -n ${NAMESPACE}
-```
-
-**Expected result:**
-```
-NAME               REFERENCE                      TARGETS   MINPODS   MAXPODS   REPLICAS
-appn8naidemo<id>   Deployment/appn8naidemo<id>   10%/80%   0         3         1
-```
-
-Qdrant and Ollama run as fixed single-replica Deployments — scale them manually if needed for higher throughput.
-
-### Step 9.2 — Manually Scale n8n Workers
-
-```bash
-kubectl scale deployment/${NAMESPACE} --replicas=2 -n ${NAMESPACE}
-kubectl get pods -n ${NAMESPACE} -w
-```
-
----
-
-## Phase 10 — AI Agent Workflows [MANUAL]
-
-### Step 10.1 — Verify Ollama is Ready
-
-Test Ollama directly from within the cluster using a temporary pod:
-
-```bash
-kubectl run curl-test --image=curlimages/curl --restart=Never -n ${NAMESPACE} -- \
-  curl -s http://${NAMESPACE}-ollama.${NAMESPACE}.svc.cluster.local:11434/api/tags
-kubectl logs curl-test -n ${NAMESPACE}
-kubectl delete pod curl-test -n ${NAMESPACE}
-```
-
-**Expected result:** JSON response listing the loaded model (e.g., `llama3.2`).
-
-### Step 10.2 — Create an AI Agent Workflow
-
-1. In n8n, click **+ New workflow**.
-2. Add a **Manual Trigger** node.
-3. Click **+** and search for **AI Agent** node. Select it.
-4. In the AI Agent node configuration:
-   - Click **Chat Model** → Add a model. Search for **Ollama**.
-   - Set the **Base URL** to the internal Ollama endpoint:
-     ```
-     http://appn8naidemo<id>-ollama.appn8naidemo<id>.svc.cluster.local:11434
-     ```
-   - Set **Model** to `llama3.2` (or the model configured in `ollama_model`)
-5. In the **Prompt** field, set:
-   ```
-   You are a helpful assistant. Answer this question: {{ $json.question }}
-   ```
-6. Add a **Set** node before the AI Agent to inject a test question:
-   - Name: `question`, Value: `What is Kubernetes?`
-7. Connect: Manual Trigger → Set → AI Agent.
-8. **Save** and **Execute workflow**.
-
-**Expected result:** The AI Agent node shows the LLM response. The output contains a text explanation of Kubernetes generated locally by Ollama. Response time depends on the model size — llama3.2 takes 5–30 seconds on CPU.
-
-### Step 10.3 — Test with a Webhook Input
-
-1. Replace the Manual Trigger with a **Webhook** node (Path: `ask-ai`, Method: `POST`).
-2. Change the AI Agent prompt to: `Answer this question: {{ $json.body.question }}`
-3. **Save** the workflow and **Activate** it.
-4. Send a test request:
-
-```bash
-curl -X POST http://${EXTERNAL_IP}:5678/webhook/ask-ai \
-  -H "Content-Type: application/json" \
-  -d '{"question": "Explain vector databases in simple terms."}'
+  -d '{"question": "Explain what an AI agent is in simple terms."}'
 ```
 
 **Expected result:** The webhook returns a JSON response containing the Ollama-generated answer.
 
 ---
 
-## Phase 11 — Vector Store Integration [MANUAL]
+## Exercise 3 — AI Memory and Context
 
-### Step 11.1 — Verify Qdrant is Ready
+### Objective
 
-```bash
-kubectl run curl-test --image=curlimages/curl --restart=Never -n ${NAMESPACE} -- \
-  curl -s http://appn8naidemo<id>-qdrant.appn8naidemo<id>.svc.cluster.local:6333/collections
-kubectl logs curl-test -n ${NAMESPACE}
-kubectl delete pod curl-test -n ${NAMESPACE}
-```
+Configure the n8n AI Agent with a Window Buffer Memory node to retain conversation history across multiple requests within a session, demonstrating stateful AI interactions on GKE.
 
-**Expected result:** `{"result":{"collections":[]},"status":"ok","time":0.0001}` — Qdrant is running with no collections yet.
+### Step 3.1 — Add Memory to the AI Agent
 
-### Step 11.2 — Create a Vector Store Workflow
+1. Open the `AI Agent Demo` workflow
+2. Click the **Memory** input port of the AI Agent node
+3. Add a **Window Buffer Memory** node:
+   - Context Window Length: `5`
+   - Session ID: `{{ $json.body.session_id }}` (for multi-user contexts)
+4. **Save** the workflow
 
-This workflow accepts text, generates embeddings via Ollama, and stores them in Qdrant.
+### Step 3.2 — Test Context Retention
 
-1. Create a new workflow with a **Webhook** trigger (Path: `store-document`, Method: `POST`).
-2. Add an **Embeddings Ollama** node:
-   - Set **Base URL**: `http://appn8naidemo<id>-ollama.appn8naidemo<id>.svc.cluster.local:11434`
-   - Set **Model** to an embedding model such as `nomic-embed-text` (or `llama3.2` for text embeddings)
-3. Add a **Qdrant Vector Store** node (Insert operation):
-   - Set **Qdrant URL**: `http://appn8naidemo<id>-qdrant.appn8naidemo<id>.svc.cluster.local:6333`
-   - Set **Collection Name**: `documents`
-   - Connect the embeddings output
-4. **Save** and **Activate** the workflow.
-
-**Test document ingestion:**
+Send two related requests with the same session ID:
 
 ```bash
-curl -X POST http://${EXTERNAL_IP}:5678/webhook/store-document \
+# First message — introduce context
+curl -X POST "http://${EXTERNAL_IP}:5678/webhook/ask-ai" \
   -H "Content-Type: application/json" \
-  -d '{"text": "Kubernetes is an open-source container orchestration platform.", "id": "doc-001"}'
+  -d '{"question": "My name is Sam and I manage a GKE cluster.", "session_id": "session-001"}'
 
-curl -X POST http://${EXTERNAL_IP}:5678/webhook/store-document \
+# Second message — test recall
+curl -X POST "http://${EXTERNAL_IP}:5678/webhook/ask-ai" \
   -H "Content-Type: application/json" \
-  -d '{"text": "Qdrant is a vector database optimized for similarity search.", "id": "doc-002"}'
+  -d '{"question": "What is my name and what do I manage?", "session_id": "session-001"}'
 ```
 
-**Expected result:** Documents are embedded and stored in Qdrant. Verify by checking the collection:
+**Expected result:** The second response correctly identifies "Sam" and "GKE cluster", demonstrating that the Buffer Memory node maintained context across requests.
+
+### Step 3.3 — Verify Memory Isolation Between Sessions
 
 ```bash
-kubectl run curl-test --image=curlimages/curl --restart=Never -n ${NAMESPACE} -- \
-  curl -s "http://appn8naidemo<id>-qdrant.appn8naidemo<id>.svc.cluster.local:6333/collections/documents"
-kubectl logs curl-test -n ${NAMESPACE}
-kubectl delete pod curl-test -n ${NAMESPACE}
+# Different session ID — should not recall previous context
+curl -X POST "http://${EXTERNAL_IP}:5678/webhook/ask-ai" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is my name?", "session_id": "session-002"}'
 ```
 
-**Expected result:** Collection info shows `vectors_count: 2`.
+**Expected result:** The response does not recall "Sam", confirming memory is isolated per `session_id`.
 
-### Step 11.3 — Retrieve Similar Documents
-
-1. Create a new workflow with a **Webhook** trigger (Path: `search-documents`, Method: `POST`).
-2. Add an **Embeddings Ollama** node to embed the search query.
-3. Add a **Qdrant Vector Store** node (Search operation):
-   - Same Qdrant URL and collection name
-   - Set **Limit** to `3`
-4. Add a **Set** node to format the results.
-5. **Save** and **Activate**.
-
-**Test similarity search:**
+### Step 3.4 — Inspect Memory Storage via Pod Logs
 
 ```bash
-curl -X POST http://${EXTERNAL_IP}:5678/webhook/search-documents \
-  -H "Content-Type: application/json" \
-  -d '{"query": "What is container orchestration?"}'
+kubectl logs -n "${NAMESPACE}" \
+  "$(kubectl get pod -n "${NAMESPACE}" -l app="${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')" \
+  -c "${NAMESPACE}" \
+  --tail=30
 ```
 
-**Expected result:** The response returns the most similar documents from Qdrant. The Kubernetes document should rank highest for this query.
+**Expected result:** Log entries showing workflow execution events and PostgreSQL operations where conversation history is stored.
+
+### Step 3.5 — View Execution History in n8n
+
+1. Open the workflow in n8n and click **Executions** (clock icon)
+2. Click a completed execution to view the full node-by-node input/output data
+3. Examine the memory node's output to see the conversation history object stored in the database
 
 ---
 
-## Phase 12 — RAG Pipeline [MANUAL]
+## Exercise 4 — Kubernetes Workloads
 
-Build a complete Retrieval-Augmented Generation pipeline that retrieves context from Qdrant and generates a grounded answer using Ollama.
+### Objective
 
-### Step 12.1 — Document Ingestion Workflow
+Inspect the Kubernetes Deployments, resource limits, NFS volumes, and HPA configuration for the n8n AI stack on GKE Autopilot, and scale workloads manually.
 
-Reuse or extend the ingestion workflow from Phase 11. Add a **Text Splitter** node before embedding to chunk large documents:
+### Step 4.1 — Inspect All Deployments
 
-1. **Webhook** (Path: `ingest`) → **Text Splitter** (chunk size: 500 chars) → **Embeddings Ollama** → **Qdrant Vector Store** (Insert)
-
-Ingest several sample documents:
-
+**kubectl:**
 ```bash
-curl -X POST http://${EXTERNAL_IP}:5678/webhook/ingest \
-  -H "Content-Type: application/json" \
-  -d '{"text": "GKE Autopilot is a managed Kubernetes service where Google manages the underlying infrastructure. It provides automatic scaling, patching, and node management. Users only pay for the resources their workloads consume.", "source": "gke-docs"}'
+kubectl get deployments -n "${NAMESPACE}"
 
-curl -X POST http://${EXTERNAL_IP}:5678/webhook/ingest \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Cloud SQL is a fully managed relational database service supporting PostgreSQL, MySQL, and SQL Server. It provides automated backups, replication, and failover. PostgreSQL 15 supports advanced JSON features and improved performance.", "source": "cloudsql-docs"}'
+kubectl describe deployment "${NAMESPACE}" -n "${NAMESPACE}"
 ```
 
-### Step 12.2 — Query Workflow with Context Retrieval and LLM Response
-
-1. Create a new workflow with a **Webhook** trigger (Path: `rag-query`, Method: `POST`).
-2. **Embeddings Ollama** node — embed the incoming query.
-3. **Qdrant Vector Store** (Search) — retrieve the top 3 similar document chunks.
-4. **Code** node — assemble the context prompt:
-   ```javascript
-   const query = $input.first().json.query;
-   const docs = $input.all().map(d => d.json.payload.text).join('\n\n');
-   return [{
-     json: {
-       prompt: `Use the following context to answer the question.\n\nContext:\n${docs}\n\nQuestion: ${query}\n\nAnswer:`
-     }
-   }];
-   ```
-5. **Ollama** node (or AI Agent with Ollama Chat Model) — generate the answer using the assembled prompt.
-6. **Respond to Webhook** node — return the answer to the caller.
-
-**Test the RAG pipeline:**
-
+**gcloud:**
 ```bash
-curl -X POST http://${EXTERNAL_IP}:5678/webhook/rag-query \
-  -H "Content-Type: application/json" \
-  -d '{"query": "How does GKE Autopilot handle node management?"}'
+gcloud container clusters describe "${CLUSTER}" \
+  --region="${REGION}" \
+  --project="${PROJECT}" \
+  --format="value(nodeConfig.machineType, currentNodeCount)"
 ```
 
-**Expected result:** A contextually grounded answer about GKE Autopilot, referencing the ingested document rather than relying solely on the model's training data. The response should mention that Google manages the infrastructure and users pay for consumed resources.
-
-### Step 12.3 — Compare RAG vs. Direct LLM
-
-Test the same question directly against Ollama without context retrieval to see how grounding improves accuracy:
-
+**REST API:**
 ```bash
-kubectl run curl-test --image=curlimages/curl --restart=Never -n ${NAMESPACE} -- \
-  curl -s -X POST \
-  http://appn8naidemo<id>-ollama.appn8naidemo<id>.svc.cluster.local:11434/api/generate \
-  -H "Content-Type: application/json" \
-  -d '{"model": "llama3.2", "prompt": "How does GKE Autopilot handle node management?", "stream": false}'
-kubectl logs curl-test -n ${NAMESPACE}
-kubectl delete pod curl-test -n ${NAMESPACE}
+curl -s \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.nodePools[] | {name: .name, machineType: .config.machineType, initialNodeCount: .initialNodeCount}'
 ```
 
-**Expected result:** A more generic answer from the base model without the specific details from your ingested documents. This demonstrates the value of RAG — the retrieved context anchors the LLM's response to your actual data.
+### Step 4.2 — Inspect Resource Limits
+
+```bash
+# View n8n container resource limits
+kubectl get pod -n "${NAMESPACE}" \
+  -l app="${NAMESPACE}" \
+  -o jsonpath='{.items[0].spec.containers[*].resources}' | jq .
+
+# View Ollama resource limits
+kubectl get pod -n "${NAMESPACE}" \
+  -l app="${NAMESPACE}-ollama" \
+  -o jsonpath='{.items[0].spec.containers[0].resources}' | jq .
+```
+
+**Expected result:** n8n shows `cpu: 2000m, memory: 4Gi` limits. Ollama inherits the same limits because both use the `cpu_limit` and `memory_limit` module variables.
+
+### Step 4.3 — Inspect NFS Volume Mounts
+
+```bash
+# Verify NFS volume is mounted in the n8n pod
+kubectl get pod -n "${NAMESPACE}" \
+  -l app="${NAMESPACE}" \
+  -o jsonpath='{.items[0].spec.volumes}' | jq '.[] | select(.name == "nfs")'
+
+# Check the mount path
+kubectl get pod -n "${NAMESPACE}" \
+  -l app="${NAMESPACE}" \
+  -o jsonpath='{.items[0].spec.containers[0].volumeMounts}' | jq .
+```
+
+**Expected result:** An NFS volume mounted at `/mnt/nfs` (the `nfs_mount_path` variable value).
+
+### Step 4.4 — Inspect the HPA
+
+```bash
+kubectl get hpa -n "${NAMESPACE}"
+
+kubectl describe hpa -n "${NAMESPACE}"
+```
+
+**Expected result:**
+```
+NAME               REFERENCE                     TARGETS    MINPODS   MAXPODS   REPLICAS
+appn8naidemo<id>   Deployment/appn8naidemo<id>   10%/80%    0         3         1
+```
+
+The HPA scales n8n based on CPU utilisation. Qdrant and Ollama run as fixed single-replica Deployments and must be scaled manually.
+
+### Step 4.5 — Scale n8n Manually
+
+```bash
+# Scale n8n to 2 replicas
+kubectl scale deployment "${NAMESPACE}" \
+  --replicas=2 \
+  -n "${NAMESPACE}"
+
+# Watch the new pod start
+kubectl get pods -n "${NAMESPACE}" -w
+```
+
+**Expected result:** A second n8n pod starts within 1–2 minutes. With Redis queue mode enabled, both pods share workflow execution without state conflicts.
+
+```bash
+# Scale back to 1
+kubectl scale deployment "${NAMESPACE}" \
+  --replicas=1 \
+  -n "${NAMESPACE}"
+```
+
+### Step 4.6 — Check GCS Volume Mounts for AI Services
+
+```bash
+# Verify Qdrant GCS Fuse mount
+kubectl get pod -n "${NAMESPACE}" \
+  -l app="${NAMESPACE}-qdrant" \
+  -o jsonpath='{.items[0].spec.containers[0].volumeMounts}' | jq .
+
+# Verify Ollama GCS Fuse mount
+kubectl get pod -n "${NAMESPACE}" \
+  -l app="${NAMESPACE}-ollama" \
+  -o jsonpath='{.items[0].spec.containers[0].volumeMounts}' | jq .
+```
+
+**Expected result:** Qdrant shows a volume mounted at `/mnt/gcs/qdrant` and Ollama at `/mnt/gcs/ollama/models`, backed by the shared GCS bucket for persistence across pod restarts.
 
 ---
 
-## Phase 13 — Undeploy [AUTOMATED]
+## Exercise 5 — Security and Workload Identity
 
-When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module. This removes all Kubernetes resources (n8n, Qdrant, Ollama Deployments and Services), Cloud SQL instance, NFS Filestore, GCS buckets, secrets, and IAM bindings.
+### Objective
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Explore GKE Workload Identity configuration that binds Kubernetes service accounts to GCP service accounts, enabling n8n, Qdrant, and Ollama to access GCP resources without static credentials.
+
+### Step 5.1 — List Service Accounts in the Namespace
+
+**kubectl:**
+```bash
+kubectl get serviceaccounts -n "${NAMESPACE}"
+```
+
+**Expected result:** One or more service accounts, including one for n8n with a Workload Identity annotation.
+
+### Step 5.2 — Inspect Workload Identity Annotation
+
+```bash
+# Check the Workload Identity annotation on the n8n service account
+kubectl get serviceaccount -n "${NAMESPACE}" \
+  -o yaml | grep -A3 "annotations:"
+```
+
+**Expected result:** An annotation like `iam.gke.io/gcp-service-account: <sa-name>@<project>.iam.gserviceaccount.com` binding the Kubernetes service account to a GCP service account.
+
+**gcloud — verify IAM binding:**
+```bash
+gcloud iam service-accounts list \
+  --project="${PROJECT}" \
+  --filter="email~n8nai" \
+  --format="table(email, displayName)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://iam.googleapis.com/v1/projects/${PROJECT}/serviceAccounts" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.accounts[] | select(.email | test("n8nai")) | {email, displayName}'
+```
+
+### Step 5.3 — Verify Secret Manager Access
+
+n8n uses Workload Identity to access Secret Manager secrets without embedding credentials:
+
+```bash
+gcloud secrets list \
+  --project="${PROJECT}" \
+  --filter="name~n8nai" \
+  --format="table(name, replication.automatic)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets?filter=name:n8nai" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.secrets[] | {name: .name, createTime: .createTime}'
+```
+
+**Expected result:** The encryption key and SMTP password secrets appear, confirming Secret Manager was provisioned and the n8n pod can access them via Workload Identity.
+
+### Step 5.4 — Verify the Encryption Key Is Loaded
+
+```bash
+kubectl exec -n "${NAMESPACE}" \
+  "$(kubectl get pod -n "${NAMESPACE}" -l app="${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')" \
+  -c "${NAMESPACE}" -- env | grep N8N_ENCRYPTION_KEY
+```
+
+**Expected result:** The variable is set (value will be the actual 32-char key), confirming Secret Manager secret resolution is working via Workload Identity.
+
+### Step 5.5 — Check Pod Security Context
+
+```bash
+kubectl get pod -n "${NAMESPACE}" \
+  -l app="${NAMESPACE}" \
+  -o jsonpath='{.items[0].spec.securityContext}' | jq .
+```
+
+Inspect the security context to understand the UID/GID settings for the n8n pod (UID 1000 to match the `node` user in the container image, required for the GCS Fuse volume mount to be writable).
 
 ---
 
-## Summary
+## Exercise 6 — Cloud Logging
 
-| Phase | Activity | Method |
-|---|---|---|
-| 1 | Deploy n8n AI on GKE Autopilot | Automated (RAD UI) |
-| 2 | Configure kubectl, verify all pods | Manual (gcloud, kubectl) |
-| 3 | Access UI, create first workflow | Manual (browser) |
-| 4 | Webhooks and scheduled triggers | Manual (browser + curl) |
-| 5 | Credential management | Manual (browser) |
-| 6 | Execution history, error handling | Manual (browser) |
-| 7 | Cloud Logging — n8n, Ollama, Qdrant logs | Manual (gcloud / kubectl) |
-| 8 | Cloud Monitoring — pod metrics | Manual (console) |
-| 9 | HPA scaling configuration | Manual (kubectl) |
-| 10 | AI Agent workflow with Ollama LLM | Manual (browser + curl) |
-| 11 | Qdrant vector store — store and search | Manual (browser + curl) |
-| 12 | RAG pipeline — end-to-end document QA | Manual (browser + curl) |
-| 13 | Undeploy all resources | Automated (RAD UI) |
+### Objective
+
+View and correlate logs from all three Kubernetes workloads (n8n, Qdrant, Ollama) using both kubectl and Cloud Logging to understand AI workflow execution patterns and diagnose issues.
+
+### Step 6.1 — View n8n Logs with kubectl
+
+```bash
+kubectl logs -n "${NAMESPACE}" \
+  "$(kubectl get pod -n "${NAMESPACE}" -l app="${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')" \
+  -c "${NAMESPACE}" \
+  --tail=50
+```
+
+**Expected result:** n8n startup log entries including database connection, encryption key loading, and workflow engine initialisation.
+
+### Step 6.2 — View Ollama Logs
+
+```bash
+kubectl logs -n "${NAMESPACE}" \
+  deployment/"${NAMESPACE}-ollama" \
+  --tail=50
+```
+
+**Expected result:** Ollama model loading progress and inference server ready message on port 11434.
+
+### Step 6.3 — View Qdrant Logs
+
+```bash
+kubectl logs -n "${NAMESPACE}" \
+  deployment/"${NAMESPACE}-qdrant" \
+  --tail=50
+```
+
+**Expected result:** Qdrant startup logs showing the vector database is listening on port 6333 and the storage path is `/mnt/gcs/qdrant`.
+
+### Step 6.4 — Query Cloud Logging for All Namespace Containers
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   AND resource.labels.namespace_name=\"${NAMESPACE}\"" \
+  --project="${PROJECT}" \
+  --limit=50 \
+  --format="value(timestamp, resource.labels.container_name, jsonPayload.message)"
+```
+
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://logging.googleapis.com/v2/entries:list" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"resourceNames\": [\"projects/${PROJECT}\"],
+    \"filter\": \"resource.type=k8s_container AND resource.labels.namespace_name=${NAMESPACE}\",
+    \"orderBy\": \"timestamp desc\",
+    \"pageSize\": 20
+  }" | jq '.entries[] | {timestamp: .timestamp, container: .resource.labels.containerName, message: .jsonPayload.message}'
+```
+
+### Step 6.5 — Filter Logs by Container
+
+```bash
+# Ollama logs only
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
+   AND resource.labels.container_name=\"${NAMESPACE}-ollama\"" \
+  --project="${PROJECT}" \
+  --limit=20 \
+  --format="value(timestamp, jsonPayload.message)"
+
+# Qdrant logs only
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
+   AND resource.labels.container_name=\"${NAMESPACE}-qdrant\"" \
+  --project="${PROJECT}" \
+  --limit=20 \
+  --format="value(timestamp, jsonPayload.message)"
+```
+
+### Step 6.6 — Open Cloud Logging Console
+
+```bash
+echo "https://console.cloud.google.com/logs/query;query=resource.type%3D%22k8s_container%22%20AND%20resource.labels.namespace_name%3D%22${NAMESPACE}%22?project=${PROJECT}"
+```
+
+---
+
+## Exercise 7 — Cloud Monitoring and Scaling
+
+### Objective
+
+Inspect pod-level CPU and memory metrics, monitor HPA scaling events, and use Cloud Monitoring to compare resource usage across all three Kubernetes workloads.
+
+### Step 7.1 — View Pod CPU and Memory Usage
+
+**kubectl (live resource usage — requires Metrics Server):**
+```bash
+kubectl top pods -n "${NAMESPACE}"
+```
+
+**Expected result:** Current CPU and memory usage for each pod (n8n, Qdrant, Ollama).
+
+**gcloud:**
+```bash
+gcloud monitoring metrics list \
+  --filter="metric.type:kubernetes.io/container" \
+  --project="${PROJECT}" \
+  | grep -E "cpu|memory"
+```
+
+### Step 7.2 — Query Pod CPU Usage via REST API
+
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"query\": \"fetch k8s_container::kubernetes.io/container/cpu/core_usage_time | filter resource.namespace_name = '${NAMESPACE}' | within 30m | group_by [resource.container_name], rate(val())\"
+  }" | jq '.timeSeriesData[] | {container: .labelValues[0].stringValue, cpuRate: .pointData[-1].values[0].doubleValue}'
+```
+
+**Expected result:** CPU usage broken out by container — `n8n`, `qdrant`, and `ollama`. Ollama shows elevated CPU during LLM inference.
+
+### Step 7.3 — Monitor HPA Scaling Events
+
+```bash
+# Watch HPA in real time (trigger workflows to generate CPU load)
+kubectl get hpa -n "${NAMESPACE}" -w
+```
+
+To trigger scaling, execute several AI Agent workflows in parallel from multiple terminal sessions:
+
+```bash
+for i in {1..5}; do
+  curl -X POST "http://${EXTERNAL_IP}:5678/webhook/ask-ai" \
+    -H "Content-Type: application/json" \
+    -d "{\"question\": \"Count to ${i} in French.\"}" &
+done
+wait
+```
+
+**Expected result:** HPA detects elevated CPU and schedules additional n8n replicas (up to `max_instance_count = 3`).
+
+### Step 7.4 — Query Memory Usage
+
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"query\": \"fetch k8s_container::kubernetes.io/container/memory/used_bytes | filter resource.namespace_name = '${NAMESPACE}' | within 30m | group_by [resource.container_name], mean(val())\"
+  }" | jq '.timeSeriesData[] | {container: .labelValues[0].stringValue, memoryBytes: .pointData[-1].values[0].int64Value}'
+```
+
+### Step 7.5 — View the GKE Workloads Dashboard
+
+```bash
+echo "https://console.cloud.google.com/kubernetes/workload?project=${PROJECT}"
+```
+
+Explore:
+- **Workloads** tab — Deployment status, replica count, rollout history for n8n, Qdrant, and Ollama
+- **Services & Ingress** — LoadBalancer external IP and ClusterIP services
+- **Pod details** — Container resource utilisation graphs
+
+### Step 7.6 — Check Cloud Monitoring Uptime Check
+
+**gcloud:**
+```bash
+gcloud monitoring uptime list-configs \
+  --project="${PROJECT}"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.uptimeCheckConfigs[] | {displayName, httpCheck: .httpCheck.path}'
+```
+
+---
+
+## Cleanup
+
+Return to the RAD UI and click **Undeploy** on the `N8N_AI_GKE` deployment. This removes all Kubernetes resources (Deployments, Services, HPA, namespace), Cloud SQL instance, NFS Filestore, GCS bucket, secrets, and IAM bindings.
+
+### Manual Cleanup (if needed)
+
+**kubectl:**
+```bash
+# Delete the namespace (removes all resources within it)
+kubectl delete namespace "${NAMESPACE}"
+```
+
+**gcloud:**
+```bash
+# Delete secrets
+gcloud secrets list \
+  --project="${PROJECT}" \
+  --filter="name~n8nai" \
+  --format="value(name)" \
+  | xargs -I{} gcloud secrets delete {} \
+    --project="${PROJECT}" --quiet
+```
+
+**REST API — delete namespace:**
+```bash
+curl -s -X DELETE \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}/namespaces/${NAMESPACE}" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)"
+```
+
+> **Note:** Resources provisioned by the `Services_GCP` module (VPC, GKE cluster) are managed
+> separately and must be undeployed via their own RAD UI deployment entry.
+
+---
+
+## Reference
+
+### Key Module Variables
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `project_id` | string | — | GCP project ID (required) |
+| `region` | string | `us-central1` | GCP region for all resources |
+| `application_name` | string | `n8nai` | Base name for Kubernetes resources |
+| `application_version` | string | `2.4.7` | n8n container image version |
+| `cpu_limit` | string | `2000m` | CPU limit per n8n pod (also used by Ollama) |
+| `memory_limit` | string | `4Gi` | Memory limit per n8n pod (also used by Ollama) |
+| `min_instance_count` | number | `0` | HPA minimum replicas |
+| `max_instance_count` | number | `3` | HPA maximum replicas |
+| `enable_ai_components` | bool | `true` | Master toggle for Qdrant + Ollama Deployments |
+| `enable_qdrant` | bool | `true` | Deploy Qdrant as Kubernetes Deployment + ClusterIP Service |
+| `qdrant_version` | string | `latest` | Qdrant Docker image tag |
+| `enable_ollama` | bool | `true` | Deploy Ollama as Kubernetes Deployment + ClusterIP Service |
+| `ollama_version` | string | `latest` | Ollama Docker image tag |
+| `ollama_model` | string | `llama3.2` | Default LLM model loaded at startup |
+| `enable_redis` | bool | `true` | Enable Redis queue mode for multi-replica n8n |
+| `redis_host` | string | `""` | Redis host (auto-discovered from NFS when empty) |
+| `enable_nfs` | bool | `true` | Provision Cloud Filestore NFS |
+| `db_name` | string | `n8n_db` | PostgreSQL database name |
+| `db_user` | string | `n8n_user` | PostgreSQL application user |
+| `service_type` | string | `LoadBalancer` | Kubernetes Service type for n8n |
+
+### Useful Commands
+
+```bash
+# Get all pods in namespace
+kubectl get pods -n "${NAMESPACE}"
+
+# Get all services in namespace
+kubectl get services -n "${NAMESPACE}"
+
+# View HPA
+kubectl get hpa -n "${NAMESPACE}"
+
+# View n8n logs
+kubectl logs deployment/"${NAMESPACE}" -n "${NAMESPACE}" --tail=50
+
+# View Ollama logs
+kubectl logs deployment/"${NAMESPACE}-ollama" -n "${NAMESPACE}" --tail=50
+
+# View Qdrant logs
+kubectl logs deployment/"${NAMESPACE}-qdrant" -n "${NAMESPACE}" --tail=50
+
+# Scale n8n
+kubectl scale deployment "${NAMESPACE}" --replicas=2 -n "${NAMESPACE}"
+
+# List secrets
+gcloud secrets list --project="${PROJECT}" --filter="name~n8nai"
+
+# Test Ollama from within cluster
+kubectl run curl-test --image=curlimages/curl --restart=Never -n "${NAMESPACE}" -- \
+  curl -s "http://${NAMESPACE}-ollama.${NAMESPACE}.svc.cluster.local:11434/api/tags"
+```
+
+### Further Reading
+
+- [n8n documentation](https://docs.n8n.io/)
+- [Qdrant documentation](https://qdrant.tech/documentation/)
+- [Ollama model library](https://ollama.com/library)
+- [GKE Autopilot overview](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
+- [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+- [Cloud Monitoring for GKE](https://cloud.google.com/stackdriver/docs/solutions/gke)
+- [Kubernetes HPA documentation](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
+- [n8n AI Agent node reference](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.agent/)

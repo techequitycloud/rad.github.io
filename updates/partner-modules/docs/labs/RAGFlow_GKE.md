@@ -1,505 +1,917 @@
-# RAGFlow on GKE Autopilot — Lab Guide
+# RAGFlow on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/RAGFlow_GKE)**
 
-## Overview
-
-**Estimated time:** 2–3 hours
-
-RAGFlow is an intelligent document analysis and RAG (Retrieval-Augmented Generation) engine. It processes documents (PDF, Word, HTML, etc.) into searchable knowledge bases using Elasticsearch for vector indexing and Redis for task queuing. This lab deploys RAGFlow on GKE Autopilot with a managed Cloud SQL MySQL 8.0 backend and GCS for artifact storage.
-
-### What the Module Automates
-
-- GKE Autopilot cluster (via Services_GCP prerequisite)
-- Cloud SQL MySQL 8.0 instance and database/user creation
-- Cloud SQL Auth Proxy sidecar injection into the RAGFlow pod
-- Kubernetes namespace, Deployment, and LoadBalancer Service
-- Cloud Storage bucket for document artifacts
-- Artifact Registry repository and container image build via Cloud Build
-- Secret Manager secrets (database password, Redis auth)
-- Workload Identity binding for least-privilege GCS and SQL access
-- NFS Filestore instance (optional, for shared upload staging)
-- Static external IP reservation
-- Cloud Monitoring uptime checks and alert policies
-
-### What You Do Manually
-
-- Note the deployment outputs (external IP, namespace, etc.) from the RAD UI deployment panel
-- Connect `kubectl` to the GKE cluster
-- Verify RAGFlow pod health and review startup logs
-- Register an admin account and explore the RAGFlow UI
-- Create a Knowledge Base and upload documents
-- Configure an LLM API key and build a RAG chatbot
-- Explore different chunking methods and document types
-- Test the RAGFlow REST API with a generated API key
-- Review Cloud Logging and Cloud Monitoring dashboards
+RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG) engine
+with 80,000+ GitHub stars. Unlike generic RAG frameworks, RAGFlow is purpose-built for deep
+document understanding — it correctly parses PDFs, tables, and visual layouts before chunking
+and retrieval. The `RAGFlow_GKE` module deploys RAGFlow on GKE Autopilot with a managed Cloud
+SQL MySQL 8.0 backend, Cloud SQL Auth Proxy sidecar, NFS for shared document processing, and
+GCS for artifact storage.
 
 ---
 
-## CLI and REST API Overview
+## Table of Contents
 
-This lab uses the following CLI tools:
-
-| Tool | Purpose |
-|---|---|
-| `gcloud` | GCP project and cluster management |
-| `kubectl` | Kubernetes workload inspection |
-| `curl` | RAGFlow REST API testing |
-
-Key REST APIs exercised:
-
-| API | Base URL |
-|---|---|
-| RAGFlow Knowledge Base | `http://<EXTERNAL_IP>/api/v1/knowledge_bases` |
-| RAGFlow Chat | `http://<EXTERNAL_IP>/api/v1/chat_assistants` |
-| RAGFlow Health | `http://<EXTERNAL_IP>/v1/health` |
-| GKE Cluster API | `https://container.googleapis.com/v1/projects/{project}/locations/{region}/clusters` |
+1. [Overview](#1-overview)
+2. [Architecture](#2-architecture)
+3. [Prerequisites](#3-prerequisites)
+4. [Lab Setup](#4-lab-setup)
+5. [Exercise 1 — Access RAGFlow](#exercise-1--access-ragflow)
+6. [Exercise 2 — Upload Documents and Build Knowledge Base](#exercise-2--upload-documents-and-build-knowledge-base)
+7. [Exercise 3 — Create Chat Application and Test Q&A](#exercise-3--create-chat-application-and-test-qa)
+8. [Exercise 4 — API Integration](#exercise-4--api-integration)
+9. [Exercise 5 — Kubernetes Workloads](#exercise-5--kubernetes-workloads)
+10. [Exercise 6 — Security and Workload Identity](#exercise-6--security-and-workload-identity)
+11. [Exercise 7 — Cloud Logging and Monitoring](#exercise-7--cloud-logging-and-monitoring)
+12. [Cleanup](#cleanup)
+13. [Reference](#reference)
 
 ---
 
-## Prerequisites
+## 1. Overview
 
-Before deploying, ensure the following:
+### What Is RAGFlow?
 
-1. **Services_GCP** module is deployed (provides VPC, GKE cluster, Memorystore Redis, Cloud SQL instance).
-2. **Elasticsearch_GKE** module is deployed and its `elasticsearch_endpoint` output is available.
-3. `gcloud` CLI is authenticated: `gcloud auth application-default login`
-4. `kubectl` is installed.
-5. You have a GCP project with billing enabled.
-6. Access to the RAD UI with permission to deploy modules in the target GCP project.
-7. (Optional) An OpenAI API key or other LLM endpoint for the chatbot phase.
+RAGFlow is an open-source **document intelligence and RAG platform** that ingests PDFs, Word
+documents, HTML pages, and other formats, chunks and embeds them using configurable strategies,
+stores vectors in Elasticsearch, and exposes a REST API for question-answering and enterprise
+search. The `RAGFlow_GKE` module deploys version **v0.13.0** on GKE Autopilot with ClientIP
+session affinity (ensuring upload sessions reach the same pod), NFS for shared processing, and
+Workload Identity for least-privilege GCP API access.
+
+### Key Capabilities Demonstrated
+
+| Capability | What It Demonstrates |
+|---|---|
+| **Document Intelligence** | PDF/DOCX/HTML ingestion with layout-aware chunking and embedding |
+| **Knowledge Base Management** | Named collections with configurable chunking strategies |
+| **RAG Chat** | LLM-powered Q&A with source citations from document chunks |
+| **REST API** | Programmatic knowledge base and chat assistant management |
+| **GKE Autopilot** | Managed Kubernetes with auto-provisioned nodes and Workload Identity |
+| **Cloud SQL Auth Proxy** | Secure sidecar-based MySQL 8.0 access via Unix socket |
+| **Workload Identity** | Pod-level IAM binding — no service account key files |
+| **NFS Storage** | Shared document processing via Cloud Filestore |
 
 ---
 
-## Phase 1 — Deploy [AUTOMATED]
+## 2. Architecture
 
-**Duration:** 20–35 minutes
+```
+Browser / API Client
+        │
+        ▼
+LoadBalancer Service (external IP, port 80)
+  │   ClientIP session affinity
+  ▼
+RAGFlow Deployment (GKE Autopilot)
+   ├── RAGFlow container (port 80, Nginx + Python workers)
+   │       ├── Document ingestion pipeline (parse → chunk → embed)
+   │       ├── REST API (/api/v1/...)
+   │       └── Web UI (Knowledge Base, Chat, Files, Settings)
+   └── Cloud SQL Auth Proxy sidecar (127.0.0.1:3306)
+```
 
-### Variables
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  Google Cloud                                                            │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │  GKE Autopilot Cluster                                             │  │
+│  │                                                                    │  │
+│  │  ┌──────────────────────────────────────────────────────────────┐  │  │
+│  │  │  ragflow namespace (appragflow<tenant><id>)                   │  │  │
+│  │  │                                                              │  │  │
+│  │  │  RAGFlow Deployment                                          │  │  │
+│  │  │    containers: [ragflow, cloud-sql-proxy]                    │  │  │
+│  │  │    session_affinity: ClientIP                                │  │  │
+│  │  │    min_replicas: 1  max_replicas: 5                         │  │  │
+│  │  │                                                              │  │  │
+│  │  │  db-init Job (mysql:8.0-debian)                              │  │  │
+│  │  └──────────────────────────────────────────────────────────────┘  │  │
+│  │                                                                    │  │
+│  │  ┌────────────────┐  ┌────────────────┐  ┌─────────────────────┐  │  │
+│  │  │  LoadBalancer  │  │ Workload       │  │  NFS (Filestore)    │  │  │
+│  │  │  Service       │  │ Identity       │  │  /mnt/nfs           │  │  │
+│  │  │  (external IP) │  │ (SA binding)   │  │  (shared docs)      │  │  │
+│  │  └────────────────┘  └────────────────┘  └─────────────────────┘  │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌───────────────────────┐  │
+│  │  Cloud SQL       │  │  Elasticsearch   │  │  Memorystore Redis    │  │
+│  │  MySQL 8.0       │  │  GKE (external   │  │  (task queue)         │  │
+│  │  (private IP)    │  │   LoadBalancer)  │  │                       │  │
+│  └──────────────────┘  └──────────────────┘  └───────────────────────┘  │
+│                                                                          │
+│  Module variable wiring:                                                 │
+│    RAGFlow_GKE                                                           │
+│      service_type       = LoadBalancer   → external IP                  │
+│      session_affinity   = ClientIP       → sticky upload sessions        │
+│      enable_nfs         = true           → shared document processing    │
+│      reserve_static_ip  = true           → stable external IP           │
+└──────────────────────────────────────────────────────────────────────────┘
+```
 
-In the RAD UI, open the RAGFlow_GKE module and fill in the deployment form:
+---
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `project_id` | Yes | — | GCP project ID (e.g., `my-project-123`) |
-| `region` | No | `us-central1` | GCP region for deployment |
-| `deployment_id` | No | auto-generated | Short alphanumeric suffix appended to all resource names |
-| `tenant_deployment_id` | No | `demo` | Environment identifier (e.g., `prod`, `dev`) |
-| `application_name` | No | `ragflow` | Internal app identifier (must be lowercase) |
-| `application_version` | No | `v0.13.0` | RAGFlow version tag; increment to trigger a new build |
-| `deploy_application` | No | `true` | Set to `false` to provision infrastructure only |
-| `min_instance_count` | No | `1` | Minimum pod replicas |
-| `max_instance_count` | No | `5` | Maximum pod replicas |
-| `gke_cluster_name` | No | auto-discovered | Name of the GKE Autopilot cluster |
-| `db_name` | No | `rag_flow` | MySQL database name |
-| `db_user` | No | `ragflow` | MySQL database user |
-| `database_password_length` | No | `32` | Length of the auto-generated database password |
-| `elasticsearch_hosts` | No | `""` | Elasticsearch HTTP endpoint (e.g., `http://10.0.0.5:9200`) |
-| `elasticsearch_username` | No | `""` | Elasticsearch username (leave blank if security disabled) |
-| `enable_redis` | No | `true` | Enable Redis task queue backend |
-| `redis_host` | No | `""` | Redis server IP (from Services_GCP Memorystore output) |
-| `redis_port` | No | `6379` | Redis server port |
-| `cpu_limit` | No | `4000m` | CPU limit per RAGFlow container |
-| `memory_limit` | No | `8Gi` | Memory limit per RAGFlow container |
-| `enable_nfs` | No | `true` | Provision Cloud Filestore NFS for shared storage |
-| `create_cloud_storage` | No | `true` | Provision GCS bucket for document artifacts |
-| `container_image_source` | No | `custom` | `custom` builds from Dockerfile; `prebuilt` uses an existing image |
-| `enable_inline_elasticsearch` | No | `false` | Deploy a dev-only single-node Elasticsearch alongside RAGFlow |
+## 3. Prerequisites
 
-### Deploy
+### Required Tools
 
-Click **Deploy** in the RAD UI.
+| Tool | Minimum Version | Install |
+|---|---|---|
+| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
+| `kubectl` | 1.29+ | `gcloud components install kubectl` |
+| `curl` / `jq` | Any | System package manager |
 
-### Approximate Phase Durations
+### GCP Permissions
 
-| Step | Duration |
-|---|---|
-| Cloud Build (container image) | 8–15 minutes |
-| GKE Deployment rollout (RAGFlow startup with Elasticsearch init) | 5–15 minutes |
-| Total | **~20–35 minutes** |
+```
+roles/owner                    # or the following fine-grained set:
+roles/container.admin
+roles/cloudsql.admin
+roles/secretmanager.admin
+roles/storage.admin
+roles/monitoring.viewer
+roles/logging.viewer
+```
 
-### Outputs
-
-After deployment completes, the following outputs are available in the RAD UI deployment panel:
-
-| Output | Description |
-|---|---|
-| `service_name` | Kubernetes Service name |
-| `service_url` | External service URL (may show IP) |
-| `service_external_ip` | External IP for the LoadBalancer |
-| `namespace` | Kubernetes namespace where RAGFlow is deployed |
-| `database_instance_name` | Cloud SQL instance name |
-| `database_name` | MySQL database name |
-| `database_user` | MySQL database username |
-| `database_password_secret` | Secret Manager secret name for the DB password |
-| `storage_buckets` | GCS bucket names |
-| `nfs_server_ip` | NFS server internal IP (sensitive) |
-| `container_image` | Full image URI deployed |
-| `kubernetes_ready` | True when all Kubernetes resources are provisioned |
-
-Set shell variables for use in later steps:
+### Environment Variables
 
 ```bash
-export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
-export REGION="us-central1"             # the region you deployed into
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
+
+gcloud config set project "${PROJECT}"
+gcloud config set compute/region "${REGION}"
+gcloud auth application-default login
+```
+
+---
+
+## 4. Lab Setup
+
+### 4.1 Deploy via RAD UI
+
+Deploy the `RAGFlow_GKE` module via the RAD UI. **Prerequisites:** `Services_GCP` and
+`Elasticsearch_GKE` must be deployed first. In the variable form, set:
+
+| Variable | Value | Notes |
+|---|---|---|
+| `project_id` | `your-gcp-project-id` | Required |
+| `region` | `us-central1` | GCP region |
+| `elasticsearch_hosts` | `http://<ES_IP>:9200` | From Elasticsearch_GKE output |
+| `redis_host` | `<REDIS_IP>` | From Services_GCP Memorystore output |
+| `enable_redis` | `true` | Required for document processing workers |
+| `enable_nfs` | `true` | Shared document processing (default) |
+| `cpu_limit` | `4000m` | RAGFlow is CPU-intensive |
+| `memory_limit` | `8Gi` | Embedding models require significant RAM |
+
+Click **Deploy** and wait for provisioning (approximately 20–35 minutes).
+
+> **What this provisions:** GKE Autopilot namespace, Cloud SQL MySQL 8.0, Cloud SQL Auth Proxy
+> sidecar, Kubernetes Deployment with LoadBalancer service, GCS bucket, NFS Filestore, Secret
+> Manager secrets, Artifact Registry repository and custom container image via Cloud Build, and
+> Cloud Monitoring uptime checks.
+
+### 4.2 Configure Shell Environment
+
+```bash
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
 export TOKEN=$(gcloud auth print-access-token)
 
 # Discover the GKE cluster
 export CLUSTER=$(gcloud container clusters list \
-  --project=${PROJECT} \
+  --project="${PROJECT}" \
   --format="value(name)" \
   --limit=1)
 
-# Configure kubectl
-gcloud container clusters get-credentials ${CLUSTER} \
-  --region=${REGION} \
-  --project=${PROJECT}
+echo "GKE cluster: ${CLUSTER}"
 
-# Discover the namespace (pattern: appragflow<tenant><deploymentid>)
-export NAMESPACE=$(kubectl get namespaces --no-headers \
-  -o custom-columns=":metadata.name" | grep "^appragflow" | head -1)
-
-# Discover the external IP
-export EXTERNAL_IP=$(kubectl get svc -n ${NAMESPACE} \
-  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
-
-# Discover the database password secret
+# Discover database password secret
 export DB_SECRET=$(gcloud secrets list \
-  --project=${PROJECT} \
+  --project="${PROJECT}" \
   --filter="name~ragflow" \
   --format="value(name)" \
   --limit=1)
 ```
 
----
+### 4.3 Configure kubectl
 
-## Phase 2 — Connect kubectl and Verify Pods [MANUAL]
+```bash
+gcloud container clusters get-credentials "${CLUSTER}" \
+  --region="${REGION}" \
+  --project="${PROJECT}"
 
-**Duration:** 5 minutes
+kubectl cluster-info
+kubectl get nodes
 
-### Steps
+# Discover the RAGFlow namespace
+export NAMESPACE=$(kubectl get namespaces --no-headers \
+  -o custom-columns=":metadata.name" | grep "^appragflow" | head -1)
 
-1. Fetch GKE credentials:
+echo "RAGFlow namespace: ${NAMESPACE}"
 
-   ```bash
-   gcloud container clusters get-credentials <CLUSTER_NAME> \
-     --region <REGION> \
-     --project <PROJECT_ID>
-   ```
+# Discover the external IP
+export EXTERNAL_IP=$(kubectl get svc -n "${NAMESPACE}" \
+  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
 
-   **gcloud equivalent for listing clusters:**
-   ```bash
-   gcloud container clusters list --project <PROJECT_ID>
-   ```
-
-   **REST API equivalent:**
-   ```bash
-   curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-     "https://container.googleapis.com/v1/projects/<PROJECT_ID>/locations/<REGION>/clusters"
-   ```
-
-2. List pods in the RAGFlow namespace:
-
-   ```bash
-   kubectl get pods -n "${NAMESPACE}"
-   ```
-
-   **Expected result:** One or more pods in `Running` state. RAGFlow may take several minutes after the pod is `Running` before the UI is fully available — Elasticsearch initialization runs on first boot.
-
-3. Check RAGFlow logs:
-
-   ```bash
-   kubectl logs -n "${NAMESPACE}" -l app=ragflow --tail=50
-   ```
-
-   Watch for log lines indicating Elasticsearch connection success and the web server starting on port 80.
-
-4. Note the external IP:
-
-   ```bash
-   kubectl get service -n "${NAMESPACE}"
-   ```
+echo "RAGFlow URL: http://${EXTERNAL_IP}"
+```
 
 ---
 
-## Phase 3 — Access RAGFlow and Initial Setup [MANUAL]
+## Exercise 1 — Access RAGFlow
 
-**Duration:** 5 minutes
+### Objective
 
-### Steps
+Verify RAGFlow pod health, obtain the external IP, and complete the initial admin account
+registration via the web UI.
 
-1. Open your browser and navigate to:
+### Step 1.1 — Verify Pod Health
 
-   ```
-   http://${EXTERNAL_IP}
-   ```
+**kubectl:**
+```bash
+kubectl get pods -n "${NAMESPACE}"
+# Expected: pods in Running state with containers: ragflow + cloud-sql-proxy
 
-   RAGFlow serves the web UI on port 80.
+kubectl get pods -n "${NAMESPACE}" \
+  -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.phase}{"\t"}{range .status.containerStatuses[*]}{.name}={.ready}{" "}{end}{"\n"}{end}'
+```
 
-2. On the registration page, create an admin account:
-   - Enter an email address and password.
-   - Click **Sign Up**.
+**gcloud:**
+```bash
+gcloud container clusters describe "${CLUSTER}" \
+  --region="${REGION}" \
+  --project="${PROJECT}" \
+  --format="table(name, status, currentNodeCount)"
+```
 
-3. Log in with the credentials you just created.
+**REST API:**
+```bash
+curl -s \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '{name, status, currentNodeCount: .currentNodeCount}'
+```
 
-4. Explore the main navigation:
-   - **Knowledge Base** — where document collections live.
-   - **Chat** — where you create RAG-powered chatbot assistants.
-   - **Files** — global document management.
-   - **Settings** — LLM configuration and API key management.
+**Expected result:** RAGFlow pod shows `Running` status. Allow 5–15 minutes after deployment
+for the startup probe to pass (RAGFlow loads embedding models on first boot).
 
-   **Expected result:** The RAGFlow dashboard loads with empty Knowledge Base and Chat sections.
+### Step 1.2 — Get External IP and Check Health
 
-5. **gcloud logging equivalent** (view RAGFlow startup logs from Cloud Logging):
+```bash
+kubectl get service -n "${NAMESPACE}"
 
-   ```bash
-   gcloud logging read \
-     'resource.type="k8s_container" AND resource.labels.namespace_name="'${NAMESPACE}'"' \
-     --project=<PROJECT_ID> \
-     --limit=50 \
-     --format="table(timestamp,textPayload)"
-   ```
+# Wait for EXTERNAL-IP assignment (may take a few minutes)
+kubectl get service -n "${NAMESPACE}" -w
 
----
+# Check health endpoint
+curl -s "http://${EXTERNAL_IP}/v1/health"
+# Expected: {"code": 0}
+```
 
-## Phase 4 — Create a Knowledge Base [MANUAL]
+### Step 1.3 — Review Startup Logs
 
-**Duration:** 10–15 minutes
+```bash
+# View RAGFlow container logs
+kubectl logs -n "${NAMESPACE}" \
+  -l app=ragflow \
+  -c ragflow \
+  --tail=50
 
-### Steps
+# View Cloud SQL Auth Proxy sidecar logs
+kubectl logs -n "${NAMESPACE}" \
+  -l app=ragflow \
+  -c cloud-sql-proxy \
+  --tail=20
+```
 
-1. Click **Knowledge Base** in the top navigation bar.
+**Expected result:** Log lines showing Elasticsearch connection success and the web server
+starting on port 80.
 
-2. Click **+ Create Knowledge Base**.
+### Step 1.4 — Create the Admin Account
 
-3. Fill in the form:
-   - **Name:** `GCP Documentation` (or any name you choose)
-   - **Chunking method:** Select **General** to start
-   - **Embedding model:** Select the available embedding model (configured in Settings)
+Navigate to `http://${EXTERNAL_IP}` in your browser:
 
-4. Click **Save**.
+1. Register an admin account with an email and password.
+2. Log in with the credentials you created.
+3. Explore the main navigation: **Knowledge Base**, **Chat**, **Files**, **Settings**.
 
-5. Inside the Knowledge Base, click **+ Add File** (or drag and drop).
-   - Upload a PDF or plain-text document (e.g., a GCP product overview PDF, a technical whitepaper, or any document under 50 MB).
-
-6. Click **Parse** to start the ingestion pipeline.
-   - RAGFlow will chunk, embed, and index the document into Elasticsearch.
-   - Monitor progress via the status indicator next to the document name.
-
-   **Expected result:** The document status changes from `Parsing` to `Done`. The chunk count is displayed.
-
-7. Click the document name to view the resulting chunks and their metadata (page number, token count, embedding vector preview).
-
-8. **REST API equivalent** (list knowledge bases):
-
-   ```bash
-   API_KEY="<your-ragflow-api-key>"
-
-   curl -H "Authorization: Bearer $API_KEY" \
-     "http://${EXTERNAL_IP}/api/v1/knowledge_bases"
-   ```
-
----
-
-## Phase 5 — Create a RAG Chatbot [MANUAL]
-
-**Duration:** 10 minutes
-
-### Steps
-
-1. Click **Chat** in the top navigation bar.
-
-2. Click **+ Create Assistant**.
-
-3. Configure the assistant:
-   - **Name:** `GCP Assistant`
-   - **System prompt:** (optional) e.g., `You are a helpful assistant that answers questions based only on the provided documents.`
-
-4. Under **Knowledge Base**, select the knowledge base you created in Phase 4 (`GCP Documentation`).
-
-5. Under **LLM Settings**:
-   - Navigate to **Settings > Model Providers** first.
-   - Add your LLM provider (e.g., OpenAI — paste your API key).
-   - Return to the assistant configuration and select the model.
-
-6. Click **Save**.
-
-7. In the chat window on the right, type a question about your uploaded document.
-
-   **Expected result:** RAGFlow retrieves relevant chunks from the knowledge base and generates a cited answer. Source citations appear below the response, showing which document chunks were used.
-
-8. Ask several follow-up questions to observe the retrieval quality.
+**Expected result:** The RAGFlow dashboard loads with all sections empty on a fresh deployment.
 
 ---
 
-## Phase 6 — Explore Document Analysis [MANUAL]
+## Exercise 2 — Upload Documents and Build Knowledge Base
 
-**Duration:** 10–15 minutes
+### Objective
 
-### Steps
+Upload multiple document types, trigger the RAGFlow parsing pipeline, compare chunking
+strategies, and build a knowledge base ready for retrieval.
 
-1. Return to **Knowledge Base** and open your existing knowledge base (or create a new one for this experiment).
+### Step 2.1 — Configure Embedding Model
 
-2. Upload different document types:
-   - A `.docx` Word document
-   - A `.txt` plain text file
-   - A second `.pdf` with tabular data
+1. Navigate to **Settings > Model Providers**.
+2. Add an embedding provider (e.g., OpenAI — enter your API key).
+3. Save the configuration.
 
-3. Try different chunking methods by editing the knowledge base settings:
-   - **General** — splits by paragraph and sentence boundaries
-   - **Q&A** — optimized for FAQ-style documents
-   - **Manual** — you define chunk boundaries
-   - **Table** — specialized for structured tabular data
+### Step 2.2 — Create a Knowledge Base
 
-4. Re-parse the document after changing the chunking method and compare the resulting chunks.
+1. Navigate to **Knowledge Base** and click **+ Create Knowledge Base**.
+2. Configure:
+   - **Name:** `Lab Documents`
+   - **Chunking method:** `General`
+   - **Embedding model:** select your configured model
+3. Click **Save**.
 
-   **Expected result:** Different chunking strategies produce different chunk sizes and boundaries. Q&A mode extracts question-answer pairs explicitly; Table mode preserves row/column structure.
+### Step 2.3 — Upload and Parse Documents
 
-5. Examine chunk metadata: token count, embedding status, and source coordinates (page, bounding box for PDFs).
+1. Inside the knowledge base, click **+ Add File**.
+2. Upload a PDF document (under 50 MB).
+3. Click **Parse** to trigger ingestion.
 
----
+**Expected result:** Document status changes from `Parsing` to `Done`.
 
-## Phase 7 — API Access [MANUAL]
+### Step 2.4 — Inspect Chunks and Embeddings
 
-**Duration:** 10 minutes
+Click the document name to review:
+- **Chunk content** and **page numbers**
+- **Token count** per chunk
+- **Embedding status** (green = indexed in Elasticsearch)
 
-### Steps
+### Step 2.5 — Compare Chunking Strategies
 
-1. In the RAGFlow UI, go to **Settings > API Key**.
+Upload a second document and try different chunking methods:
 
-2. Click **Generate API Key**. Copy the key — it will not be shown again.
+**gcloud (view parsing logs):**
+```bash
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   resource.labels.namespace_name=\"${NAMESPACE}\" \
+   resource.labels.container_name=\"ragflow\" \
+   textPayload=~\"parse|chunk|embed|elastic\"" \
+  --project="${PROJECT}" \
+  --limit=30 \
+  --format="table(timestamp,textPayload)"
+```
 
-3. Set variables and test the API:
+**Expected result:** Log entries showing chunk generation and Elasticsearch indexing operations
+for each document parsing run.
 
-   ```bash
-   API_KEY="<paste-your-api-key>"
+### Step 2.6 — Verify GCS Document Storage
 
-   # List knowledge bases
-   curl -s -H "Authorization: Bearer $API_KEY" \
-     "http://${EXTERNAL_IP}/api/v1/knowledge_bases" | python3 -m json.tool
+**kubectl (check storage bucket env var):**
+```bash
+kubectl get deployment -n "${NAMESPACE}" -o yaml \
+  | grep -A2 "BUCKET\|STORAGE"
+```
 
-   # List chat assistants
-   curl -s -H "Authorization: Bearer $API_KEY" \
-     "http://${EXTERNAL_IP}/api/v1/chat_assistants" | python3 -m json.tool
+**gcloud:**
+```bash
+BUCKET=$(gcloud storage buckets list \
+  --project="${PROJECT}" \
+  --filter="name~ragflow" \
+  --format="value(name)" --limit=1)
 
-   # Check service health
-   curl -s "http://${EXTERNAL_IP}/v1/health"
-   ```
+gcloud storage ls --recursive "gs://${BUCKET}/" \
+  --project="${PROJECT}" | head -20
+```
 
-   **Expected result:** JSON responses listing your knowledge bases and assistants. The health endpoint returns `{"code": 0}`.
-
-4. Explore the interactive API documentation at:
-
-   ```
-   http://${EXTERNAL_IP}/api/v1/docs
-   ```
-
----
-
-## Phase 8 — Explore Cloud Logging [MANUAL]
-
-**Duration:** 5 minutes
-
-### Steps
-
-1. Open the [Cloud Logging console](https://console.cloud.google.com/logs).
-
-2. Set the project to your GCP project.
-
-3. Query RAGFlow application logs:
-
-   ```
-   resource.type="k8s_container"
-   resource.labels.namespace_name="${NAMESPACE}"
-   resource.labels.container_name="ragflow"
-   ```
-
-   **gcloud equivalent:**
-   ```bash
-   gcloud logging read \
-     "resource.type=\"k8s_container\" resource.labels.namespace_name=\"${NAMESPACE}\" resource.labels.container_name=\"ragflow\"" \
-     --project=<PROJECT_ID> \
-     --limit=100 \
-     --format="table(timestamp,severity,textPayload)"
-   ```
-
-4. Filter for document parsing events by adding:
-   ```
-   textPayload=~"parse|chunk|embed|elastic"
-   ```
-
-5. Query Elasticsearch sidecar logs (if using inline Elasticsearch):
-
-   ```
-   resource.type="k8s_container"
-   resource.labels.container_name="elasticsearch"
-   ```
-
-   **Expected result:** Log entries showing Elasticsearch cluster health checks, indexing operations, and RAGFlow task queue activity.
+**Expected result:** Document files and embeddings are stored in the GCS bucket organized by
+knowledge base and document ID.
 
 ---
 
-## Phase 9 — Explore Cloud Monitoring [MANUAL]
+## Exercise 3 — Create Chat Application and Test Q&A
 
-**Duration:** 5 minutes
+### Objective
 
-### Steps
+Configure a RAG chat assistant linked to the knowledge base and test the full retrieval and
+generation pipeline.
 
-1. Open the [Cloud Monitoring console](https://console.cloud.google.com/monitoring).
+### Step 3.1 — Create a Chat Assistant
 
-2. Navigate to **Dashboards** and look for the GKE workload dashboard.
+1. Navigate to **Chat** and click **+ Create Assistant**.
+2. Configure:
+   - **Name:** `Lab Assistant`
+   - **System prompt:** `You are a helpful assistant that answers questions based only on the provided documents. Always cite your sources.`
+   - **Knowledge Base:** select `Lab Documents`
+   - **LLM Settings:** select your configured LLM provider
+3. Click **Save**.
 
-3. View key metrics for the RAGFlow deployment:
+### Step 3.2 — Test Q&A with Source Citations
 
-   ```bash
-   # gcloud equivalent: list available GKE metrics
-   gcloud monitoring metrics list \
-     --filter="metric.type=starts_with(\"kubernetes.io/container\")" \
-     --project=<PROJECT_ID>
-   ```
+Ask questions about document content. Verify that:
+- The response is grounded in the uploaded documents.
+- Source citations appear below each answer.
+- Clicking a citation shows the source chunk.
 
-4. Check CPU and memory utilization for the RAGFlow pods:
-   - Metric: `kubernetes.io/container/cpu/limit_utilization`
-   - Metric: `kubernetes.io/container/memory/limit_utilization`
-   - Filter by: `namespace_name = ${NAMESPACE}`, `container_name = ragflow`
+**Expected result:** Cited answers from document chunks with similarity scores above 0.2.
 
-5. Review the uptime check status (if configured):
+### Step 3.3 — Test Multi-Turn Conversation
 
-   **REST API equivalent:**
-   ```bash
-   curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-     "https://monitoring.googleapis.com/v3/projects/<PROJECT_ID>/uptimeCheckConfigs"
-   ```
+Ask follow-up questions that require context from previous responses to verify stateful
+multi-turn RAG behavior.
 
-   **Expected result:** Uptime checks show green (passing) status after RAGFlow finishes its initial startup. CPU and memory graphs show the resource usage of the embedding model and Elasticsearch operations.
+### Step 3.4 — Query via API
+
+```bash
+# Set API key (from Settings > API Key in the RAGFlow UI)
+export API_KEY="<your-ragflow-api-key>"
+
+# List chat assistants
+curl -s -H "Authorization: Bearer ${API_KEY}" \
+  "http://${EXTERNAL_IP}/api/v1/chat_assistants" \
+  | jq '.data[] | {id, name}'
+
+# List knowledge bases
+curl -s -H "Authorization: Bearer ${API_KEY}" \
+  "http://${EXTERNAL_IP}/api/v1/knowledge_bases" \
+  | jq '.data[] | {id, name, doc_num, chunk_num}'
+```
+
+**Expected result:** JSON responses confirming the assistant and knowledge base are configured.
 
 ---
 
-## Phase 10 — Undeploy [AUTOMATED]
+## Exercise 4 — API Integration
 
-**Duration:** 10–15 minutes
+### Objective
 
-When you are finished with the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+Demonstrate programmatic access to RAGFlow through the REST API — listing resources, querying
+the chat assistant, and integrating with external applications.
 
-**What is removed:** Kubernetes Deployment, Service, namespace, Cloud SQL instance and database, GCS bucket(s), Secret Manager secrets, Artifact Registry images, NFS Filestore instance, static IP, Cloud Monitoring uptime checks.
+### Step 4.1 — Generate an API Key
 
-**What is not removed:** The GKE cluster itself (managed by Services_GCP), the VPC (managed by Services_GCP), Elasticsearch (managed by Elasticsearch_GKE).
+1. Navigate to **Settings > API Key** in the RAGFlow UI.
+2. Click **Generate API Key**. Copy the key.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+```bash
+export API_KEY="<paste-your-api-key>"
+```
+
+### Step 4.2 — Test Core API Endpoints
+
+**Health check:**
+```bash
+curl -s "http://${EXTERNAL_IP}/v1/health"
+```
+
+**List knowledge bases:**
+```bash
+curl -s -H "Authorization: Bearer ${API_KEY}" \
+  "http://${EXTERNAL_IP}/api/v1/knowledge_bases" \
+  | jq '.data[] | {id, name, doc_num, chunk_num, embedding_model}'
+```
+
+**List chat assistants:**
+```bash
+curl -s -H "Authorization: Bearer ${API_KEY}" \
+  "http://${EXTERNAL_IP}/api/v1/chat_assistants" \
+  | jq '.data[] | {id, name, kb_ids}'
+```
+
+### Step 4.3 — Send a Query via API
+
+```bash
+# Get assistant ID
+ASSISTANT_ID=$(curl -s -H "Authorization: Bearer ${API_KEY}" \
+  "http://${EXTERNAL_IP}/api/v1/chat_assistants" \
+  | jq -r '.data[0].id')
+
+# Start a session
+SESSION=$(curl -s -X POST \
+  -H "Authorization: Bearer ${API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "api-session"}' \
+  "http://${EXTERNAL_IP}/api/v1/chat_assistants/${ASSISTANT_ID}/sessions" \
+  | jq -r '.data.id')
+
+# Send a query
+curl -s -X POST \
+  -H "Authorization: Bearer ${API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"question\": \"Summarize the main topics in the documents.\",
+       \"session_id\": \"${SESSION}\"}" \
+  "http://${EXTERNAL_IP}/api/v1/chat_assistants/${ASSISTANT_ID}/completions" \
+  | jq '.data.answer'
+```
+
+**Expected result:** A JSON response with the LLM-generated answer and source chunk references.
+
+### Step 4.4 — Browse Interactive API Documentation
+
+Navigate to `http://${EXTERNAL_IP}/api/v1/docs` for the Swagger API documentation.
 
 ---
 
-## Summary
+## Exercise 5 — Kubernetes Workloads
 
-| Phase | Type | Key Action | Duration |
+### Objective
+
+Inspect the Kubernetes resources provisioned by the module, scale the deployment, and observe
+how GKE Autopilot manages pod scheduling.
+
+### Step 5.1 — Inspect the Deployment
+
+**kubectl:**
+```bash
+kubectl describe deployment ragflow -n "${NAMESPACE}"
+
+# Check container resources and probes
+kubectl get deployment ragflow -n "${NAMESPACE}" \
+  -o jsonpath='{.spec.template.spec.containers[*].name}' | tr ' ' '\n'
+
+# View resource requests
+kubectl top pods -n "${NAMESPACE}"
+```
+
+**Expected result:** Deployment shows `ragflow` and `cloud-sql-proxy` containers, resource
+limits, startup/liveness probes targeting `/v1/health`, and Workload Identity annotations.
+
+### Step 5.2 — Inspect the LoadBalancer Service
+
+**kubectl:**
+```bash
+kubectl get service -n "${NAMESPACE}" -o wide
+
+kubectl describe service -n "${NAMESPACE}"
+# Note: sessionAffinity: ClientIP ensures upload sessions reach the same pod
+```
+
+**gcloud:**
+```bash
+gcloud compute forwarding-rules list \
+  --project="${PROJECT}" \
+  --filter="name~ragflow"
+```
+
+### Step 5.3 — Scale the Deployment
+
+```bash
+kubectl scale deployment ragflow \
+  --replicas=2 \
+  -n "${NAMESPACE}"
+
+kubectl get pods -n "${NAMESPACE}" -w
+
+# Verify both pods are running
+kubectl get pods -n "${NAMESPACE}"
+```
+
+**Expected result:** GKE Autopilot automatically provisions a node for the second pod.
+Both pods show Running status with both containers ready.
+
+### Step 5.4 — Inspect the db-init Job
+
+```bash
+# View initialization jobs
+kubectl get jobs -n "${NAMESPACE}"
+
+# Describe the db-init job
+kubectl describe job -n "${NAMESPACE}" \
+  $(kubectl get jobs -n "${NAMESPACE}" \
+    -o jsonpath='{.items[0].metadata.name}')
+
+# View job logs
+kubectl logs -n "${NAMESPACE}" \
+  -l job-name=$(kubectl get jobs -n "${NAMESPACE}" \
+    -o jsonpath='{.items[0].metadata.name}')
+```
+
+**Expected result:** The `db-init` job completed successfully, creating the `rag_flow` database
+and `ragflow` MySQL user before the application started.
+
+### Step 5.5 — View HPA Configuration
+
+```bash
+kubectl get hpa -n "${NAMESPACE}"
+
+kubectl describe hpa -n "${NAMESPACE}"
+```
+
+**Expected result:** HPA configured with min=1, max=5 replicas with CPU-based autoscaling.
+
+---
+
+## Exercise 6 — Security and Workload Identity
+
+### Objective
+
+Verify Workload Identity binding, inspect Secret Manager secrets, and confirm that pods access
+GCP APIs without service account key files.
+
+### Step 6.1 — Verify Workload Identity Annotation
+
+**kubectl:**
+```bash
+kubectl get serviceaccount -n "${NAMESPACE}" -o yaml \
+  | grep -A5 "annotations:"
+```
+
+The annotation `iam.gke.io/gcp-service-account` links the Kubernetes service account to a
+GCP IAM service account — this is the Workload Identity binding.
+
+**gcloud:**
+```bash
+gcloud iam service-accounts list \
+  --project="${PROJECT}" \
+  --filter="email~ragflow" \
+  --format="table(email, displayName)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://iam.googleapis.com/v1/projects/${PROJECT}/serviceAccounts" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.accounts[] | select(.email | test("ragflow")) | {email, displayName}'
+```
+
+### Step 6.2 — Verify IAM Binding
+
+**gcloud:**
+```bash
+SA_EMAIL=$(gcloud iam service-accounts list \
+  --project="${PROJECT}" \
+  --filter="email~ragflow" \
+  --format="value(email)" \
+  --limit=1)
+
+gcloud iam service-accounts get-iam-policy "${SA_EMAIL}" \
+  --project="${PROJECT}"
+```
+
+**Expected result:** The IAM policy shows `roles/iam.workloadIdentityUser` binding for the
+Kubernetes service account in the RAGFlow namespace.
+
+### Step 6.3 — Inspect Secret Manager Secrets
+
+**gcloud:**
+```bash
+gcloud secrets list \
+  --project="${PROJECT}" \
+  --filter="name~ragflow" \
+  --format="table(name, createTime)"
+
+# Access the database password secret
+gcloud secrets versions access latest \
+  --secret="${DB_SECRET}" \
+  --project="${PROJECT}"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets?filter=name%3Aragflow" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.secrets[] | {name, createTime}'
+```
+
+### Step 6.4 — Review Audit Logs
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "protoPayload.serviceName=secretmanager.googleapis.com \
+   AND protoPayload.methodName=~\"AccessSecretVersion\"" \
+  --project="${PROJECT}" \
+  --limit=10 \
+  --format="json" \
+  | jq '.[] | {
+    timestamp,
+    method: .protoPayload.methodName,
+    caller: .protoPayload.authenticationInfo.principalEmail,
+    resource: .protoPayload.resourceName
+  }'
+```
+
+**Expected result:** Audit log entries show the RAGFlow GCP service account accessing the
+database password secret during pod startup.
+
+---
+
+## Exercise 7 — Cloud Logging and Monitoring
+
+### Objective
+
+Query GKE container logs for application events and parsing activity, then review Cloud
+Monitoring dashboards for container resource utilization and uptime check status.
+
+### Step 7.1 — View Application Logs in the Console
+
+```bash
+echo "https://console.cloud.google.com/logs?project=${PROJECT}"
+```
+
+Use the following filter:
+```
+resource.type="k8s_container"
+resource.labels.namespace_name="${NAMESPACE}"
+resource.labels.container_name="ragflow"
+```
+
+### Step 7.2 — Query Logs via gcloud
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   resource.labels.namespace_name=\"${NAMESPACE}\" \
+   resource.labels.container_name=\"ragflow\"" \
+  --project="${PROJECT}" \
+  --limit=100 \
+  --format="table(timestamp,severity,textPayload)"
+```
+
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://logging.googleapis.com/v2/entries:list" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"resourceNames\": [\"projects/${PROJECT}\"],
+    \"filter\": \"resource.type=\\\"k8s_container\\\" resource.labels.namespace_name=\\\"${NAMESPACE}\\\"\",
+    \"pageSize\": 50
+  }" | jq '.entries[] | {timestamp, severity, textPayload}'
+```
+
+### Step 7.3 — Filter for Parsing Events
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   resource.labels.namespace_name=\"${NAMESPACE}\" \
+   textPayload=~\"parse|chunk|embed|elastic|index\"" \
+  --project="${PROJECT}" \
+  --limit=30 \
+  --format="table(timestamp,textPayload)"
+```
+
+**Expected result:** Entries showing document chunking, embedding generation, and Elasticsearch
+indexing steps during document parsing runs.
+
+### Step 7.4 — Stream Live Logs with kubectl
+
+```bash
+kubectl logs -f \
+  -n "${NAMESPACE}" \
+  -l app=ragflow \
+  -c ragflow
+```
+
+Trigger a document parse in the UI and observe the real-time output.
+
+### Step 7.5 — Review Cloud Monitoring Dashboards
+
+```bash
+echo "https://console.cloud.google.com/monitoring?project=${PROJECT}"
+```
+
+**gcloud (check uptime checks):**
+```bash
+gcloud monitoring uptime list-configs \
+  --project="${PROJECT}" \
+  --format="table(name, displayName, httpCheck.path, period)"
+```
+
+**REST API (query GKE container CPU):**
+```bash
+curl -s -X POST \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"query\": \"fetch k8s_container::kubernetes.io/container/cpu/limit_utilization | filter resource.namespace_name = '${NAMESPACE}' | within 30m | group_by [resource.container_name], mean(val())\"
+  }" | jq '.timeSeriesData[] | {container: .labelValues[0].stringValue, cpu: .pointData[-1].values[0].doubleValue}'
+```
+
+**Expected result:** CPU utilization shows elevated usage during document parsing (embedding
+model inference). Memory usage reflects the embedding model in RAM (~2–4 Gi).
+
+---
+
+## Cleanup
+
+Return to the RAD UI and click **Undeploy** on the `RAGFlow_GKE` deployment. This removes the
+Kubernetes Deployment, Service, namespace, Cloud SQL instance and database, GCS bucket(s),
+Secret Manager secrets, Artifact Registry images, NFS Filestore instance, and static IP.
+
+**Note:** The GKE cluster itself is managed by `Services_GCP` and is not deleted.
+
+### Manual Cleanup (if needed)
+
+**kubectl:**
+```bash
+kubectl delete namespace "${NAMESPACE}"
+```
+
+**gcloud:**
+```bash
+# Delete static IP
+gcloud compute addresses list \
+  --project="${PROJECT}" \
+  --filter="name~ragflow"
+
+gcloud compute addresses delete <address-name> \
+  --region="${REGION}" --project="${PROJECT}" --quiet
+
+# Delete Secret Manager secrets
+gcloud secrets list --project="${PROJECT}" --filter="name~ragflow" \
+  --format="value(name)" \
+  | xargs -I{} gcloud secrets delete {} --project="${PROJECT}" --quiet
+```
+
+**REST API — delete GKE namespace resources:**
+```bash
+curl -s -X DELETE \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}/namespaces/${NAMESPACE}" \
+  -H "Authorization: Bearer ${TOKEN}"
+```
+
+---
+
+## Reference
+
+### Key Module Variables
+
+| Variable | Type | Default | Description |
 |---|---|---|---|
-| 1 — Deploy | Automated | RAD UI deployment provisions GKE workload, Cloud SQL, GCS, Artifact Registry | 20–35 min |
-| 2 — Verify Pods | Manual | `kubectl get pods`, check logs, note external IP | 5 min |
-| 3 — Initial Setup | Manual | Register admin account, explore RAGFlow UI | 5 min |
-| 4 — Knowledge Base | Manual | Upload document, parse and chunk, view results | 10–15 min |
-| 5 — RAG Chatbot | Manual | Create assistant, connect LLM, ask questions | 10 min |
-| 6 — Document Analysis | Manual | Try different doc types and chunking methods | 10–15 min |
-| 7 — API Access | Manual | Generate API key, test REST endpoints | 10 min |
-| 8 — Cloud Logging | Manual | Query container logs and parsing events | 5 min |
-| 9 — Cloud Monitoring | Manual | Review GKE metrics and uptime checks | 5 min |
-| 10 — Undeploy | Automated | RAD UI removes all module resources | 10–15 min |
+| `project_id` | string | — | GCP project ID (required) |
+| `region` | string | `us-central1` | GCP region for all resources |
+| `application_version` | string | `v0.13.0` | RAGFlow version tag |
+| `elasticsearch_hosts` | string | — | Elasticsearch HTTP endpoint (required) |
+| `elasticsearch_username` | string | `""` | Elasticsearch username (leave blank if no auth) |
+| `enable_redis` | bool | `true` | Enable Redis task queue backend |
+| `redis_host` | string | `""` | Redis server IP (auto-resolved from NFS IP if empty) |
+| `redis_port` | string | `6379` | Redis server port |
+| `cpu_limit` | string | `4000m` | CPU limit per RAGFlow container |
+| `memory_limit` | string | `8Gi` | Memory limit per RAGFlow container |
+| `min_instance_count` | number | `1` | Minimum pod replicas (hard-capped at 1) |
+| `max_instance_count` | number | `5` | Maximum pod replicas |
+| `gke_cluster_name` | string | `""` | GKE cluster name (auto-discovered when empty) |
+| `db_name` | string | `rag_flow` | MySQL database name |
+| `db_user` | string | `ragflow` | MySQL database user |
+| `database_password_length` | number | `32` | Auto-generated password length |
+| `enable_nfs` | bool | `true` | Cloud Filestore NFS for shared document processing |
+| `nfs_mount_path` | string | `/mnt/nfs` | NFS volume mount path in container |
+| `service_type` | string | `LoadBalancer` | Kubernetes Service type |
+| `session_affinity` | string | `ClientIP` | Sticky sessions for upload operations |
+| `reserve_static_ip` | bool | `true` | Reserve global static external IP |
+| `deployment_timeout` | number | `1800` | Terraform rollout timeout (RAGFlow startup is slow) |
+
+### Automatically Injected Environment Variables
+
+| Variable | Value | Source |
+|---|---|---|
+| `MYSQL_HOST` | `127.0.0.1` | Cloud SQL Auth Proxy sidecar |
+| `MYSQL_PORT` | `3306` | MySQL standard port |
+| `MYSQL_DATABASE` | `var.db_name` | RAGFlow database name |
+| `MYSQL_USER` | `var.db_user` | RAGFlow database user |
+| `ELASTICSEARCH_HOSTS` | `var.elasticsearch_hosts` | Elasticsearch endpoint |
+| `ELASTICSEARCH_USERNAME` | `var.elasticsearch_username` | Elasticsearch username |
+| `REDIS_HOST` | `var.redis_host` | Redis server host |
+| `REDIS_PORT` | `var.redis_port` | Redis server port |
+
+### Useful Commands
+
+```bash
+# Get external IP
+kubectl get service -n "${NAMESPACE}"
+
+# Check pod health
+kubectl get pods -n "${NAMESPACE}"
+
+# View RAGFlow logs
+kubectl logs -n "${NAMESPACE}" -l app=ragflow -c ragflow --tail=50
+
+# View Auth Proxy logs
+kubectl logs -n "${NAMESPACE}" -l app=ragflow -c cloud-sql-proxy --tail=20
+
+# Stream live logs
+kubectl logs -f -n "${NAMESPACE}" -l app=ragflow
+
+# Scale deployment
+kubectl scale deployment ragflow --replicas=2 -n "${NAMESPACE}"
+
+# Check resource usage
+kubectl top pods -n "${NAMESPACE}"
+
+# Port-forward for local access
+kubectl port-forward svc/ragflow 8080:80 -n "${NAMESPACE}"
+# Then: curl http://localhost:8080/v1/health
+
+# View HPA
+kubectl get hpa -n "${NAMESPACE}"
+```
+
+### Further Reading
+
+- [RAGFlow GitHub repository](https://github.com/infiniflow/ragflow)
+- [GKE Autopilot overview](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
+- [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+- [Cloud SQL Auth Proxy on GKE](https://cloud.google.com/sql/docs/mysql/connect-kubernetes-engine)
+- [Cloud Filestore for GKE](https://cloud.google.com/filestore/docs/accessing-fileshares)
+- [Cloud Monitoring for GKE](https://cloud.google.com/stackdriver/docs/solutions/gke)

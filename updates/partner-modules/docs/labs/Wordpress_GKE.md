@@ -2,47 +2,190 @@
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Wordpress_GKE)**
 
-## Overview
-
-Deploy WordPress, the world's most popular CMS, to Google Kubernetes Engine (GKE) Autopilot with managed Cloud SQL (MySQL 8.0), Filestore NFS shared storage, GCS Fuse volumes, Redis object caching, and full observability via Cloud Logging and Cloud Monitoring.
-
-**Estimated time:** 1–2 hours
-
-### What the Module Automates
-
-- GKE namespace, Kubernetes Deployment, and LoadBalancer Service
-- Cloud SQL MySQL 8.0 instance, database, and user
-- Cloud SQL Auth Proxy sidecar injection for secure socket connections
-- Cloud Filestore (NFS) volume provisioned and mounted into pods
-- GCS bucket for data storage with optional GCS Fuse mounts
-- Artifact Registry repository and Cloud Build image build
-- Secret Manager secrets for database password and WordPress auth keys
-- Workload Identity binding for pod-level GCP API access
-- Static external IP reservation for the LoadBalancer
-- Kubernetes HPA (min/max replica configuration)
-- Cloud Monitoring uptime checks and notification channels
-- Automated database backup CronJob (daily at 02:00 UTC by default)
-
-### What You Do Manually
-
-- Note the deployment outputs (external IP, namespace, etc.) from the RAD UI deployment panel
-- Configure `kubectl` context to point at the GKE cluster
-- Open the WordPress URL in a browser and complete the 5-minute install wizard (if triggered)
-- Log in to wp-admin and explore the dashboard
-- Create content, upload media, and install plugins
-- Verify persistent storage across pod restarts
-- Explore Cloud Logging and Cloud Monitoring dashboards
-- Test horizontal pod scaling
+This lab guide walks you through deploying, exploring, and operating **WordPress** on Google Kubernetes Engine (GKE) Autopilot using the **Wordpress_GKE** module. You will explore Kubernetes workloads, Cloud SQL MySQL 8.0, Workload Identity, NFS shared storage, Redis object caching, and the full Google Cloud observability stack — including horizontal pod scaling, rolling updates, and live monitoring.
 
 ---
 
-## CLI and REST API Overview
+## Table of Contents
 
-Set these shell variables before running any `gcloud` or `curl` commands in this guide:
+1. [Overview](#1-overview)
+2. [Architecture](#2-architecture)
+3. [Prerequisites](#3-prerequisites)
+4. [Lab Setup](#4-lab-setup)
+5. [Exercise 1 — Access WordPress](#exercise-1--access-wordpress)
+6. [Exercise 2 — Content Management](#exercise-2--content-management)
+7. [Exercise 3 — Kubernetes Workloads](#exercise-3--kubernetes-workloads)
+8. [Exercise 4 — Database Integration](#exercise-4--database-integration)
+9. [Exercise 5 — Workload Identity and Security](#exercise-5--workload-identity-and-security)
+10. [Exercise 6 — Cloud Logging](#exercise-6--cloud-logging)
+11. [Exercise 7 — Cloud Monitoring](#exercise-7--cloud-monitoring)
+12. [Exercise 8 — Scaling and Operations](#exercise-8--scaling-and-operations)
+13. [Cleanup](#13-cleanup)
+14. [Reference](#14-reference)
+
+---
+
+## 1. Overview
+
+### What Is WordPress on GKE?
+
+WordPress is the world's most widely-deployed CMS, powering 43.5% of all websites. The `Wordpress_GKE` module deploys WordPress on GKE Autopilot, backed by Cloud SQL MySQL 8.0, Cloud Filestore NFS for shared `wp-content` persistence across all pod replicas, GCS for object storage, Redis object caching, and Secret Manager for WordPress authentication keys and database credentials.
+
+The module builds a custom PHP 8.4 + Apache container image via Cloud Build, creates a Kubernetes Deployment with HPA, and runs a `db-init` Kubernetes Job (using `mysql:8.0-debian`) to create the MySQL database and user on every apply. Workload Identity provides pod-level GCP API access without key files. The eight WordPress cryptographic security keys and salts are auto-generated and stored in Secret Manager.
+
+Unlike Cloud Run, GKE provides persistent pods, explicit replica control, PVC-based shared NFS storage (ReadWriteMany), and direct access to the full Kubernetes API for debugging and operations.
+
+### Key Capabilities Demonstrated
+
+| Capability | What It Demonstrates |
+|---|---|
+| **GKE Autopilot** | Serverless Kubernetes with automatic node provisioning |
+| **Workload Identity** | Pod-level GCP IAM access without service account keys |
+| **Cloud SQL Auth Proxy** | Sidecar injection for secure Unix socket MySQL connection |
+| **Filestore NFS (RWX PVC)** | Shared `wp-content` across all pod replicas |
+| **Redis Object Cache** | Plugin-level caching reducing database load |
+| **HPA** | Horizontal Pod Autoscaler for CPU-based scaling |
+| **Session Affinity** | `ClientIP` affinity keeps sessions on the same pod |
+| **Kubernetes Jobs** | `db-init` runs idempotently on every terraform apply |
+
+---
+
+## 2. Architecture
+
+```
+Internet
+   │
+   ▼ HTTP
+LoadBalancer Service (External IP, session_affinity=ClientIP)
+   │
+   ▼
+WordPress Pods (Deployment, 2/2 containers)
+   ├── WordPress container (PHP 8.4 + Apache, port 80)
+   │     ├── /var/www/html: Apache document root
+   │     ├── wp-content/: /mnt/nfs (Filestore NFS, RWX PVC)
+   │     ├── wp-config.php: generated by docker-entrypoint.sh
+   │     └── Redis cache: WP_REDIS_HOST:6379
+   └── cloud-sql-proxy sidecar
+         └── Unix socket /cloudsql/PROJECT:REGION:INSTANCE
+               │
+               ▼
+         Cloud SQL (MySQL 8.0)
+               Database: wp
+               User: wp
+
+Init Job (runs on every apply, idempotent):
+  db-init → mysql:8.0-debian → creates DB + user + grants
+
+Supporting Services:
+  Secret Manager  → 8 WordPress auth keys/salts + DB_PASSWORD
+  GCS Bucket      → wp-uploads (Workload Identity)
+  Filestore NFS   → Bound PVC (RWX) shared across pod replicas
+  Redis           → Object cache (WP_REDIS_HOST/WP_REDIS_PORT)
+  Artifact Registry → Custom WordPress image (Cloud Build)
+  HPA             → CPU-based scaling (min 1, max 1 by default)
+  Cloud Monitoring  → Uptime checks, alert policies
+```
+
+### Infrastructure
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Google Cloud                                                    │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │  GKE Autopilot Cluster                                     │  │
+│  │                                                            │  │
+│  │  ┌──────────────────────────────────────────────────────┐  │  │
+│  │  │  Namespace: appwordpress<tenant><deployment_id>      │  │  │
+│  │  │                                                      │  │  │
+│  │  │  Deployment: wordpress (2/2 containers)              │  │  │
+│  │  │  Service: LoadBalancer (EXTERNAL-IP, ClientIP)       │  │  │
+│  │  │  HPA: min 1, max 1 replicas (default)                │  │  │
+│  │  │  PVC: wordpress-nfs (RWX, Filestore)                 │  │  │
+│  │  │  Job: db-init (execute_on_apply=true)                │  │  │
+│  │  └──────────────────────────────────────────────────────┘  │  │
+│  └────────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│  ┌────────────────┐  ┌────────────────┐  ┌──────────────────┐   │
+│  │  Cloud SQL     │  │  Secret Manager │  │  Cloud Filestore │   │
+│  │  MySQL 8.0     │  │  8 keys/salts   │  │  NFS (RWX)       │   │
+│  └────────────────┘  └────────────────┘  └──────────────────┘   │
+│                                                                  │
+│  ┌────────────────┐  ┌────────────────┐                         │
+│  │  Redis         │  │  Cloud Monitor  │                         │
+│  │  Object cache  │  │  Uptime + Alerts│                         │
+│  └────────────────┘  └────────────────┘                         │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 3. Prerequisites
+
+### Required Tools
+
+| Tool | Minimum Version | Install/Command |
+|---|---|---|
+| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
+| `kubectl` | 1.29+ | `gcloud components install kubectl` |
+| `curl` / `jq` | Any | System package manager |
+
+### GCP Permissions
+
+```
+roles/owner                    # or the following fine-grained set:
+roles/container.admin
+roles/cloudsql.admin
+roles/secretmanager.admin
+roles/storage.admin
+roles/monitoring.admin
+roles/logging.viewer
+```
+
+### Environment Variables
 
 ```bash
-export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
-export REGION="us-central1"             # the region you deployed into
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
+export TOKEN=$(gcloud auth print-access-token)
+
+gcloud config set project "${PROJECT}"
+gcloud config set compute/region "${REGION}"
+```
+
+---
+
+## 4. Lab Setup
+
+### 4.1 Deploy via RAD UI
+
+Deploy the `Wordpress_GKE` module via the RAD UI. In the variable form, set:
+
+| Variable | Value | Notes |
+|---|---|---|
+| `project_id` | `your-gcp-project-id` | Required |
+| `region` | `us-central1` | GCP region |
+| `tenant_deployment_id` | `demo` | Short environment label |
+| `application_name` | `wordpress` | Do not change after first deploy |
+| `application_version` | `latest` | Pin to a specific WP version in production |
+| `min_instance_count` | `1` | Minimum pod replicas (stays warm) |
+| `max_instance_count` | `1` | Increase only after confirming shared NFS |
+| `application_database_name` | `wp` | MySQL database name |
+| `application_database_user` | `wp` | MySQL application user |
+| `enable_nfs` | `true` | Shared wp-content persistence |
+| `enable_redis` | `true` | Redis object caching (on by default) |
+| `php_memory_limit` | `512M` | PHP memory limit |
+| `upload_max_filesize` | `64M` | Maximum single upload size |
+| `reserve_static_ip` | `true` | Reserve static external IP |
+
+Click **Deploy** and wait for provisioning to complete (approximately 15–30 minutes).
+
+> **What this provisions:** GKE namespace, Kubernetes Deployment, LoadBalancer Service, HPA, Cloud Build custom WordPress PHP 8.4 image, Cloud SQL MySQL 8.0 instance with `wp` database and `wp` user, `db-init` Job (execute_on_apply=true), Secret Manager secrets (8 auth keys/salts + `DB_PASSWORD`), GCS `wp-uploads` bucket, Filestore NFS PVC, Workload Identity binding, static external IP, Cloud Monitoring uptime check, and alert policies.
+
+### 4.2 Configure Shell Environment
+
+```bash
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
 export TOKEN=$(gcloud auth print-access-token)
 
 # Discover the GKE cluster
@@ -51,193 +194,95 @@ export CLUSTER=$(gcloud container clusters list \
   --format="value(name)" \
   --limit=1)
 
-# Configure kubectl
-gcloud container clusters get-credentials ${CLUSTER} \
-  --region=${REGION} \
-  --project=${PROJECT}
-
-# Discover the namespace (pattern: appwordpress<tenant><deploymentid>)
-export NAMESPACE=$(kubectl get namespaces --no-headers \
-  -o custom-columns=":metadata.name" | grep "^appwordpress" | head -1)
-
-# Discover the external IP
-export EXTERNAL_IP=$(kubectl get svc -n ${NAMESPACE} \
-  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
-
 # Discover the database password secret
 export DB_SECRET=$(gcloud secrets list \
   --project=${PROJECT} \
   --filter="name~wordpress" \
   --format="value(name)" \
   --limit=1)
+
+# Discover the Cloud SQL instance
+export DB_INSTANCE=$(gcloud sql instances list \
+  --project=${PROJECT} \
+  --filter="name~wordpress" \
+  --format="value(name)" \
+  --limit=1)
+
+echo "Cluster: ${CLUSTER}"
 ```
 
----
-
-## Prerequisites
-
-| Requirement | Details |
-|---|---|
-| gcloud CLI | Authenticated (`gcloud auth application-default login`) |
-| kubectl | Installed and available on `$PATH` |
-| GCP project | Billing enabled |
-| Services_GCP | Must be deployed first — provides VPC, Cloud SQL instance, Filestore, and GKE cluster |
-| RAD UI access | Permission to deploy modules in the target GCP project |
-| Service account | `roles/owner` on the target project (or a tightly scoped equivalent) |
-
----
-
-## Phase 1 — Deploy [AUTOMATED]
-
-### Step 1.1 — Configure Variables
-
-In the RAD UI, open the Wordpress_GKE module and fill in the deployment form. The table below covers the key variables you are likely to customise.
-
-| Variable | Default | Description |
-|---|---|---|
-| `project_id` | _(required)_ | GCP project ID. Must match the project where Services_GCP is deployed. |
-| `deployment_id` | _(auto-generated)_ | Short suffix appended to all resource names. Leave empty to auto-generate. |
-| `region` | `"us-central1"` | GCP region for all resources. |
-| `tenant_deployment_id` | `"demo"` | Short environment label (e.g. `"prod"`, `"dev"`). |
-| `application_name` | `"wordpress"` | Base name for the Kubernetes deployment, secrets, and registry. |
-| `application_version` | `"latest"` | Container image version tag. |
-| `deploy_application` | `true` | Set to `false` to provision infrastructure only without deploying the pod. |
-| `min_instance_count` | `1` | Minimum number of WordPress pod replicas. |
-| `max_instance_count` | `1` | Maximum number of WordPress pod replicas. |
-| `cpu_limit` | `"1000m"` | CPU limit per WordPress container (millicores). |
-| `memory_limit` | `"2Gi"` | Memory limit per WordPress container. |
-| `php_memory_limit` | `"512M"` | PHP memory limit inside the container. |
-| `upload_max_filesize` | `"64M"` | Maximum single file upload size. |
-| `post_max_size` | `"64M"` | Maximum HTTP POST body size (must be >= `upload_max_filesize`). |
-| `application_database_name` | `"wp"` | MySQL database name. |
-| `application_database_user` | `"wp"` | MySQL database user. |
-| `enable_nfs` | `true` | Mount a Cloud Filestore NFS share into the pod for wp-content persistence. |
-| `nfs_mount_path` | `"/mnt/nfs"` | Container path where the NFS share is mounted. |
-| `enable_redis` | `true` | Enable Redis object caching for WordPress. |
-| `redis_host` | `""` | Redis hostname (leave empty to use auto-discovered Memorystore). |
-| `gke_cluster_name` | `""` | GKE cluster name. Leave empty to auto-discover. |
-| `service_type` | `"LoadBalancer"` | Kubernetes Service type (use `LoadBalancer` for external access). |
-| `session_affinity` | `"ClientIP"` | Route requests from the same IP to the same pod. |
-| `reserve_static_ip` | `true` | Reserve a static external IP for the LoadBalancer. |
-| `backup_schedule` | `"0 2 * * *"` | Cron schedule for automated database backups (UTC). |
-| `backup_retention_days` | `7` | Number of days to retain backup files in GCS. |
-| `support_users` | `[]` | Email addresses for monitoring alert notifications. |
-
-### Step 1.2 — Deploy
-
-Click **Deploy** in the RAD UI.
-
-| Operation | Typical duration |
-|---|---|
-| Cloud SQL provisioning (first deploy) | 15–30 minutes |
-| GKE workload rollout | 3–6 minutes |
-| Subsequent updates | 3–8 minutes |
-
-> **Note:** On the very first deployment of a new GKE cluster, `kubernetes_ready` may be `false` because the cluster endpoint is not yet reachable. Return to the RAD UI and click **Update** to complete Kubernetes resource deployment.
-
-### Step 1.3 — Record Outputs
-
-After deployment completes, the following outputs are available in the RAD UI deployment panel:
-
-| Output | Description |
-|---|---|
-| `service_url` | WordPress site URL |
-| `service_external_ip` | LoadBalancer external IP |
-| `namespace` | Kubernetes namespace |
-| `database_instance_name` | Cloud SQL instance name |
-| `database_password_secret` | Secret Manager secret name for the DB password |
-| `deployment_id` | Generated deployment suffix |
-| `resource_prefix` | Prefix used for all GCP resource names |
-| `nfs_mount_path` | NFS mount path inside the container |
-| `storage_buckets` | GCS bucket names |
-| `container_registry` | Artifact Registry repository |
-
-Run the shell variable setup block from the CLI and REST API Overview section above before continuing.
-
----
-
-## Phase 2 — Configure kubectl Access [MANUAL]
-
-### Step 2.1 — Get Cluster Credentials
-
-Auto-discover the GKE cluster managed by Services_GCP:
+### 4.3 Configure kubectl
 
 ```bash
-# List all clusters in the project
-gcloud container clusters list \
-  --project=${PROJECT} \
-  --format='value(name, location)'
-
-# Fetch credentials
+# Fetch cluster credentials
 gcloud container clusters get-credentials ${CLUSTER} \
   --region=${REGION} \
   --project=${PROJECT}
+
+# Verify the context
+kubectl config current-context
+
+# Discover the WordPress namespace
+export NAMESPACE=$(kubectl get namespaces --no-headers \
+  -o custom-columns=":metadata.name" | grep "^appwordpress" | head -1)
+
+# Discover the external IP
+export EXTERNAL_IP=$(kubectl get svc -n ${NAMESPACE} \
+  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null)
+
+echo "Namespace:   ${NAMESPACE}"
+echo "External IP: ${EXTERNAL_IP}"
 ```
 
-**REST API equivalent:**
-```bash
-curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters" \
-  | jq '.clusters[].name'
-```
+---
 
-**Expected result:** `kubectl` is configured to connect to the cluster. `~/.kube/config` is updated.
+## Exercise 1 — Access WordPress
 
-### Step 2.2 — Verify the WordPress Pod
+### Objective
 
-```bash
-kubectl get pods -n ${NAMESPACE}
-```
+Use kubectl to get the external service IP, open WordPress in a browser, complete the install wizard if required, and log in to wp-admin.
 
-**Expected result:** One pod with a name like `wordpress-<hash>` in `Running` state.
+### Step 1.1 — Get the Service External IP
 
-```
-NAME                         READY   STATUS    RESTARTS   AGE
-wordpress-7d9f8c9bc-xk4mp   2/2     Running   0          5m
-```
-
-> The pod shows `2/2` containers because the Cloud SQL Auth Proxy runs as a sidecar.
-
-```bash
-# Check pod logs
-kubectl logs -n ${NAMESPACE} -l app=wordpress -c wordpress --tail=50
-
-# Check Cloud SQL Auth Proxy sidecar logs
-kubectl logs -n ${NAMESPACE} -l app=wordpress -c cloud-sql-proxy --tail=20
-```
-
-### Step 2.3 — Verify the LoadBalancer
-
+**kubectl:**
 ```bash
 kubectl get service -n ${NAMESPACE}
 ```
 
-**Expected result:** The service shows an `EXTERNAL-IP`. This matches the `service_external_ip` output shown in the RAD UI deployment panel.
+**gcloud:**
+```bash
+gcloud compute addresses list \
+  --project=${PROJECT} \
+  --filter="name~wordpress" \
+  --format="table(name, address, status)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '{name, status, endpoint}'
+```
+
+**Expected result:** A `LoadBalancer` service with an `EXTERNAL-IP` assigned.
 
 ```
 NAME        TYPE           CLUSTER-IP    EXTERNAL-IP     PORT(S)        AGE
-wordpress   LoadBalancer   10.96.0.100   34.120.45.67    80:32041/TCP   5m
+wordpress   LoadBalancer   10.96.0.100   34.120.45.67    80:32041/TCP   10m
 ```
 
-If `EXTERNAL-IP` shows `<pending>`, wait 1–2 minutes and run the command again.
-
----
-
-## Phase 3 — Complete WordPress Setup [MANUAL]
-
-### Step 3.1 — Open WordPress in a Browser
-
-Navigate to the service URL:
+### Step 1.2 — Open WordPress in a Browser
 
 ```bash
-echo "http://${EXTERNAL_IP}"
+echo "WordPress URL: http://${EXTERNAL_IP}"
 ```
 
 Open the URL in your browser.
 
-**Expected result:** You see the WordPress 5-minute install page, or the WordPress homepage if the install was completed automatically.
+**Expected result:** You see the WordPress 5-minute install page, or the WordPress homepage if install was completed automatically.
 
-### Step 3.2 — Complete the Install Wizard (If Required)
+### Step 1.3 — Complete the Install Wizard (If Required)
 
 If the install wizard appears, fill in:
 
@@ -251,153 +296,89 @@ If the install wizard appears, fill in:
 
 Click **Install WordPress**.
 
-### Step 3.3 — Retrieve Admin Credentials from Secret Manager
-
-The WordPress admin password is stored in Secret Manager. Retrieve it:
+### Step 1.4 — Retrieve Admin Credentials from Secret Manager
 
 ```bash
-# List secrets to find the admin password secret
+# List secrets for this deployment
 gcloud secrets list \
   --project=${PROJECT} \
   --filter="name~wordpress" \
-  --format='value(name)'
+  --format="table(name)"
 
-# Retrieve the admin password
+# Retrieve the password
 gcloud secrets versions access latest \
   --secret="${DB_SECRET}" \
   --project=${PROJECT}
 ```
 
-**REST API equivalent:**
+**REST API:**
 ```bash
-curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+curl -s \
   "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}/versions/latest:access" \
-  | jq -r '.payload.data' | base64 -d
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq -r '.payload.data' | base64 --decode
 ```
 
-### Step 3.4 — Log in to wp-admin
+### Step 1.5 — Log In to wp-admin
 
-Navigate to:
-
-```
-http://<EXTERNAL_IP>/wp-admin
-```
-
-Log in with the admin username and the password retrieved in Step 3.3.
+Navigate to `http://${EXTERNAL_IP}/wp-admin`. Log in with the admin credentials.
 
 **Expected result:** The WordPress administration dashboard appears.
 
 ---
 
-## Phase 4 — Explore WordPress Admin [MANUAL]
+## Exercise 2 — Content Management
 
-### Step 4.1 — Dashboard Overview
+### Objective
 
-From the wp-admin dashboard, explore the left-hand menu:
+Create a post, upload media to verify NFS persistence, install a plugin, and explore theme management.
 
-- **Posts** — create and manage blog posts
-- **Media** — upload and manage files
-- **Pages** — static pages
-- **Plugins** — install and manage plugins
-- **Appearance** — themes and customiser
-- **Settings** — general site configuration
-
-### Step 4.2 — Create a Test Post
+### Step 2.1 — Create a Test Post
 
 1. Navigate to **Posts > Add New**.
-2. Enter a title and some body text.
-3. Click **Publish**.
-4. Click **View Post** to confirm the post is publicly accessible.
+2. Enter a title (e.g. `GKE Lab Post`) and some body text.
+3. Click **Publish**, then **View Post** to confirm the post is live.
 
-### Step 4.3 — Upload a Media File
+**Expected result:** The post appears on the WordPress frontend.
+
+### Step 2.2 — Upload a Media File
 
 1. Navigate to **Media > Add New**.
-2. Upload an image file (PNG or JPEG, under 64 MB by default).
-3. Click the uploaded file to view its details.
-4. Note the file URL — media files are served from the NFS-backed wp-content directory.
+2. Upload an image file (PNG or JPEG, under 64 MB).
+3. Click the uploaded file to view its URL.
 
-**Verify the file reached NFS:**
-
+**Verify the file is on NFS:**
 ```bash
-# Check NFS mount inside the pod
-kubectl exec -n ${NAMESPACE} \
-  $(kubectl get pods -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}') \
-  -c wordpress -- ls /mnt/nfs/
+export POD=$(kubectl get pods -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}')
+
+kubectl exec -n ${NAMESPACE} ${POD} -c wordpress -- \
+  ls /mnt/nfs/
 ```
 
-**Verify the GCS data bucket:**
+**Expected result:** The uploaded file appears under the NFS mount path.
 
-```bash
-gcloud storage ls --project=${PROJECT} | grep wordpress
-```
-
-### Step 4.4 — Install a Plugin
+### Step 2.3 — Install a Plugin
 
 1. Navigate to **Plugins > Add New**.
-2. Search for `Hello Dolly` (a lightweight test plugin).
+2. Search for `Hello Dolly`.
 3. Click **Install Now**, then **Activate**.
 4. Confirm the plugin appears under **Plugins > Installed Plugins**.
 
-### Step 4.5 — Explore Theme Editor
+Plugins are installed into `wp-content/plugins`, backed by NFS, ensuring persistence across pod restarts and rolling updates.
+
+### Step 2.4 — Explore Themes
 
 1. Navigate to **Appearance > Themes**.
-2. Browse available themes.
-3. Click **Theme Details** on any theme to inspect it.
+2. Browse available themes and click **Theme Details** on any theme.
+3. Optionally install and activate a theme.
 
----
+### Step 2.5 — Verify NFS Persistence
 
-## Phase 5 — Explore Persistent Storage [MANUAL]
-
-### Step 5.1 — Verify GCS Bucket for Data Storage
+Delete the pod to trigger a restart, then confirm the media file and plugin still exist:
 
 ```bash
-# List GCS buckets created for this deployment
-gcloud storage ls --project=${PROJECT} | grep wordpress
-
-# List contents of the data bucket (replace BUCKET_NAME with the value from RAD UI outputs)
-gcloud storage ls gs://BUCKET_NAME/
-```
-
-**REST API equivalent:**
-```bash
-curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://storage.googleapis.com/storage/v1/b?project=${PROJECT}&prefix=wordpress" \
-  | jq '.items[].name'
-```
-
-### Step 5.2 — Inspect the NFS Mount
-
-```bash
-# Describe the Filestore instance
-gcloud filestore instances list \
-  --project=${PROJECT} \
-  --format='table(name,networks[0].ipAddresses[0],fileShares[0].name,state)'
-
-# Check PVC status in the namespace
-kubectl get pvc -n ${NAMESPACE}
-```
-
-**Expected PVC output:**
-```
-NAME           STATUS   VOLUME         CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-wordpress-nfs  Bound    pvc-abc12345   1Ti        RWX            standard       10m
-```
-
-```bash
-# View what is mounted inside the pod
-kubectl exec -n ${NAMESPACE} \
-  $(kubectl get pods -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}') \
-  -c wordpress -- df -h | grep nfs
-```
-
-### Step 5.3 — Verify Storage Persistence
-
-Confirm that the media file uploaded in Phase 4 persists after a pod restart:
-
-```bash
-# Delete the pod to trigger a restart
-kubectl delete pod -n ${NAMESPACE} \
-  $(kubectl get pods -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}')
+# Delete the pod (it will be recreated by the Deployment controller)
+kubectl delete pod -n ${NAMESPACE} ${POD}
 
 # Wait for the new pod to be Running
 kubectl get pods -n ${NAMESPACE} -w
@@ -407,199 +388,610 @@ Navigate back to **Media** in wp-admin. The uploaded file should still be presen
 
 ---
 
-## Phase 6 — Explore Cloud Logging [MANUAL]
+## Exercise 3 — Kubernetes Workloads
 
-### Step 6.1 — View WordPress Logs in Logs Explorer
+### Objective
 
-Open the Google Cloud Console and navigate to **Logging > Logs Explorer**, or use the `gcloud` CLI:
+Inspect the Deployment, Service, pods, and Persistent Volume Claims to understand the Kubernetes resource hierarchy.
+
+### Step 3.1 — List Pods
 
 ```bash
-# View WordPress application logs (last 50 lines)
-gcloud logging read \
-  "resource.type=k8s_container AND resource.labels.namespace_name=${NAMESPACE} AND resource.labels.container_name=wordpress" \
-  --project=${PROJECT} \
-  --limit=50 \
-  --format='value(timestamp, textPayload)'
+kubectl get pods -n ${NAMESPACE} -o wide
 ```
 
-### Step 6.2 — View nginx / PHP-FPM Logs
+**Expected result:** One or more pods with `2/2 READY` (WordPress + Auth Proxy sidecar).
 
-```bash
-# Access logs (HTTP requests)
-gcloud logging read \
-  "resource.type=k8s_container AND resource.labels.namespace_name=${NAMESPACE} AND resource.labels.container_name=wordpress AND textPayload:\"GET\"" \
-  --project=${PROJECT} \
-  --limit=30
-
-# PHP error logs
-gcloud logging read \
-  "resource.type=k8s_container AND resource.labels.namespace_name=${NAMESPACE} AND resource.labels.container_name=wordpress AND (textPayload:\"PHP\" OR textPayload:\"Fatal\")" \
-  --project=${PROJECT} \
-  --limit=20
+```
+NAME                         READY   STATUS    RESTARTS   AGE
+wordpress-7d9f8c9bc-xk4mp   2/2     Running   0          10m
 ```
 
-### Step 6.3 — View Cloud SQL Auth Proxy Logs
+### Step 3.2 — Inspect the Deployment
 
 ```bash
-gcloud logging read \
-  "resource.type=k8s_container AND resource.labels.namespace_name=${NAMESPACE} AND resource.labels.container_name=cloud-sql-proxy" \
-  --project=${PROJECT} \
-  --limit=20
+kubectl describe deployment wordpress -n ${NAMESPACE}
 ```
 
-**REST API equivalent (Logs Explorer):**
+Key fields to observe:
+- **Image:** the custom WordPress PHP 8.4 image URI in Artifact Registry
+- **Replicas:** current vs. desired count
+- **Volume mounts:** NFS at `/mnt/nfs`, GCS Fuse mounts
+- **Session Affinity:** `ClientIP` (set at the Service level)
+
 ```bash
-curl -s -X POST \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  -H "Content-Type: application/json" \
-  "https://logging.googleapis.com/v2/entries:list" \
-  -d "{
-    \"resourceNames\": [\"projects/${PROJECT}\"],
-    \"filter\": \"resource.type=k8s_container AND resource.labels.namespace_name=${NAMESPACE}\",
-    \"pageSize\": 20
-  }" | jq '.entries[].textPayload'
+# View environment variables
+kubectl get deployment wordpress -n ${NAMESPACE} \
+  -o jsonpath='{.spec.template.spec.containers[0].env}' | jq .
+```
+
+### Step 3.3 — Inspect the Service
+
+```bash
+kubectl describe service wordpress -n ${NAMESPACE}
+
+# Check session affinity setting
+kubectl get service wordpress -n ${NAMESPACE} \
+  -o jsonpath='{.spec.sessionAffinity}'
+```
+
+**Expected result:** Service type is `LoadBalancer` with `sessionAffinity: ClientIP`. Requests from the same client IP are consistently routed to the same pod.
+
+### Step 3.4 — Check Persistent Volume Claims
+
+```bash
+kubectl get pvc -n ${NAMESPACE}
+```
+
+**Expected result:**
+
+```
+NAME           STATUS   VOLUME         CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+wordpress-nfs  Bound    pvc-abc12345   1Ti        RWX            standard       10m
+```
+
+The `RWX` (ReadWriteMany) access mode confirms all pods can read and write the same NFS volume simultaneously.
+
+```bash
+# Verify the NFS mount inside the pod
+kubectl exec -n ${NAMESPACE} ${POD} -c wordpress -- df -h | grep nfs
 ```
 
 ---
 
-## Phase 7 — Explore Cloud Monitoring [MANUAL]
+## Exercise 4 — Database Integration
 
-### Step 7.1 — GKE Dashboards
+### Objective
 
-In the Google Cloud Console, navigate to **Monitoring > Dashboards** and open the **GKE** dashboard. Explore:
+Inspect the Cloud SQL MySQL 8.0 instance, verify the `db-init` job, review database contents, and confirm the Auth Proxy sidecar.
 
-- Pod CPU and memory utilisation
-- Node-level metrics
-- Container restart counts
+### Step 4.1 — Inspect the Cloud SQL Instance
 
-### Step 7.2 — Uptime Checks
-
+**gcloud:**
 ```bash
-# List uptime checks configured for this deployment
-gcloud monitoring uptime list-configs \
+gcloud sql instances describe ${DB_INSTANCE} \
   --project=${PROJECT} \
-  --format='table(displayName, httpCheck.path, period, selectedRegions)'
+  --format="table(name, databaseVersion, state, settings.tier)"
 ```
 
-The WordPress site URL is checked every 60 seconds from multiple global locations. An alert fires if the endpoint becomes unreachable.
+**REST API:**
+```bash
+curl -s \
+  "https://sqladmin.googleapis.com/sql/v1beta4/projects/${PROJECT}/instances/${DB_INSTANCE}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '{name, version: .databaseVersion, state}'
+```
 
-### Step 7.3 — Pod Metrics via kubectl
+**Expected result:** A MySQL 8.0 instance in `RUNNABLE` state.
+
+### Step 4.2 — Verify the db-init Job
 
 ```bash
-# Pod resource usage (requires Metrics Server — available by default on GKE Autopilot)
+kubectl get jobs -n ${NAMESPACE}
+```
+
+**Expected result:**
+
+```
+NAME      COMPLETIONS   DURATION   AGE
+db-init   1/1           45s        10m
+```
+
+### Step 4.3 — View db-init Job Logs
+
+```bash
+kubectl logs -n ${NAMESPACE} \
+  $(kubectl get pods -n ${NAMESPACE} -l job-name=db-init -o jsonpath='{.items[-1].metadata.name}') \
+  2>/dev/null || kubectl logs -n ${NAMESPACE} -l job-name=db-init --tail=50
+```
+
+**Expected result:** Log output showing MySQL database creation (`CREATE DATABASE IF NOT EXISTS wp`), user creation, privilege grants, and successful Cloud SQL proxy shutdown.
+
+### Step 4.4 — List Databases and Users
+
+**gcloud:**
+```bash
+# List databases
+gcloud sql databases list \
+  --instance=${DB_INSTANCE} \
+  --project=${PROJECT}
+
+# List users
+gcloud sql users list \
+  --instance=${DB_INSTANCE} \
+  --project=${PROJECT}
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances/${DB_INSTANCE}/databases" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.items[] | {name, charset}'
+```
+
+**Expected result:** Database `wp` and user `wp` are present.
+
+### Step 4.5 — Verify Auth Proxy Sidecar
+
+```bash
+# List container names in the pod
+kubectl get pod ${POD} -n ${NAMESPACE} \
+  -o jsonpath='{.spec.containers[*].name}' | tr ' ' '\n'
+
+# View auth proxy logs
+kubectl logs -n ${NAMESPACE} ${POD} -c cloud-sql-proxy --tail=20
+```
+
+**Expected result:** Two containers: `wordpress` and `cloud-sql-proxy`. The proxy log shows successful connection to the Cloud SQL Unix socket.
+
+---
+
+## Exercise 5 — Workload Identity and Security
+
+### Objective
+
+Verify the Workload Identity binding, inspect IAM roles, confirm secrets are accessible from within the pod, and review pod security settings.
+
+### Step 5.1 — List Kubernetes Service Accounts
+
+```bash
+kubectl get serviceaccounts -n ${NAMESPACE}
+
+# Show the Workload Identity annotation
+kubectl get serviceaccount -n ${NAMESPACE} \
+  -o yaml | grep -A5 "annotations:"
+```
+
+**Expected result:** The WordPress Kubernetes service account has an annotation `iam.gke.io/gcp-service-account` pointing to a GCP service account.
+
+### Step 5.2 — Inspect GCP Service Account IAM Roles
+
+```bash
+# List GCP service accounts for this deployment
+gcloud iam service-accounts list \
+  --project=${PROJECT} \
+  --filter="email~wordpress OR email~appwordpress"
+
+export WP_SA=$(gcloud iam service-accounts list \
+  --project=${PROJECT} \
+  --filter="email~wordpress" \
+  --format="value(email)" \
+  --limit=1)
+
+# Show IAM policy
+gcloud projects get-iam-policy ${PROJECT} \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:${WP_SA}" \
+  --format="table(bindings.role)"
+```
+
+**Expected result:** The WordPress service account has `roles/cloudsql.client`, `roles/secretmanager.secretAccessor`, and `roles/storage.objectAdmin` on the media bucket.
+
+### Step 5.3 — Verify Secret Injection in the Pod
+
+```bash
+# Check DB and WordPress environment variables
+kubectl exec -n ${NAMESPACE} ${POD} -c wordpress -- \
+  env | grep -E "^(WORDPRESS_|DB_|ENABLE_REDIS|WP_REDIS)"
+```
+
+**Expected result:** `WORDPRESS_DB_NAME`, `WORDPRESS_DB_USER`, `WORDPRESS_DB_HOST`, Redis variables, and auth keys are injected. No plaintext secrets appear in `kubectl describe pod` — they are mounted from Secret Manager via the Secrets Store CSI driver.
+
+### Step 5.4 — Verify PHP Configuration Limits
+
+```bash
+kubectl exec -n ${NAMESPACE} ${POD} -c wordpress -- \
+  php -r "
+    echo 'memory_limit: '      . ini_get('memory_limit')      . PHP_EOL;
+    echo 'upload_max_filesize: ' . ini_get('upload_max_filesize') . PHP_EOL;
+    echo 'post_max_size: '     . ini_get('post_max_size')     . PHP_EOL;
+  "
+```
+
+**Expected result:** Values match those set in the module variables (`php_memory_limit`, `upload_max_filesize`, `post_max_size`).
+
+---
+
+## Exercise 6 — Cloud Logging
+
+### Objective
+
+Query Cloud Logging for WordPress container logs, PHP error logs, HTTP access logs, and Cloud SQL Auth Proxy sidecar logs.
+
+### Step 6.1 — View WordPress Container Logs via kubectl
+
+```bash
+# WordPress container logs (last 50 lines)
+kubectl logs -n ${NAMESPACE} -l app=wordpress -c wordpress --tail=50
+
+# Follow live logs
+kubectl logs -n ${NAMESPACE} -l app=wordpress -c wordpress -f
+```
+
+### Step 6.2 — View All Namespace Logs
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   AND resource.labels.cluster_name=\"${CLUSTER}\" \
+   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
+   AND resource.labels.container_name=\"wordpress\"" \
+  --project=${PROJECT} \
+  --limit=50 \
+  --format="value(timestamp, textPayload)"
+```
+
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://logging.googleapis.com/v2/entries:list" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"resourceNames\": [\"projects/${PROJECT}\"],
+    \"filter\": \"resource.type=\\\"k8s_container\\\" AND resource.labels.namespace_name=\\\"${NAMESPACE}\\\" AND resource.labels.container_name=\\\"wordpress\\\"\",
+    \"pageSize\": 20
+  }" | jq '.entries[].textPayload'
+```
+
+### Step 6.3 — Filter PHP Errors
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
+   AND resource.labels.container_name=\"wordpress\" \
+   AND (textPayload=~\"PHP Fatal\" OR textPayload=~\"PHP Warning\")" \
+  --project=${PROJECT} \
+  --limit=20
+```
+
+**Logs Explorer query:**
+```
+resource.type="k8s_container"
+resource.labels.namespace_name="${NAMESPACE}"
+resource.labels.container_name="wordpress"
+textPayload=~"PHP Fatal|PHP Warning|PHP Notice"
+```
+
+### Step 6.4 — View Auth Proxy Logs
+
+```bash
+# kubectl direct
+kubectl logs -n ${NAMESPACE} ${POD} -c cloud-sql-proxy --tail=30
+
+# Cloud Logging
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
+   AND resource.labels.container_name=\"cloud-sql-proxy\"" \
+  --project=${PROJECT} \
+  --limit=20
+```
+
+---
+
+## Exercise 7 — Cloud Monitoring
+
+### Objective
+
+Explore the GKE dashboard, view pod CPU and memory metrics, inspect uptime checks, and monitor WordPress health.
+
+### Step 7.1 — Open the GKE Dashboard
+
+```bash
+echo "https://console.cloud.google.com/kubernetes/workload?project=${PROJECT}"
+```
+
+Navigate to **Monitoring > Dashboards** and select the **GKE** dashboard. Explore:
+- Pod CPU and memory utilisation
+- Container restart counts
+- Node-level metrics
+
+### Step 7.2 — View Pod Metrics via kubectl
+
+```bash
+# Pod resource usage
 kubectl top pods -n ${NAMESPACE}
 
-# Node-level resource summary
+# Node-level summary
 kubectl top nodes
 ```
 
-### Step 7.4 — HPA Status
+**MQL query for Metrics Explorer:**
+```
+fetch k8s_container
+| metric 'kubernetes.io/container/memory/used_bytes'
+| filter (resource.namespace_name == '${NAMESPACE}')
+| every 1m
+```
+
+**REST API (pod memory, last 5 minutes):**
+```bash
+START=$(date -u -d '5 minutes ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-5M +%Y-%m-%dT%H:%M:%SZ)
+END=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+curl -s \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries?filter=metric.type%3D%22kubernetes.io%2Fcontainer%2Fmemory%2Fused_bytes%22%20AND%20resource.labels.namespace_name%3D%22${NAMESPACE}%22&interval.startTime=${START}&interval.endTime=${END}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.timeSeries[] | {container: .resource.labels.container_name, latest: .points[0].value.int64Value}'
+```
+
+### Step 7.3 — Check Uptime Checks
+
+**gcloud:**
+```bash
+gcloud monitoring uptime list-configs \
+  --project=${PROJECT} \
+  --format="table(displayName, httpCheck.path, period, selectedRegions)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.uptimeCheckConfigs[] | {displayName, path: .httpCheck.path}'
+```
+
+**Expected result:** The WordPress site URL is checked every 60 seconds from multiple global locations.
+
+### Step 7.4 — View HPA Metrics
 
 ```bash
 kubectl get hpa -n ${NAMESPACE}
+
+kubectl describe hpa -n ${NAMESPACE}
 ```
 
-**Expected output:**
+**Expected result:**
 
 ```
 NAME        REFERENCE              TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
 wordpress   Deployment/wordpress   15%/80%   1         1         1          15m
 ```
 
-**REST API equivalent:**
-```bash
-curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries?filter=metric.type%3D%22kubernetes.io%2Fcontainer%2Fcpu%2Frequest_utilization%22&interval.endTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)&interval.startTime=$(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%SZ)" \
-  | jq '.timeSeries[0].points[0].value'
-```
-
 ---
 
-## Phase 8 — Scaling and Performance [MANUAL]
+## Exercise 8 — Scaling and Operations
+
+### Objective
+
+Scale the WordPress Deployment, observe HPA behaviour, trigger a rolling update, practice rollback, and verify session affinity.
 
 ### Step 8.1 — Scale WordPress Pods
 
-To test horizontal scaling, return to the RAD UI, update `max_instance_count` to `3`, and click **Update**. Then monitor the rollout:
-
 ```bash
-kubectl rollout status deployment/wordpress -n ${NAMESPACE}
-kubectl get pods -n ${NAMESPACE} -w
-```
-
-**Expected result:** A second and third WordPress pod start within 60–90 seconds.
-
-Alternatively, patch the deployment directly for temporary testing (the RAD UI will revert this on the next update):
-
-```bash
+# Scale to 2 replicas (requires NFS for shared state)
 kubectl scale deployment wordpress \
   --replicas=2 \
   -n ${NAMESPACE}
 
+# Watch pods come up
 kubectl get pods -n ${NAMESPACE} -w
+```
+
+**Expected result:** A second WordPress pod starts within 60–90 seconds. Both pods share the same NFS-backed `wp-content` directory.
+
+**gcloud (update max via RAD UI variable):**
+
+Alternatively, return to the RAD UI, update `max_instance_count` to `2`, and click **Update**. Then monitor:
+
+```bash
+kubectl rollout status deployment/wordpress -n ${NAMESPACE}
 ```
 
 ### Step 8.2 — Verify Session Persistence
 
-Because `session_affinity = "ClientIP"`, requests from the same browser are routed to the same pod. Verify this by checking which pod handled your request:
+With `session_affinity = ClientIP`, requests from the same browser are routed to the same pod:
 
 ```bash
-# Watch access logs across all pods
+# Watch access logs across all pods simultaneously
 kubectl logs -n ${NAMESPACE} -l app=wordpress -c wordpress --follow --tail=5
 ```
 
-Open the WordPress site in your browser and perform a few actions. All log output should appear from the same pod.
-
-### Step 8.3 — Test Concurrent Access
-
-Use `curl` to send a burst of requests and verify WordPress returns HTTP 200:
+Open the WordPress site in your browser and perform a few actions. Log output should consistently appear from the same pod.
 
 ```bash
+# Confirm session affinity is set
+kubectl get service wordpress -n ${NAMESPACE} \
+  -o jsonpath='{.spec.sessionAffinity}'
+```
+
+**Expected result:** `ClientIP`
+
+### Step 8.3 — Trigger a Rolling Update
+
+```bash
+# Patch an annotation to trigger a rolling restart
+kubectl patch deployment wordpress -n ${NAMESPACE} \
+  -p '{"spec":{"template":{"metadata":{"annotations":{"restartedAt":"'$(date +%Y-%m-%dT%H:%M:%S)'"}}}}}'
+
+# Monitor the rollout
+kubectl rollout status deployment/wordpress -n ${NAMESPACE}
+```
+
+**Expected result:** Output like `Waiting for deployment "wordpress" rollout to finish: 1 out of 1 new replicas have been updated...` followed by `successfully rolled out`.
+
+### Step 8.4 — Rollback
+
+```bash
+# View rollout history
+kubectl rollout history deployment/wordpress -n ${NAMESPACE}
+
+# Roll back to the previous version
+kubectl rollout undo deployment/wordpress -n ${NAMESPACE}
+
+# Confirm rollback
+kubectl rollout status deployment/wordpress -n ${NAMESPACE}
+kubectl get pods -n ${NAMESPACE}
+```
+
+### Step 8.5 — Test Concurrent Access
+
+```bash
+# Send a burst of requests to verify HTTP 200
 for i in $(seq 1 10); do
-  curl -s -o /dev/null -w "Request ${i}: HTTP %{http_code}\n" http://${EXTERNAL_IP}/
+  curl -s -o /dev/null -w "Request ${i}: HTTP %{http_code}\n" "http://${EXTERNAL_IP}/"
 done
 ```
 
 **Expected result:** All requests return `HTTP 200`.
 
-### Step 8.4 — Scale Back Down
+### Step 8.6 — Scale Back Down
 
-Return to the RAD UI, set `max_instance_count` back to `1`, and click **Update**.
+```bash
+kubectl scale deployment wordpress \
+  --replicas=1 \
+  -n ${NAMESPACE}
 
----
-
-## Phase 9 — Undeploy [AUTOMATED]
-
-When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
-
-> **Warning:** This permanently deletes the GKE namespace, Cloud SQL database, Filestore instance, GCS buckets, and all associated secrets. Ensure any data you want to keep has been exported or backed up before undeploying.
-
-**Typical duration:** 10–20 minutes
-
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+kubectl get pods -n ${NAMESPACE}
+```
 
 ---
 
-## Summary
+## 13. Cleanup
 
-| Phase | Action | Mode |
-|---|---|---|
-| Phase 1 | Deploy infrastructure via RAD UI | Automated |
-| Phase 2 | Configure kubectl and verify pod health | Manual |
-| Phase 3 | Complete WordPress setup and log in via wp-admin | Manual |
-| Phase 4 | Explore WordPress admin: posts, media, plugins, themes | Manual |
-| Phase 5 | Verify NFS persistence and GCS storage | Manual |
-| Phase 6 | Explore Cloud Logging: WordPress, nginx, PHP-FPM logs | Manual |
-| Phase 7 | Explore Cloud Monitoring: dashboards, uptime checks, pod metrics | Manual |
-| Phase 8 | Scale pods, verify session affinity, test concurrency | Manual |
-| Phase 9 | Undeploy all infrastructure via RAD UI | Automated |
+Return to the RAD UI and click **Undeploy** on the `Wordpress_GKE` deployment. This removes the Kubernetes namespace and all workloads, Cloud SQL database and user, Secret Manager secrets (all eight auth keys/salts + DB password), GCS buckets, Filestore NFS PVC, static IP reservation, and Cloud Monitoring checks.
 
-| Resource | Notes |
-|---|---|
-| GKE Autopilot | Serverless — billed by actual pod resource consumption |
-| Cloud SQL MySQL 8.0 | Managed — patching and backups handled by GCP |
-| Cloud Filestore NFS | Shared persistent storage across all WordPress pods |
-| Cloud Storage | GCS bucket for data and backups |
-| Secret Manager | Database password and WordPress auth keys |
-| Cloud Build | Builds the custom WordPress Docker image |
-| Artifact Registry | Stores the built container image |
-| Cloud Monitoring | Uptime checks, HPA metrics, alerting |
+### Manual Cleanup (if needed)
+
+**kubectl:**
+```bash
+# Delete the namespace (removes all workloads)
+kubectl delete namespace ${NAMESPACE}
+```
+
+**gcloud:**
+```bash
+# Delete secrets (list first to confirm names)
+gcloud secrets list --project=${PROJECT} --filter="name~wordpress"
+# gcloud secrets delete <secret-name> --project=${PROJECT} --quiet
+
+# Delete static IP
+gcloud compute addresses list \
+  --project=${PROJECT} \
+  --filter="name~wordpress"
+# gcloud compute addresses delete <address-name> --region=${REGION} --project=${PROJECT} --quiet
+```
+
+> **Warning:** Undeploying permanently deletes all WordPress data in Cloud SQL, file uploads stored in NFS, and all secrets. Export any content before undeploying.
+
+> **Note:** Resources provisioned by the `Services_GCP` module (VPC, shared Cloud SQL instance, GKE cluster, Filestore) are managed separately.
+
+---
+
+## 14. Reference
+
+### Key Module Variables
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `project_id` | string | — | GCP project ID (required) |
+| `tenant_deployment_id` | string | `demo` | Short environment label; embedded in resource names |
+| `application_name` | string | `wordpress` | Base resource name; do not change after first deploy |
+| `application_version` | string | `latest` | Container image / WordPress version tag |
+| `deploy_application` | bool | `true` | Set `false` for infrastructure-only deployment |
+| `min_instance_count` | number | `1` | Minimum pod replicas (stays warm) |
+| `max_instance_count` | number | `1` | Maximum pod replicas |
+| `cpu_limit` | string | `1000m` | 1 vCPU per pod container |
+| `memory_limit` | string | `2Gi` | 2 GiB per pod container |
+| `php_memory_limit` | string | `512M` | PHP memory limit inside the container |
+| `upload_max_filesize` | string | `64M` | Maximum single upload size |
+| `post_max_size` | string | `64M` | Maximum HTTP POST body size |
+| `application_database_name` | string | `wp` | MySQL database name (do not change after deploy) |
+| `application_database_user` | string | `wp` | MySQL application user |
+| `enable_nfs` | bool | `true` | NFS shared wp-content persistence |
+| `nfs_mount_path` | string | `/mnt/nfs` | Container path for NFS mount |
+| `enable_redis` | bool | `true` | Redis object caching (on by default) |
+| `redis_host` | string | `""` | Redis hostname (empty = use NFS server IP) |
+| `redis_port` | string | `6379` | Redis TCP port (string type) |
+| `gke_cluster_name` | string | `""` | Target cluster name (empty = auto-discover) |
+| `service_type` | string | `LoadBalancer` | Kubernetes Service type |
+| `session_affinity` | string | `ClientIP` | Route requests from same IP to same pod |
+| `reserve_static_ip` | bool | `true` | Reserve static external IP for the LoadBalancer |
+| `backup_schedule` | string | `0 2 * * *` | Cron expression for automated DB backups (UTC) |
+| `backup_retention_days` | number | `7` | Days to retain backup files in GCS |
+
+### Useful Commands Reference
+
+```bash
+# Get pods
+kubectl get pods -n ${NAMESPACE}
+
+# Get service external IP
+kubectl get service -n ${NAMESPACE}
+
+# Check PVC status
+kubectl get pvc -n ${NAMESPACE}
+
+# Check HPA
+kubectl get hpa -n ${NAMESPACE}
+
+# Scale deployment
+kubectl scale deployment wordpress --replicas=2 -n ${NAMESPACE}
+
+# Rolling restart
+kubectl rollout restart deployment/wordpress -n ${NAMESPACE}
+
+# Rollback
+kubectl rollout undo deployment/wordpress -n ${NAMESPACE}
+
+# View WordPress logs
+kubectl logs -n ${NAMESPACE} -l app=wordpress -c wordpress --tail=50
+
+# View auth proxy logs
+kubectl logs -n ${NAMESPACE} ${POD} -c cloud-sql-proxy --tail=20
+
+# Check environment variables
+kubectl exec -n ${NAMESPACE} ${POD} -c wordpress -- env | grep -E "^(WORDPRESS_|WP_|ENABLE_)"
+
+# Verify PHP limits
+kubectl exec -n ${NAMESPACE} ${POD} -c wordpress -- php -r "echo ini_get('memory_limit');"
+
+# View Cloud SQL instances
+gcloud sql instances list --project=${PROJECT}
+
+# List databases
+gcloud sql databases list --instance=${DB_INSTANCE} --project=${PROJECT}
+
+# List secrets
+gcloud secrets list --project=${PROJECT} --filter="name~wordpress"
+
+# List uptime checks
+gcloud monitoring uptime list-configs --project=${PROJECT}
+```
+
+### Further Reading
+
+- [WordPress on GKE — Configuration Guide](https://docs.radmodules.dev/docs/modules/Wordpress_GKE)
+- [GKE Autopilot overview](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
+- [Workload Identity documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+- [Cloud SQL Auth Proxy for GKE](https://cloud.google.com/sql/docs/mysql/connect-kubernetes-engine)
+- [Filestore NFS on GKE](https://cloud.google.com/filestore/docs/accessing-fileshares)
+- [Redis Object Cache plugin](https://wordpress.org/plugins/redis-cache/)
+- [Cloud Monitoring for GKE](https://cloud.google.com/stackdriver/docs/solutions/gke)
+- [Horizontal Pod Autoscaler](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)

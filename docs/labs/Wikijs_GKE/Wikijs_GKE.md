@@ -2,420 +2,798 @@
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Wikijs_GKE)**
 
-## Overview
-
-**Estimated time:** 1–2 hours
-
-This lab walks you through deploying Wiki.js on Google Kubernetes Engine (GKE) Autopilot using the `Wikijs_GKE` module, then verifying and exploring the deployment manually. The module handles all GCP infrastructure; you perform the post-deployment steps interactively.
-
-### What the Module Automates
-
-- GKE Autopilot namespace and Kubernetes Deployment (HPA min/max replicas)
-- Cloud SQL PostgreSQL 15 instance, database, and user; `pg_trgm` extension installed automatically
-- Cloud Build image build and push to Artifact Registry
-- GCS Fuse CSI volume for Wiki.js asset storage (`/wiki-storage`)
-- Cloud Filestore (NFS) optional persistent share (`/mnt/nfs`)
-- Cloud SQL Auth Proxy sidecar (Unix socket at `/cloudsql`)
-- Workload Identity binding and least-privilege IAM
-- Secret Manager secrets (DB password, JWT secret)
-- Kubernetes Service (LoadBalancer) with static external IP
-- Cloud Monitoring uptime check and alert policies
-- Backup CronJob (daily at 02:00 UTC)
-- Redis environment variable injection (when `enable_redis = true`)
-
-### What You Do Manually
-
-- Note the deployment outputs (external IP, namespace, etc.) from the RAD UI deployment panel
-- Complete the Wiki.js first-run setup wizard (or retrieve seeded admin credentials from Secret Manager)
-- Create pages and explore the Markdown editor
-- Test full-text search powered by `pg_trgm`
-- Configure authentication providers and access-control groups
-- Verify GCS Fuse asset storage
-- Explore Cloud Logging and Cloud Monitoring
+This lab guide walks you through deploying, exploring, and operating **Wiki.js** on Google
+Kubernetes Engine Autopilot using the **Wikijs_GKE** module. You will explore a modern
+open-source wiki platform backed by Cloud SQL PostgreSQL with full-text search, GCS Fuse
+asset storage, Workload Identity, and Kubernetes-native operations.
 
 ---
 
-## CLI and REST API Overview
+## Table of Contents
 
-Key tools used in this lab:
-
-| Tool | Purpose |
-|---|---|
-| `gcloud` | Authenticate, query GCP resources, read secrets |
-| `kubectl` | Inspect pods, logs, exec into containers |
-| Google Cloud Console | Cloud Logging, Cloud Monitoring, Secret Manager UI |
-
----
-
-## Prerequisites
-
-1. **Services_GCP deployed** — the `Wikijs_GKE` module depends on `Services_GCP`. Ensure it is deployed in the same project and that a GKE Autopilot cluster exists.
-2. **gcloud CLI authenticated** — run `gcloud auth application-default login`.
-3. **kubectl configured** — see Phase 2 for the exact `gcloud` command.
-4. **Access to the RAD UI** with permission to deploy modules in the target GCP project.
-5. **GCP project** with billing enabled and the following APIs active (the module enables them automatically on first deploy):
-   - Kubernetes Engine, Cloud SQL, Cloud Build, Artifact Registry, Secret Manager, Cloud Storage, Cloud Monitoring.
+1. [Overview](#1-overview)
+2. [Architecture](#2-architecture)
+3. [Prerequisites](#3-prerequisites)
+4. [Lab Setup](#4-lab-setup)
+5. [Exercise 1 — Access Wiki.js](#exercise-1--access-wikijs)
+6. [Exercise 2 — Create and Edit Pages](#exercise-2--create-and-edit-pages)
+7. [Exercise 3 — User Management](#exercise-3--user-management)
+8. [Exercise 4 — Kubernetes Workloads](#exercise-4--kubernetes-workloads)
+9. [Exercise 5 — Security and Workload Identity](#exercise-5--security-and-workload-identity)
+10. [Exercise 6 — Cloud Logging and Monitoring](#exercise-6--cloud-logging-and-monitoring)
+11. [Cleanup](#cleanup)
+12. [Reference](#reference)
 
 ---
 
-## Phase 1 — Deploy [AUTOMATED]
+## 1. Overview
 
-### Variables
+### What Is Wiki.js?
 
-In the RAD UI, open the Wikijs_GKE module and fill in the deployment form:
+Wiki.js is a modern, powerful open-source wiki platform built on Node.js with 28,000+ GitHub
+stars. The `Wikijs_GKE` module deploys version **2.5.311** on GKE Autopilot with Cloud SQL
+PostgreSQL 15 and the `pg_trgm` extension for native full-text search. The GKE deployment
+adds Kubernetes-native features: HPA auto-scaling, Workload Identity, GCS Fuse CSI, and
+structured JSON pod logging.
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `project_id` | **Yes** | — | GCP project ID |
-| `deployment_id` | No | *(auto-generated)* | Stable suffix appended to all resource names |
-| `region` | No | `us-central1` | GCP region for resource deployment |
-| `application_name` | No | `wikijs` | Base name for Kubernetes deployment and secrets |
-| `application_version` | No | `2.5.311` | Container image version tag |
-| `deploy_application` | No | `true` | Set `false` to provision infrastructure only |
-| `min_instance_count` | No | `1` | Minimum pod replicas (HPA minReplicas) |
-| `max_instance_count` | No | `3` | Maximum pod replicas (HPA maxReplicas) |
-| `container_resources` | No | `{cpu_limit="1000m", memory_limit="2Gi"}` | Pod resource limits |
-| `application_database_name` | No | `wikijs` | PostgreSQL database name |
-| `application_database_user` | No | `wikijs` | PostgreSQL user name |
-| `enable_redis` | No | `false` | Enable Redis session/cache backend |
-| `redis_host` | No | `""` | Redis hostname or IP (required when `enable_redis=true`) |
-| `enable_nfs` | No | `true` | Mount Cloud Filestore NFS share into pods |
-| `gke_cluster_name` | No | `""` | Target GKE cluster name (auto-discovered when empty) |
-| `tenant_deployment_id` | No | `demo` | Deployment environment identifier |
-| `support_users` | No | `[]` | Email addresses for monitoring alert notifications |
+### Key Capabilities Demonstrated
 
-### Deploy
-
-Click **Deploy** in the RAD UI.
-
-### Deployment Duration
-
-| Stage | Estimated Duration |
+| Capability | What It Demonstrates |
 |---|---|
-| Cloud SQL PostgreSQL 15 provisioning | 8–12 min |
-| Cloud Build image build | 3–5 min |
-| GKE namespace + workload rollout | 3–5 min |
-| NFS Filestore provisioning (if enabled) | 5–8 min |
-| **Total (first deploy)** | **15–25 min** |
+| **GKE Autopilot** | Managed node provisioning, pod scheduling, auto-scaling with HPA |
+| **Workload Identity** | Kubernetes SA bound to GCP SA — no key files, least-privilege IAM |
+| **Cloud SQL Proxy** | Sidecar container providing Unix socket DB connection inside pods |
+| **GCS Fuse CSI** | GCS bucket mounted at `/wiki-storage` for persistent asset storage |
+| **Full-Text Search** | PostgreSQL `pg_trgm` trigram search powering Wiki.js search |
+| **Authentication** | Local auth, SAML 2.0, OAuth 2.0/OIDC, LDAP/Active Directory |
+| **Observability** | Cloud Logging structured JSON, Cloud Monitoring GKE dashboard |
 
-### Key Outputs
+---
 
-After deployment completes, the following outputs are available in the RAD UI deployment panel:
+## 2. Architecture
 
-| Output | Description |
-|---|---|
-| `service_external_ip` | External LoadBalancer IP for the Wiki.js service |
-| `service_url` | Full URL (`http://<IP>`) |
-| `database_instance_name` | Cloud SQL instance name |
-| `database_password_secret` | Secret Manager secret name for DB password |
-| `container_registry` | Artifact Registry repository |
-| `namespace` | Kubernetes namespace |
-| `deployment_id` | Unique deployment suffix |
+```
+Browser / Client
+       │
+       ▼ HTTP (LoadBalancer)
+┌──────────────────────────────────────────────────────────────────┐
+│  GKE Autopilot Cluster                                            │
+│                                                                   │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │  Namespace: appwikijs<tenant><deploymentid>                │  │
+│  │                                                            │  │
+│  │  ┌──────────────────────────────────────────────────────┐  │  │
+│  │  │  Pod: wikijs-<hash>   (READY 2/2)                     │  │  │
+│  │  │  ┌──────────────────┐  ┌────────────────────────────┐ │  │  │
+│  │  │  │ Container: wikijs │  │ Sidecar: cloud-sql-proxy   │ │  │  │
+│  │  │  │ Port: 3000        │  │ Unix socket: /cloudsql/... │ │  │  │
+│  │  │  │ /wiki-storage     │  └────────────────────────────┘ │  │  │
+│  │  │  │ (GCS Fuse mount)  │                                  │  │  │
+│  │  │  └──────────────────┘                                   │  │  │
+│  │  └──────────────────────────────────────────────────────┘  │  │
+│  │                                                            │  │
+│  │  Service: LoadBalancer → EXTERNAL_IP:80                   │  │
+│  │  HPA: min=1  max=3  (CPU-based)                           │  │
+│  └────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────┘
+       │
+       ▼ Cloud SQL Auth Proxy (Unix socket)
+┌──────────────────────────────────────────────────────────────────┐
+│  Cloud SQL PostgreSQL 15 (private IP)                             │
+│  Database: wikijs  │  pg_trgm extension                          │
+└──────────────────────────────────────────────────────────────────┘
 
-Set shell variables for use in later steps:
+Supporting Services:
+  Workload Identity   ← KSA → GSA binding (no key files)
+  Secret Manager      ← DB password, JWT secret
+  GCS Bucket          ← wikijs-storage (asset uploads via CSI)
+  Artifact Registry   ← custom container image
+  Cloud Monitoring    ← uptime check, alert policies
+```
+
+---
+
+## 3. Prerequisites
+
+### Required Tools
+
+| Tool | Minimum Version | Install |
+|---|---|---|
+| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
+| `kubectl` | 1.29+ | `gcloud components install kubectl` |
+| `curl` / `jq` | Any | System package manager |
+
+### GCP Permissions
+
+```
+roles/owner                    # or the following fine-grained set:
+roles/container.admin
+roles/cloudsql.admin
+roles/secretmanager.admin
+roles/storage.admin
+roles/iam.serviceAccountAdmin
+roles/monitoring.admin
+```
+
+### Environment Variables
 
 ```bash
-export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
-export REGION="us-central1"             # the region you deployed into
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
+export TOKEN=$(gcloud auth print-access-token)
+
+gcloud config set project "${PROJECT}"
+gcloud config set compute/region "${REGION}"
+```
+
+---
+
+## 4. Lab Setup
+
+### 4.1 Deploy via RAD UI
+
+Deploy the `Wikijs_GKE` module via the RAD UI. In the variable form, set:
+
+| Variable | Value | Notes |
+|---|---|---|
+| `project_id` | `your-gcp-project-id` | Required |
+| `region` | `us-central1` | GCP region |
+| `application_name` | `wikijs` | Base resource name |
+| `application_version` | `2.5.311` | Wiki.js version |
+| `min_instance_count` | `1` | Minimum pod replicas |
+| `max_instance_count` | `3` | HPA maximum replicas |
+| `enable_nfs` | `true` | Filestore NFS mount |
+| `gke_cluster_name` | `""` | Auto-discover cluster |
+
+Click **Deploy** and wait for provisioning to complete (approximately 15–25 minutes).
+
+> **What this provisions:** GKE namespace and Deployment, HPA, Cloud SQL PostgreSQL 15 with
+> `pg_trgm`, Artifact Registry (custom image), GCS Fuse CSI volume, Workload Identity binding,
+> Secret Manager secrets, LoadBalancer Service with static IP, uptime check, and alert policies.
+
+### 4.2 Configure Shell Environment
+
+```bash
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
 export TOKEN=$(gcloud auth print-access-token)
 
 # Discover the GKE cluster
 export CLUSTER=$(gcloud container clusters list \
-  --project=${PROJECT} \
+  --project="${PROJECT}" \
   --format="value(name)" \
   --limit=1)
 
-# Configure kubectl
-gcloud container clusters get-credentials ${CLUSTER} \
-  --region=${REGION} \
-  --project=${PROJECT}
+# Discover the DB secret
+export DB_SECRET=$(gcloud secrets list \
+  --project="${PROJECT}" \
+  --filter="name~wikijs" \
+  --format="value(name)" \
+  --limit=1)
+
+echo "Cluster: ${CLUSTER}"
+echo "DB Secret: ${DB_SECRET}"
+```
+
+### 4.3 Configure kubectl
+
+```bash
+gcloud container clusters get-credentials "${CLUSTER}" \
+  --region="${REGION}" \
+  --project="${PROJECT}"
+
+kubectl cluster-info
 
 # Discover the namespace (pattern: appwikijs<tenant><deploymentid>)
 export NAMESPACE=$(kubectl get namespaces --no-headers \
   -o custom-columns=":metadata.name" | grep "^appwikijs" | head -1)
 
 # Discover the external IP
-export EXTERNAL_IP=$(kubectl get svc -n ${NAMESPACE} \
+export EXTERNAL_IP=$(kubectl get svc -n "${NAMESPACE}" \
   -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
 
-# Discover the database password secret
-export DB_SECRET=$(gcloud secrets list \
-  --project=${PROJECT} \
-  --filter="name~wikijs" \
-  --format="value(name)" \
-  --limit=1)
+echo "Namespace: ${NAMESPACE}"
+echo "Wiki.js URL: http://${EXTERNAL_IP}"
 ```
 
 ---
 
-## Phase 2 — Access the Cluster and Verify Pods [MANUAL]
+## Exercise 1 — Access Wiki.js
 
-### 1. Configure kubectl
+### Objective
 
+Get the external IP from the Kubernetes LoadBalancer Service, verify pods are running, obtain
+admin credentials, and complete the Wiki.js first-run setup.
+
+### Step 1.1 — Get the External IP
+
+**kubectl:**
 ```bash
-gcloud container clusters get-credentials ${CLUSTER} \
-  --region ${REGION} \
-  --project ${PROJECT}
+kubectl get service -n "${NAMESPACE}"
 ```
 
-**Expected result:** `kubeconfig entry generated for <CLUSTER_NAME>`.
-
-gcloud equivalent to list clusters:
+**gcloud:**
 ```bash
-gcloud container clusters list --project ${PROJECT}
+gcloud compute addresses list \
+  --project="${PROJECT}" \
+  --filter="name~wikijs"
 ```
 
-### 2. Verify the Wiki.js Pod is Running
-
+**REST API:**
 ```bash
-kubectl get pods -n ${NAMESPACE}
+curl -s \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '{name, status, endpoint}'
 ```
 
-**Expected result:** One or more pods with status `Running` and `READY 2/2` (main container + Cloud SQL Auth Proxy sidecar).
+**Expected result:** The LoadBalancer Service shows an `EXTERNAL-IP` address.
+
+### Step 1.2 — Verify Pods Are Running
 
 ```bash
-kubectl describe pod <POD_NAME> -n ${NAMESPACE}
-kubectl logs <POD_NAME> -c wikijs -n ${NAMESPACE}
+kubectl get pods -n "${NAMESPACE}"
 ```
 
-### 3. Retrieve the Service External IP
+Expected output:
+```
+NAME                      READY   STATUS    RESTARTS   AGE
+wikijs-<hash>-xxxxx       2/2     Running   0          5m
+```
+
+The `2/2` indicates the Wiki.js container plus the Cloud SQL Auth Proxy sidecar are running.
 
 ```bash
-kubectl get svc -n ${NAMESPACE}
+# View detailed pod description
+kubectl describe pod -l app=wikijs -n "${NAMESPACE}"
 ```
 
-Note the `EXTERNAL-IP` for the LoadBalancer service. This matches the `service_external_ip` output shown in the RAD UI deployment panel.
+### Step 1.3 — Retrieve Admin Credentials
 
-**REST API equivalent:**
-```bash
-gcloud compute addresses list --project ${PROJECT}
-```
-
----
-
-## Phase 3 — Complete Wiki.js Setup [MANUAL]
-
-### 1. Open the Wiki.js URL
-
-Navigate to `http://${EXTERNAL_IP}` in a browser.
-
-On first run, Wiki.js displays the setup wizard (if the database is empty) or the login page (if the module seeded initial state).
-
-### 2. Retrieve Admin Credentials from Secret Manager
-
+**gcloud:**
 ```bash
 gcloud secrets versions access latest \
   --secret="${DB_SECRET}" \
-  --project ${PROJECT}
+  --project="${PROJECT}"
 ```
 
-If the secret name differs, list available secrets:
+**REST API:**
 ```bash
-gcloud secrets list --project ${PROJECT} --filter="name~wikijs"
+curl -s \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}/versions/latest:access" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq -r '.payload.data' | base64 --decode
 ```
 
-**REST API equivalent:**
+### Step 1.4 — Complete the Setup Wizard
+
+1. Navigate to `http://${EXTERNAL_IP}` in a browser.
+2. Complete the Wiki.js setup wizard with site title, admin email, and admin password.
+3. Click **Install**.
+
+**Expected result:** Wiki.js redirects to the home page.
+
+### Step 1.5 — View Container Logs at Startup
+
 ```bash
-curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}/versions/latest:access"
+# View Wiki.js container logs
+kubectl logs -l app=wikijs \
+  -c wikijs \
+  -n "${NAMESPACE}" \
+  --tail=50
 ```
 
-### 3. Complete the Setup Wizard (if displayed)
-
-- Enter site title, admin email, and admin password.
-- Click **Install**.
-
-**Expected result:** Wiki.js redirects to the home page or admin dashboard.
-
-### 4. Log In and Explore the Admin Panel
-
-- Navigate to **Administration** (gear icon in the sidebar).
-- Review General settings, Theme, and SEO configuration.
+**Expected result:** Log entries confirming database connection, `pg_trgm` extension activated,
+and Wiki.js server started on port 3000.
 
 ---
 
-## Phase 4 — Create Pages and Content [MANUAL]
+## Exercise 2 — Create and Edit Pages
 
-### 1. Create a New Page
+### Objective
+
+Create pages using the Markdown editor, build a nested page tree, and verify content is
+persisted in the PostgreSQL database.
+
+### Step 2.1 — Create Pages with Markdown
 
 1. Click **New Page** in the top navigation.
-2. Choose **Markdown** as the editor.
-3. Set a page path (e.g., `lab/getting-started`).
-4. Add content including:
-   - Headings (`# H1`, `## H2`)
-   - A code block (triple backtick)
-   - A table
-5. Click **Create** to save.
+2. Select **Markdown** editor.
+3. Set path to `lab/gke-overview`.
+4. Add a heading, code block with `kubectl` commands, and a table.
+5. Click **Create**.
 
-**Expected result:** The page renders and appears in the left navigation tree.
+**Expected result:** Page renders and appears in left sidebar under `lab/`.
 
-### 2. Create a Page Tree (Nested Pages)
+### Step 2.2 — Build a Page Hierarchy
 
-Create additional pages with paths like `lab/architecture` and `lab/deployment`. Wiki.js automatically groups them under `lab/` in the navigation.
+Create two more pages:
+- `lab/architecture` — GKE architecture overview
+- `lab/workload-identity` — Workload Identity explanation
 
-### 3. Add Tags
+**Expected result:** Three pages grouped under `lab/` in the sidebar navigation tree.
 
-Open a page, click **Page Actions > Properties**, add one or more tags (e.g., `gcp`, `tutorial`), and save.
+### Step 2.3 — Add Tags and Properties
 
-### 4. View the Public Page
+1. Open `lab/gke-overview`.
+2. Click **Page Actions** → **Properties**.
+3. Add tags: `gke`, `kubernetes`, `wikijs`.
+4. Save.
 
-Navigate to the page URL directly (without being logged in) to verify public read access if the wiki is configured for open access.
+**Expected result:** Tags appear below the page title and are indexed for search.
 
----
+### Step 2.4 — Test Full-Text Search
 
-## Phase 5 — Search Functionality [MANUAL]
+1. Click the **Search** icon in the top bar.
+2. Search for `Workload Identity`.
 
-### 1. Use the Wiki.js Search
+**Expected result:** The `lab/workload-identity` page appears in results via `pg_trgm` search.
 
-Click the search icon in the top bar, type a keyword from one of your pages, and observe the full-text results.
-
-**Expected result:** Pages containing the keyword appear in results. Search is powered by PostgreSQL `pg_trgm` trigram indexing.
-
-### 2. Verify the pg_trgm Search Engine
+### Step 2.5 — Verify Search Engine
 
 1. Navigate to **Administration > Search Engine**.
-2. Confirm **Database — PostgreSQL** is selected as the search engine.
-3. Click **Rebuild Index** to force a re-index of all pages.
+2. Confirm **Database — PostgreSQL** is selected.
+3. Click **Rebuild Index**.
 
-**Verify extension directly (optional):**
-```bash
-kubectl exec -it <POD_NAME> -c cloud-sql-proxy -n ${NAMESPACE} -- \
-  psql -U wikijs -d wikijs -c "\dx pg_trgm"
-```
+**Expected result:** Search index rebuild completes and search engine shows PostgreSQL provider.
 
 ---
 
-## Phase 6 — Authentication and Access Control [MANUAL]
+## Exercise 3 — User Management
 
-### 1. Review Local Authentication
+### Objective
 
-1. Navigate to **Administration > Authentication**.
-2. Click on the **Local** strategy — this is active by default.
-3. Review settings such as self-registration and login via email.
+Create user groups, add users, and configure page-level access control within Wiki.js.
 
-### 2. Explore Additional Auth Providers
-
-Review the available providers listed on the Authentication page:
-- **SAML 2.0** — for enterprise SSO integration
-- **OAuth 2.0 / OpenID Connect** — for Google, GitHub, or custom providers
-- **LDAP / Active Directory** — for corporate directory integration
-
-No activation is required for this lab.
-
-### 3. Manage Groups and Permissions
+### Step 3.1 — Review Default Groups
 
 1. Navigate to **Administration > Groups**.
-2. Observe the default **Administrators** and **Guests** groups.
-3. Click **Administrators** and review the page permissions rules.
-4. Click **New Group**, name it `Editors`, assign read+write permissions to `/`, and save.
+2. Click **Administrators** — review full-access page rules.
+3. Click **Guests** — review read-only or restricted access.
+
+**Expected result:** Two default groups with distinct permission profiles.
+
+### Step 3.2 — Create an Editors Group
+
+1. Click **New Group**, name it `Editors`.
+2. Add a page rule: Path `/`, Access: Read + Write.
+3. Save.
+
+### Step 3.3 — Create a New User
+
+1. Navigate to **Administration > Users** → **New User**.
+2. Enter email `editor@example.com`, name `Lab Editor`, and a password.
+3. Assign to the **Editors** group.
+4. Save.
+
+**Expected result:** User appears in the Users list assigned to Editors group.
+
+### Step 3.4 — Explore Authentication Providers
+
+1. Navigate to **Administration > Authentication**.
+2. Review available providers: Local, Google OAuth, SAML 2.0, LDAP.
+3. Note the configuration fields for Google OAuth (Client ID, Client Secret, Callback URL).
+
+**Expected result:** Multiple authentication strategies visible, each configurable for
+enterprise SSO integration.
+
+### Step 3.5 — List Secrets from Kubernetes
+
+```bash
+# List Kubernetes secrets in the namespace (Workload Identity - no DB password in K8s secrets)
+kubectl get secrets -n "${NAMESPACE}"
+```
+
+**gcloud:**
+```bash
+# The DB password is managed by Secret Manager, not a Kubernetes Secret
+gcloud secrets list \
+  --project="${PROJECT}" \
+  --filter="name~wikijs" \
+  --format="table(name, createTime)"
+```
+
+**Expected result:** Secret Manager holds the DB password; no plaintext credentials exist in
+Kubernetes Secrets — they are injected via Workload Identity and the Auth Proxy sidecar.
 
 ---
 
-## Phase 7 — Storage and Assets [MANUAL]
+## Exercise 4 — Kubernetes Workloads
 
-### 1. Upload an Image in the Page Editor
+### Objective
 
-1. Open or create a page in Markdown editor.
-2. Click the image icon in the toolbar.
-3. Upload a local image file.
+Inspect the Kubernetes Deployment, Service, and HPA that manage the Wiki.js workload.
 
-**Expected result:** The image is stored in the GCS bucket mounted at `/wiki-storage` via GCS Fuse.
-
-### 2. Verify GCS Fuse Configuration
-
-Navigate to **Administration > Storage**. Confirm that a storage target using the `/wiki-storage` path is active (this corresponds to the GCS Fuse volume mounted by the `gcs_volumes` or default storage bucket configuration).
-
-### 3. Check the GCS Bucket
+### Step 4.1 — Describe the Deployment
 
 ```bash
-gcloud storage ls --project=${PROJECT} | grep wikijs
+kubectl describe deployment -l app=wikijs -n "${NAMESPACE}"
 ```
 
-**REST API equivalent:**
+Note:
+- Two containers: `wikijs` (port 3000) and `cloud-sql-proxy` (Unix socket sidecar)
+- Volume mounts: `/cloudsql`, `/wiki-storage` (GCS Fuse), `/mnt/nfs` (Filestore)
+- Resource limits: `cpu=1000m`, `memory=2Gi`
+
+**REST API:**
 ```bash
-curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://storage.googleapis.com/storage/v1/b?project=${PROJECT}&prefix=wikijs"
+curl -s \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '{name, status, nodeConfig}'
 ```
 
-**Expected result:** Uploaded images appear as objects in the bucket.
+### Step 4.2 — View the HPA
+
+```bash
+kubectl get hpa -n "${NAMESPACE}"
+kubectl describe hpa -n "${NAMESPACE}"
+```
+
+**Expected result:** HPA shows `MINPODS` and `MAXPODS` matching your `min_instance_count` and
+`max_instance_count` settings.
+
+### Step 4.3 — Check Pod Resource Usage
+
+```bash
+kubectl top pods -n "${NAMESPACE}"
+```
+
+**Expected result:** CPU and memory consumption for the Wiki.js pod.
+
+### Step 4.4 — Inspect Volume Mounts
+
+```bash
+POD=$(kubectl get pods -n "${NAMESPACE}" \
+  -l app=wikijs \
+  -o jsonpath='{.items[0].metadata.name}')
+
+kubectl exec "${POD}" -c wikijs -n "${NAMESPACE}" -- df -h
+```
+
+**Expected result:** Filesystem mounts visible including the GCS Fuse mount at `/wiki-storage`
+and NFS mount at `/mnt/nfs`.
+
+### Step 4.5 — View All Namespace Resources
+
+```bash
+kubectl get all -n "${NAMESPACE}"
+```
+
+Expected resources:
+```
+NAME                       READY   STATUS    RESTARTS   AGE
+pod/wikijs-xxx             2/2     Running   0          10m
+
+NAME             TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)
+service/wikijs   LoadBalancer   10.96.xx.xx    34.xx.xx.xx    80:31234/TCP
+
+NAME                  READY   UP-TO-DATE   AVAILABLE
+deployment.apps/wikijs   1/1     1            1
+
+NAME                             REFERENCE       MINPODS   MAXPODS
+horizontalpodautoscaler/wikijs   Deployment/...  1         3
+```
 
 ---
 
-## Phase 8 — Explore Cloud Logging [MANUAL]
+## Exercise 5 — Security and Workload Identity
 
-### 1. View Wiki.js Application Logs via kubectl
+### Objective
+
+Verify Workload Identity binding between the Kubernetes ServiceAccount and GCP ServiceAccount,
+confirm Secret Manager access via IAM, and inspect GCS bucket permissions.
+
+### Step 5.1 — Inspect the Kubernetes ServiceAccount
 
 ```bash
-kubectl logs -l app=wikijs -n ${NAMESPACE} --tail=100 -f
+kubectl get serviceaccounts -n "${NAMESPACE}"
+kubectl describe serviceaccount -n "${NAMESPACE}" \
+  $(kubectl get serviceaccount -n "${NAMESPACE}" \
+    -o jsonpath='{.items[0].metadata.name}')
 ```
 
-Look for startup messages such as database connection confirmation and search index initialization.
+**Expected result:** The ServiceAccount has annotation:
+```
+iam.gke.io/gcp-service-account: <gsa>@<project>.iam.gserviceaccount.com
+```
 
-### 2. View Logs in Cloud Logging
+### Step 5.2 — Verify the GCP Service Account IAM Binding
 
-In the Google Cloud Console, navigate to **Logging > Log Explorer** and run:
+**gcloud:**
+```bash
+# List GCP service accounts for this project
+gcloud iam service-accounts list \
+  --project="${PROJECT}" \
+  --filter="email~wikijs" \
+  --format="table(email, displayName)"
+```
 
+```bash
+# Get IAM policy for the wikijs service account
+GSA=$(gcloud iam service-accounts list \
+  --project="${PROJECT}" \
+  --filter="email~wikijs" \
+  --format="value(email)" --limit=1)
+
+gcloud iam service-accounts get-iam-policy "${GSA}" \
+  --project="${PROJECT}"
+```
+
+**Expected result:** The Kubernetes ServiceAccount (`serviceAccount:<project>.svc.id.goog[<namespace>/<ksa-name>]`) appears with `roles/iam.workloadIdentityUser`.
+
+### Step 5.3 — Verify Secret Manager Access
+
+```bash
+# Confirm the GSA has secretAccessor on the DB secret
+gcloud secrets get-iam-policy "${DB_SECRET}" \
+  --project="${PROJECT}"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}:getIamPolicy" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.bindings[] | select(.role == "roles/secretmanager.secretAccessor")'
+```
+
+**Expected result:** The wikijs GCP service account appears with `roles/secretmanager.secretAccessor`.
+
+### Step 5.4 — Verify GCS Bucket Permissions
+
+**gcloud:**
+```bash
+BUCKET=$(gcloud storage buckets list \
+  --project="${PROJECT}" \
+  --filter="name~wikijs" \
+  --format="value(name)" --limit=1)
+
+gcloud storage buckets get-iam-policy "gs://${BUCKET}" \
+  --format="json" | jq '.bindings[] | select(.role | test("storage"))'
+```
+
+**Expected result:** The wikijs GCP service account has `roles/storage.objectAdmin` on the
+wikijs-storage bucket, enabling GCS Fuse writes.
+
+### Step 5.5 — View Pod Security Context
+
+```bash
+kubectl get pod -l app=wikijs -n "${NAMESPACE}" \
+  -o jsonpath='{.items[0].spec.securityContext}' | jq
+```
+
+**Expected result:** Security context shows `runAsNonRoot: true` and the UID for the wiki
+process, confirming the container does not run as root.
+
+---
+
+## Exercise 6 — Cloud Logging and Monitoring
+
+### Objective
+
+Query Wiki.js pod logs via Cloud Logging and kubectl, inspect GKE metrics in Cloud Monitoring,
+and verify the uptime check is passing.
+
+### Step 6.1 — View Pod Logs via kubectl
+
+```bash
+kubectl logs -l app=wikijs \
+  -c wikijs \
+  -n "${NAMESPACE}" \
+  --tail=100
+```
+
+```bash
+# Cloud SQL Auth Proxy sidecar logs
+kubectl logs -l app=wikijs \
+  -c cloud-sql-proxy \
+  -n "${NAMESPACE}" \
+  --tail=50
+```
+
+**Expected result:** Wiki.js startup messages and Auth Proxy connection establishment logs.
+
+### Step 6.2 — Query Logs in Cloud Logging
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
+   AND resource.labels.container_name=\"wikijs\"" \
+  --project="${PROJECT}" \
+  --limit=50 \
+  --format="table(timestamp,severity,jsonPayload.message)"
+```
+
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://logging.googleapis.com/v2/entries:list" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"resourceNames\": [\"projects/${PROJECT}\"],
+    \"filter\": \"resource.type=\\\"k8s_container\\\" AND resource.labels.namespace_name=\\\"${NAMESPACE}\\\"\",
+    \"orderBy\": \"timestamp desc\",
+    \"pageSize\": 20
+  }" | jq '.entries[] | {timestamp, severity, textPayload}'
+```
+
+### Step 6.3 — Filter for Errors
+
+```bash
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
+   AND severity>=ERROR" \
+  --project="${PROJECT}" \
+  --limit=10
+```
+
+In the Cloud Console Log Explorer:
 ```
 resource.type="k8s_container"
 resource.labels.namespace_name="${NAMESPACE}"
-resource.labels.container_name="wikijs"
+severity>=ERROR
 ```
 
-**gcloud equivalent:**
+**Expected result:** No error entries under normal operation.
+
+### Step 6.4 — Check the Uptime Check
+
+**gcloud:**
 ```bash
-gcloud logging read \
-  'resource.type="k8s_container" AND resource.labels.namespace_name="'${NAMESPACE}'"' \
-  --project ${PROJECT} \
-  --limit 50 \
-  --format "table(timestamp, jsonPayload.message)"
+gcloud monitoring uptime list-configs \
+  --project="${PROJECT}" \
+  --format="table(displayName, httpCheck.path, period)"
 ```
 
----
-
-## Phase 9 — Explore Cloud Monitoring [MANUAL]
-
-### 1. View GKE Metrics
-
-In the Cloud Console, navigate to **Monitoring > Dashboards** and open the **GKE** dashboard. Observe CPU, memory, and pod count metrics for the Wiki.js namespace.
-
-### 2. Check the Uptime Check
-
-1. Navigate to **Monitoring > Uptime checks**.
-2. Find the uptime check created for this deployment (named after `application_name`).
-3. Verify that the check is passing (green) from multiple global locations.
-
-**gcloud equivalent:**
+**REST API:**
 ```bash
-gcloud monitoring uptime list-configs --project ${PROJECT}
+curl -s \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | jq '.uptimeCheckConfigs[] | {displayName, period, httpCheck}'
 ```
 
-### 3. View Alert Policies
+**Expected result:** An uptime check for Wiki.js probing port 80 on the external IP.
 
-Navigate to **Monitoring > Alerting** to review any alert policies created by the module.
+### Step 6.5 — View GKE Pod Metrics
+
+```bash
+echo "https://console.cloud.google.com/monitoring/dashboards?project=${PROJECT}"
+```
+
+In Cloud Monitoring Metrics Explorer, query pod CPU:
+
+**REST API (MQL):**
+```bash
+curl -s -X POST \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"query\": \"fetch k8s_container | metric 'kubernetes.io/container/cpu/request_utilization' | filter resource.namespace_name = '${NAMESPACE}' | within 30m | group_by [resource.pod_name], mean(val())\"
+  }" | jq '.timeSeriesData[] | {pod: .labelValues[0].stringValue, cpu: .pointData[-1].values[0].doubleValue}'
+```
+
+**Expected result:** CPU utilisation charts for the wikijs pod.
+
+### Step 6.6 — View Alert Policies
+
+**gcloud:**
+```bash
+gcloud alpha monitoring policies list \
+  --project="${PROJECT}" \
+  --format="table(displayName, enabled)"
+```
+
+**Expected result:** CPU and memory alert policies for the wikijs workload.
 
 ---
 
-## Phase 10 — Undeploy [AUTOMATED]
+## Cleanup
 
-When you are finished with the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+Return to the RAD UI and click **Undeploy** on the `Wikijs_GKE` deployment. This removes the
+Kubernetes namespace and all workloads, Cloud SQL database and user, GCS bucket, Workload
+Identity bindings, Secret Manager secrets, and monitoring resources.
 
-> **Warning:** This deletes the Cloud SQL database, GCS bucket contents, and NFS data. Ensure backups are taken before undeploying if data needs to be preserved.
+> **Warning:** Undeploy deletes the Cloud SQL database and GCS bucket contents. Back up any
+> important data before proceeding.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+### Manual Cleanup (if needed)
+
+**kubectl:**
+```bash
+kubectl delete namespace "${NAMESPACE}"
+```
+
+**gcloud:**
+```bash
+# Delete Secret Manager secrets
+gcloud secrets delete "${DB_SECRET}" \
+  --project="${PROJECT}" --quiet
+
+# Delete GCS bucket
+BUCKET=$(gcloud storage buckets list \
+  --project="${PROJECT}" \
+  --filter="name~wikijs" \
+  --format="value(name)" --limit=1)
+gcloud storage rm -r "gs://${BUCKET}" --quiet
+
+# Delete service account
+GSA=$(gcloud iam service-accounts list \
+  --project="${PROJECT}" \
+  --filter="email~wikijs" \
+  --format="value(email)" --limit=1)
+gcloud iam service-accounts delete "${GSA}" \
+  --project="${PROJECT}" --quiet
+```
 
 ---
 
-## Summary
+## Reference
 
-| Phase | Type | What You Did |
-|---|---|---|
-| Phase 1 — Deploy | Automated | Provisioned GKE workload, Cloud SQL (PostgreSQL 15 + pg_trgm), GCS Fuse, NFS, secrets |
-| Phase 2 — Cluster Access | Manual | Configured kubectl, verified pod status and external IP |
-| Phase 3 — Setup | Manual | Completed Wiki.js first-run wizard, retrieved admin credentials from Secret Manager |
-| Phase 4 — Content | Manual | Created pages with Markdown, nested page tree, tags |
-| Phase 5 — Search | Manual | Tested pg_trgm full-text search, verified search engine config |
-| Phase 6 — Auth | Manual | Reviewed local auth, explored SAML/OAuth/LDAP providers, managed groups |
-| Phase 7 — Storage | Manual | Uploaded assets, verified GCS Fuse mount and bucket contents |
-| Phase 8 — Logging | Manual | Explored Wiki.js logs via kubectl and Cloud Logging |
-| Phase 9 — Monitoring | Manual | Reviewed uptime check, GKE metrics, alert policies |
-| Phase 10 — Undeploy | Automated | RAD UI removes all module-managed infrastructure |
+### Key Module Variables
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `project_id` | string | — | GCP project ID (required) |
+| `region` | string | `us-central1` | GCP region for all resources |
+| `application_name` | string | `wikijs` | Base name for Kubernetes and GCP resources |
+| `application_version` | string | `2.5.311` | Wiki.js image tag |
+| `min_instance_count` | number | `1` | HPA minimum pod replicas |
+| `max_instance_count` | number | `3` | HPA maximum pod replicas |
+| `application_database_name` | string | `wikijs` | PostgreSQL database name |
+| `application_database_user` | string | `wikijs` | PostgreSQL user name |
+| `enable_nfs` | bool | `true` | Mount Cloud Filestore at `/mnt/nfs` |
+| `enable_redis` | bool | `false` | Enable Redis session cache |
+| `enable_cloudsql_volume` | bool | `true` | Cloud SQL Auth Proxy sidecar |
+| `gke_cluster_name` | string | `""` | Target GKE cluster (auto-discovered when empty) |
+| `tenant_deployment_id` | string | `demo` | Tenant identifier in resource names |
+| `support_users` | list | `[]` | Email addresses for monitoring alerts |
+| `deploy_application` | bool | `true` | Deploy the GKE workload |
+
+### Useful Commands
+
+```bash
+# Get external IP
+kubectl get svc -n ${NAMESPACE} \
+  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
+
+# Check pod status
+kubectl get pods -n ${NAMESPACE}
+
+# View application logs
+kubectl logs -l app=wikijs -c wikijs -n ${NAMESPACE} --tail=100
+
+# View Auth Proxy logs
+kubectl logs -l app=wikijs -c cloud-sql-proxy -n ${NAMESPACE} --tail=50
+
+# Describe deployment
+kubectl describe deployment -l app=wikijs -n ${NAMESPACE}
+
+# View HPA
+kubectl get hpa -n ${NAMESPACE}
+
+# Access DB password from Secret Manager
+gcloud secrets versions access latest --secret="${DB_SECRET}" --project=${PROJECT}
+
+# List uptime checks
+gcloud monitoring uptime list-configs --project=${PROJECT}
+
+# Verify Workload Identity
+kubectl describe serviceaccount -n ${NAMESPACE}
+```
+
+### Further Reading
+
+- [Wiki.js documentation](https://docs.requarks.io/)
+- [GKE Autopilot overview](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
+- [Workload Identity documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+- [Cloud SQL Auth Proxy for GKE](https://cloud.google.com/sql/docs/postgres/connect-kubernetes-engine)
+- [GCS Fuse CSI Driver](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/cloud-storage-fuse-csi-driver)
+- [Cloud Logging for GKE](https://cloud.google.com/stackdriver/docs/solutions/gke/installing)
+- [Cloud Monitoring for GKE](https://cloud.google.com/stackdriver/docs/solutions/gke/observing)
