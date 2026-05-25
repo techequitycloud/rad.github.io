@@ -69,10 +69,10 @@ At a high level, the module creates two sets of resources in parallel and then c
 │   │  └─────────────────┘    │           └──────────────┬────────────────┘   │
 │   └─────────────────────────┘                          │                    │
 │                                          ┌─────────────▼─────────────────┐  │
-│                                          │  Unified Observability         │  │
-│                                          │  • Cloud Logging               │  │
-│                                          │  • Cloud Monitoring            │  │
-│                                          │  • Managed Prometheus          │  │
+│                                          │  Unified Observability         │ │
+│                                          │  • Cloud Logging               │ │
+│                                          │  • Cloud Monitoring            │ │
+│                                          │  • Managed Prometheus          │ │
 │                                          └───────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────────┘
 
