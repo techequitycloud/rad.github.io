@@ -1,9 +1,9 @@
 ---
-title: "Odoo_GKE Module — Configuration Guide"
+title: "Odoo GKE Module — Configuration Guide"
 sidebar_label: "Odoo GKE"
 ---
 
-# Odoo_GKE Module — Configuration Guide
+# Odoo GKE Module — Configuration Guide
 
 Odoo is a comprehensive open-source ERP platform covering CRM, accounting, inventory, manufacturing, HR, eCommerce, and more — with 16M+ users, 170,000+ enterprise customers across 5 continents, and €650M in 2025 billing revenue growing at 42% CAGR (13,000 new clients per month). It controls 5.77% global ERP market share and 12–15% of the SME segment, making it the primary open-source disruptor against SAP, Oracle, and Microsoft Dynamics, with zero licensing cost and a target of €1B in revenue by 2027. This module deploys Odoo Community Edition on **GKE Autopilot** using a custom container image built from the official Odoo nightly packages, backed by a managed Cloud SQL PostgreSQL instance and a Filestore NFS volume for shared file storage.
 

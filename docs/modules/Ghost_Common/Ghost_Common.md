@@ -1,9 +1,9 @@
 ---
-title: "Ghost_Common Shared Configuration Module"
+title: "Ghost Common Shared Configuration Module"
 sidebar_label: "Ghost Common"
 ---
 
-# Ghost_Common Shared Configuration Module
+# Ghost Common Shared Configuration Module
 
 The `Ghost_Common` module defines the Ghost publishing platform configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates no GCP resources and produces a `config` output consumed by platform-specific wrapper modules (`Ghost_CloudRun` and `Ghost_GKE`).
 

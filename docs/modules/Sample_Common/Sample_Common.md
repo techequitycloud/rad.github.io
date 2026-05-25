@@ -1,9 +1,9 @@
 ---
-title: "Sample_Common Module"
+title: "Sample Common Module"
 sidebar_label: "Sample Common"
 ---
 
-# Sample_Common Module
+# Sample Common Module
 
 ## Overview
 

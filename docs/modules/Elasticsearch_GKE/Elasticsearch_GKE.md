@@ -1,9 +1,9 @@
 ---
-title: "Elasticsearch_GKE Module — Configuration Guide"
+title: "Elasticsearch GKE Module — Configuration Guide"
 sidebar_label: "Elasticsearch GKE"
 ---
 
-# Elasticsearch_GKE Module — Configuration Guide
+# Elasticsearch GKE Module — Configuration Guide
 
 Elasticsearch is an open-source distributed search and analytics engine based on Apache Lucene,
 used by 58,220+ companies with a 4.43% DBMS market share. Elastic revenue reached $450M in Q3

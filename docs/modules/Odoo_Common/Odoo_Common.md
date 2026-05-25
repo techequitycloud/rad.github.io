@@ -1,9 +1,9 @@
 ---
-title: "Odoo_Common Module"
+title: "Odoo Common Module"
 sidebar_label: "Odoo Common"
 ---
 
-# Odoo_Common Module
+# Odoo Common Module
 
 ## Overview
 

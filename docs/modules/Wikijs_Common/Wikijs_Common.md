@@ -1,9 +1,9 @@
 ---
-title: "Wikijs_Common Module"
+title: "Wikijs Common Module"
 sidebar_label: "Wikijs Common"
 ---
 
-# Wikijs_Common Module
+# Wikijs Common Module
 
 ## Overview
 

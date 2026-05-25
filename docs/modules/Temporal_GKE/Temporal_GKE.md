@@ -1,9 +1,9 @@
 ---
-title: "Temporal_GKE Module"
+title: "Temporal GKE Module"
 sidebar_label: "Temporal GKE"
 ---
 
-# Temporal_GKE Module
+# Temporal GKE Module
 
 The `Temporal_GKE` module deploys [Temporal Workflow Engine](https://temporal.io/) to GKE Autopilot using the official `temporalio/auto-setup` all-in-one image. It provisions all four Temporal services — Frontend, History, Matching, and Worker — in a single pod, backed by Cloud SQL PostgreSQL for persistence and visibility. An optional Elasticsearch integration unlocks advanced visibility for full-text workflow search and custom search attributes.
 

@@ -1,9 +1,9 @@
 ---
-title: "Flowise_CloudRun Module — Configuration Guide"
+title: "Flowise CloudRun Module — Configuration Guide"
 sidebar_label: "Flowise CloudRun"
 ---
 
-# Flowise_CloudRun Module — Configuration Guide
+# Flowise CloudRun Module — Configuration Guide
 
 Flowise is an open-source visual AI workflow builder that lets non-developers construct
 LangChain and LlamaIndex pipelines through a drag-and-drop interface — now backed by Workday

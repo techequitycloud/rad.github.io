@@ -1,9 +1,9 @@
 ---
-title: "OpenEMR_CloudRun Module — Configuration Guide"
+title: "OpenEMR CloudRun Module — Configuration Guide"
 sidebar_label: "OpenEMR CloudRun"
 ---
 
-# OpenEMR_CloudRun Module — Configuration Guide
+# OpenEMR CloudRun Module — Configuration Guide
 
 `OpenEMR_CloudRun` deploys **OpenEMR Community Edition** — the world's most widely
 deployed open-source Electronic Health Records (EHR) and medical practice management
