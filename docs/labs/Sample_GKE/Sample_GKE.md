@@ -125,7 +125,7 @@ After deployment completes, the following outputs are available in the RAD UI de
 
 | Output | Description |
 |---|---|
-| `service_url` | Application URL (http://<external-ip>) |
+| `service_url` | Application URL (http://\<external-ip\>) |
 | `service_external_ip` | External IP of the LoadBalancer Service |
 | `service_name` | Kubernetes Service name |
 | `namespace` | Kubernetes namespace |
