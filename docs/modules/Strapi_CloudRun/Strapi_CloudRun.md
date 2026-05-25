@@ -1,4 +1,9 @@
-# Strapi CloudRun Module — Configuration Guide
+---
+title: "Strapi_CloudRun Module — Configuration Guide"
+sidebar_label: "Strapi CloudRun"
+---
+
+# Strapi_CloudRun Module — Configuration Guide
 
 `Strapi_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Strapi](https://strapi.io/) — the leading open-source headless CMS — on Google Cloud Run Gen2. With 71,000+ GitHub stars and a 4.5/5 rating on G2 from 189+ reviews, Strapi is trusted by Adidas, Airbus, Amazon, Cisco, and Toyota for omnichannel content delivery across websites, mobile apps, digital signage, and IoT surfaces. The headless CMS market is growing at 22.1% CAGR toward $5.53B by 2032, and Strapi's fully customizable API layer with no vendor lock-in makes it a top choice for teams of any size.
 
@@ -397,7 +402,7 @@ The table below covers all variables unique to or with notable defaults in `Stra
 | `memory_limit` | `string` | `"2Gi"` | 3 | 2 GiB |
 | `min_instance_count` | `number` | `0` | 3 | Scale-to-zero |
 | `max_instance_count` | `number` | `1` | 3 | |
-| `container_port` | `number` | `8080` | 3 | Cloud Run module default; overrides Strapi Common's 1337 |
+| `container_port` | `number` | `8080` | 3 | Cloud Run module default; overrides Strapi_Common's 1337 |
 | `container_protocol` | `string` | `"http1"` | 3 | `"http1"` or `"h2c"` |
 | `container_image_source` | `string` | `"custom"` | 3 | `"prebuilt"` or `"custom"` |
 | `container_image` | `string` | `""` | 3 | Override for prebuilt |
@@ -417,10 +422,10 @@ The table below covers all variables unique to or with notable defaults in `Stra
 | `redis_host` | `string` | `null` | 20 | Must be set when Redis enabled |
 | `redis_port` | `string` | `"6379"` | 20 | String type |
 | `redis_auth` | `string` | `""` | 20 | Sensitive |
-| `startup_probe` | `object` | `{ type="HTTP", path="/_health", initial_delay_seconds=60 }` | 13 | Passed to Strapi Common |
-| `liveness_probe` | `object` | `{ type="HTTP", path="/_health", initial_delay_seconds=30 }` | 13 | Passed to Strapi Common |
-| `startup_probe_config` | `object` | `{ path="/_health", initial_delay_seconds=30, failure_threshold=30 }` | 13 | Passed to App CloudRun |
-| `health_check_config` | `object` | `{ path="/_health" }` | 13 | Passed to App CloudRun |
+| `startup_probe` | `object` | `{ type="HTTP", path="/_health", initial_delay_seconds=60 }` | 13 | Passed to Strapi_Common |
+| `liveness_probe` | `object` | `{ type="HTTP", path="/_health", initial_delay_seconds=30 }` | 13 | Passed to Strapi_Common |
+| `startup_probe_config` | `object` | `{ path="/_health", initial_delay_seconds=30, failure_threshold=30 }` | 13 | Passed to App_CloudRun |
+| `health_check_config` | `object` | `{ path="/_health" }` | 13 | Passed to App_CloudRun |
 | `initialization_jobs` | `list` | `[{ name="db-init", execute_on_apply=true }]` | 12 | Platform-managed; modify with care |
 | `additional_services` | `list` | `[]` | 12 | Co-deployed Cloud Run services |
 | `enable_vpc_sc` | `bool` | `false` | 21 | VPC Service Controls |

@@ -1,4 +1,9 @@
-# OpenEMR GKE Module — Configuration Guide
+---
+title: "OpenEMR_GKE Module — Configuration Guide"
+sidebar_label: "OpenEMR GKE"
+---
+
+# OpenEMR_GKE Module — Configuration Guide
 
 OpenEMR is the world's most widely deployed open-source electronic health records (EHR) and medical practice management platform, used by solo clinics, hospitals, developing-world health systems, and small/mid-size US practices. Over 40% of healthcare organizations now use at least one open-source health IT component. Version 8.0.0 (March 2026) achieved ONC Ambulatory EHR Certification with US Core 8.0 and USCDI v5, delivering FHIR-compliant, ONC-certified EHR at near-zero licensing cost. This module deploys OpenEMR on **GKE Autopilot** using a custom container image built on Alpine 3.20 with Apache and PHP 8.3 FPM, backed by a managed Cloud SQL MySQL 8.0 instance accessed via a Cloud SQL Auth Proxy sidecar, and a Filestore NFS volume for persistent patient document and sites directory storage.
 
@@ -14,39 +19,39 @@ This guide documents only the variables that are **unique to `OpenEMR_GKE`** or 
 
 **Variables fully covered by the App_GKE guide:**
 
-| Configuration Area | App GKE.md Section | OpenEMR-Specific Notes |
+| Configuration Area | App_GKE.md Section | OpenEMR-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | [§1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) | Different defaults for `module_description` and `module_documentation`. `resource_creator_identity` behaves identically. |
-| Project & Identity | [§2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) | Refer to base App GKE module documentation. |
+| Project & Identity | [§2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) | Refer to base App_GKE module documentation. |
 | Runtime & Scaling | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | See [OpenEMR Runtime Configuration](#openemr-runtime-configuration) below. `container_port` defaults to `80`. `session_affinity` defaults to `"ClientIP"`. |
 | Environment Variables & Secrets | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | See [OpenEMR Environment Variables](#openemr-environment-variables) below for PHP and SMTP defaults. |
 | GKE Backend Configuration | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | Refer to base App_GKE module documentation. `session_affinity` defaults to `"ClientIP"`. `deployment_timeout` defaults to `1200`. |
 | Jobs & Scheduled Tasks | [§3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | Refer to base App_GKE module documentation. The module injects a platform-managed `nfs-init` initialisation job — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
-| CI/CD & GitHub Integration | [§6 CI/CD & Delivery](../App_GKE/App_GKE.md#6-cicd--delivery) | Refer to base App GKE module documentation. |
+| CI/CD & GitHub Integration | [§6 CI/CD & Delivery](../App_GKE/App_GKE.md#6-cicd--delivery) | Refer to base App_GKE module documentation. |
 | Storage — NFS | [§3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) | NFS is **enabled by default** (`enable_nfs = true`). See [NFS & Patient Document Storage](#nfs--patient-document-storage) below. |
-| Storage — GCS | [§3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) | Refer to base App GKE module documentation. |
-| Backup Schedule & Retention | [§8.B Backup Import & Recovery](../App_GKE/App_GKE.md#b-backup-import) | Refer to base App GKE module documentation. See also [Backup Import & Recovery](#backup-import--recovery) below. |
-| Custom SQL Scripts | [§3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | Refer to base App GKE module documentation. |
+| Storage — GCS | [§3.C Storage (NFS / GCS / GCS Fuse)](../App_GKE/App_GKE.md#c-storage-nfs--gcs--gcs-fuse) | Refer to base App_GKE module documentation. |
+| Backup Schedule & Retention | [§8.B Backup Import & Recovery](../App_GKE/App_GKE.md#b-backup-import) | Refer to base App_GKE module documentation. See also [Backup Import & Recovery](#backup-import--recovery) below. |
+| Custom SQL Scripts | [§3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) | Refer to base App_GKE module documentation. |
 | Observability & Health | [§5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) | See [OpenEMR Health Probes](#openemr-health-probes) below for OpenEMR-specific probe paths and timing defaults. |
 | Reliability Policies | [§7 Reliability & Scheduling](../App_GKE/App_GKE.md#7-reliability--scheduling) | Refer to base App_GKE module documentation. `enable_pod_disruption_budget` defaults to `false` (because the default `max_instance_count = 1` makes a PDB with `min_available = 1` block node drains). |
-| Resource Quota | [§7.C Resource Quotas](../App_GKE/App_GKE.md#c-resource-quotas) | Refer to base App GKE module documentation. |
-| Custom Domain, Static IP & Network | [§5.C Static IP](../App_GKE/App_GKE.md#c-static-ip) | Refer to base App GKE module documentation. |
-| Identity-Aware Proxy | [§4.B Identity-Aware Proxy (IAP)](../App_GKE/App_GKE.md#b-identity-aware-proxy-iap) | Refer to base App GKE module documentation. |
-| Cloud Armor WAF | [§4.A Cloud Armor WAF](../App_GKE/App_GKE.md#a-cloud-armor-waf) | Refer to base App GKE module documentation. |
-| VPC Service Controls | [§4.D VPC Service Controls](../App_GKE/App_GKE.md#d-vpc-service-controls) | Refer to base App GKE module documentation. |
-| StatefulSet Configuration | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | Refer to base App GKE module documentation. |
+| Resource Quota | [§7.C Resource Quotas](../App_GKE/App_GKE.md#c-resource-quotas) | Refer to base App_GKE module documentation. |
+| Custom Domain, Static IP & Network | [§5.C Static IP](../App_GKE/App_GKE.md#c-static-ip) | Refer to base App_GKE module documentation. |
+| Identity-Aware Proxy | [§4.B Identity-Aware Proxy (IAP)](../App_GKE/App_GKE.md#b-identity-aware-proxy-iap) | Refer to base App_GKE module documentation. |
+| Cloud Armor WAF | [§4.A Cloud Armor WAF](../App_GKE/App_GKE.md#a-cloud-armor-waf) | Refer to base App_GKE module documentation. |
+| VPC Service Controls | [§4.D VPC Service Controls](../App_GKE/App_GKE.md#d-vpc-service-controls) | Refer to base App_GKE module documentation. |
+| StatefulSet Configuration | [§3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot) | Refer to base App_GKE module documentation. |
 | Database Configuration | [§3.B Database (Cloud SQL)](../App_GKE/App_GKE.md#b-database-cloud-sql) | `database_type` must be `"MYSQL_8_0"`. See [OpenEMR Database Configuration](#openemr-database-configuration) below. |
-| Networking & Network Policies | [§3.D Networking & Network Policies](../App_GKE/App_GKE.md#d-networking--network-policies) | Refer to base App GKE module documentation. |
-| Additional Services | [§3.F Additional Services](../App_GKE/App_GKE.md#f-additional-services) | Refer to base App GKE module documentation. |
-| Binary Authorization | [§4.C Binary Authorization](../App_GKE/App_GKE.md#c-binary-authorization) | Refer to base App GKE module documentation. |
-| Secrets Store CSI | [§4.E Secrets Store CSI](../App_GKE/App_GKE.md#e-secrets-store-csi-driver) | Refer to base App GKE module documentation. |
-| Cloud CDN | [§5.B Cloud CDN](../App_GKE/App_GKE.md#b-cloud-cdn) | Refer to base App GKE module documentation. |
+| Networking & Network Policies | [§3.D Networking & Network Policies](../App_GKE/App_GKE.md#d-networking--network-policies) | Refer to base App_GKE module documentation. |
+| Additional Services | [§3.F Additional Services](../App_GKE/App_GKE.md#f-additional-services) | Refer to base App_GKE module documentation. |
+| Binary Authorization | [§4.C Binary Authorization](../App_GKE/App_GKE.md#c-binary-authorization) | Refer to base App_GKE module documentation. |
+| Secrets Store CSI | [§4.E Secrets Store CSI](../App_GKE/App_GKE.md#e-secrets-store-csi-driver) | Refer to base App_GKE module documentation. |
+| Cloud CDN | [§5.B Cloud CDN](../App_GKE/App_GKE.md#b-cloud-cdn) | Refer to base App_GKE module documentation. |
 | Pod Disruption Budget | [§7.A Pod Disruption Budget](../App_GKE/App_GKE.md#a-pod-disruption-budgets) | `enable_pod_disruption_budget` defaults to `false`. |
-| Topology Spread | [§7.B Topology Spread](../App_GKE/App_GKE.md#b-topology-spread-constraints) | Refer to base App GKE module documentation. |
-| Auto Password Rotation | [§7.D Auto Password Rotation](../App_GKE/App_GKE.md#d-auto-password-rotation) | Refer to base App GKE module documentation. |
+| Topology Spread | [§7.B Topology Spread](../App_GKE/App_GKE.md#b-topology-spread-constraints) | Refer to base App_GKE module documentation. |
+| Auto Password Rotation | [§7.D Auto Password Rotation](../App_GKE/App_GKE.md#d-auto-password-rotation) | Refer to base App_GKE module documentation. |
 | Redis / Memorystore | [§8.A Redis / Memorystore](../App_GKE/App_GKE.md#a-redis--memorystore) | `enable_redis` defaults to `true`. See [Redis Session Store](#redis-session-store) below. |
-| Service Mesh | [§8.C Service Mesh](../App_GKE/App_GKE.md#c-service-mesh-asm-via-fleet) | Refer to base App GKE module documentation. |
-| Multi-Cluster Services | [§8.D Multi-Cluster Services](../App_GKE/App_GKE.md#d-multi-cluster-services-mcs) | Refer to base App GKE module documentation. |
+| Service Mesh | [§8.C Service Mesh](../App_GKE/App_GKE.md#c-service-mesh-asm-via-fleet) | Refer to base App_GKE module documentation. |
+| Multi-Cluster Services | [§8.D Multi-Cluster Services](../App_GKE/App_GKE.md#d-multi-cluster-services-mcs) | Refer to base App_GKE module documentation. |
 
 ---
 
@@ -120,20 +125,20 @@ ephemeral_storage_limit = "8Gi"
 
 ### Scaling Defaults
 
-| Variable | App GKE Default | OpenEMR GKE Default | Reason |
+| Variable | App_GKE Default | OpenEMR_GKE Default | Reason |
 |---|---|---|---|
 | `min_instance_count` | `1` | `1` | OpenEMR should always have at least one running pod to avoid cold starts that impact clinical access. |
 | `max_instance_count` | `1` | `1` | OpenEMR's PHP session handling relies on the local NFS mount. Multi-instance deployments require Redis session storage. Increase `max_instance_count` only after enabling Redis. |
 
 ### Session Affinity
 
-| Variable | App GKE Default | OpenEMR GKE Default | Description & Implications |
+| Variable | App_GKE Default | OpenEMR_GKE Default | Description & Implications |
 |---|---|---|---|
 | `session_affinity` | `"None"` | `"ClientIP"` | Ensures a given client consistently reaches the same pod. This mitigates cross-pod session inconsistency when Redis is not configured. Change to `"None"` only when Redis session storage is enabled and all pods share session state. |
 
 ### Deployment Timeout
 
-| Variable | App GKE Default | OpenEMR GKE Default | Description & Implications |
+| Variable | App_GKE Default | OpenEMR_GKE Default | Description & Implications |
 |---|---|---|---|
 | `deployment_timeout` | `600` | `1800` | OpenEMR's initial database installation and PHP asset compilation can take 10–20 minutes on first boot. The extended timeout prevents Terraform from reporting a failure during legitimate long-running first deployments. |
 
@@ -187,7 +192,7 @@ OpenEMR requires MySQL 8.0. The database is provisioned by the underlying `App_G
 
 The following defaults are **OpenEMR-specific** and differ from the App_GKE defaults:
 
-| Variable | App GKE Default | OpenEMR GKE Default | Recommendation |
+| Variable | App_GKE Default | OpenEMR_GKE Default | Recommendation |
 |---|---|---|---|
 | `db_name` | `"gkeappdb"` | `"openemr"` | The MySQL database created for OpenEMR. Injected as the database name in OpenEMR's `sqlconf.php`. |
 | `db_user` | `"gkeappuser"` | `"openemr"` | The MySQL user for the application. Injected into the OpenEMR configuration. |

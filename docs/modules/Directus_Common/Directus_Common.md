@@ -1,4 +1,9 @@
-# Directus Common Shared Configuration Module
+---
+title: "Directus_Common Shared Configuration Module"
+sidebar_label: "Directus Common"
+---
+
+# Directus_Common Shared Configuration Module
 
 The `Directus_Common` module defines the Directus headless CMS and Backend-as-a-Service (BaaS) platform configuration for the RAD Modules ecosystem. Unlike a purely configuration-only module, it **also creates GCP resources** — specifically the Secret Manager secrets required by the Directus runtime. Its outputs are consumed by platform-specific wrapper modules (`Directus_CloudRun` and `Directus_GKE`).
 
@@ -262,7 +267,7 @@ A lighter-weight bootstrap script (used by the `directus-bootstrap` initializati
 
 ## 8. Platform-Specific Differences
 
-| Aspect | Directus CloudRun | Directus GKE |
+| Aspect | Directus_CloudRun | Directus_GKE |
 |--------|------------------|--------------|
 | `enable_cloudsql_volume` | `false` by default (TCP to private IP) | `true` by default (Auth Proxy sidecar via socket) |
 | `DB_SSL` | `'{"rejectUnauthorized":false}'` (private IP TCP) | `"false"` (Auth Proxy handles TLS) |

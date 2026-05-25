@@ -1,3 +1,8 @@
+---
+title: "Ollama on Cloud Run — Lab Guide"
+sidebar_label: "Ollama CloudRun"
+---
+
 # Ollama on Cloud Run — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Ollama_CloudRun)**

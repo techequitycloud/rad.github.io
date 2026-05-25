@@ -1,38 +1,30 @@
-# Skills Development
+# Education & Enablement
 
-The platform ships its own learning material so that a new team member — regardless of role — can go from account creation to first productive action using only resources in this repository. Role-based guides, workflow walkthroughs, Google Cloud certification tracks, deep-dive analyses, and AI-assistant onboarding all version with the code they describe.
+> **Scope.** Canonical home for the learning material in this repo — Google Cloud certification tracks, lab walkthroughs, deep-dive analyses, role-based workflow docs, and structured agent skill guides. The architecture they teach is canonical in [practices/platform_engineering.md](../practices/platform_engineering.md); the developer-facing self-service surface is in [outcomes/developer_productivity.md](developer_productivity.md).
 
-## Google Cloud certification coverage
+## What this repo uniquely brings to education & enablement
 
-Five complete certification tracks ship with the platform, each with a Certification Guide plus per-section Exploration Guides that tie curriculum directly to working code:
+### 1. Google Cloud certification coverage (canonical)
 
-| Certification | Materials |
+Five complete certification tracks ship in the repo, each with a Configuration Guide plus per-section Exploration Guides:
+
+| Cert | Files |
 |---|---|
-| ACE — Associate Cloud Engineer | `ACE_Certification_Guide.md`, `ACE_Section_1..4_Exploration_Guide.md` |
+| ACE — Associate Cloud Engineer | `ACE_Configuration_Guide.md`, `ACE_Section_1..4_Exploration_Guide.md` |
 | PCA — Professional Cloud Architect | `PCA_Certification_Guide.md`, `PCA_Configuration_Guide.md`, `PCA_Section_1..6_Exploration_Guide.md` |
 | PCD — Professional Cloud Developer | `PCD_Configuration_Guide.md`, `PCD_Section_1..4_Exploration_Guide.md` |
 | PDE — Professional Cloud DevOps Engineer | `PDE_Certification_Guide.md`, `PDE_Section_1..5_Exploration_Guide.md` |
 | PSE — Professional Security Engineer | `PSE_Certification_Guide.md`, `PSE_Section_1..5_Exploration_Guide.md` |
 
-Learners explore certification concepts hands-on against real deployed modules, rather than studying abstract documentation.
+These tie certification curriculum directly to working code in this repo — learners explore concepts hands-on against real modules.
 
-## Role-based guides and workflow walkthroughs
+### 2. Hands-on lab guide (canonical)
 
-Six role-based guides under `docs/guides/` — one per role (`admin`, `agent`, `finance`, `partner`, `support`, `user`) — cover everything a new team member needs to be productive in their role. The agent guide ships with a companion video and audio.
+`modules/VMware_Engine/LAB_GUIDE.md` — a 2–3 hour walkthrough that documents what Terraform automates vs what the learner does manually, with timing estimates and prerequisites. A model for IaC-paired hands-on labs. Modernisation context in [outcomes/modernisation.md](modernisation.md).
 
-`docs/workflows/` provides task-oriented flow documentation: `getting-started.md`, `using-rad.md`, and per-role workflow guides (`admin.md`, `agent.md`, `finance.md`, `partner.md`, `support.md`, `user.md`). This persona separation is also the structural evidence auditors look for as proof of segregation of duties — see the Compliance & Governance outcome.
+### 3. Deep-dive architecture analyses
 
-## Feature documentation
-
-`docs/features/` contains role-scoped feature documentation (`admins.md`, `agents.md`, `finance.md`, `partners.md`, `support.md`, `users.md`). A matching set is surfaced in-product and intentionally kept separate from the repo docs, so the in-product copy can be scoped to what end users need rather than what contributors need.
-
-## Hands-on lab guide
-
-`modules/VMware_Engine/LAB_GUIDE.md` is a 2–3 hour walkthrough that documents what Terraform automates versus what the learner does manually, with timing estimates and prerequisites. It serves as a model for IaC-paired hands-on lab design — see the Modernization outcome for context.
-
-## Deep-dive architecture analyses
-
-For learners — or AI assistants — who need the *why*, not just the *what*:
+For learners (or AI assistants) who need *why*, not just *what*:
 
 - `App_CloudRun_Analysis.md` — Cloud Run Foundation deep-dive
 - `App_GKE_Deep_Dive_Analysis.md` — GKE Foundation deep-dive
@@ -40,65 +32,60 @@ For learners — or AI assistants — who need the *why*, not just the *what*:
 - `REFACTORING_ANALYSIS.md` — refactoring rationale
 - `MULTI_CLUSTER_GUIDE.md` — multi-cluster topology
 - `IAP_IMPLEMENTATION_PLAN.md` — IAP design
-- `CUSTOM_DOMAIN_CDN_FEATURE.md` — domain and CDN design
+- `CUSTOM_DOMAIN_CDN_FEATURE.md` — domain + CDN design
 - `VARIABLE_GROUPING_RECOMMENDATIONS.md` — variable taxonomy
 
-## Agent-native enablement
+### 4. Role-based workflow documentation (canonical)
 
-The repository is structured so AI coding assistants can self-onboard alongside human contributors:
+`docs/workflows/` — `getting-started.md`, `admin.md`, `partner.md`, `support.md`, `finance.md`, `user.md`, `agent.md`. Multi-tenancy / segregation-of-duties context in [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) and [outcomes/compliance_governance.md](compliance_governance.md).
 
-- **`CLAUDE.md`** — top-level Claude Code project guidance, loaded automatically at the start of every session.
+### 5. Agent-native enablement (canonical)
+
+The repo is structured so AI coding assistants can self-onboard:
+
+- **`CLAUDE.md`** — top-level Claude Code project guidance.
 - **`AGENTS.md`** — eight slash-command agent workflows: `/global`, `/platform`, `/foundation`, `/application`, `/troubleshoot`, `/maintain`, `/performance`, `/security`.
-- **`.agent/skills/`** — layered skill guides covering repository governance, Application Module patterns, and Foundation Module internals.
+- **`.agent/skills/`** — layered skill guides:
+  - `repository-context/SKILL.md` — governance and naming conventions
+  - `application-module-context/SKILL.md` — Application Module patterns
+  - `foundation-module-context/SKILL.md` — App_CloudRun / App_GKE internals
+  - `platform-module-context/SKILL.md` — Services_GCP internals
 - **`SKILLS.md`** — skill index and meta-documentation.
 
-The same skill files that guide AI contributors serve equally well for human developers onboarding the codebase.
+These are equally useful for human developers onboarding the codebase.
 
-## Implementation references
+### 6. Decision and design records
 
-`docs/implementation/` carries deeper technical notes for contributors and reviewers:
+`.agent/` contains the implementation history that doubles as case-study material: `VPC_SC_PHASE1_COMPLETE.md` … `VPC_SC_PHASE4_COMPLETE.md`, `VPC_SERVICE_CONTROLS_PLAN.md`, `VPC_SC_QUICK_START.md`, `VPC_SC_TESTING_GUIDE.md`, `VPA_IMPLEMENTATION.md`, `CLOUDRUN_LOADBALANCER_REMOVAL.md`, `GKE_DEPLOYMENT_FIXES.md`, `VARIABLE_RENAME_deploy_application.md`, `SECTION_RENUMBERING_App_GKE.md`, `VARIABLE_GROUPING_UPDATE.md`.
 
-| File | Topic |
-|---|---|
-| `PROJECT_COSTS_IMPLEMENTATION.md` | BigQuery cost API design |
-| `MULTI_CURRENCY_PAYMENTS.md` | Normalised currency handling |
-| `PAYMENT_CONFIG.md` | Provider routing and selection |
-| `FLUTTERWAVE_PAYMENT_OPTIONS.md` | Flutterwave-specific options |
-| `PAYMENT_PROVIDER_REVIEW.md` | Provider capability comparison |
-| `TEST_PLAN.md` | Test strategy and coverage plan |
+### 7. Reference implementations (cross-ref)
 
-## Documentation quality enforcement
+`modules/Sample_CloudRun`, `modules/Sample_GKE`, `examples/bank-of-anthos-multi-cluster/` — see [outcomes/developer_productivity.md](developer_productivity.md) and [capabilities/networking.md](../capabilities/networking.md).
 
-`tools/check_documentation.py` validates that every Terraform module directory has an up-to-date `README.md` with described and alphabetically ordered variables and outputs. This CI gate catches documentation drift before it reaches `main`, keeping infrastructure documentation in sync with the code it describes.
+### 8. Business / partner enablement materials
 
-## Decision and design records
-
-`.agent/` contains the implementation history that doubles as case-study material: `VPC_SC_PHASE1_COMPLETE.md` through `VPC_SC_PHASE4_COMPLETE.md`, `VPC_SERVICE_CONTROLS_PLAN.md`, `VPA_IMPLEMENTATION.md`, `CLOUDRUN_LOADBALANCER_REMOVAL.md`, `GKE_DEPLOYMENT_FIXES.md`, and more — each recording why a decision was made and what it resolved.
-
-## Business and partner enablement materials
-
-- `BUSINESS_CASE.md`, `IAC_AUTOMATION_BUSINESS_CASE.md` — quantified ROI.
+- `BUSINESS_CASE.md`, `IAC_AUTOMATION_BUSINESS_CASE.md` — quantified ROI (cross-ref to [outcomes/developer_productivity.md](developer_productivity.md) §4 for the headline numbers).
 - `ITEMIZED_PROPOSAL.md`, `PROPOSAL_DRAFT.md` — partner-facing proposal templates.
 - `articles/cyclos-business-overview.md`, `cyclos-technical-deep-dive.md` — published case study.
 
-## Troubleshooting as enablement
-
-`AGENTS.md` `/troubleshoot` maps symptoms to root causes across all known failure modes. The Known Issue Patterns table within it is itself a teaching resource — diagnostic intuition is built by studying recurring patterns, not just individual incidents. The full SRE runbook lives in the SRE practices.
-
-## Quantified enablement value
+### 9. Quantified enablement value
 
 | Area | Without this platform | With this platform |
 |---|---|---|
 | Certification preparation | Separate training purchase; abstract study against documentation | Five certification tracks tied directly to running infrastructure; hands-on exploration in the RAD UI |
 | Developer onboarding | Days reading unstructured docs and tribal knowledge | Layered agent skill guides, worked examples, and reference modules; new contributor productive within hours |
-| Application setup time | 3–5 days manual provisioning | under 2 hours via self-service scaffold |
+| Application setup time | 3–5 days manual provisioning | &lt;2 hours via self-service scaffold — see [outcomes/developer_productivity.md](developer_productivity.md) §4 |
 | Security knowledge transfer | Ad-hoc; depends on individual expertise | `/security` audit workflow encodes 30+ control checkpoints as executable documentation |
 
-## See also
+### 10. Troubleshooting as enablement (cross-ref)
 
-- Platform Engineering practices — the architecture being taught
-- Developer Productivity outcome — self-service surface and quantified ROI
-- Modernization outcome — VMware Engine lab context
-- Compliance & Governance outcome — `/security` workflow and audit framing
-- AI capability — assistant configuration and skill files
-- SRE practices — `/troubleshoot` as enablement
+`AGENTS.md` `/troubleshoot` Known Issue Patterns table is itself a teaching resource — symptoms mapped to root causes builds diagnostic intuition. Canonical in [practices/sre.md](../practices/sre.md) §3.
+
+## Cross-references
+
+- [practices/platform_engineering.md](../practices/platform_engineering.md) — architecture being taught
+- [outcomes/developer_productivity.md](developer_productivity.md) — self-service surface; quantified ROI (§4)
+- [outcomes/modernisation.md](modernisation.md) — VMware Engine lab context (§1)
+- [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) — persona docs as segregation evidence (§9)
+- [outcomes/compliance_governance.md](compliance_governance.md) — `/security` workflow and audit framing (§4, §6)
+- [practices/sre.md](../practices/sre.md) — `/troubleshoot` as enablement (§3)

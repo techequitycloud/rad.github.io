@@ -1,3 +1,8 @@
+---
+title: "Sample Application on GKE — Lab Guide"
+sidebar_label: "Sample GKE"
+---
+
 # Sample Application on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Sample_GKE)**

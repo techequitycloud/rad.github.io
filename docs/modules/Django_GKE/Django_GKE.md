@@ -1,4 +1,9 @@
-# Django GKE Module — Configuration Guide
+---
+title: "Django_GKE Module — Configuration Guide"
+sidebar_label: "Django GKE"
+---
+
+# Django_GKE Module — Configuration Guide
 
 Django is the most mature Python web framework, used by 35,570+ companies including Instagram, Spotify, Dropbox, and NASA. It holds 12.6% developer preference in the 2026 Stack Overflow Survey with 20,000+ job postings growing at 10% YoY. Its "batteries included" philosophy — built-in ORM, admin interface, and authentication — makes it the default choice for building secure, scalable APIs, internal tools, and ML-integrated web services. This module deploys a production-ready Django application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL instance, GCS media storage, and Secret Manager for secrets including the Django `SECRET_KEY`.
 
@@ -14,7 +19,7 @@ This guide documents only the variables that are **unique to `Django_GKE`** or t
 
 **Variables fully covered by the App_GKE guide:**
 
-| Configuration Area | App GKE.md Section | Django-Specific Notes |
+| Configuration Area | App_GKE.md Section | Django-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Different defaults for `module_description` and `module_documentation`. |
 | Project & Identity | §2 IAM & Access Control | Identical. Plus `deployment_region` for fallback region. |
@@ -25,10 +30,10 @@ This guide documents only the variables that are **unique to `Django_GKE`** or t
 | Initialization Jobs & CronJobs | §3.E Initialization Jobs & CronJobs | See [Initialization Jobs](#initialization-jobs) for Django-specific job patterns. |
 | Additional Services | §3.F Additional Services | Identical. |
 | Storage — NFS & GCS | §3.C Storage (NFS / GCS / GCS Fuse) | `enable_nfs` defaults to `true` for Django (shared file storage across pods). The media GCS bucket is provisioned automatically by Django_Common. |
-| Database Configuration | §3.B Database (Cloud SQL) | See [Django Database Configuration](#django-database-configuration). PostgreSQL required; Django-specific extensions auto-installed by Django Common. |
+| Database Configuration | §3.B Database (Cloud SQL) | See [Django Database Configuration](#django-database-configuration). PostgreSQL required; Django-specific extensions auto-installed by Django_Common. |
 | Backup Schedule & Retention | §3.B Database (Cloud SQL) | Identical. |
 | Custom SQL Scripts | §3.E Initialization Jobs & CronJobs | Identical. |
-| Observability & Health Checks | §3.A Compute (GKE Autopilot) | See [Django Health Probes](#django-health-probes) — Django GKE exposes a dual probe system. |
+| Observability & Health Checks | §3.A Compute (GKE Autopilot) | See [Django Health Probes](#django-health-probes) — Django_GKE exposes a dual probe system. |
 | Cloud Armor WAF | §4.A Cloud Armor WAF | Identical. |
 | Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Requires additional GKE-specific variables: `iap_oauth_client_id`, `iap_oauth_client_secret`, `iap_support_email` (group 19). See note below. |
 | Binary Authorization | §4.C Binary Authorization | Identical. |

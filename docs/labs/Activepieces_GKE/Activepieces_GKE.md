@@ -1,3 +1,8 @@
+---
+title: "Activepieces on GKE — Lab Guide"
+sidebar_label: "Activepieces GKE"
+---
+
 # Activepieces on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Activepieces_GKE)**

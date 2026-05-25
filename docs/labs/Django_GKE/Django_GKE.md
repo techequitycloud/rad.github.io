@@ -1,3 +1,8 @@
+---
+title: "Django on GKE — Lab Guide"
+sidebar_label: "Django GKE"
+---
+
 # Django on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Django_GKE)**

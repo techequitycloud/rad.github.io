@@ -1,3 +1,8 @@
+---
+title: "Node-RED on Cloud Run — Lab Guide"
+sidebar_label: "NodeRED CloudRun"
+---
+
 # Node-RED on Cloud Run — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/NodeRED_CloudRun)**

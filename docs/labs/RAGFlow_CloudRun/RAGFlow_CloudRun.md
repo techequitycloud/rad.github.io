@@ -1,3 +1,8 @@
+---
+title: "RAGFlow on Cloud Run — Lab Guide"
+sidebar_label: "RAGFlow CloudRun"
+---
+
 # RAGFlow on Cloud Run — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/RAGFlow_CloudRun)**

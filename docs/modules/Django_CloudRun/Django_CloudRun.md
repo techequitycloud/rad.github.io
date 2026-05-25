@@ -1,3 +1,8 @@
+---
+title: "Django on Google Cloud Run"
+sidebar_label: "Django CloudRun"
+---
+
 # Django on Google Cloud Run
 
 This document provides a comprehensive reference for the `modules/Django_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Django-specific behaviours, and operational patterns for deploying Django on Google Cloud Run (v2).
@@ -344,7 +349,7 @@ All four probes target `/healthz` by default. Implement a `/healthz` view in you
 | Field | `App_CloudRun` | `Django_CloudRun` | Reason |
 |---|---|---|---|
 | `path` | `/healthz` | `/healthz` | Same — Django targets `/healthz` matching the App_CloudRun default. |
-| Startup `initial_delay_seconds` (`startup_probe`) | `10` | `60` | Django Common probe accounts for DB connection + app load time. |
+| Startup `initial_delay_seconds` (`startup_probe`) | `10` | `60` | Django_Common probe accounts for DB connection + app load time. |
 | Startup `failure_threshold` (`startup_probe_config`) | `10` | `10` | Same — sufficient retry budget. |
 
 ### D. Auto Password Rotation
@@ -546,8 +551,8 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `initialization_jobs` | 12 | `[db-init job (execute_on_apply=false)]` | One-shot Cloud Run Jobs. The `db-init` job is pre-configured with `execute_on_apply = false`. Pass `[]` to let `Django_Common` substitute both `db-init` and `db-migrate` jobs, each with `execute_on_apply = true`. |
 | `cron_jobs` | 12 | `[]` | Recurring scheduled Cloud Run Jobs (e.g., `clearsessions`). |
 | `additional_services` | 12 | `[]` | Additional Cloud Run services (e.g., Celery workers). Unique to `Django_CloudRun`. |
-| `startup_probe` | 13 | `{ path="/healthz", initial_delay_seconds=60, failure_threshold=3, ... }` | Django Common startup probe. |
-| `liveness_probe` | 13 | `{ path="/healthz", initial_delay_seconds=30, failure_threshold=3, ... }` | Django Common liveness probe. |
+| `startup_probe` | 13 | `{ path="/healthz", initial_delay_seconds=60, failure_threshold=3, ... }` | Django_Common startup probe. |
+| `liveness_probe` | 13 | `{ path="/healthz", initial_delay_seconds=30, failure_threshold=3, ... }` | Django_Common liveness probe. |
 | `startup_probe_config` | 13 | `{ path="/healthz", initial_delay_seconds=10, failure_threshold=10, ... }` | Cloud Run infrastructure startup probe. Maps to `startup_probe_config` in `App_CloudRun`. |
 | `health_check_config` | 13 | `{ path="/healthz", initial_delay_seconds=15, failure_threshold=3, ... }` | Cloud Run infrastructure liveness probe. Maps to `health_check_config` in `App_CloudRun`. |
 | `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
@@ -564,7 +569,7 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 
 ## Configuration Pitfalls & Sensible Defaults
 
-The table below identifies the variables most commonly misconfigured in `Django_CloudRun` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong. For full variable details see Section 10 (Variable Reference) and the [App_CloudRun configuration guide](../App_CloudRun/App_CloudRun.md).
+The table below identifies the variables most commonly misconfigured in `Django_CloudRun` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong. For full variable details see Section 10 (Variable Reference) and the [App_CloudRun configuration guide](App_CloudRun.md).
 
 > Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
 

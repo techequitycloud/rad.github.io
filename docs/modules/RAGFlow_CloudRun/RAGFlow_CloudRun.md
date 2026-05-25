@@ -1,4 +1,9 @@
-# RAGFlow CloudRun Module — Configuration Guide
+---
+title: "RAGFlow_CloudRun Module — Configuration Guide"
+sidebar_label: "RAGFlow CloudRun"
+---
+
+# RAGFlow_CloudRun Module — Configuration Guide
 
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG)
 platform with 80,000+ GitHub stars and 2,596% year-over-year contributor growth — named one of
@@ -47,7 +52,7 @@ application configuration, database initialization job, and document storage buc
 
 ### Key differences from `App_CloudRun` defaults
 
-| Feature | App CloudRun default | RAGFlow CloudRun default |
+| Feature | App_CloudRun default | RAGFlow_CloudRun default |
 |---|---|---|
 | `container_port` | `8080` | `80` (set by `RAGFlow_Common`) |
 | `image_source` | varies | `"custom"` (always builds via Dockerfile) |
@@ -369,7 +374,7 @@ lifecycle precondition block:
 
 ## §20 · Notable Differences from `RAGFlow_GKE`
 
-| Feature | RAGFlow GKE | RAGFlow CloudRun |
+| Feature | RAGFlow_GKE | RAGFlow_CloudRun |
 |---|---|---|
 | **Compute platform** | GKE Autopilot (Kubernetes Deployment) | Cloud Run v2 (serverless containers) |
 | **Minimum instances** | Hard-coded `min_instance_count = 1` | Hard-coded `min_instance_count = 1` (same reason) |

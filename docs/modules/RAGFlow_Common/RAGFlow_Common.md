@@ -1,4 +1,9 @@
-# RAGFlow Common Module — Configuration Guide
+---
+title: "RAGFlow_Common Module — Configuration Guide"
+sidebar_label: "RAGFlow Common"
+---
+
+# RAGFlow_Common Module — Configuration Guide
 
 `RAGFlow_Common` is the **shared configuration sub-module** for RAGFlow deployments. It is not deployed directly — it is called by `RAGFlow_GKE` (and future CloudRun variants) to produce the three standard outputs that the Foundation module (`App_GKE`) expects: `config`, `storage_buckets`, and `path`.
 

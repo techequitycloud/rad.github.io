@@ -1,3 +1,8 @@
+---
+title: "Wiki.js on GKE — Lab Guide"
+sidebar_label: "Wikijs GKE"
+---
+
 # Wiki.js on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Wikijs_GKE)**

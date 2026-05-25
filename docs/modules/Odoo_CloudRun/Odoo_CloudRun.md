@@ -1,4 +1,9 @@
-# Odoo CloudRun Module — Configuration Guide
+---
+title: "Odoo_CloudRun Module — Configuration Guide"
+sidebar_label: "Odoo CloudRun"
+---
+
+# Odoo_CloudRun Module — Configuration Guide
 
 Odoo is an open-source ERP suite with 16M+ users, 170,000+ enterprise customers across 5 continents, and €650M in 2025 billing revenue growing at 42% CAGR — adding 13,000 new clients per month. It controls 5.77% global ERP market share and 12–15% of the SME segment, and is targeting €1B in revenue by 2027. Odoo is the primary open-source disruptor against SAP, Oracle, and Microsoft Dynamics, delivering CRM, accounting, inventory, manufacturing, HR, and e-commerce in one integrated suite with zero licensing cost.
 
@@ -275,8 +280,8 @@ on the App_CloudRun side; `startup_probe` / `liveness_probe` apply via Odoo_Comm
 |---|---|---|
 | `startup_probe` | `{ enabled = true, type = "TCP", path = "/", initial_delay_seconds = 60, timeout_seconds = 10, period_seconds = 30, failure_threshold = 3 }` | TCP port check on startup. More reliable than HTTP during Odoo's boot phase. For first deployments with schema creation, increase `failure_threshold` to `6`. |
 | `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/web/health", initial_delay_seconds = 120, timeout_seconds = 60, period_seconds = 120, failure_threshold = 3 }` | HTTP check against `/web/health`, which returns 200 only when Odoo has a live database connection. `period_seconds = 120` avoids unnecessary database load. |
-| `startup_probe_config` | `{ enabled = true, path = "/web/health", initial_delay_seconds = 180, timeout_seconds = 60, period_seconds = 120, failure_threshold = 3 }` | Structured App CloudRun startup probe with Odoo-tuned defaults. |
-| `health_check_config` | `{ enabled = true, path = "/web/health", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Structured App CloudRun liveness probe with Odoo-tuned defaults. |
+| `startup_probe_config` | `{ enabled = true, path = "/web/health", initial_delay_seconds = 180, timeout_seconds = 60, period_seconds = 120, failure_threshold = 3 }` | Structured App_CloudRun startup probe with Odoo-tuned defaults. |
+| `health_check_config` | `{ enabled = true, path = "/web/health", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Structured App_CloudRun liveness probe with Odoo-tuned defaults. |
 
 ### §7.B · Storage
 
@@ -381,7 +386,7 @@ These are set automatically by the module and cannot be overridden via input var
 | Variable | Value / Source | Notes |
 |---|---|---|
 | `ODOO_MASTER_PASS` | Secret Manager ref | Auto-generated 16-char alphanumeric password stored as `app<app_name><tenant_id><random_hex>-master-password` (where `random_hex` is an internally-generated suffix, not the user-supplied `deployment_id`). The secret ID is passed via `module_secret_env_vars`. Used for Odoo's database management interface. |
-| `DB_PASSWORD` | Secret Manager ref | Auto-generated database password from App CloudRun; injected for the Odoo application user. |
+| `DB_PASSWORD` | Secret Manager ref | Auto-generated database password from App_CloudRun; injected for the Odoo application user. |
 | `ROOT_PASSWORD` | Secret Manager ref | Same auto-generated database password; used by `db-init` for superuser setup. |
 
 ### Structural Wiring

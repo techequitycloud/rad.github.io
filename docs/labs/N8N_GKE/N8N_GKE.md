@@ -1,3 +1,8 @@
+---
+title: "n8n on GKE — Lab Guide"
+sidebar_label: "N8N GKE"
+---
+
 # n8n on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/N8N_GKE)**

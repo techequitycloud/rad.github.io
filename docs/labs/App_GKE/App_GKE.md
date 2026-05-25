@@ -1,3 +1,8 @@
+---
+title: "App on GKE — Lab Guide"
+sidebar_label: "App GKE"
+---
+
 # App on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/App_GKE)**

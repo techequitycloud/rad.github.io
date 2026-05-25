@@ -1,4 +1,9 @@
-# MC Bank GKE Module
+---
+title: "MC_Bank_GKE Module"
+sidebar_label: "MC Bank GKE"
+---
+
+# MC_Bank_GKE Module
 
 ## Overview
 

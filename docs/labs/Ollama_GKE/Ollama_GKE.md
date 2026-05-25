@@ -1,3 +1,8 @@
+---
+title: "Ollama on GKE — Lab Guide"
+sidebar_label: "Ollama GKE"
+---
+
 # Ollama on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Ollama_GKE)**

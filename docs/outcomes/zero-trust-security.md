@@ -1,17 +1,21 @@
-# Zero Trust Security
+# Security & Zero Trust
 
-The platform delivers a zero-trust security posture by default. Rather than relying on network-perimeter assumptions: every access decision is identity-verified, every credential is stored and rotated automatically, every container image is cryptographically attested, and every deployment is wrapped in a data-exfiltration perimeter. These controls are single-flag defaults — not optional extras — so modernised deployments arrive with a strong security posture without a separate security remediation project.
+> **Scope.** Outcomes-framing of the platform's security posture: what classes of attack are eliminated, what the zero-trust access model delivers, and how the platform hardens the software supply chain and data perimeter. The control implementation mechanics are canonical in [practices/devsecops.md](../practices/devsecops.md); the auditor-evidence framing is in [outcomes/compliance_governance.md](compliance_governance.md).
 
-## Zero-trust access replacing VPN
+## What this repo uniquely brings to security posture
+
+### 1. Zero-trust access replacing VPN (canonical)
 
 `enable_iap = true` deploys Identity-Aware Proxy, requiring Google identity authentication for every request before it reaches the application — no VPN client, no open firewall ports, no network-layer perimeter to provision or maintain.
 
 - Remote access to internal applications is gated on Google Workspace or Cloud Identity credentials.
 - Every access attempt is logged with user identity, timestamp, and context.
 - Access is revoked instantly by removing an IAM binding; no firewall rule changes required.
-- Authorised users and groups are declared in IaC (`iap_authorized_users`, `iap_authorized_groups`), version-controlled and auditable.
+- Groups and users are declared in IaC (`iap_authorized_users`, `iap_authorized_groups`), version-controlled and auditable.
 
-## WAF and DDoS protection at the edge
+IAP mechanics canonical in [practices/devsecops.md](../practices/devsecops.md) §2.
+
+### 2. WAF and DDoS protection at the edge
 
 `enable_cloud_armor = true` deploys a Global External Application Load Balancer with Cloud Armor WAF policies:
 
@@ -20,7 +24,9 @@ The platform delivers a zero-trust security posture by default. Rather than rely
 - IP allowlist / denylist rules via `admin_ip_ranges` lock down administrative paths.
 - All traffic passes through Google's global DDoS mitigation infrastructure at no additional configuration cost.
 
-## Secrets never in plaintext
+Network security primitives canonical in [practices/devsecops.md](../practices/devsecops.md) §6.
+
+### 3. Secrets never in plaintext
 
 The platform eliminates credential-in-environment-variable exposure by design:
 
@@ -29,7 +35,9 @@ The platform eliminates credential-in-environment-variable exposure by design:
 - Automated rotation (`enable_auto_password_rotation`) shortens credential validity windows without operator intervention.
 - Pre-commit scanners (`check_secrets.py`, `check_secrets_cr.py`) block accidental commits containing plaintext credentials.
 
-## Software supply chain integrity
+Secret management canonical in [practices/devsecops.md](../practices/devsecops.md) §3.
+
+### 4. Software supply chain integrity
 
 `enable_binary_authorization = true` enforces signed-image attestation at deployment time:
 
@@ -37,11 +45,11 @@ The platform eliminates credential-in-environment-variable exposure by design:
 - Unsigned, unscanned, or tampered images are rejected at the admission controller before they can run.
 - Artifact Registry vulnerability scanning surfaces CVEs in base images before deployment.
 
-CMEK (`modules/Services_GCP/cmek.tf`) protects data at rest with customer-controlled keys across Cloud SQL, Filestore, GCS, and Secret Manager.
+Combined with CMEK (`modules/Services_GCP/cmek.tf`), data at rest is protected with customer-controlled keys across Cloud SQL, Filestore, GCS, and Secret Manager.
 
-`pnpm audit` in CI blocks PRs with high or critical findings in third-party npm packages. Webhook payloads from payment providers are rejected unless the provider's HMAC or signature validates.
+Supply chain and container security canonical in [practices/devsecops.md](../practices/devsecops.md) §5.
 
-## Data exfiltration prevention via VPC Service Controls
+### 5. Data exfiltration prevention via VPC Service Controls
 
 `enable_vpc_sc = true` wraps GCP service APIs in a service perimeter:
 
@@ -49,7 +57,9 @@ CMEK (`modules/Services_GCP/cmek.tf`) protects data at rest with customer-contro
 - Per-tenant perimeters ensure Customer A cannot reach Customer B's Cloud SQL, GCS, or Secret Manager resources.
 - `vpc_sc_dry_run = true` enables a safe observation window before enforcement; violation logs surface in Cloud Audit Logs for review.
 
-## Principle of least privilege by default
+VPC-SC mechanics canonical in [practices/devsecops.md](../practices/devsecops.md) §4. Per-tenant perimeter strategy in [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) §3.
+
+### 6. Principle of least privilege by default
 
 Every deployment provisions dedicated, narrowly-scoped service accounts rather than relying on the default compute service account:
 
@@ -57,28 +67,18 @@ Every deployment provisions dedicated, narrowly-scoped service accounts rather t
 - GKE workloads use Workload Identity Federation — no long-lived key files to rotate, store, or accidentally expose.
 - Plan-time validation (`modules/App_CloudRun/validation.tf`, `modules/App_GKE/validation.tf`) rejects misconfigurations before any resource is created.
 
-Distinct role bundles across the platform — `super_admin`, `developers_infrastructure`, `developers_frontend`, `developers_backend_api` — ensure no single role both authors and approves changes.
+Identity mechanics canonical in [practices/devsecops.md](../practices/devsecops.md) §2.
 
-## Continuous security posture visibility
+### 7. Continuous security posture visibility
 
-`modules/Services_GCP/scc.tf` enables Security Command Center (SCC) to aggregate misconfigurations, vulnerabilities, and threat findings across the project in a single pane. `modules/Services_GCP/audit.tf` enables project-wide Admin Activity, Data Access, and System Event audit logs with an optional BigQuery sink for long-term retention.
+`modules/Services_GCP/scc.tf` enables Security Command Center (SCC) to aggregate misconfigurations, vulnerabilities, and threat findings across the project in a single pane. `modules/Services_GCP/audit.tf` enables project-wide Admin Activity, Data Access, and System Event audit logs with optional BigQuery sink for long-term retention.
 
-The `AGENTS.md` `/security` workflow provides a 30+ point recurring audit checklist covering IAM and service accounts, VPC Service Controls, Binary Authorization, secret management, network security, database security, container security, and compliance logging. This can be executed against any deployment at any time and serves as both an operational control and an auditor-facing evidence artefact.
+The `AGENTS.md` `/security` workflow provides a 30+ point recurring audit checklist that can be executed against any deployment at any time. Observability surface canonical in [capabilities/observability.md](../capabilities/observability.md) §4–5.
 
-## Quantified security value
+## Cross-references
 
-| Area | Without this platform | With this platform |
-|---|---|---|
-| Application access control | VPN clients and open firewall ports per application; access revocation requires firewall rule changes | IAP: Google identity required for every request, zero open ports, instant revocation by removing an IAM binding |
-| Credential exposure | Database passwords and API keys in environment variables, config files, or container images | Secret Manager: no plaintext credentials in environment, Terraform state, or images; automated rotation via Cloud Scheduler |
-| Supply chain integrity | Any container image deployable without verification | Binary Authorization: only cryptographically attested images admitted; unsigned or tampered images rejected at the admission controller |
-| Data exfiltration risk | GCP API plane accessible to any service account with valid credentials | VPC-SC perimeter: API-plane exfiltration blocked even with a compromised credential |
-| Security audit evidence | Manual log correlation; access events scattered across services | SCC + Cloud Audit Logs: all access attributed, timestamped, and queryable from a single pane; `/security` checklist produces auditor-ready evidence |
-
-## See also
-
-- DevSecOps practices — control implementation mechanics
-- Compliance & Governance outcome — auditor-evidence framing of these controls
-- Observability capability — Security Command Center, Cloud Audit Logs, and security-finding surfaces
-- Multitenancy & SaaS capability — per-tenant VPC-SC perimeters
-- Networking capability — network security layer (Cloud Armor, Kubernetes NetworkPolicy, firewall rules)
+- [practices/devsecops.md](../practices/devsecops.md) — control implementation mechanics (§2–6)
+- [outcomes/compliance_governance.md](compliance_governance.md) — auditor-evidence framing of these controls
+- [capabilities/observability.md](../capabilities/observability.md) — SCC, Cloud Audit Logs, security-finding surfaces (§4–5)
+- [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) — per-tenant VPC-SC perimeters (§3)
+- [capabilities/networking.md](../capabilities/networking.md) — network security layer (Cloud Armor, Kubernetes NetworkPolicy, firewall rules)

@@ -1,4 +1,9 @@
-# NodeRED Common Shared Configuration Module
+---
+title: "NodeRED_Common Shared Configuration Module"
+sidebar_label: "NodeRED Common"
+---
+
+# NodeRED_Common Shared Configuration Module
 
 The `NodeRED_Common` module defines the Node-RED flow-based programming tool for the RAD Modules ecosystem. It produces a `config` output consumed by platform-specific wrapper modules (`NodeRED_CloudRun` and `NodeRED_GKE`), along with a `storage_buckets` output that provisions the application's GCS bucket.
 
@@ -151,7 +156,7 @@ Unlike database-backed applications, Node-RED requires no schema initialisation,
 
 ## 8. Platform-Specific Differences
 
-| Aspect | NodeRED CloudRun | NodeRED GKE |
+| Aspect | NodeRED_CloudRun | NodeRED_GKE |
 |--------|------------------|-------------|
 | `module_env_vars` passed to Foundation | `{}` (empty) | `{}` (empty) |
 | `module_secret_env_vars` passed to Foundation | `{}` (empty — no auto-generated secrets) | `{}` (empty) |

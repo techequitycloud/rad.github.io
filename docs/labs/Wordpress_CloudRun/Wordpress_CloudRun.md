@@ -1,3 +1,8 @@
+---
+title: "WordPress on Cloud Run — Lab Guide"
+sidebar_label: "Wordpress CloudRun"
+---
+
 # WordPress on Cloud Run — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Wordpress_CloudRun)**

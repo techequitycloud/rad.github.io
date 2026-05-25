@@ -1,3 +1,8 @@
+---
+title: "Strapi on GKE — Lab Guide"
+sidebar_label: "Strapi GKE"
+---
+
 # Strapi on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Strapi_GKE)**

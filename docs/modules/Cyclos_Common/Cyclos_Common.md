@@ -1,4 +1,9 @@
-# Cyclos Common Shared Configuration Module
+---
+title: "Cyclos_Common Shared Configuration Module"
+sidebar_label: "Cyclos Common"
+---
+
+# Cyclos_Common Shared Configuration Module
 
 The `Cyclos_Common` module defines the Cyclos banking and payment platform configuration for the RAD Modules ecosystem. It is a **configuration library**, not a resource-creating module — it produces a standardized application configuration object consumed by platform-specific wrapper modules (`Cyclos_CloudRun` and `Cyclos_GKE`).
 
@@ -195,7 +200,7 @@ Optional Hazelcast cluster configuration for multi-instance deployments:
 
 ## 8. Platform-Specific Differences
 
-| Aspect | Cyclos CloudRun | Cyclos GKE |
+| Aspect | Cyclos_CloudRun | Cyclos_GKE |
 |--------|-----------------|------------|
 | `service_url` | Set to the Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Optional (Auth Proxy sidecar) | Optional (defaults to `false`; Cyclos uses TCP to Cloud SQL private IP) |

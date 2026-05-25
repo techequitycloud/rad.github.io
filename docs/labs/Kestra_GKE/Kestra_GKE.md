@@ -1,3 +1,8 @@
+---
+title: "Kestra on GKE — Lab Guide"
+sidebar_label: "Kestra GKE"
+---
+
 # Kestra on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Kestra_GKE)**

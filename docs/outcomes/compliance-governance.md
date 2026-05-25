@@ -1,79 +1,91 @@
 # Compliance & Governance
 
-The platform delivers a concrete, auditable compliance posture across SOC 2 Type II, ISO 27001, HIPAA, and GDPR programmes. Controls are expressed as code, changes are tracked as Git commits, and evidence is pre-assembled rather than manually collected at audit time.
+> **Scope.** Auditor-evidence framing of the platform: how to assemble the control-evidence references for SOC 2 / ISO 27001 / HIPAA / GDPR programmes from the controls and observability surfaces defined elsewhere. This file is largely a curated index; the controls themselves are canonical in [practices/devsecops.md](../practices/devsecops.md) and [capabilities/observability.md](../capabilities/observability.md).
 
-## Infrastructure as auditable code
+## What this repo uniquely brings to compliance & governance
 
-Every change to the platform is a Git commit — reviewed, attributable, and reversible. Every deployment is a Cloud Build run with inputs, build steps, outputs, and durations all recorded and exportable as standard change-management evidence. Reproducible builds (`commit_hash.txt` + `repo_url.txt` per deployment) make any prior production state reconstructible. There is no "click-ops" — all controls are expressed as Terraform resources, and `tools/check-tf-plan.py` enforces guardrails at plan time to block misconfigurations before `apply`.
+### 1. Infrastructure as auditable code
 
-## IAM and separation of duties
+- **Every change is a Git commit** — reviewed, attributable, reversible. Standard change-management evidence.
+- **Every deployment is a Cloud Build run** — inputs, build steps, outputs, durations all recorded; auditable and exportable.
+- **Reproducible builds** — `commit_hash.txt` + `repo_url.txt` per deployment make any prior production state reconstructible. IaC mechanics canonical in [practices/gitops_iac.md](../practices/gitops_iac.md).
+- **No "click-ops"** — all controls expressed as Terraform resources.
 
-Distinct role bundles — `super_admin`, `developers_infrastructure`, `developers_frontend`, `developers_backend_api` — ensure no single role both authors and approves changes. Per-workload service accounts are narrowly scoped to only the roles required for their function. Application service accounts hold only `secretmanager.secretAccessor`, `cloudsql.client`, or `storage.objectAdmin` as appropriate. GKE workloads use Workload Identity Federation to eliminate long-lived key files entirely.
+`BUSINESS_CASE.md`: *"Infrastructure code can be scanned and audited. Changes are tracked via Git (Audit Trail), essential for SOC2/ISO27001 compliance."*
 
-Role assignments should be reviewed periodically to maintain least-privilege as team membership changes. The structural separation of operational personas (`admin`, `partner`, `support`, `finance`, `user`, `agent`) in `docs/workflows/` provides the segregation-of-duties evidence auditors require.
+### 2. Audit trail and security findings (cross-ref)
 
-## Data classification and residency
+The complete audit/observability surface — Cloud Audit Logs, Security Command Center, mesh telemetry, dashboards, alert policies — is canonical in [capabilities/observability.md](../capabilities/observability.md).
 
-The platform handles three categories of data with differentiated protection:
+### 3. Control inventory (auditor evidence map)
 
-| Category | Data | Protection |
-|---|---|---|
-| PII / identity | Firebase auth tokens, user profile data | `verifyIdToken` on every sensitive API route; row-level Firestore rules |
-| Financial | Credit balances, invoices, BigQuery billing export, payment payloads | Webhook signature verification across all providers; role-scoped API routes |
-| Operational | Deployment state, Cloud Function logs, Terraform state | GCS bucket IAM; Cloud Logging access controls |
+Map of common audit-control families to their canonical home in this repo:
 
-Secrets are stored in Secret Manager and never placed in environment variables visible in the console, Terraform state, or container images. Secrets bound to Cloud Build pipelines use region-pinned replication (`us-central1`) to satisfy data-residency requirements.
-
-## Control inventory
-
-Map of common audit-control families to their canonical implementation in the platform:
-
-| Control family | Implementation |
+| Control family | Canonical home |
 |---|---|
-| Identity and access (least privilege, WIF, IAP) | `infrastructure/iam_permissions.tf`; DevSecOps §2 |
-| Secret management and rotation | `enable_auto_password_rotation`; `src/utils/secrets.ts`; DevSecOps §3 |
-| Data residency / network isolation (VPC-SC, private IP) | DevSecOps §4; Networking capability |
-| Supply chain integrity (Binary Authorization, AR, CMEK) | `enable_binary_authorization = true`; DevSecOps §5 |
-| Network controls (Cloud Armor, NetworkPolicy, firewall) | `enable_cloud_armor = true`; DevSecOps §6 |
-| Audit logging (Cloud Audit Logs, SCC) | `modules/Services_GCP/audit.tf`; `scc.tf`; Observability capability §4–5 |
-| Backup / DR | Disaster Recovery capability |
-| Tenant isolation | Multitenancy & SaaS capability |
-| Change management | CI/CD practices; `AGENTS.md` `/maintain` |
-| License and documentation compliance | `tools/check-license.py`; `tools/check_documentation.py` |
+| Identity and access (least privilege, WIF, IAP) | [practices/devsecops.md](../practices/devsecops.md) §2 |
+| Secret management | [practices/devsecops.md](../practices/devsecops.md) §3 |
+| Data residency / network isolation (VPC-SC, private IP) | [practices/devsecops.md](../practices/devsecops.md) §4, [capabilities/networking.md](../capabilities/networking.md) |
+| Supply chain integrity (Binary Authorization, AR, CMEK) | [practices/devsecops.md](../practices/devsecops.md) §5 |
+| Network controls (Cloud Armor, NetworkPolicy, firewall) | [practices/devsecops.md](../practices/devsecops.md) §6 |
+| Audit logging (Cloud Audit Logs, SCC) | [capabilities/observability.md](../capabilities/observability.md) §4–5 |
+| Backup / DR | [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md) |
+| Tenant isolation | [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) |
+| Change management | [practices/cicd.md](../practices/cicd.md), `AGENTS.md` `/maintain` |
 
-## Third-party and supply chain risk
+### 4. Mandatory `/security` audit workflow
 
-Three payment providers (Stripe, Paystack, Flutterwave) and GCP managed services are the primary third-party dependencies. Webhook payloads are rejected unless the provider's HMAC or signature validates. `pnpm audit` in CI blocks PRs with high or critical findings in third-party npm packages. Container images are built from a pinned Node 20 Alpine base, enabling vulnerability scanning via Google Artifact Analysis.
+`AGENTS.md` `/security` defines a 30+ point recurring audit checklist designed as the control-evidence collection workflow for SOC 2 / ISO 27001 audits. Categories:
 
-## Audit workflows
+- IAM & service accounts
+- VPC Service Controls
+- Binary Authorization
+- Secret management
+- Network security
+- Database security
+- Container security
+- Compliance & audit
 
-`AGENTS.md` `/security` defines a 30+ point recurring audit checklist designed as the control-evidence collection workflow for SOC 2 / ISO 27001 audits. The checklist covers IAM and service accounts, VPC Service Controls, Binary Authorization, secret management, network security, database security, container security, and compliance logging.
+### 5. Change-management discipline
 
-`AGENTS.md` `/maintain` codifies the change process: pre-change state review and backup, post-change verification and metric monitoring, and critical-change gates for VPC, NFS, and database operations.
+`AGENTS.md` `/maintain` codifies the change process (canonical in [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md) §8): pre-change state review and backup; post-change verification and metric monitoring; critical-change gates for VPC / NFS / DB.
 
-## Quantified compliance value
+### 6. Segregation-of-duties via persona docs
+
+`docs/workflows/` provides explicitly-separated documentation for each operational persona:
+
+- `admin.md` — platform administrators
+- `partner.md` — partner / reseller operations
+- `support.md` — tenant support
+- `finance.md` — billing / chargeback
+- `user.md` — end-user
+- `agent.md` — AI-assisted operations
+- `getting-started.md` — onboarding
+
+This persona separation is the structural evidence auditors look for as proof of segregation of duties.
+
+### 7. Quantified compliance value
 
 | Area | Manual approach | With this platform |
 |---|---|---|
-| SOC 2 / ISO 27001 audit prep | 6–12 weeks of dedicated evidence collection | Pre-assembled evidence map; controls are code, not screenshots |
+| SOC 2 / ISO 27001 audit prep | 6–12 weeks of dedicated evidence collection | Pre-assembled evidence map in the `/security` workflow; controls are code, not screenshots |
 | Audit trail | Manually assembled from disparate logs | Every change is a Git commit + Cloud Build run — attributable, reversible, exportable |
 | Secret rotation | Manual or bespoke scripting | Automated via Cloud Scheduler + Cloud Run Jobs (`enable_auto_password_rotation`) |
 | Control drift detection | Periodic manual review | IaC re-apply reverts drift; plan-time validation blocks misconfigurations before apply |
 
-## Per-tenant compliance
+Quantified provisioning and operational savings: [outcomes/developer_productivity.md](developer_productivity.md) §4.
 
-Per-deployment VPC-SC perimeters, per-tenant Cloud Billing labels, and per-app service accounts provide multi-tenant isolation that satisfies tenant-scoped compliance requirements. See the Multitenancy & SaaS capability for the full isolation model.
+### 8. Per-tenant compliance (cross-ref)
 
-## Incident response
+Per-deployment VPC-SC perimeters, per-tenant Cloud Billing labels, per-app service accounts — multi-tenant isolation that satisfies tenant-scoped compliance requirements. Canonical in [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md).
 
-Security and operational incidents should be escalated through the notification fan-out described in the Observability capability. A formal incident response runbook covering classification, containment, and post-mortem steps should be maintained alongside these controls.
+## Cross-references
 
-## See also
-
-- DevSecOps practices — the controls compliance builds on
-- Observability capability — audit logging and security findings
-- GitOps & IaC practices — IaC reproducibility and immutable change history
-- CI/CD practices — pipeline-level change management
-- Disaster Recovery capability — backup, rollback, and change-management checklist
-- Multitenancy & SaaS capability — per-tenant isolation
-- Security & Zero Trust outcome — security-posture framing of the same controls
+- [practices/devsecops.md](../practices/devsecops.md) — the controls themselves (§2–6)
+- [capabilities/observability.md](../capabilities/observability.md) — audit-log and security-finding sources (§4–5)
+- [practices/gitops_iac.md](../practices/gitops_iac.md) — IaC reproducibility / immutable change history
+- [practices/cicd.md](../practices/cicd.md) — pipeline-level change management (§4)
+- [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md) — backup, rollback, change-management checklist (§1–2, §8)
+- [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) — per-tenant isolation (§2–5)
+- [outcomes/education_enablement.md](education_enablement.md) — `/security` workflow alongside other agent workflows (§5)
+- [outcomes/security_zero_trust.md](security_zero_trust.md) — security-posture framing of the same controls

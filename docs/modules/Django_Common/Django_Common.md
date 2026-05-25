@@ -1,4 +1,9 @@
-# Django Common Shared Configuration Module
+---
+title: "Django_Common Shared Configuration Module"
+sidebar_label: "Django Common"
+---
+
+# Django_Common Shared Configuration Module
 
 The `Django_Common` module defines the Django web framework configuration for the RAD Modules ecosystem. Like `Directus_Common`, it **creates GCP resources** (a Secret Manager secret for the Django `SECRET_KEY`) and produces a `config` output consumed by platform-specific wrapper modules (`Django_CloudRun` and `Django_GKE`).
 
@@ -279,7 +284,7 @@ The production settings extend `basesettings.py` and configure Django for cloud 
 
 ## 9. Platform-Specific Differences
 
-| Aspect | Django CloudRun | Django GKE |
+| Aspect | Django_CloudRun | Django_GKE |
 |--------|-----------------|-----------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Optional (`var.enable_cloudsql_volume`) | Optional (`var.enable_cloudsql_volume`) |

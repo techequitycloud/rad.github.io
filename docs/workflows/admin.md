@@ -5,7 +5,7 @@ slug: /workflows/admin
 
 import AudioPlayer from '@site/src/components/AudioPlayer';
 
-# Admin Workflow
+# Tutorial: Administrator Workflow
 
 <img src="https://storage.googleapis.com/rad-public-2b65/workflows/admin_workflow.png" alt="Admin Workflow" style={{marginBottom: '20px'}} />
 
@@ -19,7 +19,7 @@ import AudioPlayer from '@site/src/components/AudioPlayer';
 ## 1. Introduction
 This tutorial covers the essential tasks for setting up a new RAD platform instance. You will configure global settings, connect the platform repository, publish modules, and configure monetization settings like subscription tiers and user credits.
 
-## 2. Global Configuration
+## 2. Step 1: Global Configuration
 1.  Click **Setup** in the navigation bar.
 2.  **Organization Id:** Enter your Google Cloud **Organization ID**.
 3.  **Billing Account Id:** Enter the **Billing Account ID** associated with your Google Cloud projects.
@@ -29,7 +29,7 @@ This tutorial covers the essential tasks for setting up a new RAD platform insta
 7.  **Mail:** Enter your SMTP credentials (email address and app password) so the platform can send low-credit alerts, retention notifications, and system emails.
 8.  Click **Submit** to save.
 
-## 3. Configure Platform Repository
+## 3. Step 2: Configure Platform Repository
 To allow users to deploy modules, you must first connect the platform to a GitHub repository containing your Terraform modules.
 
 1.  Click your **Profile Icon** in the top right and select **Profile**.
@@ -49,7 +49,7 @@ The platform supports multiple GitHub repositories as module sources. To add add
 
 > **Token scope:** Each token must have the `repo` scope. The platform validates token accessibility at save time — an error will be shown if the token cannot reach the selected repository.
 
-## 4. Publish Modules
+## 4. Step 3: Publish Modules
 Now that the repository is connected, you need to publish specific modules to make them available to users.
 
 1.  Click **Publish** in the navigation bar.
@@ -60,7 +60,7 @@ Now that the repository is connected, you need to publish specific modules to ma
 
 > **Re-publishing:** When module code is updated in the source repository, return to the Publish page and click **Update** on the affected module. This refreshes the module definition (variables, description, cost) in the platform without removing existing deployments.
 
-## 5. Create a Subscription Tier
+## 5. Step 4: Create a Subscription Tier
 Now that subscriptions are enabled, let's create a plan for users to buy.
 
 **Note:** You must have the **Finance** role to access the Billing page. If you don't see the 'Billing' link, go to the **Users** page and assign the Finance role to your account.
@@ -75,7 +75,7 @@ Now that subscriptions are enabled, let's create a plan for users to buy.
     *   **Features:** "Access to all modules, Priority Support"
 5.  Click **Save**. Your new tier is now live and visible to users on the Buy Credits page.
 
-## 6. Define Credit Settings
+## 6. Step 5: Define Credit Settings
 Let's set the exchange rate for credits and new user bonuses.
 
 1.  Click the **Credit Settings** tab (still on the Billing page).
@@ -84,7 +84,7 @@ Let's set the exchange rate for credits and new user bonuses.
 4.  **Low Credit Threshold:** Enter a value (e.g., `50`) to notify users when their balance is low. Click **Save**.
 5.  **Monthly Top-Up:** Enable this feature and set an amount (e.g., `200`) to give users recurring monthly credits. Click **Save**.
 
-## 7. Manage a User
+## 7. Step 6: Manage a User
 If a user needs extra credits or adjustments:
 
 1.  Click the **Credit Management** tab.
@@ -103,7 +103,7 @@ To update credits or roles for multiple users at once:
 3.  Click **Bulk Update** and choose the action (assign role, award credits).
 4.  Confirm the action. Changes are applied to all selected users immediately.
 
-## 8. Payment Health & Reconciliation
+## 8. Step 7: Payment Health & Reconciliation
 
 The platform automatically reconciles payments from both payment providers (Stripe and Flutterwave) every day at 2:00 AM UTC. This job detects:
 
@@ -124,7 +124,7 @@ The platform monitors the availability of all three payment providers in real ti
 *   Users will still be able to pay through the remaining available providers.
 *   The health status is visible to administrators via the system health endpoint.
 
-## 9. Automated Background Jobs
+## 9. Step 8: Automated Background Jobs
 
 The platform runs the following scheduled jobs automatically. Understanding the schedule helps you diagnose unexpected credit changes or billing events.
 

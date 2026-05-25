@@ -1,3 +1,8 @@
+---
+title: "Temporal on GKE — Lab Guide"
+sidebar_label: "Temporal GKE"
+---
+
 # Temporal on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Temporal_GKE)**

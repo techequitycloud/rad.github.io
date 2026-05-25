@@ -1,3 +1,8 @@
+---
+title: "Cyclos on GKE — Lab Guide"
+sidebar_label: "Cyclos GKE"
+---
+
 # Cyclos on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Cyclos_GKE)**

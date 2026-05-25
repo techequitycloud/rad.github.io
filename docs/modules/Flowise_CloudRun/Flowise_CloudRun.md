@@ -1,4 +1,9 @@
-# Flowise CloudRun Module — Configuration Guide
+---
+title: "Flowise_CloudRun Module — Configuration Guide"
+sidebar_label: "Flowise CloudRun"
+---
+
+# Flowise_CloudRun Module — Configuration Guide
 
 Flowise is an open-source visual AI workflow builder that lets non-developers construct
 LangChain and LlamaIndex pipelines through a drag-and-drop interface — now backed by Workday
@@ -42,7 +47,7 @@ definitions. The `Flowise_Common` outputs feed into App_CloudRun's `application_
 
 ### Key differences from `App_CloudRun` defaults
 
-| Feature | App CloudRun default | Flowise CloudRun default |
+| Feature | App_CloudRun default | Flowise_CloudRun default |
 |---|---|---|
 | `container_port` | `8080` | `3000` |
 | `cpu_limit` | `"1000m"` | `"1000m"` |
@@ -245,10 +250,10 @@ liveness probes target this path.
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` | `{ enabled=true, type="HTTP", path="/api/v1/ping", initial_delay_seconds=60, timeout_seconds=5, period_seconds=10, failure_threshold=3 }` | Flat startup probe passed to Flowise Common. |
-| `liveness_probe` | `{ enabled=true, type="HTTP", path="/api/v1/ping", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Flat liveness probe passed to Flowise Common. |
-| `startup_probe_config` | `{ enabled=true, path="/api/v1/ping", initial_delay_seconds=30, period_seconds=10, failure_threshold=30 }` | Structured startup probe passed directly to App CloudRun. |
-| `health_check_config` | `{ enabled=true, path="/api/v1/ping" }` | Structured liveness probe passed directly to App CloudRun. |
+| `startup_probe` | `{ enabled=true, type="HTTP", path="/api/v1/ping", initial_delay_seconds=60, timeout_seconds=5, period_seconds=10, failure_threshold=3 }` | Flat startup probe passed to Flowise_Common. |
+| `liveness_probe` | `{ enabled=true, type="HTTP", path="/api/v1/ping", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Flat liveness probe passed to Flowise_Common. |
+| `startup_probe_config` | `{ enabled=true, path="/api/v1/ping", initial_delay_seconds=30, period_seconds=10, failure_threshold=30 }` | Structured startup probe passed directly to App_CloudRun. |
+| `health_check_config` | `{ enabled=true, path="/api/v1/ping" }` | Structured liveness probe passed directly to App_CloudRun. |
 | `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check from multiple global locations. |
 
 ### §6.B · Storage
@@ -353,7 +358,7 @@ variables.
 | `DATABASE_USER` | `var.application_database_user` | Mapped from `DB_USER` by `flowise-entrypoint.sh`. |
 | `DATABASE_NAME` | `var.application_database_name` | Mapped from `DB_NAME` by `flowise-entrypoint.sh`. |
 | `DATABASE_PASSWORD` | Secret Manager ref | Mapped from `DB_PASSWORD` by `flowise-entrypoint.sh`. |
-| `FLOWISE_PASSWORD` | Secret Manager ref | Auto-generated admin password from Flowise Common. |
+| `FLOWISE_PASSWORD` | Secret Manager ref | Auto-generated admin password from Flowise_Common. |
 
 ### Structural Wiring
 

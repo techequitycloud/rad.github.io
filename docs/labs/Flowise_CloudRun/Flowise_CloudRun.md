@@ -1,3 +1,8 @@
+---
+title: "Flowise on Cloud Run — Lab Guide"
+sidebar_label: "Flowise CloudRun"
+---
+
 # Flowise on Cloud Run — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Flowise_CloudRun)**

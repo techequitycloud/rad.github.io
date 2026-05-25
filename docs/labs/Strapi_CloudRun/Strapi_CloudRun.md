@@ -1,3 +1,8 @@
+---
+title: "Strapi on Cloud Run — Lab Guide"
+sidebar_label: "Strapi CloudRun"
+---
+
 # Strapi on Cloud Run — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Strapi_CloudRun)**

@@ -1,3 +1,8 @@
+---
+title: "OpenClaw on Cloud Run — Lab Guide"
+sidebar_label: "OpenClaw CloudRun"
+---
+
 # OpenClaw on Cloud Run — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/OpenClaw_CloudRun)**

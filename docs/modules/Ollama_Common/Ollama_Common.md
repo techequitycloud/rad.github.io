@@ -1,4 +1,9 @@
-# Ollama Common Shared Configuration Module
+---
+title: "Ollama_Common Shared Configuration Module"
+sidebar_label: "Ollama Common"
+---
+
+# Ollama_Common Shared Configuration Module
 
 The `Ollama_Common` module defines the Ollama LLM inference server configuration for the RAD
 Modules ecosystem. It **creates one GCP resource** (the GCS models bucket, via the
@@ -294,7 +299,7 @@ The `gcs_volumes` entry appended by this module:
 
 ## 9. Platform-Specific Differences
 
-| Aspect | Ollama CloudRun | Ollama GKE |
+| Aspect | Ollama_CloudRun | Ollama_GKE |
 |---|---|---|
 | `region` | Passed as `"us-central1"` from `main.tf` | Auto-discovered from VPC subnets via `app_networking`; falls back to `var.region` |
 | Model-pull job type | Cloud Run Job | Kubernetes Job |

@@ -1,3 +1,8 @@
+---
+title: "Google Cloud VMware Engine — Lab Guide"
+sidebar_label: "VMware Engine"
+---
+
 # Google Cloud VMware Engine — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/VMware_Engine)**

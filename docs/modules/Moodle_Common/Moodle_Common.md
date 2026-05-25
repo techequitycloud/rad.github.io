@@ -1,4 +1,9 @@
-# Moodle Common Shared Configuration Module
+---
+title: "Moodle_Common Shared Configuration Module"
+sidebar_label: "Moodle Common"
+---
+
+# Moodle_Common Shared Configuration Module
 
 The `Moodle_Common` module defines the Moodle Learning Management System (LMS) configuration for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`Moodle_CloudRun` and `Moodle_GKE`).
 
@@ -303,7 +308,7 @@ Key environment variables consumed by `moodle-config.php` and `cloudrun-entrypoi
 
 ## 9. Platform-Specific Differences
 
-| Aspect | Moodle CloudRun | Moodle GKE |
+| Aspect | Moodle_CloudRun | Moodle_GKE |
 |--------|-----------------|-----------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Forced to `true` in `moodle.tf` application_modules merge (not user-configurable) | `var.enable_cloudsql_volume` (default `true`, user-configurable) |

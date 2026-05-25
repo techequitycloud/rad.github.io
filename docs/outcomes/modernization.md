@@ -1,10 +1,12 @@
-# Modernization
+# Application Modernisation
 
-The platform supports a structured modernisation programme from lift-and-shift through replatform to fully managed, scale-to-zero deployments — without requiring application rewrites at any stage.
+> **Scope.** Canonical home for the modernisation programme angle — VMware Engine as lift-and-shift landing zone, replatform via the application catalogue, managed-service substitution, and migration tooling. Underlying capabilities live in their canonical homes (data, networking, devsecops, serverless).
 
-## Lift-and-shift via VMware Engine
+## What this repo uniquely brings to modernisation
 
-`modules/VMware_Engine/` provides a turnkey landing zone for migrating an existing VMware estate into Google Cloud:
+### 1. Lift-and-shift via VMware Engine (canonical)
+
+`modules/VMware_Engine/` plus `modules/VMware_Engine/LAB_GUIDE.md` (*"Migrate to Virtual Machines v5 — Lab Guide"*) provides a turnkey landing zone:
 
 - Enables required GCP APIs.
 - Creates the VMware Engine Network and Private Cloud.
@@ -13,11 +15,11 @@ The platform supports a structured modernisation programme from lift-and-shift t
 - Deploys a Windows Server 2022 jump host.
 - Resets vCenter solution user credentials.
 
-`modules/VMware_Engine/LAB_GUIDE.md` (*"Migrate to Virtual Machines v5 — Lab Guide"*) is a 2–3 hour hands-on walkthrough that documents what Terraform automates versus what the operator does manually, with timing estimates and prerequisites. This is Phase 1 — getting the existing VMware estate into Google Cloud without refactoring.
+The canonical "Phase 1" — get the existing VMware estate into Google Cloud without refactoring.
 
-## Replatform via the application catalogue
+### 2. Replatform via the application catalogue (cross-ref)
 
-Once on GCP, the application catalogue replaces hand-rolled VM stacks with managed, scale-to-zero or auto-scaled containers — without rewriting the application:
+Once on GCP, the catalogue (canonical in [outcomes/developer_productivity.md](developer_productivity.md)) replaces hand-rolled VM stacks with managed, scale-to-zero or auto-scaled containers — without rewriting the application:
 
 | Legacy stack | Modernised module |
 |---|---|
@@ -30,64 +32,56 @@ Once on GCP, the application catalogue replaces hand-rolled VM stacks with manag
 | Ghost blogging | `Ghost_*` |
 | Strapi headless CMS | `Strapi_*` |
 
-## Managed-service substitution
+### 3. Managed-service substitution
 
 Modernisation replaces self-hosted dependencies with managed equivalents:
 
 | Self-hosted | Managed replacement | Canonical home |
 |---|---|---|
-| MySQL/PostgreSQL on a VM | Cloud SQL (private IP, PITR, HA, CMEK) | Data & Databases capability |
-| Redis on a VM | Memorystore | Data & Databases capability |
-| NFS server on a VM | Filestore | Data & Databases capability |
-| Self-hosted Docker registry | Artifact Registry | CI/CD practices |
-| Self-hosted CI/CD (Jenkins) | Cloud Build | CI/CD practices |
-| Self-hosted secrets vault | Secret Manager | DevSecOps practices |
-| Self-hosted observability stack | Cloud Monitoring + Logging | Observability capability |
-| VPN for admin access | Identity-Aware Proxy | DevSecOps practices |
+| MySQL/PostgreSQL on a VM | Cloud SQL (private IP, PITR, HA, CMEK) | [capabilities/data_and_databases.md](../capabilities/data_and_databases.md) |
+| Redis on a VM | Memorystore | [capabilities/data_and_databases.md](../capabilities/data_and_databases.md) |
+| NFS server on a VM | Filestore | [capabilities/data_and_databases.md](../capabilities/data_and_databases.md) |
+| Self-hosted Docker registry | Artifact Registry | [practices/cicd.md](../practices/cicd.md) |
+| Self-hosted CI/CD (Jenkins) | Cloud Build | [practices/cicd.md](../practices/cicd.md) |
+| Self-hosted secrets vault | Secret Manager | [practices/devsecops.md](../practices/devsecops.md) |
+| Self-hosted observability stack | Cloud Monitoring + Logging | [capabilities/observability.md](../capabilities/observability.md) |
+| VPN for admin access | Identity-Aware Proxy | [practices/devsecops.md](../practices/devsecops.md) |
 
-## Refactor to serverless
+### 4. Refactor to serverless (cross-ref)
 
-Cloud Run + GKE Autopilot remove the last vestiges of pre-provisioned compute, providing per-request billing and automatic scaling to zero. This is the final modernisation step — eliminating idle infrastructure cost alongside the operational overhead of managing nodes.
+Cloud Run + GKE Autopilot remove the last vestiges of pre-provisioned compute. Runtime mechanics canonical in [capabilities/serverless.md](../capabilities/serverless.md).
 
-## Data migration tooling
+### 5. Data migration tooling (cross-ref)
 
-`export-backup.sh`, `import-gcs-backup.sh`, and `import-gdrive-backup.sh`, together with per-app `db-init.sh` and `install-{mysql-plugins,postgres-extensions}.sh` scripts, handle the data-migration cutover from legacy storage to Cloud SQL and GCS.
+`export-backup.sh`, `import-gcs-backup.sh`, `import-gdrive-backup.sh` plus the per-app `db-init.sh` and `install-{mysql-plugins,postgres-extensions}.sh` scripts handle the data-migration cutover. Canonical in [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md) and [capabilities/data_and_databases.md](../capabilities/data_and_databases.md).
 
-## Hybrid-during-migration support
+### 6. Hybrid-during-migration support
 
-Migration is rarely a single cutover. The platform supports a hybrid phase:
+- **VMware Engine** keeps the legacy estate reachable from GCP-native services.
+- **Workload Identity Federation** federates external identities (canonical in [practices/devsecops.md](../practices/devsecops.md)).
+- VPN/Interconnect-friendly VPC topology — canonical in [capabilities/networking.md](../capabilities/networking.md).
 
-- **VMware Engine** keeps the legacy estate reachable from GCP-native services throughout the migration.
-- **Workload Identity Federation** federates external identities, eliminating the need to redistribute service account keys during cutover.
-- VPN/Interconnect-friendly VPC topology keeps on-premises connectivity operational until the migration is complete.
+### 7. Security uplift as part of modernisation (cross-ref)
 
-## Security uplift as part of modernisation
+Modernisation is also a chance to fix security: private DB IP, IAP, Binary Authorization, VPC-SC, Cloud Armor, CMEK appear automatically in modernised deployments. Canonical in [practices/devsecops.md](../practices/devsecops.md).
 
-Modernisation is also a chance to fix security. Private DB IP, IAP, Binary Authorization, VPC-SC, Cloud Armor, and CMEK appear automatically in every modernised deployment as single-flag defaults — not optional extras. Teams arrive at a stronger security posture without needing a separate security remediation project.
-
-## Programme-level documentation
+### 8. Programme-level documentation
 
 - `MODERNIZATION_IMPLEMENTATION_PLAN.md` — the broader programme view.
 - `MODERNIZATION_REVIEW.md` — review checklist.
-- `REFACTORING_ANALYSIS.md` — architectural refactoring rationale.
+- `REFACTORING_ANALYSIS.md` — architectural refactoring rationale (e.g., extracting App_Common sub-modules).
 - `ITEMIZED_PROPOSAL.md`, `PROPOSAL_DRAFT.md` — partner-facing proposal templates.
 - `articles/cyclos-business-overview.md`, `cyclos-technical-deep-dive.md` — published case study.
 
-## Quantified outcomes
+### 9. Quantified outcomes (cross-ref)
 
-| Outcome | Before | After |
-|---|---|---|
-| VM migration to GCP | Manual re-architecture and weeks of planning per workload | VMware Engine landing zone provisioned via Terraform; structured, phased migration without application rewrites |
-| Application replatform | Bespoke Terraform per app; 3–5 days of setup per deployment | Application catalogue module applied in under 2 hours; consistent, tested configuration across every app |
-| Infrastructure cost | Idle VMs billed 24/7; manual scaling decisions | Scale-to-zero compute; 30–50% compute and egress savings via CDN offload |
-| Security posture | Security hardening treated as a separate follow-on project | IAP, Binary Authorization, VPC-SC, and Cloud Armor enabled by default — security uplift is part of modernisation, not deferred |
-| Maintenance burden | ~40 h per cycle for a 10-app fleet | ~2 h per cycle; 95% reduction in maintenance effort and cost |
+95% faster provisioning, 95% maintenance reduction, 30–50% compute/egress savings via CDN — canonical in [outcomes/developer_productivity.md](developer_productivity.md) §4.
 
-## See also
+## Cross-references
 
-- Developer Productivity outcome — application catalogue (the modernisation targets)
-- Serverless capability — Cloud Run / Autopilot as the replatform endpoint
-- Data & Databases capability — managed-data substitutions
-- Disaster Recovery capability — data-migration tooling
-- Networking capability — hybrid VPC and VMware Engine peering
-- DevSecOps practices — security uplift controls
+- [outcomes/developer_productivity.md](developer_productivity.md) — application catalogue (the modernisation targets)
+- [capabilities/serverless.md](../capabilities/serverless.md) — Cloud Run / Autopilot as the replatform endpoint (§1–3)
+- [capabilities/data_and_databases.md](../capabilities/data_and_databases.md) — managed-data substitutions
+- [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md) — data-migration tooling (§1)
+- [capabilities/networking.md](../capabilities/networking.md) — hybrid VPC and VMware Engine peering
+- [practices/devsecops.md](../practices/devsecops.md) — security uplift controls (§2 identity, §3 secrets, §5 supply chain, §6 network)

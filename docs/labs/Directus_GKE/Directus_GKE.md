@@ -1,3 +1,8 @@
+---
+title: "Directus on GKE — Lab Guide"
+sidebar_label: "Directus GKE"
+---
+
 # Directus on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Directus_GKE)**

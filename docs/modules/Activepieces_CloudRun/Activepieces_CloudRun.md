@@ -1,3 +1,8 @@
+---
+title: "Activepieces on Google Cloud Run"
+sidebar_label: "Activepieces CloudRun"
+---
+
 # Activepieces on Google Cloud Run
 
 This document provides a comprehensive reference for the `modules/Activepieces_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Activepieces-specific behaviours, and operational patterns for deploying Activepieces on Google Cloud Run (v2).

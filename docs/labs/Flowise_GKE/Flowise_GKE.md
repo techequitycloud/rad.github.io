@@ -1,3 +1,8 @@
+---
+title: "Flowise on GKE — Lab Guide"
+sidebar_label: "Flowise GKE"
+---
+
 # Flowise on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Flowise_GKE)**
