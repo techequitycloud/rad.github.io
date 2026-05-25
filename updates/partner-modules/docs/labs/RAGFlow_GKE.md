@@ -79,35 +79,35 @@ RAGFlow Deployment (GKE Autopilot)
 │  │  GKE Autopilot Cluster                                             │  │
 │  │                                                                    │  │
 │  │  ┌──────────────────────────────────────────────────────────────┐  │  │
-│  │  │  ragflow namespace (appragflow<tenant><id>)                   │  │  │
+│  │  │  ragflow namespace (appragflow<tenant><id>)                   │  │ │
 │  │  │                                                              │  │  │
 │  │  │  RAGFlow Deployment                                          │  │  │
 │  │  │    containers: [ragflow, cloud-sql-proxy]                    │  │  │
 │  │  │    session_affinity: ClientIP                                │  │  │
-│  │  │    min_replicas: 1  max_replicas: 5                         │  │  │
+│  │  │    min_replicas: 1  max_replicas: 5                         │  │   │
 │  │  │                                                              │  │  │
 │  │  │  db-init Job (mysql:8.0-debian)                              │  │  │
 │  │  └──────────────────────────────────────────────────────────────┘  │  │
 │  │                                                                    │  │
-│  │  ┌────────────────┐  ┌────────────────┐  ┌─────────────────────┐  │  │
-│  │  │  LoadBalancer  │  │ Workload       │  │  NFS (Filestore)    │  │  │
-│  │  │  Service       │  │ Identity       │  │  /mnt/nfs           │  │  │
-│  │  │  (external IP) │  │ (SA binding)   │  │  (shared docs)      │  │  │
-│  │  └────────────────┘  └────────────────┘  └─────────────────────┘  │  │
+│  │  ┌────────────────┐  ┌────────────────┐  ┌─────────────────────┐  │   │
+│  │  │  LoadBalancer  │  │ Workload       │  │  NFS (Filestore)    │  │   │
+│  │  │  Service       │  │ Identity       │  │  /mnt/nfs           │  │   │
+│  │  │  (external IP) │  │ (SA binding)   │  │  (shared docs)      │  │   │
+│  │  └────────────────┘  └────────────────┘  └─────────────────────┘  │   │
 │  └────────────────────────────────────────────────────────────────────┘  │
 │                                                                          │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌───────────────────────┐  │
-│  │  Cloud SQL       │  │  Elasticsearch   │  │  Memorystore Redis    │  │
-│  │  MySQL 8.0       │  │  GKE (external   │  │  (task queue)         │  │
-│  │  (private IP)    │  │   LoadBalancer)  │  │                       │  │
-│  └──────────────────┘  └──────────────────┘  └───────────────────────┘  │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌───────────────────────┐   │
+│  │  Cloud SQL       │  │  Elasticsearch   │  │  Memorystore Redis    │   │
+│  │  MySQL 8.0       │  │  GKE (external   │  │  (task queue)         │   │
+│  │  (private IP)    │  │   LoadBalancer)  │  │                       │   │
+│  └──────────────────┘  └──────────────────┘  └───────────────────────┘   │
 │                                                                          │
 │  Module variable wiring:                                                 │
 │    RAGFlow_GKE                                                           │
-│      service_type       = LoadBalancer   → external IP                  │
+│      service_type       = LoadBalancer   → external IP                   │
 │      session_affinity   = ClientIP       → sticky upload sessions        │
 │      enable_nfs         = true           → shared document processing    │
-│      reserve_static_ip  = true           → stable external IP           │
+│      reserve_static_ip  = true           → stable external IP            │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 

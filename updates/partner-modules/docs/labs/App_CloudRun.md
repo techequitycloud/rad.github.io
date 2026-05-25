@@ -62,18 +62,18 @@ Internet / Client
 ┌──────────────────────────────────────────────────────────────────┐
 │  Cloud Run v2 Service (crapp)                                    │
 │                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
+│  ┌──────────────────────────────────────────────────────────┐    │
 │  │  Revision: crapp-xxxxx                                    │   │
 │  │  Container: application (port 8080)                       │   │
 │  │  Resource limits: cpu=1000m, memory=512Mi                 │   │
 │  │  Concurrency: 80 (default)                                │   │
 │  │  min_instances=0  max_instances=1                         │   │
-│  └──────────────────────────────────────────────────────────┘   │
+│  └──────────────────────────────────────────────────────────┘    │
 │                                                                  │
 │  Volumes:                                                        │
-│  ├── /cloudsql  (Cloud SQL Auth Proxy socket)                   │
-│  ├── /mnt/nfs   (Cloud Filestore NFS, if enabled)               │
-│  └── /mnt/gcs   (GCS Fuse, if configured)                      │
+│  ├── /cloudsql  (Cloud SQL Auth Proxy socket)                    │
+│  ├── /mnt/nfs   (Cloud Filestore NFS, if enabled)                │
+│  └── /mnt/gcs   (GCS Fuse, if configured)                        │
 └──────────────────────────────────────────────────────────────────┘
        │ Direct VPC Egress (PRIVATE_RANGES_ONLY)
        ▼
@@ -81,7 +81,7 @@ Internet / Client
 │  VPC Network (Services_GCP)                                      │
 │  ├── Cloud SQL PostgreSQL (Auth Proxy Unix socket)               │
 │  ├── Cloud Filestore NFS                                         │
-│  └── Redis (optional, REDIS_HOST env var injected)              │
+│  └── Redis (optional, REDIS_HOST env var injected)               │
 └──────────────────────────────────────────────────────────────────┘
 
 Supporting Services:

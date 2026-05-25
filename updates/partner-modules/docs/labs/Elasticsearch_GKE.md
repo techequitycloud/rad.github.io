@@ -62,29 +62,29 @@ Client (curl / RAGFlow / application)
        │
        ▼ HTTP port 9200 (LoadBalancer)
 ┌──────────────────────────────────────────────────────────────────┐
-│  GKE Autopilot Cluster                                            │
-│                                                                   │
+│  GKE Autopilot Cluster                                           │
+│                                                                  │
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │  Namespace: appelasticsearch<tenant><deploymentid>         │  │
 │  │                                                            │  │
 │  │  ┌──────────────────────────────────────────────────────┐  │  │
-│  │  │  StatefulSet Pod: elasticsearch-<suffix>-0            │  │  │
-│  │  │  Container: docker.elastic.co/elasticsearch/...8.13.4 │  │  │
-│  │  │  Port: 9200 (HTTP REST)  │  Port: 9300 (transport)    │  │  │
+│  │  │  StatefulSet Pod: elasticsearch-<suffix>-0            │  │ │
+│  │  │  Container: docker.elastic.co/elasticsearch/...8.13.4 │  │ │
+│  │  │  Port: 9200 (HTTP REST)  │  Port: 9300 (transport)    │  │ │
 │  │  │  JVM heap: -Xms512m -Xmx512m                         │  │  │
-│  │  │  cluster.name=ragflow                                  │  │  │
-│  │  │  discovery.type=single-node                            │  │  │
-│  │  │                                                        │  │  │
-│  │  │  PVC: data-elasticsearch-<suffix>-0                    │  │  │
-│  │  │  Mount: /usr/share/elasticsearch/data                  │  │  │
-│  │  │  Storage: 30 Gi  │  StorageClass: standard-rwo         │  │  │
+│  │  │  cluster.name=ragflow                                  │  ││
+│  │  │  discovery.type=single-node                            │  ││
+│  │  │                                                        │  ││
+│  │  │  PVC: data-elasticsearch-<suffix>-0                    │  ││
+│  │  │  Mount: /usr/share/elasticsearch/data                  │  ││
+│  │  │  Storage: 30 Gi  │  StorageClass: standard-rwo         │  ││
 │  │  └──────────────────────────────────────────────────────┘  │  │
 │  │                                                            │  │
 │  │  Services:                                                 │  │
-│  │  ├── elasticsearch (LoadBalancer port 9200)               │  │
-│  │  └── elasticsearch-headless (ClusterIP, DNS)              │  │
+│  │  ├── elasticsearch (LoadBalancer port 9200)               │   │
+│  │  └── elasticsearch-headless (ClusterIP, DNS)              │   │
 │  │                                                            │  │
-│  │  PDB: minAvailable=1                                      │  │
+│  │  PDB: minAvailable=1                                      │   │
 │  └────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────┘
 

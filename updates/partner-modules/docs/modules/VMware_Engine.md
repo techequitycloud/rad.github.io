@@ -52,30 +52,30 @@ All resources use the `altostrat-<id>` prefix where `<id>` is either `var.deploy
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        GCP Project                               │
-│                                                                   │
-│  VMware Engine Network (global, STANDARD)                        │
-│  └── GCVE Private Cloud (zone-local)                             │
-│       ├── vSphere                                                 │
-│       ├── vSAN                                                    │
-│       ├── NSX-T Manager                                           │
-│       └── HCX Manager                                             │
-│                                                                   │
-│  Network Policy (regional)                                        │
-│  ├── internet_access: enabled/disabled                            │
-│  └── external_ip: enabled/disabled                               │
-│                                                                   │
+│                        GCP Project                              │
+│                                                                 │
+│  VMware Engine Network (global, STANDARD)                       │
+│  └── GCVE Private Cloud (zone-local)                            │
+│       ├── vSphere                                               │
+│       ├── vSAN                                                  │
+│       ├── NSX-T Manager                                         │
+│       └── HCX Manager                                           │
+│                                                                 │
+│  Network Policy (regional)                                      │
+│  ├── internet_access: enabled/disabled                          │
+│  └── external_ip: enabled/disabled                              │
+│                                                                 │
 │  VEN ←──────── VPC Peering ────────→ Peer VPC (auto-mode)       │
-│                   (custom routes exported+imported)               │
-│                                                                   │
-│  Peer VPC                                                         │
-│  ├── Firewall: allow-internal                                     │
-│  ├── Firewall: allow-ssh (0.0.0.0/0 → TCP 22)                  │
-│  ├── Firewall: allow-rdp (0.0.0.0/0 → TCP 3389)               │
-│  ├── Firewall: allow-icmp (0.0.0.0/0)                          │
+│                   (custom routes exported+imported)             │
+│                                                                 │
+│  Peer VPC                                                       │
+│  ├── Firewall: allow-internal                                   │
+│  ├── Firewall: allow-ssh (0.0.0.0/0 → TCP 22)                   │
+│  ├── Firewall: allow-rdp (0.0.0.0/0 → TCP 3389)                 │
+│  ├── Firewall: allow-icmp (0.0.0.0/0)                           │
 │  ├── Firewall: allow-http (→ tag:jump-host TCP 80,443)          │
-│  └── Jump Host VM (Windows Server 2022, tag:jump-host)           │
-│       └── Used to RDP into vCenter, NSX-T, HCX consoles          │
+│  └── Jump Host VM (Windows Server 2022, tag:jump-host)          │
+│       └── Used to RDP into vCenter, NSX-T, HCX consoles         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

@@ -83,8 +83,8 @@ Cloud Run Gen2 Service (cpu_always_allocated=true)
 │  │  ingress: internal (behind router)  ·  cpu_always_allocated: true  │  │
 │  │  min_instance_count: 0  ·  max_instance_count: 1 (per tenant)      │  │
 │  └────────────────────────────────────────────────────────────────────┘  │
-│           │  GCS Fuse extension                                           │
-│           │  VPC Connector (Serverless VPC Access)                        │
+│           │  GCS Fuse extension                                          │
+│           │  VPC Connector (Serverless VPC Access)                       │
 │  ┌────────┴──────────────────────────────────────────────────────────┐   │
 │  │  GCS Bucket (<prefix>-storage)                                    │   │
 │  │  mounted at /data with uid=1000,gid=1000                          │   │
@@ -100,11 +100,11 @@ Cloud Run Gen2 Service (cpu_always_allocated=true)
 │  └──────────────────────┘  └───────────────────────────────────────────┘ │
 │                                                                          │
 │  Module variable wiring:                                                 │
-│    OpenClaw_CloudRun                                                      │
+│    OpenClaw_CloudRun                                                     │
 │      cpu_always_allocated  = true  → required for WebSocket/async        │
 │      execution_environment = gen2  → required for GCS Fuse               │
 │      max_instance_count    = 1     → avoid split state per tenant        │
-│      ingress_settings      = internal → designed behind router            │
+│      ingress_settings      = internal → designed behind router           │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 

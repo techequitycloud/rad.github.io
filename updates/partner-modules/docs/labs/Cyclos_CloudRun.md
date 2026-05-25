@@ -85,26 +85,26 @@ Cloud Run Gen 2 Service (cyclos)
 ┌──────────────────────────────────────────────────────────────────┐
 │  Google Cloud Project                                            │
 │                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
+│  ┌──────────────────────────────────────────────────────────┐    │
 │  │  Cloud Run Gen 2                                          │   │
 │  │  cyclos service → https://<hash>.run.app/cyclos           │   │
 │  │  min_instances=1, max_instances=1 (standalone mode)       │   │
-│  └─────────────────────┬────────────────────────────────────┘   │
+│  └─────────────────────┬────────────────────────────────────┘    │
 │                         │ VPC connector (private ranges)         │
 │  ┌──────────────────────▼─────────────────────────────────────┐  │
-│  │  VPC Network                                                │  │
+│  │  VPC Network                                                │ │
 │  │  ┌──────────────────┐  ┌────────────────────────────────┐  │  │
-│  │  │  Cloud SQL        │  │  Serverless VPC Access          │  │  │
-│  │  │  PostgreSQL 15    │  │  Connector                      │  │  │
-│  │  │  (private IP)     │  │  (PRIVATE_RANGES_ONLY egress)   │  │  │
+│  │  │  Cloud SQL        │  │  Serverless VPC Access          │  ││
+│  │  │  PostgreSQL 15    │  │  Connector                      │  ││
+│  │  │  (private IP)     │  │  (PRIVATE_RANGES_ONLY egress)   │  ││
 │  │  └──────────────────┘  └────────────────────────────────┘  │  │
 │  └────────────────────────────────────────────────────────────┘  │
 │                                                                  │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌───────────────┐  │
-│  │  Secret Manager  │  │  Cloud Storage   │  │  Artifact     │  │
-│  │  (db password,   │  │  (cyclos-storage │  │  Registry     │  │
-│  │   rotation alert)│  │   bucket)        │  │  (image)      │  │
-│  └──────────────────┘  └──────────────────┘  └───────────────┘  │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌───────────────┐   │
+│  │  Secret Manager  │  │  Cloud Storage   │  │  Artifact     │   │
+│  │  (db password,   │  │  (cyclos-storage │  │  Registry     │   │
+│  │   rotation alert)│  │   bucket)        │  │  (image)      │   │
+│  └──────────────────┘  └──────────────────┘  └───────────────┘   │
 │                                                                  │
 │  ┌──────────────────┐  ┌──────────────────────────────────────┐  │
 │  │  Cloud Logging   │  │  Cloud Monitoring (uptime check,     │  │

@@ -90,27 +90,27 @@ Cloud Storage bucket (nodered-storage)
 ┌──────────────────────────────────────────────────────────────────┐
 │  Google Cloud Project                                            │
 │                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
+│  ┌──────────────────────────────────────────────────────────┐    │
 │  │  Cloud Run Gen 2                                          │   │
 │  │  nodered service → https://<hash>.run.app                 │   │
 │  │  min_instances=0 (scale to zero), max_instances=1         │   │
 │  │  execution_environment=gen2 (required for NFS)            │   │
-│  └─────────────────────┬────────────────────────────────────┘   │
+│  └─────────────────────┬────────────────────────────────────┘    │
 │                         │ VPC connector (private ranges)         │
 │  ┌──────────────────────▼─────────────────────────────────────┐  │
-│  │  VPC Network                                                │  │
+│  │  VPC Network                                                │ │
 │  │  ┌──────────────────────────────────────────────────────┐  │  │
-│  │  │  Cloud Filestore NFS                                  │  │  │
-│  │  │  mounted at /data inside Cloud Run container          │  │  │
-│  │  │  (flows.json, flows_cred.json, node_modules/)         │  │  │
+│  │  │  Cloud Filestore NFS                                  │  │ │
+│  │  │  mounted at /data inside Cloud Run container          │  │ │
+│  │  │  (flows.json, flows_cred.json, node_modules/)         │  │ │
 │  │  └──────────────────────────────────────────────────────┘  │  │
 │  └────────────────────────────────────────────────────────────┘  │
 │                                                                  │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌───────────────┐  │
-│  │  Secret Manager  │  │  Cloud Storage   │  │  Artifact     │  │
-│  │  (credential     │  │  (nodered-       │  │  Registry     │  │
-│  │   secret key)    │  │   storage)       │  │  (image)      │  │
-│  └──────────────────┘  └──────────────────┘  └───────────────┘  │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌───────────────┐   │
+│  │  Secret Manager  │  │  Cloud Storage   │  │  Artifact     │   │
+│  │  (credential     │  │  (nodered-       │  │  Registry     │   │
+│  │   secret key)    │  │   storage)       │  │  (image)      │   │
+│  └──────────────────┘  └──────────────────┘  └───────────────┘   │
 │                                                                  │
 │  ┌──────────────────┐  ┌──────────────────────────────────────┐  │
 │  │  Cloud Logging   │  │  Cloud Monitoring (request count,    │  │
