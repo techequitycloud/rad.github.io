@@ -388,6 +388,242 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Module Labs',
+      items: [
+        {
+          type: 'category',
+          label: 'Platform Modules',
+          items: [
+            {
+              type: 'category',
+              label: 'GKE Multi-Cloud',
+              items: [
+                { type: 'doc', id: 'labs/AKS_GKE/AKS_GKE', label: 'Azure' },
+                { type: 'doc', id: 'labs/EKS_GKE/EKS_GKE', label: 'AWS' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Cloud Service Mesh',
+              items: [
+                { type: 'doc', id: 'labs/Bank_GKE/Bank_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Istio Service Mesh',
+              items: [
+                { type: 'doc', id: 'labs/Istio_GKE/Istio_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'GKE Multi-Cluster',
+              items: [
+                { type: 'doc', id: 'labs/MC_Bank_GKE/MC_Bank_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'VMware Engine',
+              items: [
+                { type: 'doc', id: 'labs/VMware_Engine/VMware_Engine', label: 'VMware Engine' },
+              ],
+            },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Partner Modules',
+          items: [
+            {
+              type: 'category',
+              label: 'Activepieces',
+              items: [
+                { type: 'doc', id: 'labs/Activepieces_CloudRun/Activepieces_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/Activepieces_GKE/Activepieces_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Application',
+              items: [
+                { type: 'doc', id: 'labs/App_CloudRun/App_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/App_GKE/App_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Cyclos',
+              items: [
+                { type: 'doc', id: 'labs/Cyclos_CloudRun/Cyclos_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/Cyclos_GKE/Cyclos_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Directus',
+              items: [
+                { type: 'doc', id: 'labs/Directus_CloudRun/Directus_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/Directus_GKE/Directus_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Django',
+              items: [
+                { type: 'doc', id: 'labs/Django_CloudRun/Django_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/Django_GKE/Django_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Elasticsearch',
+              items: [
+                { type: 'doc', id: 'labs/Elasticsearch_GKE/Elasticsearch_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Flowise',
+              items: [
+                { type: 'doc', id: 'labs/Flowise_CloudRun/Flowise_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/Flowise_GKE/Flowise_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Ghost',
+              items: [
+                { type: 'doc', id: 'labs/Ghost_CloudRun/Ghost_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/Ghost_GKE/Ghost_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Kestra',
+              items: [
+                { type: 'doc', id: 'labs/Kestra_CloudRun/Kestra_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/Kestra_GKE/Kestra_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Moodle',
+              items: [
+                { type: 'doc', id: 'labs/Moodle_CloudRun/Moodle_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/Moodle_GKE/Moodle_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'N8N',
+              items: [
+                { type: 'doc', id: 'labs/N8N_CloudRun/N8N_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/N8N_GKE/N8N_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'N8N AI',
+              items: [
+                { type: 'doc', id: 'labs/N8N_AI_CloudRun/N8N_AI_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/N8N_AI_GKE/N8N_AI_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Node-RED',
+              items: [
+                { type: 'doc', id: 'labs/NodeRED_CloudRun/NodeRED_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/NodeRED_GKE/NodeRED_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Odoo',
+              items: [
+                { type: 'doc', id: 'labs/Odoo_CloudRun/Odoo_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/Odoo_GKE/Odoo_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Ollama',
+              items: [
+                { type: 'doc', id: 'labs/Ollama_CloudRun/Ollama_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/Ollama_GKE/Ollama_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'OpenClaw',
+              items: [
+                { type: 'doc', id: 'labs/OpenClaw_CloudRun/OpenClaw_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/OpenClaw_GKE/OpenClaw_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'OpenEMR',
+              items: [
+                { type: 'doc', id: 'labs/OpenEMR_CloudRun/OpenEMR_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/OpenEMR_GKE/OpenEMR_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'RAGFlow',
+              items: [
+                { type: 'doc', id: 'labs/RAGFlow_CloudRun/RAGFlow_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/RAGFlow_GKE/RAGFlow_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Sample',
+              items: [
+                { type: 'doc', id: 'labs/Sample_CloudRun/Sample_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/Sample_GKE/Sample_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Strapi',
+              items: [
+                { type: 'doc', id: 'labs/Strapi_CloudRun/Strapi_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/Strapi_GKE/Strapi_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Temporal',
+              items: [
+                { type: 'doc', id: 'labs/Temporal_GKE/Temporal_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Wiki.js',
+              items: [
+                { type: 'doc', id: 'labs/Wikijs_CloudRun/Wikijs_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/Wikijs_GKE/Wikijs_GKE', label: 'GKE' },
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Wordpress',
+              items: [
+                { type: 'doc', id: 'labs/Wordpress_CloudRun/Wordpress_CloudRun', label: 'Cloud Run' },
+                { type: 'doc', id: 'labs/Wordpress_GKE/Wordpress_GKE', label: 'GKE' },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      type: 'category',
       label: 'Platform Guides',
       items: [
         {
