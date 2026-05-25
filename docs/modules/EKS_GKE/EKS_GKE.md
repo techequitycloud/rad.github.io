@@ -7,6 +7,9 @@ sidebar_label: "EKS GKE"
 
 <YouTubeEmbed videoId="VGko2SaLDZE" poster="https://storage.googleapis.com/rad-public-2b65/modules/EKS_GKE.png" />
 
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/EKS_GKE.pdf" target="_blank">View Presentation (PDF)</a>
 
 ## Overview
 
