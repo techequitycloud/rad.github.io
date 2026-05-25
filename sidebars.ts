@@ -28,11 +28,6 @@ const sidebars: SidebarsConfig = {
           id: 'workflows/using-rad',
           label: 'Using RAD',
         },
-        {
-          type: 'doc',
-          id: 'workflows/credits',
-          label: 'Credit Management',
-        },
       ],
     },
     {
@@ -700,6 +695,7 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'tutorials/user', label: 'User' },
         { type: 'doc', id: 'tutorials/agent', label: 'Agent' },
         { type: 'doc', id: 'tutorials/finance', label: 'Finance' },
+        { type: 'doc', id: 'workflows/credits', label: 'Credit Management' },
         { type: 'doc', id: 'tutorials/support', label: 'Support' },
         { type: 'doc', id: 'tutorials/roi', label: 'ROI' },
       ],
