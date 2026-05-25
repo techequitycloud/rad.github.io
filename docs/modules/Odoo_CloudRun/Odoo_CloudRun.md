@@ -1,9 +1,9 @@
 ---
-title: "Odoo_CloudRun Module — Configuration Guide"
+title: "Odoo CloudRun Module — Configuration Guide"
 sidebar_label: "Odoo CloudRun"
 ---
 
-# Odoo_CloudRun Module — Configuration Guide
+# Odoo CloudRun Module — Configuration Guide
 
 Odoo is an open-source ERP suite with 16M+ users, 170,000+ enterprise customers across 5 continents, and €650M in 2025 billing revenue growing at 42% CAGR — adding 13,000 new clients per month. It controls 5.77% global ERP market share and 12–15% of the SME segment, and is targeting €1B in revenue by 2027. Odoo is the primary open-source disruptor against SAP, Oracle, and Microsoft Dynamics, delivering CRM, accounting, inventory, manufacturing, HR, and e-commerce in one integrated suite with zero licensing cost.
 

@@ -1,9 +1,9 @@
 ---
-title: "Moodle_CloudRun Module — Configuration Guide"
+title: "Moodle CloudRun Module — Configuration Guide"
 sidebar_label: "Moodle CloudRun"
 ---
 
-# Moodle_CloudRun Module — Configuration Guide
+# Moodle CloudRun Module — Configuration Guide
 
 Moodle is the world's most widely deployed open-source Learning Management System (LMS),
 holding 14% global market share and dominant positions in Europe (69%) and Latin America

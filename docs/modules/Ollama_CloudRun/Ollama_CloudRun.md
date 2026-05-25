@@ -1,9 +1,9 @@
 ---
-title: "Ollama_CloudRun Module — Configuration Guide"
+title: "Ollama CloudRun Module — Configuration Guide"
 sidebar_label: "Ollama CloudRun"
 ---
 
-# Ollama_CloudRun Module — Configuration Guide
+# Ollama CloudRun Module — Configuration Guide
 
 Ollama is the de facto standard runtime for running large language models locally, with 169,000+
 GitHub stars and support for 4,500+ models — including Llama 3.1 (112M+ pulls), DeepSeek-R1

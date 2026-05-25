@@ -1,9 +1,9 @@
 ---
-title: "Strapi_Common Module"
+title: "Strapi Common Module"
 sidebar_label: "Strapi Common"
 ---
 
-# Strapi_Common Module
+# Strapi Common Module
 
 ## Overview
 

@@ -308,7 +308,7 @@ kubectl get pods -n gmp-system
 
 # Query a Kubernetes metric via Cloud Monitoring PromQL
 # (run in Cloud Console: Monitoring → Metrics Explorer → PromQL)
-# kubernetes_io:container_memory_used_bytes{cluster="gke-cluster"}
+# kubernetes io:container_memory_used_bytes{cluster="gke-cluster"}
 ```
 
 ### Gateway API
@@ -1075,7 +1075,7 @@ kubectl port-forward -n istio-system svc/prometheus 9090:9090
 # rate(istio_requests_total{destination_service_name="my-service"}[5m])
 
 # Query P99 latency for a service
-# histogram_quantile(0.99, rate(istio_request_duration_milliseconds_bucket{destination_service_name="my-service"}[5m]))
+# histogram quantile(0.99, rate(istio_request_duration_milliseconds_bucket{destination_service_name="my-service"}[5m]))
 ```
 
 **Explore in the Cloud Console:** Navigate to **Monitoring → Metrics Explorer**. In the metric picker, search for `istio` to see all Istio metrics forwarded by Google Cloud Managed Service for Prometheus (if GMP integration is enabled). Set the aggregation to `sum by (destination_service_name)` to see per-service request rates.

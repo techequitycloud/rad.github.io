@@ -1,9 +1,9 @@
 ---
-title: "Wordpress_Common Module"
+title: "Wordpress Common Module"
 sidebar_label: "Wordpress Common"
 ---
 
-# Wordpress_Common Module
+# Wordpress Common Module
 
 ## Overview
 

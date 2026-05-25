@@ -1,9 +1,9 @@
 ---
-title: "OpenEMR_Common Module"
+title: "OpenEMR Common Module"
 sidebar_label: "OpenEMR Common"
 ---
 
-# OpenEMR_Common Module
+# OpenEMR Common Module
 
 ## Overview
 

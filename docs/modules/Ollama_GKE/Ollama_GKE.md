@@ -1,9 +1,9 @@
 ---
-title: "Ollama_GKE Module — Configuration Guide"
+title: "Ollama GKE Module — Configuration Guide"
 sidebar_label: "Ollama GKE"
 ---
 
-# Ollama_GKE Module — Configuration Guide
+# Ollama GKE Module — Configuration Guide
 
 Ollama is the de facto standard runtime for running large language models locally, with 169,000+
 GitHub stars and support for 4,500+ models — including Llama 3.1 (112M+ pulls), DeepSeek-R1

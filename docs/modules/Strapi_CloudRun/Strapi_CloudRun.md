@@ -1,9 +1,9 @@
 ---
-title: "Strapi_CloudRun Module — Configuration Guide"
+title: "Strapi CloudRun Module — Configuration Guide"
 sidebar_label: "Strapi CloudRun"
 ---
 
-# Strapi_CloudRun Module — Configuration Guide
+# Strapi CloudRun Module — Configuration Guide
 
 `Strapi_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Strapi](https://strapi.io/) — the leading open-source headless CMS — on Google Cloud Run Gen2. With 71,000+ GitHub stars and a 4.5/5 rating on G2 from 189+ reviews, Strapi is trusted by Adidas, Airbus, Amazon, Cisco, and Toyota for omnichannel content delivery across websites, mobile apps, digital signage, and IoT surfaces. The headless CMS market is growing at 22.1% CAGR toward $5.53B by 2032, and Strapi's fully customizable API layer with no vendor lock-in makes it a top choice for teams of any size.
 

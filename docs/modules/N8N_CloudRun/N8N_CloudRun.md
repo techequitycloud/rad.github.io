@@ -1,9 +1,9 @@
 ---
-title: "N8N_CloudRun Module — Configuration Guide"
+title: "N8N CloudRun Module — Configuration Guide"
 sidebar_label: "N8N CloudRun"
 ---
 
-# N8N_CloudRun Module — Configuration Guide
+# N8N CloudRun Module — Configuration Guide
 
 n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), **230,000+ active users**, and a **$2.5B valuation** as of 2025 — growing from $350M in under four months and serving a quarter of the Fortune 500. With $240M raised across four funding rounds, 400+ integrations, and native AI nodes, n8n connects apps, APIs, and data sources with full code flexibility. It is self-hostable for total data sovereignty and no per-execution fees. This module deploys n8n on **Google Cloud Run** with a managed Cloud SQL PostgreSQL database and GCS-backed storage persistence.
 

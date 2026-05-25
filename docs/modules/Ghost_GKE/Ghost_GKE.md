@@ -1,9 +1,9 @@
 ---
-title: "Ghost_GKE Module — Configuration Guide"
+title: "Ghost GKE Module — Configuration Guide"
 sidebar_label: "Ghost GKE"
 ---
 
-# Ghost_GKE Module — Configuration Guide
+# Ghost GKE Module — Configuration Guide
 
 This guide describes every configuration variable available in the `Ghost_GKE` module. `Ghost_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/Ghost_Common.md) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot. Ghost is trusted by Buffer, Cloudflare, DuckDuckGo, Duolingo, FreeCodeCamp, Revolut, and Kickstarter — with 22,000+ active customers and 100,000+ websites growing at roughly 15%/year, ahead of the 11% CMS market average. Built-in subscription monetization, native SEO, and superior page speed make it the leading alternative to WordPress for content-first businesses.
 

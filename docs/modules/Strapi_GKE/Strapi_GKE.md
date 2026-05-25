@@ -1,9 +1,9 @@
 ---
-title: "Strapi_GKE Module — Configuration Guide"
+title: "Strapi GKE Module — Configuration Guide"
 sidebar_label: "Strapi GKE"
 ---
 
-# Strapi_GKE Module — Configuration Guide
+# Strapi GKE Module — Configuration Guide
 
 Strapi is the leading open-source headless CMS — with 71,000+ GitHub stars and a 4.5/5 rating on G2 from 189+ reviews — that gives developers the freedom to choose their favourite tools and frameworks while enabling content editors to manage their content independently. Trusted by Adidas, Airbus, Amazon, Cisco, and Toyota for omnichannel content delivery across websites, mobile apps, digital signage, and IoT surfaces, Strapi's fully customizable API layer with no vendor lock-in positions it at the forefront of a headless CMS market growing at 22.1% CAGR toward $5.53B by 2032. This module deploys Strapi on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL instance, a Cloud Filestore NFS volume for media uploads, and a GCS bucket for object storage.
 
