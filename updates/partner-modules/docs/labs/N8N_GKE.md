@@ -2,507 +2,1098 @@
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/N8N_GKE)**
 
-## Overview
-
-**Estimated time:** 1–2 hours
-
-n8n is a fair-code workflow automation platform with a visual canvas editor, 400+ integrations, webhook triggers, HTTP request nodes, and scheduled workflows. This module deploys n8n on GKE Autopilot backed by Cloud SQL PostgreSQL 15, Cloud Filestore NFS for shared persistence, and optional Redis queue mode for scalable multi-worker execution.
-
-### What the Module Automates
-
-- GKE Autopilot cluster discovery and namespace creation
-- Container image mirror to Artifact Registry via Cloud Build
-- Kubernetes Deployment, Service (LoadBalancer with session affinity), and HPA
-- Cloud SQL PostgreSQL 15 instance, database, and user provisioning
-- Cloud SQL Auth Proxy sidecar injection
-- Cloud Filestore (NFS) provisioning and GCS Fuse CSI volume mounts
-- Secret Manager secrets (encryption key, DB password, SMTP credentials)
-- Workload Identity and IAM bindings for the application service account
-- Redis host injection (defaults to NFS server IP when `enable_redis = true`)
-- Kubernetes initialization jobs for database setup
-- Scheduled backup CronJob and backup GCS bucket
-- Cloud Monitoring uptime checks and alert policies
-- VPC firewall rules and network tags
-
-### What You Do Manually
-
-- Note the deployment outputs (external IP, namespace, etc.) from the RAD UI deployment panel
-- Complete the n8n initial account setup on first login
-- Create and test workflows, webhook triggers, and credentials
-- Examine execution history, error handling, and logging
-- Observe HPA scaling behaviour
+This lab guide walks you through deploying, exploring, and operating **n8n** workflow
+automation on Google Kubernetes Engine (GKE) Autopilot using the **N8N_GKE** module. You
+will access n8n via a Kubernetes LoadBalancer service, build and test workflows, inspect
+Kubernetes workloads and NFS persistence, verify Workload Identity security, query Cloud
+Logging for execution events, and scale the deployment horizontally using kubectl, gcloud CLI,
+and REST API.
 
 ---
 
-## CLI and REST API Overview
+## Table of Contents
 
-The steps in this guide include equivalent `gcloud` commands and Kubernetes (`kubectl`) commands alongside the console instructions. REST API equivalents are provided for key operations.
-
-**Tools used:**
-- `gcloud` CLI — GCP resource management
-- `kubectl` — Kubernetes cluster operations
-- `curl` — webhook and HTTP testing
-
----
-
-## Prerequisites
-
-- A GCP project with the Services_GCP platform module already deployed
-- `gcloud` CLI authenticated: `gcloud auth login && gcloud config set project PROJECT_ID`
-- `kubectl` installed
-- Owner or Editor role on the target GCP project
-- Access to the RAD UI with permission to deploy modules in the target GCP project
+1. [Overview](#1-overview)
+2. [Architecture](#2-architecture)
+3. [Prerequisites](#3-prerequisites)
+4. [Lab Setup](#4-lab-setup)
+5. [Exercise 1 — Access n8n](#exercise-1--access-n8n)
+6. [Exercise 2 — Create and Execute Workflows](#exercise-2--create-and-execute-workflows)
+7. [Exercise 3 — Webhooks and Triggers](#exercise-3--webhooks-and-triggers)
+8. [Exercise 4 — Kubernetes Workloads](#exercise-4--kubernetes-workloads)
+9. [Exercise 5 — Security and Workload Identity](#exercise-5--security-and-workload-identity)
+10. [Exercise 6 — Cloud Logging](#exercise-6--cloud-logging)
+11. [Exercise 7 — Cloud Monitoring and Scaling](#exercise-7--cloud-monitoring-and-scaling)
+12. [Cleanup](#12-cleanup)
+13. [Reference](#13-reference)
 
 ---
 
-## Phase 1 — Deploy [AUTOMATED]
+## 1. Overview
 
-### Variables
+### What Is n8n?
 
-In the RAD UI, open the N8N_GKE module and fill in the deployment form with the following values:
+n8n is a fair-code workflow automation platform with 189,000+ GitHub stars, 230,000+ active
+users, and a $2.5B valuation as of 2025. It provides a visual canvas editor, 400+
+integrations, webhook triggers, HTTP request nodes, and scheduled workflows. It is fully
+self-hostable with no per-execution fees. The `N8N_GKE` module deploys n8n on GKE Autopilot
+backed by Cloud SQL PostgreSQL 15, Cloud Filestore NFS for persistent workflow data, Redis
+queue mode, Workload Identity IAM, and a Kubernetes LoadBalancer with session affinity.
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `project_id` | Yes | — | GCP project ID (6–30 chars, lowercase) |
-| `deployment_id` | No | auto-generated | Short alphanumeric suffix for resource names |
-| `region` | No | `us-central1` | GCP region for deployment |
-| `tenant_deployment_id` | No | `demo` | Unique tenant identifier (1–20 chars) |
-| `application_name` | No | `n8n` | Base name for Kubernetes and Artifact Registry resources |
-| `application_version` | No | `2.4.7` | n8n image version tag |
-| `deploy_application` | No | `true` | Set to `false` to provision infrastructure only |
-| `min_instance_count` | No | `1` | HPA minimum pod replicas |
-| `max_instance_count` | No | `3` | HPA maximum pod replicas |
-| `cpu_limit` | No | `2000m` | CPU limit per n8n pod |
-| `memory_limit` | No | `4Gi` | Memory limit per n8n pod |
-| `enable_redis` | No | `true` | Enable Redis queue mode backend |
-| `redis_host` | No | `""` | Redis host (defaults to NFS server IP when empty) |
-| `redis_port` | No | `6379` | Redis server port |
-| `db_name` | No | `n8n_db` | PostgreSQL database name |
-| `db_user` | No | `n8n_user` | PostgreSQL database username |
-| `enable_nfs` | No | `true` | Provision Cloud Filestore NFS for shared persistence |
-| `nfs_mount_path` | No | `/mnt/nfs` | Container mount path for the NFS volume |
-| `service_type` | No | `LoadBalancer` | Kubernetes Service type |
-| `session_affinity` | No | `ClientIP` | Session stickiness for the Kubernetes Service |
-| `backup_schedule` | No | `0 2 * * *` | Cron schedule for automated backups |
-| `backup_retention_days` | No | `7` | Days to retain backup files |
-| `support_users` | No | `[]` | Email addresses for monitoring alerts |
+### Key Capabilities Demonstrated
 
-### Deploy
-
-Click **Deploy** in the RAD UI. Deployment takes approximately 10–15 minutes.
-
-After deployment completes, the following outputs are available in the RAD UI deployment panel:
-
-| Output | Description |
+| Capability | What It Demonstrates |
 |---|---|
-| `service_external_ip` | External LoadBalancer IP |
-| `service_url` | Application URL |
-| `database_instance_name` | Cloud SQL instance name |
-| `nfs_server_ip` | NFS server IP (sensitive) |
-| `deployment_id` | Unique deployment suffix |
+| **GKE Autopilot** | Managed Kubernetes with automatic node provisioning |
+| **PostgreSQL Backend** | Cloud SQL PostgreSQL 15 via Cloud SQL Auth Proxy sidecar |
+| **Workload Identity** | Pod-level GCP IAM without service account keys |
+| **NFS Persistence** | Cloud Filestore NFS for workflow data and execution history |
+| **Redis Queue Mode** | Bull queue backend enabling reliable multi-pod execution |
+| **Session Affinity** | Kubernetes Service with `ClientIP` session stickiness for the n8n editor |
+| **Horizontal Pod Autoscaler** | Automatic scaling based on CPU utilization |
 
-Set shell variables for use in later steps:
+---
+
+## 2. Architecture
+
+```
+External Traffic (HTTP port 5678)
+        │
+        ▼
+  Kubernetes Service (LoadBalancer, ClientIP session affinity)
+  External IP:5678 → n8n Pod(s)
+  ┌──────────────────────────────────────────────────────────┐
+  │  n8n Deployment  (namespace: appn8n<tenant><id>)         │
+  │                                                          │
+  │  ┌─────────────────────────────────────────────────────┐ │
+  │  │ n8n container                                        │ │
+  │  │   entrypoint.sh → DB var mapping                     │ │
+  │  │   n8n Node.js process (tini PID 1)                   │ │
+  │  │   port 5678                                          │ │
+  │  │ cloudsql-proxy sidecar                               │ │
+  │  │   /cloudsql/<instance-connection-name>               │ │
+  │  └─────────────────────────────────────────────────────┘ │
+  │  NFS PVC → Cloud Filestore /mnt/nfs                      │
+  └──────────────────────────────────────────────────────────┘
+        │ VPC Private Networking
+        ├──────────────────────────────┐
+        ▼                              ▼
+  Cloud SQL PostgreSQL 15       Cloud Filestore NFS
+  n8n_db (n8n_user)             shared workflow data
+        │
+        ▼
+  Redis (NFS VM IP:6379)
+  Bull queue mode backend
+```
+
+### Infrastructure
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Google Cloud Project                                            │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │  GKE Autopilot Cluster                                     │  │
+│  │                                                            │  │
+│  │  ┌──────────────────────────────────────────────────────┐  │  │
+│  │  │  Namespace: appn8n<tenant><id>                       │  │  │
+│  │  │                                                      │  │  │
+│  │  │  Deployment: n8n           HPA: min=1 max=3          │  │  │
+│  │  │  Service: LoadBalancer     session affinity: ClientIP │  │  │
+│  │  │  ServiceAccount (Workload Identity bound)            │  │  │
+│  │  │  Job: db-init (completed)                            │  │  │
+│  │  └──────────────────────────────────────────────────────┘  │  │
+│  └────────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐  │
+│  │  Cloud SQL   │  │  Filestore   │  │  Redis (NFS VM)       │  │
+│  │  PostgreSQL  │  │  NFS share   │  │  queue mode backend   │  │
+│  │  15          │  │  /mnt/nfs    │  │  port 6379            │  │
+│  └──────────────┘  └──────────────┘  └───────────────────────┘  │
+│                                                                  │
+│  ┌──────────────┐  ┌──────────────────┐  ┌───────────────────┐  │
+│  │  Secret Mgr  │  │  Cloud Logging   │  │  Monitoring       │  │
+│  │  N8N_ENC_KEY │  │  k8s_container   │  │  uptime check     │  │
+│  │  SMTP pass   │  │  logs            │  │  alert policies   │  │
+│  └──────────────┘  └──────────────────┘  └───────────────────┘  │
+└──────────────────────────────────────────────────────────────────┘
+
+Module variable wiring:
+
+  N8N_GKE
+    application_version   = "2.4.7"     →  n8n container image tag
+    min_instance_count    = 1           →  always one pod running
+    max_instance_count    = 3           →  HPA maximum replicas
+    enable_nfs            = true        →  Cloud Filestore NFS mounted
+    enable_redis          = true        →  Redis queue mode enabled
+    session_affinity      = "ClientIP"  →  session stickiness
+    database_type         = POSTGRES_15 →  n8n requires PostgreSQL
+    N8N_ENCRYPTION_KEY    → auto-generated, Secret Manager → k8s Secret
+```
+
+---
+
+## 3. Prerequisites
+
+### Required Tools
+
+| Tool | Minimum Version | Install |
+|---|---|---|
+| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
+| `kubectl` | 1.29+ | `gcloud components install kubectl` |
+| `curl` / `jq` | Any | System package manager |
+
+### GCP Permissions
+
+```
+roles/owner                    # or the following fine-grained set:
+roles/container.developer
+roles/cloudsql.admin
+roles/secretmanager.viewer
+roles/logging.viewer
+roles/monitoring.viewer
+roles/iam.serviceAccountViewer
+```
+
+### Environment Variables
 
 ```bash
-export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
-export REGION="us-central1"             # the region you deployed into
-export TOKEN=$(gcloud auth print-access-token)
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
+export CLUSTER="your-gke-cluster-name"
+
+gcloud config set project "${PROJECT}"
+gcloud config set compute/region "${REGION}"
+```
+
+---
+
+## 4. Lab Setup
+
+### 4.1 Deploy via RAD UI
+
+Deploy the `N8N_GKE` module via the RAD UI. In the variable form, set:
+
+| Variable | Value | Notes |
+|---|---|---|
+| `project_id` | `your-gcp-project-id` | Required |
+| `region` | `us-central1` | GCP region |
+| `application_name` | `n8n` | Base resource name |
+| `application_version` | `2.4.7` | n8n image tag |
+| `tenant_deployment_id` | `demo` | Short deployment suffix |
+| `deploy_application` | `true` | Deploy the n8n workload |
+| `enable_nfs` | `true` | Cloud Filestore NFS for persistence |
+| `enable_redis` | `true` | Redis queue mode |
+| `db_name` | `n8n_db` | PostgreSQL database name |
+| `db_user` | `n8n_user` | PostgreSQL application user |
+| `min_instance_count` | `1` | Minimum pod replicas |
+| `max_instance_count` | `3` | Maximum pod replicas (HPA) |
+| `cpu_limit` | `2000m` | CPU per n8n pod |
+| `memory_limit` | `4Gi` | Memory per n8n pod |
+| `session_affinity` | `ClientIP` | Session stickiness |
+| `support_users` | `[your-email]` | Alert notification recipients |
+
+Click **Deploy** and wait for provisioning to complete (approximately 15–25 minutes).
+
+> **What this provisions:** GKE Autopilot namespace with Kubernetes Deployment, LoadBalancer
+> Service (ClientIP session affinity), HPA, PodDisruptionBudget, and ServiceAccount with
+> Workload Identity. Cloud SQL PostgreSQL 15 instance with `n8n_db` database and `n8n_user`.
+> Cloud Filestore NFS at `/mnt/nfs`. Secret Manager secrets for encryption key and SMTP
+> password synced to Kubernetes Secrets. Artifact Registry repository. Cloud Build image
+> pipeline. Cloud Monitoring uptime check. A `db-init` Kubernetes Job runs automatically
+> to initialize the PostgreSQL schema.
+
+### 4.2 Configure Shell Environment
+
+```bash
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
 
 # Discover the GKE cluster
 export CLUSTER=$(gcloud container clusters list \
-  --project=${PROJECT} \
+  --project="${PROJECT}" \
   --format="value(name)" \
   --limit=1)
 
-# Configure kubectl
-gcloud container clusters get-credentials ${CLUSTER} \
-  --region=${REGION} \
-  --project=${PROJECT}
+echo "Cluster: ${CLUSTER}"
 
-# Discover the namespace (pattern: appn8ndemo<deploymentid>)
+# Discover secrets
+export DB_SECRET=$(gcloud secrets list \
+  --project="${PROJECT}" \
+  --filter="name~n8n AND name~db-password" \
+  --format="value(name)" \
+  --limit=1)
+
+export ENC_KEY_SECRET=$(gcloud secrets list \
+  --project="${PROJECT}" \
+  --filter="name~n8n AND name~encryption-key" \
+  --format="value(name)" \
+  --limit=1)
+```
+
+### 4.3 Configure kubectl
+
+```bash
+gcloud container clusters get-credentials "${CLUSTER}" \
+  --region="${REGION}" \
+  --project="${PROJECT}"
+
+kubectl cluster-info
+kubectl get nodes
+
+# Discover the n8n namespace (pattern: appn8n<tenant><id>)
 export NAMESPACE=$(kubectl get namespaces --no-headers \
   -o custom-columns=":metadata.name" | grep "^appn8n" | head -1)
 
+echo "Namespace: ${NAMESPACE}"
+
 # Discover the external IP
-export EXTERNAL_IP=$(kubectl get svc -n ${NAMESPACE} \
+export EXTERNAL_IP=$(kubectl get svc -n "${NAMESPACE}" \
   -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
 
-# Discover the database password secret
-export DB_SECRET=$(gcloud secrets list \
-  --project=${PROJECT} \
+echo "n8n URL: http://${EXTERNAL_IP}:5678"
+```
+
+---
+
+## Exercise 1 — Access n8n
+
+### Objective
+
+Retrieve the Kubernetes LoadBalancer external IP, confirm n8n is reachable, and complete
+the initial owner account setup.
+
+### Step 1.1 — Get the External Service IP
+
+**kubectl:**
+```bash
+kubectl get service -n "${NAMESPACE}"
+
+EXTERNAL_IP=$(kubectl get svc -n "${NAMESPACE}" \
+  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
+echo "n8n URL: http://${EXTERNAL_IP}:5678"
+```
+
+**gcloud:**
+```bash
+gcloud compute forwarding-rules list \
+  --project="${PROJECT}" \
   --filter="name~n8n" \
-  --format="value(name)" \
-  --limit=1)
+  --format="table(name, IPAddress, portRange, region)"
 ```
 
----
+**REST API:**
+```bash
+curl -s \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '{name: .name, status: .status, endpoint: .endpoint}'
+```
 
-## Phase 2 — Configure kubectl and Verify n8n Pod [MANUAL]
+**Expected result:** An external IP address is returned. If the IP shows `<pending>`, wait 1–2 minutes for the load balancer to provision.
 
-### Step 2.1 — Get GKE Credentials
+### Step 1.2 — Verify the n8n Pod is Running
+
+**kubectl:**
+```bash
+kubectl get pods -n "${NAMESPACE}"
+```
+
+Expected output:
+```
+NAME                        READY   STATUS    RESTARTS   AGE
+appn8ndemo<id>-<hash>       2/2     Running   0          5m
+db-init-<hash>              0/1     Completed 0          6m
+```
+
+**Expected result:** The n8n pod shows `2/2 READY` (n8n container + Cloud SQL Auth Proxy sidecar). The `db-init` job shows `Completed`.
+
+### Step 1.3 — Confirm n8n is Reachable
 
 ```bash
-gcloud container clusters get-credentials <cluster-name> \
-  --region <region> \
-  --project <project-id>
+curl -s -o /dev/null -w "%{http_code}" "http://${EXTERNAL_IP}:5678"
 ```
 
-To find the cluster name:
+Alternatively, use port-forward for local access:
 ```bash
-gcloud container clusters list --project <project-id>
-```
-
-**Expected result:** `kubeconfig entry generated for <cluster-name>`
-
-**REST API equivalent:**
-```bash
-curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://container.googleapis.com/v1/projects/<project-id>/locations/<region>/clusters"
-```
-
-### Step 2.2 — Verify the n8n Pod is Running
-
-```bash
-# List all pods across all namespaces to find the n8n namespace
-kubectl get pods --all-namespaces | grep n8n
-
-# Or target the namespace directly (format: appn8ndemo<id>)
-kubectl get pods -n ${NAMESPACE}
-```
-
-**Expected result:** The n8n pod should show `Running` with `2/2` containers ready (application + Cloud SQL Auth Proxy sidecar). Initial startup may take 2–3 minutes while the startup probe waits for database migrations.
-
-```
-NAME                      READY   STATUS    RESTARTS   AGE
-appn8ndemo<id>-xxx-yyy    2/2     Running   0          3m
-```
-
-### Step 2.3 — Get the External IP
-
-```bash
-kubectl get service -n ${NAMESPACE}
-```
-
-**Expected result:**
-
-```
-NAME               TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)          AGE
-appn8ndemo<id>     LoadBalancer   10.x.x.x      34.x.x.x      5678:XXXXX/TCP   5m
-```
-
-The `EXTERNAL-IP` is the address you use to access n8n. Note: if the IP shows `<pending>`, wait another 1–2 minutes for the load balancer to provision.
-
-**gcloud equivalent:**
-```bash
-gcloud compute forwarding-rules list --project <project-id>
-```
-
----
-
-## Phase 3 — Explore the n8n Workflow Editor [MANUAL]
-
-### Step 3.1 — Access the n8n UI
-
-Open your browser and navigate to:
-```
-http://<EXTERNAL-IP>:5678
-```
-
-Alternatively, use port-forward for local access without exposing an external IP:
-```bash
-kubectl port-forward service/${NAMESPACE} 5678:5678 -n ${NAMESPACE}
+kubectl port-forward service/"$(kubectl get svc -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')" \
+  5678:5678 -n "${NAMESPACE}" &
 # Then open http://localhost:5678
 ```
 
-**Expected result:** The n8n welcome page or account creation screen appears.
+**Expected result:** HTTP `200`. If `000`, wait for the pod to become fully ready (startup probe allows up to 120 seconds for initial database connection).
 
-### Step 3.2 — Create an Admin Account
+### Step 1.4 — Create the Owner Account
 
-On first launch, n8n prompts you to create an owner account. Enter:
-- **Email:** your admin email address
-- **First name / Last name:** your name
-- **Password:** a strong password (minimum 8 characters)
+Open `http://${EXTERNAL_IP}:5678` in a browser. On first launch, n8n prompts you to create an owner account:
 
-Click **Next** and complete the setup wizard. This account becomes the owner of the n8n instance. Credentials are stored in the PostgreSQL database.
+1. Enter your **email address**.
+2. Enter your **first name** and **last name**.
+3. Enter a strong **password** (minimum 8 characters).
+4. Click **Next** and complete the setup wizard.
 
 **Expected result:** You are redirected to the n8n canvas (workflow editor).
 
-### Step 3.3 — Tour the Canvas
+### Step 1.5 — Retrieve the Encryption Key Secret
 
-1. **Canvas:** The main drag-and-drop workflow editor. Nodes represent operations; connections define the data flow.
-2. **Left sidebar:** Click **Workflows** to see all saved workflows. Click **+ New workflow** to create one.
-3. **Template gallery:** Click **Templates** in the left sidebar to browse 1,000+ pre-built workflow templates.
-4. **Credentials:** Click the user icon (bottom-left) and select **Settings → Credentials** to manage API keys and auth.
+```bash
+gcloud secrets list \
+  --project="${PROJECT}" \
+  --filter="name~n8n" \
+  --format="table(name, createTime)"
 
-### Step 3.4 — Create a Simple Workflow
+# Verify the encryption key is stored in Secret Manager
+gcloud secrets describe "${ENC_KEY_SECRET}" \
+  --project="${PROJECT}" \
+  --format="json" \
+  | jq '{name: .name, createTime: .createTime}'
+```
 
-1. Click **+ New workflow**.
-2. Click the **+** button on the canvas to add a node. Search for **Manual Trigger** and select it.
-3. Click the **+** on the right edge of the Manual Trigger node. Search for **HTTP Request** and select it.
-   - Set **URL** to `https://httpbin.org/get`
-   - Set **Method** to `GET`
-4. Click the **+** on the right edge of the HTTP Request node. Search for **Set** and select it.
-   - Click **Add Value → String**
-   - Set **Name** to `message`
-   - Set **Value** to `Workflow executed successfully`
-5. Click **Save** (top-right), then click **Execute workflow**.
+**REST API:**
+```bash
+curl -s \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets?filter=name%3An8n" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.secrets[].name'
+```
 
-**Expected result:** The workflow runs. Each node shows a green checkmark. Click any node to inspect its output data in the panel on the right. The Set node output contains `{"message": "Workflow executed successfully"}`.
+**Expected result:** Two n8n secrets are listed: `*-encryption-key` and `*-db-password`. These are synced to Kubernetes Secrets in the namespace.
 
 ---
 
-## Phase 4 — Webhooks and Triggers [MANUAL]
+## Exercise 2 — Create and Execute Workflows
 
-### Step 4.1 — Create a Webhook Trigger Workflow
+### Objective
+
+Build a three-node workflow using Manual Trigger, HTTP Request, and Set nodes — then
+execute it and inspect the data flow between nodes.
+
+### Step 2.1 — Create a New Workflow
+
+1. Click **+ New workflow** in the left sidebar.
+2. Click **+** on the canvas. Search for **Manual Trigger** and select it.
+3. Click **+** on the right edge of the Manual Trigger. Search for **HTTP Request** and select it.
+   - Set **URL** to `https://httpbin.org/get`
+   - Set **Method** to `GET`
+4. Click **+** after the HTTP Request. Search for **Set** and select it.
+   - Click **Add Value → String**
+   - Set **Name** to `message`
+   - Set **Value** to `Workflow executed successfully`
+5. Click **Save** (top-right).
+
+### Step 2.2 — Execute the Workflow
+
+Click **Execute workflow** (or the play button on the Manual Trigger node).
+
+**Expected result:** Each node shows a green checkmark. Click any node to inspect its output data. The Set node output contains `{"message": "Workflow executed successfully"}`.
+
+### Step 2.3 — Inspect Node Data
+
+Click the HTTP Request node to inspect its output:
+1. The **Output** panel shows the full JSON response from `httpbin.org/get`.
+2. Note the `headers.Host` and `origin` fields in the response.
+
+**kubectl — view n8n execution logs:**
+```bash
+kubectl logs -n "${NAMESPACE}" \
+  "$(kubectl get pod -n "${NAMESPACE}" -l app=n8n -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || \
+     kubectl get pods -n "${NAMESPACE}" --no-headers -o custom-columns=':metadata.name' | grep -v db-init | head -1)" \
+  -c n8n 2>/dev/null --tail=20 || \
+  kubectl logs -n "${NAMESPACE}" \
+  "$(kubectl get pods -n "${NAMESPACE}" --no-headers -o custom-columns=':metadata.name' | grep -v db-init | head -1)" \
+  --tail=20
+```
+
+**Expected result:** n8n logs show workflow execution events including start time and completion.
+
+### Step 2.4 — Create a More Complex Workflow
+
+1. Create a new workflow.
+2. Add a **Manual Trigger** node.
+3. Add an **HTTP Request** node targeting `https://httpbin.org/uuid`.
+4. Add a **Set** node:
+   - Add string: Name = `uuid`, Value = `={{ $json.uuid }}`
+5. Add an **IF** node:
+   - Condition: `{{ $json.uuid }}` is not empty
+6. Save and execute.
+
+**Expected result:** The IF node evaluates the UUID condition and routes to the `true` branch, confirming the HTTP Request returned a valid UUID.
+
+### Step 2.5 — View Execution History
+
+Click **Executions** (clock icon) in the top navigation bar.
+
+**Expected result:** All workflow executions are listed with status (success/error), start time, and duration.
+
+---
+
+## Exercise 3 — Webhooks and Triggers
+
+### Objective
+
+Create a webhook-triggered workflow, test it with curl, and configure a scheduled trigger
+with automatic execution.
+
+### Step 3.1 — Create a Webhook Workflow
 
 1. Click **+ New workflow**.
 2. Add a **Webhook** node as the trigger:
    - Set **HTTP Method** to `POST`
-   - Set **Path** to `test-webhook`
-   - Copy the **Webhook URL** shown (format: `http://<EXTERNAL-IP>:5678/webhook/test-webhook`)
+   - Set **Path** to `gke-webhook`
 3. Add a **Set** node after the webhook:
    - Add a string value: Name = `received`, Value = `={{ $json.body }}`
 4. Click **Save**.
-5. Click **Listen for Test Event** in the Webhook node to activate the test listener.
+5. Click **Listen for Test Event** in the Webhook node.
 
-### Step 4.2 — Test the Webhook
+**Expected result:** The test webhook URL is:
+`http://${EXTERNAL_IP}:5678/webhook-test/gke-webhook`
 
-In a new terminal, send a POST request:
+### Step 3.2 — Test the Webhook with curl
 
 ```bash
-curl -X POST http://${EXTERNAL_IP}:5678/webhook/test-webhook \
+curl -X POST "http://${EXTERNAL_IP}:5678/webhook-test/gke-webhook" \
   -H "Content-Type: application/json" \
-  -d '{"hello": "from curl", "timestamp": "2026-05-15"}'
+  -d '{"hello": "from curl", "environment": "gke"}'
 ```
 
-**Expected result:** The n8n UI shows the webhook received the data. The Webhook node turns green and displays the payload. The Set node output contains `{"received": {"hello": "from curl", "timestamp": "2026-05-15"}}`.
+**Expected result:** The n8n UI shows the webhook received the data. The payload `{"hello": "from curl", "environment": "gke"}` appears in the Webhook node output.
 
-**REST API note:** The webhook URL IS the REST API endpoint — n8n exposes webhooks as HTTP endpoints natively. Production webhooks (with the workflow active) use the path prefix `/webhook/` instead of `/webhook-test/`.
+### Step 3.3 — Activate the Webhook for Production
 
-### Step 4.3 — Explore a Scheduled Trigger
+1. Close the test listener.
+2. **Activate** the workflow using the toggle in the top-right corner.
+3. The production webhook URL: `http://${EXTERNAL_IP}:5678/webhook/gke-webhook`
+
+```bash
+# Test the production webhook
+curl -X POST "http://${EXTERNAL_IP}:5678/webhook/gke-webhook" \
+  -H "Content-Type: application/json" \
+  -d '{"event": "production", "source": "lab"}'
+```
+
+**kubectl — verify the service session affinity:**
+```bash
+kubectl get service -n "${NAMESPACE}" -o json \
+  | jq '.items[0].spec.sessionAffinity'
+```
+
+**Expected result:** The service uses `ClientIP` session affinity, ensuring webhook requests from the same client IP consistently route to the same n8n pod — important for stateful webhook listeners.
+
+### Step 3.4 — Create a Scheduled Trigger
 
 1. Create a new workflow.
 2. Add a **Schedule Trigger** node:
-   - Set **Trigger Interval** to `Minutes` and **Minutes Between Triggers** to `1`
+   - Set **Trigger Interval** to `Minutes`
+   - Set **Minutes Between Triggers** to `1`
 3. Add an **HTTP Request** node targeting `https://httpbin.org/uuid`.
-4. **Save** and **Activate** the workflow (toggle in the top-right).
+4. **Save** and **Activate** the workflow.
 
-**Expected result:** The workflow appears in the **Workflows** list with an active status indicator. After 1 minute, an execution appears in the workflow's execution history.
-
-Deactivate the workflow after testing to avoid unnecessary polling.
-
----
-
-## Phase 5 — Credential Management [MANUAL]
-
-### Step 5.1 — Add an HTTP Basic Auth Credential
-
-1. In any workflow, add an **HTTP Request** node.
-2. Click **Authentication → Basic Auth**.
-3. Click **Create New Credential**.
-4. Enter a username and password. Click **Save**.
-
-**Expected result:** The credential is saved and listed under **Settings → Credentials**. It is encrypted using the n8n encryption key stored in Secret Manager.
-
-### Step 5.2 — View Credentials in Secret Manager
-
-Verify that n8n's encryption key is stored securely:
-
+**REST API — check Cloud Logging for scheduled execution:**
 ```bash
-gcloud secrets list --project <project-id> | grep n8n
-```
-
-**Expected result:** Secrets named `appn8ndemo<id>-encryption-key` and `appn8ndemo<id>-db-password` appear in the list. The plaintext values are never stored in Terraform state.
-
-### Step 5.3 — Explore Credential Sharing
-
-Go to **Settings → Credentials**. Click any credential. The **Sharing** tab controls which n8n users can use this credential in their workflows. This is useful for team deployments where multiple users share the same n8n instance.
-
----
-
-## Phase 6 — Workflow History and Error Handling [MANUAL]
-
-### Step 6.1 — View Execution History
-
-1. Open a workflow that has been executed.
-2. Click **Executions** (clock icon) in the top bar.
-
-**Expected result:** A list of all executions for that workflow, showing status (success/error), start time, and duration.
-
-**gcloud equivalent (view n8n pod logs for execution events):**
-```bash
-kubectl logs -n ${NAMESPACE} deployment/${NAMESPACE} -c ${NAMESPACE} --tail=100
-```
-
-### Step 6.2 — Examine a Successful Execution
-
-Click any green (successful) execution. The workflow canvas highlights each node in green, and clicking a node shows the input/output data at that step.
-
-### Step 6.3 — Add Error Handling
-
-1. Open the simple HTTP Request workflow from Phase 3.
-2. Click **+** and add an **Error Trigger** node (this node activates only when a workflow errors).
-3. Connect the Error Trigger to a **Set** node that records `error = true`.
-4. In the HTTP Request node settings, change the URL to an invalid address (e.g., `https://invalid.example.invalid`) to force an error.
-5. Execute the workflow.
-
-**Expected result:** The workflow fails, and the Error Trigger branch activates. The execution history shows the error path was taken.
-
-### Step 6.4 — Retry Settings
-
-On any node, click the three-dot menu and select **Settings**. Under **On Error**, choose **Retry on Fail** and set **Max Tries** to `3`. This makes n8n automatically retry the node on transient failures before triggering the error branch.
-
----
-
-## Phase 7 — Explore Cloud Logging [MANUAL]
-
-### Step 7.1 — View n8n Logs in Cloud Logging
-
-Navigate to Cloud Logging in the GCP Console, or use the CLI:
-
-```bash
-gcloud logging read \
-  'resource.type="k8s_container" AND resource.labels.namespace_name="'${NAMESPACE}'"' \
-  --project <project-id> \
-  --limit 50 \
-  --format "value(timestamp, jsonPayload.message)"
-```
-
-**Expected result:** Log lines from the n8n application, including database connection events, workflow execution start/stop events, and webhook registration messages.
-
-**REST API equivalent:**
-```bash
-curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+curl -s -X POST \
   "https://logging.googleapis.com/v2/entries:list" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
   -H "Content-Type: application/json" \
   -d '{
-    "resourceNames": ["projects/<project-id>"],
-    "filter": "resource.type=k8s_container AND resource.labels.namespace_name='${NAMESPACE}'",
-    "pageSize": 20
+    "projectIds": ["'"${PROJECT}"'"],
+    "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"'"${NAMESPACE}"'\" AND textPayload=~\"Schedule\"",
+    "pageSize": 5
+  }' | jq '.entries[].textPayload'
+```
+
+**Expected result:** After 1 minute, an execution appears in the workflow's execution history. Deactivate the workflow after testing.
+
+### Step 3.5 — Test Webhook Persistence Across Pod Restarts
+
+Active webhooks are stored in the PostgreSQL database. Verify they survive a pod restart:
+
+```bash
+N8N_POD=$(kubectl get pods -n "${NAMESPACE}" --no-headers \
+  -o custom-columns=':metadata.name' | grep -v db-init | head -1)
+
+# Restart the pod
+kubectl delete pod "${N8N_POD}" -n "${NAMESPACE}"
+
+# Wait for the new pod to be ready
+kubectl rollout status deployment \
+  "$(kubectl get deployment -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')" \
+  -n "${NAMESPACE}"
+
+# Verify the webhook still works
+curl -X POST "http://${EXTERNAL_IP}:5678/webhook/gke-webhook" \
+  -H "Content-Type: application/json" \
+  -d '{"event": "after-restart"}'
+```
+
+**Expected result:** The webhook continues to work after the pod restarts, because workflow state is stored in PostgreSQL (persistent across pod lifecycle).
+
+---
+
+## Exercise 4 — Kubernetes Workloads
+
+### Objective
+
+Inspect the n8n Kubernetes Deployment, Service, NFS persistence, and HPA configuration
+to understand how the module wires together GKE resources.
+
+### Step 4.1 — Inspect the Deployment
+
+**kubectl:**
+```bash
+kubectl describe deployment -n "${NAMESPACE}"
+
+kubectl get deployment -n "${NAMESPACE}" -o json \
+  | jq '{
+    name: .items[0].metadata.name,
+    replicas: .items[0].spec.replicas,
+    image: .items[0].spec.template.spec.containers[0].image,
+    cpu: .items[0].spec.template.spec.containers[0].resources.limits.cpu,
+    memory: .items[0].spec.template.spec.containers[0].resources.limits.memory,
+    port: .items[0].spec.template.spec.containers[0].ports[0].containerPort
   }'
 ```
 
-### Step 7.2 — Query for Workflow Execution Events
+**Expected result:** The Deployment shows the n8n 2.4.7 image, 2 vCPU / 4Gi resource limits, port 5678, and 1 current replica.
 
+### Step 4.2 — Inspect the LoadBalancer Service
+
+**kubectl:**
 ```bash
-gcloud logging read \
-  'resource.type="k8s_container" AND jsonPayload.message=~"Workflow" AND resource.labels.namespace_name="'${NAMESPACE}'"' \
-  --project <project-id> \
-  --limit 20
+kubectl get service -n "${NAMESPACE}" -o wide
+kubectl describe service -n "${NAMESPACE}"
 ```
 
-**Expected result:** Log entries showing workflow execution events — start, completion, and any errors.
+**Expected result:** The Kubernetes Service of type `LoadBalancer` maps external port 5678 to container port 5678 with `ClientIP` session affinity.
+
+### Step 4.3 — Inspect Pod Containers
+
+**kubectl:**
+```bash
+N8N_POD=$(kubectl get pods -n "${NAMESPACE}" --no-headers \
+  -o custom-columns=':metadata.name' | grep -v db-init | head -1)
+
+# List containers in the pod
+kubectl get pod "${N8N_POD}" -n "${NAMESPACE}" \
+  -o jsonpath='{.spec.containers[*].name}' | tr ' ' '\n'
+
+# View n8n container startup logs
+kubectl logs "${N8N_POD}" -n "${NAMESPACE}" --tail=30 2>/dev/null || \
+  kubectl logs "${N8N_POD}" -n "${NAMESPACE}" -c n8n --tail=30
+```
+
+**Expected result:** Two containers are listed: `n8n` and `cloud-sql-proxy`. The n8n container logs show database connection events and the n8n version banner.
+
+### Step 4.4 — Inspect NFS Volume Mount
+
+**kubectl:**
+```bash
+kubectl get pod "${N8N_POD}" -n "${NAMESPACE}" -o json \
+  | jq '.spec.volumes[] | select(.name | test("nfs"))'
+
+kubectl exec "${N8N_POD}" -n "${NAMESPACE}" -- \
+  ls /mnt/nfs/ 2>/dev/null || echo "NFS directory accessible"
+```
+
+**gcloud — describe the Filestore instance:**
+```bash
+gcloud filestore instances list \
+  --project="${PROJECT}" \
+  --format="table(name, tier, networks[0].ipAddresses[0], fileShares[0].capacityGb)"
+```
+
+**Expected result:** The NFS volume is mounted at `/mnt/nfs`. The Cloud Filestore instance is listed as `READY` with its private IP address.
+
+### Step 4.5 — Inspect the db-init Job
+
+**kubectl:**
+```bash
+kubectl get jobs -n "${NAMESPACE}"
+kubectl describe job -n "${NAMESPACE}" \
+  "$(kubectl get jobs -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')" 2>/dev/null
+```
+
+**Expected result:** The `db-init` job shows `1/1` successful completions. This job ran the `db-init.sh` script to create the `n8n_db` database and `n8n_user` PostgreSQL user before the n8n Deployment started.
 
 ---
 
-## Phase 8 — Explore Cloud Monitoring [MANUAL]
+## Exercise 5 — Security and Workload Identity
 
-### Step 8.1 — View Pod Metrics in Cloud Monitoring
+### Objective
 
-Navigate to **Cloud Monitoring → Metrics Explorer** in the GCP Console.
+Inspect the Kubernetes ServiceAccount Workload Identity binding, verify IAM roles assigned
+to the n8n GCP service account, and review Kubernetes Secrets synced from Secret Manager.
 
-Select the following metric:
+### Step 5.1 — Inspect the Kubernetes ServiceAccount
+
+**kubectl:**
+```bash
+kubectl get serviceaccounts -n "${NAMESPACE}" -o wide
+
+kubectl describe serviceaccount \
+  "$(kubectl get sa -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')" \
+  -n "${NAMESPACE}"
+```
+
+**Expected result:** The n8n ServiceAccount has the annotation:
+`iam.gke.io/gcp-service-account=<gcp-sa-email>@${PROJECT}.iam.gserviceaccount.com`
+This binds the Kubernetes ServiceAccount to a GCP IAM service account via Workload Identity federation.
+
+### Step 5.2 — Verify IAM Roles on the GCP Service Account
+
+**gcloud:**
+```bash
+export GCP_SA=$(kubectl get serviceaccount -n "${NAMESPACE}" \
+  "$(kubectl get sa -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')" \
+  -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}')
+
+echo "GCP SA: ${GCP_SA}"
+
+# List IAM roles
+gcloud projects get-iam-policy "${PROJECT}" \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:${GCP_SA}" \
+  --format="table(bindings.role)"
+```
+
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://cloudresourcemanager.googleapis.com/v1/projects/${PROJECT}:getIamPolicy" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d '{}' \
+  | jq --arg sa "${GCP_SA}" '.bindings[] | select(.members[] | test($sa)) | .role'
+```
+
+**Expected result:** The GCP service account has roles including `roles/cloudsql.client`, `roles/secretmanager.secretAccessor`, and `roles/storage.objectAdmin`.
+
+### Step 5.3 — Verify the Workload Identity Binding
+
+**gcloud:**
+```bash
+gcloud iam service-accounts get-iam-policy "${GCP_SA}" \
+  --project="${PROJECT}" \
+  --format="json" \
+  | jq '.bindings[] | select(.role == "roles/iam.workloadIdentityUser")'
+```
+
+**Expected result:** The binding shows `serviceAccount:${PROJECT}.svc.id.goog[${NAMESPACE}/<k8s-sa-name>]` as a member with `roles/iam.workloadIdentityUser`, confirming Workload Identity is correctly configured.
+
+### Step 5.4 — Inspect Kubernetes Secrets
+
+**kubectl:**
+```bash
+kubectl get secrets -n "${NAMESPACE}" \
+  -o custom-columns="NAME:.metadata.name,TYPE:.type,AGE:.metadata.creationTimestamp"
+
+# View the encryption key secret (shows key names, not values)
+kubectl describe secret -n "${NAMESPACE}" \
+  "$(kubectl get secrets -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')"
+```
+
+**Expected result:** Kubernetes Secrets for the n8n encryption key and DB password are listed. The `N8N_ENCRYPTION_KEY` secret was synced from Secret Manager during deployment.
+
+### Step 5.5 — Verify Pod Uses Workload Identity
+
+**kubectl:**
+```bash
+N8N_POD=$(kubectl get pods -n "${NAMESPACE}" --no-headers \
+  -o custom-columns=':metadata.name' | grep -v db-init | head -1)
+
+# Check the service account used by the pod
+kubectl get pod "${N8N_POD}" -n "${NAMESPACE}" \
+  -o jsonpath='{.spec.serviceAccountName}'
+
+# Verify the pod can access GCP services via Workload Identity
+kubectl exec "${N8N_POD}" -n "${NAMESPACE}" -- \
+  wget -qO- "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email" \
+  -H "Metadata-Flavor: Google" 2>/dev/null || echo "Metadata server accessible via Workload Identity"
+```
+
+**Expected result:** The pod runs under the n8n Kubernetes ServiceAccount bound to the GCP service account via Workload Identity. The metadata server returns the GCP service account email.
+
+---
+
+## Exercise 6 — Cloud Logging
+
+### Objective
+
+Query n8n container logs via Cloud Logging, filter for workflow execution events, inspect
+Cloud SQL Auth Proxy logs, and navigate the Logs Explorer.
+
+### Step 6.1 — View n8n Application Logs
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
+   AND resource.labels.container_name=\"n8n\"" \
+  --project="${PROJECT}" \
+  --limit=50 \
+  --format="table(timestamp, jsonPayload.message)"
+```
+
+**kubectl (live logs):**
+```bash
+N8N_POD=$(kubectl get pods -n "${NAMESPACE}" --no-headers \
+  -o custom-columns=':metadata.name' | grep -v db-init | head -1)
+
+kubectl logs "${N8N_POD}" -n "${NAMESPACE}" --tail=30
+```
+
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://logging.googleapis.com/v2/entries:list" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "projectIds": ["'"${PROJECT}"'"],
+    "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"'"${NAMESPACE}"'\"",
+    "orderBy": "timestamp desc",
+    "pageSize": 20
+  }' | jq '.entries[] | {timestamp: .timestamp, message: (.jsonPayload.message // .textPayload)}'
+```
+
+**Expected result:** n8n startup logs appear, including database connection events, webhook registration messages, and the n8n version banner.
+
+### Step 6.2 — Filter for Workflow Execution Events
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
+   AND jsonPayload.message=~\"Workflow\"" \
+  --project="${PROJECT}" \
+  --limit=20 \
+  --format="json" \
+  | jq '.[] | {timestamp: .timestamp, message: .jsonPayload.message}'
+```
+
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://logging.googleapis.com/v2/entries:list" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "projectIds": ["'"${PROJECT}"'"],
+    "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"'"${NAMESPACE}"'\" AND jsonPayload.message=~\"Workflow\"",
+    "pageSize": 10
+  }' | jq '.entries[].jsonPayload.message'
+```
+
+**Expected result:** Log entries show workflow execution start, completion, and any error events, with workflow IDs and execution timestamps.
+
+### Step 6.3 — View Cloud SQL Auth Proxy Logs
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
+   AND resource.labels.container_name=\"cloud-sql-proxy\"" \
+  --project="${PROJECT}" \
+  --limit=20 \
+  --format="table(timestamp, textPayload)"
+```
+
+**kubectl:**
+```bash
+N8N_POD=$(kubectl get pods -n "${NAMESPACE}" --no-headers \
+  -o custom-columns=':metadata.name' | grep -v db-init | head -1)
+kubectl logs "${N8N_POD}" -n "${NAMESPACE}" -c cloud-sql-proxy --tail=20
+```
+
+**Expected result:** Auth Proxy logs show connection establishment to the PostgreSQL instance via Unix socket at `/cloudsql/<connection-name>`.
+
+### Step 6.4 — Filter for Errors
+
+```bash
+gcloud logging read \
+  "resource.type=\"k8s_container\" \
+   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
+   AND severity>=ERROR" \
+  --project="${PROJECT}" \
+  --limit=20 \
+  --format="table(timestamp, severity, jsonPayload.message)"
+```
+
+**Expected result:** Under normal operation, no critical errors appear after startup. Warnings may appear during the db-init job execution or Redis connection establishment.
+
+### Step 6.5 — Navigate to Logs Explorer
+
+```bash
+echo "https://console.cloud.google.com/logs/query;query=resource.type%3D%22k8s_container%22%0Aresource.labels.namespace_name%3D%22${NAMESPACE}%22?project=${PROJECT}"
+```
+
+Open the URL to use the interactive Logs Explorer with filtering, time range selection, and log streaming for all containers in the n8n namespace.
+
+---
+
+## Exercise 7 — Cloud Monitoring and Scaling
+
+### Objective
+
+Review GKE container metrics for n8n, check the uptime monitor, observe HPA scaling
+behavior, and practice manual and automatic scaling.
+
+### Step 7.1 — View Container CPU and Memory Metrics
+
+Navigate to Metrics Explorer:
+```bash
+echo "https://console.cloud.google.com/monitoring/metrics-explorer?project=${PROJECT}"
+```
+
+Select:
 - **Resource type:** `k8s_container`
 - **Metric:** `kubernetes.io/container/cpu/core_usage_time`
 - **Filter:** `namespace_name = ${NAMESPACE}`
 
-**Expected result:** A time-series chart shows CPU usage for the n8n pod(s).
-
-**gcloud equivalent:**
+**gcloud:**
 ```bash
 gcloud monitoring metrics list \
-  --filter="metric.type:kubernetes" \
-  --project <project-id>
+  --filter="metric.type:kubernetes.io/container" \
+  --project="${PROJECT}" \
+  --format="table(name)" \
+  --limit=10
 ```
 
-### Step 8.2 — Check the Uptime Monitor
+**REST API (query CPU usage):**
+```bash
+curl -s -X POST \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "fetch k8s_container::kubernetes.io/container/cpu/limit_utilization | filter resource.namespace_name = \"'"${NAMESPACE}"'\" | within 30m | group_by [resource.container_name], mean(val())"
+  }' | jq '.timeSeriesData[] | {container: .labelValues[0].stringValue, utilisation: .pointData[-1].values[0].doubleValue}'
+```
 
-If `uptime_check_config.enabled = true` was set during deployment, an uptime check was created automatically.
+**Expected result:** CPU utilization for the n8n container is near zero under no-load conditions. Memory usage is typically 300–800 MB depending on the number of active workflows.
+
+### Step 7.2 — Review the Uptime Check
+
+**gcloud:**
+```bash
+gcloud monitoring uptime list-configs \
+  --project="${PROJECT}" \
+  --format="table(name, displayName, httpCheck.path, period, timeout)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.uptimeCheckConfigs[] | {name: .name, displayName: .displayName, host: .httpCheck.host}'
+```
+
+**Expected result:** An uptime check polls n8n at `GET /` every 60 seconds and shows **Passing** status.
+
+### Step 7.3 — Inspect the HPA
+
+**kubectl:**
+```bash
+kubectl get hpa -n "${NAMESPACE}"
+kubectl describe hpa -n "${NAMESPACE}"
+```
+
+**Expected result:** The HPA shows `min=1`, `max=3`, current CPU utilization, and target CPU threshold (typically 80%). Current replicas is `1` under no-load conditions.
+
+### Step 7.4 — Scale the Deployment Manually
+
+**kubectl:**
+```bash
+DEPLOY_NAME=$(kubectl get deployment -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')
+
+# Scale to 2 replicas
+kubectl scale deployment "${DEPLOY_NAME}" \
+  --replicas=2 \
+  -n "${NAMESPACE}"
+
+# Watch pods scaling up
+kubectl get pods -n "${NAMESPACE}" -w
+```
+
+**Expected result:** A second n8n pod starts within 60–90 seconds. Both pods share the NFS `/mnt/nfs` volume for workflow persistence, and session affinity ensures the editor session stays on one pod.
+
+### Step 7.5 — Perform a Rolling Update and Rollback
 
 ```bash
-gcloud monitoring uptime list-configs --project <project-id>
+# Trigger a rolling update via an env var change
+kubectl set env "deployment/${DEPLOY_NAME}" \
+  LAB_VERSION=test-update \
+  -n "${NAMESPACE}"
+
+# Watch the rolling update
+kubectl rollout status "deployment/${DEPLOY_NAME}" -n "${NAMESPACE}"
+
+# View rollout history
+kubectl rollout history "deployment/${DEPLOY_NAME}" -n "${NAMESPACE}"
+
+# Rollback to previous revision
+kubectl rollout undo "deployment/${DEPLOY_NAME}" -n "${NAMESPACE}"
+kubectl rollout status "deployment/${DEPLOY_NAME}" -n "${NAMESPACE}"
 ```
 
-**Expected result:** An uptime check named after the deployment appears, with a status of `Healthy`.
+**REST API — verify cluster health after rollback:**
+```bash
+curl -s \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '{status: .status, currentNodeCount: .currentNodeCount}'
+```
 
-### Step 8.3 — View Notifications Channels
+**Expected result:** The rolling update replaces pods one at a time, maintaining availability. The rollback completes successfully and restores the previous deployment state.
+
+### Step 7.6 — Return to Minimum Replicas
 
 ```bash
-gcloud beta monitoring channels list --project <project-id>
+kubectl scale deployment "${DEPLOY_NAME}" --replicas=1 -n "${NAMESPACE}"
+kubectl get pods -n "${NAMESPACE}"
 ```
 
-If `support_users` was configured, a notification channel for each email address was created to receive alert notifications.
+**Expected result:** One pod terminates gracefully. The remaining pod continues serving traffic. The HPA resumes control and may scale back down to the minimum.
 
 ---
 
-## Phase 9 — Scaling [MANUAL]
+## 12. Cleanup
 
-### Step 9.1 — Examine HPA Configuration
+Return to the RAD UI and click **Undeploy** on the `N8N_GKE` deployment. This removes
+the Kubernetes namespace and all workloads, Cloud SQL instance, NFS Filestore, GCS buckets,
+Secret Manager secrets, Workload Identity bindings, and all associated IAM resources.
 
-The Horizontal Pod Autoscaler controls the number of n8n replicas based on CPU usage.
+> **Warning:** The `N8N_ENCRYPTION_KEY` is destroyed with the module. All workflow
+> credentials encrypted with this key cannot be decrypted after re-deployment. Export
+> credentials from n8n Settings before undeploying if you need to preserve them.
 
+### Manual Cleanup (if needed)
+
+**kubectl:**
 ```bash
-kubectl get hpa -n ${NAMESPACE}
+# Delete the namespace and all its resources
+kubectl delete namespace "${NAMESPACE}"
 ```
 
-**Expected result:**
-```
-NAME             REFERENCE                    TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
-appn8ndemo<id>   Deployment/appn8ndemo<id>   15%/80%   1         3         1          10m
-```
-
-### Step 9.2 — Describe the HPA
-
+**gcloud:**
 ```bash
-kubectl describe hpa -n ${NAMESPACE}
+# Delete secrets
+gcloud secrets delete "${ENC_KEY_SECRET}" \
+  --project="${PROJECT}" --quiet
+gcloud secrets delete "${DB_SECRET}" \
+  --project="${PROJECT}" --quiet
+
+# Delete Cloud SQL instance
+export SQL_INSTANCE=$(gcloud sql instances list \
+  --project="${PROJECT}" \
+  --filter="databaseVersion:POSTGRES_15" \
+  --format="value(name)" --limit=1)
+gcloud sql instances delete "${SQL_INSTANCE}" \
+  --project="${PROJECT}" --quiet
 ```
 
-**Expected result:** Details showing the CPU utilization target (default 80%), current utilization, and scaling events. When CPU exceeds the target, Kubernetes automatically adds pods up to `max_instance_count`.
-
-**REST API equivalent:**
+**REST API — delete Cloud SQL instance:**
 ```bash
-curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://container.googleapis.com/v1/projects/<project-id>/locations/<region>/clusters/<cluster-name>"
-```
-
-### Step 9.3 — Manually Scale Workers
-
-To temporarily override the HPA and set a specific replica count:
-
-```bash
-kubectl scale deployment/${NAMESPACE} --replicas=2 -n ${NAMESPACE}
-```
-
-**Expected result:** A second pod starts. After ~1 minute, the HPA resumes control and may scale back down if CPU is low.
-
-```bash
-# Watch scaling in real time
-kubectl get pods -n ${NAMESPACE} -w
+curl -s -X DELETE \
+  "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances/${SQL_INSTANCE}" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)"
 ```
 
 ---
 
-## Phase 10 — Undeploy [AUTOMATED]
+## 13. Reference
 
-When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module. This removes all Kubernetes resources, Cloud SQL instance, NFS Filestore, GCS buckets, secrets, and IAM bindings created by this module.
+### Key Module Variables
 
-**Note:** If `enable_purge = false` was set, some resources (database, buckets) are retained after undeployment to protect against accidental data loss.
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `project_id` | `string` | — | GCP project ID (required) |
+| `region` | `string` | `us-central1` | GCP region for all resources |
+| `application_name` | `string` | `n8n` | Base resource name |
+| `application_version` | `string` | `2.4.7` | n8n container image tag |
+| `tenant_deployment_id` | `string` | `demo` | Short suffix appended to resource names |
+| `deploy_application` | `bool` | `true` | Deploy the n8n workload (false = infra only) |
+| `gke_cluster_name` | `string` | `""` | Target GKE cluster name (auto-discovered if empty) |
+| `cpu_limit` | `string` | `2000m` | CPU per n8n pod |
+| `memory_limit` | `string` | `4Gi` | Memory per n8n pod |
+| `min_instance_count` | `number` | `1` | HPA minimum replicas |
+| `max_instance_count` | `number` | `3` | HPA maximum replicas |
+| `container_port` | `number` | `5678` | n8n listening port |
+| `service_type` | `string` | `LoadBalancer` | Kubernetes Service type |
+| `session_affinity` | `string` | `ClientIP` | Session stickiness for LoadBalancer |
+| `enable_nfs` | `bool` | `true` | Cloud Filestore NFS for workflow persistence |
+| `nfs_mount_path` | `string` | `/mnt/nfs` | NFS mount path inside containers |
+| `enable_redis` | `bool` | `true` | Redis queue mode (uses NFS server IP by default) |
+| `redis_host` | `string` | `""` | Redis hostname (blank = NFS server IP) |
+| `redis_port` | `string` | `6379` | Redis TCP port |
+| `db_name` | `string` | `n8n_db` | PostgreSQL database name |
+| `db_user` | `string` | `n8n_user` | PostgreSQL application user |
+| `database_password_length` | `number` | `32` | Auto-generated password length |
+| `enable_auto_password_rotation` | `bool` | `false` | Automated DB password rotation |
+| `backup_schedule` | `string` | `0 2 * * *` | Cron schedule for automated backups |
+| `backup_retention_days` | `number` | `7` | Days to retain backup files |
+| `support_users` | `list(string)` | `[]` | Email addresses for monitoring alerts |
+| `resource_labels` | `map(string)` | `{}` | Labels applied to all provisioned resources |
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+### Auto-Injected Environment Variables
 
----
-
-## Summary
-
-| Phase | Activity | Method |
+| Variable | Value | Notes |
 |---|---|---|
-| 1 | Deploy n8n on GKE Autopilot | Automated (RAD UI) |
-| 2 | Configure kubectl, verify pod | Manual (gcloud, kubectl) |
-| 3 | Access UI, create first workflow | Manual (browser) |
-| 4 | Webhooks and scheduled triggers | Manual (browser + curl) |
-| 5 | Credential management | Manual (browser) |
-| 6 | Execution history, error handling | Manual (browser) |
-| 7 | Cloud Logging — query workflow events | Manual (gcloud / console) |
-| 8 | Cloud Monitoring — pod metrics | Manual (console) |
-| 9 | HPA scaling configuration | Manual (kubectl) |
-| 10 | Undeploy all resources | Automated (RAD UI) |
+| `N8N_PORT` | `5678` | Fixed to match `container_port` |
+| `DB_TYPE` | `postgresdb` | Forces PostgreSQL backend |
+| `N8N_ENCRYPTION_KEY` | Kubernetes Secret ref | Auto-generated; synced from Secret Manager |
+| `WEBHOOK_URL` | Internal ClusterIP URL | Pre-computed service URL |
+| `N8N_EDITOR_BASE_URL` | Internal ClusterIP URL | Same as `WEBHOOK_URL` |
+| `ENABLE_REDIS` | `true` / `false` | Reflects `enable_redis` variable |
+| `QUEUE_BULL_REDIS_HOST` | NFS server IP | Resolved at runtime from `NFS_SERVER_IP` |
+| `QUEUE_BULL_REDIS_PORT` | `6379` | Redis TCP port |
+
+### Useful Commands Reference
+
+```bash
+# Get n8n external IP
+kubectl get svc -n "${NAMESPACE}" -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
+
+# Tail n8n logs
+kubectl logs -n "${NAMESPACE}" -l app=n8n -f
+
+# Check pod health
+kubectl get pods -n "${NAMESPACE}" -o wide
+
+# Describe deployment
+kubectl describe deployment -n "${NAMESPACE}"
+
+# Check HPA status
+kubectl get hpa -n "${NAMESPACE}"
+
+# Scale deployment
+kubectl scale deployment -n "${NAMESPACE}" <name> --replicas=<n>
+
+# Rolling update status
+kubectl rollout status deployment/<name> -n "${NAMESPACE}"
+
+# Rollback deployment
+kubectl rollout undo deployment/<name> -n "${NAMESPACE}"
+
+# List n8n secrets
+gcloud secrets list --project="${PROJECT}" --filter="name~n8n"
+
+# Check uptime monitor
+gcloud monitoring uptime list-configs --project="${PROJECT}"
+
+# View Cloud SQL instance
+gcloud sql instances list --project="${PROJECT}"
+```
+
+### Further Reading
+
+- [n8n documentation](https://docs.n8n.io/)
+- [n8n queue mode](https://docs.n8n.io/hosting/scaling/queue-mode/)
+- [GKE Autopilot overview](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
+- [Workload Identity for GKE](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+- [Cloud SQL Auth Proxy for GKE](https://cloud.google.com/sql/docs/postgres/connect-kubernetes-engine)
+- [Kubernetes Horizontal Pod Autoscaling](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
+- [Cloud Filestore NFS for GKE](https://cloud.google.com/filestore/docs/accessing-fileshares)
+- [Cloud Monitoring for GKE](https://cloud.google.com/stackdriver/docs/solutions/gke)
