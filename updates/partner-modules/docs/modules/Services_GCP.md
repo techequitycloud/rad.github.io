@@ -15,10 +15,10 @@ Services_GCP  →  App_CloudRun / App_GKE  →  *_Common modules
 │  ─────────────                       ──────────────────────                  │
 │  • 46 GCP APIs enabled               • PostgreSQL (create_postgres)          │
 │  • VPC network + subnets             • MySQL (create_mysql)                  │
-│  • Cloud NAT (egress)                • NFS+Redis VM (create_network_filesystem)│
-│  • Private Service Connect           • Managed Filestore (create_filestore_nfs)│
+│  • Cloud NAT (egress)                • NFS+Redis VM (network_filesystem)     │
+│  • Private Service Connect           • Managed Filestore (filestore_nfs)     │
 │  • Artifact Registry (Docker)        • Managed Redis (create_redis)          │
-│  • 4 Service Accounts + IAM          • GKE Autopilot (create_google_kubernetes_engine)│
+│  • 4 Service Accounts + IAM          • GKE Autopilot (create_gke)            │
 │  • Root DB password (Secret Mgr)     • CMEK (enable_cmek)                    │
 │  • Firewall rules                    • VPC Service Controls (enable_vpc_sc)  │
 │                                      • Binary Authorization                  │

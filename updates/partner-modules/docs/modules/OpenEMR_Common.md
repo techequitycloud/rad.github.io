@@ -14,26 +14,26 @@ OpenEMR has specific infrastructure requirements: **MySQL 8.0** (not PostgreSQL)
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                         OpenEMR_Common (Layer 1)                             │
 │                                                                              │
-│  Inputs: project_id, tenant_deployment_id, deployment_id,                   │
-│          application_version, enable_redis, gcs_volumes, ...                │
+│  Inputs: project_id, tenant_deployment_id, deployment_id,                    │
+│          application_version, enable_redis, gcs_volumes, ...                 │
 │                                                                              │
-│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐    │
-│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │    │
-│  │                      │    │                                         │    │
-│  │  Secret Manager API  │    │  container_image: "" (custom build)     │    │
-│  │  admin-password      │    │  container_port: 80                     │    │
-│  │    secret (20-char   │    │  database_type: MYSQL_8_0               │    │
-│  │    alphanumeric)     │    │  enable_nfs: true                       │    │
-│  │                      │    │  nfs_mount_path: /var/www/.../sites     │    │
-│  │                      │    │  gcs_volumes: (pass-through)            │    │
-│  │  storage_buckets: [] │    │  ephemeral_storage_limit: 8Gi           │    │
-│  │  (no GCS buckets)    │    │  initialization_jobs: [nfs-init,        │    │
-│  │                      │    │                        db-init]         │    │
-│  └──────────────────────┘    │  startup_probe: TCP/0s                  │    │
-│                              │  liveness_probe: HTTP /interface/...    │    │
-│                              └─────────────────────────────────────────┘    │
+│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐     │
+│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │     │
+│  │                      │    │                                         │     │
+│  │  Secret Manager API  │    │  container_image: "" (custom build)     │     │
+│  │  admin-password      │    │  container_port: 80                     │     │
+│  │    secret (20-char   │    │  database_type: MYSQL_8_0               │     │
+│  │    alphanumeric)     │    │  enable_nfs: true                       │     │
+│  │                      │    │  nfs_mount_path: /var/www/.../sites     │     │
+│  │                      │    │  gcs_volumes: (pass-through)            │     │
+│  │  storage_buckets: [] │    │  ephemeral_storage_limit: 8Gi           │     │
+│  │  (no GCS buckets)    │    │  initialization_jobs: [nfs-init,        │     │
+│  │                      │    │                        db-init]         │     │
+│  └──────────────────────┘    │  startup_probe: TCP/0s                  │     │
+│                              │  liveness_probe: HTTP /interface/...    │     │
+│                              └─────────────────────────────────────────┘     │
 │                                                                              │
-│  wrapper_prefix = "app{application_name}{tenant_deployment_id}{             │
+│  wrapper_prefix = "app{application_name}{tenant_deployment_id}{              │
 │                         deployment_id}"                                      │
 └──────────────────────────────────────────────────────────────────────────────┘
                     │

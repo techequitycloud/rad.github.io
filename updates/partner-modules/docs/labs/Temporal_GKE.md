@@ -61,30 +61,30 @@ Browser / Client
        │
        ▼ HTTP port 8081 (LoadBalancer)
 ┌──────────────────────────────────────────────────────────────────┐
-│  GKE Autopilot Cluster                                            │
-│                                                                   │
+│  GKE Autopilot Cluster                                           │
+│                                                                  │
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │  Namespace: apptemporal<tenant><deploymentid>              │  │
 │  │                                                            │  │
 │  │  ┌──────────────────────────────────────────────────────┐  │  │
-│  │  │  Pod: temporal-<hash>  (READY 2/2)                    │  │  │
-│  │  │  Container: temporalio/auto-setup:1.25.0              │  │  │
-│  │  │  ├── Frontend service  (gRPC port 7233)               │  │  │
-│  │  │  ├── History service   (workflow state)               │  │  │
-│  │  │  ├── Matching service  (task queue dispatch)          │  │  │
-│  │  │  └── Worker service    (workflow/activity workers)    │  │  │
-│  │  │  Sidecar: cloud-sql-proxy (Unix socket /cloudsql)     │  │  │
+│  │  │  Pod: temporal-<hash>  (READY 2/2)                    │  │ │
+│  │  │  Container: temporalio/auto-setup:1.25.0              │  │ │
+│  │  │  ├── Frontend service  (gRPC port 7233)               │  │ │
+│  │  │  ├── History service   (workflow state)               │  │ │
+│  │  │  ├── Matching service  (task queue dispatch)          │  │ │
+│  │  │  └── Worker service    (workflow/activity workers)    │  │ │
+│  │  │  Sidecar: cloud-sql-proxy (Unix socket /cloudsql)     │  │ │
 │  │  └──────────────────────────────────────────────────────┘  │  │
 │  │                                                            │  │
 │  │  ┌──────────────────────────────────────────────────────┐  │  │
-│  │  │  Pod: temporal-ui-<hash>  (READY 1/1)                 │  │  │
-│  │  │  Container: ubuntu/temporal-ui                        │  │  │
-│  │  │  Port: 8080 → LoadBalancer port 8081                  │  │  │
+│  │  │  Pod: temporal-ui-<hash>  (READY 1/1)                 │  │ │
+│  │  │  Container: ubuntu/temporal-ui                        │  │ │
+│  │  │  Port: 8080 → LoadBalancer port 8081                  │  │ │
 │  │  └──────────────────────────────────────────────────────┘  │  │
 │  │                                                            │  │
 │  │  Services:                                                 │  │
-│  │  ├── temporal (ClusterIP port 7233 — gRPC frontend)       │  │
-│  │  └── temporal-ui (LoadBalancer port 8081)                 │  │
+│  │  ├── temporal (ClusterIP port 7233 — gRPC frontend)       │   │
+│  │  └── temporal-ui (LoadBalancer port 8081)                 │   │
 │  └────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────┘
        │ Cloud SQL Auth Proxy

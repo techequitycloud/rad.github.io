@@ -76,34 +76,34 @@ OpenClaw Deployment (GKE Autopilot)
 │  │  GKE Autopilot Cluster                                             │  │
 │  │                                                                    │  │
 │  │  ┌──────────────────────────────────────────────────────────────┐  │  │
-│  │  │  openclaw namespace (appopenclaw<tenant><id>)                 │  │  │
+│  │  │  openclaw namespace (appopenclaw<tenant><id>)                 │  │ │
 │  │  │                                                              │  │  │
 │  │  │  OpenClaw Deployment                                         │  │  │
 │  │  │    containers: [openclaw]                                    │  │  │
 │  │  │    GCS Fuse CSI volume at /data                              │  │  │
-│  │  │    HPA: min=1, max=3 replicas                               │  │  │
+│  │  │    HPA: min=1, max=3 replicas                               │  │   │
 │  │  │                                                              │  │  │
 │  │  │  PodDisruptionBudget (minAvailable=1)                        │  │  │
 │  │  └──────────────────────────────────────────────────────────────┘  │  │
 │  │                                                                    │  │
-│  │  ┌──────────────────────┐  ┌───────────────────────────────────┐  │  │
-│  │  │  Workload Identity   │  │  LoadBalancer / ClusterIP Service │  │  │
-│  │  │  (SA → GCP SA IAM)   │  │  (port 8080)                      │  │  │
-│  │  └──────────────────────┘  └───────────────────────────────────┘  │  │
+│  │  ┌──────────────────────┐  ┌───────────────────────────────────┐  │   │
+│  │  │  Workload Identity   │  │  LoadBalancer / ClusterIP Service │  │   │
+│  │  │  (SA → GCP SA IAM)   │  │  (port 8080)                      │  │   │
+│  │  └──────────────────────┘  └───────────────────────────────────┘  │   │
 │  └────────────────────────────────────────────────────────────────────┘  │
 │                                                                          │
-│  ┌──────────────────────────┐  ┌───────────────────────────────────────┐│
-│  │  GCS Bucket              │  │  Secret Manager                       ││
-│  │  <prefix>-storage        │  │  - anthropic-api-key                  ││
-│  │  mounted via GCS Fuse    │  │  - (telegram/slack if enabled)        ││
-│  │  at /data uid=1000       │  │                                       ││
-│  └──────────────────────────┘  └───────────────────────────────────────┘│
+│  ┌──────────────────────────┐  ┌───────────────────────────────────────┐ │
+│  │  GCS Bucket              │  │  Secret Manager                       │ │
+│  │  <prefix>-storage        │  │  - anthropic-api-key                  │ │
+│  │  mounted via GCS Fuse    │  │  - (telegram/slack if enabled)        │ │
+│  │  at /data uid=1000       │  │                                       │ │
+│  └──────────────────────────┘  └───────────────────────────────────────┘ │
 │                                                                          │
 │  Module variable wiring:                                                 │
 │    OpenClaw_GKE                                                          │
-│      min_instance_count = 1  → always at least one pod                  │
-│      max_instance_count = 3  → HPA scale-out for multi-tenant load      │
-│      enable_nfs = false      → GCS Fuse replaces NFS                    │
+│      min_instance_count = 1  → always at least one pod                   │
+│      max_instance_count = 3  → HPA scale-out for multi-tenant load       │
+│      enable_nfs = false      → GCS Fuse replaces NFS                     │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 

@@ -80,27 +80,27 @@ Cloud Run Gen2 Service (min=1 instance)
 │                                                                           │
 │  ┌──────────────────────────────────────────────────────────────────────┐ │
 │  │  Cloud Run Gen2 (RAGFlow)                                            │ │
-│  │  ingress: all  ·  vpc_egress: PRIVATE_RANGES_ONLY  ·  min=1         │ │
+│  │  ingress: all  ·  vpc_egress: PRIVATE_RANGES_ONLY  ·  min=1         │  │
 │  └──────────────────────────────────────────────────────────────────────┘ │
-│           │  VPC Connector (Serverless VPC Access)                         │
-│  ┌────────┴──────────────────────────────────────────────────────────────┐ │
-│  │  Private VPC                                                          │ │
+│           │  VPC Connector (Serverless VPC Access)                        │
+│  ┌────────┴──────────────────────────────────────────────────────────────┐│
+│  │  Private VPC                                                          ││
 │  │  ┌──────────────┐  ┌──────────────────┐  ┌───────────────────────┐   │ │
 │  │  │  Cloud SQL   │  │  Memorystore     │  │  Elasticsearch_GKE    │   │ │
 │  │  │  MySQL 8.0   │  │  Redis           │  │  (LoadBalancer IP)    │   │ │
 │  │  └──────────────┘  └──────────────────┘  └───────────────────────┘   │ │
-│  └───────────────────────────────────────────────────────────────────────┘ │
+│  └───────────────────────────────────────────────────────────────────────┘│
 │                                                                           │
-│  ┌──────────────────┐  ┌───────────────────────┐  ┌───────────────────┐  │
-│  │  GCS Bucket      │  │  Secret Manager       │  │  Artifact Registry│  │
-│  │  ragflow-docs    │  │  DB password, Redis   │  │  Custom image     │  │
-│  └──────────────────┘  └───────────────────────┘  └───────────────────┘  │
+│  ┌──────────────────┐  ┌───────────────────────┐  ┌───────────────────┐   │
+│  │  GCS Bucket      │  │  Secret Manager       │  │  Artifact Registry│   │
+│  │  ragflow-docs    │  │  DB password, Redis   │  │  Custom image     │   │
+│  └──────────────────┘  └───────────────────────┘  └───────────────────┘   │
 │                                                                           │
 │  Module variable wiring:                                                  │
-│    RAGFlow_CloudRun                                                        │
-│      min_instance_count    = 1   → warm instance (scale-to-zero disabled)│
+│    RAGFlow_CloudRun                                                       │
+│      min_instance_count    = 1   → warm instance (scale-to-zero disabled) │
 │      execution_environment = gen2 → GCS Fuse and Auth Proxy support       │
-│      elasticsearch_hosts   = http://<ES_IP>:9200 → required              │
+│      elasticsearch_hosts   = http://<ES_IP>:9200 → required               │
 │      enable_redis          = true → task queue backend                    │
 └───────────────────────────────────────────────────────────────────────────┘
 ```

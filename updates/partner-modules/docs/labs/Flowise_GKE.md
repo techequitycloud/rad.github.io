@@ -91,13 +91,13 @@ GKE Autopilot Cluster
 │  │  HPA ──► Flowise Deployment                                  │   │
 │  └──────────────────────────────────────────────────────────────┘   │
 │                                                                     │
-│  Cloud SQL PostgreSQL 15    GCS Bucket                             │
-│  db: flowisedb               <prefix>-flowise-uploads              │
-│  Auth Proxy via Unix socket  STORAGE_TYPE=gcs                      │
+│  Cloud SQL PostgreSQL 15    GCS Bucket                              │
+│  db: flowisedb               <prefix>-flowise-uploads               │
+│  Auth Proxy via Unix socket  STORAGE_TYPE=gcs                       │
 │                                                                     │
-│  Artifact Registry          Secret Manager     Cloud Monitoring    │
+│  Artifact Registry          Secret Manager     Cloud Monitoring     │
 │  flowise custom image        FLOWISE_PASSWORD   pod CPU/memory      │
-│  (built via Cloud Build)     DB password        HPA metrics        │
+│  (built via Cloud Build)     DB password        HPA metrics         │
 └─────────────────────────────────────────────────────────────────────┘
 
 Module variable wiring:

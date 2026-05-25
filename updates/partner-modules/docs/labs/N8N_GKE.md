@@ -98,23 +98,23 @@ External Traffic (HTTP port 5678)
 │  │  │  Namespace: appn8n<tenant><id>                       │  │  │
 │  │  │                                                      │  │  │
 │  │  │  Deployment: n8n           HPA: min=1 max=3          │  │  │
-│  │  │  Service: LoadBalancer     session affinity: ClientIP │  │  │
+│  │  │  Service: LoadBalancer     session affinity: ClientIP │  │ │
 │  │  │  ServiceAccount (Workload Identity bound)            │  │  │
 │  │  │  Job: db-init (completed)                            │  │  │
 │  │  └──────────────────────────────────────────────────────┘  │  │
 │  └────────────────────────────────────────────────────────────┘  │
 │                                                                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐  │
-│  │  Cloud SQL   │  │  Filestore   │  │  Redis (NFS VM)       │  │
-│  │  PostgreSQL  │  │  NFS share   │  │  queue mode backend   │  │
-│  │  15          │  │  /mnt/nfs    │  │  port 6379            │  │
-│  └──────────────┘  └──────────────┘  └───────────────────────┘  │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐   │
+│  │  Cloud SQL   │  │  Filestore   │  │  Redis (NFS VM)       │   │
+│  │  PostgreSQL  │  │  NFS share   │  │  queue mode backend   │   │
+│  │  15          │  │  /mnt/nfs    │  │  port 6379            │   │
+│  └──────────────┘  └──────────────┘  └───────────────────────┘   │
 │                                                                  │
-│  ┌──────────────┐  ┌──────────────────┐  ┌───────────────────┐  │
-│  │  Secret Mgr  │  │  Cloud Logging   │  │  Monitoring       │  │
-│  │  N8N_ENC_KEY │  │  k8s_container   │  │  uptime check     │  │
-│  │  SMTP pass   │  │  logs            │  │  alert policies   │  │
-│  └──────────────┘  └──────────────────┘  └───────────────────┘  │
+│  ┌──────────────┐  ┌──────────────────┐  ┌───────────────────┐   │
+│  │  Secret Mgr  │  │  Cloud Logging   │  │  Monitoring       │   │
+│  │  N8N_ENC_KEY │  │  k8s_container   │  │  uptime check     │   │
+│  │  SMTP pass   │  │  logs            │  │  alert policies   │   │
+│  └──────────────┘  └──────────────────┘  └───────────────────┘   │
 └──────────────────────────────────────────────────────────────────┘
 
 Module variable wiring:

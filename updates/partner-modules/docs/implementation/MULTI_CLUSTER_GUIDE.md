@@ -24,19 +24,19 @@ The Services_GCP module now supports deploying multiple GKE Autopilot clusters w
 │                     Shared VPC Network                          │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌───────────────┐│
-│  │   Cluster-1      │  │   Cluster-2      │  │   Cluster-N   ││
-│  │ 10.128.0.0/20    │  │ 10.144.0.0/20    │  │ 10.X.0.0/20   ││
-│  │                  │  │                  │  │               ││
-│  │ Pods: /14        │  │ Pods: /14        │  │ Pods: /14     ││
-│  │ Svcs: /20        │  │ Svcs: /20        │  │ Svcs: /20     ││
-│  │                  │  │                  │  │               ││
-│  │ Istiod Instance  │  │ Istiod Instance  │  │ Istiod       ││
-│  │ East-West GW     │  │ East-West GW     │  │ East-West GW ││
-│  └─────────┬────────┘  └────────┬─────────┘  └───────┬───────┘│
-│            │                    │                    │         │
-│            └────────────────────┼────────────────────┘         │
-│                    Fleet-based Service Discovery               │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌───────────────┐  │
+│  │   Cluster-1      │  │   Cluster-2      │  │   Cluster-N   │  │
+│  │ 10.128.0.0/20    │  │ 10.144.0.0/20    │  │ 10.X.0.0/20   │  │
+│  │                  │  │                  │  │               │  │
+│  │ Pods: /14        │  │ Pods: /14        │  │ Pods: /14     │  │
+│  │ Svcs: /20        │  │ Svcs: /20        │  │ Svcs: /20     │  │
+│  │                  │  │                  │  │               │  │
+│  │ Istiod Instance  │  │ Istiod Instance  │  │ Istiod       │   │
+│  │ East-West GW     │  │ East-West GW     │  │ East-West GW │   │
+│  └─────────┬────────┘  └────────┬─────────┘  └───────┬───────┘  │
+│            │                    │                    │          │
+│            └────────────────────┼────────────────────┘          │
+│                    Fleet-based Service Discovery                │
 │                         (Automatic mTLS)                        │
 └─────────────────────────────────────────────────────────────────┘
 ```

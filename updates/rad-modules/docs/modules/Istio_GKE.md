@@ -53,38 +53,38 @@ The module deploys approximately **10–12 minutes** to a single GCP project and
 │                                                                            │
 │   ┌──────────────────────────────────────────────────────────────────┐     │
 │   │  VPC Network                                                     │     │
-│   │  ┌──────────────────────────────────────────────────────────┐   │     │
-│   │  │  Subnet (10.132.0.0/16)                                  │   │     │
-│   │  │  Pod secondary range:     10.62.128.0/17                 │   │     │
-│   │  │  Service secondary range: 10.64.128.0/20                 │   │     │
-│   │  │                                                          │   │     │
-│   │  │  ┌──────────────────────────────────────────────────┐   │   │     │
-│   │  │  │  GKE Standard Cluster                            │   │   │     │
-│   │  │  │  • VPC-native networking                         │   │   │     │
-│   │  │  │  • Workload Identity                             │   │   │     │
-│   │  │  │  • Security Posture                              │   │   │     │
-│   │  │  │  • Managed Prometheus                            │   │   │     │
-│   │  │  │  • Gateway API                                   │   │   │     │
-│   │  │  │                                                  │   │   │     │
-│   │  │  │  Node Pool (2 × e2-standard-2, preemptible)      │   │   │     │
-│   │  │  │                                                  │   │   │     │
-│   │  │  │  Istio Control Plane (istio-system)              │   │   │     │
-│   │  │  │  • istiod (service discovery + config + CA)      │   │   │     │
-│   │  │  │  • Ingress Gateway (LoadBalancer)                │   │   │     │
-│   │  │  │                                                  │   │   │     │
-│   │  │  │  SIDECAR MODE              AMBIENT MODE          │   │   │     │
-│   │  │  │  ┌──────────────┐          ┌──────────────────┐  │   │   │     │
-│   │  │  │  │ App Pod      │          │ ztunnel (per node│  │   │   │     │
-│   │  │  │  │ ┌──────────┐ │          │ L4 mTLS + policy)│  │   │   │     │
-│   │  │  │  │ │ App      │ │          └────────┬─────────┘  │   │   │     │
-│   │  │  │  │ │ Envoy    │ │                   │            │   │   │     │
-│   │  │  │  │ │ sidecar  │ │          ┌────────▼─────────┐  │   │   │     │
-│   │  │  │  │ └──────────┘ │          │ Waypoint Proxy   │  │   │   │     │
-│   │  │  │  └──────────────┘          │ (optional, L7)   │  │   │   │     │
-│   │  │  │                            └──────────────────┘  │   │   │     │
-│   │  │  │  Observability: Prometheus · Jaeger · Grafana · Kiali   │   │     │
-│   │  │  └──────────────────────────────────────────────────┘   │   │     │
-│   │  └──────────────────────────────────────────────────────────┘   │     │
+│   │  ┌──────────────────────────────────────────────────────────┐   │      │
+│   │  │  Subnet (10.132.0.0/16)                                  │   │      │
+│   │  │  Pod secondary range:     10.62.128.0/17                 │   │      │
+│   │  │  Service secondary range: 10.64.128.0/20                 │   │      │
+│   │  │                                                          │   │      │
+│   │  │  ┌──────────────────────────────────────────────────┐   │   │       │
+│   │  │  │  GKE Standard Cluster                            │   │   │       │
+│   │  │  │  • VPC-native networking                         │   │   │       │
+│   │  │  │  • Workload Identity                             │   │   │       │
+│   │  │  │  • Security Posture                              │   │   │       │
+│   │  │  │  • Managed Prometheus                            │   │   │       │
+│   │  │  │  • Gateway API                                   │   │   │       │
+│   │  │  │                                                  │   │   │       │
+│   │  │  │  Node Pool (2 × e2-standard-2, preemptible)      │   │   │       │
+│   │  │  │                                                  │   │   │       │
+│   │  │  │  Istio Control Plane (istio-system)              │   │   │       │
+│   │  │  │  • istiod (service discovery + config + CA)      │   │   │       │
+│   │  │  │  • Ingress Gateway (LoadBalancer)                │   │   │       │
+│   │  │  │                                                  │   │   │       │
+│   │  │  │  SIDECAR MODE              AMBIENT MODE          │   │   │       │
+│   │  │  │  ┌──────────────┐          ┌──────────────────┐  │   │   │       │
+│   │  │  │  │ App Pod      │          │ ztunnel (per node│  │   │   │       │
+│   │  │  │  │ ┌──────────┐ │          │ L4 mTLS + policy)│  │   │   │       │
+│   │  │  │  │ │ App      │ │          └────────┬─────────┘  │   │   │       │
+│   │  │  │  │ │ Envoy    │ │                   │            │   │   │       │
+│   │  │  │  │ │ sidecar  │ │          ┌────────▼─────────┐  │   │   │       │
+│   │  │  │  │ └──────────┘ │          │ Waypoint Proxy   │  │   │   │       │
+│   │  │  │  └──────────────┘          │ (optional, L7)   │  │   │   │       │
+│   │  │  │                            └──────────────────┘  │   │   │       │
+│   │  │  │  Observability: Prometheus · Jaeger · Grafana · Kiali   │   │    │
+│   │  │  └──────────────────────────────────────────────────┘   │   │       │
+│   │  └──────────────────────────────────────────────────────────┘   │      │
 │   │  Cloud Router + Cloud NAT (outbound egress)                      │     │
 │   └──────────────────────────────────────────────────────────────────┘     │
 └────────────────────────────────────────────────────────────────────────────┘

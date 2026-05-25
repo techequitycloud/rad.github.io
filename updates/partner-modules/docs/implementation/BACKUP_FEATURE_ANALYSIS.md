@@ -22,34 +22,34 @@ The backup feature uses **Cloud Run Jobs** as the execution environment, which p
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    App_CloudRun Module                        │
+│                    App_CloudRun Module                      │
 ├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  ┌────────────────┐         ┌──────────────────┐           │
-│  │  Terraform     │         │   Cloud Run      │           │
-│  │  Resources     │────────▶│   Jobs           │           │
-│  │  (jobs.tf)     │         │                  │           │
-│  └────────────────┘         │  • Export Job    │           │
+│                                                             │
+│  ┌────────────────┐         ┌──────────────────┐            │
+│  │  Terraform     │         │   Cloud Run      │            │
+│  │  Resources     │────────▶│   Jobs           │            │
+│  │  (jobs.tf)     │         │                  │            │
+│  └────────────────┘         │  • Export Job    │            │
 │                              │  • GCS Import    │           │
-│  ┌────────────────┐         │  • GDrive Import │           │
-│  │  Bash Scripts  │────────▶│                  │           │
-│  │  (scripts/)    │         └──────────────────┘           │
+│  ┌────────────────┐         │  • GDrive Import │            │
+│  │  Bash Scripts  │────────▶│                  │            │
+│  │  (scripts/)    │         └──────────────────┘            │
 │  │                │                  │                      │
 │  │ • export-      │                  ▼                      │
-│  │   backup.sh    │         ┌──────────────────┐           │
-│  │ • import-gcs-  │         │  Cloud SQL DB    │           │
-│  │   backup.sh    │◀────────│  (Private IP)    │           │
-│  │ • import-      │         └──────────────────┘           │
+│  │   backup.sh    │         ┌──────────────────┐            │
+│  │ • import-gcs-  │         │  Cloud SQL DB    │            │
+│  │   backup.sh    │◀────────│  (Private IP)    │            │
+│  │ • import-      │         └──────────────────┘            │
 │  │   gdrive-      │                                         │
-│  │   backup.sh    │         ┌──────────────────┐           │
-│  └────────────────┘◀────────│  NFS Volume      │           │
+│  │   backup.sh    │         ┌──────────────────┐            │
+│  └────────────────┘◀────────│  NFS Volume      │            │
 │                              │  (Optional)      │           │
-│  ┌────────────────┐         └──────────────────┘           │
+│  ┌────────────────┐         └──────────────────┘            │
 │  │  GCS Bucket    │                                         │
-│  │  (Backups)     │         ┌──────────────────┐           │
-│  │                │◀────────│  Cloud Scheduler │           │
-│  │ • Lifecycle    │         │  (Cron Jobs)     │           │
-│  │ • Retention    │         └──────────────────┘           │
+│  │  (Backups)     │         ┌──────────────────┐            │
+│  │                │◀────────│  Cloud Scheduler │            │
+│  │ • Lifecycle    │         │  (Cron Jobs)     │            │
+│  │ • Retention    │         └──────────────────┘            │
 │  └────────────────┘                                         │
 └─────────────────────────────────────────────────────────────┘
 ```
