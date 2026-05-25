@@ -1,10 +1,48 @@
-# Services_GCP — Lab Guide
+---
+title: "Services GCP — Lab Guide"
+sidebar_label: "Services GCP"
+---
+
+# Services GCP — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/GCP_Services)**
 
-## Overview
+Services GCP is the **foundational infrastructure module** in the RAD Modules ecosystem. It must be deployed before any application module and provisions the shared GCP services that all applications depend on — including VPC networking, Cloud SQL databases, a self-managed NFS and Redis VM, Artifact Registry, IAM service accounts, and optional managed services such as GKE Autopilot, Cloud Filestore, and Cloud Memorystore.
 
-`Services_GCP` is the **foundational infrastructure module** in the RAD Modules ecosystem. It must be deployed before any application module and provisions the shared GCP services that all applications depend on: VPC networking, Cloud SQL databases, a self-managed NFS and Redis VM, Artifact Registry, IAM service accounts, and optional managed services (Cloud Filestore, Cloud Memorystore, GKE Autopilot) and security controls (CMEK, Binary Authorization, VPC Service Controls).
+---
+
+## Table of Contents
+
+1. [Overview](#1-overview)
+2. [Architecture](#2-architecture)
+3. [Prerequisites](#3-prerequisites)
+4. [Lab Setup](#4-lab-setup)
+5. [Exercise 1 — Deploy Services GCP Infrastructure](#exercise-1--deploy-services-gcp-infrastructure)
+6. [Exercise 2 — Verify Networking & IAM](#exercise-2--verify-networking--iam)
+7. [Exercise 3 — Verify Cloud SQL Databases](#exercise-3--verify-cloud-sql-databases)
+8. [Exercise 4 — Verify the NFS & Redis VM](#exercise-4--verify-the-nfs--redis-vm)
+9. [Exercise 5 — Verify the GKE Cluster (Optional)](#exercise-5--verify-the-gke-cluster-optional)
+10. [Exercise 6 — Verify Security Controls (Optional)](#exercise-6--verify-security-controls-optional)
+11. [Exercise 7 — Review Cloud Logging & Monitoring](#exercise-7--review-cloud-logging--monitoring)
+12. [Cleanup](#cleanup)
+13. [Reference](#reference)
+
+---
+
+## 1. Overview
+
+### What Is Services GCP?
+
+| Capability | What It Demonstrates |
+| :--- | :--- |
+| VPC Networking | Custom-mode VPC with regional subnets, Cloud NAT, and Private Service Connect peering |
+| IAM Service Accounts | Four purpose-built service accounts with least-privilege bindings for Cloud Build, Cloud Deploy, Cloud Run, and NFS/Redis |
+| Cloud SQL | Private-IP PostgreSQL (default) and optional MySQL or AlloyDB with automated backups and Secret Manager root passwords |
+| Artifact Registry | Shared Docker repository used by all application modules in the project |
+| NFS + Redis VM | Self-managed Managed Instance Group with auto-healing, providing shared NFS storage and Redis cache |
+| GKE Autopilot (optional) | One or more Autopilot clusters registered to a GKE fleet |
+| Security Controls (optional) | CMEK via Cloud KMS, Binary Authorization image policies, and VPC Service Controls perimeters |
+| Observability (optional) | Cloud Monitoring alert policies for CPU, memory, and disk utilisation |
 
 **Estimated time:** 1.5–2.5 hours (add 30–40 minutes if deploying a GKE cluster)
 
@@ -30,11 +68,63 @@
 
 ---
 
-## CLI and REST API Overview
+## 2. Architecture
+
+```
+┌─────────────────────────────────── GCP Project ───────────────────────────────────┐
+│                                                                                    │
+│  ┌──────────────────────────────── VPC Network ────────────────────────────────┐  │
+│  │  ┌──────────────────────────── Primary Subnet ──────────────────────────┐   │  │
+│  │  │                                                                       │   │  │
+│  │  │  ┌──────────────────────┐      ┌──────────────────────────────────┐  │   │  │
+│  │  │  │   NFS + Redis VM     │      │   GKE Autopilot Cluster(s)       │  │   │  │
+│  │  │  │   (MIG, auto-heal,   │      │   + Fleet Registration           │  │   │  │
+│  │  │  │    daily snapshots)  │      │   (optional)                     │  │   │  │
+│  │  │  └──────────────────────┘      └──────────────────────────────────┘  │   │  │
+│  │  └───────────────────────────────────────────────────────────────────────┘   │  │
+│  │                                         │                                     │  │
+│  │                                    Cloud NAT ──────────────────► Internet     │  │
+│  └─────────────────────────────────────────────────────────────────────────────  │  │
+│                                                                                   │  │
+│  ┌──────────────────────────────────────────────────────────────────────────┐    │  │
+│  │                           Managed Services                               │    │  │
+│  │  ┌─────────────────┐   ┌──────────────────────┐   ┌──────────────────┐  │    │  │
+│  │  │   Cloud SQL      │   │  Artifact Registry   │   │  Secret Manager  │  │    │  │
+│  │  │   PostgreSQL     │   │  (shared Docker      │   │  (DB passwords,  │  │    │  │
+│  │  │   MySQL (opt.)   │   │   repository)        │   │   KMS keys)      │  │    │  │
+│  │  └─────────────────┘   └──────────────────────┘   └──────────────────┘  │    │  │
+│  └──────────────────────────────────────────────────────────────────────────┘    │  │
+│                                                                                   │  │
+│  ┌──────────────────────────────────────────────────────────────────────────┐    │  │
+│  │                        IAM Service Accounts                              │    │  │
+│  │   cloudbuild-sa  ·  clouddeploy-sa  ·  cloudrun-sa  ·  app-nfs-sa       │    │  │
+│  └──────────────────────────────────────────────────────────────────────────┘    │  │
+└───────────────────────────────────────────────────────────────────────────────────┘  │
+```
+
+---
+
+## 3. Prerequisites
+
+| Requirement | Detail |
+| :--- | :--- |
+| GCP project with billing | Active billing account linked to the target project |
+| RAD module creator service account | `roles/owner` granted in the target project |
+| `gcloud` CLI | Authenticated with `gcloud auth login` and project configured |
+| `kubectl` (optional) | Required only if deploying a GKE Autopilot cluster |
+| RAD UI access | Permission to deploy modules in the target GCP project |
+
+Services GCP is a standalone module with no runtime dependencies on other RAD modules. The only prerequisite is an existing GCP project with billing enabled.
+
+---
+
+## 4. Lab Setup
+
+Set these shell variables at the start of each session. They are referenced throughout all exercises.
 
 ```bash
-# Set these variables at the start of each session
-export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
+# Required — set these before running any commands
+export PROJECT="your-gcp-project-id"   # your GCP project ID
 export REGION="us-central1"             # the region you deployed into
 export TOKEN=$(gcloud auth print-access-token)
 
@@ -51,7 +141,7 @@ export PG_INSTANCE=$(gcloud sql instances list \
   --format="value(name)" \
   --limit=1)
 
-# Discover the NFS/Redis VM (if created)
+# Discover the NFS/Redis VM (applies when create_network_filesystem = true)
 export NFS_VM=$(gcloud compute instances list \
   --project=${PROJECT} \
   --filter="tags.items:nfsserver" \
@@ -61,28 +151,14 @@ export NFS_VM=$(gcloud compute instances list \
 
 ---
 
-## Prerequisites
+## Exercise 1 — Deploy Services GCP Infrastructure
 
-| Requirement | Detail |
-|---|---|
-| GCP project with billing | Active billing account linked |
-| Service account | `roles/owner` granted in the target project to the RAD module creator SA |
-| `gcloud` CLI | Authenticated (`gcloud auth login`) |
-| `kubectl` (optional) | Required only if deploying a GKE cluster |
-| RAD UI access | Permission to deploy modules in the target GCP project |
-
-`Services_GCP` is a standalone module with no runtime dependencies on other RAD modules. The only prerequisite is an existing GCP project with billing enabled.
-
----
-
-## Phase 1 — Deploy Infrastructure [AUTOMATED]
-
-### Step 1.1 — Configure Variables
+### 1.1 — Configure Variables
 
 Variables are configured in the RAD UI form before deploying. The table below covers the most commonly adjusted variables.
 
 | Variable | Default | Description |
-|---|---|---|
+| :--- | :--- | :--- |
 | `project_id` | _(required)_ | GCP project ID to deploy into |
 | `availability_regions` | `['us-central1']` | List of regions for subnets and resources; first entry is the primary region |
 | `network_name` | `vpc-network` | Name of the VPC network to create |
@@ -106,14 +182,14 @@ Variables are configured in the RAD UI form before deploying. The table below co
 | `enable_security_command_center` | `false` | Enable Security Command Center for centralised security findings |
 | `configure_email_notification` | `false` | Create Cloud Monitoring alert policies for CPU, memory, and disk |
 
-### Step 1.2 — Initiate Deployment
+### 1.2 — Initiate Deployment
 
 Deployment is initiated from the RAD UI. Fill in the variable form and click **Deploy**.
 
 **Expected resource provisioning times:**
 
 | Phase | Typical duration |
-|---|---|
+| :--- | :--- |
 | GCP API enablement (46 APIs + 360 s propagation wait) | 6–8 min |
 | VPC network, subnets, Cloud NAT, Private Service Connect | 2–4 min |
 | Artifact Registry repository + service accounts | 2–3 min |
@@ -128,12 +204,12 @@ Deployment is initiated from the RAD UI. Fill in the variable form and click **D
 | **Total (defaults: PostgreSQL + NFS VM)** | **20–35 min** |
 | **Total (with GKE cluster)** | **35–55 min** |
 
-### Step 1.3 — Record Outputs
+### 1.3 — Record Outputs
 
 After deployment completes, the following outputs are available in the RAD UI deployment panel.
 
 | Output | Description |
-|---|---|
+| :--- | :--- |
 | `deployment_id` | Random hex ID used as a suffix in all resource names |
 | `primary_region` | First region from `availability_regions` |
 | `host_project_id` | GCP project ID |
@@ -154,11 +230,11 @@ After deployment completes, the following outputs are available in the RAD UI de
 | `binauthz_attestor_name` | Binary Authorization attestor name (if `enable_binary_authorization = true`) |
 | `storage_kms_key_name` | KMS key resource name for Cloud Storage (if `enable_cmek = true`) |
 
-Set shell variables for use in later steps:
+Update your shell variables with values from the deployment outputs:
 
 ```bash
-export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
-export REGION="us-central1"             # the region you deployed into
+export PROJECT="your-gcp-project-id"
+export REGION="us-central1"
 export TOKEN=$(gcloud auth print-access-token)
 
 export NETWORK=$(gcloud compute networks list \
@@ -181,9 +257,9 @@ export NFS_VM=$(gcloud compute instances list \
 
 ---
 
-## Phase 2 — Verify Networking & IAM [MANUAL]
+## Exercise 2 — Verify Networking & IAM
 
-### Step 2.1 — Confirm the VPC Network
+### 2.1 — Confirm the VPC Network
 
 Verify the VPC network was created:
 
@@ -204,7 +280,7 @@ In the Cloud Console, navigate to **VPC network → VPC networks** and confirm t
 >   | jq '{name, autoCreateSubnetworks, routingConfig}'
 > ```
 
-### Step 2.2 — Inspect Subnets
+### 2.2 — Inspect Subnets
 
 ```bash
 gcloud compute networks subnets list \
@@ -215,7 +291,7 @@ gcloud compute networks subnets list \
 
 **Expected result:** One subnet per configured availability region with the CIDR range you specified. `privateIpGoogleAccess` should be `True`.
 
-### Step 2.3 — Confirm Cloud NAT
+### 2.3 — Confirm Cloud NAT
 
 ```bash
 gcloud compute routers list \
@@ -235,7 +311,7 @@ gcloud compute routers nats list \
 
 **Expected result:** A Cloud Router and NAT gateway are present in the primary region. This allows private VM instances to reach the internet for updates without a public IP.
 
-### Step 2.4 — Verify Firewall Rules
+### 2.4 — Verify Firewall Rules
 
 ```bash
 gcloud compute firewall-rules list \
@@ -253,7 +329,7 @@ gcloud compute firewall-rules list \
 >   | jq '.items[] | select(.network | endswith("'${NETWORK}'")) | {name, direction, allowed}'
 > ```
 
-### Step 2.5 — Inspect IAM Service Accounts
+### 2.5 — Inspect IAM Service Accounts
 
 ```bash
 gcloud iam service-accounts list \
@@ -287,7 +363,7 @@ gcloud projects get-iam-policy ${PROJECT} \
 >   | jq '.accounts[] | {displayName, email, disabled}'
 > ```
 
-### Step 2.6 — Verify Artifact Registry Repository
+### 2.6 — Verify Artifact Registry Repository
 
 ```bash
 gcloud artifacts repositories list \
@@ -302,9 +378,9 @@ In the Cloud Console, navigate to **Artifact Registry → Repositories** and con
 
 ---
 
-## Phase 3 — Verify Databases [MANUAL]
+## Exercise 3 — Verify Cloud SQL Databases
 
-### Step 3.1 — Confirm Cloud SQL PostgreSQL Instance
+### 3.1 — Confirm Cloud SQL PostgreSQL Instance
 
 ```bash
 gcloud sql instances describe ${PG_INSTANCE} \
@@ -323,7 +399,7 @@ In the Cloud Console, navigate to **SQL** and click the instance name. Review th
 >   | jq '{name, state, databaseVersion, settings: {tier: .settings.tier, availabilityType: .settings.availabilityType}}'
 > ```
 
-### Step 3.2 — Verify Private IP Only
+### 3.2 — Verify Private IP Only
 
 ```bash
 gcloud sql instances describe ${PG_INSTANCE} \
@@ -333,7 +409,7 @@ gcloud sql instances describe ${PG_INSTANCE} \
 
 **Expected result:** Only a `PRIVATE` type IP address is listed. No `PRIMARY` (public) IP exists — the instance is accessible only from within the VPC.
 
-### Step 3.3 — Verify Automated Backups
+### 3.3 — Verify Automated Backups
 
 ```bash
 gcloud sql backups list \
@@ -345,7 +421,7 @@ gcloud sql backups list \
 
 **Expected result:** If the instance is more than 24 hours old, completed backups appear. If newly deployed, the list may be empty but the backup configuration is already active (04:00 UTC daily, 7-day retention).
 
-### Step 3.4 — Retrieve the Root Password Secret
+### 3.4 — Retrieve the Root Password Secret
 
 The root password is automatically generated and stored in Secret Manager:
 
@@ -377,7 +453,7 @@ gcloud secrets versions access latest \
 >   | jq -r '.payload.data' | base64 --decode
 > ```
 
-### Step 3.5 — Check Database Flags
+### 3.5 — Check Database Flags
 
 ```bash
 gcloud sql instances describe ${PG_INSTANCE} \
@@ -389,11 +465,11 @@ gcloud sql instances describe ${PG_INSTANCE} \
 
 ---
 
-## Phase 4 — Verify NFS & Redis VM [MANUAL]
+## Exercise 4 — Verify the NFS & Redis VM
 
-This phase applies when `create_network_filesystem = true` (the default). Skip to Phase 5 if you are using Cloud Filestore + Cloud Memorystore instead.
+This exercise applies when `create_network_filesystem = true` (the default). Skip to Exercise 5 if you are using Cloud Filestore + Cloud Memorystore instead.
 
-### Step 4.1 — Confirm the VM is Running
+### 4.1 — Confirm the VM is Running
 
 ```bash
 gcloud compute instances describe ${NFS_VM} \
@@ -417,7 +493,7 @@ In the Cloud Console, navigate to **Compute Engine → VM instances** and confir
 >   | jq '.items | to_entries[] | .value.instances[]? | select(.tags.items[]? == "nfsserver") | {name, status, zone, networkIP: .networkInterfaces[0].networkIP}'
 > ```
 
-### Step 4.2 — Confirm the Managed Instance Group
+### 4.2 — Confirm the Managed Instance Group
 
 ```bash
 gcloud compute instance-groups managed list \
@@ -427,7 +503,7 @@ gcloud compute instance-groups managed list \
 
 **Expected result:** The MIG shows `targetSize: 1` and `isStable: True`. The auto-healing policy monitors TCP port 2049 (NFS) — if the VM becomes unhealthy, the MIG automatically recreates it.
 
-### Step 4.3 — Verify the Data Disk
+### 4.3 — Verify the Data Disk
 
 ```bash
 gcloud compute disks list \
@@ -440,9 +516,9 @@ gcloud compute disks list \
 
 In the Cloud Console, navigate to **Compute Engine → Disks** to view the disk and confirm daily snapshot creation under **Compute Engine → Snapshots**.
 
-### Step 4.4 — Verify NFS Server IP in Outputs
+### 4.4 — Verify NFS Server IP in Outputs
 
-The NFS server IP is exposed as `nfs_server_ip` in the module outputs and is used by App_CloudRun and App_GKE to mount the NFS share. Confirm it matches the VM's internal IP:
+The NFS server IP is exposed as `nfs_server_ip` in the module outputs and is used by application modules to mount the NFS share. Confirm it matches the VM's internal IP:
 
 ```bash
 NFS_IP=$(gcloud compute instances describe ${NFS_VM} \
@@ -458,11 +534,11 @@ echo "NFS server IP: ${NFS_IP}"
 
 ---
 
-## Phase 5 — Verify GKE Cluster [MANUAL]
+## Exercise 5 — Verify the GKE Cluster (Optional)
 
-This phase applies only when `create_google_kubernetes_engine = true`. Skip to Phase 6 if GKE was not enabled.
+This exercise applies only when `create_google_kubernetes_engine = true`. Skip to Exercise 6 if GKE was not enabled.
 
-### Step 5.1 — List GKE Clusters
+### 5.1 — List GKE Clusters
 
 ```bash
 gcloud container clusters list \
@@ -481,7 +557,7 @@ In the Cloud Console, navigate to **Kubernetes Engine → Clusters** to confirm 
 >   | jq '.clusters[] | {name, status, autopilot, currentMasterVersion}'
 > ```
 
-### Step 5.2 — Configure kubectl Access
+### 5.2 — Configure kubectl Access
 
 ```bash
 export CLUSTER=$(gcloud container clusters list \
@@ -496,9 +572,9 @@ gcloud container clusters get-credentials ${CLUSTER} \
 kubectl config current-context
 ```
 
-**Expected result:** A kubeconfig context referencing your project and cluster is shown, e.g. `gke_my-project_us-central1_gke-cluster-1`.
+**Expected result:** A kubeconfig context referencing your project and cluster is shown, for example `gke_my-project_us-central1_gke-cluster-1`.
 
-### Step 5.3 — Verify Cluster CIDR Configuration
+### 5.3 — Verify Cluster CIDR Configuration
 
 ```bash
 gcloud container clusters describe ${CLUSTER} \
@@ -509,7 +585,7 @@ gcloud container clusters describe ${CLUSTER} \
 
 **Expected result:** Pod and service CIDR ranges match your configured `gke_pod_base_cidr` and `gke_service_base_cidr`. The cluster is attached to the module VPC.
 
-### Step 5.4 — Verify Fleet Registration
+### 5.4 — Verify Fleet Registration
 
 ```bash
 gcloud container fleet memberships list \
@@ -521,11 +597,11 @@ gcloud container fleet memberships list \
 
 ---
 
-## Phase 6 — Verify Security Controls [MANUAL]
+## Exercise 6 — Verify Security Controls (Optional)
 
-This phase covers optional security controls. Steps apply only when the relevant feature was enabled during deployment.
+This exercise covers optional security controls. Steps apply only when the relevant feature was enabled during deployment.
 
-### Step 6.1 — CMEK: Verify KMS Key Ring and Key
+### 6.1 — CMEK: Verify KMS Key Ring and Key
 
 Applies when `enable_cmek = true`:
 
@@ -552,7 +628,7 @@ gcloud kms keys list \
 
 **Expected result:** A key ring and at least one `ENCRYPT_DECRYPT` purpose key exist in the primary region. The primary key version state is `ENABLED`. Confirm that the Cloud SQL instance and Artifact Registry repository show Customer-managed encryption in their respective console pages.
 
-### Step 6.2 — Binary Authorization: Verify Policy
+### 6.2 — Binary Authorization: Verify Policy
 
 Applies when `enable_binary_authorization = true`:
 
@@ -572,7 +648,7 @@ gcloud container binauthz attestors list \
 
 In the Cloud Console, navigate to **Security → Binary Authorization** to view the policy and attestors.
 
-### Step 6.3 — VPC Service Controls: Verify Perimeter
+### 6.3 — VPC Service Controls: Verify Perimeter
 
 Applies when `enable_vpc_sc = true`:
 
@@ -588,7 +664,7 @@ gcloud access-context-manager perimeters list \
 
 **Expected result:** A perimeter exists and lists the project as a protected resource. When `vpc_sc_dry_run = true` (default), the perimeter is in audit mode — violations are logged but requests are not blocked.
 
-View dry-run violations to identify any access patterns that would be blocked before enforcing:
+View dry-run violations to identify access patterns that would be blocked before enforcing:
 
 ```bash
 gcloud logging read \
@@ -602,9 +678,9 @@ In the Cloud Console, navigate to **Security → VPC Service Controls** to view 
 
 ---
 
-## Phase 7 — Cloud Logging & Monitoring [MANUAL]
+## Exercise 7 — Review Cloud Logging & Monitoring
 
-### Step 7.1 — Confirm API Enablement Logs
+### 7.1 — Confirm API Enablement Logs
 
 View the audit log entries generated when APIs were enabled during deployment:
 
@@ -618,7 +694,7 @@ gcloud logging read \
 
 **Expected result:** Log entries show the 46+ APIs enabled by this module during initial deployment.
 
-### Step 7.2 — View Admin Activity Audit Logs
+### 7.2 — View Admin Activity Audit Logs
 
 ```bash
 gcloud logging read \
@@ -630,7 +706,7 @@ gcloud logging read \
 
 **Expected result:** Infrastructure creation events are logged, including VPC network, subnet, and firewall rule creation.
 
-### Step 7.3 — Check Cloud Monitoring Alert Policies
+### 7.3 — Check Cloud Monitoring Alert Policies
 
 Applies when `configure_email_notification = true`:
 
@@ -659,7 +735,7 @@ In the Cloud Console, navigate to **Monitoring → Alerting → Policies** to vi
 >   | jq '.alertPolicies[] | {displayName, enabled, conditions: [.conditions[].displayName]}'
 > ```
 
-### Step 7.4 — Explore Compute Engine Metrics (NFS VM)
+### 7.4 — Explore Compute Engine Metrics (NFS VM)
 
 Applies when `create_network_filesystem = true`. In the Cloud Console, navigate to **Monitoring → Metrics Explorer** and query:
 
@@ -679,7 +755,7 @@ fetch gce_instance
 | every 1m
 ```
 
-Replace `INSTANCE_ID` with the VM's instance ID, which can be retrieved with:
+Replace `INSTANCE_ID` with the VM's instance ID:
 
 ```bash
 gcloud compute instances describe ${NFS_VM} \
@@ -694,16 +770,16 @@ gcloud compute instances describe ${NFS_VM} \
 
 ---
 
-## Phase 8 — Undeploy [AUTOMATED]
+## Cleanup
 
-When you are finished, return to the RAD UI, navigate to your `Services_GCP` deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your Services GCP deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
 
-> **Important:** All application modules (`*_CloudRun`, `*_GKE`) that depend on this `Services_GCP` deployment **must be undeployed first**. Destroying `Services_GCP` while application modules are still running will break their database, NFS, and network connectivity.
+> **Important:** All application modules (`*_CloudRun`, `*_GKE`) that depend on this Services GCP deployment **must be undeployed first**. Destroying Services GCP while application modules are still running will break their database, NFS, and network connectivity.
 
 **Expected undeploy times:**
 
 | Resource | Typical duration |
-|---|---|
+| :--- | :--- |
 | GKE cluster + Fleet deregistration (if enabled) | 5–10 minutes |
 | Cloud SQL instances | 3–5 minutes |
 | Cloud Memorystore Redis (if enabled) | 2–3 minutes |
@@ -721,18 +797,18 @@ When you are finished, return to the RAD UI, navigate to your `Services_GCP` dep
 
 ---
 
-## Summary
+## Reference
 
-| Action | Phase | Automated |
-|---|---|---|
-| Configure variables in RAD UI | 1.1 | Manual |
-| Deploy APIs, networking, databases, NFS VM, Artifact Registry | 1.2 | Automated |
-| Note outputs from RAD UI deployment panel | 1.3 | Manual |
-| Verify VPC network, subnets, NAT, firewall rules | 2 | Manual |
-| Inspect IAM service accounts and Artifact Registry | 2 | Manual |
-| Confirm Cloud SQL private IP, backups, and Secret Manager passwords | 3 | Manual |
-| Verify NFS/Redis VM MIG health and data disk | 4 | Manual |
-| Configure kubectl and verify GKE cluster and fleet (if enabled) | 5 | Manual |
-| Verify CMEK, Binary Authorization, and VPC-SC (if enabled) | 6 | Manual |
-| Review audit logs, alert policies, and Compute metrics | 7 | Manual |
-| Undeploy all module resources | 8 | Automated |
+| Topic | Link |
+| :--- | :--- |
+| Services GCP Configuration Guide | [docs.radmodules.dev/docs/modules/GCP_Services](https://docs.radmodules.dev/docs/modules/GCP_Services) |
+| VPC Network Overview | [cloud.google.com/vpc/docs/overview](https://cloud.google.com/vpc/docs/overview) |
+| Cloud NAT documentation | [cloud.google.com/nat/docs/overview](https://cloud.google.com/nat/docs/overview) |
+| Cloud SQL for PostgreSQL | [cloud.google.com/sql/docs/postgres](https://cloud.google.com/sql/docs/postgres) |
+| Secret Manager overview | [cloud.google.com/secret-manager/docs/overview](https://cloud.google.com/secret-manager/docs/overview) |
+| Artifact Registry documentation | [cloud.google.com/artifact-registry/docs](https://cloud.google.com/artifact-registry/docs) |
+| GKE Autopilot overview | [cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview) |
+| Cloud KMS key management | [cloud.google.com/kms/docs/key-management-overview](https://cloud.google.com/kms/docs/key-management-overview) |
+| Binary Authorization | [cloud.google.com/binary-authorization/docs/overview](https://cloud.google.com/binary-authorization/docs/overview) |
+| VPC Service Controls | [cloud.google.com/vpc-service-controls/docs/overview](https://cloud.google.com/vpc-service-controls/docs/overview) |
+| Cloud Monitoring alert policies | [cloud.google.com/monitoring/alerts](https://cloud.google.com/monitoring/alerts) |
