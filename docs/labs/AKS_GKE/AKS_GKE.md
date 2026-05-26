@@ -96,7 +96,7 @@ Azure Cloud                          Google Cloud
 │  ┌──────────────────────────────────────────────────────────────┐  │
 │  │  GKE Fleet Hub                                               │  │
 │  │  • Fleet membership: azure-aks-cluster-<id>                  │  │
-│  │  • Platform version: 1.34.0-gke.1                           │   │
+│  │  • Platform version: 1.34.0-gke.1                            │  │
 │  │  • Logging: SYSTEM + WORKLOADS                               │  │
 │  │  • Managed Prometheus enabled                                │  │
 │  └──────────────────────────────────────────────────────────────┘  │
