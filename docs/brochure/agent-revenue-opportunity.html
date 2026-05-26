@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Your Cloud Expertise is a Revenue Stream — RAD Agent Programme</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --primary: #1a73e8;
+      --accent: #0d47a1;
+      --dark: #1c2b3a;
+      --mid: #4a6274;
+      --light: #f0f4f8;
+      --border: #d0dce8;
+      --white: #ffffff;
+      --gold: #f9ab00;
+      --green: #1e8e3e;
+      --teal: #00796b;
+      --red: #d93025;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.6;
+      color: var(--dark);
+      background: var(--white);
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    /* ── COVER ── */
+    .cover {
+      background: linear-gradient(150deg, #0a2540 0%, #1e5c3a 50%, #1a73e8 100%);
+      min-height: 297mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 0;
+    }
+
+    .cover-top {
+      padding: 56px 60px 40px;
+    }
+
+    .cover-brand {
+      font-size: 10pt;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.65);
+      margin-bottom: 48px;
+    }
+
+    .cover h1 {
+      font-size: 38pt;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+
+    .cover-sub {
+      font-size: 15pt;
+      font-weight: 300;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 40px;
+    }
+
+    .cover-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .cover-tag {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      padding: 5px 16px;
+      font-size: 9pt;
+      color: #fff;
+    }
+
+    .cover-metrics {
+      background: rgba(0, 0, 0, 0.28);
+      padding: 24px 60px;
+      display: flex;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+
+    .cm {
+      color: #fff;
+    }
+
+    .cm-val {
+      font-size: 22pt;
+      font-weight: 700;
+      color: var(--gold);
+      display: block;
+      line-height: 1;
+    }
+
+    .cm-lbl {
+      font-size: 7.5pt;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 3px;
+    }
+
+    .cover-tagline {
+      background: rgba(0, 0, 0, 0.18);
+      padding: 20px 60px;
+    }
+
+    .cover-tagline p {
+      font-size: 13pt;
+      font-weight: 300;
+      color: rgba(255, 255, 255, 0.9);
+      font-style: italic;
+    }
+
+    .cover-footer {
+      background: rgba(0, 0, 0, 0.35);
+      padding: 20px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cover-footer-left {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 9pt;
+    }
+
+    .cover-footer-right {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 8.5pt;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── INNER PAGES ── */
+    .inner {
+      padding: 44px 56px;
+    }
+
+    .section {
+      margin-bottom: 36px;
+    }
+
+    .sh {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .sh-title {
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    .sh-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+    }
+
+    .page-title {
+      font-size: 20pt;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 6px;
+      line-height: 1.2;
+    }
+
+    .page-sub {
+      font-size: 10.5pt;
+      color: var(--mid);
+      margin-bottom: 28px;
+    }
+
+    /* ── TEXT ── */
+    p {
+      margin-bottom: 12px;
+      color: var(--dark);
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    /* ── METRIC CARDS ── */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .metrics-row-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .mc {
+      background: var(--light);
+      border-radius: 10px;
+      padding: 18px 16px;
+      border-top: 3px solid var(--primary);
+      text-align: center;
+    }
+
+    .mc-val {
+      font-size: 18pt;
+      font-weight: 700;
+      color: var(--primary);
+      display: block;
+      line-height: 1;
+    }
+
+    .mc-sub {
+      font-size: 7.5pt;
+      color: var(--mid);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 5px;
+      display: block;
+    }
+
+    .mc-gold {
+      border-top-color: var(--gold);
+    }
+
+    .mc-gold .mc-val {
+      color: #b06000;
+    }
+
+    .mc-green {
+      border-top-color: var(--green);
+    }
+
+    .mc-green .mc-val {
+      color: var(--green);
+    }
+
+    .mc-teal {
+      border-top-color: var(--teal);
+    }
+
+    .mc-teal .mc-val {
+      color: var(--teal);
+    }
+
+    /* ── TWO / THREE COL ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      background: var(--white);
+    }
+
+    .card-accent {
+      border-left: 3px solid var(--primary);
+      background: var(--light);
+    }
+
+    .card-gold {
+      border-left: 3px solid var(--gold);
+      background: #fffdf0;
+    }
+
+    .card-green {
+      border-left: 3px solid var(--green);
+      background: #f0faf3;
+    }
+
+    .card-teal {
+      border-left: 3px solid var(--teal);
+      background: #e0f2f1;
+    }
+
+    .card h4 {
+      font-size: 9.5pt;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      font-size: 8.5pt;
+      color: var(--mid);
+      margin: 0;
+    }
+
+    .card-num {
+      font-size: 7pt;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight {
+      background: linear-gradient(135deg, var(--accent), var(--primary));
+      border-radius: 10px;
+      padding: 24px 28px;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+
+    .highlight h3 {
+      font-size: 13pt;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .highlight p {
+      color: rgba(255, 255, 255, 0.85);
+      margin: 0;
+      font-size: 9.5pt;
+    }
+
+    .highlight-gold {
+      background: linear-gradient(135deg, #b06000, var(--gold));
+    }
+
+    .highlight-green {
+      background: linear-gradient(135deg, #0a5c22, var(--green));
+    }
+
+    .highlight-teal {
+      background: linear-gradient(135deg, #004d40, var(--teal));
+    }
+
+    .highlight-dark {
+      background: linear-gradient(135deg, #0a2540, var(--dark));
+    }
+
+    /* ── JOURNEY / STEP FLOW ── */
+    .journey {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-bottom: 20px;
+    }
+
+    .journey-step {
+      display: flex;
+      gap: 16px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      background: var(--white);
+      align-items: flex-start;
+    }
+
+    .journey-step:first-child {
+      border-radius: 8px 8px 0 0;
+    }
+
+    .journey-step:last-child {
+      border-bottom: 1px solid var(--border);
+      border-radius: 0 0 8px 8px;
+    }
+
+    .journey-step:nth-child(even) {
+      background: var(--light);
+    }
+
+    .step-num {
+      font-size: 16pt;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1;
+      min-width: 28px;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-title {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 2px;
+    }
+
+    .step-desc {
+      font-size: 8.5pt;
+      color: var(--mid);
+    }
+
+    .step-badge {
+      font-size: 7pt;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 10px;
+      background: #e8f0fe;
+      color: var(--accent);
+      white-space: nowrap;
+      align-self: flex-start;
+      margin-top: 2px;
+    }
+
+    .step-badge-gold {
+      background: #fff8e1;
+      color: #7a4900;
+    }
+
+    .step-badge-green {
+      background: #e6f4ea;
+      color: #0a5c22;
+    }
+
+    .step-badge-teal {
+      background: #e0f2f1;
+      color: #004d40;
+    }
+
+    /* ── REVENUE TIER CARDS ── */
+    .tier-card {
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      background: var(--white);
+      position: relative;
+    }
+
+    .tier-card h4 {
+      font-size: 12pt;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+
+    .tier-duration {
+      font-size: 8pt;
+      color: var(--mid);
+      margin-bottom: 14px;
+      display: block;
+    }
+
+    .tier-outcome {
+      margin-top: 14px;
+      background: var(--light);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 8.5pt;
+    }
+
+    .tier-outcome strong {
+      color: var(--primary);
+    }
+
+    .tier-featured {
+      border: 2px solid var(--gold);
+    }
+
+    .tier-featured::before {
+      content: 'Highest Impact';
+      position: absolute;
+      top: -11px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gold);
+      color: var(--dark);
+      font-size: 7pt;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 12px;
+      border-radius: 10px;
+    }
+
+    /* ── REVENUE EXAMPLE BOX ── */
+    .revenue-example {
+      background: var(--light);
+      border-radius: 10px;
+      padding: 18px 20px;
+      border-left: 4px solid var(--gold);
+      margin-bottom: 16px;
+    }
+
+    .revenue-example-title {
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #7a4900;
+      margin-bottom: 8px;
+    }
+
+    .revenue-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8.5pt;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .revenue-line:last-child {
+      border-bottom: none;
+      font-weight: 700;
+      color: var(--dark);
+      padding-top: 8px;
+      margin-top: 4px;
+    }
+
+    .revenue-amount {
+      font-weight: 600;
+      color: var(--green);
+    }
+
+    /* ── TABLE ── */
+    .layer-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .layer-table th {
+      background: var(--dark);
+      color: #fff;
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 8pt;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .layer-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 9pt;
+      vertical-align: middle;
+    }
+
+    .layer-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .layer-table tr:nth-child(even) td {
+      background: var(--light);
+    }
+
+    .layer-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 7.5pt;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-blue {
+      background: #e8f0fe;
+      color: var(--accent);
+    }
+
+    .badge-gold {
+      background: #fff8e1;
+      color: #7a4900;
+    }
+
+    .badge-green {
+      background: #e6f4ea;
+      color: #0a5c22;
+    }
+
+    .badge-dark {
+      background: var(--dark);
+      color: #fff;
+    }
+
+    .badge-teal {
+      background: #e0f2f1;
+      color: #004d40;
+    }
+
+    /* ── LIST ── */
+    .bullet-list {
+      list-style: none;
+    }
+
+    .bullet-list li {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 9pt;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .bullet-list li:last-child {
+      border-bottom: none;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      min-width: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      margin-top: 4px;
+    }
+
+    .dot-blue {
+      background: var(--primary);
+    }
+
+    .dot-green {
+      background: var(--green);
+    }
+
+    .dot-teal {
+      background: var(--teal);
+    }
+
+    /* ── FOOTER BAR ── */
+    .footer-bar {
+      background: var(--dark);
+      padding: 14px 56px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .fb-left {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 8pt;
+    }
+
+    .fb-right {
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 7.5pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── UTILITY ── */
+    .cite {
+      font-size: 7pt;
+      color: var(--mid);
+      font-style: italic;
+      margin-top: 8px;
+    }
+
+    .mb-20 {
+      margin-bottom: 20px;
+    }
+
+    .mb-28 {
+      margin-bottom: 28px;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #e8f0fe;
+      color: var(--accent);
+      border-radius: 12px;
+      padding: 3px 10px;
+      font-size: 7.5pt;
+      font-weight: 600;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    .tag-gold {
+      background: #fff8e1;
+      color: #7a4900;
+    }
+
+    .tag-green {
+      background: #e6f4ea;
+      color: #0a5c22;
+    }
+
+    .tag-teal {
+      background: #e0f2f1;
+      color: #004d40;
+    }
+
+    /* ── ADVANTAGE GRID (Page 3) ── */
+    .adv-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .adv-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      background: var(--white);
+    }
+
+    .adv-card h5 {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 6px;
+    }
+
+    .adv-card p {
+      font-size: 8pt;
+      color: var(--mid);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .adv-gold {
+      border-left: 4px solid var(--gold);
+      background: #fffdf0;
+    }
+
+    .adv-primary {
+      border-left: 4px solid var(--primary);
+      background: #f0f4ff;
+    }
+
+    .adv-green {
+      border-left: 4px solid var(--green);
+      background: #f0faf3;
+    }
+
+    .adv-teal {
+      border-left: 4px solid var(--teal);
+      background: #e8f5f3;
+    }
+
+    .adv-dark {
+      border-left: 4px solid var(--dark);
+      background: var(--light);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 1: COVER                                                 -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="cover">
+    <div class="cover-top">
+      <div class="cover-brand">Google Cloud &nbsp;·&nbsp; RAD Agent Programme</div>
+      <h1>Your Cloud Expertise<br>is a Revenue Stream</h1>
+      <div class="cover-sub">The RAD Agent Programme — Earn Recurring Commissions by Recommending the Platform That Makes Google Cloud Accessible to Everyone</div>
+      <div class="cover-tags">
+        <span class="cover-tag">Recurring Commission</span>
+        <span class="cover-tag">Referral Link + QR Code</span>
+        <span class="cover-tag">Real-Time Dashboard</span>
+        <span class="cover-tag">CSV Export</span>
+        <span class="cover-tag">£0 Entry Cost</span>
+        <span class="cover-tag">Google Cloud Aligned</span>
+      </div>
+    </div>
+    <div class="cover-metrics">
+      <div class="cm"><span class="cm-val">£0</span><span class="cm-lbl">Entry Cost</span></div>
+      <div class="cm"><span class="cm-val">Uncapped</span><span class="cm-lbl">Referral Earnings</span></div>
+      <div class="cm"><span class="cm-val">Real-Time</span><span class="cm-lbl">Commission Dashboard</span></div>
+      <div class="cm"><span class="cm-val">12+</span><span class="cm-lbl">Currencies Supported</span></div>
+      <div class="cm"><span class="cm-val">40+</span><span class="cm-lbl">Deployable Modules</span></div>
+      <div class="cm"><span class="cm-val">13 Years</span><span class="cm-lbl">Google Partnership</span></div>
+    </div>
+    <div class="cover-tagline">
+      <p>&ldquo;Every conversation you have about Google Cloud is an opportunity to earn recurring income — and the RAD platform makes recommending it effortless.&rdquo;</p>
+    </div>
+    <div class="cover-footer">
+      <div class="cover-footer-left">May 2026 &nbsp;·&nbsp; https://radmodules.dev</div>
+      <div class="cover-footer-right">Agent Confidential</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 2: THE OPPORTUNITY                                       -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="page-break">
+    <div class="inner">
+      <div class="section">
+        <div class="sh">
+          <div class="sh-title">The Opportunity</div>
+          <div class="sh-line"></div>
+        </div>
+        <div class="page-title">Your Expertise Is Undermonetised — Here's How to Change That</div>
+        <div class="page-sub">The global cloud skills crisis creates a unique window for certified professionals who can bridge the gap between where organisations want to be and where they currently are</div>
+
+        <div class="two-col mb-28">
+          <div>
+            <div class="sh">
+              <div class="sh-title">The Market Context</div>
+              <div class="sh-line"></div>
+            </div>
+
+            <ul class="bullet-list mb-20">
+              <li>
+                <span class="dot"></span>
+                <span><strong>92%</strong> of organisations struggle to hire sufficient cloud skills — the talent gap is structural, not cyclical, and it is widening every year</span>
+              </li>
+              <li>
+                <span class="dot dot-blue"></span>
+                <span>The digital transformation market is valued at <strong>$911B</strong> with a 23.9% CAGR through 2030 — cloud infrastructure sits at the centre of every major spending decision</span>
+              </li>
+              <li>
+                <span class="dot dot-green"></span>
+                <span>Only <strong>19%</strong> of engineering teams perform at elite DORA level — the gap between best and the rest is a commercial problem looking for a solution</span>
+              </li>
+              <li>
+                <span class="dot dot-teal"></span>
+                <span>Elite performers deploy <strong>182x faster</strong> than low performers — certified professionals who can close that gap are not consultants, they are strategic assets</span>
+              </li>
+            </ul>
+
+            <div class="card card-accent mb-20">
+              <h4>What Most Certified Professionals Do</h4>
+              <p>Complete certifications, build a credible reputation, and bill day rates. Clients trust their recommendations and act on their advice — but that trust generates income only once per engagement. Every new project resets the counter. The referral and recommendation value that sits behind every conversation is left entirely on the table.</p>
+            </div>
+
+            <div class="card card-gold">
+              <h4>The Missing Piece</h4>
+              <p>You are already the trusted advisor in your network. When colleagues ask which platform to use, which tool to deploy, which vendor to trust — they ask you. The only thing missing is a mechanism to monetise that trust. The RAD Agent Programme is that mechanism: a structured, transparent system that turns your existing credibility into a recurring income stream.</p>
+            </div>
+          </div>
+
+          <div>
+            <div class="sh">
+              <div class="sh-title">How the RAD Agent Programme Works</div>
+              <div class="sh-line"></div>
+            </div>
+
+            <div class="highlight mb-20">
+              <h3>Become a RAD Agent in One Step</h3>
+              <p>A single 90-minute discovery session gives you everything you need: your personalised referral link, your QR code for events and materials, and access to your real-time commission dashboard. No lengthy onboarding. No upfront investment. No sales quota.</p>
+            </div>
+
+            <div class="journey mb-20">
+              <div class="journey-step">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                  <div class="step-title">Receive Your Referral Link + QR Code</div>
+                  <div class="step-desc">Your personalised referral link and QR code are configured in your agent dashboard — ready to embed in any digital or printed material immediately</div>
+                </div>
+                <span class="step-badge">Day 1</span>
+              </div>
+              <div class="journey-step">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                  <div class="step-title">Share Across Your Network</div>
+                  <div class="step-desc">Embed in proposals, LinkedIn profile, event materials, workshop follow-ups, email signature — anywhere your network already engages with you</div>
+                </div>
+                <span class="step-badge step-badge-gold">Week 1–2</span>
+              </div>
+              <div class="journey-step">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                  <div class="step-title">Earn Agent Revenue Share Each Month</div>
+                  <div class="step-desc">Referred users who become paying customers generate Agent Revenue Share for you every month — on their purchased credit spend, for as long as they remain active</div>
+                </div>
+                <span class="step-badge step-badge-green">Month 1+</span>
+              </div>
+              <div class="journey-step">
+                <div class="step-num">4</div>
+                <div class="step-content">
+                  <div class="step-title">Track Everything in Real Time</div>
+                  <div class="step-desc">Your commission dashboard shows referred users, deployment activity, cumulative earnings and CSV export for accounting — full transparency, no reconciliation required</div>
+                </div>
+                <span class="step-badge step-badge-teal">Ongoing</span>
+              </div>
+            </div>
+
+            <div class="card card-teal">
+              <h4>The compounding advantage</h4>
+              <p>Unlike project income that resets every quarter, agent commissions compound — every new referral adds to your base, never replaces it. A referral network built over 12 months continues paying month after month, year after year, with no additional effort beyond sharing your link.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="fb-left">Your Cloud Expertise is a Revenue Stream &nbsp;·&nbsp; https://radmodules.dev</div>
+      <div class="fb-right">Page 2</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 3: YOUR COMPLETE BENEFIT STACK                           -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="page-break">
+    <div class="inner">
+      <div class="section">
+        <div class="sh">
+          <div class="sh-title">The Full Picture</div>
+          <div class="sh-line"></div>
+        </div>
+        <div class="page-title">Six Dimensions of Value — Not Just a Commission Cheque</div>
+        <div class="page-sub">The RAD Agent Programme is designed to make you more successful across every dimension of your professional life — not just add a line item to your income statement</div>
+
+        <div class="adv-grid mb-20">
+
+          <div class="adv-card adv-gold">
+            <h5>Financial Returns</h5>
+            <p>Recurring monthly commissions on True Revenue — the actual purchased credit spend of every user you refer. Uncapped referral network with no ceiling on earnings. Commissions apply to purchased credits only, protecting your income from free-credit inflation. CSV export for seamless accounting integration. Payments processed across 12+ currencies via Stripe and Flutterwave — no geographic restrictions on your network.</p>
+          </div>
+
+          <div class="adv-card adv-primary">
+            <h5>Professional Credibility</h5>
+            <p>Direct association with a 13-year Google Cloud partnership and a platform delivered to 500+ client engagements at 4.8/5 CSAT. When you recommend RAD, you recommend a platform that aligns with Google Cloud CAMP — the same framework Google uses to assess cloud maturity. 10,000+ professionals have already been trained on it. Your recommendation carries the weight of that track record.</p>
+          </div>
+
+          <div class="adv-card adv-green">
+            <h5>Skills Development</h5>
+            <p>Free access to deploy RAD modules in your own environment — stay current across the full Google Cloud platform without a client project as the excuse. 24 structured exploration guides mapping every module to GCP certification objectives across all five professional tracks: ACE, PCA, PCD, PDE, and PSE. Working with Jules AI and Claude Code in live deployments keeps your AI/ML practice sharp and commercially relevant.</p>
+          </div>
+
+          <div class="adv-card adv-teal">
+            <h5>Network Expansion</h5>
+            <p>Entry into the RAD partner and agent community — professionals across consulting, training, community building and content creation. Co-delivery opportunities with established SI partners. Introductions to the broader Google Cloud partner ecosystem. Priority access to new module launches and beta programmes before general availability. Cross-referral potential from other agents and partners working in complementary markets.</p>
+          </div>
+
+          <div class="adv-card adv-primary">
+            <h5>Pre-Sales Tools</h5>
+            <p>ROI Calculator to generate client-specific business cases in 30 minutes — quantified savings ready for procurement sign-off. 40+ demo-ready modules for any vertical: deploy live in client meetings, not after them. Six persona demo scripts tailored to CTO, CFO, Head of Platform, DevOps Lead, Procurement and Finance audiences. Full technical documentation and certification-aligned exploration guides to support any client conversation.</p>
+          </div>
+
+          <div class="adv-card adv-dark">
+            <h5>First-Mover Market Position</h5>
+            <p>The RAD agent network is in its growth phase — early agents build the largest referral bases and establish the strongest positions before the market matures. Position yourself at the intersection of the $911B digital transformation market and the Google Cloud ecosystem. Be known as the professional who bridges cloud ambition and cloud execution — the person whose recommendation creates real outcomes, not just advice.</p>
+          </div>
+
+        </div>
+
+        <div class="sh">
+          <div class="sh-title">Platform Track Record</div>
+          <div class="sh-line"></div>
+        </div>
+
+        <div class="metrics-row" style="margin-bottom: 0;">
+          <div class="mc mc-gold">
+            <span class="mc-val">10,000+</span>
+            <span class="mc-sub">Professionals Trained</span>
+          </div>
+          <div class="mc mc-green">
+            <span class="mc-val">4.8/5</span>
+            <span class="mc-sub">CSAT Score</span>
+          </div>
+          <div class="mc">
+            <span class="mc-val">500+</span>
+            <span class="mc-sub">Client Engagements</span>
+          </div>
+          <div class="mc mc-teal">
+            <span class="mc-val">50+</span>
+            <span class="mc-sub">Countries Reached</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="fb-left">Your Cloud Expertise is a Revenue Stream &nbsp;·&nbsp; https://radmodules.dev</div>
+      <div class="fb-right">Page 3</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 4: YOUR EARNINGS IN DETAIL                               -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="page-break">
+    <div class="inner">
+      <div class="section">
+        <div class="sh">
+          <div class="sh-title">The Numbers</div>
+          <div class="sh-line"></div>
+        </div>
+        <div class="page-title">Recurring Commissions — How Your Earnings Compound Over Time</div>
+        <div class="page-sub">Agent commissions are calculated on True Revenue — the actual purchased credit spend of every user you refer. As your referral base grows, so does your passive monthly income.</div>
+
+        <div class="card card-accent mb-20">
+          <h4>Commission Mechanics — How True Revenue Protects Your Earnings</h4>
+          <p style="margin-bottom: 8px;"><strong>True Revenue</strong> means your commission is calculated on purchased credits only — not free credits awarded at sign-up or promotional bonuses. This design ensures that your earnings reflect genuine user activity and commercial spend, not platform incentives.</p>
+          <p style="margin-bottom: 8px;">Commissions accumulate monthly against every referred user who purchases credits and deploys on RAD. There is no cap on the number of users you can refer. Your dashboard updates in real time as referred users deploy — no end-of-month reconciliation, no delays, no black box.</p>
+          <p>Every referred user remains attributed to you for the lifetime of their subscription. As your referral base grows month on month, your passive income grows with it — without displacing previous earnings.</p>
+        </div>
+
+        <div class="three-col mb-20">
+
+          <!-- Profile 01 -->
+          <div class="tier-card">
+            <div class="card-num">Profile 01</div>
+            <h4>The Networked Professional</h4>
+            <span class="tier-duration">Google Cloud trainer &nbsp;·&nbsp; instructor &nbsp;·&nbsp; educator</span>
+            <ul class="bullet-list">
+              <li><span class="dot dot-blue"></span>Shares referral link in course materials, LinkedIn and workshop follow-ups</li>
+              <li><span class="dot dot-blue"></span>30 referred users in Year 1 at Professional tier (£99/month)</li>
+              <li><span class="dot dot-blue"></span>15% commission = £14.85/user/month</li>
+              <li><span class="dot dot-blue"></span>£445/month = £5,346/year in Year 1</li>
+              <li><span class="dot dot-blue"></span>Year 3 (60+ users): £17,820/year passive income</li>
+            </ul>
+            <div class="tier-outcome">
+              <strong>Example Year 1 earnings: £5,346</strong>
+            </div>
+          </div>
+
+          <!-- Profile 02 -->
+          <div class="tier-card tier-featured">
+            <div class="card-num" style="color: #7a4900;">Profile 02</div>
+            <h4>The Active Consultant</h4>
+            <span class="tier-duration">Independent GCP architect &nbsp;·&nbsp; solutions architect</span>
+            <ul class="bullet-list">
+              <li><span class="dot"></span>Recommends RAD to every client as part of the standard engagement toolkit</li>
+              <li><span class="dot"></span>12 corporate clients at Team tier (£299/month)</li>
+              <li><span class="dot"></span>15% commission = £44.85/client/month</li>
+              <li><span class="dot"></span>£538/month = £6,456/year in Year 1</li>
+              <li><span class="dot"></span>Year 3 as clients expand teams: £20,000+/year</li>
+            </ul>
+            <div class="tier-outcome">
+              <strong>Example Year 1 earnings: £6,456</strong>
+            </div>
+          </div>
+
+          <!-- Profile 03 -->
+          <div class="tier-card">
+            <div class="card-num">Profile 03</div>
+            <h4>The Community Builder</h4>
+            <span class="tier-duration">GCP meetup host &nbsp;·&nbsp; content creator &nbsp;·&nbsp; community organiser</span>
+            <ul class="bullet-list">
+              <li><span class="dot dot-teal"></span>QR code displayed at events, referral link in newsletters and posts</li>
+              <li><span class="dot dot-teal"></span>Blend of 75 users across tiers at £50/month average spend</li>
+              <li><span class="dot dot-teal"></span>15% commission = £7.50/user/month</li>
+              <li><span class="dot dot-teal"></span>£562/month = £6,750/year in Year 1</li>
+              <li><span class="dot dot-teal"></span>Year 3 (150+ users): £13,500/year</li>
+            </ul>
+            <div class="tier-outcome">
+              <strong>Example Year 1 earnings: £6,750</strong>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="sh">
+          <div class="sh-title">Three-Year Earnings Projection by Agent Profile</div>
+          <div class="sh-line"></div>
+        </div>
+
+        <table class="layer-table">
+          <thead>
+            <tr>
+              <th style="width:40%">Agent Profile</th>
+              <th style="width:20%">Year 1</th>
+              <th style="width:20%">Year 2</th>
+              <th style="width:20%">Year 3</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="layer-badge badge-blue">Networked Professional</span> &nbsp; 30 → 60 referred users</td>
+              <td><strong>£5,346</strong></td>
+              <td>£10,692</td>
+              <td>£17,820</td>
+            </tr>
+            <tr>
+              <td><span class="layer-badge badge-gold">Active Consultant</span> &nbsp; 12 → 25 corporate clients</td>
+              <td><strong>£6,456</strong></td>
+              <td>£13,440</td>
+              <td>£20,160+</td>
+            </tr>
+            <tr>
+              <td><span class="layer-badge badge-teal">Community Builder</span> &nbsp; 75 → 150 referred users</td>
+              <td><strong>£6,750</strong></td>
+              <td>£10,125</td>
+              <td>£13,500</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="cite">Illustrative examples based on platform commission model. 15% Agent Revenue Share applied to True Revenue (purchased credits). Actual earnings depend on referral base size, user spend levels and agent commission configuration.</div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="fb-left">Your Cloud Expertise is a Revenue Stream &nbsp;·&nbsp; https://radmodules.dev</div>
+      <div class="fb-right">Page 4</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- PAGE 5: GETTING STARTED                                       -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="page-break">
+    <div class="inner">
+      <div class="section">
+        <div class="sh">
+          <div class="sh-title">Your Next Step</div>
+          <div class="sh-line"></div>
+        </div>
+        <div class="page-title">Three Steps from Today to Your First Commission</div>
+        <div class="page-sub">Becoming a RAD Agent requires no upfront investment, no lengthy onboarding, and no commercial negotiation — your referral link is ready within days of your first conversation.</div>
+
+        <div class="journey mb-28">
+          <div class="journey-step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <div class="step-title">Discovery Session (90 minutes)</div>
+              <div class="step-desc">Walk through the RAD platform live, understand the commission model in full, configure your personalised referral link and commission dashboard. One conversation is all it takes to go from interested to active agent.</div>
+            </div>
+            <span class="step-badge">Week 1</span>
+          </div>
+          <div class="journey-step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <div class="step-title">First Referrals</div>
+              <div class="step-desc">Share your personalised referral link across your existing communications: LinkedIn profile, email signature, client proposals, workshop materials, event QR code. No new channels required — your existing presence is enough.</div>
+            </div>
+            <span class="step-badge step-badge-gold">Week 2</span>
+          </div>
+          <div class="journey-step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <div class="step-title">First Commission</div>
+              <div class="step-desc">As referred users purchase credits and deploy on RAD, your commission dashboard updates in real time. Your first payment follows your first active referred user — no waiting period, no minimum threshold.</div>
+            </div>
+            <span class="step-badge step-badge-green">Month 1+</span>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div>
+            <div class="sh">
+              <div class="sh-title">Who Makes the Best RAD Agents</div>
+              <div class="sh-line"></div>
+            </div>
+
+            <ul class="bullet-list mb-20">
+              <li><span class="dot dot-blue"></span>Google Cloud certified professionals (ACE, PCA, PCD, PDE, PSE)</li>
+              <li><span class="dot dot-blue"></span>Independent cloud architects and consultants with active client networks</li>
+              <li><span class="dot dot-blue"></span>Cloud trainers, instructors and educators with established learner communities</li>
+              <li><span class="dot dot-blue"></span>GCP community organisers and event hosts with engaged audiences</li>
+              <li><span class="dot dot-blue"></span>LinkedIn thought leaders in the cloud and tech space with active followings</li>
+              <li><span class="dot dot-blue"></span>University lecturers and tech educators reaching the next generation of engineers</li>
+              <li><span class="dot dot-blue"></span>Solution architects at ISV and SI partners embedded in client delivery teams</li>
+            </ul>
+
+            <div class="sh">
+              <div class="sh-title">What You Get on Day One</div>
+              <div class="sh-line"></div>
+            </div>
+
+            <div class="card card-green">
+              <h4>Your Agent Starter Pack</h4>
+              <p style="margin-bottom: 6px;">Personalised referral link and printable QR code for events and materials; real-time commission dashboard with CSV export; access to demo environments for your own client proposals; ROI Calculator and pre-sales toolkit; onboarding session with the RAD team; full access to module documentation and certification-aligned exploration guides.</p>
+            </div>
+          </div>
+
+          <div>
+            <div class="highlight highlight-green mb-20">
+              <h3>The Conversation You're Already Having</h3>
+              <p>You don't need a sales pitch. You already have it. When clients ask about GCP infrastructure, you have an answer: RAD. When your network asks which platform to use for GCP learning, you have a link: your referral link. When colleagues ask how to deploy enterprise apps on GCP, you have a demo: yours. The RAD Agent Programme turns the conversations you are already having into the income they deserve.</p>
+            </div>
+
+            <div class="card mb-20" style="border-left: 3px solid var(--teal); background: #e0f2f1;">
+              <h4>Agent Discovery Session</h4>
+              <p>A 90-minute session to walk through the platform live, understand the commission model in full, and configure your agent dashboard. We deploy a live RAD module so you can see exactly what you are recommending — and exactly how it creates value for the people in your network.</p>
+              <p style="margin-top: 8px; font-weight: 600; color: var(--teal);">One conversation. Your referral link. Your passive income stream starts here.</p>
+            </div>
+
+            <div class="card" style="border-left: 3px solid var(--dark); background: var(--light);">
+              <h4>Contact</h4>
+              <p style="margin-bottom: 4px;"><strong>Dr. Shiyghan Emmanuel Navti</strong></p>
+              <p style="margin-bottom: 4px;">shiyghan.navti@techequity.cloud</p>
+              <p>+44-7966265130 &nbsp;·&nbsp; https://docs.radmodules.dev</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="fb-left">Your Cloud Expertise is a Revenue Stream &nbsp;·&nbsp; https://radmodules.dev &nbsp;·&nbsp; May 2026</div>
+      <div class="fb-right">Page 5 &nbsp;·&nbsp; Agent Confidential</div>
+    </div>
+  </div>
+
+</body>
+
+</html>
