@@ -64,9 +64,9 @@ cluster_size = 4  →  us-west1, us-east1, europe-west1, asia-east1
 ┌──────────────────────────────────────────────────────────────────────┐
 │  Global                                                              │
 │  ┌──────────────────────────────────────────────────────────────┐    │
-│  │  Multi-Cluster Ingress (Global L7 Load Balancer)              │   │
-│  │  Single public IP → nearest healthy cluster                   │   │
-│  └────────────┬─────────────────────────────┬────────────────┘       │
+│  │  Multi-Cluster Ingress (Global L7 Load Balancer)             │    │
+│  │  Single public IP → nearest healthy cluster                  │    │
+│  └────────────┬─────────────────────────────┬───────────────────┘    │
 │               │                             │                        │
 │       ┌───────▼──────────┐         ┌────────▼─────────┐              │
 │       │  us-west1        │         │  us-east1        │  (+ more)    │
@@ -82,8 +82,8 @@ cluster_size = 4  →  us-west1, us-east1, europe-west1, asia-east1
 │       └──────────────────┘         └──────────────────┘              │
 │                                                                      │
 │  ┌──────────────────────────────────────────────────────────────┐    │
-│  │  Google Cloud Fleet Hub                                       │   │
-│  │  • Fleet membership for each cluster                          │   │
+│  │  Google Cloud Fleet Hub                                      │    │
+│  │  • Fleet membership for each cluster                         │    │
 │  │  • servicemesh feature: MANAGEMENT_AUTOMATIC (all clusters)  │    │
 │  │  • multiclusteringress feature (config cluster: cluster-0)   │    │
 │  └──────────────────────────────────────────────────────────────┘    │
