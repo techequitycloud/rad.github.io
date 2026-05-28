@@ -1,9 +1,9 @@
 ---
-title: "Ollama_Common Shared Configuration Module"
+title: "Ollama Common Shared Configuration Module"
 sidebar_label: "Ollama Common"
 ---
 
-# Ollama_Common Shared Configuration Module
+# Ollama Common Shared Configuration Module
 
 The `Ollama_Common` module defines the Ollama LLM inference server configuration for the RAD
 Modules ecosystem. It **creates one GCP resource** (the GCS models bucket, via the

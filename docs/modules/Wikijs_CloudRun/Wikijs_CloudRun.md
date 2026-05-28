@@ -1,9 +1,16 @@
 ---
-title: "Wikijs_CloudRun Module — Configuration Guide"
+title: "Wikijs CloudRun Module — Configuration Guide"
 sidebar_label: "Wikijs CloudRun"
 ---
 
-# Wikijs_CloudRun Module — Configuration Guide
+# Wikijs CloudRun Module — Configuration Guide
+
+<YouTubeEmbed videoId="XpWRyS4o48o" poster="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_CloudRun.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 `Wikijs_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Cloud Run Gen2. Wiki.js has 28,000+ GitHub stars and is adopted by software teams, healthcare organizations (including the Indonesia Ministry of Health), educational institutions, and government agencies (including Brazil social services). It replaces expensive Confluence licenses — saving $5–10/user/month — with support for Markdown, WYSIWYG editing, LDAP/SAML/OAuth, and Git sync for version-controlled knowledge management.
 

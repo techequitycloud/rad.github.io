@@ -1,9 +1,16 @@
 ---
-title: "NodeRED_GKE Module — Configuration Guide"
+title: "NodeRED GKE Module — Configuration Guide"
 sidebar_label: "NodeRED GKE"
 ---
 
-# NodeRED_GKE Module — Configuration Guide
+# NodeRED GKE Module — Configuration Guide
+
+<YouTubeEmbed videoId="uluvGXNPkbE" poster="https://storage.googleapis.com/rad-public-2b65/modules/NodeRed_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/NodeRed_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 Node-RED is a leading open-source, browser-based flow programming tool originally developed by IBM, with 4,000+ community connector nodes and a growing ecosystem spanning smart manufacturing and edge computing. It is the de facto standard for IoT, IIoT, and industrial automation — integrating legacy OT systems (Modbus, OPC-UA, Siemens S7, MQTT) with modern cloud services. Gartner projects that 70%+ of all applications will use low-code technologies by 2026, and the low-code platform market is tracking toward $16.5B by 2027. This module deploys Node-RED on **GKE Autopilot** with NFS-backed persistent flow storage, optional Redis context storage, and full Kubernetes reliability controls.
 

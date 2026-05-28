@@ -1,9 +1,16 @@
 ---
-title: "Kestra_GKE Module — Configuration Guide"
+title: "Kestra GKE Module — Configuration Guide"
 sidebar_label: "Kestra GKE"
 ---
 
-# Kestra_GKE Module — Configuration Guide
+# Kestra GKE Module — Configuration Guide
+
+<YouTubeEmbed videoId="LIA0OHMv8MQ" poster="https://storage.googleapis.com/rad-public-2b65/modules/Kestra_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Kestra_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 Kestra is an open-source, declarative, event-driven workflow orchestration platform (Apache 2.0 licence) with **26,000+ GitHub stars**, trusted by more than 30,000 organisations including Bloomberg, Toyota, BHP, JPMorgan Chase, Apple, and Crédit Agricole. The platform executed **2 billion workflows in 2025** (20× year-on-year growth) and raised a **$25M Series A in March 2026**. BHP's adoption replaced VMware vRA entirely and cut infrastructure provisioning from 6 months to 6 days. It allows you to build, schedule, and monitor ETL/ELT pipelines, data quality checks, agentic AI pipelines, and workflow automation through a YAML-based flow definition and a rich plugin ecosystem. This module deploys Kestra on **GKE Autopilot** in **standalone mode** (server, worker, and scheduler in a single container) with a PostgreSQL 15 backend and GCS artifact storage.
 

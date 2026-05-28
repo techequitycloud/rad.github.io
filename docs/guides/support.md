@@ -1,11 +1,6 @@
 # Support Guide
 
-<img src="https://storage.googleapis.com/rad-public-2b65/guides/support_guide.png" alt="Support Guide" style={{marginBottom: '20px'}} />
-
-<video width="100%" controls style={{marginTop: '20px'}}>
-  <source src="https://storage.googleapis.com/rad-public-2b65/guides/support_guide.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="7EkWYQRPeAw" poster="https://storage.googleapis.com/rad-public-2b65/guides/support_guide.png" />
 
 ## 1. Introduction
 

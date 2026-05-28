@@ -1,9 +1,9 @@
 ---
-title: "N8N_Common Shared Configuration Module"
+title: "N8N Common Shared Configuration Module"
 sidebar_label: "N8N Common"
 ---
 
-# N8N_Common Shared Configuration Module
+# N8N Common Shared Configuration Module
 
 The `N8N_Common` module defines the n8n workflow automation platform (without AI components) for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`N8N_CloudRun` and `N8N_GKE`).
 

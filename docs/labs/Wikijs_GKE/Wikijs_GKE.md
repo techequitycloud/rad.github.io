@@ -62,29 +62,29 @@ Browser / Client
        │
        ▼ HTTP (LoadBalancer)
 ┌──────────────────────────────────────────────────────────────────┐
-│  GKE Autopilot Cluster                                            │
-│                                                                   │
+│  GKE Autopilot Cluster                                           │
+│                                                                  │
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │  Namespace: appwikijs<tenant><deploymentid>                │  │
 │  │                                                            │  │
 │  │  ┌──────────────────────────────────────────────────────┐  │  │
-│  │  │  Pod: wikijs-<hash>   (READY 2/2)                     │  │  │
-│  │  │  ┌──────────────────┐  ┌────────────────────────────┐ │  │  │
-│  │  │  │ Container: wikijs │  │ Sidecar: cloud-sql-proxy   │ │  │  │
-│  │  │  │ Port: 3000        │  │ Unix socket: /cloudsql/... │ │  │  │
-│  │  │  │ /wiki-storage     │  └────────────────────────────┘ │  │  │
-│  │  │  │ (GCS Fuse mount)  │                                  │  │  │
-│  │  │  └──────────────────┘                                   │  │  │
+│  │  │  Pod: wikijs-<hash>   (READY 2/2)                     │  │ │
+│  │  │  ┌──────────────────┐  ┌────────────────────────────┐ │  │ │
+│  │  │  │ Container: wikijs │  │ Sidecar: cloud-sql-proxy   │ │  ││
+│  │  │  │ Port: 3000        │  │ Unix socket: /cloudsql/... │ │  ││
+│  │  │  │ /wiki-storage     │  └────────────────────────────┘ │  ││
+│  │  │  │ (GCS Fuse mount)  │                               │  │  │
+│  │  │  └──────────────────┘                                │  │  │
 │  │  └──────────────────────────────────────────────────────┘  │  │
 │  │                                                            │  │
-│  │  Service: LoadBalancer → EXTERNAL_IP:80                   │  │
-│  │  HPA: min=1  max=3  (CPU-based)                           │  │
+│  │  Service: LoadBalancer → EXTERNAL_IP:80                   │   │
+│  │  HPA: min=1  max=3  (CPU-based)                           │   │
 │  └────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────┘
        │
        ▼ Cloud SQL Auth Proxy (Unix socket)
 ┌──────────────────────────────────────────────────────────────────┐
-│  Cloud SQL PostgreSQL 15 (private IP)                             │
+│  Cloud SQL PostgreSQL 15 (private IP)                            │
 │  Database: wikijs  │  pg_trgm extension                          │
 └──────────────────────────────────────────────────────────────────┘
 

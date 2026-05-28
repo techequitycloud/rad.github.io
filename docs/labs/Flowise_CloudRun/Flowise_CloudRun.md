@@ -91,16 +91,16 @@ Cloud Run — Flowise (gen2)
 │  │                                                              │   │
 │  │  Cloud Run (gen2, port 3000)        Cloud SQL PostgreSQL 15  │   │
 │  │  flowise + cloudsql-proxy  ◄──────► db: flowisedb            │   │
-│  │                                     user: flowiseuser         │   │
+│  │                                     user: flowiseuser         │  │
 │  └──────────────────────────────────────────────────────────────┘   │
 │                                                                     │
-│  Artifact Registry              GCS Bucket                         │
+│  Artifact Registry              GCS Bucket                          │
 │  flowise custom image            <prefix>-flowise-uploads           │
-│  (built via Cloud Build)         STORAGE_TYPE=gcs                  │
+│  (built via Cloud Build)         STORAGE_TYPE=gcs                   │
 │                                                                     │
-│  Secret Manager                 Cloud Monitoring                   │
-│  ├── FLOWISE_PASSWORD            uptime check (/)                  │
-│  └── DB password                 request_count, latencies          │
+│  Secret Manager                 Cloud Monitoring                    │
+│  ├── FLOWISE_PASSWORD            uptime check (/)                   │
+│  └── DB password                 request_count, latencies           │
 └─────────────────────────────────────────────────────────────────────┘
 
 Module variable wiring:

@@ -1,9 +1,9 @@
 ---
-title: "Wordpress_Common Module"
+title: "Wordpress Common Module"
 sidebar_label: "Wordpress Common"
 ---
 
-# Wordpress_Common Module
+# Wordpress Common Module
 
 ## Overview
 
@@ -21,25 +21,25 @@ The module uses **MySQL 8.0** and deploys WordPress on **Apache** via a `php:8.4
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                       Wordpress_Common (Layer 1)                             │
 │                                                                              │
-│  Inputs: project_id, resource_prefix, deployment_id_suffix, ...             │
+│  Inputs: project_id, resource_prefix, deployment_id_suffix, ...              │
 │                                                                              │
-│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐    │
-│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │    │
-│  │                      │    │                                         │    │
-│  │  Secret Manager API  │    │  container_image: "" (custom build)     │    │
-│  │  8 secrets           │    │  container_port: 80                     │    │
-│  │  (64-char, special   │    │  database_type: MYSQL_8_0               │    │
-│  │   chars)             │    │  enable_mysql_plugins: false            │    │
-│  │  time_sleep 30s      │    │  secret_env_vars:                       │    │
-│  │                      │    │    WORDPRESS_AUTH_KEY → secret-id       │    │
-│  │  GCS Bucket          │    │    (+ 7 more keys/salts)                │    │
-│  │   wp-uploads         │    │  environment_variables:                 │    │
-│  │  (created by         │    │    WORDPRESS_TABLE_PREFIX: "wp_"        │    │
-│  │   Layer 2)           │    │    WP_REDIS_HOST, WP_REDIS_PORT         │    │
-│  │                      │    │  initialization_jobs: [db-init]         │    │
-│  │                      │    │  startup_probe: TCP / 30s delay         │    │
-│  │                      │    │  liveness_probe: HTTP /wp-admin 300s    │    │
-│  └──────────────────────┘    └─────────────────────────────────────────┘    │
+│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐     │
+│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │     │
+│  │                      │    │                                         │     │
+│  │  Secret Manager API  │    │  container_image: "" (custom build)     │     │
+│  │  8 secrets           │    │  container_port: 80                     │     │
+│  │  (64-char, special   │    │  database_type: MYSQL_8_0               │     │
+│  │   chars)             │    │  enable_mysql_plugins: false            │     │
+│  │  time_sleep 30s      │    │  secret_env_vars:                       │     │
+│  │                      │    │    WORDPRESS_AUTH_KEY → secret-id       │     │
+│  │  GCS Bucket          │    │    (+ 7 more keys/salts)                │     │
+│  │   wp-uploads         │    │  environment_variables:                 │     │
+│  │  (created by         │    │    WORDPRESS_TABLE_PREFIX: "wp_"        │     │
+│  │   Layer 2)           │    │    WP_REDIS_HOST, WP_REDIS_PORT         │     │
+│  │                      │    │  initialization_jobs: [db-init]         │     │
+│  │                      │    │  startup_probe: TCP / 30s delay         │     │
+│  │                      │    │  liveness_probe: HTTP /wp-admin 300s    │     │
+│  └──────────────────────┘    └─────────────────────────────────────────┘     │
 └──────────────────────────────────────────────────────────────────────────────┘
                     │
                     ▼

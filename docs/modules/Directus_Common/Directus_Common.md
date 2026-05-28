@@ -1,9 +1,9 @@
 ---
-title: "Directus_Common Shared Configuration Module"
+title: "Directus Common Shared Configuration Module"
 sidebar_label: "Directus Common"
 ---
 
-# Directus_Common Shared Configuration Module
+# Directus Common Shared Configuration Module
 
 The `Directus_Common` module defines the Directus headless CMS and Backend-as-a-Service (BaaS) platform configuration for the RAD Modules ecosystem. Unlike a purely configuration-only module, it **also creates GCP resources** — specifically the Secret Manager secrets required by the Directus runtime. Its outputs are consumed by platform-specific wrapper modules (`Directus_CloudRun` and `Directus_GKE`).
 

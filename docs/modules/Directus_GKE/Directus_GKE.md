@@ -1,9 +1,16 @@
 ---
-title: "Directus_GKE Module — Configuration Guide"
+title: "Directus GKE Module — Configuration Guide"
 sidebar_label: "Directus GKE"
 ---
 
-# Directus_GKE Module — Configuration Guide
+# Directus GKE Module — Configuration Guide
+
+<YouTubeEmbed videoId="bY_QvUBz9W8" poster="https://storage.googleapis.com/rad-public-2b65/modules/Directus_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Directus_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 `Directus_GKE` is a wrapper module that deploys [Directus](https://directus.io/) — an open-source composable data platform and headless CMS with 34,500+ GitHub stars, trusted by Tripadvisor, Adobe, and Mercedes-Benz — on Google Kubernetes Engine (GKE) Autopilot. Directus wraps any SQL database with instant REST and GraphQL APIs and a no-code admin panel without modifying your schema. Its native MCP server support (introduced in v11.13, November 2025) enables direct AI tool integration, and it is consistently ranked among the top open-source headless CMS choices in 2026 for Backend-as-a-Service, internal dashboards, and omnichannel content delivery. It composes two underlying modules:
 

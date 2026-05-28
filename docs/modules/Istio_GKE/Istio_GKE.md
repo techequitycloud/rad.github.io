@@ -5,6 +5,13 @@ sidebar_label: "Istio GKE"
 
 # Istio GKE Module
 
+<YouTubeEmbed videoId="xBcB4IG23uY" poster="https://storage.googleapis.com/rad-public-2b65/modules/Istio_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Istio_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 ## Overview
 
 The Istio GKE module provisions a complete Google Kubernetes Engine (GKE) Standard cluster and installs the **open-source Istio service mesh** onto it. Unlike Google Cloud Service Mesh (which is Google's managed, commercially supported Istio distribution), this module works directly with upstream Istio — the same project maintained by the Cloud Native Computing Foundation (CNCF) — giving platform engineers hands-on experience with the technology in its original, unmodified form.
@@ -53,38 +60,38 @@ The module deploys approximately **10–12 minutes** to a single GCP project and
 │                                                                            │
 │   ┌──────────────────────────────────────────────────────────────────┐     │
 │   │  VPC Network                                                     │     │
-│   │  ┌──────────────────────────────────────────────────────────┐   │     │
-│   │  │  Subnet (10.132.0.0/16)                                  │   │     │
-│   │  │  Pod secondary range:     10.62.128.0/17                 │   │     │
-│   │  │  Service secondary range: 10.64.128.0/20                 │   │     │
-│   │  │                                                          │   │     │
-│   │  │  ┌──────────────────────────────────────────────────┐   │   │     │
-│   │  │  │  GKE Standard Cluster                            │   │   │     │
-│   │  │  │  • VPC-native networking                         │   │   │     │
-│   │  │  │  • Workload Identity                             │   │   │     │
-│   │  │  │  • Security Posture                              │   │   │     │
-│   │  │  │  • Managed Prometheus                            │   │   │     │
-│   │  │  │  • Gateway API                                   │   │   │     │
-│   │  │  │                                                  │   │   │     │
-│   │  │  │  Node Pool (2 × e2-standard-2, preemptible)      │   │   │     │
-│   │  │  │                                                  │   │   │     │
-│   │  │  │  Istio Control Plane (istio-system)              │   │   │     │
-│   │  │  │  • istiod (service discovery + config + CA)      │   │   │     │
-│   │  │  │  • Ingress Gateway (LoadBalancer)                │   │   │     │
-│   │  │  │                                                  │   │   │     │
-│   │  │  │  SIDECAR MODE              AMBIENT MODE          │   │   │     │
-│   │  │  │  ┌──────────────┐          ┌──────────────────┐  │   │   │     │
-│   │  │  │  │ App Pod      │          │ ztunnel (per node│  │   │   │     │
-│   │  │  │  │ ┌──────────┐ │          │ L4 mTLS + policy)│  │   │   │     │
-│   │  │  │  │ │ App      │ │          └────────┬─────────┘  │   │   │     │
-│   │  │  │  │ │ Envoy    │ │                   │            │   │   │     │
-│   │  │  │  │ │ sidecar  │ │          ┌────────▼─────────┐  │   │   │     │
-│   │  │  │  │ └──────────┘ │          │ Waypoint Proxy   │  │   │   │     │
-│   │  │  │  └──────────────┘          │ (optional, L7)   │  │   │   │     │
-│   │  │  │                            └──────────────────┘  │   │   │     │
-│   │  │  │  Observability: Prometheus · Jaeger · Grafana · Kiali   │   │     │
-│   │  │  └──────────────────────────────────────────────────┘   │   │     │
-│   │  └──────────────────────────────────────────────────────────┘   │     │
+│   │  ┌──────────────────────────────────────────────────────────┐   │      │
+│   │  │  Subnet (10.132.0.0/16)                                  │   │      │
+│   │  │  Pod secondary range:     10.62.128.0/17                 │   │      │
+│   │  │  Service secondary range: 10.64.128.0/20                 │   │      │
+│   │  │                                                          │   │      │
+│   │  │  ┌──────────────────────────────────────────────────┐   │   │       │
+│   │  │  │  GKE Standard Cluster                            │   │   │       │
+│   │  │  │  • VPC-native networking                         │   │   │       │
+│   │  │  │  • Workload Identity                             │   │   │       │
+│   │  │  │  • Security Posture                              │   │   │       │
+│   │  │  │  • Managed Prometheus                            │   │   │       │
+│   │  │  │  • Gateway API                                   │   │   │       │
+│   │  │  │                                                  │   │   │       │
+│   │  │  │  Node Pool (2 × e2-standard-2, preemptible)      │   │   │       │
+│   │  │  │                                                  │   │   │       │
+│   │  │  │  Istio Control Plane (istio-system)              │   │   │       │
+│   │  │  │  • istiod (service discovery + config + CA)      │   │   │       │
+│   │  │  │  • Ingress Gateway (LoadBalancer)                │   │   │       │
+│   │  │  │                                                  │   │   │       │
+│   │  │  │  SIDECAR MODE              AMBIENT MODE          │   │   │       │
+│   │  │  │  ┌──────────────┐          ┌──────────────────┐  │   │   │       │
+│   │  │  │  │ App Pod      │          │ ztunnel (per node│  │   │   │       │
+│   │  │  │  │ ┌──────────┐ │          │ L4 mTLS + policy)│  │   │   │       │
+│   │  │  │  │ │ App      │ │          └────────┬─────────┘  │   │   │       │
+│   │  │  │  │ │ Envoy    │ │                   │            │   │   │       │
+│   │  │  │  │ │ sidecar  │ │          ┌────────▼─────────┐  │   │   │       │
+│   │  │  │  │ └──────────┘ │          │ Waypoint Proxy   │  │   │   │       │
+│   │  │  │  └──────────────┘          │ (optional, L7)   │  │   │   │       │
+│   │  │  │                            └──────────────────┘  │   │   │       │
+│   │  │  │  Observability: Prometheus · Jaeger · Grafana · Kiali   │   │    │
+│   │  │  └──────────────────────────────────────────────────┘   │   │       │
+│   │  └──────────────────────────────────────────────────────────┘   │      │
 │   │  Cloud Router + Cloud NAT (outbound egress)                      │     │
 │   └──────────────────────────────────────────────────────────────────┘     │
 └────────────────────────────────────────────────────────────────────────────┘
@@ -308,7 +315,7 @@ kubectl get pods -n gmp-system
 
 # Query a Kubernetes metric via Cloud Monitoring PromQL
 # (run in Cloud Console: Monitoring → Metrics Explorer → PromQL)
-# kubernetes_io:container_memory_used_bytes{cluster="gke-cluster"}
+# kubernetes io:container_memory_used_bytes{cluster="gke-cluster"}
 ```
 
 ### Gateway API
@@ -1075,7 +1082,7 @@ kubectl port-forward -n istio-system svc/prometheus 9090:9090
 # rate(istio_requests_total{destination_service_name="my-service"}[5m])
 
 # Query P99 latency for a service
-# histogram_quantile(0.99, rate(istio_request_duration_milliseconds_bucket{destination_service_name="my-service"}[5m]))
+# histogram quantile(0.99, rate(istio_request_duration_milliseconds_bucket{destination_service_name="my-service"}[5m]))
 ```
 
 **Explore in the Cloud Console:** Navigate to **Monitoring → Metrics Explorer**. In the metric picker, search for `istio` to see all Istio metrics forwarded by Google Cloud Managed Service for Prometheus (if GMP integration is enabled). Set the aggregation to `sum by (destination_service_name)` to see per-service request rates.

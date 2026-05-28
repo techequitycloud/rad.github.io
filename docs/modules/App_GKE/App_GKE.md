@@ -1,9 +1,16 @@
 ---
-title: "App_GKE on Google Cloud Platform"
+title: "App GKE on Google Cloud Platform"
 sidebar_label: "App GKE"
 ---
 
-# App_GKE on Google Cloud Platform
+# App GKE on Google Cloud Platform
+
+<YouTubeEmbed videoId="AYqSW6rJUAY" poster="https://storage.googleapis.com/rad-public-2b65/modules/App_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/App_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 This document provides a comprehensive analysis of the `modules/App_GKE` Terraform module on Google Cloud Platform. It details the architecture, IAM configuration, service integrations, and potential enhancements.
 

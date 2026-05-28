@@ -1,9 +1,16 @@
 ---
-title: "Ollama_GKE Module — Configuration Guide"
+title: "Ollama GKE Module — Configuration Guide"
 sidebar_label: "Ollama GKE"
 ---
 
-# Ollama_GKE Module — Configuration Guide
+# Ollama GKE Module — Configuration Guide
+
+<YouTubeEmbed videoId="F2OWLTuUntk" poster="https://storage.googleapis.com/rad-public-2b65/modules/Ollama_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Ollama_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 Ollama is the de facto standard runtime for running large language models locally, with 169,000+
 GitHub stars and support for 4,500+ models — including Llama 3.1 (112M+ pulls), DeepSeek-R1

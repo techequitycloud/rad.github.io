@@ -1,15 +1,10 @@
 # Deploying with RAD
 
-<img src="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.png" alt="Using RAD" style={{marginBottom: '20px'}} />
-
-<video width="100%" controls style={{marginTop: '20px'}}>
-  <source src="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+<YouTubeEmbed videoId="KhqI2xG8kPo" poster="https://storage.googleapis.com/rad-public-2b65/getting_started/Using_RAD.png" />
 
 <br/>
 
-<a href="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.pdf" target="_blank" rel="noopener noreferrer">Download Workflow PDF</a>
+<a href="https://storage.googleapis.com/rad-public-2b65/getting_started/Using_RAD.pdf" target="_blank">View Presentation (PDF)</a>
 
 ## 1. Introduction
 

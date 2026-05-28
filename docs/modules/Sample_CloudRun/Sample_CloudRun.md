@@ -1,9 +1,16 @@
 ---
-title: "Sample_CloudRun Module — Configuration Guide"
+title: "Sample CloudRun Module — Configuration Guide"
 sidebar_label: "Sample CloudRun"
 ---
 
-# Sample_CloudRun Module — Configuration Guide
+# Sample CloudRun Module — Configuration Guide
+
+<YouTubeEmbed videoId="HML16p56zA4" poster="https://storage.googleapis.com/rad-public-2b65/modules/Sample_CloudRun.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Sample_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 `Sample_CloudRun` is a **reference wrapper module** that sits on top of `App_CloudRun`.
 It deploys a pre-configured Flask application (Python 3.11, PostgreSQL 15, optional

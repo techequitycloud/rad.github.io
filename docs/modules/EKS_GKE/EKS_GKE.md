@@ -5,6 +5,12 @@ sidebar_label: "EKS GKE"
 
 # EKS GKE Module
 
+<YouTubeEmbed videoId="VGko2SaLDZE" poster="https://storage.googleapis.com/rad-public-2b65/modules/EKS_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/EKS_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 ## Overview
 
 The EKS GKE module provisions a complete Amazon Elastic Kubernetes Service (EKS) cluster on AWS and registers it with Google Cloud as a **GKE Attached Cluster**. Once registered, the EKS cluster is visible and manageable from the Google Cloud console alongside any native GKE clusters in the same project — giving platform engineers a single pane of glass across both clouds.
@@ -63,10 +69,10 @@ At a high level, the module creates two sets of resources in parallel and then c
 │   │  └─────────────────┘    │           └──────────────┬────────────────┘   │
 │   └─────────────────────────┘                          │                    │
 │                                          ┌─────────────▼─────────────────┐  │
-│                                          │  Unified Observability         │  │
-│                                          │  • Cloud Logging               │  │
-│                                          │  • Cloud Monitoring            │  │
-│                                          │  • Managed Prometheus          │  │
+│                                          │  Unified Observability         │ │
+│                                          │  • Cloud Logging               │ │
+│                                          │  • Cloud Monitoring            │ │
+│                                          │  • Managed Prometheus          │ │
 │                                          └───────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────────┘
 

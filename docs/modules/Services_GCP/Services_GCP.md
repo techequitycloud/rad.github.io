@@ -1,9 +1,15 @@
 ---
-title: "Services_GCP Module"
+title: "Services GCP Module"
 sidebar_label: "Services GCP"
 ---
 
-# Services_GCP Module
+# Services GCP Module
+
+<YouTubeEmbed videoId="AbseyUBpOqM" poster="https://storage.googleapis.com/rad-public-2b65/modules/Services_GCP.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Services_GCP.pdf" target="_blank">View Presentation (PDF)</a>
 
 `Services_GCP` is the **foundational infrastructure module** in the RAD Modules ecosystem. It runs before any application module and provisions the shared GCP services that all applications depend on: VPC networking, Cloud SQL databases, NFS file storage, Redis cache, Artifact Registry, IAM service accounts, and optional security controls (CMEK, Binary Authorization, VPC Service Controls).
 
@@ -20,10 +26,10 @@ Services_GCP  →  App_CloudRun / App_GKE  →  *_Common modules
 │  ─────────────                       ──────────────────────                  │
 │  • 46 GCP APIs enabled               • PostgreSQL (create_postgres)          │
 │  • VPC network + subnets             • MySQL (create_mysql)                  │
-│  • Cloud NAT (egress)                • NFS+Redis VM (create_network_filesystem)│
-│  • Private Service Connect           • Managed Filestore (create_filestore_nfs)│
+│  • Cloud NAT (egress)                • NFS+Redis VM (network_filesystem)     │
+│  • Private Service Connect           • Managed Filestore (filestore_nfs)     │
 │  • Artifact Registry (Docker)        • Managed Redis (create_redis)          │
-│  • 4 Service Accounts + IAM          • GKE Autopilot (create_google_kubernetes_engine)│
+│  • 4 Service Accounts + IAM          • GKE Autopilot (create_gke)            │
 │  • Root DB password (Secret Mgr)     • CMEK (enable_cmek)                    │
 │  • Firewall rules                    • VPC Service Controls (enable_vpc_sc)  │
 │                                      • Binary Authorization                  │

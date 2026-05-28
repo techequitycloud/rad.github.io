@@ -72,11 +72,11 @@ VPC (internal) / Public internet (if ingress_settings=all)
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │  Ollama container                                          │  │
 │  │  PORT: 11434                                               │  │
-│  │  OLLAMA_MODELS = /mnt/gcs/ollama/models (GCS Fuse)        │  │
-│  │  OLLAMA_HOST   = 0.0.0.0:11434                            │  │
+│  │  OLLAMA_MODELS = /mnt/gcs/ollama/models (GCS Fuse)        │   │
+│  │  OLLAMA_HOST   = 0.0.0.0:11434                            │   │
 │  │  OLLAMA_KEEP_ALIVE = 24h                                   │  │
 │  │                                                            │  │
-│  │  GCS Fuse mount → /mnt/gcs/ → <prefix>-models GCS bucket  │  │
+│  │  GCS Fuse mount → /mnt/gcs/ → <prefix>-models GCS bucket  │   │
 │  └────────────────────────────────────────────────────────────┘  │
 │                                                                  │
 │  No database, no Cloud SQL, no secrets required                  │

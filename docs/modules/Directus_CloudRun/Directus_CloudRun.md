@@ -5,6 +5,13 @@ sidebar_label: "Directus CloudRun"
 
 # Directus on Google Cloud Run
 
+<YouTubeEmbed videoId="hoQxO5K-Els" poster="https://storage.googleapis.com/rad-public-2b65/modules/Directus_CloudRun.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Directus_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 This document provides a comprehensive reference for the `modules/Directus_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Directus-specific behaviours, and operational patterns for deploying Directus on Google Cloud Run (v2).
 
 ---

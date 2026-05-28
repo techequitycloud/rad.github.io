@@ -91,20 +91,20 @@ GKE Autopilot Cluster
 │  │  Namespace: appn8naidemo<id>                                 │   │
 │  │  ┌────────────────────────────────────────────────────────┐  │   │
 │  │  │  n8n Pod (2/2)      Qdrant Pod (1/1)  Ollama Pod (1/1) │  │   │
-│  │  │  n8n + sql-proxy    qdrant             ollama           │  │   │
+│  │  │  n8n + sql-proxy    qdrant             ollama           │  │  │
 │  │  └────────────────────────────────────────────────────────┘  │   │
 │  │                                                              │   │
 │  │  HPA ──► n8n Deployment                                      │   │
 │  │  LoadBalancer ──► n8n Service (external IP:5678)             │   │
 │  └──────────────────────────────────────────────────────────────┘   │
 │                                                                     │
-│  Cloud SQL PostgreSQL 15    NFS Filestore       GCS Bucket         │
-│  db: n8n_db                 /mnt/nfs (n8n data) /mnt/gcs           │
+│  Cloud SQL PostgreSQL 15    NFS Filestore       GCS Bucket          │
+│  db: n8n_db                 /mnt/nfs (n8n data) /mnt/gcs            │
 │  Auth Proxy via socket      Redis on NFS IP     qdrant + ollama     │
 │                                                                     │
-│  Secret Manager             Cloud Logging       Cloud Monitoring   │
-│  ├── encryption-key         k8s_container       pod CPU/memory     │
-│  └── smtp-password          namespace filter    HPA metrics        │
+│  Secret Manager             Cloud Logging       Cloud Monitoring    │
+│  ├── encryption-key         k8s_container       pod CPU/memory      │
+│  └── smtp-password          namespace filter    HPA metrics         │
 └─────────────────────────────────────────────────────────────────────┘
 
 Module variable wiring:

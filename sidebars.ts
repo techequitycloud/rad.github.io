@@ -28,37 +28,6 @@ const sidebars: SidebarsConfig = {
           id: 'workflows/using-rad',
           label: 'Using RAD',
         },
-        {
-          type: 'doc',
-          id: 'workflows/credits',
-          label: 'Credit Management',
-        },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Platform Tutorials',
-      items: [
-        { type: 'doc', id: 'tutorials/getting-started', label: 'Quick Start' },
-        { type: 'doc', id: 'tutorials/admin', label: 'Admin' },
-        { type: 'doc', id: 'tutorials/partner', label: 'Partner' },
-        { type: 'doc', id: 'tutorials/user', label: 'User' },
-        { type: 'doc', id: 'tutorials/agent', label: 'Agent' },
-        { type: 'doc', id: 'tutorials/finance', label: 'Finance' },
-        { type: 'doc', id: 'tutorials/support', label: 'Support' },
-        { type: 'doc', id: 'tutorials/roi', label: 'ROI' },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Platform Demos',
-      items: [
-        { type: 'doc', id: 'demos/user', label: 'User' },
-        { type: 'doc', id: 'demos/partner', label: 'Partner' },
-        { type: 'doc', id: 'demos/support', label: 'Support' },
-        { type: 'doc', id: 'demos/agent', label: 'Agent' },
-        { type: 'doc', id: 'demos/finance', label: 'Finance' },
-        { type: 'doc', id: 'demos/admin', label: 'Admin' },
       ],
     },
     {
@@ -171,6 +140,13 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Partner Modules',
           items: [
+            {
+              type: 'category',
+              label: 'Foundation',
+              items: [
+                { type: 'doc', id: 'modules/GCP_Services/GCP_Services', label: 'Services' },
+              ],
+            },
             {
               type: 'category',
               label: 'Activepieces',
@@ -375,13 +351,6 @@ const sidebars: SidebarsConfig = {
                 { type: 'doc', id: 'modules/Wordpress_Common/Wordpress_Common', label: 'Common' },
               ],
             },
-            {
-              type: 'category',
-              label: 'Foundation',
-              items: [
-                { type: 'doc', id: 'modules/GCP_Services/GCP_Services', label: 'Services' },
-              ],
-            },
           ],
         },
       ],
@@ -436,6 +405,13 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Partner Modules',
           items: [
+            {
+              type: 'category',
+              label: 'Foundation',
+              items: [
+                { type: 'doc', id: 'labs/Services_GCP/Services_GCP', label: 'Services' },
+              ],
+            },
             {
               type: 'category',
               label: 'Activepieces',
@@ -707,6 +683,33 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'outcomes/modernization', label: 'Modernization' },
         { type: 'doc', id: 'outcomes/skills-development', label: 'Skills Development' },
         { type: 'doc', id: 'outcomes/zero-trust-security', label: 'Zero Trust Security' },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Platform Tutorials',
+      items: [
+        { type: 'doc', id: 'tutorials/getting-started', label: 'Quick Start' },
+        { type: 'doc', id: 'tutorials/admin', label: 'Admin' },
+        { type: 'doc', id: 'tutorials/partner', label: 'Partner' },
+        { type: 'doc', id: 'tutorials/user', label: 'User' },
+        { type: 'doc', id: 'tutorials/agent', label: 'Agent' },
+        { type: 'doc', id: 'tutorials/finance', label: 'Finance' },
+        { type: 'doc', id: 'workflows/credits', label: 'Credit Management' },
+        { type: 'doc', id: 'tutorials/support', label: 'Support' },
+        { type: 'doc', id: 'tutorials/roi', label: 'ROI' },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Platform Demos',
+      items: [
+        { type: 'doc', id: 'demos/user', label: 'User' },
+        { type: 'doc', id: 'demos/partner', label: 'Partner' },
+        { type: 'doc', id: 'demos/support', label: 'Support' },
+        { type: 'doc', id: 'demos/agent', label: 'Agent' },
+        { type: 'doc', id: 'demos/finance', label: 'Finance' },
+        { type: 'doc', id: 'demos/admin', label: 'Admin' },
       ],
     },
   ],

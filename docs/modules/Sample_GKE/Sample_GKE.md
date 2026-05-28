@@ -1,9 +1,16 @@
 ---
-title: "Sample_GKE Module — Configuration Guide"
+title: "Sample GKE Module — Configuration Guide"
 sidebar_label: "Sample GKE"
 ---
 
-# Sample_GKE Module — Configuration Guide
+# Sample GKE Module — Configuration Guide
+
+<YouTubeEmbed videoId="JtRvXXiwIdw" poster="https://storage.googleapis.com/rad-public-2b65/modules/Sample_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Sample_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 `Sample_GKE` is a **wrapper module** that sits on top of [`App_GKE`](../App_GKE/App_GKE.md). It deploys a pre-configured reference Flask application (Python 3.11, PostgreSQL 15, optional Redis, optional NFS) on GKE Autopilot. Its purpose is to serve as a working example of how to build a custom application module on top of `App_GKE`.
 

@@ -97,23 +97,23 @@ Browser / API Client
 │                                                                  │
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │  Cloud Run Service (gen2)   region: us-central1            │  │
-│  │  Ghost 6.x · port 2368 · min=0 · max=5                    │  │
+│  │  Ghost 6.x · port 2368 · min=0 · max=5                    │   │
 │  │  Sidecar: Cloud SQL Auth Proxy (Unix socket)               │  │
 │  │  NFS mount: /mnt/nfs (Cloud Filestore)                     │  │
 │  └─────────────────────────┬──────────────────────────────────┘  │
-│                             │ VPC Access Connector                │
-│  ┌──────────────────────────▼──────────────────────────────────┐  │
-│  │  VPC Network (Services_GCP)                                  │  │
+│                             │ VPC Access Connector               │
+│  ┌──────────────────────────▼──────────────────────────────────┐ │
+│  │  VPC Network (Services_GCP)                                  ││
 │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │  │
 │  │  │  Cloud SQL   │  │  Filestore   │  │  Redis (NFS VM)  │  │  │
 │  │  │  MySQL 8.0   │  │  NFS share   │  │  port 6379       │  │  │
 │  │  └──────────────┘  └──────────────┘  └──────────────────┘  │  │
-│  └─────────────────────────────────────────────────────────────┘  │
+│  └─────────────────────────────────────────────────────────────┘ │
 │                                                                  │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐  │
-│  │  Secret Manager  │  │  Cloud Logging   │  │  Monitoring  │  │
-│  │  DB & admin creds│  │  structured logs │  │  uptime check│  │
-│  └──────────────────┘  └──────────────────┘  └──────────────┘  │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐    │
+│  │  Secret Manager  │  │  Cloud Logging   │  │  Monitoring  │    │
+│  │  DB & admin creds│  │  structured logs │  │  uptime check│    │
+│  └──────────────────┘  └──────────────────┘  └──────────────┘    │
 └──────────────────────────────────────────────────────────────────┘
 
 Module variable wiring:

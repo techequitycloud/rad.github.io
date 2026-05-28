@@ -1,9 +1,9 @@
 ---
-title: "Wikijs_Common Module"
+title: "Wikijs Common Module"
 sidebar_label: "Wikijs Common"
 ---
 
-# Wikijs_Common Module
+# Wikijs Common Module
 
 ## Overview
 
@@ -21,23 +21,23 @@ The database password is not generated here; it is managed by the platform layer
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                          Wikijs_Common (Layer 1)                             │
 │                                                                              │
-│  Inputs: application_name, db_name, db_user, environment_variables, ...     │
+│  Inputs: application_name, db_name, db_user, environment_variables, ...      │
 │                                                                              │
-│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐    │
-│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │    │
-│  │                      │    │                                         │    │
-│  │  (none)              │    │  container_image: "requarks/wiki:2"     │    │
-│  │                      │    │  container_port: 3000                   │    │
-│  │                      │    │  database_type: POSTGRES_15             │    │
-│  │                      │    │  enable_postgres_extensions: true       │    │
-│  │                      │    │  postgres_extensions: ["pg_trgm"]       │    │
-│  │  GCS Bucket          │    │  secret_environment_variables:          │    │
-│  │   wikijs-storage     │    │    DB_PASS → "database_password_secret" │    │
-│  │  (created by         │    │  HA_STORAGE_PATH: "/wiki-storage"       │    │
-│  │   Layer 2)           │    │  initialization_jobs: [db-init]         │    │
-│  │                      │    │  startup_probe: HTTP /healthz 60s       │    │
-│  └──────────────────────┘    │  liveness_probe: HTTP /healthz 60s      │    │
-│                              └─────────────────────────────────────────┘    │
+│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐     │
+│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │     │
+│  │                      │    │                                         │     │
+│  │  (none)              │    │  container_image: "requarks/wiki:2"     │     │
+│  │                      │    │  container_port: 3000                   │     │
+│  │                      │    │  database_type: POSTGRES_15             │     │
+│  │                      │    │  enable_postgres_extensions: true       │     │
+│  │                      │    │  postgres_extensions: ["pg_trgm"]       │     │
+│  │  GCS Bucket          │    │  secret_environment_variables:          │     │
+│  │   wikijs-storage     │    │    DB_PASS → "database_password_secret" │     │
+│  │  (created by         │    │  HA_STORAGE_PATH: "/wiki-storage"       │     │
+│  │   Layer 2)           │    │  initialization_jobs: [db-init]         │     │
+│  │                      │    │  startup_probe: HTTP /healthz 60s       │     │
+│  └──────────────────────┘    │  liveness_probe: HTTP /healthz 60s      │     │
+│                              └─────────────────────────────────────────┘     │
 └──────────────────────────────────────────────────────────────────────────────┘
                     │
                     ▼

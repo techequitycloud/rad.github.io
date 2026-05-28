@@ -1,9 +1,16 @@
 ---
-title: "Moodle_CloudRun Module — Configuration Guide"
+title: "Moodle CloudRun Module — Configuration Guide"
 sidebar_label: "Moodle CloudRun"
 ---
 
-# Moodle_CloudRun Module — Configuration Guide
+# Moodle CloudRun Module — Configuration Guide
+
+<YouTubeEmbed videoId="OaymmxOTJps" poster="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_CloudRun.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 Moodle is the world's most widely deployed open-source Learning Management System (LMS),
 holding 14% global market share and dominant positions in Europe (69%) and Latin America

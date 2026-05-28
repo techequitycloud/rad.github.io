@@ -1,9 +1,16 @@
 ---
-title: "OpenEMR_GKE Module — Configuration Guide"
+title: "OpenEMR GKE Module — Configuration Guide"
 sidebar_label: "OpenEMR GKE"
 ---
 
-# OpenEMR_GKE Module — Configuration Guide
+# OpenEMR GKE Module — Configuration Guide
+
+<YouTubeEmbed videoId="xPCDmeESfCU" poster="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 OpenEMR is the world's most widely deployed open-source electronic health records (EHR) and medical practice management platform, used by solo clinics, hospitals, developing-world health systems, and small/mid-size US practices. Over 40% of healthcare organizations now use at least one open-source health IT component. Version 8.0.0 (March 2026) achieved ONC Ambulatory EHR Certification with US Core 8.0 and USCDI v5, delivering FHIR-compliant, ONC-certified EHR at near-zero licensing cost. This module deploys OpenEMR on **GKE Autopilot** using a custom container image built on Alpine 3.20 with Apache and PHP 8.3 FPM, backed by a managed Cloud SQL MySQL 8.0 instance accessed via a Cloud SQL Auth Proxy sidecar, and a Filestore NFS volume for persistent patient document and sites directory storage.
 

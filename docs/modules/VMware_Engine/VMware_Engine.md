@@ -1,9 +1,16 @@
 ---
-title: "VMware_Engine Module — Configuration Guide"
+title: "VMware Engine Module — Configuration Guide"
 sidebar_label: "VMware Engine"
 ---
 
-# VMware_Engine Module — Configuration Guide
+# VMware Engine Module — Configuration Guide
+
+<YouTubeEmbed videoId="jTtmQW5AlL0" poster="https://storage.googleapis.com/rad-public-2b65/modules/VMWare_Engine.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/VMWare_Engine.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 `VMware_Engine` is a **standalone infrastructure module** that provisions Google Cloud VMware
 Engine (GCVE) resources in an existing GCP project. It deploys a GCVE private cloud, a global
@@ -57,30 +64,30 @@ All resources use the `altostrat-<id>` prefix where `<id>` is either `var.deploy
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        GCP Project                               │
-│                                                                   │
-│  VMware Engine Network (global, STANDARD)                        │
-│  └── GCVE Private Cloud (zone-local)                             │
-│       ├── vSphere                                                 │
-│       ├── vSAN                                                    │
-│       ├── NSX-T Manager                                           │
-│       └── HCX Manager                                             │
-│                                                                   │
-│  Network Policy (regional)                                        │
-│  ├── internet_access: enabled/disabled                            │
-│  └── external_ip: enabled/disabled                               │
-│                                                                   │
+│                        GCP Project                              │
+│                                                                 │
+│  VMware Engine Network (global, STANDARD)                       │
+│  └── GCVE Private Cloud (zone-local)                            │
+│       ├── vSphere                                               │
+│       ├── vSAN                                                  │
+│       ├── NSX-T Manager                                         │
+│       └── HCX Manager                                           │
+│                                                                 │
+│  Network Policy (regional)                                      │
+│  ├── internet_access: enabled/disabled                          │
+│  └── external_ip: enabled/disabled                              │
+│                                                                 │
 │  VEN ←──────── VPC Peering ────────→ Peer VPC (auto-mode)       │
-│                   (custom routes exported+imported)               │
-│                                                                   │
-│  Peer VPC                                                         │
-│  ├── Firewall: allow-internal                                     │
-│  ├── Firewall: allow-ssh (0.0.0.0/0 → TCP 22)                  │
-│  ├── Firewall: allow-rdp (0.0.0.0/0 → TCP 3389)               │
-│  ├── Firewall: allow-icmp (0.0.0.0/0)                          │
+│                   (custom routes exported+imported)             │
+│                                                                 │
+│  Peer VPC                                                       │
+│  ├── Firewall: allow-internal                                   │
+│  ├── Firewall: allow-ssh (0.0.0.0/0 → TCP 22)                   │
+│  ├── Firewall: allow-rdp (0.0.0.0/0 → TCP 3389)                 │
+│  ├── Firewall: allow-icmp (0.0.0.0/0)                           │
 │  ├── Firewall: allow-http (→ tag:jump-host TCP 80,443)          │
-│  └── Jump Host VM (Windows Server 2022, tag:jump-host)           │
-│       └── Used to RDP into vCenter, NSX-T, HCX consoles          │
+│  └── Jump Host VM (Windows Server 2022, tag:jump-host)          │
+│       └── Used to RDP into vCenter, NSX-T, HCX consoles         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

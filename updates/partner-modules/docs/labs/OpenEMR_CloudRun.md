@@ -93,17 +93,17 @@ Cloud Run Gen2 Service (min=1 instance)
 │  │  └──────────────────┘  └────────────────────┘  └───────────────┘  │   │
 │  └────────────────────────────────────────────────────────────────────┘  │
 │                                                                          │
-│  ┌──────────────────┐  ┌───────────────────────┐  ┌───────────────────┐ │
-│  │  Secret Manager  │  │  GCS Bucket           │  │  Artifact Registry│ │
-│  │  admin-password  │  │  data + backups       │  │  Custom image     │ │
-│  │  db-password     │  │                       │  │  (Alpine + PHP83) │ │
-│  └──────────────────┘  └───────────────────────┘  └───────────────────┘ │
+│  ┌──────────────────┐  ┌───────────────────────┐  ┌───────────────────┐  │
+│  │  Secret Manager  │  │  GCS Bucket           │  │  Artifact Registry│  │
+│  │  admin-password  │  │  data + backups       │  │  Custom image     │  │
+│  │  db-password     │  │                       │  │  (Alpine + PHP83) │  │
+│  └──────────────────┘  └───────────────────────┘  └───────────────────┘  │
 │                                                                          │
 │  Module variable wiring:                                                 │
 │    OpenEMR_CloudRun                                                      │
-│      enable_nfs   = true  → NFS required for OpenEMR sites directory    │
-│      enable_redis = true  → PHP session storage                         │
-│      min_instance_count = 1 → avoids cold starts for clinicians         │
+│      enable_nfs   = true  → NFS required for OpenEMR sites directory     │
+│      enable_redis = true  → PHP session storage                          │
+│      min_instance_count = 1 → avoids cold starts for clinicians          │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 

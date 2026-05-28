@@ -92,17 +92,17 @@ Cloud Run — n8n (port 5678)
 │  │                                                              │   │
 │  │  Cloud Run (gen2)                  Cloud SQL PostgreSQL 15   │   │
 │  │  ├── n8n (public)    ◄──────────── DB: n8n_db / n8n_user     │   │
-│  │  ├── Qdrant (internal)             (Auth Proxy via /cloudsql) │   │
+│  │  ├── Qdrant (internal)             (Auth Proxy via /cloudsql) │  │
 │  │  └── Ollama (internal)                                       │   │
 │  │                                                              │   │
-│  │  NFS Filestore (Redis host)        GCS Bucket               │   │
+│  │  NFS Filestore (Redis host)        GCS Bucket               │    │
 │  │  redis on NFS_SERVER_IP:6379       ├── /home/node/.n8n       │   │
 │  │                                    ├── /mnt/gcs/qdrant       │   │
 │  └────────────────────────────────────└── /mnt/gcs/ollama/models┘   │
 │                                                                     │
-│  Secret Manager                       Cloud Monitoring             │
-│  ├── N8N_ENCRYPTION_KEY (32 chars)    ├── uptime check (n8n URL)   │
-│  └── N8N_SMTP_PASS                    └── request_count alerts     │
+│  Secret Manager                       Cloud Monitoring              │
+│  ├── N8N_ENCRYPTION_KEY (32 chars)    ├── uptime check (n8n URL)    │
+│  └── N8N_SMTP_PASS                    └── request_count alerts      │
 └─────────────────────────────────────────────────────────────────────┘
 
 Module variable wiring:

@@ -1,9 +1,9 @@
 ---
-title: "Odoo_Common Module"
+title: "Odoo Common Module"
 sidebar_label: "Odoo Common"
 ---
 
-# Odoo_Common Module
+# Odoo Common Module
 
 ## Overview
 
@@ -19,28 +19,28 @@ Odoo is a comprehensive open-source ERP platform. This module handles its specif
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                          Odoo_Common (Layer 1)                               │
 │                                                                              │
-│  Inputs: project_id, tenant_deployment_id, deployment_id,                   │
+│  Inputs: project_id, tenant_deployment_id, deployment_id,                    │
 │          application_version, enable_redis, ...                              │
 │                                                                              │
-│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐    │
-│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │    │
-│  │                      │    │                                         │    │
-│  │  Secret Manager API  │    │  container_image: "odoo" (custom build) │    │
-│  │  master-password     │    │  container_port: 8069                   │    │
-│  │    secret (16-char   │    │  container_command: ["/bin/bash", "-c"] │    │
-│  │    alphanumeric)     │    │  container_args: [inline startup script]│    │
-│  │                      │    │  database_type: POSTGRES_15             │    │
-│  │  GCS Bucket          │    │  enable_nfs: true                       │    │
-│  │    odoo-addons       │    │  nfs_mount_path: /mnt                   │    │
-│  │    (/mnt/extra-      │    │  gcs_volumes: [odoo-addons]             │    │
-│  │     addons)          │    │  initialization_jobs: [nfs-init,        │    │
-│  │                      │    │                        db-init]         │    │
-│  └──────────────────────┘    │  startup_probe: TCP/180s                │    │
-│                              │  liveness_probe: HTTP /web/health/120s  │    │
-│                              └─────────────────────────────────────────┘    │
+│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐     │
+│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │     │
+│  │                      │    │                                         │     │
+│  │  Secret Manager API  │    │  container_image: "odoo" (custom build) │     │
+│  │  master-password     │    │  container_port: 8069                   │     │
+│  │    secret (16-char   │    │  container_command: ["/bin/bash", "-c"] │     │
+│  │    alphanumeric)     │    │  container_args: [inline startup script]│     │
+│  │                      │    │  database_type: POSTGRES_15             │     │
+│  │  GCS Bucket          │    │  enable_nfs: true                       │     │
+│  │    odoo-addons       │    │  nfs_mount_path: /mnt                   │     │
+│  │    (/mnt/extra-      │    │  gcs_volumes: [odoo-addons]             │     │
+│  │     addons)          │    │  initialization_jobs: [nfs-init,        │     │
+│  │                      │    │                        db-init]         │     │
+│  └──────────────────────┘    │  startup_probe: TCP/180s                │     │
+│                              │  liveness_probe: HTTP /web/health/120s  │     │
+│                              └─────────────────────────────────────────┘     │
 │                                                                              │
-│  wrapper_prefix = "app{application_name}{tenant_deployment_id}{             │
-│                         random_hex}"   (always internal random_id.hex)      │
+│  wrapper_prefix = "app{application_name}{tenant_deployment_id}{              │
+│                         random_hex}"   (always internal random_id.hex)       │
 └──────────────────────────────────────────────────────────────────────────────┘
                     │
                     ▼

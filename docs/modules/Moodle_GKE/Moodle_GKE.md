@@ -1,9 +1,16 @@
 ---
-title: "Moodle_GKE Module — Configuration Guide"
+title: "Moodle GKE Module — Configuration Guide"
 sidebar_label: "Moodle GKE"
 ---
 
-# Moodle_GKE Module — Configuration Guide
+# Moodle GKE Module — Configuration Guide
+
+<YouTubeEmbed videoId="m9pdsCMhhd8" poster="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 Moodle is the world's most widely deployed open-source Learning Management System (LMS), holding 14% global market share and dominant positions in Europe (69%) and Latin America (73%). The global LMS market is growing from $24.5B in 2024 to $107.9B by 2033 at a 17.9% CAGR, driven by demand for corporate training, higher education, and government certification programs. This module deploys Moodle on **GKE Autopilot** using a custom PHP 8.3/Apache container, backed by a managed Cloud SQL PostgreSQL instance and shared NFS storage for course materials, with horizontal pod autoscaling to support thousands of concurrent students.
 

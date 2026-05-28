@@ -1,9 +1,16 @@
 ---
-title: "Django_GKE Module — Configuration Guide"
+title: "Django GKE Module — Configuration Guide"
 sidebar_label: "Django GKE"
 ---
 
-# Django_GKE Module — Configuration Guide
+# Django GKE Module — Configuration Guide
+
+<YouTubeEmbed videoId="bY_QvUBz9W8" poster="https://storage.googleapis.com/rad-public-2b65/modules/Django_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Django_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 Django is the most mature Python web framework, used by 35,570+ companies including Instagram, Spotify, Dropbox, and NASA. It holds 12.6% developer preference in the 2026 Stack Overflow Survey with 20,000+ job postings growing at 10% YoY. Its "batteries included" philosophy — built-in ORM, admin interface, and authentication — makes it the default choice for building secure, scalable APIs, internal tools, and ML-integrated web services. This module deploys a production-ready Django application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL instance, GCS media storage, and Secret Manager for secrets including the Django `SECRET_KEY`.
 

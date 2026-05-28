@@ -1,9 +1,16 @@
 ---
-title: "RAGFlow_CloudRun Module — Configuration Guide"
+title: "RAGFlow CloudRun Module — Configuration Guide"
 sidebar_label: "RAGFlow CloudRun"
 ---
 
-# RAGFlow_CloudRun Module — Configuration Guide
+# RAGFlow CloudRun Module — Configuration Guide
+
+<YouTubeEmbed videoId="wfMeu3xhZQQ" poster="https://storage.googleapis.com/rad-public-2b65/modules/RAGFlow_CloudRun.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/RAGFlow_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG)
 platform with 80,000+ GitHub stars and 2,596% year-over-year contributor growth — named one of

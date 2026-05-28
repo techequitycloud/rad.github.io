@@ -1,9 +1,16 @@
 ---
-title: "OpenEMR_CloudRun Module — Configuration Guide"
+title: "OpenEMR CloudRun Module — Configuration Guide"
 sidebar_label: "OpenEMR CloudRun"
 ---
 
-# OpenEMR_CloudRun Module — Configuration Guide
+# OpenEMR CloudRun Module — Configuration Guide
+
+<YouTubeEmbed videoId="PMHV80I67yc" poster="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_CloudRun.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
+
 
 `OpenEMR_CloudRun` deploys **OpenEMR Community Edition** — the world's most widely
 deployed open-source Electronic Health Records (EHR) and medical practice management

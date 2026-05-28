@@ -5,6 +5,13 @@ sidebar_label: "Bank GKE"
 
 # Bank GKE Module
 
+<YouTubeEmbed videoId="ybbAakgQdKA" poster="https://storage.googleapis.com/rad-public-2b65/modules/Bank_GKE.png" />
+
+<br/>
+
+<a href="https://storage.googleapis.com/rad-public-2b65/modules/Bank_GKE.pdf" target="_blank">View Presentation (PDF)</a>
+
+
 ## Overview
 
 The **Bank GKE** module deploys a production-grade microservices banking application on a single Google Kubernetes Engine (GKE) cluster. It is designed as a focused learning environment for platform engineers who want hands-on experience with core GKE capabilities, Cloud Service Mesh, Anthos Config Management, and cloud-native observability — within a single-region, single-cluster deployment that is simpler to reason about than a multi-cluster setup.

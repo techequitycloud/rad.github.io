@@ -65,17 +65,17 @@ Local kubectl port-forward / In-cluster pods
 │  │                                                            │  │
 │  │  ┌─────────────────────────────────────────────────────┐   │  │
 │  │  │  Ollama Pod (1/1 READY)                             │   │  │
-│  │  │  ┌─────────────────────────────────────────────┐   │   │  │
-│  │  │  │  ollama container                           │   │   │  │
-│  │  │  │  PORT: 11434                                │   │   │  │
-│  │  │  │  OLLAMA_MODELS = /mnt/gcs/ollama/models     │   │   │  │
-│  │  │  │  GCS Fuse CSI volume → <prefix>-models      │   │   │  │
-│  │  │  └─────────────────────────────────────────────┘   │   │  │
+│  │  │  ┌─────────────────────────────────────────────┐   │   │   │
+│  │  │  │  ollama container                           │   │   │   │
+│  │  │  │  PORT: 11434                                │   │   │   │
+│  │  │  │  OLLAMA_MODELS = /mnt/gcs/ollama/models     │   │   │   │
+│  │  │  │  GCS Fuse CSI volume → <prefix>-models      │   │   │   │
+│  │  │  └─────────────────────────────────────────────┘   │   │   │
 │  │  └─────────────────────────────────────────────────────┘   │  │
 │  │                                                            │  │
-│  │  ClusterIP Service :11434 → Ollama pod :11434             │  │
-│  │  In-cluster URL: http://ollama.<namespace>.svc:11434      │  │
-│  │  HPA: minReplicas=1, maxReplicas=3                        │  │
+│  │  ClusterIP Service :11434 → Ollama pod :11434             │   │
+│  │  In-cluster URL: http://ollama.<namespace>.svc:11434      │   │
+│  │  HPA: minReplicas=1, maxReplicas=3                        │   │
 │  └────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────┘
        │

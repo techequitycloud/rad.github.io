@@ -64,17 +64,17 @@ Browser / External Webhook
 │  │                                                            │  │
 │  │  ┌─────────────────────────────────────────────────────┐   │  │
 │  │  │  Activepieces Pod (2/2 READY)                       │   │  │
-│  │  │  ┌───────────────────┐  ┌──────────────────────────┐ │   │  │
-│  │  │  │  activepieces     │  │  cloud-sql-proxy         │ │   │  │
-│  │  │  │  container        │  │  sidecar                 │ │   │  │
-│  │  │  │  Node.js server   │  │  TCP 127.0.0.1:5432      │ │   │  │
-│  │  │  │  AP_QUEUE_MODE=   │  │  → Cloud SQL             │ │   │  │
-│  │  │  │    MEMORY         │  │                          │ │   │  │
-│  │  │  └───────────────────┘  └──────────────────────────┘ │   │  │
+│  │  │  ┌───────────────────┐  ┌──────────────────────────┐ │   │ │
+│  │  │  │  activepieces     │  │  cloud-sql-proxy         │ │   │ │
+│  │  │  │  container        │  │  sidecar                 │ │   │ │
+│  │  │  │  Node.js server   │  │  TCP 127.0.0.1:5432      │ │   │ │
+│  │  │  │  AP_QUEUE_MODE=   │  │  → Cloud SQL             │ │   │ │
+│  │  │  │    MEMORY         │  │                          │ │   │ │
+│  │  │  └───────────────────┘  └──────────────────────────┘ │   │ │
 │  │  └─────────────────────────────────────────────────────┘   │  │
 │  │                                                            │  │
-│  │  LoadBalancer Service :80 → Activepieces pod :8080        │  │
-│  │  HPA: minReplicas=1, maxReplicas=3                        │  │
+│  │  LoadBalancer Service :80 → Activepieces pod :8080        │   │
+│  │  HPA: minReplicas=1, maxReplicas=3                        │   │
 │  └────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────┘
        │                    │
@@ -84,7 +84,7 @@ Browser / External Webhook
 │  ap-data        │  │  flows, runs, connections, users        │
 │  (file uploads) │  │  pgvector extension installed           │
 │  Workload       │  └─────────────────────────────────────────┘
-│  Identity SA    │
+│  Identity SA                                                 │
 └─────────────────┘
 
 Supporting resources:
