@@ -6,7 +6,7 @@ This document provides a comprehensive reference for the `modules/Ghost_CloudRun
 
 ## 1. Module Overview
 
-Ghost is a professional open-source publishing platform for newsletters, memberships, and content sites — trusted by Buffer, Cloudflare, DuckDuckGo, Duolingo, FreeCodeCamp, Revolut, and Kickstarter. With 22,000+ active customers and 100,000+ websites growing at roughly 15%/year (ahead of the 11% CMS market average), Ghost's built-in subscription monetization, native SEO, and superior page speed make it the leading alternative to WordPress for content-first businesses. `Ghost_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Ghost-specific application configuration, database initialisation, and storage configuration via `Ghost_Common`.
+Ghost is a professional open-source publishing platform for newsletters, memberships, and content sites. `Ghost_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Ghost-specific application configuration, database initialisation, and storage configuration via `Ghost_Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Node.js container, 2 vCPU / 4 Gi by default. Scale-to-zero (`min_instance_count = 0`) with `max_instance_count = 5` — both hardcoded, not user-configurable.
@@ -194,7 +194,7 @@ Identical to `App_CloudRun`. When `enable_vpc_sc = true`, all GCP API calls from
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `enable_vpc_sc` | 21 | `false` | Registers module API calls within the project's VPC-SC perimeter. A perimeter must already exist before enabling. |
+| `enable_vpc_sc` | 22 | `false` | Registers module API calls within the project's VPC-SC perimeter. A perimeter must already exist before enabling. |
 
 ### E. Secret Manager Integration
 
@@ -345,12 +345,12 @@ When `enable_redis = true` and `redis_host` is not provided, the module defaults
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `enable_redis` | 20 | `true` | Enables Redis for Ghost page caching. Recommended for all deployments. |
-| `redis_host` | 20 | `""` | Redis server hostname or IP. Leave blank to use the NFS server IP. Override with a Memorystore instance for production. |
-| `redis_port` | 20 | `'6379'` | Redis server TCP port (string). |
-| `redis_auth` | 20 | `""` | Redis AUTH password. Leave empty if the Redis instance does not require authentication. Sensitive — never stored in state. |
+| `enable_redis` | 21 | `true` | Enables Redis for Ghost page caching. Recommended for all deployments. |
+| `redis_host` | 21 | `""` | Redis server hostname or IP. Leave blank to use the NFS server IP. Override with a Memorystore instance for production. |
+| `redis_port` | 21 | `'6379'` | Redis server TCP port (string). |
+| `redis_auth` | 21 | `""` | Redis AUTH password. Leave empty if the Redis instance does not require authentication. Sensitive — never stored in state. |
 
-> Note: Redis is in **group 20** in `Ghost_CloudRun` (vs group 10 in `App_CloudRun`).
+> Note: Redis is in **group 21** in `Ghost_CloudRun` (vs group 10 in `App_CloudRun`).
 
 ### B. Email (SMTP)
 
@@ -454,7 +454,7 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `module_documentation` | 0 | (docs URL) | Platform metadata: documentation URL. |
 | `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
-| `credit_cost` | 0 | `100` | Platform metadata: deployment credit cost. |
+| `credit_cost` | 0 | `50` | Platform metadata: deployment credit cost. |
 | `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
 | `enable_purge` | 0 | `true` | Permits full deletion of module resources on destroy. |
 | `public_access` | 0 | `true` | Platform catalogue visibility. |
@@ -540,15 +540,15 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `liveness_probe` | 13 | `{ path="/", initial_delay_seconds=60, failure_threshold=3, ... }` | Liveness probe. |
 | `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | 13 | `[]` | Cloud Monitoring metric alert policies. |
-| `enable_redis` | 20 | `true` | **Enabled by default.** Redis for Ghost page caching. |
-| `redis_host` | 20 | `""` | Redis hostname/IP. Defaults to NFS server IP when empty. |
-| `redis_port` | 20 | `'6379'` | Redis TCP port (string). |
-| `redis_auth` | 20 | `""` | Redis AUTH password. Sensitive. |
-| `enable_vpc_sc` | 21 | `false` | Registers API calls within the project's VPC-SC perimeter. |
-| `vpc_cidr_ranges` | 21 | `[]` | VPC subnet CIDR ranges for VPC-SC network access level. Auto-discovered when empty. |
-| `vpc_sc_dry_run` | 21 | `true` | Logs VPC-SC violations without blocking. Set `false` to enforce. |
-| `organization_id` | 21 | `""` | GCP Organization ID for VPC-SC. Auto-discovered from project when empty. |
-| `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ). |
+| `enable_redis` | 21 | `true` | **Enabled by default.** Redis for Ghost page caching. |
+| `redis_host` | 21 | `""` | Redis hostname/IP. Defaults to NFS server IP when empty. |
+| `redis_port` | 21 | `'6379'` | Redis TCP port (string). |
+| `redis_auth` | 21 | `""` | Redis AUTH password. Sensitive. |
+| `enable_vpc_sc` | 22 | `false` | Registers API calls within the project's VPC-SC perimeter. |
+| `vpc_cidr_ranges` | 22 | `[]` | VPC subnet CIDR ranges for VPC-SC network access level. Auto-discovered when empty. |
+| `vpc_sc_dry_run` | 22 | `true` | Logs VPC-SC violations without blocking. Set `false` to enforce. |
+| `organization_id` | 22 | `""` | GCP Organization ID for VPC-SC. Auto-discovered from project when empty. |
+| `enable_audit_logging` | 22 | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ). |
 
 ---
 

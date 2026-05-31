@@ -1,15 +1,10 @@
 # OpenEMR_CloudRun Module — Configuration Guide
 
-`OpenEMR_CloudRun` deploys **OpenEMR Community Edition** — the world's most widely
-deployed open-source Electronic Health Records (EHR) and medical practice management
-platform — on Google Cloud Run Gen 2. OpenEMR is used by solo clinics, developing-world
-health systems, and small/mid-size US practices; over 40% of healthcare organizations now
-use at least one open-source health IT component. Version 8.0.0 (March 2026) achieved
-ONC Ambulatory EHR Certification with US Core 8.0 and USCDI v5, delivering FHIR-compliant,
-ONC-certified EHR at near-zero licensing cost. The application runs on Apache with PHP 8.3
-FPM on Alpine 3.20, backed by Cloud SQL MySQL 8.0 connected via Unix socket, and a Cloud
-Filestore NFS volume that persists the `sites` directory containing patient documents and
-application state.
+`OpenEMR_CloudRun` deploys **OpenEMR Community Edition** — an open-source Electronic
+Health Records (EHR) and medical practice management platform — on Google Cloud Run
+Gen 2. The application runs on Apache with PHP 8.3 FPM on Alpine 3.20, backed by
+Cloud SQL MySQL 8.0 connected via Unix socket, and a Cloud Filestore NFS volume that
+persists the `sites` directory containing patient documents and application state.
 
 `OpenEMR_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. All GCP
 infrastructure is provisioned by `App_CloudRun`. The module adds OpenEMR-specific
@@ -396,10 +391,10 @@ Complete list of all input variables, grouped by UI section.
 | Group | Variable | Type | Default | Updatable |
 |---|---|---|---|---|
 | 0 | `module_description` | string | *(long description)* | — |
-| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/applications/openemr"` | — |
+| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/modules/OpenEMR_CloudRun"` | — |
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
-| 0 | `credit_cost` | number | `100` | — |
+| 0 | `credit_cost` | number | `50` | — |
 | 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
 | 0 | `public_access` | bool | `true` | — |

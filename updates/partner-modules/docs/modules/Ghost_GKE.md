@@ -1,6 +1,6 @@
 # Ghost_GKE Module — Configuration Guide
 
-This guide describes every configuration variable available in the `Ghost_GKE` module. `Ghost_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot. Ghost is trusted by Buffer, Cloudflare, DuckDuckGo, Duolingo, FreeCodeCamp, Revolut, and Kickstarter — with 22,000+ active customers and 100,000+ websites growing at roughly 15%/year, ahead of the 11% CMS market average. Built-in subscription monetization, native SEO, and superior page speed make it the leading alternative to WordPress for content-first businesses.
+This guide describes every configuration variable available in the `Ghost_GKE` module. `Ghost_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Ghost_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Ghost** are described in full here.
 
@@ -43,7 +43,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Topology Spread Constraints | §7.B Topology Spread Constraints | Identical. |
 | Resource Quotas | §7.C Resource Quotas | Identical. |
 | Auto Password Rotation | §7.D Auto Password Rotation | See [Group 11: Database Configuration](#group-11-database-configuration). |
-| Redis Cache | §8.A Redis / Memorystore | `enable_redis` defaults to `true`; see [Group 14: Redis Cache](#group-14-redis-cache). |
+| Redis Cache | §8.A Redis / Memorystore | `enable_redis` defaults to `true`; see [Group 15: Redis Cache](#group-15-redis-cache). |
 | Backup Import | §8.B Backup Import | Exposes both `backup_uri` (full GCS URI or Drive ID) and `backup_file` (filename in module backup bucket); see [Group 6: Backup & Maintenance](#group-6-backup--maintenance). |
 | Service Mesh (ASM) | §8.C Service Mesh (ASM via Fleet) | Identical. |
 | Multi-Cluster Services | §8.D Multi-Cluster Services (MCS) | Identical. |
@@ -59,7 +59,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 3. **A `ghost-content` GCS bucket is provisioned automatically.** `Ghost_Common` provides a `ghost-content` bucket definition that is merged into the module's bucket list. You do not need to define it in `storage_buckets`.
 4. **A `db-init` job runs on first deployment.** `Ghost_Common` supplies a default `db-init` Kubernetes Job using a `mysql:8.0-debian` image that initialises the Ghost MySQL schema. Override `initialization_jobs` to replace it with a custom job.
 5. **Resource defaults are sized for Ghost.** The default `cpu_limit` (2 vCPU) and `memory_limit` (4 Gi) are higher than the `App_GKE` defaults to match Ghost 6.x's resource requirements.
-6. **Redis caching is enabled by default.** Ghost uses Redis for page caching. See [Group 14: Redis Cache](#group-14-redis-cache) and [App_GKE §8.A](../App_GKE/App_GKE.md#a-redis--memorystore) for details.
+6. **Redis caching is enabled by default.** Ghost uses Redis for page caching. See [Group 15: Redis Cache](#group-15-redis-cache) and [App_GKE §8.A](../App_GKE/App_GKE.md#a-redis--memorystore) for details.
 7. **Health probes are tuned for Ghost's slow startup.** Ghost runs database migrations and compiles themes on first boot. The default startup probe allows 90 seconds of initial delay before checking.
 
 ---
@@ -73,7 +73,7 @@ The behaviour of these variables is identical to `App_GKE`. See [App_GKE §1](..
 | Variable | Ghost_GKE Default | Notes |
 |---|---|---|
 | `module_description` | `"Ghost: Deploy Ghost publishing platform on GKE Autopilot…"` | Pre-populated with Ghost-specific description. |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/ghost"` | Points to the Ghost documentation page. |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/Ghost_GKE"` | Points to the Ghost GKE documentation page. |
 | `module_services` | Includes Ghost-relevant services | Adds `Cloud SQL (MySQL 8.0)` and `SMTP Integration` to the standard list. |
 
 ---
@@ -86,7 +86,7 @@ Identical to `App_GKE`. See [App_GKE §2](../App_GKE/App_GKE.md#2-iam--access-co
 
 | Variable | Default | Description |
 |---|---|---|
-| `region` | `"us-central1"` | GCP region for resource deployment. Used as a fallback when network discovery cannot determine the region from existing VPC subnets. Also used as the storage bucket location for the `ghost-content` bucket provisioned by `Ghost_Common`. |
+| `deployment_region` | `"us-central1"` | GCP region for resource deployment. Used as a fallback when network discovery cannot determine the region from existing VPC subnets. Also used as the storage bucket location for the `ghost-content` bucket provisioned by `Ghost_Common`. |
 
 ---
 
@@ -384,7 +384,7 @@ Available variables: `enable_pod_disruption_budget`, `pdb_min_available`, `enabl
 
 ---
 
-## Group 15: Resource Quota
+## Group 8: Resource Quota
 
 Identical to `App_GKE`. See [App_GKE §7.C](../App_GKE/App_GKE.md#c-resource-quotas).
 
@@ -418,11 +418,11 @@ Available variables: `stateful_pvc_enabled`, `stateful_pvc_size`, `stateful_pvc_
 
 ---
 
-## Group 14: Redis Cache
+## Group 15: Redis Cache
 
 These variables configure Ghost's Redis integration. The underlying Redis infrastructure support is provided by `App_GKE` (see [App_GKE §8.A](../App_GKE/App_GKE.md#a-redis--memorystore)); the variables below are Ghost-specific overrides and additions. Ghost uses Redis for page caching and session caching, which significantly reduces database load and improves page delivery speed for high-traffic sites.
 
-> **Note:** In `Ghost_GKE`, the Redis variables are in **group 14** (not group 20 as in `Ghost_CloudRun`).
+> **Note:** In `Ghost_GKE`, the Redis variables are in **group 15** (not group 21 as in `Ghost_CloudRun`).
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -431,7 +431,7 @@ These variables configure Ghost's Redis integration. The underlying Redis infras
 | `redis_port` | `"6379"` | Port number string | The TCP port on which the Redis server is listening. The default `6379` is the standard Redis port. Change only if your Redis instance is configured to listen on a non-standard port. |
 | `redis_auth` | `""` | String *(sensitive)* | The authentication password for the Redis server. Leave empty if the Redis instance does not require authentication (typical for the platform's default NFS co-hosted Redis). For production deployments using Google Cloud Memorystore with AUTH enabled, set this to the instance's AUTH string. This value is treated as sensitive and is never stored in Terraform state in plaintext. |
 
-### Validating Group 14 Settings
+### Validating Group 15 Settings
 
 **Google Cloud Console:**
 - **Memorystore instance (if used):** Navigate to **Memorystore → Redis** to confirm the instance exists, its IP address, port, and AUTH status.

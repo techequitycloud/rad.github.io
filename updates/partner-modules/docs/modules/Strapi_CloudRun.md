@@ -1,6 +1,6 @@
 # Strapi_CloudRun Module — Configuration Guide
 
-`Strapi_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Strapi](https://strapi.io/) — the leading open-source headless CMS — on Google Cloud Run Gen2. With 71,000+ GitHub stars and a 4.5/5 rating on G2 from 189+ reviews, Strapi is trusted by Adidas, Airbus, Amazon, Cisco, and Toyota for omnichannel content delivery across websites, mobile apps, digital signage, and IoT surfaces. The headless CMS market is growing at 22.1% CAGR toward $5.53B by 2032, and Strapi's fully customizable API layer with no vendor lock-in makes it a top choice for teams of any size.
+`Strapi_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Strapi](https://strapi.io/) — an open-source headless CMS — on Google Cloud Run Gen2.
 
 Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply Strapi-appropriate defaults and to call the `Strapi_Common` sub-module, which generates the application's container build context, database initialisation jobs, Strapi-specific secrets, and GCS bucket configuration. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.
 

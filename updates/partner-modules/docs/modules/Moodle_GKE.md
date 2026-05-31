@@ -1,6 +1,6 @@
 # Moodle_GKE Module — Configuration Guide
 
-Moodle is the world's most widely deployed open-source Learning Management System (LMS), holding 14% global market share and dominant positions in Europe (69%) and Latin America (73%). The global LMS market is growing from $24.5B in 2024 to $107.9B by 2033 at a 17.9% CAGR, driven by demand for corporate training, higher education, and government certification programs. This module deploys Moodle on **GKE Autopilot** using a custom PHP 8.3/Apache container, backed by a managed Cloud SQL PostgreSQL instance and shared NFS storage for course materials, with horizontal pod autoscaling to support thousands of concurrent students.
+Moodle is the world's most popular open-source Learning Management System (LMS), used by educational institutions, corporations, and online learning platforms worldwide. This module deploys Moodle on **GKE Autopilot** using a custom PHP 8.3/Apache container, backed by a managed Cloud SQL PostgreSQL instance and shared NFS storage for course materials.
 
 `Moodle_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Moodle-specific application configuration, an automated cron Cloud Scheduler job, and database initialisation on top.
 

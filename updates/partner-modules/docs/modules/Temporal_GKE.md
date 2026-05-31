@@ -2,7 +2,7 @@
 
 The `Temporal_GKE` module deploys [Temporal Workflow Engine](https://temporal.io/) to GKE Autopilot using the official `temporalio/auto-setup` all-in-one image. It provisions all four Temporal services — Frontend, History, Matching, and Worker — in a single pod, backed by Cloud SQL PostgreSQL for persistence and visibility. An optional Elasticsearch integration unlocks advanced visibility for full-text workflow search and custom search attributes.
 
-A separate Temporal Web UI deployment (`ubuntu/temporal-ui`) is always provisioned alongside the server and exposed via its own LoadBalancer service.
+A Temporal Web UI can be optionally added via the `additional_services` variable.
 
 ---
 
@@ -17,14 +17,11 @@ Layer 3: Temporal_GKE (this module)
   ├── temporal-db-init (Kubernetes Job — runs before server pod)
   │     └── Creates PostgreSQL role with CREATEDB privilege (postgres:15-alpine)
   └── app_gke (App_GKE)
-        ├── Temporal server pod (temporalio/auto-setup)
-        │     ├── Cloud SQL Auth Proxy sidecar (127.0.0.1:5432)
-        │     └── Shell wrapper maps DB_USER/DB_PASSWORD/DB_NAME → Temporal env vars
-        └── Temporal Web UI pod (ubuntu/temporal-ui:2.39.0-24.04_edge)
-              └── LoadBalancer Service on port 8081
+        └── Temporal server pod (temporalio/auto-setup)
+              └── Connects directly to Cloud SQL via private IP (no Auth Proxy sidecar)
                        ↓
 Layer 2: App_GKE (Kubernetes Deployment, Service, HPA, Workload Identity,
-                  Cloud SQL user + database creation, Secret Manager credential)
+                  Secret Manager credential management)
                        ↓
 Layer 1: Services_GCP (VPC, Cloud SQL, GKE Autopilot cluster, Artifact Registry)
 ```
@@ -34,10 +31,10 @@ Layer 1: Services_GCP (VPC, Cloud SQL, GKE Autopilot cluster, Artifact Registry)
 - Database credentials (user, password, DB_USER / DB_PASSWORD / DB_NAME env vars) are managed by App_GKE's standard mechanism — the same as Django, Ghost, and every other module.
 - The `temporal-db-init` Kubernetes Job creates the PostgreSQL role with `CREATEDB` privilege before the server pod starts. `auto-setup` then creates the `DBNAME` and `VISIBILITY_DBNAME` databases itself and runs schema migrations.
 - The Temporal Frontend gRPC port is hardcoded to **7233** in `main.tf` (`service_port = 7233`). The `container_port` variable has no effect on service exposure.
-- The Cloud SQL Auth Proxy sidecar is always injected (`enable_cloudsql_volume = true`). Temporal connects via `127.0.0.1:5432`, and `DB = "postgres12"` tells `auto-setup` to use the PostgreSQL 12 driver/schema.
+- **No Cloud SQL Auth Proxy sidecar** — `enable_cloudsql_volume = false`. Temporal connects directly to Cloud SQL via the private IP discovered by the `sql_discovery` sub-module (`POSTGRES_SEEDS = <db_internal_ip>`). `DB = "postgres12"` tells `auto-setup` to use the PostgreSQL 12 driver/schema.
 - Redis is explicitly disabled (`enable_redis = false`). Temporal uses PostgreSQL as its queue and persistence backend.
 - The Temporal server `service_type` defaults to **ClusterIP** — SDK workers connect from within the GKE cluster. Use `service_type = "LoadBalancer"` only if external SDK workers need direct gRPC access.
-- The Web UI is always added as an `additional_service` with `ingress = "INGRESS_TRAFFIC_ALL"`, giving it an external IP on port **8081**.
+- No Web UI is deployed automatically. Use the `additional_services` variable to add a Temporal Web UI container if desired.
 
 ---
 
@@ -52,9 +49,8 @@ Layer 1: Services_GCP (VPC, Cloud SQL, GKE Autopilot cluster, Artifact Registry)
 | `local.module_env_vars` | Empty — all env vars are set inside `temporal_module.environment_variables` |
 | `local.module_secret_env_vars` | Empty — `DB_PASSWORD` / `ROOT_PASSWORD` are managed by App_GKE's standard mechanism |
 | `local.module_storage_buckets` | Empty — Temporal requires no GCS buckets |
-| `local.temporal_ui_additional_services` | Web UI deployment spec (always included) |
 
-The `temporal_module` config sets `db_name` and `db_user` to non-empty values so that App_GKE's standard credential management is activated — creating the Secret Manager secret for `DB_PASSWORD` and injecting both `DB_PASSWORD` and `ROOT_PASSWORD` as secret env vars. The actual SQL username (`DB_USER`) is always `replace(App_GKE_resource_prefix, "-", "_")`, matching the convention used by all other modules.
+The `temporal_module` config sets `db_name = ""` and `db_user = ""` so App_GKE's standard Cloud SQL database creation is skipped. Database and user provisioning is handled entirely by `Temporal_Common` (which creates its own Secret Manager secret for the password). The secret is injected via `module_secret_env_vars = module.temporal_common.secret_ids`.
 
 ---
 
@@ -63,7 +59,6 @@ The `temporal_module` config sets `db_name` and `db_user` to non-empty values so
 | Component | Image | Tag |
 |---|---|---|
 | Temporal server | `temporalio/auto-setup` | `var.application_version` (default: `1.25.0`) |
-| Temporal Web UI | `ubuntu/temporal-ui` | `2.39.0-24.04_edge` (hardcoded) |
 | DB init job | `postgres` | `15-alpine` (hardcoded) |
 
 - `enable_image_mirroring = true` by default — the Temporal server image is mirrored from Docker Hub into Artifact Registry before deployment.
@@ -74,31 +69,24 @@ The `temporal_module` config sets `db_name` and `db_user` to non-empty values so
 
 ## 4. Environment Variables
 
-The Temporal server container is started via a shell wrapper command:
-
-```
-/bin/sh -c "export POSTGRES_USER=\"$DB_USER\" && export POSTGRES_PWD=\"$DB_PASSWORD\" && export DBNAME=\"$DB_NAME\" && export VISIBILITY_DBNAME=\"${DB_NAME}_vis\" && exec /etc/temporal/entrypoint.sh"
-```
-
-This wrapper maps App_GKE's standard env vars to the Temporal-specific names before exec-ing the entrypoint. Kubernetes `$(VAR)` substitution is not used because `DBNAME` sorts alphabetically before `DB_NAME`, which would prevent the substitution from resolving.
+The Temporal server environment variables are set directly in `environment_variables` within `temporal.tf`. There is no shell wrapper — all variables are passed as Kubernetes env vars.
 
 ### Static Variables (set in `environment_variables`)
 
 | Variable | Default Value | Description |
 |---|---|---|
 | `DB` | `"postgres12"` | Tells `auto-setup` to use the PostgreSQL 12+ driver and schema paths |
-| `POSTGRES_SEEDS` | `"127.0.0.1"` | Cloud SQL Auth Proxy sidecar address |
+| `POSTGRES_SEEDS` | `module.sql_discovery.db_internal_ip` | Cloud SQL private IP (auto-discovered from Services_GCP) |
+| `POSTGRES_USER` | `var.temporal_db_user` | PostgreSQL username (from `temporal_db_user` variable) |
+| `DBNAME` | `var.temporal_database_name` | Primary persistence database name |
+| `VISIBILITY_DBNAME` | `var.temporal_visibility_database_name` | Visibility database name |
 | `NUM_HISTORY_SHARDS` | `"4"` | History shard count (power of two; cannot change post-deploy) |
 | `SERVICES` | `"frontend,history,matching,worker"` | All four Temporal services in one pod |
+| `SQL_TLS_ENABLED` | `"true"` | Enables TLS for direct Cloud SQL connections |
+| `POSTGRES_TLS_ENABLED` | `"true"` | Enables TLS in schema migration tool |
+| `POSTGRES_TLS_DISABLE_HOST_VERIFICATION` | `"true"` | Skips host verification (Cloud SQL CA cert not available in pod) |
 
-### Dynamically Mapped Variables (set by shell wrapper at startup)
-
-| Variable | Source | Description |
-|---|---|---|
-| `POSTGRES_USER` | `$DB_USER` (injected by App_GKE) | PostgreSQL username |
-| `POSTGRES_PWD` | `$DB_PASSWORD` (Secret Manager, via App_GKE) | PostgreSQL password |
-| `DBNAME` | `$DB_NAME` (injected by App_GKE) | Primary persistence database name |
-| `VISIBILITY_DBNAME` | `${DB_NAME}_vis` | Visibility database name (derived from primary) |
+The `POSTGRES_PWD` is injected via `module_secret_env_vars` from `Temporal_Common`'s Secret Manager secret.
 
 ### Elasticsearch Variables (when `enable_elasticsearch = true`)
 
@@ -114,28 +102,28 @@ This wrapper maps App_GKE's standard env vars to the Temporal-specific names bef
 
 ## 5. Temporal Web UI
 
-The Web UI is deployed unconditionally as a `temporal_ui_additional_services` entry that is concatenated with any user-supplied `additional_services`.
+No Temporal Web UI is deployed automatically by this module. To add a Web UI, pass a configuration entry via the `additional_services` variable. A typical example using `ubuntu/temporal-ui`:
 
-| Aspect | Value |
-|---|---|
-| Image | `ubuntu/temporal-ui:2.39.0-24.04_edge` |
-| Port | `8081` |
-| Service type | `LoadBalancer` (via `ingress = "INGRESS_TRAFFIC_ALL"`) |
-| Scaling | `min_instance_count = 1`, `max_instance_count = 1` |
-| CPU / Memory | `500m` / `256Mi` |
-| gRPC backend | Resolved from `GKE_SERVICE_URL` injected by App_GKE — the scheme is stripped to produce `<service-fqdn>:7233` |
-
-The startup command writes a minimal `development.yaml` config before exec-ing the UI binary:
+```hcl
+additional_services = [
+  {
+    name         = "temporal-ui"
+    image        = "ubuntu/temporal-ui:2.39.0-24.04_edge"
+    port         = 8081
+    cpu_limit    = "500m"
+    memory_limit = "256Mi"
+    env_vars = {
+      TEMPORAL_ADDRESS = "<temporal-frontend-service>:7233"
+      TEMPORAL_UI_PORT = "8081"
+    }
+    min_instance_count = 1
+    max_instance_count = 1
+    ingress            = "INGRESS_TRAFFIC_ALL"
+  }
+]
 ```
-temporalGrpcAddress: <service-fqdn>:7233
-port: 8081
-enableUi: true
-defaultNamespace: default
-auth:
-  enabled: false
-```
 
-Authentication for the Web UI is disabled by default. Use `iap_authorized_users` / `iap_authorized_groups` with `enable_iap = true` if access control is required (note that IAP is not recommended for the main Temporal gRPC port).
+Replace `<temporal-frontend-service>` with the Kubernetes Service name of the Temporal frontend (available from the `service_name` output).
 
 ---
 
@@ -145,7 +133,7 @@ TCP probes are used for both the startup and liveness checks because Temporal Fr
 
 | Probe | Type | Initial Delay | Period | Failure Threshold |
 |---|---|---|---|---|
-| Startup | TCP | 30s | 10s | 90 (15-minute window for schema init) |
+| Startup | TCP | 30s | 10s | 60 (10-minute window for schema init) |
 | Liveness | TCP | 60s | 30s | 3 |
 
 The Web UI uses HTTP GET `/` probes on port 8081.
@@ -194,7 +182,7 @@ The Web UI uses HTTP GET `/` probes on port 8081.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `service_type` | `string` | `"ClusterIP"` | Kubernetes Service type for the Temporal Frontend. Use `ClusterIP` for cluster-internal SDK workers (recommended — the Web UI is exposed separately via its own LoadBalancer). Use `LoadBalancer` only if SDK workers need to connect from outside the cluster. |
+| `service_type` | `string` | `"ClusterIP"` | Kubernetes Service type for the Temporal Frontend. Use `ClusterIP` for cluster-internal SDK workers (recommended). Use `LoadBalancer` only if SDK workers need to connect from outside the cluster. |
 | `container_protocol` | `string` | `"h2c"` | HTTP/2 cleartext — required for gRPC. |
 | `timeout_seconds` | `number` | `300` | Backend response timeout for the load balancer. |
 
@@ -229,13 +217,13 @@ The Web UI uses HTTP GET `/` probes on port 8081.
 
 ### Database Initialisation
 
-Database provisioning follows the same pattern as Django, Ghost, and all other modules:
+Database provisioning for Temporal uses a dedicated `Temporal_Common` sub-module rather than App_GKE's standard mechanism:
 
-1. **App_GKE** creates the Cloud SQL user and database, and injects `DB_USER`, `DB_PASSWORD`, `DB_NAME`, and `ROOT_PASSWORD` into the pod and jobs.
-2. **`temporal-db-init` job** (runs before the server pod) connects as the `postgres` superuser using `ROOT_PASSWORD` and creates the Temporal PostgreSQL role with `CREATEDB` privilege.
-3. **`temporalio/auto-setup`** connects as `DB_USER` (remapped to `POSTGRES_USER` by the shell wrapper) and creates the `DBNAME` and `VISIBILITY_DBNAME` databases, then runs all schema migrations.
+1. **`Temporal_Common`** creates the Cloud SQL user (`temporal_db_user`), both databases (`temporal_database_name` and `temporal_visibility_database_name`), and the Secret Manager secret for the database password.
+2. **`temporal-db-init` job** (runs before the server pod) connects as the `postgres` superuser and creates the Temporal PostgreSQL role with `CREATEDB` privilege, so that `auto-setup` can create the databases itself.
+3. **`temporalio/auto-setup`** connects as `POSTGRES_USER` (set from `var.temporal_db_user`) directly to the Cloud SQL private IP and creates the `DBNAME` and `VISIBILITY_DBNAME` databases, then runs all schema migrations.
 
-The database name and username are always derived from the App_GKE resource prefix (`replace(resource_prefix, "-", "_")`), ensuring consistent naming with all other GKE modules.
+Because `Temporal_Common` manages its own credentials, `db_name = ""` and `db_user = ""` are passed to `App_GKE`, and `enable_cloudsql_volume = false` — the Cloud SQL Auth Proxy is not used.
 
 ### Schema Initialisation
 

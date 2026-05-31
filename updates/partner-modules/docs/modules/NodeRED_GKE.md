@@ -1,6 +1,6 @@
 # NodeRED_GKE Module — Configuration Guide
 
-Node-RED is a leading open-source, browser-based flow programming tool originally developed by IBM, with 4,000+ community connector nodes and a growing ecosystem spanning smart manufacturing and edge computing. It is the de facto standard for IoT, IIoT, and industrial automation — integrating legacy OT systems (Modbus, OPC-UA, Siemens S7, MQTT) with modern cloud services. Gartner projects that 70%+ of all applications will use low-code technologies by 2026, and the low-code platform market is tracking toward $16.5B by 2027. This module deploys Node-RED on **GKE Autopilot** with NFS-backed persistent flow storage, optional Redis context storage, and full Kubernetes reliability controls.
+Node-RED is a leading open-source flow-based programming tool designed for wiring together IoT devices, APIs, and online services through a browser-based visual editor. This module deploys Node-RED on **GKE Autopilot** with NFS-backed persistent flow storage, optional Redis context storage, and full Kubernetes reliability controls.
 
 `NodeRED_GKE` is a **wrapper module** built on top of `App_GKE`. It delegates all GCP infrastructure provisioning to App_GKE (GKE Autopilot cluster, networking, Cloud Storage, NFS, Secret Manager, CI/CD) and uses a `NodeRED_Common` sub-module to supply Node-RED-specific application configuration. The `NodeRED_Common` outputs feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts_dir` inputs.
 
@@ -54,10 +54,10 @@ Node-RED is a leading open-source, browser-based flow programming tool originall
 | `support_users` | `[]` | Email addresses granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `{}` | Labels applied to all module-managed resources. |
 | `module_description` | *(Node-RED GKE description)* | Platform UI description. |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/node-red"` | External documentation URL. |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/NodeRED_GKE"` | External documentation URL. |
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed first. |
 | `module_services` | *(GKE Autopilot, Filestore, GCS, etc.)* | GCP services used by this module. |
-| `credit_cost` | `75` | Platform credits consumed on deployment. |
+| `credit_cost` | `150` | Platform credits consumed on deployment. |
 | `require_credit_purchases` | `false` | Enforces credit balance check. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
 | `public_access` | `true` | Visibility to all platform users. |
@@ -430,10 +430,10 @@ Complete list of all input variables, grouped by UI section.
 | Group | Variable | Type | Default | Updatable |
 |---|---|---|---|---|
 | 0 | `module_description` | string | *(long description)* | — |
-| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/applications/node-red"` | — |
+| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/modules/NodeRED_GKE"` | — |
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
-| 0 | `credit_cost` | number | `75` | — |
+| 0 | `credit_cost` | number | `150` | — |
 | 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
 | 0 | `public_access` | bool | `true` | — |

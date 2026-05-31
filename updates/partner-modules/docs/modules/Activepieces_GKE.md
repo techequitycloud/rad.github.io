@@ -1,6 +1,6 @@
-# Activepieces GKE Module — Configuration Guide
+# Activepieces_GKE Module — Configuration Guide
 
-Activepieces is a Y Combinator-backed open-source workflow automation platform (Apache 2.0) with **22,000+ GitHub stars** and **100,000+ active installations**. At $1.7M ARR with a team of ~15, it is a lean, high-velocity Zapier/Make alternative with 450+ integrations and native AI/MCP server support — ideal for teams prioritising data sovereignty and avoiding per-task pricing at scale. White-label capability makes it a strong fit for agencies and SaaS builders. This module deploys a production-ready Activepieces application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL 15 instance, GCS data storage, and Secret Manager for cryptographic secrets (`AP_ENCRYPTION_KEY` and `AP_JWT_SECRET`).
+Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation platform for connecting apps, APIs, and data sources. This module deploys a production-ready Activepieces application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL 15 instance, GCS data storage, and Secret Manager for cryptographic secrets (`AP_ENCRYPTION_KEY` and `AP_JWT_SECRET`).
 
 `Activepieces_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, Filestore, secrets, CI/CD) and adds Activepieces-specific application configuration via the `Activepieces_Common` sub-module.
 
@@ -17,7 +17,7 @@ This guide documents variables that are **unique to `Activepieces_GKE`** or that
 | Configuration Area | App_GKE.md Section | Activepieces-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Different defaults for `module_description` and `module_documentation`. |
-| Project & Identity | §2 IAM & Access Control | Identical. Plus `deployment_region` for fallback region. |
+| Project & Identity | §2 IAM & Access Control | Identical. Plus `region` for fallback region. |
 | Application Identity | §3.A Compute (GKE Autopilot) | See [Activepieces Application Identity](#activepieces-application-identity). `application_name` defaults to `"activepieces"`. |
 | Runtime & Scaling | §3.A Compute (GKE Autopilot) | `min_instance_count` defaults to `1`. `container_image_source` defaults to `"custom"`. See [Scaling Considerations](#scaling-considerations). |
 | Environment Variables & Secrets | §3 Core Service Configuration | `Activepieces_Common` injects all `AP_*` variables automatically — see [Platform-Managed Behaviours](#platform-managed-behaviours). |

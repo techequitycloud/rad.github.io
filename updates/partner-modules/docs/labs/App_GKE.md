@@ -1,870 +1,578 @@
-# App on GKE — Lab Guide
+# App_GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/App_GKE)**
 
-This lab guide walks you through deploying, exploring, and operating the **App_GKE** foundation
-module on Google Kubernetes Engine Autopilot. You will explore the full GKE infrastructure
-stack that powers all GKE application modules: Kubernetes workloads, Cloud SQL integration,
-Workload Identity, Secret Manager, GCS Fuse, HPA, and Cloud Monitoring.
+## Overview
+
+`App_GKE` is the **foundation deployment engine** for all GKE Autopilot application modules in this repository. It is a highly parameterized Terraform child module that provisions a production-ready Kubernetes workload on GKE Autopilot, including Cloud SQL (PostgreSQL or MySQL), Cloud Filestore NFS, GCS storage, Secret Manager, Workload Identity, Cloud Build CI/CD, Cloud Monitoring, and optional Cloud Armor WAF.
+
+Application modules such as `Django_GKE`, `Ghost_GKE`, and `Wordpress_GKE` call this module and pass application-specific configuration. You can also call `App_GKE` directly to deploy a generic containerised workload on GKE Autopilot.
+
+**Estimated time:** 2–3 hours
+
+### What the Module Automates
+
+- GKE namespace, Deployment (or StatefulSet), Service, and HPA creation
+- Cloud Build image build and push to Artifact Registry (custom mode) or image mirroring (prebuilt mode)
+- Cloud SQL database and user provisioning, with Cloud SQL Auth Proxy sidecar
+- Secret Manager secrets for database credentials and application settings
+- Cloud Filestore NFS provisioning and GCS Fuse volume configuration
+- Workload Identity binding between the Kubernetes service account and GCP service account
+- Kubernetes Jobs for initialisation tasks (e.g. `db-init`) and CronJobs for scheduled tasks
+- Cloud Monitoring uptime checks and alert policies
+- Optional: Cloud Armor WAF + Ingress, Identity-Aware Proxy, VPC Service Controls, CI/CD trigger, static IP reservation
+
+### What You Do Manually
+
+- Note the deployment outputs (external IP, namespace, etc.) from the RAD UI deployment panel
+- Configure `kubectl` access to the GKE cluster
+- Inspect running pods and Kubernetes resources
+- Retrieve credentials from Secret Manager and access the application
+- Query application logs in Cloud Logging
+- View GKE dashboards, pod metrics, and uptime checks in Cloud Monitoring
+- Scale the Deployment and observe HPA behaviour
 
 ---
 
-## Table of Contents
+## CLI and REST API Overview
 
-1. [Overview](#1-overview)
-2. [Architecture](#2-architecture)
-3. [Prerequisites](#3-prerequisites)
-4. [Lab Setup](#4-lab-setup)
-5. [Exercise 1 — Access the Application](#exercise-1--access-the-application)
-6. [Exercise 2 — Kubernetes Workloads](#exercise-2--kubernetes-workloads)
-7. [Exercise 3 — Database Integration](#exercise-3--database-integration)
-8. [Exercise 4 — Workload Identity and Secrets](#exercise-4--workload-identity-and-secrets)
-9. [Exercise 5 — Networking](#exercise-5--networking)
-10. [Exercise 6 — Cloud Logging and Monitoring](#exercise-6--cloud-logging-and-monitoring)
-11. [Cleanup](#cleanup)
-12. [Reference](#reference)
-
----
-
-## 1. Overview
-
-### What Is App_GKE?
-
-`App_GKE` is the **foundation deployment engine** for all GKE Autopilot application modules in
-the RAD Modules ecosystem. It provisions a production-ready Kubernetes workload, including Cloud
-SQL (PostgreSQL or MySQL), Cloud Filestore NFS, GCS Fuse storage, Workload Identity, Secret
-Manager, Cloud Build CI/CD, Cloud Monitoring, and optional Cloud Armor WAF. Application wrappers
-such as `Wikijs_GKE`, `Ghost_GKE`, and `Django_GKE` call this module with app-specific config.
-
-### Key Capabilities Demonstrated
-
-| Capability | What It Demonstrates |
-|---|---|
-| **GKE Autopilot** | Managed node provisioning, automatic scaling, security hardening |
-| **Kubernetes Resources** | Deployment, Service, HPA, ServiceAccount, PodDisruptionBudget |
-| **Workload Identity** | KSA → GSA binding, no service account key files needed |
-| **Cloud SQL Auth Proxy** | Sidecar-based Unix socket DB connection inside pods |
-| **Secret Manager** | Secrets fetched at runtime via Workload Identity |
-| **GCS Fuse CSI** | GCS bucket mounted as a filesystem inside pods |
-| **HPA** | CPU-based auto-scaling between min/max replica counts |
-| **Observability** | Cloud Logging structured JSON, Cloud Monitoring GKE dashboard |
-
----
-
-## 2. Architecture
-
-```
-Internet / Client
-       │
-       ▼ HTTP (LoadBalancer Service)
-┌──────────────────────────────────────────────────────────────────┐
-│  GKE Autopilot Cluster                                           │
-│                                                                  │
-│  ┌────────────────────────────────────────────────────────────┐  │
-│  │  Namespace: app<appname><tenant><deploymentid>             │  │
-│  │                                                            │  │
-│  │  ┌──────────────────────────────────────────────────────┐  │  │
-│  │  │  Pod: gkeapp-<hash>  (READY 2/2)                      │  │ │
-│  │  │  ┌───────────────────┐  ┌────────────────────────┐   │  │  │
-│  │  │  │ Container: gkeapp │  │ Sidecar: cloud-sql-proxy│   │  │ │
-│  │  │  │ Port: 8080        │  │ /cloudsql Unix socket   │   │  │ │
-│  │  │  │ /mnt/nfs (NFS)    │  └────────────────────────┘   │  │  │
-│  │  │  │ /mnt/gcs (GCSFuse)│                                │  │ │
-│  │  │  └───────────────────┘                                │  │ │
-│  │  └──────────────────────────────────────────────────────┘  │  │
-│  │                                                            │  │
-│  │  Service: LoadBalancer → EXTERNAL_IP:80                   │   │
-│  │  HPA: min=1  max=3  (CPU-based)                           │   │
-│  │  PDB: maxUnavailable=1                                    │   │
-│  └────────────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────────┘
-       │ Cloud SQL Auth Proxy (private IP via VPC)
-       ▼
-┌──────────────────────────────────────────────────────────────────┐
-│  Cloud SQL PostgreSQL (private IP)                               │
-│  Database: gkeappdb  │  User: gkeappuser                         │
-│  DB password → Secret Manager                                    │
-└──────────────────────────────────────────────────────────────────┘
-
-Supporting Services:
-  Workload Identity   ← KSA → GSA binding (no key files)
-  Secret Manager      ← database password, app secrets
-  GCS Bucket          ← application storage (GCS Fuse CSI)
-  Cloud Filestore     ← NFS mount at /mnt/nfs
-  Artifact Registry   ← custom container image (Cloud Build)
-  Cloud Monitoring    ← uptime check, CPU/memory alerts
-```
-
----
-
-## 3. Prerequisites
-
-### Required Tools
-
-| Tool | Minimum Version | Install |
-|---|---|---|
-| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
-| `kubectl` | 1.29+ | `gcloud components install kubectl` |
-| `curl` / `jq` | Any | System package manager |
-
-### GCP Permissions
-
-```
-roles/owner                    # or the following fine-grained set:
-roles/container.admin
-roles/cloudsql.admin
-roles/secretmanager.admin
-roles/storage.admin
-roles/iam.serviceAccountAdmin
-roles/monitoring.admin
-roles/logging.admin
-```
-
-### Environment Variables
+Set these shell variables at the start of each session — all gcloud and REST examples below reference them.
 
 ```bash
-export PROJECT="your-gcp-project-id"
-export REGION="us-central1"
+export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
+export REGION="us-central1"             # the region you deployed into
 export TOKEN=$(gcloud auth print-access-token)
 
-gcloud config set project "${PROJECT}"
-gcloud config set compute/region "${REGION}"
-```
-
----
-
-## 4. Lab Setup
-
-### 4.1 Deploy via RAD UI
-
-Deploy the `App_GKE` module via the RAD UI. In the variable form, set:
-
-| Variable | Value | Notes |
-|---|---|---|
-| `project_id` | `your-gcp-project-id` | Required |
-| `region` | `us-central1` | GCP region |
-| `application_name` | `gkeapp` | Base resource name |
-| `application_version` | `1.0.0` | Container image tag |
-| `min_instance_count` | `1` | Minimum pod replicas |
-| `max_instance_count` | `3` | HPA maximum replicas |
-| `database_type` | `POSTGRES` | Cloud SQL PostgreSQL |
-| `enable_nfs` | `true` | Filestore NFS mount |
-| `enable_redis` | `true` | Redis env vars injected |
-| `reserve_static_ip` | `true` | Static external IP |
-
-Click **Deploy** and wait for provisioning to complete (approximately 15–30 minutes).
-
-> **What this provisions:** GKE namespace, Deployment, Service, HPA, PodDisruptionBudget,
-> Cloud SQL PostgreSQL, Workload Identity, Secret Manager secrets, Artifact Registry (custom
-> image), GCS Fuse volume, Filestore NFS, static IP, uptime check, and alert policies.
-
-### 4.2 Configure Shell Environment
-
-```bash
-export PROJECT="your-gcp-project-id"
-export REGION="us-central1"
-export TOKEN=$(gcloud auth print-access-token)
-
-# Discover the GKE cluster
+# Discover the GKE cluster name (auto-created by Services_GCP)
 export CLUSTER=$(gcloud container clusters list \
-  --project="${PROJECT}" \
-  --format="value(name)" \
+  --project=${PROJECT} \
+  --format='value(name)' \
   --limit=1)
 
-# Discover the DB secret
-export DB_SECRET=$(gcloud secrets list \
-  --project="${PROJECT}" \
-  --filter="name~gkeapp" \
-  --format="value(name)" \
-  --limit=1)
-
-echo "Cluster: ${CLUSTER}"
-echo "DB Secret: ${DB_SECRET}"
-```
-
-### 4.3 Configure kubectl
-
-```bash
-gcloud container clusters get-credentials "${CLUSTER}" \
-  --region="${REGION}" \
-  --project="${PROJECT}"
-
-kubectl cluster-info
+# Configure kubectl
+gcloud container clusters get-credentials ${CLUSTER} \
+  --region=${REGION} \
+  --project=${PROJECT}
 
 # Discover the namespace (pattern: app<appname><tenant><deploymentid>)
 export NAMESPACE=$(kubectl get namespaces --no-headers \
   -o custom-columns=":metadata.name" | grep "^appgkeapp" | head -1)
+# Replace "gkeapp" with the actual application_name you used
 
 # Discover the external IP
-export EXTERNAL_IP=$(kubectl get svc -n "${NAMESPACE}" \
+export EXTERNAL_IP=$(kubectl get svc -n ${NAMESPACE} \
   -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
 
-echo "Namespace: ${NAMESPACE}"
-echo "App URL: http://${EXTERNAL_IP}"
+# Discover the database password secret
+export DB_SECRET=$(gcloud secrets list \
+  --project=${PROJECT} \
+  --filter="name~gkeapp" \
+  --format="value(name)" \
+  --limit=1)
 ```
 
 ---
 
-## Exercise 1 — Access the Application
+## Prerequisites
 
-### Objective
+| Requirement | Detail |
+|---|---|
+| Access to the RAD UI | Permission to deploy modules in the target GCP project |
+| gcloud CLI | Authenticated (`gcloud auth login`) |
+| kubectl | Installed and on PATH |
+| GCP project with billing | Active billing account linked |
+| Services_GCP module deployed | Provides VPC, GKE cluster, Cloud SQL, Artifact Registry, and Filestore |
+| Service account | `roles/owner` granted in the target project |
 
-Get the external IP from the Kubernetes LoadBalancer Service, verify pods are running, and
-access the application.
+The `Services_GCP` module **must** be deployed and healthy before running this module. It supplies the shared VPC, GKE Autopilot cluster, Cloud SQL instance, Artifact Registry repository, and Filestore NFS server that App_GKE discovers automatically at deploy time.
 
-### Step 1.1 — Get the External IP
+---
 
-**kubectl:**
+## Phase 1 — Deploy Infrastructure [AUTOMATED]
+
+### Step 1.1 — Configure Variables
+
+Variables are configured in the RAD UI form before deploying. The table below lists the most commonly configured variables.
+
+| Variable | Default | Description |
+|---|---|---|
+| `project_id` | _(required)_ | GCP project ID to deploy into |
+| `deployment_id` | _(auto-generated)_ | Short alphanumeric suffix appended to all resource names |
+| `region` | `us-central1` | GCP region for resource deployment |
+| `tenant_deployment_id` | `demo` | Unique tenant/environment identifier used in resource naming |
+| `application_name` | `gkeapp` | Base name for the Kubernetes workload and associated resources |
+| `application_version` | `1.0.0` | Container image version tag |
+| `container_image_source` | `custom` | `custom` to build via Cloud Build; `prebuilt` to deploy an existing image URI |
+| `container_image` | `""` | Full image URI — required when `container_image_source = "prebuilt"` |
+| `deploy_application` | `true` | Set to `false` to provision infrastructure only without deploying the workload |
+| `min_instance_count` | `1` | Minimum pod replicas (HPA `minReplicas`) |
+| `max_instance_count` | `3` | Maximum pod replicas (HPA `maxReplicas`) |
+| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | CPU and memory limits per pod |
+| `workload_type` | `Deployment` | `Deployment` for stateless apps; `StatefulSet` for stateful apps. Setting `stateful_pvc_enabled = true` without specifying this variable automatically selects `StatefulSet` |
+| `stateful_pvc_enabled` | `null` | Enables a PersistentVolumeClaim template in the StatefulSet spec so each pod replica gets its own isolated PVC. Setting this to `true` without `workload_type` auto-selects `StatefulSet` |
+| `stateful_pvc_size` | `null` | Storage size for each PVC (e.g. `"20Gi"`). Only used when `stateful_pvc_enabled = true` |
+| `stateful_pvc_mount_path` | `null` | Container path where the PVC is mounted (e.g. `"/var/lib/data"`). Only used when `stateful_pvc_enabled = true` |
+| `stateful_pvc_storage_class` | `null` | Kubernetes StorageClass for the PVCs. Leave `null` to use the cluster default; for GKE Autopilot `"standard-rwo"` (Balanced PD, ReadWriteOnce) is the default |
+| `service_type` | `LoadBalancer` | `LoadBalancer`, `ClusterIP`, or `NodePort` |
+| `gke_cluster_name` | `""` | Target cluster name — leave empty to auto-discover from Services_GCP |
+| `database_type` | `POSTGRES` | Cloud SQL engine: `POSTGRES`, `MYSQL`, or `NONE` |
+| `application_database_name` | `gkeappdb` | Database name created in Cloud SQL |
+| `application_database_user` | `gkeappuser` | Database user name |
+| `enable_redis` | `true` | Injects `REDIS_HOST`/`REDIS_PORT` environment variables into pods |
+| `enable_nfs` | `true` | Provisions Cloud Filestore NFS and mounts it at `/mnt/nfs` |
+| `enable_cloud_armor` | `false` | Attaches a Cloud Armor WAF policy to the GKE Ingress backend |
+| `enable_iap` | `false` | Enables Identity-Aware Proxy authentication |
+| `reserve_static_ip` | `true` | Provisions a global static external IP for the load balancer |
+
+### Step 1.2 — Initiate Deployment
+
+Deployment is initiated from the RAD UI. Fill in the variable form and click **Deploy**.
+
+**Expected resource provisioning times:**
+
+| Resource | Typical duration |
+|---|---|
+| Kubernetes namespace and RBAC | 1–2 minutes |
+| Cloud Build image build (custom mode) | 5–10 minutes |
+| Cloud SQL database and user | 2–5 minutes |
+| Secret Manager secrets | < 1 minute |
+| NFS setup job | 2–4 minutes |
+| GKE Deployment rollout | 3–8 minutes |
+| Uptime check and alert policies | 1–2 minutes |
+| **Total** | **15–30 minutes** |
+
+> **Note:** On the very first deploy of a new inline GKE cluster, the `kubernetes_ready` output will be `false` because the cluster endpoint is not yet readable. A second deploy may be required to complete Kubernetes resource deployment.
+
+### Step 1.3 — Record Outputs
+
+After deployment completes, the following outputs are available in the RAD UI deployment panel.
+
+| Output | Description |
+|---|---|
+| `kubernetes_ready` | `true` when all Kubernetes workload resources have been deployed successfully |
+| `service_url` | Service URL (external URL if LoadBalancer with static IP, otherwise internal) |
+| `service_external_ip` | External LoadBalancer IP (if static IP is reserved) |
+| `database_instance_name` | Cloud SQL instance name |
+| `database_password_secret` | Secret Manager secret name for the database password |
+| `storage_buckets` | GCS bucket names created for the application |
+| `container_registry` | Artifact Registry repository name |
+| `deployment_id` | Unique deployment identifier |
+| `resource_prefix` | Resource naming prefix applied to all resources |
+| `initialization_jobs` | Names of Kubernetes initialisation jobs |
+| `deployment_summary` | Human-readable summary of the full deployment |
+
+Set shell variables for use in later steps using discovery commands:
+
 ```bash
-kubectl get service -n "${NAMESPACE}"
+export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
+export REGION="us-central1"             # the region you deployed into
+export TOKEN=$(gcloud auth print-access-token)
+
+# Discover the GKE cluster
+export CLUSTER=$(gcloud container clusters list \
+  --project=${PROJECT} \
+  --format="value(name)" \
+  --limit=1)
+
+# Configure kubectl
+gcloud container clusters get-credentials ${CLUSTER} \
+  --region=${REGION} \
+  --project=${PROJECT}
+
+# Discover the namespace (pattern: app<appname><tenant><deploymentid>)
+export NAMESPACE=$(kubectl get namespaces --no-headers \
+  -o custom-columns=":metadata.name" | grep "^appgkeapp" | head -1)
+# Replace "gkeapp" with the actual application_name you configured
+
+# Discover the external IP
+export EXTERNAL_IP=$(kubectl get svc -n ${NAMESPACE} \
+  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
+
+# Discover the database password secret
+export DB_SECRET=$(gcloud secrets list \
+  --project=${PROJECT} \
+  --filter="name~gkeapp" \
+  --format="value(name)" \
+  --limit=1)
 ```
 
-**gcloud:**
-```bash
-gcloud compute addresses list \
-  --project="${PROJECT}" \
-  --filter="region:${REGION}" \
-  --format="table(name, address, status)"
-```
+---
 
-**REST API:**
-```bash
-curl -s \
-  "https://compute.googleapis.com/compute/v1/projects/${PROJECT}/regions/${REGION}/addresses" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.items[] | {name, address, status}'
-```
+## Phase 2 — Configure kubectl Access [MANUAL]
 
-**Expected result:** LoadBalancer Service shows an `EXTERNAL-IP` address.
-
-### Step 1.2 — Verify Pods Are Running
+### Step 2.1 — Retrieve Cluster Credentials
 
 ```bash
-kubectl get pods -n "${NAMESPACE}"
+gcloud container clusters get-credentials \
+  $(gcloud container clusters list \
+    --project=${PROJECT} \
+    --format='value(name)' \
+    --limit=1) \
+  --region=${REGION} \
+  --project=${PROJECT}
 ```
 
-Expected output:
+Verify the context is active:
+
+```bash
+kubectl config current-context
+```
+
+**Expected result:** A context line referencing your project and cluster, e.g. `gke_my-gcp-project_us-central1_gke-cluster-1`.
+
+> **REST API equivalent:**
+> ```bash
+> curl -s -H "Authorization: Bearer ${TOKEN}" \
+>   "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters" \
+>   | jq '.clusters[] | {name, status, endpoint}'
+> ```
+
+### Step 2.2 — Identify the Namespace
+
+The namespace follows the pattern `app<application_name><tenant_deployment_id><deployment_id>`:
+
+```bash
+kubectl get namespaces | grep gkeapp
+```
+
+Set the variable:
+
+```bash
+export NAMESPACE=$(kubectl get namespaces --no-headers \
+  -o custom-columns=":metadata.name" | grep "^appgkeapp" | head -1)
+echo "Namespace: ${NAMESPACE}"
+```
+
+### Step 2.3 — Verify Pods Are Running
+
+```bash
+kubectl get pods -n ${NAMESPACE}
+```
+
+**Expected result:** One or more pods with status `Running`:
+
 ```
 NAME                       READY   STATUS    RESTARTS   AGE
 gkeapp-7d9f8b6c4-xq2pj    2/2     Running   0          5m
 ```
 
-The `2/2` indicates the application container and Cloud SQL Auth Proxy sidecar are running.
+The `2/2` indicates the application container and the Cloud SQL Auth Proxy sidecar are both running.
 
-### Step 1.3 — Access the Application
-
-```bash
-curl -s "http://${EXTERNAL_IP}/"
-```
+### Step 2.4 — Check the Service External IP
 
 ```bash
-# Test health endpoint
-curl -s -o /dev/null -w "%{http_code}" "http://${EXTERNAL_IP}/healthz"
+kubectl get service -n ${NAMESPACE}
 ```
 
-**Expected result:** HTTP `200` — the application is running and connected to the database.
+**Expected result:** A `LoadBalancer` service with an `EXTERNAL-IP` assigned:
 
-### Step 1.4 — Test Database Connectivity Endpoint
-
-```bash
-curl -s "http://${EXTERNAL_IP}/db"
+```
+NAME      TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)        AGE
+gkeapp    LoadBalancer   10.96.100.50   34.123.45.67    80:31234/TCP   5m
 ```
 
-**Expected result:** JSON response confirming PostgreSQL connection via the Cloud SQL Auth
-Proxy sidecar, showing database name and user.
+Record the external IP — this is your application URL.
 
-### Step 1.5 — View Pod Logs
-
-```bash
-POD=$(kubectl get pods -n "${NAMESPACE}" \
-  -o jsonpath='{.items[0].metadata.name}')
-
-kubectl logs "${POD}" -c gkeapp -n "${NAMESPACE}" --tail=50
-```
-
-**Expected result:** Application startup logs and incoming request entries.
+> **gcloud equivalent:**
+> ```bash
+> gcloud compute forwarding-rules list --project=${PROJECT} --filter="region:${REGION}"
+> ```
 
 ---
 
-## Exercise 2 — Kubernetes Workloads
+## Phase 3 — Access the Application [MANUAL]
 
-### Objective
-
-Inspect the Deployment, Service, HPA, and PodDisruptionBudget resources that form the
-Kubernetes workload pattern.
-
-### Step 2.1 — Describe the Deployment
+### Step 3.1 — Open the Application URL
 
 ```bash
-kubectl describe deployment -l app=gkeapp -n "${NAMESPACE}"
+export APP_IP=$(kubectl get service -n ${NAMESPACE} \
+  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
+echo "Application URL: http://${APP_IP}"
 ```
 
-Note:
-- Two containers: `gkeapp` (port 8080) and `cloud-sql-proxy` (Unix socket at `/cloudsql`)
-- Volume mounts: `/cloudsql`, `/mnt/nfs`, GCS Fuse path
-- Resource requests/limits: `cpu=1000m`, `memory=512Mi`
-- Environment variables: `DB_NAME`, `DB_USER`, `REDIS_HOST`, `REDIS_PORT`
+Open `http://<EXTERNAL-IP>` in your browser.
 
-### Step 2.2 — View the HPA
+**Expected result:** The deployed container responds over HTTP/HTTPS.
+
+### Step 3.2 — Retrieve Credentials from Secret Manager
+
+List secrets created for this deployment:
 
 ```bash
-kubectl get hpa -n "${NAMESPACE}"
-kubectl describe hpa -n "${NAMESPACE}"
+gcloud secrets list \
+  --project=${PROJECT} \
+  --filter="name~gkeapp" \
+  --format="table(name)"
 ```
 
-**Expected result:** HPA shows `MINPODS`, `MAXPODS`, and current replica count with CPU target.
-
-### Step 2.3 — Scale the Deployment
+Access the database password secret:
 
 ```bash
-# Scale up to 3 replicas
-kubectl scale deployment -n "${NAMESPACE}" --all --replicas=3
-
-# Watch pods come up
-kubectl get pods -n "${NAMESPACE}" -w
+gcloud secrets versions access latest \
+  --secret="${DB_SECRET}" \
+  --project=${PROJECT}
 ```
 
-**Expected result:** Three pods reach `Running` status within 1–2 minutes.
-
-```bash
-# Scale back to 1
-kubectl scale deployment -n "${NAMESPACE}" --all --replicas=1
-```
-
-### Step 2.4 — View the Service
-
-```bash
-kubectl get service -n "${NAMESPACE}" -o yaml
-```
-
-**Expected result:** LoadBalancer service spec showing port 80 → container port 8080 and the
-assigned external IP.
-
-### Step 2.5 — Check the PodDisruptionBudget
-
-```bash
-kubectl get pdb -n "${NAMESPACE}"
-kubectl describe pdb -n "${NAMESPACE}"
-```
-
-**Expected result:** PDB allowing at most 1 pod unavailable during voluntary disruptions,
-protecting service availability during node drain operations.
-
-### Step 2.6 — Rolling Update
-
-```bash
-# Trigger rolling update by patching the deployment annotation
-kubectl patch deployment -n "${NAMESPACE}" -l app=gkeapp \
-  -p '{"spec":{"template":{"metadata":{"annotations":{"kubectl.kubernetes.io/restartedAt":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}}}}}'
-
-# Watch the rolling update
-kubectl rollout status deployment -l app=gkeapp -n "${NAMESPACE}"
-```
-
-**Expected result:** Rollout completes with `successfully rolled out`.
+> **REST API equivalent:**
+> ```bash
+> curl -s -H "Authorization: Bearer ${TOKEN}" \
+>   "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}/versions/latest:access" \
+>   | jq -r '.payload.data' | base64 --decode
+> ```
 
 ---
 
-## Exercise 3 — Database Integration
+## Phase 4 — Database and Migrations [MANUAL]
 
-### Objective
-
-Inspect the Cloud SQL instance, verify the database initialisation job completed, and confirm
-the Auth Proxy sidecar is providing database connectivity.
-
-### Step 3.1 — Inspect the Cloud SQL Instance
-
-**gcloud:**
-```bash
-gcloud sql instances list \
-  --project="${PROJECT}" \
-  --format="table(name, state, databaseVersion, region, settings.tier)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.items[] | {name, state, databaseVersion, region}'
-```
-
-**Expected result:** A Cloud SQL PostgreSQL instance with state `RUNNABLE`.
-
-### Step 3.2 — Verify the db-init Job Completed
+### Step 4.1 — Inspect the Cloud SQL Instance
 
 ```bash
-kubectl get jobs -n "${NAMESPACE}"
+gcloud sql instances list --project=${PROJECT}
 ```
 
-**Expected result:**
+> **REST API equivalent:**
+> ```bash
+> curl -s -H "Authorization: Bearer ${TOKEN}" \
+>   "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances" \
+>   | jq '.items[] | {name, state, databaseVersion, region}'
+> ```
+
+### Step 4.2 — Verify Initialisation Job Completed
+
+```bash
+kubectl get jobs -n ${NAMESPACE}
+```
+
+**Expected result:** The `db-init` job (if enabled) shows `COMPLETIONS: 1/1`:
+
 ```
 NAME      COMPLETIONS   DURATION   AGE
 db-init   1/1           45s        10m
 ```
 
-```bash
-# View init job logs
-kubectl logs job/db-init -n "${NAMESPACE}"
-```
-
-**Expected result:** Logs showing database user creation, database creation, and privilege
-grants — confirming the init job ran to completion before the application started.
-
-### Step 3.3 — List Databases in Cloud SQL
+View init job logs:
 
 ```bash
-SQL_INSTANCE=$(gcloud sql instances list \
-  --project="${PROJECT}" \
-  --format="value(name)" --limit=1)
-
-gcloud sql databases list \
-  --instance="${SQL_INSTANCE}" \
-  --project="${PROJECT}"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances/${SQL_INSTANCE}/databases" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.items[] | {name, charset}'
-```
-
-**Expected result:** The application database (`gkeappdb`) appears in the list.
-
-### Step 3.4 — Verify Auth Proxy Sidecar
-
-```bash
-POD=$(kubectl get pods -n "${NAMESPACE}" \
-  -o jsonpath='{.items[0].metadata.name}')
-
-# View Auth Proxy sidecar logs
-kubectl logs "${POD}" -c cloud-sql-proxy -n "${NAMESPACE}" --tail=30
-```
-
-**Expected result:** Auth Proxy startup messages showing the Cloud SQL instance connection
-string and Unix socket path being listened on.
-
-### Step 3.5 — Check Database Connection String in Environment
-
-```bash
-kubectl exec "${POD}" -c gkeapp -n "${NAMESPACE}" -- \
-  printenv | grep -E "DB_|REDIS_"
-```
-
-**Expected result:** Environment variables `DB_NAME`, `DB_USER`, `DB_HOST` (pointing to
-the Auth Proxy socket path), `REDIS_HOST`, and `REDIS_PORT`.
-
----
-
-## Exercise 4 — Workload Identity and Secrets
-
-### Objective
-
-Verify the Workload Identity binding between the Kubernetes ServiceAccount and GCP
-ServiceAccount, confirm Secret Manager access, and inspect secret injection.
-
-### Step 4.1 — Inspect the Kubernetes ServiceAccount
-
-```bash
-kubectl get serviceaccounts -n "${NAMESPACE}"
-
-# Get the full annotation showing the GCP SA binding
-kubectl describe serviceaccount \
-  $(kubectl get serviceaccount -n "${NAMESPACE}" \
-    -o jsonpath='{.items[0].metadata.name}') \
-  -n "${NAMESPACE}"
-```
-
-**Expected result:** ServiceAccount annotation:
-```
-iam.gke.io/gcp-service-account: <gsa>@<project>.iam.gserviceaccount.com
-```
-
-### Step 4.2 — Verify Workload Identity IAM Binding
-
-**gcloud:**
-```bash
-GSA=$(gcloud iam service-accounts list \
-  --project="${PROJECT}" \
-  --filter="email~gkeapp" \
-  --format="value(email)" --limit=1)
-
-gcloud iam service-accounts get-iam-policy "${GSA}" \
-  --project="${PROJECT}"
-```
-
-**Expected result:** The Kubernetes ServiceAccount appears as a principal with
-`roles/iam.workloadIdentityUser` in the IAM policy.
-
-### Step 4.3 — List and Access Secrets
-
-**gcloud:**
-```bash
-gcloud secrets list \
-  --project="${PROJECT}" \
-  --filter="name~gkeapp" \
-  --format="table(name, createTime)"
-```
-
-```bash
-# Access the database password
-gcloud secrets versions access latest \
-  --secret="${DB_SECRET}" \
-  --project="${PROJECT}"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}/versions/latest:access" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq -r '.payload.data' | base64 --decode
-```
-
-### Step 4.4 — Verify Secret IAM Bindings
-
-**gcloud:**
-```bash
-gcloud secrets get-iam-policy "${DB_SECRET}" \
-  --project="${PROJECT}" \
-  --format="json" | jq '.bindings'
-```
-
-**Expected result:** The GCP ServiceAccount linked to the KSA has
-`roles/secretmanager.secretAccessor` on the secret.
-
-### Step 4.5 — Inspect Kubernetes Secret References
-
-```bash
-kubectl get secrets -n "${NAMESPACE}"
-```
-
-**Expected result:** Kubernetes Secrets may exist for service account tokens; Secret Manager
-secrets are fetched at init time by the db-init job and injected as environment variables —
-they are NOT stored as plaintext Kubernetes Secrets.
-
----
-
-## Exercise 5 — Networking
-
-### Objective
-
-Inspect GKE networking, verify the LoadBalancer Service external IP, and understand VPC
-connectivity for Cloud SQL and NFS access.
-
-### Step 5.1 — View the LoadBalancer Service
-
-```bash
-kubectl get service -n "${NAMESPACE}" -o wide
-```
-
-**gcloud:**
-```bash
-gcloud compute forwarding-rules list \
-  --project="${PROJECT}" \
-  --filter="region:${REGION}" \
-  --format="table(name, IPAddress, target)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://compute.googleapis.com/compute/v1/projects/${PROJECT}/regions/${REGION}/forwardingRules" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.items[] | {name, IPAddress, loadBalancingScheme}'
-```
-
-**Expected result:** A forwarding rule with the external IP matching `EXTERNAL_IP`.
-
-### Step 5.2 — Verify Static IP Reservation
-
-**gcloud:**
-```bash
-gcloud compute addresses list \
-  --project="${PROJECT}" \
-  --filter="region:${REGION}" \
-  --format="table(name, address, status, addressType)"
-```
-
-**Expected result:** A reserved static IP address with status `IN_USE`, assigned to the
-LoadBalancer Service.
-
-### Step 5.3 — View the VPC Network
-
-**gcloud:**
-```bash
-gcloud compute networks list \
-  --project="${PROJECT}" \
-  --filter="description:managed-by=services-gcp"
-```
-
-```bash
-gcloud compute networks subnets list \
-  --project="${PROJECT}" \
-  --filter="region:${REGION} AND description:managed-by=services-gcp" \
-  --format="table(name, region, ipCidrRange)"
-```
-
-**Expected result:** The Services_GCP-managed VPC network and subnet for the deployed region.
-
-### Step 5.4 — Check Pod-to-Database Connectivity
-
-```bash
-POD=$(kubectl get pods -n "${NAMESPACE}" \
-  -o jsonpath='{.items[0].metadata.name}')
-
-# Check mounted volumes (Cloud SQL socket, NFS, GCS)
-kubectl exec "${POD}" -c gkeapp -n "${NAMESPACE}" -- \
-  df -h
-```
-
-**Expected result:** Filesystems mounted including `/mnt/nfs` (Filestore NFS) and any GCS
-Fuse mounts. The Cloud SQL socket at `/cloudsql/` is a directory, not a filesystem mount.
-
-### Step 5.5 — Inspect GKE Cluster Networking
-
-**gcloud:**
-```bash
-gcloud container clusters describe "${CLUSTER}" \
-  --region="${REGION}" \
-  --project="${PROJECT}" \
-  --format="yaml(networkConfig, privateClusterConfig, ipAllocationPolicy)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '{name, network, subnetwork, clusterIpv4Cidr, servicesIpv4Cidr}'
-```
-
-**Expected result:** GKE Autopilot cluster networking configuration showing pod CIDR, service
-CIDR, and the VPC network name.
-
----
-
-## Exercise 6 — Cloud Logging and Monitoring
-
-### Objective
-
-Query structured pod logs via Cloud Logging, inspect GKE metrics in Cloud Monitoring, and
-verify the uptime check is active.
-
-### Step 6.1 — View Pod Logs via kubectl
-
-```bash
-POD=$(kubectl get pods -n "${NAMESPACE}" \
-  -o jsonpath='{.items[0].metadata.name}')
-
-# Application container logs
-kubectl logs "${POD}" -c gkeapp -n "${NAMESPACE}" --tail=100
-
-# Cloud SQL Auth Proxy sidecar logs
-kubectl logs "${POD}" -c cloud-sql-proxy -n "${NAMESPACE}" --tail=50
-```
-
-### Step 6.2 — Query Logs in Cloud Logging
-
-**gcloud:**
-```bash
-gcloud logging read \
-  "resource.type=\"k8s_container\" \
-   AND resource.labels.namespace_name=\"${NAMESPACE}\"" \
-  --project="${PROJECT}" \
-  --limit=50 \
-  --format="table(timestamp,severity,textPayload)"
-```
-
-**REST API:**
-```bash
-curl -s -X POST \
-  "https://logging.googleapis.com/v2/entries:list" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"resourceNames\": [\"projects/${PROJECT}\"],
-    \"filter\": \"resource.type=\\\"k8s_container\\\" AND resource.labels.namespace_name=\\\"${NAMESPACE}\\\"\",
-    \"orderBy\": \"timestamp desc\",
-    \"pageSize\": 20
-  }" | jq '.entries[] | {timestamp, severity, textPayload}'
-```
-
-### Step 6.3 — Filter for Errors
-
-```bash
-gcloud logging read \
-  "resource.type=\"k8s_container\" \
-   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
-   AND severity>=ERROR" \
-  --project="${PROJECT}" \
-  --limit=10
-```
-
-**Expected result:** No error entries under normal operation.
-
-### Step 6.4 — Check the Uptime Check
-
-**gcloud:**
-```bash
-gcloud monitoring uptime list-configs \
-  --project="${PROJECT}" \
-  --format="table(displayName, httpCheck.path, period)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.uptimeCheckConfigs[] | {displayName, period, httpCheck}'
-```
-
-**Expected result:** Uptime check probing the application external IP.
-
-### Step 6.5 — View GKE Pod Metrics
-
-**REST API (MQL — pod CPU utilisation):**
-```bash
-curl -s -X POST \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"query\": \"fetch k8s_container | metric 'kubernetes.io/container/cpu/request_utilization' | filter resource.namespace_name = '${NAMESPACE}' | within 30m | group_by [resource.pod_name], mean(val())\"
-  }" | jq '.timeSeriesData[] | {pod: .labelValues[0].stringValue, cpu: .pointData[-1].values[0].doubleValue}'
-```
-
-**REST API (MQL — pod memory usage):**
-```bash
-curl -s -X POST \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"query\": \"fetch k8s_container | metric 'kubernetes.io/container/memory/used_bytes' | filter resource.namespace_name = '${NAMESPACE}' | within 30m | group_by [resource.pod_name], mean(val())\"
-  }" | jq '.timeSeriesData[] | {pod: .labelValues[0].stringValue, memory: .pointData[-1].values[0].int64Value}'
-```
-
-### Step 6.6 — View Alert Policies
-
-**gcloud:**
-```bash
-gcloud alpha monitoring policies list \
-  --project="${PROJECT}" \
-  --format="table(displayName, enabled)"
-```
-
-**Expected result:** CPU and memory alert policies for the namespace workloads.
-
----
-
-## Cleanup
-
-Return to the RAD UI and click **Undeploy** on the `App_GKE` deployment. This removes the
-Kubernetes namespace, all workloads, Cloud SQL database and user, GCS bucket, Workload Identity
-bindings, Secret Manager secrets, static IP, and monitoring resources.
-
-### Manual Cleanup (if needed)
-
-**kubectl:**
-```bash
-kubectl delete namespace "${NAMESPACE}"
-```
-
-**gcloud:**
-```bash
-# Delete Secret Manager secrets
-gcloud secrets delete "${DB_SECRET}" \
-  --project="${PROJECT}" --quiet
-
-# Delete the GCP service account
-GSA=$(gcloud iam service-accounts list \
-  --project="${PROJECT}" \
-  --filter="email~gkeapp" \
-  --format="value(email)" --limit=1)
-gcloud iam service-accounts delete "${GSA}" \
-  --project="${PROJECT}" --quiet
-
-# Release static IP
-ADDR=$(gcloud compute addresses list \
-  --project="${PROJECT}" \
-  --filter="region:${REGION} AND name~gkeapp" \
-  --format="value(name)" --limit=1)
-gcloud compute addresses delete "${ADDR}" \
-  --region="${REGION}" \
-  --project="${PROJECT}" --quiet
-```
-
----
-
-## Reference
-
-### Key Module Variables
-
-| Variable | Type | Default | Description |
-|---|---|---|---|
-| `project_id` | string | — | GCP project ID (required) |
-| `region` | string | `us-central1` | GCP region for all resources |
-| `application_name` | string | `gkeapp` | Base name for Kubernetes and GCP resources |
-| `application_version` | string | `1.0.0` | Container image tag |
-| `container_image_source` | string | `custom` | `custom` (Cloud Build) or `prebuilt` |
-| `min_instance_count` | number | `1` | HPA minimum pod replicas |
-| `max_instance_count` | number | `3` | HPA maximum pod replicas |
-| `database_type` | string | `POSTGRES` | `POSTGRES`, `MYSQL`, or `NONE` |
-| `application_database_name` | string | `gkeappdb` | PostgreSQL database name |
-| `application_database_user` | string | `gkeappuser` | PostgreSQL user |
-| `enable_nfs` | bool | `true` | Mount Cloud Filestore at `/mnt/nfs` |
-| `enable_redis` | bool | `true` | Inject `REDIS_HOST`/`REDIS_PORT` env vars |
-| `service_type` | string | `LoadBalancer` | Kubernetes Service type |
-| `reserve_static_ip` | bool | `true` | Reserve a static external IP |
-| `gke_cluster_name` | string | `""` | Target GKE cluster (auto-discovered when empty) |
-| `workload_type` | string | `Deployment` | `Deployment` or `StatefulSet` |
-| `tenant_deployment_id` | string | `demo` | Tenant identifier in resource names |
-| `support_users` | list | `[]` | Email addresses for monitoring alerts |
-| `enable_cloud_armor` | bool | `false` | Cloud Armor WAF + Ingress |
-| `enable_iap` | bool | `false` | Identity-Aware Proxy |
-
-### Useful Commands
-
-```bash
-# Get external IP
-kubectl get svc -n ${NAMESPACE} \
-  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
-
-# Check pod status
-kubectl get pods -n ${NAMESPACE}
-
-# View HPA
-kubectl get hpa -n ${NAMESPACE}
-
-# View application logs
-kubectl logs -l app=gkeapp -n ${NAMESPACE} --tail=100
-
-# View Auth Proxy logs
-kubectl logs -l app=gkeapp -c cloud-sql-proxy -n ${NAMESPACE} --tail=50
-
-# Describe deployment
-kubectl describe deployment -l app=gkeapp -n ${NAMESPACE}
-
-# Check db-init job
 kubectl logs job/db-init -n ${NAMESPACE}
-
-# Access DB password
-gcloud secrets versions access latest --secret="${DB_SECRET}" --project=${PROJECT}
-
-# List uptime checks
-gcloud monitoring uptime list-configs --project=${PROJECT}
 ```
 
-### Further Reading
+### Step 4.3 — List Databases in Cloud SQL
 
-- [GKE Autopilot overview](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
-- [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
-- [Cloud SQL Auth Proxy for GKE](https://cloud.google.com/sql/docs/postgres/connect-kubernetes-engine)
-- [GCS Fuse CSI Driver](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/cloud-storage-fuse-csi-driver)
-- [GKE HPA documentation](https://cloud.google.com/kubernetes-engine/docs/concepts/horizontalpodautoscaler)
-- [Cloud Logging for GKE](https://cloud.google.com/stackdriver/docs/solutions/gke/installing)
-- [Cloud Monitoring for GKE](https://cloud.google.com/stackdriver/docs/solutions/gke/observing)
+```bash
+gcloud sql databases list \
+  --instance=$(gcloud sql instances list --project=${PROJECT} --format='value(name)' --limit=1) \
+  --project=${PROJECT}
+```
+
+**Expected result:** Your application database appears in the list.
+
+---
+
+## Phase 5 — Inspect Storage [MANUAL]
+
+### Step 5.1 — Explore the GCS Bucket
+
+```bash
+gcloud storage ls --project=${PROJECT} | grep gkeapp
+```
+
+List bucket contents:
+
+```bash
+gcloud storage ls gs://<bucket-name>/
+```
+
+### Step 5.2 — Verify GCS Fuse Mount (if configured)
+
+```bash
+POD=$(kubectl get pods -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}')
+kubectl exec -n ${NAMESPACE} ${POD} -- df -h | grep fuse
+```
+
+**Expected result:** A fuse filesystem entry appears, mounted at the configured GCS volume path.
+
+### Step 5.3 — Check the NFS Mount (if configured)
+
+```bash
+kubectl exec -n ${NAMESPACE} ${POD} -- df -h /mnt/nfs
+```
+
+**Expected result:** An NFS filesystem appears, mounted from the Filestore instance IP.
+
+---
+
+## Phase 6 — Explore Cloud Logging [MANUAL]
+
+### Step 6.1 — View Logs in the Console
+
+Navigate to **Logging > Logs Explorer** in the Cloud Console.
+
+### Step 6.2 — Query Application Logs
+
+**All application pod logs:**
+```
+resource.type="k8s_container"
+resource.labels.project_id="${PROJECT}"
+resource.labels.cluster_name="${CLUSTER}"
+resource.labels.namespace_name="${NAMESPACE}"
+```
+
+**Error logs only:**
+```
+resource.type="k8s_container"
+resource.labels.namespace_name="${NAMESPACE}"
+severity>=ERROR
+```
+
+**Cloud SQL Auth Proxy sidecar logs:**
+```
+resource.type="k8s_container"
+resource.labels.namespace_name="${NAMESPACE}"
+resource.labels.container_name="cloud-sql-proxy"
+```
+
+> **gcloud equivalent:**
+> ```bash
+> gcloud logging read \
+>   'resource.type="k8s_container" AND resource.labels.namespace_name="'${NAMESPACE}'"' \
+>   --project=${PROJECT} \
+>   --limit=50 \
+>   --format="table(timestamp,severity,textPayload)"
+> ```
+>
+> **REST API equivalent:**
+> ```bash
+> curl -s -X POST -H "Authorization: Bearer ${TOKEN}" \
+>   -H "Content-Type: application/json" \
+>   "https://logging.googleapis.com/v2/entries:list" \
+>   -d '{
+>     "resourceNames": ["projects/'${PROJECT}'"],
+>     "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"'${NAMESPACE}'\"",
+>     "orderBy": "timestamp desc",
+>     "pageSize": 20
+>   }' | jq '.entries[] | {timestamp, severity, textPayload}'
+> ```
+
+---
+
+## Phase 7 — Explore Cloud Monitoring [MANUAL]
+
+### Step 7.1 — View the GKE Dashboard
+
+Navigate to **Monitoring > Dashboards** and select the GKE dashboard for your cluster. You will see:
+- Node CPU and memory utilisation
+- Pod count and restart events
+- Network ingress/egress
+
+### Step 7.2 — View Pod CPU and Memory Metrics
+
+**Pod CPU utilisation:**
+```
+fetch k8s_container
+| metric 'kubernetes.io/container/cpu/core_usage_time'
+| filter (resource.namespace_name == '${NAMESPACE}')
+| align rate(1m)
+| every 1m
+```
+
+**Pod memory usage:**
+```
+fetch k8s_container
+| metric 'kubernetes.io/container/memory/used_bytes'
+| filter (resource.namespace_name == '${NAMESPACE}')
+| every 1m
+```
+
+### Step 7.3 — Check Uptime Checks
+
+Navigate to **Monitoring > Uptime checks** to view the uptime check configured by the deployment.
+
+**Expected result:** The check shows green/passing status against your application's external IP.
+
+> **REST API equivalent:**
+> ```bash
+> curl -s -H "Authorization: Bearer ${TOKEN}" \
+>   "https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs" \
+>   | jq '.uptimeCheckConfigs[] | {displayName, httpCheck, period}'
+> ```
+
+---
+
+## Phase 8 — Scaling and Updates [MANUAL]
+
+### Step 8.1 — Manually Scale the Deployment
+
+Scale up to 3 replicas:
+
+```bash
+kubectl scale deployment -n ${NAMESPACE} --all --replicas=3
+```
+
+Watch pods come up:
+
+```bash
+kubectl get pods -n ${NAMESPACE} -w
+```
+
+**Expected result:** Three pods reach `Running` status within 1–2 minutes.
+
+Scale back down:
+
+```bash
+kubectl scale deployment -n ${NAMESPACE} --all --replicas=1
+```
+
+### Step 8.2 — Trigger a Rolling Update
+
+To trigger a rolling update, return to the RAD UI, navigate to your deployment, update the `application_version` variable, and click **Update**. Monitor the rollout with:
+
+```bash
+kubectl rollout status deployment -n ${NAMESPACE}
+```
+
+**Expected result:** Output ending with `successfully rolled out`.
+
+### Step 8.3 — View the HPA
+
+```bash
+kubectl get hpa -n ${NAMESPACE}
+```
+
+**Expected result:** HPA shows current and desired replica counts along with CPU utilisation percentages.
+
+---
+
+## Phase 9 — Undeploy [AUTOMATED]
+
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+
+**Expected destroy times:**
+
+| Resource | Typical duration |
+|---|---|
+| Kubernetes workloads and namespace | 2–4 minutes |
+| Secret Manager secrets | < 1 minute |
+| GCS buckets | 1–2 minutes |
+| Cloud SQL database and user | 1–2 minutes |
+| Static IP reservation | < 1 minute |
+| **Total** | **8–15 minutes** |
+
+Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+
+---
+
+## Summary
+
+| Action | Phase | Automated |
+|---|---|---|
+| Configure variables in RAD UI | 1.1 | Manual |
+| Build and deploy to GKE | 1.2 | Automated |
+| Configure kubectl access | 2 | Manual |
+| Verify pods and service IP | 2 | Manual |
+| Access application and retrieve credentials | 3 | Manual |
+| Verify database and initialisation job | 4 | Manual |
+| Inspect GCS storage and NFS mount | 5 | Manual |
+| Query logs in Cloud Logging | 6 | Manual |
+| View GKE metrics and uptime checks | 7 | Manual |
+| Scale deployment and trigger rolling update | 8 | Manual |
+| Undeploy all module resources | 9 | Automated |

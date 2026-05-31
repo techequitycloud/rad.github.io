@@ -1,9 +1,9 @@
 # Multi-Cluster Bank of Anthos on GKE — Lab Guide
 
-📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/MC Bank GKE)**
+📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/MC_Bank_GKE)**
 
 This lab guide walks you through deploying and operating the **Bank of Anthos** reference
-application across **multiple GKE clusters in multiple regions** using the **MC Bank GKE**
+application across **multiple GKE clusters in multiple regions** using the **MC_Bank_GKE**
 module. You will explore active-active geo-redundant architecture, fleet-wide Cloud Service
 Mesh, Multi-Cluster Ingress for global load balancing, Multi-Cluster Services for cross-cluster
 service discovery, and resilience testing through deliberate failure injection.
@@ -64,26 +64,26 @@ cluster_size = 4  →  us-west1, us-east1, europe-west1, asia-east1
 ┌──────────────────────────────────────────────────────────────────────┐
 │  Global                                                              │
 │  ┌──────────────────────────────────────────────────────────────┐    │
-│  │  Multi-Cluster Ingress (Global L7 Load Balancer)             │    │
-│  │  Single public IP → nearest healthy cluster                  │    │
-│  └────────────┬─────────────────────────────┬───────────────────┘    │
-│               │                             │                        │
-│       ┌───────▼──────────┐         ┌────────▼─────────┐              │
-│       │  us-west1        │         │  us-east1        │  (+ more)    │
-│       │  GKE Autopilot   │         │  GKE Autopilot   │              │
-│       │  Cluster         │         │  Cluster         │              │
-│       │  ┌────────────┐  │         │  ┌────────────┐  │              │
-│       │  │Bank of     │  │         │  │Bank of     │  │              │
-│       │  │Anthos      │◄─┼────MCS──┼─►│Anthos      │  │              │
-│       │  │(all 9 svcs)│  │         │  │(all 9 svcs)│  │              │
-│       │  │+ Envoy     │  │         │  │+ Envoy     │  │              │
-│       │  │sidecars    │  │         │  │sidecars    │  │              │
-│       │  └────────────┘  │         │  └────────────┘  │              │
-│       └──────────────────┘         └──────────────────┘              │
+│  │  Multi-Cluster Ingress (Global L7 Load Balancer)              │    │
+│  │  Single public IP → nearest healthy cluster                   │    │
+│  └────────────┬─────────────────────────────┬────────────────┘    │
+│               │                             │                      │
+│       ┌───────▼──────────┐         ┌────────▼─────────┐           │
+│       │  us-west1        │         │  us-east1        │  (+ more)  │
+│       │  GKE Autopilot   │         │  GKE Autopilot   │           │
+│       │  Cluster         │         │  Cluster         │           │
+│       │  ┌────────────┐  │         │  ┌────────────┐  │           │
+│       │  │Bank of     │  │         │  │Bank of     │  │           │
+│       │  │Anthos      │◄─┼────MCS──┼─►│Anthos      │  │           │
+│       │  │(all 9 svcs)│  │         │  │(all 9 svcs)│  │           │
+│       │  │+ Envoy     │  │         │  │+ Envoy     │  │           │
+│       │  │sidecars    │  │         │  │sidecars    │  │           │
+│       │  └────────────┘  │         │  └────────────┘  │           │
+│       └──────────────────┘         └──────────────────┘           │
 │                                                                      │
 │  ┌──────────────────────────────────────────────────────────────┐    │
-│  │  Google Cloud Fleet Hub                                      │    │
-│  │  • Fleet membership for each cluster                         │    │
+│  │  Google Cloud Fleet Hub                                       │    │
+│  │  • Fleet membership for each cluster                          │    │
 │  │  • servicemesh feature: MANAGEMENT_AUTOMATIC (all clusters)  │    │
 │  │  • multiclusteringress feature (config cluster: cluster-0)   │    │
 │  └──────────────────────────────────────────────────────────────┘    │

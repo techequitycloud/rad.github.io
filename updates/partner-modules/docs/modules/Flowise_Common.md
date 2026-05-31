@@ -239,7 +239,6 @@ module "flowise_app" {
   project_id           = var.project_id
   tenant_deployment_id = var.tenant_deployment_id
   deployment_id        = local.random_id
-  region               = local.region
   resource_labels      = var.resource_labels
 
   application_name    = var.application_name

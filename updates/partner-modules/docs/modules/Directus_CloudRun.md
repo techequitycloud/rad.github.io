@@ -6,7 +6,7 @@ This document provides a comprehensive reference for the `modules/Directus_Cloud
 
 ## 1. Module Overview
 
-Directus is an open-source composable data platform and Backend-as-a-Service (BaaS) that wraps any SQL database with auto-generated REST and GraphQL APIs and a no-code admin application — without modifying your schema. With 34,500+ GitHub stars and customers including Tripadvisor, Adobe, and Mercedes-Benz, Directus is consistently ranked among the top open-source headless CMS choices in 2026. Its native MCP server support (introduced in v11.13, November 2025) enables direct AI tool integration, making it ideal for Backend-as-a-Service, internal dashboards, and headless CMS use cases. `Directus_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Directus-specific application configuration, security secrets, database initialisation, and storage configuration via `Directus_Common`.
+Directus is an open-source headless CMS and Backend-as-a-Service (BaaS) platform that wraps any SQL database with auto-generated REST and GraphQL APIs and a no-code admin application. `Directus_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Directus-specific application configuration, security secrets, database initialisation, and storage configuration via `Directus_Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Node.js container, scale-to-zero by default. Custom image build via Cloud Build is the default workflow.
@@ -485,9 +485,9 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `100` | Platform metadata: deployment credit cost. |
-| `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
+| `require_credit_purchases` | 0 | `true` | Platform metadata: enforces credit balance check. |
 | `enable_purge` | 0 | `true` | Permits full deletion of module resources on destroy. |
-| `public_access` | 0 | `true` | Platform catalogue visibility. |
+| `public_access` | 0 | `false` | Platform catalogue visibility. |
 | `deployment_id` | 0 | `""` | Deployment ID suffix. Auto-generated if empty. |
 | `resource_creator_identity` | 0 | (platform SA) | Service account used by Terraform to manage resources. |
 | `project_id` | 1 | — | GCP project ID. **Required.** |

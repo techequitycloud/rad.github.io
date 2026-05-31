@@ -1,6 +1,6 @@
 # Kestra_CloudRun Module — Configuration Guide
 
-Kestra is an open-source, declarative, event-driven workflow orchestration platform (Apache 2.0 licence) with **26,000+ GitHub stars**, trusted by more than 30,000 organisations including Bloomberg, Toyota, BHP, JPMorgan Chase, Apple, and Crédit Agricole. The platform executed **2 billion workflows in 2025** (20× year-on-year growth) and raised a **$25M Series A in March 2026**. BHP's adoption replaced VMware vRA entirely and cut infrastructure provisioning from 6 months to 6 days. It allows you to build, schedule, and monitor ETL/ELT pipelines, data quality checks, agentic AI pipelines, and workflow automation through a YAML-based flow definition and a rich plugin ecosystem. This module deploys Kestra on **Google Cloud Run** in **standalone mode** (server, worker, and scheduler in a single container) with a PostgreSQL 15 backend and GCS artifact storage.
+Kestra is an open-source data orchestration and scheduling platform (Apache 2.0 licence). It allows you to build, schedule, and monitor ETL/ELT pipelines, batch jobs, and workflow automation through a YAML-based flow definition and a rich plugin ecosystem. This module deploys Kestra on **Google Cloud Run** in **standalone mode** (server, worker, and scheduler in a single container) with a PostgreSQL 15 backend and GCS artifact storage.
 
 `Kestra_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP infrastructure provisioning to App_CloudRun (Cloud Run service, Cloud SQL, networking, Secret Manager, GCS, CI/CD) and uses a `Kestra_Common` sub-module to supply Kestra-specific application configuration, secret generation, and storage bucket definitions.
 
@@ -42,7 +42,7 @@ The following behaviours are set automatically and cannot be overridden via user
 | **socat Unix-socket bridge** | The custom Dockerfile installs `socat` and replaces the entrypoint with `entrypoint.sh`. On Cloud Run, the Cloud SQL Auth Proxy creates a Unix socket; Java JDBC cannot connect via Unix sockets natively, so `entrypoint.sh` bridges the socket to TCP `127.0.0.1:5432` using `socat`. On GKE, the Auth Proxy sidecar already exposes TCP, so the bridge is skipped. |
 | **Service URL pre-computed** | The predicted Cloud Run URL (`https://<resource_prefix>-<project_number>.<region>.run.app`) is passed to `Kestra_Common` and injected as a Kestra configuration variable before deployment. |
 | **Fixed environment variables** | `MICRONAUT_SERVER_PORT=8080`, `KESTRA_QUEUE_TYPE=postgres`, `KESTRA_REPOSITORY_TYPE=postgres`, `KESTRA_STORAGE_TYPE=gcs`, `KESTRA_BASICAUTH_ENABLED=true`, `KESTRA_BASICAUTH_USERNAME=admin`, `DATASOURCES_POSTGRES_DRIVERCLASSNAME`, `ENDPOINTS_ALL_PORT`, and two Flyway baseline variables are always injected. |
-| **Scripts directory** | Resolved as `abspath("${path.module}/scripts")` — points to the `Kestra_CloudRun` module's own bundled scripts directory. |
+| **Scripts directory** | Resolved as `abspath("${module.kestra_app.path}/scripts")` — points to `Kestra_Common`'s bundled scripts directory. |
 | **`execution_environment` normalised** | The platform UI may send `"EXECUTION_ENVIRONMENT_GEN2"` — this is normalised to `"gen2"` before passing to App_CloudRun. |
 | **`backup_format` normalised** | Lowercased before passing to App_CloudRun (UI may send uppercase `"SQL"`). |
 
@@ -53,10 +53,10 @@ The following behaviours are set automatically and cannot be overridden via user
 | Variable | Default | Description |
 |---|---|---|
 | `module_description` | *(long description)* | Platform UI description. Do not modify unless customising. |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/kestra"` | External documentation URL. |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/Kestra_CloudRun"` | External documentation URL. |
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed first. |
 | `module_services` | `["Cloud Run", "Cloud Run Jobs", "Cloud Build", "Artifact Registry", "Cloud Storage", "Cloud SQL (PostgreSQL 15)", "VPC Network", "Serverless VPC Access", "Secret Manager", "Cloud IAM", "Cloud Logging", "Cloud Monitoring", "Health Checks", "Webhooks", "Filestore (NFS)"]` | GCP services consumed. |
-| `credit_cost` | `100` | Platform credits consumed on deployment. |
+| `credit_cost` | `50` | Platform credits consumed on deployment. |
 | `require_credit_purchases` | `false` | Enforces credit balance check before deploy. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
 | `public_access` | `true` | Controls platform catalogue visibility. |
@@ -274,21 +274,21 @@ Kestra's health endpoint is `/health`. Kestra (Java JVM) has a slow startup — 
 
 ## §14 · Outputs
 
-All 38 outputs are proxied from `App_CloudRun`:
+Outputs are proxied from `App_CloudRun`:
 
 | Output | Description | Sensitive |
 |---|---|---|
-| `service_name` | Name of the Cloud Run service | — |
-| `service_url` | URL of the Cloud Run service | — |
-| `service_location` | Location of the Cloud Run service | — |
-| `stage_services` | Map of stage names to Cloud Run service details (for Cloud Deploy) | — |
-| `database_instance_name` | Name of the Cloud SQL instance | — |
-| `database_name` | Name of the application database | — |
-| `database_user` | Name of the application database user | — |
+| `service_name` | Cloud Run service name | — |
+| `service_url` | Public URL of the Cloud Run service | — |
+| `service_location` | GCP region of the Cloud Run service | — |
+| `stage_services` | Stage-specific Cloud Run service details | — |
+| `database_instance_name` | Cloud SQL instance name | — |
+| `database_name` | Application database name | — |
+| `database_user` | Application database user | — |
 | `database_password_secret` | Secret Manager secret name for database password | — |
-| `database_host` | Database host IP address | yes |
+| `database_host` | Database host | yes |
 | `database_port` | Database port | — |
-| `storage_buckets` | Created storage buckets | — |
+| `storage_buckets` | Created GCS buckets | — |
 | `network_name` | VPC network name | — |
 | `network_exists` | Whether the VPC network exists | — |
 | `regions` | Available regions in the VPC | — |
@@ -299,7 +299,6 @@ All 38 outputs are proxied from `App_CloudRun`:
 | `container_registry` | Artifact Registry repository name | — |
 | `monitoring_enabled` | Whether monitoring is configured | — |
 | `monitoring_notification_channels` | Monitoring notification channel names | — |
-| `uptime_check_names` | Uptime check configuration names | — |
 | `deployment_id` | Unique deployment identifier | — |
 | `tenant_id` | Tenant identifier | — |
 | `resource_prefix` | Resource naming prefix | — |
@@ -309,13 +308,13 @@ All 38 outputs are proxied from `App_CloudRun`:
 | `nfs_setup_job` | NFS setup job name | — |
 | `deployment_summary` | Summary of the deployment | — |
 | `cicd_enabled` | Whether CI/CD pipeline is enabled | — |
-| `github_repository_url` | GitHub repository URL connected for CI/CD | — |
+| `github_repository_url` | GitHub repository URL for CI/CD | — |
 | `github_repository_owner` | GitHub repository owner/organization | — |
 | `github_repository_name` | GitHub repository name | — |
-| `artifact_registry_repository` | Artifact Registry repository for container images | — |
-| `cloudbuild_trigger_name` | Cloud Build trigger name for CI/CD | — |
-| `cloudbuild_trigger_id` | Cloud Build trigger ID for CI/CD | — |
-| `cicd_configuration` | CI/CD pipeline configuration details | — |
+| `artifact_registry_repository` | Artifact Registry repository | — |
+| `cloudbuild_trigger_name` | Cloud Build trigger name | — |
+| `cloudbuild_trigger_id` | Cloud Build trigger ID | — |
+| `cicd_configuration` | Complete CI/CD configuration | — |
 
 ---
 

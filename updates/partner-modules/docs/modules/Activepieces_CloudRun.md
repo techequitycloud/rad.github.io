@@ -6,7 +6,7 @@ This document provides a comprehensive reference for the `modules/Activepieces_C
 
 ## 1. Module Overview
 
-Activepieces is a Y Combinator-backed open-source workflow automation platform (Apache 2.0) with **22,000+ GitHub stars** and **100,000+ active installations**. At $1.7M ARR with a team of ~15, it is a lean, high-velocity Zapier/Make alternative with 450+ integrations and native AI/MCP server support — ideal for teams prioritising data sovereignty and avoiding per-task pricing at scale. White-label capability makes it a strong fit for agencies and SaaS builders. `Activepieces_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Activepieces-specific application configuration, secrets, database initialisation, and queue configuration via `Activepieces_Common`.
+Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation platform for connecting apps, APIs, and data sources. `Activepieces_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Activepieces-specific application configuration, secrets, database initialisation, and queue configuration via `Activepieces_Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Node.js container, scale-to-zero supported (`min_instance_count = 0` by default). Custom image build via Cloud Build wraps the upstream `activepieces/activepieces` image.
@@ -369,10 +369,10 @@ All user-configurable variables exposed by `Activepieces_CloudRun`, sorted by UI
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `module_description` | 0 | (Activepieces Cloud Run platform text) | Platform metadata: module description. |
-| `module_documentation` | 0 | `https://docs.radmodules.dev/docs/applications/activepieces` | Platform metadata: documentation URL. |
+| `module_documentation` | 0 | `https://docs.radmodules.dev/docs/modules/Activepieces_CloudRun` | Platform metadata: documentation URL. |
 | `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
-| `credit_cost` | 0 | `100` | Platform metadata: deployment credit cost. |
+| `credit_cost` | 0 | `50` | Platform metadata: deployment credit cost. |
 | `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
 | `enable_purge` | 0 | `true` | Permits full deletion of module resources on destroy. |
 | `public_access` | 0 | `true` | Platform catalogue visibility. |
@@ -452,8 +452,8 @@ All user-configurable variables exposed by `Activepieces_CloudRun`, sorted by UI
 | `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
 | `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Empty list triggers the default `db-init` job (`execute_on_apply=true`). |
 | `cron_jobs` | 12 | `[]` | **Not referenced** — not forwarded to `App_CloudRun`. Has no effect in this module version. |
-| `startup_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=120, failure_threshold=10, ... }` | Activepieces Common startup probe. Allow 7+ minutes on first boot. |
-| `liveness_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=30, failure_threshold=3, ... }` | Activepieces Common liveness probe. |
+| `startup_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=120, failure_threshold=10, ... }` | Activepieces_Common startup probe. Allow 7+ minutes on first boot. |
+| `liveness_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=30, failure_threshold=3, ... }` | Activepieces_Common liveness probe. |
 | `startup_probe_config` | 13 | `{ enabled=false }` | Cloud Run infrastructure startup probe. Disabled — `startup_probe` takes effect. |
 | `health_check_config` | 13 | `{ enabled=true }` | Cloud Run infrastructure liveness probe. |
 | `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |

@@ -1,6 +1,6 @@
 # Cyclos_CloudRun Module — Configuration Guide
 
-Cyclos is open-source banking and payment software powering 1,500+ payment systems worldwide, particularly in developing economies and community currency initiatives. It enables financial inclusion for microfinance institutions, local banks, barter networks, and remittance operators where commercial banking software is cost-prohibitive, providing mobile-first online banking, POS integration, QR payments, and marketplace tools. This module deploys Cyclos on **Google Cloud Run** using the official `cyclos/cyclos` container image, backed by a managed Cloud SQL PostgreSQL instance.
+Cyclos is a professional banking and payment system designed for microfinance institutions, credit unions, complementary currency schemes, and community banks. This module deploys Cyclos on **Google Cloud Run** using the official `cyclos/cyclos` container image, backed by a managed Cloud SQL PostgreSQL instance.
 
 `Cyclos_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Cyclos-specific application configuration on top.
 

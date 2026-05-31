@@ -297,7 +297,7 @@ module "n8n_app" {
   labels               = var.resource_labels
   tenant_deployment_id = var.tenant_deployment_id
   deployment_id        = local.random_id
-  region               = local.region
+  deployment_region    = local.region
 
   # Application Details
   application_name    = var.application_name

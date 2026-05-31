@@ -1,16 +1,9 @@
 # RAGFlow_CloudRun Module — Configuration Guide
 
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG)
-platform with 80,000+ GitHub stars and 2,596% year-over-year contributor growth — named one of
-GitHub's fastest-growing open-source projects (Apache 2.0). Unlike generic RAG frameworks,
-RAGFlow is purpose-built for deep document understanding: it correctly parses PDFs, tables, and
-visual layouts before chunking and retrieval, making it significantly more accurate on structured
-enterprise content. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and
-embeds them, stores vectors in Elasticsearch, exposes a REST API for question-answering, and
-provides a web UI for knowledge base management and enterprise search. Typical deployments power
-enterprise knowledge bases, legal research tools, financial document analysis, and customer
-support systems where retrieval accuracy depends on document parsing quality. v0.25 (April 2026)
-added agentic memory, sandbox code execution, and prebuilt ingestion pipelines.
+platform. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and embeds
+them, stores vectors in Elasticsearch, exposes a REST API for question-answering, and provides
+a web UI for knowledge base management and enterprise search.
 
 `RAGFlow_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun`
 for all GCP infrastructure provisioning (Cloud Run service, Cloud SQL Auth Proxy, GCS buckets,
@@ -53,10 +46,10 @@ application configuration, database initialization job, and document storage buc
 | `image_source` | varies | `"custom"` (always builds via Dockerfile) |
 | `database_type` | varies | `"MYSQL_8_0"` |
 | `execution_environment` | varies | `"gen2"` |
-| `cpu_limit` | varies | `"4000m"` |
-| `memory_limit` | varies | `"8Gi"` |
+| `cpu_limit` | varies | `"2000m"` |
+| `memory_limit` | varies | `"4Gi"` |
 | `min_instance_count` | `0` | `1` (hard-coded; scale-to-zero disabled) |
-| `max_instance_count` | varies | `5` |
+| `max_instance_count` | varies | `1` |
 | `timeout_seconds` | varies | `600` |
 | `enable_cloudsql_volume` | varies | `true` |
 | `enable_redis` | `false` | `true` (conditioned on `redis_host != ""`) |
@@ -107,16 +100,15 @@ RAGFlow_CloudRun
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `module_description` | `string` | *(RAGFlow Cloud Run description)* | Platform UI description. `{{UIMeta group=0 order=1}}` |
-| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/applications/ragflow"` | Documentation URL. `{{UIMeta group=0 order=2}}` |
+| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/RAGFlow_CloudRun"` | Documentation URL. `{{UIMeta group=0 order=2}}` |
 | `module_dependency` | `list(string)` | `["Services_GCP", "Elasticsearch_GKE"]` | Modules that must be deployed first. `{{UIMeta group=0 order=3}}` |
 | `module_services` | `list(string)` | `["Cloud Run", "Cloud Run Jobs", "Cloud Build", "Artifact Registry", "Cloud Storage", "GCS Fuse", "Cloud SQL (MySQL 8.0)", "VPC Network", "Serverless VPC Access", "Secret Manager", "Cloud IAM", "Cloud Logging", "Cloud Monitoring", "Memorystore (Redis)", "Elasticsearch"]` | GCP services consumed. `{{UIMeta group=0 order=4}}` |
-| `credit_cost` | `number` | `150` | Platform credits consumed on deployment. `{{UIMeta group=0 order=5}}` |
+| `credit_cost` | `number` | `50` | Platform credits consumed on deployment. `{{UIMeta group=0 order=5}}` |
 | `require_credit_purchases` | `bool` | `false` | Enforce credit balance check before deployment. `{{UIMeta group=0 order=6}}` |
 | `enable_purge` | `bool` | `true` | Permit full deletion of all resources on destroy. `{{UIMeta group=0 order=7}}` |
 | `public_access` | `bool` | `true` | Platform UI visibility to all users. `{{UIMeta group=0 order=8}}` |
-| `shared_users` | `list(string)` | `[]` | Users granted access regardless of `public_access`. Actively enforced by the platform. `{{UIMeta group=0 order=9}}` |
-| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated (4-byte hex) when blank. `{{UIMeta group=0 order=10 updatesafe}}` |
-| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform to create resources. `{{UIMeta group=0 order=11 updatesafe}}` |
+| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated (4-byte hex) when blank. `{{UIMeta group=0 order=9 updatesafe}}` |
+| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform to create resources. `{{UIMeta group=0 order=10 updatesafe}}` |
 
 ---
 
@@ -149,10 +141,10 @@ RAGFlow_CloudRun
 | `deploy_application` | `bool` | `true` | Set `false` to provision infrastructure (MySQL, secrets, GCS) without deploying the Cloud Run service. `{{UIMeta group=3 order=0 updatesafe}}` |
 | `container_image_source` | `string` | `"custom"` | `"custom"` builds from `RAGFlow_Common/scripts/Dockerfile`; `"prebuilt"` deploys an existing image. Options: `prebuilt`, `custom`. `{{UIMeta group=3 order=1 updatesafe}}` |
 | `container_image` | `string` | `""` | Override image URI. Leave empty to use the Cloud Build result from `RAGFlow_Common`. `{{UIMeta group=3 order=2 updatesafe}}` |
-| `cpu_limit` | `string` | `"4000m"` | CPU limit per container instance. RAGFlow document parsing is CPU-intensive. `{{UIMeta group=3 order=3 updatesafe}}` |
-| `memory_limit` | `string` | `"8Gi"` | Memory limit per container instance. Embedding models require significant RAM. `{{UIMeta group=3 order=4 updatesafe}}` |
+| `cpu_limit` | `string` | `"2000m"` | CPU limit per container instance. RAGFlow document parsing is CPU-intensive. `{{UIMeta group=3 order=3 updatesafe}}` |
+| `memory_limit` | `string` | `"4Gi"` | Memory limit per container instance. Embedding models require significant RAM. `{{UIMeta group=3 order=4 updatesafe}}` |
 | `container_port` | `number` | `80` | TCP port the RAGFlow container listens on. RAGFlow's Nginx frontend uses port 80. `{{UIMeta group=3 order=5 updatesafe}}` |
-| `max_instance_count` | `number` | `5` | Maximum number of Cloud Run instances. Valid range: 1–1000. `{{UIMeta group=3 order=6 updatesafe}}` |
+| `max_instance_count` | `number` | `1` | Maximum number of Cloud Run instances. Valid range: 1–1000. `{{UIMeta group=3 order=6 updatesafe}}` |
 | `execution_environment` | `string` | `"gen2"` | Cloud Run execution environment. `"gen2"` is required for NFS mounts. Options: `gen1`, `gen2`. `{{UIMeta group=3 order=7 updatesafe}}` |
 | `timeout_seconds` | `number` | `600` | Maximum duration in seconds Cloud Run waits for a response. Large document processing can be slow. Valid range: 0–3600. `{{UIMeta group=3 order=8 updatesafe}}` |
 | `container_protocol` | `string` | `"http1"` | HTTP protocol version for the Cloud Run service. Options: `http1`, `h2c`. `{{UIMeta group=3 order=9 updatesafe}}` |
@@ -295,27 +287,27 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 ---
 
-## §15 · Observability & Health (Group 13)
+## §15 · Observability & Health (Group 14)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/system/version", initial_delay_seconds=120, timeout_seconds=10, period_seconds=10, failure_threshold=30 }` | Startup probe configuration. RAGFlow loads embedding models at boot — the default allows up to 300 seconds before failing. `{{UIMeta group=13 order=1 updatesafe}}` |
-| `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/system/version", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Liveness probe configuration. Checks `/v1/system/version` every 30 seconds after a 120-second initial delay. `{{UIMeta group=13 order=2 updatesafe}}` |
-| `uptime_check_config` | `object` | `{ enabled=false, path="/v1/health", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. Enable to receive alerts when the service is unreachable. `{{UIMeta group=13 order=3 updatesafe}}` |
-| `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies. Each policy requires `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`, and optionally `aggregation_period`. `{{UIMeta group=13 order=4 updatesafe}}` |
+| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/system/version", initial_delay_seconds=120, timeout_seconds=10, period_seconds=10, failure_threshold=30 }` | Startup probe configuration. RAGFlow loads embedding models at boot — the default allows ample time. `{{UIMeta group=14 order=1 updatesafe}}` |
+| `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/system/version", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Liveness probe configuration. Checks `/v1/system/version` every 30 seconds after a 120-second initial delay. `{{UIMeta group=14 order=2 updatesafe}}` |
+| `uptime_check_config` | `object` | `{ enabled=false, path="/v1/health", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. Enable to receive alerts when the service is unreachable. `{{UIMeta group=14 order=3 updatesafe}}` |
+| `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies. Each policy requires `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`, and optionally `aggregation_period`. `{{UIMeta group=14 order=4 updatesafe}}` |
 
 ---
 
-## §16 · Elasticsearch & Redis (Group 14)
+## §16 · Elasticsearch & Redis (Group 15)
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `elasticsearch_hosts` | `string` | `""` | **Required when `deploy_application = true`.** Elasticsearch HTTP endpoint for RAGFlow document indexing and vector search. Set to the `elasticsearch_endpoint` output from `Elasticsearch_GKE` (e.g. `"http://10.0.0.5:9200"`). Inline Elasticsearch is not supported on Cloud Run. `{{UIMeta group=14 order=1 updatesafe}}` |
-| `elasticsearch_username` | `string` | `""` | Username for Elasticsearch authentication. Leave empty when `xpack.security.enabled = false`. `{{UIMeta group=14 order=2 updatesafe}}` |
-| `enable_redis` | `bool` | `true` | Enables Redis as the RAGFlow task queue backend. Required for document processing workers. The Redis connection is only wired when `redis_host` is non-empty. `{{UIMeta group=14 order=3 updatesafe}}` |
-| `redis_host` | `string` | `""` | Hostname or IP of the Redis server for the RAGFlow task queue. Use the `redis_host` output from `Services_GCP` (Memorystore). `{{UIMeta group=14 order=4 updatesafe}}` |
-| `redis_port` | `string` | `"6379"` | TCP port of the Redis server. `{{UIMeta group=14 order=5 updatesafe}}` |
-| `redis_auth` | `string` | `""` | Authentication password for the Redis server. Sensitive. `{{UIMeta group=14 order=6 updatesafe}}` |
+| `elasticsearch_hosts` | `string` | **required** | Elasticsearch HTTP endpoint for RAGFlow document indexing and vector search. Set to the `elasticsearch_endpoint` output from `Elasticsearch_GKE` (e.g. `"http://10.0.0.5:9200"`). Inline Elasticsearch is not supported on Cloud Run. `{{UIMeta group=1 order=3 updatesafe}}` |
+| `elasticsearch_username` | `string` | `""` | Username for Elasticsearch authentication. Leave empty when `xpack.security.enabled = false`. `{{UIMeta group=15 order=2 updatesafe}}` |
+| `enable_redis` | `bool` | `true` | Enables Redis as the RAGFlow task queue backend. Required for document processing workers. The Redis connection is only wired when `redis_host` is non-empty. `{{UIMeta group=15 order=3 updatesafe}}` |
+| `redis_host` | `string` | `""` | Hostname or IP of the Redis server for the RAGFlow task queue. Use the `redis_host` output from `Services_GCP` (Memorystore). `{{UIMeta group=15 order=4 updatesafe}}` |
+| `redis_port` | `string` | `"6379"` | TCP port of the Redis server. `{{UIMeta group=15 order=5 updatesafe}}` |
+| `redis_auth` | `string` | `""` | Authentication password for the Redis server. Sensitive. `{{UIMeta group=15 order=6 updatesafe}}` |
 
 ---
 

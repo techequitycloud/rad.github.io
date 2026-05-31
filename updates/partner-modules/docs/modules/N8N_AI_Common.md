@@ -351,7 +351,7 @@ module "n8n_app" {
   wrapper_prefix          = local.resource_prefix
   common_labels           = local.labels
   deployment_id           = local.deployment_id
-  region                  = var.region
+  deployment_region       = var.deployment_region
   service_url             = local.service_url
   enable_ai_components    = var.enable_ai_components
   enable_qdrant           = var.enable_qdrant

@@ -6,7 +6,7 @@ This document provides a comprehensive reference for the `modules/Django_CloudRu
 
 ## 1. Module Overview
 
-Django is the most mature Python web framework, used by 35,570+ companies including Instagram, Spotify, Dropbox, and NASA. It holds 12.6% developer preference in the 2026 Stack Overflow Survey with 20,000+ job postings growing at 10% YoY. Its "batteries included" philosophy — built-in ORM, admin interface, and authentication — makes it the default choice for building secure, scalable APIs, internal tools, and ML-integrated web services. `Django_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Django-specific application configuration, secrets, database initialisation, and storage configuration via `Django_Common`.
+Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design. `Django_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Django-specific application configuration, secrets, database initialisation, and storage configuration via `Django_Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Python container, scale-to-zero by default (`min_instance_count = 0`). Custom image build via Cloud Build is the default workflow.
@@ -464,9 +464,9 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `100` | Platform metadata: deployment credit cost. |
-| `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
+| `require_credit_purchases` | 0 | `true` | Platform metadata: enforces credit balance check. |
 | `enable_purge` | 0 | `true` | Permits full deletion of module resources on destroy. |
-| `public_access` | 0 | `true` | Platform catalogue visibility. |
+| `public_access` | 0 | `false` | Platform catalogue visibility. |
 | `deployment_id` | 0 | `""` | Deployment ID suffix. Auto-generated if empty. |
 | `resource_creator_identity` | 0 | (platform SA) | Service account used by Terraform to manage resources. |
 | `project_id` | 1 | — | GCP project ID. **Required.** |

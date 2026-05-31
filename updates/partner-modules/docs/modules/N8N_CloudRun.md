@@ -1,6 +1,9 @@
 # N8N_CloudRun Module — Configuration Guide
 
-n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), **230,000+ active users**, and a **$2.5B valuation** as of 2025 — growing from $350M in under four months and serving a quarter of the Fortune 500. With $240M raised across four funding rounds, 400+ integrations, and native AI nodes, n8n connects apps, APIs, and data sources with full code flexibility. It is self-hostable for total data sovereignty and no per-execution fees. This module deploys n8n on **Google Cloud Run** with a managed Cloud SQL PostgreSQL database and GCS-backed storage persistence.
+n8n is an open-source workflow automation platform that lets you connect services, run logic,
+and build automated pipelines through a visual node-based interface. This module deploys n8n
+on **Google Cloud Run** with a managed Cloud SQL PostgreSQL database and GCS-backed storage
+persistence.
 
 `N8N_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP
 infrastructure provisioning to App_CloudRun (Cloud Run service, Cloud SQL, networking, Secret
@@ -74,7 +77,7 @@ Their semantics are identical to the App_CloudRun equivalents — refer to
 | `support_users` | `[]` | Email addresses granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `{}` | Labels applied to all module-managed resources. |
 | `module_description` | *(N8N description string)* | Platform UI description. Do not modify unless customising the module. |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/n8n"` | External documentation URL displayed in the platform UI. |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/N8N_CloudRun"` | External documentation URL displayed in the platform UI. |
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed before this one. |
 | `deployment_id` | `""` | Optional fixed deployment ID. Auto-generated when blank. |
 
@@ -453,10 +456,10 @@ Complete list of all input variables, grouped by UI section.
 | Group | Variable | Type | Default | Updatable |
 |---|---|---|---|---|
 | 0 | `module_description` | string | *(long description)* | — |
-| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/applications/n8n"` | — |
+| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/modules/N8N_CloudRun"` | — |
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
-| 0 | `credit_cost` | number | `100` | — |
+| 0 | `credit_cost` | number | `50` | — |
 | 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
 | 0 | `public_access` | bool | `true` | — |

@@ -64,26 +64,26 @@ VMware tools, processes, and skills work without modification.
 │  Google Cloud                                                        │
 │                                                                      │
 │  ┌───────────────────────────────────────────────────────────────┐   │
-│  │  VMware Engine Network (VMware-managed fabric)                │   │
+│  │  VMware Engine Network (VMware-managed fabric)                 │   │
 │  │  ┌─────────────────────────────────────────────────────────┐  │   │
-│  │  │  GCVE Private Cloud                                     │  │   │
-│  │  │  • vCenter Server (VCSA)                                │  │   │
-│  │  │  • NSX-T Manager                                        │  │   │
-│  │  │  • vSAN storage (all-NVMe)                              │  │   │
-│  │  │  • HCX (migration appliance)                            │  │   │
-│  │  │  • Management CIDR: 172.20.1.0/24                       │  │   │
-│  │  │  • Node type: standard-72 (1–N nodes)                   │  │   │
+│  │  │  GCVE Private Cloud                                      │  │   │
+│  │  │  • vCenter Server (VCSA)                                 │  │   │
+│  │  │  • NSX-T Manager                                         │  │   │
+│  │  │  • vSAN storage (all-NVMe)                               │  │   │
+│  │  │  • HCX (migration appliance)                             │  │   │
+│  │  │  • Management CIDR: 172.20.1.0/24                        │  │   │
+│  │  │  • Node type: standard-72 (1–N nodes)                    │  │   │
 │  │  └─────────────────────────────────────────────────────────┘  │   │
 │  └──────────┬────────────────────────────────────────────────────┘   │
 │             │ VPC Peering (VMware Engine Network ↔ Peer VPC)         │
 │  ┌──────────▼────────────────────────────────────────────────────┐   │
-│  │  Peer VPC (Google-managed)                                    │   │
+│  │  Peer VPC (Google-managed)                                     │   │
 │  │  ┌─────────────────────────────────────────────────────────┐  │   │
-│  │  │  Jump Host (Windows Server 2022)                        │  │   │
-│  │  │  • e2-medium (default)                                  │  │   │
-│  │  │  • RDP access for vCenter/NSX-T console                 │  │   │
+│  │  │  Jump Host (Windows Server 2022)                         │  │   │
+│  │  │  • e2-medium (default)                                   │  │   │
+│  │  │  • RDP access for vCenter/NSX-T console                  │  │   │
 │  │  └─────────────────────────────────────────────────────────┘  │   │
-│  │  Firewall Rules: SSH, RDP, HTTP, ICMP, internal traffic       │   │
+│  │  Firewall Rules: SSH, RDP, HTTP, ICMP, internal traffic       │  │   │
 │  └───────────────────────────────────────────────────────────────┘   │
 │                                                                      │
 │  Network Policy                                                      │

@@ -6,7 +6,7 @@ This document provides a comprehensive reference for the `modules/OpenClaw_Cloud
 
 ## 1. Module Overview
 
-OpenClaw is an open-source local AI agent that takes actions (not just generates responses), gaining rapid GitHub traction in late 2025. Its ecosystem of derivative startups generated approximately $400K/month in revenue within the first quarter of availability. Top use cases include contract review (legal teams report ~40% reduction in document review time), competitor monitoring, AI-powered content research, inbox triage, and DevOps security scanning. `OpenClaw_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects OpenClaw-specific application configuration, secrets, storage, and container build configuration via `OpenClaw_Common`, with per-tenant isolation for multi-tenant deployments.
+OpenClaw is a serverless, multi-tenant AI agent gateway that provides WebSocket-enabled conversational AI agents with persistent GCS-backed workspace storage. `OpenClaw_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects OpenClaw-specific application configuration, secrets, storage, and container build configuration via `OpenClaw_Common`.
 
 **Key Capabilities:**
 - **Compute**: Cloud Run v2 (Gen2), custom container image built from `ghcr.io/openclaw/openclaw`, scale-to-zero by default (`min_instance_count = 0`). CPU is always allocated (`cpu_always_allocated = true`) to support WebSocket connections and async agent operations.
@@ -269,10 +269,10 @@ Complete variable reference with UIMeta group assignments.
 | Variable | Group | Default |
 |---|---|---|
 | `module_description` | 0 | *(OpenClaw CloudRun description)* |
-| `module_documentation` | 0 | `"https://docs.radmodules.dev/docs/applications/openclaw"` |
+| `module_documentation` | 0 | `"https://docs.radmodules.dev/docs/modules/OpenClaw_CloudRun"` |
 | `module_dependency` | 0 | `["Services_GCP"]` |
 | `module_services` | 0 | *(GCP service list)* |
-| `credit_cost` | 0 | `100` |
+| `credit_cost` | 0 | `50` |
 | `require_credit_purchases` | 0 | `false` |
 | `enable_purge` | 0 | `true` |
 | `public_access` | 0 | `true` |

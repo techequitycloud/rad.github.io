@@ -1,6 +1,6 @@
 # Cyclos_GKE Module — Configuration Guide
 
-Cyclos is open-source banking and payment software powering 1,500+ payment systems worldwide, particularly in developing economies and community currency initiatives. It enables financial inclusion for microfinance institutions, local banks, barter networks, and remittance operators where commercial banking software is cost-prohibitive, providing mobile-first online banking, POS integration, QR payments, and marketplace tools. This module deploys Cyclos on **GKE Autopilot** using the official `cyclos/cyclos` container image, backed by a managed Cloud SQL PostgreSQL instance.
+Cyclos is a professional banking and payment system designed for microfinance institutions, credit unions, complementary currency schemes, and community banks. This module deploys Cyclos on **GKE Autopilot** using the official `cyclos/cyclos` container image, backed by a managed Cloud SQL PostgreSQL instance.
 
 `Cyclos_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Cyclos-specific application configuration on top.
 

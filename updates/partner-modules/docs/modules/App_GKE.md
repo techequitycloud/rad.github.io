@@ -110,7 +110,6 @@ The module implements a least-privilege IAM strategy using dedicated Service Acc
 *   **`db-init`**: Runs custom scripts for database schema migration and seeding.
 *   **Cloud SQL Auth Proxy sidecar**: Jobs with `needs_db = true` get a proxy sidecar with `--quitquitquit` for graceful termination.
 *   **Script ConfigMaps**: Job scripts are mounted via Kubernetes ConfigMaps from the module's `scripts/` directory.
-*   **Resource limits**: Each job accepts `cpu_limit` (default `"1000m"`) and `memory_limit` (default `"512Mi"`). The optional `ephemeral_storage_limit` field (default `null`) sets a Kubernetes ephemeral-storage resource limit on the job container — useful for jobs that write large temporary files to the container's writable layer. When `null`, no ephemeral-storage limit is applied.
 *   **Execution control**: `execute_on_apply` maps to the Kubernetes provider's `wait_for_completion` flag. When `true` (default), Terraform blocks until the job completes before proceeding. When `false`, Terraform submits the job and continues without waiting.
 *   **Job ordering**: `depends_on_jobs` is declared in the variable type and preserved in the merged job configuration, but job ordering is currently enforced implicitly through the Terraform resource dependency graph (e.g. nfs-setup completes before initialization jobs run) rather than via per-job `depends_on_jobs` chains.
 
@@ -466,13 +465,13 @@ These variables are consumed by the platform UI / billing system and do not affe
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `module_description` | `string` | (long default) | Human-readable description of the module's purpose |
-| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/App_GKE"` | URL to external documentation |
+| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/applications/gke-app"` | URL to external documentation |
 | `module_dependency` | `list(string)` | `["Services_GCP"]` | Other modules that must be deployed first |
 | `module_services` | `list(string)` | (long list) | GCP services consumed by this module |
 | `credit_cost` | `number` | `100` | Platform credits consumed on deployment |
-| `require_credit_purchases` | `bool` | `false` | Enforce credit balance check before deployment |
+| `require_credit_purchases` | `bool` | `true` | Enforce credit balance check before deployment |
 | `enable_purge` | `bool` | `true` | Permit full deletion of resources on destroy |
-| `public_access` | `bool` | `true` | Make the module publicly visible in the platform catalogue |
+| `public_access` | `bool` | `false` | Make the module publicly visible in the platform catalogue |
 
 ### Core Identity & Project
 
@@ -486,11 +485,11 @@ These variables are consumed by the platform UI / billing system and do not affe
 | `tenant_deployment_id` | `string` | `"demo"` | Deployment environment suffix (e.g. `prod`, `dev`) |
 | `deployment_id` | `string` | `""` | Optional deployment ID; auto-generated if empty |
 | `support_users` | `list(string)` | `[]` | Email addresses of monitoring alert recipients |
-| `resource_labels` | `map(string)` | `{env="dev"}` | Common labels applied to all resources |
-| `region` | `string` | `"us-central1"` | GCP region used when no Services_GCP subnet mapping can be auto-discovered |
+| `resource_labels` | `map(string)` | `{}` | Common labels applied to all resources |
+| `fallback_region` | `string` | `"us-central1"` | GCP region used when no Services_GCP subnet mapping can be auto-discovered |
 | `impersonation_service_account` | `string` | `""` | Service account email to impersonate in discovery / mirror scripts (cross-project deployments) |
 | `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform to create resources |
-| `explicit_secret_values` | `map(string)` | `{}` | Raw secret values provided directly by a wrapper module; bypasses plan-time Secret Manager lookups. **Note**: `sensitive = true` is intentionally absent — enabling it causes `CreateContainerConfigError: secret "<prefix>-secrets" not found` on every GKE deployment because pods start before the Kubernetes Secret is materialised. This is a platform UI constraint, not an oversight; the interim mitigation is GCS CMEK encryption on the state backend. |
+| `explicit_secret_values` | `map(string)` | `{}` | Raw secret values provided directly by a wrapper module; bypasses plan-time Secret Manager lookups |
 | `scripts_dir` | `string` | `""` | Path to initialisation scripts directory; defaults to module's built-in scripts |
 
 ### Compute & Scaling (§3.A)
@@ -527,7 +526,7 @@ These variables are consumed by the platform UI / billing system and do not affe
 | `stateful_headless_service` | `bool` | `null` | Create a headless Service for stable pod DNS |
 | `stateful_pod_management_policy` | `string` | `null` | `OrderedReady` or `Parallel` |
 | `stateful_update_strategy` | `string` | `null` | `RollingUpdate` or `OnDelete` |
-| `stateful_fs_group` | `number` | `0` | GID set as pod-level `fsGroup` in the security context; Kubernetes chowns PVC mount to this GID on attach |
+| `stateful_fs_group` | `number` | `null` | GID set as pod-level `fsGroup` in the security context; Kubernetes chowns PVC mount to this GID on attach |
 
 ### Database (§3.B)
 
@@ -627,11 +626,11 @@ These variables are consumed by the platform UI / billing system and do not affe
 | `enable_topology_spread` | `bool` | `false` | Add zone and node spread constraints |
 | `topology_spread_strict` | `bool` | `false` | Use `DoNotSchedule` for zone constraint |
 | `enable_resource_quota` | `bool` | `false` | Apply ResourceQuota to all namespaces |
-| `quota_cpu_requests` | `string` | `"4"` | Total CPU requests limit |
-| `quota_cpu_limits` | `string` | `"4"` | Total CPU limits cap |
-| `quota_memory_requests` | `string` | `"4Gi"` | Total memory requests limit |
-| `quota_memory_limits` | `string` | `"8Gi"` | Total memory limits cap |
-| `quota_max_pods` | `string` | `"20"` | Maximum pod count |
+| `quota_cpu_requests` | `string` | `""` | Total CPU requests limit |
+| `quota_cpu_limits` | `string` | `""` | Total CPU limits cap |
+| `quota_memory_requests` | `string` | `""` | Total memory requests limit |
+| `quota_memory_limits` | `string` | `""` | Total memory limits cap |
+| `quota_max_pods` | `string` | `""` | Maximum pod count |
 | `enable_auto_password_rotation` | `bool` | `false` | Enable automated DB password rotation |
 | `rotation_propagation_delay_sec` | `number` | `90` | Seconds to wait before disabling old secret version |
 | `secret_rotation_period` | `string` | `"2592000s"` | Rotation frequency (default: 30 days) |
@@ -782,7 +781,7 @@ This section consolidates sensible starting values and the consequences of misco
 |---|---|---|---|
 | `tenant_deployment_id` | `"prod"` / `"staging"` / `"dev"` (match environment) | **Critical** | **Do not change after initial deployment.** The value is embedded in every resource name (Cloud SQL instance, GCS buckets, secrets, service accounts). Changing it causes Terraform to destroy and recreate all named resources, resulting in data loss and a new, empty database. |
 | `application_name` | Short, lowercase, hyphen-safe identifier (e.g. `"myapp"`) | **Critical** | **Do not change after initial deployment.** Embedded in Kubernetes namespace, service names, and GCP resource names. Renaming orphans existing resources and creates new ones with an empty state. |
-| `region` | The GCP region where your workloads run (e.g. `"europe-west1"`) | **High** | If left as `"us-central1"` when your Services_GCP stack is in a different region, inline infrastructure (NFS VM, Cloud SQL instance, GKE cluster) is provisioned in the wrong region. Cross-region latency increases significantly; costs rise due to cross-region egress. |
+| `fallback_region` | The GCP region where your workloads run (e.g. `"europe-west1"`) | **High** | If left as `"us-central1"` when your Services_GCP stack is in a different region, inline infrastructure (NFS VM, Cloud SQL instance, GKE cluster) is provisioned in the wrong region. Cross-region latency increases significantly; costs rise due to cross-region egress. |
 | `deployment_id` | `""` (auto-generate on first apply; never change) | **Critical** | Auto-generation is safe. If you set a value manually and then change it, every resource whose name includes the deployment ID is destroyed and recreated, causing complete data loss. |
 | `support_users` | List of on-call email addresses | **Medium** | Empty list suppresses all Cloud Monitoring alert emails. Outages go unnotified until a user reports them. |
 

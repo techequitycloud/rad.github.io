@@ -1,6 +1,6 @@
 # N8N_AI_GKE Module — Configuration Guide
 
-n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), trusted by a quarter of the Fortune 500. `N8N_AI_GKE` is the AI-augmented variant — pre-configured with native LLM nodes, agent loops, and vector store integrations so teams can build production AI automation pipelines without boilerplate. AI-specific template usage is the fastest-growing segment within the N8N community. This module deploys n8n on **GKE Autopilot** alongside two companion AI services: **Qdrant** (vector database for RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis workflows without external AI API dependencies.
+n8n is an open-source workflow automation platform that lets you connect services, run logic, and build AI-powered pipelines through a visual node-based interface. This module deploys n8n on **GKE Autopilot** alongside two companion AI services: **Qdrant** (vector database for RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis workflows without external AI API dependencies.
 
 `N8N_AI_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS, secrets, CI/CD) and adds n8n-specific application configuration and AI component orchestration on top.
 
@@ -16,7 +16,7 @@ This guide documents only the variables that are **unique to `N8N_AI_GKE`** or t
 
 | Configuration Area | App_GKE.md Section | N8N_AI-Specific Notes |
 |---|---|---|
-| Module Metadata & Configuration | §1 Module Overview | Different defaults for `module_description` and `module_documentation`. `module_documentation` defaults to `"https://docs.radmodules.dev/docs/applications/n8n-ai-gke"` (note the `-gke` suffix, unlike N8N_AI_CloudRun). |
+| Module Metadata & Configuration | §1 Module Overview | Different defaults for `module_description` and `module_documentation`. `module_documentation` defaults to `"https://docs.radmodules.dev/docs/modules/N8N_AI_GKE"`. |
 | Project & Identity | §2 IAM & Access Control | Refer to base App_GKE module documentation. |
 | Application Identity | §3.A Compute (GKE Autopilot) | See [N8N AI Application Identity](#n8n-ai-application-identity) below for n8n-specific defaults. |
 | Runtime & Scaling | §3.A Compute (GKE Autopilot) | See [N8N Runtime Configuration](#n8n-runtime-configuration) below. `cpu_limit` and `memory_limit` are top-level variables. |

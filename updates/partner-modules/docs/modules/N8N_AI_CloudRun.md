@@ -1,6 +1,11 @@
 # N8N_AI_CloudRun Module — Configuration Guide
 
-n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), trusted by a quarter of the Fortune 500. `N8N_AI_CloudRun` is the AI-augmented variant — pre-configured with native LLM nodes, agent loops, and vector store integrations so teams can build production AI automation pipelines without boilerplate. AI-specific template usage is the fastest-growing segment within the N8N community. This module deploys n8n on **Google Cloud Run** alongside two companion AI services: **Qdrant** (vector database for RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis workflows without external AI API dependencies.
+n8n is an open-source workflow automation platform that lets you connect services, run logic,
+and build AI-powered pipelines through a visual node-based interface. This module deploys n8n
+on **Google Cloud Run** alongside two companion AI services: **Qdrant** (vector database for
+RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together
+they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis
+workflows without external AI API dependencies.
 
 `N8N_AI_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all
 GCP infrastructure provisioning to App_CloudRun (Cloud Run service, Cloud SQL, networking,
@@ -75,7 +80,7 @@ Their semantics are identical to the App_CloudRun equivalents — refer to
 | `support_users` | `[]` | Email addresses granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `{}` | Labels applied to all module-managed resources. |
 | `module_description` | *(N8N AI description string)* | Platform UI description. Do not modify unless customising the module. |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/n8n-ai"` | External documentation URL displayed in the platform UI. |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/N8N_AI_CloudRun"` | External documentation URL displayed in the platform UI. |
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed before this one. |
 | `deployment_id` | `""` | Optional fixed deployment ID. Auto-generated when blank. |
 
@@ -469,10 +474,10 @@ Complete reference of all `N8N_AI_CloudRun` variables, their defaults, and UI me
 | Variable | Default | Group |
 |---|---|---|
 | `module_description` | *(N8N AI description)* | 0 |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/n8n-ai"` | 0 |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/N8N_AI_CloudRun"` | 0 |
 | `module_dependency` | `["Services_GCP"]` | 0 |
 | `module_services` | *(list of GCP services)* | 0 |
-| `credit_cost` | `100` | 0 |
+| `credit_cost` | `50` | 0 |
 | `require_credit_purchases` | `false` | 0 |
 | `enable_purge` | `true` | 0 |
 | `public_access` | `true` | 0 |

@@ -52,7 +52,7 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 |---|---|
 | `name_suffix` | `"kestra-storage"` |
 | `name` | `<resource_prefix>-kestra-storage` |
-| `location` | `var.deployment_region` |
+| `location` | `var.region` |
 | `storage_class` | `"STANDARD"` |
 | `force_destroy` | `true` |
 | `versioning_enabled` | `false` |
@@ -208,7 +208,7 @@ All variables are passed in by the wrapper modules (`Kestra_CloudRun` and `Kestr
 | `labels` | map(string) | `{}` | Labels applied to created resources. |
 | `tenant_deployment_id` | string | `"demo"` | Tenant identifier suffix. |
 | `deployment_id` | string | `""` | Random deployment ID suffix. |
-| `deployment_region` | string | `"us-central1"` | Region for the GCS storage bucket. |
+| `region` | string | `"us-central1"` | Region for the GCS storage bucket. |
 | `application_name` | string | `"kestra"` | Application name. |
 | `application_version` | string | `"latest"` | Container image version tag. |
 | `display_name` | string | `"Kestra Data Orchestration"` | Human-readable display name. |

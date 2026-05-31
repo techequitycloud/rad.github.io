@@ -1,6 +1,6 @@
 # Directus_GKE Module — Configuration Guide
 
-`Directus_GKE` is a wrapper module that deploys [Directus](https://directus.io/) — an open-source composable data platform and headless CMS with 34,500+ GitHub stars, trusted by Tripadvisor, Adobe, and Mercedes-Benz — on Google Kubernetes Engine (GKE) Autopilot. Directus wraps any SQL database with instant REST and GraphQL APIs and a no-code admin panel without modifying your schema. Its native MCP server support (introduced in v11.13, November 2025) enables direct AI tool integration, and it is consistently ranked among the top open-source headless CMS choices in 2026 for Backend-as-a-Service, internal dashboards, and omnichannel content delivery. It composes two underlying modules:
+`Directus_GKE` is a wrapper module that deploys [Directus](https://directus.io/) — an open-source headless CMS and data API platform — on Google Kubernetes Engine (GKE) Autopilot. It composes two underlying modules:
 
 - **[App_GKE](../App_GKE/App_GKE.md)** — provides all GKE infrastructure: cluster targeting, Kubernetes workloads, networking, security, CI/CD, storage, observability, and backup.
 - **Directus_Common** — generates the Directus application configuration, database initialisation scripts, migration jobs, and Directus-specific environment variables. Its outputs are injected into `App_GKE` via the `application_config`, `module_env_vars`, `module_secret_env_vars`, and `module_storage_buckets` inputs.
@@ -16,7 +16,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Configuration Area | App_GKE.md Section | Directus-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Directus-specific `module_description`, `module_documentation`, and `module_services` defaults are pre-set. `resource_creator_identity` — see [Resource Creator Identity](#resource-creator-identity) below. |
-| Project & Identity | §2 IAM & Access Control | Identical, plus `region` unique to this module — see [Project & Identity](#project--identity) below. |
+| Project & Identity | §2 IAM & Access Control | Identical, plus `deployment_region` unique to this module — see [Project & Identity](#project--identity) below. |
 | Application Identity | §3.A Compute (GKE Autopilot) | Directus-specific defaults; also exposes `db_name`, `db_user`, and `description` — see [Application & Database Identity](#application--database-identity) below. |
 | Runtime & Scaling | §3.A Compute (GKE Autopilot) | Directus-specific defaults for `container_port`, scaling counts, and `enable_cloudsql_volume`; also exposes `cpu_limit`, `memory_limit`, `startup_probe`, and `liveness_probe` — see [Runtime Configuration](#runtime-configuration) below. |
 | Environment Variables & Secrets | §3 Core Service Configuration | Identical. |
@@ -60,7 +60,7 @@ The following variables are shared with `App_GKE` but have different default val
 | `application_version` | `"11.1.0"` | `"1.0.0"` | Pins the Directus container image version. |
 | `container_port` | `8055` | `8080` | Directus listens on port 8055 by default. |
 | `min_instance_count` | `0` | `1` | Scale-to-zero is the default; set to `1` or more to eliminate cold starts. |
-| `max_instance_count` | `8` | `3` | Higher default to accommodate Directus workloads under load. |
+| `max_instance_count` | `3` | `3` | Directus default; increase for high-traffic deployments. |
 | `cpu_limit` (`container_resources.cpu_limit`) | `"2000m"` | `"1000m"` | Directus benefits from 2 vCPU for responsive API generation. |
 | `memory_limit` (`container_resources.memory_limit`) | `"2Gi"` | `"512Mi"` | Directus requires at minimum 512Mi; 2Gi is recommended for production. |
 | `enable_nfs` | `true` | `true` | Shared NFS storage is used for Directus uploaded assets and media. |

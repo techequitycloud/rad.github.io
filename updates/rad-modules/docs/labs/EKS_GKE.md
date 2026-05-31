@@ -1,9 +1,9 @@
 # AWS Elastic Kubernetes Service on GKE Fleet — Lab Guide
 
-📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/EKS GKE)**
+📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/EKS_GKE)**
 
 This lab guide walks you through deploying an **AWS Elastic Kubernetes Service (EKS)** cluster
-and registering it as a GKE Attached Cluster in **Google Cloud Fleet** using the **EKS GKE**
+and registering it as a GKE Attached Cluster in **Google Cloud Fleet** using the **EKS_GKE**
 module. You will then explore unified multi-cloud operations: accessing the EKS cluster via
 Google Cloud's Connect Gateway, centralised logging and monitoring through Google Cloud
 Observability, and fleet-wide access control — all from a single Google Cloud control plane.
@@ -64,20 +64,20 @@ for several reasons:
 │  AWS (us-west-2)                                                    │
 │  ┌──────────────────────────────────────────────────────────────┐   │
 │  │  VPC (10.0.0.0/16)                                           │   │
-│  │  ┌─────────────────────┐  ┌─────────────────────────────┐    │   │
-│  │  │  Public Subnets     │  │  Private Subnets            │    │   │
-│  │  │  (3 AZs)            │  │  (3 AZs) — optional         │    │   │
-│  │  │  ┌───────────────┐  │  │  ┌─────────────────────┐    │    │   │
-│  │  │  │  NAT Gateway  │  │  │  │  EKS Node Group     │    │    │   │
-│  │  │  └───────────────┘  │  │  │  (2–5 nodes)        │    │    │   │
-│  │  └─────────────────────┘  │  └─────────────────────┘    │    │   │
-│  │                           └─────────────────────────────┘    │   │
-│  │  ┌──────────────────────────────────────────────────────┐    │   │
-│  │  │  EKS Cluster                                         │    │   │
-│  │  │  • Kubernetes 1.34                                   │    │   │
-│  │  │  • OIDC issuer enabled                               │    │   │
-│  │  │  • IAM roles for service accounts                    │    │   │
-│  │  └──────────────────────────────────────────────────────┘    │   │
+│  │  ┌─────────────────────┐  ┌─────────────────────────────┐   │   │
+│  │  │  Public Subnets     │  │  Private Subnets            │   │   │
+│  │  │  (3 AZs)            │  │  (3 AZs) — optional         │   │   │
+│  │  │  ┌───────────────┐  │  │  ┌─────────────────────┐   │   │   │
+│  │  │  │  NAT Gateway  │  │  │  │  EKS Node Group     │   │   │   │
+│  │  │  └───────────────┘  │  │  │  (2–5 nodes)        │   │   │   │
+│  │  └─────────────────────┘  │  └─────────────────────┘   │   │   │
+│  │                           └─────────────────────────────┘   │   │
+│  │  ┌──────────────────────────────────────────────────────┐   │   │
+│  │  │  EKS Cluster                                         │   │   │
+│  │  │  • Kubernetes 1.34                                   │   │   │
+│  │  │  • OIDC issuer enabled                               │   │   │
+│  │  │  • IAM roles for service accounts                    │   │   │
+│  │  └──────────────────────────────────────────────────────┘   │   │
 │  └──────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────┘
           │ OIDC Federation + GKE Connect Agent (outbound HTTPS)
@@ -87,7 +87,7 @@ for several reasons:
 │  ┌──────────────────────────────────────────────────────────────┐   │
 │  │  GKE Fleet Hub                                               │   │
 │  │  • Fleet membership: eks-cluster-<id>                        │   │
-│  │  • Platform version: 1.34.0-gke.1                            │   │
+│  │  • Platform version: 1.34.0-gke.1                           │   │
 │  │  • Logging: SYSTEM + WORKLOADS                               │   │
 │  │  • Managed Prometheus enabled                                │   │
 │  └──────────────────────────────────────────────────────────────┘   │

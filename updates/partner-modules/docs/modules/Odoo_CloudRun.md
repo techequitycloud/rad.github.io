@@ -1,7 +1,5 @@
 # Odoo_CloudRun Module — Configuration Guide
 
-Odoo is an open-source ERP suite with 16M+ users, 170,000+ enterprise customers across 5 continents, and €650M in 2025 billing revenue growing at 42% CAGR — adding 13,000 new clients per month. It controls 5.77% global ERP market share and 12–15% of the SME segment, and is targeting €1B in revenue by 2027. Odoo is the primary open-source disruptor against SAP, Oracle, and Microsoft Dynamics, delivering CRM, accounting, inventory, manufacturing, HR, and e-commerce in one integrated suite with zero licensing cost.
-
 `Odoo_CloudRun` deploys **Odoo Community Edition** on Google Cloud Run, backed by
 Cloud SQL PostgreSQL and a Cloud Filestore NFS volume for shared file storage.
 It is a **wrapper module** built on top of `App_CloudRun`. All GCP infrastructure
@@ -403,10 +401,10 @@ Complete list of all input variables, grouped by UI section.
 | Group | Variable | Type | Default | Updatable |
 |---|---|---|---|---|
 | 0 | `module_description` | string | *(long description)* | — |
-| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/applications/cloud-run-app"` | — |
+| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/modules/Odoo_CloudRun"` | — |
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
-| 0 | `credit_cost` | number | `100` | — |
+| 0 | `credit_cost` | number | `50` | — |
 | 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
 | 0 | `public_access` | bool | `true` | — |
@@ -498,15 +496,15 @@ Complete list of all input variables, grouped by UI section.
 | 13 | `health_check_config` | object | `{ path = "/web/health", initial_delay_seconds = 30, … }` | yes |
 | 13 | `uptime_check_config` | object | `{ enabled = true, path = "/" }` | yes |
 | 13 | `alert_policies` | list(object) | `[]` | yes |
-| 20 | `enable_redis` | bool | `false` | yes |
-| 20 | `redis_host` | string | `""` | yes |
-| 20 | `redis_port` | string | `"6379"` | yes |
-| 20 | `redis_auth` | string | `""` | yes |
-| 21 | `enable_vpc_sc` | bool | `false` | yes |
-| 21 | `vpc_cidr_ranges` | list(string) | `[]` | yes |
-| 21 | `vpc_sc_dry_run` | bool | `true` | yes |
-| 21 | `organization_id` | string | `""` | yes |
-| 21 | `enable_audit_logging` | bool | `false` | yes |
+| 21 | `enable_redis` | bool | `false` | yes |
+| 21 | `redis_host` | string | `""` | yes |
+| 21 | `redis_port` | string | `"6379"` | yes |
+| 21 | `redis_auth` | string | `""` | yes |
+| 22 | `enable_vpc_sc` | bool | `false` | yes |
+| 22 | `vpc_cidr_ranges` | list(string) | `[]` | yes |
+| 22 | `vpc_sc_dry_run` | bool | `true` | yes |
+| 22 | `organization_id` | string | `""` | yes |
+| 22 | `enable_audit_logging` | bool | `false` | yes |
 
 ## Destroying Resources
 

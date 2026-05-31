@@ -1,12 +1,9 @@
 # Moodle_CloudRun Module — Configuration Guide
 
-Moodle is the world's most widely deployed open-source Learning Management System (LMS),
-holding 14% global market share and dominant positions in Europe (69%) and Latin America
-(73%). The global LMS market is growing from $24.5B in 2024 to $107.9B by 2033 at a 17.9%
-CAGR, driven by demand for corporate training, higher education, and government certification
-programs. This module deploys Moodle on **Google Cloud Run** using a custom PHP 8.3/Apache
-container, backed by a managed Cloud SQL PostgreSQL instance and shared NFS storage for
-course materials, with auto-scaling to support thousands of concurrent students.
+Moodle is the world's most popular open-source Learning Management System (LMS), used by
+educational institutions, corporations, and online learning platforms worldwide. This module
+deploys Moodle on **Google Cloud Run** using a custom PHP 8.3/Apache container, backed by a
+managed Cloud SQL PostgreSQL instance and shared NFS storage for course materials.
 
 `Moodle_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP
 infrastructure provisioning to App_CloudRun (Cloud Run service, Cloud SQL, networking, Secret
@@ -79,7 +76,7 @@ Their semantics are identical to the App_CloudRun equivalents — refer to
 | `support_users` | `[]` | Email addresses granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `{}` | Labels applied to all module-managed resources. |
 | `module_description` | *(Moodle LMS description string)* | Platform UI description. Do not modify unless customising the module. |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/moodle"` | External documentation URL displayed in the platform UI. |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/Moodle_CloudRun"` | External documentation URL displayed in the platform UI. |
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed before this one. |
 | `deployment_id` | `""` | Optional fixed deployment ID. Auto-generated when blank. |
 
@@ -245,9 +242,9 @@ Google accounts.
 ### §4.C · Cloud Armor & CDN
 
 Cloud Armor provides a WAF security policy fronted by a Global HTTPS Load Balancer. When
-`application_domains` is non-empty, `ENABLE_REVERSE_PROXY` is automatically set to `"TRUE"` so
-Moodle generates correct HTTPS URLs behind the load balancer. Note: `MOODLE_REVERSE_PROXY` is
-not injected by this module — only `ENABLE_REVERSE_PROXY` is set.
+`application_domains` is non-empty, `MOODLE_REVERSE_PROXY` and `ENABLE_REVERSE_PROXY` are
+automatically set to `"true"` / `"TRUE"` so Moodle generates correct HTTPS URLs behind the
+load balancer.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -289,8 +286,8 @@ not injected by this module — only `ENABLE_REVERSE_PROXY` is set.
 
 Custom domains require `enable_cloud_armor = true`. The module provisions a Global HTTPS Load
 Balancer with Google-managed SSL certificates. Setting `application_domains` also activates
-`ENABLE_REVERSE_PROXY = "TRUE"` automatically so Moodle generates correct HTTPS URLs behind
-the load balancer. Note: `MOODLE_REVERSE_PROXY` is not injected by this module.
+`MOODLE_REVERSE_PROXY = "true"` and `ENABLE_REVERSE_PROXY = "TRUE"` automatically so Moodle
+generates correct HTTPS URLs behind the load balancer.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -494,10 +491,10 @@ group they belong to.
 | Variable | Default | Group |
 |---|---|---|
 | `module_description` | *(Moodle LMS description)* | 0 |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/moodle"` | 0 |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/Moodle_CloudRun"` | 0 |
 | `module_dependency` | `["Services_GCP"]` | 0 |
 | `module_services` | *(list of GCP services)* | 0 |
-| `credit_cost` | `100` | 0 |
+| `credit_cost` | `50` | 0 |
 | `require_credit_purchases` | `false` | 0 |
 | `enable_purge` | `true` | 0 |
 | `public_access` | `true` | 0 |
@@ -576,15 +573,15 @@ group they belong to.
 | `liveness_probe` | `{ path="/health.php", initial_delay_seconds=120, period_seconds=60 }` | 13 |
 | `uptime_check_config` | `{ enabled=true, path="/", check_interval="60s" }` | 13 |
 | `alert_policies` | `[]` | 13 |
-| `enable_redis` | `true` | 20 |
-| `redis_host` | `""` | 20 |
-| `redis_port` | `"6379"` | 20 |
-| `redis_auth` | `""` | 20 |
-| `enable_vpc_sc` | `false` | 21 |
-| `vpc_cidr_ranges` | `[]` | 21 |
-| `vpc_sc_dry_run` | `true` | 21 |
-| `organization_id` | `""` | 21 |
-| `enable_audit_logging` | `false` | 21 |
+| `enable_redis` | `true` | 21 |
+| `redis_host` | `""` | 21 |
+| `redis_port` | `"6379"` | 21 |
+| `redis_auth` | `""` | 21 |
+| `enable_vpc_sc` | `false` | 22 |
+| `vpc_cidr_ranges` | `[]` | 22 |
+| `vpc_sc_dry_run` | `true` | 22 |
+| `organization_id` | `""` | 22 |
+| `enable_audit_logging` | `false` | 22 |
 | `max_images_to_retain` | `7` | 9 |
 | `delete_untagged_images` | `true` | 9 |
 | `image_retention_days` | `30` | 9 |

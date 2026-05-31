@@ -1,10 +1,10 @@
 # RAGFlow_Common Module — Configuration Guide
 
-`RAGFlow_Common` is the **shared configuration sub-module** for RAGFlow deployments. It is not deployed directly — it is called by `RAGFlow_GKE` (and future CloudRun variants) to produce the three standard outputs that the Foundation module (`App_GKE`) expects: `config`, `storage_buckets`, and `path`.
+`RAGFlow_Common` is the **shared configuration sub-module** for RAGFlow deployments. It is not deployed directly — it is called by `RAGFlow_CloudRun` and `RAGFlow_GKE` to produce the three standard outputs that the Foundation modules expect: `config`, `storage_buckets`, and `path`.
 
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG) platform. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and embeds them, stores vectors in Elasticsearch, and exposes a REST API for question-answering, knowledge base management, and enterprise search.
 
-> `RAGFlow_Common` is a **sub-module** — it is called as a child module by `RAGFlow_GKE`. Do not deploy it directly. It contains no `provider` or `backend` blocks and creates no GCP resources itself.
+> `RAGFlow_Common` is a **sub-module** — it is called as a child module by `RAGFlow_CloudRun` and `RAGFlow_GKE`. Do not deploy it directly. It contains no `provider` or `backend` blocks and creates no GCP resources itself.
 
 ---
 
@@ -12,7 +12,7 @@ RAGFlow is an open-source document intelligence and Retrieval-Augmented Generati
 
 ### What `RAGFlow_Common` provides
 
-- A **`config` output** containing the complete application configuration object consumed by `App_GKE`'s `application_config` input. This includes the container image reference, port, database type, resource limits, health probes, and initialization jobs.
+- A **`config` output** containing the complete application configuration object consumed by the Foundation module's (`App_CloudRun` or `App_GKE`) `application_config` input. This includes the container image reference, port, database type, resource limits, health probes, and initialization jobs.
 - A **`storage_buckets` output** — a single GCS bucket with the suffix `ragflow-documents` in the deployment region, used for document ingestion and storage.
 - A **`path` output** — the absolute path to the module directory. `RAGFlow_GKE` uses `"${module.ragflow_app.path}/scripts"` as its `scripts_dir`.
 
@@ -80,7 +80,7 @@ All probes target the `/v1/health` endpoint. RAGFlow loads embedding models at s
 
 | Output | Description |
 |---|---|
-| `config` | Complete application configuration object consumed by `App_GKE`'s `application_config` input. Contains `app_name`, `container_image`, `container_port=80`, `database_type="MYSQL_8_0"`, `db_name`, `db_user`, `enable_cloudsql_volume`, `container_resources`, `min_instance_count`, `max_instance_count`, `environment_variables`, `secret_environment_variables`, `initialization_jobs`, `startup_probe`, `liveness_probe`, and `readiness_probe`. |
+| `config` | Complete application configuration object consumed by the Foundation module's `application_config` input. Contains `app_name`, `container_image`, `container_port=80`, `database_type="MYSQL_8_0"`, `db_name`, `db_user`, `enable_cloudsql_volume`, `container_resources`, `min_instance_count`, `max_instance_count`, `environment_variables`, `secret_environment_variables`, `initialization_jobs`, `startup_probe`, `liveness_probe`, and `readiness_probe`. |
 | `storage_buckets` | List containing one GCS bucket configuration object: `{ name_suffix = "ragflow-documents", location = var.region, storage_class = "STANDARD", force_destroy = true, versioning_enabled = false }`. |
 | `path` | Absolute path to the `RAGFlow_Common` module directory. Used by `RAGFlow_GKE` to resolve `scripts_dir`. |
 
@@ -97,7 +97,7 @@ The following values are fixed inside `RAGFlow_Common` and cannot be overridden 
 | `container_port` | `80` | RAGFlow's Nginx frontend listens on port 80. |
 | `database_type` | `"MYSQL_8_0"` | RAGFlow requires MySQL 8.0. |
 | `enable_mysql_plugins` | `false` | RAGFlow does not require MySQL plugins. |
-| `readiness_probe.path` | `"/v1/system/version"` | Fixed readiness check endpoint. |
+| `readiness_probe.path` | `"/v1/health"` | Fixed readiness check endpoint. |
 | `build_args.APP_VERSION` | `var.application_version` | Version is always passed to the Dockerfile as a build argument. |
 | Default `db-init` job image | `"mysql:8.0-debian"` | Standard MySQL client image for schema initialization. |
 
@@ -105,13 +105,13 @@ The following values are fixed inside `RAGFlow_Common` and cannot be overridden 
 
 ## §5 · Usage Pattern
 
-`RAGFlow_Common` is called exclusively by `RAGFlow_GKE`:
+`RAGFlow_Common` is called by `RAGFlow_CloudRun` and `RAGFlow_GKE`. Example for `RAGFlow_GKE`:
 
 ```hcl
 module "ragflow_app" {
-  source        = "../RAGFlow_Common"
-  deployment_id = local.random_id
-  region        = local.region
+  source              = "../RAGFlow_Common"
+  deployment_id       = local.random_id
+  region              = local.region
   application_name    = var.application_name
   application_version = var.application_version
   db_name             = var.db_name

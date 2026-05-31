@@ -1,10 +1,10 @@
 # Istio Service Mesh on GKE — Lab Guide
 
-📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Istio GKE)**
+📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Istio_GKE)**
 
 This lab guide walks you through the full lifecycle of deploying, configuring, and observing a
 service mesh on Google Kubernetes Engine using **open-source Istio** — installed via `istioctl`
-on a GKE Standard cluster. You will use the **Istio GKE** module to provision the platform, then
+on a GKE Standard cluster. You will use the **Istio_GKE** module to provision the platform, then
 explore traffic management, security, and observability capabilities hands-on. The module supports
 both **sidecar mode** (Envoy per-pod) and **ambient mode** (ztunnel per-node).
 
@@ -75,28 +75,28 @@ The module installs four open-source observability tools automatically:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  GKE Standard Cluster (Istio_GKE module)                            │
+│  GKE Standard Cluster (Istio_GKE module)                           │
 │                                                                     │
 │  ┌────────────────────────────────────────────────────────────────┐ │
 │  │  istio-system namespace                                        │ │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌─────────┐   │ │
-│  │  │  istiod    │  │  Ingress   │  │  Kiali     │  │Grafana/ │   │ │
-│  │  │ (control   │  │  Gateway   │  │  (topology)│  │Jaeger/  │   │ │
-│  │  │  plane)    │  │  (L7 LB)   │  │            │  │Prom     │   │ │
-│  │  └────────────┘  └────────────┘  └────────────┘  └─────────┘   │ │
+│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌─────────┐ │ │
+│  │  │  istiod    │  │  Ingress   │  │  Kiali     │  │Grafana/ │ │ │
+│  │  │ (control   │  │  Gateway   │  │  (topology)│  │Jaeger/  │ │ │
+│  │  │  plane)    │  │  (L7 LB)   │  │            │  │Prom     │ │ │
+│  │  └────────────┘  └────────────┘  └────────────┘  └─────────┘ │ │
 │  └────────────────────────────────────────────────────────────────┘ │
 │                                                                     │
 │  ┌────────────────────────────────────────────────────────────────┐ │
 │  │  default namespace (label: istio-injection=enabled)            │ │
 │  │                                                                │ │
-│  │  ┌──────────────────────┐   ┌──────────────────────┐           │ │
-│  │  │  productpage pod     │   │  reviews pod         │           │ │
-│  │  │  [app + envoy proxy] │◄──►  [app + envoy proxy] │           │ │
-│  │  └──────────────────────┘   └──────────────────────┘           │ │
-│  │  ┌──────────────────────┐   ┌──────────────────────┐           │ │
-│  │  │  details pod         │   │  ratings pod         │           │ │
-│  │  │  [app + envoy proxy] │   │  [app + envoy proxy] │           │ │
-│  │  └──────────────────────┘   └──────────────────────┘           │ │
+│  │  ┌──────────────────────┐   ┌──────────────────────┐          │ │
+│  │  │  productpage pod     │   │  reviews pod         │          │ │
+│  │  │  [app + envoy proxy] │◄──►  [app + envoy proxy] │          │ │
+│  │  └──────────────────────┘   └──────────────────────┘          │ │
+│  │  ┌──────────────────────┐   ┌──────────────────────┐          │ │
+│  │  │  details pod         │   │  ratings pod         │          │ │
+│  │  │  [app + envoy proxy] │   │  [app + envoy proxy] │          │ │
+│  │  └──────────────────────┘   └──────────────────────┘          │ │
 │  └────────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────────┘
 
@@ -644,7 +644,7 @@ Service A Pod                     Service B Pod
 ├─────────────────────┤           ├─────────────────────┤
 │  Envoy sidecar      │◄─mTLS────►│  Envoy sidecar      │
 │  (cert: spiffe://   │           │  (cert: spiffe://   │
-│  cluster.local/...) │           │  cluster.local/...) │
+│   cluster.local/...) │           │   cluster.local/...) │
 └─────────────────────┘           └─────────────────────┘
 ```
 

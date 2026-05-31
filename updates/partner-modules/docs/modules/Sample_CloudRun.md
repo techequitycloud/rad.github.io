@@ -76,7 +76,7 @@ as `display_name` and `description`, then merged into `application_config` for
 | `application_display_name` | `"Cloudrun Application"` | Human-readable name shown in the platform UI and Cloud Run console. Safe to update at any time. |
 | `application_description` | `"Sample application to showcase Cloudrun features"` | Brief description of the application. Populates the Cloud Run service description field. |
 | `application_version` | `"latest"` | Version tag applied to the container image. Increment to trigger a new image build or revision. |
-| `application_database_name` | `"sampleapp"` | PostgreSQL database name. Passed to `Sample_Common` as `db_name`. **Do not change after initial deployment.** |
+| `application_database_name` | `"cloudrunapp"` | PostgreSQL database name. Passed to `Sample_Common` as `db_name`. **Do not change after initial deployment.** |
 | `application_database_user` | `"cloudrunapp"` | PostgreSQL user. Passed to `Sample_Common` as `db_user`. Password auto-generated. |
 
 ### §3.B · Resource Sizing
@@ -262,7 +262,7 @@ The `startup_probe_config` / `health_check_config` pair controls Cloud Run's liv
 
 | Variable | Default | Description |
 |---|---|---|
-| `application_database_name` | `"sampleapp"` | PostgreSQL database name, passed to `Sample_Common` as `db_name`. Initialised by the `db-init` job on first deployment. |
+| `application_database_name` | `"cloudrunapp"` | PostgreSQL database name, passed to `Sample_Common` as `db_name`. Initialised by the `db-init` job on first deployment. |
 | `application_database_user` | `"cloudrunapp"` | PostgreSQL user, passed as `db_user`. Password auto-generated. |
 | `database_password_length` | `32` | Auto-generated password length (16–64 characters). Default is `32`. |
 | `enable_auto_password_rotation` | `false` | Automated password rotation. See §4.A. |
@@ -395,104 +395,104 @@ Complete list of all input variables, grouped by UI section.
 | 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/modules/Sample_CloudRun"` | — |
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
-| 0 | `credit_cost` | number | `100` | — |
+| 0 | `credit_cost` | number | `50` | — |
 | 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
 | 0 | `public_access` | bool | `true` | — |
 | 0 | `deployment_id` | string | `""` | yes |
 | 0 | `resource_creator_identity` | string | `"rad-module-creator@…"` | yes |
 | 1 | `project_id` | string | — | yes |
-| 2 | `tenant_deployment_id` | string | `"demo"` | yes |
-| 2 | `support_users` | list(string) | `[]` | yes |
-| 2 | `resource_labels` | map(string) | `{}` | yes |
-| 3 | `application_name` | string | `"cloudrunapp"` | — |
-| 3 | `application_display_name` | string | `"Cloudrun Application"` | yes |
-| 3 | `application_description` | string | `"Sample application to showcase Cloudrun features"` | yes |
-| 3 | `application_version` | string | `"latest"` | yes |
-| 4 | `deploy_application` | bool | `true` | yes |
-| 4 | `container_image_source` | string | `"prebuilt"` | yes |
-| 4 | `container_image` | string | `"us-docker.pkg.dev/cloudrun/container/hello"` | yes |
-| 4 | `container_build_config` | object | `{ enabled = false }` | yes |
-| 4 | `enable_image_mirroring` | bool | `true` | yes |
-| 4 | `cpu_limit` | string | `"1000m"` | yes |
-| 4 | `memory_limit` | string | `"512Mi"` | yes |
-| 4 | `min_instance_count` | number | `0` (hardcoded to `0` in `sample.tf`) | yes |
-| 4 | `max_instance_count` | number | `1` | yes |
-| 4 | `container_port` | number | `8080` | yes |
-| 4 | `container_protocol` | string | `"http1"` | yes |
-| 4 | `execution_environment` | string | `"gen2"` | yes |
-| 4 | `timeout_seconds` | number | `300` | yes |
-| 4 | `enable_cloudsql_volume` | bool | `true` | yes |
-| 4 | `cloudsql_volume_mount_path` | string | `"/cloudsql"` | yes |
-| 4 | `traffic_split` | list(object) | `[]` | yes |
-| 4 | `max_revisions_to_retain` | number | `7` | yes |
-| 4 | `service_annotations` | map(string) | `{}` | yes |
-| 4 | `service_labels` | map(string) | `{}` | yes |
-| 5 | `ingress_settings` | string | `"all"` | yes |
-| 5 | `vpc_egress_setting` | string | `"PRIVATE_RANGES_ONLY"` | yes |
-| 5 | `enable_iap` | bool | `false` | yes |
-| 5 | `iap_authorized_users` | list(string) | `[]` | yes |
-| 5 | `iap_authorized_groups` | list(string) | `[]` | yes |
-| 6 | `environment_variables` | map(string) | `{}` | yes |
-| 6 | `secret_environment_variables` | map(string) | `{}` | yes |
-| 6 | `secret_rotation_period` | string | `"2592000s"` | yes |
-| 6 | `secret_propagation_delay` | number | `30` | yes |
-| 7 | `backup_schedule` | string | `"0 2 * * *"` | yes |
-| 7 | `backup_retention_days` | number | `7` | yes |
-| 7 | `enable_backup_import` | bool | `false` | yes |
-| 7 | `backup_source` | string | `"gcs"` | yes |
-| 7 | `backup_uri` | string | `""` | yes |
-| 7 | `backup_format` | string | `"sql"` | yes |
-| 8 | `enable_cicd_trigger` | bool | `false` | yes |
-| 8 | `github_repository_url` | string | `""` | yes |
-| 8 | `github_token` | string | `""` | yes |
-| 8 | `github_app_installation_id` | string | `""` | yes |
-| 8 | `cicd_trigger_config` | object | `{ branch_pattern = "^main$" }` | yes |
-| 8 | `enable_cloud_deploy` | bool | `false` | yes |
-| 8 | `cloud_deploy_stages` | list(object) | `[dev, staging, prod]` | yes |
-| 8 | `enable_binary_authorization` | bool | `false` | yes |
-| 9 | `enable_custom_sql_scripts` | bool | `false` | yes |
-| 9 | `custom_sql_scripts_bucket` | string | `""` | yes |
-| 9 | `custom_sql_scripts_path` | string | `""` | yes |
-| 9 | `custom_sql_scripts_use_root` | bool | `false` | yes |
-| 10 | `enable_cloud_armor` | bool | `false` | yes |
-| 10 | `admin_ip_ranges` | list(string) | `[]` | yes |
-| 10 | `application_domains` | list(string) | `[]` | yes |
-| 10 | `enable_cdn` | bool | `false` | yes |
-| 10 | `max_images_to_retain` | number | `7` | yes |
-| 10 | `delete_untagged_images` | bool | `true` | yes |
-| 10 | `image_retention_days` | number | `30` | yes |
-| 9 | `nfs_instance_name` | string | `""` | yes |
-| 9 | `nfs_instance_base_name` | string | `"app-nfs"` | yes |
-| 11 | `create_cloud_storage` | bool | `true` | yes |
-| 11 | `storage_buckets` | list(object) | `[{ name_suffix = "data" }]` | yes |
-| 11 | `enable_nfs` | bool | `true` | yes |
-| 11 | `nfs_mount_path` | string | `"/mnt/nfs"` | yes |
-| 11 | `gcs_volumes` | list(object) | `[]` | yes |
-| 11 | `manage_storage_kms_iam` | bool | `false` | yes |
-| 11 | `enable_artifact_registry_cmek` | bool | `false` | yes |
-| 12 | `application_database_name` | string | `"sampleapp"` | — |
-| 12 | `application_database_user` | string | `"cloudrunapp"` | — |
-| 12 | `database_password_length` | number | `32` | yes |
-| 12 | `enable_auto_password_rotation` | bool | `false` | yes |
-| 12 | `rotation_propagation_delay_sec` | number | `90` | yes |
-| 13 | `initialization_jobs` | list(object) | `[]` | yes |
-| 13 | `cron_jobs` | list(object) | `[]` | yes |
-| 14 | `startup_probe` | object | `{ type = "HTTP", path = "/healthz", initial_delay_seconds = 60, … }` | yes |
-| 14 | `liveness_probe` | object | `{ type = "HTTP", path = "/healthz", initial_delay_seconds = 30, … }` | yes |
-| 14 | `startup_probe_config` | object | `{ enabled = true }` (TCP, timeout=240, period=240, threshold=1) | yes |
-| 14 | `health_check_config` | object | `{ enabled = true }` (HTTP, path="/", timeout=1, period=10, threshold=3) | yes |
-| 14 | `uptime_check_config` | object | `{ enabled = true, path = "/" }` | yes |
-| 14 | `alert_policies` | list(object) | `[]` | yes |
-| 21 | `enable_redis` | bool | `false` | yes |
-| 21 | `redis_host` | string | `""` | yes |
-| 21 | `redis_port` | **number** | `6379` | yes |
-| 21 | `redis_auth` | string | `""` | yes |
-| 22 | `enable_vpc_sc` | bool | `false` | yes |
-| 22 | `vpc_cidr_ranges` | list(string) | `[]` | yes |
-| 22 | `vpc_sc_dry_run` | bool | `true` | yes |
-| 22 | `organization_id` | string | `""` | yes |
-| 22 | `enable_audit_logging` | bool | `false` | yes |
+| 1 | `tenant_deployment_id` | string | `"demo"` | yes |
+| 1 | `support_users` | list(string) | `[]` | yes |
+| 1 | `resource_labels` | map(string) | `{}` | yes |
+| 2 | `application_name` | string | `"cloudrunapp"` | — |
+| 2 | `application_display_name` | string | `"Cloudrun Application"` | yes |
+| 2 | `application_description` | string | `"Sample application to showcase Cloudrun features"` | yes |
+| 2 | `application_version` | string | `"latest"` | yes |
+| 3 | `deploy_application` | bool | `true` | yes |
+| 3 | `container_image_source` | string | `"prebuilt"` | yes |
+| 3 | `container_image` | string | `"us-docker.pkg.dev/cloudrun/container/hello"` | yes |
+| 3 | `container_build_config` | object | `{ enabled = false }` | yes |
+| 3 | `enable_image_mirroring` | bool | `true` | yes |
+| 3 | `cpu_limit` | string | `"1000m"` | yes |
+| 3 | `memory_limit` | string | `"512Mi"` | yes |
+| 3 | `min_instance_count` | number | `0` (hardcoded to `0` in `sample.tf`) | yes |
+| 3 | `max_instance_count` | number | `1` | yes |
+| 3 | `container_port` | number | `8080` | yes |
+| 3 | `container_protocol` | string | `"http1"` | yes |
+| 3 | `execution_environment` | string | `"gen2"` | yes |
+| 3 | `timeout_seconds` | number | `300` | yes |
+| 3 | `enable_cloudsql_volume` | bool | `true` | yes |
+| 3 | `cloudsql_volume_mount_path` | string | `"/cloudsql"` | yes |
+| 3 | `traffic_split` | list(object) | `[]` | yes |
+| 3 | `max_revisions_to_retain` | number | `7` | yes |
+| 3 | `service_annotations` | map(string) | `{}` | yes |
+| 3 | `service_labels` | map(string) | `{}` | yes |
+| 4 | `ingress_settings` | string | `"all"` | yes |
+| 4 | `vpc_egress_setting` | string | `"PRIVATE_RANGES_ONLY"` | yes |
+| 4 | `enable_iap` | bool | `false` | yes |
+| 4 | `iap_authorized_users` | list(string) | `[]` | yes |
+| 4 | `iap_authorized_groups` | list(string) | `[]` | yes |
+| 5 | `environment_variables` | map(string) | `{}` | yes |
+| 5 | `secret_environment_variables` | map(string) | `{}` | yes |
+| 5 | `secret_rotation_period` | string | `"2592000s"` | yes |
+| 5 | `secret_propagation_delay` | number | `30` | yes |
+| 6 | `backup_schedule` | string | `"0 2 * * *"` | yes |
+| 6 | `backup_retention_days` | number | `7` | yes |
+| 6 | `enable_backup_import` | bool | `false` | yes |
+| 6 | `backup_source` | string | `"gcs"` | yes |
+| 6 | `backup_uri` | string | `""` | yes |
+| 6 | `backup_format` | string | `"sql"` | yes |
+| 7 | `enable_cicd_trigger` | bool | `false` | yes |
+| 7 | `github_repository_url` | string | `""` | yes |
+| 7 | `github_token` | string | `""` | yes |
+| 7 | `github_app_installation_id` | string | `""` | yes |
+| 7 | `cicd_trigger_config` | object | `{ branch_pattern = "^main$" }` | yes |
+| 7 | `enable_cloud_deploy` | bool | `false` | yes |
+| 7 | `cloud_deploy_stages` | list(object) | `[dev, staging, prod]` | yes |
+| 7 | `enable_binary_authorization` | bool | `false` | yes |
+| 8 | `enable_custom_sql_scripts` | bool | `false` | yes |
+| 8 | `custom_sql_scripts_bucket` | string | `""` | yes |
+| 8 | `custom_sql_scripts_path` | string | `""` | yes |
+| 8 | `custom_sql_scripts_use_root` | bool | `false` | yes |
+| 9 | `enable_cloud_armor` | bool | `false` | yes |
+| 9 | `admin_ip_ranges` | list(string) | `[]` | yes |
+| 9 | `application_domains` | list(string) | `[]` | yes |
+| 9 | `enable_cdn` | bool | `false` | yes |
+| 9 | `max_images_to_retain` | number | `7` | yes |
+| 9 | `delete_untagged_images` | bool | `true` | yes |
+| 9 | `image_retention_days` | number | `30` | yes |
+| 8 | `nfs_instance_name` | string | `""` | yes |
+| 8 | `nfs_instance_base_name` | string | `"app-nfs"` | yes |
+| 10 | `create_cloud_storage` | bool | `true` | yes |
+| 10 | `storage_buckets` | list(object) | `[{ name_suffix = "data" }]` | yes |
+| 10 | `enable_nfs` | bool | `true` | yes |
+| 10 | `nfs_mount_path` | string | `"/mnt/nfs"` | yes |
+| 10 | `gcs_volumes` | list(object) | `[]` | yes |
+| 10 | `manage_storage_kms_iam` | bool | `false` | yes |
+| 10 | `enable_artifact_registry_cmek` | bool | `false` | yes |
+| 11 | `application_database_name` | string | `"cloudrunapp"` | — |
+| 11 | `application_database_user` | string | `"cloudrunapp"` | — |
+| 11 | `database_password_length` | number | `32` | yes |
+| 11 | `enable_auto_password_rotation` | bool | `false` | yes |
+| 11 | `rotation_propagation_delay_sec` | number | `90` | yes |
+| 12 | `initialization_jobs` | list(object) | `[]` | yes |
+| 12 | `cron_jobs` | list(object) | `[]` | yes |
+| 13 | `startup_probe` | object | `{ type = "HTTP", path = "/healthz", initial_delay_seconds = 60, … }` | yes |
+| 13 | `liveness_probe` | object | `{ type = "HTTP", path = "/healthz", initial_delay_seconds = 30, … }` | yes |
+| 13 | `startup_probe_config` | object | `{ enabled = true }` (TCP, timeout=240, period=240, threshold=1) | yes |
+| 13 | `health_check_config` | object | `{ enabled = true }` (HTTP, path="/", timeout=1, period=10, threshold=3) | yes |
+| 13 | `uptime_check_config` | object | `{ enabled = true, path = "/" }` | yes |
+| 13 | `alert_policies` | list(object) | `[]` | yes |
+| 20 | `enable_redis` | bool | `false` | yes |
+| 20 | `redis_host` | string | `""` | yes |
+| 20 | `redis_port` | **number** | `6379` | yes |
+| 20 | `redis_auth` | string | `""` | yes |
+| 21 | `enable_vpc_sc` | bool | `false` | yes |
+| 21 | `vpc_cidr_ranges` | list(string) | `[]` | yes |
+| 21 | `vpc_sc_dry_run` | bool | `true` | yes |
+| 21 | `organization_id` | string | `""` | yes |
+| 21 | `enable_audit_logging` | bool | `false` | yes |
 
 ## Destroying Resources
 
