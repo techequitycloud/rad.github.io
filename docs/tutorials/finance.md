@@ -6,7 +6,6 @@ title: Finance Tutorial
 
 <YouTubeEmbed videoId="zxaCgdLDKl0" />
 
-
 ## 1. Introduction
 The Finance role provides deep visibility into the platform's economics.
 

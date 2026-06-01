@@ -4,19 +4,9 @@ sidebar_label: Directus
 slug: /applications/directus
 ---
 
-
-
 # Directus on Google Cloud Platform
 
-
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/directus_module.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/directus_module.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
 <br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/directus_module.pdf)
 
 ## Overview
 The **Directus** module deploys Directus, an open data platform, on Google Cloud. It instantly turns any SQL database into an API and provides a beautiful no-code app for managing the content.

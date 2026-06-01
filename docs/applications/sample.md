@@ -4,19 +4,9 @@ sidebar_label: Sample
 slug: /applications/sample
 ---
 
-
-
 # Sample web application on Google Cloud Platform
 
-
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/sample_module.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/sample_module.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
 <br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/sample_module.pdf)
 
 ## Overview
 The **Sample** module acts as a reference implementation for deploying custom web applications on Google Cloud Platform. It demonstrates how to build a production-ready "Wrapper Module" that inherits the platform's best practices while deploying a custom Python Flask application.

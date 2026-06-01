@@ -4,19 +4,9 @@ sidebar_label: Cloud Run App
 slug: /applications/cloud-run-app
 ---
 
-
-
 # CloudRunApp on Google Cloud Platform
 
-
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/cloudrunapp_module.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/cloudrunapp_module.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
 <br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/cloudrunapp_module.pdf)
 
 This document provides a comprehensive analysis of the `CloudRunApp` module on Google Cloud Platform. It details the architecture, IAM configuration, service integrations, and potential enhancements.
 

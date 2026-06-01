@@ -4,19 +4,9 @@ sidebar_label: Strapi
 slug: /applications/strapi
 ---
 
-
-
 # Strapi on Google Cloud Platform
 
-
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/strapi_module.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/strapi_module.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
 <br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/strapi_module.pdf)
 
 ## Overview
 The **Strapi** module deploys the leading open-source Headless CMS on Google Cloud. It empowers developers to build performant, customizable APIs while giving content editors a user-friendly interface.

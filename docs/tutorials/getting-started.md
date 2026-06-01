@@ -6,7 +6,6 @@ title: Quick Start Tutorial
 
 <YouTubeEmbed videoId="_T008Avk7o0" />
 
-
 ## 1. Introduction
 Welcome to the Rapid Application Deployment (RAD) platform! This tutorial will guide you through your first steps: logging in, exploring the dashboard, and deploying your first module.
 

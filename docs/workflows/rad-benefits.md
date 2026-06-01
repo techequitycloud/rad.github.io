@@ -8,8 +8,6 @@ title: "RAD Benefits"
 
 <br/>
 
-<a href="https://storage.googleapis.com/rad-public-2b65/getting_started/RAD_Benefits.pdf" target="_blank">View Presentation (PDF)</a>
-
 ## Overview
 
 RAD is a platform that provisions production-grade Google Cloud infrastructure from pre-built templates, giving you real hands-on experience for skill-building and certification preparation. Whether you are a cloud engineer building expertise, a student preparing for a Google Cloud certification, or an organisation accelerating your team's GCP skills, RAD replaces passive study with active, real-world practice.

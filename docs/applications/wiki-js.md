@@ -4,19 +4,9 @@ sidebar_label: Wiki.js
 slug: /applications/wiki-js
 ---
 
-
-
 # Wiki.js on Google Cloud Platform
 
-
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/wikijs_module.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/wikijs_module.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
 <br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/wikijs_module.pdf)
 
 ## Overview
 The **Wiki.js** module deploys the most powerful and extensible open-source wiki software on Google Cloud. It is designed to make knowledge management beautiful and intuitive for teams of all sizes.

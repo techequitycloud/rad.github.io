@@ -1100,7 +1100,6 @@ Deploying this module gives you a working environment to explore the following G
 | [Policy Controller](https://cloud.google.com/anthos-config-management/docs/concepts/policy-controller) | Enable Policy Controller from the Fleet dashboard and apply a constraint to the EKS cluster |
 | [Config Management](https://cloud.google.com/anthos-config-management/docs/overview) | Enable Config Sync and point it at a Git repository to synchronise manifests to the EKS cluster |
 
-
 ---
 
 ## Common Issues and Variable Dependencies

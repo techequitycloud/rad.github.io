@@ -4,18 +4,9 @@ sidebar_label: OpenEMR
 slug: /applications/openemr
 ---
 
-
 # OpenEMR on Google Cloud Platform
 
-
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/openemr_module.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/openemr_module.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
 <br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/openemr_module.pdf)
 
 ## Overview
 The **OpenEMR** module deploys a leading open-source electronic health records (EHR) and medical practice management solution. It is designed for healthcare providers who need a secure, HIPAA-compliant-ready environment to manage patient data, scheduling, and billing.
@@ -35,8 +26,6 @@ The **OpenEMR** module deploys a leading open-source electronic health records (
 ---
 
 This document provides an analysis of the `OpenEMR` module. It details the architecture, IAM configurations, service specifications, and available features, along with recommendations for enhancement.
-
-
 
 The OpenEMR module deploys a scalable, containerized instance of OpenEMR on Google Cloud Run. It utilizes a wrapper architecture (`CloudRunApp`) to provision standard infrastructure components while defining OpenEMR-specific configurations. Key architectural decisions include using Cloud SQL for the database, an external NFS server (GCE instance) for shared file storage (sites directory), and Redis for session management (hosted on the same NFS infrastructure).
 

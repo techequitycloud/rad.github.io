@@ -4,18 +4,9 @@ sidebar_label: Odoo
 slug: /applications/odoo
 ---
 
-
 # Odoo on Google Cloud Platform
 
-
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/odoo_module.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/odoo_module.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
 <br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/odoo_module.pdf)
 
 ## Overview
 The **Odoo** module deploys a comprehensive Enterprise Resource Planning (ERP) suite. Odoo offers a single platform for CRM, Accounting, Inventory, Manufacturing, eCommerce, and more. This module provides a turnkey solution to host Odoo Enterprise or Community on Google Cloud, ensuring it is secure, backed up, and scalable.
@@ -35,8 +26,6 @@ The **Odoo** module deploys a comprehensive Enterprise Resource Planning (ERP) s
 ---
 
 This analysis details the implementation of the `Odoo` module, covering architecture, IAM, services, configuration, features, and the implemented enhancements.
-
-
 
 The `modules/Odoo` module is a wrapper deployment that leverages the `modules/CloudRunApp` foundation to deploy Odoo Community Edition on Google Cloud Run. It utilizes a Serverless architecture backed by Cloud SQL (PostgreSQL) and Cloud Filestore (NFS) for persistence.
 

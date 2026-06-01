@@ -4,18 +4,9 @@ sidebar_label: Moodle
 slug: /applications/moodle
 ---
 
-
 # Moodle on Google Cloud Platform
 
-
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/moodle_module.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/moodle_module.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
 <br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/moodle_module.pdf)
 
 ## Overview
 The **Moodle** module enables educational institutions and training organizations to launch a powerful Learning Management System (LMS) on Google Cloud. It transforms the complex task of setting up Moodle servers into a simple automated process, providing a robust platform for online learning.

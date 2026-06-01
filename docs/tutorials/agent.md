@@ -6,7 +6,6 @@ title: Agent Tutorial
 
 <YouTubeEmbed videoId="pb10lSy5nR0" />
 
-
 ## 1. Introduction
 The Agent Program allows you to earn revenue by referring new users. This tutorial explains how to find your referral code and track your earnings.
 

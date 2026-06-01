@@ -4,18 +4,9 @@ sidebar_label: N8N AI
 slug: /applications/n8n-ai
 ---
 
-
 # N8N AI on Google Cloud Platform
 
-
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/n8nai_module.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/n8nai_module.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
 <br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/n8nai_module.pdf)
 
 ## Overview
 The **N8N AI** module is a supercharged version of the standard N8N deployment, pre-configured for the era of Generative AI. It allows your business to build intelligent agents, chat bots, and document analysis workflows using state-of-the-art Local LLMs and Vector Databases, all hosted securely in your own cloud environment.

@@ -4,18 +4,9 @@ sidebar_label: GCP Services
 slug: /applications/gcp-services
 ---
 
-
 # GCP Services on Google Cloud Platform
 
-
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/gcpservices_module.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/gcpservices_module.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
 <br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/gcpservices_module.pdf)
 
 ## Overview
 The **GCP Services** module acts as the foundation builder for your applications. Once your project is created, this module lays down the necessary infrastructure "plumbing"—networks, databases, and shared storage—that your applications need to run. It ensures that all services are connected securely and efficiently.

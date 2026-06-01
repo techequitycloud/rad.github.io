@@ -6,7 +6,6 @@ title: Support Tutorial
 
 <YouTubeEmbed videoId="i2fpN6jryy4" />
 
-
 ## 1. Introduction
 This tutorial is designed for **Support** users. You will learn how to use your enhanced permissions to troubleshoot user deployments and manage the module catalog.
 

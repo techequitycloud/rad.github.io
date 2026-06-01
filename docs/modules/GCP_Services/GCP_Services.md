@@ -4,9 +4,6 @@
 
 <br/>
 
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Services_GCP.pdf" target="_blank">View Presentation (PDF)</a>
-
-
 `Services_GCP` is the **foundational infrastructure module** in the RAD Modules ecosystem. It runs before any application module and provisions the shared GCP services that all applications depend on: VPC networking, Cloud SQL databases, NFS file storage, Redis cache, Artifact Registry, IAM service accounts, and optional security controls (CMEK, Binary Authorization, VPC Service Controls).
 
 **Deployment order:**

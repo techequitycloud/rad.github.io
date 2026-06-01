@@ -4,18 +4,9 @@ sidebar_label: N8N
 slug: /applications/n8n
 ---
 
-
 # N8N on Google Cloud Platform
 
-
-<video width="100%" controls style={{marginTop: '20px'}} poster="https://storage.googleapis.com/rad-public-2b65/modules/n8n_module.png">
-  <source src="https://storage.googleapis.com/rad-public-2b65/modules/n8n_module.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
 <br/>
-
-[Download PDF](https://storage.googleapis.com/rad-public-2b65/modules/n8n_module.pdf)
 
 ## Overview
 The **N8N** module deploys n8n, a fair-code workflow automation tool, onto Google Cloud. This tool allows your business to connect disparate apps, APIs, and data sources to automate processes without writing complex code.
@@ -34,8 +25,6 @@ The **N8N** module deploys n8n, a fair-code workflow automation tool, onto Googl
 ---
 
 This document provides a comprehensive analysis of the `N8N` implementation, detailing its architecture, IAM configuration, services, and potential enhancements.
-
-
 
 The `modules/N8N` module is a **Wrapper Module** that leverages the core logic from `modules/CloudRunApp`. It deploys the [n8n](https://n8n.io/) workflow automation platform as a containerized service on Google Cloud Run, backed by Cloud SQL (PostgreSQL) and Cloud Storage for persistence.
 

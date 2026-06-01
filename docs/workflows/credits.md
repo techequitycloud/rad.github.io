@@ -9,9 +9,6 @@ sidebar_label: "Credit Management"
 
 <br/>
 
-<a href="https://storage.googleapis.com/rad-public-2b65/getting_started/Credit_Management.pdf" target="_blank">View Presentation (PDF)</a>
-
-
 The credit system controls access to paid module deployments. This page explains how credits are allocated, consumed, and managed — including subscription options, multi-currency payments, and automatic billing controls.
 
 ---
