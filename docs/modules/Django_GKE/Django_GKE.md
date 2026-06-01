@@ -1,18 +1,11 @@
 ---
-title: "Django GKE Module — Configuration Guide"
+title: "Django_GKE Module — Configuration Guide"
 sidebar_label: "Django GKE"
 ---
 
-# Django GKE Module — Configuration Guide
+# Django_GKE Module — Configuration Guide
 
-<YouTubeEmbed videoId="bY_QvUBz9W8" poster="https://storage.googleapis.com/rad-public-2b65/modules/Django_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Django_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
-Django is the most mature Python web framework, used by 35,570+ companies including Instagram, Spotify, Dropbox, and NASA. It holds 12.6% developer preference in the 2026 Stack Overflow Survey with 20,000+ job postings growing at 10% YoY. Its "batteries included" philosophy — built-in ORM, admin interface, and authentication — makes it the default choice for building secure, scalable APIs, internal tools, and ML-integrated web services. This module deploys a production-ready Django application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL instance, GCS media storage, and Secret Manager for secrets including the Django `SECRET_KEY`.
+Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design. This module deploys a production-ready Django application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL instance, GCS media storage, and Secret Manager for secrets including the Django `SECRET_KEY`.
 
 `Django_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, Filestore, secrets, CI/CD) and adds Django-specific application configuration on top via the `Django_Common` sub-module.
 
@@ -326,6 +319,41 @@ The `rotation_propagation_delay_sec` variable controls how long the module waits
 | `resource_creator_identity` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account email | The service account used by Terraform to create and manage GCP resources. For enhanced security, replace with a project-scoped service account granted only the minimum permissions required by this module. |
 
 ---
+
+## Configuration Pitfalls & Sensible Defaults
+
+The table below identifies the variables most commonly misconfigured in `Django_GKE` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong. For full variable details see the [App_GKE configuration guide](App_GKE.md).
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `application_name` | `"django"` (default; do not change after first deploy) | **Critical** | Embedded in GKE namespace name, Artifact Registry repo, Secret Manager secrets, and Cloud SQL database. Changing causes all named resources to be recreated — complete data loss. |
+| `tenant_deployment_id` | Match environment: `"prod"`, `"staging"`, `"dev"` | **Critical** | Changing after first deploy recreates all named resources. The old Cloud SQL instance (with all data) is orphaned and a new empty one is created. |
+| `application_version` | A pinned tag (e.g. `"1.2.3"`); avoid `"latest"` in production | **Medium** | `"latest"` makes rollback ambiguous — Kubernetes cannot distinguish between two `"latest"` image pulls. Always pin to a meaningful digest or version tag in production. |
+| `workload_type` | `null` (auto-selects `Deployment` when `stateful_pvc_enabled` is `null`/`false`) | **Critical** | Setting `"StatefulSet"` without `stateful_pvc_enabled = true` creates a StatefulSet with no stable storage. Setting `"Deployment"` alongside `stateful_pvc_enabled = true` fails at plan time. For NFS-only deployments keep `null` (Deployment) — StatefulSet is only needed when each pod requires its own independent disk. |
+| `stateful_pvc_size` | `"10Gi"` (default); increase based on application data volume | **High** | PVC storage cannot be decreased after provisioning. Set too small: the disk fills up, Django raises `OSError: [Errno 28] No space left on device`, and writes fail. Always provision 2–3× the expected data size to allow for growth. |
+| `quota_memory_requests` | `"4Gi"` (use binary suffix — `Gi` or `Mi`) | **Critical** | A bare integer like `"4"` is treated as **4 bytes** by Kubernetes. The ResourceQuota rejects every pod that requests more than 4 bytes of memory, which means **all pods fail to schedule**. Always use `"4Gi"` or `"4096Mi"`. This is the most common GKE deployment failure for this module. |
+| `quota_memory_limits` | `"8Gi"` (must be ≥ `quota_memory_requests`) | **Critical** | Same bare-integer issue as `quota_memory_requests`. A value of `"8"` = 8 bytes, blocking all pod scheduling immediately. |
+| `min_instance_count` | `1` for production (eliminates cold starts on GKE) | **Medium** | `0` for production: GKE scales to zero — Django pods are fully stopped when idle. On the next request, Kubernetes must schedule a new pod, pull the image (if not cached), and wait for the startup probe. Total cold-start time can exceed 60 seconds. |
+| `max_instance_count` | `≤ Cloud SQL max_connections ÷ avg_DB_connections_per_pod` | **High** | Exceeding Cloud SQL's connection limit causes `FATAL: sorry, too many clients already`. All Django pods simultaneously fail database queries. |
+| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` minimum; increase for media-processing workloads | **High** | Memory too low: Django pod is OOMKilled (exit code 137) when processing large uploads or loading large querysets. GKE Autopilot enforces a minimum of 1 CPU and 512Mi per pod — requests below the minimum are silently raised to the minimum, but limits below minimum cause plan-time errors. |
+| `enable_cloudsql_volume` | `true` (default; Cloud SQL Auth Proxy sidecar — secure, recommended) | **High** | `false`: Django must reach Cloud SQL over TCP via private IP. If Private Service Access is not configured, all DB connections fail. IAM-based auth is lost; password-only auth is required. |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` (default; `db-init.sh` uses this socket path) | **Critical** | Wrong path: `db-init.sh` cannot find the Auth Proxy Unix socket. DB init fails. The pod starts but crashes on the first database call with `no such file or directory`. |
+| `enable_nfs` | `true` (default; required for shared Django media files across replicas) | **High** | `false` with `max_instance_count > 1`: each pod has its own ephemeral volume. Media files written by one pod are invisible to others. Users see 404 for recently uploaded files. All files on a pod are lost on restart. |
+| `nfs_mount_path` | `"/mnt/nfs"` (must match `MEDIA_ROOT` in `settings.py`) | **High** | Mismatch with `MEDIA_ROOT`: Django writes media to ephemeral local storage instead of NFS. Files are lost on pod restart. If `MEDIA_ROOT` points to a non-existent path, every file write raises `FileNotFoundError`. |
+| `startup_probe` | `{ path = "/healthz", failure_threshold = 30, period_seconds = 10 }` — 300 s total tolerance | **Critical** | `failure_threshold` too low with Django running migrations at startup: Kubernetes kills the pod before migrations finish. Restart loop prevents the service from ever becoming healthy. Increase `failure_threshold` to `40–60` for large migration sets. |
+| `liveness_probe` | `{ path = "/healthz", period_seconds = 30, failure_threshold = 3 }` — must be fast and non-blocking | **High** | Health endpoint that makes a database call: if the DB is slow, the liveness probe times out and Kubernetes restarts all healthy pods simultaneously. Use an endpoint that returns `200 OK` in < 1 s without DB access. |
+| `enable_iap` | `false` for public; `true` for internal-only Django deployments | **High** | `true` without `iap_oauth_client_id` and `iap_oauth_client_secret`: the validation guard blocks the plan. Providing credentials but omitting entries in `iap_authorized_users`/`iap_authorized_groups`: all requests return HTTP 403 — even yours. |
+| `enable_pod_disruption_budget` | `false` (default; safe at replica count 1) | **High** | `true` with `max_instance_count = 1` and `pdb_min_available = "1"`: GKE node drains are permanently blocked. Node upgrades stall. The GKE Autopilot maintenance window cannot complete. Only enable when `min_instance_count ≥ 2`. |
+| `pdb_min_available` | `"1"` (default) — keep below `min_instance_count` | **High** | `pdb_min_available` equal to `max_instance_count`: zero pods can be evicted during voluntary disruptions. Node upgrades, cluster maintenance, and rolling deployments all stall indefinitely. |
+| `secret_environment_variables` | Use for `DJANGO_SUPERUSER_PASSWORD`, `SECRET_KEY`, and all API credentials | **High** | Credentials in plain `environment_variables`: visible in the GCP Console, in Cloud Logging if Django prints env vars (e.g. `manage.py diffsettings`), and in Terraform state in plaintext. |
+| `enable_redis` | `false` (default); set `true` when using Redis-backed sessions or Celery | **Medium** | Left `false` when Django is configured to use Redis for sessions or caching: `redis.exceptions.ConnectionRefusedError` on every cache/session access. Users cannot log in; cached views raise uncaught exceptions. |
+| `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` until CI pipeline attests images; then `"REQUIRE_ATTESTATION"` | **Critical** | `"REQUIRE_ATTESTATION"` without a functioning Cloud Build attestation step: no new image can be deployed to GKE, and rollbacks also fail. The only recovery is reverting to `"ALWAYS_ALLOW"`. |
+| `enable_vpc_sc` | `false` until VPC-SC perimeter exists; then `vpc_sc_dry_run = true` first | **Critical** | `enable_vpc_sc = true` with `vpc_sc_dry_run = false` on first enable: if the Django GKE SA, Cloud Build SA, or your admin IP is missing from the access level, Cloud SQL, Secret Manager, and Artifact Registry access all fail simultaneously — complete outage. |
+| `enable_backup_import` | `false` after a successful restore — **set back to `false` immediately** | **High** | Leaving `true` after a successful import: the restore job re-runs on every `tofu apply`, overwriting live Django data (including new user registrations and content) with the stale backup. |
+| `rotation_propagation_delay_sec` | `120`–`180` for production Django (Gunicorn worker pool needs time to reconnect) | **High** | Default `90` s too short for pools with long-lived DB connections: the old password is revoked before all Gunicorn workers reconnect. Workers throw `authentication failed` until they are recycled. Increase to at least `120` for production. |
+| `enable_audit_logging` | `false` for dev; `true` for regulated production environments | **Low** | `false` in production: Secret Manager reads, DB password accesses, and KMS key usage are not logged. SOC 2 and HIPAA audits may flag the absence. Enabling increases Cloud Logging costs but is strongly recommended for regulated workloads. |
 
 ## Deployment Prerequisites & Validation
 

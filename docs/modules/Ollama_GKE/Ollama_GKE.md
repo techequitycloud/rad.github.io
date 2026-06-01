@@ -1,26 +1,14 @@
 ---
-title: "Ollama GKE Module — Configuration Guide"
+title: "Ollama_GKE Module — Configuration Guide"
 sidebar_label: "Ollama GKE"
 ---
 
-# Ollama GKE Module — Configuration Guide
+# Ollama_GKE Module — Configuration Guide
 
-<YouTubeEmbed videoId="F2OWLTuUntk" poster="https://storage.googleapis.com/rad-public-2b65/modules/Ollama_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Ollama_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
-Ollama is the de facto standard runtime for running large language models locally, with 169,000+
-GitHub stars and support for 4,500+ models — including Llama 3.1 (112M+ pulls), DeepSeek-R1
-(82.7M pulls), and Gemma. It attracts 110,000+ monthly developer searches, reflecting its
-dominant position in self-hosted LLM inference. Ollama is critical for financial services,
-healthcare, legal, and government deployments with strict data sovereignty requirements where
-models cannot leave the organisation's infrastructure. This module deploys Ollama on **GKE
+Ollama is an open-source LLM inference server that serves large language models such as Llama,
+Mistral, Gemma, and Phi via a REST API on port 11434. This module deploys Ollama on **GKE
 Autopilot** as a Kubernetes Deployment with model weights persisted to a GCS Fuse volume so
-that pod restarts load models from storage rather than re-downloading them. It is designed as a
-shared in-cluster AI inference endpoint for Flowise, N8N, RAGFlow, Django, and other workloads.
+that pod restarts load models from storage rather than re-downloading them.
 
 `Ollama_GKE` is a **wrapper module** built on top of `App_GKE`. It delegates all GCP
 infrastructure provisioning to App_GKE (GKE cluster, networking, GCS, Secret Manager, CI/CD)
@@ -78,16 +66,15 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 | `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform. |
 | `support_users` | `list(string)` | `[]` | Email addresses granted IAM access and monitoring alert recipients. |
 | `resource_labels` | `map(string)` | `{}` | Labels applied to all module-managed resources. |
-| `region` | `string` | `"us-central1"` | GCP region fallback when network discovery cannot determine region from VPC subnets. Also used as the GCS bucket region. |
+| `deployment_region` | `string` | `"us-central1"` | GCP region fallback when network discovery cannot determine region from VPC subnets. Also used as the GCS bucket region. |
 | `module_description` | `string` | *(Ollama_GKE description)* | Platform UI description. |
 | `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/Ollama_GKE"` | External documentation URL. |
 | `module_dependency` | `list(string)` | `["Services_GCP"]` | Modules that must be deployed before this one. |
 | `module_services` | `list(string)` | *(GCP service list)* | GCP services consumed by this module. |
-| `credit_cost` | `number` | `100` | Platform credits consumed on deployment. |
+| `credit_cost` | `number` | `150` | Platform credits consumed on deployment. |
 | `require_credit_purchases` | `bool` | `false` | Enforce credit balance check before deployment. |
 | `enable_purge` | `bool` | `true` | Permit full deletion of all module resources on destroy. |
 | `public_access` | `bool` | `true` | Controls platform UI visibility. |
-| `shared_users` | `list(string)` | `[]` | Users granted access to this module regardless of `public_access`. Actively enforced by the platform. |
 | `deployment_id` | `string` | `""` | Optional fixed deployment ID. Auto-generated when blank. |
 
 ---
@@ -377,7 +364,7 @@ Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is re
 | **GCS volume always mounted** | The `ollama-models` volume is always appended to `gcs_volumes` inside Ollama_Common. |
 | **No database, no Redis** | `enable_redis = false` and `database_type = "NONE"` are hard-coded. |
 | **Model-pull job auto-generated** | When `default_model` is set and `initialization_jobs = []`, a Kubernetes Job (`model-pull`) is created using `scripts/model-pull.sh`. Providing any entry in `initialization_jobs` disables it. |
-| **Network discovery** | The module uses the `App_Common/modules/app_networking` module to discover the VPC region from existing subnets. The first discovered region is used as the deployment region. Falls back to `var.region` when no subnets are found. |
+| **Network discovery** | The module uses the `App_Common/modules/app_networking` module to discover the VPC region from existing subnets. The first discovered region is used as `deployment_region`. Falls back to `var.deployment_region` when no subnets are found. |
 | **Namespace auto-generated** | When `namespace_name = ""`, the namespace defaults to `<resource_prefix>` (the full `app<name><tenant><id>` string). |
 | **`scripts_dir`** | Set to `Ollama_Common`'s bundled `scripts/` directory. |
 
@@ -393,18 +380,17 @@ Complete variable reference with UIMeta group assignments.
 | `module_documentation` | `"https://docs.radmodules.dev/docs/modules/Ollama_GKE"` | 0 |
 | `module_dependency` | `["Services_GCP"]` | 0 |
 | `module_services` | *(list of GCP services)* | 0 |
-| `credit_cost` | `100` | 0 |
+| `credit_cost` | `150` | 0 |
 | `require_credit_purchases` | `false` | 0 |
 | `enable_purge` | `true` | 0 |
 | `public_access` | `true` | 0 |
-| `shared_users` | `[]` | 0 |
 | `deployment_id` | `""` | 0 |
 | `resource_creator_identity` | `"rad-module-creator@..."` | 0 |
 | `project_id` | *(required)* | 1 |
 | `tenant_deployment_id` | `"demo"` | 1 |
 | `support_users` | `[]` | 1 |
 | `resource_labels` | `{}` | 1 |
-| `region` | `"us-central1"` | 1 |
+| `deployment_region` | `"us-central1"` | 1 |
 | `application_name` | `"ollama"` | 2 |
 | `application_display_name` | `"Ollama LLM Server"` | 2 |
 | `application_description` | `"Ollama — standalone open-source LLM inference server on GKE..."` | 2 |
@@ -590,3 +576,30 @@ resource_labels = {
 
 enable_image_mirroring = true
 ```
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `container_resources.memory_limit` | `16Gi` (7B) / `8Gi` (3B) | **Critical** | Insufficient memory causes OOM-kill mid-inference and crash-loops the pod. GKE Autopilot will not schedule the pod if the requested memory exceeds node capacity. Allocate at least 2× the quantised model weight size. |
+| `container_resources.cpu_limit` | `8` (7B) / `4` (3B) | **High** | Too few CPUs causes multi-second token latency on large models. For production throughput on 7B models, 6–8 cores are recommended. |
+| `container_resources` (GPU) | CPU-only defaults | **High** | The module documentation notes NVIDIA L4 GPU support. To enable GPU inference, you must provision an NVIDIA L4 node pool in the GKE Autopilot cluster (outside this module) and add `nvidia.com/gpu: 1` as a resource request via `container_resources`. Without this, GPU acceleration is silently not used and inference runs on CPU. |
+| `min_instance_count` | `1` | **High** | Setting to `0` allows scale-to-zero but causes 60–120 s cold starts (GCS Fuse mount + model load). Inappropriate for low-latency inference workloads. |
+| `model_pull_timeout_seconds` | `3600` | **High** | A short timeout (e.g., `300`) causes the model-pull Kubernetes Job to fail before the download completes for models larger than ~2 GB. The service starts but no default model is loaded. |
+| `default_model` | `""` (skip pull) | **Medium** | If no model is pulled at deploy time, the Ollama API returns an error on all inference requests until a model is manually pulled. |
+| `workload_type` | `null` (auto-select) | **Medium** | Using `"StatefulSet"` without enabling `stateful_pvc_enabled` results in pods with no persistent local storage. Conversely, setting `stateful_pvc_enabled = true` while specifying `workload_type = "Deployment"` fails at plan time. |
+| `service_type` | `"ClusterIP"` | **Critical** | Setting `service_type = "LoadBalancer"` exposes the Ollama API (port 11434) publicly without authentication. Ollama has no built-in auth. Always keep `ClusterIP` for internal cluster-only access. |
+| `environment_variables.OLLAMA_ORIGINS` | `"*"` (Ollama default) | **High** | If not explicitly restricted, CORS accepts any origin. Set to the specific UI origins (e.g., `"http://openwebui.namespace.svc.cluster.local:8080"`) to prevent cross-cluster or external browser access to the API. |
+| `environment_variables.OLLAMA_KEEP_ALIVE` | `"5m"` (Ollama default) | **Medium** | Ollama evicts models from GPU/CPU memory after 5 minutes idle. Subsequent requests trigger a full reload (30–60 s). Set to `"24h"` or `"-1"` for always-warm deployments. |
+| `environment_variables.OLLAMA_NUM_PARALLEL` | `1` | **Medium** | Serialises all inference requests. For shared cluster deployments with multiple callers (OpenWebUI, Flowise, N8N), increase to `2`–`4` based on available CPU/memory. |
+| `stateful_pvc_enabled` | `false` | **Medium** | Using GCS Fuse (default) means model weight loading at startup incurs network latency. A local PVC (StatefulSet) eliminates this but prevents pod migration during node pool upgrades. |
+| `quota_memory_requests` / `quota_memory_limits` | `"16Gi"` / `"32Gi"` | **Critical** | Must use binary unit suffixes (`Gi`, `Mi`). A bare integer (e.g., `"4"`) is treated as bytes by Kubernetes and will block all pod scheduling in the namespace. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | With `pdb_min_available = 1` and only one replica, rolling node upgrades stall because Kubernetes cannot evict the single pod. Ensure `max_instance_count ≥ 2` when using a PDB with `pdb_min_available = 1`. |
+| `deployment_timeout` | `600` | **High** | The default 600 s wait for the Deployment to become ready may be insufficient when pulling a large model (13B+) from GCS for the first time. Increase to `1200` for models over 8 GB. |
+| `session_affinity` | `"None"` | **Low** | Setting to `"ClientIP"` routes all requests from the same caller to the same pod, which improves context continuity for multi-turn conversations but unevenly distributes load across replicas. |
+| `enable_resource_quota` | `false` | **Medium** | Without a ResourceQuota, a misconfigured or runaway Ollama pod can consume all cluster resources. Enable and tune quotas in shared clusters. |
+| `enable_image_mirroring` | `true` | **Medium** | Disabling pulls directly from Docker Hub (rate-limited). Keep `true` in production. |
+| `gcs_volumes` mount options | `implicit-dirs` | **Medium** | Without `implicit-dirs` in GCS Fuse mount options, directory listings fail and Ollama cannot discover models stored in GCS subdirectories. |
+| `max_instance_count` | `3` | **High** | Each pod independently loads the full model into memory. For a 7B model (16 GiB each), three replicas require 48 GiB of cluster memory. Size the node pool accordingly or cap at `1` for large models. |

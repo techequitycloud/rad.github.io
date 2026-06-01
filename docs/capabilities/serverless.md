@@ -5,7 +5,7 @@ sidebar_label: "Serverless"
 
 # Serverless
 
-> **Scope.** Canonical home for the runtime mechanics that make this a serverless-first platform: Cloud Run v2, GKE Autopilot, VPA, Cloud Run Jobs vs Kubernetes Jobs, Cloud Deploy multi-stage promotion, custom container builds, and the managed-service backbone. The cost lens is in [practices/finops.md](../practices/finops.md); the data-tier services are detailed in [capabilities/data-and-databases.md](data-and-databases.md).
+> **Scope.** Canonical home for the runtime mechanics that make this a serverless-first platform: Cloud Run v2, GKE Autopilot, VPA, Cloud Run Jobs vs Kubernetes Jobs, Cloud Deploy multi-stage promotion, custom container builds, and the managed-service backbone. The cost lens is in [practices/finops.md](../practices/finops.md); the data-tier services are detailed in [capabilities/data_and_databases.md](data_and_databases.md).
 
 ## What this repo uniquely brings to serverless
 
@@ -43,7 +43,7 @@ For workloads that don't fit Cloud Run (StatefulSets, NFS-backed apps, custom co
 
 ### 4. Fully managed dependencies
 
-Every supporting service is managed (canonical detail per service in [capabilities/data-and-databases.md](data-and-databases.md)):
+Every supporting service is managed (canonical detail per service in [capabilities/data_and_databases.md](data_and_databases.md)):
 
 | Service | Module file |
 |---|---|
@@ -91,12 +91,12 @@ Every application ships in **both** flavours (`<App>_CloudRun` and `<App>_GKE`) 
 
 ### 9. Event-driven / serverless-friendly catalogue items
 
-Some applications are themselves serverless workflow engines: N8N, Activepieces, Kestra, NodeRED, Flowise. See the full catalogue in [outcomes/developer-productivity.md](../outcomes/developer-productivity.md).
+Some applications are themselves serverless workflow engines: N8N, Activepieces, Kestra, NodeRED, Flowise. See the full catalogue in [outcomes/developer_productivity.md](../outcomes/developer_productivity.md).
 
 ## Cross-references
 
 - [practices/finops.md](../practices/finops.md) — cost economics of scale-to-zero, lifecycle policies
-- [capabilities/data-and-databases.md](data-and-databases.md) — managed dependency details (Cloud SQL, AlloyDB, Redis, etc.)
+- [capabilities/data_and_databases.md](data_and_databases.md) — managed dependency details (Cloud SQL, AlloyDB, Redis, etc.)
 - [capabilities/networking.md](networking.md) — Direct VPC Egress, ingress controls, Cloud Armor
 - [practices/devsecops.md](../practices/devsecops.md) — IAP, secret CSI mounting, Binary Authorization
 - [practices/cicd.md](../practices/cicd.md) — serverless pipeline (Cloud Build + Cloud Deploy)

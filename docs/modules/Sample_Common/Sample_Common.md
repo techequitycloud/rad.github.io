@@ -1,9 +1,9 @@
 ---
-title: "Sample Common Module"
+title: "Sample_Common Module"
 sidebar_label: "Sample Common"
 ---
 
-# Sample Common Module
+# Sample_Common Module
 
 ## Overview
 
@@ -21,25 +21,25 @@ The module provisions one GCP Secret Manager secret (the Flask `SECRET_KEY`), de
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                          Sample_Common (Layer 1)                             │
 │                                                                              │
-│  Inputs: project_id, tenant_deployment_id, deployment_id,                    │
+│  Inputs: project_id, tenant_deployment_id, deployment_id,                   │
 │          enable_redis, resource_prefix, ...                                  │
 │                                                                              │
-│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐     │
-│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │     │
-│  │                      │    │                                         │     │
-│  │  Secret Manager API  │    │  container_image: "" (derived from      │     │
-│  │                      │    │    application_name by App_GKE/Run)     │     │
-│  │  secret-key          │    │  container_port: 8080                   │     │
-│  │    (32-char, no      │    │  secret_env_vars: {SECRET_KEY: ...}     │     │
-│  │     special chars)   │    │  database_type: POSTGRES_15             │     │
-│  │  30s propagation     │    │  initialization_jobs: [db-init]         │     │
-│  │  wait                │    │  additional_services: [redis] (opt.)    │     │
-│  │                      │    │  startup_probe: HTTP /healthz 10s       │     │
-│  │  storage_buckets: [] │    │  liveness_probe: HTTP /healthz 15s      │     │
-│  │  (no GCS buckets)    │    │                                         │     │
-│  └──────────────────────┘    └─────────────────────────────────────────┘     │
+│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐    │
+│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │    │
+│  │                      │    │                                         │    │
+│  │  Secret Manager API  │    │  container_image: "" (derived from      │    │
+│  │                      │    │    application_name by App_GKE/Run)     │    │
+│  │  secret-key          │    │  container_port: 8080                   │    │
+│  │    (32-char, no      │    │  secret_env_vars: {SECRET_KEY: ...}     │    │
+│  │     special chars)   │    │  database_type: POSTGRES_15             │    │
+│  │  30s propagation     │    │  initialization_jobs: [db-init]         │    │
+│  │  wait                │    │  additional_services: [redis] (opt.)    │    │
+│  │                      │    │  startup_probe: HTTP /healthz 10s       │    │
+│  │  storage_buckets: [] │    │  liveness_probe: HTTP /healthz 15s      │    │
+│  │  (no GCS buckets)    │    │                                         │    │
+│  └──────────────────────┘    └─────────────────────────────────────────┘    │
 │                                                                              │
-│  secret_prefix = var.resource_prefix  OR                                     │
+│  secret_prefix = var.resource_prefix  OR                                    │
 │                  "app{application_name}{tenant_deployment_id}{deployment_id}"│
 └──────────────────────────────────────────────────────────────────────────────┘
                     │

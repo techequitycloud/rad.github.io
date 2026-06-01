@@ -1,9 +1,9 @@
 ---
-title: "App Common Shared Library"
+title: "App_Common Shared Library"
 sidebar_label: "App Common"
 ---
 
-# App Common Shared Library
+# App_Common Shared Library
 
 The `App_Common` module is a collection of reusable, shared Terraform modules that serve as the foundation for the RAD Modules ecosystem. It provides the core infrastructure logic used by platform-specific modules like `App_CloudRun` and `App_GKE`.
 

@@ -1,9 +1,9 @@
 ---
-title: "N8N AI Common Shared Configuration Module"
+title: "N8N_AI_Common Shared Configuration Module"
 sidebar_label: "N8N AI Common"
 ---
 
-# N8N AI Common Shared Configuration Module
+# N8N_AI_Common Shared Configuration Module
 
 The `N8N_AI_Common` module defines the n8n workflow automation platform with an integrated AI stack (Qdrant vector database and Ollama LLM provider) for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`N8N_AI_CloudRun` and `N8N_AI_GKE`).
 
@@ -356,7 +356,7 @@ module "n8n_app" {
   wrapper_prefix          = local.resource_prefix
   common_labels           = local.labels
   deployment_id           = local.deployment_id
-  region                  = var.region
+  deployment_region       = var.deployment_region
   service_url             = local.service_url
   enable_ai_components    = var.enable_ai_components
   enable_qdrant           = var.enable_qdrant

@@ -1,18 +1,11 @@
 ---
-title: "N8N GKE Module — Configuration Guide"
+title: "N8N_GKE Module — Configuration Guide"
 sidebar_label: "N8N GKE"
 ---
 
-# N8N GKE Module — Configuration Guide
+# N8N_GKE Module — Configuration Guide
 
-<YouTubeEmbed videoId="K1AxLa1xMP0" poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/N8N_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
-n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), **230,000+ active users**, and a **$2.5B valuation** as of 2025 — growing from $350M in under four months and serving a quarter of the Fortune 500. With $240M raised across four funding rounds, 400+ integrations, and native AI nodes, n8n connects apps, APIs, and data sources with full code flexibility. It is self-hostable for total data sovereignty and no per-execution fees. This module deploys n8n on **GKE Autopilot** with a managed PostgreSQL database, GCS-backed storage persistence, and optional NFS for shared volumes.
+n8n is an open-source workflow automation platform that lets you connect services, run logic, and build automated pipelines through a visual node-based interface. This module deploys n8n on **GKE Autopilot** with a managed PostgreSQL database, GCS-backed storage persistence, and optional NFS for shared volumes.
 
 `N8N_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS, secrets, CI/CD) and adds n8n-specific application configuration on top.
 
@@ -412,3 +405,31 @@ secret_environment_variables = {
   SMTP_PASSWORD = "sendgrid-api-key-secret"
 }
 ```
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `N8N_ENCRYPTION_KEY` (auto-generated secret) | Auto-generated 32-char random string stored in Secret Manager | **Critical** | Changing this key after first run permanently loses all saved credentials in every workflow. Never rotate unless you are prepared to re-enter every credential from scratch. |
+| `application_name` | `"n8n"` | **Critical** | Immutable after first deploy. Changing it renames all GCP and Kubernetes resources, triggering a full recreation, database loss, and service outage. |
+| `db_name` | `"n8n_db"` | **Critical** | Immutable after first deploy. Changing it causes n8n to connect to a new empty database, losing all workflows, credentials, and execution history. |
+| `WEBHOOK_URL` / `N8N_EDITOR_BASE_URL` (injected from `service_url`) | Predicted service URL | **Critical** | Must match the actual public URL. If wrong, webhook triggers and OAuth callbacks silently fail. |
+| `enable_redis` | `true` | **High** | Disabling Redis while `max_instance_count > 1` causes split-brain execution — each pod runs its own queue, producing duplicate and conflicting workflow executions. Only disable Redis with a single replica. |
+| `redis_host` | `""` (uses NFS server IP when `enable_nfs = true`) | **High** | When `enable_redis = true`, `redis_host` is empty, and `enable_nfs = false`, the plan-time validation guard fires: "When enable_redis is true, either redis_host must be set or enable_nfs must be true." Deployment is blocked. |
+| `min_instance_count` | `1` (GKE default) | **High** | Unlike Cloud Run, GKE does not support true scale-to-zero without KEDA. Setting below `1` may leave the deployment in an inconsistent HPA state. The validation guard rejects `min > max`. |
+| `max_instance_count` | `3` | **High** | Increasing above `1` without `enable_redis = true` leads to split-brain queue processing. Redis is required for all multi-replica deployments. |
+| `memory_limit` | `"4Gi"` | **High** | Values below `2Gi` cause OOM kills under moderate workflow load. The default 4 Gi is the recommended minimum for queue-mode deployments. |
+| `workload_type` | `null` (defaults to `Deployment`) | **High** | Setting `workload_type = "StatefulSet"` without `stateful_pvc_enabled = true` creates a StatefulSet with no persistent storage. Conversely, setting `stateful_pvc_enabled = true` without an explicit `workload_type` automatically resolves to `StatefulSet`. |
+| `stateful_pvc_enabled` | `false` | **High** | For single-replica deployments that need persistent local storage, enabling PVC with a StatefulSet is safer than NFS. However, PVCs are not automatically expanded — size must be planned in advance. |
+| `enable_nfs` | `true` | **High** | n8n uses filesystem binary data mode. Without NFS, binary attachments are written to ephemeral pod storage and lost on restart or rescheduling. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` (not enforced) | **High** | Must use binary unit suffixes (`"4Gi"`, `"8192Mi"`). Bare integers (e.g. `"4"`) are treated as bytes by Kubernetes and block all pod scheduling in the namespace. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | Disabling PDB allows GKE to evict all n8n pods simultaneously during node upgrades, causing a brief but complete outage. Keep enabled in production. |
+| `pdb_min_available` | `"1"` | **Medium** | Setting to `"0"` with `min_instance_count = 1` means GKE can evict the single pod with no replacement guarantee during maintenance windows. |
+| `session_affinity` | `"ClientIP"` | **Medium** | n8n's UI holds WebSocket connections and uses session-local state. Disabling session affinity (`"None"`) can cause UI disconnections when requests route to different pods. |
+| `enable_iap` | `false` | **High** | Enabling IAP without providing both `iap_oauth_client_id` and `iap_oauth_client_secret` is blocked by validation at plan time with a clear error message. |
+| `termination_grace_period_seconds` | `30` | **Medium** | n8n needs time to finish in-flight workflow executions before pod shutdown. Values below `30` may abort active executions mid-run. Increase to `60` for long-running workflow nodes. |
+| `enable_topology_spread` | `false` | **Low** | Without topology spread, all n8n pods may schedule on the same node, creating a single point of failure. Enable in multi-node production clusters. |
+| `enable_vertical_pod_autoscaling` | `false` | **Low** | Enabling VPA alongside HPA can cause conflicting scaling decisions. Use VPA for right-sizing only; disable it once resource limits are tuned. |
+| `organization_id` | `""` | **Medium** | Required for VPC-SC. If empty, VPC Service Controls are silently skipped regardless of `enable_vpc_sc`. |

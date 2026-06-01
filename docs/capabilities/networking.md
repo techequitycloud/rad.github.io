@@ -5,7 +5,7 @@ sidebar_label: "Networking"
 
 # Networking
 
-> **Scope.** Canonical home for the network surface — VPC, NAT, PSA peering, Direct VPC Egress, Cloud Armor WAF, Gateway API, multi-cluster topology, custom domains + CDN, service mesh, and hybrid connectivity. Identity-tier controls (IAP, VPC-SC, WIF) are in [practices/devsecops.md](../practices/devsecops.md); the IaC mechanics around PSA state migration are in [practices/gitops-iac.md](../practices/gitops-iac.md).
+> **Scope.** Canonical home for the network surface — VPC, NAT, PSA peering, Direct VPC Egress, Cloud Armor WAF, Gateway API, multi-cluster topology, custom domains + CDN, service mesh, and hybrid connectivity. Identity-tier controls (IAP, VPC-SC, WIF) are in [practices/devsecops.md](../practices/devsecops.md); the IaC mechanics around PSA state migration are in [practices/gitops_iac.md](../practices/gitops_iac.md).
 
 ## What this repo uniquely brings to networking
 
@@ -26,7 +26,7 @@ Cloud Run reaches private Cloud SQL/Redis via Direct VPC Egress (not the legacy 
 ### 3. GKE networking (canonical)
 
 - **Pod / service CIDRs** — `modules/Services_GCP/gke.tf` allocates `/14` pods and `/20` services per cluster.
-- **Inline VPC CIDR derivation** — `modules/App_GKE/prerequisites.tf` derives unique CIDRs from `sha256(prereq_suffix)`. Override variables (`prereq_subnet_cidr_override`, `prereq_gke_pod_cidr_override`, `prereq_gke_service_cidr_override`) pin existing CIDRs. Multi-tenancy implications in [capabilities/multitenancy-saas.md](multitenancy-saas.md).
+- **Inline VPC CIDR derivation** — `modules/App_GKE/prerequisites.tf` derives unique CIDRs from `sha256(prereq_suffix)`. Override variables (`prereq_subnet_cidr_override`, `prereq_gke_pod_cidr_override`, `prereq_gke_service_cidr_override`) pin existing CIDRs. Multi-tenancy implications in [capabilities/multitenancy_saas.md](multitenancy_saas.md).
 - **Gateway API** — `modules/App_GKE/gateway.tf`. Modern Kubernetes ingress for custom domains; uses `var.application_domains` directly to avoid apply-time circular dependencies.
 - **NetworkPolicy (micro-segmentation)** — `modules/App_GKE/network_policy.tf`. Enabled via `enable_network_segmentation = true`; requires GKE Dataplane V2 (`ADVANCED_DATAPATH`). Default policy: deny all ingress/egress except intra-namespace traffic, GFE health-check CIDRs (`35.191.0.0/16`, `130.211.0.0/22`), and DNS. Egress allows cluster-internal DNS and HTTPS to GCP APIs.
 - **Firewall** — `modules/App_GKE/firewall.tf` (deny-by-default; no `target_tags` for Autopilot compatibility).
@@ -41,7 +41,7 @@ Cloud Run reaches private Cloud SQL/Redis via Direct VPC Egress (not the legacy 
 - **Fleet-based service discovery** — `modules/Services_GCP/gke-fleet.tf` enrolls clusters into a GKE Fleet. The Fleet Hub provides a single-pane view across clusters and enables multi-cluster service discovery: services registered with `ServiceExport` are automatically reachable by name from other clusters in the same Fleet.
 - **Multi-Cluster Ingress** — optional unified ingress.
 
-This pattern is the foundation for HA / DR (see [capabilities/disaster-recovery.md](disaster-recovery.md)) and multicloud extension (see [capabilities/multicloud.md](multicloud.md)).
+This pattern is the foundation for HA / DR (see [capabilities/disaster_recovery.md](disaster_recovery.md)) and multicloud extension (see [capabilities/multicloud.md](multicloud.md)).
 
 ### 5. Custom domains, SSL, CDN (canonical)
 
@@ -90,19 +90,19 @@ IAP, VPC-SC, Workload Identity — the identity-layer view of edge controls. Can
 
 ### 9. Hybrid connectivity
 
-- **VMware Engine** — `modules/VMware_Engine/network_peering.tf` and `firewall.tf`. VPC peering between GCVE private cloud and your VPC. Full modernisation context in [outcomes/modernization.md](../outcomes/modernization.md).
+- **VMware Engine** — `modules/VMware_Engine/network_peering.tf` and `firewall.tf`. VPC peering between GCVE private cloud and your VPC. Full modernisation context in [outcomes/modernisation.md](../outcomes/modernisation.md).
 - **VPN / Interconnect-friendly** — VPC topology supports attachment.
 
 ### 10. Network-related troubleshooting
 
-`AGENTS.md` `/troubleshoot` documents PSA collisions, the `inline_psa` state migration after enabling VPC-SC (canonical in [practices/gitops-iac.md](../practices/gitops-iac.md)), and `CLUSTER_ALREADY_HAS_OPERATION` retry logic.
+`AGENTS.md` `/troubleshoot` documents PSA collisions, the `inline_psa` state migration after enabling VPC-SC (canonical in [practices/gitops_iac.md](../practices/gitops_iac.md)), and `CLUSTER_ALREADY_HAS_OPERATION` retry logic.
 
 ## Cross-references
 
 - [practices/devsecops.md](../practices/devsecops.md) — IAP, VPC-SC, Binary Authorization, NetworkPolicy (identity / edge / segmentation controls)
-- [capabilities/multitenancy-saas.md](multitenancy-saas.md) — inline CIDR derivation and per-tenant perimeter strategy
-- [capabilities/disaster-recovery.md](disaster-recovery.md) — multi-cluster HA / DR
+- [capabilities/multitenancy_saas.md](multitenancy_saas.md) — inline CIDR derivation and per-tenant perimeter strategy
+- [capabilities/disaster_recovery.md](disaster_recovery.md) — multi-cluster HA / DR
 - [capabilities/multicloud.md](multicloud.md) — multi-cluster mesh as multicloud foundation
 - [capabilities/observability.md](observability.md) — service mesh telemetry, VPC-SC dry-run observation
-- [outcomes/modernization.md](../outcomes/modernization.md) — VMware Engine hybrid landing zone
+- [outcomes/modernisation.md](../outcomes/modernisation.md) — VMware Engine hybrid landing zone
 - [practices/finops.md](../practices/finops.md) — CDN cost offload

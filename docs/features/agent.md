@@ -2,8 +2,18 @@
 title: Agent Features
 slug: /features/agents
 ---
+<img src="https://storage.googleapis.com/rad-public-2b65/features/agent_features.png" alt="Agent Features Infographic" />
 
-<YouTubeEmbed videoId="CLPC90yiUtA" poster="https://storage.googleapis.com/rad-public-2b65/features/agent_features.png" />
+<br/>
+
+<AudioPlayer src="https://storage.googleapis.com/rad-public-2b65/features/agent_features.m4a" />
+
+<br/>
+
+<video controls width="100%">
+  <source src="https://storage.googleapis.com/rad-public-2b65/features/agent_features.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 <br/>
 

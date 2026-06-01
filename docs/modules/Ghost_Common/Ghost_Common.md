@@ -1,9 +1,9 @@
 ---
-title: "Ghost Common Shared Configuration Module"
+title: "Ghost_Common Shared Configuration Module"
 sidebar_label: "Ghost Common"
 ---
 
-# Ghost Common Shared Configuration Module
+# Ghost_Common Shared Configuration Module
 
 The `Ghost_Common` module defines the Ghost publishing platform configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates no GCP resources and produces a `config` output consumed by platform-specific wrapper modules (`Ghost_CloudRun` and `Ghost_GKE`).
 
@@ -113,7 +113,7 @@ The absolute path to the module directory, used by wrapper modules to locate the
 |----------|------|---------|-------------|
 | `enable_cloudsql_volume` | `bool` | `true` | Mount Cloud SQL Auth Proxy sidecar socket |
 | `gcs_volumes` | `list(object)` | `[]` | GCS Fuse volume mounts (name, bucket_name, mount_path, readonly, mount_options) |
-| `region` | `string` | `"us-central1"` | Region for the storage bucket |
+| `deployment_region` | `string` | `"us-central1"` | Region for the storage bucket |
 
 ---
 

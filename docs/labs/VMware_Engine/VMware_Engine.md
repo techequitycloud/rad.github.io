@@ -69,26 +69,26 @@ VMware tools, processes, and skills work without modification.
 │  Google Cloud                                                        │
 │                                                                      │
 │  ┌───────────────────────────────────────────────────────────────┐   │
-│  │  VMware Engine Network (VMware-managed fabric)                │   │
+│  │  VMware Engine Network (VMware-managed fabric)                 │   │
 │  │  ┌─────────────────────────────────────────────────────────┐  │   │
-│  │  │  GCVE Private Cloud                                     │  │   │
-│  │  │  • vCenter Server (VCSA)                                │  │   │
-│  │  │  • NSX-T Manager                                        │  │   │
-│  │  │  • vSAN storage (all-NVMe)                              │  │   │
-│  │  │  • HCX (migration appliance)                            │  │   │
-│  │  │  • Management CIDR: 172.20.1.0/24                       │  │   │
-│  │  │  • Node type: standard-72 (1–N nodes)                   │  │   │
+│  │  │  GCVE Private Cloud                                      │  │   │
+│  │  │  • vCenter Server (VCSA)                                 │  │   │
+│  │  │  • NSX-T Manager                                         │  │   │
+│  │  │  • vSAN storage (all-NVMe)                               │  │   │
+│  │  │  • HCX (migration appliance)                             │  │   │
+│  │  │  • Management CIDR: 172.20.1.0/24                        │  │   │
+│  │  │  • Node type: standard-72 (1–N nodes)                    │  │   │
 │  │  └─────────────────────────────────────────────────────────┘  │   │
 │  └──────────┬────────────────────────────────────────────────────┘   │
 │             │ VPC Peering (VMware Engine Network ↔ Peer VPC)         │
 │  ┌──────────▼────────────────────────────────────────────────────┐   │
-│  │  Peer VPC (Google-managed)                                    │   │
+│  │  Peer VPC (Google-managed)                                     │   │
 │  │  ┌─────────────────────────────────────────────────────────┐  │   │
-│  │  │  Jump Host (Windows Server 2022)                        │  │   │
-│  │  │  • e2-medium (default)                                  │  │   │
-│  │  │  • RDP access for vCenter/NSX-T console                 │  │   │
+│  │  │  Jump Host (Windows Server 2022)                         │  │   │
+│  │  │  • e2-medium (default)                                   │  │   │
+│  │  │  • RDP access for vCenter/NSX-T console                  │  │   │
 │  │  └─────────────────────────────────────────────────────────┘  │   │
-│  │  Firewall Rules: SSH, RDP, HTTP, ICMP, internal traffic       │   │
+│  │  Firewall Rules: SSH, RDP, HTTP, ICMP, internal traffic       │  │   │
 │  └───────────────────────────────────────────────────────────────┘   │
 │                                                                      │
 │  Network Policy                                                      │
@@ -999,8 +999,8 @@ curl -s -X DELETE \
 | `jump_host_machine_type` | string | `e2-medium` | Jump host Compute Engine machine type |
 | `reset_vcenter_credentials` | bool | `true` | Auto-reset vCenter solution user password |
 | `create_network` | bool | `true` | Create peer VPC network |
-| `enable_internet_access` | bool | `true` | Enable internet access from GCVE network |
-| `enable_external_ip` | bool | `true` | Enable external IP access for NSX-T edge |
+| `enable_internet_access` | bool | `false` | Enable internet access from GCVE network |
+| `enable_external_ip` | bool | `false` | Enable external IP access for NSX-T edge |
 | `create_firewall_rules` | bool | `true` | Create firewall rules (RDP, SSH, HTTP, ICMP) |
 
 ### Terraform Outputs

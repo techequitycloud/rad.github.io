@@ -7,6 +7,17 @@ slug: /guides/finance
 
 <YouTubeEmbed videoId="vVRLTTaOBto" poster="https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.png" />
 
+# Finance Guide
+
+<img src="https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.png" alt="Finance Guide" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.m4a" title="Finance Quick Start Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
 ## 1. Introduction
 
 Welcome to the Finance Guide. This documentation is intended for users with the **Finance** role. This role provides specialized access to the **Billing** section of the application, as well as revenue reports and management capabilities for the platform's credit economy and subscription products.

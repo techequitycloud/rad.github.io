@@ -1,18 +1,11 @@
 ---
-title: "Flowise GKE Module — Configuration Guide"
+title: "Flowise_GKE Module — Configuration Guide"
 sidebar_label: "Flowise GKE"
 ---
 
-# Flowise GKE Module — Configuration Guide
+# Flowise_GKE Module — Configuration Guide
 
-<YouTubeEmbed videoId="O0ZdeBnpuKA" poster="https://storage.googleapis.com/rad-public-2b65/modules/Flowise_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Flowise_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
-Flowise is an open-source visual AI workflow builder that lets non-developers construct LangChain and LlamaIndex pipelines through a drag-and-drop interface — now backed by Workday for enterprise deployments. It chains models, retrieval tools, prompt templates, and decision logic without boilerplate code, making it the primary entry point for visual AI development at a time when 76% of developers are using or planning to use AI tools. It is ideal for rapidly prototyping chatbots, RAG systems, and multi-agent pipelines. This module deploys Flowise on **GKE Autopilot** with a managed Cloud SQL PostgreSQL database, GCS-backed file storage, and optional NFS for shared volumes.
+Flowise is an open-source visual AI workflow builder that lets non-developers construct LangChain and LlamaIndex pipelines through a drag-and-drop interface. This module deploys Flowise on **GKE Autopilot** with a managed Cloud SQL PostgreSQL database, GCS-backed file storage, and optional NFS for shared volumes.
 
 `Flowise_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS, secrets, CI/CD) and a `Flowise_Common` sub-module to supply Flowise-specific application configuration, secret generation, and storage bucket definitions.
 
@@ -64,10 +57,10 @@ The following behaviours are applied automatically and cannot be overridden via 
 | Variable | Default | Description |
 |---|---|---|
 | `module_description` | `"Flowise Visual AI Workflow Builder on GKE Autopilot"` | Platform UI description. Do not modify unless customising. |
-| `module_documentation` | `"https://docs.flowiseai.com"` | External documentation URL. |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/Flowise_GKE"` | External documentation URL. |
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed first. |
 | `module_services` | `["GKE Autopilot", "Cloud SQL (PostgreSQL 15)", "Cloud Storage", "Secret Manager", "Artifact Registry", "Cloud Build"]` | GCP services consumed. |
-| `credit_cost` | `100` | Platform credits consumed on deployment. |
+| `credit_cost` | `150` | Platform credits consumed on deployment. |
 | `require_credit_purchases` | `false` | Enforces credit balance check before deploy. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
 | `public_access` | `true` | Controls platform catalogue visibility. |
@@ -453,6 +446,35 @@ Redis is not required for Flowise core functionality. Enable only if your Flowis
 project_id           = "my-project-123"
 tenant_deployment_id = "demo"
 ```
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `flowise_username` | `"admin"` | **Critical** | Default admin username is publicly known. Always change before exposing the service externally — combined with a weak or default password it grants immediate full access to all AI flows. |
+| `FLOWISE_PASSWORD` (via Secret Manager) | Auto-generated 32-char random secret | **Critical** | The module auto-generates the password. If you override it via `environment_variables` with a weak value, all flows and credentials stored in the DB are accessible. |
+| `FLOWISE_SECRETKEY_OVERWRITE` | Not set (Flowise internal default) | **Critical** | If set initially and later changed or removed, all Flowise credential secrets (LLM API keys, vector-store tokens) in the DB become permanently unreadable. Treat as immutable after first deploy. |
+| `application_database_name` | `"flowisedb"` | **High** | Changing after the database has been provisioned orphans the existing database. Immutable after first apply. |
+| `application_database_user` | `"flowiseuser"` | **High** | The database user is created by the db-init job and cannot be renamed without manual Cloud SQL intervention. Immutable after first apply. |
+| `container_resources.memory_limit` | `"1Gi"` | **High** | Under 512Mi the Node.js/LangChain process is OOM-killed on startup. GKE Autopilot rounds up resource requests to the nearest profile; allocating too little causes the pod to be evicted. Minimum `"1Gi"`; production with large flow graphs needs `"2Gi"`. |
+| `container_resources.cpu_limit` | `"1000m"` | **Medium** | Under 500m Flowise flow execution is very slow and readiness probes may time out on GKE. |
+| `container_resources.mem_request` | `null` (defaults to limit) | **Medium** | On GKE Autopilot, requests determine node provisioning. Setting `mem_request` far below `memory_limit` can cause scheduler gaps or burstable throttling. |
+| `STORAGE_TYPE` / `GCLOUD_PROJECT` | `"gcs"` / project injected | **High** | Overriding `STORAGE_TYPE` away from `"gcs"` causes Flowise to write to the pod's ephemeral disk, which is lost on every pod restart. GKE makes this far more frequent than Cloud Run. |
+| `GOOGLE_CLOUD_STORAGE_BUCKET_NAME` | Auto-set from module output | **High** | Do not override. An incorrect bucket name causes all file uploads to fail silently. |
+| `enable_cloudsql_volume` | `true` | **Critical** | If `false` with a Postgres database, the Cloud SQL Auth Proxy sidecar is not injected and the database connection will be refused. The validation guard rejects this at plan time. |
+| `min_instance_count` | `1` | **Medium** | Setting to `0` on GKE with HPA risks scale-to-zero pod eviction. Flowise has a non-trivial startup time (~30 s); scale-to-zero introduces unacceptable first-request latency. |
+| `max_instance_count` | `1` | **Medium** | Flowise stores in-memory flow execution state. Multiple replicas without a shared Redis session store cause flow executions to fail on load-balanced requests. Keep at `1` unless Redis is enabled. |
+| `enable_redis` | `false` | **Medium** | Required for multi-replica deployments. Enabling without providing `redis_host` raises a validation error at plan time. |
+| `redis_host` | `null` | **High** | Must be set when `enable_redis = true`. If left empty the validation guard will block the apply. If you set `enable_nfs = true`, the NFS server IP is used as default — only acceptable for local Redis colocated on the NFS host. |
+| `enable_iap` | `false` | **High** | Leaves Flowise accessible via the load-balancer IP without authentication. Set `enable_iap = true` and supply `iap_oauth_client_id` and `iap_oauth_client_secret`, or configure network policies to restrict access. |
+| `iap_oauth_client_id` / `iap_oauth_client_secret` | `""` | **High** | If `enable_iap = true` but these are empty, IAP is silently disabled by the validation guard, leaving the service exposed. Both must be non-empty when IAP is enabled. |
+| `database_type` | `"POSTGRES_15"` | **Critical** | Changing to `"NONE"` after a deploy drops the Cloud SQL instance. Combined with `enable_cloudsql_volume = true` the proxy sidecar will fail to start. |
+| `quota_memory_requests` / `quota_memory_limits` | `"4Gi"` / `"8Gi"` | **High** | GKE-specific: values must use binary unit suffixes (`Gi`, `Mi`). A bare integer (e.g., `"4"`) is treated as bytes by Kubernetes and blocks all pod scheduling. |
+| `stateful_pvc_enabled` | `false` | **Medium** | If set to `true` without specifying `workload_type`, the module auto-selects `StatefulSet`. Ensure your replica count and storage class support StatefulSet semantics. |
+| `pdb_min_available` | `"1"` | **Medium** | Setting to `"0"` disables the Pod Disruption Budget, allowing node upgrades to evict all Flowise pods simultaneously, causing a full outage during cluster maintenance. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Removing or disabling means no automated Cloud SQL backups and potential unrecoverable data loss on destructive operations. |
 
 ### Production Deployment
 

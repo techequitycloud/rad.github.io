@@ -7,6 +7,17 @@ slug: /workflows/finance
 
 <YouTubeEmbed videoId="8afdUHzCNwg" poster="https://storage.googleapis.com/rad-public-2b65/workflows/finance_workflow.png" />
 
+# Finance Workflow
+
+<img src="https://storage.googleapis.com/rad-public-2b65/workflows/finance_workflow.png" alt="Finance Workflow" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflows/finance_workflow.m4a" title="Finance Workflow Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/workflows/finance_workflow.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
 ## 1. Introduction
 The Finance role provides deep visibility into the platform's economics — revenue by partner and user, credit spending, project infrastructure costs, payment provider activity, and automated reconciliation.
 

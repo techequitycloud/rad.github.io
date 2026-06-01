@@ -1,653 +1,356 @@
 ---
-title: "VMware Engine Module Documentation"
+title: "VMware_Engine Module — Configuration Guide"
 sidebar_label: "VMware Engine"
 ---
 
-# VMware Engine Module
+# VMware_Engine Module — Configuration Guide
 
-<YouTubeEmbed videoId="jTtmQW5AlL0" poster="https://storage.googleapis.com/rad-public-2b65/modules/VMWare_Engine.png" />
+`VMware_Engine` is a **standalone infrastructure module** that provisions Google Cloud VMware
+Engine (GCVE) resources in an existing GCP project. It deploys a GCVE private cloud, a global
+VMware Engine Network (VEN), a VPC network for peering and jump host access, VPC network
+peering between the VEN and the peer VPC, a network policy for internet egress and external IP
+allocation, default VPC firewall rules, and a Windows Server 2022 jump host VM for accessing
+vCenter, NSX-T Manager, and HCX Manager via RDP.
 
-<br/>
+This module is designed to support **VM migration workflows** and **GCVE lab environments**. It
+is deployed directly to an existing GCP project (not through the standard App_CloudRun or
+App_GKE foundation modules) and has no dependency on `Services_GCP`.
 
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/VMWare_Engine.pdf" target="_blank">View Presentation (PDF)</a>
-
-## Overview
-
-The VMware Engine module provisions a complete **Google Cloud VMware Engine (GCVE)** private
-cloud environment. GCVE is Google Cloud's fully managed service that runs the entire VMware
-Software-Defined Data Centre (SDDC) stack — vSphere, vSAN, and NSX-T — on dedicated
-bare-metal hardware within Google Cloud. Unlike virtualisation-based alternatives, GCVE gives
-you the identical VMware tooling and operational model you already use on-premises, with no
-hypervisor layer changes and no application refactoring required.
-
-This module is designed as a hands-on environment for cloud architects, VMware administrators,
-and migration specialists who want to experience GCVE provisioning and day-two operations without
-the overhead of manual setup. All infrastructure — the VMware Engine Network, private cloud,
-VPC peering, network policies, firewall rules, and Windows jump host — is provisioned by
-Terraform. Users connect via RDP to the pre-configured jump host and explore vCenter and NSX-T
-immediately after deployment completes.
-
-By deploying this module, you gain direct experience with:
-
-- **GCVE private cloud provisioning** — the `google_vmwareengine_private_cloud` resource that
-  creates the full SDDC stack (vCenter, NSX-T, vSAN, HCX) on dedicated bare-metal nodes
-- **VMware Engine Network** — the managed fabric that connects the GCVE private cloud to Google
-  Cloud VPC networks via VMware Engine-native peering
-- **VPC Network Peering** — the `google_vmwareengine_network_peering` resource that bridges the
-  VMware Engine Network and a standard GCP VPC, enabling jump host and workload connectivity
-- **NSX-T networking** — creating DHCP servers, workload segments, and tier-1 gateway
-  configuration inside the private cloud
-- **Network policies** — enabling internet egress and external IP allocation for VMware
-  workloads via the GCVE edge services CIDR
-- **Jump host access** — connecting to vCenter and NSX-T Manager consoles via a Windows Server
-  2022 VM over RDP
-- **Credential management** — the vCenter solution user credential reset workflow used when
-  connecting third-party tools to the private cloud
-
-The module provisions in approximately **30–90 minutes** for a `TIME_LIMITED` single-node
-private cloud. `STANDARD` private clouds (3+ nodes) take **2–4 hours** for the initial
-bare-metal provisioning cycle.
+> **Provisioning time:** A GCVE private cloud takes **30–90 minutes** to provision.
+> `google_vmwareengine_private_cloud` has a 180-minute timeout. Do not interrupt a running
+> apply.
 
 ---
 
-## What Gets Deployed
+## §1 · Module Overview
 
-**Google Cloud infrastructure:**
+### Always-created resources
 
-| Resource | Name Pattern | Purpose |
+Every deployment provisions the following resources regardless of feature flags:
+
+| Resource | Name Pattern | Description |
 |---|---|---|
-| VMware Engine Network | `{id}-vmware-engine-network` | Managed network fabric connecting private cloud to Google Cloud |
-| GCVE Private Cloud | `pvt-cloud` | Full SDDC: vCenter, NSX-T, vSAN, HCX on bare-metal nodes |
-| VMware Engine Network Peering | `{id}-vpc-peering` | Bridges the VMware Engine Network and the peer VPC |
-| Network Policy | `{id}-network-policy` | Controls internet access and external IP allocation for workload VMs |
-| Peer VPC Network | `{id}-peer-network` | GCP VPC for the jump host and peering anchor |
-| Firewall rules | `{id}-allow-*` | RDP, SSH, HTTP, ICMP, and internal traffic on the peer VPC |
-| Windows Server 2022 VM | `{id}-jump-host` | RDP workstation for accessing vCenter and NSX-T consoles |
-| vCenter credentials reset | (null\_resource) | Automated reset of the vCenter solution user password post-provisioning |
+| `google_vmwareengine_network` | `altostrat-<id>-ven` | Global VMware Engine Network (STANDARD type) — the logical network backing the private cloud and VEN-to-VPC routing. |
+| `google_vmwareengine_private_cloud` | `altostrat-<id>-private-cloud` | GCVE private cloud — provisions vSphere, vSAN, NSX-T, and HCX management appliances. |
+| `google_vmwareengine_network_policy` | `altostrat-<id>-edge-policy` | Network policy controlling internet egress and external IP allocation via the `edge_services_cidr`. |
+| `google_vmwareengine_network_peering` | `altostrat-<id>-vpc-ven` | VPC peering between the VMware Engine Network and the peer VPC. Custom routes are imported and exported in both directions. |
+| `google_compute_firewall` (allow-http) | `altostrat-<id>-allow-http` | Always-created firewall rule allowing TCP 80/443 to instances tagged `jump-host`. |
 
-**GCVE private cloud components (provisioned inside the private cloud):**
+### Optionally-created resources
 
-| Component | Access | Purpose |
+| Resource | Controlled by | Description |
 |---|---|---|
-| vCenter Server (VCSA) | `https://<vcenter-fqdn>` | vSphere management console — cluster, VM, and storage operations |
-| NSX-T Manager | `https://<nsx-fqdn>` | Network virtualisation — segments, DHCP, routing, security |
-| HCX Manager | `https://<hcx-fqdn>` | VMware Hybrid Cloud Extension appliance for workload mobility |
-| vSAN Datastore | (within vCenter) | All-NVMe distributed storage for VM disks |
-| Management cluster | (within vCenter) | Bare-metal node pool running the VMware management plane |
+| `google_compute_network` | `create_vpc = true` | Auto-mode VPC network for jump host and VEN peering. |
+| `google_compute_firewall` × 4 | `create_default_firewall_rules = true` | Default-VPC-style rules: allow-internal, allow-ssh, allow-rdp, allow-icmp. |
+| `google_compute_instance` | `create_jump_host = true` | Windows Server 2022 jump host VM (`jump-host` tag) for RDP access to GCVE management consoles. |
+| `null_resource` (vCenter credentials reset) | `reset_vcenter_credentials = true` | Runs `gcloud vmware private-clouds vcenter credentials reset` after provisioning. Outputs credentials to Cloud Build logs. |
+| `google_project_service` × 6 | `enable_services = true` | Enables required GCP APIs: `vmwareengine`, `vmmigration`, `compute`, `cloudresourcemanager`, `iam`, `iamcredentials`. |
+
+### Resource naming
+
+All resources use the `altostrat-<id>` prefix where `<id>` is either `var.deployment_id`
+(when set) or a randomly generated 2-byte hex string.
+
+---
+
+## §2 · Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                          VMware Engine Module                                │
-│                                                                              │
-│   Google Cloud Project                                                       │
-│   ──────────────────────────────────────────────────────────────────────     │
-│                                                                              │
-│   ┌──────────────────────────────────────────────────────────────────────┐   │
-│   │  VMware Engine Network (global, Google-managed)                      │   │
-│   │                                                                      │   │
-│   │  ┌──────────────────────────────────────────────────────────────┐   │   │
-│   │  │  GCVE Private Cloud (bare-metal SDDC)                        │   │   │
-│   │  │  • vCenter Server                    (management_cidr /24)  │   │   │
-│   │  │  • NSX-T Manager                     172.20.1.0/24          │   │   │
-│   │  │  • HCX appliance                                            │   │   │
-│   │  │  • vSAN datastore (all-NVMe)                                │   │   │
-│   │  │  • Node type: standard-72  (1 node TIME_LIMITED,            │   │   │
-│   │  │                             3+ nodes STANDARD)              │   │   │
-│   │  └──────────────────────────────────────────────────────────┘   │   │
-│   │                          │                                       │   │
-│   │            VPC Peering (VMware ↔ GCP)                           │   │
-│   └──────────────────────────│───────────────────────────────────────┘   │
-│                              │                                            │
-│   ┌──────────────────────────▼───────────────────────────────────────┐   │
-│   │  Peer VPC Network                                                 │   │
-│   │                                                                   │   │
-│   │  ┌──────────────────────────────┐                                │   │
-│   │  │  Windows Server 2022 VM      │                                │   │
-│   │  │  • e2-medium                 │                                │   │
-│   │  │  • RDP port 3389             │                                │   │
-│   │  │  • External IP (ephemeral)   │                                │   │
-│   │  └──────────────────────────────┘                                │   │
-│   │  Firewall: allow-rdp · allow-ssh · allow-icmp · allow-internal   │   │
-│   │           · allow-http                                           │   │
-│   └──────────────────────────────────────────────────────────────────┘   │
-│                                                                            │
-│   Network Policy                                                           │
-│   • Internet access (outbound via edge CIDR)                               │
-│   • External IP allocation (NSX-T NAT rules)                               │
-│   • Edge services CIDR: 10.11.3.0/26                                       │
-│                                                                            │
-└────────────────────────────────────────────────────────────────────────────┘
-
-Deployment sequence:
-  1. Enable GCP APIs (vmwareengine, compute, cloudresourcemanager, iam, logging, monitoring)
-  2. Create VMware Engine Network (global, type STANDARD)
-  3. Create GCVE private cloud — this triggers Google to provision bare-metal nodes,
-     install vSphere/vSAN/NSX-T/HCX, and configure the management cluster
-     (TIME_LIMITED: 30–90 min; STANDARD: 2–4 hours)
-  4. Create peer VPC network
-  5. Create 5 firewall rules (RDP, SSH, ICMP, internal, HTTP)
-  6. Create VMware Engine Network Peering (bridges VMware fabric ↔ peer VPC)
-  7. Create Network Policy (internet access + external IP via edge services CIDR)
-  8. Deploy Windows Server 2022 jump host on the peer VPC
-  9. Reset vCenter solution user credentials (null_resource: gcloud vmware ... reset)
+┌─────────────────────────────────────────────────────────────────┐
+│                        GCP Project                               │
+│                                                                   │
+│  VMware Engine Network (global, STANDARD)                        │
+│  └── GCVE Private Cloud (zone-local)                             │
+│       ├── vSphere                                                 │
+│       ├── vSAN                                                    │
+│       ├── NSX-T Manager                                           │
+│       └── HCX Manager                                             │
+│                                                                   │
+│  Network Policy (regional)                                        │
+│  ├── internet_access: enabled/disabled                            │
+│  └── external_ip: enabled/disabled                               │
+│                                                                   │
+│  VEN ←──────── VPC Peering ────────→ Peer VPC (auto-mode)       │
+│                   (custom routes exported+imported)               │
+│                                                                   │
+│  Peer VPC                                                         │
+│  ├── Firewall: allow-internal                                     │
+│  ├── Firewall: allow-ssh (0.0.0.0/0 → TCP 22)                  │
+│  ├── Firewall: allow-rdp (0.0.0.0/0 → TCP 3389)               │
+│  ├── Firewall: allow-icmp (0.0.0.0/0)                          │
+│  ├── Firewall: allow-http (→ tag:jump-host TCP 80,443)          │
+│  └── Jump Host VM (Windows Server 2022, tag:jump-host)           │
+│       └── Used to RDP into vCenter, NSX-T, HCX consoles          │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## VMware Engine Network
+## §3 · Module Metadata (Group 0)
 
-The **VMware Engine Network** is a Google-managed network fabric that underpins the GCVE
-private cloud. It is distinct from a standard GCP VPC — it is not configured by customers
-and does not appear in the VPC console. The VMware Engine Network carries all management and
-workload traffic within the private cloud and exposes it to Google Cloud via peering.
-
-The module creates a `STANDARD` type VMware Engine Network scoped globally. A single VMware
-Engine Network can host multiple private clouds and multiple peering connections.
-
-```bash
-# Inspect the VMware Engine Network
-gcloud vmware networks describe "${VMWARE_ENGINE_NETWORK_ID}" \
-  --project="${PROJECT_ID}" \
-  --location=global \
-  --format="yaml(name, state, type)"
-
-# REST API
-curl -s \
-  "https://vmwareengine.googleapis.com/v1/projects/${PROJECT_ID}/locations/global/vmwareEngineNetworks" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '.vmwareEngineNetworks[] | {name, state, type}'
-```
-
----
-
-## Private Cloud
-
-The **GCVE private cloud** is the core resource created by this module. It provisions a
-complete VMware SDDC on dedicated bare-metal hardware managed by Google. The private cloud
-contains:
-
-- **vCenter Server Appliance (VCSA)** — the vSphere management endpoint, accessible at an
-  FQDN of the form `vcsa-xxx.yyy.REGION.gve.goog`
-- **NSX-T Manager** — the network virtualisation plane for segments, DHCP, routing, and
-  distributed firewall, accessible at `nsx-xxx.yyy.REGION.gve.goog`
-- **HCX appliance** — VMware Hybrid Cloud Extension for live VM mobility and network extension
-  between on-premises VMware and GCVE
-- **vSAN datastore** — all-NVMe distributed storage pool; capacity scales with node count
-- **Management cluster** — the bare-metal compute pool hosting the SDDC management components
-
-### Private Cloud Types
-
-| Type | Nodes | Provisioning Time | Lifespan | Use Case |
-|---|---|---|---|---|
-| `TIME_LIMITED` | 1 | 30–90 minutes | 72 hours | Evaluation, lab, proof-of-concept |
-| `STANDARD` | 3+ | 2–4 hours | Indefinite | Production workloads |
-
-> **TIME_LIMITED note:** The 72-hour clock starts when the private cloud reaches `ACTIVE`
-> state. After expiry, the private cloud is automatically deleted with all VMs it contains.
-> It cannot be extended; use `STANDARD` for longer evaluations.
-
-### Management CIDR
-
-The `management_cidr` variable (default `172.20.1.0/24`) reserves an IP range for GCVE
-management infrastructure — vCenter, NSX-T, HCX, and ESXi management interfaces. This CIDR:
-
-- **Cannot be changed after private cloud creation.** Choose carefully before deploying.
-- Must not overlap with the peer VPC subnets or the edge services CIDR.
-- `/24` is the minimum; larger ranges support larger management clusters.
-
-```bash
-# Check private cloud state and management details
-gcloud vmware private-clouds describe "${PRIVATE_CLOUD_NAME}" \
-  --location="${ZONE}" \
-  --project="${PROJECT_ID}" \
-  --format="yaml(state, vcenter, nsx, hcx, managementCluster)"
-
-# REST API
-curl -s \
-  "https://vmwareengine.googleapis.com/v1/projects/${PROJECT_ID}/locations/${ZONE}/privateClouds/${PRIVATE_CLOUD_NAME}" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '{name, state, vcenter: .vcenter.fqdn, nsx: .nsx.fqdn, hcx: .hcx.fqdn}'
-```
-
-### Node Types
-
-| Node Type | vCPUs | RAM | vSAN Capacity | Best For |
-|---|---|---|---|---|
-| `standard-72` | 72 | 768 GB | ~36 TB NVMe | General workloads |
-| `highmem-72` | 72 | 1,536 GB | ~36 TB NVMe | Memory-intensive (databases, SAP) |
-| `standard-32` | 32 | 384 GB | ~18 TB NVMe | Smaller deployments |
-
-> **API naming:** The UI displays node types as `ve1-standard-72`, but the Terraform resource
-> and `gcloud` CLI use the shorter form `standard-72`. Always use the shorter form in the
-> `node_type_id` variable.
-
----
-
-## VPC Peering
-
-VPC peering bridges the VMware Engine Network and a standard GCP VPC, enabling:
-
-- The jump host VM to reach vCenter, NSX-T, and VMware workloads via their internal IPs
-- VMware workloads to consume GCP services (Cloud SQL, BigQuery, Vertex AI) without traversing
-  the internet
-- Route export — workload segment CIDRs created in NSX-T are automatically advertised to the
-  peered VPC
-
-The module creates a `google_vmwareengine_network_peering` resource that links the VMware Engine
-Network to the `peer-network` VPC. This is distinct from a standard `google_compute_network_peering`
-— it uses the VMware Engine API and handles the necessary route table entries automatically.
-
-```bash
-# Inspect the VMware Engine peering
-gcloud vmware network-peerings list \
-  --project="${PROJECT_ID}" \
-  --location=global
-
-# View routes exported from GCVE to the peer VPC
-gcloud compute routes list \
-  --project="${PROJECT_ID}" \
-  --format="table(name, network, destRange, nextHopGateway, priority)"
-
-# REST API
-curl -s \
-  "https://vmwareengine.googleapis.com/v1/projects/${PROJECT_ID}/locations/global/networkPeerings" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '.networkPeerings[] | {name, state, vmwareEngineNetwork, peerNetwork}'
-```
-
----
-
-## Jump Host
-
-The **Windows Server 2022 jump host** is the interactive workstation for all GCVE console
-access. Because vCenter and NSX-T are only accessible at internal FQDNs within the VMware
-Engine Network, the jump host — which sits in the peered GCP VPC — acts as the network bridge
-between the operator's machine and the VMware management plane.
-
-### Why a Dedicated Jump Host
-
-vCenter and NSX-T management endpoints are not reachable from the public internet. They are
-only reachable from within the VMware Engine Network or from a peered VPC. The jump host sits
-in the peer VPC and can reach both consoles at their internal FQDNs over the VPC peering.
-
-### Jump Host Configuration
-
-| Parameter | Value | Rationale |
-|---|---|---|
-| Machine type | `e2-medium` (2 vCPU, 4 GB RAM) | Sufficient for browser-based console access; configurable via `jump_host_machine_type` |
-| Boot disk | 50 GB, `pd-balanced` | Windows Server 2022 minimum recommendation |
-| Image | `windows-server-2022-dc-core-v*` | Latest Windows Server 2022 Datacenter from the public Google image family |
-| External IP | Yes (ephemeral) | Required for RDP access from the operator's machine |
-
-### Connecting via RDP
-
-Before connecting, generate a Windows password:
-
-```bash
-JUMP_HOST=$(gcloud compute instances list \
-  --filter="name~jump-host" \
-  --project="${PROJECT_ID}" \
-  --format="value(name)")
-
-gcloud compute reset-windows-password "${JUMP_HOST}" \
-  --zone="${ZONE}" \
-  --project="${PROJECT_ID}"
-```
-
-Then connect using your RDP client:
-
-```
-Host:     <jump-host-external-ip>:3389
-Username: <username from gcloud output>
-Password: <password from gcloud output>
-```
-
-> **macOS:** Microsoft Remote Desktop has been discontinued. Use **Windows App** instead:
-> `brew install --cask windows-app`, then open it with `open -a "Windows App.app"` and add a
-> new PC using the IP, username, and password above.
-
-> **Linux:** `xfreerdp /u:<username> /p:<password> /v:<ip>:3389 /dynamic-resolution`
-
-```bash
-# Get the jump host external IP
-gcloud compute instances list \
-  --filter="name~jump-host" \
-  --project="${PROJECT_ID}" \
-  --format="table(name, zone, status, networkInterfaces[0].accessConfigs[0].natIP)"
-```
-
----
-
-## Network Policy
-
-The **VMware Engine Network Policy** controls how workload VMs inside the private cloud
-communicate with the internet and with Google Cloud external IPs. It operates at the VMware
-Engine Network level, not the individual VM level, and applies to all workloads in the GCVE
-private cloud.
-
-Two services are governed by the network policy:
-
-| Service | Module Default | Description |
-|---|---|---|
-| Internet access | `true` | Allows outbound internet traffic from VMware workload VMs via NSX-T edge services |
-| External IP | `true` | Allows NSX-T to allocate public IPs for NAT rules, enabling inbound internet access to workload VMs |
-
-Both services route through the **edge services CIDR** (default `10.11.3.0/26`), which must
-be a `/26` block that does not overlap with the management CIDR or the peer VPC subnets.
-
-```bash
-# View network policies
-gcloud vmware network-policies list \
-  --location="${REGION}" \
-  --project="${PROJECT_ID}" \
-  --format="table(name, internetAccess.enabled, externalIp.enabled, edgeServicesCidr)"
-
-# REST API
-curl -s \
-  "https://vmwareengine.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/networkPolicies" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '.networkPolicies[] | {name, internet: .internetAccess.enabled, externalIp: .externalIp.enabled, edgeCidr: .edgeServicesCidr}'
-```
-
-> **Propagation time:** Enabling internet access or external IP for the first time can take
-> up to 15 minutes. The Network Policies page in the Cloud Console shows the current service
-> state.
-
----
-
-## Firewall Rules
-
-Five firewall rules are created on the peer VPC to support jump host access and internal
-communication:
-
-| Rule | Source | Ports | Purpose |
+| Variable | Type | Default | Description |
 |---|---|---|---|
-| `allow-internal` | `10.128.0.0/9` | All | Unrestricted traffic between VMs on the same VPC |
-| `allow-ssh` | `0.0.0.0/0` | TCP 22 | SSH access to Linux VMs on the peer VPC |
-| `allow-rdp` | `0.0.0.0/0` | TCP 3389 | RDP access to the Windows jump host |
-| `allow-icmp` | `0.0.0.0/0` | ICMP | Ping for connectivity testing |
-| `allow-http` | `0.0.0.0/0` | TCP 80, 443 | HTTP/HTTPS access to jump-host-tagged instances |
-
-```bash
-gcloud compute firewall-rules list \
-  --project="${PROJECT_ID}" \
-  --format="table(name, direction, sourceRanges, allowed)"
-```
+| `module_description` | `string` | `"This module deploys Google Cloud VMware Engine infrastructure..."` | Human-readable description displayed in the platform UI. `{{UIMeta group=0 order=100}}` |
+| `module_dependency` | `list(string)` | `["GCP Project"]` | Modules that must be deployed first. `{{UIMeta group=0 order=101}}` |
+| `module_services` | `list(string)` | `["GCP", "VMware Engine", "Cloud Networking", "Cloud IAM"]` | Service tags shown in the platform catalogue. `{{UIMeta group=0 order=102}}` |
+| `credit_cost` | `number` | `500` | Platform credits consumed on deployment. Reflects the high cost of GCVE private cloud nodes. `{{UIMeta group=0 order=103}}` |
+| `require_credit_purchases` | `bool` | `false` | Do not require purchased credits (GCVE is typically a lab/evaluation scenario). `{{UIMeta group=0 order=104}}` |
+| `enable_purge` | `bool` | `true` | Permit full deletion of all resources on destroy. `{{UIMeta group=0 order=105}}` |
+| `public_access` | `bool` | `true` | Module is visible to all platform users. `{{UIMeta group=0 order=106}}` |
+| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Terraform service account. Must hold `roles/owner` in the destination project. `{{UIMeta group=0 order=107}}` |
+| `deployment_id` | `string` | `null` | Short alphanumeric suffix for resource names. Auto-generated (2-byte hex) when null or empty. `{{UIMeta group=0 order=108}}` |
 
 ---
 
-## vCenter Credentials Reset
+## §4 · Project & Region (Group 1)
 
-After the private cloud is provisioned, the vCenter **solution user** credentials
-(`solution-user-01@gve.local` by default) must be reset before they can be used by
-third-party tools. When `reset_vcenter_credentials = true`, the module runs this reset
-automatically via a `null_resource` local-exec provisioner.
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `existing_project_id` | `string` | `""` | GCP project ID where GCVE resources are deployed. The project must already exist — this module does not create it. `{{UIMeta group=1 order=101}}` |
+| `region` | `string` | `"us-west2"` | GCP region for the private cloud and network policy. Must match a region where GCVE is available and the selected `node_type_id` is in stock. `{{UIMeta group=1 order=103}}` |
+| `zone` | `string` | `"us-west2-a"` | GCP zone for the private cloud management cluster and jump host VM. Must be within `region`. `{{UIMeta group=1 order=104}}` |
+| `enable_services` | `bool` | `true` | Automatically enable required GCP APIs (`vmwareengine`, `vmmigration`, `compute`, `cloudresourcemanager`, `iam`, `iamcredentials`). Set `false` when these APIs are already enabled. `{{UIMeta group=1 order=105}}` |
 
-The credentials are retrieved and stored in the Terraform outputs.
+---
 
-### Manual Reset
+## §5 · Private Cloud (Group 4)
 
-To reset manually or retrieve current credentials:
+The private cloud is the central GCVE resource. It provisions vSphere, vSAN, NSX-T Manager,
+and HCX Manager appliances in the specified zone. Provisioning takes **30–90 minutes**.
+
+> **`management_cidr` is immutable.** It cannot be changed after the private cloud is created
+> without destroying and recreating the entire private cloud. Plan this CIDR carefully before
+> first deployment.
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `management_cidr` | `string` | `"172.20.0.0/24"` | CIDR block for the GCVE management cluster (vCenter, NSX-T, HCX). A `/24` is the minimum required. Must not overlap with `edge_services_cidr` or any peered VPC subnet. **Immutable after creation.** `{{UIMeta group=4 order=402}}` |
+| `private_cloud_type` | `string` | `"TIME_LIMITED"` | Private cloud deployment type. `"TIME_LIMITED"` provisions a single-node evaluation cloud (no SLA, limited duration). `"STANDARD"` provisions a production cloud with a minimum of 3 nodes. Options: `TIME_LIMITED`, `STANDARD`. `{{UIMeta group=4 order=403}}` |
+| `node_type_id` | `string` | `"standard-72"` | VMware Engine node type. The UI shows `"ve1-standard-72"` but the API requires `"standard-72"`. Other valid values: `"standard-128"`, `"ve2-standard-64"`, `"ve2-large-64"`. Availability is zone-dependent. `{{UIMeta group=4 order=404}}` |
+| `node_count` | `number` | `1` | Number of nodes in the management cluster. Must be `1` for `TIME_LIMITED`. `STANDARD` requires a minimum of `3`. `{{UIMeta group=4 order=405}}` |
+
+---
+
+## §6 · Network Peering (Group 5)
+
+VPC peering connects the VMware Engine Network to the peer VPC so that GCVE management
+appliances are reachable from the peer VPC (and vice versa). Custom routes are exported and
+imported in both directions so NSX-T segments are automatically propagated to the peered VPC
+routing table.
+
+> Peering activates fully only after the private cloud is provisioned. The `network_peering_state`
+> output shows `"ACTIVE"` once the private cloud is ready.
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `create_vpc` | `bool` | `true` | Create the peer VPC network. Set `false` to reuse an existing VPC — in this case you must also set `create_default_firewall_rules = false` and create the peering manually. `{{UIMeta group=5 order=503}}` |
+
+The peer VPC created when `create_vpc = true` uses `auto_create_subnetworks = true`
+(auto-mode), which creates subnets in all regions with the `10.128.0.0/9` range.
+
+---
+
+## §7 · Network Policy (Group 6)
+
+The network policy controls internet access and external IP allocation for GCVE workload VMs.
+Activation can take up to **15 minutes** after apply. GCVE enforces one network policy per
+VMware Engine Network — if a prior failed deployment left an orphaned policy, subsequent applies
+will fail with `"Resource for the given network already exists"`.
+
+> **Recovery from orphaned policy:**
+> ```bash
+> gcloud vmware network-policies list \
+>   --project=PROJECT_ID --location=REGION \
+>   --impersonate-service-account=SA_EMAIL
+> gcloud vmware network-policies delete POLICY_NAME \
+>   --project=PROJECT_ID --location=REGION \
+>   --impersonate-service-account=SA_EMAIL --quiet
+> ```
+> If no policy appears in the list but the error persists, the policy is stuck in GCP internal
+> state — contact GCP support to purge it.
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `edge_services_cidr` | `string` | `"10.11.2.0/26"` | CIDR for VMware Engine edge services (internet ingress/egress). Must not overlap with `management_cidr` or any peered VPC subnet. A `/26` provides 64 addresses, which is the minimum recommended. `{{UIMeta group=6 order=602}}` |
+| `enable_internet_access` | `bool` | `true` | Enable internet access from GCVE workload VMs via the edge services CIDR. `{{UIMeta group=6 order=603}}` |
+| `enable_external_ip` | `bool` | `true` | Enable external IP address allocation for GCVE workload VMs. `{{UIMeta group=6 order=604}}` |
+
+---
+
+## §8 · Firewall Rules (Group 7)
+
+When `create_default_firewall_rules = true`, four firewall rules are created on the peer VPC,
+mirroring the default rules GCP creates on the auto-mode `default` VPC. One additional rule
+(`allow-http`) is always created for the jump host.
+
+| Rule | Ports | Source | Purpose |
+|---|---|---|---|
+| `altostrat-<id>-allow-internal` | All protocols | `internal_traffic_cidr` | Allow all traffic between VPC instances. |
+| `altostrat-<id>-allow-ssh` | TCP 22 | `0.0.0.0/0` | SSH from any source. |
+| `altostrat-<id>-allow-rdp` | TCP 3389 | `0.0.0.0/0` | RDP from any source — required for jump host access. |
+| `altostrat-<id>-allow-icmp` | ICMP | `0.0.0.0/0` | Ping from any source. |
+| `altostrat-<id>-allow-http` | TCP 80, 443 | `0.0.0.0/0` | HTTP/HTTPS to `jump-host` tagged instances. Always created. |
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `create_default_firewall_rules` | `bool` | `true` | Create the four default VPC firewall rules. Set `false` if they already exist on the target VPC to avoid a duplicate-resource error. `{{UIMeta group=7 order=701}}` |
+| `internal_traffic_cidr` | `string` | `"10.128.0.0/9"` | Source CIDR for the allow-internal rule. Matches the default VPC auto-mode subnet range. Override if using a custom-mode VPC with a different CIDR. `{{UIMeta group=7 order=702}}` |
+
+---
+
+## §9 · Jump Host (Group 8)
+
+A Windows Server 2022 Compute Engine VM used to access vCenter, NSX-T Manager, and HCX Manager
+consoles via RDP. The jump host is deployed on the peer VPC and has routed access to GCVE
+management appliances once VPC peering is active.
+
+> **Administrator password:** The Windows administrator password must be set manually via
+> **"Set Windows Password"** in the GCP Console after the instance is created. The instance
+> uses the `cloud-platform` service account scope for full API access from Cloud Shell.
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `create_jump_host` | `bool` | `true` | Deploy the Windows Server 2022 jump host VM. Set `false` to skip when you have an existing bastion host or use Cloud Shell exclusively. `{{UIMeta group=8 order=801}}` |
+| `jump_host_machine_type` | `string` | `"e2-medium"` | Machine type for the jump host. `e2-medium` (1 vCPU, 4 GB) is sufficient for console access. Increase if using the jump host for HCX migration traffic. `{{UIMeta group=8 order=803}}` |
+| `jump_host_boot_disk_size_gb` | `number` | `50` | Boot disk size in GB. Minimum 50 GB recommended for Windows Server 2022. Uses `pd-balanced` disk type. `{{UIMeta group=8 order=804}}` |
+| `jump_host_subnetwork` | `string` | `""` | Subnetwork self-link or name for the jump host NIC. Leave empty to let GCP auto-select the auto-mode subnet for the zone's region. Required for custom-mode VPCs. `{{UIMeta group=8 order=805}}` |
+
+---
+
+## §10 · vCenter Credentials (Group 9)
+
+When `reset_vcenter_credentials = true`, a `null_resource` provisioner runs
+`gcloud vmware private-clouds vcenter credentials reset` after the private cloud is provisioned.
+The new credentials are printed to Cloud Build logs. These credentials are required for
+registering the Migrate to Virtual Machines (M2VM) connector against the vCenter source.
+
+The provisioner first checks the private cloud state; if it is not `ACTIVE`, it skips the
+reset and prints manual instructions.
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `reset_vcenter_credentials` | `bool` | `true` | Reset and retrieve vCenter solution user credentials after provisioning. Requires `gcloud` in the Terraform runner environment (Cloud Build). `{{UIMeta group=9 order=901}}` |
+| `vcenter_solution_user` | `string` | `"solution-user-01@gve.local"` | vCenter solution user account to reset. Used for Migrate to Virtual Machines connector integration. `{{UIMeta group=9 order=902}}` |
+
+---
+
+## §11 · Outputs
+
+| Output | Description |
+|---|---|
+| `deployment_id` | Module deployment ID (the `<id>` suffix in all resource names). |
+| `project_id` | GCP project ID where resources were deployed. |
+| `vmware_engine_network_id` | Full resource ID of the VMware Engine Network. |
+| `private_cloud_id` | Full resource ID of the GCVE private cloud. |
+| `vcenter_fqdn` | vCenter Server FQDN. Access the vSphere Client from the jump host browser using this URL. |
+| `nsx_fqdn` | NSX-T Manager FQDN. Access the NSX-T console from the jump host browser. |
+| `hcx_fqdn` | HCX Manager FQDN. |
+| `network_peering_state` | Current state of the VPC peering. Shows `"ACTIVE"` once the private cloud is fully provisioned. |
+| `network_policy_id` | Full resource ID of the VMware Engine Network Policy. |
+
+---
+
+## §12 · Required Providers
+
+Declared in `versions.tf`:
+
+| Provider | Source | Version |
+|---|---|---|
+| Terraform | — | `>= 1.3` |
+| `google` | `hashicorp/google` | `>= 5.0, < 6.0` |
+| `random` | `hashicorp/random` | `>= 3.0` |
+| `null` | `hashicorp/null` | `>= 3.0` |
+| `external` | `hashicorp/external` | `>= 2.0` |
+
+---
+
+## §13 · Notable Behaviour
+
+### CIDR planning
+
+Three CIDRs must be allocated without overlap before first deployment:
+
+| CIDR | Variable | Default | Purpose |
+|---|---|---|---|
+| Management CIDR | `management_cidr` | `172.20.0.0/24` | GCVE management cluster (vCenter, NSX-T, HCX). **Immutable.** |
+| Edge services CIDR | `edge_services_cidr` | `10.11.2.0/26` | Internet ingress/egress for GCVE workload VMs. |
+| Peer VPC subnets | Auto-mode | `10.128.0.0/9` | Jump host and general VPC connectivity. |
+
+### Destroy behaviour
+
+Destroy is handled by the managed resources themselves:
+- `google_vmwareengine_private_cloud` has a 180-minute `delete` timeout.
+- The network policy is deleted before the VEN via implicit `depends_on` ordering.
+- There are no destroy provisioners — concurrent gcloud + Terraform deletion would cause
+  race conditions.
+
+### Credential output
+
+vCenter credentials are printed to Cloud Build (or local) stdout during apply. They are not
+stored in Terraform state. If the reset fails (e.g. because the cloud is not yet `ACTIVE`),
+manual instructions are printed.
+
+---
+
+## §14 · Usage Example
+
+```hcl
+module "vmware_engine" {
+  source = "./modules/VMware_Engine"
+
+  existing_project_id = "my-gcp-project"
+  region              = "us-west2"
+  zone                = "us-west2-a"
+
+  # Private cloud
+  management_cidr    = "172.20.0.0/24"
+  private_cloud_type = "TIME_LIMITED"
+  node_type_id       = "standard-72"
+  node_count         = 1
+
+  # Network policy
+  edge_services_cidr = "10.11.2.0/26"
+  enable_internet_access = true
+  enable_external_ip     = true
+
+  # Jump host
+  create_jump_host           = true
+  jump_host_machine_type     = "e2-medium"
+  jump_host_boot_disk_size_gb = 50
+
+  # vCenter credentials
+  reset_vcenter_credentials = true
+  vcenter_solution_user     = "solution-user-01@gve.local"
+}
+
+output "vcenter_url" {
+  value = module.vmware_engine.vcenter_fqdn
+}
+```
+
+### After deployment
 
 ```bash
-# Reset credentials
+# Get console access URLs (use from the jump host browser)
+tofu output vcenter_fqdn
+tofu output nsx_fqdn
+tofu output hcx_fqdn
+
+# Verify peering is active
+tofu output network_peering_state  # → "ACTIVE" once private cloud is ready
+
+# If credentials were not reset automatically (cloud not yet ACTIVE), reset manually:
 gcloud vmware private-clouds vcenter credentials reset \
-  --private-cloud="${PRIVATE_CLOUD_NAME}" \
-  --username="solution-user-01@gve.local" \
-  --location="${ZONE}" \
-  --project="${PROJECT_ID}" \
+  --private-cloud=altostrat-<id>-private-cloud \
+  --username=solution-user-01@gve.local \
+  --location=us-west2-a \
+  --project=my-gcp-project \
   --no-async
 
-# Retrieve credentials
 gcloud vmware private-clouds vcenter credentials describe \
-  --private-cloud="${PRIVATE_CLOUD_NAME}" \
-  --username="solution-user-01@gve.local" \
-  --location="${ZONE}" \
-  --project="${PROJECT_ID}"
+  --private-cloud=altostrat-<id>-private-cloud \
+  --username=solution-user-01@gve.local \
+  --location=us-west2-a \
+  --project=my-gcp-project \
+  --format=json
 ```
-
-> **Why credentials expire:** vCenter solution user passwords have a built-in expiry policy.
-> If your deployment is long-running, re-run the reset command to refresh them before
-> connecting any integration that uses `solution-user-01@gve.local`.
-
----
-
-## Configuration Reference
-
-### Private Cloud
-
-| Variable | Default | Description |
-|---|---|---|
-| `private_cloud_type` | `TIME_LIMITED` | `TIME_LIMITED` (1-node, 72-hour eval) or `STANDARD` (production) |
-| `node_count` | `1` | 1 for `TIME_LIMITED`; minimum 3 for `STANDARD` |
-| `node_type_id` | `standard-72` | Node hardware type — use the API short form, not the UI display name |
-| `management_cidr` | `172.20.1.0/24` | CIDR for GCVE management infrastructure — **immutable after creation** |
-| `reset_vcenter_credentials` | `true` | Auto-reset vCenter solution user credentials after provisioning |
-| `vcenter_solution_user` | `solution-user-01@gve.local` | vCenter solution user account to reset |
-
-### Networking
-
-| Variable | Default | Description |
-|---|---|---|
-| `create_vpc` | `true` | Create the peer VPC; set `false` to use an existing VPC |
-| `edge_services_cidr` | `10.11.3.0/26` | CIDR for GCVE edge services (internet + external IP routing) |
-| `enable_internet_access` | `true` | Enable outbound internet from VMware workload VMs |
-| `enable_external_ip` | `true` | Enable external IP allocation for NSX-T NAT rules |
-| `internal_traffic_cidr` | `10.128.0.0/9` | Source CIDR for the allow-internal firewall rule |
-| `create_default_firewall_rules` | `true` | Create RDP, SSH, ICMP, internal, and HTTP firewall rules |
-
-### Jump Host
-
-| Variable | Default | Description |
-|---|---|---|
-| `create_jump_host` | `true` | Deploy the Windows Server 2022 jump host |
-| `jump_host_machine_type` | `e2-medium` | Machine type for the jump host |
-| `jump_host_boot_disk_size_gb` | `50` | Boot disk size in GB (minimum 50 for Windows Server 2022) |
-| `jump_host_subnetwork` | `""` | Subnetwork for custom-mode VPCs; leave blank for auto-selection |
-
-### Platform Metadata
-
-| Variable | Default | Description |
-|---|---|---|
-| `region` | — | GCP region (required) |
-| `zone` | — | GCP zone (required) |
-| `project_id` | — | GCP project ID (required) |
-| `deployment_id` | `null` | Optional suffix for resource names; auto-generated by the platform |
-| `resource_creator_identity` | `""` | Service account for Terraform impersonation |
-| `credit_cost` | `500` | Platform credit cost for deployment |
-
----
-
-## Default Behaviours
-
-Understanding the module's defaults avoids surprises when deploying or modifying the
-environment.
-
-**Internet access and external IP are enabled by default.** Both `enable_internet_access` and
-`enable_external_ip` default to `true`. This means workload VMs can reach the internet and
-NSX-T can assign public IPs out of the box. Set both to `false` if you want a fully isolated
-private cloud.
-
-**The peer VPC is created by default.** `create_vpc = true` creates a new VPC named
-`{id}-peer-network`. If you want to attach the private cloud peering to an existing VPC
-(such as the `default` network), set `create_vpc = false` and configure the peering manually.
-
-**vCenter credentials are reset automatically.** `reset_vcenter_credentials = true` runs a
-`gcloud vmware ... credentials reset` call after the private cloud is provisioned. This is
-required before connecting any tool that uses `solution-user-01@gve.local`. If you have a
-pipeline that rotates credentials separately, set this to `false`.
-
-**TIME_LIMITED private clouds expire after 72 hours.** The clock starts when the private cloud
-first reaches `ACTIVE` state. After expiry, Google automatically deletes the private cloud and
-all VMs inside it without warning. There is no extension option — migrate to `STANDARD` for
-longer evaluations.
-
-**The management CIDR is immutable.** `management_cidr` cannot be changed after the private
-cloud is created. If you need a different CIDR, destroy the private cloud and create a new one.
-This operation is irreversible and deletes all VMs in the private cloud.
-
-**Provisioning is slow by design.** Google must physically allocate and cable bare-metal
-servers before the SDDC software can be installed. Terraform `apply` blocks until the private
-cloud reaches `ACTIVE` state, which takes 30–90 minutes for `TIME_LIMITED` and 2–4 hours for
-`STANDARD`. This is normal — there is no way to accelerate it.
-
-**Private cloud deletion is irreversible.** Running `terraform destroy` (or clicking Undeploy
-in the RAD UI) permanently deletes the private cloud and all VMs it contains. Ensure all
-workloads are backed up or migrated before destroying.
-
-**GCP APIs are protected from accidental deletion.** The `google_project_service` resources
-have `lifecycle { prevent_destroy = true }`. Running `terraform destroy` does not disable
-`vmwareengine.googleapis.com` or the other enabled APIs. To disable APIs, remove the lifecycle
-block and re-run `tofu plan` before `tofu destroy`.
-
----
-
-## Prerequisites
-
-### Google Cloud
-
-- A GCP project with billing enabled and a quota allocation for VMware Engine nodes
-- The following APIs are enabled automatically on first deployment:
-
-```
-vmwareengine.googleapis.com
-compute.googleapis.com
-cloudresourcemanager.googleapis.com
-iam.googleapis.com
-logging.googleapis.com
-monitoring.googleapis.com
-```
-
-> **VMware Engine quota:** Single-node `TIME_LIMITED` private clouds require a quota of at
-> least 1 `standard-72` node in the target zone. STANDARD private clouds require 3+ nodes.
-> Request quota increases via the Cloud Console under **IAM & Admin → Quotas** if needed.
-
-```bash
-# Verify API enablement after deployment
-gcloud services list \
-  --filter="config.name~vmwareengine OR config.name~compute" \
-  --project="${PROJECT_ID}" \
-  --format="table(config.name, state)"
-```
-
-### Permissions
-
-The service account running the module (`resource_creator_identity`) requires:
-
-- `roles/owner` (or at minimum):
-  - `roles/vmwareengine.admin` — create and manage private clouds, networks, policies, peerings
-  - `roles/compute.admin` — create VPC, firewall rules, and the jump host VM
-  - `roles/iam.serviceAccountUser` — impersonate the provisioning service account
-
-### Local Tools
-
-No local tools are required for the RAD UI deployment path. For manual exploration:
-
-- `gcloud` CLI (v480.0.0 or later, authenticated)
-- `curl` and `jq` for REST API calls
-- An RDP client: Windows App (macOS), Remmina or FreeRDP (Linux), or the built-in client (Windows)
-
----
-
-## Deploying the Module
-
-### Via RAD UI
-
-1. Navigate to the RAD UI and select the `VMware Engine` module
-2. Fill in the required variables:
-   - `project_id` — your GCP project ID
-   - `region` — GCP region (e.g., `us-central1`)
-   - `zone` — GCP zone (e.g., `us-central1-a`)
-   - `private_cloud_type` — `TIME_LIMITED` for evaluation or `STANDARD` for production
-   - `node_count` — `1` for `TIME_LIMITED`, `3` for `STANDARD`
-   - Leave all other variables at their defaults
-3. Click **Deploy** and wait for provisioning to complete (30–90 min for `TIME_LIMITED`)
-
-### Verify Deployment
-
-```bash
-# Confirm private cloud is ACTIVE
-gcloud vmware private-clouds describe "${PRIVATE_CLOUD_NAME}" \
-  --location="${ZONE}" \
-  --project="${PROJECT_ID}" \
-  --format="value(state)"
-# Expected: ACTIVE
-
-# Confirm jump host is running
-gcloud compute instances list \
-  --filter="name~jump-host" \
-  --project="${PROJECT_ID}" \
-  --format="table(name, status, zone, networkInterfaces[0].accessConfigs[0].natIP)"
-
-# Confirm VPC peering is active
-gcloud vmware network-peerings list \
-  --project="${PROJECT_ID}" \
-  --location=global \
-  --format="table(name, state)"
-
-# Retrieve vCenter and NSX-T FQDNs
-gcloud vmware private-clouds describe "${PRIVATE_CLOUD_NAME}" \
-  --location="${ZONE}" \
-  --project="${PROJECT_ID}" \
-  --format="yaml(vcenter, nsx, hcx)"
-```
-
-### Cleaning Up
-
-Use the RAD UI **Undeploy** button to remove all Terraform-managed resources. The deletion
-order matters — the private cloud must be deleted before the VMware Engine Network peering
-can be removed.
-
-If cleaning up manually:
-
-```bash
-# 1. Delete any additional clusters created during lab exercises
-gcloud vmware private-clouds clusters delete "workload-cluster" \
-  --private-cloud="${PRIVATE_CLOUD_NAME}" \
-  --location="${ZONE}" \
-  --project="${PROJECT_ID}" \
-  --quiet
-
-# 2. Delete the private cloud (irreversible — deletes all VMs)
-gcloud vmware private-clouds delete "${PRIVATE_CLOUD_NAME}" \
-  --location="${ZONE}" \
-  --project="${PROJECT_ID}" \
-  --quiet
-
-# 3. Delete the jump host
-gcloud compute instances delete "${JUMP_HOST}" \
-  --zone="${ZONE}" \
-  --project="${PROJECT_ID}" \
-  --quiet
-
-# 4. Delete the peer VPC network
-gcloud compute networks delete "peer-network" \
-  --project="${PROJECT_ID}" \
-  --quiet
-```
-
-> **Warning:** Private cloud deletion is irreversible. All VMs and data inside the private
-> cloud are permanently destroyed. Ensure workloads are migrated or backed up before deleting.
-
----
-
-## Further Learning
-
-### Google Cloud VMware Engine
-- [GCVE overview](https://cloud.google.com/vmware-engine/docs/overview)
-- [Private cloud provisioning](https://cloud.google.com/vmware-engine/docs/private-cloud/provision-private-cloud)
-- [VMware Engine node types](https://cloud.google.com/vmware-engine/docs/concepts-node-types)
-- [NSX-T network configuration in GCVE](https://cloud.google.com/vmware-engine/docs/networking/nsx-t-configuration)
-- [VPC peering for VMware Engine](https://cloud.google.com/vmware-engine/docs/networking/vpc-network-peering)
-- [Network policies (internet and external IP access)](https://cloud.google.com/vmware-engine/docs/networking/network-policies)
-- [GCVE security best practices](https://cloud.google.com/vmware-engine/docs/security/secure-your-private-cloud)
-- [VMware Engine REST API reference](https://cloud.google.com/vmware-engine/docs/reference/rest)
-
-### VMware Documentation
-- [VMware NSX-T Data Center documentation](https://docs.vmware.com/en/VMware-NSX-T-Data-Center/)
-- [vSphere documentation](https://docs.vmware.com/en/VMware-vSphere/)
-- [HCX user guide](https://docs.vmware.com/en/VMware-HCX/)
-
-### Migration and Modernisation
-- [Google Cloud Adoption Framework](https://cloud.google.com/adoption-framework)
-- [GCVE use cases: data center exit, DR, and VDI](https://cloud.google.com/vmware-engine/docs/concepts-use-cases)

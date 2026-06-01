@@ -7,826 +7,584 @@ sidebar_label: "OpenClaw GKE"
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/OpenClaw_GKE)**
 
-OpenClaw is an open-source AI agent gateway that takes actions — not just generates responses.
-It manages stateful, multi-tenant AI agents with conversation history, tool integration, and
-per-tenant isolation. The `OpenClaw_GKE` module deploys OpenClaw on GKE Autopilot with GCS
-Fuse CSI driver for persistent agent workspace, Workload Identity for pod-level IAM, and HPA
-for horizontal scaling.
+## Overview
+
+**Estimated time:** 1–2 hours
+
+OpenClaw is an AI agent gateway platform for managing stateful multi-tenant AI agents. It provides agent orchestration, conversation management, tool integration, and per-tenant isolation. This lab deploys OpenClaw on GKE Autopilot with GCS Fuse for persistent agent state, Workload Identity for pod-level IAM, Secret Manager for credential management, and optional Telegram or Slack channel integration.
+
+### What the Module Automates
+
+- GKE Autopilot cluster discovery and namespace provisioning
+- GCS workspace bucket and GCS Fuse CSI driver configuration
+- Workload Identity binding for pod-level IAM
+- Secret Manager secrets for Anthropic API key and integration tokens
+- Artifact Registry repository and Cloud Build image pipeline
+- Kubernetes Deployment, Service, HPA, and PodDisruptionBudget
+- Skills repository sync configuration on pod startup
+- Cloud Logging and Cloud Monitoring integration
+
+### What You Do Manually
+
+- Note the deployment outputs (external IP, namespace, etc.) from the RAD UI deployment panel
+- Obtain kubectl access and verify OpenClaw pod health
+- Log in to the OpenClaw interface and explore the dashboard
+- Create and configure an AI agent with a system prompt
+- Start test conversations with the agent
+- Configure multi-tenant isolation and explore per-tenant API keys
+- Verify GCS Fuse state persistence across pod restarts
+- Query Cloud Logging for agent and API request logs
+- Review Cloud Monitoring service metrics and pod health
 
 ---
 
-## Table of Contents
+## CLI and REST API Overview
 
-1. [Overview](#1-overview)
-2. [Architecture](#2-architecture)
-3. [Prerequisites](#3-prerequisites)
-4. [Lab Setup](#4-lab-setup)
-5. [Exercise 1 — Access Application](#exercise-1--access-application)
-6. [Exercise 2 — Core Features](#exercise-2--core-features)
-7. [Exercise 3 — Kubernetes Workloads](#exercise-3--kubernetes-workloads)
-8. [Exercise 4 — Security and Workload Identity](#exercise-4--security-and-workload-identity)
-9. [Exercise 5 — Cloud Logging and Monitoring](#exercise-5--cloud-logging-and-monitoring)
-10. [Cleanup](#cleanup)
-11. [Reference](#reference)
+This lab uses the following CLIs:
 
----
-
-## 1. Overview
-
-### What Is OpenClaw?
-
-OpenClaw is an **open-source local AI agent gateway** built for multi-tenant deployments. It
-orchestrates AI agents powered by Anthropic's Claude, maintains per-session conversation history,
-supports tool/skill integration, and provides per-tenant isolation. The `OpenClaw_GKE` module
-deploys it on GKE Autopilot with the GCS Fuse CSI driver mounting the agent workspace at `/data`
-for durable state across pod restarts.
-
-### Key Capabilities Demonstrated
-
-| Capability | What It Demonstrates |
+| Tool | Purpose |
 |---|---|
-| **AI Agent Orchestration** | Stateful Claude-powered agents with tool use and conversation history |
-| **Multi-Tenant Isolation** | Per-tenant agent scoping, API keys, and conversation isolation |
-| **GCS Fuse CSI** | Agent workspace durability across pod restarts (GKE CSI driver) |
-| **GKE Autopilot** | Managed Kubernetes with Workload Identity and auto-provisioned nodes |
-| **Workload Identity** | Pod-level IAM binding — no service account key files |
-| **HPA** | Horizontal pod autoscaling for multi-tenant deployments |
-| **Cloud Logging** | Agent invocation, LLM API call, and workspace activity logs |
-| **Cloud Monitoring** | Pod metrics, uptime check, and alert policy dashboards |
+| `gcloud` | GCP resource management, log queries, secret access |
+| `kubectl` | Kubernetes pod inspection, log streaming, exec |
+| `curl` | API calls to the OpenClaw gateway |
 
----
-
-## 2. Architecture
-
-```
-Browser / API Client / Messaging Bot
-        │
-        ▼
-LoadBalancer Service (external IP or ClusterIP)
-  │
-  ▼
-OpenClaw Deployment (GKE Autopilot)
-   ├── OpenClaw container (port 8080, Node.js)
-   │       ├── Agent orchestration (Claude API calls)
-   │       ├── Conversation management (per-tenant, per-session)
-   │       ├── REST API (/api/agents, /api/conversations, /api/tenants)
-   │       └── GCS Fuse CSI mount at /data
-   └── HPA (min=1, max=3)
-```
-
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│  Google Cloud                                                            │
-│  ┌────────────────────────────────────────────────────────────────────┐  │
-│  │  GKE Autopilot Cluster                                             │  │
-│  │                                                                    │  │
-│  │  ┌──────────────────────────────────────────────────────────────┐  │  │
-│  │  │  openclaw namespace (appopenclaw<tenant><id>)                 │  │ │
-│  │  │                                                              │  │  │
-│  │  │  OpenClaw Deployment                                         │  │  │
-│  │  │    containers: [openclaw]                                    │  │  │
-│  │  │    GCS Fuse CSI volume at /data                              │  │  │
-│  │  │    HPA: min=1, max=3 replicas                               │  │   │
-│  │  │                                                              │  │  │
-│  │  │  PodDisruptionBudget (minAvailable=1)                        │  │  │
-│  │  └──────────────────────────────────────────────────────────────┘  │  │
-│  │                                                                    │  │
-│  │  ┌──────────────────────┐  ┌───────────────────────────────────┐  │   │
-│  │  │  Workload Identity   │  │  LoadBalancer / ClusterIP Service │  │   │
-│  │  │  (SA → GCP SA IAM)   │  │  (port 8080)                      │  │   │
-│  │  └──────────────────────┘  └───────────────────────────────────┘  │   │
-│  └────────────────────────────────────────────────────────────────────┘  │
-│                                                                          │
-│  ┌──────────────────────────┐  ┌───────────────────────────────────────┐ │
-│  │  GCS Bucket              │  │  Secret Manager                       │ │
-│  │  <prefix>-storage        │  │  - anthropic-api-key                  │ │
-│  │  mounted via GCS Fuse    │  │  - (telegram/slack if enabled)        │ │
-│  │  at /data uid=1000       │  │                                       │ │
-│  └──────────────────────────┘  └───────────────────────────────────────┘ │
-│                                                                          │
-│  Module variable wiring:                                                 │
-│    OpenClaw_GKE                                                          │
-│      min_instance_count = 1  → always at least one pod                   │
-│      max_instance_count = 3  → HPA scale-out for multi-tenant load       │
-│      enable_nfs = false      → GCS Fuse replaces NFS                     │
-└──────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 3. Prerequisites
-
-### Required Tools
-
-| Tool | Minimum Version | Install |
-|---|---|---|
-| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
-| `kubectl` | 1.29+ | `gcloud components install kubectl` |
-| `curl` / `jq` | Any | System package manager |
-
-### GCP Permissions
-
-```
-roles/owner                    # or the following fine-grained set:
-roles/container.admin
-roles/secretmanager.admin
-roles/storage.admin
-roles/iam.serviceAccountAdmin
-roles/monitoring.viewer
-roles/logging.viewer
-```
-
-### Environment Variables
+Configure:
 
 ```bash
-export PROJECT="your-gcp-project-id"
-export REGION="us-central1"
+# Authenticate gcloud
+gcloud auth login
+gcloud config set project YOUR_PROJECT_ID
 
-gcloud config set project "${PROJECT}"
-gcloud config set compute/region "${REGION}"
-gcloud auth application-default login
+# Get GKE credentials
+gcloud container clusters get-credentials CLUSTER_NAME \
+  --region REGION \
+  --project YOUR_PROJECT_ID
 ```
 
 ---
 
-## 4. Lab Setup
+## Prerequisites
 
-### 4.1 Deploy via RAD UI
+Before deploying this module:
 
-Deploy the `OpenClaw_GKE` module via the RAD UI. **Prerequisite:** `Services_GCP` must be
-deployed first. In the variable form, set:
+1. **Services_GCP deployed** — this module depends on `Services_GCP` for the VPC and GKE Autopilot cluster.
+2. **GCP project** with billing enabled.
+3. **gcloud CLI** authenticated with Owner or Editor role on the project.
+4. **kubectl** installed and configured.
+5. **Access to the RAD UI** with permission to deploy modules in the target GCP project.
+6. **Anthropic API key** — required for LLM-powered agent responses. Obtain from [console.anthropic.com](https://console.anthropic.com).
 
-| Variable | Value | Notes |
-|---|---|---|
-| `project_id` | `your-gcp-project-id` | Required |
-| `region` | `us-central1` | GCP region |
-| `anthropic_api_key` | `sk-ant-...` | Required for agent responses |
-| `min_instance_count` | `1` | Minimum pod replicas |
-| `max_instance_count` | `3` | HPA maximum replicas |
-| `cpu_limit` | `2000m` | Default |
-| `memory_limit` | `2Gi` | Default |
+---
 
-Click **Deploy** and wait for provisioning (approximately 12–19 minutes).
+## Phase 1 — Deploy [AUTOMATED]
 
-> **What this provisions:** GKE Autopilot namespace, Kubernetes Deployment with HPA and
-> PodDisruptionBudget, GCS workspace bucket with GCS Fuse CSI mount, Workload Identity binding,
-> Secret Manager secret for the Anthropic API key, Artifact Registry repository, and custom
-> container image built via Cloud Build.
+### Variables
 
-### 4.2 Configure Shell Environment
+In the RAD UI, open the OpenClaw_GKE module and fill in the deployment form:
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `project_id` | Yes | — | GCP project ID (e.g., `my-project-123`) |
+| `deployment_id` | No | auto-generated | Short alphanumeric suffix appended to all resource names |
+| `region` | No | `us-central1` | GCP region for resource deployment |
+| `application_name` | No | `openclaw` | Internal identifier used for Kubernetes resources and secrets |
+| `application_version` | No | `latest` | Container image tag |
+| `deploy_application` | No | `true` | Set to `false` to provision infrastructure only |
+| `min_instance_count` | No | `1` | Minimum HPA pod replicas |
+| `max_instance_count` | No | `3` | Maximum HPA pod replicas |
+| `container_resources` | No | `{cpu_limit="2000m", memory_limit="2Gi"}` | CPU and memory limits per pod |
+| `gke_cluster_name` | No | `""` | Target GKE cluster name; auto-discovered when empty |
+| `anthropic_api_key` | No | `""` | Anthropic API key (stored in Secret Manager) |
+| `skills_repo_url` | No | `""` | GitHub URL of a shared skills repository |
+| `skills_repo_ref` | No | `main` | Git ref (branch or tag) for the skills repository |
+| `enable_telegram` | No | `false` | Enable Telegram bot integration |
+| `enable_slack` | No | `false` | Enable Slack bot integration |
+| `timeout_seconds` | No | `3600` | Request timeout (1 hour recommended for agent sessions) |
+| `backup_schedule` | No | `0 2 * * *` | Cron expression for automated workspace backups |
+| `backup_retention_days` | No | `7` | Days to retain backup files in GCS |
+
+### Deploy
+
+Click **Deploy** in the RAD UI.
+
+### Expected Deployment Duration
+
+| Phase | Duration |
+|---|---|
+| GKE namespace and RBAC setup | ~2 min |
+| Secret Manager secrets | ~1 min |
+| GCS workspace bucket provisioning | ~1 min |
+| Cloud Build image pipeline | ~5–10 min |
+| Kubernetes Deployment rollout | ~3–5 min |
+| **Total** | **~12–19 min** |
+
+### Outputs
+
+After deployment completes, the following outputs are available in the RAD UI deployment panel:
+
+| Output | Description |
+|---|---|
+| `service_name` | Kubernetes Service name |
+| `service_url` | External URL for the OpenClaw gateway |
+| `service_external_ip` | LoadBalancer external IP address |
+| `service_cluster_ip` | ClusterIP of the Kubernetes service |
+| `namespace` | Kubernetes namespace |
+| `storage_buckets` | GCS bucket names |
+| `container_image` | Container image URI deployed |
+| `deployment_id` | Unique deployment suffix |
+| `network_name` | VPC network name |
+| `kubernetes_ready` | Whether all Kubernetes resources were deployed |
+
+Set shell variables for use in later steps:
 
 ```bash
-export PROJECT="your-gcp-project-id"
-export REGION="us-central1"
+export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
+export REGION="us-central1"             # the region you deployed into
 export TOKEN=$(gcloud auth print-access-token)
 
 # Discover the GKE cluster
 export CLUSTER=$(gcloud container clusters list \
-  --project="${PROJECT}" \
+  --project=${PROJECT} \
   --format="value(name)" \
   --limit=1)
 
-echo "GKE cluster: ${CLUSTER}"
-```
+# Configure kubectl
+gcloud container clusters get-credentials ${CLUSTER} \
+  --region=${REGION} \
+  --project=${PROJECT}
 
-### 4.3 Configure kubectl
-
-```bash
-gcloud container clusters get-credentials "${CLUSTER}" \
-  --region="${REGION}" \
-  --project="${PROJECT}"
-
-kubectl cluster-info
-kubectl get nodes
-
-# Discover the OpenClaw namespace
+# Discover the namespace (pattern: appopenclaw<tenant><deploymentid>)
 export NAMESPACE=$(kubectl get namespaces --no-headers \
   -o custom-columns=":metadata.name" | grep "^appopenclaw" | head -1)
 
-echo "OpenClaw namespace: ${NAMESPACE}"
-
-# Discover the external IP (if service_type=LoadBalancer)
-export EXTERNAL_IP=$(kubectl get svc -n "${NAMESPACE}" \
-  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null)
-
-# Or port-forward if service_type=ClusterIP
-if [ -z "${EXTERNAL_IP}" ]; then
-  echo "No external IP — use port-forward:"
-  echo "kubectl port-forward svc/openclaw 8080:8080 -n ${NAMESPACE}"
-  export SERVICE_URL="http://localhost:8080"
-else
-  export SERVICE_URL="http://${EXTERNAL_IP}:8080"
-  echo "OpenClaw URL: ${SERVICE_URL}"
-fi
+# Discover the external IP
+export EXTERNAL_IP=$(kubectl get svc -n ${NAMESPACE} \
+  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
 ```
 
 ---
 
-## Exercise 1 — Access Application
+## Phase 2 — Verify GKE Deployment [MANUAL]
 
-### Objective
+### Steps
 
-Verify OpenClaw pod health, obtain the service endpoint, retrieve admin credentials, and
-explore the main dashboard sections.
+1. Configure kubectl to target the GKE cluster:
 
-### Step 1.1 — Verify Pod Health
-
-**kubectl:**
 ```bash
-kubectl get pods -n "${NAMESPACE}"
-
-kubectl describe deployment openclaw -n "${NAMESPACE}"
+gcloud container clusters get-credentials CLUSTER_NAME \
+  --region REGION \
+  --project YOUR_PROJECT_ID
 ```
 
-**gcloud:**
+2. Confirm OpenClaw pods are running:
+
 ```bash
-gcloud container clusters describe "${CLUSTER}" \
-  --region="${REGION}" \
-  --project="${PROJECT}" \
-  --format="table(name, status, currentNodeCount)"
+kubectl get pods -n ${NAMESPACE}
 ```
 
-**REST API:**
+**Expected result:** All pods show `Running` status and `1/1` in the READY column. The startup probe allows up to ~3 minutes for Node.js and the 35 bundled plugin packages to stage before the gateway starts.
+
+3. Check the Deployment details:
+
 ```bash
-curl -s \
-  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '{name, status, currentNodeCount}'
+kubectl describe deployment openclaw -n ${NAMESPACE}
 ```
 
-**Expected result:** OpenClaw pod shows `Running` status with `1/1` ready containers.
-Allow 3–5 minutes after deployment for the startup probe to pass.
+**Expected result:** Deployment shows correct replica count, no error events, and Workload Identity annotations.
 
-### Step 1.2 — Get Service Endpoint
+4. View the Service and external IP:
 
 ```bash
-kubectl get service -n "${NAMESPACE}"
-
-# If using port-forward
-kubectl port-forward svc/openclaw 8080:8080 -n "${NAMESPACE}" &
-
-# Health check
-curl -s "${SERVICE_URL}/health"
-# Expected: {"status": "ok"}
+kubectl get service -n ${NAMESPACE}
 ```
 
-### Step 1.3 — Verify GCS Fuse Mount
+**Expected result:** The Service shows either a `ClusterIP` (default) or `LoadBalancer` external IP depending on the `service_type` configuration.
+
+5. Check pod logs to confirm the gateway started:
 
 ```bash
-kubectl exec -n "${NAMESPACE}" deploy/openclaw -- ls /data
-
-kubectl exec -n "${NAMESPACE}" deploy/openclaw -- ls -la /data/workspace/
+kubectl logs -n ${NAMESPACE} -l app=openclaw --tail=50
 ```
 
-**Expected result:** The `/data` directory is mounted and writable, backed by the GCS workspace
-bucket. The `workspace/` subdirectory contains agent state files.
+**Expected result:** Log lines indicating the OpenClaw gateway is listening on port 8080, the GCS Fuse workspace mount is active at `/data`, and the skills repository (if configured) was cloned.
 
-### Step 1.4 — Retrieve Admin Credentials
+6. Verify the GCS Fuse mount is active inside the pod:
 
 ```bash
-ADMIN_SECRET=$(gcloud secrets list \
-  --project="${PROJECT}" \
-  --filter="name~openclaw" \
-  --format="value(name)" \
-  --limit=1)
+kubectl exec -n ${NAMESPACE} deploy/openclaw -- ls /data
+```
 
+**Expected result:** The `/data` directory contents are listed, backed by the GCS workspace bucket.
+
+### gcloud equivalent
+
+```bash
+gcloud container clusters list --project YOUR_PROJECT_ID
+```
+
+---
+
+## Phase 3 — Explore the OpenClaw Interface [MANUAL]
+
+### Steps
+
+1. Determine the OpenClaw service endpoint. If `service_type` is `LoadBalancer`, use `${EXTERNAL_IP}`.
+
+   If `service_type` is `ClusterIP` (internal only), use kubectl port-forward:
+
+```bash
+kubectl port-forward svc/openclaw 8080:8080 -n ${NAMESPACE}
+# Access at: http://localhost:8080
+```
+
+2. Open the OpenClaw UI in your browser at the service URL or `http://localhost:8080`.
+
+3. Log in with admin credentials. Retrieve the admin token from Secret Manager:
+
+```bash
 gcloud secrets versions access latest \
-  --secret="${ADMIN_SECRET}" \
-  --project="${PROJECT}"
+  --secret="openclaw-admin-token" \
+  --project=YOUR_PROJECT_ID
 ```
 
-### Step 1.5 — Explore the Dashboard
+**Expected result:** The OpenClaw dashboard loads, showing the main navigation sections: **Agents**, **Conversations**, **Tenants**, **Tools**.
 
-Navigate to `${SERVICE_URL}` in your browser. Log in with the admin credentials.
+4. Explore each section briefly:
+   - **Agents** — lists configured AI agents.
+   - **Conversations** — lists active and historical conversations.
+   - **Tenants** — tenant management for multi-tenant isolation.
+   - **Tools** — available tools and capabilities the agents can use.
 
-Explore: **Agents**, **Conversations**, **Tenants**, **Tools**.
+### gcloud equivalent
 
-**Expected result:** The dashboard loads with empty sections on a fresh deployment.
+```bash
+# Verify the Anthropic API key is stored in Secret Manager
+gcloud secrets list \
+  --filter="name:openclaw" \
+  --project=YOUR_PROJECT_ID
+```
 
 ---
 
-## Exercise 2 — Core Features
+## Phase 4 — Create an AI Agent [MANUAL]
 
-### Objective
+### Steps
 
-Create an AI agent, start conversations, verify multi-tenant isolation, and test state
-persistence across pod restarts.
+1. Navigate to **Agents** in the OpenClaw dashboard.
 
-### Step 2.1 — Create an AI Agent
+2. Click **New Agent** (or the **+** button).
 
-1. Navigate to **Agents** > **New Agent**.
-2. Configure:
+3. Configure the agent:
    - **Name:** `gcp-assistant`
-   - **System prompt:** `You are a helpful Google Cloud Platform expert.`
-   - **LLM backend:** `Claude`
-3. Click **Save**.
+   - **Description:** `A helpful assistant for Google Cloud Platform questions`
+   - **System prompt:**
+     ```
+     You are a helpful Google Cloud Platform expert. You help users understand GCP services,
+     best practices, and how to architect cloud-native applications. Always provide concise,
+     accurate, and practical answers.
+     ```
+   - **LLM backend:** Select `Claude` (or configure the Anthropic API key if prompted).
+   - **Tools/capabilities:** Leave at defaults for this lab.
 
-**REST API:**
-```bash
-export ADMIN_TOKEN="<your-admin-token>"
-
-curl -s -X POST "${SERVICE_URL}/api/agents" \
-  -H "Authorization: Bearer ${ADMIN_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "gcp-assistant",
-    "system_prompt": "You are a helpful GCP expert.",
-    "llm_backend": "anthropic"
-  }' | jq '{id, name}'
-```
+4. Click **Save** or **Create Agent**.
 
 **Expected result:** The agent appears in the Agents list with a green status indicator.
 
-### Step 2.2 — Start a Conversation
+5. Note the **Agent ID** shown in the agent details — you will use it in the next phase.
 
-1. Navigate to **Conversations** > **New Conversation**.
-2. Select `gcp-assistant` and send: `What is GKE Autopilot?`
+### REST API equivalent
 
-**REST API:**
 ```bash
-AGENT_ID=$(curl -s "${SERVICE_URL}/api/agents" \
-  -H "Authorization: Bearer ${ADMIN_TOKEN}" \
-  | jq -r '.[] | select(.name=="gcp-assistant") | .id')
-
-curl -s -X POST "${SERVICE_URL}/api/conversations" \
-  -H "Authorization: Bearer ${ADMIN_TOKEN}" \
+# Create an agent via the OpenClaw REST API
+curl -X POST http://localhost:8080/api/agents \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
-  -d "{\"agent_id\": \"${AGENT_ID}\", \"message\": \"What is GKE Autopilot?\"}" \
-  | jq '.response'
-```
-
-**Expected result:** A contextual explanation from Claude about GKE Autopilot.
-
-### Step 2.3 — Configure Multi-Tenant Isolation
-
-1. Create two tenants: `dev-team` and `production-team`.
-2. Assign `gcp-assistant` to `dev-team` only.
-3. Verify the agent is not visible in `production-team`.
-
-```bash
-# Create tenants
-curl -s -X POST "${SERVICE_URL}/api/tenants" \
-  -H "Authorization: Bearer ${ADMIN_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "dev-team"}' | jq '{id, name}'
-
-curl -s -X POST "${SERVICE_URL}/api/tenants" \
-  -H "Authorization: Bearer ${ADMIN_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "production-team"}' | jq '{id, name}'
-```
-
-**Expected result:** Tenant isolation is enforced — agents scoped to `dev-team` are not
-visible in `production-team`.
-
-### Step 2.4 — Test State Persistence Across Pod Restarts
-
-Restart the pod and verify conversation history is preserved:
-
-```bash
-# Trigger pod restart
-kubectl rollout restart deployment/openclaw -n "${NAMESPACE}"
-
-# Watch rollout
-kubectl rollout status deployment/openclaw -n "${NAMESPACE}"
-
-# Verify workspace is still present after restart
-kubectl exec -n "${NAMESPACE}" deploy/openclaw -- ls /data/workspace/
-```
-
-**Expected result:** After the pod restarts, all conversations and agent configurations are
-still accessible because state is stored in GCS (not the pod's ephemeral filesystem).
-
----
-
-## Exercise 3 — Kubernetes Workloads
-
-### Objective
-
-Inspect Kubernetes resources, scale the deployment, observe GKE Autopilot node provisioning,
-and verify the HPA and PodDisruptionBudget.
-
-### Step 3.1 — Inspect the Deployment
-
-**kubectl:**
-```bash
-kubectl describe deployment openclaw -n "${NAMESPACE}"
-
-# Check container spec and volumes
-kubectl get deployment openclaw -n "${NAMESPACE}" \
-  -o jsonpath='{.spec.template.spec.containers[0].resources}' | jq .
-
-# View GCS Fuse CSI volume spec
-kubectl get deployment openclaw -n "${NAMESPACE}" \
-  -o jsonpath='{.spec.template.spec.volumes}' | jq .
-```
-
-**Expected result:** Deployment shows OpenClaw container with GCS Fuse CSI volume at `/data`,
-resource limits (`cpu_limit`, `memory_limit`), and startup/liveness probes targeting `/health`.
-
-### Step 3.2 — Inspect the Service
-
-**kubectl:**
-```bash
-kubectl get service -n "${NAMESPACE}" -o wide
-
-kubectl describe service -n "${NAMESPACE}"
-```
-
-**gcloud:**
-```bash
-gcloud compute forwarding-rules list \
-  --project="${PROJECT}" \
-  --filter="name~openclaw"
-```
-
-### Step 3.3 — Scale the Deployment
-
-```bash
-kubectl scale deployment openclaw \
-  --replicas=2 \
-  -n "${NAMESPACE}"
-
-kubectl get pods -n "${NAMESPACE}" -w
-```
-
-**Expected result:** GKE Autopilot automatically provisions a node for the second pod.
-
-> **Note:** Multiple OpenClaw replicas will split workspace access for the same tenant.
-> In production, keep `max_instance_count = 1` per tenant or implement sticky routing.
-
-Scale back to 1 after observing:
-```bash
-kubectl scale deployment openclaw --replicas=1 -n "${NAMESPACE}"
-```
-
-### Step 3.4 — Inspect the HPA
-
-**kubectl:**
-```bash
-kubectl get hpa -n "${NAMESPACE}"
-
-kubectl describe hpa -n "${NAMESPACE}"
-```
-
-**Expected result:** HPA configured with min=1, max=3 replicas. CPU-based autoscaling will
-trigger when pod CPU utilization exceeds the target threshold.
-
-### Step 3.5 — Inspect the PodDisruptionBudget
-
-**kubectl:**
-```bash
-kubectl get pdb -n "${NAMESPACE}"
-
-kubectl describe pdb -n "${NAMESPACE}"
-```
-
-**Expected result:** PDB with `minAvailable=1` ensures at least one OpenClaw pod is always
-running during voluntary disruptions (node maintenance, rolling updates).
-
-### Step 3.6 — Perform a Rolling Update
-
-```bash
-# Trigger rolling update (simulates version change)
-kubectl set env deployment/openclaw \
-  RESTART_TRIGGER=$(date +%s) \
-  -n "${NAMESPACE}"
-
-# Watch rollout
-kubectl rollout status deployment/openclaw -n "${NAMESPACE}"
-
-# Rollback if needed
-kubectl rollout undo deployment/openclaw -n "${NAMESPACE}"
-```
-
-**Expected result:** Rolling update completes with zero downtime — the PDB ensures one replica
-stays live during the update.
-
----
-
-## Exercise 4 — Security and Workload Identity
-
-### Objective
-
-Verify Workload Identity binding, inspect Secret Manager credentials, confirm pods access
-GCP APIs without key files, and review audit logs.
-
-### Step 4.1 — Verify Workload Identity Annotation
-
-**kubectl:**
-```bash
-kubectl get serviceaccount -n "${NAMESPACE}" -o yaml \
-  | grep -A5 "annotations:"
-```
-
-The annotation `iam.gke.io/gcp-service-account` links the Kubernetes SA to a GCP SA.
-
-**gcloud:**
-```bash
-gcloud iam service-accounts list \
-  --project="${PROJECT}" \
-  --filter="email~openclaw" \
-  --format="table(email, displayName)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://iam.googleapis.com/v1/projects/${PROJECT}/serviceAccounts" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.accounts[] | select(.email | test("openclaw")) | {email, displayName}'
-```
-
-**Expected result:** A dedicated GCP service account for OpenClaw with the annotation binding
-to the Kubernetes service account in the namespace.
-
-### Step 4.2 — Verify IAM Bindings
-
-**gcloud:**
-```bash
-SA_EMAIL=$(gcloud iam service-accounts list \
-  --project="${PROJECT}" \
-  --filter="email~openclaw" \
-  --format="value(email)" \
-  --limit=1)
-
-gcloud iam service-accounts get-iam-policy "${SA_EMAIL}" \
-  --project="${PROJECT}"
-```
-
-**Expected result:** The IAM policy shows `roles/iam.workloadIdentityUser` binding for the
-Kubernetes service account in the OpenClaw namespace.
-
-### Step 4.3 — Inspect Secret Manager Secrets
-
-**gcloud:**
-```bash
-gcloud secrets list \
-  --project="${PROJECT}" \
-  --filter="name~openclaw" \
-  --format="table(name, createTime)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets?filter=name%3Aopenclaw" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.secrets[] | {name, createTime}'
-```
-
-**Expected result:** At minimum, the Anthropic API key secret. Telegram/Slack secrets if those
-integrations were enabled.
-
-### Step 4.4 — Confirm No Key File in Pod
-
-**kubectl:**
-```bash
-# Verify no service account key JSON is mounted
-kubectl exec -n "${NAMESPACE}" deploy/openclaw -- \
-  env | grep -i "google_application_credentials\|service_account" || \
-  echo "No key file env vars — Workload Identity is active"
-```
-
-**Expected result:** No `GOOGLE_APPLICATION_CREDENTIALS` environment variable in the pod.
-The Workload Identity binding provides credentials transparently via the metadata server.
-
-### Step 4.5 — Review Secret Manager Audit Logs
-
-**gcloud:**
-```bash
-gcloud logging read \
-  "protoPayload.serviceName=secretmanager.googleapis.com \
-   AND protoPayload.methodName=~\"AccessSecretVersion\"" \
-  --project="${PROJECT}" \
-  --limit=10 \
-  --format="json" \
-  | jq '.[] | {
-    timestamp,
-    caller: .protoPayload.authenticationInfo.principalEmail,
-    resource: .protoPayload.resourceName
+  -d '{
+    "name": "gcp-assistant",
+    "description": "A helpful GCP assistant",
+    "system_prompt": "You are a helpful GCP expert.",
+    "llm_backend": "anthropic"
   }'
 ```
 
-**Expected result:** The OpenClaw GCP service account accessing the Anthropic API key secret
-during pod startup — no direct key references needed.
+---
+
+## Phase 5 — Test Agent Conversations [MANUAL]
+
+### Steps
+
+1. Navigate to **Conversations** in the OpenClaw dashboard.
+
+2. Click **New Conversation** and select the `gcp-assistant` agent created in Phase 4.
+
+3. Send a test message:
+
+```
+What is Google Cloud Run?
+```
+
+**Expected result:** The agent responds with a concise explanation of Cloud Run, its use cases, and key features.
+
+4. Send a follow-up question:
+
+```
+How does GKE Autopilot differ from Standard?
+```
+
+**Expected result:** The agent explains the differences between GKE Autopilot (fully managed node pools, per-pod billing) and Standard (manual node management, per-node billing).
+
+5. View the **conversation history** — scroll up to see the full exchange logged with timestamps.
+
+6. Export the conversation transcript by clicking **Export** or **Download** in the conversation toolbar.
+
+**Expected result:** A text or JSON file is downloaded containing the full conversation thread.
+
+### REST API equivalent
+
+```bash
+# Send a message to the agent via API
+curl -X POST http://localhost:8080/api/conversations \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "AGENT_ID",
+    "message": "What is Google Cloud Run?"
+  }'
+```
 
 ---
 
-## Exercise 5 — Cloud Logging and Monitoring
+## Phase 6 — Multi-Tenant Configuration [MANUAL]
 
-### Objective
+### Steps
 
-Query GKE container logs for agent activity, review Cloud Monitoring dashboards for pod
-resource utilization, and verify uptime check status.
+1. Navigate to **Tenants** in the OpenClaw dashboard.
 
-### Step 5.1 — View Application Logs in the Console
+2. Click **New Tenant** and create a tenant:
+   - **Name:** `dev-team`
+   - **Description:** `Development team tenant`
+   - Click **Create**.
+
+3. Create a second tenant:
+   - **Name:** `production-team`
+   - **Description:** `Production environment tenant`
+   - Click **Create**.
+
+4. Assign the `gcp-assistant` agent to the `dev-team` tenant:
+   - Open the `dev-team` tenant.
+   - Navigate to **Agents** within the tenant.
+   - Click **Assign Agent** and select `gcp-assistant`.
+
+**Expected result:** The `gcp-assistant` agent is now scoped to the `dev-team` tenant. Conversations and history within this tenant are isolated from other tenants.
+
+5. Verify tenant isolation:
+   - Switch to the `production-team` tenant context.
+   - Navigate to **Agents** — the `gcp-assistant` agent should not appear here unless explicitly assigned.
+
+**Expected result:** Tenant isolation is enforced — agents and conversations scoped to `dev-team` are not visible in `production-team`.
+
+6. Explore **API keys** per tenant:
+   - Open a tenant.
+   - Navigate to **API Keys** or **Settings**.
+   - Generate a tenant-scoped API key.
+
+**Expected result:** A unique API key is generated for the tenant, which can be used to make tenant-scoped API calls.
+
+### REST API equivalent
 
 ```bash
-echo "https://console.cloud.google.com/logs?project=${PROJECT}"
+# List tenants
+curl -X GET http://localhost:8080/api/tenants \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+
+# Create a tenant
+curl -X POST http://localhost:8080/api/tenants \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "dev-team", "description": "Development team tenant"}'
 ```
 
-Use the following filter:
+---
+
+## Phase 7 — Explore State Persistence [MANUAL]
+
+### Steps
+
+1. Verify the GCS Fuse workspace mount is active inside the running pod:
+
+```bash
+kubectl exec -n ${NAMESPACE} deploy/openclaw -- ls /data
+```
+
+**Expected result:** The `/data` directory is mounted and contains the agent workspace files, conversation history, and any skill library cloned from the configured GitHub repository.
+
+2. List the workspace contents in more detail:
+
+```bash
+kubectl exec -n ${NAMESPACE} deploy/openclaw -- ls -la /data/workspace/
+```
+
+**Expected result:** Workspace files including skill library (if `skills_repo_url` was set), conversation logs, and agent configuration files.
+
+3. Verify the underlying GCS bucket:
+
+```bash
+gcloud storage ls gs://GCS_BUCKET_NAME/ \
+  --project=YOUR_PROJECT_ID
+```
+
+**Expected result:** The same files visible inside the pod are also visible in GCS, confirming GCS Fuse is writing through to the bucket.
+
+4. Test state persistence by restarting a pod:
+
+```bash
+kubectl rollout restart deployment/openclaw -n ${NAMESPACE}
+```
+
+5. Wait for the new pod to become ready:
+
+```bash
+kubectl rollout status deployment/openclaw -n ${NAMESPACE}
+```
+
+6. After the pod restarts, verify conversation history is preserved:
+
+```bash
+kubectl exec -n ${NAMESPACE} deploy/openclaw -- ls /data/workspace/
+```
+
+**Expected result:** The conversation history and workspace files from before the restart are still present, demonstrating that GCS Fuse provides durable state across pod restarts.
+
+### gcloud equivalent (browse workspace in GCS)
+
+```bash
+gcloud storage ls --recursive gs://GCS_BUCKET_NAME/workspace/ \
+  --project=YOUR_PROJECT_ID
+```
+
+---
+
+## Phase 8 — Explore Cloud Logging [MANUAL]
+
+### Steps
+
+1. Open the [Google Cloud Console Logs Explorer](https://console.cloud.google.com/logs).
+
+2. Select your project.
+
+3. Query OpenClaw agent logs:
+
 ```
 resource.type="k8s_container"
 resource.labels.namespace_name="${NAMESPACE}"
 resource.labels.container_name="openclaw"
 ```
 
-### Step 5.2 — Query Logs via gcloud
+**Expected result:** Log entries from OpenClaw include incoming API requests, agent invocations, LLM API calls to Anthropic, conversation events, and GCS Fuse mount activity.
 
-**gcloud:**
+4. Filter for API request logs:
+
+```
+resource.type="k8s_container"
+resource.labels.namespace_name="${NAMESPACE}"
+textPayload:"POST /api"
+```
+
+5. Use kubectl to stream live logs from the pod:
+
+```bash
+kubectl logs -f -n ${NAMESPACE} -l app=openclaw
+```
+
+6. Filter for error-level logs in Cloud Logging:
+
+```
+resource.type="k8s_container"
+resource.labels.namespace_name="${NAMESPACE}"
+severity>=ERROR
+```
+
+**Expected result:** Any LLM API errors, authentication failures, or GCS mount issues appear here.
+
+### gcloud equivalent
+
 ```bash
 gcloud logging read \
-  "resource.type=\"k8s_container\" \
-   resource.labels.namespace_name=\"${NAMESPACE}\" \
-   resource.labels.container_name=\"openclaw\"" \
-  --project="${PROJECT}" \
-  --limit=100 \
-  --format="table(timestamp,severity,textPayload)"
-```
-
-**REST API:**
-```bash
-curl -s -X POST \
-  "https://logging.googleapis.com/v2/entries:list" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"resourceNames\": [\"projects/${PROJECT}\"],
-    \"filter\": \"resource.type=\\\"k8s_container\\\" resource.labels.namespace_name=\\\"${NAMESPACE}\\\"\",
-    \"pageSize\": 50
-  }" | jq '.entries[] | {timestamp, severity, textPayload}'
-```
-
-### Step 5.3 — Filter for Agent Invocations
-
-**gcloud:**
-```bash
-gcloud logging read \
-  "resource.type=\"k8s_container\" \
-   resource.labels.namespace_name=\"${NAMESPACE}\" \
-   textPayload=~\"agent|conversation|anthropic|POST /api\"" \
-  --project="${PROJECT}" \
-  --limit=30 \
-  --format="table(timestamp,textPayload)"
-```
-
-**Expected result:** Log entries showing agent invocations and outbound Anthropic Claude API
-calls for each conversation message.
-
-### Step 5.4 — Stream Live Logs with kubectl
-
-```bash
-kubectl logs -f -n "${NAMESPACE}" -l app=openclaw
-```
-
-Send a conversation message and observe the real-time Claude API call logs.
-
-### Step 5.5 — Review Cloud Monitoring Pod Metrics
-
-```bash
-echo "https://console.cloud.google.com/monitoring?project=${PROJECT}"
-```
-
-**REST API (query pod CPU):**
-```bash
-curl -s -X POST \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"query\": \"fetch k8s_container::kubernetes.io/container/cpu/limit_utilization | filter resource.namespace_name = '${NAMESPACE}' | within 30m | group_by [resource.container_name], mean(val())\"
-  }" | jq '.timeSeriesData[] | {container: .labelValues[0].stringValue, cpu: .pointData[-1].values[0].doubleValue}'
-```
-
-**gcloud (query memory):**
-```bash
-kubectl top pods -n "${NAMESPACE}"
-```
-
-**Expected result:** CPU spikes during Anthropic API calls; memory usage is relatively stable.
-
-### Step 5.6 — Review Uptime Checks
-
-**gcloud:**
-```bash
-gcloud monitoring uptime list-configs \
-  --project="${PROJECT}" \
-  --format="table(name, displayName, httpCheck.path, period)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.uptimeCheckConfigs[] | {name, displayName, httpCheck}'
-```
-
-**Expected result:** Uptime check polling `/health` at 60-second intervals showing green
-status from multiple global probe locations.
-
----
-
-## Cleanup
-
-Return to the RAD UI and click **Undeploy** on the `OpenClaw_GKE` deployment. This removes
-all Kubernetes resources, GCS workspace bucket, Secret Manager secrets, and IAM bindings.
-The GKE cluster managed by `Services_GCP` is not affected.
-
-### Manual Cleanup (if needed)
-
-**kubectl:**
-```bash
-kubectl delete namespace "${NAMESPACE}"
-```
-
-**gcloud:**
-```bash
-# Delete Secret Manager secrets
-gcloud secrets list \
-  --project="${PROJECT}" \
-  --filter="name~openclaw" \
-  --format="value(name)" \
-  | xargs -I{} gcloud secrets delete {} --project="${PROJECT}" --quiet
-
-# Delete GCS workspace bucket
-BUCKET=$(gcloud storage buckets list \
-  --project="${PROJECT}" \
-  --filter="name~openclaw" \
-  --format="value(name)" --limit=1)
-gcloud storage rm --recursive "gs://${BUCKET}/"
-gcloud storage buckets delete "gs://${BUCKET}"
+  'resource.type="k8s_container" AND resource.labels.namespace_name="'${NAMESPACE}'"' \
+  --project=YOUR_PROJECT_ID \
+  --limit=50 \
+  --format="table(timestamp, severity, textPayload)"
 ```
 
 ---
 
-## Reference
+## Phase 9 — Explore Cloud Monitoring [MANUAL]
 
-### Key Module Variables
+### Steps
 
-| Variable | Type | Default | Description |
-|---|---|---|---|
-| `project_id` | string | — | GCP project ID (required) |
-| `region` | string | `us-central1` | GCP region for all resources |
-| `application_version` | string | `latest` | OpenClaw image tag |
-| `anthropic_api_key` | string | `""` | Anthropic API key (stored in Secret Manager) |
-| `cpu_limit` | string | `2000m` | CPU limit per pod |
-| `memory_limit` | string | `2Gi` | Memory limit per pod |
-| `min_instance_count` | number | `1` | Minimum HPA pod replicas |
-| `max_instance_count` | number | `3` | Maximum HPA pod replicas |
-| `gke_cluster_name` | string | `""` | GKE cluster name (auto-discovered when empty) |
-| `skills_repo_url` | string | `""` | GitHub URL of shared skills repository |
-| `skills_repo_ref` | string | `main` | Git ref for skills repository |
-| `enable_telegram` | bool | `false` | Enable Telegram bot integration |
-| `enable_slack` | bool | `false` | Enable Slack bot integration |
-| `timeout_seconds` | number | `3600` | Request timeout for long agent sessions |
-| `backup_schedule` | string | `0 2 * * *` | Workspace backup cron schedule |
-| `backup_retention_days` | number | `7` | Days to retain backup files |
+1. Open [Google Cloud Console Monitoring](https://console.cloud.google.com/monitoring).
 
-### Useful Commands
+2. Navigate to **Metrics Explorer**.
+
+3. Query GKE pod CPU metrics:
+   - **Metric:** `kubernetes.io/container/cpu/usage_time`
+   - **Filter:** `namespace_name = ${NAMESPACE}`
+
+**Expected result:** A time-series graph showing OpenClaw pod CPU consumption. Agent workloads spike during LLM API calls.
+
+4. Query pod memory usage:
+   - **Metric:** `kubernetes.io/container/memory/used_bytes`
+   - **Filter:** `namespace_name = ${NAMESPACE}`
+
+**Expected result:** Memory usage time-series for the OpenClaw pods.
+
+5. Check pod restart counts:
+   - **Metric:** `kubernetes.io/container/restart_count`
+   - **Filter:** `namespace_name = ${NAMESPACE}`
+
+**Expected result:** Zero restarts for a healthy deployment.
+
+6. Navigate to **Dashboards** and explore the GKE workloads dashboard:
+   - Select your cluster and namespace.
+   - Review pod health, resource utilization, and network traffic.
+
+7. Check the **Alerting** section to review any alert policies configured by the module.
+
+**Expected result:** All alert policies are visible and in a healthy (no-fire) state.
+
+### gcloud equivalent
 
 ```bash
-# Get pods
-kubectl get pods -n "${NAMESPACE}"
-
-# Stream live logs
-kubectl logs -f -n "${NAMESPACE}" -l app=openclaw
-
-# Exec into pod
-kubectl exec -it -n "${NAMESPACE}" deploy/openclaw -- sh
-
-# Check GCS Fuse mount
-kubectl exec -n "${NAMESPACE}" deploy/openclaw -- ls /data
-
-# Scale deployment
-kubectl scale deployment openclaw --replicas=2 -n "${NAMESPACE}"
-
-# Rolling restart
-kubectl rollout restart deployment/openclaw -n "${NAMESPACE}"
-
-# Watch rollout
-kubectl rollout status deployment/openclaw -n "${NAMESPACE}"
-
-# Port-forward for access
-kubectl port-forward svc/openclaw 8080:8080 -n "${NAMESPACE}"
-
-# View HPA
-kubectl get hpa -n "${NAMESPACE}"
-
-# View PDB
-kubectl get pdb -n "${NAMESPACE}"
-
-# Top pods
-kubectl top pods -n "${NAMESPACE}"
+# List GKE workload metrics
+gcloud monitoring metrics list \
+  --filter="metric.type:kubernetes.io/container" \
+  --project=YOUR_PROJECT_ID \
+  --limit=10
 ```
 
-### Further Reading
+---
 
-- [OpenClaw GitHub repository](https://github.com/openclaw/openclaw)
-- [GKE Autopilot overview](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
-- [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
-- [GCS Fuse CSI driver on GKE](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/cloud-storage-fuse-csi-driver)
-- [HPA documentation](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
-- [Cloud Monitoring for GKE](https://cloud.google.com/stackdriver/docs/solutions/gke)
+## Phase 10 — Undeploy [AUTOMATED]
+
+When the lab is complete, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+
+**Expected result:** All Kubernetes resources, GCS workspace bucket, Secret Manager secrets, and IAM bindings created by this module are deleted. The GKE cluster and VPC managed by `Services_GCP` are not affected.
+
+Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+
+---
+
+## Summary
+
+| Phase | Type | Description |
+|---|---|---|
+| Phase 1 — Deploy | Automated | Provisions GKE workload, GCS workspace, secrets, HPA |
+| Phase 2 — Verify GKE | Manual | Confirms pods running, GCS Fuse mount active |
+| Phase 3 — Explore Interface | Manual | Admin login and dashboard orientation |
+| Phase 4 — Create an AI Agent | Manual | Configure agent with system prompt and LLM backend |
+| Phase 5 — Test Conversations | Manual | Agent conversation, history, and transcript export |
+| Phase 6 — Multi-Tenant Config | Manual | Tenant creation, agent assignment, isolation verification |
+| Phase 7 — State Persistence | Manual | GCS Fuse mount, pod restart, workspace durability |
+| Phase 8 — Cloud Logging | Manual | Agent and API request log exploration |
+| Phase 9 — Cloud Monitoring | Manual | GKE pod metrics and health |
+| Phase 10 — Undeploy | Automated | Tears down all module-managed resources |

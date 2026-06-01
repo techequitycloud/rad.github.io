@@ -1,9 +1,9 @@
 ---
-title: "OpenClaw Common Shared Configuration Module"
+title: "OpenClaw_Common Shared Configuration Module"
 sidebar_label: "OpenClaw Common"
 ---
 
-# OpenClaw Common Shared Configuration Module
+# OpenClaw_Common Shared Configuration Module
 
 The `OpenClaw_Common` module defines the OpenClaw AI gateway configuration for the RAD Modules ecosystem. It **creates GCP resources** (Secret Manager secrets for API credentials and optional messaging platform tokens) and produces a `config` output consumed by platform-specific wrapper modules (`OpenClaw_CloudRun` and `OpenClaw_GKE`).
 
@@ -100,7 +100,7 @@ One GCS bucket for the OpenClaw workspace:
 |-------|-------|
 | `name_suffix` | `"openclaw-data"` |
 | `name` | `<wrapper_prefix>-storage` (explicit name) |
-| `location` | `var.region` |
+| `location` | `var.deployment_region` |
 | `storage_class` | `"STANDARD"` |
 | `force_destroy` | `true` |
 | `versioning_enabled` | `false` |
@@ -220,7 +220,7 @@ The `--bind lan` flag is required for Cloud Run — the runtime maps the externa
 | `wrapper_prefix` | `string` | **required** | Prefix for resource naming (GCS bucket, secret IDs) |
 | `deployment_id` | `string` | `""` | Unique deployment identifier |
 | `common_labels` | `map(string)` | `{}` | Labels applied to all resources |
-| `region` | `string` | `"us-central1"` | Region for the GCS workspace bucket |
+| `deployment_region` | `string` | `"us-central1"` | Region for the GCS workspace bucket |
 
 ### Application Details
 
@@ -344,7 +344,7 @@ module "openclaw_app" {
   deployment_id     = local.random_id
   wrapper_prefix    = local.wrapper_prefix
   common_labels     = local.common_labels
-  region            = local.region
+  deployment_region = local.deployment_region
 
   application_name         = var.application_name
   application_display_name = var.application_display_name

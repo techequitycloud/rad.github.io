@@ -7,697 +7,428 @@ sidebar_label: "Moodle CloudRun"
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Moodle_CloudRun)**
 
-This lab guide walks you through deploying, exploring, and operating **Moodle 4.5** on
-Google Cloud Run with the **Moodle_CloudRun** module. You will explore the world's most popular
-open-source LMS running on a serverless runtime, covering course creation, user management,
-learning activities, file storage, Cloud Scheduler cron integration, and Google Cloud
-observability.
+## Overview
+
+**Estimated time:** 3–4 hours
+
+Moodle is an open-source Learning Management System (LMS) used by educational institutions worldwide. This lab deploys Moodle 4.5 on Google Cloud Run backed by Cloud SQL PostgreSQL 15, Cloud Filestore NFS for shared moodledata, GCS Fuse volume mounts, Redis session caching, Cloud Scheduler for cron jobs, and optional Cloud CDN and Cloud Armor for performance and security.
+
+### What the Module Automates
+
+- Cloud Run service with Cloud SQL Auth Proxy sidecar
+- Cloud SQL PostgreSQL 15 instance, database, and user
+- Cloud Filestore (NFS) instance for shared moodledata
+- GCS Fuse volume mounts and Cloud Storage buckets
+- Secret Manager secrets (admin password, DB password)
+- Artifact Registry repository and Cloud Build image pipeline
+- Serverless VPC Access connector for private networking
+- Cloud Run IAM and service account bindings
+- Cloud Scheduler jobs for Moodle cron tasks
+- Cloud Monitoring uptime checks and alert policies
+- Optional Cloud CDN and Cloud Armor (Global HTTPS Load Balancer)
+
+### What You Do Manually
+
+- Note the service URL and other deployment outputs from the RAD UI deployment panel
+- Complete the Moodle installation wizard (if required)
+- Access Site Administration with admin credentials from Secret Manager
+- Create courses and enroll users
+- Explore LMS features (Gradebook, Quiz, Assignment, Forum)
+- Review Cloud Scheduler cron setup
+- Explore Cloud Logging, Cloud Monitoring, and CDN metrics
 
 ---
 
-## Table of Contents
+## CLI and REST API Overview
 
-1. [Overview](#1-overview)
-2. [Architecture](#2-architecture)
-3. [Prerequisites](#3-prerequisites)
-4. [Lab Setup](#4-lab-setup)
-5. [Exercise 1 — Access Moodle](#exercise-1--access-moodle)
-6. [Exercise 2 — Create a Course](#exercise-2--create-a-course)
-7. [Exercise 3 — Learning Activities](#exercise-3--learning-activities)
-8. [Exercise 4 — User Management](#exercise-4--user-management)
-9. [Exercise 5 — Files and Media](#exercise-5--files-and-media)
-10. [Exercise 6 — Database and Storage](#exercise-6--database-and-storage)
-11. [Exercise 7 — Cloud Logging](#exercise-7--cloud-logging)
-12. [Exercise 8 — Cloud Monitoring](#exercise-8--cloud-monitoring)
-13. [Cleanup](#cleanup)
-14. [Reference](#reference)
+This lab uses two primary tools:
 
----
-
-## 1. Overview
-
-### What Is Moodle?
-
-Moodle is the world's most popular open-source Learning Management System (LMS), used by
-educational institutions, corporations, and governments worldwide to deliver online courses and
-training programs. It supports quizzes, assignments, forums, grading, and rich plugin
-ecosystems. The `Moodle_CloudRun` module deploys **Moodle 4.5** on Cloud Run Gen 2, backed by
-Cloud SQL PostgreSQL 15, Cloud Filestore NFS for shared moodledata, Redis session caching, and
-Cloud Scheduler for automated cron tasks.
-
-### Key Capabilities Demonstrated
-
-| Capability | What It Demonstrates |
+| Tool | Purpose |
 |---|---|
-| **Serverless LMS** | Cloud Run Gen 2 hosting Apache + PHP 8.3 + Moodle with startup and health probes |
-| **NFS Persistence** | Cloud Filestore NFS for shared moodledata accessible across instances |
-| **Private Database** | Cloud SQL PostgreSQL 15 with Cloud SQL Auth Proxy sidecar |
-| **Redis Session Cache** | Redis for session storage with `moodle_prod_sess_` key prefix |
-| **Cloud Scheduler Cron** | Cloud Scheduler triggering `admin/cron.php` every 5 minutes |
-| **Secret Management** | Admin password and SMTP credentials in Secret Manager |
-| **Course Management** | Full Moodle LMS: courses, quizzes, assignments, forums, gradebook |
-| **Observability** | Cloud Logging (PHP/Apache logs) and Cloud Monitoring with uptime checks |
+| `gcloud` | Access secrets, inspect Cloud Run services, view logs |
+
+Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 
 ---
 
-## 2. Architecture
+## Prerequisites
 
-```
-Browser / Student / Admin
-         │
-         ▼
-Cloud Run Gen 2 Service (moodle)
-  ├── Apache 2 + PHP 8.3 + Moodle 4.5
-  ├── Cloud SQL Auth Proxy sidecar
-  ├── NFS mount: /mnt (moodledata)
-  ├── Startup probe: HTTP /health.php
-  ├── Liveness probe: HTTP /health.php
-  └── Serverless VPC Access connector
-         │
-         ├── Cloud SQL PostgreSQL 15 (Auth Proxy socket)
-         │     └── database: moodle, user: moodle
-         │         extension: pg_trgm
-         │
-         ├── Cloud Filestore NFS (/mnt)
-         │     └── filedir/, temp/, cache/, localcache/
-         │         (www-data ownership, 2770 permissions)
-         │
-         ├── Redis (session storage)
-         │     └── MOODLE_REDIS_ENABLED=true
-         │
-         ├── Cloud Storage bucket (moodle-media)
-         │     └── GCS Fuse mount for themes/plugins (optional)
-         │
-         └── Secret Manager
-               ├── admin password (moodle-admin-password)
-               ├── cron password (MOODLE_CRON_PASSWORD)
-               └── SMTP password (MOODLE_SMTP_PASSWORD)
-
-Cloud Scheduler
-  └── moodle-cron → POST /admin/cron.php (every 5 minutes)
-```
-
-### Infrastructure
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  Google Cloud Project                                            │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐    │
-│  │  Cloud Run Gen 2                                          │   │
-│  │  moodle service → https://<hash>.run.app                  │   │
-│  │  min_instances=0 (scale to zero), max_instances=3         │   │
-│  └─────────────────────┬────────────────────────────────────┘    │
-│                         │ VPC connector (private ranges)         │
-│  ┌──────────────────────▼─────────────────────────────────────┐  │
-│  │  VPC Network                                                │ │
-│  │  ┌──────────────────┐  ┌─────────────┐  ┌──────────────┐  │   │
-│  │  │  Cloud SQL        │  │  Filestore  │  │  Redis       │  │  │
-│  │  │  PostgreSQL 15    │  │  NFS /mnt   │  │  (sessions)  │  │  │
-│  │  │  (Auth Proxy)     │  │             │  │              │  │  │
-│  │  └──────────────────┘  └─────────────┘  └──────────────┘  │   │
-│  └────────────────────────────────────────────────────────────┘  │
-│                                                                  │
-│  ┌──────────────────┐  ┌──────────────┐  ┌────────────────────┐  │
-│  │  Secret Manager  │  │  Cloud       │  │  Cloud Scheduler   │  │
-│  │  (admin, cron,   │  │  Storage     │  │  (moodle-cron      │  │
-│  │   smtp secrets)  │  │  (moodle-    │  │   every 5 min)     │  │
-│  │                  │  │   media)     │  │                    │  │
-│  └──────────────────┘  └──────────────┘  └────────────────────┘  │
-│                                                                  │
-│  ┌──────────────────┐  ┌──────────────────────────────────────┐  │
-│  │  Cloud Logging   │  │  Cloud Monitoring (request count,    │  │
-│  │  (PHP/Apache     │  │   latency, uptime check, instance    │  │
-│  │   access logs)   │  │   count, Cloud SQL metrics)          │  │
-│  └──────────────────┘  └──────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────────┘
-
-Module variable wiring:
-
-  Moodle_CloudRun
-    application_version   = "4.5.1"     → Ubuntu + PHP 8.3 + Moodle 4.5
-    enable_nfs            = true         → Cloud Filestore at /mnt
-    enable_redis          = true         → Redis session storage
-    min_instance_count    = 0            → scale to zero when idle
-    max_instance_count    = 3            → horizontal scaling
-    enable_cloud_armor    = false        → basic deployment (set true for prod)
-```
+1. A GCP project with billing enabled.
+2. The `Services_GCP` module deployed in the same project (provides VPC, Cloud SQL, and NFS server).
+3. The following APIs enabled (Services_GCP handles this):
+   - `run.googleapis.com`
+   - `sqladmin.googleapis.com`
+   - `secretmanager.googleapis.com`
+   - `artifactregistry.googleapis.com`
+   - `cloudbuild.googleapis.com`
+   - `vpcaccess.googleapis.com`
+   - `file.googleapis.com`
+   - `cloudscheduler.googleapis.com`
+4. `gcloud` authenticated: `gcloud auth application-default login`
+5. Access to the RAD UI with permission to deploy modules in the target GCP project.
 
 ---
 
-## 3. Prerequisites
+## Phase 1 — Deploy Infrastructure [AUTOMATED]
 
-### Required Tools
+### Step 1.1 — Configure Variables
 
-| Tool | Minimum Version | Install |
-|---|---|---|
-| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
-| `curl` / `jq` | Any | System package manager |
+Variables are configured in the RAD UI form before deploying. The table below describes each variable you can fill in.
 
-### GCP Permissions
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `project_id` | Yes | — | GCP project ID |
+| `tenant_deployment_id` | No | `"demo"` | Short identifier for this deployment (e.g. `"prod"`) |
+| `deployment_id` | No | `""` | Auto-generated suffix appended to resource names |
+| `region` | No | `"us-central1"` | GCP region for Cloud Run and Cloud SQL |
+| `application_name` | No | `"moodle"` | Base name for Cloud Run service and secrets |
+| `application_version` | No | `"4.5.1"` | Moodle container image version |
+| `deploy_application` | No | `true` | Set `false` to provision infrastructure without deploying the service |
+| `min_instance_count` | No | `0` | Minimum Cloud Run instances (0 = scale to zero) |
+| `max_instance_count` | No | `3` | Maximum Cloud Run instances |
+| `cpu_limit` | No | `"1000m"` | CPU per Cloud Run instance |
+| `memory_limit` | No | `"2Gi"` | Memory per Cloud Run instance |
+| `db_name` | No | `"moodle"` | PostgreSQL database name |
+| `db_user` | No | `"moodle"` | PostgreSQL database username |
+| `enable_redis` | No | `true` | Enable Redis for session caching |
+| `redis_host` | No | `""` | Redis host (defaults to NFS server IP) |
+| `redis_port` | No | `"6379"` | Redis port |
+| `enable_nfs` | No | `true` | Mount NFS for moodledata |
+| `nfs_mount_path` | No | `"/mnt/nfs"` | NFS mount path inside the container |
+| `ingress_settings` | No | `"all"` | `"all"` (public), `"internal"`, or `"internal-and-cloud-load-balancing"` |
+| `vpc_egress_setting` | No | `"PRIVATE_RANGES_ONLY"` | VPC egress: `"ALL_TRAFFIC"` or `"PRIVATE_RANGES_ONLY"` |
+| `enable_cloud_armor` | No | `false` | Enable Cloud Armor WAF with Global HTTPS Load Balancer |
+| `enable_cdn` | No | `false` | Enable Cloud CDN (requires `enable_cloud_armor = true`) |
+| `application_domains` | No | `[]` | Custom domain names for the load balancer |
+| `backup_schedule` | No | `"0 2 * * *"` | Cron schedule for automated backups |
+| `backup_retention_days` | No | `7` | Days to retain backup files |
+| `support_users` | No | `[]` | Email addresses for monitoring alerts |
 
-```
-roles/owner                    # or the following fine-grained set:
-roles/run.admin
-roles/cloudsql.admin
-roles/secretmanager.admin
-roles/file.editor
-roles/iam.serviceAccountAdmin
-roles/cloudscheduler.admin
-roles/monitoring.admin
-roles/logging.admin
-```
+### Step 1.2 — Initialise and Deploy
 
-### Environment Variables
+Deployment is initiated from the RAD UI. After filling in the variable form, click **Deploy** to start the deployment.
+
+**Approximate deployment durations:**
+
+| Phase | Duration |
+|---|---|
+| Cloud SQL PostgreSQL instance creation | 8–12 min |
+| Cloud Filestore NFS provisioning | 3–5 min |
+| Artifact Registry image build (Cloud Build) | 8–15 min |
+| Cloud Run service deployment | 2–4 min |
+| Moodle startup and DB schema installation | 5–10 min |
+| **Total** | **26–46 min** |
+
+> Note: Moodle performs database schema installation on the first boot. The startup probe is configured with a high `failure_threshold` (20) to allow time for this. Cloud Run will not route traffic until the `/health.php` probe succeeds.
+
+### Step 1.3 — Record Outputs
+
+After deployment completes, the following outputs are available in the RAD UI deployment panel.
+
+| Output | Description |
+|---|---|
+| `service_url` | HTTPS URL of the Cloud Run service |
+| `service_name` | Cloud Run service name |
+| `service_location` | GCP region |
+| `database_instance_name` | Cloud SQL instance name |
+| `database_password_secret` | Secret Manager secret name for the DB password |
+| `nfs_server_ip` | NFS server internal IP |
+| `deployment_id` | Unique deployment suffix |
+
+Set shell variables for use in later steps:
 
 ```bash
-export PROJECT="${PROJECT_ID}"   # your GCP project ID
-export REGION="us-central1"      # region you deployed into
+export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
+export REGION="us-central1"             # the region you deployed into
+export TOKEN=$(gcloud auth print-access-token)
 
-gcloud config set project "${PROJECT}"
-gcloud config set compute/region "${REGION}"
-
-# Discover the Cloud Run service
+# Discover the Cloud Run service (filter by app name "moodle")
 export SERVICE=$(gcloud run services list \
-  --project="${PROJECT}" \
-  --region="${REGION}" \
+  --project=${PROJECT} \
+  --region=${REGION} \
   --format="value(metadata.name)" \
-  --filter="metadata.name~moodle" \
   --limit=1)
-
-# Discover the service URL
-export SERVICE_URL=$(gcloud run services describe "${SERVICE}" \
-  --project="${PROJECT}" \
-  --region="${REGION}" \
+export SERVICE_URL=$(gcloud run services describe ${SERVICE} \
+  --project=${PROJECT} \
+  --region=${REGION} \
   --format="value(status.url)")
 
-# Discover the admin password secret
-export ADMIN_SECRET=$(gcloud secrets list \
-  --project="${PROJECT}" \
-  --filter="name~moodle-admin" \
+# Discover the database password secret (filter by app name)
+export DB_SECRET=$(gcloud secrets list \
+  --project=${PROJECT} \
+  --filter="name~moodle" \
   --format="value(name)" \
   --limit=1)
 ```
 
 ---
 
-## 4. Lab Setup
+## Phase 2 — Access the Application [MANUAL]
 
-### 4.1 Deploy via RAD UI
-
-Deploy the `Moodle_CloudRun` module via the RAD UI. In the variable form, set:
-
-| Variable | Value | Notes |
-|---|---|---|
-| `project_id` | `your-gcp-project-id` | Required |
-| `region` | `us-central1` | GCP region |
-| `application_name` | `moodle` | Base name for all resources |
-| `application_version` | `4.5.1` | Moodle version |
-| `min_instance_count` | `0` | Scale to zero when idle |
-| `max_instance_count` | `3` | Allow horizontal scaling |
-| `cpu_limit` | `1000m` | CPU per instance |
-| `memory_limit` | `2Gi` | Memory per instance |
-| `db_name` | `moodle` | PostgreSQL database |
-| `db_user` | `moodle` | PostgreSQL user |
-| `enable_redis` | `true` | Redis session caching |
-| `enable_nfs` | `true` | NFS for moodledata |
-| `ingress_settings` | `all` | Public HTTPS endpoint |
-
-Click **Deploy** and wait for provisioning to complete (approximately 26–46 minutes — Moodle builds from source).
-
-> **What this provisions:** Cloud Run Gen 2 service with Cloud SQL Auth Proxy sidecar, Cloud SQL
-> PostgreSQL 15 with pg_trgm extension, Cloud Filestore NFS for moodledata, Secret Manager
-> secrets (admin, cron, SMTP passwords), Cloud Scheduler cron job, GCS bucket, Artifact
-> Registry, and Cloud Monitoring uptime check.
-
-### 4.2 Configure Shell Environment
-
-After deployment completes, set the shell variables from Section 3 and verify connectivity:
+### Step 2.1 — Get the Service URL
 
 ```bash
-# Confirm service is running
-gcloud run services describe "${SERVICE}" \
-  --region="${REGION}" \
-  --project="${PROJECT}" \
-  --format="table(status.url, status.conditions[0].type)"
-
-# Test connectivity (first request may be slow on scale-to-zero)
-curl -s -o /dev/null -w "%{http_code}" "${SERVICE_URL}"
-# Expected: 200 or 303
-```
-
----
-
-## Exercise 1 — Access Moodle
-
-### Objective
-
-Retrieve the Cloud Run service URL, verify Moodle is running, retrieve admin credentials from
-Secret Manager, and log in to the admin dashboard.
-
-### Step 1.1 — Get the Service URL
-
-**gcloud:**
-```bash
-gcloud run services describe "${SERVICE}" \
-  --region="${REGION}" \
-  --project="${PROJECT}" \
-  --format="value(status.url)"
-
 echo "Moodle URL: ${SERVICE_URL}"
 ```
 
-**REST API:**
+**gcloud equivalent:**
 ```bash
-curl -s \
-  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '{name: .name, url: .uri, state: .terminalCondition.state}'
+gcloud run services describe ${SERVICE} \
+  --region=${REGION} \
+  --project=${PROJECT} \
+  --format="value(status.url)"
 ```
 
-**Expected result:** A URL in the format `https://<hash>.run.app` is returned with terminal condition `CONTAINER_READY`.
-
-### Step 1.2 — Confirm Moodle is Reachable
-
+**REST API equivalent:**
 ```bash
-curl -s -o /dev/null -w "%{http_code}" "${SERVICE_URL}"
-# Expected: 200 or 303 (redirect to login)
+curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}"
 ```
 
-If `503`, Moodle is performing initial schema installation — wait 60–90 seconds and retry. On first boot, schema installation takes 5–10 minutes.
+**Expected result:** A URL in the format `https://<hash>-<hash>.a.run.app` is printed. This is the public Moodle URL.
 
-### Step 1.3 — Retrieve Admin Credentials
+### Step 2.2 — Confirm Moodle is Reachable
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" ${SERVICE_URL}
+```
+
+**Expected result:** HTTP `200` or `303` (redirect to the Moodle login page). If you see `503`, Moodle is still performing the initial database installation — wait 60–90 seconds and retry.
+
+### Step 2.3 — Inspect the Cloud Run Service
+
+```bash
+gcloud run services describe ${SERVICE} \
+  --region=${REGION} \
+  --project=${PROJECT}
+```
+
+**Expected result:** Service status shows `Ready`. Container configuration shows the Cloud SQL Auth Proxy sidecar, NFS volume mount, and resource limits.
+
+---
+
+## Phase 3 — Complete Moodle Setup [MANUAL]
+
+### Step 3.1 — Retrieve Admin Credentials
+
+The admin password is stored in Secret Manager:
 
 ```bash
 # List Moodle-related secrets
-gcloud secrets list --project="${PROJECT}" --filter="name~moodle"
+gcloud secrets list --project=${PROJECT} --filter="name~moodle"
 
-# Retrieve the admin password
+# Retrieve admin password
 gcloud secrets versions access latest \
-  --secret="${ADMIN_SECRET}" \
-  --project="${PROJECT}"
+  --secret="moodle-admin-password" \
+  --project=${PROJECT}
 ```
 
-**REST API:**
+**gcloud — list secret versions:**
 ```bash
-curl -s \
-  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${ADMIN_SECRET}/versions/latest:access" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+gcloud secrets versions list moodle-admin-password --project=${PROJECT}
+```
+
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/moodle-admin-password/versions/latest:access" \
   | jq -r '.payload.data' | base64 -d
 ```
 
-**Expected result:** The admin password is returned. Default admin username is `admin`.
+**Expected result:** The admin password is printed. The default admin username is `admin`.
 
-### Step 1.4 — Log In to Moodle
+### Step 3.2 — Access Moodle and Log In
 
-1. Open `${SERVICE_URL}` in your browser.
-2. If an installation wizard appears, follow through: confirm database settings, accept licence, set site name and timezone.
-3. Navigate to `${SERVICE_URL}/login` and log in as `admin` with the retrieved password.
+Open `${SERVICE_URL}` in a browser. If an installation wizard appears, follow through:
+
+1. Confirm database settings (pre-populated from environment).
+2. Accept the licence agreement.
+3. Complete the administrator account setup.
+4. Configure the site name, timezone, and language.
+
+If installation ran automatically via the init job, navigate to `${SERVICE_URL}/login` and log in as `admin`.
 
 **Expected result:** You are logged in to the Moodle dashboard as site administrator.
 
-### Step 1.5 — Explore Site Administration
+### Step 3.3 — Access Site Administration
 
 1. Click the user avatar (top-right) > **Site administration**.
-2. Review the dashboard sections: **Users**, **Courses**, **Grades**, **Plugins**, **Server**.
-3. Navigate to **Site administration > Server > Moodle info** to confirm version 4.5.x.
+2. Explore the dashboard sections: **Users**, **Courses**, **Grades**, **Plugins**, **Server**.
 
-**Expected result:** Site Administration panel shows Moodle 4.5, PHP 8.3, and PostgreSQL 15 backend.
+**gcloud — view the Moodle Cloud Run revision environment:**
+```bash
+gcloud run services describe ${SERVICE} \
+  --region=${REGION} \
+  --project=${PROJECT} \
+  --format="json" | jq '.spec.template.spec.containers[0].env[] | {name, value}'
+```
+
+**Expected result:** The Site Administration panel is accessible. Environment variables such as `DB_HOST`, `DB_NAME`, and `MOODLE_URL` are injected from the module configuration.
 
 ---
 
-## Exercise 2 — Create a Course
+## Phase 4 — Create Courses and Enroll Users [MANUAL]
 
-### Objective
-
-Create a new Moodle course, configure course settings, enrol a student, and explore the
-course structure.
-
-### Step 2.1 — Create a New Course
+### Step 4.1 — Create a New Course
 
 1. Navigate to **Site administration > Courses > Add a new course**.
 2. Fill in:
-   - **Course full name:** `Introduction to Cloud Computing`
-   - **Short name:** `CLOUD101`
-   - **Category:** `Miscellaneous`
-   - **Course start date:** today
-   - **Course format:** Weekly
+   - **Course full name**: e.g. `Introduction to Cloud Computing`
+   - **Short name**: e.g. `CLOUD101`
+   - **Category**: `Miscellaneous`
+   - **Course start date**: today
 3. Click **Save and display**.
 
-**Expected result:** The empty course page appears with the first weekly section visible.
+**Expected result:** The empty course page appears with editing mode enabled.
 
-### Step 2.2 — Configure Course Settings
+### Step 4.2 — Add Course Activities
 
-1. From the course page, click **Edit settings** (gear icon).
-2. Review and configure:
-   - **Enrolment methods** — manual enrolment enabled by default
-   - **Groups mode** — set to `No groups` for this lab
-   - **Completion tracking** — enable for activity completion visibility
-3. Save settings.
+In the course, click **Turn editing on** (top-right), then click **Add an activity or resource**:
 
-**Expected result:** Course settings saved. Completion tracking is enabled.
+1. **Add a Quiz**: Select Quiz, enter a name, save. Click **Edit quiz** to add questions.
+2. **Add a Forum**: Select Forum, name it "General Discussion", set type to "Standard forum", save.
+3. **Add an Assignment**: Select Assignment, enter a name and submission settings, save.
 
-### Step 2.3 — Add Course Activities
+**Expected result:** Three activities appear in the course content area.
 
-Click **Turn editing on** (top-right), then click **Add an activity or resource** in Week 1:
-
-1. **Add a Quiz**: Select Quiz, name it `Week 1 Quiz`, save. Click **Edit quiz** to configure question settings.
-2. **Add a Forum**: Select Forum, name it `General Discussion`, type `Standard forum for general use`, save.
-3. **Add an Assignment**: Select Assignment, name it `Lab Report`, submission types `Online text`, save.
-
-**Expected result:** Three activities appear in the Week 1 section: a Quiz, a Forum, and an Assignment.
-
-### Step 2.4 — Create a Test Student User
+### Step 4.3 — Create a Test Student User
 
 1. Navigate to **Site administration > Users > Add a new user**.
-2. Fill in: username `student01`, first name `Test`, last name `Student`, email `student01@example.com`, set a password.
+2. Enter username, first/last name, email, and password.
 3. Click **Create user**.
 
-**Expected result:** User `student01` appears in the users list.
+**Expected result:** The new student user appears in the users list.
 
-### Step 2.5 — Enrol the Student
+### Step 4.4 — Enroll the Student
 
 1. From the course page, click **Participants** in the left navigation.
-2. Click **Enrol users** (top-right button).
-3. Search for `student01`, assign **Student** role, click **Enrol users**.
+2. Click **Enroll users** (top-right).
+3. Search for your test student, set role to **Student**, click **Enroll users**.
 
-**Expected result:** Student appears in the Participants list with the Student role and enrolment date.
+**Expected result:** The student appears in the Participants list.
+
+### Step 4.5 — Test the Student View
+
+Log in as the student (use a private browsing window) or use **Switch role to > Student**.
+
+**Expected result:** The student sees the course and its activities without editing controls. They can attempt the quiz, post in the forum, and submit assignments.
 
 ---
 
-## Exercise 3 — Learning Activities
+## Phase 5 — Explore LMS Features [MANUAL]
 
-### Objective
-
-Add questions to the quiz, create an assignment submission, post to the forum, and explore
-the gradebook.
-
-### Step 3.1 — Edit the Quiz
-
-1. From the course page, click on **Week 1 Quiz**.
-2. Click **Edit quiz** > **Add question** > **Multiple choice**.
-3. Enter a question: `What is a virtual machine?`, four options, mark the correct answer.
-4. Set **Default mark** to 1.0 and save.
-5. Click **Preview quiz** to test the question.
-
-**Expected result:** Quiz preview shows the multiple-choice question. Selecting the correct answer shows a pass result.
-
-### Step 3.2 — Submit an Assignment
-
-1. As `student01` (use private browsing or Switch role), navigate to the course.
-2. Click **Lab Report** assignment.
-3. Click **Add submission**, enter text: `This is my lab report submission.`
-4. Click **Save changes**.
-
-**Expected result:** Submission appears with status `Submitted for grading`.
-
-### Step 3.3 — Grade the Assignment
-
-1. As admin, click **Lab Report** > **View all submissions**.
-2. Click **Grade** next to student01's submission.
-3. Enter a grade (e.g., 85/100) and feedback comment.
-4. Click **Save changes**.
-
-**Expected result:** Grade is recorded and visible in the Gradebook.
-
-### Step 3.4 — Post to the Forum
-
-1. Click on **General Discussion** forum.
-2. Click **Add a new discussion topic**.
-3. Enter subject `Welcome to CLOUD101` and message body.
-4. Click **Post to forum**.
-5. Add a reply to the post.
-
-**Expected result:** Discussion thread appears with the post and reply. Subscription notification would be sent via SMTP if configured.
-
-### Step 3.5 — Review the Gradebook
+### Step 5.1 — Gradebook Navigation
 
 1. In the course, click **Grades** in the left navigation.
-2. The Grader report shows student01 with the assignment grade (85).
-3. Navigate to **Grader report > Grade letters** to review the grading scale.
+2. The Gradebook shows students and grades for all graded activities.
 
-**Expected result:** Gradebook shows the quiz (not yet attempted) and assignment grade for student01.
+**Expected result:** The Grader report shows rows for each student and columns for each graded item.
 
----
+### Step 5.2 — Quiz Editor
 
-## Exercise 4 — User Management
+1. Click on the Quiz activity.
+2. Click **Edit quiz** > **Add question** > select **Multiple choice**.
+3. Enter a question, four options, and the correct answer. Save.
+4. Click **Preview quiz** to test.
 
-### Objective
+**Expected result:** The quiz renders and evaluates answers. Grade appears in the Gradebook.
 
-Create additional users with different roles, explore cohorts, configure role permissions,
-and understand the Moodle user hierarchy.
+### Step 5.3 — Assignment Submissions
 
-### Step 4.1 — Create a Teacher User
+1. Click on the Assignment activity.
+2. Click **View all submissions** to see the submissions table.
+3. As admin, click **Grade** to enter a score and feedback.
 
-1. Navigate to **Site administration > Users > Add a new user**.
-2. Fill in: username `teacher01`, first name `Lab`, last name `Teacher`, email `teacher01@example.com`.
-3. Click **Create user**.
-4. Go back to the course Participants page and enrol `teacher01` with the **Teacher** role.
+**Expected result:** The grade is recorded and visible in the Gradebook.
 
-**Expected result:** Teacher appears in Participants with Teacher role. They can edit course content.
+### Step 5.4 — Forums
 
-### Step 4.2 — Create a Cohort
+1. Click on the Forum activity.
+2. Click **Add a new discussion topic**, enter a subject and message, click **Post to forum**.
+3. Reply to the thread.
 
-1. Navigate to **Site administration > Users > Cohorts**.
-2. Click **Add new cohort**: name `Cloud 101 Students`, description `Students for the cloud computing course`.
-3. Click **Add members** and add `student01` to the cohort.
+**Expected result:** The thread and reply appear in the forum. Subscription notifications would be sent via Moodle's email system.
 
-**Expected result:** Cohort created with student01 as a member.
+### Step 5.5 — My Courses Dashboard
 
-### Step 4.3 — Configure Role Permissions
+Click **Home** or **Dashboard** in the top navigation.
 
-1. Navigate to **Site administration > Users > Define roles**.
-2. Click on the **Student** role to review its permissions.
-3. Note: Students can view content, submit activities, and read forums but cannot edit course content.
-4. Review the **Teacher** role — teachers can grade, edit, and manage enrolments.
-
-**Expected result:** Role permission matrix shows the difference between Student and Teacher capabilities.
-
-### Step 4.4 — Explore Authentication Settings
-
-1. Navigate to **Site administration > Plugins > Authentication > Manage authentication**.
-2. Review enabled authentication methods: Email-based self-registration, Manual accounts.
-3. Note the password policies under **Site administration > Security > Site security settings**.
-
-**Expected result:** Email self-registration and manual account creation are enabled. Password policy requires minimum length and complexity.
-
-### Step 4.5 — View User Activity Reports
-
-1. Navigate to **Site administration > Reports > Activity**.
-2. Select the course `CLOUD101` and review student activity.
-3. Navigate to **Reports > User list** to see all enrolled users.
-
-**Expected result:** Activity report shows student01's last access time and quiz/forum activity.
+**Expected result:** The dashboard aggregates upcoming deadlines, unread forum posts, recently accessed courses, and calendar events across all enrolled courses.
 
 ---
 
-## Exercise 5 — Files and Media
+## Phase 6 — Scheduled Tasks and Cron [MANUAL]
 
-### Objective
+### Step 6.1 — Navigate to Scheduled Tasks
 
-Upload files to a course, manage the file repository, verify NFS persistence for moodledata,
-and check GCS storage integration.
+1. In Site Administration, navigate to **Server > Scheduled tasks**.
+2. Review the list of Moodle scheduled tasks and their last run times.
 
-### Step 5.1 — Upload a File Resource
+**Expected result:** Tasks such as `Send message digest emails`, `Update course completion status`, and `Run grade_cron()` appear with their schedules and last run timestamps.
 
-1. In the course, click **Turn editing on** > **Add an activity or resource** > **File**.
-2. Name the resource `Course Slides`.
-3. Click **Add file** (paper icon) in the file picker and upload a PDF or image.
-4. Set **Display** to `Embed` and save.
+### Step 6.2 — Review Cloud Scheduler Cron Jobs
 
-**Expected result:** The file resource appears in the course. Students can view or download it.
+Moodle requires cron to run regularly. This deployment uses Cloud Scheduler to trigger the cron process on Cloud Run.
 
-### Step 5.2 — Explore the File Repository
-
-1. Click **Add an activity or resource** > any activity > click the file picker icon.
-2. Review the available repositories: **Recent files**, **Upload a file**, **URL downloader**, **Server files**.
-3. Navigate to **Site administration > Plugins > Repositories** to view configured repositories.
-
-**Expected result:** At least the Upload, Server files, and Recent files repositories are available.
-
-### Step 5.3 — Check NFS Persistence
-
-Moodle's moodledata directory is stored on Cloud Filestore NFS. Verify the mount:
-
+**gcloud — list Cloud Scheduler jobs:**
 ```bash
-# Check the NFS volume configuration on the Cloud Run service
-gcloud run services describe "${SERVICE}" \
-  --region="${REGION}" \
-  --project="${PROJECT}" \
-  --format="yaml" | grep -A10 "volumes:"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://file.googleapis.com/v1/projects/${PROJECT}/locations/-/instances" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '.instances[] | {name, state, tier, fileShares}'
-```
-
-**Expected result:** The Cloud Run service has an NFS volume mounted at `/mnt`. The Filestore instance shows `READY` state with a file share for moodledata.
-
-### Step 5.4 — Verify GCS Storage Bucket
-
-```bash
-# List Moodle GCS buckets
-gcloud storage buckets list \
-  --project="${PROJECT}" \
-  --filter="name~moodle"
-
-# REST API
-curl -s \
-  "https://storage.googleapis.com/storage/v1/b?project=${PROJECT}&prefix=moodle" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '.items[] | {name, location, storageClass}'
-```
-
-**Expected result:** A `moodle-media` bucket exists in STANDARD storage class. This bucket can be used for themes and plugins via GCS Fuse mounts.
-
-### Step 5.5 — Test Scale-to-Zero Persistence
-
-```bash
-# Force a new Cloud Run revision (simulates scale-to-zero and new instance)
-gcloud run services update "${SERVICE}" \
-  --region="${REGION}" \
-  --project="${PROJECT}" \
-  --update-labels "lab-restart=$(date +%s)"
-
-# Wait for new revision
-gcloud run revisions list \
-  --service="${SERVICE}" \
-  --region="${REGION}" \
-  --project="${PROJECT}"
-```
-
-1. After the new revision is active, reload the Moodle site.
-2. Verify the course, users, and uploaded files are still present.
-
-**Expected result:** All course content, users, and files persist across Cloud Run instance replacement because moodledata is stored on NFS.
-
----
-
-## Exercise 6 — Database and Storage
-
-### Objective
-
-Inspect the Cloud SQL PostgreSQL instance, review backup configuration, and trigger a manual
-database backup via the Moodle admin panel.
-
-### Step 6.1 — Inspect the Cloud SQL Instance
-
-**gcloud:**
-```bash
-INSTANCE=$(gcloud sql instances list \
-  --project="${PROJECT}" \
-  --filter="name~moodle" \
-  --format="value(name)" \
-  --limit=1)
-
-gcloud sql instances describe "${INSTANCE}" \
-  --project="${PROJECT}" \
-  --format="table(name, databaseVersion, settings.tier, settings.backupConfiguration.enabled)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://sqladmin.googleapis.com/sql/v1beta4/projects/${PROJECT}/instances" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '.items[] | {name, version: .databaseVersion, state}'
-```
-
-**Expected result:** A PostgreSQL 15 instance exists with automated backups enabled. The database tier shows the configured storage class.
-
-### Step 6.2 — Review Cloud SQL Monitoring
-
-Navigate to **Cloud Console > SQL > Instances > [your-instance] > Monitoring**:
-
-1. Review **CPU utilisation** — shows Moodle's database load.
-2. Review **Active connections** — shows active Moodle→PostgreSQL connections via Auth Proxy.
-3. Review **Storage used** — reflects the Moodle course database size.
-
-```bash
-# Query Cloud SQL CPU utilisation via REST
-curl -s -X POST \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"query\": \"fetch cloudsql_database::cloudsql.googleapis.com/database/cpu/utilization | filter resource.database_id =~ '${PROJECT}:${INSTANCE}' | within 30m\"
-  }" | jq '.timeSeriesData[].pointData[-1].values'
-```
-
-**Expected result:** Cloud SQL shows active connections from Moodle's connection pool. CPU is low during idle periods.
-
-### Step 6.3 — Run a Moodle Admin Backup
-
-1. Navigate to **Site administration > Courses > Backups > General backup defaults**.
-2. Review the backup settings (automated course backups run on the configured schedule).
-3. Navigate to **Site administration > Courses > Backups > Automated backup status**.
-4. Click **Run now** to trigger an immediate backup.
-
-**Expected result:** Backup starts immediately. A backup file is created in the course's backup area.
-
-### Step 6.4 — Review Cloud Scheduler Cron
-
-```bash
-# List Cloud Scheduler jobs for Moodle
 gcloud scheduler jobs list \
-  --project="${PROJECT}" \
-  --location="${REGION}" \
+  --project=${PROJECT} \
+  --location=${REGION} \
   --filter="name~moodle"
-
-# Describe the cron job
-CRON_JOB=$(gcloud scheduler jobs list \
-  --project="${PROJECT}" \
-  --location="${REGION}" \
-  --filter="name~moodle" \
-  --format="value(name)" | head -1)
-
-gcloud scheduler jobs describe "${CRON_JOB}" \
-  --location="${REGION}" \
-  --project="${PROJECT}"
 ```
 
-**REST API:**
+**gcloud — describe the cron job:**
 ```bash
-curl -s \
-  "https://cloudscheduler.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/jobs?filter=name:moodle" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '.jobs[] | {name, schedule, state, lastAttemptTime}'
+gcloud scheduler jobs describe \
+  $(gcloud scheduler jobs list --project=${PROJECT} --location=${REGION} --filter="name~moodle" --format="value(name)" | head -1) \
+  --location=${REGION} \
+  --project=${PROJECT}
 ```
 
-**Expected result:** A `moodle-cron` Cloud Scheduler job runs every 5 minutes, calling `${SERVICE_URL}/admin/cron.php?password=<MOODLE_CRON_PASSWORD>`.
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://cloudscheduler.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/jobs?filter=name:moodle"
+```
 
-### Step 6.5 — Manually Trigger Cron
+**Expected result:** A Cloud Scheduler job (e.g. `moodle-cron`) is listed with a schedule (typically `*/5 * * * *` for every 5 minutes) and a target URL pointing to the Cloud Run service's `cron.php` endpoint.
+
+### Step 6.3 — Verify the cron.php Endpoint
 
 ```bash
-# Trigger the cron job immediately
-gcloud scheduler jobs run "${CRON_JOB}" \
-  --location="${REGION}" \
-  --project="${PROJECT}"
-
-# Verify the cron.php endpoint
 curl -s -o /dev/null -w "%{http_code}" \
   "${SERVICE_URL}/admin/cron.php"
-# Expected: 200
 ```
 
-**Expected result:** Cron runs and processes pending scheduled tasks. HTTP 200 returned from cron.php.
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "${SERVICE_URL}/admin/cron.php"
+```
+
+**Expected result:** HTTP `200`. The cron script processes pending scheduled tasks and returns output.
+
+### Step 6.4 — Manually Trigger the Cloud Scheduler Job
+
+```bash
+gcloud scheduler jobs run \
+  $(gcloud scheduler jobs list --project=${PROJECT} --location=${REGION} --filter="name~moodle" --format="value(name)" | head -1) \
+  --location=${REGION} \
+  --project=${PROJECT}
+```
+
+**Expected result:** The cron job is triggered immediately. Check the Cloud Run logs to see cron.php execution output.
 
 ---
 
-## Exercise 7 — Cloud Logging
+## Phase 7 — Explore Cloud Logging [MANUAL]
 
-### Objective
+### Step 7.1 — View Moodle Application Logs
 
-Query Moodle PHP/Apache logs, filter for errors, view Cloud SQL Auth Proxy logs, and stream
-live logs using gcloud.
+Navigate to **Logging > Logs Explorer** in the Cloud Console.
 
-### Step 7.1 — View Moodle Logs in Log Explorer
-
-Navigate to **Cloud Console > Logging > Log Explorer** and use this filter:
+Use the following query to view Cloud Run Moodle logs:
 
 ```
 resource.type="cloud_run_revision"
@@ -705,259 +436,155 @@ resource.labels.service_name="${SERVICE}"
 resource.labels.location="${REGION}"
 ```
 
-**Expected result:** PHP/Apache access logs appear with Moodle page requests, Auth Proxy connection messages, and cron execution entries.
-
-### Step 7.2 — Filter Application Logs via gcloud
-
-**gcloud:**
+**gcloud equivalent:**
 ```bash
 gcloud logging read \
-  'resource.type="cloud_run_revision" AND resource.labels.service_name="'"${SERVICE}"'"' \
-  --project="${PROJECT}" \
-  --freshness=1h \
+  'resource.type="cloud_run_revision" AND resource.labels.service_name="'${SERVICE}'"' \
+  --project=${PROJECT} \
   --limit=50 \
-  --format="table(timestamp,severity,textPayload)"
+  --format="table(timestamp, textPayload)"
 ```
 
-**REST API:**
+**REST API equivalent:**
 ```bash
-curl -s -X POST \
-  "https://logging.googleapis.com/v2/entries:list" \
+curl -X POST \
   -H "Authorization: Bearer $(gcloud auth print-access-token)" \
   -H "Content-Type: application/json" \
-  -d "{
-    \"projectIds\": [\"${PROJECT}\"],
-    \"filter\": \"resource.type=cloud_run_revision AND resource.labels.service_name=${SERVICE}\",
-    \"pageSize\": 20
-  }" | jq '.entries[] | {timestamp: .timestamp, text: .textPayload}'
+  "https://logging.googleapis.com/v2/entries:list" \
+  -d '{
+    "projectIds": ["'"${PROJECT}"'"],
+    "filter": "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"'"${SERVICE}"'\"",
+    "pageSize": 20
+  }'
 ```
 
-**Expected result:** Apache access log lines appear (`GET /course/view.php HTTP/1.1 200`). Auth Proxy connection messages confirm database connectivity.
+**Expected result:** PHP/Apache access logs and Moodle-specific messages appear. Cloud SQL Auth Proxy connection messages also appear. Look for `Apache/2.x` access log lines for each page request.
 
-### Step 7.3 — Filter PHP Errors
+### Step 7.2 — Filter PHP Errors
 
-```bash
-gcloud logging read \
-  'resource.type="cloud_run_revision" AND resource.labels.service_name="'"${SERVICE}"'" AND textPayload=~"PHP Fatal|PHP Error"' \
-  --project="${PROJECT}" \
-  --freshness=24h \
-  --format="table(timestamp,textPayload)"
+```
+resource.type="cloud_run_revision"
+resource.labels.service_name="${SERVICE}"
+textPayload=~"PHP (Fatal|Error)"
+severity>=WARNING
 ```
 
-**Expected result:** Under normal operation, no PHP fatal errors appear. PHP deprecation notices may appear for some plugins.
+**Expected result:** Under normal operation, no fatal PHP errors should appear. Plugin-related notices may appear depending on the Moodle configuration.
 
-### Step 7.4 — View Cron Execution Logs
+### Step 7.3 — View Cron Execution Logs
 
-```bash
-gcloud logging read \
-  'resource.type="cloud_run_revision" AND resource.labels.service_name="'"${SERVICE}"'" AND textPayload=~"cron.php"' \
-  --project="${PROJECT}" \
-  --freshness=1h \
-  --limit=20 \
-  --format="table(timestamp,textPayload)"
+Filter logs for cron.php requests:
+
+```
+resource.type="cloud_run_revision"
+resource.labels.service_name="${SERVICE}"
+textPayload=~"cron.php"
 ```
 
-**Expected result:** Each Cloud Scheduler trigger produces a log line for the `cron.php` request with HTTP 200 status.
-
-### Step 7.5 — Stream Live Logs
-
-```bash
-gcloud run services logs tail "${SERVICE}" \
-  --region="${REGION}" \
-  --project="${PROJECT}"
-```
-
-Make requests to the Moodle dashboard and observe access log entries in real time.
-
-**Expected result:** Apache access log lines appear within seconds of making Moodle page requests.
+**Expected result:** Each Cloud Scheduler trigger produces a log line for the `cron.php` request with a `200` status code.
 
 ---
 
-## Exercise 8 — Cloud Monitoring
+## Phase 8 — Explore Cloud Monitoring [MANUAL]
 
-### Objective
+### Step 8.1 — View Service Metrics
 
-Explore Cloud Run metrics for Moodle, review the uptime check, inspect Cloud SQL monitoring,
-and understand scale-to-zero instance behaviour.
+Navigate to **Monitoring > Metrics Explorer** in the Cloud Console.
 
-### Step 8.1 — View Cloud Run Metrics in Console
+Useful metrics for Cloud Run Moodle deployments:
 
-Navigate to **Cloud Console > Cloud Run > Services > moodle** and review the metrics tabs:
-
-| Metric Tab | Key Metrics |
+| Metric | Description |
 |---|---|
-| **Requests** | Request count, latency P50/P95/P99 |
-| **Container** | CPU utilisation, memory utilisation |
-| **Instances** | Active instance count (scales to zero when idle) |
+| `run.googleapis.com/request_count` | Requests per second |
+| `run.googleapis.com/request_latencies` | Request latency distribution |
+| `run.googleapis.com/container/instance_count` | Number of active instances |
+| `run.googleapis.com/container/cpu/utilizations` | CPU utilisation per revision |
+| `run.googleapis.com/container/memory/utilizations` | Memory utilisation per revision |
+| `cloudsql.googleapis.com/database/cpu/utilization` | Cloud SQL CPU usage |
 
-**Expected result:** Instance count drops to 0 during idle periods (`min_instance_count = 0`). Request count increases as you navigate Moodle.
-
-### Step 8.2 — Review the Uptime Check
-
-```bash
-gcloud monitoring uptime list-configs --project="${PROJECT}"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '.uptimeCheckConfigs[] | {name: .displayName, path: .httpCheck.path, period: .period}'
-```
-
-**Expected result:** An uptime check targeting the Moodle service root path runs every 60 seconds from multiple global locations with passing status.
-
-### Step 8.3 — Query Request Metrics via REST API
-
-```bash
-curl -s -X POST \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"query\": \"fetch cloud_run_revision::run.googleapis.com/request_count | filter resource.service_name = '${SERVICE}' | within 1h | group_by [], sum(val())\"
-  }" | jq '.timeSeriesData[].pointData[-1].values'
-```
-
-**Expected result:** Total request count for the past hour is returned.
-
-### Step 8.4 — Review Cloud SQL Metrics
-
-Navigate to **Cloud Console > SQL > Instances > [your-instance] > Monitoring**:
-
-1. **CPU utilisation** — should be low for this lab workload.
-2. **Active connections** — shows Moodle Auth Proxy pooled connections.
-3. **Storage** — reflects the moodle database size.
-
-**gcloud:**
+**gcloud equivalent:**
 ```bash
 gcloud monitoring metrics list \
-  --filter="metric.type:cloudsql.googleapis.com" \
-  --project="${PROJECT}" \
-  | grep -E "cpu|connections|storage"
+  --filter="metric.type:run.googleapis.com" \
+  --project=${PROJECT} \
+  --limit=10
 ```
 
-**Expected result:** Cloud SQL shows stable CPU utilisation and consistent connection count from the Auth Proxy pool.
+**Expected result:** Cloud Run metrics charts show request count, latency percentiles, and instance count over time.
 
-### Step 8.5 — Explore Metrics Explorer
+### Step 8.2 — Review Uptime Checks
 
-1. Navigate to **Cloud Console > Monitoring > Metrics Explorer**.
-2. Select resource type **Cloud Run Revision** and plot:
-   - `run.googleapis.com/container/instance_count` — observe scale-to-zero
-   - `run.googleapis.com/request_latencies` — note the cold-start latency spike
+Navigate to **Monitoring > Uptime checks**.
 
-**Expected result:** Instance count drops to 0 during idle periods. Request latency shows a spike on the first request after scale-to-zero (cold start).
+**Expected result:** The uptime check (configured when `uptime_check_config.enabled = true`) runs every 60 seconds against `${SERVICE_URL}/` and shows **Passing** from multiple global regions.
+
+**gcloud equivalent:**
+```bash
+gcloud monitoring uptime list-configs \
+  --project=${PROJECT}
+```
+
+### Step 8.3 — CDN Metrics (if Cloud CDN is enabled)
+
+If `enable_cdn = true` and `enable_cloud_armor = true` were configured, navigate to **Network services > Cloud CDN** in the Cloud Console.
+
+**gcloud — list CDN backend services:**
+```bash
+gcloud compute backend-services list \
+  --project=${PROJECT} \
+  --global
+```
+
+**Expected result:** CDN metrics show cache hit ratio, total requests, and cache bytes served. For Moodle, static assets (CSS, JavaScript, images) should achieve a high cache hit rate.
+
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://compute.googleapis.com/compute/v1/projects/${PROJECT}/global/backendServices"
+```
+
+### Step 8.4 — Cloud SQL Monitoring
+
+Navigate to **SQL > Instances > [your-instance] > Monitoring**.
+
+**Expected result:** PostgreSQL connection count shows active Moodle connections. Storage usage reflects Moodle course database size.
 
 ---
 
-## Cleanup
+## Phase 9 — Undeploy [AUTOMATED]
 
-Return to the RAD UI and click **Undeploy** on the `Moodle_CloudRun` deployment. This removes
-the Cloud Run service, Cloud SQL instance, Cloud Filestore NFS, GCS bucket, Secret Manager
-secrets, Cloud Scheduler jobs, VPC connector, and all IAM bindings.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
 
-> **Warning:** This permanently deletes all data including the PostgreSQL database and NFS
-> moodledata. Export any course content before undeploying via **Site administration >
-> Courses > Restore/Backup**.
+**Approximate destroy duration:** 15–25 minutes (Cloud SQL and Cloud Filestore deletion take the longest).
 
-> **Note:** Cloud SQL and Cloud Filestore deletion takes 5–10 minutes each.
+> **Warning:** This permanently deletes all resources including the PostgreSQL database, NFS moodledata, and Cloud Scheduler jobs. Export any course content before undeploying using **Site administration > Courses > Restore/Backup**.
 
-### Manual Cleanup (if needed)
-
-**gcloud:**
-```bash
-# Delete the Cloud Run service
-gcloud run services delete "${SERVICE}" \
-  --region="${REGION}" --project="${PROJECT}" --quiet
-
-# Delete the Cloud SQL instance
-gcloud sql instances delete "${INSTANCE}" \
-  --project="${PROJECT}" --quiet
-
-# Delete Secret Manager secrets
-gcloud secrets list --project="${PROJECT}" --filter="name~moodle" \
-  --format="value(name)" | xargs -I{} gcloud secrets delete {} --project="${PROJECT}" --quiet
-```
-
-**REST API — delete Cloud Run service:**
-```bash
-curl -s -X DELETE \
-  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)"
-```
+Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 
-## Reference
+## Summary
 
-### Key Module Variables
-
-| Variable | Type | Default | Description |
-|---|---|---|---|
-| `project_id` | string | — | GCP project ID (required) |
-| `region` | string | `us-central1` | GCP region for all resources |
-| `application_name` | string | `moodle` | Base name for Cloud Run service and resources |
-| `application_version` | string | `4.5.1` | Moodle image version (built from Ubuntu 24.04 + PHP 8.3) |
-| `min_instance_count` | number | `0` | Minimum Cloud Run instances (0 = scale to zero) |
-| `max_instance_count` | number | `3` | Maximum Cloud Run instances |
-| `cpu_limit` | string | `1000m` | CPU per Cloud Run instance |
-| `memory_limit` | string | `2Gi` | Memory per Cloud Run instance |
-| `db_name` | string | `moodle` | PostgreSQL database name |
-| `db_user` | string | `moodle` | PostgreSQL application user |
-| `enable_redis` | bool | `true` | Enable Redis for session caching |
-| `redis_host` | string | `""` | Redis host IP (defaults to NFS server IP) |
-| `redis_port` | string | `6379` | Redis port |
-| `enable_nfs` | bool | `true` | Mount Cloud Filestore NFS for moodledata (required) |
-| `nfs_mount_path` | string | `/mnt` | NFS mount path inside the container |
-| `ingress_settings` | string | `all` | Traffic ingress setting |
-| `vpc_egress_setting` | string | `PRIVATE_RANGES_ONLY` | VPC egress routing |
-| `enable_cloud_armor` | bool | `false` | Enable Cloud Armor WAF |
-| `enable_cdn` | bool | `false` | Enable Cloud CDN (requires Cloud Armor) |
-| `backup_schedule` | string | `0 2 * * *` | Cron schedule for automated backups |
-| `backup_retention_days` | number | `7` | Days to retain backup files |
-
-### Useful Commands
-
-```bash
-# Get service URL
-gcloud run services describe ${SERVICE} --region=${REGION} --project=${PROJECT} --format="value(status.url)"
-
-# View environment variables
-gcloud run services describe ${SERVICE} --region=${REGION} --format="json" | jq '.spec.template.spec.containers[0].env[]'
-
-# List Cloud SQL instances
-gcloud sql instances list --project=${PROJECT} --filter="name~moodle"
-
-# Access admin password secret
-gcloud secrets versions access latest --secret=${ADMIN_SECRET} --project=${PROJECT}
-
-# Tail Cloud Run logs
-gcloud run services logs tail ${SERVICE} --region=${REGION} --project=${PROJECT}
-
-# List Cloud Scheduler jobs
-gcloud scheduler jobs list --project=${PROJECT} --location=${REGION} --filter="name~moodle"
-
-# Run cron job now
-gcloud scheduler jobs run ${CRON_JOB} --location=${REGION} --project=${PROJECT}
-
-# List Cloud Run revisions
-gcloud run revisions list --service=${SERVICE} --region=${REGION} --project=${PROJECT}
-
-# List uptime checks
-gcloud monitoring uptime list-configs --project=${PROJECT}
-
-# List Filestore instances
-gcloud filestore instances list --project=${PROJECT}
-```
-
-### Further Reading
-
-- [Moodle official documentation](https://docs.moodle.org/)
-- [Moodle Admin Quick Guide](https://docs.moodle.org/405/en/Administration_quick_guide)
-- [Cloud Run documentation](https://cloud.google.com/run/docs)
-- [Cloud SQL for PostgreSQL](https://cloud.google.com/sql/docs/postgres)
-- [Cloud Filestore NFS](https://cloud.google.com/filestore/docs)
-- [Cloud Scheduler documentation](https://cloud.google.com/scheduler/docs)
-- [Cloud Monitoring for Cloud Run](https://cloud.google.com/run/docs/monitoring)
-- [Redis session caching in Moodle](https://docs.moodle.org/405/en/Session_handling)
+| Action | Phase | Automated |
+|---|---|---|
+| Cloud Run service provisioning | 1 | Yes |
+| Cloud SQL PostgreSQL 15 database | 1 | Yes |
+| Cloud Filestore NFS for moodledata | 1 | Yes |
+| Secret Manager credentials | 1 | Yes |
+| VPC Access connector and IAM | 1 | Yes |
+| Container image build (Cloud Build) | 1 | Yes |
+| Cloud Scheduler cron jobs | 1 | Yes |
+| Get Cloud Run service URL | 2 | No |
+| Confirm Moodle is reachable | 2 | No |
+| Retrieve admin credentials from Secret Manager | 3 | No |
+| Complete Moodle installation wizard | 3 | No |
+| Access Site Administration | 3 | No |
+| Create course and add activities | 4 | No |
+| Create student user and enroll | 4 | No |
+| Explore Gradebook, Quiz, Assignment, Forum | 5 | No |
+| Review Cloud Scheduler cron setup | 6 | No |
+| Verify cron.php endpoint | 6 | No |
+| Review PHP/Apache logs in Cloud Logging | 7 | No |
+| Review Cloud Run and Cloud SQL metrics | 8 | No |
+| Review CDN metrics (if enabled) | 8 | No |
+| Undeploy infrastructure | 9 | Yes |

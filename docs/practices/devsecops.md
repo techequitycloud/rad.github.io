@@ -37,7 +37,7 @@ title: DevSecOps
 - `modules/Services_GCP/vpc_sc.tf` + `modules/App_CloudRun/vpc_sc.tf` + `modules/App_GKE/vpc_sc.tf`.
 - Three user-facing variables: `enable_vpc_sc`, `admin_ip_ranges`, `vpc_sc_dry_run`.
 - Phased rollout documented in `.agent/VPC_SC_QUICK_START.md`, `VPC_SC_TESTING_GUIDE.md`, `VPC_SC_PER_DEPLOYMENT_STRATEGY.md`. Always enable dry-run first, monitor for 1–2 weeks, then enforce.
-- Per-tenant perimeter strategy — see [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md).
+- Per-tenant perimeter strategy — see [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md).
 
 ### 5. Supply chain and container security (canonical)
 
@@ -87,7 +87,7 @@ The `/security` audit workflow catches configuration drift before it becomes an 
 
 - [capabilities/networking.md](../capabilities/networking.md) — VPC, mesh, edge, ingress controls (network-layer view)
 - [capabilities/observability.md](../capabilities/observability.md) — Cloud Audit Logs, Security Command Center, dry-run violation observation
-- [outcomes/compliance-governance.md](../outcomes/compliance-governance.md) — auditor-evidence framing of these controls
-- [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) — per-tenant perimeter strategy
-- [practices/gitops-iac.md](gitops-iac.md) — secret-out-of-state mechanics
+- [outcomes/compliance_governance.md](../outcomes/compliance_governance.md) — auditor-evidence framing of these controls
+- [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) — per-tenant perimeter strategy
+- [practices/gitops_iac.md](gitops_iac.md) — secret-out-of-state mechanics
 - [practices/sre.md](sre.md) — post-mortem process, on-call model

@@ -7,6 +7,17 @@ slug: /guides/agent
 
 <YouTubeEmbed videoId="2R4Ek8airqI" poster="https://storage.googleapis.com/rad-public-2b65/guides/agent_guide.png" />
 
+# Agent Guide
+
+<img src="https://storage.googleapis.com/rad-public-2b65/guides/agent_guide.png" alt="Agent Guide" style={{marginBottom: '20px'}} />
+
+<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/agent_guide.m4a" title="Agent Quick Start Audio" />
+
+<video width="100%" controls style={{marginTop: '20px'}}>
+  <source src="https://storage.googleapis.com/rad-public-2b65/guides/agent_guide.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
 ## 1. Introduction
 
 Welcome to the Agent Program! As an Agent, you earn commissions by referring new users to the platform. This guide explains how to track your referrals and monitor the revenue they generate.

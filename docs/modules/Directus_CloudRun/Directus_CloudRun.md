@@ -5,20 +5,13 @@ sidebar_label: "Directus CloudRun"
 
 # Directus on Google Cloud Run
 
-<YouTubeEmbed videoId="hoQxO5K-Els" poster="https://storage.googleapis.com/rad-public-2b65/modules/Directus_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Directus_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
 This document provides a comprehensive reference for the `modules/Directus_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Directus-specific behaviours, and operational patterns for deploying Directus on Google Cloud Run (v2).
 
 ---
 
 ## 1. Module Overview
 
-Directus is an open-source composable data platform and Backend-as-a-Service (BaaS) that wraps any SQL database with auto-generated REST and GraphQL APIs and a no-code admin application — without modifying your schema. With 34,500+ GitHub stars and customers including Tripadvisor, Adobe, and Mercedes-Benz, Directus is consistently ranked among the top open-source headless CMS choices in 2026. Its native MCP server support (introduced in v11.13, November 2025) enables direct AI tool integration, making it ideal for Backend-as-a-Service, internal dashboards, and headless CMS use cases. `Directus_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Directus-specific application configuration, security secrets, database initialisation, and storage configuration via `Directus_Common`.
+Directus is an open-source headless CMS and Backend-as-a-Service (BaaS) platform that wraps any SQL database with auto-generated REST and GraphQL APIs and a no-code admin application. `Directus_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Directus-specific application configuration, security secrets, database initialisation, and storage configuration via `Directus_Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Node.js container, scale-to-zero by default. Custom image build via Cloud Build is the default workflow.
@@ -497,9 +490,9 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `100` | Platform metadata: deployment credit cost. |
-| `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
+| `require_credit_purchases` | 0 | `true` | Platform metadata: enforces credit balance check. |
 | `enable_purge` | 0 | `true` | Permits full deletion of module resources on destroy. |
-| `public_access` | 0 | `true` | Platform catalogue visibility. |
+| `public_access` | 0 | `false` | Platform catalogue visibility. |
 | `deployment_id` | 0 | `""` | Deployment ID suffix. Auto-generated if empty. |
 | `resource_creator_identity` | 0 | (platform SA) | Service account used by Terraform to manage resources. |
 | `project_id` | 1 | — | GCP project ID. **Required.** |
@@ -596,6 +589,40 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `vpc_sc_dry_run` | 21 | `true` | When `true`, violations are logged but not blocked. |
 | `organization_id` | 21 | `""` | GCP Organization ID for VPC-SC Access Context Manager. Auto-discovered when empty. |
 | `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs for all supported GCP services. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+The table below identifies the variables most commonly misconfigured in `Directus_CloudRun` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong.
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `application_name` | `"directus"` (default; do not change after first deploy) | **Critical** | Embedded in Cloud Run service name, Artifact Registry repo, and Secret Manager secret IDs (including the `KEY` and `SECRET` secrets). Changing recreates all named resources — existing auth tokens are invalidated and all file transformation caches are lost. |
+| `tenant_deployment_id` | Match environment: `"prod"`, `"staging"`, `"dev"` | **Critical** | Changing after first deploy orphans the old Cloud SQL instance and Secret Manager secrets. A new empty database and fresh `KEY`/`SECRET` pair are generated, invalidating all existing user sessions and signed URLs. |
+| `application_version` | A pinned tag (e.g. `"11.1.0"`); avoid `"latest"` in production | **Medium** | `"latest"` makes rollback ambiguous. Directus schema migrations are one-way — deploying a newer version and then rolling back to `"latest"` (pointing to the old version) causes a migration mismatch and crashes on startup. Always pin to a specific version. |
+| `database_type` | `"POSTGRES_15"` (default; recommended for Directus) | **Critical** | Changing from `POSTGRES` to `MYSQL` after first deploy: Directus schema (UUID primary keys, JSONB columns) is incompatible with MySQL. A new empty MySQL instance is provisioned; all existing data is left in the orphaned PostgreSQL instance. |
+| `KEY` (generated secret) | Auto-generated 32-character random string stored in Secret Manager | **Critical** | Rotating or changing the `KEY` secret after first deploy: all existing user sessions and access tokens are immediately invalidated. Every logged-in user is logged out. Webhooks signed with the old key fail validation. Never rotate `KEY` without a planned maintenance window and user notification. |
+| `SECRET` (generated secret) | Auto-generated 32-character random string stored in Secret Manager | **Critical** | Rotating `SECRET` after first deploy: all JWT tokens issued to API clients become invalid. Third-party integrations using bearer tokens fail with 401 until tokens are re-issued. Never rotate `SECRET` without updating all API clients first. |
+| `ADMIN_EMAIL` | `"admin@example.com"` (hardcoded default in `Directus_Common`) — **must be overridden** via `environment_variables` | **High** | Left as `"admin@example.com"`: the Directus admin account is created with a guessable email. Any actor who knows the email and the generated `ADMIN_PASSWORD` can access the admin panel. Override with a real email address before first deploy. |
+| `ADMIN_PASSWORD` (generated secret) | Auto-generated 16-character password stored in Secret Manager | **High** | Never log or print the admin password in CI/CD pipelines. Retrieve it from Secret Manager: `gcloud secrets versions access latest --secret=<PREFIX>-admin-password`. If the first deploy bootstrap runs with `ADMIN_EMAIL = admin@example.com`, the account is created with that email — changing the email later requires a manual DB update. |
+| `enable_redis` | `false` (default); set `true` for production horizontal scaling | **High** | `false` with `max_instance_count > 1`: each Cloud Run instance has an isolated in-process cache. Cache inconsistency between instances causes stale API responses. Directus rate-limiting state is also per-instance — clients can exceed rate limits by being distributed across instances. Enable Redis for any multi-instance deployment. |
+| `REDIS` (secret env var) | Full Redis URL: `redis://:<password>@<host>:<port>` | **High** | Redis URL omits the auth password when the Redis instance requires authentication: Directus connects but Redis rejects the `AUTH` command. All cache operations fail silently (Directus falls back to in-process cache) and rate-limiting breaks. Always include the password in the URL if set. |
+| `STORAGE_GCS_BUCKET` | Auto-derived from `tenant_deployment_id` and `deployment_id` | **Critical** | Pointing to a non-existent bucket: all file uploads to Directus fail with a storage error. Images uploaded via the API return 500. Existing files become inaccessible. Ensure the bucket exists before first deploy and matches the auto-derived name exactly. |
+| `enable_cloudsql_volume` | `true` (default; Cloud SQL Auth Proxy sidecar) | **High** | `false`: Directus must connect to Cloud SQL over TCP. If Private Service Access is not configured, all DB connections fail at startup with `ECONNREFUSED`. The Cloud Run revision never becomes healthy. |
+| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` minimum | **High** | Memory too low: Directus is OOMKilled when processing large image transformation requests or loading large collection schemas into memory. Increase to at least `1024Mi` for deployments with image assets or complex data models. |
+| `min_instance_count` | `0` for dev (scale-to-zero); `1` for production | **Medium** | `0` in production: cold starts take 15–30 s for Directus (image pull + DB schema load + extension registration). Users experience long delays on the first API call after an idle period. |
+| `max_instance_count` | `≤ Cloud SQL max_connections ÷ avg_connections_per_instance` | **High** | Exceeding Cloud SQL max connections: `FATAL: sorry, too many clients already`. Every Directus instance fails on DB queries simultaneously. The entire API becomes unavailable. |
+| `execution_environment` | `"gen2"` (required for NFS mounts) | **High** | `"gen1"` with `enable_nfs = true`: the NFS mount fails at container startup. Directus cannot read or write local storage fallback files. All instances fail to start. |
+| `enable_nfs` | `true` (default; required for shared upload storage across instances) | **High** | `false` with `max_instance_count > 1` and `STORAGE_LOCATIONS = "local"`: uploaded files stored on one instance's ephemeral disk are invisible to other instances. Users get 404 for assets uploaded by a different instance. After any instance restart, all locally stored assets are lost. (GCS storage avoids this — keep `STORAGE_GCS_DRIVER = "gcs"` set.) |
+| `ingress_settings` | `"all"` for public-facing; `"internal-and-cloud-load-balancing"` when using Cloud Armor | **Medium** | `"all"` with Cloud Armor enabled: requests can bypass the load balancer and WAF via the direct `*.run.app` URL. Use `"internal-and-cloud-load-balancing"` to force all traffic through the LB+Armor path. |
+| `startup_probe_config.path` | `"/server/ping"` (Directus built-in health endpoint) | **Critical** | Wrong path: Cloud Run repeatedly fails the startup probe, preventing the revision from receiving traffic. `"/server/ping"` returns HTTP 200 when Directus is fully initialised and DB-connected. Do not use `"/"` — the root redirects to the admin UI with a 301, which some probe configurations count as a failure. |
+| `startup_probe_config.failure_threshold` | `30` (default; ~330 s tolerance for first-run DB migration) | **High** | Too low on first deploy: Directus runs schema migrations that can take 1–3 minutes on a fresh database. The probe kills the instance before migrations complete. Increase `failure_threshold` to `40` or `period_seconds` to `15` if first-deploy timeouts occur. |
+| `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` until CI pipeline attests images | **Critical** | `"REQUIRE_ATTESTATION"` without a working attestation pipeline: no new Directus image can be deployed. Rollbacks also fail. |
+| `enable_backup_import` | `false` after a successful restore — **set back to `false` immediately** | **High** | Leaving `true`: the import job re-runs on every `tofu apply`, overwriting the live Directus database with the stale backup. All data entered since the backup (new items, users, files) is destroyed. |
+| `enable_iap` | `false` for public Directus; `true` for internal headless CMS | **High** | `true` without `iap_oauth_client_id`/`iap_oauth_client_secret`: IAP is silently disabled and the admin panel is exposed without authentication. With credentials but no `iap_authorized_users`: all requests return HTTP 403, locking out everyone including administrators. |
+| `enable_vpc_sc` | `false` until VPC-SC perimeter exists; use `vpc_sc_dry_run = true` first | **Critical** | `enable_vpc_sc = true` with `vpc_sc_dry_run = false` on first enable: if the Directus Cloud Run SA is missing from the access level, Cloud SQL, Secret Manager, and GCS access all fail simultaneously. |
+| `enable_audit_logging` | `false` for dev; `true` for production environments handling PII | **Low** | `false` in production: Secret Manager reads (including `KEY`, `SECRET`, and `ADMIN_PASSWORD`) are not logged. Compliance frameworks may require these access records. Enabling increases Cloud Logging costs. |
 
 ## Destroying Resources
 
