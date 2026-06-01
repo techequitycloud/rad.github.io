@@ -1,21 +1,21 @@
 ---
-title: "Supabase_GKE Module — Configuration Guide"
+title: "Supabase GKE Module — Configuration Guide"
 sidebar_label: "Supabase GKE"
 ---
 
-# Supabase_GKE Module — Configuration Guide
+# Supabase GKE Module — Configuration Guide
 
 This guide describes every configuration variable available in the `Supabase_GKE` module. `Supabase_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Supabase_Common`](../Supabase_Common/Supabase_Common.md) shared application configuration to deploy [Supabase](https://supabase.com/) — an open-source Firebase alternative — on Google Kubernetes Engine (GKE) Autopilot.
 
-> **GKE-only:** Supabase is available in the GKE variant only. There is no `Supabase_CloudRun` module, as Supabase's multi-service architecture (Kong API gateway, Auth, Storage, Realtime, PostgREST) requires persistent connections and Kubernetes primitives that Cloud Run does not support.
+> **GKE-only:** Supabase is available in the GKE variant only. There is no `Supabase CloudRun` module, as Supabase's multi-service architecture (Kong API gateway, Auth, Storage, Realtime, PostgREST) requires persistent connections and Kubernetes primitives that Cloud Run does not support.
 
-Most configuration options in `Supabase_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the documentation.
+Most configuration options in `Supabase GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the documentation.
 
 ---
 
 ## Standard Configuration Reference
 
-| Configuration Area | App_GKE.md Section | Supabase-Specific Notes |
+| Configuration Area | App GKE.md Section | Supabase-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Supabase-specific `module_description` and `module_services` defaults are pre-set. |
 | Project & Identity | §2 IAM & Access Control | Identical. |
@@ -33,10 +33,10 @@ Most configuration options in `Supabase_GKE` map directly to the same options in
 
 ---
 
-## How Supabase_GKE Relates to App_GKE
+## How Supabase GKE Relates to App GKE
 
 1. **Kong API gateway is the main container.** The primary GKE Deployment runs the Kong API gateway on port 8000. All Supabase service requests are routed through Kong's declarative configuration.
-2. **Three secrets are auto-managed.** `Supabase_Common` creates and manages:
+2. **Three secrets are auto-managed.** `Supabase Common` creates and manages:
    - `SUPABASE_JWT_SECRET` — 32-char random (auto-generated if not provided).
    - `SUPABASE_ANON_KEY` — public anon JWT (placeholder if not provided; must be replaced with a signed JWT).
    - `SUPABASE_SERVICE_KEY` — service role JWT (placeholder if not provided).
@@ -53,7 +53,7 @@ Identical to `App_GKE`. See [App_GKE §1](../App_GKE/App_GKE.md#1-module-overvie
 
 **Supabase-specific defaults:**
 
-| Variable | Supabase_GKE Default | Notes |
+| Variable | Supabase GKE Default | Notes |
 |---|---|---|
 | `credit_cost` | `150` | GKE deployment. |
 | `enable_image_mirroring` | `true` | Always enabled — cannot be disabled. Supabase images are mirrored to Artifact Registry on every apply. |
@@ -70,11 +70,11 @@ Identical to `App_GKE`. See [App_GKE §2](../App_GKE/App_GKE.md#2-iam--access-co
 
 **Supabase-specific defaults:**
 
-| Variable | Supabase_GKE Default | App_GKE Default | Notes |
+| Variable | Supabase GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `application_name` | `"supabase"` | `"gkeapp"` | Base name for all resources. **Do not change after deployment.** |
-| `display_name` | `"Supabase"` | *(not in App_GKE)* | Human-readable name. |
-| `description` | `"Supabase open-source Firebase alternative"` | *(not in App_GKE)* | Deployment description. |
+| `display_name` | `"Supabase"` | *(not in App GKE)* | Human-readable name. |
+| `description` | `"Supabase open-source Firebase alternative"` | *(not in App GKE)* | Deployment description. |
 | `application_version` | `"latest"` | `"1.0.0"` | Kong gateway image version. |
 
 ---
@@ -85,7 +85,7 @@ The primary container in the Supabase GKE Deployment runs the **Kong API gateway
 
 **Supabase-specific defaults:**
 
-| Variable | Supabase_GKE Default | App_GKE Default | Notes |
+| Variable | Supabase GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `container_port` | `8000` | `8080` | Kong API gateway HTTP port. |
 | `cpu_limit` | `"1000m"` | `"1000m"` | 1 vCPU for Kong. Individual microservices define their own resources via `additional_services`. |
@@ -115,7 +115,7 @@ Identical to `App_GKE`. See [App_GKE §4](../App_GKE/App_GKE.md#4-advanced-secur
 
 ## Group 5: Environment Variables & Secrets
 
-`Supabase_Common` manages three secrets automatically:
+`Supabase Common` manages three secrets automatically:
 
 | Secret | Environment Variable | Description |
 |---|---|---|
@@ -133,7 +133,7 @@ Identical to `App_GKE`. See [App_GKE §4](../App_GKE/App_GKE.md#4-advanced-secur
 | `anon_key` | 3 | `""` | Pre-generated anonymous JWT. **Sensitive.** Leave empty to use the auto-generated placeholder. |
 | `service_role_key` | 3 | `""` | Pre-generated service role JWT. **Sensitive.** Leave empty to use the auto-generated placeholder. |
 
-Kong environment variables injected by `Supabase_Common`:
+Kong environment variables injected by `Supabase Common`:
 
 | Variable | Value | Description |
 |---|---|---|
@@ -187,13 +187,13 @@ Override `initialization_jobs` with a non-empty list to replace this default.
 
 **Supabase-specific defaults and requirements:**
 
-| Variable | Supabase_GKE Default | Notes |
+| Variable | Supabase GKE Default | Notes |
 |---|---|---|
 | `database_type` | `"POSTGRES_15"` | **Supabase requires PostgreSQL 15.** |
 | `application_database_name` | `"postgres"` | Supabase uses the default `postgres` database name (not a custom db). |
 | `application_database_user` | `"supabase_admin"` | Supabase admin user. |
-| `db_name` | `"postgres"` | Passed to `Supabase_Common`. |
-| `db_user` | `"supabase_admin"` | Passed to `Supabase_Common`. |
+| `db_name` | `"postgres"` | Passed to `Supabase Common`. |
+| `db_user` | `"supabase_admin"` | Passed to `Supabase Common`. |
 
 > **pgvector:** The Supabase `db-init.sh` script enables the `pgvector` extension in the PostgreSQL database. This is required for Supabase's AI/vector features. Ensure the Cloud SQL PostgreSQL 15 instance supports `pgvector` (available on Cloud SQL for PostgreSQL 13+).
 
@@ -224,7 +224,7 @@ Supabase's Kong gateway exposes `/health` as its health endpoint.
 
 ## Group 14: Reliability Policies
 
-Identical to `App_GKE`. Variables available: `enable_pod_disruption_budget` (default `true`), `pdb_min_available` (default `"1"`), `enable_topology_spread`, `topology_spread_strict`.
+Identical to `App GKE`. Variables available: `enable_pod_disruption_budget` (default `true`), `pdb_min_available` (default `"1"`), `enable_topology_spread`, `topology_spread_strict`.
 
 ---
 
@@ -232,7 +232,7 @@ Identical to `App_GKE`. Variables available: `enable_pod_disruption_budget` (def
 
 **Supabase-specific defaults:**
 
-| Variable | Supabase_GKE Default | Notes |
+| Variable | Supabase GKE Default | Notes |
 |---|---|---|
 | `service_type` | `"LoadBalancer"` | External load balancer for Kong API gateway. |
 | `workload_type` | `null` | Defaults to `Deployment`. |

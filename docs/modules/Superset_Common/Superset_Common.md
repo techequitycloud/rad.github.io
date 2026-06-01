@@ -1,11 +1,11 @@
 ---
-title: "Superset_Common Shared Configuration Module"
+title: "Superset Common Shared Configuration Module"
 sidebar_label: "Superset Common"
 ---
 
-# Superset_Common Shared Configuration Module
+# Superset Common Shared Configuration Module
 
-The `Superset_Common` module defines the Apache Superset configuration for the RAD Modules ecosystem. It is a **configuration and secrets module** — it creates one Secret Manager secret and produces `config`, `secret_ids`, and `storage_buckets` outputs consumed by platform-specific wrapper modules (`Superset_CloudRun` and `Superset_GKE`).
+The `Superset Common` module defines the Apache Superset configuration for the RAD Modules ecosystem. It is a **configuration and secrets module** — it creates one Secret Manager secret and produces `config`, `secret_ids`, and `storage_buckets` outputs consumed by platform-specific wrapper modules (`Superset CloudRun` and `Superset GKE`).
 
 ## 1. Overview
 
@@ -130,7 +130,7 @@ The 60-second initial delay and 12-failure threshold give Superset up to 180 sec
 
 ## 5. Initialization Jobs
 
-`Superset_Common` provides a two-phase init pipeline by default (when `initialization_jobs = []`):
+`Superset Common` provides a two-phase init pipeline by default (when `initialization_jobs = []`):
 
 ### Phase 1: `db-init`
 
@@ -195,7 +195,7 @@ Runs the Superset bootstrap sequence: `db upgrade`, `fab create-admin`, `superse
 
 ## 8. Platform-Specific Differences
 
-| Aspect | Superset_CloudRun | Superset_GKE |
+| Aspect | Superset CloudRun | Superset GKE |
 |---|---|---|
 | `min_instance_count` | `1` | `1` |
 | `redis_port` type | `number` (6379) | `string` ("6379") |

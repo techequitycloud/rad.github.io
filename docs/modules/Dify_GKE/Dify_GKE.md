@@ -11,25 +11,25 @@ This document provides a comprehensive reference for the `modules/Dify_GKE` Terr
 
 ## 1. Module Overview
 
-Dify is an open-source LLM application development platform with 50,000+ GitHub stars. `Dify_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning and injects Dify-specific application configuration, database initialisation, secrets, and storage configuration via `Dify_Common`.
+Dify is an open-source LLM application development platform with 50,000+ GitHub stars. `Dify GKE` is a **wrapper module** built on top of `App GKE`. It uses `App GKE` for all GCP infrastructure provisioning and injects Dify-specific application configuration, database initialisation, secrets, and storage configuration via `Dify Common`.
 
 **Key Capabilities:**
 *   **Compute**: GKE Autopilot, Python/Next.js containers, 2 vCPU / 4 Gi default. Horizontal Pod Autoscaler (HPA) manages scaling. A **web** sidecar Deployment (`langgenius/dify-web`) is automatically deployed alongside the API.
-*   **Data Persistence**: Cloud SQL **PostgreSQL 15** with `pgvector` extension enabled for vector storage. NFS (GCE VM or Filestore) for shared Redis and task state. GCS `dify-storage` bucket auto-provisioned by `Dify_Common`.
+*   **Data Persistence**: Cloud SQL **PostgreSQL 15** with `pgvector` extension enabled for vector storage. NFS (GCE VM or Filestore) for shared Redis and task state. GCS `dify-storage` bucket auto-provisioned by `Dify Common`.
 *   **AI Infrastructure**: pgvector reuses the Cloud SQL PostgreSQL instance as the vector store (`VECTOR_STORE=pgvector`). Redis is required for Celery task queue and event bus streaming.
-*   **Security**: Inherits Workload Identity, Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_GKE`. `Dify_Common` auto-generates a `SECRET_KEY` secret stored in Secret Manager.
+*   **Security**: Inherits Workload Identity, Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App GKE`. `Dify Common` auto-generates a `SECRET_KEY` secret stored in Secret Manager.
 *   **Caching/Queue**: Redis **enabled by default** (`enable_redis = true`) — required for Celery broker, backend, and SSE/WebSocket LLM streaming.
 *   **CI/CD**: Cloud Build custom image pipeline; Cloud Deploy progressive delivery optional.
 
-**Wrapper architecture:** `Dify_GKE` calls `Dify_Common` to build an `application_config` object and then calls `App_GKE` for all Kubernetes resource provisioning. The `web` additional service is wired to `$(GKE_SERVICE_URL)` for API communication. `scripts_dir` resolves to `abspath("${module.dify_app.path}/scripts")`.
+**Wrapper architecture:** `Dify GKE` calls `Dify Common` to build an `application_config` object and then calls `App GKE` for all Kubernetes resource provisioning. The `web` additional service is wired to `$(GKE_SERVICE_URL)` for API communication. `scripts_dir` resolves to `abspath("${module.dify_app.path}/scripts")`.
 
 ---
 
 ## 2. IAM & Access Control
 
-`Dify_GKE` delegates all IAM provisioning to `App_GKE`. Workload Identity is used to bind the Kubernetes service account to a GCP service account, granting the Dify pod access to Cloud SQL, Secret Manager, and GCS.
+`Dify GKE` delegates all IAM provisioning to `App GKE`. Workload Identity is used to bind the Kubernetes service account to a GCP service account, granting the Dify pod access to Cloud SQL, Secret Manager, and GCS.
 
-**Auto-generated application secret:** `Dify_Common` generates a 64-character random `SECRET_KEY` and stores it in Secret Manager as `<resource_prefix>-secret-key`.
+**Auto-generated application secret:** `Dify Common` generates a 64-character random `SECRET_KEY` and stores it in Secret Manager as `<resource_prefix>-secret-key`.
 
 For the complete role tables and Workload Identity, IAP, password rotation, and public access details, see [App_GKE §2](../App_GKE/App_GKE.md#2-iam--access-control).
 
@@ -103,11 +103,11 @@ Dify runs as a Kubernetes Deployment (default) or StatefulSet. The API pod runs 
 
 ### E. Initialization & Bootstrap
 
-A `db-init` Kubernetes Job is automatically provisioned by `Dify_Common` when `initialization_jobs` is left as the default empty list. Dify runs its own database migrations automatically on startup via `MIGRATION_ENABLED=true`.
+A `db-init` Kubernetes Job is automatically provisioned by `Dify Common` when `initialization_jobs` is left as the default empty list. Dify runs its own database migrations automatically on startup via `MIGRATION_ENABLED=true`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `initialization_jobs` | 11 | `[]` | Kubernetes Jobs for initialization tasks. Leave empty for `Dify_Common` to supply the default `db-init` job. |
+| `initialization_jobs` | 11 | `[]` | Kubernetes Jobs for initialization tasks. Leave empty for `Dify Common` to supply the default `db-init` job. |
 | `cron_jobs` | 11 | `[]` | List of CronJobs to deploy alongside Dify. |
 | `additional_services` | 11 | `[]` | Additional Kubernetes services to deploy alongside Dify. |
 
@@ -194,8 +194,8 @@ For deployments requiring persistent local storage (e.g., custom model caches), 
 |---|---|---|---|
 | `startup_probe` | 14 | `{ path="/health", initial_delay_seconds=30, failure_threshold=30, ... }` | Startup probe. Container receives no traffic until this succeeds. |
 | `liveness_probe` | 14 | `{ path="/health", initial_delay_seconds=30, failure_threshold=3, ... }` | Liveness probe. Container is restarted after `failure_threshold` failures. |
-| `startup_probe_config` | 10 | `{ enabled=true }` | Alternative startup probe configuration for App_GKE. Takes precedence. |
-| `health_check_config` | 10 | `{ enabled=true }` | Alternative liveness probe configuration for App_GKE. Takes precedence. |
+| `startup_probe_config` | 10 | `{ enabled=true }` | Alternative startup probe configuration for App GKE. Takes precedence. |
+| `health_check_config` | 10 | `{ enabled=true }` | Alternative liveness probe configuration for App GKE. Takes precedence. |
 | `uptime_check_config` | 10 | `{ enabled=false, path="/health" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | 10 | `[]` | Custom alert policies for monitoring Dify metrics. |
 | `deployment_timeout` | 6 | `1800` | Maximum seconds Terraform waits for the Kubernetes rollout to complete. |
@@ -226,16 +226,16 @@ For deployments requiring persistent local storage (e.g., custom model caches), 
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| **PostgreSQL 15 required** | `database_type = "POSTGRES_15"` fixed by `Dify_Common` | Dify requires PostgreSQL. MySQL is unsupported. |
+| **PostgreSQL 15 required** | `database_type = "POSTGRES_15"` fixed by `Dify Common` | Dify requires PostgreSQL. MySQL is unsupported. |
 | **pgvector enabled** | `enable_postgres_extensions = true`, `postgres_extensions = ["vector"]` | Enables the `vector` extension. Cannot be disabled. |
-| **SECRET_KEY auto-generated** | `Dify_Common` provisions the secret | A 64-character random key is stored in Secret Manager and injected as `SECRET_KEY`. |
-| **MIGRATION_ENABLED=true** | Hardcoded in `Dify_Common` environment_variables | Dify runs Flask-Migrate automatically on startup. |
+| **SECRET_KEY auto-generated** | `Dify Common` provisions the secret | A 64-character random key is stored in Secret Manager and injected as `SECRET_KEY`. |
+| **MIGRATION_ENABLED=true** | Hardcoded in `Dify Common` environment_variables | Dify runs Flask-Migrate automatically on startup. |
 | **Web service auto-deployed** | `dify_additional_services` in `dify.tf` | A `langgenius/dify-web:<version>` Deployment is created and wired to `$(GKE_SERVICE_URL)`. |
-| **GCS storage bucket** | `dify-storage` bucket provisioned by `Dify_Common` | `STORAGE_TYPE=google-storage`, authenticated via Workload Identity. |
+| **GCS storage bucket** | `dify-storage` bucket provisioned by `Dify Common` | `STORAGE_TYPE=google-storage`, authenticated via Workload Identity. |
 | **NFS enabled by default** | `enable_nfs = true` default | NFS server provides the Redis host when no external Redis is configured. |
 | **Redis enabled by default** | `enable_redis = true` default | Celery and event bus require Redis. Cannot be safely disabled. |
-| **Default db-init job** | Supplied by `Dify_Common` when `initialization_jobs = []` | PostgreSQL database and user are created idempotently. |
-| **Workload Identity** | Managed by `App_GKE` | The Dify pod accesses GCP APIs via Workload Identity — no service account key files. |
+| **Default db-init job** | Supplied by `Dify Common` when `initialization_jobs = []` | PostgreSQL database and user are created idempotently. |
+| **Workload Identity** | Managed by `App GKE` | The Dify pod accesses GCP APIs via Workload Identity — no service account key files. |
 
 ---
 

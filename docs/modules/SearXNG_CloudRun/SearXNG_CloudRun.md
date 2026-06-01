@@ -11,12 +11,12 @@ This document provides a comprehensive reference for the `modules/SearXNG_CloudR
 
 ## 1. Module Overview
 
-SearXNG is a privacy-respecting, self-hosted metasearch engine with 10,000+ GitHub stars that aggregates results from 70+ search services without tracking users or serving ads. It is ideal for organisations requiring a GDPR-compliant, ad-free alternative to Google or Bing with zero data profiling. `SearXNG_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects SearXNG-specific application configuration via `SearXNG_Common`.
+SearXNG is a privacy-respecting, self-hosted metasearch engine with 10,000+ GitHub stars that aggregates results from 70+ search services without tracking users or serving ads. It is ideal for organisations requiring a GDPR-compliant, ad-free alternative to Google or Bing with zero data profiling. `SearXNG CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects SearXNG-specific application configuration via `SearXNG Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), 1 vCPU / 512 Mi by default. **Scale-to-zero is fixed** (`min_instance_count = 0` hardcoded in `searxng.tf`). `max_instance_count` is user-configurable.
 *   **Stateless**: SearXNG does not use a database. No Cloud SQL instance is provisioned. `enable_cloudsql_volume` defaults to `false`.
-*   **Secret**: `SEARXNG_SECRET` (session key) is auto-generated and stored in Secret Manager by `SearXNG_Common`. It is injected into the container at runtime.
+*   **Secret**: `SEARXNG_SECRET` (session key) is auto-generated and stored in Secret Manager by `SearXNG Common`. It is injected into the container at runtime.
 *   **Redis** (optional): Redis can be enabled for rate limiting and bot detection. When `enable_redis = true` and `redis_host` is empty, defaults to `127.0.0.1`.
 *   **Prebuilt default**: `container_image_source = 'prebuilt'` is the default — the official SearXNG image is deployed directly. Set to `'custom'` to build a modified image via Cloud Build.
 *   **Health**: Health probes target `/healthz`.
@@ -34,15 +34,15 @@ SearXNG is a privacy-respecting, self-hosted metasearch engine with 10,000+ GitH
 | `description` | 3 | `string` | `'SearXNG — privacy-respecting metasearch engine on Cloud Run'` | Cloud Run service description. |
 | `application_version` | 3 | `string` | `'latest'` | SearXNG image version tag (e.g., `'2024.11.4'`). |
 
-**Wrapper architecture:** `SearXNG_CloudRun` calls `SearXNG_Common` to produce an `application_config` object. The `module_secret_env_vars` carries only `SEARXNG_SECRET`. `module_storage_buckets = module.searxng_app.storage_buckets`. The `min_instance_count = 0` is hardcoded in the `searxng_module` merge in `searxng.tf`. `SEARXNG_BIND_ADDRESS`, `ENABLE_REDIS`, and `REDIS_URL` are injected via `module_env_vars`.
+**Wrapper architecture:** `SearXNG CloudRun` calls `SearXNG Common` to produce an `application_config` object. The `module_secret_env_vars` carries only `SEARXNG_SECRET`. `module_storage_buckets = module.searxng_app.storage_buckets`. The `min_instance_count = 0` is hardcoded in the `searxng_module` merge in `searxng.tf`. `SEARXNG_BIND_ADDRESS`, `ENABLE_REDIS`, and `REDIS_URL` are injected via `module_env_vars`.
 
 ---
 
 ## 2. IAM & Access Control
 
-`SearXNG_CloudRun` delegates all IAM provisioning to `App_CloudRun`. Because SearXNG is stateless (no database, no file uploads), the IAM footprint is minimal — only Secret Manager read access for `SEARXNG_SECRET` is required beyond the standard Cloud Run SA roles.
+`SearXNG CloudRun` delegates all IAM provisioning to `App CloudRun`. Because SearXNG is stateless (no database, no file uploads), the IAM footprint is minimal — only Secret Manager read access for `SEARXNG_SECRET` is required beyond the standard Cloud Run SA roles.
 
-**Auto-generated secret:** `SearXNG_Common` auto-generates `SEARXNG_SECRET` and stores it in Secret Manager. This key is used for SearXNG's session cryptography and must be consistent across all running instances.
+**Auto-generated secret:** `SearXNG Common` auto-generates `SEARXNG_SECRET` and stores it in Secret Manager. This key is used for SearXNG's session cryptography and must be consistent across all running instances.
 
 ---
 
@@ -71,9 +71,9 @@ SearXNG is a privacy-respecting, self-hosted metasearch engine with 10,000+ GitH
 
 > **Note:** `min_instance_count` is hardcoded to `0` in `searxng.tf` and is not user-configurable. SearXNG cold starts are fast (< 5 seconds) because the container does not perform database connections or schema migrations.
 
-**Differences from `App_CloudRun` defaults:**
+**Differences from `App CloudRun` defaults:**
 
-| Variable | `App_CloudRun` | `SearXNG_CloudRun` | Reason |
+| Variable | `App CloudRun` | `SearXNG CloudRun` | Reason |
 |---|---|---|---|
 | `enable_cloudsql_volume` | `true` | `false` | SearXNG has no database. |
 | `container_image_source` | `'custom'` | `'prebuilt'` | No custom Dockerfile required for the official SearXNG image. |
@@ -204,7 +204,7 @@ SearXNG is stateless — there is no user data to back up. The backup variables 
 |---|---|---|
 | **Stateless** | `database_type = "NONE"` (effective), `enable_cloudsql_volume = false` | SearXNG aggregates results at request time. No database is provisioned. |
 | **Scale-to-zero fixed** | `min_instance_count = 0` hardcoded in `searxng.tf` merge | SearXNG cold starts are fast (< 5 seconds). Not user-configurable. |
-| **SEARXNG_SECRET auto-generated** | `SearXNG_Common` creates and stores in Secret Manager | Session key injected via `module_secret_env_vars`. Do not rotate in production without coordinating with active sessions. |
+| **SEARXNG_SECRET auto-generated** | `SearXNG Common` creates and stores in Secret Manager | Session key injected via `module_secret_env_vars`. Do not rotate in production without coordinating with active sessions. |
 | **SEARXNG_BIND_ADDRESS injected** | `module_env_vars = { SEARXNG_BIND_ADDRESS = "0.0.0.0:8080" }` | Hardcoded to bind on all interfaces at Cloud Run's expected port. |
 | **Prebuilt image by default** | `container_image_source = 'prebuilt'` | The official SearXNG image works without customisation. |
 
@@ -230,7 +230,7 @@ SearXNG is stateless — there is no user data to back up. The backup variables 
 | `SEARXNG_SECRET` (auto-generated by Common) | *(auto-generated — stored in Secret Manager)* | **Critical** | SearXNG uses `SEARXNG_SECRET` to sign user sessions and HMAC query parameters. If scale-to-zero is enabled (`min_instance_count = 0`), each cold start generates a new instance. Without a stable secret stored externally (Secret Manager), session cookies from a previous instance become invalid on cold start, breaking all active user sessions and search result caching. The module auto-generates and stores the secret in Secret Manager — do not override it with a hardcoded value. |
 | `min_instance_count` | `1` | **Critical** | SearXNG must have `min_instance_count = 1` (no scale-to-zero). A cold-started instance has no user session continuity. If the secret is somehow regenerated per-instance, all existing sessions are immediately invalidated. Always keep at least one warm instance. |
 | `enable_redis` | `false` | **High** | Redis provides SearXNG with rate limiting, bot detection, and result caching. Without Redis, public-facing deployments have no rate limiting, making them vulnerable to scraping and API quota exhaustion from upstream search engines. Enable Redis and provide a `redis_host` for any public deployment. |
-| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, SearXNG defaults to `127.0.0.1` (no reachable Redis). Rate limiting and caching are silently disabled. Set to the Memorystore Redis IP from `Services_GCP`. |
+| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, SearXNG defaults to `127.0.0.1` (no reachable Redis). Rate limiting and caching are silently disabled. Set to the Memorystore Redis IP from `Services GCP`. |
 | `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **High** | SearXNG fetches search results from upstream engines (Google, Bing, DuckDuckGo, etc.) over the internet. `PRIVATE_RANGES_ONLY` only routes VPC-internal traffic; external search engine requests are blocked. Use `"ALL_TRAFFIC"` if the upstream search engine endpoints are not reachable via private IP, or ensure a Cloud NAT gateway is configured for the VPC. |
 | `ingress_settings` | `"all"` | **High** | Public ingress is intentional for a meta-search engine. However, without Redis-based rate limiting, public access enables unlimited scraping. Combine with `enable_redis = true` and upstream API keys for production. |
 | `memory_limit` | `"512Mi"` | **Medium** | SearXNG is lightweight (Python/Flask), but processing simultaneous results from many search engines increases memory usage. Under high concurrency, `256Mi` can cause OOM kills. The default `512Mi` is adequate for moderate traffic; scale to `1Gi` for high-traffic public instances. |

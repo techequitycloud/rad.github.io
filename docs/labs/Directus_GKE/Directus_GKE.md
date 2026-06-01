@@ -15,7 +15,7 @@ Directus is a real-time open-source data platform that wraps any SQL database wi
 
 ### What the Module Automates
 
-- GKE Autopilot cluster targeting (uses the Services_GCP-managed cluster)
+- GKE Autopilot cluster targeting (uses the Services GCP-managed cluster)
 - Kubernetes namespace, Deployment, and LoadBalancer Service
 - Cloud SQL PostgreSQL 15 instance with PostGIS extension and dedicated database user
 - Secret Manager secrets for Directus KEY, SECRET, ADMIN_PASSWORD, and REDIS credentials
@@ -55,7 +55,7 @@ This lab uses three primary interfaces:
 
 ## Prerequisites
 
-1. **Services_GCP deployed** — this module depends on `Services_GCP`. The VPC network, GKE Autopilot cluster, Cloud SQL instance, Artifact Registry, and shared service accounts must exist before deploying Directus_GKE.
+1. **Services GCP deployed** — this module depends on `Services GCP`. The VPC network, GKE Autopilot cluster, Cloud SQL instance, Artifact Registry, and shared service accounts must exist before deploying Directus GKE.
 2. **GCP project with billing enabled.**
 3. **Access to the RAD UI** with permission to deploy modules in the target GCP project.
 4. **gcloud CLI** authenticated: `gcloud auth application-default login`
@@ -79,7 +79,7 @@ Variables are configured in the RAD UI form before deploying. Use the table belo
 | `application_version` | No | `11.1.0` | Directus container image version tag |
 | `deploy_application` | No | `true` | Set to `false` to provision infra only |
 | `min_instance_count` | No | `0` | Minimum pod replicas (0 = scale to zero) |
-| `max_instance_count` | No | `3` | Maximum pod replicas (HPA ceiling) |
+| `max_instance_count` | No | `8` | Maximum pod replicas (HPA ceiling) |
 | `gke_cluster_name` | No | `""` | Target GKE cluster name; auto-discovered when empty |
 | `cpu_limit` | No | `2000m` | CPU limit per Directus pod |
 | `memory_limit` | No | `2Gi` | Memory limit per Directus pod |
@@ -459,7 +459,7 @@ When you are finished with the lab, return to the RAD UI, navigate to your deplo
 
 > **Note:** `enable_purge = true` (the default) ensures all resources including GCS buckets and the Cloud SQL instance are deleted. Set `enable_purge = false` before undeploying if you want to retain data.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

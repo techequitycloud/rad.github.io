@@ -1,24 +1,24 @@
 ---
-title: "OpenEMR_CloudRun Module — Configuration Guide"
+title: "OpenEMR CloudRun Module — Configuration Guide"
 sidebar_label: "OpenEMR CloudRun"
 ---
 
-# OpenEMR_CloudRun Module — Configuration Guide
+# OpenEMR CloudRun Module — Configuration Guide
 
-`OpenEMR_CloudRun` deploys **OpenEMR Community Edition** — an open-source Electronic
+`OpenEMR CloudRun` deploys **OpenEMR Community Edition** — an open-source Electronic
 Health Records (EHR) and medical practice management platform — on Google Cloud Run
 Gen 2. The application runs on Apache with PHP 8.3 FPM on Alpine 3.20, backed by
 Cloud SQL MySQL 8.0 connected via Unix socket, and a Cloud Filestore NFS volume that
 persists the `sites` directory containing patient documents and application state.
 
-`OpenEMR_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. All GCP
-infrastructure is provisioned by `App_CloudRun`. The module adds OpenEMR-specific
+`OpenEMR CloudRun` is a **wrapper module** built on top of `App CloudRun`. All GCP
+infrastructure is provisioned by `App CloudRun`. The module adds OpenEMR-specific
 configuration, a platform-managed `nfs-init` job for storage preparation and backup
 restoration, auto-generated admin password and database password secrets, and runtime
 defaults tuned for healthcare availability requirements.
 
-The module uses `OpenEMR_Common` as a sub-module to resolve application configuration,
-scripts, and storage bucket lists, which are passed into `App_CloudRun` via
+The module uses `OpenEMR Common` as a sub-module to resolve application configuration,
+scripts, and storage bucket lists, which are passed into `App CloudRun` via
 `application_config`, `module_env_vars`, `module_secret_env_vars`, and
 `module_storage_buckets`.
 
@@ -28,8 +28,8 @@ scripts, and storage bucket lists, which are passed into `App_CloudRun` via
 
 | Attribute | Value |
 |---|---|
-| **Underlying platform** | `App_CloudRun` |
-| **Sub-module** | `OpenEMR_Common` |
+| **Underlying platform** | `App CloudRun` |
+| **Sub-module** | `OpenEMR Common` |
 | **Application** | OpenEMR (Apache/PHP 8.3 FPM on Alpine 3.20) |
 | **Default version** | `7.0.4` |
 | **Database** | Cloud SQL MySQL 8.0 (required; Unix socket connection) |
@@ -50,7 +50,7 @@ OpenEMR_CloudRun (variables.tf / openemr.tf / main.tf)
   └─ App_CloudRun     ← provisions all GCP infrastructure
 ```
 
-`OpenEMR_Common` outputs:
+`OpenEMR Common` outputs:
 - `config` → merged into `application_config` (with `BACKUP_FILEID` injected into `nfs-init` when `backup_uri` is set)
 - `admin_password_secret_id` → injected as `OE_PASS` via `module_secret_env_vars`
 - `storage_buckets` → merged into `module_storage_buckets`
@@ -80,7 +80,7 @@ and injected alongside `OE_PASS` via `module_secret_env_vars`.
 
 `display_name` and `description` are OpenEMR-specific aliases for
 `application_display_name` and `application_description`, passed directly to
-`OpenEMR_Common` and then to `App_CloudRun`.
+`OpenEMR Common` and then to `App CloudRun`.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -93,7 +93,7 @@ and injected alongside `OE_PASS` via `module_secret_env_vars`.
 
 OpenEMR's PHP-FPM workers and database connection pool consume 1.5–3 Gi under
 normal clinical load. `cpu_limit` and `memory_limit` are built directly into
-`container_resources` passed to `App_CloudRun`.
+`container_resources` passed to `App CloudRun`.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -142,8 +142,8 @@ secret_environment_variables = {
 
 ### §3.E · Container Image & Build
 
-OpenEMR_CloudRun does not expose `container_image_source` or `container_build_config`
-as user variables. Image building is managed entirely by `OpenEMR_Common` based on
+OpenEMR CloudRun does not expose `container_image_source` or `container_build_config`
+as user variables. Image building is managed entirely by `OpenEMR Common` based on
 `application_version`. Set `enable_image_mirroring = false` only if the image is
 already available in a private registry.
 
@@ -255,8 +255,8 @@ traffic_split = [
 
 OpenEMR performs database connection validation and, on first boot, runs the full
 database installation process (5–20 minutes). `startup_probe` and `liveness_probe`
-are passed both to `OpenEMR_Common` and — as `startup_probe_config` /
-`health_check_config` — directly to `App_CloudRun`.
+are passed both to `OpenEMR Common` and — as `startup_probe_config` /
+`health_check_config` — directly to `App CloudRun`.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -269,11 +269,11 @@ are passed both to `OpenEMR_Common` and — as `startup_probe_config` /
 |---|---|---|
 | `enable_nfs` | `true` | **Must remain `true`** for a functional OpenEMR deployment. Provisions Cloud Filestore NFS. OpenEMR cannot persist patient data without shared NFS storage. |
 | `nfs_mount_path` | `"/var/www/localhost/htdocs/openemr/sites"` | Container mount path for the NFS volume. Maps directly to OpenEMR's `sites` directory. Do not change unless the container uses a different path. |
-| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to use. Leave empty to auto-discover a Services_GCP-managed instance. |
+| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to use. Leave empty to auto-discover a Services GCP-managed instance. |
 | `nfs_instance_base_name` | `"app-nfs"` | Base name for the inline NFS GCE VM when no existing instance is found. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. `OpenEMR_Common` may provision additional buckets via `module_storage_buckets`. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. `OpenEMR Common` may provision additional buckets via `module_storage_buckets`. |
 | `create_cloud_storage` | `true` | Set `false` to skip GCS bucket provisioning. |
-| `gcs_volumes` | `[]` | GCS buckets to mount as GCS Fuse volumes inside the container (passed to both `OpenEMR_Common` and `App_CloudRun`). |
+| `gcs_volumes` | `[]` | GCS buckets to mount as GCS Fuse volumes inside the container (passed to both `OpenEMR Common` and `App CloudRun`). |
 | `manage_storage_kms_iam` | `false` | Creates a CMEK KMS keyring and storage encryption key, enabling CMEK on all GCS buckets. |
 | `enable_artifact_registry_cmek` | `false` | Creates an Artifact Registry KMS key, enabling CMEK encryption of container images. |
 
@@ -305,7 +305,7 @@ during deployment.
 | `backup_retention_days` | `7` | Days to retain backup files. Consider regulatory retention requirements before reducing. |
 | `enable_backup_import` | `false` | Triggers backup restoration via the `nfs-init` job. The `backup_uri` value is injected as `BACKUP_FILEID`. |
 | `backup_source` | `"gcs"` | Source: `"gcs"` (full GCS URI) or `"gdrive"` (Google Drive file ID). |
-| `backup_uri` | `""` | For GCS: e.g. `"gs://my-bucket/backups/openemr.sql"`. Mapped to `backup_file` in App_CloudRun. |
+| `backup_uri` | `""` | For GCS: e.g. `"gs://my-bucket/backups/openemr.sql"`. Mapped to `backup_file` in App CloudRun. |
 | `backup_format` | `"sql"` | Format: `sql`, `gz`, `tar`, `tgz`, `tar.gz`, `zip`. |
 
 ---
@@ -326,7 +326,7 @@ Redis instance).
 | `enable_redis` | `true` | Configures OpenEMR to use Redis for PHP session storage. Injects `REDIS_SERVER` automatically. If `redis_host` is empty, uses the NFS server IP. |
 | `redis_host` | `""` | Redis hostname or IP. Leave empty to use the NFS server IP. Override with a dedicated Cloud Memorystore instance for higher-availability production deployments. |
 | `redis_port` | `"6379"` | Redis TCP port (string). |
-| `redis_auth` | `""` | Redis AUTH password. Leave empty if authentication is not enabled. Treated as sensitive. Passed to `App_CloudRun` but not `OpenEMR_Common`. |
+| `redis_auth` | `""` | Redis AUTH password. Leave empty if authentication is not enabled. Treated as sensitive. Passed to `App CloudRun` but not `OpenEMR Common`. |
 
 ### §8.B · Custom SQL Scripts
 
@@ -340,7 +340,7 @@ Redis instance).
 ### §8.C · Jobs & Scheduled Tasks
 
 User-defined initialization and cron jobs supplement the platform-managed `nfs-init`
-job (see §9). Both are passed through to `App_CloudRun` via `initialization_jobs`
+job (see §9). Both are passed through to `App CloudRun` via `initialization_jobs`
 and `cron_jobs`.
 
 | Variable | Default | Description |
@@ -374,17 +374,17 @@ These are set automatically by the module and cannot be overridden via input var
 | Variable | Value / Source | Notes |
 |---|---|---|
 | `OE_PASS` | Secret Manager ref | Auto-generated OpenEMR admin password stored in Secret Manager. Used to set the administrator account on first boot. |
-| `MYSQL_PASS` | `module.app_cloudrun.database_password_secret` | Auto-generated MySQL password from App_CloudRun. Do not define this in `secret_environment_variables`. |
+| `MYSQL_PASS` | `module.app_cloudrun.database_password_secret` | Auto-generated MySQL password from App CloudRun. Do not define this in `secret_environment_variables`. |
 
 ### Structural Wiring
 
 | Behaviour | Detail |
 |---|---|
 | Cloud SQL Unix socket | Connected via Unix socket at `cloudsql_volume_mount_path = "/cloudsql"`. OpenEMR's `sqlconf.php` uses this socket path. TCP connections are not used. This is enforced unconditionally. |
-| `scripts_dir` | Resolved as `abspath("${module.openemr_app.path}/scripts")` — points to `OpenEMR_Common`'s bundled scripts. |
-| `module_env_vars` | Sourced from `module.openemr_app.config.environment_variables` (OpenEMR_Common's resolved env vars). |
-| `startup_probe` → `startup_probe_config` | `var.startup_probe` is passed as `startup_probe_config` to `App_CloudRun` in `main.tf`. |
-| `liveness_probe` → `health_check_config` | `var.liveness_probe` is passed as `health_check_config` to `App_CloudRun` in `main.tf`. |
+| `scripts_dir` | Resolved as `abspath("${module.openemr_app.path}/scripts")` — points to `OpenEMR Common`'s bundled scripts. |
+| `module_env_vars` | Sourced from `module.openemr_app.config.environment_variables` (OpenEMR Common's resolved env vars). |
+| `startup_probe` → `startup_probe_config` | `var.startup_probe` is passed as `startup_probe_config` to `App CloudRun` in `main.tf`. |
+| `liveness_probe` → `health_check_config` | `var.liveness_probe` is passed as `health_check_config` to `App CloudRun` in `main.tf`. |
 | `backup_uri` → `backup_file` | `var.backup_uri` is mapped to `backup_file` in `main.tf`. Also injected into the `nfs-init` job as `BACKUP_FILEID`. |
 
 ---
@@ -397,7 +397,7 @@ Complete list of all input variables, grouped by UI section.
 |---|---|---|---|---|
 | 0 | `module_description` | string | *(long description)* | — |
 | 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/modules/OpenEMR_CloudRun"` | — |
-| 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
+| 0 | `module_dependency` | list(string) | `["Services GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
 | 0 | `credit_cost` | number | `50` | — |
 | 0 | `require_credit_purchases` | bool | `false` | — |

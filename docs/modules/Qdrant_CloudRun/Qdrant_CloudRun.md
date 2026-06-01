@@ -11,12 +11,12 @@ This document provides a comprehensive reference for the `modules/Qdrant_CloudRu
 
 ## 1. Module Overview
 
-Qdrant is a high-performance vector database and similarity search engine built in Rust. `Qdrant_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Qdrant-specific application configuration, an optional API key, and storage configuration via `Qdrant_Common`.
+Qdrant is a high-performance vector database and similarity search engine built in Rust. `Qdrant CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects Qdrant-specific application configuration, an optional API key, and storage configuration via `Qdrant Common`.
 
 **Key Capabilities:**
 - **Compute**: Cloud Run v2 (Gen2), 1 vCPU / 1 Gi by default. `min_instance_count = 1` to avoid HNSW index-loading cold starts. `max_instance_count = 1` — Qdrant is a single-writer store.
 - **Data Persistence**: Cloud Storage bucket (`<prefix>-storage`) mounted at `/qdrant/storage` via GCS FUSE. No Cloud SQL, no Redis.
-- **Security**: Optional API key via Secret Manager. A plan-time validation blocks public ingress (`ingress_settings = "all"`) unless `enable_api_key = true`. Inherits Cloud Armor, IAP, Binary Authorization, and VPC-SC from `App_CloudRun`.
+- **Security**: Optional API key via Secret Manager. A plan-time validation blocks public ingress (`ingress_settings = "all"`) unless `enable_api_key = true`. Inherits Cloud Armor, IAP, Binary Authorization, and VPC-SC from `App CloudRun`.
 - **CI/CD**: Cloud Build image pipeline by default; Cloud Deploy progressive delivery optional.
 - **Reliability**: Startup probe targets `/readyz`; liveness probe targets `/livez`. Separate endpoints prevent spurious restarts during collection loading.
 - **gRPC**: Qdrant supports gRPC on port 6334. Cloud Run does not multiplex two ports, so gRPC is disabled by default. Use `container_protocol = "h2c"` with a gRPC client if needed.
@@ -35,17 +35,17 @@ Qdrant is a high-performance vector database and similarity search engine built 
 | `description` | 3 | `string` | Qdrant description | Cloud Run service description |
 | `application_version` | 3 | `string` | `'latest'` | Qdrant image tag (e.g., `'v1.9.0'`) |
 
-**Wrapper architecture:** `Qdrant_CloudRun` calls `Qdrant_Common` to build an `application_config` object containing Qdrant-specific environment variables, probe configuration, and the storage volume definition. `module_storage_buckets` carries the `<prefix>-storage` GCS bucket. `scripts_dir` is resolved to `abspath("${module.qdrant_app.path}/scripts")` at apply time.
+**Wrapper architecture:** `Qdrant CloudRun` calls `Qdrant Common` to build an `application_config` object containing Qdrant-specific environment variables, probe configuration, and the storage volume definition. `module_storage_buckets` carries the `<prefix>-storage` GCS bucket. `scripts_dir` is resolved to `abspath("${module.qdrant_app.path}/scripts")` at apply time.
 
 ---
 
 ## 2. IAM & Access Control
 
-`Qdrant_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, and IAP service agent role sets are identical to those in `App_CloudRun`.
+`Qdrant CloudRun` delegates all IAM provisioning to `App CloudRun`. The Cloud Run SA, Cloud Build SA, and IAP service agent role sets are identical to those in `App CloudRun`.
 
-**API key:** When `enable_api_key = true`, `Qdrant_Common` generates a 32-character API key and stores it in Secret Manager as `<prefix>-api-key`. It is injected as `QDRANT__SERVICE__API_KEY`. All REST and gRPC calls must include `api-key: <key>` in the request header.
+**API key:** When `enable_api_key = true`, `Qdrant Common` generates a 32-character API key and stores it in Secret Manager as `<prefix>-api-key`. It is injected as `QDRANT__SERVICE__API_KEY`. All REST and gRPC calls must include `api-key: <key>` in the request header.
 
-For the complete role tables and IAP details, see the App_CloudRun documentation.
+For the complete role tables and IAP details, see the App CloudRun documentation.
 
 ---
 
@@ -53,7 +53,7 @@ For the complete role tables and IAP details, see the App_CloudRun documentation
 
 ### A. Compute (Cloud Run)
 
-`Qdrant_CloudRun` exposes `cpu_limit` and `memory_limit` as dedicated top-level variables. Qdrant loads HNSW vector indexes into RAM — size `memory_limit` according to your collection size and vector dimensionality.
+`Qdrant CloudRun` exposes `cpu_limit` and `memory_limit` as dedicated top-level variables. Qdrant loads HNSW vector indexes into RAM — size `memory_limit` according to your collection size and vector dimensionality.
 
 **Single-instance constraint:** `max_instance_count = 1` is strongly recommended. Qdrant is a single-writer store — multiple instances against the same GCS FUSE mount will corrupt collection data. Scale vertically (increase CPU and memory) rather than horizontally.
 
@@ -75,9 +75,9 @@ For the complete role tables and IAP details, see the App_CloudRun documentation
 | `service_annotations` | 4 | `{}` | Cloud Run service annotations |
 | `service_labels` | 4 | `{}` | Cloud Run service labels |
 
-**Differences from `App_CloudRun` defaults:**
+**Differences from `App CloudRun` defaults:**
 
-| Variable | `App_CloudRun` | `Qdrant_CloudRun` | Reason |
+| Variable | `App CloudRun` | `Qdrant CloudRun` | Reason |
 |---|---|---|---|
 | `container_port` | `8080` | `6333` | Qdrant's native REST API port |
 | `ingress_settings` | `'all'` | `'internal'` | Vector databases should not be publicly exposed by default |
@@ -87,7 +87,7 @@ For the complete role tables and IAP details, see the App_CloudRun documentation
 
 ### B. Storage (GCS FUSE)
 
-Qdrant requires persistent storage for its WAL, collection data, HNSW index files, and metadata. `Qdrant_Common` automatically provisions a GCS bucket and mounts it at `/qdrant/storage` via GCS FUSE. `QDRANT__STORAGE__STORAGE_PATH` is set to match.
+Qdrant requires persistent storage for its WAL, collection data, HNSW index files, and metadata. `Qdrant Common` automatically provisions a GCS bucket and mounts it at `/qdrant/storage` via GCS FUSE. `QDRANT__STORAGE__STORAGE_PATH` is set to match.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -165,9 +165,9 @@ Qdrant exposes two dedicated health endpoints with distinct purposes:
 | `uptime_check_config` | 14 | `{ enabled=true, path="/readyz" }` | Cloud Monitoring uptime check |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies |
 
-**Differences from `App_CloudRun` probe defaults:**
+**Differences from `App CloudRun` probe defaults:**
 
-| Field | `App_CloudRun` | `Qdrant_CloudRun` | Reason |
+| Field | `App CloudRun` | `Qdrant CloudRun` | Reason |
 |---|---|---|---|
 | Startup `path` | `/healthz` | `/readyz` | Qdrant's dedicated readiness endpoint |
 | Liveness `path` | `/healthz` | `/livez` | Qdrant's dedicated liveness endpoint (separate from readiness) |
@@ -180,7 +180,7 @@ Qdrant exposes two dedicated health endpoints with distinct purposes:
 | `backup_retention_days` | 7 | `7` | Days to retain backup files |
 | `enable_backup_import` | 7 | `false` | Trigger a one-time restore on apply |
 | `backup_source` | 7 | `'gcs'` | `'gcs'` (full GCS URI) or `'gdrive'` (file ID) |
-| `backup_uri` | 7 | `""` | GCS URI or Drive file ID. Mapped to `backup_file` in `App_CloudRun`. |
+| `backup_uri` | 7 | `""` | GCS URI or Drive file ID. Mapped to `backup_file` in `App CloudRun`. |
 | `backup_format` | 7 | `'tar'` | Backup format: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip` |
 
 ---
@@ -204,13 +204,13 @@ Qdrant exposes two dedicated health endpoints with distinct purposes:
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| No database | `database_type = "NONE"` fixed by `Qdrant_Common` | No Cloud SQL instance is created |
+| No database | `database_type = "NONE"` fixed by `Qdrant Common` | No Cloud SQL instance is created |
 | No Redis | `enable_redis = false` hard-coded in `main.tf` | Qdrant has no caching dependency |
 | Storage path env var | `QDRANT__STORAGE__STORAGE_PATH=/qdrant/storage` always injected | Aligned with GCS FUSE mount point |
 | HTTP port env var | `QDRANT__SERVICE__HTTP_PORT=6333` always injected | Explicit port matching `container_port` |
 | gRPC disabled | `QDRANT__SERVICE__GRPC_PORT` not set | Cloud Run does not expose port 6334. Use `container_protocol = "h2c"` for gRPC over the main port. |
 | Public ingress blocked | Plan-time validation in `validation.tf` | `ingress_settings = "all"` blocked unless `enable_api_key = true` |
-| GCS storage bucket | `<prefix>-storage` provisioned by `Qdrant_Common` | Mounted at `/qdrant/storage` via GCS FUSE |
+| GCS storage bucket | `<prefix>-storage` provisioned by `Qdrant Common` | Mounted at `/qdrant/storage` via GCS FUSE |
 | Separate liveness/readiness | Startup: `/readyz`, Liveness: `/livez` | Prevents restart loops during large collection loads |
 
 ---
@@ -223,7 +223,7 @@ All user-configurable variables, sorted by UI group then order.
 |---|---|---|---|
 | `module_description` | 0 | Qdrant platform text | Platform metadata |
 | `module_documentation` | 0 | docs URL | Documentation URL |
-| `module_dependency` | 0 | `['Services_GCP']` | Required modules |
+| `module_dependency` | 0 | `['Services GCP']` | Required modules |
 | `module_services` | 0 | GCP service list | GCP services consumed |
 | `credit_cost` | 0 | `50` | Deployment credit cost |
 | `require_credit_purchases` | 0 | `false` | Credit balance check |
@@ -331,7 +331,7 @@ All user-configurable variables, sorted by UI group then order.
 | `cpu_limit` | `"1000m"` | **Medium** | HNSW index builds are CPU-intensive; concurrent similarity searches compete for CPU. Under `1000m`, p99 query latency degrades noticeably. Scale to `2000m`–`4000m` for production. |
 | `collection vector dimensions` | *(set at collection creation time via client)* | **Critical** | The vector dimension parameter in a Qdrant collection is immutable after creation. If the dimension does not match the embedding model used to generate vectors (e.g., 768 vs. 1536), all upsert operations fail with a dimension mismatch error and the collection is permanently unusable. Always verify the embedding model dimension before creating a collection. |
 | `min_instance_count` | `1` | **Medium** | Scale-to-zero (`0`) causes Qdrant to restart and reload indexes from NFS/GCS on the next request. For collections with millions of vectors, this reload can take tens of seconds, causing request timeouts. Keep at `1` for latency-sensitive workloads. |
-| `max_instance_count` | `1` | **High** | Multiple Qdrant Cloud Run instances cannot share a single NFS collection storage safely. Qdrant does not support distributed operation in this topology. Keep at `1` or use `Qdrant_GKE` with StatefulSet for production scale. |
+| `max_instance_count` | `1` | **High** | Multiple Qdrant Cloud Run instances cannot share a single NFS collection storage safely. Qdrant does not support distributed operation in this topology. Keep at `1` or use `Qdrant GKE` with StatefulSet for production scale. |
 | `container_port` | `6333` | **Critical** | Qdrant listens on HTTP port 6333 and gRPC port 6334. Changing the HTTP port requires a matching `QDRANT__SERVICE__HTTP_PORT` environment variable; mismatches cause health check failures and no-traffic revisions. |
 | `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **Low** | Correct for VPC-only deployments. Change to `ALL_TRAFFIC` only if Qdrant must fetch snapshots or reach public endpoints directly. |
 | `timeout_seconds` | `300` | **Medium** | Large ANN searches or snapshot upload/download operations can take longer than the default. Increase to `600` for collections with tens of millions of vectors. |

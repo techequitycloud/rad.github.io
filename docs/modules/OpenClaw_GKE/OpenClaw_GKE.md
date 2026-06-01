@@ -1,13 +1,13 @@
 ---
-title: "OpenClaw_GKE Module — Configuration Guide"
+title: "OpenClaw GKE Module — Configuration Guide"
 sidebar_label: "OpenClaw GKE"
 ---
 
-# OpenClaw_GKE Module — Configuration Guide
+# OpenClaw GKE Module — Configuration Guide
 
 OpenClaw is a multi-tenant AI agent gateway that provides WebSocket-enabled conversational AI agents with persistent GCS-backed workspace storage. This module deploys OpenClaw on **GKE Autopilot** as a Kubernetes Deployment, backed by GCS Fuse CSI driver for durable agent workspace and Secret Manager for credential management.
 
-`OpenClaw_GKE` is a **wrapper module** built on top of `App_GKE`. It delegates all GCP infrastructure provisioning to App_GKE (GKE cluster, networking, GCS, Secret Manager, CI/CD) and adds OpenClaw-specific application configuration on top via the `OpenClaw_Common` sub-module.
+`OpenClaw GKE` is a **wrapper module** built on top of `App GKE`. It delegates all GCP infrastructure provisioning to App GKE (GKE cluster, networking, GCS, Secret Manager, CI/CD) and adds OpenClaw-specific application configuration on top via the `OpenClaw Common` sub-module.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -23,7 +23,7 @@ This guide documents the variables that are **unique to `OpenClaw_GKE`** or that
 | Project & Identity (Group 1) | Identical. `deployment_region` exposed as a fallback. |
 | Application Identity (Group 2) | `application_name` defaults to `"openclaw"`. |
 | Runtime & Scaling (Group 3) | `container_resources` defaults to `cpu_limit="2000m"`, `memory_limit="2Gi"`. `min_instance_count=1`, `max_instance_count=3`. |
-| Environment Variables (Group 4) | Module-managed vars always injected by `OpenClaw_Common` — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
+| Environment Variables (Group 4) | Module-managed vars always injected by `OpenClaw Common` — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
 | GKE Backend Config (Group 5) | `workload_type` defaults to `"Deployment"`. `session_affinity` defaults to `"ClientIP"`. `service_type` defaults to `"ClusterIP"`. |
 | StatefulSet Config (Group 6) | Available for sticky pod identity; not required for standard GCS-backed deployments. |
 | Resource Quota (Group 7) | Identical. |
@@ -44,19 +44,19 @@ This guide documents the variables that are **unique to `OpenClaw_GKE`** or that
 
 ## Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `OpenClaw_GKE` (via the `OpenClaw_Common` sub-module) regardless of variable values in your `tfvars` file.
+The following behaviours are applied automatically by `OpenClaw GKE` (via the `OpenClaw Common` sub-module) regardless of variable values in your `tfvars` file.
 
 | Behaviour | Detail |
 |---|---|
 | **No database** | `database_type = "NONE"` and `enable_redis = false` are hard-coded in `main.tf`. Cloud SQL and Redis are never provisioned. |
 | **Custom image build** | `OpenClaw_Common` sets `image_source = "custom"`. A custom image is always built that layers `entrypoint.sh` onto `ghcr.io/openclaw/openclaw:<application_version>`. The `BASE_IMAGE` build arg is set at Cloud Build time. |
-| **GCS workspace at `/data`** | `OpenClaw_Common` always appends an `openclaw-data` GCS Fuse volume at `/data` with `uid=1000,gid=1000` mount options. The `<prefix>-storage` bucket is always provisioned. |
+| **GCS workspace at `/data`** | `OpenClaw Common` always appends an `openclaw-data` GCS Fuse volume at `/data` with `uid=1000,gid=1000` mount options. The `<prefix>-storage` bucket is always provisioned. |
 | **State dir on local disk** | `OPENCLAW_STATE_DIR=/tmp/openclaw` and `XDG_CONFIG_HOME=/tmp/openclaw` are always injected. This prevents npm staging failures caused by GCS Fuse's lack of hard-link support. Persistent agent workspace and agent state remain on `/data`. |
 | **Fixed environment variables** | `NODE_ENV=production`, `NODE_OPTIONS=--max-old-space-size=1536`, `NPM_CONFIG_CACHE=/tmp/.npm` are always set. |
 | **Skills sync on startup** | If `SKILLS_REPO_URL` is set, `entrypoint.sh` clones or updates the repository into `/data/workspace/skill-library` on every pod startup. Non-fatal — the gateway starts even if clone fails. |
 | **Config regenerated on startup** | `entrypoint.sh` always overwrites `openclaw.json` in `$OPENCLAW_STATE_DIR`, ensuring Terraform-managed env vars win over stale GCS-persisted values. |
 | **Session affinity defaults to `ClientIP`** | Ensures a given user's WebSocket sessions are consistently routed to the same pod when multiple replicas are deployed. |
-| **Anthropic secret always created** | `OpenClaw_Common` creates the `<prefix>-anthropic-api-key` Secret Manager secret unconditionally. The secret version is only written when `anthropic_api_key` is non-empty. |
+| **Anthropic secret always created** | `OpenClaw Common` creates the `<prefix>-anthropic-api-key` Secret Manager secret unconditionally. The secret version is only written when `anthropic_api_key` is non-empty. |
 
 ---
 
@@ -73,7 +73,7 @@ The following behaviours are applied automatically by `OpenClaw_GKE` (via the `O
 
 ## Runtime & Scaling
 
-`OpenClaw_GKE` uses a single structured `container_resources` object (as required by `App_GKE`) rather than separate `cpu_limit` and `memory_limit` top-level variables.
+`OpenClaw GKE` uses a single structured `container_resources` object (as required by `App GKE`) rather than separate `cpu_limit` and `memory_limit` top-level variables.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -86,9 +86,9 @@ The following behaviours are applied automatically by `OpenClaw_GKE` (via the `O
 | `enable_vertical_pod_autoscaling` | 3 | `false` | Enable VPA. When enabled, HPA based on CPU/Memory is disabled to avoid conflicts. |
 | `container_protocol` | 3 | `"http1"` | Service protocol. Options: `"http1"`, `"h2c"`. |
 
-**Key differences from `App_GKE` defaults:**
+**Key differences from `App GKE` defaults:**
 
-| Variable | App_GKE default | OpenClaw_GKE default | Reason |
+| Variable | App GKE default | OpenClaw GKE default | Reason |
 |---|---|---|---|
 | `container_resources.cpu_limit` | `"1000m"` | `"2000m"` | OpenClaw Node.js gateway benefits from at least 2 vCPU. |
 | `container_resources.memory_limit` | `"512Mi"` | `"2Gi"` | Agent state and plugin staging require more memory. |
@@ -102,7 +102,7 @@ The following behaviours are applied automatically by `OpenClaw_GKE` (via the `O
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `gke_cluster_name` | 5 | `""` | GKE Autopilot cluster name. Auto-discovers the Services_GCP-managed cluster when empty. |
+| `gke_cluster_name` | 5 | `""` | GKE Autopilot cluster name. Auto-discovers the Services GCP-managed cluster when empty. |
 | `namespace_name` | 5 | `""` | Kubernetes namespace. Auto-generated from resource prefix when empty. |
 | `workload_type` | 5 | `"Deployment"` | `"Deployment"` for stateless replicas with GCS-backed state, or `"StatefulSet"` for sticky pod identity. |
 | `service_type` | 5 | `"ClusterIP"` | `"ClusterIP"` for internal-only access; `"LoadBalancer"` for direct external access. |
@@ -146,16 +146,16 @@ When `workload_type = "StatefulSet"`, these variables control the StatefulSet be
 
 OpenClaw exposes `/health` on port 8080. All probes target this path.
 
-`OpenClaw_GKE` exposes a dual probe system:
+`OpenClaw GKE` exposes a dual probe system:
 
-**`startup_probe` / `liveness_probe`** — passed to `OpenClaw_Common` to configure the application-level probes.
+**`startup_probe` / `liveness_probe`** — passed to `OpenClaw Common` to configure the application-level probes.
 
-**`startup_probe_config` / `health_check_config`** — passed directly to `App_GKE` for Kubernetes probe configuration.
+**`startup_probe_config` / `health_check_config`** — passed directly to `App GKE` for Kubernetes probe configuration.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `startup_probe` | 9 | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=10, timeout_seconds=5, period_seconds=5, failure_threshold=36 }` | Passed to `OpenClaw_Common`. 36 × 5s + 10s initial = ~190s, giving headroom for npm to stage 35+ bundled plugin packages before the gateway starts. |
-| `liveness_probe` | 9 | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Passed to `OpenClaw_Common`. |
+| `startup_probe` | 9 | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=10, timeout_seconds=5, period_seconds=5, failure_threshold=36 }` | Passed to `OpenClaw Common`. 36 × 5s + 10s initial = ~190s, giving headroom for npm to stage 35+ bundled plugin packages before the gateway starts. |
+| `liveness_probe` | 9 | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Passed to `OpenClaw Common`. |
 | `startup_probe_config` | 9 | `{ enabled=true, path="/health", initial_delay_seconds=10, failure_threshold=36, period_seconds=5 }` | Kubernetes startup probe. 36-attempt threshold gives ~3 minutes for gateway startup. |
 | `health_check_config` | 9 | `{ enabled=true, path="/health", initial_delay_seconds=30, failure_threshold=3, period_seconds=30 }` | Kubernetes liveness probe. |
 | `uptime_check_config` | 9 | `{ enabled=false, path="/health" }` | Cloud Monitoring uptime check. Disabled by default for GKE (ClusterIP services are not externally reachable). |
@@ -204,7 +204,7 @@ All credentials are stored in Secret Manager and injected at pod startup. Plaint
 
 ## Backup & Maintenance
 
-OpenClaw state is natively durable in GCS. These variables are present for interface compatibility with `App_GKE`.
+OpenClaw state is natively durable in GCS. These variables are present for interface compatibility with `App GKE`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -212,14 +212,14 @@ OpenClaw state is natively durable in GCS. These variables are present for inter
 | `backup_retention_days` | 16 | `7` | Days to retain backup files in GCS. |
 | `enable_backup_import` | 16 | `false` | Triggers a one-time workspace import on apply. |
 | `backup_source` | 16 | `"gcs"` | Import source: `"gcs"` or `"gdrive"`. |
-| `backup_uri` | 16 | `""` | GCS path or Google Drive file ID of the backup to import. Maps to `backup_file` in `App_GKE`. |
+| `backup_uri` | 16 | `""` | GCS path or Google Drive file ID of the backup to import. Maps to `backup_file` in `App GKE`. |
 | `backup_format` | 16 | `"tar"` | Import format: `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
 
 ---
 
 ## Identity-Aware Proxy (GKE-specific)
 
-`OpenClaw_GKE` exposes three IAP variables required when `enable_iap = true` and `enable_custom_domain = true`.
+`OpenClaw GKE` exposes three IAP variables required when `enable_iap = true` and `enable_custom_domain = true`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -357,7 +357,7 @@ OpenClaw uses GCS Fuse for state. NFS is disabled by default and not required.
 
 ## Platform-Specific Comparison
 
-| Aspect | OpenClaw_CloudRun | OpenClaw_GKE |
+| Aspect | OpenClaw CloudRun | OpenClaw GKE |
 |---|---|---|
 | Compute | Cloud Run v2 (serverless) | GKE Autopilot (Kubernetes) |
 | `min_instance_count` default | `0` (scale-to-zero) | `1` (always warm) |

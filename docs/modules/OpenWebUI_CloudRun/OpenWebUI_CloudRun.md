@@ -11,12 +11,12 @@ This document provides a comprehensive reference for the `modules/OpenWebUI_Clou
 
 ## 1. Module Overview
 
-Open WebUI is a self-hosted AI interface with 90,000+ GitHub stars, providing a polished ChatGPT-style frontend for Ollama, OpenAI-compatible APIs, and dozens of LLM providers. `OpenWebUI_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Open WebUI-specific application configuration, secrets, and storage via `OpenWebUI_Common`.
+Open WebUI is a self-hosted AI interface with 90,000+ GitHub stars, providing a polished ChatGPT-style frontend for Ollama, OpenAI-compatible APIs, and dozens of LLM providers. `OpenWebUI CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects Open WebUI-specific application configuration, secrets, and storage via `OpenWebUI Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), 2 vCPU / 4 Gi by default. Scale-to-zero (`min_instance_count = 0`) with `max_instance_count = 3` — both are user-configurable.
-*   **Data Persistence**: Cloud SQL **PostgreSQL 15**. `OpenWebUI_Common` provisions a `db-init` job that creates the database and user on first apply. The Cloud SQL Auth Proxy sidecar is enabled by default (`enable_cloudsql_volume = true`).
-*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_CloudRun`. `WEBUI_SECRET_KEY` is auto-generated and stored in Secret Manager by `OpenWebUI_Common`.
+*   **Data Persistence**: Cloud SQL **PostgreSQL 15**. `OpenWebUI Common` provisions a `db-init` job that creates the database and user on first apply. The Cloud SQL Auth Proxy sidecar is enabled by default (`enable_cloudsql_volume = true`).
+*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`. `WEBUI_SECRET_KEY` is auto-generated and stored in Secret Manager by `OpenWebUI Common`.
 *   **No Redis**: Open WebUI persists sessions and application state in PostgreSQL — no Redis session store is required. The `enable_redis` variable exists for compatibility but defaults to `false` and no `REDIS_*` env vars are injected.
 *   **AI Backend Integration**: `ollama_base_url` and `openai_api_base_url` variables configure backend AI connections. API keys should be supplied via `secret_environment_variables`.
 *   **Health**: Health probes target `/health` with 30-second initial delay.
@@ -34,17 +34,17 @@ Open WebUI is a self-hosted AI interface with 90,000+ GitHub stars, providing a 
 | `description` | 3 | `string` | `'Open WebUI — self-hosted AI interface...'` | Cloud Run service description. |
 | `application_version` | 3 | `string` | `'latest'` | Open WebUI image version tag. |
 
-**Wrapper architecture:** `OpenWebUI_CloudRun` calls `OpenWebUI_Common` to produce an `application_config` object containing Open WebUI-specific environment variables, probe configuration, and the `db-init` job. `module_storage_buckets` carries the GCS data bucket provisioned by `OpenWebUI_Common`. `scripts_dir = abspath("${path.module}/scripts")` at apply time (note: scripts live in the `OpenWebUI_CloudRun` module itself, not in `OpenWebUI_Common`).
+**Wrapper architecture:** `OpenWebUI CloudRun` calls `OpenWebUI Common` to produce an `application_config` object containing Open WebUI-specific environment variables, probe configuration, and the `db-init` job. `module_storage_buckets` carries the GCS data bucket provisioned by `OpenWebUI Common`. `scripts_dir = abspath("${path.module}/scripts")` at apply time (note: scripts live in the `OpenWebUI CloudRun` module itself, not in `OpenWebUI Common`).
 
 ---
 
 ## 2. IAM & Access Control
 
-`OpenWebUI_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in `App_CloudRun`.
+`OpenWebUI CloudRun` delegates all IAM provisioning to `App CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in `App CloudRun`.
 
-**Auto-generated secret:** `OpenWebUI_Common` auto-generates `WEBUI_SECRET_KEY` and stores it in Secret Manager. This key is used by Open WebUI to sign sessions. It is injected into the Cloud Run service via `module_secret_env_vars`.
+**Auto-generated secret:** `OpenWebUI Common` auto-generates `WEBUI_SECRET_KEY` and stores it in Secret Manager. This key is used by Open WebUI to sign sessions. It is injected into the Cloud Run service via `module_secret_env_vars`.
 
-**Database initialisation:** The `db-init` Cloud Run Job (provisioned by `OpenWebUI_Common`) creates the PostgreSQL database and user on first apply. It runs under the Cloud Run SA.
+**Database initialisation:** The `db-init` Cloud Run Job (provisioned by `OpenWebUI Common`) creates the PostgreSQL database and user on first apply. It runs under the Cloud Run SA.
 
 ---
 
@@ -68,7 +68,7 @@ Open WebUI is a self-hosted AI interface with 90,000+ GitHub stars, providing a 
 
 ### B. Open WebUI Settings (Group 5)
 
-These variables are unique to Open WebUI and are not present in `App_CloudRun`.
+These variables are unique to Open WebUI and are not present in `App CloudRun`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -92,7 +92,7 @@ Open WebUI requires PostgreSQL. The database type is fixed to PostgreSQL 15 and 
 
 ### D. Storage (GCS)
 
-`OpenWebUI_Common` provisions a GCS data bucket for Open WebUI's backend data directory (`DATA_DIR=/app/backend/data`).
+`OpenWebUI Common` provisions a GCS data bucket for Open WebUI's backend data directory (`DATA_DIR=/app/backend/data`).
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -111,7 +111,7 @@ Open WebUI requires PostgreSQL. The database type is fixed to PostgreSQL 15 and 
 
 ### F. Environment Variables & Secrets
 
-The platform injects `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` automatically. `OpenWebUI_Common` assembles `DATABASE_URL` from these. `WEBUI_SECRET_KEY` is auto-generated and injected from Secret Manager.
+The platform injects `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` automatically. `OpenWebUI Common` assembles `DATABASE_URL` from these. `WEBUI_SECRET_KEY` is auto-generated and injected from Secret Manager.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -194,11 +194,11 @@ Open WebUI exposes `/health`. Both startup and liveness probes target this path.
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| **PostgreSQL required** | Fixed in `OpenWebUI_Common` | Open WebUI requires PostgreSQL for session and state persistence. |
-| **WEBUI_SECRET_KEY auto-generated** | `OpenWebUI_Common` creates and stores in Secret Manager | Injected via `module_secret_env_vars`. Do not set manually. |
-| **DATABASE_URL assembled automatically** | `OpenWebUI_Common` entrypoint | Constructed from injected `DB_*` env vars. Do not override. |
+| **PostgreSQL required** | Fixed in `OpenWebUI Common` | Open WebUI requires PostgreSQL for session and state persistence. |
+| **WEBUI_SECRET_KEY auto-generated** | `OpenWebUI Common` creates and stores in Secret Manager | Injected via `module_secret_env_vars`. Do not set manually. |
+| **DATABASE_URL assembled automatically** | `OpenWebUI Common` entrypoint | Constructed from injected `DB_*` env vars. Do not override. |
 | **No Redis** | `module_env_vars = {}` | Unlike Odoo or Moodle, no `REDIS_*` env vars are injected. `enable_redis` defaults to `false`. |
-| **Scripts directory** | `scripts_dir = abspath("${path.module}/scripts")` | Init scripts reside in `OpenWebUI_CloudRun/scripts/`, not in `OpenWebUI_Common`. |
+| **Scripts directory** | `scripts_dir = abspath("${path.module}/scripts")` | Init scripts reside in `OpenWebUI_CloudRun/scripts/`, not in `OpenWebUI Common`. |
 
 ---
 

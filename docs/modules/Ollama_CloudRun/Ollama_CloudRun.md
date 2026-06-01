@@ -1,20 +1,20 @@
 ---
-title: "Ollama_CloudRun Module — Configuration Guide"
+title: "Ollama CloudRun Module — Configuration Guide"
 sidebar_label: "Ollama CloudRun"
 ---
 
-# Ollama_CloudRun Module — Configuration Guide
+# Ollama CloudRun Module — Configuration Guide
 
 Ollama is an open-source LLM inference server that serves large language models such as Llama,
 Mistral, Gemma, and Phi via a REST API on port 11434. This module deploys Ollama on **Google
 Cloud Run** (serverless, CPU-only) with model weights persisted to a GCS Fuse volume so that
 container restarts load models from storage rather than re-downloading them.
 
-`Ollama_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP
-infrastructure provisioning to App_CloudRun (Cloud Run service, networking, Secret Manager, GCS,
-CI/CD) and uses an `Ollama_Common` sub-module to supply Ollama-specific application
+`Ollama CloudRun` is a **wrapper module** built on top of `App CloudRun`. It delegates all GCP
+infrastructure provisioning to App CloudRun (Cloud Run service, networking, Secret Manager, GCS,
+CI/CD) and uses an `Ollama Common` sub-module to supply Ollama-specific application
 configuration, the GCS models bucket, and the optional model-pull initialization job. The
-`Ollama_Common` outputs feed into App_CloudRun's `application_config`, `module_storage_buckets`,
+`Ollama Common` outputs feed into App CloudRun's `application_config`, `module_storage_buckets`,
 and `scripts_dir` inputs.
 
 > This module is designed as a **shared AI inference endpoint**. Any workload in the same VPC
@@ -25,7 +25,7 @@ and `scripts_dir` inputs.
 
 ## §1 · Module Overview
 
-### What `Ollama_CloudRun` provides
+### What `Ollama CloudRun` provides
 
 - An **Ollama container** (prebuilt image `ollama/ollama` from Docker Hub,
   `enable_image_mirroring = true` by default) deployed on Cloud Run listening on port `11434`.
@@ -37,9 +37,9 @@ and `scripts_dir` inputs.
   job only runs when `default_model` is non-empty and `initialization_jobs = []`.
 - **No database, no Redis, no NFS** — Ollama is stateless beyond its GCS-backed model cache.
 
-### Key differences from `App_CloudRun` defaults
+### Key differences from `App CloudRun` defaults
 
-| Feature | App_CloudRun default | Ollama_CloudRun default |
+| Feature | App CloudRun default | Ollama CloudRun default |
 |---|---|---|
 | `container_port` | `8080` | `11434` |
 | `cpu_limit` | `"1000m"` | `"4000m"` |
@@ -51,7 +51,7 @@ and `scripts_dir` inputs.
 | `timeout_seconds` | `60` | `3600` |
 | `enable_redis` | varies | **always `false`** (hard-coded) |
 | Database | varies | **`NONE`** (hard-coded, no Cloud SQL) |
-| GCS models bucket | none | auto-provisioned via Ollama_Common |
+| GCS models bucket | none | auto-provisioned via Ollama Common |
 | Model-pull job | none | auto-generated when `default_model` is set |
 | Auto-injected env vars | none | `OLLAMA_MODELS`, `OLLAMA_HOST`, `OLLAMA_KEEP_ALIVE` |
 
@@ -66,9 +66,9 @@ and `scripts_dir` inputs.
 | `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform. |
 | `support_users` | `list(string)` | `[]` | Email addresses granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `map(string)` | `{}` | Labels applied to all module-managed resources. |
-| `module_description` | `string` | *(Ollama_CloudRun description)* | Platform UI description. |
+| `module_description` | `string` | *(Ollama CloudRun description)* | Platform UI description. |
 | `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/Ollama_CloudRun"` | External documentation URL. |
-| `module_dependency` | `list(string)` | `["Services_GCP"]` | Modules that must be deployed before this one. |
+| `module_dependency` | `list(string)` | `["Services GCP"]` | Modules that must be deployed before this one. |
 | `module_services` | `list(string)` | *(GCP service list)* | GCP services consumed by this module. |
 | `credit_cost` | `number` | `50` | Platform credits consumed on deployment. |
 | `require_credit_purchases` | `bool` | `false` | Enforce credit balance check before deployment. |
@@ -124,11 +124,11 @@ models bucket.
 | `enable_image_mirroring` | `bool` | `true` | Mirror `ollama/ollama` to Artifact Registry before deployment to avoid Docker Hub rate limits. |
 | `service_annotations` | `map(string)` | `{}` | Custom annotations applied to the Cloud Run service. |
 | `service_labels` | `map(string)` | `{}` | Custom labels applied to the Cloud Run service. |
-| `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | Required by the App_CloudRun interface; not used by Ollama (no database). |
+| `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | Required by the App CloudRun interface; not used by Ollama (no database). |
 
 ### §3.D · Automatically Injected Environment Variables
 
-The following environment variables are set automatically by `Ollama_Common` and must not be
+The following environment variables are set automatically by `Ollama Common` and must not be
 overridden in `environment_variables`:
 
 | Variable | Value | Purpose |
@@ -206,7 +206,7 @@ required to enable GCS model persistence.
 ## §5 · Backup & Maintenance (Group 6)
 
 Ollama has no database — backup and import settings are present for interface compatibility
-with App_CloudRun but have no operational effect.
+with App CloudRun but have no operational effect.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -262,11 +262,11 @@ Ollama has no database dependency. Redis is also disabled for this module.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `database_password_length` | `number` | `32` | Not used by Ollama. Present for App_CloudRun interface compatibility. Valid range: 16–64. |
+| `database_password_length` | `number` | `32` | Not used by Ollama. Present for App CloudRun interface compatibility. Valid range: 16–64. |
 
 **Hard-coded values (not user-configurable):**
 - `enable_redis = false`
-- `database_type = "NONE"` (set via `Ollama_Common`)
+- `database_type = "NONE"` (set via `Ollama Common`)
 
 ---
 
@@ -277,10 +277,10 @@ ready. Probes target this path.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=30, timeout_seconds=5, period_seconds=15, failure_threshold=20 }` | Startup probe forwarded through Ollama_Common. The 30 s initial delay and 20-attempt threshold allow up to ~5 minutes for model loading from GCS on first start. |
+| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=30, timeout_seconds=5, period_seconds=15, failure_threshold=20 }` | Startup probe forwarded through Ollama Common. The 30 s initial delay and 20-attempt threshold allow up to ~5 minutes for model loading from GCS on first start. |
 | `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=60, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe. 60 s initial delay avoids false restarts during the model-load phase. |
-| `startup_probe_config` | `object` | `{ enabled=true }` | Structured startup probe passed directly to App_CloudRun (240 s timeout by default). |
-| `health_check_config` | `object` | `{ enabled=true }` | Structured liveness probe passed directly to App_CloudRun. |
+| `startup_probe_config` | `object` | `{ enabled=true }` | Structured startup probe passed directly to App CloudRun (240 s timeout by default). |
+| `health_check_config` | `object` | `{ enabled=true }` | Structured liveness probe passed directly to App CloudRun. |
 | `uptime_check_config` | `object` | `{ enabled=true, path="/", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check from multiple global locations. |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies notifying `support_users`. |
 
@@ -336,12 +336,12 @@ The following behaviours are applied automatically and cannot be overridden via 
 | **`OLLAMA_MODELS` injected** | Set to `/mnt/gcs/ollama/models` — the GCS Fuse subdirectory inside the auto-provisioned models bucket. Do not set this in `environment_variables`. |
 | **`OLLAMA_HOST` injected** | Set to `"0.0.0.0:11434"` so Cloud Run's ingress can forward traffic to the container. |
 | **`OLLAMA_KEEP_ALIVE` injected** | Set to `"24h"` to keep the loaded model resident in memory between requests. Override by setting `OLLAMA_KEEP_ALIVE` in `environment_variables`. |
-| **Models bucket always provisioned** | The `<resource_prefix>-models` GCS bucket is always created via `Ollama_Common.storage_buckets`, regardless of `create_cloud_storage` or `storage_buckets` settings. |
+| **Models bucket always provisioned** | The `<resource_prefix>-models` GCS bucket is always created via `Ollama Common.storage_buckets`, regardless of `create_cloud_storage` or `storage_buckets` settings. |
 | **GCS volume always mounted** | The `ollama-models` volume is always appended to `gcs_volumes`. Additional volumes specified in `gcs_volumes` are merged before the models volume. |
 | **`execution_environment = "gen2"` default** | GCS Fuse requires the Cloud Run gen2 execution environment. The default enforces this. |
 | **No database, no Redis** | `enable_redis = false` and `database_type = "NONE"` are hard-coded in `main.tf`. These cannot be changed. |
-| **Model-pull job auto-generated** | When `default_model` is set and `initialization_jobs = []`, a Cloud Run Job (`model-pull`) is created automatically using the `scripts/model-pull.sh` script from `Ollama_Common`. Providing any entry in `initialization_jobs` disables the auto-generated job entirely. |
-| **`scripts_dir`** | Set to `Ollama_Common`'s bundled `scripts/` directory. |
+| **Model-pull job auto-generated** | When `default_model` is set and `initialization_jobs = []`, a Cloud Run Job (`model-pull`) is created automatically using the `scripts/model-pull.sh` script from `Ollama Common`. Providing any entry in `initialization_jobs` disables the auto-generated job entirely. |
+| **`scripts_dir`** | Set to `Ollama Common`'s bundled `scripts/` directory. |
 
 ---
 
@@ -353,7 +353,7 @@ Complete variable reference with UIMeta group assignments.
 |---|---|---|
 | `module_description` | *(Ollama CloudRun description)* | 0 |
 | `module_documentation` | `"https://docs.radmodules.dev/docs/modules/Ollama_CloudRun"` | 0 |
-| `module_dependency` | `["Services_GCP"]` | 0 |
+| `module_dependency` | `["Services GCP"]` | 0 |
 | `module_services` | *(list of GCP services)* | 0 |
 | `credit_cost` | `50` | 0 |
 | `require_credit_purchases` | `false` | 0 |

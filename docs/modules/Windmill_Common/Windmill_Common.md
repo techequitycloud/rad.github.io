@@ -1,11 +1,11 @@
 ---
-title: "Windmill_Common Shared Configuration Module"
+title: "Windmill Common Shared Configuration Module"
 sidebar_label: "Windmill Common"
 ---
 
-# Windmill_Common Shared Configuration Module
+# Windmill Common Shared Configuration Module
 
-The `Windmill_Common` module defines the Windmill developer platform configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates a small set of GCP resources (a Secret Manager secret for SMTP) and produces `config`, `secret_ids`, and `storage_buckets` outputs consumed by platform-specific wrapper modules (`Windmill_CloudRun` and `Windmill_GKE`).
+The `Windmill Common` module defines the Windmill developer platform configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates a small set of GCP resources (a Secret Manager secret for SMTP) and produces `config`, `secret_ids`, and `storage_buckets` outputs consumed by platform-specific wrapper modules (`Windmill CloudRun` and `Windmill GKE`).
 
 ## 1. Overview
 
@@ -92,7 +92,7 @@ A list of GCS bucket configurations for provisioning by the platform module:
 
 ## 3. Environment Variables
 
-`Windmill_Common` injects the following environment variables into the container. These are hardcoded defaults merged with user-supplied `var.environment_variables`.
+`Windmill Common` injects the following environment variables into the container. These are hardcoded defaults merged with user-supplied `var.environment_variables`.
 
 | Variable | Value | Description |
 |---|---|---|
@@ -181,7 +181,7 @@ All three probe types target `GET /api/version`, which returns HTTP 200 with the
 
 ## 7. Secret Manager Resources
 
-`Windmill_Common` creates the following Secret Manager resources:
+`Windmill Common` creates the following Secret Manager resources:
 
 | Resource | Type | Description |
 |---|---|---|
@@ -193,7 +193,7 @@ All three probe types target `GET /api/version`, which returns HTTP 200 with the
 
 ## 8. Platform-Specific Differences
 
-| Aspect | Windmill_CloudRun | Windmill_GKE |
+| Aspect | Windmill CloudRun | Windmill GKE |
 |---|---|---|
 | `MODE` | `server,worker` (single process) | `server,worker` (single process per pod) |
 | `min_instance_count` | `1` | `1` |

@@ -1,15 +1,15 @@
 ---
-title: "Services_GCP — Lab Guide"
+title: "Services GCP — Lab Guide"
 sidebar_label: "Services GCP"
 ---
 
-# Services_GCP — Lab Guide
+# Services GCP — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/GCP_Services)**
 
 ## Overview
 
-`Services_GCP` is the **foundational infrastructure module** in the RAD Modules ecosystem. It must be deployed before any application module and provisions the shared GCP services that all applications depend on: VPC networking, Cloud SQL databases, a self-managed NFS and Redis VM, Artifact Registry, IAM service accounts, and optional managed services (Cloud Filestore, Cloud Memorystore, GKE Autopilot) and security controls (CMEK, Binary Authorization, VPC Service Controls).
+`Services GCP` is the **foundational infrastructure module** in the RAD Modules ecosystem. It must be deployed before any application module and provisions the shared GCP services that all applications depend on: VPC networking, Cloud SQL databases, a self-managed NFS and Redis VM, Artifact Registry, IAM service accounts, and optional managed services (Cloud Filestore, Cloud Memorystore, GKE Autopilot) and security controls (CMEK, Binary Authorization, VPC Service Controls).
 
 **Estimated time:** 1.5–2.5 hours (add 30–40 minutes if deploying a GKE cluster)
 
@@ -76,7 +76,7 @@ export NFS_VM=$(gcloud compute instances list \
 | `kubectl` (optional) | Required only if deploying a GKE cluster |
 | RAD UI access | Permission to deploy modules in the target GCP project |
 
-`Services_GCP` is a standalone module with no runtime dependencies on other RAD modules. The only prerequisite is an existing GCP project with billing enabled.
+`Services GCP` is a standalone module with no runtime dependencies on other RAD modules. The only prerequisite is an existing GCP project with billing enabled.
 
 ---
 
@@ -447,7 +447,7 @@ In the Cloud Console, navigate to **Compute Engine → Disks** to view the disk 
 
 ### Step 4.4 — Verify NFS Server IP in Outputs
 
-The NFS server IP is exposed as `nfs_server_ip` in the module outputs and is used by App_CloudRun and App_GKE to mount the NFS share. Confirm it matches the VM's internal IP:
+The NFS server IP is exposed as `nfs_server_ip` in the module outputs and is used by App CloudRun and App GKE to mount the NFS share. Confirm it matches the VM's internal IP:
 
 ```bash
 NFS_IP=$(gcloud compute instances describe ${NFS_VM} \
@@ -701,9 +701,9 @@ gcloud compute instances describe ${NFS_VM} \
 
 ## Phase 8 — Undeploy [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your `Services_GCP` deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your `Services GCP` deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
 
-> **Important:** All application modules (`*_CloudRun`, `*_GKE`) that depend on this `Services_GCP` deployment **must be undeployed first**. Destroying `Services_GCP` while application modules are still running will break their database, NFS, and network connectivity.
+> **Important:** All application modules (`*_CloudRun`, `*_GKE`) that depend on this `Services GCP` deployment **must be undeployed first**. Destroying `Services GCP` while application modules are still running will break their database, NFS, and network connectivity.
 
 **Expected undeploy times:**
 

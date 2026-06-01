@@ -1,13 +1,13 @@
 ---
-title: "OpenEMR_Common Module"
+title: "OpenEMR Common Module"
 sidebar_label: "OpenEMR Common"
 ---
 
-# OpenEMR_Common Module
+# OpenEMR Common Module
 
 ## Overview
 
-`OpenEMR_Common` is a pure-configuration Terraform module in the RAD Modules ecosystem. It generates a `config` object consumed by platform modules (`App_CloudRun`, `App_GKE`) to deploy OpenEMR — an open-source electronic health record (EHR) and medical practice management system — on Google Cloud. The module provisions one GCP Secret Manager secret (the OpenEMR admin password) and emits all container configuration as Terraform outputs. No compute resources or GCS buckets are created directly.
+`OpenEMR Common` is a pure-configuration Terraform module in the RAD Modules ecosystem. It generates a `config` object consumed by platform modules (`App CloudRun`, `App GKE`) to deploy OpenEMR — an open-source electronic health record (EHR) and medical practice management system — on Google Cloud. The module provisions one GCP Secret Manager secret (the OpenEMR admin password) and emits all container configuration as Terraform outputs. No compute resources or GCS buckets are created directly.
 
 OpenEMR has specific infrastructure requirements: **MySQL 8.0** (not PostgreSQL), NFS-backed site files (documents, session cache, Twig cache, sqlconf), ephemeral storage for PHP opcache and Apache logs, and a multi-step startup sequence that can take several minutes on first boot. This module handles all of these by configuring custom init jobs, a temporary health probe server during startup, and version-aware upgrade scripts.
 
@@ -80,7 +80,7 @@ OpenEMR has specific infrastructure requirements: **MySQL 8.0** (not PostgreSQL)
 | `storage_buckets` | list | Always empty `[]` — no GCS buckets provisioned by this module |
 | `path` | string | Absolute path to this module directory |
 | `admin_password_secret_id` | string | Secret Manager resource ID for the admin password |
-| `admin_password` | string (sensitive) | Plaintext admin password value. Marked sensitive — used by `OpenEMR_GKE` to inject `OE_PASS` via `explicit_secret_values`. Not exposed to `OpenEMR_CloudRun`, which uses the Secret Manager reference instead. |
+| `admin_password` | string (sensitive) | Plaintext admin password value. Marked sensitive — used by `OpenEMR GKE` to inject `OE_PASS` via `explicit_secret_values`. Not exposed to `OpenEMR CloudRun`, which uses the Secret Manager reference instead. |
 
 ---
 
@@ -139,7 +139,7 @@ OpenEMR has specific infrastructure requirements: **MySQL 8.0** (not PostgreSQL)
 | `redis_host` | string | `""` | Redis hostname; falls back to `$(NFS_SERVER_IP)` at runtime |
 | `redis_port` | string | `"6379"` | Redis port |
 
-> Redis is **enabled by default** in OpenEMR_Common (unlike most other modules). The `$(NFS_SERVER_IP)` placeholder in `REDIS_SERVER` is expanded at container startup by `openemr.sh`.
+> Redis is **enabled by default** in OpenEMR Common (unlike most other modules). The `$(NFS_SERVER_IP)` placeholder in `REDIS_SERVER` is expanded at container startup by `openemr.sh`.
 
 ---
 
@@ -397,7 +397,7 @@ The following environment variables are always set by the module (merged with `v
 
 ## Platform-Specific Differences
 
-| Aspect | OpenEMR_CloudRun | OpenEMR_GKE |
+| Aspect | OpenEMR CloudRun | OpenEMR GKE |
 |--------|------------------|------------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | `true` (defaults from Common; CloudRun uses Auth Proxy socket) | `true` (forced in GKE wrapper; Cloud SQL Proxy sidecar) |

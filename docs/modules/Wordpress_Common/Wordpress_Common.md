@@ -1,15 +1,15 @@
 ---
-title: "Wordpress_Common Module"
+title: "Wordpress Common Module"
 sidebar_label: "Wordpress Common"
 ---
 
-# Wordpress_Common Module
+# Wordpress Common Module
 
 ## Overview
 
-`Wordpress_Common` is a configuration module in the RAD Modules ecosystem that provisions eight WordPress security keys and salts and outputs a `config` object consumed by `App_CloudRun` or `App_GKE` to deploy WordPress — the world's most widely used CMS — on Google Cloud.
+`Wordpress Common` is a configuration module in the RAD Modules ecosystem that provisions eight WordPress security keys and salts and outputs a `config` object consumed by `App CloudRun` or `App GKE` to deploy WordPress — the world's most widely used CMS — on Google Cloud.
 
-Unlike most `*_Common` modules that compute a `resource_prefix` internally, **Wordpress_Common requires `resource_prefix` to be supplied by the caller** and uses it directly for all secret naming without any transformation. Both `resource_prefix` and `deployment_id_suffix` are required inputs with no defaults.
+Unlike most `*_Common` modules that compute a `resource_prefix` internally, **Wordpress Common requires `resource_prefix` to be supplied by the caller** and uses it directly for all secret naming without any transformation. Both `resource_prefix` and `deployment_id_suffix` are required inputs with no defaults.
 
 The module uses **MySQL 8.0** and deploys WordPress on **Apache** via a `php:8.4-apache`-based image with WordPress downloaded at build time.
 
@@ -73,7 +73,7 @@ The module uses **MySQL 8.0** and deploys WordPress on **Apache** via a `php:8.4
 
 All 8 passwords use `length = 64, special = true` — the largest and most complex secrets in the RAD Modules ecosystem.
 
-> **`resource_prefix` is required** with no default. Pass `App_GKE.resource_prefix` for GKE deployments, or a fixed stable string for Cloud Run.
+> **`resource_prefix` is required** with no default. Pass `App GKE.resource_prefix` for GKE deployments, or a fixed stable string for Cloud Run.
 
 ---
 
@@ -140,7 +140,7 @@ All 8 passwords use `length = 64, special = true` — the largest and most compl
 | `initialization_jobs` | list(any) | `[]` | Override default jobs (empty = use `db-init`) |
 | `enable_cloudsql_volume` | bool | `true` | Mount Cloud SQL Auth Proxy sidecar socket volume |
 
-> **Note:** `cloudsql_volume_mount_path` is hardcoded to `"/cloudsql"` in the config output — it is not a variable exposed by `Wordpress_Common`. The callers (`Wordpress_CloudRun`, `Wordpress_GKE`) may override it when merging the config into `application_modules`.
+> **Note:** `cloudsql_volume_mount_path` is hardcoded to `"/cloudsql"` in the config output — it is not a variable exposed by `Wordpress Common`. The callers (`Wordpress CloudRun`, `Wordpress GKE`) may override it when merging the config into `application_modules`.
 
 ### WordPress-Specific
 
@@ -180,9 +180,9 @@ The module merges caller-supplied `environment_variables` with the following def
 
 | Variable | Reason |
 |----------|--------|
-| `WORDPRESS_DB_NAME` | `App_CloudRun` computes its own `resource_prefix`; setting `DB_NAME` from `Wordpress_Common`'s prefix could cause a mismatch. `wp-config-docker.php` reads `DB_NAME` directly from the environment that `App_CloudRun` injects correctly. |
-| `WORDPRESS_DB_USER` | Same reason — `App_CloudRun` manages DB credentials. |
-| `WP_HOME` / `WP_SITEURL` | `wp-config-docker.php` reads `CLOUDRUN_SERVICE_URL` (always injected by `App_CloudRun`) so these never need to be set statically. |
+| `WORDPRESS_DB_NAME` | `App CloudRun` computes its own `resource_prefix`; setting `DB_NAME` from `Wordpress Common`'s prefix could cause a mismatch. `wp-config-docker.php` reads `DB_NAME` directly from the environment that `App CloudRun` injects correctly. |
+| `WORDPRESS_DB_USER` | Same reason — `App CloudRun` manages DB credentials. |
+| `WP_HOME` / `WP_SITEURL` | `wp-config-docker.php` reads `CLOUDRUN_SERVICE_URL` (always injected by `App CloudRun`) so these never need to be set statically. |
 
 ---
 
@@ -347,7 +347,7 @@ if ($_wp_site_url !== '') {
 
 ## Platform-Specific Differences
 
-| Aspect | Wordpress_CloudRun | Wordpress_GKE |
+| Aspect | Wordpress CloudRun | Wordpress GKE |
 |--------|-------------------|---------------|
 | `service_url` | Computed Cloud Run URL injected as `CLOUDRUN_SERVICE_URL` | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Optional (Auth Proxy sidecar) | Optional (Auth Proxy sidecar) |
@@ -389,9 +389,9 @@ module "wordpress_cloudrun" {
 }
 ```
 
-### Aligning `resource_prefix` with `App_GKE`
+### Aligning `resource_prefix` with `App GKE`
 
-When deploying on GKE, pass `App_GKE`'s `resource_prefix` so all secrets and cluster resources share the same naming prefix:
+When deploying on GKE, pass `App GKE`'s `resource_prefix` so all secrets and cluster resources share the same naming prefix:
 
 ```hcl
 module "wordpress_common" {

@@ -11,13 +11,13 @@ This document provides a comprehensive reference for the `modules/Dify_CloudRun`
 
 ## 1. Module Overview
 
-Dify is an open-source LLM application development platform with 50,000+ GitHub stars, widely adopted for building production-grade AI applications without deep ML expertise. `Dify_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Dify-specific application configuration, database initialisation, secrets, and storage configuration via `Dify_Common`.
+Dify is an open-source LLM application development platform with 50,000+ GitHub stars, widely adopted for building production-grade AI applications without deep ML expertise. `Dify CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects Dify-specific application configuration, database initialisation, secrets, and storage configuration via `Dify Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Python/Next.js containers, 2 vCPU / 4 Gi default. Min 1 instance to maintain Celery worker availability. A **web** sidecar service (`langgenius/dify-web`) is automatically deployed alongside the API.
-*   **Data Persistence**: Cloud SQL **PostgreSQL 15** with `pgvector` extension enabled for vector storage. NFS (GCE VM or Filestore) for shared Redis and task state. GCS `dify-storage` bucket auto-provisioned by `Dify_Common`.
+*   **Data Persistence**: Cloud SQL **PostgreSQL 15** with `pgvector` extension enabled for vector storage. NFS (GCE VM or Filestore) for shared Redis and task state. GCS `dify-storage` bucket auto-provisioned by `Dify Common`.
 *   **AI Infrastructure**: pgvector reuses the Cloud SQL PostgreSQL instance as the vector store (`VECTOR_STORE=pgvector`). Redis is required for Celery task queue and event bus streaming.
-*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_CloudRun`. `Dify_Common` auto-generates a `SECRET_KEY` secret stored in Secret Manager.
+*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`. `Dify Common` auto-generates a `SECRET_KEY` secret stored in Secret Manager.
 *   **Caching/Queue**: Redis **enabled by default** (`enable_redis = true`) — required for Celery broker, backend, and SSE/WebSocket LLM streaming.
 *   **CI/CD**: Cloud Build custom image pipeline; Cloud Deploy progressive delivery optional.
 *   **Reliability**: Health probes target `/health` with 30-second initial delay.
@@ -35,9 +35,9 @@ Dify is an open-source LLM application development platform with 50,000+ GitHub 
 | `description` | 3 | `string` | `'Dify - Open-source LLM application development platform...'` | Cloud Run service description. |
 | `application_version` | 3 | `string` | `'0.15.0'` | Dify image version tag. Applies to both API and web containers. |
 
-**Wrapper architecture:** `Dify_CloudRun` calls `Dify_Common` to build an `application_config` object containing Dify-specific environment variables, probe configuration, pgvector settings, and the `db-init` job definition. `Dify_CloudRun` hardcodes a `web` additional service (`langgenius/dify-web`) that is deployed alongside the API service. The web service consumes `CLOUDRUN_SERVICE_URL` at runtime via `$(CLOUDRUN_SERVICE_URL)` substitution. `module_storage_buckets` carries the `dify-storage` GCS bucket provisioned by `Dify_Common`. `scripts_dir` is resolved to `abspath("${module.dify_app.path}/scripts")` at apply time.
+**Wrapper architecture:** `Dify CloudRun` calls `Dify Common` to build an `application_config` object containing Dify-specific environment variables, probe configuration, pgvector settings, and the `db-init` job definition. `Dify CloudRun` hardcodes a `web` additional service (`langgenius/dify-web`) that is deployed alongside the API service. The web service consumes `CLOUDRUN_SERVICE_URL` at runtime via `$(CLOUDRUN_SERVICE_URL)` substitution. `module_storage_buckets` carries the `dify-storage` GCS bucket provisioned by `Dify Common`. `scripts_dir` is resolved to `abspath("${module.dify_app.path}/scripts")` at apply time.
 
-**PostgreSQL + pgvector note:** `Dify_Common` enables the `vector` PostgreSQL extension automatically. The pgvector integration reuses the Cloud SQL PostgreSQL instance — no separate vector database is required in the default configuration.
+**PostgreSQL + pgvector note:** `Dify Common` enables the `vector` PostgreSQL extension automatically. The pgvector integration reuses the Cloud SQL PostgreSQL instance — no separate vector database is required in the default configuration.
 
 ---
 
@@ -45,11 +45,11 @@ Dify is an open-source LLM application development platform with 50,000+ GitHub 
 
 `Dify_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in [App_CloudRun §2](../App_CloudRun/App_CloudRun.md#2-iam--access-control).
 
-**Auto-generated application secret:** `Dify_Common` generates a 64-character random `SECRET_KEY` and stores it in Secret Manager as `<resource_prefix>-secret-key`. This secret is injected as `SECRET_KEY` into the Dify API container at runtime. It is used by Dify for JWT signing and session encryption — do not change it after initial deployment.
+**Auto-generated application secret:** `Dify Common` generates a 64-character random `SECRET_KEY` and stores it in Secret Manager as `<resource_prefix>-secret-key`. This secret is injected as `SECRET_KEY` into the Dify API container at runtime. It is used by Dify for JWT signing and session encryption — do not change it after initial deployment.
 
 **Database initialisation identity:** The `db-init` Cloud Run Job runs under the Cloud Run SA. It connects to Cloud SQL PostgreSQL via the Auth Proxy Unix socket (since `enable_cloudsql_volume = true` by default), using `DB_HOST` (the socket path under `/cloudsql`), `DB_USER`, and `ROOT_PASSWORD` (from Secret Manager).
 
-**30-second secret propagation delay:** `Dify_Common` waits 30 seconds after creating the `SECRET_KEY` secret before proceeding. This allows Secret Manager global replication to complete before the Cloud Run service revision starts.
+**30-second secret propagation delay:** `Dify Common` waits 30 seconds after creating the `SECRET_KEY` secret before proceeding. This allows Secret Manager global replication to complete before the Cloud Run service revision starts.
 
 For the complete role tables and IAP, password rotation, and public access details, see [App_CloudRun §2](../App_CloudRun/App_CloudRun.md#2-iam--access-control).
 
@@ -61,7 +61,7 @@ For the complete role tables and IAP, password rotation, and public access detai
 
 Dify is a Python (Flask/Gunicorn) application with embedded Celery workers. The API service runs in supervisord mode — both the API gunicorn process and a Celery worker run inside the same container. A separate `dify-web` Next.js service is deployed as an additional service and communicates with the API via the Cloud Run service URL.
 
-**Startup CPU Boost** is always enabled (hardcoded in `App_CloudRun`).
+**Startup CPU Boost** is always enabled (hardcoded in `App CloudRun`).
 
 **Container image:** `Dify_Common` sets `image_source = "custom"` and `container_image = "langgenius/dify-api"`. Cloud Build compiles a custom image using `Dify_Common`'s Dockerfile which wraps the upstream image with supervisord. The web service uses `langgenius/dify-web:<version>` as a prebuilt image.
 
@@ -80,9 +80,9 @@ Dify is a Python (Flask/Gunicorn) application with embedded Celery workers. The 
 | `service_annotations` | 4 | `{}` | Advanced Cloud Run annotations. |
 | `service_labels` | 4 | `{}` | Labels applied to the Cloud Run service. |
 
-**Differences from `App_CloudRun` defaults:**
+**Differences from `App CloudRun` defaults:**
 
-| Variable | `App_CloudRun` | `Dify_CloudRun` | Reason |
+| Variable | `App CloudRun` | `Dify CloudRun` | Reason |
 |---|---|---|---|
 | `container_port` | `8080` | `5001` | Dify API's native port. |
 | `cpu_limit` | `'1000m'` | `'2000m'` | Gunicorn + Celery worker share CPU; 2 vCPU required. |
@@ -93,7 +93,7 @@ Dify is a Python (Flask/Gunicorn) application with embedded Celery workers. The 
 
 ### B. Database (Cloud SQL — PostgreSQL 15)
 
-Dify requires **PostgreSQL** — `Dify_Common` fixes `database_type = "POSTGRES_15"` and enables the `pgvector` extension. The pgvector integration is used by Dify as the default vector store (`VECTOR_STORE=pgvector`), eliminating the need for a separate vector database.
+Dify requires **PostgreSQL** — `Dify Common` fixes `database_type = "POSTGRES_15"` and enables the `pgvector` extension. The pgvector integration is used by Dify as the default vector store (`VECTOR_STORE=pgvector`), eliminating the need for a separate vector database.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -104,13 +104,13 @@ Dify requires **PostgreSQL** — `Dify_Common` fixes `database_type = "POSTGRES_
 | `enable_auto_password_rotation` | 12 | `false` | Automated zero-downtime password rotation. |
 | `rotation_propagation_delay_sec` | 12 | `90` | Seconds to wait after rotation before restarting the service. |
 
-> `enable_postgres_extensions` and the `vector` extension are enabled automatically by `Dify_Common` and cannot be disabled.
+> `enable_postgres_extensions` and the `vector` extension are enabled automatically by `Dify Common` and cannot be disabled.
 
 ### C. Storage (NFS & GCS)
 
 **NFS is enabled by default** (`enable_nfs = true`). The NFS server IP is used as the Redis host when `redis_host` is not explicitly set. Requires `execution_environment = 'gen2'`.
 
-**GCS storage bucket:** `Dify_Common` automatically provisions a dedicated `<resource_prefix>-storage` GCS bucket and configures Dify to use it via `STORAGE_TYPE=google-storage`. Workload Identity / ADC handles authentication; no service account JSON key is required.
+**GCS storage bucket:** `Dify Common` automatically provisions a dedicated `<resource_prefix>-storage` GCS bucket and configures Dify to use it via `STORAGE_TYPE=google-storage`. Workload Identity / ADC handles authentication; no service account JSON key is required.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -135,7 +135,7 @@ Cloud Run uses Direct VPC Egress to reach Cloud SQL's internal IP. Because `enab
 
 ### E. Initialization & Bootstrap
 
-A `db-init` Cloud Run Job is automatically provisioned by `Dify_Common` when `initialization_jobs` is left as the default empty list (`[]`). It uses the `postgres:15-alpine` image and executes `Dify_Common/scripts/db-init.sh`, which performs idempotent operations to create the Dify database user and database.
+A `db-init` Cloud Run Job is automatically provisioned by `Dify Common` when `initialization_jobs` is left as the default empty list (`[]`). It uses the `postgres:15-alpine` image and executes `Dify_Common/scripts/db-init.sh`, which performs idempotent operations to create the Dify database user and database.
 
 Dify runs its own database migrations automatically on startup via `MIGRATION_ENABLED=true` — no additional migration job is required.
 
@@ -143,7 +143,7 @@ Additional recurring cron jobs can be defined via `cron_jobs`:
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Dify_Common` to supply the default `db-init` job. Non-empty list replaces it entirely. |
+| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Dify Common` to supply the default `db-init` job. Non-empty list replaces it entirely. |
 | `cron_jobs` | 13 | `[]` | Recurring jobs triggered by Cloud Scheduler. Each entry: `name`, `schedule` (cron UTC), `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `parallelism`, `mount_nfs`, `mount_gcs_volumes`, `script_path`, `paused`. |
 
 ---
@@ -189,7 +189,7 @@ When `enable_iap = true`, Cloud Run's native IAP integration is enabled directly
 
 Dify application secrets are stored in Secret Manager and injected natively by Cloud Run at revision start.
 
-`Dify_Common` auto-generates one secret:
+`Dify Common` auto-generates one secret:
 
 | Secret | Environment Variable | Description |
 |---|---|---|
@@ -290,7 +290,7 @@ Dify exposes a `/health` HTTP endpoint. Both startup and liveness probes target 
 
 ### A. Redis Cache & Celery
 
-Redis is **required** for Dify (`enable_redis = true` by default). `Dify_Common` configures three Redis-backed features:
+Redis is **required** for Dify (`enable_redis = true` by default). `Dify Common` configures three Redis-backed features:
 - **Celery broker and backend** — task queue for LLM inference and document indexing jobs (db 1)
 - **Event bus** — SSE/WebSocket streaming for real-time LLM output (db 0)
 - **Redis cache** — general caching (db 0)
@@ -325,28 +325,28 @@ Dify connects to external LLM providers (OpenAI, Anthropic, Azure OpenAI, etc.) 
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| **PostgreSQL 15 required** | `database_type = "POSTGRES_15"` fixed by `Dify_Common` | Dify requires PostgreSQL. MySQL is unsupported. |
+| **PostgreSQL 15 required** | `database_type = "POSTGRES_15"` fixed by `Dify Common` | Dify requires PostgreSQL. MySQL is unsupported. |
 | **pgvector enabled** | `enable_postgres_extensions = true`, `postgres_extensions = ["vector"]` | Enables the `vector` extension for pgvector integration. Cannot be disabled. |
-| **SECRET_KEY auto-generated** | `google_secret_manager_secret.dify_secret_key` in `Dify_Common` | A 64-character random key is created and injected as `SECRET_KEY`. |
-| **MIGRATION_ENABLED=true** | Hardcoded in `Dify_Common` environment_variables | Dify runs Flask-Migrate automatically on startup. No separate migration job is needed. |
+| **SECRET_KEY auto-generated** | `google_secret_manager_secret.dify_secret_key` in `Dify Common` | A 64-character random key is created and injected as `SECRET_KEY`. |
+| **MIGRATION_ENABLED=true** | Hardcoded in `Dify Common` environment_variables | Dify runs Flask-Migrate automatically on startup. No separate migration job is needed. |
 | **Web service auto-deployed** | `dify_additional_services` in `dify.tf` | A `langgenius/dify-web:<version>` service is deployed and wired to `$(CLOUDRUN_SERVICE_URL)`. |
-| **GCS storage bucket** | `dify-storage` bucket provisioned by `Dify_Common` via `module_storage_buckets` | `STORAGE_TYPE=google-storage`, `GOOGLE_STORAGE_BUCKET_NAME=<prefix>-storage`. |
+| **GCS storage bucket** | `dify-storage` bucket provisioned by `Dify Common` via `module_storage_buckets` | `STORAGE_TYPE=google-storage`, `GOOGLE_STORAGE_BUCKET_NAME=<prefix>-storage`. |
 | **NFS enabled by default** | `enable_nfs = true` default | NFS server provides the Redis host when no external Redis is configured. |
 | **Redis enabled by default** | `enable_redis = true` default | Celery and event bus require Redis. Cannot be safely disabled. |
-| **Default db-init job** | Supplied by `Dify_Common` when `initialization_jobs = []` | PostgreSQL database and user are created idempotently. Override with non-empty list to replace. |
-| **Scripts directory** | `scripts_dir = abspath("${module.dify_app.path}/scripts")` | Initialization scripts are sourced from `Dify_Common`. |
+| **Default db-init job** | Supplied by `Dify Common` when `initialization_jobs = []` | PostgreSQL database and user are created idempotently. Override with non-empty list to replace. |
+| **Scripts directory** | `scripts_dir = abspath("${module.dify_app.path}/scripts")` | Initialization scripts are sourced from `Dify Common`. |
 
 ---
 
 ## 10. Variable Reference
 
-All user-configurable variables exposed by `Dify_CloudRun`, sorted by UI group then order.
+All user-configurable variables exposed by `Dify CloudRun`, sorted by UI group then order.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `module_description` | 0 | (Dify platform text) | Platform metadata: module description. |
 | `module_documentation` | 0 | `'https://docs.radmodules.dev/docs/modules/Dify_CloudRun'` | Platform metadata: documentation URL. |
-| `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
+| `module_dependency` | 0 | `['Services GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `50` | Platform metadata: deployment credit cost. |
 | `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
@@ -430,7 +430,7 @@ All user-configurable variables exposed by `Dify_CloudRun`, sorted by UI group t
 | `database_password_length` | 12 | `32` | Auto-generated password length. Range: 16–64. |
 | `enable_auto_password_rotation` | 12 | `false` | Automated zero-downtime password rotation. |
 | `rotation_propagation_delay_sec` | 12 | `90` | Seconds to wait after rotation before restarting the service. |
-| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Dify_Common` to supply the default `db-init` job. |
+| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Dify Common` to supply the default `db-init` job. |
 | `cron_jobs` | 13 | `[]` | Recurring scheduled Cloud Run Jobs. |
 | `startup_probe` | 14 | `{ path="/health", initial_delay_seconds=30, failure_threshold=30, ... }` | Startup probe. |
 | `liveness_probe` | 14 | `{ path="/health", initial_delay_seconds=30, failure_threshold=3, ... }` | Liveness probe. |

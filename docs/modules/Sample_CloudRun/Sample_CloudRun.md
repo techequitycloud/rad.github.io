@@ -1,19 +1,19 @@
 ---
-title: "Sample_CloudRun Module — Configuration Guide"
+title: "Sample CloudRun Module — Configuration Guide"
 sidebar_label: "Sample CloudRun"
 ---
 
-# Sample_CloudRun Module — Configuration Guide
+# Sample CloudRun Module — Configuration Guide
 
-`Sample_CloudRun` is a **reference wrapper module** that sits on top of `App_CloudRun`.
+`Sample CloudRun` is a **reference wrapper module** that sits on top of `App CloudRun`.
 It deploys a pre-configured Flask application (Python 3.11, PostgreSQL 15, optional
 Redis, optional NFS) on Cloud Run, and serves as a working example of how to build
-a custom application module on top of `App_CloudRun`.
+a custom application module on top of `App CloudRun`.
 
-`Sample_CloudRun` composes two internal layers: `Sample_Common` produces the
-application-specific configuration object, and `App_CloudRun` provisions all GCP
-infrastructure. You do not interact with `Sample_Common` directly — all inputs are
-exposed as variables on `Sample_CloudRun` itself.
+`Sample CloudRun` composes two internal layers: `Sample Common` produces the
+application-specific configuration object, and `App CloudRun` provisions all GCP
+infrastructure. You do not interact with `Sample Common` directly — all inputs are
+exposed as variables on `Sample CloudRun` itself.
 
 ---
 
@@ -21,8 +21,8 @@ exposed as variables on `Sample_CloudRun` itself.
 
 | Attribute | Value |
 |---|---|
-| **Underlying platform** | `App_CloudRun` |
-| **Sub-module** | `Sample_Common` |
+| **Underlying platform** | `App CloudRun` |
+| **Sub-module** | `Sample Common` |
 | **Application** | Flask (Python 3.11-slim), listening on port `8080` |
 | **Default version** | `"latest"` |
 | **Database** | Cloud SQL PostgreSQL 15, initialised by the `db-init` job |
@@ -42,7 +42,7 @@ Sample_CloudRun (variables.tf / sample.tf / main.tf)
   └─ App_CloudRun     ← provisions all GCP infrastructure
 ```
 
-`Sample_Common` outputs:
+`Sample Common` outputs:
 - `config` → merged into `application_config` (with `min_instance_count = 0` forced)
 - `secret_ids.FLASK_SECRET_KEY` → injected as `SECRET_KEY` via `module_secret_env_vars`
 - `storage_buckets` → merged into `module_storage_buckets`
@@ -71,9 +71,9 @@ no NFS-server fallback (see §8.A).
 
 ### §3.A · Application Identity
 
-`application_display_name` and `application_description` are passed to `Sample_Common`
+`application_display_name` and `application_description` are passed to `Sample Common`
 as `display_name` and `description`, then merged into `application_config` for
-`App_CloudRun`.
+`App CloudRun`.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -81,13 +81,13 @@ as `display_name` and `description`, then merged into `application_config` for
 | `application_display_name` | `"Cloudrun Application"` | Human-readable name shown in the platform UI and Cloud Run console. Safe to update at any time. |
 | `application_description` | `"Sample application to showcase Cloudrun features"` | Brief description of the application. Populates the Cloud Run service description field. |
 | `application_version` | `"latest"` | Version tag applied to the container image. Increment to trigger a new image build or revision. |
-| `application_database_name` | `"cloudrunapp"` | PostgreSQL database name. Passed to `Sample_Common` as `db_name`. **Do not change after initial deployment.** |
-| `application_database_user` | `"cloudrunapp"` | PostgreSQL user. Passed to `Sample_Common` as `db_user`. Password auto-generated. |
+| `application_database_name` | `"cloudrunapp"` | PostgreSQL database name. Passed to `Sample Common` as `db_name`. **Do not change after initial deployment.** |
+| `application_database_user` | `"cloudrunapp"` | PostgreSQL user. Passed to `Sample Common` as `db_user`. Password auto-generated. |
 
 ### §3.B · Resource Sizing
 
-`cpu_limit` and `memory_limit` are flat scalar variables passed to `Sample_Common`,
-which assembles them into the `container_resources` object consumed by `App_CloudRun`.
+`cpu_limit` and `memory_limit` are flat scalar variables passed to `Sample Common`,
+which assembles them into the `container_resources` object consumed by `App CloudRun`.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -233,19 +233,19 @@ traffic_split = [
 
 ### §7.A · Health Probes
 
-`Sample_CloudRun` exposes **two distinct sets** of health probe variables:
+`Sample CloudRun` exposes **two distinct sets** of health probe variables:
 
-- `startup_probe` / `liveness_probe` → passed to `Sample_Common` (application config within `application_config`)
-- `startup_probe_config` / `health_check_config` → passed directly to `App_CloudRun` (the actual Cloud Run container health checks)
+- `startup_probe` / `liveness_probe` → passed to `Sample Common` (application config within `application_config`)
+- `startup_probe_config` / `health_check_config` → passed directly to `App CloudRun` (the actual Cloud Run container health checks)
 
 The `startup_probe_config` / `health_check_config` pair controls Cloud Run's live health checking behaviour. `startup_probe` / `liveness_probe` embed probe definitions in the app module config for downstream reference.
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` | `{ enabled = true, type = "HTTP", path = "/healthz", initial_delay_seconds = 60, timeout_seconds = 5, period_seconds = 10, failure_threshold = 3 }` | Application-level startup probe passed to `Sample_Common`. |
-| `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/healthz", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Application-level liveness probe passed to `Sample_Common`. |
-| `startup_probe_config` | `{ enabled = true }` | Cloud Run infrastructure startup probe (TCP, `timeout_seconds = 240`, `period_seconds = 240`, `failure_threshold = 1`). Passed directly to `App_CloudRun`. |
-| `health_check_config` | `{ enabled = true }` | Cloud Run infrastructure liveness probe (HTTP, `path = "/"`, `timeout_seconds = 1`, `period_seconds = 10`, `failure_threshold = 3`). Passed directly to `App_CloudRun`. |
+| `startup_probe` | `{ enabled = true, type = "HTTP", path = "/healthz", initial_delay_seconds = 60, timeout_seconds = 5, period_seconds = 10, failure_threshold = 3 }` | Application-level startup probe passed to `Sample Common`. |
+| `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/healthz", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Application-level liveness probe passed to `Sample Common`. |
+| `startup_probe_config` | `{ enabled = true }` | Cloud Run infrastructure startup probe (TCP, `timeout_seconds = 240`, `period_seconds = 240`, `failure_threshold = 1`). Passed directly to `App CloudRun`. |
+| `health_check_config` | `{ enabled = true }` | Cloud Run infrastructure liveness probe (HTTP, `path = "/"`, `timeout_seconds = 1`, `period_seconds = 10`, `failure_threshold = 3`). Passed directly to `App CloudRun`. |
 | `uptime_check_config` | `{ enabled = true, path = "/" }` | Cloud Monitoring uptime check. `check_interval` and `timeout` use `"Ns"` format. |
 | `alert_policies` | `[]` | Metric-threshold alert policies. Each entry: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
 
@@ -257,7 +257,7 @@ The `startup_probe_config` / `health_check_config` pair controls Cloud Run's liv
 | `nfs_mount_path` | `"/mnt/nfs"` | Container mount path for the NFS volume. |
 | `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to use directly. Leave empty to auto-discover or create inline. |
 | `nfs_instance_base_name` | `"app-nfs"` | Base name for the inline NFS GCE VM when none is found. Deployment ID is appended. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. `Sample_Common` may provision additional buckets via `module_storage_buckets`. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. `Sample Common` may provision additional buckets via `module_storage_buckets`. |
 | `create_cloud_storage` | `true` | Set `false` to skip GCS bucket provisioning. |
 | `gcs_volumes` | `[]` | GCS buckets to mount as GCS Fuse volumes inside the container. |
 | `manage_storage_kms_iam` | `false` | Creates a CMEK KMS keyring and grants the GCS service account the encrypter/decrypter role, enabling CMEK on all storage buckets. |
@@ -267,7 +267,7 @@ The `startup_probe_config` / `health_check_config` pair controls Cloud Run's liv
 
 | Variable | Default | Description |
 |---|---|---|
-| `application_database_name` | `"cloudrunapp"` | PostgreSQL database name, passed to `Sample_Common` as `db_name`. Initialised by the `db-init` job on first deployment. |
+| `application_database_name` | `"cloudrunapp"` | PostgreSQL database name, passed to `Sample Common` as `db_name`. Initialised by the `db-init` job on first deployment. |
 | `application_database_user` | `"cloudrunapp"` | PostgreSQL user, passed as `db_user`. Password auto-generated. |
 | `database_password_length` | `32` | Auto-generated password length (16–64 characters). Default is `32`. |
 | `enable_auto_password_rotation` | `false` | Automated password rotation. See §4.A. |
@@ -283,7 +283,7 @@ The `startup_probe_config` / `health_check_config` pair controls Cloud Run's liv
 | `backup_retention_days` | `7` | Days to retain backup files before automatic deletion. |
 | `enable_backup_import` | `false` | Triggers a one-time database restore on the next `terraform apply`. |
 | `backup_source` | `"gcs"` | Source: `"gcs"` (full GCS URI) or `"gdrive"` (Google Drive file ID). |
-| `backup_uri` | `""` | For GCS: e.g. `"gs://my-bucket/backups/app.sql"`. Mapped to `backup_file` in App_CloudRun. |
+| `backup_uri` | `""` | For GCS: e.g. `"gs://my-bucket/backups/app.sql"`. Mapped to `backup_file` in App CloudRun. |
 | `backup_format` | `"sql"` | Format: `sql`, `gz`, `tar`, `tgz`, `tar.gz`, `zip`, `auto`. |
 
 ---
@@ -293,11 +293,11 @@ The `startup_probe_config` / `health_check_config` pair controls Cloud Run's liv
 ### §8.A · Redis
 
 Redis is **disabled by default** (`enable_redis = false`). When enabled,
-`Sample_Common` deploys an internal `redis:alpine` Cloud Run additional service.
+`Sample Common` deploys an internal `redis:alpine` Cloud Run additional service.
 `ENABLE_REDIS`, `REDIS_HOST`, and `REDIS_PORT` are injected via `module_env_vars`.
 
 **Important:** `REDIS_HOST` is left **empty** when `redis_host` is not set. Unlike
-other modules (e.g. OpenEMR_CloudRun), there is no NFS-server-IP fallback. Cloud Run
+other modules (e.g. OpenEMR CloudRun), there is no NFS-server-IP fallback. Cloud Run
 instances are network-isolated — they cannot reach a co-located Redis via `127.0.0.1`.
 You must set `redis_host` to the IP or internal URL of your Redis instance (e.g. a
 Cloud Memorystore private IP, or the Cloud Run internal URL of the Redis additional
@@ -308,7 +308,7 @@ service).
 | `enable_redis` | `false` | Deploys an internal `redis:alpine` Cloud Run service. Injects `ENABLE_REDIS`, `REDIS_HOST`, `REDIS_PORT` into the application container. |
 | `redis_host` | `""` | **Must be set explicitly.** If left empty, `REDIS_HOST` is an empty string and the application cannot connect to Redis. |
 | `redis_port` | `6379` | Redis TCP port. **Note: this is a `number` type**, unlike other modules where it is a string. |
-| `redis_auth` | `""` | Redis AUTH password. Treated as sensitive; passed to `App_CloudRun`. Leave empty for unauthenticated Redis. |
+| `redis_auth` | `""` | Redis AUTH password. Treated as sensitive; passed to `App CloudRun`. Leave empty for unauthenticated Redis. |
 
 ### §8.B · Custom SQL Scripts
 
@@ -323,7 +323,7 @@ service).
 
 | Variable | Default | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Cloud Run jobs executed once during deployment. Supplements the platform-managed `db-init` job from `Sample_Common`. |
+| `initialization_jobs` | `[]` | Cloud Run jobs executed once during deployment. Supplements the platform-managed `db-init` job from `Sample Common`. |
 | `cron_jobs` | `[]` | Recurring Cloud Scheduler-triggered jobs. Each entry: `name`, `schedule` (cron, UTC). |
 
 ### §8.D · Observability
@@ -361,7 +361,7 @@ latency requirements (and update the hardcoded value in `sample.tf`).
 
 | Job | What it does |
 |---|---|
-| `db-init` | Runs the bundled `db-init.sh` script (`postgres:15-alpine` image) against the Cloud SQL PostgreSQL instance on first deployment. Creates the application schema. Managed by `Sample_Common`. |
+| `db-init` | Runs the bundled `db-init.sh` script (`postgres:15-alpine` image) against the Cloud SQL PostgreSQL instance on first deployment. Creates the application schema. Managed by `Sample Common`. |
 
 ### Environment Variables (always injected)
 
@@ -374,7 +374,7 @@ latency requirements (and update the hardcoded value in `sample.tf`).
 
 ### Conditional: Redis Additional Service
 
-When `enable_redis = true`, `Sample_Common` declares an `additional_services` entry
+When `enable_redis = true`, `Sample Common` declares an `additional_services` entry
 that deploys a `redis:alpine` Cloud Run service alongside the main application. The
 service is internal-only (`INGRESS_TRAFFIC_INTERNAL_ONLY`).
 
@@ -382,10 +382,10 @@ service is internal-only (`INGRESS_TRAFFIC_INTERNAL_ONLY`).
 
 | Behaviour | Detail |
 |---|---|
-| `scripts_dir` | Resolved as `abspath("${module.sample_app.path}/scripts")` — points to `Sample_Common`'s bundled scripts. |
+| `scripts_dir` | Resolved as `abspath("${module.sample_app.path}/scripts")` — points to `Sample Common`'s bundled scripts. |
 | `backup_uri` → `backup_file` | `var.backup_uri` is mapped to `backup_file` in `main.tf`. |
-| `startup_probe` → `Sample_Common` | `var.startup_probe` is passed to `Sample_Common`, embedding it in the `application_config`. |
-| `startup_probe_config` → `App_CloudRun` | `var.startup_probe_config` is passed directly to `App_CloudRun` as the live Cloud Run infrastructure probe. |
+| `startup_probe` → `Sample Common` | `var.startup_probe` is passed to `Sample Common`, embedding it in the `application_config`. |
+| `startup_probe_config` → `App CloudRun` | `var.startup_probe_config` is passed directly to `App CloudRun` as the live Cloud Run infrastructure probe. |
 | `liveness_probe` / `health_check_config` | Same dual routing as startup probes above. |
 
 ---
@@ -398,7 +398,7 @@ Complete list of all input variables, grouped by UI section.
 |---|---|---|---|---|
 | 0 | `module_description` | string | *(long description)* | — |
 | 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/modules/Sample_CloudRun"` | — |
-| 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
+| 0 | `module_dependency` | list(string) | `["Services GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
 | 0 | `credit_cost` | number | `50` | — |
 | 0 | `require_credit_purchases` | bool | `false` | — |
@@ -501,7 +501,7 @@ Complete list of all input variables, grouped by UI section.
 
 ## Configuration Pitfalls & Sensible Defaults
 
-The table below identifies the variables most commonly misconfigured in `Sample_CloudRun` deployments. Because `Sample_CloudRun` is the reference implementation used to test `App_CloudRun` Foundation Module changes, the pitfalls here also apply to any new application module built from this template.
+The table below identifies the variables most commonly misconfigured in `Sample CloudRun` deployments. Because `Sample CloudRun` is the reference implementation used to test `App CloudRun` Foundation Module changes, the pitfalls here also apply to any new application module built from this template.
 
 > Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
 
@@ -510,9 +510,9 @@ The table below identifies the variables most commonly misconfigured in `Sample_
 | `application_name` | `"sample"` (default; do not change after first deploy) | **Critical** | Embedded in Cloud Run service name, Artifact Registry repo, Secret Manager secret IDs (including `FLASK_SECRET_KEY`). Changing after first deploy recreates all named resources — any state stored in Secret Manager is orphaned and new secrets are generated. |
 | `tenant_deployment_id` | Match environment: `"prod"`, `"staging"`, `"dev"` | **Critical** | Changing after first deploy recreates all named resources. The old Cloud SQL instance (if used) and Secret Manager secrets are orphaned. A new empty database is created. |
 | `application_version` | A pinned tag (e.g. `"1.0.0"`); avoid `"latest"` in production | **Medium** | `"latest"` makes rollback ambiguous. Cloud Run cannot distinguish between two `"latest"` revisions. Always pin to a digest or version tag in staging and production. |
-| `container_port` | `8080` (Flask/Gunicorn default; set in `Sample_Common`) | **Critical** | Mismatch: Cloud Run's startup probe fails immediately. All requests return 502. The revision never becomes healthy and enters a continuous restart loop. |
+| `container_port` | `8080` (Flask/Gunicorn default; set in `Sample Common`) | **Critical** | Mismatch: Cloud Run's startup probe fails immediately. All requests return 502. The revision never becomes healthy and enters a continuous restart loop. |
 | `startup_probe_config.path` | `"/healthz"` (Flask route that returns 200) | **Critical** | `"/healthz"` route not implemented in the sample Flask app: Cloud Run never routes traffic. The revision is healthy at the infra level but continuously restarts. Implement the route with `return "ok", 200`. |
-| `min_instance_count` | `0` for dev/testing (scale-to-zero appropriate for a reference app) | **Medium** | `0` in a load-testing scenario: cold starts (5–10 s for the sample Flask image) inflate p99 latency. Set `min_instance_count = 1` when benchmarking `App_CloudRun` Foundation Module changes to eliminate cold-start noise. |
+| `min_instance_count` | `0` for dev/testing (scale-to-zero appropriate for a reference app) | **Medium** | `0` in a load-testing scenario: cold starts (5–10 s for the sample Flask image) inflate p99 latency. Set `min_instance_count = 1` when benchmarking `App CloudRun` Foundation Module changes to eliminate cold-start noise. |
 | `max_instance_count` | `1` for dev; `≤ Cloud SQL max_connections ÷ pool_size` for load tests | **High** | Exceeding Cloud SQL connection limit during load tests: `FATAL: sorry, too many clients already`. All Flask instances fail DB queries simultaneously. |
 | `cpu_limit` | `"1000m"` (1 vCPU; sufficient for the hello-world pattern) | **Medium** | Too low (`< 250m`): CPU throttling causes slow Flask request handling and may cause the startup probe to time out. GCP bills minimum 0.083 vCPU for Cloud Run regardless. |
 | `memory_limit` | `"512Mi"` (sufficient for Flask + `FLASK_SECRET_KEY`) | **Medium** | Too low (`< 128Mi`): Flask is OOMKilled on startup when loading the application module and Secret Manager client libraries. |

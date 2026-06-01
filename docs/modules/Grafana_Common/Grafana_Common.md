@@ -1,20 +1,20 @@
 ---
-title: "Grafana_Common Module"
+title: "Grafana Common Module"
 sidebar_label: "Grafana Common"
 ---
 
-# Grafana_Common Module
+# Grafana Common Module
 
-`Grafana_Common` is the shared application configuration module for Grafana deployments. It is called internally by `Grafana_CloudRun` and `Grafana_GKE` — it is not deployed directly.
+`Grafana Common` is the shared application configuration module for Grafana deployments. It is called internally by `Grafana CloudRun` and `Grafana GKE` — it is not deployed directly.
 
 ---
 
 ## Purpose
 
-`Grafana_Common` assembles the four values consumed by the Foundation Modules (`App_CloudRun` and `App_GKE`):
+`Grafana Common` assembles the four values consumed by the Foundation Modules (`App CloudRun` and `App GKE`):
 
 - **`config`** — The application configuration object containing the container image, port, resource limits, database settings, probes, and initialization jobs.
-- **`secret_ids`** — Secret Manager secret references to inject as environment variables. Grafana_Common returns an empty map — no application-level secrets are auto-generated.
+- **`secret_ids`** — Secret Manager secret references to inject as environment variables. Grafana Common returns an empty map — no application-level secrets are auto-generated.
 - **`storage_buckets`** — A list containing the `grafana-data` GCS bucket definition.
 - **`path`** — The filesystem path to this module, used to resolve `scripts_dir` in the parent module.
 
@@ -22,7 +22,7 @@ sidebar_label: "Grafana Common"
 
 ## Container Configuration
 
-`Grafana_Common` sets the following fixed values in its `config` output:
+`Grafana Common` sets the following fixed values in its `config` output:
 
 | Field | Value | Notes |
 |---|---|---|
@@ -48,7 +48,7 @@ Both the startup and liveness probes target `/api/health` — Grafana's dedicate
 
 ## Storage Buckets
 
-`Grafana_Common` provisions one GCS bucket automatically:
+`Grafana Common` provisions one GCS bucket automatically:
 
 | Suffix | Class | Notes |
 |---|---|---|
@@ -58,7 +58,7 @@ Both the startup and liveness probes target `/api/health` — Grafana's dedicate
 
 ## Variables
 
-`Grafana_Common` accepts the following internal variables (not user-facing — set by the parent CloudRun or GKE module):
+`Grafana Common` accepts the following internal variables (not user-facing — set by the parent CloudRun or GKE module):
 
 | Variable | Default | Description |
 |---|---|---|

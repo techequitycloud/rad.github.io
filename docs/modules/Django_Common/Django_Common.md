@@ -1,11 +1,11 @@
 ---
-title: "Django_Common Shared Configuration Module"
+title: "Django Common Shared Configuration Module"
 sidebar_label: "Django Common"
 ---
 
-# Django_Common Shared Configuration Module
+# Django Common Shared Configuration Module
 
-The `Django_Common` module defines the Django web framework configuration for the RAD Modules ecosystem. Like `Directus_Common`, it **creates GCP resources** (a Secret Manager secret for the Django `SECRET_KEY`) and produces a `config` output consumed by platform-specific wrapper modules (`Django_CloudRun` and `Django_GKE`).
+The `Django Common` module defines the Django web framework configuration for the RAD Modules ecosystem. Like `Directus Common`, it **creates GCP resources** (a Secret Manager secret for the Django `SECRET_KEY`) and produces a `config` output consumed by platform-specific wrapper modules (`Django CloudRun` and `Django GKE`).
 
 ## 1. Overview
 
@@ -101,7 +101,7 @@ A map of Django secret environment variable names to their Secret Manager secret
 ```
 
 ### `secret_values`
-A **sensitive** map of the same secrets with raw generated values. Used by `App_GKE` to bypass Secret Manager read-after-write consistency issues during initial apply.
+A **sensitive** map of the same secrets with raw generated values. Used by `App GKE` to bypass Secret Manager read-after-write consistency issues during initial apply.
 
 ### `path`
 The absolute path to the `Django_Common` module directory (`path.module`). Note: wrapper modules (`Django_CloudRun`, `Django_GKE`) do **not** use this output to set `scripts_dir` — they instead hard-code `abspath("${path.module}/../Django_Common/scripts")` to point directly at the `scripts/` subdirectory.
@@ -284,14 +284,14 @@ The production settings extend `basesettings.py` and configure Django for cloud 
 
 ## 9. Platform-Specific Differences
 
-| Aspect | Django_CloudRun | Django_GKE |
+| Aspect | Django CloudRun | Django GKE |
 |--------|-----------------|-----------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Optional (`var.enable_cloudsql_volume`) | Optional (`var.enable_cloudsql_volume`) |
 | `DB_HOST` | Detected at runtime by `db-init.sh`: socket path if Unix socket, or `127.0.0.1` when using the Auth Proxy over TCP | Cloud SQL private IP or `127.0.0.1` via Auth Proxy |
 | Health probes | Caller must provide (`startup_probe`, `liveness_probe`) | Caller must provide (`startup_probe`, `liveness_probe`) |
 | Secret injection | `secret_ids` map from `module.django_app` | Secret values injected directly |
-| NFS | Not managed by Django_Common; App_CloudRun handles NFS via `enable_nfs` | Not managed by Django_Common; App_GKE handles NFS via `enable_nfs` (defaults to `true` in Django_GKE) |
+| NFS | Not managed by Django Common; App CloudRun handles NFS via `enable_nfs` | Not managed by Django Common; App GKE handles NFS via `enable_nfs` (defaults to `true` in Django GKE) |
 | Redis | Optional via `enable_redis` | Optional via `enable_redis` |
 | Scaling | Serverless, scale-to-zero (`min_instance_count = 0`) | Kubernetes Deployment with configurable replicas |
 

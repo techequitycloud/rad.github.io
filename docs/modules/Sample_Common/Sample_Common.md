@@ -1,15 +1,15 @@
 ---
-title: "Sample_Common Module"
+title: "Sample Common Module"
 sidebar_label: "Sample Common"
 ---
 
-# Sample_Common Module
+# Sample Common Module
 
 ## Overview
 
-`Sample_Common` is a **reference implementation** of a `*_Common` module in the RAD Modules ecosystem. It deploys a minimal Flask web application backed by PostgreSQL to demonstrate the correct structure, patterns, and conventions that all `*_Common` modules follow.
+`Sample Common` is a **reference implementation** of a `*_Common` module in the RAD Modules ecosystem. It deploys a minimal Flask web application backed by PostgreSQL to demonstrate the correct structure, patterns, and conventions that all `*_Common` modules follow.
 
-Use this module as a starting point when building a new application module, or as a working example to understand how Layer 1 configuration modules integrate with `App_CloudRun` and `App_GKE`.
+Use this module as a starting point when building a new application module, or as a working example to understand how Layer 1 configuration modules integrate with `App CloudRun` and `App GKE`.
 
 The module provisions one GCP Secret Manager secret (the Flask `SECRET_KEY`), defines no GCS buckets, and optionally enables a Redis sidecar for server-side session storage.
 
@@ -59,7 +59,7 @@ The module provisions one GCP Secret Manager secret (the Flask `SECRET_KEY`), de
 | `google_secret_manager_secret_version` | — | Populates the secret key |
 | `time_sleep` | — | 30s wait after secret creation for IAM propagation |
 
-> **`secret_prefix` resolution:** When `var.resource_prefix` is set (e.g., passed from `App_GKE`'s own `resource_prefix` output), it is used directly. This aligns the secret name with GKE cluster and deployment resources. When empty, falls back to `"app{application_name}{tenant_deployment_id}{deployment_id}"`.
+> **`secret_prefix` resolution:** When `var.resource_prefix` is set (e.g., passed from `App GKE`'s own `resource_prefix` output), it is used directly. This aligns the secret name with GKE cluster and deployment resources. When empty, falls back to `"app{application_name}{tenant_deployment_id}{deployment_id}"`.
 
 ---
 
@@ -73,7 +73,7 @@ The module provisions one GCP Secret Manager secret (the Flask `SECRET_KEY`), de
 | `secret_values` | map(string) (sensitive) | `{ FLASK_SECRET_KEY: "<plaintext>" }` |
 | `path` | string | Absolute path to this module directory |
 
-The `SECRET_KEY` is also wired directly into the `config.secret_env_vars` map, so `App_CloudRun`/`App_GKE` automatically mount it as a secret environment variable in the container without any extra caller configuration.
+The `SECRET_KEY` is also wired directly into the `config.secret_env_vars` map, so `App CloudRun`/`App GKE` automatically mount it as a secret environment variable in the container without any extra caller configuration.
 
 ---
 
@@ -86,7 +86,7 @@ The `SECRET_KEY` is also wired directly into the `config.secret_env_vars` map, s
 | `project_id` | string | — | GCP project ID (required) |
 | `tenant_deployment_id` | string | `"demo"` | Tenant identifier used in secret naming |
 | `deployment_id` | string | `""` | Deployment identifier |
-| `resource_prefix` | string | `""` | Override secret prefix (pass `App_GKE.resource_prefix` to align names) |
+| `resource_prefix` | string | `""` | Override secret prefix (pass `App GKE.resource_prefix` to align names) |
 | `resource_labels` | map(string) | `{}` | Labels applied to all GCP resources |
 
 ### Application
@@ -235,10 +235,10 @@ A minimal working application demonstrating all integration patterns:
 
 ## Platform-Specific Differences
 
-| Aspect | Sample_CloudRun | Sample_GKE |
+| Aspect | Sample CloudRun | Sample GKE |
 |--------|-----------------|------------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
-| `resource_prefix` | Auto-computed from app/tenant/deployment | Explicitly set (typically `App_GKE.resource_prefix`) |
+| `resource_prefix` | Auto-computed from app/tenant/deployment | Explicitly set (typically `App GKE.resource_prefix`) |
 | `min_instance_count` | `0` (scale-to-zero) | `1` (minimum pod availability) |
 | `DB_HOST` | Cloud SQL Auth Proxy socket path | Cloud SQL private IP |
 | Redis host | Explicit `redis_host` required | Defaults to `127.0.0.1` if enabled |
@@ -270,9 +270,9 @@ module "sample_cloudrun" {
 }
 ```
 
-### Aligning Secret Names with App_GKE
+### Aligning Secret Names with App GKE
 
-When deploying on GKE, pass `App_GKE`'s `resource_prefix` output so the secret name matches all other cluster resources:
+When deploying on GKE, pass `App GKE`'s `resource_prefix` output so the secret name matches all other cluster resources:
 
 ```hcl
 module "sample_common" {

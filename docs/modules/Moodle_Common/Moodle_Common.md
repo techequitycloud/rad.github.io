@@ -1,11 +1,11 @@
 ---
-title: "Moodle_Common Shared Configuration Module"
+title: "Moodle Common Shared Configuration Module"
 sidebar_label: "Moodle Common"
 ---
 
-# Moodle_Common Shared Configuration Module
+# Moodle Common Shared Configuration Module
 
-The `Moodle_Common` module defines the Moodle Learning Management System (LMS) configuration for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`Moodle_CloudRun` and `Moodle_GKE`).
+The `Moodle Common` module defines the Moodle Learning Management System (LMS) configuration for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`Moodle CloudRun` and `Moodle GKE`).
 
 ## 1. Overview
 
@@ -93,7 +93,7 @@ A map of Moodle secret environment variable names to Secret Manager secret IDs, 
 ```
 
 ### `secret_values`
-A **sensitive** map of the same secrets with their raw generated values. Used by `App_GKE` to bypass Secret Manager read-after-write consistency issues on initial apply.
+A **sensitive** map of the same secrets with their raw generated values. Used by `App GKE` to bypass Secret Manager read-after-write consistency issues on initial apply.
 
 ### `cron_password` / `smtp_password`
 Individual sensitive outputs exposing each password directly. Provided as a convenience for wrapper modules that need to pass a single credential to another resource (e.g., configuring an external SMTP provider).
@@ -308,7 +308,7 @@ Key environment variables consumed by `moodle-config.php` and `cloudrun-entrypoi
 
 ## 9. Platform-Specific Differences
 
-| Aspect | Moodle_CloudRun | Moodle_GKE |
+| Aspect | Moodle CloudRun | Moodle GKE |
 |--------|-----------------|-----------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Forced to `true` in `moodle.tf` application_modules merge (not user-configurable) | `var.enable_cloudsql_volume` (default `true`, user-configurable) |

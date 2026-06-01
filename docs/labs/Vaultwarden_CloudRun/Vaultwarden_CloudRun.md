@@ -11,7 +11,7 @@ sidebar_label: "Vaultwarden CloudRun"
 
 **Estimated time:** 2–3 hours
 
-Vaultwarden is an unofficial, lightweight Bitwarden-compatible server written in Rust. It enables self-hosting of a complete password manager that works with all official Bitwarden clients. This lab deploys Vaultwarden on Google Cloud Run backed by Cloud SQL PostgreSQL 15, with single-instance reliability and 30-day backup retention.
+Vaultwarden is an unofficial, lightweight Bitwarden-compatible server written in Rust. It enables self-hosting of a complete password manager that works with all official Bitwarden clients. This lab deploys Vaultwarden on Google Cloud Run backed by Cloud SQL PostgreSQL 15, with 30-day backup retention.
 
 ### What the Module Automates
 
@@ -28,11 +28,11 @@ Vaultwarden is an unofficial, lightweight Bitwarden-compatible server written in
 ### What You Do Manually
 
 - Note the Cloud Run service URL from the RAD UI deployment panel
-- Register the initial admin account (signups disabled after first user)
+- Register the initial admin account
 - Install and configure Bitwarden client apps
 - Connect clients to the self-hosted instance
-- Configure SMTP for two-factor authentication and notifications
-- Enable Cloud Armor WAF for brute-force protection (recommended)
+- Configure SMTP for two-factor authentication codes
+- Enable admin panel with `ADMIN_TOKEN`
 - Review logs in Cloud Logging
 
 ---
@@ -50,8 +50,8 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 ## Prerequisites
 
 1. A GCP project with billing enabled.
-2. The `Services_GCP` module deployed in the same project.
-3. The following APIs enabled (Services_GCP handles this):
+2. The `Services GCP` module deployed in the same project.
+3. The following APIs enabled:
    - `run.googleapis.com`
    - `sqladmin.googleapis.com`
    - `secretmanager.googleapis.com`
@@ -59,7 +59,7 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
    - `cloudbuild.googleapis.com`
 4. `gcloud` authenticated: `gcloud auth application-default login`
 5. Access to the RAD UI.
-6. (Recommended) Bitwarden desktop or mobile client for testing.
+6. Bitwarden client (desktop/mobile/browser extension) for testing.
 
 ---
 
@@ -73,21 +73,21 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 | `tenant_deployment_id` | No | `"demo"` | Short deployment identifier |
 | `region` | No | `"us-central1"` | GCP region |
 | `application_version` | No | `"1.32.7"` | Vaultwarden image version |
-| `domain` | No | `""` | Public domain (e.g. `https://vault.example.com`). Required for WebAuthn. |
-| `signups_allowed` | No | `false` | Set `true` for initial admin setup; disable afterwards |
-| `web_vault_enabled` | No | `true` | Enable the Vaultwarden web UI |
+| `domain` | No | `""` | Public domain for WebAuthn and email links |
+| `signups_allowed` | No | `false` | **Set `true` for initial deploy** to create admin account |
+| `web_vault_enabled` | No | `true` | Enable web vault UI |
 | `database_type` | No | `"POSTGRES_15"` | `"POSTGRES_15"` or `"MYSQL_8_0"` |
 | `db_name` | No | `"vaultwarden"` | Database name |
 | `db_user` | No | `"vaultwarden"` | Database user |
-| `cpu_limit` | No | `"1000m"` | CPU per instance (minimum `1000m`) |
+| `cpu_limit` | No | `"1000m"` | CPU (minimum `1000m`) |
 | `memory_limit` | No | `"512Mi"` | Memory per instance |
 | `min_instance_count` | No | `1` | Minimum instances |
 | `max_instance_count` | No | `3` | Maximum instances |
-| `enable_cloud_armor` | No | `false` | Enable Cloud Armor WAF (recommended for production) |
-| `backup_retention_days` | No | `30` | Days to retain backups |
+| `enable_cloud_armor` | No | `false` | Cloud Armor WAF (recommended for production) |
+| `backup_retention_days` | No | `30` | Backup retention (30 days default) |
 | `support_users` | No | `[]` | Monitoring alert emails |
 
-> **Important:** Set `signups_allowed = true` for the initial deployment to create your admin account. After registration, redeploy with `signups_allowed = false`.
+> **Important:** Set `signups_allowed = true` for the initial deployment to register your admin account. Redeploy with `signups_allowed = false` immediately after.
 
 ### Step 1.2 — Initiate Deployment
 
@@ -110,7 +110,6 @@ Click **Deploy** in the RAD UI.
 | `service_name` | Cloud Run service name |
 | `database_instance_name` | Cloud SQL instance name |
 | `database_password_secret` | Secret Manager secret for the DB password |
-| `deployment_id` | Unique deployment identifier |
 
 Set shell variables:
 
@@ -157,18 +156,18 @@ curl -H "Authorization: Bearer ${TOKEN}" \
   "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}"
 ```
 
-**Expected result:** HTTP `200` with response body `OK`. This is the `/alive` health endpoint.
+**Expected result:** HTTP `200` with body `OK`. The `/alive` endpoint confirms Vaultwarden is running.
 
-### Step 2.2 — Inspect the Cloud Run Service
+### Step 2.2 — Verify Environment Variables
 
 ```bash
 gcloud run services describe ${SERVICE} \
   --region=${REGION} \
   --project=${PROJECT} \
-  --format="json" | jq '.spec.template.spec.containers[0].env[] | select(.name | IN("SIGNUPS_ALLOWED","WEB_VAULT_ENABLED","DATA_FOLDER"))'
+  --format="json" | jq '.spec.template.spec.containers[0].env[] | select(.name | IN("SIGNUPS_ALLOWED","WEB_VAULT_ENABLED","DATA_FOLDER","ROCKET_PORT"))'
 ```
 
-**Expected result:** Shows `SIGNUPS_ALLOWED=true` (for initial setup), `WEB_VAULT_ENABLED=true`, `DATA_FOLDER=/data`.
+**Expected result:** Shows `SIGNUPS_ALLOWED=true` (for initial setup), `WEB_VAULT_ENABLED=true`, `DATA_FOLDER=/data`, `ROCKET_PORT=80`.
 
 ---
 
@@ -176,24 +175,26 @@ gcloud run services describe ${SERVICE} \
 
 ### Step 3.1 — Access the Web Vault
 
-Open a browser and navigate to `${SERVICE_URL}`.
+Navigate to `${SERVICE_URL}` in a browser.
 
-**Expected result:** The Vaultwarden web vault login/registration page appears.
+**Expected result:** The Vaultwarden web vault login page appears.
 
 ### Step 3.2 — Create an Account
 
 1. Click **Create account**.
-2. Enter your email address and a strong master password.
-3. Enter a password hint (optional but recommended).
+2. Enter your email address and a strong master password (minimum 12 characters).
+3. Add a password hint (optional but recommended for recovery).
 4. Click **Create account**.
 
-**Expected result:** The account is created and you are logged into the Vaultwarden web vault.
+**Expected result:** Account is created. You are redirected to the vault.
 
 ### Step 3.3 — Disable Signups
 
-After creating your admin account, redeploy with `signups_allowed = false` to prevent unauthorised registrations.
+After creating your admin account, update the deployment to disable new registrations:
 
-Update the variable in the RAD UI and click **Redeploy**, or verify the current value:
+In the RAD UI, set `signups_allowed = false` and click **Redeploy**.
+
+Verify after redeploy:
 
 ```bash
 gcloud run services describe ${SERVICE} \
@@ -202,58 +203,70 @@ gcloud run services describe ${SERVICE} \
   --format="json" | jq '.spec.template.spec.containers[0].env[] | select(.name=="SIGNUPS_ALLOWED")'
 ```
 
+**Expected result:** `SIGNUPS_ALLOWED=false`.
+
 ---
 
 ## Phase 4 — Connect Bitwarden Clients [MANUAL]
 
-### Step 4.1 — Configure the Server URL
+### Step 4.1 — Configure the Server URL in Bitwarden Client
 
-In the Bitwarden desktop, mobile, or browser extension client:
+In the official Bitwarden client (desktop, mobile, or browser extension):
 
-1. On the login screen, click the gear icon (**Settings**) or **Self-hosted** option.
-2. Set **Server URL** to `${SERVICE_URL}`.
+1. On the login screen, click the gear icon or **Self-hosted** link.
+2. Enter the **Server URL**: `${SERVICE_URL}`.
 3. Click **Save**.
 
-**Expected result:** The client connects to your Vaultwarden instance. The login screen shows your server URL.
+**Expected result:** The client connects. The login screen shows your custom server URL.
 
-### Step 4.2 — Log In with the Admin Account
+### Step 4.2 — Log In
 
-1. Enter your email and master password.
-2. Click **Log in**.
+Enter your email and master password, then click **Log in**.
 
-**Expected result:** You are logged in and see an empty vault.
+**Expected result:** You are logged into the vault. Items from the web vault appear.
 
-### Step 4.3 — Create a Vault Item
+### Step 4.3 — Test Vault Operations
 
-1. Click the **+** button to create a new item.
-2. Add a **Login** item with a username, password, and website URL.
-3. Click **Save**.
+1. Create a new **Login** item with a username, password, and URL.
+2. Create a **Secure Note** with sensitive text.
+3. Verify items sync across clients.
 
-**Expected result:** The login item appears in your vault and is synchronised with Vaultwarden.
+**Expected result:** Items are created and appear on all connected clients.
+
+### Step 4.4 — Test the Browser Extension
+
+1. Install the Bitwarden browser extension.
+2. Set the server URL to `${SERVICE_URL}`.
+3. Log in and visit a website — the extension should offer to fill credentials.
+
+**Expected result:** Browser extension fills saved credentials automatically.
 
 ---
 
 ## Phase 5 — Configure the Admin Panel [MANUAL]
 
-### Step 5.1 — Access the Admin Interface
+### Step 5.1 — Set the Admin Token
 
-Navigate to `${SERVICE_URL}/admin`.
-
-**Expected result:** Vaultwarden prompts for the admin token. By default, the admin token is not set — you must configure it via environment variables.
-
-### Step 5.2 — Set the Admin Token
-
-Add the admin token to your deployment's `environment_variables`:
+The admin panel (`/admin`) requires an `ADMIN_TOKEN` environment variable. Add it to your deployment:
 
 ```hcl
 environment_variables = {
-  ADMIN_TOKEN = "your-secure-admin-token-here"
+  ADMIN_TOKEN = "your-secure-random-token"
 }
 ```
 
-Redeploy the module, then navigate to `${SERVICE_URL}/admin` and enter the token.
+You can generate a secure token:
+```bash
+openssl rand -hex 32
+```
 
-**gcloud — verify the env var is set:**
+Redeploy after updating the variable.
+
+### Step 5.2 — Access the Admin Panel
+
+Navigate to `${SERVICE_URL}/admin` and enter the admin token.
+
+**gcloud — confirm token is set:**
 ```bash
 gcloud run services describe ${SERVICE} \
   --region=${REGION} \
@@ -261,39 +274,38 @@ gcloud run services describe ${SERVICE} \
   --format="json" | jq '.spec.template.spec.containers[0].env[] | select(.name=="ADMIN_TOKEN")'
 ```
 
-**Expected result:** The Vaultwarden admin panel loads, showing user management, organisation settings, and SMTP configuration.
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer ${TOKEN}" \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}" \
+  | jq '.template.containers[0].env[] | select(.name=="ADMIN_TOKEN")'
+```
+
+**Expected result:** The admin panel loads. You can see all registered users, manage organisations, and configure global settings.
+
+### Step 5.3 — Explore Admin Panel Features
+
+1. Navigate to **Users** — view registered accounts.
+2. Navigate to **Organisations** — create a shared vault for team use.
+3. Navigate to **Settings** — configure IP whitelisting, password policy, and 2FA enforcement.
 
 ---
 
 ## Phase 6 — Configure SMTP [MANUAL]
 
-Vaultwarden uses SMTP for two-factor authentication codes, account verification, and emergency access.
+Vaultwarden uses SMTP for 2FA codes, emergency access, and organisation invitations.
 
-### Step 6.1 — Configure SMTP via Environment Variables
-
-Update your deployment's `environment_variables`:
-
-```hcl
-environment_variables = {
-  SMTP_HOST        = "smtp.mailgun.org"
-  SMTP_PORT        = "587"
-  SMTP_FROM        = "vault@yourdomain.com"
-  SMTP_FROM_NAME   = "Vaultwarden"
-  SMTP_SSL         = "true"
-  SMTP_USERNAME    = "postmaster@mg.yourdomain.com"
-}
-
-secret_environment_variables = {
-  SMTP_PASSWORD = "vaultwarden-smtp-password"
-}
-```
-
-First, create the SMTP password secret:
+### Step 6.1 — Create SMTP Password Secret
 
 ```bash
-echo -n "your-smtp-password" | gcloud secrets create vaultwarden-smtp-password \
+echo -n "your-smtp-password-here" | gcloud secrets create vaultwarden-smtp-password \
   --data-file=- \
   --project=${PROJECT}
+```
+
+**gcloud equivalent (verify):**
+```bash
+gcloud secrets versions list vaultwarden-smtp-password --project=${PROJECT}
 ```
 
 **REST API equivalent:**
@@ -305,17 +317,34 @@ curl -X POST \
   -d '{"secretId": "vaultwarden-smtp-password", "replication": {"automatic": {}}}'
 ```
 
-### Step 6.2 — Verify SMTP Configuration
+### Step 6.2 — Add SMTP Configuration
 
-In the Vaultwarden admin panel (`/admin`), navigate to the **SMTP** section and click **Send test email**.
+Update `environment_variables` and `secret_environment_variables` in the RAD UI:
 
-**Expected result:** A test email is sent to the admin address.
+```hcl
+environment_variables = {
+  SMTP_HOST      = "smtp.mailgun.org"
+  SMTP_PORT      = "587"
+  SMTP_FROM      = "vault@yourdomain.com"
+  SMTP_FROM_NAME = "Vaultwarden"
+  SMTP_SSL       = "true"
+  SMTP_USERNAME  = "postmaster@mg.yourdomain.com"
+}
+
+secret_environment_variables = {
+  SMTP_PASSWORD = "vaultwarden-smtp-password"
+}
+```
+
+Redeploy and test via the admin panel.
 
 ---
 
 ## Phase 7 — Explore Cloud Logging [MANUAL]
 
 ### Step 7.1 — View Vaultwarden Logs
+
+In **Logging > Logs Explorer**:
 
 ```
 resource.type="cloud_run_revision"
@@ -345,21 +374,23 @@ curl -X POST \
   }'
 ```
 
-**Expected result:** Vaultwarden startup logs appear. Look for `Rocket launch` and database connection messages. The default log level is `warn` — only warnings and errors appear under normal operation.
+**Expected result:** Vaultwarden startup logs include `Rocket launch` and database connection messages. At `LOG_LEVEL=warn` (default), only warnings and errors are logged under normal operation.
 
-### Step 7.2 — Enable Debug Logging Temporarily
+### Step 7.2 — Monitor Uptime
 
-Update `environment_variables` to set `LOG_LEVEL = "info"` for detailed logs, then restore to `"warn"` after investigation.
+Navigate to **Monitoring > Uptime checks**.
+
+**Expected result:** A preconfigured check polling `/alive` shows **Passing**.
 
 ---
 
 ## Phase 8 — Undeploy [AUTOMATED]
 
-When finished, return to the RAD UI and click **Undeploy**.
+Return to the RAD UI and click **Undeploy**.
 
 **Approximate undeploy duration:** 12–18 minutes.
 
-> **Warning:** Undeploying permanently deletes the database and all stored vault data. Export your vault from the Bitwarden client (Settings > Export vault) before undeploying.
+> **Warning:** Undeploying permanently deletes all resources. Export your vault from any Bitwarden client (Settings > Export vault) before undeploying.
 
 ---
 
@@ -371,13 +402,15 @@ When finished, return to the RAD UI and click **Undeploy**.
 | Cloud SQL PostgreSQL 15 database | 1 | Yes |
 | Secret Manager credentials | 1 | Yes |
 | Container image build | 1 | Yes |
-| Note service URL | 2 | No |
 | Confirm Vaultwarden reachable | 2 | No |
+| Verify environment variables | 2 | No |
 | Create admin account | 3 | No |
 | Disable signups | 3 | No |
 | Connect Bitwarden clients | 4 | No |
+| Test vault operations | 4 | No |
 | Set admin token | 5 | No |
-| Access admin panel | 5 | No |
+| Access and explore admin panel | 5 | No |
 | Configure SMTP | 6 | No |
 | Review Cloud Logging | 7 | No |
+| Monitor uptime check | 7 | No |
 | Undeploy infrastructure | 8 | Yes |

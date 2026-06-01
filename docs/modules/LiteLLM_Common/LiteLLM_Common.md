@@ -1,9 +1,9 @@
 ---
-title: "LiteLLM_Common"
+title: "LiteLLM Common"
 sidebar_label: "LiteLLM Common"
 ---
 
-# LiteLLM_Common
+# LiteLLM Common
 
 This document provides a reference for the `modules/LiteLLM_Common` Terraform module — the shared application configuration layer consumed by both `LiteLLM_CloudRun` and `LiteLLM_GKE`.
 
@@ -11,11 +11,11 @@ This document provides a reference for the `modules/LiteLLM_Common` Terraform mo
 
 ## 1. Overview
 
-`LiteLLM_Common` is the **application-specific shared layer** for LiteLLM deployments. It is not deployed directly by users; it is called as a child module by `LiteLLM_CloudRun` and `LiteLLM_GKE`.
+`LiteLLM Common` is the **application-specific shared layer** for LiteLLM deployments. It is not deployed directly by users; it is called as a child module by `LiteLLM CloudRun` and `LiteLLM GKE`.
 
 **Responsibilities:**
 - Provisions `LITELLM_MASTER_KEY` and `LITELLM_SALT_KEY` in Secret Manager.
-- Builds the `config` output consumed by the Foundation Module (`App_CloudRun` / `App_GKE`).
+- Builds the `config` output consumed by the Foundation Module (`App CloudRun` / `App GKE`).
 - Assembles LiteLLM environment variables including `PROXY_BASE_URL`, `STORE_MODEL_IN_DB`, Redis settings, and `HOST`.
 - Provides the default `db-init` Cloud Run Job (using `postgres:15-alpine`) that creates the LiteLLM PostgreSQL database and user when `initialization_jobs` is left empty.
 - Declares the `litellm-data` GCS bucket in `storage_buckets` output.
@@ -35,7 +35,7 @@ A `time_sleep` of 30 seconds is applied after secret creation for Secret Manager
 
 ## 3. Default Database Initialization Job
 
-When `initialization_jobs` is empty, `LiteLLM_Common` injects a single `db-init` job:
+When `initialization_jobs` is empty, `LiteLLM Common` injects a single `db-init` job:
 
 ```
 name:         "db-init"

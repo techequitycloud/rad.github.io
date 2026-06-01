@@ -1,13 +1,13 @@
 ---
-title: "Wikijs_CloudRun Module — Configuration Guide"
+title: "Wikijs CloudRun Module — Configuration Guide"
 sidebar_label: "Wikijs CloudRun"
 ---
 
-# Wikijs_CloudRun Module — Configuration Guide
+# Wikijs CloudRun Module — Configuration Guide
 
 `Wikijs_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Cloud Run Gen2.
 
-Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply Wiki.js-appropriate defaults and to call the `Wikijs_Common` sub-module, which generates the application's container image configuration, database initialisation logic, GCS Fuse storage mounts, and database password wiring. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.
+Every variable in this module is passed through to `App CloudRun`. The wrapper's role is to supply Wiki.js-appropriate defaults and to call the `Wikijs Common` sub-module, which generates the application's container image configuration, database initialisation logic, GCS Fuse storage mounts, and database password wiring. You configure this module exactly as you would `App CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App CloudRun`, or that are unique to this wrapper.
 
 > **Where to look:** If a variable you are configuring is not described here, consult the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md). All `App_CloudRun` features — access and networking, IAP, Cloud Armor, CDN, CI/CD, Cloud Deploy, Binary Authorization, traffic splitting, and VPC Service Controls — are available in `Wikijs_CloudRun` with identical behaviour and configuration.
 
@@ -17,27 +17,27 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 
 | Property | Value |
 |---|---|
-| Sub-module | `Wikijs_Common` |
+| Sub-module | `Wikijs Common` |
 | Default application name | `wikijs` |
 | Default display name | `Wiki.js` |
 | Default version | `2.5.311` |
-| Container port | `3000` (set by `Wikijs_Common`) |
+| Container port | `3000` (set by `Wikijs Common`) |
 | Execution environment | `gen2` |
 | Database engine | PostgreSQL 15 (with `pg_trgm` extension) |
 | Default DB name | `wikijs` |
 | Default DB user | `wikijs` |
 | NFS enabled | `true` (mount: `/mnt/nfs`) |
 | Redis enabled | `false` |
-| Image source | Managed by `Wikijs_Common` |
-| Platform-managed job | `db-init` (from `Wikijs_Common` when `initialization_jobs = []`) |
+| Image source | Managed by `Wikijs Common` |
+| Platform-managed job | `db-init` (from `Wikijs Common` when `initialization_jobs = []`) |
 
-`Wikijs_Common` manages the container image source, build configuration, and GCS Fuse storage (`wikijs-storage` bucket provisioned for persistent asset storage). The database password is wired from `module.app_cloudrun.database_password_secret` into `module_secret_env_vars` as the key `database_password_secret`, which the platform maps to the `DB_PASS` environment variable consumed by Wiki.js. The `pg_trgm` PostgreSQL extension is installed by `Wikijs_Common` to enable native full-text search.
+`Wikijs Common` manages the container image source, build configuration, and GCS Fuse storage (`wikijs-storage` bucket provisioned for persistent asset storage). The database password is wired from `module.app_cloudrun.database_password_secret` into `module_secret_env_vars` as the key `database_password_secret`, which the platform maps to the `DB_PASS` environment variable consumed by Wiki.js. The `pg_trgm` PostgreSQL extension is installed by `Wikijs Common` to enable native full-text search.
 
 ---
 
 ## §2 IAM & Project Identity
 
-Behaviour is identical to `App_CloudRun`. The following variables are passed through unchanged.
+Behaviour is identical to `App CloudRun`. The following variables are passed through unchanged.
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -59,7 +59,7 @@ Behaviour is identical to `App_CloudRun`. The following variables are passed thr
 | `display_name` | `"Wiki.js"` | Human-readable name in UI and dashboards |
 | `application_version` | `"2.5.311"` | Image tag; increment to update the Wiki.js release |
 
-Note: there is no `application_display_name` or `description` variable in this module — the Cloud Run wrapper uses `display_name` (passed to `Wikijs_Common`) rather than the `application_display_name` used by `App_GKE`. A `deploy_application` variable (default `true`) controls whether the Cloud Run service is deployed; set to `false` to provision only supporting infrastructure (secrets, storage, IAM).
+Note: there is no `application_display_name` or `description` variable in this module — the Cloud Run wrapper uses `display_name` (passed to `Wikijs Common`) rather than the `application_display_name` used by `App GKE`. A `deploy_application` variable (default `true`) controls whether the Cloud Run service is deployed; set to `false` to provision only supporting infrastructure (secrets, storage, IAM).
 
 ### §3.B Resource Sizing
 
@@ -95,7 +95,7 @@ Override individual keys to change database settings or storage path. Do not rem
 |---|---|---|
 | `database_password_secret` | `module.app_cloudrun.database_password_secret` | `DB_PASS` (mapped by `entrypoint.sh`) |
 
-`main.tf` passes `module_secret_env_vars = { database_password_secret = module.app_cloudrun.database_password_secret }` to `App_CloudRun`. `Wikijs_Common`'s `config.secret_environment_variables` carries `DB_PASS = "database_password_secret"`, which the platform resolves to the actual Secret Manager ID and injects into the container as `DB_PASSWORD`. `entrypoint.sh` then maps `DB_PASSWORD` → `DB_PASS` at container start. This is wired automatically and does not require user configuration.
+`main.tf` passes `module_secret_env_vars = { database_password_secret = module.app_cloudrun.database_password_secret }` to `App CloudRun`. `Wikijs Common`'s `config.secret_environment_variables` carries `DB_PASS = "database_password_secret"`, which the platform resolves to the actual Secret Manager ID and injects into the container as `DB_PASSWORD`. `entrypoint.sh` then maps `DB_PASSWORD` → `DB_PASS` at container start. This is wired automatically and does not require user configuration.
 
 **User-supplied secrets:**
 
@@ -227,7 +227,7 @@ cloud_deploy_stages = [
 
 ### §7.A Health Probes
 
-`Wikijs_CloudRun` uses only `startup_probe` and `liveness_probe` (passed to `Wikijs_Common`). There is no separate `startup_probe_config` / `health_check_config` interface in this module.
+`Wikijs CloudRun` uses only `startup_probe` and `liveness_probe` (passed to `Wikijs Common`). There is no separate `startup_probe_config` / `health_check_config` interface in this module.
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -314,7 +314,7 @@ nfs_mount_path = "/mnt/nfs"
 
 ### §8.C GCS Fuse Volumes (wikijs-storage)
 
-`Wikijs_Common` provisions a `wikijs-storage` GCS bucket and expects it to be mounted at `/wiki-storage` for persistent asset storage. To wire this up, use `gcs_volumes`:
+`Wikijs Common` provisions a `wikijs-storage` GCS bucket and expects it to be mounted at `/wiki-storage` for persistent asset storage. To wire this up, use `gcs_volumes`:
 
 ```hcl
 gcs_volumes = [{
@@ -329,7 +329,7 @@ The `HA_STORAGE_PATH = "/wiki-storage"` default in `environment_variables` point
 
 ### §8.D Additional Services & Scheduled Jobs
 
-`Wikijs_CloudRun` does not expose the `additional_services` variable. However, `cron_jobs` is exposed and allows scheduling recurring Cloud Run jobs (e.g. database backups) using Cloud Scheduler. See §7.C for an example.
+`Wikijs CloudRun` does not expose the `additional_services` variable. However, `cron_jobs` is exposed and allows scheduling recurring Cloud Run jobs (e.g. database backups) using Cloud Scheduler. See §7.C for an example.
 
 ---
 
@@ -339,15 +339,15 @@ The following are set or injected automatically and do not require configuration
 
 ### Database password wiring
 
-Unlike most other wrapper modules, `Wikijs_CloudRun` wires the database password directly from `App_CloudRun`'s output (`module.app_cloudrun.database_password_secret`) into `module_secret_env_vars` as `database_password_secret`. This cross-module reference is handled in `main.tf` and does not require user input.
+Unlike most other wrapper modules, `Wikijs CloudRun` wires the database password directly from `App CloudRun`'s output (`module.app_cloudrun.database_password_secret`) into `module_secret_env_vars` as `database_password_secret`. This cross-module reference is handled in `main.tf` and does not require user input.
 
 ### PostgreSQL pg_trgm extension
 
-`Wikijs_Common` installs the `pg_trgm` PostgreSQL extension during database initialisation to enable Wiki.js's native full-text search. This is performed automatically and requires no additional configuration.
+`Wikijs Common` installs the `pg_trgm` PostgreSQL extension during database initialisation to enable Wiki.js's native full-text search. This is performed automatically and requires no additional configuration.
 
 ### GCS storage bucket
 
-`Wikijs_Common` provisions a storage bucket with the suffix `wikijs-storage`. The bucket name is made available via `module.wikijs_app.storage_buckets` and passed to `App_CloudRun` as `module_storage_buckets`. Set `gcs_volumes` to mount this bucket at `/wiki-storage`.
+`Wikijs Common` provisions a storage bucket with the suffix `wikijs-storage`. The bucket name is made available via `module.wikijs_app.storage_buckets` and passed to `App CloudRun` as `module_storage_buckets`. Set `gcs_volumes` to mount this bucket at `/wiki-storage`.
 
 ### Default environment variables
 
@@ -366,7 +366,7 @@ The table below covers all variables unique to or with notable defaults in `Wiki
 | Variable | Type | Default | Group | Notes |
 |---|---|---|---|---|
 | `application_name` | `string` | `"wikijs"` | 2 | Base resource name |
-| `display_name` | `string` | `"Wiki.js"` | 2 | Passed to Wikijs_Common |
+| `display_name` | `string` | `"Wiki.js"` | 2 | Passed to Wikijs Common |
 | `application_version` | `string` | `"2.5.311"` | 2 | Image tag |
 | `deployment_id` | `string` | `""` | 0 | Auto-generated when empty; pin to stabilise resource names across runs |
 | `db_name` | `string` | `"wikijs"` | 11 | PostgreSQL DB name |

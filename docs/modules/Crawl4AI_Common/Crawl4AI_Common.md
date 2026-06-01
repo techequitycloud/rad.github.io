@@ -1,11 +1,11 @@
 ---
-title: "Crawl4AI_Common Shared Configuration Module"
+title: "Crawl4AI Common Shared Configuration Module"
 sidebar_label: "Crawl4AI Common"
 ---
 
-# Crawl4AI_Common Shared Configuration Module
+# Crawl4AI Common Shared Configuration Module
 
-The `Crawl4AI_Common` module defines the Crawl4AI web crawler configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates no GCP resources and produces a `config` output consumed by platform-specific wrapper modules (`Crawl4AI_CloudRun` and `Crawl4AI_GKE`).
+The `Crawl4AI Common` module defines the Crawl4AI web crawler configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates no GCP resources and produces a `config` output consumed by platform-specific wrapper modules (`Crawl4AI CloudRun` and `Crawl4AI GKE`).
 
 ## 1. Overview
 
@@ -33,7 +33,7 @@ Layer 1: App_Common (networking, storage, secrets, IAM)
 - **No external database** — `database_type = "NONE"`. Cloud SQL is not provisioned.
 - **Creates no GCP resources** — no secrets, no IAM bindings, no storage buckets.
 - **Embedded Redis** — supervisord starts Redis (priority 10) then Gunicorn (priority 20) inside the same container. Redis listens on `localhost:6379` and must NOT be overridden via environment variables.
-- **Chromium memory management** — the default `config.yml` includes `--disable-dev-shm-usage` in Chrome's extra_args. On Cloud Run, Chromium redirects shared memory to `/tmp`; on GKE, a proper `/dev/shm` emptyDir volume is mounted by `App_GKE`.
+- **Chromium memory management** — the default `config.yml` includes `--disable-dev-shm-usage` in Chrome's extra_args. On Cloud Run, Chromium redirects shared memory to `/tmp`; on GKE, a proper `/dev/shm` emptyDir volume is mounted by `App GKE`.
 - `secret_ids` returns an empty map — no secrets are auto-generated.
 - `storage_buckets` returns an empty list — no GCS buckets are auto-provisioned.
 
@@ -98,7 +98,7 @@ Additional environment variables from `var.environment_variables` are merged aft
 
 ### `secret_ids`
 
-Empty map — Crawl4AI_Common creates no secrets. Use `secret_environment_variables` in the wrapper module to inject `SECRET_KEY` and LLM API keys.
+Empty map — Crawl4AI Common creates no secrets. Use `secret_environment_variables` in the wrapper module to inject `SECRET_KEY` and LLM API keys.
 
 ### `storage_buckets`
 

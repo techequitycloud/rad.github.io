@@ -1,13 +1,13 @@
 ---
-title: "Wordpress_CloudRun Module — Configuration Guide"
+title: "Wordpress CloudRun Module — Configuration Guide"
 sidebar_label: "Wordpress CloudRun"
 ---
 
-# Wordpress_CloudRun Module — Configuration Guide
+# Wordpress CloudRun Module — Configuration Guide
 
 `Wordpress_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [WordPress](https://wordpress.org/) on Google Cloud Run Gen2.
 
-Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply WordPress-appropriate defaults and to call the `Wordpress_Common` sub-module, which generates the application's container build context, PHP configuration, MySQL connection settings, Redis object cache configuration, and WordPress-specific secrets. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.
+Every variable in this module is passed through to `App CloudRun`. The wrapper's role is to supply WordPress-appropriate defaults and to call the `Wordpress Common` sub-module, which generates the application's container build context, PHP configuration, MySQL connection settings, Redis object cache configuration, and WordPress-specific secrets. You configure this module exactly as you would `App CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App CloudRun`, or that are unique to this wrapper.
 
 > **Where to look:** If a variable you are configuring is not described here, consult the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md). All `App_CloudRun` features — access and networking, IAP, Cloud Armor, CDN, CI/CD, Cloud Deploy, Binary Authorization, traffic splitting, and VPC Service Controls — are available in `Wordpress_CloudRun` with identical behaviour and configuration.
 
@@ -17,7 +17,7 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 
 | Property | Value |
 |---|---|
-| Sub-module | `Wordpress_Common` |
+| Sub-module | `Wordpress Common` |
 | Default application name | `wordpress` |
 | Default display name | `Wordpress` |
 | Default version | `latest` |
@@ -29,9 +29,9 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 | NFS enabled | `true` (mount: `/mnt/nfs`) |
 | Redis enabled | `true` (object cache) |
 | Image source | `custom` (Cloud Build) |
-| Platform-managed job | `db-init` (injected by `Wordpress_Common` when `initialization_jobs = []`) |
+| Platform-managed job | `db-init` (injected by `Wordpress Common` when `initialization_jobs = []`) |
 
-`Wordpress_Common` generates the Dockerfile (based on the official `wordpress` image), PHP configuration (`php.ini` overrides), WordPress `wp-config.php` template, and WordPress-specific secrets. Redis object caching is enabled by default; `Wordpress_Common` injects the required `WP_REDIS_HOST` and `WP_REDIS_PORT` environment variables when `enable_redis = true`.
+`Wordpress Common` generates the Dockerfile (based on the official `wordpress` image), PHP configuration (`php.ini` overrides), WordPress `wp-config.php` template, and WordPress-specific secrets. Redis object caching is enabled by default; `Wordpress Common` injects the required `WP_REDIS_HOST` and `WP_REDIS_PORT` environment variables when `enable_redis = true`.
 
 **Note on MySQL:** This module uses MySQL 8.0, not PostgreSQL. The Cloud SQL Auth Proxy sidecar (`enable_cloudsql_volume = true`) provides a Unix socket connection. Attempting to disable `enable_cloudsql_volume` without switching to TCP-based connectivity will break the database connection.
 
@@ -39,7 +39,7 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 
 ## §2 IAM & Project Identity
 
-Behaviour is identical to `App_CloudRun`. The following variables are passed through unchanged.
+Behaviour is identical to `App CloudRun`. The following variables are passed through unchanged.
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -59,10 +59,10 @@ Behaviour is identical to `App_CloudRun`. The following variables are passed thr
 |---|---|---|
 | `application_name` | `"wordpress"` | Base name for Cloud Run service, secrets, Artifact Registry |
 | `display_name` | `"Wordpress"` | Human-readable name in UI and dashboards |
-| `description` | `"Wordpress CMS on Cloud Run"` | Used by `Wordpress_Common` for internal labelling |
+| `description` | `"Wordpress CMS on Cloud Run"` | Used by `Wordpress Common` for internal labelling |
 | `application_version` | `"latest"` | Image tag; change to a specific version (e.g. `"6.5"`) for reproducible deployments |
 
-Note: this module uses `display_name` and `description` (not `application_display_name` / `application_description`). `display_name` is forwarded to `App_CloudRun` as `application_display_name`; `description` is used only within `Wordpress_Common` and is not passed to `App_CloudRun`.
+Note: this module uses `display_name` and `description` (not `application_display_name` / `application_description`). `display_name` is forwarded to `App CloudRun` as `application_display_name`; `description` is used only within `Wordpress Common` and is not passed to `App CloudRun`.
 
 **WordPress-specific PHP configuration variables:**
 
@@ -97,11 +97,11 @@ When `container_resources` is set (non-null), it takes precedence over the flat 
 
 Plain-text variables via `environment_variables`; sensitive values via `secret_environment_variables`.
 
-**Module-injected secrets** (provisioned by `Wordpress_Common`, injected via `module_secret_env_vars`):
+**Module-injected secrets** (provisioned by `Wordpress Common`, injected via `module_secret_env_vars`):
 
-WordPress auth keys and salts are auto-generated by `Wordpress_Common` and stored in Secret Manager. The secret IDs are injected as environment variables at runtime. The exact variable names follow WordPress conventions (e.g. `WORDPRESS_AUTH_KEY`, `WORDPRESS_SECURE_AUTH_KEY`, `WORDPRESS_LOGGED_IN_KEY`, `WORDPRESS_NONCE_KEY`, and their corresponding salts).
+WordPress auth keys and salts are auto-generated by `Wordpress Common` and stored in Secret Manager. The secret IDs are injected as environment variables at runtime. The exact variable names follow WordPress conventions (e.g. `WORDPRESS_AUTH_KEY`, `WORDPRESS_SECURE_AUTH_KEY`, `WORDPRESS_LOGGED_IN_KEY`, `WORDPRESS_NONCE_KEY`, and their corresponding salts).
 
-The database password is auto-generated by `App_CloudRun` and wired through the module.
+The database password is auto-generated by `App CloudRun` and wired through the module.
 
 **User-supplied variables (non-sensitive):**
 
@@ -143,7 +143,7 @@ The Cloud SQL Auth Proxy sidecar is required for MySQL Unix socket connectivity.
 | `container_image` | `""` | Leave empty for Cloud Build output; set for prebuilt image URI |
 | `enable_image_mirroring` | `true` | Mirrors image to Artifact Registry before deployment |
 
-There is no `container_build_config` user variable in this module; the build configuration is fully managed by `Wordpress_Common`.
+There is no `container_build_config` user variable in this module; the build configuration is fully managed by `Wordpress Common`.
 
 ---
 
@@ -237,7 +237,7 @@ cloud_deploy_stages = [
 
 ### §7.A Health Probes
 
-`Wordpress_CloudRun` uses only `startup_probe` and `liveness_probe` (passed to `Wordpress_Common`). There is no separate `startup_probe_config` / `health_check_config` interface in this module.
+`Wordpress CloudRun` uses only `startup_probe` and `liveness_probe` (passed to `Wordpress Common`). There is no separate `startup_probe_config` / `health_check_config` interface in this module.
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -305,7 +305,7 @@ alert_policies = [{
 
 ### §8.A Redis Object Cache
 
-Redis is **enabled by default** (`enable_redis = true`). `Wordpress_Common` injects Redis connection details when enabled. Leave `redis_host` empty to use the default Redis configuration supplied by `Wordpress_Common`.
+Redis is **enabled by default** (`enable_redis = true`). `Wordpress Common` injects Redis connection details when enabled. Leave `redis_host` empty to use the default Redis configuration supplied by `Wordpress Common`.
 
 ```hcl
 enable_redis = true
@@ -325,7 +325,7 @@ enable_nfs     = true
 nfs_mount_path = "/mnt/nfs"
 ```
 
-`Wordpress_Common` configures WordPress to use this mount path for persistent file storage. Disable NFS only for single-container, stateless deployments where uploads are stored externally.
+`Wordpress Common` configures WordPress to use this mount path for persistent file storage. Disable NFS only for single-container, stateless deployments where uploads are stored externally.
 
 ### §8.C GCS Fuse Volumes
 
@@ -340,7 +340,7 @@ gcs_volumes = [{
 
 ### §8.D Additional Services
 
-`Wordpress_CloudRun` does not expose the `additional_services` variable. Co-deployed services are not supported in this module's interface. (This variable is available in `Wordpress_GKE`.)
+`Wordpress CloudRun` does not expose the `additional_services` variable. Co-deployed services are not supported in this module's interface. (This variable is available in `Wordpress GKE`.)
 
 ---
 
@@ -350,19 +350,19 @@ The following are set or injected automatically and do not require configuration
 
 ### Database credentials (MySQL 8.0)
 
-`App_CloudRun` generates a random MySQL password and stores it in Secret Manager. `Wordpress_Common` injects the password as `WORDPRESS_DB_PASSWORD` and constructs the database host path for the Unix socket connection.
+`App CloudRun` generates a random MySQL password and stores it in Secret Manager. `Wordpress Common` injects the password as `WORDPRESS_DB_PASSWORD` and constructs the database host path for the Unix socket connection.
 
 ### WordPress authentication keys and salts
 
-`Wordpress_Common` auto-generates all eight WordPress authentication keys and salts on first deploy (e.g. `WORDPRESS_AUTH_KEY`, `WORDPRESS_LOGGED_IN_KEY`, and their `_SALT` counterparts). These are stored in Secret Manager and injected at runtime.
+`Wordpress Common` auto-generates all eight WordPress authentication keys and salts on first deploy (e.g. `WORDPRESS_AUTH_KEY`, `WORDPRESS_LOGGED_IN_KEY`, and their `_SALT` counterparts). These are stored in Secret Manager and injected at runtime.
 
 ### PHP configuration
 
-`Wordpress_Common` applies `php_memory_limit`, `upload_max_filesize`, and `post_max_size` to the container's `php.ini` during the Cloud Build step. These do not need to be set in `environment_variables`.
+`Wordpress Common` applies `php_memory_limit`, `upload_max_filesize`, and `post_max_size` to the container's `php.ini` during the Cloud Build step. These do not need to be set in `environment_variables`.
 
 ### Redis injection
 
-When `enable_redis = true`, `Wordpress_Common` injects `WP_REDIS_HOST` and `WP_REDIS_PORT` into the container environment and configures the Redis Object Cache plugin. The plugin must be installed in the WordPress image for caching to activate.
+When `enable_redis = true`, `Wordpress Common` injects `WP_REDIS_HOST` and `WP_REDIS_PORT` into the container environment and configures the Redis Object Cache plugin. The plugin must be installed in the WordPress image for caching to activate.
 
 ### Probe endpoints
 
@@ -378,7 +378,7 @@ The table below covers all variables unique to or with notable defaults in `Word
 |---|---|---|---|---|
 | `application_name` | `string` | `"wordpress"` | 2 | Base resource name |
 | `display_name` | `string` | `"Wordpress"` | 2 | UI display name (forwarded as `application_display_name`) |
-| `description` | `string` | `"Wordpress CMS on Cloud Run"` | 2 | Used by Wordpress_Common only |
+| `description` | `string` | `"Wordpress CMS on Cloud Run"` | 2 | Used by Wordpress Common only |
 | `application_version` | `string` | `"latest"` | 2 | Image tag |
 | `php_memory_limit` | `string` | `"512M"` | 2 | PHP memory limit |
 | `upload_max_filesize` | `string` | `"64M"` | 2 | Max upload file size |
@@ -415,7 +415,7 @@ The table below covers all variables unique to or with notable defaults in `Word
 | `create_cloud_storage` | `bool` | `true` | 10 | Skip bucket creation when `false` |
 | `manage_storage_kms_iam` | `bool` | `false` | 10 | Enable CMEK for GCS buckets |
 | `enable_artifact_registry_cmek` | `bool` | `false` | 10 | Enable CMEK for Artifact Registry |
-| `backup_uri` | `string` | `""` | 6 | Full GCS URI or Drive ID (passed as `backup_file` to `App_CloudRun`) |
+| `backup_uri` | `string` | `""` | 6 | Full GCS URI or Drive ID (passed as `backup_file` to `App CloudRun`) |
 | `backup_format` | `string` | `"sql"` | 6 | `"sql"`, `"tar"`, `"gz"`, `"tgz"`, `"tar.gz"`, `"zip"`, `"auto"` |
 | `secret_rotation_period` | `string` | `"2592000s"` | 5 | Pub/Sub rotation notification period; `null` to disable |
 | `secret_propagation_delay` | `number` | `30` | 5 | Seconds to wait after secret create/update |
@@ -425,7 +425,7 @@ The table below covers all variables unique to or with notable defaults in `Word
 | `redis_auth` | `string` | `""` | 20 | Sensitive |
 | `startup_probe` | `object` | `{ type="TCP", initial_delay_seconds=30, failure_threshold=20 }` | 13 | |
 | `liveness_probe` | `object` | `{ type="HTTP", path="/wp-admin/install.php", initial_delay_seconds=300 }` | 13 | |
-| `initialization_jobs` | `list` | `[]` | 12 | When empty, `Wordpress_Common` injects the `db-init` job automatically |
+| `initialization_jobs` | `list` | `[]` | 12 | When empty, `Wordpress Common` injects the `db-init` job automatically |
 | `enable_vpc_sc` | `bool` | `false` | 21 | VPC Service Controls |
 | `vpc_cidr_ranges` | `list(string)` | `[]` | 21 | CIDR ranges for VPC-SC access level; auto-discovered when empty |
 | `vpc_sc_dry_run` | `bool` | `true` | 21 | Log-only mode; set `false` to enforce |

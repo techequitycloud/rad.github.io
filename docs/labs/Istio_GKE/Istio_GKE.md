@@ -8,10 +8,9 @@ sidebar_label: "Istio GKE"
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Istio_GKE)**
 
 This lab guide walks you through the full lifecycle of deploying, configuring, and observing a
-service mesh on Google Kubernetes Engine using **open-source Istio** — installed via `istioctl`
-on a GKE Standard cluster. You will use the **Istio_GKE** module to provision the platform, then
-explore traffic management, security, and observability capabilities hands-on. The module supports
-both **sidecar mode** (Envoy per-pod) and **ambient mode** (ztunnel per-node).
+service mesh on Google Kubernetes Engine using **Cloud Service Mesh (CSM)** — Google's managed
+distribution of Istio. You will use the **Services GCP** and **App GKE** modules to provision the
+platform, then explore traffic management, security, and observability capabilities hands-on.
 
 ---
 
@@ -21,16 +20,18 @@ both **sidecar mode** (Envoy per-pod) and **ambient mode** (ztunnel per-node).
 2. [Architecture](#2-architecture)
 3. [Prerequisites](#3-prerequisites)
 4. [Lab Setup](#4-lab-setup)
-5. [Exercise 1 — Verify the Istio Installation](#exercise-1--verify-the-istio-installation)
-6. [Exercise 2 — Explore the Bookinfo Application](#exercise-2--explore-the-bookinfo-application)
+5. [Exercise 1 — Verify the Service Mesh Installation](#exercise-1--verify-the-service-mesh-installation)
+6. [Exercise 2 — Sidecar Injection and Envoy Proxy](#exercise-2--sidecar-injection-and-envoy-proxy)
 7. [Exercise 3 — Traffic Management (Canary and Weighted Routing)](#exercise-3--traffic-management-canary-and-weighted-routing)
-8. [Exercise 4 — Fault Injection and Resilience](#exercise-4--fault-injection-and-resilience)
-9. [Exercise 5 — Mutual TLS and PeerAuthentication](#exercise-5--mutual-tls-and-peerauthentication)
-10. [Exercise 6 — Authorization Policies (L7 Access Control)](#exercise-6--authorization-policies-l7-access-control)
-11. [Exercise 7 — Observability: Kiali, Grafana, Jaeger, and Prometheus](#exercise-7--observability-kiali-grafana-jaeger-and-prometheus)
-12. [Exercise 8 — Ambient Mode (ztunnel and Waypoint Proxies)](#exercise-8--ambient-mode-ztunnel-and-waypoint-proxies)
-13. [Cleanup](#13-cleanup)
-14. [Reference](#14-reference)
+8. [Exercise 4 — Mutual TLS and PeerAuthentication](#exercise-4--mutual-tls-and-peerauthentication)
+9. [Exercise 5 — Authorization Policies (L7 Access Control)](#exercise-5--authorization-policies-l7-access-control)
+10. [Exercise 6 — Observability: Metrics, Tracing, and Kiali](#exercise-6--observability-metrics-tracing-and-kiali)
+11. [Exercise 7 — Gateway API: Managed External Ingress](#exercise-7--gateway-api-managed-external-ingress)
+12. [Exercise 8 — Network Segmentation with Kubernetes NetworkPolicies](#exercise-8--network-segmentation-with-kubernetes-networkpolicies)
+13. [Exercise 9 — Cloud Armor WAF on the GKE Gateway](#exercise-9--cloud-armor-waf-on-the-gke-gateway)
+14. [Exercise 10 — Multi-Cluster Service Mesh](#exercise-10--multi-cluster-service-mesh)
+15. [Cleanup](#15-cleanup)
+16. [Reference](#16-reference)
 
 ---
 
@@ -40,7 +41,9 @@ both **sidecar mode** (Envoy per-pod) and **ambient mode** (ztunnel per-node).
 
 Istio is an open-source **service mesh** that adds a transparent layer of infrastructure to
 distributed applications. It manages service-to-service communication in Kubernetes clusters
-without requiring changes to application code.
+without requiring changes to application code. Every pod in an Istio-enabled namespace gets an
+**Envoy** sidecar proxy injected automatically. All traffic flows through this sidecar, giving the
+mesh control plane visibility and enforcement capabilities across the entire fleet.
 
 Key capabilities:
 
@@ -51,28 +54,15 @@ Key capabilities:
 | **Observability** | Automatic telemetry: request metrics, distributed traces, service topology |
 | **Resilience** | Timeouts, health-aware load balancing, outlier detection |
 
-### Sidecar Mode vs Ambient Mode
+### Cloud Service Mesh on GKE
 
-The `Istio_GKE` module supports two data plane architectures:
+Google Cloud's **Cloud Service Mesh (CSM)** is a fully managed Istio control plane delivered via
+Fleet Hub. When enabled through the `Services GCP` module, Google manages:
 
-| Mode | Data Plane | Resource Overhead | L7 Features |
-|---|---|---|---|
-| **Sidecar** | Envoy proxy injected into every pod | ~30–50% additional CPU/memory per pod | Full (built-in) |
-| **Ambient** | ztunnel DaemonSet on each node + optional waypoint proxy per namespace | ~5% overhead at node level | Requires waypoint proxy |
-
-Set `install_ambient_mesh = false` (default) for sidecar mode or `install_ambient_mesh = true`
-for ambient mode.
-
-### Observability Stack
-
-The module installs four open-source observability tools automatically:
-
-| Tool | Port | Purpose |
-|---|---|---|
-| **Kiali** | 20001 | Service topology graph, traffic flow visualization |
-| **Grafana** | 3000 | Istio metrics dashboards (RED metrics per service) |
-| **Jaeger** | 16686 | Distributed tracing |
-| **Prometheus** | 9090 | Metrics storage and querying |
+- Istio installation and upgrades on the cluster
+- Certificate management and rotation (Workload Identity–based)
+- Multi-cluster service discovery when multiple clusters are Fleet members
+- Integration with Google Cloud Monitoring, Trace, and the Cloud Service Mesh dashboard
 
 ---
 
@@ -80,50 +70,55 @@ The module installs four open-source observability tools automatically:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  GKE Standard Cluster (Istio_GKE module)                           │
-│                                                                     │
+│  Google Cloud Fleet                                                 │
 │  ┌────────────────────────────────────────────────────────────────┐ │
-│  │  istio-system namespace                                        │ │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌─────────┐ │ │
-│  │  │  istiod    │  │  Ingress   │  │  Kiali     │  │Grafana/ │ │ │
-│  │  │ (control   │  │  Gateway   │  │  (topology)│  │Jaeger/  │ │ │
-│  │  │  plane)    │  │  (L7 LB)   │  │            │  │Prom     │ │ │
-│  │  └────────────┘  └────────────┘  └────────────┘  └─────────┘ │ │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                                                                     │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │  default namespace (label: istio-injection=enabled)            │ │
+│  │  Cloud Service Mesh (servicemesh Fleet Feature)               │ │
+│  │  Management: MANAGEMENT_AUTOMATIC                              │ │
+│  └────────────────┬───────────────────────────────────────────────┘ │
+│                   │ Fleet Hub membership                            │
+│  ┌────────────────▼───────────────────────────────────────────────┐ │
+│  │  GKE Autopilot Cluster (Services_GCP)                         │ │
 │  │                                                                │ │
-│  │  ┌──────────────────────┐   ┌──────────────────────┐          │ │
-│  │  │  productpage pod     │   │  reviews pod         │          │ │
-│  │  │  [app + envoy proxy] │◄──►  [app + envoy proxy] │          │ │
-│  │  └──────────────────────┘   └──────────────────────┘          │ │
-│  │  ┌──────────────────────┐   ┌──────────────────────┐          │ │
-│  │  │  details pod         │   │  ratings pod         │          │ │
-│  │  │  [app + envoy proxy] │   │  [app + envoy proxy] │          │ │
-│  │  └──────────────────────┘   └──────────────────────┘          │ │
+│  │  ┌──────────────────────────────────────────────────────────┐ │ │
+│  │  │  App Namespace (label: istio.io/rev=asm-managed)         │ │ │
+│  │  │                                                          │ │ │
+│  │  │  ┌─────────────────────┐   ┌─────────────────────────┐  │ │ │
+│  │  │  │  Pod (app container)│   │  Pod (app container)    │  │ │ │
+│  │  │  │  + Envoy sidecar    │◄──►  + Envoy sidecar        │  │ │ │
+│  │  │  │  (mTLS enforced)    │   │  (mTLS enforced)        │  │ │ │
+│  │  │  └──────────┬──────────┘   └────────────┬────────────┘  │ │ │
+│  │  └─────────────│───────────────────────────│───────────────┘ │ │
+│  │                │ Envoy data plane           │                  │ │
+│  │  ┌─────────────▼───────────────────────────▼───────────────┐ │ │
+│  │  │  GKE Gateway (L7 Global External Managed)               │ │ │
+│  │  │  Certificate Manager + Cloud Armor WAF                  │ │ │
+│  │  └────────────────────────────────────────────────────────── │ │
 │  └────────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────────┘
 
 Module variable wiring:
 
-  Istio_GKE
-    install_ambient_mesh = false  →  Sidecar mode (Envoy per-pod)
-    install_ambient_mesh = true   →  Ambient mode (ztunnel per-node)
-    deploy_application   = true   →  Bookinfo sample app in default namespace
-    istio_version        = "1.24.2"
+  Services_GCP
+    configure_cloud_service_mesh = true   →  Fleet Hub servicemesh feature
+                                             MANAGEMENT_AUTOMATIC per cluster
+
+  App_GKE
+    configure_service_mesh       = true   →  istio.io/rev=asm-managed label
+                                             on the application namespace
+                                             (triggers Envoy sidecar injection)
+    enable_network_segmentation  = true   →  Kubernetes NetworkPolicies
+    enable_cloud_armor           = true   →  Cloud Armor WAF on Gateway
+    enable_iap                   = true   →  Identity-Aware Proxy
 ```
 
-### Bookinfo Application Architecture
+### Data Plane vs Control Plane
 
-The Bookinfo sample application is a four-microservice polyglot app used throughout this lab:
-
-```
-Browser → Ingress Gateway → productpage (Python)
-                               ├── details (Ruby)
-                               └── reviews (Java) [v1/v2/v3]
-                                      └── ratings (Node.js)
-```
+| Component | Location | Managed by |
+|---|---|---|
+| **Envoy sidecars** | Inside each pod (data plane) | CSM (auto-injected) |
+| **istiod** | `asm-system` namespace | Google Cloud (managed) |
+| **Mesh CA** | Fleet / Workload Identity | Google Cloud |
+| **Telemetry** | Cloud Monitoring / Trace | Google Cloud |
 
 ---
 
@@ -135,18 +130,24 @@ Browser → Ingress Gateway → productpage (Python)
 |---|---|---|
 | `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
 | `kubectl` | 1.29+ | `gcloud components install kubectl` |
-| `istioctl` | 1.20+ | `curl -L https://istio.io/downloadIstio \| sh -` |
+| `istioctl` | 1.20+ | `curl -L https://istio.io/downloadIstio | sh -` |
 | `curl` / `jq` | Any | System package manager |
 
-**Access to the RAD UI** with permission to deploy the `Istio_GKE` module in the target GCP project.
+**Access to the RAD UI** with permission to deploy modules (`Services GCP` and `App GKE`) in the target GCP project.
 
 ### GCP Permissions
+
+Your identity (user or service account) needs these roles on the project:
 
 ```
 roles/owner                        # or the following fine-grained set:
 roles/container.admin
-roles/compute.networkAdmin
+roles/gkehub.admin
 roles/iam.serviceAccountAdmin
+roles/compute.networkAdmin
+roles/certificatemanager.owner
+roles/iap.admin                    # if using IAP exercises
+roles/cloudarmor.admin             # if using Cloud Armor exercises
 ```
 
 ### Environment Variables
@@ -156,8 +157,9 @@ Set these once; all commands in this lab reference them:
 ```bash
 export PROJECT_ID="your-gcp-project-id"
 export REGION="us-central1"
-export CLUSTER_NAME="istio-gke-cluster"   # matches gke_cluster variable
-export ISTIO_VERSION="1.24.2"
+export CLUSTER_NAME="csm-lab-cluster"
+export APP_NAMESPACE="sample-app"
+export MESH_REV="asm-managed"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set compute/region "${REGION}"
@@ -167,179 +169,270 @@ gcloud config set compute/region "${REGION}"
 
 ## 4. Lab Setup
 
-### 4.1 Deploy via RAD UI
+### 4.1 Enable Required APIs
 
-Deploy the `Istio_GKE` module via the RAD UI. In the variable form, set the following key
-variables:
+**gcloud:**
+```bash
+gcloud services enable \
+  container.googleapis.com \
+  gkehub.googleapis.com \
+  mesh.googleapis.com \
+  meshconfig.googleapis.com \
+  meshtelemetry.googleapis.com \
+  anthos.googleapis.com \
+  multiclusteringress.googleapis.com \
+  certificatemanager.googleapis.com \
+  iap.googleapis.com \
+  --project="${PROJECT_ID}"
+```
 
-| Variable | Value | Notes |
-|---|---|---|
-| `project_id` | `your-gcp-project-id` | Required |
-| `region` | `us-central1` | GCP region |
-| `istio_version` | `1.24.2` | Istio release to install |
-| `install_ambient_mesh` | `false` | Use `true` for ambient mode |
-| `deploy_application` | `true` | Deploy Bookinfo sample app |
-| `gke_cluster` | `istio-gke-cluster` | GKE cluster name |
+**REST API equivalent:**
+```bash
+for api in \
+  container.googleapis.com \
+  gkehub.googleapis.com \
+  mesh.googleapis.com \
+  meshconfig.googleapis.com; do
+  curl -s -X POST \
+    "https://serviceusage.googleapis.com/v1/projects/${PROJECT_ID}/services/${api}:enable" \
+    -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+    -H "Content-Type: application/json"
+done
+```
 
-Click **Deploy** and wait for provisioning to complete (approximately 15–20 minutes).
+### 4.2 Deploy the Platform (Services GCP)
 
-> **What this provisions:** A GKE Standard cluster with two preemptible e2-standard-2 nodes,
-> VPC network, Istio installed via `istioctl` with the default or ambient profile, the Bookinfo
-> sample application in the `default` namespace, and the full observability stack (Prometheus,
-> Grafana, Jaeger, Kiali) in `istio-system`.
+Deploy the `Services GCP` module via the RAD UI. In the variable form, set the following key variables:
 
-### 4.2 Configure kubectl
+| Variable | Value |
+|---|---|
+| `project_id` | `your-gcp-project-id` |
+| `region` | `us-central1` |
+| `create_google_kubernetes_engine` | `true` |
+| `configure_cloud_service_mesh` | `true` (enables Fleet Hub CSM feature) |
+| `gke_cluster_name` | `csm-lab-cluster` |
 
+Click **Deploy** and wait for provisioning to complete.
+
+> **What this provisions:** A GKE Autopilot cluster registered as a Fleet member, the
+> `servicemesh` Fleet feature enabled with `MANAGEMENT_AUTOMATIC`, and (if multi-cluster) the
+> Multi-Cluster Ingress feature. Google's control plane automatically installs the Istio control
+> plane (`istiod`) in the `asm-system` namespace.
+
+### 4.3 Deploy the Application (App GKE)
+
+Deploy the `App GKE` module via the RAD UI. In the variable form, set the following key variables:
+
+| Variable | Value |
+|---|---|
+| `project_id` | `your-gcp-project-id` |
+| `region` | `us-central1` |
+| `application_name` | `sample` |
+| `deploy_application` | `true` |
+| `configure_service_mesh` | `true` (adds istio.io/rev label to namespace) |
+| `enable_network_segmentation` | `true` |
+| `container_image` | `us-docker.pkg.dev/google-samples/containers/gke/hello-app:1.0` |
+| `container_port` | `8080` |
+| `service_type` | `ClusterIP` |
+
+Click **Deploy** and wait for provisioning to complete.
+
+### 4.4 Configure kubectl
+
+**gcloud:**
 ```bash
 gcloud container clusters get-credentials "${CLUSTER_NAME}" \
   --region "${REGION}" \
   --project "${PROJECT_ID}"
+```
 
-kubectl cluster-info
-kubectl get nodes
+**REST API equivalent** (retrieve cluster endpoint and CA):
+```bash
+CLUSTER_ENDPOINT=$(curl -s \
+  "https://container.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/clusters/${CLUSTER_NAME}" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq -r '.endpoint')
+
+echo "Cluster endpoint: https://${CLUSTER_ENDPOINT}"
 ```
 
 ---
 
-## Exercise 1 — Verify the Istio Installation
+## Exercise 1 — Verify the Service Mesh Installation
 
 ### Objective
 
-Confirm that Istio is running correctly, the control plane is healthy, and the observability
-components are deployed.
+Confirm that Cloud Service Mesh is active on the cluster, the Istio control plane is healthy, and
+the Fleet Hub membership is correctly configured.
 
-### Step 1.1 — Check Istio Control Plane
+### Step 1.1 — Check Fleet Hub Membership
 
+**gcloud:**
 ```bash
-# Verify istiod (Istio control plane) is running
-kubectl get pods -n istio-system
-
-# Expected pods (sidecar mode):
-# istiod-xxxxxxx-xxxxx          1/1  Running
-# istio-ingressgateway-xxxxx    1/1  Running
-# prometheus-xxxxx              2/2  Running
-# grafana-xxxxx                 1/1  Running
-# jaeger-xxxxx                  1/1  Running
-# kiali-xxxxx                   1/1  Running
+gcloud container fleet memberships list --project="${PROJECT_ID}"
 ```
 
-### Step 1.2 — Check Istio Version
+Expected output (abbreviated):
+```
+NAME               EXTERNAL_ID                            LOCATION
+csm-lab-cluster    xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx   global
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://gkehub.googleapis.com/v1/projects/${PROJECT_ID}/locations/global/memberships" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.resources[] | {name, state: .state.code}'
+```
+
+### Step 1.2 — Check the Service Mesh Fleet Feature
+
+**gcloud:**
+```bash
+gcloud container fleet mesh describe --project="${PROJECT_ID}"
+```
+
+Expected output:
+```
+membershipSpecs:
+  projects/.../locations/global/memberships/csm-lab-cluster:
+    mesh:
+      management: MANAGEMENT_AUTOMATIC
+membershipStates:
+  projects/.../locations/global/memberships/csm-lab-cluster:
+    servicemesh:
+      controlPlaneManagement:
+        state: ACTIVE
+      dataPlaneManagement:
+        state: ACTIVE
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://gkehub.googleapis.com/v1/projects/${PROJECT_ID}/locations/global/features/servicemesh" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '{state: .state.state, membershipStates: .membershipStates}'
+```
+
+### Step 1.3 — Verify Istio Control Plane Pods
+
+```bash
+kubectl get pods -n asm-system
+```
+
+Expected (managed CSM runs without local `istiod` — look for the webhook instead):
+```bash
+kubectl get mutatingwebhookconfigurations | grep -i istio
+```
+
+You should see `istiod-asm-managed` or `istio-sidecar-injector` — this confirms the managed
+control plane is wired to the cluster's admission controllers.
+
+### Step 1.4 — Inspect Mesh Configuration with istioctl
 
 ```bash
 istioctl version
-
-# Expected output:
-# client version: 1.24.2
-# control plane version: 1.24.2
-# data plane version: 1.24.2 (X proxies)
-```
-
-### Step 1.3 — Verify Sidecar Injection Webhook
-
-```bash
-kubectl get mutatingwebhookconfigurations | grep istio
-# Should show: istio-sidecar-injector
-
-kubectl get namespace default --show-labels
-# Should include: istio-injection=enabled
-```
-
-### Step 1.4 — Analyse Mesh Configuration
-
-```bash
-istioctl analyze
-
-# Lists any configuration issues in the mesh.
-# A healthy installation returns: ✔ No validation issues found.
-```
-
-### Step 1.5 — Check Proxy Status
-
-```bash
-istioctl proxy-status
-
-# Lists all sidecar proxies synced to the control plane:
-# NAME                    CLUSTER  CDS  LDS  EDS  RDS  ECDS  ISTIOD
-# details-v1-xxx.default  ...      SYNCED SYNCED SYNCED SYNCED ...
+istioctl proxy-status          # lists all enrolled Envoy proxies
+istioctl analyze -n "${APP_NAMESPACE}"   # reports any mesh configuration issues
 ```
 
 ---
 
-## Exercise 2 — Explore the Bookinfo Application
+## Exercise 2 — Sidecar Injection and Envoy Proxy
 
 ### Objective
 
-Access the Bookinfo sample application through the Istio Ingress Gateway and understand its
-multi-version microservice architecture.
+Understand how the `istio.io/rev=asm-managed` namespace label triggers automatic Envoy sidecar
+injection, and inspect the injected sidecar inside a running pod.
 
-### Step 2.1 — Get the Ingress Gateway IP
+### Step 2.1 — Verify the Namespace Label
+
+The App GKE module sets this label when `configure_service_mesh = true`:
 
 ```bash
-INGRESS_IP=$(kubectl get svc istio-ingressgateway -n istio-system \
-  -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-
-echo "Ingress Gateway IP: ${INGRESS_IP}"
+kubectl get namespace "${APP_NAMESPACE}" --show-labels
 ```
 
-### Step 2.2 — Access Bookinfo
-
-```bash
-# Test the product page
-curl -s "http://${INGRESS_IP}/productpage" | grep "<title>"
-# Expected: <title>Simple Bookstore App</title>
-
-# Open in browser
-echo "http://${INGRESS_IP}/productpage"
+Expected:
+```
+NAME          STATUS   AGE   LABELS
+sample-app    Active   5m    istio.io/rev=asm-managed, ...
 ```
 
-Refresh the page multiple times — the **Book Reviews** section cycles through three versions:
-- **v1**: No stars (no call to ratings service)
-- **v2**: Black stars
-- **v3**: Red stars
+If you need to label an existing namespace manually:
 
-### Step 2.3 — Inspect the Mesh Resources
-
+**kubectl:**
 ```bash
-# View all Bookinfo pods (each should show 2/2 READY in sidecar mode)
-kubectl get pods -o wide
-
-# View the Istio Gateway resource
-kubectl get gateway
-kubectl describe gateway bookinfo-gateway
-
-# View the VirtualService routing to productpage
-kubectl get virtualservice
-kubectl describe virtualservice bookinfo
+kubectl label namespace "${APP_NAMESPACE}" \
+  istio.io/rev="${MESH_REV}" \
+  --overwrite
 ```
 
-### Step 2.4 — Inspect the Envoy Sidecar
+**REST API equivalent:**
+```bash
+curl -s -X PATCH \
+  "https://container.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/clusters/${CLUSTER_NAME}/resourceLabels" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d '{"resourceLabels": {"istio.io/rev": "asm-managed"}}'
+```
+
+> Note: The REST approach above patches cluster-level labels. Namespace labels in Kubernetes are
+> managed through the Kubernetes API, not the GKE API. Use `kubectl patch` or `kubectl label` for
+> namespace-level operations.
+
+### Step 2.2 — Restart Pods to Trigger Injection
+
+Existing pods must be restarted after the label is added to receive a sidecar:
 
 ```bash
-POD=$(kubectl get pod -l app=productpage -o jsonpath='{.items[0].metadata.name}')
+kubectl rollout restart deployment -n "${APP_NAMESPACE}"
+```
 
-# Containers in the pod (should show: productpage, istio-proxy)
-kubectl get pod "${POD}" -o jsonpath='{.spec.containers[*].name}' | tr ' ' '\n'
+### Step 2.3 — Confirm Two Containers Per Pod
 
-# Envoy proxy version
-kubectl exec "${POD}" -c istio-proxy -- \
+```bash
+kubectl get pods -n "${APP_NAMESPACE}" -o wide
+```
+
+The `READY` column should show `2/2` — the app container plus the injected Envoy sidecar:
+
+```
+NAME                      READY   STATUS    RESTARTS   AGE
+sample-xxxxxxxxx-xxxxx    2/2     Running   0          2m
+```
+
+### Step 2.4 — Inspect the Sidecar
+
+```bash
+POD=$(kubectl get pod -n "${APP_NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')
+
+# View all containers in the pod
+kubectl get pod "${POD}" -n "${APP_NAMESPACE}" \
+  -o jsonpath='{.spec.containers[*].name}' | tr ' ' '\n'
+
+# Check Envoy proxy version
+kubectl exec "${POD}" -n "${APP_NAMESPACE}" -c istio-proxy -- \
   pilot-agent request GET server_info | jq '.version'
 
-# Active listeners (what traffic the sidecar intercepts)
-kubectl exec "${POD}" -c istio-proxy -- \
-  pilot-agent request GET listeners | jq '.[].name'
+# Inspect active Envoy listeners (what the sidecar intercepts)
+kubectl exec "${POD}" -n "${APP_NAMESPACE}" -c istio-proxy -- \
+  pilot-agent request GET listeners | jq '.[] | .name'
 ```
 
-### Step 2.5 — View Full Proxy Configuration
+### Step 2.5 — View Envoy Proxy Configuration via istioctl
 
 ```bash
-# Full Envoy config for the productpage sidecar
-istioctl proxy-config all "${POD}"
+# Full proxy configuration dump
+istioctl proxy-config all "${POD}" -n "${APP_NAMESPACE}"
 
-# Only clusters (upstream services this sidecar knows about)
-istioctl proxy-config cluster "${POD}"
+# Just the clusters (upstream services known to this sidecar)
+istioctl proxy-config cluster "${POD}" -n "${APP_NAMESPACE}"
 
 # Active routes
-istioctl proxy-config route "${POD}"
+istioctl proxy-config route "${POD}" -n "${APP_NAMESPACE}"
 ```
 
 ---
@@ -348,37 +441,105 @@ istioctl proxy-config route "${POD}"
 
 ### Objective
 
-Use Istio `VirtualService` and `DestinationRule` resources to control traffic between the three
-versions of the `reviews` service.
+Deploy two versions of a service and use Istio `VirtualService` and `DestinationRule` resources to
+split traffic between them — demonstrating canary releases and blue/green deployments without
+infrastructure changes.
 
 ### Background: Istio Traffic Management Resources
 
 | Resource | Purpose |
 |---|---|
-| `DestinationRule` | Defines named subsets of a service (v1, v2, v3) and load balancing policy |
+| `DestinationRule` | Defines named subsets of a service (e.g., v1, v2) and load balancing policy |
 | `VirtualService` | Attaches routing rules to a Kubernetes Service — weight, headers, retry, timeout |
+| `Gateway` (Istio) | Manages inbound/outbound traffic at the mesh boundary (not the GKE Gateway API) |
 
-### Step 3.1 — Create a DestinationRule for All Services
+### Step 3.1 — Deploy Two Application Versions
 
 ```yaml
-# destination-rules-all.yaml
-apiVersion: networking.istio.io/v1beta1
-kind: DestinationRule
+# deploy-v1.yaml
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: productpage
+  name: sample-v1
+  namespace: sample-app
+  labels:
+    app: sample
+    version: v1
 spec:
-  host: productpage
-  subsets:
-  - name: v1
-    labels:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample
       version: v1
+  template:
+    metadata:
+      labels:
+        app: sample
+        version: v1
+    spec:
+      containers:
+      - name: sample
+        image: us-docker.pkg.dev/google-samples/containers/gke/hello-app:1.0
+        ports:
+        - containerPort: 8080
 ---
+# deploy-v2.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-v2
+  namespace: sample-app
+  labels:
+    app: sample
+    version: v2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: sample
+        version: v2
+    spec:
+      containers:
+      - name: sample
+        image: us-docker.pkg.dev/google-samples/containers/gke/hello-app:2.0
+        ports:
+        - containerPort: 8080
+```
+
+```bash
+kubectl apply -f deploy-v1.yaml
+kubectl apply -f deploy-v2.yaml
+kubectl get pods -n "${APP_NAMESPACE}" -L version
+```
+
+### Step 3.2 — Define a DestinationRule
+
+```yaml
+# destination-rule.yaml
 apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
-  name: reviews
+  name: sample-dr
+  namespace: sample-app
 spec:
-  host: reviews
+  host: sample           # matches the Kubernetes Service name
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        http2MaxRequests: 1000
+    outlierDetection:    # circuit breaking
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
   subsets:
   - name: v1
     labels:
@@ -386,139 +547,87 @@ spec:
   - name: v2
     labels:
       version: v2
-  - name: v3
-    labels:
-      version: v3
----
-apiVersion: networking.istio.io/v1beta1
-kind: DestinationRule
-metadata:
-  name: ratings
-spec:
-  host: ratings
-  subsets:
-  - name: v1
-    labels:
-      version: v1
----
-apiVersion: networking.istio.io/v1beta1
-kind: DestinationRule
-metadata:
-  name: details
-spec:
-  host: details
-  subsets:
-  - name: v1
-    labels:
-      version: v1
 ```
 
 ```bash
-kubectl apply -f destination-rules-all.yaml
-kubectl get destinationrules
+kubectl apply -f destination-rule.yaml
+kubectl get destinationrules -n "${APP_NAMESPACE}"
 ```
 
-### Step 3.2 — Pin All Traffic to reviews v1
+### Step 3.3 — Create a VirtualService (90/10 Canary Split)
 
 ```yaml
-# virtual-service-all-v1.yaml
+# virtual-service-canary.yaml
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: reviews
+  name: sample-vs
+  namespace: sample-app
 spec:
   hosts:
-  - reviews
-  http:
-  - route:
-    - destination:
-        host: reviews
-        subset: v1
-```
-
-```bash
-kubectl apply -f virtual-service-all-v1.yaml
-```
-
-Refresh `http://${INGRESS_IP}/productpage` multiple times — you should only see v1 (no stars).
-
-### Step 3.3 — Canary: 80% v1 / 20% v3
-
-```yaml
-# virtual-service-reviews-80-20.yaml
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
-  name: reviews
-spec:
-  hosts:
-  - reviews
-  http:
-  - route:
-    - destination:
-        host: reviews
-        subset: v1
-      weight: 80
-    - destination:
-        host: reviews
-        subset: v3
-      weight: 20
-```
-
-```bash
-kubectl apply -f virtual-service-reviews-80-20.yaml
-
-# Generate load to observe the split
-for i in $(seq 1 50); do
-  curl -s -o /dev/null "http://${INGRESS_IP}/productpage"
-done
-```
-
-### Step 3.4 — Header-Based Routing (Test User)
-
-Route a specific test user always to v2 (black stars) while everyone else sees v1:
-
-```yaml
-# virtual-service-reviews-user-v2.yaml
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
-  name: reviews
-spec:
-  hosts:
-  - reviews
+  - sample
   http:
   - match:
     - headers:
-        end-user:
-          exact: jason
+        x-canary:
+          exact: "true"
     route:
     - destination:
-        host: reviews
+        host: sample
         subset: v2
+      weight: 100
   - route:
     - destination:
-        host: reviews
+        host: sample
         subset: v1
+      weight: 90
+    - destination:
+        host: sample
+        subset: v2
+      weight: 10
+    retries:
+      attempts: 3
+      perTryTimeout: 5s
+      retryOn: "5xx,reset,connect-failure"
+    timeout: 15s
 ```
 
 ```bash
-kubectl apply -f virtual-service-reviews-user-v2.yaml
+kubectl apply -f virtual-service-canary.yaml
 ```
 
-Log into the Bookinfo UI as `jason` (any password) — you should see black stars (v2). Log out
-and you see no stars (v1).
+### Step 3.4 — Test the Traffic Split
 
-### Step 3.5 — Promote to 100% v3
+Launch a test pod in the same namespace:
 
 ```bash
-kubectl patch virtualservice reviews \
+kubectl run curl-test \
+  --image=curlimages/curl:latest \
+  --restart=Never \
+  --rm -it \
+  -n "${APP_NAMESPACE}" \
+  -- sh
+
+# Inside the pod — send 20 requests and count which version responds
+for i in $(seq 1 20); do
+  curl -s http://sample:8080 | grep "Hello"
+done
+
+# Test canary header routing (always goes to v2)
+curl -s -H "x-canary: true" http://sample:8080
+```
+
+### Step 3.5 — Shift to 100% v2 (Promotion)
+
+```bash
+kubectl patch virtualservice sample-vs \
+  -n "${APP_NAMESPACE}" \
   --type='merge' \
   -p '{
     "spec": {
       "http": [{
         "route": [{
-          "destination": {"host": "reviews", "subset": "v3"},
+          "destination": {"host": "sample", "subset": "v2"},
           "weight": 100
         }]
       }]
@@ -526,120 +635,57 @@ kubectl patch virtualservice reviews \
   }'
 ```
 
----
-
-## Exercise 4 — Fault Injection and Resilience
-
-### Objective
-
-Use Istio's fault injection to simulate network failures and test the application's resilience.
-
-### Step 4.1 — Inject a 7-Second Delay on Ratings
+### Step 3.6 — Inject a Fault (Chaos Engineering)
 
 ```yaml
-# virtual-service-ratings-delay.yaml
+# virtual-service-fault.yaml
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: ratings
+  name: sample-vs
+  namespace: sample-app
 spec:
   hosts:
-  - ratings
+  - sample
   http:
   - fault:
       delay:
         percentage:
-          value: 100.0
-        fixedDelay: 7s
-    route:
-    - destination:
-        host: ratings
-        subset: v1
-```
-
-```bash
-kubectl apply -f virtual-service-ratings-delay.yaml
-```
-
-Access the product page — you will notice a timeout after ~6 seconds (the reviews service has
-a 6s timeout to ratings). This demonstrates how latency in one service propagates to the
-client even without an error code.
-
-### Step 4.2 — Inject HTTP Abort Faults
-
-```yaml
-# virtual-service-ratings-abort.yaml
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
-  name: ratings
-spec:
-  hosts:
-  - ratings
-  http:
-  - fault:
+          value: 10.0
+        fixedDelay: 3s
       abort:
         percentage:
-          value: 100.0
-        httpStatus: 500
+          value: 5.0
+        httpStatus: 503
     route:
     - destination:
-        host: ratings
-        subset: v1
+        host: sample
+        subset: v2
 ```
 
 ```bash
-kubectl apply -f virtual-service-ratings-abort.yaml
-# The reviews section shows "Ratings service is currently unavailable"
-```
+kubectl apply -f virtual-service-fault.yaml
 
-### Step 4.3 — Add Retries to details Service
-
-```yaml
-# virtual-service-details-retry.yaml
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
-  name: details
-spec:
-  hosts:
-  - details
-  http:
-  - route:
-    - destination:
-        host: details
-        subset: v1
-    retries:
-      attempts: 3
-      perTryTimeout: 2s
-      retryOn: "5xx,reset,connect-failure,retriable-4xx"
-    timeout: 10s
-```
-
-```bash
-kubectl apply -f virtual-service-details-retry.yaml
-```
-
-### Step 4.4 — Remove Fault Injection
-
-```bash
-kubectl delete virtualservice ratings
-# Or re-apply a clean VirtualService without the fault block
+# Observe retry behaviour kicking in
+kubectl exec curl-test -n "${APP_NAMESPACE}" -- \
+  sh -c 'for i in $(seq 1 50); do curl -s -o /dev/null -w "%{http_code}\n" http://sample:8080; done'
 ```
 
 ---
 
-## Exercise 5 — Mutual TLS and PeerAuthentication
+## Exercise 4 — Mutual TLS and PeerAuthentication
 
 ### Objective
 
-Enforce strict mutual TLS (mTLS) between all services in the default namespace and verify
-encrypted communication using Envoy proxy stats.
+Enforce strict mutual TLS (mTLS) between all services in the namespace, verify encrypted
+communication using Envoy proxy stats, and understand how CSM's managed CA issues workload
+certificates via Workload Identity.
 
 ### Background
 
-Istio issues X.509 certificates to each workload sidecar using the SPIFFE standard. mTLS is
-negotiated transparently by Envoy sidecars — application code has no awareness of encryption.
+Cloud Service Mesh issues X.509 certificates to each workload sidecar, signed by the Fleet-level
+mesh CA. mTLS is negotiated transparently by the Envoy sidecars — application code has no
+awareness of the encryption.
 
 ```
 Service A Pod                     Service B Pod
@@ -649,27 +695,25 @@ Service A Pod                     Service B Pod
 ├─────────────────────┤           ├─────────────────────┤
 │  Envoy sidecar      │◄─mTLS────►│  Envoy sidecar      │
 │  (cert: spiffe://   │           │  (cert: spiffe://   │
-│   cluster.local/...) │           │   cluster.local/...) │
+│   .../sa/service-a) │           │   .../sa/service-b) │
 └─────────────────────┘           └─────────────────────┘
 ```
 
-### Step 5.1 — Check Default mTLS Mode
+### Step 4.1 — Check Current mTLS Mode
 
 ```bash
-POD=$(kubectl get pod -l app=productpage -o jsonpath='{.items[0].metadata.name}')
+istioctl x authz check "${POD}" -n "${APP_NAMESPACE}"
 
-# Check current auth policy
-istioctl x authz check "${POD}"
-
-# Inspect the workload certificate
-kubectl exec "${POD}" -c istio-proxy -- \
-  cat /var/run/secrets/workload-spiffe-credentials/certificates.pem \
-  | openssl x509 -noout -text \
-  | grep -E "Subject Alternative Name|URI"
-# Expected: URI:spiffe://cluster.local/ns/default/sa/bookinfo-productpage
+# View certificate details on the sidecar
+kubectl exec "${POD}" -n "${APP_NAMESPACE}" -c istio-proxy -- \
+  openssl s_client -connect sample:8080 -showcerts 2>/dev/null | \
+  openssl x509 -noout -subject -issuer -dates
 ```
 
-### Step 5.2 — Apply Strict PeerAuthentication
+### Step 4.2 — Apply Strict PeerAuthentication (Namespace-Wide)
+
+In permissive mode (default), both mTLS and plaintext are accepted. Strict mode rejects any
+non-mTLS connection.
 
 ```yaml
 # peer-auth-strict.yaml
@@ -677,7 +721,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: default
-  namespace: default
+  namespace: sample-app
 spec:
   mtls:
     mode: STRICT
@@ -685,48 +729,71 @@ spec:
 
 ```bash
 kubectl apply -f peer-auth-strict.yaml
-kubectl get peerauthentication
+
+# Verify the policy is active
+kubectl get peerauthentication -n "${APP_NAMESPACE}"
 ```
 
-### Step 5.3 — Test mTLS Enforcement
+### Step 4.3 — Test mTLS Enforcement
 
 ```bash
-# This should FAIL — plain HTTP from a pod without a sidecar
-kubectl run plain-test \
+# This should FAIL — plain HTTP from outside the mesh
+kubectl run plain-curl \
   --image=curlimages/curl:latest \
   --restart=Never \
   --rm -it \
-  -n kube-system \
-  -- curl -v --max-time 5 http://productpage.default.svc.cluster.local:9080
+  -n default \
+  -- curl -v http://sample.sample-app.svc.cluster.local:8080
 
-# This should SUCCEED — sidecar-equipped pod in the mesh
-kubectl run mesh-test \
+# This should SUCCEED — sidecar-equipped pod in the same namespace
+kubectl run mesh-curl \
   --image=curlimages/curl:latest \
   --restart=Never \
   --rm -it \
-  -- curl -s http://productpage:9080/productpage | head -5
+  -n sample-app \
+  -- curl -s http://sample:8080
 ```
 
-### Step 5.4 — View mTLS Stats
+### Step 4.4 — Check the Workload Certificate (SPIFFE Identity)
 
 ```bash
-POD=$(kubectl get pod -l app=productpage -o jsonpath='{.items[0].metadata.name}')
+POD=$(kubectl get pod -n "${APP_NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')
 
-kubectl exec "${POD}" -c istio-proxy -- \
-  pilot-agent request GET stats \
-  | grep -E "ssl\.(handshake|connection_error|fail)"
+# Retrieve the leaf certificate from the running sidecar
+kubectl exec "${POD}" -n "${APP_NAMESPACE}" -c istio-proxy -- \
+  cat /var/run/secrets/workload-spiffe-credentials/certificates.pem \
+  | openssl x509 -noout -text \
+  | grep -E "Subject Alternative Name|URI"
+```
+
+Expected: `URI:spiffe://PROJECT_ID.svc.id.goog/ns/sample-app/sa/default`
+
+### Step 4.5 — View mTLS Stats on the Envoy Proxy
+
+```bash
+kubectl exec "${POD}" -n "${APP_NAMESPACE}" -c istio-proxy -- \
+  pilot-agent request GET stats | grep -E "ssl\.(handshake|connection_error|fail)"
 ```
 
 ---
 
-## Exercise 6 — Authorization Policies (L7 Access Control)
+## Exercise 5 — Authorization Policies (L7 Access Control)
 
 ### Objective
 
 Use Istio `AuthorizationPolicy` resources to enforce fine-grained, per-route access control
-between services — without touching application code.
+between services — without touching application code or firewall rules.
 
-### Step 6.1 — Deny All Traffic by Default
+### Background
+
+`AuthorizationPolicy` operates at Layer 7 inside the Envoy sidecar. Policies can match on:
+
+- Source service account (SPIFFE identity)
+- Source namespace
+- HTTP method, path, headers
+- JWT claims (when combined with `RequestAuthentication`)
+
+### Step 5.1 — Deny All Traffic by Default
 
 ```yaml
 # deny-all.yaml
@@ -734,7 +801,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: deny-all
-  namespace: default
+  namespace: sample-app
 spec:
   {}   # empty spec = deny all
 ```
@@ -742,366 +809,713 @@ spec:
 ```bash
 kubectl apply -f deny-all.yaml
 
-# All requests should now return 403
-curl -s -o /dev/null -w "%{http_code}" "http://${INGRESS_IP}/productpage"
+# Confirm all requests are now rejected
+kubectl run test-curl \
+  --image=curlimages/curl:latest \
+  --restart=Never \
+  --rm -it \
+  -n sample-app \
+  -- curl -s -o /dev/null -w "%{http_code}" http://sample:8080
 # Expected: 403
 ```
 
-### Step 6.2 — Allow Ingress Gateway to productpage
+### Step 5.2 — Allow GET Requests from a Specific Service Account
 
 ```yaml
-# allow-productpage.yaml
+# allow-frontend.yaml
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: allow-ingress-productpage
-  namespace: default
+  name: allow-frontend
+  namespace: sample-app
 spec:
   selector:
     matchLabels:
-      app: productpage
+      app: sample
   rules:
   - from:
     - source:
         principals:
-        - "cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"
+        - "cluster.local/ns/sample-app/sa/frontend"
     to:
     - operation:
         methods: ["GET"]
+        paths: ["/", "/health", "/api/*"]
+    when:
+    - key: request.headers[x-request-id]
+      notValues: [""]   # require a correlation ID header
 ```
 
 ```bash
-kubectl apply -f allow-productpage.yaml
+kubectl apply -f allow-frontend.yaml
 ```
 
-### Step 6.3 — Allow productpage to Call details and reviews
+### Step 5.3 — Allow Health Checks from Any Source
 
 ```yaml
-# allow-services.yaml
+# allow-health.yaml
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: allow-productpage-details
-  namespace: default
+  name: allow-health
+  namespace: sample-app
 spec:
   selector:
     matchLabels:
-      app: details
+      app: sample
   rules:
-  - from:
-    - source:
-        principals:
-        - "cluster.local/ns/default/sa/bookinfo-productpage"
----
-apiVersion: security.istio.io/v1beta1
-kind: AuthorizationPolicy
-metadata:
-  name: allow-productpage-reviews
-  namespace: default
-spec:
-  selector:
-    matchLabels:
-      app: reviews
-  rules:
-  - from:
-    - source:
-        principals:
-        - "cluster.local/ns/default/sa/bookinfo-productpage"
-```
-
-```bash
-kubectl apply -f allow-services.yaml
-```
-
-### Step 6.4 — Allow reviews to Call ratings Only
-
-```yaml
-# allow-reviews-ratings.yaml
-apiVersion: security.istio.io/v1beta1
-kind: AuthorizationPolicy
-metadata:
-  name: allow-reviews-ratings
-  namespace: default
-spec:
-  selector:
-    matchLabels:
-      app: ratings
-  rules:
-  - from:
-    - source:
-        principals:
-        - "cluster.local/ns/default/sa/bookinfo-reviews"
-    to:
+  - to:
     - operation:
         methods: ["GET"]
+        paths: ["/health", "/ready"]
 ```
 
 ```bash
-kubectl apply -f allow-reviews-ratings.yaml
+kubectl apply -f allow-health.yaml
+```
 
-# Verify policy decisions
-kubectl exec "$(kubectl get pod -l app=productpage -o jsonpath='{.items[0].metadata.name}')" \
-  -c istio-proxy -- \
+### Step 5.4 — JWT Validation with RequestAuthentication
+
+```yaml
+# request-authn.yaml
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: jwt-auth
+  namespace: sample-app
+spec:
+  selector:
+    matchLabels:
+      app: sample
+  jwtRules:
+  - issuer: "https://accounts.google.com"
+    jwksUri: "https://www.googleapis.com/oauth2/v3/certs"
+    audiences:
+    - "your-oauth-client-id.apps.googleusercontent.com"
+    forwardOriginalToken: true
+```
+
+```bash
+kubectl apply -f request-authn.yaml
+
+# Test with a valid Google ID token
+TOKEN=$(gcloud auth print-identity-token)
+kubectl run jwt-test \
+  --image=curlimages/curl:latest \
+  --restart=Never \
+  --rm -it \
+  -n sample-app \
+  -- curl -s -H "Authorization: Bearer ${TOKEN}" http://sample:8080
+```
+
+### Step 5.5 — Audit Policy Decisions
+
+```bash
+# Check Envoy RBAC filter stats (allowed vs denied)
+kubectl exec "${POD}" -n "${APP_NAMESPACE}" -c istio-proxy -- \
   pilot-agent request GET stats \
-  | grep -E "rbac\.(allowed|denied)"
-```
-
-### Step 6.5 — Cleanup Authorization Policies
-
-```bash
-kubectl delete authorizationpolicies --all
+  | grep -E "rbac\.(allowed|denied|shadow)"
 ```
 
 ---
 
-## Exercise 7 — Observability: Kiali, Grafana, Jaeger, and Prometheus
+## Exercise 6 — Observability: Metrics, Tracing, and Kiali
 
 ### Objective
 
-Explore the four open-source observability tools installed by the `Istio_GKE` module and
-understand how they provide complementary views of service mesh behaviour.
+Explore the telemetry stack automatically provisioned by Cloud Service Mesh: RED metrics (Rate,
+Errors, Duration), distributed traces, and the service topology graph.
 
-### Step 7.1 — Generate Load for Telemetry
+### Step 6.1 — Cloud Service Mesh Dashboard
 
-Before opening dashboards, generate traffic to populate metrics and traces:
-
+**gcloud (open in browser):**
 ```bash
-for i in $(seq 1 200); do
-  curl -s -o /dev/null "http://${INGRESS_IP}/productpage"
-  sleep 0.2
-done
+gcloud container fleet mesh describe \
+  --project="${PROJECT_ID}" \
+  --format="value(membershipStates)"
+
+# Navigate to: Console > Anthos > Service Mesh
+echo "https://console.cloud.google.com/anthos/meshes?project=${PROJECT_ID}"
 ```
 
-Or use fortio for sustained load:
+The dashboard shows:
+- **Service topology** — which services communicate with which
+- **Goldilocks metrics** — request rate, error rate, latency P50/P90/P99
+- **SLO windows** — current error budget against configured objectives
 
+### Step 6.2 — Query Mesh Metrics in Cloud Monitoring
+
+**gcloud (MQL query):**
 ```bash
-kubectl run fortio \
+gcloud monitoring metrics list \
+  --filter="metric.type:istio" \
+  --project="${PROJECT_ID}" \
+  | grep -E "request_count|request_duration|request_bytes"
+```
+
+**REST API — run an instant MQL query:**
+```bash
+curl -s -X POST \
+  "https://monitoring.googleapis.com/v3/projects/${PROJECT_ID}/timeSeries:query" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "fetch istio_canonical_service::istio.io/service/server/request_count | within 1h | group_by [resource.service_name], sum(val())"
+  }' | jq '.timeSeriesData[].labelValues'
+```
+
+### Step 6.3 — Distributed Tracing via Cloud Trace
+
+CSM auto-instruments traces using the W3C `traceparent` header. No application code change is
+needed.
+
+**gcloud (list recent traces):**
+```bash
+gcloud trace traces list \
+  --project="${PROJECT_ID}" \
+  --start-time="$(date -d '1 hour ago' --utc +%Y-%m-%dT%H:%M:%SZ)" \
+  --end-time="$(date --utc +%Y-%m-%dT%H:%M:%SZ)" \
+  --limit=10
+```
+
+**REST API:**
+```bash
+START=$(date -d '1 hour ago' --utc +%Y-%m-%dT%H:%M:%SZ)
+curl -s \
+  "https://cloudtrace.googleapis.com/v1/projects/${PROJECT_ID}/traces?startTime=${START}&pageSize=5" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.traces[] | {traceId, spans: (.spans | length)}'
+```
+
+**Generate load to produce traces:**
+```bash
+kubectl run trace-gen \
   --image=fortio/fortio:latest \
   --restart=Never \
   --rm -it \
-  -- load -c 5 -qps 10 -t 120s "http://${INGRESS_IP}/productpage"
+  -n "${APP_NAMESPACE}" \
+  -- load -c 5 -qps 10 -t 60s http://sample:8080
 ```
 
-### Step 7.2 — Kiali: Service Topology Graph
+### Step 6.4 — Access Kiali (Service Topology)
+
+Kiali is not deployed by managed CSM by default; Google's dashboard is the primary UI. If you
+have a self-managed Istio layer or want Kiali for deeper exploration:
 
 ```bash
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.20/samples/addons/kiali.yaml -n istio-system
+
 # Port-forward to Kiali
 kubectl port-forward svc/kiali 20001:20001 -n istio-system &
 
 # Open: http://localhost:20001
 ```
 
-In Kiali:
-1. Navigate to **Graph** → select the `default` namespace
-2. Observe the service dependency graph with live traffic flow
-3. Click any edge to see request rate, error rate, and latency
-4. Toggle **Traffic Animation** to see request flow in real time
-5. Navigate to **Workloads** to inspect individual pod health
-
-### Step 7.3 — Grafana: RED Metrics Dashboards
+### Step 6.5 — Prometheus Metrics (Local Scrape)
 
 ```bash
-kubectl port-forward svc/grafana 3000:3000 -n istio-system &
-
-# Open: http://localhost:3000
-```
-
-In Grafana:
-1. Navigate to **Dashboards** → **Istio** folder
-2. Open **Istio Service Dashboard** — select the `reviews` service
-   - **Request Volume**: requests per second
-   - **Success Rate**: percentage of non-5xx responses
-   - **Request Duration**: P50, P90, P99 latency percentiles
-3. Open **Istio Workload Dashboard** to compare individual pod metrics
-
-### Step 7.4 — Jaeger: Distributed Tracing
-
-```bash
-kubectl port-forward svc/tracing 16686:80 -n istio-system &
-
-# Open: http://localhost:16686
-```
-
-In Jaeger:
-1. Select service `productpage.default` from the dropdown
-2. Click **Find Traces**
-3. Click a trace to expand the span waterfall
-4. Identify which service contributes the most latency
-5. Trace IDs are propagated via the `x-b3-traceid` header automatically by Envoy
-
-### Step 7.5 — Prometheus: Raw Metrics
-
-```bash
-kubectl port-forward svc/prometheus 9090:9090 -n istio-system &
-
-# Open: http://localhost:9090
-```
-
-Sample PromQL queries:
-
-```promql
-# Total requests per service
-sum(istio_requests_total) by (destination_service_name)
-
-# Request rate over 5 minutes
-rate(istio_requests_total[5m])
-
-# 99th percentile latency per service
-histogram_quantile(0.99,
-  sum(rate(istio_request_duration_milliseconds_bucket[5m]))
-  by (destination_service_name, le)
-)
-
-# Error rate (5xx responses)
-sum(rate(istio_requests_total{response_code=~"5.*"}[5m]))
-  by (destination_service_name)
-  /
-sum(rate(istio_requests_total[5m]))
-  by (destination_service_name)
-```
-
-### Step 7.6 — Envoy Admin Interface
-
-```bash
-POD=$(kubectl get pod -l app=productpage -o jsonpath='{.items[0].metadata.name}')
-
-kubectl port-forward "${POD}" 15000:15000 &
+# Port-forward to the Envoy admin interface
+kubectl port-forward "${POD}" 15000:15000 -n "${APP_NAMESPACE}" &
 
 # Query Envoy stats directly
 curl -s http://localhost:15000/stats/prometheus \
-  | grep -E "istio_requests_total|upstream_rq"
-
-# View Envoy configuration
-curl -s http://localhost:15000/config_dump | jq '.configs | length'
+  | grep -E "istio_requests_total|istio_request_duration"
 ```
 
 ---
 
-## Exercise 8 — Ambient Mode (ztunnel and Waypoint Proxies)
+## Exercise 7 — Gateway API: Managed External Ingress
 
 ### Objective
 
-If `install_ambient_mesh = true` was set during deployment, explore how ambient mode provides
-L4 mTLS and L7 policies without per-pod Envoy sidecars.
+Expose the mesh-enabled application externally using the **GKE Gateway API** — a Kubernetes-native
+ingress layer that manages a Google Cloud L7 External Load Balancer, TLS certificates, and
+optionally Cloud Armor WAF and IAP.
 
-> **Note:** If you deployed with `install_ambient_mesh = false` (the default), skip to
-> [Cleanup](#13-cleanup). Ambient mode requires a fresh deployment with the flag enabled.
+The App GKE module provisions all of this via `gateway.tf` when `enable_custom_domain = true`.
 
-### Step 8.1 — Verify ztunnel DaemonSet
+### Step 7.1 — Enable the Gateway via RAD UI Update
 
+Return to the RAD UI, navigate to your `App GKE` deployment, update the following variables, and click **Update**:
+
+| Variable | Value |
+|---|---|
+| `enable_custom_domain` | `true` |
+| `application_domains` | `["app.example.com"]` |
+| `service_type` | `ClusterIP` (Gateway handles external exposure) |
+
+This creates:
+- A `Certificate Manager` certificate (Google-managed, auto-renewed)
+- A `Certificate Map` and `Certificate Map Entry`
+- A GKE `Gateway` resource (`gke-l7-global-external-managed` class)
+- An `HTTPRoute` pointing to the application Service
+- A `GCPBackendPolicy` for timeout, IAP, and Cloud Armor attachment
+
+### Step 7.2 — Retrieve the Gateway's External IP
+
+**kubectl:**
 ```bash
-# ztunnel runs on every node (one pod per node)
-kubectl get daemonset ztunnel -n istio-system
-kubectl get pods -n istio-system -l app=ztunnel -o wide
+kubectl get gateway -n "${APP_NAMESPACE}" -o wide
 
-# Verify no sidecars in application pods (1/1 READY, not 2/2)
-kubectl get pods
+GATEWAY_IP=$(kubectl get gateway -n "${APP_NAMESPACE}" \
+  -o jsonpath='{.items[0].status.addresses[0].value}')
+echo "Gateway IP: ${GATEWAY_IP}"
 ```
 
-### Step 8.2 — Confirm Ambient Mode Label
-
+**gcloud (via reserved address):**
 ```bash
-kubectl get namespace default --show-labels
-# Should include: istio.io/dataplane-mode=ambient
-```
-
-### Step 8.3 — Verify Waypoint Proxy
-
-```bash
-# The module deploys a waypoint proxy for the default namespace
-kubectl get gateway -n default
-
-# Check waypoint proxy status
-istioctl waypoint status
-```
-
-### Step 8.4 — mTLS in Ambient Mode
-
-With ambient mode, ztunnel handles L4 mTLS transparently. Verify:
-
-```bash
-# Check ztunnel logs for CONNECT tunnels (mTLS)
-kubectl logs -n istio-system -l app=ztunnel --tail=20 \
-  | grep -E "CONNECT|tls"
-
-# Proxy status shows ztunnel-managed workloads
-istioctl proxy-status
-```
-
-### Step 8.5 — L7 Policy via Waypoint Proxy
-
-Authorization policies require the waypoint proxy for L7 enforcement in ambient mode:
-
-```yaml
-# ambient-authz.yaml
-apiVersion: security.istio.io/v1beta1
-kind: AuthorizationPolicy
-metadata:
-  name: allow-reviews-only
-  namespace: default
-spec:
-  targetRef:
-    group: gateway.networking.k8s.io
-    kind: Gateway
-    name: waypoint
-  selector:
-    matchLabels:
-      app: ratings
-  rules:
-  - from:
-    - source:
-        principals:
-        - "cluster.local/ns/default/sa/bookinfo-reviews"
-```
-
-```bash
-kubectl apply -f ambient-authz.yaml
-```
-
----
-
-## 13. Cleanup
-
-Return to the RAD UI, navigate to your `Istio_GKE` deployment, and click **Undeploy** (or
-**Delete**). This removes the GKE cluster, VPC network, and all Istio components.
-
-### Manual Cleanup (if needed)
-
-```bash
-# Delete GKE cluster
-gcloud container clusters delete "${CLUSTER_NAME}" \
-  --region "${REGION}" \
-  --project "${PROJECT_ID}" \
-  --quiet
-
-# Release reserved static IPs
 gcloud compute addresses list \
-  --filter="name~istio" \
+  --filter="name~sample" \
   --project="${PROJECT_ID}"
 ```
 
-Kill port-forward processes:
+**REST API:**
+```bash
+curl -s \
+  "https://compute.googleapis.com/compute/v1/projects/${PROJECT_ID}/global/addresses" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.items[] | select(.name | test("sample")) | {name, address, status}'
+```
+
+### Step 7.3 — Test HTTP and HTTPS Endpoints
 
 ```bash
-pkill -f "kubectl port-forward"
+# HTTP (port 80)
+curl -v "http://${GATEWAY_IP}"
+
+# HTTPS (requires DNS A record pointing app.example.com → GATEWAY_IP)
+curl -v "https://app.example.com"
+```
+
+### Step 7.4 — Inspect the HTTPRoute
+
+```bash
+kubectl describe httproute -n "${APP_NAMESPACE}"
+```
+
+### Step 7.5 — Cross-Namespace Backend with ReferenceGrant
+
+When Cloud Deploy stages are active, the backend Service lives in a per-stage namespace. The
+module creates a `ReferenceGrant` to permit the cross-namespace `backendRef`:
+
+```bash
+kubectl get referencegrant -A
+kubectl describe referencegrant -n "${APP_NAMESPACE}"
 ```
 
 ---
 
-## 14. Reference
+## Exercise 8 — Network Segmentation with Kubernetes NetworkPolicies
+
+### Objective
+
+Understand how Kubernetes `NetworkPolicy` resources (backed by GKE Dataplane V2) complement Istio's
+L7 enforcement with L3/L4 restrictions, creating a defence-in-depth posture.
+
+The App GKE module creates these policies when `enable_network_segmentation = true`.
+
+### Step 8.1 — Review the Generated NetworkPolicies
+
+```bash
+kubectl get networkpolicies -n "${APP_NAMESPACE}"
+kubectl describe networkpolicy "${APP_NAMESPACE}-namespace-isolation" -n "${APP_NAMESPACE}"
+```
+
+The policy enforces:
+
+| Direction | Rule | Purpose |
+|---|---|---|
+| Ingress | Same-namespace pods | Intra-service communication |
+| Ingress | `35.191.0.0/16`, `130.211.0.0/22` | GFE health checks from load balancer |
+| Ingress | `35.235.240.0/20` | GKE control plane health probes |
+| Egress | Port 53 UDP/TCP | DNS resolution |
+| Egress | `199.36.153.4/30`, `199.36.153.8/30` | GCP APIs via Private Google Access |
+| Egress | Same-namespace pods | Sidecar and service-to-service mesh traffic |
+
+### Step 8.2 — Test Policy Enforcement
+
+```bash
+# This should be BLOCKED (cross-namespace, no matching ingress rule)
+kubectl run blocked-test \
+  --image=curlimages/curl:latest \
+  --restart=Never \
+  --rm -it \
+  -n default \
+  -- curl -v --max-time 5 http://sample.sample-app.svc.cluster.local:8080
+# Expected: connection timeout
+
+# This should SUCCEED (same-namespace)
+kubectl run allowed-test \
+  --image=curlimages/curl:latest \
+  --restart=Never \
+  --rm -it \
+  -n sample-app \
+  -- curl -s http://sample:8080
+```
+
+### Step 8.3 — Add a Cross-Namespace Allow Rule
+
+If you have a legitimate service in another namespace that needs access:
+
+```yaml
+# allow-from-monitoring.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-monitoring
+  namespace: sample-app
+spec:
+  podSelector:
+    matchLabels:
+      app: sample
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+      podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - protocol: TCP
+      port: 15090   # Envoy Prometheus scrape port
+```
+
+```bash
+kubectl apply -f allow-from-monitoring.yaml
+```
+
+### Step 8.4 — Verify with GKE Dataplane V2 Policy Logging
+
+GKE Dataplane V2 can log NetworkPolicy decisions to Cloud Logging:
+
+**gcloud (enable policy logging):**
+```bash
+gcloud container clusters update "${CLUSTER_NAME}" \
+  --enable-network-policy-logging \
+  --region "${REGION}" \
+  --project "${PROJECT_ID}"
+```
+
+**Query logs:**
+```bash
+gcloud logging read \
+  "resource.type=k8s_node AND jsonPayload.\"@type\"=\"type.googleapis.com/google.cloud.networkpolicy.v1.NetworkPolicyEvent\"" \
+  --project="${PROJECT_ID}" \
+  --limit=20 \
+  --format=json \
+  | jq '.[] | {pod: .jsonPayload.reporter, disposition: .jsonPayload.disposition, dest: .jsonPayload.dest}'
+```
+
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://logging.googleapis.com/v2/entries:list" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"resourceNames\": [\"projects/${PROJECT_ID}\"],
+    \"filter\": \"resource.type=k8s_node jsonPayload.@type=type.googleapis.com/google.cloud.networkpolicy.v1.NetworkPolicyEvent\",
+    \"pageSize\": 10
+  }" | jq '.entries[] | {disposition: .jsonPayload.disposition}'
+```
+
+---
+
+## Exercise 9 — Cloud Armor WAF on the GKE Gateway
+
+### Objective
+
+Enable Cloud Armor Web Application Firewall on the GKE Gateway backend, observe OWASP Top 10
+rule enforcement, and test rate limiting.
+
+The App GKE module creates an inline Cloud Armor security policy when `enable_cloud_armor = true`
+and attaches it to the Gateway via `GCPBackendPolicy`.
+
+### Step 9.1 — Enable Cloud Armor via RAD UI Update
+
+Return to the RAD UI, navigate to your `App GKE` deployment, update the following variables, and click **Update**:
+
+| Variable | Value |
+|---|---|
+| `enable_cloud_armor` | `true` |
+| `admin_ip_ranges` | `["YOUR_CIDR/32"]` (bypass WAF for testing) |
+
+This creates a policy with:
+- OWASP Top 10 preconfigured rules (SQLi, XSS, LFI, RCE)
+- Adaptive Protection (AI-based DDoS)
+- Rate limiting: 500 requests/minute per IP, 5-minute ban
+
+### Step 9.2 — Verify the Policy Attachment
+
+**gcloud:**
+```bash
+gcloud compute security-policies list --project="${PROJECT_ID}"
+
+gcloud compute security-policies describe "sample-waf-policy" \
+  --project="${PROJECT_ID}" \
+  --format="table(rules[].priority,rules[].action,rules[].description)"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://compute.googleapis.com/compute/v1/projects/${PROJECT_ID}/global/securityPolicies/sample-waf-policy" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.rules[] | {priority, action, description}'
+```
+
+### Step 9.3 — Test SQL Injection Blocking
+
+```bash
+# This should return HTTP 403 (rule priority 1000)
+curl -v "https://app.example.com/?id=1' OR '1'='1"
+
+# This should return HTTP 403 (XSS — rule priority 1001)
+curl -v "https://app.example.com/?q=<script>alert(1)</script>"
+
+# Legitimate request — should succeed
+curl -v "https://app.example.com/"
+```
+
+### Step 9.4 — Monitor Cloud Armor Logs
+
+**gcloud:**
+```bash
+gcloud logging read \
+  "resource.type=http_load_balancer AND jsonPayload.enforcedSecurityPolicy.outcome=DENY" \
+  --project="${PROJECT_ID}" \
+  --limit=20 \
+  --format=json \
+  | jq '.[] | {
+    timestamp: .timestamp,
+    ip: .httpRequest.remoteIp,
+    url: .httpRequest.requestUrl,
+    rule: .jsonPayload.enforcedSecurityPolicy.name
+  }'
+```
+
+**REST API:**
+```bash
+curl -s -X POST \
+  "https://logging.googleapis.com/v2/entries:list" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"resourceNames\": [\"projects/${PROJECT_ID}\"],
+    \"filter\": \"resource.type=http_load_balancer jsonPayload.enforcedSecurityPolicy.outcome=DENY\",
+    \"pageSize\": 10
+  }" | jq '.entries[].jsonPayload.enforcedSecurityPolicy'
+```
+
+### Step 9.5 — Test Rate Limiting
+
+```bash
+# Send 600 rapid requests (threshold is 500/minute)
+kubectl run rate-test \
+  --image=fortio/fortio:latest \
+  --restart=Never \
+  --rm -it \
+  -n "${APP_NAMESPACE}" \
+  -- load -c 10 -qps 100 -t 10s https://app.example.com
+
+# Check for 429 responses — IPs exceeding the limit are banned for 5 minutes
+```
+
+### Step 9.6 — Adaptive Protection Events
+
+**gcloud:**
+```bash
+gcloud compute security-policies get-rule 0 \
+  --security-policy="sample-waf-policy" \
+  --project="${PROJECT_ID}"
+```
+
+**REST API — list Adaptive Protection events:**
+```bash
+curl -s \
+  "https://compute.googleapis.com/compute/v1/projects/${PROJECT_ID}/global/securityPolicies/sample-waf-policy" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.adaptiveProtectionConfig'
+```
+
+---
+
+## Exercise 10 — Multi-Cluster Service Mesh
+
+### Objective
+
+Register a second GKE cluster to the Fleet, enable Cloud Service Mesh across both clusters, and
+observe automatic cross-cluster service discovery — traffic from Cluster A can reach services in
+Cluster B without any extra configuration.
+
+### Prerequisites
+
+A second GKE cluster, or re-apply `Services GCP` with a second cluster configuration block.
+
+### Step 10.1 — Register the Second Cluster
+
+**gcloud:**
+```bash
+gcloud container clusters get-credentials "${CLUSTER_NAME}-2" \
+  --region "${REGION}" \
+  --project "${PROJECT_ID}"
+
+gcloud container fleet memberships register "${CLUSTER_NAME}-2" \
+  --gke-cluster="${REGION}/${CLUSTER_NAME}-2" \
+  --enable-workload-identity \
+  --project="${PROJECT_ID}"
+```
+
+**REST API — create Fleet membership:**
+```bash
+curl -s -X POST \
+  "https://gkehub.googleapis.com/v1/projects/${PROJECT_ID}/locations/global/memberships?membershipId=${CLUSTER_NAME}-2" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"endpoint\": {
+      \"gkeCluster\": {
+        \"resourceLink\": \"//container.googleapis.com/projects/${PROJECT_ID}/locations/${REGION}/clusters/${CLUSTER_NAME}-2\"
+      }
+    },
+    \"authority\": {
+      \"issuer\": \"https://container.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/clusters/${CLUSTER_NAME}-2\"
+    }
+  }"
+```
+
+### Step 10.2 — Enable CSM on the Second Cluster
+
+Via the RAD UI, update the `Services GCP` deployment to include the second cluster in the Fleet Hub CSM feature. The module's `for_each` over `cluster_network_config` creates a Fleet Hub feature membership for every cluster automatically when `configure_cloud_service_mesh = true`.
+
+Or apply the mesh feature membership directly:
+
+**gcloud:**
+```bash
+gcloud container fleet mesh update \
+  --membership="${CLUSTER_NAME}-2" \
+  --management=automatic \
+  --project="${PROJECT_ID}"
+```
+
+**REST API:**
+```bash
+curl -s -X PATCH \
+  "https://gkehub.googleapis.com/v1/projects/${PROJECT_ID}/locations/global/features/servicemesh" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"membershipSpecs\": {
+      \"projects/${PROJECT_ID}/locations/global/memberships/${CLUSTER_NAME}-2\": {
+        \"mesh\": {\"management\": \"MANAGEMENT_AUTOMATIC\"}
+      }
+    }
+  }"
+```
+
+### Step 10.3 — Verify Cross-Cluster Service Discovery
+
+```bash
+# On Cluster 1 — confirm service endpoint from Cluster 2 is visible
+kubectl exec "${POD}" -n "${APP_NAMESPACE}" -c istio-proxy -- \
+  pilot-agent request GET clusters | grep "${CLUSTER_NAME}-2"
+
+# Inspect the ServiceEntry created by Fleet multi-cluster
+kubectl get serviceentries -A
+```
+
+### Step 10.4 — Multi-Cluster Ingress
+
+When `configure_cloud_service_mesh = true` and multiple clusters are registered, the
+`Services GCP` module creates the `multiclusteringress` Fleet feature, designating one cluster
+as the config cluster:
+
+**gcloud:**
+```bash
+gcloud container fleet ingress describe --project="${PROJECT_ID}"
+```
+
+**REST API:**
+```bash
+curl -s \
+  "https://gkehub.googleapis.com/v1/projects/${PROJECT_ID}/locations/global/features/multiclusteringress" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  | jq '.spec.multiclusteringress'
+```
+
+---
+
+## 15. Cleanup
+
+When you are finished, return to the RAD UI and undeploy in the following order to avoid ongoing charges:
+
+1. Navigate to the `App GKE` deployment and click **Undeploy** (or **Delete**).
+2. Once App GKE is fully removed, navigate to the `Services GCP` deployment and click **Undeploy** (or **Delete**).
+
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+
+### Manual Cleanup (if needed)
+
+**gcloud:**
+```bash
+# Remove Fleet memberships
+gcloud container fleet memberships delete "${CLUSTER_NAME}" \
+  --project="${PROJECT_ID}" --quiet
+gcloud container fleet memberships delete "${CLUSTER_NAME}-2" \
+  --project="${PROJECT_ID}" --quiet
+
+# Delete GKE clusters
+gcloud container clusters delete "${CLUSTER_NAME}" \
+  --region "${REGION}" --project "${PROJECT_ID}" --quiet
+
+# Delete Cloud Armor policy
+gcloud compute security-policies delete "sample-waf-policy" \
+  --project="${PROJECT_ID}" --quiet
+
+# Delete Certificate Manager resources
+gcloud certificate-manager certificates list --project="${PROJECT_ID}"
+gcloud certificate-manager maps list --project="${PROJECT_ID}"
+```
+
+**REST API — delete Fleet membership:**
+```bash
+curl -s -X DELETE \
+  "https://gkehub.googleapis.com/v1/projects/${PROJECT_ID}/locations/global/memberships/${CLUSTER_NAME}" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)"
+```
+
+**REST API — delete GKE cluster:**
+```bash
+curl -s -X DELETE \
+  "https://container.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/clusters/${CLUSTER_NAME}" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)"
+```
+
+---
+
+## 16. Reference
 
 ### Key Module Variables
 
+#### Services GCP
+
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `project_id` | string | — | GCP project ID (required) |
-| `region` | string | `us-central1` | GCP region for all resources |
-| `gke_cluster` | string | `gke-cluster` | GKE cluster name |
-| `istio_version` | string | `1.24.2` | Open-source Istio version to install |
-| `install_ambient_mesh` | bool | `false` | `true` for ambient mode, `false` for sidecar |
-| `deploy_application` | bool | `true` | Deploy Bookinfo sample application |
-| `create_network` | bool | `true` | Create a new VPC; set `false` to use existing |
-| `create_cluster` | bool | `true` | Create a new GKE cluster; set `false` to use existing |
+| `configure_cloud_service_mesh` | bool | `false` | Enables Fleet Hub Cloud Service Mesh feature with `MANAGEMENT_AUTOMATIC` |
+| `create_google_kubernetes_engine` | bool | `false` | Creates a GKE Autopilot cluster |
+
+#### App GKE
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `configure_service_mesh` | bool | `false` | Labels the app namespace `istio.io/rev=asm-managed` to enable sidecar injection |
+| `enable_network_segmentation` | bool | `false` | Creates Kubernetes NetworkPolicies restricting pod ingress/egress |
+| `enable_cloud_armor` | bool | `false` | Creates a Cloud Armor WAF policy and attaches it via GCPBackendPolicy |
+| `enable_iap` | bool | `false` | Attaches Identity-Aware Proxy to the Gateway backend |
+| `enable_custom_domain` | bool | `false` | Deploys the GKE Gateway API stack (Certificate Manager, Gateway, HTTPRoute) |
+| `application_domains` | list(string) | `[]` | Domains for Certificate Manager and HTTPRoute hostnames |
+| `service_type` | string | `LoadBalancer` | Use `ClusterIP` when Gateway API handles external exposure |
 
 ### Istio Resource Reference
 
@@ -1109,7 +1523,6 @@ pkill -f "kubectl port-forward"
 |---|---|---|
 | `VirtualService` | `networking.istio.io/v1beta1` | Traffic routing rules (weight, headers, fault injection) |
 | `DestinationRule` | `networking.istio.io/v1beta1` | Subsets, load balancing, circuit breaking |
-| `Gateway` | `networking.istio.io/v1beta1` | Inbound/outbound traffic at mesh boundary |
 | `PeerAuthentication` | `security.istio.io/v1beta1` | mTLS mode per namespace or workload |
 | `AuthorizationPolicy` | `security.istio.io/v1beta1` | L7 allow/deny based on identity, path, method |
 | `RequestAuthentication` | `security.istio.io/v1beta1` | JWT issuer validation |
@@ -1117,34 +1530,39 @@ pkill -f "kubectl port-forward"
 ### Useful Commands Reference
 
 ```bash
-# Istio status
-istioctl version
+# Mesh status
+gcloud container fleet mesh describe --project="${PROJECT_ID}"
+
+# Fleet membership list
+gcloud container fleet memberships list --project="${PROJECT_ID}"
+
+# Proxy status for all sidecars
 istioctl proxy-status
-istioctl analyze
 
-# Proxy config for a pod
-istioctl proxy-config cluster <pod-name>
-istioctl proxy-config route <pod-name>
-istioctl proxy-config listener <pod-name>
+# Analyse mesh configuration for issues
+istioctl analyze -n "${APP_NAMESPACE}"
 
-# Check auth policy for a pod
-istioctl x authz check <pod-name>
+# Check effective policy for a pod
+istioctl x authz check "${POD}" -n "${APP_NAMESPACE}"
+
+# View Envoy config for a pod
+istioctl proxy-config all "${POD}" -n "${APP_NAMESPACE}"
 
 # Tail Envoy access logs
-kubectl logs <pod> -c istio-proxy -f
+kubectl logs "${POD}" -n "${APP_NAMESPACE}" -c istio-proxy -f
 
-# Port-forward observability tools
-kubectl port-forward svc/kiali 20001:20001 -n istio-system
-kubectl port-forward svc/grafana 3000:3000 -n istio-system
-kubectl port-forward svc/tracing 16686:80 -n istio-system
-kubectl port-forward svc/prometheus 9090:9090 -n istio-system
+# Generate load for metric/trace generation
+kubectl run fortio --image=fortio/fortio --restart=Never --rm -it \
+  -n "${APP_NAMESPACE}" \
+  -- load -c 5 -qps 20 -t 120s http://sample:8080
 ```
 
 ### Further Reading
 
+- [Cloud Service Mesh documentation](https://cloud.google.com/service-mesh/docs)
 - [Istio traffic management concepts](https://istio.io/latest/docs/concepts/traffic-management/)
 - [Istio security concepts (mTLS, AuthorizationPolicy)](https://istio.io/latest/docs/concepts/security/)
-- [Istio ambient mode overview](https://istio.io/latest/docs/ops/ambient/)
-- [Bookinfo sample application](https://istio.io/latest/docs/examples/bookinfo/)
-- [Kiali documentation](https://kiali.io/docs/)
-- [GKE with open-source Istio](https://cloud.google.com/kubernetes-engine/docs/tutorials/installing-istio)
+- [GKE Tutorial: Secure services with Istio](https://cloud.google.com/kubernetes-engine/docs/tutorials/secure-services-istio)
+- [Fleet-based service mesh setup](https://cloud.google.com/service-mesh/docs/configure-managed-anthos-service-mesh)
+- [GKE Gateway API overview](https://cloud.google.com/kubernetes-engine/docs/concepts/gateway-api)
+- [Cloud Armor WAF with GKE](https://cloud.google.com/armor/docs/configure-security-policies)

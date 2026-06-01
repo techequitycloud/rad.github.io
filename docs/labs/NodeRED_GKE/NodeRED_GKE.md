@@ -15,7 +15,7 @@ Node-RED is a flow-based programming tool for event-driven applications — orig
 
 ### What the Module Automates
 
-- GKE Autopilot cluster (via Services_GCP prerequisite)
+- GKE Autopilot cluster (via Services GCP prerequisite)
 - Kubernetes namespace, Deployment, and LoadBalancer Service
 - Cloud Filestore NFS instance mounted at `/data` for persistent flow storage
 - Cloud Storage bucket for backups and artifacts
@@ -63,7 +63,7 @@ Key REST APIs exercised:
 
 Before deploying, ensure the following:
 
-1. **Services_GCP** module is deployed (provides VPC, GKE cluster, Filestore NFS).
+1. **Services GCP** module is deployed (provides VPC, GKE cluster, Filestore NFS).
 2. `gcloud` CLI is authenticated: `gcloud auth application-default login`
 3. `kubectl` is installed.
 4. You have a GCP project with billing enabled.
@@ -77,7 +77,7 @@ Before deploying, ensure the following:
 
 ### Variables
 
-In the RAD UI, open the NodeRED_GKE module and fill in the deployment form:
+In the RAD UI, open the NodeRED GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
@@ -518,9 +518,9 @@ When you are finished with the lab, return to the RAD UI, navigate to your deplo
 
 **What is removed:** Kubernetes Deployment, Service, namespace, Cloud Filestore NFS instance, GCS bucket, Secret Manager secrets, Artifact Registry images, static IP, Cloud Monitoring uptime checks.
 
-**What is not removed:** The GKE cluster itself (managed by Services_GCP), the VPC (managed by Services_GCP).
+**What is not removed:** The GKE cluster itself (managed by Services GCP), the VPC (managed by Services GCP).
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

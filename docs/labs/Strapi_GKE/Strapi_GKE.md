@@ -15,7 +15,7 @@ Strapi is an open-source headless CMS that provides a content management interfa
 
 ### What the Module Automates
 
-- GKE Autopilot cluster targeting (uses the Services_GCP-managed cluster)
+- GKE Autopilot cluster targeting (uses the Services GCP-managed cluster)
 - Kubernetes namespace, Deployment, and LoadBalancer Service
 - Cloud SQL PostgreSQL 15 instance with dedicated database user
 - Secret Manager secrets for Strapi APP_KEYS, JWT_SECRET, API_TOKEN_SALT, ADMIN_JWT_SECRET, and database credentials
@@ -55,7 +55,7 @@ This lab uses three primary interfaces:
 
 ## Prerequisites
 
-1. **Services_GCP deployed** — this module depends on `Services_GCP`. The VPC network, GKE Autopilot cluster, Cloud SQL instance, Artifact Registry, and shared service accounts must exist before deploying Strapi_GKE.
+1. **Services GCP deployed** — this module depends on `Services GCP`. The VPC network, GKE Autopilot cluster, Cloud SQL instance, Artifact Registry, and shared service accounts must exist before deploying Strapi GKE.
 2. **GCP project with billing enabled.**
 3. **gcloud CLI** authenticated: `gcloud auth application-default login`
 4. **kubectl** installed and available on your PATH.
@@ -68,7 +68,7 @@ This lab uses three primary interfaces:
 
 ### Variables
 
-In the RAD UI, open the Strapi_GKE module and fill in the deployment form:
+In the RAD UI, open the Strapi GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
@@ -466,7 +466,7 @@ When you are finished with the lab, return to the RAD UI, navigate to your deplo
 
 **Expected result:** All Kubernetes workloads, the Cloud SQL instance, NFS Filestore, Secret Manager secrets, GCS buckets, and Artifact Registry images are removed from the project.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

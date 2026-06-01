@@ -1,29 +1,29 @@
 ---
-title: "Metabase_Common Module"
+title: "Metabase Common Module"
 sidebar_label: "Metabase Common"
 ---
 
-# Metabase_Common Module
+# Metabase Common Module
 
-`Metabase_Common` is the shared application configuration module for Metabase deployments. It is called internally by `Metabase_CloudRun` and `Metabase_GKE` — it is not deployed directly.
+`Metabase Common` is the shared application configuration module for Metabase deployments. It is called internally by `Metabase CloudRun` and `Metabase GKE` — it is not deployed directly.
 
 ---
 
 ## Purpose
 
-`Metabase_Common` assembles the four values consumed by the Foundation Modules (`App_CloudRun` and `App_GKE`):
+`Metabase Common` assembles the four values consumed by the Foundation Modules (`App CloudRun` and `App GKE`):
 
 - **`config`** — The application configuration object containing the container image, port, resource limits, database settings, probes, environment variables, and initialization jobs.
 - **`storage_buckets`** — Returns an empty list. Metabase does not require dedicated GCS storage — all state is stored in the PostgreSQL application database.
 - **`path`** — The filesystem path to this module, used to resolve the `db-init.sh` script path.
 
-> **Note:** Unlike Grafana_Common, Metabase_Common does not expose a `secret_ids` output — `metabase.tf` sets `module_secret_env_vars = {}` directly.
+> **Note:** Unlike Grafana Common, Metabase Common does not expose a `secret_ids` output — `metabase.tf` sets `module_secret_env_vars = {}` directly.
 
 ---
 
 ## Container Configuration
 
-`Metabase_Common` sets the following fixed values in its `config` output:
+`Metabase Common` sets the following fixed values in its `config` output:
 
 | Field | Value | Notes |
 |---|---|---|
@@ -39,7 +39,7 @@ sidebar_label: "Metabase Common"
 
 ## Fixed Environment Variables
 
-`Metabase_Common` merges the following environment variables into the `config.environment_variables` output. Do not override these in the parent module:
+`Metabase Common` merges the following environment variables into the `config.environment_variables` output. Do not override these in the parent module:
 
 | Variable | Value | Notes |
 |---|---|---|
@@ -62,7 +62,7 @@ Both the startup and liveness probes target `/api/health`. Metabase requires a g
 
 ## Default Initialization Job
 
-When `initialization_jobs` is empty (the default), `Metabase_Common` provides a default `db-init` job:
+When `initialization_jobs` is empty (the default), `Metabase Common` provides a default `db-init` job:
 
 | Field | Value |
 |---|---|
@@ -80,7 +80,7 @@ The `db-init.sh` script idempotently creates the Metabase PostgreSQL database an
 
 ## Storage Buckets
 
-`Metabase_Common` returns an empty storage buckets list. Metabase stores all application state in PostgreSQL. Add buckets via the `storage_buckets` variable in the parent CloudRun or GKE module if required (e.g., for Metabase Enterprise Edition S3-compatible storage or custom plugin artifacts).
+`Metabase Common` returns an empty storage buckets list. Metabase stores all application state in PostgreSQL. Add buckets via the `storage_buckets` variable in the parent CloudRun or GKE module if required (e.g., for Metabase Enterprise Edition S3-compatible storage or custom plugin artifacts).
 
 ---
 

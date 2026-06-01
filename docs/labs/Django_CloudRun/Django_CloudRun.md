@@ -73,11 +73,11 @@ export DB_SECRET=$(gcloud secrets list \
 |---|---|
 | gcloud CLI | Authenticated (`gcloud auth login`) |
 | GCP project with billing | Active billing account linked |
-| Services_GCP module deployed | Provides VPC, Cloud SQL, Artifact Registry, and Filestore |
+| Services GCP module deployed | Provides VPC, Cloud SQL, Artifact Registry, and Filestore |
 | Service account | `roles/owner` granted in the target project |
 | RAD UI access | Permission to deploy modules in the target GCP project |
 
-The `Services_GCP` module **must** be deployed and healthy before running this module. It supplies the shared VPC, Cloud SQL instance, Artifact Registry repository, and Filestore NFS server that Django_CloudRun discovers automatically at deploy time.
+The `Services GCP` module **must** be deployed and healthy before running this module. It supplies the shared VPC, Cloud SQL instance, Artifact Registry repository, and Filestore NFS server that Django CloudRun discovers automatically at deploy time.
 
 ---
 
@@ -553,7 +553,7 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Uptime checks and alert policies | < 1 minute |
 | **Total** | **6–12 minutes** |
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

@@ -1,13 +1,13 @@
 ---
-title: "Temporal_Common Shared Infrastructure Module"
+title: "Temporal Common Shared Infrastructure Module"
 sidebar_label: "Temporal Common"
 ---
 
-# Temporal_Common Shared Infrastructure Module
+# Temporal Common Shared Infrastructure Module
 
-The `Temporal_Common` module provisions the database infrastructure required by the Temporal Workflow Engine on Google Cloud Platform. It **creates Cloud SQL resources** (a database user, two PostgreSQL databases, and one Secret Manager secret) and exposes outputs consumed by `Temporal_GKE`.
+The `Temporal Common` module provisions the database infrastructure required by the Temporal Workflow Engine on Google Cloud Platform. It **creates Cloud SQL resources** (a database user, two PostgreSQL databases, and one Secret Manager secret) and exposes outputs consumed by `Temporal GKE`.
 
-Unlike most `*_Common` modules, `Temporal_Common` does **not** produce a `config` output. It is a lower-level infrastructure module that manages only the Temporal-specific Cloud SQL objects and the associated database password secret.
+Unlike most `*_Common` modules, `Temporal Common` does **not** produce a `config` output. It is a lower-level infrastructure module that manages only the Temporal-specific Cloud SQL objects and the associated database password secret.
 
 ---
 
@@ -81,13 +81,13 @@ When `resource_prefix` is not set, the prefix is auto-generated as `app<applicat
 | `storage_buckets` | `list` | Always empty — Temporal does not use GCS buckets |
 | `path` | `string` | Filesystem path of this module; used to reference `scripts/schema-init.sh` |
 
-The `secret_ids` output maps the `POSTGRES_PWD` environment variable name to the Secret Manager secret ID. `Temporal_GKE` passes this map directly as `module_secret_env_vars` to `App_GKE`, which injects the secret value into the Temporal server pod at runtime.
+The `secret_ids` output maps the `POSTGRES_PWD` environment variable name to the Secret Manager secret ID. `Temporal GKE` passes this map directly as `module_secret_env_vars` to `App GKE`, which injects the secret value into the Temporal server pod at runtime.
 
 ---
 
 ## 4. Scripts Directory
 
-`Temporal_Common` ships one script in `scripts/`:
+`Temporal Common` ships one script in `scripts/`:
 
 | File | Purpose |
 |---|---|
@@ -97,13 +97,13 @@ The `secret_ids` output maps the `POSTGRES_PWD` environment variable name to the
 1. Initialise the default schema (`setup-schema -v 0.0`, then `update-schema`).
 2. Initialise the visibility schema with the same pattern.
 
-This script is retained for use-cases where manual or external schema management is preferred. In the default `Temporal_GKE` deployment, schema initialisation is handled automatically by the `temporalio/auto-setup` image at startup.
+This script is retained for use-cases where manual or external schema management is preferred. In the default `Temporal GKE` deployment, schema initialisation is handled automatically by the `temporalio/auto-setup` image at startup.
 
 ---
 
-## 5. Relationship to Temporal_GKE
+## 5. Relationship to Temporal GKE
 
-`Temporal_GKE` calls `Temporal_Common` after running `sql_discovery` to locate the Services_GCP-managed Cloud SQL instance:
+`Temporal GKE` calls `Temporal Common` after running `sql_discovery` to locate the Services GCP-managed Cloud SQL instance:
 
 ```hcl
 module "temporal_common" {
@@ -119,7 +119,7 @@ module "temporal_common" {
 }
 ```
 
-The `resource_prefix` is passed explicitly so that all Secret Manager secrets align with the resource names produced by `App_GKE`. The outputs are then consumed as:
+The `resource_prefix` is passed explicitly so that all Secret Manager secrets align with the resource names produced by `App GKE`. The outputs are then consumed as:
 
 ```hcl
 module_secret_env_vars = module.temporal_common.secret_ids
@@ -137,7 +137,7 @@ environment_variables = {
 
 ## 6. Input Variables
 
-`Temporal_Common` is not intended to be called directly by end users. All variables are passed from `Temporal_GKE`.
+`Temporal Common` is not intended to be called directly by end users. All variables are passed from `Temporal GKE`.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -153,5 +153,5 @@ environment_variables = {
 
 ## 7. Platform-Specific Notes
 
-- `Temporal_Common` is GKE-only. There is no `Temporal_CloudRun` module because Temporal's gRPC-based architecture and long-lived workflow execution model are not suitable for Cloud Run's stateless, request-scoped model.
-- The visibility database (`_vis` suffix) is used by the standard PostgreSQL visibility store. When `enable_elasticsearch = true` in `Temporal_GKE`, Elasticsearch takes over as the advanced visibility store, but the `_vis` database continues to exist in Cloud SQL.
+- `Temporal Common` is GKE-only. There is no `Temporal CloudRun` module because Temporal's gRPC-based architecture and long-lived workflow execution model are not suitable for Cloud Run's stateless, request-scoped model.
+- The visibility database (`_vis` suffix) is used by the standard PostgreSQL visibility store. When `enable_elasticsearch = true` in `Temporal GKE`, Elasticsearch takes over as the advanced visibility store, but the `_vis` database continues to exist in Cloud SQL.

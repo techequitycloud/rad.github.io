@@ -1,13 +1,13 @@
 ---
-title: "Vaultwarden_GKE Module — Configuration Guide"
+title: "Vaultwarden GKE Module — Configuration Guide"
 sidebar_label: "Vaultwarden GKE"
 ---
 
-# Vaultwarden_GKE Module — Configuration Guide
+# Vaultwarden GKE Module — Configuration Guide
 
 This guide describes every configuration variable available in the `Vaultwarden_GKE` module. `Vaultwarden_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Vaultwarden_Common`](../Vaultwarden_Common/Vaultwarden_Common.md) shared application configuration to deploy [Vaultwarden](https://github.com/dani-garcia/vaultwarden) on Google Kubernetes Engine (GKE) Autopilot.
 
-Most configuration options in `Vaultwarden_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the same documentation.
+Most configuration options in `Vaultwarden GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the same documentation.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -15,7 +15,7 @@ Most configuration options in `Vaultwarden_GKE` map directly to the same options
 
 ## Standard Configuration Reference
 
-| Configuration Area | App_GKE.md Section | Vaultwarden-Specific Notes |
+| Configuration Area | App GKE.md Section | Vaultwarden-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Vaultwarden-specific `module_description` and `module_services` defaults are pre-set. |
 | Project & Identity | §2 IAM & Access Control | Identical. |
@@ -29,21 +29,21 @@ Most configuration options in `Vaultwarden_GKE` map directly to the same options
 | Observability & Health Checks | §3.A Compute (GKE Autopilot) | Probes target `/alive`; see [Group 13](#group-13-observability--health). |
 | Cloud Armor WAF | §4.A Cloud Armor WAF | Recommended for Vaultwarden. |
 | Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Identical. |
-| Stateful Workloads | StatefulSet config in App_GKE | **StatefulSet is the default workload type** with a 10 Gi PVC at `/data`; see [Group 18](#group-18-stateful-workloads). |
+| Stateful Workloads | StatefulSet config in App GKE | **StatefulSet is the default workload type** with a 10 Gi PVC at `/data`; see [Group 18](#group-18-stateful-workloads). |
 | Traffic & Ingress | §5 Traffic & Ingress | `session_affinity = "ClientIP"` by default; see [Group 17](#group-17-gke-backend-configuration). |
 
 ---
 
-## How Vaultwarden_GKE Relates to App_GKE
+## How Vaultwarden GKE Relates to App GKE
 
-`Vaultwarden_GKE` passes all variables through to `App_GKE` and adds a `Vaultwarden_Common` sub-module. The main effects are:
+`Vaultwarden GKE` passes all variables through to `App GKE` and adds a `Vaultwarden Common` sub-module. The main effects are:
 
-1. **StatefulSet with PVC is the default.** Unlike most modules that default to `Deployment`, `Vaultwarden_GKE` defaults to `workload_type = "StatefulSet"` with `stateful_pvc_enabled = true`, `stateful_pvc_size = "10Gi"`, and `stateful_pvc_mount_path = "/data"`. This provides persistent local storage for Vaultwarden's data directory.
-2. **PostgreSQL 15 (default) or MySQL 8.0 supported.** Set `database_type = "MYSQL_8_0"` for MySQL. `Vaultwarden_Common` selects the appropriate init job image automatically.
+1. **StatefulSet with PVC is the default.** Unlike most modules that default to `Deployment`, `Vaultwarden GKE` defaults to `workload_type = "StatefulSet"` with `stateful_pvc_enabled = true`, `stateful_pvc_size = "10Gi"`, and `stateful_pvc_mount_path = "/data"`. This provides persistent local storage for Vaultwarden's data directory.
+2. **PostgreSQL 15 (default) or MySQL 8.0 supported.** Set `database_type = "MYSQL_8_0"` for MySQL. `Vaultwarden Common` selects the appropriate init job image automatically.
 3. **Session affinity is enabled by default.** `session_affinity = "ClientIP"` ensures Bitwarden client connections are routed consistently to the same pod.
 4. **`DATA_FOLDER=/data` is injected automatically.** The wrapper injects this env var pointing to the PVC mount path.
 5. **`SIGNUPS_ALLOWED=false` by default.** Registrations are disabled by default. Set `signups_allowed = true` for initial setup; disable immediately after creating admin accounts.
-6. **No application-level secrets.** `Vaultwarden_Common` creates no Secret Manager secrets. All credential management is by `App_GKE`.
+6. **No application-level secrets.** `Vaultwarden Common` creates no Secret Manager secrets. All credential management is by `App GKE`.
 
 ---
 
@@ -53,7 +53,7 @@ Identical to `App_GKE`. See [App_GKE §1](../App_GKE/App_GKE.md#1-module-overvie
 
 **Vaultwarden-specific defaults:**
 
-| Variable | Vaultwarden_GKE Default | Notes |
+| Variable | Vaultwarden GKE Default | Notes |
 |---|---|---|
 | `module_description` | `"Vaultwarden: Deploy Vaultwarden password manager on GKE Autopilot…"` | Pre-populated. |
 | `credit_cost` | `150` | GKE deployments cost more than Cloud Run. |
@@ -70,11 +70,11 @@ Identical to `App_GKE`. See [App_GKE §2](../App_GKE/App_GKE.md#2-iam--access-co
 
 **Vaultwarden-specific defaults:**
 
-| Variable | Vaultwarden_GKE Default | App_GKE Default | Notes |
+| Variable | Vaultwarden GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `application_name` | `"vaultwarden"` | `"gkeapp"` | Base name for all resources. **Do not change after deployment.** |
-| `display_name` | `"Vaultwarden"` | *(not in App_GKE)* | Human-readable name for the platform UI. |
-| `description` | `"Vaultwarden password manager"` | *(not in App_GKE)* | Deployment description. |
+| `display_name` | `"Vaultwarden"` | *(not in App GKE)* | Human-readable name for the platform UI. |
+| `description` | `"Vaultwarden password manager"` | *(not in App GKE)* | Deployment description. |
 | `application_version` | `"1.32.7"` | `"1.0.0"` | Vaultwarden release version. |
 
 ---
@@ -83,11 +83,11 @@ Identical to `App_GKE`. See [App_GKE §2](../App_GKE/App_GKE.md#2-iam--access-co
 
 **Vaultwarden-specific defaults:**
 
-| Variable | Vaultwarden_GKE Default | App_GKE Default | Notes |
+| Variable | Vaultwarden GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `container_port` | `80` | `8080` | Vaultwarden's HTTP port. |
 | `cpu_limit` | `"1000m"` | `"1000m"` | Vaultwarden is a lightweight Rust binary. |
-| `memory_limit` | `"512Mi"` | `"512Mi"` | Same as App_GKE default. |
+| `memory_limit` | `"512Mi"` | `"512Mi"` | Same as App GKE default. |
 | `min_instance_count` | `1` | `1` | At least one Vaultwarden pod always running. |
 | `max_instance_count` | `3` | `3` | Maximum pod replicas. |
 | `enable_cloudsql_volume` | `true` | `true` | Cloud SQL Auth Proxy sidecar. |
@@ -171,7 +171,7 @@ Identical to `App_GKE`. See [App_GKE §6](../App_GKE/App_GKE.md#6-cicd--delivery
 
 **Vaultwarden db-init job:**
 
-`Vaultwarden_Common` detects `database_type` and selects the appropriate init job image:
+`Vaultwarden Common` detects `database_type` and selects the appropriate init job image:
 
 | `database_type` | Image | Description |
 |---|---|---|
@@ -193,7 +193,7 @@ Override `initialization_jobs` with a non-empty list to replace this default.
 
 **Vaultwarden-specific defaults:**
 
-| Variable | Vaultwarden_GKE Default | Notes |
+| Variable | Vaultwarden GKE Default | Notes |
 |---|---|---|
 | `database_type` | `"POSTGRES_15"` | Default. Set `"MYSQL_8_0"` for MySQL. |
 | `db_name` | `"vaultwarden"` | **Do not change after deployment.** |
@@ -243,7 +243,7 @@ Identical to `App_GKE`. See [App_GKE §7](../App_GKE/App_GKE.md#7-reliability--s
 
 **Vaultwarden-specific defaults:**
 
-| Variable | Vaultwarden_GKE Default | App_GKE Default | Notes |
+| Variable | Vaultwarden GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `workload_type` | `"StatefulSet"` | `null` (Deployment) | StatefulSet for persistent local storage at `/data`. |
 | `session_affinity` | `"ClientIP"` | `"None"` | Ensures Bitwarden client connections route to the same pod. |
@@ -253,7 +253,7 @@ Identical to `App_GKE`. See [App_GKE §7](../App_GKE/App_GKE.md#7-reliability--s
 
 ## Group 18: Stateful Workloads
 
-`Vaultwarden_GKE` defaults to a StatefulSet with a persistent PVC for Vaultwarden's data directory:
+`Vaultwarden GKE` defaults to a StatefulSet with a persistent PVC for Vaultwarden's data directory:
 
 | Variable | Default | Description |
 |---|---|---|

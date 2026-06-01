@@ -1,25 +1,25 @@
 ---
-title: "RAGFlow_Common Module — Configuration Guide"
+title: "RAGFlow Common Module — Configuration Guide"
 sidebar_label: "RAGFlow Common"
 ---
 
-# RAGFlow_Common Module — Configuration Guide
+# RAGFlow Common Module — Configuration Guide
 
-`RAGFlow_Common` is the **shared configuration sub-module** for RAGFlow deployments. It is not deployed directly — it is called by `RAGFlow_CloudRun` and `RAGFlow_GKE` to produce the three standard outputs that the Foundation modules expect: `config`, `storage_buckets`, and `path`.
+`RAGFlow Common` is the **shared configuration sub-module** for RAGFlow deployments. It is not deployed directly — it is called by `RAGFlow CloudRun` and `RAGFlow GKE` to produce the three standard outputs that the Foundation modules expect: `config`, `storage_buckets`, and `path`.
 
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG) platform. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and embeds them, stores vectors in Elasticsearch, and exposes a REST API for question-answering, knowledge base management, and enterprise search.
 
-> `RAGFlow_Common` is a **sub-module** — it is called as a child module by `RAGFlow_CloudRun` and `RAGFlow_GKE`. Do not deploy it directly. It contains no `provider` or `backend` blocks and creates no GCP resources itself.
+> `RAGFlow Common` is a **sub-module** — it is called as a child module by `RAGFlow CloudRun` and `RAGFlow GKE`. Do not deploy it directly. It contains no `provider` or `backend` blocks and creates no GCP resources itself.
 
 ---
 
 ## §1 · Module Overview
 
-### What `RAGFlow_Common` provides
+### What `RAGFlow Common` provides
 
-- A **`config` output** containing the complete application configuration object consumed by the Foundation module's (`App_CloudRun` or `App_GKE`) `application_config` input. This includes the container image reference, port, database type, resource limits, health probes, and initialization jobs.
+- A **`config` output** containing the complete application configuration object consumed by the Foundation module's (`App CloudRun` or `App GKE`) `application_config` input. This includes the container image reference, port, database type, resource limits, health probes, and initialization jobs.
 - A **`storage_buckets` output** — a single GCS bucket with the suffix `ragflow-documents` in the deployment region, used for document ingestion and storage.
-- A **`path` output** — the absolute path to the module directory. `RAGFlow_GKE` uses `"${module.ragflow_app.path}/scripts"` as its `scripts_dir`.
+- A **`path` output** — the absolute path to the module directory. `RAGFlow GKE` uses `"${module.ragflow_app.path}/scripts"` as its `scripts_dir`.
 
 ### How the image is built
 
@@ -27,11 +27,11 @@ Unlike most application modules that pull a prebuilt image, `RAGFlow_Common` set
 
 ### Database
 
-RAGFlow requires **MySQL 8.0** (`database_type = "MYSQL_8_0"`). The `db_name` and `db_user` values from the caller are forwarded directly into the config output. The Cloud SQL Auth Proxy sidecar is always enabled (`enable_cloudsql_volume = true`) and mounts the socket at `/cloudsql`. The `MYSQL_HOST` environment variable is set to `127.0.0.1` in `RAGFlow_GKE`'s locals so RAGFlow connects via the proxy.
+RAGFlow requires **MySQL 8.0** (`database_type = "MYSQL_8_0"`). The `db_name` and `db_user` values from the caller are forwarded directly into the config output. The Cloud SQL Auth Proxy sidecar is always enabled (`enable_cloudsql_volume = true`) and mounts the socket at `/cloudsql`. The `MYSQL_HOST` environment variable is set to `127.0.0.1` in `RAGFlow GKE`'s locals so RAGFlow connects via the proxy.
 
 ### Initialization job
 
-When `initialization_jobs = []` (the default), `RAGFlow_Common` generates a single `db-init` Kubernetes Job that runs the `scripts/db-init.sh` script using the `mysql:8.0-debian` image. This job is marked `execute_on_apply = true` and has a 600-second timeout and 1 retry. Providing any non-empty `initialization_jobs` list disables the auto-generated job.
+When `initialization_jobs = []` (the default), `RAGFlow Common` generates a single `db-init` Kubernetes Job that runs the `scripts/db-init.sh` script using the `mysql:8.0-debian` image. This job is marked `execute_on_apply = true` and has a 600-second timeout and 1 retry. Providing any non-empty `initialization_jobs` list disables the auto-generated job.
 
 ### Health probes
 
@@ -45,7 +45,7 @@ All probes target the `/v1/health` endpoint. RAGFlow loads embedding models at s
 
 ### Scripts directory
 
-`RAGFlow_Common` bundles three files in `scripts/`:
+`RAGFlow Common` bundles three files in `scripts/`:
 
 | File | Purpose |
 |---|---|
@@ -87,13 +87,13 @@ All probes target the `/v1/health` endpoint. RAGFlow loads embedding models at s
 |---|---|
 | `config` | Complete application configuration object consumed by the Foundation module's `application_config` input. Contains `app_name`, `container_image`, `container_port=80`, `database_type="MYSQL_8_0"`, `db_name`, `db_user`, `enable_cloudsql_volume`, `container_resources`, `min_instance_count`, `max_instance_count`, `environment_variables`, `secret_environment_variables`, `initialization_jobs`, `startup_probe`, `liveness_probe`, and `readiness_probe`. |
 | `storage_buckets` | List containing one GCS bucket configuration object: `{ name_suffix = "ragflow-documents", location = var.region, storage_class = "STANDARD", force_destroy = true, versioning_enabled = false }`. |
-| `path` | Absolute path to the `RAGFlow_Common` module directory. Used by `RAGFlow_GKE` to resolve `scripts_dir`. |
+| `path` | Absolute path to the `RAGFlow Common` module directory. Used by `RAGFlow GKE` to resolve `scripts_dir`. |
 
 ---
 
 ## §4 · Hard-Coded Values
 
-The following values are fixed inside `RAGFlow_Common` and cannot be overridden by callers:
+The following values are fixed inside `RAGFlow Common` and cannot be overridden by callers:
 
 | Setting | Value | Reason |
 |---|---|---|
@@ -110,7 +110,7 @@ The following values are fixed inside `RAGFlow_Common` and cannot be overridden 
 
 ## §5 · Usage Pattern
 
-`RAGFlow_Common` is called by `RAGFlow_CloudRun` and `RAGFlow_GKE`. Example for `RAGFlow_GKE`:
+`RAGFlow Common` is called by `RAGFlow CloudRun` and `RAGFlow GKE`. Example for `RAGFlow GKE`:
 
 ```hcl
 module "ragflow_app" {
@@ -136,4 +136,4 @@ locals {
 }
 ```
 
-Do not call `RAGFlow_Common` directly from a root module — it has no `provider` or `backend` block and does not create any GCP resources itself.
+Do not call `RAGFlow Common` directly from a root module — it has no `provider` or `backend` block and does not create any GCP resources itself.

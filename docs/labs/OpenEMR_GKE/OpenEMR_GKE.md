@@ -92,7 +92,7 @@ GET https://sqladmin.googleapis.com/v1/projects/PROJECT_ID/instances/INSTANCE_NA
 
 Before beginning this lab, ensure the following are in place:
 
-1. **Services_GCP module deployed** — OpenEMR_GKE depends on `Services_GCP` for the VPC network, Cloud SQL instance, GKE Autopilot cluster, and Artifact Registry. The `module_dependency` variable confirms this: `["Services_GCP"]`.
+1. **Services GCP module deployed** — OpenEMR GKE depends on `Services GCP` for the VPC network, Cloud SQL instance, GKE Autopilot cluster, and Artifact Registry. The `module_dependency` variable confirms this: `["Services GCP"]`.
 2. **GCP project with billing enabled.**
 3. **`gcloud` CLI installed and authenticated** (`gcloud auth login && gcloud auth application-default login`).
 4. **`kubectl` installed** — available via `gcloud components install kubectl`.
@@ -587,7 +587,7 @@ The module removes all resources in reverse dependency order: Kubernetes workloa
 
 > Note: `enable_purge = true` (default) allows full deletion. If set to `false`, resources are retained after undeployment. For production healthcare environments, consider setting `enable_purge = false` to protect against accidental deletion of patient data.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

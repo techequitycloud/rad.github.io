@@ -1,21 +1,21 @@
 ---
-title: "RAGFlow_CloudRun Module — Configuration Guide"
+title: "RAGFlow CloudRun Module — Configuration Guide"
 sidebar_label: "RAGFlow CloudRun"
 ---
 
-# RAGFlow_CloudRun Module — Configuration Guide
+# RAGFlow CloudRun Module — Configuration Guide
 
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG)
 platform. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and embeds
 them, stores vectors in Elasticsearch, exposes a REST API for question-answering, and provides
 a web UI for knowledge base management and enterprise search.
 
-`RAGFlow_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun`
+`RAGFlow CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun`
 for all GCP infrastructure provisioning (Cloud Run service, Cloud SQL Auth Proxy, GCS buckets,
-secrets, CI/CD, load balancer, NFS) and `RAGFlow_Common` to supply the RAGFlow-specific
+secrets, CI/CD, load balancer, NFS) and `RAGFlow Common` to supply the RAGFlow-specific
 application configuration, database initialization job, and document storage bucket.
 
-> **Deployment prerequisite:** `RAGFlow_CloudRun` requires `Elasticsearch_GKE` to be deployed
+> **Deployment prerequisite:** `RAGFlow CloudRun` requires `Elasticsearch GKE` to be deployed
 > first. The `elasticsearch_hosts` variable **must be set** when `deploy_application = true` —
 > Terraform will reject the configuration otherwise. Inline Elasticsearch is not supported on
 > Cloud Run.
@@ -24,7 +24,7 @@ application configuration, database initialization job, and document storage buc
 
 ## §1 · Module Overview
 
-### What `RAGFlow_CloudRun` provides
+### What `RAGFlow CloudRun` provides
 
 - A **Cloud Run v2 service** (custom image built from `infiniflow/ragflow` via Cloud Build)
   with a **minimum of one warm instance** — scale-to-zero is disabled because RAGFlow loads
@@ -36,18 +36,18 @@ application configuration, database initialization job, and document storage buc
   are injected automatically and the Memorystore connection is wired through the VPC.
 - **Elasticsearch** integration — `ELASTICSEARCH_HOSTS` and `ELASTICSEARCH_USERNAME` are
   injected automatically from the `elasticsearch_hosts` and `elasticsearch_username` variables.
-- A **GCS bucket** with the suffix `ragflow-documents` (from `RAGFlow_Common`) for document
+- A **GCS bucket** with the suffix `ragflow-documents` (from `RAGFlow Common`) for document
   ingestion and storage.
 - A **MySQL `db-init` Cloud Run Job** that creates the `rag_flow` database and `ragflow` user
   before the application service starts.
 - Optional **GCS Fuse** volume mounts for additional document storage access.
 - Optional **Cloud Filestore NFS** mount (requires `execution_environment = "gen2"`).
 
-### Key differences from `App_CloudRun` defaults
+### Key differences from `App CloudRun` defaults
 
-| Feature | App_CloudRun default | RAGFlow_CloudRun default |
+| Feature | App CloudRun default | RAGFlow CloudRun default |
 |---|---|---|
-| `container_port` | `8080` | `80` (set by `RAGFlow_Common`) |
+| `container_port` | `8080` | `80` (set by `RAGFlow Common`) |
 | `image_source` | varies | `"custom"` (always builds via Dockerfile) |
 | `database_type` | varies | `"MYSQL_8_0"` |
 | `execution_environment` | varies | `"gen2"` |
@@ -60,7 +60,7 @@ application configuration, database initialization job, and document storage buc
 | `enable_redis` | `false` | `true` (conditioned on `redis_host != ""`) |
 | `vpc_egress_setting` | varies | `"PRIVATE_RANGES_ONLY"` |
 | `ingress_settings` | varies | `"all"` |
-| `module_dependency` | varies | `["Services_GCP", "Elasticsearch_GKE"]` |
+| `module_dependency` | varies | `["Services GCP", "Elasticsearch GKE"]` |
 | `credit_cost` | varies | `150` |
 
 ### Architecture
@@ -88,15 +88,15 @@ RAGFlow_CloudRun
 
 | Behaviour | Detail |
 |---|---|
-| **Elasticsearch endpoint injected** | `ELASTICSEARCH_HOSTS` is always set from `var.elasticsearch_hosts`. When `deploy_application = true`, Terraform rejects an empty value — deploy `Elasticsearch_GKE` first. |
+| **Elasticsearch endpoint injected** | `ELASTICSEARCH_HOSTS` is always set from `var.elasticsearch_hosts`. When `deploy_application = true`, Terraform rejects an empty value — deploy `Elasticsearch GKE` first. |
 | **MySQL connection injected** | `MYSQL_HOST=127.0.0.1`, `MYSQL_PORT=3306`, `MYSQL_DATABASE`, and `MYSQL_USER` are always injected. The Cloud SQL Auth Proxy runs as a sidecar via `enable_cloudsql_volume = true`. |
 | **Redis queue injected** | When `enable_redis = true` and `redis_host` is non-empty, `REDIS_HOST` and `REDIS_PORT` are injected. The `enable_redis` flag is suppressed internally when `redis_host` is empty to avoid Foundation-level validation errors. |
 | **Custom image build** | RAGFlow always builds a custom image via `RAGFlow_Common/scripts/Dockerfile` using Cloud Build. The `APP_VERSION` build argument is set from `application_version`. |
 | **`db-init` job auto-generated** | A MySQL initialization Cloud Run Job (`mysql:8.0-debian`) runs `scripts/db-init.sh` on first deploy. It creates the database and user with `mysql_native_password` authentication. |
 | **`service_conf.yaml` generated at startup** | The custom entrypoint (`scripts/entrypoint.sh`) writes `/ragflow/conf/service_conf.yaml` from injected environment variables before starting the RAGFlow processes. |
-| **`min_instance_count` hard-capped at 1** | `RAGFlow_CloudRun` hard-codes `min_instance_count = 1` in the locals merge, regardless of any Foundation-level default. RAGFlow's embedding model loading makes scale-to-zero impractical on Cloud Run. |
+| **`min_instance_count` hard-capped at 1** | `RAGFlow CloudRun` hard-codes `min_instance_count = 1` in the locals merge, regardless of any Foundation-level default. RAGFlow's embedding model loading makes scale-to-zero impractical on Cloud Run. |
 | **NFS requires gen2** | If `enable_nfs = true`, `execution_environment` must be `"gen2"`. `validation.tf` enforces this at plan time. |
-| **`module_storage_buckets` sourced from Common** | The document storage bucket defined in `RAGFlow_Common` is passed directly to `App_CloudRun` as `module_storage_buckets`. Any additional buckets in `var.storage_buckets` are handled separately by `App_CloudRun`. |
+| **`module_storage_buckets` sourced from Common** | The document storage bucket defined in `RAGFlow Common` is passed directly to `App CloudRun` as `module_storage_buckets`. Any additional buckets in `var.storage_buckets` are handled separately by `App CloudRun`. |
 
 ---
 
@@ -106,7 +106,7 @@ RAGFlow_CloudRun
 |---|---|---|---|
 | `module_description` | `string` | *(RAGFlow Cloud Run description)* | Platform UI description. `{{UIMeta group=0 order=1}}` |
 | `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/RAGFlow_CloudRun"` | Documentation URL. `{{UIMeta group=0 order=2}}` |
-| `module_dependency` | `list(string)` | `["Services_GCP", "Elasticsearch_GKE"]` | Modules that must be deployed first. `{{UIMeta group=0 order=3}}` |
+| `module_dependency` | `list(string)` | `["Services GCP", "Elasticsearch GKE"]` | Modules that must be deployed first. `{{UIMeta group=0 order=3}}` |
 | `module_services` | `list(string)` | `["Cloud Run", "Cloud Run Jobs", "Cloud Build", "Artifact Registry", "Cloud Storage", "GCS Fuse", "Cloud SQL (MySQL 8.0)", "VPC Network", "Serverless VPC Access", "Secret Manager", "Cloud IAM", "Cloud Logging", "Cloud Monitoring", "Memorystore (Redis)", "Elasticsearch"]` | GCP services consumed. `{{UIMeta group=0 order=4}}` |
 | `credit_cost` | `number` | `50` | Platform credits consumed on deployment. `{{UIMeta group=0 order=5}}` |
 | `require_credit_purchases` | `bool` | `false` | Enforce credit balance check before deployment. `{{UIMeta group=0 order=6}}` |
@@ -145,7 +145,7 @@ RAGFlow_CloudRun
 |---|---|---|---|
 | `deploy_application` | `bool` | `true` | Set `false` to provision infrastructure (MySQL, secrets, GCS) without deploying the Cloud Run service. `{{UIMeta group=3 order=0 updatesafe}}` |
 | `container_image_source` | `string` | `"custom"` | `"custom"` builds from `RAGFlow_Common/scripts/Dockerfile`; `"prebuilt"` deploys an existing image. Options: `prebuilt`, `custom`. `{{UIMeta group=3 order=1 updatesafe}}` |
-| `container_image` | `string` | `""` | Override image URI. Leave empty to use the Cloud Build result from `RAGFlow_Common`. `{{UIMeta group=3 order=2 updatesafe}}` |
+| `container_image` | `string` | `""` | Override image URI. Leave empty to use the Cloud Build result from `RAGFlow Common`. `{{UIMeta group=3 order=2 updatesafe}}` |
 | `cpu_limit` | `string` | `"2000m"` | CPU limit per container instance. RAGFlow document parsing is CPU-intensive. `{{UIMeta group=3 order=3 updatesafe}}` |
 | `memory_limit` | `string` | `"4Gi"` | Memory limit per container instance. Embedding models require significant RAM. `{{UIMeta group=3 order=4 updatesafe}}` |
 | `container_port` | `number` | `80` | TCP port the RAGFlow container listens on. RAGFlow's Nginx frontend uses port 80. `{{UIMeta group=3 order=5 updatesafe}}` |
@@ -161,7 +161,7 @@ RAGFlow_CloudRun
 | `service_labels` | `map(string)` | `{}` | Custom labels applied to the Cloud Run service resource. `{{UIMeta group=3 order=15 updatesafe}}` |
 
 > **Note:** `min_instance_count` is always set to `1` internally and cannot be overridden at
-> the `RAGFlow_CloudRun` level. RAGFlow loads embedding models during startup, making
+> the `RAGFlow CloudRun` level. RAGFlow loads embedding models during startup, making
 > scale-to-zero impractical within Cloud Run's request timeout window.
 
 ---
@@ -189,7 +189,7 @@ RAGFlow_CloudRun
 
 ### Automatically Injected Environment Variables
 
-The following variables are always injected by `RAGFlow_CloudRun` and must not be set in
+The following variables are always injected by `RAGFlow CloudRun` and must not be set in
 `environment_variables`:
 
 | Variable | Value | Source |
@@ -259,7 +259,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `create_cloud_storage` | `bool` | `true` | Controls whether the module provisions additional GCS buckets. The `ragflow-documents` bucket from `RAGFlow_Common` is always created. `{{UIMeta group=10 order=1 updatesafe}}` |
+| `create_cloud_storage` | `bool` | `true` | Controls whether the module provisions additional GCS buckets. The `ragflow-documents` bucket from `RAGFlow Common` is always created. `{{UIMeta group=10 order=1 updatesafe}}` |
 | `storage_buckets` | `list(object)` | `[{ name_suffix="data" }]` | Additional GCS bucket configurations beyond the `ragflow-documents` bucket. Each supports `name_suffix`, `location`, `storage_class`, `force_destroy`, `versioning_enabled`, `lifecycle_rules`, `public_access_prevention`, and `uniform_bucket_level_access`. `{{UIMeta group=10 order=2 updatesafe}}` |
 | `enable_nfs` | `bool` | `false` | Provisions a Cloud Filestore NFS instance and mounts it into the Cloud Run service. Requires `execution_environment = "gen2"`. `{{UIMeta group=10 order=3 updatesafe}}` |
 | `nfs_mount_path` | `string` | `"/mnt/nfs"` | Filesystem path inside the container where the NFS volume is mounted. `{{UIMeta group=10 order=4 updatesafe}}` |
@@ -287,7 +287,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `initialization_jobs` | `list(object)` | `[]` | Cloud Run Jobs executed before the application starts. When empty, the auto-generated MySQL `db-init` job from `RAGFlow_Common` runs. Each job supports `name`, `description`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `execution_mode`, `mount_nfs`, `mount_gcs_volumes`, `depends_on_jobs`, `execute_on_apply`, and `script_path`. `{{UIMeta group=12 order=1 updatesafe}}` |
+| `initialization_jobs` | `list(object)` | `[]` | Cloud Run Jobs executed before the application starts. When empty, the auto-generated MySQL `db-init` job from `RAGFlow Common` runs. Each job supports `name`, `description`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `execution_mode`, `mount_nfs`, `mount_gcs_volumes`, `depends_on_jobs`, `execute_on_apply`, and `script_path`. `{{UIMeta group=12 order=1 updatesafe}}` |
 | `cron_jobs` | `list(object)` | `[]` | Recurring Cloud Run Jobs deployed on a cron schedule. Each job supports `name`, `schedule`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `parallelism`, `mount_nfs`, `mount_gcs_volumes`, `script_path`, and `paused`. `{{UIMeta group=12 order=2 updatesafe}}` |
 
 ---
@@ -310,7 +310,7 @@ The following variables are always injected by `RAGFlow_CloudRun` and must not b
 | `elasticsearch_hosts` | `string` | **required** | Elasticsearch HTTP endpoint for RAGFlow document indexing and vector search. Set to the `elasticsearch_endpoint` output from `Elasticsearch_GKE` (e.g. `"http://10.0.0.5:9200"`). Inline Elasticsearch is not supported on Cloud Run. `{{UIMeta group=1 order=3 updatesafe}}` |
 | `elasticsearch_username` | `string` | `""` | Username for Elasticsearch authentication. Leave empty when `xpack.security.enabled = false`. `{{UIMeta group=15 order=2 updatesafe}}` |
 | `enable_redis` | `bool` | `true` | Enables Redis as the RAGFlow task queue backend. Required for document processing workers. The Redis connection is only wired when `redis_host` is non-empty. `{{UIMeta group=15 order=3 updatesafe}}` |
-| `redis_host` | `string` | `""` | Hostname or IP of the Redis server for the RAGFlow task queue. Use the `redis_host` output from `Services_GCP` (Memorystore). `{{UIMeta group=15 order=4 updatesafe}}` |
+| `redis_host` | `string` | `""` | Hostname or IP of the Redis server for the RAGFlow task queue. Use the `redis_host` output from `Services GCP` (Memorystore). `{{UIMeta group=15 order=4 updatesafe}}` |
 | `redis_port` | `string` | `"6379"` | TCP port of the Redis server. `{{UIMeta group=15 order=5 updatesafe}}` |
 | `redis_auth` | `string` | `""` | Authentication password for the Redis server. Sensitive. `{{UIMeta group=15 order=6 updatesafe}}` |
 
@@ -335,8 +335,8 @@ lifecycle precondition block:
 
 | Guard | Error Message |
 |---|---|
-| `elasticsearch_hosts != ""` when `deploy_application = true` | `elasticsearch_hosts` must be set — deploy `Elasticsearch_GKE` first. The check is skipped for infrastructure-only applies (`deploy_application = false`) so operators can provision MySQL and storage before standing up Elasticsearch. |
-| `enable_redis = true` requires `redis_host != ""` when `deploy_application = true` | When Redis is enabled and the service is being deployed, `redis_host` must be set. Use the `redis_host` output from `Services_GCP`. |
+| `elasticsearch_hosts != ""` when `deploy_application = true` | `elasticsearch_hosts` must be set — deploy `Elasticsearch GKE` first. The check is skipped for infrastructure-only applies (`deploy_application = false`) so operators can provision MySQL and storage before standing up Elasticsearch. |
+| `enable_redis = true` requires `redis_host != ""` when `deploy_application = true` | When Redis is enabled and the service is being deployed, `redis_host` must be set. Use the `redis_host` output from `Services GCP`. |
 | `enable_iap = true` requires at least one of `iap_authorized_users` or `iap_authorized_groups` | When IAP is enabled, at least one authorized user or group must be specified. |
 | `enable_nfs = true` requires `execution_environment = "gen2"` | NFS mounts require the gen2 Cloud Run execution environment. |
 
@@ -364,9 +364,9 @@ lifecycle precondition block:
 
 ---
 
-## §20 · Notable Differences from `RAGFlow_GKE`
+## §20 · Notable Differences from `RAGFlow GKE`
 
-| Feature | RAGFlow_GKE | RAGFlow_CloudRun |
+| Feature | RAGFlow GKE | RAGFlow CloudRun |
 |---|---|---|
 | **Compute platform** | GKE Autopilot (Kubernetes Deployment) | Cloud Run v2 (serverless containers) |
 | **Minimum instances** | Hard-coded `min_instance_count = 1` | Hard-coded `min_instance_count = 1` (same reason) |
@@ -396,7 +396,7 @@ The following GCP resources are provisioned when this module is applied:
 - **Secret Manager secrets** — Database password and any `secret_environment_variables`
 - **GCS bucket** — `ragflow-documents` for document ingestion storage
 - **GCS bucket** — Additional buckets per `storage_buckets` (default: one `data` bucket)
-- **Artifact Registry** — Container image repository (if not already provisioned by `Services_GCP`)
+- **Artifact Registry** — Container image repository (if not already provisioned by `Services GCP`)
 - **Serverless VPC Access connector** — For private Redis and MySQL egress
 - **Cloud Build trigger** — Optional; created when `enable_cicd_trigger = true`
 - **Cloud Deploy pipeline** — Optional; created when `enable_cloud_deploy = true`
@@ -502,7 +502,7 @@ resource_labels = {
 |---|---|---|---|
 | `elasticsearch_hosts` | *(required — no default)* | **Critical** | RAGFlow cannot index or search documents without a reachable Elasticsearch endpoint. Must be set to the `elasticsearch_endpoint` output from a deployed `Elasticsearch_GKE` instance (e.g. `http://10.0.0.5:9200`). Leaving blank causes the application to start but all ingestion and retrieval operations fail immediately. |
 | `enable_redis` | `true` | **Critical** | Redis is required for RAGFlow's document processing task queue. Setting to `false` disables the task queue backend; document parsing jobs are never executed and uploaded files remain unprocessed indefinitely. |
-| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, RAGFlow falls back to the NFS-hosted Redis sidecar (requires `enable_nfs = true`). Pointing to a wrong or unreachable host causes all async document workers to fail silently. Use the Memorystore Redis IP from `Services_GCP`. |
+| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, RAGFlow falls back to the NFS-hosted Redis sidecar (requires `enable_nfs = true`). Pointing to a wrong or unreachable host causes all async document workers to fail silently. Use the Memorystore Redis IP from `Services GCP`. |
 | `database_type` | `"MYSQL_8_0"` | **Critical** | RAGFlow only supports MySQL 8.0. Changing to `POSTGRES` or `NONE` removes the required database backend; RAGFlow cannot store user accounts, knowledge bases, or task state. |
 | `min_instance_count` | `1` | **High** | RAGFlow loads embedding models and the RAGFlow server during cold start, a process that can take 2–3 minutes. Setting to `0` causes scale-to-zero; every cold start request will time out for end users until the instance is warm. |
 | `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **High** | Memorystore Redis is accessed over a private VPC IP. If changed to a value that does not route private RFC-1918 traffic through the VPC connector, Redis connections fail and the task queue stops working. Use `ALL_TRAFFIC` only when all dependencies (Redis, MySQL, Elasticsearch) are accessed via public IPs with appropriate firewall rules. |
@@ -519,7 +519,7 @@ resource_labels = {
 | `ingress_settings` | `"all"` | **High** | Public ingress exposes the RAGFlow web UI to the internet. For internal-only deployments, set to `"internal"` or `"internal-and-cloud-load-balancing"` and use IAP or a private load balancer. |
 | `enable_iap` | `false` | **High** | Without IAP, the Cloud Run service (when `ingress_settings = "all"`) is accessible to any unauthenticated caller. Enable IAP and populate `iap_authorized_users` / `iap_authorized_groups` for production deployments. |
 | `secret_propagation_delay` | `30` | **Medium** | If set too low in projects with slow Secret Manager replication, the deployment job may attempt to read a secret before it is fully propagated, causing transient failures. Increase to `60` for large or cross-region projects. |
-| `elasticsearch_username` | `""` | **High** | If the Elasticsearch_GKE instance is deployed with `enable_xpack_security = true`, RAGFlow must authenticate. Leaving this blank causes HTTP 401 errors from Elasticsearch, breaking all index and search operations. |
+| `elasticsearch_username` | `""` | **High** | If the Elasticsearch GKE instance is deployed with `enable_xpack_security = true`, RAGFlow must authenticate. Leaving this blank causes HTTP 401 errors from Elasticsearch, breaking all index and search operations. |
 | `enable_auto_password_rotation` | `false` | **Low** | Without password rotation, a compromised database credential remains valid indefinitely. Enable in production with `rotation_propagation_delay_sec >= 90` to allow Cloud Run revisions to pick up the new secret version before rotation completes. |
 | `application_version` | `"v0.13.0"` | **Medium** | Incrementing this value triggers an image rebuild. Ensure the new RAGFlow version is compatible with the existing MySQL schema — RAGFlow migrations run automatically on startup but major version jumps may be irreversible. |
 

@@ -1,13 +1,13 @@
 ---
-title: "Ghost_GKE Module — Configuration Guide"
+title: "Ghost GKE Module — Configuration Guide"
 sidebar_label: "Ghost GKE"
 ---
 
-# Ghost_GKE Module — Configuration Guide
+# Ghost GKE Module — Configuration Guide
 
 This guide describes every configuration variable available in the `Ghost_GKE` module. `Ghost_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Ghost_Common`](../Ghost_Common/Ghost_Common.md) shared application configuration to deploy the [Ghost](https://ghost.org/) publishing platform on Google Kubernetes Engine (GKE) Autopilot.
 
-Most configuration options in `Ghost_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Ghost** are described in full here.
+Most configuration options in `Ghost GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Ghost** are described in full here.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -17,7 +17,7 @@ Most configuration options in `Ghost_GKE` map directly to the same options in `A
 
 The following configuration areas are provided by the underlying `App_GKE` module. Consult the linked sections of the [App_GKE Configuration Guide](../App_GKE/App_GKE.md) for full documentation.
 
-| Configuration Area | App_GKE.md Section | Ghost-Specific Notes |
+| Configuration Area | App GKE.md Section | Ghost-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Ghost-specific `module_description`, `module_documentation`, and `module_services` defaults are pre-set. |
 | Project & Identity | §2 IAM & Access Control | Identical. |
@@ -25,7 +25,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Runtime & Scaling | §3.A Compute (GKE Autopilot) | Ghost-specific defaults for `container_port`, `cpu_limit`, `memory_limit`, and `min_instance_count`; see [Group 3: Runtime & Scaling](#group-3-runtime--scaling). |
 | Environment Variables & Secrets | §3 Core Service Configuration | `database__client = "mysql"` is injected automatically. SMTP defaults pre-populated; see [Group 5: Environment Variables & Secrets](#group-5-environment-variables--secrets). |
 | Networking & Network Policies | §3.D Networking & Network Policies | Identical. |
-| Initialization Jobs & CronJobs | §3.E Initialization Jobs & CronJobs | `db-init` MySQL job supplied automatically by `Ghost_Common`; see [Group 8: Jobs & Scheduled Tasks](#group-8-jobs--scheduled-tasks). |
+| Initialization Jobs & CronJobs | §3.E Initialization Jobs & CronJobs | `db-init` MySQL job supplied automatically by `Ghost Common`; see [Group 8: Jobs & Scheduled Tasks](#group-8-jobs--scheduled-tasks). |
 | Additional Services | §3.F Additional Services | Identical. |
 | Storage — NFS | §3.C Storage (NFS / GCS / GCS Fuse) | `enable_nfs` defaults to `true`; see [Group 9: Storage & Filesystem — NFS](#group-9-storage--filesystem--nfs). |
 | Storage — GCS | §3.C Storage (NFS / GCS / GCS Fuse) | `ghost-content` GCS bucket provisioned automatically; see [Group 10: Storage & Filesystem — GCS](#group-10-storage--filesystem--gcs). |
@@ -55,15 +55,15 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 
 ---
 
-## How Ghost_GKE Relates to App_GKE
+## How Ghost GKE Relates to App GKE
 
-`Ghost_GKE` passes all variables through to `App_GKE` and adds a `Ghost_Common` sub-module that supplies Ghost-specific defaults and application configuration. The main effects are:
+`Ghost GKE` passes all variables through to `App GKE` and adds a `Ghost Common` sub-module that supplies Ghost-specific defaults and application configuration. The main effects are:
 
 1. **MySQL 8.0 is required.** Ghost 6.x requires MySQL 8.0 and will not work with PostgreSQL. The `database_type` default is overridden to `"MYSQL_8_0"`.
 2. **`database__client = "mysql"` is injected automatically.** Ghost 6.x will silently fall back to SQLite without this environment variable, even when all other database connection variables are present. The module injects it automatically — you do not need to set it yourself.
-3. **A `ghost-content` GCS bucket is provisioned automatically.** `Ghost_Common` provides a `ghost-content` bucket definition that is merged into the module's bucket list. You do not need to define it in `storage_buckets`.
-4. **A `db-init` job runs on first deployment.** `Ghost_Common` supplies a default `db-init` Kubernetes Job using a `mysql:8.0-debian` image that initialises the Ghost MySQL schema. Override `initialization_jobs` to replace it with a custom job.
-5. **Resource defaults are sized for Ghost.** The default `cpu_limit` (2 vCPU) and `memory_limit` (4 Gi) are higher than the `App_GKE` defaults to match Ghost 6.x's resource requirements.
+3. **A `ghost-content` GCS bucket is provisioned automatically.** `Ghost Common` provides a `ghost-content` bucket definition that is merged into the module's bucket list. You do not need to define it in `storage_buckets`.
+4. **A `db-init` job runs on first deployment.** `Ghost Common` supplies a default `db-init` Kubernetes Job using a `mysql:8.0-debian` image that initialises the Ghost MySQL schema. Override `initialization_jobs` to replace it with a custom job.
+5. **Resource defaults are sized for Ghost.** The default `cpu_limit` (2 vCPU) and `memory_limit` (4 Gi) are higher than the `App GKE` defaults to match Ghost 6.x's resource requirements.
 6. **Redis caching is enabled by default.** Ghost uses Redis for page caching. See [Group 15: Redis Cache](#group-15-redis-cache) and [App_GKE §8.A](../App_GKE/App_GKE.md#a-redis--memorystore) for details.
 7. **Health probes are tuned for Ghost's slow startup.** Ghost runs database migrations and compiles themes on first boot. The default startup probe allows 90 seconds of initial delay before checking.
 
@@ -75,7 +75,7 @@ The behaviour of these variables is identical to `App_GKE`. See [App_GKE §1](..
 
 **Ghost-specific defaults:**
 
-| Variable | Ghost_GKE Default | Notes |
+| Variable | Ghost GKE Default | Notes |
 |---|---|---|
 | `module_description` | `"Ghost: Deploy Ghost publishing platform on GKE Autopilot…"` | Pre-populated with Ghost-specific description. |
 | `module_documentation` | `"https://docs.radmodules.dev/docs/modules/Ghost_GKE"` | Points to the Ghost GKE documentation page. |
@@ -87,11 +87,11 @@ The behaviour of these variables is identical to `App_GKE`. See [App_GKE §1](..
 
 Identical to `App_GKE`. See [App_GKE §2](../App_GKE/App_GKE.md#2-iam--access-control).
 
-**Ghost_GKE-specific addition in this group:**
+**Ghost GKE-specific addition in this group:**
 
 | Variable | Default | Description |
 |---|---|---|
-| `deployment_region` | `"us-central1"` | GCP region for resource deployment. Used as a fallback when network discovery cannot determine the region from existing VPC subnets. Also used as the storage bucket location for the `ghost-content` bucket provisioned by `Ghost_Common`. |
+| `deployment_region` | `"us-central1"` | GCP region for resource deployment. Used as a fallback when network discovery cannot determine the region from existing VPC subnets. Also used as the storage bucket location for the `ghost-content` bucket provisioned by `Ghost Common`. |
 
 ---
 
@@ -101,13 +101,13 @@ These variables behave identically to `App_GKE`. See [App_GKE §3.A](../App_GKE/
 
 **Ghost-specific defaults:**
 
-| Variable | Ghost_GKE Default | App_GKE Default | Notes |
+| Variable | Ghost GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `application_name` | `"ghost"` | `"gkeapp"` | Used as the base name for all GCP and Kubernetes resources. **Do not change after deployment.** |
-| `application_display_name` | `"Ghost Blog"` | `"App_GKE Application"` | Shown in the platform UI and dashboards. Can be changed freely. |
-| `display_name` | `"Ghost Publishing Platform"` | *(not in App_GKE)* | Ghost_GKE-specific alias for a human-readable UI name. Passed through to `Ghost_Common`. |
-| `application_description` | `"Ghost Publishing Platform on GKE Autopilot"` | `"App_GKE Custom Application…"` | Descriptive label. Can be changed freely. |
-| `description` | `"Ghost Publishing Platform on GKE Autopilot"` | *(not in App_GKE)* | Ghost_GKE-specific alias for the deployment description. Passed to `Ghost_Common` as the `db-init` job description. |
+| `application_display_name` | `"Ghost Blog"` | `"App GKE Application"` | Shown in the platform UI and dashboards. Can be changed freely. |
+| `display_name` | `"Ghost Publishing Platform"` | *(not in App GKE)* | Ghost GKE-specific alias for a human-readable UI name. Passed through to `Ghost Common`. |
+| `application_description` | `"Ghost Publishing Platform on GKE Autopilot"` | `"App GKE Custom Application…"` | Descriptive label. Can be changed freely. |
+| `description` | `"Ghost Publishing Platform on GKE Autopilot"` | *(not in App GKE)* | Ghost GKE-specific alias for the deployment description. Passed to `Ghost Common` as the `db-init` job description. |
 | `application_version` | `"6.14.0"` | `"1.0.0"` | The Ghost release version to build and deploy. Incrementing this value triggers a new Cloud Build run. |
 
 ---
@@ -118,18 +118,18 @@ Most variables behave identically to `App_GKE`. See [App_GKE Group 3](../App_GKE
 
 **Ghost-specific defaults and behaviour:**
 
-| Variable | Ghost_GKE Default | App_GKE Default | Notes |
+| Variable | Ghost GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `container_port` | `2368` | `8080` | Ghost's native HTTP port. Do not change unless your custom Dockerfile binds Ghost to a different port. |
 | `max_instance_count` | `5` **[fixed in main.tf]** | `3` | Ghost is more resource-intensive than a generic application; the higher ceiling accommodates traffic spikes during newsletter sends or content publication. The variable default is `5`, and `main.tf` also hardcodes `max_instance_count = 5` in the locals merge — changing the variable has no effect without editing `main.tf` directly. |
 | `cpu_limit` | `"2000m"` | `"1000m"` | Ghost 6.x requires a minimum of 1 vCPU; 2 vCPU (2000m) is recommended for production to handle concurrent membership and admin requests without degradation. |
 | `memory_limit` | `"4Gi"` | `"512Mi"` | Ghost 6.x uses significantly more memory than the base default. 4 Gi is recommended for production; do not set below 512 Mi or Ghost will OOMKill during theme compilation. |
-| `container_image_source` | `"custom"` | `"custom"` | `Ghost_Common` supplies a Dockerfile-based build by default so that Ghost can be customised with plugins and themes before deployment. Set to `"prebuilt"` to deploy the official Docker Hub Ghost image directly. |
+| `container_image_source` | `"custom"` | `"custom"` | `Ghost Common` supplies a Dockerfile-based build by default so that Ghost can be customised with plugins and themes before deployment. Set to `"prebuilt"` to deploy the official Docker Hub Ghost image directly. |
 | `enable_cloudsql_volume` | `true` | `true` | The Cloud SQL Auth Proxy sidecar is required for Ghost to connect to Cloud SQL via a Unix socket. Only disable if connecting to Cloud SQL directly over a private TCP connection. |
 
 **`min_instance_count`:** The variable default is `1` (always at least one pod running — no scale-to-zero on GKE). Like `max_instance_count`, the value `1` is also hardcoded in the `main.tf` locals merge, so changing the variable via `tfvars` has no effect without editing `main.tf` directly.
 
-**`container_resources`:** The variable default is `{ cpu_limit = "1000m", memory_limit = "512Mi" }` (the App_GKE base default). However, Ghost_Common produces a `config` with `cpu_limit = var.cpu_limit` (default `"2000m"`) and `memory_limit = var.memory_limit` (default `"4Gi"`), which are merged into `container_resources` in the `main.tf` locals block. This means the effective container resources for Ghost are 2 vCPU / 4 Gi by default, regardless of the `container_resources` variable default. To override both the `cpu_limit` / `memory_limit` shorthand variables and the `container_resources` object for consistency, set `cpu_limit`, `memory_limit`, and `container_resources` together.
+**`container_resources`:** The variable default is `{ cpu_limit = "1000m", memory_limit = "512Mi" }` (the App GKE base default). However, Ghost Common produces a `config` with `cpu_limit = var.cpu_limit` (default `"2000m"`) and `memory_limit = var.memory_limit` (default `"4Gi"`), which are merged into `container_resources` in the `main.tf` locals block. This means the effective container resources for Ghost are 2 vCPU / 4 Gi by default, regardless of the `container_resources` variable default. To override both the `cpu_limit` / `memory_limit` shorthand variables and the `container_resources` object for consistency, set `cpu_limit`, `memory_limit`, and `container_resources` together.
 
 The remaining runtime variables (`deploy_application`, `container_image`, `container_build_config`, `enable_image_mirroring`, `enable_vertical_pod_autoscaling`, `container_protocol`, `container_resources`, `timeout_seconds`, `cloudsql_volume_mount_path`, `service_annotations`, `service_labels`) behave as described in [App_GKE Group 3](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 
@@ -139,9 +139,9 @@ The remaining runtime variables (`deploy_application`, `container_image`, `conta
 
 These variables behave identically to `App_GKE`. See [App_GKE §4](../App_GKE/App_GKE.md#4-advanced-security), [App_GKE §5](../App_GKE/App_GKE.md#5-traffic--ingress), and [App_GKE §3.D](../App_GKE/App_GKE.md#d-networking--network-policies).
 
-> **Note:** The `ingress_settings` and `vpc_egress_setting` variables appear in `Ghost_GKE`'s variable definitions but are **not passed through to `App_GKE`**. Setting these variables has no effect on the deployed infrastructure in the current implementation.
+> **Note:** The `ingress_settings` and `vpc_egress_setting` variables appear in `Ghost GKE`'s variable definitions but are **not passed through to `App GKE`**. Setting these variables has no effect on the deployed infrastructure in the current implementation.
 
-The following networking variables are available in `Ghost_GKE`:
+The following networking variables are available in `Ghost GKE`:
 
 | Variable | Default | Description |
 |---|---|---|
@@ -217,13 +217,13 @@ These variables behave identically to `App_GKE`. See [App_GKE §3.B](../App_GKE/
 | `backup_schedule` | `"0 2 * * *"` | Daily at 02:00 UTC. Adjust to match your Recovery Point Objective and traffic patterns. |
 | `backup_retention_days` | `7` | 7-day retention. Increase for production deployments (30–90 days recommended). |
 
-**Backup Import** — Ghost_GKE also supports importing an existing backup on first deployment:
+**Backup Import** — Ghost GKE also supports importing an existing backup on first deployment:
 
 | Variable | Default | Description |
 |---|---|---|
 | `enable_backup_import` | `false` | When `true`, runs a one-time import job during deployment to restore the backup specified by `backup_uri`. Configure `backup_source`, `backup_uri`, and `backup_format` before enabling. |
 | `backup_source` | `"gcs"` | Source system for the backup file. `"gcs"` imports from a Cloud Storage URI; `"gdrive"` imports from a Google Drive file ID. |
-| `backup_uri` | `""` | Full GCS URI (`"gs://my-bucket/backups/ghost.sql"`) or Google Drive file ID. Mapped to `backup_file` in `App_GKE`. |
+| `backup_uri` | `""` | Full GCS URI (`"gs://my-bucket/backups/ghost.sql"`) or Google Drive file ID. Mapped to `backup_file` in `App GKE`. |
 | `backup_file` | `"backup.sql"` | Filename of a backup stored in the module's automatically created backups GCS bucket. An alternative to `backup_uri` for backups already placed in the module-managed bucket. |
 | `backup_format` | `"sql"` | Format of the backup file. Supported values: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`, `auto`. |
 
@@ -243,7 +243,7 @@ These variables behave as described in [App_GKE §3.E](../App_GKE/App_GKE.md#e-i
 
 **Ghost default `db-init` job:**
 
-When `initialization_jobs` is left as the default (empty list `[]`), `Ghost_Common` automatically supplies a `db-init` job:
+When `initialization_jobs` is left as the default (empty list `[]`), `Ghost Common` automatically supplies a `db-init` job:
 
 | Field | Value |
 |---|---|
@@ -259,7 +259,7 @@ Override `initialization_jobs` with a non-empty list to replace this default wit
 
 The `cron_jobs` and `additional_services` variables are available and behave identically to `App_GKE`. See [App_GKE §3.E](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs) for full documentation.
 
-> **Note:** The `cron_jobs` schema in `Ghost_GKE` uses Kubernetes CronJob fields — `restart_policy`, `concurrency_policy`, `failed_jobs_history_limit`, `successful_jobs_history_limit`, `starting_deadline_seconds`, `suspend` — rather than the Cloud Run–style fields (`parallelism`, `paused`, `max_retries`, `task_count`) used in `Ghost_CloudRun`. The `secret_env_vars` field is also not available in GKE cron jobs (secrets are managed via `secret_environment_variables` at the module level).
+> **Note:** The `cron_jobs` schema in `Ghost GKE` uses Kubernetes CronJob fields — `restart_policy`, `concurrency_policy`, `failed_jobs_history_limit`, `successful_jobs_history_limit`, `starting_deadline_seconds`, `suspend` — rather than the Cloud Run–style fields (`parallelism`, `paused`, `max_retries`, `task_count`) used in `Ghost CloudRun`. The `secret_env_vars` field is also not available in GKE cron jobs (secrets are managed via `secret_environment_variables` at the module level).
 
 ---
 
@@ -282,7 +282,7 @@ These variables behave identically to `App_GKE`. See [App_GKE Group 9](../App_GK
 
 **Ghost-specific defaults:**
 
-`Ghost_Common` automatically provisions a `ghost-content` GCS bucket in addition to any buckets defined in `storage_buckets`. This bucket is used for Ghost media storage via GCS Fuse. You do not need to define it manually.
+`Ghost Common` automatically provisions a `ghost-content` GCS bucket in addition to any buckets defined in `storage_buckets`. This bucket is used for Ghost media storage via GCS Fuse. You do not need to define it manually.
 
 | Bucket | `name_suffix` | Purpose |
 |---|---|---|
@@ -298,23 +298,23 @@ These variables behave identically to `App_GKE`. See [App_GKE §3.B](../App_GKE/
 
 **Ghost-specific defaults and restrictions:**
 
-| Variable | Ghost_GKE Default | App_GKE Default | Notes |
+| Variable | Ghost GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `database_type` | `"MYSQL_8_0"` | `"POSTGRES"` | **Ghost 6.x requires MySQL 8.0.** Do not change this to a PostgreSQL or SQL Server variant — Ghost will not start. |
 | `application_database_name` | `"gkeappdb"` | `"gkeappdb"` | Override to `"ghost"` or a meaningful name such as `"ghost_prod"`. |
 | `application_database_user` | `"gkeappuser"` | `"gkeappuser"` | Override to `"ghost"` or a meaningful name such as `"ghost_svc"`. |
-| `db_name` | `"ghost"` | *(not in App_GKE)* | Shorthand variable for the database name passed to Ghost_Common. Controls the `db_name` field in the `application_config` used by Ghost (distinct from `application_database_name`, which controls what App_GKE provisions in Cloud SQL). |
-| `db_user` | `"ghost"` | *(not in App_GKE)* | Shorthand variable for the database user passed to Ghost_Common. Controls the `db_user` field in the Ghost `application_config` (distinct from `application_database_user`). |
+| `db_name` | `"ghost"` | *(not in App GKE)* | Shorthand variable for the database name passed to Ghost Common. Controls the `db_name` field in the `application_config` used by Ghost (distinct from `application_database_name`, which controls what App GKE provisions in Cloud SQL). |
+| `db_user` | `"ghost"` | *(not in App GKE)* | Shorthand variable for the database user passed to Ghost Common. Controls the `db_user` field in the Ghost `application_config` (distinct from `application_database_user`). |
 
 > **Important:** Ghost 6.x will silently use SQLite instead of MySQL if the `database__client` variable is not set. This module injects `database__client = "mysql"` automatically. Do not remove or override it.
 
-> **Note:** Unlike `Ghost_CloudRun` (where `database_type` is fixed inside `Ghost_Common` and not user-configurable), `Ghost_GKE` exposes `database_type` as a user-configurable variable with a default of `"MYSQL_8_0"`. The variable can technically be changed, but doing so will break Ghost — the application only supports MySQL 8.0.
+> **Note:** Unlike `Ghost CloudRun` (where `database_type` is fixed inside `Ghost Common` and not user-configurable), `Ghost GKE` exposes `database_type` as a user-configurable variable with a default of `"MYSQL_8_0"`. The variable can technically be changed, but doing so will break Ghost — the application only supports MySQL 8.0.
 
 **Cloud SQL instance discovery:**
 
 | Variable | Default | Description |
 |---|---|---|
-| `sql_instance_name` | `""` | Name of an existing Cloud SQL instance to use. Leave empty to auto-discover a Services_GCP-managed instance or create an inline instance. |
+| `sql_instance_name` | `""` | Name of an existing Cloud SQL instance to use. Leave empty to auto-discover a Services GCP-managed instance or create an inline instance. |
 | `sql_instance_base_name` | `"app-sql"` | Base name for the inline Cloud SQL instance when no existing instance is found. Deployment ID is appended. |
 
 **Automatic password rotation** is also supported:
@@ -342,40 +342,40 @@ Ghost 6.x performs database migrations and theme compilation during startup, whi
 
 ### Health probe routing
 
-`Ghost_GKE` exposes **two parallel sets** of probe variables that configure Kubernetes probes via different routing paths:
+`Ghost GKE` exposes **two parallel sets** of probe variables that configure Kubernetes probes via different routing paths:
 
 | Variable set | Passed to | Configures |
 |---|---|---|
-| `startup_probe`, `liveness_probe` | `Ghost_Common` sub-module | The application container's Kubernetes probe spec (`initialDelaySeconds`, `path`, `failureThreshold`, etc.) |
-| `startup_probe_config`, `health_check_config` | `App_GKE` directly | The App_GKE-standard probe configuration used for load balancer health checks and GKE infrastructure probes |
+| `startup_probe`, `liveness_probe` | `Ghost Common` sub-module | The application container's Kubernetes probe spec (`initialDelaySeconds`, `path`, `failureThreshold`, etc.) |
+| `startup_probe_config`, `health_check_config` | `App GKE` directly | The App GKE-standard probe configuration used for load balancer health checks and GKE infrastructure probes |
 
 These are parallel paths, not aliases. Changing `startup_probe` does not affect `startup_probe_config`, and vice versa.
 
-> **Important:** `startup_probe_config` and `health_check_config` both default to `path = "/healthz"`. Ghost does not expose a `/healthz` endpoint — its root path (`/`) returns HTTP 200 when healthy. If you rely on the App_GKE-standard probes, override both variables to use `path = "/"` to match Ghost's actual health endpoint.
+> **Important:** `startup_probe_config` and `health_check_config` both default to `path = "/healthz"`. Ghost does not expose a `/healthz` endpoint — its root path (`/`) returns HTTP 200 when healthy. If you rely on the App GKE-standard probes, override both variables to use `path = "/"` to match Ghost's actual health endpoint.
 
-**Startup probe** (`startup_probe` → `Ghost_Common`):
+**Startup probe** (`startup_probe` → `Ghost Common`):
 
-| Field | Ghost Default | App_GKE Default | Notes |
+| Field | Ghost Default | App GKE Default | Notes |
 |---|---|---|---|
 | `path` | `"/"` | `"/healthz"` | Ghost does not expose a dedicated `/healthz` endpoint; the root path is used instead. |
 | `initial_delay_seconds` | `90` | `10` | Allows Ghost 90 seconds before the first probe attempt, giving it time to run migrations. |
 | `failure_threshold` | `10` | `3` | Ghost may take up to 100 seconds on first boot; `10 × period_seconds (10s) = 100s` total allowance. |
 
-**Liveness probe** (`liveness_probe` → `Ghost_Common`):
+**Liveness probe** (`liveness_probe` → `Ghost Common`):
 
-| Field | Ghost Default | App_GKE Default | Notes |
+| Field | Ghost Default | App GKE Default | Notes |
 |---|---|---|---|
 | `path` | `"/"` | `"/healthz"` | Same as startup probe — Ghost's root path returns HTTP 200 when healthy. |
 | `initial_delay_seconds` | `60` | `15` | Gives Ghost additional time to stabilise before liveness checks begin. |
 
-**App_GKE-standard probes** (`startup_probe_config`, `health_check_config` → `App_GKE`):
+**App GKE-standard probes** (`startup_probe_config`, `health_check_config` → `App GKE`):
 
 | Variable | Ghost Default | Notes |
 |---|---|---|
 | `startup_probe_config` | `{ enabled = true, path = "/healthz" }` | **Override `path` to `"/"` for Ghost.** Ghost's root path is the correct health endpoint. |
 | `health_check_config` | `{ enabled = true, path = "/healthz" }` | **Override `path` to `"/"` for Ghost.** Same reason as above. |
 
-**`uptime_check_config`:** In `Ghost_GKE` the default is `{ enabled = false, path = "/" }` — uptime checks are **disabled by default** (unlike `Ghost_CloudRun` where they are enabled). Enable explicitly for production monitoring.
+**`uptime_check_config`:** In `Ghost GKE` the default is `{ enabled = false, path = "/" }` — uptime checks are **disabled by default** (unlike `Ghost CloudRun` where they are enabled). Enable explicitly for production monitoring.
 
 The `uptime_check_config` and `alert_policies` variables behave as described in [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 
@@ -411,7 +411,7 @@ Identical to `App_GKE`. See [App_GKE §3.A](../App_GKE/App_GKE.md#a-compute-gke-
 
 Available variables: `gke_cluster_name`, `namespace_name`, `workload_type`, `service_type`, `session_affinity`, `enable_multi_cluster_service`, `configure_service_mesh`, `enable_network_segmentation`, `termination_grace_period_seconds`, `deployment_timeout`, `gke_cluster_selection_mode` (default `"primary"`; options: `explicit`, `round-robin`, `primary`), `network_name` (default `""`; auto-discovered when empty), `prereq_gke_subnet_cidr` (default `"10.201.0.0/24"`; CIDR for inline GKE subnet creation).
 
-> **Session affinity note:** `session_affinity` defaults to `"ClientIP"` in Ghost_GKE. This is important for Ghost: without session affinity, the Ghost admin panel and membership portal can experience intermittent authentication failures when requests are routed to different pod replicas that do not share session state.
+> **Session affinity note:** `session_affinity` defaults to `"ClientIP"` in Ghost GKE. This is important for Ghost: without session affinity, the Ghost admin panel and membership portal can experience intermittent authentication failures when requests are routed to different pod replicas that do not share session state.
 
 ---
 
@@ -427,7 +427,7 @@ Available variables: `stateful_pvc_enabled`, `stateful_pvc_size`, `stateful_pvc_
 
 These variables configure Ghost's Redis integration. The underlying Redis infrastructure support is provided by `App_GKE` (see [App_GKE §8.A](../App_GKE/App_GKE.md#a-redis--memorystore)); the variables below are Ghost-specific overrides and additions. Ghost uses Redis for page caching and session caching, which significantly reduces database load and improves page delivery speed for high-traffic sites.
 
-> **Note:** In `Ghost_GKE`, the Redis variables are in **group 15** (not group 21 as in `Ghost_CloudRun`).
+> **Note:** In `Ghost GKE`, the Redis variables are in **group 15** (not group 21 as in `Ghost CloudRun`).
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -462,7 +462,7 @@ kubectl exec -n NAMESPACE POD_NAME -- \
 
 ## Module Outputs
 
-`Ghost_GKE` exposes the following Terraform outputs:
+`Ghost GKE` exposes the following Terraform outputs:
 
 | Output | Description |
 |---|---|

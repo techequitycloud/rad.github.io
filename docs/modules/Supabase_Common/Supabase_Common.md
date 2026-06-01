@@ -1,11 +1,11 @@
 ---
-title: "Supabase_Common Shared Configuration Module"
+title: "Supabase Common Shared Configuration Module"
 sidebar_label: "Supabase Common"
 ---
 
-# Supabase_Common Shared Configuration Module
+# Supabase Common Shared Configuration Module
 
-The `Supabase_Common` module defines the Supabase configuration for the RAD Modules ecosystem. It is a **configuration and secrets module** — it creates three Secret Manager secrets (JWT secret, anon key, service role key) and produces `config`, `secret_ids`, `storage_buckets`, and `path` outputs consumed by `Supabase_GKE`.
+The `Supabase Common` module defines the Supabase configuration for the RAD Modules ecosystem. It is a **configuration and secrets module** — it creates three Secret Manager secrets (JWT secret, anon key, service role key) and produces `config`, `secret_ids`, `storage_buckets`, and `path` outputs consumed by `Supabase GKE`.
 
 ## 1. Overview
 
@@ -79,7 +79,7 @@ Layer 2: App_GKE  (Kubernetes infrastructure)
 
 ### `path`
 
-The absolute path to the `Supabase_Common` module directory, used by `Supabase_GKE` to locate the `scripts/` directory.
+The absolute path to the `Supabase Common` module directory, used by `Supabase GKE` to locate the `scripts/` directory.
 
 ---
 
@@ -155,7 +155,7 @@ One `db-init` job runs by default:
 
 ## 6. JWT Key Management
 
-Supabase uses signed JWTs for client authentication. `Supabase_Common` creates three secrets:
+Supabase uses signed JWTs for client authentication. `Supabase Common` creates three secrets:
 
 ### Post-Deployment JWT Setup
 
@@ -201,10 +201,10 @@ Kong routes requests to Supabase microservices by path prefix:
 
 ## 8. Platform-Specific Differences
 
-| Aspect | Supabase_GKE | Notes |
+| Aspect | Supabase GKE | Notes |
 |---|---|---|
 | Platform | GKE Autopilot only | No Cloud Run variant |
-| Additional microservices | Via `additional_services` in `Supabase_GKE` | Auth, PostgREST, Realtime, Storage, Studio |
+| Additional microservices | Via `additional_services` in `Supabase GKE` | Auth, PostgREST, Realtime, Storage, Studio |
 | JWT management | Auto-generated secret; placeholder anon/service keys | Replace placeholders post-deployment |
 | Image mirroring | Always `true` | Cannot be disabled |
 

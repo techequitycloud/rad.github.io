@@ -67,7 +67,7 @@ gcloud container clusters get-credentials CLUSTER_NAME \
 
 Before deploying this module:
 
-1. **Services_GCP deployed** — this module depends on `Services_GCP` for the VPC and GKE Autopilot cluster.
+1. **Services GCP deployed** — this module depends on `Services GCP` for the VPC and GKE Autopilot cluster.
 2. **GCP project** with billing enabled.
 3. **gcloud CLI** authenticated with Owner or Editor role on the project.
 4. **kubectl** installed and configured.
@@ -80,7 +80,7 @@ Before deploying this module:
 
 ### Variables
 
-In the RAD UI, open the OpenClaw_GKE module and fill in the deployment form:
+In the RAD UI, open the OpenClaw GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
@@ -568,9 +568,9 @@ gcloud monitoring metrics list \
 
 When the lab is complete, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
 
-**Expected result:** All Kubernetes resources, GCS workspace bucket, Secret Manager secrets, and IAM bindings created by this module are deleted. The GKE cluster and VPC managed by `Services_GCP` are not affected.
+**Expected result:** All Kubernetes resources, GCS workspace bucket, Secret Manager secrets, and IAM bindings created by this module are deleted. The GKE cluster and VPC managed by `Services GCP` are not affected.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

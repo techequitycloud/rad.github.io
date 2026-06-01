@@ -11,23 +11,23 @@ This document provides a comprehensive reference for the `modules/Grafana_GKE` T
 
 ## 1. Module Overview
 
-`Grafana_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP and Kubernetes infrastructure provisioning and injects Grafana-specific application configuration via `Grafana_Common`.
+`Grafana GKE` is a **wrapper module** built on top of `App GKE`. It uses `App GKE` for all GCP and Kubernetes infrastructure provisioning and injects Grafana-specific application configuration via `Grafana Common`.
 
 **Key Capabilities:**
 - **Compute**: GKE Autopilot Deployment or StatefulSet, 1 vCPU / 2 Gi by default with Horizontal Pod Autoscaling.
 - **Data Persistence**: Cloud SQL **PostgreSQL 15** as the Grafana application database. The module automatically injects `GF_DATABASE_TYPE=postgres` to prevent Grafana from falling back to SQLite.
 - **Storage**: StatefulSet PVCs (optional, for local Grafana data), GCS Fuse volumes, and NFS mounts for sharing dashboards and plugins across pods.
-- **Security**: Inherits Cloud Armor WAF, IAP (OAuth 2.0), Binary Authorization, and VPC Service Controls from `App_GKE`.
+- **Security**: Inherits Cloud Armor WAF, IAP (OAuth 2.0), Binary Authorization, and VPC Service Controls from `App GKE`.
 - **CI/CD**: Cloud Build custom image pipeline by default; Cloud Deploy progressive delivery optional.
 - **Reliability**: Health probes target `/api/health`. PodDisruptionBudget is enabled by default.
 
-**Key difference from Grafana_CloudRun:** The GKE variant uses Kubernetes-native scaling (HPA), persistent volume claims for StatefulSet deployments, Workload Identity instead of service account key files, and `startup_probe_config`/`health_check_config` variables (in addition to the `startup_probe`/`liveness_probe` variables from the Common module).
+**Key difference from Grafana CloudRun:** The GKE variant uses Kubernetes-native scaling (HPA), persistent volume claims for StatefulSet deployments, Workload Identity instead of service account key files, and `startup_probe_config`/`health_check_config` variables (in addition to the `startup_probe`/`liveness_probe` variables from the Common module).
 
 ---
 
 ## 2. IAM & Access Control
 
-`Grafana_GKE` delegates all IAM provisioning to `App_GKE`. Grafana pods access Cloud SQL via the Cloud SQL Auth Proxy sidecar (`enable_cloudsql_volume = true` by default) and Workload Identity.
+`Grafana GKE` delegates all IAM provisioning to `App GKE`. Grafana pods access Cloud SQL via the Cloud SQL Auth Proxy sidecar (`enable_cloudsql_volume = true` by default) and Workload Identity.
 
 **`GF_DATABASE_TYPE` injection:** `grafana.tf` merges `{ GF_DATABASE_TYPE = "postgres" }` into the environment_variables map. This is required — without it Grafana defaults to SQLite even when all other `GF_DATABASE_*` variables are present.
 
@@ -194,8 +194,8 @@ IAP for GKE requires OAuth 2.0 credentials. Unlike the CloudRun variant, the GKE
 | `health_check_config` | 10 | `{ path="/api/health", initial_delay_seconds=30, failure_threshold=3 }` | Kubernetes liveness probe. |
 | `uptime_check_config` | 10 | `{ enabled=false, path="/api/health" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | 10 | `[]` | Cloud Monitoring metric alert policies. |
-| `startup_probe` | 10 | `{ path="/api/health", initial_delay_seconds=30, failure_threshold=12 }` | Probe config passed to `Grafana_Common`. |
-| `liveness_probe` | 10 | `{ path="/api/health", initial_delay_seconds=60, failure_threshold=3 }` | Probe config passed to `Grafana_Common`. |
+| `startup_probe` | 10 | `{ path="/api/health", initial_delay_seconds=30, failure_threshold=12 }` | Probe config passed to `Grafana Common`. |
+| `liveness_probe` | 10 | `{ path="/api/health", initial_delay_seconds=60, failure_threshold=3 }` | Probe config passed to `Grafana Common`. |
 
 ### B. Reliability Policies
 
@@ -265,12 +265,12 @@ IAP for GKE requires OAuth 2.0 credentials. Unlike the CloudRun variant, the GKE
 |---|---|
 | **PostgreSQL 15 required** | Grafana requires a relational database backend. SQLite is not safe for multi-pod deployments. |
 | **`GF_DATABASE_TYPE = "postgres"` injected** | Injected by `grafana.tf`. Without this, Grafana falls back to SQLite even when all other `GF_DATABASE_*` variables are present. |
-| **GCS data bucket** | A `grafana-data` GCS bucket is provisioned by `Grafana_Common` and passed via `module_storage_buckets`. |
+| **GCS data bucket** | A `grafana-data` GCS bucket is provisioned by `Grafana Common` and passed via `module_storage_buckets`. |
 | **Cloud SQL Auth Proxy sidecar** | `enable_cloudsql_volume = true` by default. Grafana connects to Cloud SQL via the Unix socket. |
 | **Default fsGroup = 472** | Grafana runs as UID/GID 472. `stateful_fs_group = 472` ensures the container can write to PVC mounts without permission errors. |
 | **No default init job** | Grafana auto-migrates its database schema on startup. No `db-init` job is needed. |
 | **Health endpoint** | `/api/health` returns HTTP 200 when Grafana and its database connection are healthy. |
-| **Custom image by default** | Cloud Build compiles a custom image using `Grafana_Common`'s Dockerfile extending `grafana/grafana`. |
+| **Custom image by default** | Cloud Build compiles a custom image using `Grafana Common`'s Dockerfile extending `grafana/grafana`. |
 
 ---
 

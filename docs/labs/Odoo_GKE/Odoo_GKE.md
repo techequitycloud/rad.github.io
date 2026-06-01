@@ -11,7 +11,7 @@ sidebar_label: "Odoo GKE"
 
 **Estimated time:** 2–3 hours (ERP complexity requires additional setup and exploration time)
 
-This lab walks you through deploying Odoo ERP on Google Kubernetes Engine (GKE) Autopilot using the `Odoo_GKE` module, then verifying and exploring the deployment manually. The module handles all GCP infrastructure; you perform the post-deployment steps interactively.
+This lab walks you through deploying Odoo ERP on Google Kubernetes Engine (GKE) Autopilot using the `Odoo GKE` module, then verifying and exploring the deployment manually. The module handles all GCP infrastructure; you perform the post-deployment steps interactively.
 
 ### What the Module Automates
 
@@ -54,7 +54,7 @@ Key tools used in this lab:
 
 ## Prerequisites
 
-1. **Services_GCP deployed** — the `Odoo_GKE` module depends on `Services_GCP`. Ensure it is deployed in the same project and that a GKE Autopilot cluster exists.
+1. **Services GCP deployed** — the `Odoo GKE` module depends on `Services GCP`. Ensure it is deployed in the same project and that a GKE Autopilot cluster exists.
 2. **gcloud CLI authenticated** — run `gcloud auth application-default login`.
 3. **kubectl configured** — see Phase 2 for the exact `gcloud` command.
 4. **GCP project** with billing enabled and the following APIs active (the module enables them automatically on first deploy):
@@ -67,7 +67,7 @@ Key tools used in this lab:
 
 ### Variables
 
-In the RAD UI, open the Odoo_GKE module and fill in the deployment form:
+In the RAD UI, open the Odoo GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
@@ -215,7 +215,7 @@ On first visit, Odoo displays the **database manager** page at `/web/database/ma
 
 Fill in the form:
 - **Master Password** — retrieve from Secret Manager (see below)
-- **Database Name** — e.g., `gkeappdb` (must match `application_database_name`)
+- **Database Name** — e.g., `odoo` (must match `application_database_name`)
 - **Email** — admin email address
 - **Password** — admin user password
 - **Language** — select your locale
@@ -416,7 +416,7 @@ When you are finished with the lab, return to the RAD UI, navigate to your deplo
 
 > **Warning:** This deletes the Cloud SQL database, GCS bucket contents, and NFS data. Ensure database backups are taken before undeploying if data needs to be preserved.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

@@ -11,12 +11,12 @@ This document provides a comprehensive reference for the `modules/Chroma_GKE` Te
 
 ## 1. Module Overview
 
-`Chroma_GKE` is a **wrapper module** built on top of `App_GKE`. It deploys Chroma — the AI-native open-source vector database — on GKE Autopilot with production-grade StatefulSet persistence, GCS FUSE storage, optional token authentication, Workload Identity, and horizontal auto-scaling.
+`Chroma GKE` is a **wrapper module** built on top of `App GKE`. It deploys Chroma — the AI-native open-source vector database — on GKE Autopilot with production-grade StatefulSet persistence, GCS FUSE storage, optional token authentication, Workload Identity, and horizontal auto-scaling.
 
 **Key Capabilities:**
 - **Compute**: GKE Autopilot, 1 vCPU / 1 Gi by default. StatefulSet or Deployment workload type.
 - **Data Persistence**: StatefulSet PVC (recommended for production) or GCS FUSE-mounted Cloud Storage bucket. No Cloud SQL, no Redis.
-- **Security**: Optional auth token via Secret Manager injected as `CHROMA_SERVER_AUTH_CREDENTIALS`. Inherits Cloud Armor, IAP, and VPC-SC from `App_GKE`.
+- **Security**: Optional auth token via Secret Manager injected as `CHROMA_SERVER_AUTH_CREDENTIALS`. Inherits Cloud Armor, IAP, and VPC-SC from `App GKE`.
 - **CI/CD**: Cloud Build image pipeline by default; Cloud Deploy progressive delivery optional.
 - **Reliability**: Health probes target `/api/v2/heartbeat`. PodDisruptionBudget enabled by default.
 
@@ -38,9 +38,9 @@ This document provides a comprehensive reference for the `modules/Chroma_GKE` Te
 
 ## 2. IAM & Access Control
 
-`Chroma_GKE` delegates all IAM provisioning to `App_GKE`. Workload Identity is used — the Kubernetes service account is bound to a GCP service account with the minimum required roles (GCS read/write for the data bucket, Secret Manager accessor for the auth token).
+`Chroma GKE` delegates all IAM provisioning to `App GKE`. Workload Identity is used — the Kubernetes service account is bound to a GCP service account with the minimum required roles (GCS read/write for the data bucket, Secret Manager accessor for the auth token).
 
-**Auth token:** When `enable_auth_token = true`, `Chroma_Common` generates a token and stores it in Secret Manager as `<prefix>-auth-token`. The token is injected as `CHROMA_SERVER_AUTH_CREDENTIALS`.
+**Auth token:** When `enable_auth_token = true`, `Chroma Common` generates a token and stores it in Secret Manager as `<prefix>-auth-token`. The token is injected as `CHROMA_SERVER_AUTH_CREDENTIALS`.
 
 ---
 
@@ -90,7 +90,7 @@ For production deployments, `stateful_pvc_enabled = true` is recommended over GC
 | `stateful_update_strategy` | 7 | `null` | `'RollingUpdate'` for zero-downtime updates |
 | `stateful_fs_group` | 7 | `1000` | GID for PVC write access. Set to `0` to leave unset. |
 
-**PVC vs GCS FUSE double-mount prevention:** When `stateful_pvc_enabled = true`, the wrapper passes `enable_gcs_storage_volume = false` to `Chroma_Common`, which prevents the `<prefix>-data` GCS bucket from being mounted at `/data` alongside the PVC.
+**PVC vs GCS FUSE double-mount prevention:** When `stateful_pvc_enabled = true`, the wrapper passes `enable_gcs_storage_volume = false` to `Chroma Common`, which prevents the `<prefix>-data` GCS bucket from being mounted at `/data` alongside the PVC.
 
 ### D. Storage (GCS FUSE)
 
@@ -166,12 +166,12 @@ IAP via the Kubernetes Gateway API. Requires `enable_custom_domain` or `enable_c
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| No SQL database | `database_type = "NONE"` fixed by `Chroma_Common` | No Cloud SQL resources created |
+| No SQL database | `database_type = "NONE"` fixed by `Chroma Common` | No Cloud SQL resources created |
 | No Redis | Not used | Chroma has no caching dependency |
-| Fixed env vars | Always injected by `Chroma_Common` | `ANONYMIZED_TELEMETRY=false`, `CHROMA_SERVER_HTTP_PORT=8000` |
+| Fixed env vars | Always injected by `Chroma Common` | `ANONYMIZED_TELEMETRY=false`, `CHROMA_SERVER_HTTP_PORT=8000` |
 | Health probe path | Hard-coded to `/api/v2/heartbeat` | Chroma provides no configurable health path |
 | StatefulSet auto-select | `stateful_pvc_enabled = true` | Automatically resolves `workload_type` to `"StatefulSet"` |
-| PVC prevents GCS double-mount | `enable_gcs_storage_volume = false` passed to `Chroma_Common` | Prevents simultaneous PVC and GCS FUSE at `/data` |
+| PVC prevents GCS double-mount | `enable_gcs_storage_volume = false` passed to `Chroma Common` | Prevents simultaneous PVC and GCS FUSE at `/data` |
 
 ---
 
@@ -255,7 +255,7 @@ IAP via the Kubernetes Gateway API. Requires `enable_custom_domain` or `enable_c
 | `min_instance_count` | `1` | **Medium** | Scale-to-zero (`0`) on GKE causes the pod to be deleted. After scaling back up, Chroma must reload the HNSW index from the PVC (or GCS), which can take tens of seconds for large collections. Keep at `1` for latency-sensitive workloads. |
 | `max_instance_count` | `1` | **High** | Multiple Chroma replicas sharing a single PVC are not supported. Chroma does not have a distributed lock on its storage. Using `max_instance_count > 1` with a single PVC causes concurrent write corruption. For horizontal scaling, use a Chroma cluster deployment with separate PVCs per pod (one collection set per replica). |
 | `enable_gcs_storage_volume` (Common) | `true` | **High** | If GCS Fuse is the storage backend (no PVC) and it is disabled, all data is stored in the ephemeral container layer and lost on restart. Do not disable unless PVC persistence is configured. |
-| `quota_memory_requests` | `""` | **Critical** | If `enable_resource_quota = true` and this value is set without binary suffixes (e.g. `"4"` instead of `"4Gi"`), Kubernetes treats it as bytes, blocking all pod scheduling in the namespace. Always use `Gi` or `Mi`. Note: in Chroma_GKE this variable is accepted but not forwarded; verify in App_GKE if enabled. |
+| `quota_memory_requests` | `""` | **Critical** | If `enable_resource_quota = true` and this value is set without binary suffixes (e.g. `"4"` instead of `"4Gi"`), Kubernetes treats it as bytes, blocking all pod scheduling in the namespace. Always use `Gi` or `Mi`. Note: in Chroma GKE this variable is accepted but not forwarded; verify in App GKE if enabled. |
 | `stateful_pvc_mount_path` | `"/data"` | **Critical** | Chroma defaults to `/data` for its storage directory. If the mount path does not match the `CHROMA_SERVER_PERSIST_DIRECTORY` environment variable, Chroma will use the ephemeral in-container path, silently losing data on restart. |
 | `application_version` | `"latest"` | **Medium** | Using `"latest"` makes deployments non-reproducible. Chroma's data format has changed between major versions; upgrading across incompatible versions can make existing collections unreadable. Pin to a specific version tag in production. |
 | `enable_nfs` | `false` | **Low** | NFS is not recommended for primary Chroma storage on GKE — prefer PVCs for better IOPS and exclusive access semantics. NFS is useful for shared read-only data. |

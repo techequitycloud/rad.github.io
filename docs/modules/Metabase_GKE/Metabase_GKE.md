@@ -11,12 +11,12 @@ This document provides a comprehensive reference for the `modules/Metabase_GKE` 
 
 ## 1. Module Overview
 
-`Metabase_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP and Kubernetes infrastructure provisioning and injects Metabase-specific application configuration via `Metabase_Common`.
+`Metabase GKE` is a **wrapper module** built on top of `App GKE`. It uses `App GKE` for all GCP and Kubernetes infrastructure provisioning and injects Metabase-specific application configuration via `Metabase Common`.
 
 **Key Capabilities:**
 - **Compute**: GKE Autopilot Deployment (Metabase is stateless), 2 vCPU / 4 Gi by default with Horizontal Pod Autoscaling.
 - **Data Persistence**: Cloud SQL **PostgreSQL 15** as the Metabase application database. A `db-init` Kubernetes Job runs automatically on first deployment.
-- **Security**: Inherits Cloud Armor WAF, IAP (OAuth 2.0), Binary Authorization, and VPC Service Controls from `App_GKE`.
+- **Security**: Inherits Cloud Armor WAF, IAP (OAuth 2.0), Binary Authorization, and VPC Service Controls from `App GKE`.
 - **Session Affinity**: Defaults to `'ClientIP'` (sticky sessions) — recommended for Metabase to avoid session interruptions when HPA scales pods.
 - **Reliability**: Health probes target `/api/health` with 120-second initial delay for JVM startup. PodDisruptionBudget is enabled by default.
 
@@ -26,9 +26,9 @@ This document provides a comprehensive reference for the `modules/Metabase_GKE` 
 
 ## 2. IAM & Access Control
 
-`Metabase_GKE` delegates all IAM provisioning to `App_GKE`. Metabase pods access Cloud SQL via the Cloud SQL Auth Proxy sidecar and Workload Identity.
+`Metabase GKE` delegates all IAM provisioning to `App GKE`. Metabase pods access Cloud SQL via the Cloud SQL Auth Proxy sidecar and Workload Identity.
 
-**Default `db-init` job:** `Metabase_Common` provides a `db-init` Kubernetes Job using `postgres:15-alpine` that runs before the Metabase workload starts, creating the PostgreSQL database and user.
+**Default `db-init` job:** `Metabase Common` provides a `db-init` Kubernetes Job using `postgres:15-alpine` that runs before the Metabase workload starts, creating the PostgreSQL database and user.
 
 ---
 
@@ -97,8 +97,8 @@ Metabase is stateless and does not require StatefulSet. These variables are avai
 | `postgres_extensions` | 16 | `[]` | Not applicable for Metabase. |
 | `enable_auto_password_rotation` | 16 | `false` | Automated zero-downtime password rotation. |
 | `rotation_propagation_delay_sec` | 16 | `90` | Seconds to wait after rotation before restarting pods. |
-| `db_name` | 16 | `'metabase'` | Passed to `Metabase_Common`. |
-| `db_user` | 16 | `'metabase'` | Passed to `Metabase_Common`. |
+| `db_name` | 16 | `'metabase'` | Passed to `Metabase Common`. |
+| `db_user` | 16 | `'metabase'` | Passed to `Metabase Common`. |
 
 ### E. Storage
 
@@ -196,8 +196,8 @@ IAP is particularly valuable for Metabase GKE deployments — it restricts acces
 | `health_check_config` | 10 | `{ path="/api/health", initial_delay_seconds=120, failure_threshold=3 }` | GKE liveness probe. |
 | `uptime_check_config` | 10 | `{ enabled=false, path="/api/health" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | 10 | `[]` | Cloud Monitoring metric alert policies. |
-| `startup_probe` | 10 | `{ path="/api/health", initial_delay_seconds=60, failure_threshold=18 }` | Probe config passed to `Metabase_Common`. |
-| `liveness_probe` | 10 | `{ path="/api/health", initial_delay_seconds=120, failure_threshold=3 }` | Probe config passed to `Metabase_Common`. |
+| `startup_probe` | 10 | `{ path="/api/health", initial_delay_seconds=60, failure_threshold=18 }` | Probe config passed to `Metabase Common`. |
+| `liveness_probe` | 10 | `{ path="/api/health", initial_delay_seconds=120, failure_threshold=3 }` | Probe config passed to `Metabase Common`. |
 
 ### B. Reliability Policies
 
@@ -270,9 +270,9 @@ Metabase does not natively use Redis. The `enable_redis` variable injects `REDIS
 | Behaviour | Detail |
 |---|---|
 | **PostgreSQL 15 required** | Metabase uses PostgreSQL as its application database. All state is stored in PostgreSQL. |
-| **`MB_JETTY_PORT = "3000"` injected** | Set automatically by `Metabase_Common`. Must match `container_port`. |
-| **`JAVA_TIMEZONE = "UTC"` injected** | Set automatically by `Metabase_Common`. Ensures consistent timestamp handling. |
-| **Default db-init Kubernetes Job** | `Metabase_Common` provides a `db-init` job that runs before the workload. Override by setting `initialization_jobs`. |
+| **`MB_JETTY_PORT = "3000"` injected** | Set automatically by `Metabase Common`. Must match `container_port`. |
+| **`JAVA_TIMEZONE = "UTC"` injected** | Set automatically by `Metabase Common`. Ensures consistent timestamp handling. |
+| **Default db-init Kubernetes Job** | `Metabase Common` provides a `db-init` job that runs before the workload. Override by setting `initialization_jobs`. |
 | **Metabase is stateless** | Use `workload_type = 'Deployment'`. StatefulSet is available but not recommended. |
 | **Session affinity = ClientIP** | Default sticky sessions prevent users from being re-routed mid-session when HPA scales pods. |
 | **No application secrets generated** | Metabase manages its own internal keys. No `SECRET_KEY` equivalent is created. |

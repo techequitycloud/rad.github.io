@@ -47,8 +47,8 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) | [kubect
 ## Prerequisites
 
 1. A GCP project with billing enabled.
-2. The `Services_GCP` module deployed in the same project (provides VPC, GKE Autopilot cluster).
-3. The following APIs enabled (Services_GCP handles this):
+2. The `Services GCP` module deployed in the same project (provides VPC, GKE Autopilot cluster).
+3. The following APIs enabled (Services GCP handles this):
    - `container.googleapis.com`
    - `secretmanager.googleapis.com`
    - `artifactregistry.googleapis.com`

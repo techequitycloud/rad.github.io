@@ -1,11 +1,11 @@
 ---
-title: "OpenClaw_Common Shared Configuration Module"
+title: "OpenClaw Common Shared Configuration Module"
 sidebar_label: "OpenClaw Common"
 ---
 
-# OpenClaw_Common Shared Configuration Module
+# OpenClaw Common Shared Configuration Module
 
-The `OpenClaw_Common` module defines the OpenClaw AI gateway configuration for the RAD Modules ecosystem. It **creates GCP resources** (Secret Manager secrets for API credentials and optional messaging platform tokens) and produces a `config` output consumed by platform-specific wrapper modules (`OpenClaw_CloudRun` and `OpenClaw_GKE`).
+The `OpenClaw Common` module defines the OpenClaw AI gateway configuration for the RAD Modules ecosystem. It **creates GCP resources** (Secret Manager secrets for API credentials and optional messaging platform tokens) and produces a `config` output consumed by platform-specific wrapper modules (`OpenClaw CloudRun` and `OpenClaw GKE`).
 
 ## 1. Overview
 
@@ -136,7 +136,7 @@ A **sensitive** map of raw credential values for GKE deployments that bypass Sec
 ```
 
 ### `path`
-Absolute path to the `OpenClaw_Common` module directory. Wrapper modules set `scripts_dir = abspath("${module.openclaw_app.path}/scripts")`.
+Absolute path to the `OpenClaw Common` module directory. Wrapper modules set `scripts_dir = abspath("${module.openclaw_app.path}/scripts")`.
 
 ---
 
@@ -319,7 +319,7 @@ The `uid=1000,gid=1000` mount options match the container user (UID 1000) set in
 
 ## 8. Platform-Specific Differences
 
-| Aspect | OpenClaw_CloudRun | OpenClaw_GKE |
+| Aspect | OpenClaw CloudRun | OpenClaw GKE |
 |--------|-------------------|--------------|
 | `service_url` | Cloud Run service URL | Internal ClusterIP URL or custom domain |
 | `database_type` in config | `null` (overridden to `"NONE"` in wrapper) | `"NONE"` (set explicitly in wrapper locals) |

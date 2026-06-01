@@ -85,10 +85,10 @@ export DB_SECRET=$(gcloud secrets list \
 | gcloud CLI | Authenticated (`gcloud auth login`) |
 | kubectl | Installed and on PATH |
 | GCP project with billing | Active billing account linked |
-| Services_GCP module deployed | Provides VPC, GKE cluster, Cloud SQL, Artifact Registry, and Filestore |
+| Services GCP module deployed | Provides VPC, GKE cluster, Cloud SQL, Artifact Registry, and Filestore |
 | Service account | `roles/owner` granted in the target project |
 
-The `Services_GCP` module **must** be deployed and healthy before running this module. It supplies the shared VPC, GKE Autopilot cluster, Cloud SQL instance, Artifact Registry repository, and Filestore NFS server that Django_GKE discovers automatically at deploy time.
+The `Services GCP` module **must** be deployed and healthy before running this module. It supplies the shared VPC, GKE Autopilot cluster, Cloud SQL instance, Artifact Registry repository, and Filestore NFS server that Django GKE discovers automatically at deploy time.
 
 ---
 
@@ -109,7 +109,7 @@ Variables are configured in the RAD UI form before deploying. The table below li
 | `deploy_application` | `true` | Set to `false` to provision secrets/storage only without deploying the GKE workload |
 | `min_instance_count` | `0` | Minimum pod replicas (0 = scale to zero when idle) |
 | `max_instance_count` | `1` | Maximum pod replicas; acts as a cost ceiling |
-| `gke_cluster_name` | `""` | Target cluster name — leave empty to auto-discover from Services_GCP |
+| `gke_cluster_name` | `""` | Target cluster name — leave empty to auto-discover from Services GCP |
 | `gke_cluster_selection_mode` | `primary` | Cluster selection strategy: `explicit`, `round-robin`, or `primary` |
 | `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | CPU and memory limits for each Django pod |
 | `application_database_name` | `gkeapp` | PostgreSQL database name created in Cloud SQL |
@@ -644,7 +644,7 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Static IP reservation | < 1 minute |
 | **Total** | **8–15 minutes** |
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

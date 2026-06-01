@@ -61,7 +61,7 @@ Key REST APIs exercised:
 
 Before deploying, ensure the following:
 
-1. **Services_GCP** module is deployed (provides VPC, Serverless VPC Access connector, Cloud Filestore NFS).
+1. **Services GCP** module is deployed (provides VPC, Serverless VPC Access connector, Cloud Filestore NFS).
 2. `gcloud` CLI is authenticated: `gcloud auth application-default login`
 3. You have a GCP project with billing enabled.
 4. Access to the RAD UI with permission to deploy modules in the target GCP project.
@@ -521,7 +521,7 @@ When you are finished with the lab, return to the RAD UI, navigate to your deplo
 
 **What is removed:** Cloud Run service and revisions, Cloud Filestore NFS instance, GCS bucket, Secret Manager secrets, Artifact Registry images, Cloud Monitoring uptime checks.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

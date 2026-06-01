@@ -1,9 +1,9 @@
 ---
-title: "Wordpress_GKE Module — Configuration Guide"
+title: "Wordpress GKE Module — Configuration Guide"
 sidebar_label: "Wordpress GKE"
 ---
 
-# Wordpress_GKE Module — Configuration Guide
+# Wordpress GKE Module — Configuration Guide
 
 This guide describes the configuration variables that are **unique to the `Wordpress_GKE` module**. Because `Wordpress_GKE` is a wrapper around `App_GKE`, the vast majority of its variables are passed directly to that base module and are fully documented in the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). This guide explains the WordPress-specific additions, the differences in default values, and what the `Wordpress_Common` sub-module provisions automatically.
 
@@ -13,7 +13,7 @@ This guide describes the configuration variables that are **unique to the `Wordp
 
 ## WordPress Application Architecture
 
-`Wordpress_GKE` composes two modules:
+`Wordpress GKE` composes two modules:
 
 ```
 Wordpress_GKE
@@ -39,7 +39,7 @@ On first deployment the `db-init` job (using `mysql:8.0-debian`) runs a script t
 
 The groups below are **fully inherited from `App_GKE`** and behave identically. Refer to the linked sections of the [App_GKE Configuration Guide](../App_GKE/App_GKE.md) for complete documentation, including all option values, validation commands, and Console navigation paths.
 
-| Configuration Area | App_GKE.md Section |
+| Configuration Area | App GKE.md Section |
 |---|---|
 | Module Metadata & Configuration | [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) |
 | Project & Identity | [App_GKE §2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) |
@@ -73,7 +73,7 @@ The groups below are **fully inherited from `App_GKE`** and behave identically. 
 
 ## WordPress-Specific Configuration
 
-The sections below document variables that are **unique to this module** or that carry **WordPress-specific defaults** which differ from the `App_GKE` base.
+The sections below document variables that are **unique to this module** or that carry **WordPress-specific defaults** which differ from the `App GKE` base.
 
 ---
 
@@ -108,7 +108,7 @@ kubectl exec -n NAMESPACE POD_NAME -- php -r "
 
 All variables in this group behave as documented in [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute-gke-autopilot). The table below highlights the defaults that `Wordpress_GKE` changes from the base module values.
 
-| Variable | WordPress Default | App_GKE Default | Note |
+| Variable | WordPress Default | App GKE Default | Note |
 |---|---|---|---|
 | `container_image_source` | `"custom"` | `"custom"` | WordPress always builds a custom PHP 8.4 + Apache image via Cloud Build. Override with `"prebuilt"` only when supplying your own pre-built WordPress image via `container_image`. |
 | `container_port` | `80` | `8080` | Apache in the WordPress container listens on port 80. Do not change unless you have modified the Apache configuration inside the container. |
@@ -117,7 +117,7 @@ All variables in this group behave as documented in [App_GKE §3.A Compute (GKE 
 | `min_instance_count` | `1` | `1` | One pod is always running to avoid cold-start latency for WordPress visitors. |
 | `max_instance_count` | `1` | `3` | WordPress stores uploaded media in a GCS Fuse–mounted bucket, which supports concurrent writers. However, PHP session state and certain plugin caches may not be multi-replica–safe. Increase this value only after verifying that all installed plugins handle concurrent access correctly, and ensure `session_affinity = "ClientIP"` (the default) is set to pin sessions to individual pods. |
 | `container_resources` | `null` *(uses `cpu_limit`/`memory_limit`)* | `null` | When `container_resources` is set explicitly it overrides the separate `cpu_limit` and `memory_limit` variables. Use `container_resources` when you also need to specify CPU/memory *requests* or ephemeral storage limits. |
-| `container_build_config` | `{ enabled = true }` | N/A | Advanced Cloud Build configuration (Dockerfile path, build args, artifact repo). Exposed in `Wordpress_GKE` but **not** in `Wordpress_CloudRun`. Defaults to the `Wordpress_Common`-managed build config; override only when supplying a custom Dockerfile. |
+| `container_build_config` | `{ enabled = true }` | N/A | Advanced Cloud Build configuration (Dockerfile path, build args, artifact repo). Exposed in `Wordpress GKE` but **not** in `Wordpress CloudRun`. Defaults to the `Wordpress Common`-managed build config; override only when supplying a custom Dockerfile. |
 
 ---
 
@@ -127,7 +127,7 @@ Refer to [App_GKE §3.A Compute (GKE Autopilot)](../App_GKE/App_GKE.md#a-compute
 
 #### WordPress Auto-Generated Security Keys & Salts
 
-`Wordpress_Common` automatically provisions **eight WordPress cryptographic secrets** in Secret Manager and injects them into the application pods. You do not need to supply values — they are generated as random 64-character strings on the first deployment and persist across subsequent applies.
+`Wordpress Common` automatically provisions **eight WordPress cryptographic secrets** in Secret Manager and injects them into the application pods. You do not need to supply values — they are generated as random 64-character strings on the first deployment and persist across subsequent applies.
 
 | Secret | WordPress Constant | Purpose |
 |---|---|---|
@@ -151,7 +151,7 @@ gcloud secrets list --project=PROJECT_ID \
 
 #### WordPress Pre-Set Environment Variables
 
-`Wordpress_Common` injects the following environment variables into all pods automatically. You do not need to configure them; override via `environment_variables` only when customising beyond the defaults.
+`Wordpress Common` injects the following environment variables into all pods automatically. You do not need to configure them; override via `environment_variables` only when customising beyond the defaults.
 
 | Variable | Pre-Set Value | Description |
 |---|---|---|
@@ -167,15 +167,15 @@ gcloud secrets list --project=PROJECT_ID \
 
 The WordPress database is always **MySQL 8.0** (`MYSQL_8_0`), locked in by `Wordpress_Common`. Refer to [App_GKE §3.B Database (Cloud SQL)](../App_GKE/App_GKE.md#b-database-cloud-sql) for documentation on Cloud SQL instance discovery (`sql_instance_name`, `sql_instance_base_name`), `database_password_length`, `enable_auto_password_rotation`, and `rotation_propagation_delay_sec`.
 
-The variables below behave identically to their `App_GKE` counterparts but carry WordPress-appropriate defaults.
+The variables below behave identically to their `App GKE` counterparts but carry WordPress-appropriate defaults.
 
-| Variable | WordPress Default | App_GKE Default | Description |
+| Variable | WordPress Default | App GKE Default | Description |
 |---|---|---|---|
-| `database_type` | `null` *(defaults to `"MYSQL_8_0"` from `Wordpress_Common`)* | `"POSTGRES"` | WordPress requires MySQL. The `Wordpress_Common` config provides `"MYSQL_8_0"` as the base default, but the caller can override this via `var.database_type` (the GKE wrapper merges a non-null value). Setting this to a non-MySQL type will prevent WordPress from connecting to the database and should only be done with a corresponding custom `wp-config.php`. |
+| `database_type` | `null` *(defaults to `"MYSQL_8_0"` from `Wordpress Common`)* | `"POSTGRES"` | WordPress requires MySQL. The `Wordpress Common` config provides `"MYSQL_8_0"` as the base default, but the caller can override this via `var.database_type` (the GKE wrapper merges a non-null value). Setting this to a non-MySQL type will prevent WordPress from connecting to the database and should only be done with a corresponding custom `wp-config.php`. |
 | `application_database_name` | `"wp"` | `"gkeappdb"` | Name of the MySQL database created inside the Cloud SQL instance. Injected into pods as `DB_NAME`. **Do not change after initial deployment** without first migrating the database contents. |
 | `application_database_user` | `"wp"` | `"gkeappuser"` | MySQL username created for the WordPress application. Injected into pods as `DB_USER`. The auto-generated password is stored in Secret Manager and injected as `DB_PASSWORD`. |
 
-> **Note:** The variables `enable_postgres_extensions`, `postgres_extensions`, `enable_mysql_plugins`, and `mysql_plugins` are available but have no effect in the default WordPress configuration. `Wordpress_Common` does not enable any MySQL plugins. They are available for advanced use cases where custom MySQL behaviour is needed alongside WordPress.
+> **Note:** The variables `enable_postgres_extensions`, `postgres_extensions`, `enable_mysql_plugins`, and `mysql_plugins` are available but have no effect in the default WordPress configuration. `Wordpress Common` does not enable any MySQL plugins. They are available for advanced use cases where custom MySQL behaviour is needed alongside WordPress.
 
 ---
 
@@ -185,7 +185,7 @@ Refer to [App_GKE §3.E Initialization Jobs & CronJobs](../App_GKE/App_GKE.md#e-
 
 #### Pre-Configured db-init Job
 
-`Wordpress_Common` automatically defines a `db-init` initialization job. This job runs the `db-init.sh` script using the `mysql:8.0-debian` image and creates the WordPress MySQL database and database user within the Cloud SQL instance if they do not already exist. Key properties:
+`Wordpress Common` automatically defines a `db-init` initialization job. This job runs the `db-init.sh` script using the `mysql:8.0-debian` image and creates the WordPress MySQL database and database user within the Cloud SQL instance if they do not already exist. Key properties:
 
 - **`execute_on_apply = true`** — runs on every `terraform apply`, not only on first deployment.
 - **Idempotent** — checks for existing objects before creating them; safe to run repeatedly.
@@ -209,8 +209,8 @@ WordPress uses Redis as a persistent object cache to store the results of expens
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
-| `enable_redis` | `true` | `true` / `false` | When `true`, injects the `ENABLE_REDIS`, `WP_REDIS_HOST`, and `WP_REDIS_PORT` environment variables into the WordPress pods. The container entrypoint script reads these and configures the Redis Object Cache plugin automatically. **Enabling this variable does not provision a Redis server** — the server must exist independently. Leave `redis_host` empty to automatically use the Redis-compatible service co-located on the `Services_GCP`-managed NFS server (the default shared deployment model). Set to `false` to disable object caching entirely; this increases database load on busy sites but removes the Redis dependency. |
-| `redis_host` | `""` *(defaults to NFS server IP)* | IP address or hostname | The hostname or IP address of the Redis server, injected as `WP_REDIS_HOST`. Leave blank to fall back to the IP of the `Services_GCP`-managed NFS server (where a Redis-compatible service is typically co-located). Set explicitly when connecting to a dedicated Redis instance such as Cloud Memorystore — use the instance's private IP (found in **Memorystore → Redis → *instance* → Primary endpoint**). The GKE pods reach this address over the VPC — ensure firewall rules permit TCP traffic on `redis_port` from the cluster node subnet. |
+| `enable_redis` | `true` | `true` / `false` | When `true`, injects the `ENABLE_REDIS`, `WP_REDIS_HOST`, and `WP_REDIS_PORT` environment variables into the WordPress pods. The container entrypoint script reads these and configures the Redis Object Cache plugin automatically. **Enabling this variable does not provision a Redis server** — the server must exist independently. Leave `redis_host` empty to automatically use the Redis-compatible service co-located on the `Services GCP`-managed NFS server (the default shared deployment model). Set to `false` to disable object caching entirely; this increases database load on busy sites but removes the Redis dependency. |
+| `redis_host` | `""` *(defaults to NFS server IP)* | IP address or hostname | The hostname or IP address of the Redis server, injected as `WP_REDIS_HOST`. Leave blank to fall back to the IP of the `Services GCP`-managed NFS server (where a Redis-compatible service is typically co-located). Set explicitly when connecting to a dedicated Redis instance such as Cloud Memorystore — use the instance's private IP (found in **Memorystore → Redis → *instance* → Primary endpoint**). The GKE pods reach this address over the VPC — ensure firewall rules permit TCP traffic on `redis_port` from the cluster node subnet. |
 | `redis_port` | `"6379"` | Port number as string (e.g. `"6379"`) | TCP port of the Redis server, injected as `WP_REDIS_PORT`. The default `6379` is correct for standard Redis and Cloud Memorystore. Change only if your Redis instance is configured on a non-standard port. |
 | `redis_auth` | `""` | Password string *(sensitive)* | Authentication password for the Redis server, injected securely via Secret Manager. Leave empty if the Redis instance does not require authentication. For Cloud Memorystore with AUTH enabled, set this to the auth string shown in **Memorystore → Redis → *instance* → AUTH string**. This value is stored in Secret Manager and never exposed in plaintext in Terraform state or pod environment variable listings. |
 
@@ -233,12 +233,12 @@ kubectl exec -n NAMESPACE POD_NAME -- wp redis status --allow-root
 
 Refer to [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) for documentation on `startup_probe_config`, `health_check_config`, `uptime_check_config`, and `alert_policies`.
 
-`Wordpress_GKE` exposes two additional internal probe variables (`startup_probe` and `liveness_probe`) that are passed to `Wordpress_Common` and control the probe configuration embedded in the WordPress application configuration object. These have WordPress-specific defaults that are tuned for WordPress's startup behaviour:
+`Wordpress GKE` exposes two additional internal probe variables (`startup_probe` and `liveness_probe`) that are passed to `Wordpress Common` and control the probe configuration embedded in the WordPress application configuration object. These have WordPress-specific defaults that are tuned for WordPress's startup behaviour:
 
-| Variable | WordPress Default | App_GKE Default | Rationale |
+| Variable | WordPress Default | App GKE Default | Rationale |
 |---|---|---|---|
-| `startup_probe` | `type = "TCP"`, `initial_delay_seconds = 30`, `period_seconds = 15`, `failure_threshold = 20` | N/A *(internal to Wordpress_Common)* | Uses **TCP** rather than HTTP because WordPress may not yet respond to HTTP requests while the database connection is being established on first boot. The high `failure_threshold` (20 × 15s = 300 seconds of grace) accommodates the `db-init` job and WordPress's initialisation phase. **Do not reduce `failure_threshold` below 10** for production deployments — premature startup probe failures cause pod restarts during database initialisation, leading to a restart loop. |
-| `liveness_probe` | `type = "HTTP"`, `path = "/wp-admin/install.php"`, `initial_delay_seconds = 300`, `timeout_seconds = 60`, `failure_threshold = 3` | N/A *(internal to Wordpress_Common)* | Uses `/wp-admin/install.php` as the health endpoint. This WordPress-managed page returns HTTP 200 whether WordPress is freshly installed or already configured, making it a reliable liveness indicator that does not depend on an application-specific `/healthz` route. The 300-second initial delay ensures liveness checks do not begin until after the database initialisation job has had time to complete. |
+| `startup_probe` | `type = "TCP"`, `initial_delay_seconds = 30`, `period_seconds = 15`, `failure_threshold = 20` | N/A *(internal to Wordpress Common)* | Uses **TCP** rather than HTTP because WordPress may not yet respond to HTTP requests while the database connection is being established on first boot. The high `failure_threshold` (20 × 15s = 300 seconds of grace) accommodates the `db-init` job and WordPress's initialisation phase. **Do not reduce `failure_threshold` below 10** for production deployments — premature startup probe failures cause pod restarts during database initialisation, leading to a restart loop. |
+| `liveness_probe` | `type = "HTTP"`, `path = "/wp-admin/install.php"`, `initial_delay_seconds = 300`, `timeout_seconds = 60`, `failure_threshold = 3` | N/A *(internal to Wordpress Common)* | Uses `/wp-admin/install.php` as the health endpoint. This WordPress-managed page returns HTTP 200 whether WordPress is freshly installed or already configured, making it a reliable liveness indicator that does not depend on an application-specific `/healthz` route. The 300-second initial delay ensures liveness checks do not begin until after the database initialisation job has had time to complete. |
 
 ---
 
@@ -250,19 +250,19 @@ Refer to [App_GKE — Deployment Prerequisites & Dependency Analysis](../App_GKE
 
 - The `db-init` job creates the MySQL database and user automatically on first apply — no manual database setup is required before deployment.
 - The eight WordPress security keys and salts are generated and stored in Secret Manager automatically — no pre-existing secrets are needed.
-- The GCS uploads bucket (`wp-uploads`) is defined by `Wordpress_Common` and provisioned by `App_GKE` — it does not need to be created manually before deployment.
+- The GCS uploads bucket (`wp-uploads`) is defined by `Wordpress Common` and provisioned by `App GKE` — it does not need to be created manually before deployment.
 - Because `execute_on_apply = true` on the `db-init` job, every `terraform apply` will run the database initialisation script. This is intentional and safe; the script is idempotent.
-- The backup import variable is named `backup_file` (not `backup_uri` as in `Wordpress_CloudRun`), with a default value of `"backup.sql"`.
+- The backup import variable is named `backup_file` (not `backup_uri` as in `Wordpress CloudRun`), with a default value of `"backup.sql"`.
 - The `container_build_config` variable is exposed in this module (unlike `Wordpress_CloudRun`) and can be used to customise the Cloud Build configuration when `container_image_source = "custom"`.
 - On a first apply that creates a new inline GKE cluster, `kubernetes_ready` outputs `false` and all Kubernetes workloads are skipped. A second apply completes the deployment. Refer to the `kubernetes_ready` output for details.
 
 ---
 
-## Dependency on `Services_GCP`
+## Dependency on `Services GCP`
 
 Refer to [App_GKE — Dependency on `Services_GCP` for Shared Resources](../App_GKE/App_GKE.md#dependency-on-services_gcp-for-shared-resources) for a full comparison of standalone versus `Services_GCP`-backed deployments.
 
-**WordPress-specific benefit:** when `Services_GCP` provides a shared Cloud SQL instance, the `db-init` job connects to it and creates only the WordPress database and user within the shared instance — eliminating the cost of a dedicated Cloud SQL instance per WordPress site. This is the recommended model for multi-tenant platforms where many independent WordPress deployments share the same GCP project.
+**WordPress-specific benefit:** when `Services GCP` provides a shared Cloud SQL instance, the `db-init` job connects to it and creates only the WordPress database and user within the shared instance — eliminating the cost of a dedicated Cloud SQL instance per WordPress site. This is the recommended model for multi-tenant platforms where many independent WordPress deployments share the same GCP project.
 
 ---
 

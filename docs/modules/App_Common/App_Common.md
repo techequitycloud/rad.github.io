@@ -1,20 +1,20 @@
 ---
-title: "App_Common Shared Library"
+title: "App Common Shared Library"
 sidebar_label: "App Common"
 ---
 
-# App_Common Shared Library
+# App Common Shared Library
 
-The `App_Common` module is a collection of reusable, shared Terraform modules that serve as the foundation for the RAD Modules ecosystem. It provides the core infrastructure logic used by platform-specific modules like `App_CloudRun` and `App_GKE`.
+The `App Common` module is a collection of reusable, shared Terraform modules that serve as the foundation for the RAD Modules ecosystem. It provides the core infrastructure logic used by platform-specific modules like `App CloudRun` and `App GKE`.
 
 ## 1. Overview
 
 **Purpose**: To enforce consistency, reduce code duplication, and standardize infrastructure patterns across different compute platforms (Serverless vs. Kubernetes).
 
 **Architecture**:
-*   **Layer 1 (App_Common)**: Abstracted infrastructure components (Networking, Databases, Storage, IAM).
-*   **Layer 2 (Platform)**: `App_CloudRun` and `App_GKE` compose these components to build a complete deployment environment.
-*   **Layer 3 (Application)**: Wrappers (e.g., `Cyclos_CloudRun`) instantiate the platform layer with specific app configurations.
+*   **Layer 1 (App Common)**: Abstracted infrastructure components (Networking, Databases, Storage, IAM).
+*   **Layer 2 (Platform)**: `App CloudRun` and `App GKE` compose these components to build a complete deployment environment.
+*   **Layer 3 (Application)**: Wrappers (e.g., `Cyclos CloudRun`) instantiate the platform layer with specific app configurations.
 
 ---
 
@@ -27,21 +27,21 @@ The functional logic is encapsulated in submodules located in `modules/App_Commo
 | File | Purpose |
 |---|---|
 | `buildappcontainer.tf` | Creates `local_file.app_dockerfile` (when `dockerfile_content` is provided) and `local_file.app_cloudbuild`, then drives the application image build via `terraform_data.build_and_push_application_image`, which invokes `scripts/build-container.sh`. Replacement is triggered by hashes of the build script, Dockerfile, context directory, repository ID, tag, and build args. All three resources are gated on `local.enable_custom_build`. The `cloudbuild.yaml` template at the top level accepts `PROJECT_ID`, `APP_NAME`, `IMAGE_REGION`, `IMAGE_NAME`, `IMAGE_VERSION`, `REPO_NAME`, `REPO_PROJECT_ID`, `REPO_LOCATION`, `DOCKERFILE`, `CONTEXT_PATH`, and `BUILD_ARGS` — it does not include `DOCKERFILE_CONTENT` or `CLOUDBUILD_SA` (those variables are only used in the `app_build` submodule's template). |
-| `sql.tf` | Discovers an existing Cloud SQL instance via `scripts/get-sqlserver-info.sh`, computes the canonical `${instance}-root-password` Secret Manager secret ID, and provisions the secret container plus a 32-char `random_password` version when the secret does not already exist in Secret Manager. Uses `data.google_secret_manager_secret` to detect whether Services_GCP has already created it before deciding whether to create one. Note: the generated password is stored in Terraform state via `random_password`; callers can also retrieve it at runtime via `gcloud secrets versions access`. |
+| `sql.tf` | Discovers an existing Cloud SQL instance via `scripts/get-sqlserver-info.sh`, computes the canonical `${instance}-root-password` Secret Manager secret ID, and provisions the secret container plus a 32-char `random_password` version when the secret does not already exist in Secret Manager. Uses `data.google_secret_manager_secret` to detect whether Services GCP has already created it before deciding whether to create one. Note: the generated password is stored in Terraform state via `random_password`; callers can also retrieve it at runtime via `gcloud secrets versions access`. |
 | `registry.tf` | Discovers an existing Artifact Registry repository via `scripts/discover_repo.sh` (using `data.external`). The `google_artifact_registry_repository` data source is gated on `enable_custom_build || enable_cicd_trigger` and a non-empty discovered location. |
 | `network.tf` | Delegates VPC network discovery to the `app_networking` submodule (`modules/App_Common/modules/app_networking`) and surfaces its outputs as locals (`network_exists`, `discovered_regions`, `available_regions`, `subnet_names`, `subnet_cidrs`, `subnet_details`, `region_to_subnet`). Note: `network_tags` is an output of the submodule but is not promoted to a top-level local here. |
 | `nfs.tf` | Runs `get-nfsserver-info.sh` and `get-filestore-info.sh` directly via `data.external` (when `local.nfs_enabled = true`) and exposes computed locals for `nfs_internal_ip`, `nfs_instance_name`, `nfs_instance_zone`, and `nfs_server_exists`. Filestore IP takes precedence over GCE IP. Does not expose `nfs_instance_tags`; that output exists only in the `app_nfs_discovery` submodule. |
 | `storage.tf` | Calls `app_storage_enhanced` directly (not `app_storage_wrapper`) to provision application buckets plus a fixed backup bucket (`${resource_prefix}-backups`). `gcsfuse_unmount_wait` is hardcoded to `60`. The KMS key name is hardcoded to the well-known path `projects/{project_id}/locations/{region}/keyRings/{project_id}-cmek-keyring/cryptoKeys/storage-key`. Always unconditionally uploads a `backup.sql` seed object from `${path.module}/scripts/backup.sql` to the backup bucket (no count gate). |
 
 ### Core Integration Modules
-These modules are directly used by `App_CloudRun` and `App_GKE` via `gcp_integration.tf`.
+These modules are directly used by `App CloudRun` and `App GKE` via `gcp_integration.tf`.
 
 #### `app_networking`
 *   **Path**: `modules/app_networking`
 *   **Description**: Discovers and validates the existing VPC network topology. All discovery logic runs in a single inline `data "external"` bash script.
 *   **Outputs**: `network_exists`, `network_name`, `discovered_regions`, `available_regions`, `subnet_names`, `subnet_cidrs`, `subnet_details`, `region_to_subnet`, `subnet_count`, `network_tags`.
 *   **Capabilities**:
-    *   **Auto-discovery**: When `network_name` is empty, queries all subnets with description `managed-by=services-gcp` and selects the unique Services_GCP-managed network; emits a stderr message and leaves `NETWORK_NAME` empty (not a hard Terraform error) if zero or more than one is found.
+    *   **Auto-discovery**: When `network_name` is empty, queries all subnets with description `managed-by=services-gcp` and selects the unique Services GCP-managed network; emits a stderr message and leaves `NETWORK_NAME` empty (not a hard Terraform error) if zero or more than one is found.
     *   Verifies existence of the target (or discovered) VPC network.
     *   Retrieves subnet names, CIDR ranges, and a `region_to_subnet` map for multi-region deployments.
     *   **Network tags**: Discovers all ingress firewall-rule target tags on the network (filtered by `targetTags:*`, not restricted to HTTP/HTTPS ports). Outputs `network_tags` — used to tag Cloud Run services with Direct VPC Egress so the correct firewall rules apply.
@@ -88,7 +88,7 @@ These modules are directly used by `App_CloudRun` and `App_GKE` via `gcp_integra
 
 #### `app_build`
 *   **Path**: `modules/app_build`
-*   **Description**: Container build orchestration using Cloud Build (Kaniko). Used by Foundation modules (`App_CloudRun`, `App_GKE`).
+*   **Description**: Container build orchestration using Cloud Build (Kaniko). Used by Foundation modules (`App CloudRun`, `App GKE`).
 *   **Capabilities**:
     *   **Path handling**: Detects whether `container_build_config.context_path` is absolute or relative. Absolute paths (e.g. an app's own `scripts/` dir) set the build working directory to that path so all context files are included in the Cloud Build tarball; relative paths resolve against `scripts_dir` as before.
     *   **Inline Dockerfile**: When `dockerfile_content` is provided it is written to disk via `local_file`; otherwise the existing file at `{context_path}/{dockerfile_path}` is used. Falls back to a clear error comment if neither is found.
@@ -174,7 +174,7 @@ These modules provide lower-level utilities or specific enhancements.
 *   **Path**: `modules/app_cmek`
 *   **Description**: Provisions Cloud KMS infrastructure for Customer-Managed Encryption Keys (CMEK) for both Cloud Storage and Artifact Registry.
 *   **Capabilities**:
-    *   **Keyring discovery**: Runs `discover_cmek_keyring.sh` at plan time to find any pre-existing keyring created by `Services_GCP` (prefix `{project_id}-cmek-`). Reuses the discovered keyring; falls back to creating `{project_id}-cmek-keyring` when none exists. This ensures the two modules always converge on the same keyring without conflicts.
+    *   **Keyring discovery**: Runs `discover_cmek_keyring.sh` at plan time to find any pre-existing keyring created by `Services GCP` (prefix `{project_id}-cmek-`). Reuses the discovered keyring; falls back to creating `{project_id}-cmek-keyring` when none exists. This ensures the two modules always converge on the same keyring without conflicts.
     *   **Storage CMEK** (`enable_cmek = true`): Idempotently creates the CMEK keyring and a `storage-key` CryptoKey via `gcloud kms keyrings create ... || true`. Reads the keyring via a data source (deferred to apply time by `depends_on`) and outputs `storage_key_id` for `app_storage_enhanced`.
     *   **Artifact Registry CMEK** (`enable_artifact_registry_cmek = true`): Idempotently creates an `artifact-registry-key` in the same keyring and grants the AR service identity (`service-{project_number}@gcp-sa-artifactregistry.iam.gserviceaccount.com`) `roles/cloudkms.cryptoKeyEncrypterDecrypter` — without requiring the `google-beta` provider for the service identity lookup.
     *   Set both flags to `false` to skip all provisioning.
@@ -184,7 +184,7 @@ These modules provide lower-level utilities or specific enhancements.
 *   **Description**: Binary Authorization image signing and policy enforcement for container images.
 *   **Capabilities**:
     *   Creates a KMS keyring (`${project_id}-binauthz-keyring`) and an asymmetric RSA signing key (`binauthz-signer`). The provisioner also restores and enables key version 1 if it is in `DESTROY_SCHEDULED` state, ensuring re-deploys after a partial destroy succeed without manual intervention.
-    *   Creates a Container Analysis note, `pipeline-attestor` attestor, and Binary Authorization policy via `create-binauthz-prerequisites.sh`. The script is idempotent — it exits immediately when the attestor already exists, leaving `Services_GCP`-provisioned environments untouched.
+    *   Creates a Container Analysis note, `pipeline-attestor` attestor, and Binary Authorization policy via `create-binauthz-prerequisites.sh`. The script is idempotent — it exits immediately when the attestor already exists, leaving `Services GCP`-provisioned environments untouched.
     *   Signs the application container image via `sign-image.sh`. Skips signing when the image is the placeholder `gcr.io/cloudrun/hello` (guard is inside the provisioner, not `count`, because the image value may be unknown at plan time).
     *   Optionally signs the `db-clients` image when `sql_server_exists = true`.
     *   Supports three enforcement modes via `binauthz_evaluation_mode`: `ALWAYS_ALLOW` (default, permissive), `REQUIRE_ATTESTATION` (enforce signed images), and `ALWAYS_DENY` (emergency lockdown).
@@ -242,7 +242,7 @@ These modules provide lower-level utilities or specific enhancements.
 
 ## 3. Implementation Pattern
 
-Platform modules (`App_CloudRun`, `App_GKE`) consume `App_Common` submodules directly. The pattern below shows a typical integration:
+Platform modules (`App CloudRun`, `App GKE`) consume `App Common` submodules directly. The pattern below shows a typical integration:
 
 ```hcl
 # Example from modules/App_CloudRun/gcp_integration.tf
@@ -278,4 +278,4 @@ locals {
 }
 ```
 
-Any improvement to the shared discovery or management logic in `App_Common` automatically benefits all consuming platform modules without changes to Application Modules.
+Any improvement to the shared discovery or management logic in `App Common` automatically benefits all consuming platform modules without changes to Application Modules.

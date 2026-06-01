@@ -11,15 +11,15 @@ sidebar_label: "Superset CloudRun"
 
 **Estimated time:** 2–3 hours
 
-Apache Superset is an open-source data visualisation and business intelligence platform. This lab deploys Superset on Google Cloud Run backed by Cloud SQL PostgreSQL 15, with a two-phase initialisation pipeline (database creation + schema migration/admin setup) and a 50-character `SUPERSET_SECRET_KEY` auto-generated in Secret Manager.
+Apache Superset is an open-source data visualisation and business intelligence platform. This lab deploys Superset on Google Cloud Run backed by Cloud SQL PostgreSQL 15, with an auto-generated `SUPERSET_SECRET_KEY` and a two-phase init pipeline that creates the database and bootstraps the application schema and admin user.
 
 ### What the Module Automates
 
 - Cloud Run service with Cloud SQL Auth Proxy sidecar
 - Cloud SQL PostgreSQL 15 instance, database (`superset_db`), and user (`superset_user`)
 - `SUPERSET_SECRET_KEY` (50-char random) in Secret Manager
-- Two-phase init: `db-init` + `app-init` (migration + admin creation)
-- Artifact Registry repository and Cloud Build image pipeline (with psycopg2-binary)
+- Two-phase init: `db-init` (database creation) + `app-init` (migrations + admin user)
+- Artifact Registry repository and Cloud Build image pipeline (psycopg2-binary pre-installed)
 - Cloud Run IAM and service account bindings
 - Cloud Monitoring uptime checks targeting `/health`
 - GCS `superset-data` bucket
@@ -28,8 +28,9 @@ Apache Superset is an open-source data visualisation and business intelligence p
 
 - Note the Cloud Run service URL from the RAD UI deployment panel
 - Log in as the initial admin user
-- Connect data sources (BigQuery, PostgreSQL, etc.)
-- Create datasets, charts, and dashboards
+- Change the admin password
+- Connect data sources and create datasets
+- Build charts and dashboards
 - Configure email alerts and reports
 - Review logs in Cloud Logging
 
@@ -48,7 +49,7 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 ## Prerequisites
 
 1. A GCP project with billing enabled.
-2. The `Services_GCP` module deployed in the same project.
+2. The `Services GCP` module deployed in the same project.
 3. The following APIs enabled:
    - `run.googleapis.com`
    - `sqladmin.googleapis.com`
@@ -57,6 +58,7 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
    - `cloudbuild.googleapis.com`
 4. `gcloud` authenticated: `gcloud auth application-default login`
 5. Access to the RAD UI.
+6. (Optional) A data source to connect — BigQuery, PostgreSQL, or any SQLAlchemy-compatible database.
 
 ---
 
@@ -70,15 +72,16 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 | `tenant_deployment_id` | No | `"demo"` | Short deployment identifier |
 | `region` | No | `"us-central1"` | GCP region |
 | `application_version` | No | `"latest"` | Superset image version |
+| `deploy_application` | No | `true` | Set `false` for infrastructure-only |
 | `cpu_limit` | No | `"2000m"` | CPU per instance |
 | `memory_limit` | No | `"2Gi"` | Memory per instance |
+| `timeout_seconds` | No | `600` | Max request duration (extended for long queries) |
 | `min_instance_count` | No | `1` | Minimum instances |
 | `max_instance_count` | No | `5` | Maximum instances |
-| `db_name` | No | `"superset_db"` | Database name |
-| `db_user` | No | `"superset_user"` | Database user |
-| `timeout_seconds` | No | `600` | Max request duration |
-| `enable_redis` | No | `false` | Enable Redis (recommended for production) |
-| `redis_host` | No | `""` | Redis host (if `enable_redis = true`) |
+| `db_name` | No | `"superset_db"` | PostgreSQL database name |
+| `db_user` | No | `"superset_user"` | PostgreSQL user |
+| `enable_redis` | No | `false` | Enable Redis (recommended for multi-user production) |
+| `redis_host` | No | `""` | Redis hostname/IP |
 | `redis_port` | No | `6379` | Redis port (number) |
 | `support_users` | No | `[]` | Monitoring alert emails |
 
@@ -91,11 +94,14 @@ Click **Deploy** in the RAD UI.
 | Phase | Duration |
 |---|---|
 | Cloud SQL instance creation | 8–12 min |
-| Secret creation and db-init job | 2–3 min |
+| SUPERSET_SECRET_KEY provisioning | 1–2 min |
+| `db-init` job (database creation) | 2–3 min |
 | Container image build (Cloud Build + psycopg2) | 8–15 min |
-| app-init job (migration + admin) | 3–5 min |
+| `app-init` job (migration + admin creation) | 3–5 min |
 | Cloud Run service deployment | 2–4 min |
-| **Total** | **23–39 min** |
+| **Total** | **24–41 min** |
+
+> **Note:** The `app-init` job timeout is 30 minutes. Schema migrations on the first deploy may take several minutes.
 
 ### Step 1.3 — Record Outputs
 
@@ -105,6 +111,9 @@ Click **Deploy** in the RAD UI.
 | `service_name` | Cloud Run service name |
 | `database_instance_name` | Cloud SQL instance name |
 | `database_password_secret` | Secret Manager secret for the DB password |
+| `deployment_id` | Unique deployment identifier |
+
+Set shell variables:
 
 ```bash
 export PROJECT="your-gcp-project-id"
@@ -149,24 +158,47 @@ curl -H "Authorization: Bearer ${TOKEN}" \
   "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}"
 ```
 
-**Expected result:** HTTP `200`. Superset's `/health` endpoint returns `OK`.
+**Expected result:** HTTP `200`. The `/health` endpoint confirms Gunicorn workers are ready.
+
+### Step 2.2 — Verify Secret Key is Injected
+
+```bash
+gcloud secrets list --project=${PROJECT} --filter="name~superset-secret-key"
+```
+
+**gcloud — view secret metadata:**
+```bash
+gcloud secrets describe \
+  $(gcloud secrets list --project=${PROJECT} --filter="name~superset-secret-key" --format="value(name)" --limit=1) \
+  --project=${PROJECT}
+```
+
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer ${TOKEN}" \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets?filter=name%3A~superset"
+```
+
+**Expected result:** A secret named `{prefix}-secret-key` exists. The value is 50 characters, injected as `SUPERSET_SECRET_KEY` into the Cloud Run service.
 
 ---
 
 ## Phase 3 — Log In as Admin [MANUAL]
 
-### Step 3.1 — Retrieve Default Admin Credentials
+### Step 3.1 — Retrieve Admin Credentials
 
-The `app-init` job creates an initial admin user. Default credentials are typically set in the `app-init.sh` script (commonly `admin`/`admin`). Check the init job logs:
+The `app-init` job creates an initial admin account. Retrieve the credentials from the job execution logs:
 
 ```bash
-gcloud run jobs list --project=${PROJECT} --region=${REGION} --filter="name~superset"
-```
+# List Superset-related Cloud Run Jobs
+gcloud run jobs list \
+  --project=${PROJECT} \
+  --region=${REGION} \
+  --filter="name~superset"
 
-**gcloud — view app-init execution logs:**
-```bash
+# View app-init job execution logs
 gcloud logging read \
-  'resource.type="cloud_run_job" AND resource.labels.job_name~"app-init"' \
+  'resource.type="cloud_run_job" AND labels."run.googleapis.com/job_name"~"app-init"' \
   --project=${PROJECT} \
   --limit=50 \
   --format="table(timestamp, textPayload)"
@@ -178,64 +210,105 @@ curl -H "Authorization: Bearer ${TOKEN}" \
   "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/jobs"
 ```
 
+**Expected result:** The app-init logs show the admin username and that the user was created successfully. Default credentials are set in the init script (commonly `admin` / `admin` — check the `app-init.sh` script in `Superset_Common/scripts/`).
+
 ### Step 3.2 — Log In to Superset
 
 Navigate to `${SERVICE_URL}` and log in with the admin credentials.
 
-**Expected result:** The Superset dashboard loads. You are logged in as the admin user.
+**Expected result:** The Superset home page loads with the toolbar and navigation menu.
 
 ### Step 3.3 — Change the Admin Password
 
-1. Click the user icon (top-right) > **Profile**.
-2. Navigate to **Security** > **Reset my password**.
-3. Enter a new strong password.
+1. Click the user icon (top-right corner) > **Profile**.
+2. Click **Reset my password** or navigate to **Security** > **List Users**.
+3. Set a strong password.
+
+**Expected result:** Password is updated. You remain logged in.
 
 ---
 
-## Phase 4 — Connect Data Sources [MANUAL]
+## Phase 4 — Connect a Data Source [MANUAL]
 
 ### Step 4.1 — Add a Database Connection
 
-1. Click **Settings** (top-right gear) > **Database Connections** > **+ Database**.
-2. Select your database type (e.g., **BigQuery**, **PostgreSQL**, **MySQL**).
-3. Enter the connection string or use the guided form.
-4. Click **Test connection**.
+1. Click **Settings** (gear icon, top-right) > **Database Connections**.
+2. Click **+ Database**.
+3. Select a database type:
+   - **BigQuery**: Use a service account JSON key.
+   - **PostgreSQL**: Enter hostname, port, database, username, password.
+   - **SQLite**: Enter the file path (for testing).
+4. Click **Test connection** to verify connectivity.
+5. Click **Connect**.
 
-**Expected result:** Connection test succeeds. The database appears in the connections list.
+**Expected result:** The database connection is saved and appears in the list.
 
-### Step 4.2 — Add a Dataset
+### Step 4.2 — Create a Dataset
 
 1. Click **Data** > **Datasets** > **+ Dataset**.
-2. Select the database and schema.
-3. Choose a table and click **Create dataset and create chart**.
+2. Select the database and schema from the dropdowns.
+3. Select a table.
+4. Click **Create dataset and create chart**.
 
-**Expected result:** The dataset is created and the chart editor opens.
+**Expected result:** The dataset is created and the chart editor opens automatically.
 
 ---
 
-## Phase 5 — Create Charts and Dashboards [MANUAL]
+## Phase 5 — Create Charts and a Dashboard [MANUAL]
 
-### Step 5.1 — Create a Chart
+### Step 5.1 — Create a Bar Chart
 
-1. Select a chart type (e.g., **Bar Chart**, **Line Chart**).
-2. Configure dimensions, metrics, and filters.
-3. Click **Update chart**.
-4. Click **Save** and give the chart a name.
+1. In the chart editor, select **Bar Chart** as the chart type.
+2. Set **Dimensions** (X-axis) and **Metrics** (Y-axis) from the dataset columns.
+3. Add a **Time filter** if the dataset contains timestamp data.
+4. Click **Update chart**.
+5. Click **Save** and name the chart.
 
-### Step 5.2 — Create a Dashboard
+**Expected result:** A bar chart renders with your data.
+
+### Step 5.2 — Create a Line Chart
+
+1. Click **Charts** > **+ Chart**.
+2. Select your dataset and choose **Line Chart**.
+3. Configure the time column, metrics, and granularity.
+4. Save the chart.
+
+### Step 5.3 — Build a Dashboard
 
 1. Click **Dashboards** > **+ Dashboard**.
-2. Click **Edit dashboard** and drag charts onto the canvas.
-3. Resize and arrange charts.
-4. Click **Save**.
+2. Click **Edit dashboard** to open the editor.
+3. Drag charts from the right panel onto the canvas.
+4. Resize and position charts.
+5. Add **Text** and **Divider** components for labels.
+6. Click **Save**.
 
-**Expected result:** A dashboard is created with your charts.
+**Expected result:** The dashboard is saved and viewable without edit mode.
 
 ---
 
-## Phase 6 — Explore Cloud Logging [MANUAL]
+## Phase 6 — Configure Alerts and Reports [MANUAL]
 
-### Step 6.1 — View Superset Logs
+### Step 6.1 — Explore Alerts
+
+1. Click **Settings** > **Alerts and Reports**.
+2. Click **+ Alert** to create a new alert.
+3. Select a chart or dashboard, set conditions (e.g., metric > threshold), and configure the notification channel.
+
+> **Note:** Email alerts require SMTP configuration via `environment_variables`.
+
+### Step 6.2 — Schedule a Dashboard Report
+
+1. Click **+ Report** to schedule a periodic report.
+2. Select a dashboard and set the schedule (e.g., daily at 08:00).
+3. Choose recipients.
+
+---
+
+## Phase 7 — Explore Cloud Logging [MANUAL]
+
+### Step 7.1 — View Superset Application Logs
+
+In **Logging > Logs Explorer**:
 
 ```
 resource.type="cloud_run_revision"
@@ -265,17 +338,56 @@ curl -X POST \
   }'
 ```
 
-**Expected result:** Gunicorn access logs and SQLAlchemy query logs appear.
+**Expected result:** Gunicorn access logs and Flask application logs appear. Slow SQL queries produce entries in the log.
+
+### Step 7.2 — Check Startup Probe Behaviour
+
+```
+resource.type="cloud_run_revision"
+resource.labels.service_name="${SERVICE}"
+textPayload=~"Booting worker"
+```
+
+**Expected result:** Gunicorn worker boot messages. The startup probe (`/health`) allows up to 60 seconds initial delay and 12 retries — Superset has up to 180 seconds total startup tolerance.
+
+### Step 7.3 — Review Uptime Check
+
+Navigate to **Monitoring > Uptime checks**.
+
+**Expected result:** A preconfigured uptime check polling `${SERVICE_URL}/health` shows **Passing**.
 
 ---
 
-## Phase 7 — Undeploy [AUTOMATED]
+## Phase 8 — Cloud Run Scaling [MANUAL]
+
+### Step 8.1 — Check Instance Count
+
+```bash
+gcloud monitoring time-series list \
+  --filter='metric.type="run.googleapis.com/container/instance_count" AND resource.labels.service_name="'${SERVICE}'"' \
+  --project=${PROJECT}
+```
+
+**Expected result:** With `min_instance_count=1`, at least one instance is always running.
+
+### Step 8.2 — Simulate Load
+
+```bash
+# Send concurrent requests
+for i in $(seq 1 20); do curl -s -o /dev/null ${SERVICE_URL}/health & done; wait
+```
+
+**Expected result:** Cloud Run scales up instances to handle the load, up to `max_instance_count=5`.
+
+---
+
+## Phase 9 — Undeploy [AUTOMATED]
 
 Return to the RAD UI and click **Undeploy**.
 
 **Approximate undeploy duration:** 12–18 minutes.
 
-> **Warning:** Undeploying permanently deletes all resources. Export dashboards and charts via Superset Settings > Export before undeploying.
+> **Warning:** Undeploying permanently deletes all resources including the Superset metadata database (dashboards, charts, datasets). Export dashboards via **Settings > Export all** before undeploying.
 
 ---
 
@@ -288,10 +400,14 @@ Return to the RAD UI and click **Undeploy**.
 | SUPERSET_SECRET_KEY in Secret Manager | 1 | Yes |
 | db-init and app-init jobs | 1 | Yes |
 | Confirm Superset reachable | 2 | No |
-| Log in as admin | 3 | No |
-| Change admin password | 3 | No |
-| Connect data sources | 4 | No |
+| Verify secret key injection | 2 | No |
+| Retrieve admin credentials | 3 | No |
+| Log in and change password | 3 | No |
+| Connect a data source | 4 | No |
 | Create datasets | 4 | No |
-| Create charts and dashboards | 5 | No |
-| Review Cloud Logging | 6 | No |
-| Undeploy infrastructure | 7 | Yes |
+| Create bar and line charts | 5 | No |
+| Build a dashboard | 5 | No |
+| Configure alerts and reports | 6 | No |
+| Review Cloud Logging | 7 | No |
+| Check scaling behaviour | 8 | No |
+| Undeploy infrastructure | 9 | Yes |

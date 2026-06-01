@@ -1,13 +1,13 @@
 ---
-title: "Odoo_Common Module"
+title: "Odoo Common Module"
 sidebar_label: "Odoo Common"
 ---
 
-# Odoo_Common Module
+# Odoo Common Module
 
 ## Overview
 
-`Odoo_Common` is a pure-configuration Terraform module in the RAD Modules ecosystem. It generates a `config` object consumed by platform modules (`App_CloudRun`, `App_GKE`) to deploy Odoo Community Edition on Google Cloud. The module provisions one GCP Secret Manager secret (the Odoo master password), defines one GCS storage bucket for custom addons, and emits all container configuration as Terraform outputs — no compute resources are created directly.
+`Odoo Common` is a pure-configuration Terraform module in the RAD Modules ecosystem. It generates a `config` object consumed by platform modules (`App CloudRun`, `App GKE`) to deploy Odoo Community Edition on Google Cloud. The module provisions one GCP Secret Manager secret (the Odoo master password), defines one GCS storage bucket for custom addons, and emits all container configuration as Terraform outputs — no compute resources are created directly.
 
 Odoo is a comprehensive open-source ERP platform. This module handles its specific requirements: NFS-backed filestore and sessions, Cloud SQL Auth Proxy socket remapping, an inline startup script that auto-generates `odoo.conf` from environment variables, and optional Redis session store support.
 
@@ -317,7 +317,7 @@ xmlrpc_port = 8069
 
 ## Startup Script (`container_command` / `container_args`)
 
-Rather than a simple entrypoint, Odoo_Common overrides `container_command` and `container_args` in the `config` output with an inline bash script. This script runs as the container's startup command and handles all first-boot initialization:
+Rather than a simple entrypoint, Odoo Common overrides `container_command` and `container_args` in the `config` output with an inline bash script. This script runs as the container's startup command and handles all first-boot initialization:
 
 1. **Auto-generate `odoo.conf`** if `/mnt/odoo.conf` does not exist — writes a full configuration file from environment variables `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `ODOO_MASTER_PASS`
 2. **Append Redis config** to auto-generated conf if `ENABLE_REDIS=true` and a Redis host is available (`REDIS_HOST` or fallback `NFS_SERVER_IP`)
@@ -346,7 +346,7 @@ The `redis_host_final` local is computed at Terraform plan time: if `var.redis_h
 
 ## Platform-Specific Differences
 
-| Aspect | Odoo_CloudRun | Odoo_GKE |
+| Aspect | Odoo CloudRun | Odoo GKE |
 |--------|---------------|----------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Optional (Auth Proxy sidecar); default `true` | Optional (Auth Proxy sidecar); default `true` — GKE pods can use either socket or TCP depending on cluster networking |
@@ -396,7 +396,7 @@ module "odoo_cloudrun" {
 }
 ```
 
-The `odoo_master_pass_secret_id` output can be passed to App_CloudRun as a secret environment variable:
+The `odoo_master_pass_secret_id` output can be passed to App CloudRun as a secret environment variable:
 
 ```hcl
 secret_env_vars = {

@@ -1,11 +1,11 @@
 ---
-title: "Kestra_Common Shared Configuration Module"
+title: "Kestra Common Shared Configuration Module"
 sidebar_label: "Kestra Common"
 ---
 
-# Kestra_Common Shared Configuration Module
+# Kestra Common Shared Configuration Module
 
-The `Kestra_Common` module defines the Kestra workflow orchestration platform for the RAD Modules ecosystem. It **creates GCP resources** (one Secret Manager secret for the admin password) and produces a `config` output consumed by the platform-specific wrapper modules (`Kestra_CloudRun` and `Kestra_GKE`).
+The `Kestra Common` module defines the Kestra workflow orchestration platform for the RAD Modules ecosystem. It **creates GCP resources** (one Secret Manager secret for the admin password) and produces a `config` output consumed by the platform-specific wrapper modules (`Kestra CloudRun` and `Kestra GKE`).
 
 ## 1. Overview
 
@@ -51,7 +51,7 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 
 ## 3. Storage Buckets
 
-`Kestra_Common` produces a single GCS bucket definition via the `storage_buckets` output:
+`Kestra Common` produces a single GCS bucket definition via the `storage_buckets` output:
 
 | Field | Value |
 |---|---|
@@ -126,7 +126,7 @@ Sensitive map containing the raw generated admin password. Used by wrapper modul
 
 ### `path`
 
-The resolved filesystem path of the `Kestra_Common` module directory. Used by wrapper modules to locate the `scripts/` directory:
+The resolved filesystem path of the `Kestra Common` module directory. Used by wrapper modules to locate the `scripts/` directory:
 
 ```hcl
 scripts_dir = abspath("${module.kestra_app.path}/scripts")
@@ -140,7 +140,7 @@ The computed resource naming prefix (`app<application_name><tenant_deployment_id
 
 ## 5. Environment Variables (always injected)
 
-`Kestra_Common` merges the following into `config.environment_variables`, with `var.environment_variables` taking precedence:
+`Kestra Common` merges the following into `config.environment_variables`, with `var.environment_variables` taking precedence:
 
 | Variable | Value | Purpose |
 |---|---|---|
@@ -156,13 +156,13 @@ The computed resource naming prefix (`app<application_name><tenant_deployment_id
 | `FLYWAY_DATASOURCES_POSTGRES_BASELINE_ON_MIGRATE` | `"true"` | Prevents Flyway failure on Cloud SQL's pre-populated public schema |
 | `FLYWAY_DATASOURCES_POSTGRES_BASELINE_VERSION` | `"0"` | Baselines at v0, then applies all Kestra migrations |
 
-> **DATASOURCES_POSTGRES_URL, DATASOURCES_POSTGRES_USERNAME, DATASOURCES_POSTGRES_PASSWORD**: These are **not** set by `Kestra_Common`. They are constructed at container startup by `entrypoint.sh` from the platform-injected `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` variables. Do not set them in `environment_variables`.
+> **DATASOURCES_POSTGRES_URL, DATASOURCES_POSTGRES_USERNAME, DATASOURCES_POSTGRES_PASSWORD**: These are **not** set by `Kestra Common`. They are constructed at container startup by `entrypoint.sh` from the platform-injected `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` variables. Do not set them in `environment_variables`.
 
 ---
 
 ## 6. Initialization Job
 
-When `initialization_jobs` is empty (the default), `Kestra_Common` automatically defines a single bootstrap job:
+When `initialization_jobs` is empty (the default), `Kestra Common` automatically defines a single bootstrap job:
 
 | Field | Value |
 |---|---|
@@ -190,7 +190,7 @@ When `initialization_jobs` is provided by the caller, the custom jobs replace th
 
 ## 7. Scripts Directory
 
-`Kestra_Common` ships three files in `scripts/`:
+`Kestra Common` ships three files in `scripts/`:
 
 | File | Purpose |
 |---|---|
@@ -204,7 +204,7 @@ When `initialization_jobs` is provided by the caller, the custom jobs replace th
 
 ## 8. Input Variables
 
-All variables are passed in by the wrapper modules (`Kestra_CloudRun` and `Kestra_GKE`). `Kestra_Common` is not intended to be called directly by end users.
+All variables are passed in by the wrapper modules (`Kestra CloudRun` and `Kestra GKE`). `Kestra Common` is not intended to be called directly by end users.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -238,11 +238,11 @@ All variables are passed in by the wrapper modules (`Kestra_CloudRun` and `Kestr
 
 ## 9. Platform-Specific Differences
 
-| Aspect | Cloud Run (`Kestra_CloudRun`) | GKE (`Kestra_GKE`) |
+| Aspect | Cloud Run (`Kestra CloudRun`) | GKE (`Kestra GKE`) |
 |---|---|---|
 | **Socket bridge** | `entrypoint.sh` bridges Unix socket → TCP via `socat` | Cloud SQL Auth Proxy sidecar listens on TCP `127.0.0.1:5432` directly — bridge logic skipped |
 | **`enable_cloudsql_volume` wired** | Passed as-is; controls Cloud Run Cloud SQL sidecar annotation | Passed as-is; controls Cloud SQL Auth Proxy sidecar injection into the pod |
 | **Service URL** | Pre-computed HTTPS URL: `https://<resource_prefix>-<project_number>.<region>.run.app` | Pre-computed internal DNS: `http://<service_name>.<namespace>.svc.cluster.local` |
-| **`secret_values` usage** | Passed as `module_explicit_secret_values` to App_CloudRun | Passed as `explicit_secret_values` to App_GKE for direct Kubernetes Secret injection |
+| **`secret_values` usage** | Passed as `module_explicit_secret_values` to App CloudRun | Passed as `explicit_secret_values` to App GKE for direct Kubernetes Secret injection |
 | **Scripts directory** | `abspath("${module.kestra_app.path}/scripts")` | `abspath("${module.kestra_app.path}/scripts")` |
 | **`kestra.tf` extras** | Passes `container_port` override | Also passes `enable_cloudsql_volume` override in `kestra_module` merge |

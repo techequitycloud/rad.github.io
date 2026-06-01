@@ -1,21 +1,21 @@
 ---
-title: "RAGFlow_GKE Module — Configuration Guide"
+title: "RAGFlow GKE Module — Configuration Guide"
 sidebar_label: "RAGFlow GKE"
 ---
 
-# RAGFlow_GKE Module — Configuration Guide
+# RAGFlow GKE Module — Configuration Guide
 
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG)
 platform. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and embeds
 them, stores vectors in Elasticsearch, exposes a REST API for question-answering, and provides
 a web UI for knowledge base management and enterprise search.
 
-`RAGFlow_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all
+`RAGFlow GKE` is a **wrapper module** built on top of `App GKE`. It uses `App GKE` for all
 GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS,
-secrets, CI/CD) and `RAGFlow_Common` to supply the RAGFlow-specific application configuration,
+secrets, CI/CD) and `RAGFlow Common` to supply the RAGFlow-specific application configuration,
 database initialization job, and document storage bucket.
 
-> **Deployment prerequisite:** `RAGFlow_GKE` requires `Elasticsearch_GKE` to be deployed
+> **Deployment prerequisite:** `RAGFlow GKE` requires `Elasticsearch GKE` to be deployed
 > first. The `elasticsearch_hosts` variable is **mandatory** — Terraform will reject the
 > configuration if it is empty.
 
@@ -23,7 +23,7 @@ database initialization job, and document storage bucket.
 
 ## §1 · Module Overview
 
-### What `RAGFlow_GKE` provides
+### What `RAGFlow GKE` provides
 
 - A **RAGFlow Kubernetes Deployment** (custom image built from `infiniflow/ragflow` via
   Cloud Build) running on GKE Autopilot with a **LoadBalancer** service on port 80.
@@ -40,11 +40,11 @@ database initialization job, and document storage bucket.
 - **ClientIP session affinity** by default, ensuring that browser uploads and multi-step
   document processing requests consistently reach the same pod.
 
-### Key differences from `App_GKE` defaults
+### Key differences from `App GKE` defaults
 
-| Feature | App_GKE default | RAGFlow_GKE default |
+| Feature | App GKE default | RAGFlow GKE default |
 |---|---|---|
-| `container_port` | `8080` | `80` (set by RAGFlow_Common) |
+| `container_port` | `8080` | `80` (set by RAGFlow Common) |
 | `image_source` | varies | `"custom"` (always builds via Dockerfile) |
 | `database_type` | varies | `"MYSQL_8_0"` |
 | `service_type` | varies | `"LoadBalancer"` |
@@ -55,7 +55,7 @@ database initialization job, and document storage bucket.
 | `deployment_timeout` | `600` | `1800` |
 | `reserve_static_ip` | `false` | `true` |
 | `network_tags` | `[]` | `["nfsserver"]` |
-| `module_dependency` | varies | `["Services_GCP", "Elasticsearch_GKE"]` |
+| `module_dependency` | varies | `["Services GCP", "Elasticsearch GKE"]` |
 | `credit_cost` | varies | `150` |
 
 ### Architecture
@@ -80,14 +80,14 @@ RAGFlow_GKE
 
 | Behaviour | Detail |
 |---|---|
-| **Elasticsearch endpoint injected** | `ELASTICSEARCH_HOSTS` is always set from `var.elasticsearch_hosts`. Terraform rejects empty values — deploy `Elasticsearch_GKE` first. |
+| **Elasticsearch endpoint injected** | `ELASTICSEARCH_HOSTS` is always set from `var.elasticsearch_hosts`. Terraform rejects empty values — deploy `Elasticsearch GKE` first. |
 | **MySQL connection injected** | `MYSQL_HOST=127.0.0.1`, `MYSQL_PORT=3306`, `MYSQL_DATABASE`, and `MYSQL_USER` are always injected. The Cloud SQL Auth Proxy runs as a sidecar. |
 | **Redis queue injected** | When `enable_redis = true`, `REDIS_HOST` and `REDIS_PORT` are injected automatically. |
 | **Custom image build** | RAGFlow always builds a custom image via `RAGFlow_Common/scripts/Dockerfile` using Cloud Build. The `APP_VERSION` build arg is set from `application_version`. |
 | **`db-init` job auto-generated** | A MySQL initialization Job (`mysql:8.0-debian`) runs `scripts/db-init.sh` on first deploy. It creates the database and user with `mysql_native_password` auth. |
 | **`service_conf.yaml` generated at startup** | The custom entrypoint (`scripts/entrypoint.sh`) writes `/ragflow/conf/service_conf.yaml` from environment variables before starting the RAGFlow processes. |
 | **Network discovery** | The module uses `App_Common/modules/app_networking` to discover the VPC region from existing subnets. Falls back to `var.region` when no subnets are found. |
-| **`min_instance_count` hard-capped at 1** | `RAGFlow_GKE` hard-codes `min_instance_count = 1` in the `locals` merge, regardless of `var.min_instance_count`. |
+| **`min_instance_count` hard-capped at 1** | `RAGFlow GKE` hard-codes `min_instance_count = 1` in the `locals` merge, regardless of `var.min_instance_count`. |
 
 ---
 
@@ -97,7 +97,7 @@ RAGFlow_GKE
 |---|---|---|---|
 | `module_description` | `string` | *(RAGFlow GKE description)* | Platform UI description. `{{UIMeta group=0 order=1}}` |
 | `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/RAGFlow_GKE"` | Documentation URL. `{{UIMeta group=0 order=2}}` |
-| `module_dependency` | `list(string)` | `["Services_GCP", "Elasticsearch_GKE"]` | Modules that must be deployed first. `{{UIMeta group=0 order=3}}` |
+| `module_dependency` | `list(string)` | `["Services GCP", "Elasticsearch GKE"]` | Modules that must be deployed first. `{{UIMeta group=0 order=3}}` |
 | `module_services` | `list(string)` | *(GKE, MySQL, Elasticsearch, Redis, etc.)* | GCP services consumed. `{{UIMeta group=0 order=4}}` |
 | `credit_cost` | `number` | `150` | Platform credits consumed on deployment. `{{UIMeta group=0 order=5}}` |
 | `require_credit_purchases` | `bool` | `false` | Enforce credit balance check. `{{UIMeta group=0 order=6}}` |
@@ -213,7 +213,7 @@ RAGFlow_GKE
 
 ### Automatically Injected Environment Variables
 
-The following variables are always injected by `RAGFlow_GKE` and must not be set in `environment_variables`:
+The following variables are always injected by `RAGFlow GKE` and must not be set in `environment_variables`:
 
 | Variable | Value | Source |
 |---|---|---|
@@ -264,7 +264,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 | `nfs_mount_path` | `string` | `"/mnt/nfs"` | NFS volume mount path inside the container. `{{UIMeta group=12 order=2}}` |
 | `nfs_instance_name` | `string` | `""` | Name of an existing NFS GCE VM. Auto-discovered when empty. `{{UIMeta group=12 order=3}}` |
 | `nfs_instance_base_name` | `string` | `"app-nfs"` | Base name for the inline NFS GCE VM. `{{UIMeta group=12 order=4}}` |
-| `create_cloud_storage` | `bool` | `true` | Provision GCS buckets. The `ragflow-documents` bucket is always created by `RAGFlow_Common`. `{{UIMeta group=13 order=1}}` |
+| `create_cloud_storage` | `bool` | `true` | Provision GCS buckets. The `ragflow-documents` bucket is always created by `RAGFlow Common`. `{{UIMeta group=13 order=1}}` |
 | `storage_buckets` | `list(object)` | `[{ name_suffix="data" }]` | Additional GCS bucket configurations. `{{UIMeta group=13 order=2}}` |
 | `gcs_volumes` | `list(object)` | `[]` | GCS Fuse volumes mounted into the RAGFlow container. `{{UIMeta group=13 order=3}}` |
 | `manage_storage_kms_iam` | `bool` | `false` | Create CMEK KMS keyring for storage encryption. `{{UIMeta group=13 order=4}}` |
@@ -304,7 +304,7 @@ The following variables are always injected by `RAGFlow_GKE` and must not be set
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `initialization_jobs` | `list(object)` | `[]` | Kubernetes Jobs executed before the application starts. When empty, the auto-generated MySQL `db-init` job from `RAGFlow_Common` runs. Each job must have at least one of `command`, `args`, or `script_path`. `{{UIMeta group=10 order=1}}` |
+| `initialization_jobs` | `list(object)` | `[]` | Kubernetes Jobs executed before the application starts. When empty, the auto-generated MySQL `db-init` job from `RAGFlow Common` runs. Each job must have at least one of `command`, `args`, or `script_path`. `{{UIMeta group=10 order=1}}` |
 | `cron_jobs` | `list(object)` | `[]` | Recurring Kubernetes CronJobs. `{{UIMeta group=10 order=2}}` |
 | `additional_services` | `list(object)` | `[]` | Additional containers deployed as separate Kubernetes Deployments. `{{UIMeta group=10 order=3}}` |
 | `enable_custom_sql_scripts` | `bool` | `false` | Run custom SQL scripts from a GCS bucket after provisioning. `{{UIMeta group=17 order=1}}` |
@@ -357,12 +357,12 @@ These settings apply only when `workload_type = "StatefulSet"`.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `startup_probe_config` | `object` | `{ enabled=true, path="/v1/health", initial_delay_seconds=60, period_seconds=10, failure_threshold=18 }` | App_GKE-standard startup probe. `{{UIMeta group=9 order=1}}` |
-| `health_check_config` | `object` | `{ enabled=true, path="/v1/health", initial_delay_seconds=120, period_seconds=30 }` | App_GKE-standard liveness probe. `{{UIMeta group=9 order=2}}` |
+| `startup_probe_config` | `object` | `{ enabled=true, path="/v1/health", initial_delay_seconds=60, period_seconds=10, failure_threshold=18 }` | App GKE-standard startup probe. `{{UIMeta group=9 order=1}}` |
+| `health_check_config` | `object` | `{ enabled=true, path="/v1/health", initial_delay_seconds=120, period_seconds=30 }` | App GKE-standard liveness probe. `{{UIMeta group=9 order=2}}` |
 | `uptime_check_config` | `object` | `{ enabled=false, path="/v1/health", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. `{{UIMeta group=9 order=3}}` |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies. `{{UIMeta group=9 order=4}}` |
-| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=60, timeout_seconds=10, period_seconds=10, failure_threshold=18 }` | Container startup probe forwarded to `RAGFlow_Common`. `{{UIMeta group=9 order=5}}` |
-| `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Container liveness probe forwarded to `RAGFlow_Common`. `{{UIMeta group=9 order=6}}` |
+| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=60, timeout_seconds=10, period_seconds=10, failure_threshold=18 }` | Container startup probe forwarded to `RAGFlow Common`. `{{UIMeta group=9 order=5}}` |
+| `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Container liveness probe forwarded to `RAGFlow Common`. `{{UIMeta group=9 order=6}}` |
 
 ---
 
@@ -373,7 +373,7 @@ These settings apply only when `workload_type = "StatefulSet"`.
 | Guard | Error Message |
 |---|---|
 | `min_instance_count <= max_instance_count` | Minimum cannot exceed maximum. |
-| `elasticsearch_hosts != ""` | `elasticsearch_hosts` must be set — deploy `Elasticsearch_GKE` first and use its `elasticsearch_endpoint` output. |
+| `elasticsearch_hosts != ""` | `elasticsearch_hosts` must be set — deploy `Elasticsearch GKE` first and use its `elasticsearch_endpoint` output. |
 | `enable_redis = true` requires `redis_host != ""` OR `enable_nfs = true` | Without a Redis host source, the task queue will fail to connect. |
 | `enable_iap = true` requires both OAuth credentials | IAP on GKE requires `iap_oauth_client_id` and `iap_oauth_client_secret`. |
 | `enable_cloudsql_volume = true` requires `database_type != "NONE"` | The Auth Proxy sidecar should not be enabled without a database. |
@@ -491,7 +491,7 @@ resource_labels = {
 |---|---|---|---|
 | `elasticsearch_hosts` | *(required — no default)* | **Critical** | RAGFlow cannot index or search documents without a reachable Elasticsearch endpoint. Must be set to the `elasticsearch_endpoint` output from a deployed `Elasticsearch_GKE` instance (e.g. `http://10.0.0.5:9200`). Leaving blank causes a plan-time error; RAGFlow will not deploy. |
 | `enable_redis` | `true` | **Critical** | Redis is required for RAGFlow's document processing task queue. Setting to `false` disables the task queue backend; document parsing jobs are never executed and uploaded files remain unprocessed indefinitely. |
-| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, the module falls back to a default address. Pointing to a wrong or unreachable Memorystore Redis host causes all async document workers to fail silently. Use the Redis IP from `Services_GCP`. |
+| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, the module falls back to a default address. Pointing to a wrong or unreachable Memorystore Redis host causes all async document workers to fail silently. Use the Redis IP from `Services GCP`. |
 | `database_type` | `"MYSQL_8_0"` | **Critical** | RAGFlow only supports MySQL 8.0. Changing to `POSTGRES` or `NONE` removes the required database backend; RAGFlow cannot store user accounts, knowledge bases, or task state. |
 | `min_instance_count` | `1` | **High** | RAGFlow loads embedding models during pod startup, which takes 2–3 minutes. Setting to `0` enables scale-to-zero on GKE; requests during cold-start periods will time out. Keep at `1` or more in production. |
 | `stateful_pvc_enabled` | `null` | **High** | RAGFlow on GKE stores model artifacts and temporary processing files on disk. Without a PVC (`null` defaults to no PVC), pod restarts lose all in-progress processing state. Set `stateful_pvc_enabled = true` for production deployments. |
@@ -502,7 +502,7 @@ resource_labels = {
 | `container_resources.memory_limit` | `"4Gi"` | **High** | RAGFlow loads embedding models plus the application server. Values below `4Gi` cause OOM kills during document processing. Scale to `8Gi`–`16Gi` for production. |
 | `container_resources.cpu_limit` | `"2000m"` | **Medium** | Document parsing (OCR, chunking) is CPU-intensive. Under `1000m`, processing throughput degrades noticeably. Recommend `4000m`+ for production ingestion workloads. |
 | `max_instance_count` | `5` | **Medium** | GKE HPA scales pods based on CPU/memory. Multiple RAGFlow replicas sharing a MySQL database must have sufficient connection pool headroom (`max_connections` in Cloud SQL). Scaling aggressively without increasing Cloud SQL tier causes connection exhaustion. |
-| `elasticsearch_username` | `""` | **High** | If the Elasticsearch_GKE instance has `enable_xpack_security = true`, RAGFlow must authenticate. Leaving this blank causes HTTP 401 from Elasticsearch, breaking all index and search operations. |
+| `elasticsearch_username` | `""` | **High** | If the Elasticsearch GKE instance has `enable_xpack_security = true`, RAGFlow must authenticate. Leaving this blank causes HTTP 401 from Elasticsearch, breaking all index and search operations. |
 | `backup_schedule` | `"0 2 * * *"` | **Medium** | Daily MySQL backups protect against data loss. Setting too-infrequent or omitting a schedule increases RPO. |
 | `backup_retention_days` | `7` | **Low** | Short retention limits point-in-time recovery. Consider 30 days for production. |
 | `enable_iap` | `false` | **High** | Without IAP, the GKE Ingress (when using external load balancer) is accessible to any caller. Enable IAP with `iap_authorized_users`/`iap_authorized_groups` for production. Requires `iap_oauth_client_id` and `iap_oauth_client_secret`. |

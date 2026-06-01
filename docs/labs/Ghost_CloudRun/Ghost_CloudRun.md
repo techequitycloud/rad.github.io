@@ -53,8 +53,8 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 ## Prerequisites
 
 1. A GCP project with billing enabled.
-2. The `Services_GCP` module deployed in the same project (provides VPC, Cloud SQL instance, and NFS server).
-3. The following APIs enabled (Services_GCP handles this):
+2. The `Services GCP` module deployed in the same project (provides VPC, Cloud SQL instance, and NFS server).
+3. The following APIs enabled (Services GCP handles this):
    - `run.googleapis.com`
    - `sqladmin.googleapis.com`
    - `secretmanager.googleapis.com`
@@ -457,7 +457,7 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 
 > **Warning:** This permanently deletes all resources including the database and NFS content. Export your Ghost content before undeploying: Ghost Admin > Settings > Labs > Export.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

@@ -1,17 +1,17 @@
 ---
-title: "App_CloudRun — Lab Guide"
+title: "App CloudRun — Lab Guide"
 sidebar_label: "App CloudRun"
 ---
 
-# App_CloudRun — Lab Guide
+# App CloudRun — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/App_CloudRun)**
 
 ## Overview
 
-`App_CloudRun` is the **foundation deployment engine** for all Cloud Run application modules in this repository. It is a highly parameterized Terraform child module that provisions a production-ready Cloud Run v2 service, including Cloud SQL (PostgreSQL or MySQL), Cloud Filestore NFS, GCS storage, Secret Manager, Cloud Build CI/CD, Cloud Monitoring, and optional Cloud Armor WAF.
+`App CloudRun` is the **foundation deployment engine** for all Cloud Run application modules in this repository. It is a highly parameterized Terraform child module that provisions a production-ready Cloud Run v2 service, including Cloud SQL (PostgreSQL or MySQL), Cloud Filestore NFS, GCS storage, Secret Manager, Cloud Build CI/CD, Cloud Monitoring, and optional Cloud Armor WAF.
 
-Application modules such as `Django_CloudRun`, `Ghost_CloudRun`, and `Wordpress_CloudRun` call this module and pass application-specific configuration. You can also call `App_CloudRun` directly to deploy a generic containerised workload on Cloud Run.
+Application modules such as `Django CloudRun`, `Ghost CloudRun`, and `Wordpress CloudRun` call this module and pass application-specific configuration. You can also call `App CloudRun` directly to deploy a generic containerised workload on Cloud Run.
 
 **Estimated time:** 1.5–2.5 hours
 
@@ -65,11 +65,11 @@ export SERVICE_URL=$(gcloud run services describe ${SERVICE} \
 |---|---|
 | gcloud CLI | Authenticated (`gcloud auth login`) |
 | GCP project with billing | Active billing account linked |
-| Services_GCP module deployed | Provides VPC, Cloud SQL, Artifact Registry, and Filestore |
+| Services GCP module deployed | Provides VPC, Cloud SQL, Artifact Registry, and Filestore |
 | Service account | `roles/owner` granted in the target project |
 | RAD UI access | Permission to deploy modules in the target GCP project |
 
-The `Services_GCP` module **must** be deployed and healthy before running this module. It supplies the shared VPC, Cloud SQL instance, Artifact Registry repository, and Filestore NFS server that App_CloudRun discovers automatically at deploy time.
+The `Services GCP` module **must** be deployed and healthy before running this module. It supplies the shared VPC, Cloud SQL instance, Artifact Registry repository, and Filestore NFS server that App CloudRun discovers automatically at deploy time.
 
 ---
 
@@ -499,7 +499,7 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Uptime checks and alert policies | < 1 minute |
 | **Total** | **6–12 minutes** |
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

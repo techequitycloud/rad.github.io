@@ -1,11 +1,11 @@
 ---
-title: "Activepieces_Common Shared Configuration Module"
+title: "Activepieces Common Shared Configuration Module"
 sidebar_label: "Activepieces Common"
 ---
 
-# Activepieces_Common Shared Configuration Module
+# Activepieces Common Shared Configuration Module
 
-The `Activepieces_Common` module defines the Activepieces workflow automation platform configuration for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets for cryptographic keys) and produces a `config` output consumed by the platform-specific wrapper modules (`Activepieces_CloudRun` and `Activepieces_GKE`).
+The `Activepieces Common` module defines the Activepieces workflow automation platform configuration for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets for cryptographic keys) and produces a `config` output consumed by the platform-specific wrapper modules (`Activepieces CloudRun` and `Activepieces GKE`).
 
 ## 1. Overview
 
@@ -107,7 +107,7 @@ A map of Activepieces secret environment variable names to their Secret Manager 
 ```
 
 ### `secret_values`
-A **sensitive** map of the same secrets with raw generated values. Used by `App_GKE` to bypass Secret Manager read-after-write consistency issues during the initial apply.
+A **sensitive** map of the same secrets with raw generated values. Used by `App GKE` to bypass Secret Manager read-after-write consistency issues during the initial apply.
 
 ```hcl
 {
@@ -117,16 +117,16 @@ A **sensitive** map of the same secrets with raw generated values. Used by `App_
 ```
 
 ### `path`
-The absolute path to the `Activepieces_Common` module directory (`path.module`). Wrapper modules (`Activepieces_CloudRun`, `Activepieces_GKE`) use this output to set `scripts_dir` as `abspath("${module.activepieces_app.path}/scripts")`.
+The absolute path to the `Activepieces Common` module directory (`path.module`). Wrapper modules (`Activepieces CloudRun`, `Activepieces GKE`) use this output to set `scripts_dir` as `abspath("${module.activepieces_app.path}/scripts")`.
 
 ### `resource_prefix`
 The resource naming prefix passed into the module. Exposed for downstream use by callers that need it for additional resource naming.
 
 ---
 
-## 4. Environment Variables Injected by Activepieces_Common
+## 4. Environment Variables Injected by Activepieces Common
 
-`Activepieces_Common` merges the following default environment variables into the `config.environment_variables` field. User-supplied `var.environment_variables` are merged last and take precedence over any of these defaults.
+`Activepieces Common` merges the following default environment variables into the `config.environment_variables` field. User-supplied `var.environment_variables` are merged last and take precedence over any of these defaults.
 
 | Variable | Default / Logic | Description |
 |----------|-----------------|-------------|
@@ -152,7 +152,7 @@ The resource naming prefix passed into the module. Exposed for downstream use by
 
 ## 5. Initialization Job
 
-When `initialization_jobs = []` (the default), `Activepieces_Common` substitutes a single default `db-init` job:
+When `initialization_jobs = []` (the default), `Activepieces Common` substitutes a single default `db-init` job:
 
 | Field | Value |
 |-------|-------|
@@ -277,7 +277,7 @@ Database setup script used by the default `db-init` initialization job. See §5 
 
 ## 8. Platform-Specific Differences
 
-| Aspect | Activepieces_CloudRun | Activepieces_GKE |
+| Aspect | Activepieces CloudRun | Activepieces GKE |
 |--------|-----------------------|------------------|
 | `service_url` | Predicted Cloud Run URL: `https://<name>-<project_number>.<region>.run.app` | Internal cluster URL: `http://<name>.<namespace>.svc.cluster.local` |
 | `enable_cloudsql_volume` | Defaults to `true` | Defaults to `true` |

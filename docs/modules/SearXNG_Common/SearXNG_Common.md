@@ -11,7 +11,7 @@ This document provides a reference for the `modules/SearXNG_Common` Terraform mo
 
 ## 1. Module Overview
 
-`SearXNG_Common` is the application-specific configuration layer for SearXNG. It is called by both `SearXNG_CloudRun` and `SearXNG_GKE` to produce the standardised `config`, `secret_ids`, and `storage_buckets` outputs that the Foundation Modules consume.
+`SearXNG Common` is the application-specific configuration layer for SearXNG. It is called by both `SearXNG CloudRun` and `SearXNG GKE` to produce the standardised `config`, `secret_ids`, and `storage_buckets` outputs that the Foundation Modules consume.
 
 **Responsibilities:**
 *   Defines the SearXNG container configuration: image (`searxng/searxng`), container port (8080), health probe paths (`/healthz`), and default environment variables.
@@ -19,7 +19,7 @@ This document provides a reference for the `modules/SearXNG_Common` Terraform mo
 *   Outputs an empty `storage_buckets` list (SearXNG is stateless — no GCS bucket required).
 *   Sets the `enable_image_mirroring` flag to mirror the SearXNG image into Artifact Registry.
 
-**Note on `SEARXNG_SECRET`:** This secret is the cryptographic session key for SearXNG. All running instances must share the same value. `SearXNG_Common` generates it once and stores it in Secret Manager. For GKE deployments, the explicit value is also output to allow the CSI driver to inject it without read-after-write consistency issues on first apply.
+**Note on `SEARXNG_SECRET`:** This secret is the cryptographic session key for SearXNG. All running instances must share the same value. `SearXNG Common` generates it once and stores it in Secret Manager. For GKE deployments, the explicit value is also output to allow the CSI driver to inject it without read-after-write consistency issues on first apply.
 
 **Outputs:**
 
@@ -33,13 +33,13 @@ This document provides a reference for the `modules/SearXNG_Common` Terraform mo
 
 ## 2. Variables
 
-`SearXNG_Common` variables are set by the calling Application Module.
+`SearXNG Common` variables are set by the calling Application Module.
 
 | Variable | Default | Description |
 |---|---|---|
 | `project_id` | — | GCP project ID. Required. |
 | `deployment_id` | `""` | Deployment ID suffix. |
-| `resource_prefix` | `""` | Optional resource prefix override. Pass `App_GKE`'s resource prefix for GKE deployments. |
+| `resource_prefix` | `""` | Optional resource prefix override. Pass `App GKE`'s resource prefix for GKE deployments. |
 | `tenant_deployment_id` | `'demo'` | Deployment environment identifier. |
 | `resource_labels` | `{}` | Labels for all resources. |
 | `application_name` | `'searxng'` | Internal application name used in resource naming. |

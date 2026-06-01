@@ -1,11 +1,11 @@
 ---
-title: "Ghost_Common Shared Configuration Module"
+title: "Ghost Common Shared Configuration Module"
 sidebar_label: "Ghost Common"
 ---
 
-# Ghost_Common Shared Configuration Module
+# Ghost Common Shared Configuration Module
 
-The `Ghost_Common` module defines the Ghost publishing platform configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates no GCP resources and produces a `config` output consumed by platform-specific wrapper modules (`Ghost_CloudRun` and `Ghost_GKE`).
+The `Ghost Common` module defines the Ghost publishing platform configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates no GCP resources and produces a `config` output consumed by platform-specific wrapper modules (`Ghost CloudRun` and `Ghost GKE`).
 
 ## 1. Overview
 
@@ -31,7 +31,7 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 
 **Key characteristics**:
 - The only `*_Common` module in the ecosystem that uses **MySQL 8.0** instead of PostgreSQL.
-- Creates **no GCP resources** — no secrets, no IAM bindings (compare with Directus_Common and Django_Common which create Secret Manager secrets).
+- Creates **no GCP resources** — no secrets, no IAM bindings (compare with Directus Common and Django Common which create Secret Manager secrets).
 - Defines a **readiness probe** in addition to startup and liveness probes (unique among the `*_Common` modules).
 - The `entrypoint.sh` script auto-detects the Cloud Run service URL at runtime via the GCE metadata server and Cloud Run API v2, removing the need to know the URL at Terraform plan time.
 
@@ -98,13 +98,13 @@ The absolute path to the module directory, used by wrapper modules to locate the
 | `db_user` | `string` | `"ghost"` | MySQL application user |
 | `cpu_limit` | `string` | `"2000m"` | Container CPU limit |
 | `memory_limit` | `string` | `"4Gi"` | Container memory limit |
-| `environment_variables` | `map(string)` | `{}` | Environment variables passed directly to the container. Note: wrapper modules (`Ghost_CloudRun`, `Ghost_GKE`) default this to SMTP stub values; `Ghost_Common` itself defaults to an empty map. |
+| `environment_variables` | `map(string)` | `{}` | Environment variables passed directly to the container. Note: wrapper modules (`Ghost CloudRun`, `Ghost GKE`) default this to SMTP stub values; `Ghost Common` itself defaults to an empty map. |
 | `initialization_jobs` | `list(object)` | `[]` | Custom init jobs; empty triggers the default `db-init` job |
 | `startup_probe` | `object` | see above | Startup health probe |
 | `liveness_probe` | `object` | see above | Liveness health probe |
 | `enable_image_mirroring` | `bool` | `false` | Mirror the container image to Artifact Registry before deployment |
-| `min_instance_count` | `number` | `0` | Minimum number of running instances (0 enables scale-to-zero). Overridden to `0` by `Ghost_CloudRun` and `1` by `Ghost_GKE` via hardcoded locals. |
-| `max_instance_count` | `number` | `3` | Maximum number of running instances. Overridden to `5` by both `Ghost_CloudRun` and `Ghost_GKE` via hardcoded locals. |
+| `min_instance_count` | `number` | `0` | Minimum number of running instances (0 enables scale-to-zero). Overridden to `0` by `Ghost CloudRun` and `1` by `Ghost GKE` via hardcoded locals. |
+| `max_instance_count` | `number` | `3` | Maximum number of running instances. Overridden to `5` by both `Ghost CloudRun` and `Ghost GKE` via hardcoded locals. |
 | `secret_environment_variables` | `map(string)` | `{}` | Secret environment variables passed to the container |
 
 ### Storage & Volumes
@@ -119,7 +119,7 @@ The absolute path to the module directory, used by wrapper modules to locate the
 
 ## 4. Health Probes
 
-Ghost_Common is the only `*_Common` module that defines all three probe types. All probes target `GET /` (the Ghost homepage, which returns 200 when the application is fully ready):
+Ghost Common is the only `*_Common` module that defines all three probe types. All probes target `GET /` (the Ghost homepage, which returns 200 when the application is fully ready):
 
 | Probe | Initial Delay | Timeout | Period | Failure Threshold | Purpose |
 |-------|--------------|---------|--------|-------------------|---------|
@@ -223,7 +223,7 @@ environment_variables = {
 
 ## 8. Platform-Specific Differences
 
-| Aspect | Ghost_CloudRun | Ghost_GKE |
+| Aspect | Ghost CloudRun | Ghost GKE |
 |--------|----------------|-----------|
 | `service_url` | `entrypoint.sh` auto-detects from GCE metadata API (checks `K_SERVICE` env var) | `entrypoint.sh` falls back to `http://localhost:2368` — GKE pods do not set `K_SERVICE`, so the URL must be configured via a Ghost `url` environment variable |
 | `min_instance_count` | `0` (scale-to-zero) — hardcoded in `Ghost_CloudRun/main.tf`, overrides Common default | `1` (always one pod running) — hardcoded in `Ghost_GKE/main.tf`, overrides Common default |
@@ -231,8 +231,8 @@ environment_variables = {
 | `enable_cloudsql_volume` | Optional (default `true`) | Optional (default `true`) |
 | `DB_HOST` | Cloud SQL Auth Proxy socket path | Cloud SQL private IP |
 | URL auto-detection | `entrypoint.sh` fetches service URL from GCP metadata API (Cloud Run sets `K_SERVICE`) | `entrypoint.sh` falls back to `http://localhost:2368` because GKE pods do not set `K_SERVICE`; set the `url` env var explicitly for GKE |
-| NFS | Enabled by default (`enable_nfs = true`) in `Ghost_CloudRun` | Enabled by default (`enable_nfs = true`) in `Ghost_GKE` |
-| Redis | Enabled by default (`enable_redis = true`) in `Ghost_CloudRun` | Enabled by default (`enable_redis = true`) in `Ghost_GKE` |
+| NFS | Enabled by default (`enable_nfs = true`) in `Ghost CloudRun` | Enabled by default (`enable_nfs = true`) in `Ghost GKE` |
+| Redis | Enabled by default (`enable_redis = true`) in `Ghost CloudRun` | Enabled by default (`enable_redis = true`) in `Ghost GKE` |
 
 ---
 

@@ -13,28 +13,28 @@ This document provides a comprehensive reference for the `modules/Metabase_Cloud
 
 Metabase is an open-source business intelligence and analytics platform with 40,000+ GitHub stars, used by 50,000+ organizations to democratize data access — enabling non-technical users to query and visualize data without writing SQL. It connects to 20+ database types including BigQuery, PostgreSQL, MySQL, and Cloud SQL.
 
-`Metabase_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Metabase-specific application configuration, database initialization, and startup probes via `Metabase_Common`.
+`Metabase CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects Metabase-specific application configuration, database initialization, and startup probes via `Metabase Common`.
 
 **Key Capabilities:**
 - **Compute**: Cloud Run v2 (Gen2), 2 vCPU / 4 Gi by default to accommodate the Metabase JVM. Scale-to-zero supported (`min_instance_count = 0` default) but cold starts take 60–120 seconds.
 - **Data Persistence**: Cloud SQL **PostgreSQL 15** as the Metabase application database (distinct from data sources Metabase queries). A `db-init` Cloud Run Job runs automatically on first deployment.
-- **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_CloudRun`.
+- **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`.
 - **CI/CD**: Cloud Build custom image pipeline by default; Cloud Deploy progressive delivery optional.
 - **Reliability**: Health probes target `/api/health` with a generous 120-second initial delay to accommodate JVM startup.
 
 **JVM cold start warning:** Metabase runs on the JVM and takes 60–120 seconds to start from cold. For production deployments, set `min_instance_count = 1` to eliminate cold starts.
 
-**Wrapper architecture:** `Metabase_CloudRun` calls `Metabase_Common` to build an `application_config` object. `metabase.tf` assembles the application configuration. `Metabase_Common` automatically provides a default `db-init` PostgreSQL initialization job using `postgres:15-alpine` that runs the `db-init.sh` script before Metabase first boots.
+**Wrapper architecture:** `Metabase CloudRun` calls `Metabase Common` to build an `application_config` object. `metabase.tf` assembles the application configuration. `Metabase Common` automatically provides a default `db-init` PostgreSQL initialization job using `postgres:15-alpine` that runs the `db-init.sh` script before Metabase first boots.
 
 ---
 
 ## 2. IAM & Access Control
 
-`Metabase_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, and IAP service agent roles are identical to those in App_CloudRun.
+`Metabase CloudRun` delegates all IAM provisioning to `App CloudRun`. The Cloud Run SA, Cloud Build SA, and IAP service agent roles are identical to those in App CloudRun.
 
-**Database initialisation:** A `db-init` Cloud Run Job is automatically provisioned by `Metabase_Common` when `initialization_jobs` is left as the default empty list. It uses `postgres:15-alpine` and executes `Metabase_Common/scripts/db-init.sh`, which idempotently creates the Metabase PostgreSQL database and user. Override `initialization_jobs` with a non-empty list to replace this default.
+**Database initialisation:** A `db-init` Cloud Run Job is automatically provisioned by `Metabase Common` when `initialization_jobs` is left as the default empty list. It uses `postgres:15-alpine` and executes `Metabase_Common/scripts/db-init.sh`, which idempotently creates the Metabase PostgreSQL database and user. Override `initialization_jobs` with a non-empty list to replace this default.
 
-**Fixed environment variables:** `Metabase_Common` automatically sets `MB_JETTY_PORT = "3000"` and `JAVA_TIMEZONE = "UTC"` in the container environment. Do not override these in `environment_variables`.
+**Fixed environment variables:** `Metabase Common` automatically sets `MB_JETTY_PORT = "3000"` and `JAVA_TIMEZONE = "UTC"` in the container environment. Do not override these in `environment_variables`.
 
 ---
 
@@ -69,7 +69,7 @@ Metabase is a Java/JVM application with substantial resource requirements. The d
 
 Metabase requires a PostgreSQL or MySQL database to store its own application data: questions, dashboards, users, collections, and settings. This is separate from the data sources that Metabase queries.
 
-**Default `db-init` job:** `Metabase_Common` automatically provides a `db-init` job that creates the Metabase database and PostgreSQL user before the Metabase service starts. This job uses `postgres:15-alpine` and runs with `execute_on_apply = true`.
+**Default `db-init` job:** `Metabase Common` automatically provides a `db-init` job that creates the Metabase database and PostgreSQL user before the Metabase service starts. This job uses `postgres:15-alpine` and runs with `execute_on_apply = true`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -103,11 +103,11 @@ Metabase does not require dedicated GCS storage by default — its application s
 
 ### E. Initialization & Bootstrap
 
-`Metabase_Common` automatically provides a default `db-init` Cloud Run Job when `initialization_jobs` is empty. Override with a non-empty list to replace the default.
+`Metabase Common` automatically provides a default `db-init` Cloud Run Job when `initialization_jobs` is empty. Override with a non-empty list to replace the default.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Metabase_Common` to supply the default `db-init` PostgreSQL job. Non-empty list replaces it entirely. |
+| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Metabase Common` to supply the default `db-init` PostgreSQL job. Non-empty list replaces it entirely. |
 | `cron_jobs` | 13 | `[]` | Recurring scheduled Cloud Run Jobs triggered by Cloud Scheduler. |
 
 ---
@@ -258,7 +258,7 @@ environment_variables = {
 }
 ```
 
-> **Note:** `MB_JETTY_PORT = "3000"` and `JAVA_TIMEZONE = "UTC"` are set automatically by `Metabase_Common`. Do not override these values.
+> **Note:** `MB_JETTY_PORT = "3000"` and `JAVA_TIMEZONE = "UTC"` are set automatically by `Metabase Common`. Do not override these values.
 
 ### D. Custom SQL & Backup
 
@@ -275,12 +275,12 @@ environment_variables = {
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| **PostgreSQL 15 required** | `database_type = "POSTGRES_15"` fixed by `Metabase_Common` | Metabase uses PostgreSQL as its application database. |
-| **MB_JETTY_PORT fixed** | `MB_JETTY_PORT = "3000"` injected by `Metabase_Common` | Must match `container_port = 3000`. |
-| **JAVA_TIMEZONE fixed** | `JAVA_TIMEZONE = "UTC"` injected by `Metabase_Common` | UTC timezone ensures consistent timestamp handling. |
-| **Default db-init job** | Supplied by `Metabase_Common` when `initialization_jobs = []` | PostgreSQL database and user are created automatically. Override with a non-empty list. |
+| **PostgreSQL 15 required** | `database_type = "POSTGRES_15"` fixed by `Metabase Common` | Metabase uses PostgreSQL as its application database. |
+| **MB_JETTY_PORT fixed** | `MB_JETTY_PORT = "3000"` injected by `Metabase Common` | Must match `container_port = 3000`. |
+| **JAVA_TIMEZONE fixed** | `JAVA_TIMEZONE = "UTC"` injected by `Metabase Common` | UTC timezone ensures consistent timestamp handling. |
+| **Default db-init job** | Supplied by `Metabase Common` when `initialization_jobs = []` | PostgreSQL database and user are created automatically. Override with a non-empty list. |
 | **No application secrets generated** | `module_secret_env_vars = {}` | Metabase manages its own internal keys. No `SECRET_KEY` equivalent is created. |
-| **No default GCS storage** | `storage_buckets = []` in `Metabase_Common` | Metabase stores all state in PostgreSQL. Add buckets via `storage_buckets` if needed. |
+| **No default GCS storage** | `storage_buckets = []` in `Metabase Common` | Metabase stores all state in PostgreSQL. Add buckets via `storage_buckets` if needed. |
 | **Unix socket by default** | `enable_cloudsql_volume = true` default | Connects to Cloud SQL via Auth Proxy Unix socket. |
 | **Scale-to-zero by default** | `min_instance_count = 0` | JVM cold starts take 60–120 seconds. Set to `1` for production. |
 
@@ -292,7 +292,7 @@ environment_variables = {
 |---|---|---|---|
 | `module_description` | 0 | (Metabase platform text) | Platform metadata: module description. |
 | `module_documentation` | 0 | `https://docs.radmodules.dev/docs/modules/Metabase_CloudRun` | Platform metadata: documentation URL. |
-| `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
+| `module_dependency` | 0 | `['Services GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `50` | Platform metadata: deployment credit cost. |
 | `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |

@@ -1,11 +1,11 @@
 ---
-title: "Directus_Common Shared Configuration Module"
+title: "Directus Common Shared Configuration Module"
 sidebar_label: "Directus Common"
 ---
 
-# Directus_Common Shared Configuration Module
+# Directus Common Shared Configuration Module
 
-The `Directus_Common` module defines the Directus headless CMS and Backend-as-a-Service (BaaS) platform configuration for the RAD Modules ecosystem. Unlike a purely configuration-only module, it **also creates GCP resources** — specifically the Secret Manager secrets required by the Directus runtime. Its outputs are consumed by platform-specific wrapper modules (`Directus_CloudRun` and `Directus_GKE`).
+The `Directus Common` module defines the Directus headless CMS and Backend-as-a-Service (BaaS) platform configuration for the RAD Modules ecosystem. Unlike a purely configuration-only module, it **also creates GCP resources** — specifically the Secret Manager secrets required by the Directus runtime. Its outputs are consumed by platform-specific wrapper modules (`Directus CloudRun` and `Directus GKE`).
 
 ## 1. Overview
 
@@ -29,13 +29,13 @@ Layer 2: Platform Modules
 Layer 1: App_Common (networking, database, storage, secrets, IAM)
 ```
 
-**Key difference from Cyclos_Common**: This module provisions real GCP resources (Secret Manager secrets with generated credentials) and performs a custom Docker image build, rather than referencing a prebuilt public image.
+**Key difference from Cyclos Common**: This module provisions real GCP resources (Secret Manager secrets with generated credentials) and performs a custom Docker image build, rather than referencing a prebuilt public image.
 
 ---
 
 ## 2. GCP Resources Created
 
-`Directus_Common` provisions the following resources directly:
+`Directus Common` provisions the following resources directly:
 
 ### Secret Manager Secrets
 
@@ -108,7 +108,7 @@ A map of Directus secret environment variable names to their Secret Manager secr
 ```
 
 ### `secret_values`
-A **sensitive** map of the same secrets but with their raw generated values. Used by `App_GKE` to bypass Secret Manager read-after-write consistency issues during initial apply.
+A **sensitive** map of the same secrets but with their raw generated values. Used by `App GKE` to bypass Secret Manager read-after-write consistency issues during initial apply.
 
 ### `path`
 The absolute path to the module directory, used by wrapper modules to locate the `scripts/` directory.
@@ -267,7 +267,7 @@ A lighter-weight bootstrap script (used by the `directus-bootstrap` initializati
 
 ## 8. Platform-Specific Differences
 
-| Aspect | Directus_CloudRun | Directus_GKE |
+| Aspect | Directus CloudRun | Directus GKE |
 |--------|------------------|--------------|
 | `enable_cloudsql_volume` | `false` by default (TCP to private IP) | `true` by default (Auth Proxy sidecar via socket) |
 | `DB_SSL` | `'{"rejectUnauthorized":false}'` (private IP TCP) | `"false"` (Auth Proxy handles TLS) |

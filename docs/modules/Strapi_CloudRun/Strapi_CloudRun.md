@@ -1,13 +1,13 @@
 ---
-title: "Strapi_CloudRun Module — Configuration Guide"
+title: "Strapi CloudRun Module — Configuration Guide"
 sidebar_label: "Strapi CloudRun"
 ---
 
-# Strapi_CloudRun Module — Configuration Guide
+# Strapi CloudRun Module — Configuration Guide
 
 `Strapi_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Strapi](https://strapi.io/) — an open-source headless CMS — on Google Cloud Run Gen2.
 
-Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply Strapi-appropriate defaults and to call the `Strapi_Common` sub-module, which generates the application's container build context, database initialisation jobs, Strapi-specific secrets, and GCS bucket configuration. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.
+Every variable in this module is passed through to `App CloudRun`. The wrapper's role is to supply Strapi-appropriate defaults and to call the `Strapi Common` sub-module, which generates the application's container build context, database initialisation jobs, Strapi-specific secrets, and GCS bucket configuration. You configure this module exactly as you would `App CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App CloudRun`, or that are unique to this wrapper.
 
 > **Where to look:** If a variable you are configuring is not described here, consult the [App_CloudRun Configuration Guide](../App_CloudRun/App_CloudRun.md). All `App_CloudRun` features — access and networking, IAP, Cloud Armor, CDN, CI/CD, Cloud Deploy, Binary Authorization, traffic splitting, and VPC Service Controls — are available in `Strapi_CloudRun` with identical behaviour and configuration.
 
@@ -17,7 +17,7 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 
 | Property | Value |
 |---|---|
-| Sub-module | `Strapi_Common` |
+| Sub-module | `Strapi Common` |
 | Default application name | `strapi` |
 | Default display name | `Strapi CMS` |
 | Default version | `5.0.0` |
@@ -31,13 +31,13 @@ Every variable in this module is passed through to `App_CloudRun`. The wrapper's
 | Image source | `custom` (Cloud Build) |
 | Platform-managed job | `db-init` |
 
-`Strapi_Common` generates the Dockerfile, build scripts, and a `db-init` Cloud Run job. It also generates five Strapi application secrets (`APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`) and two GCS environment variables (`GCS_BUCKET_NAME`, `GCS_BASE_URL`).
+`Strapi Common` generates the Dockerfile, build scripts, and a `db-init` Cloud Run job. It also generates five Strapi application secrets (`APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`) and two GCS environment variables (`GCS_BUCKET_NAME`, `GCS_BASE_URL`).
 
 ---
 
 ## §2 IAM & Project Identity
 
-Behaviour is identical to `App_CloudRun`. The following variables are passed through unchanged.
+Behaviour is identical to `App CloudRun`. The following variables are passed through unchanged.
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -83,7 +83,7 @@ Plain-text variables are injected via `environment_variables`; sensitive values 
 | `GCS_BUCKET_NAME` | Auto-provisioned GCS bucket name (suffix: `strapi-uploads`) |
 | `GCS_BASE_URL` | `https://storage.googleapis.com/<bucket-name>` |
 
-**Module-injected secrets** (provisioned by `Strapi_Common`, injected via `module_secret_env_vars`):
+**Module-injected secrets** (provisioned by `Strapi Common`, injected via `module_secret_env_vars`):
 
 | Secret env var | Purpose |
 |---|---|
@@ -114,7 +114,7 @@ secret_environment_variables = {
 
 ### §3.D Networking
 
-Behaviour is identical to `App_CloudRun`. Key defaults:
+Behaviour is identical to `App CloudRun`. Key defaults:
 
 | Variable | Default |
 |---|---|
@@ -132,10 +132,10 @@ Set `container_protocol = "h2c"` to enable HTTP/2 (gRPC) communication between t
 |---|---|---|
 | `container_image_source` | `"custom"` | `"custom"` triggers Cloud Build; `"prebuilt"` deploys an existing image |
 | `container_image` | `""` | Leave empty for Cloud Build output; set for prebuilt image URI |
-| `container_build_config` | `{ enabled = true }` | `Strapi_Common` controls Dockerfile path and context; module overrides `dockerfile_path = "Dockerfile"` and `context_path = "."` in `strapi.tf` |
+| `container_build_config` | `{ enabled = true }` | `Strapi Common` controls Dockerfile path and context; module overrides `dockerfile_path = "Dockerfile"` and `context_path = "."` in `strapi.tf` |
 | `enable_image_mirroring` | `true` | Mirrors image to Artifact Registry before deployment |
 
-`Strapi_Common` owns the build context (Dockerfile, scripts). The `container_build_config` override in `strapi.tf` corrects paths after symlink removal; only change `build_args` or `artifact_repo_name` if needed.
+`Strapi Common` owns the build context (Dockerfile, scripts). The `container_build_config` override in `strapi.tf` corrects paths after symlink removal; only change `build_args` or `artifact_repo_name` if needed.
 
 ---
 
@@ -229,9 +229,9 @@ cloud_deploy_stages = [
 
 ### §7.A Health Probes
 
-`Strapi_CloudRun` exposes two independent probe interfaces:
+`Strapi CloudRun` exposes two independent probe interfaces:
 
-**Interface 1 — `startup_probe` / `liveness_probe`** (passed to `Strapi_Common`):
+**Interface 1 — `startup_probe` / `liveness_probe`** (passed to `Strapi Common`):
 
 | Variable | Default |
 |---|---|
@@ -248,7 +248,7 @@ cloud_deploy_stages = [
 | `liveness_probe.period_seconds` | `30` |
 | `liveness_probe.failure_threshold` | `3` |
 
-**Interface 2 — `startup_probe_config` / `health_check_config`** (passed directly to `App_CloudRun`):
+**Interface 2 — `startup_probe_config` / `health_check_config`** (passed directly to `App CloudRun`):
 
 | Variable | Default |
 |---|---|
@@ -346,7 +346,7 @@ gcs_volumes = [{
 
 ### §8.D Additional Services
 
-`Strapi_CloudRun` exposes the `additional_services` variable, enabling co-deployed Cloud Run services (e.g. a background worker or internal Redis):
+`Strapi CloudRun` exposes the `additional_services` variable, enabling co-deployed Cloud Run services (e.g. a background worker or internal Redis):
 
 ```hcl
 additional_services = [{
@@ -368,11 +368,11 @@ The following are set or injected automatically and do not require configuration
 
 ### Database credentials
 
-`App_CloudRun` generates a random PostgreSQL password and stores it in Secret Manager. `Strapi_Common` derives the database connection string from this secret and the Cloud SQL instance connection name.
+`App CloudRun` generates a random PostgreSQL password and stores it in Secret Manager. `Strapi Common` derives the database connection string from this secret and the Cloud SQL instance connection name.
 
 ### Strapi application secrets
 
-`Strapi_Common` auto-generates all five Strapi cryptographic secrets (`APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`) on first deploy. These are stored in Secret Manager and injected at runtime.
+`Strapi Common` auto-generates all five Strapi cryptographic secrets (`APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`) on first deploy. These are stored in Secret Manager and injected at runtime.
 
 ### GCS bucket environment variables
 
@@ -402,7 +402,7 @@ The table below covers all variables unique to or with notable defaults in `Stra
 | `memory_limit` | `string` | `"2Gi"` | 3 | 2 GiB |
 | `min_instance_count` | `number` | `0` | 3 | Scale-to-zero |
 | `max_instance_count` | `number` | `1` | 3 | |
-| `container_port` | `number` | `8080` | 3 | Cloud Run module default; overrides Strapi_Common's 1337 |
+| `container_port` | `number` | `8080` | 3 | Cloud Run module default; overrides Strapi Common's 1337 |
 | `container_protocol` | `string` | `"http1"` | 3 | `"http1"` or `"h2c"` |
 | `container_image_source` | `string` | `"custom"` | 3 | `"prebuilt"` or `"custom"` |
 | `container_image` | `string` | `""` | 3 | Override for prebuilt |
@@ -422,10 +422,10 @@ The table below covers all variables unique to or with notable defaults in `Stra
 | `redis_host` | `string` | `null` | 20 | Must be set when Redis enabled |
 | `redis_port` | `string` | `"6379"` | 20 | String type |
 | `redis_auth` | `string` | `""` | 20 | Sensitive |
-| `startup_probe` | `object` | `{ type="HTTP", path="/_health", initial_delay_seconds=60 }` | 13 | Passed to Strapi_Common |
-| `liveness_probe` | `object` | `{ type="HTTP", path="/_health", initial_delay_seconds=30 }` | 13 | Passed to Strapi_Common |
-| `startup_probe_config` | `object` | `{ path="/_health", initial_delay_seconds=30, failure_threshold=30 }` | 13 | Passed to App_CloudRun |
-| `health_check_config` | `object` | `{ path="/_health" }` | 13 | Passed to App_CloudRun |
+| `startup_probe` | `object` | `{ type="HTTP", path="/_health", initial_delay_seconds=60 }` | 13 | Passed to Strapi Common |
+| `liveness_probe` | `object` | `{ type="HTTP", path="/_health", initial_delay_seconds=30 }` | 13 | Passed to Strapi Common |
+| `startup_probe_config` | `object` | `{ path="/_health", initial_delay_seconds=30, failure_threshold=30 }` | 13 | Passed to App CloudRun |
+| `health_check_config` | `object` | `{ path="/_health" }` | 13 | Passed to App CloudRun |
 | `initialization_jobs` | `list` | `[{ name="db-init", execute_on_apply=true }]` | 12 | Platform-managed; modify with care |
 | `additional_services` | `list` | `[]` | 12 | Co-deployed Cloud Run services |
 | `enable_vpc_sc` | `bool` | `false` | 21 | VPC Service Controls |

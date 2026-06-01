@@ -1,11 +1,11 @@
 ---
-title: "Cyclos_Common Shared Configuration Module"
+title: "Cyclos Common Shared Configuration Module"
 sidebar_label: "Cyclos Common"
 ---
 
-# Cyclos_Common Shared Configuration Module
+# Cyclos Common Shared Configuration Module
 
-The `Cyclos_Common` module defines the Cyclos banking and payment platform configuration for the RAD Modules ecosystem. It is a **configuration library**, not a resource-creating module — it produces a standardized application configuration object consumed by platform-specific wrapper modules (`Cyclos_CloudRun` and `Cyclos_GKE`).
+The `Cyclos Common` module defines the Cyclos banking and payment platform configuration for the RAD Modules ecosystem. It is a **configuration library**, not a resource-creating module — it produces a standardized application configuration object consumed by platform-specific wrapper modules (`Cyclos CloudRun` and `Cyclos GKE`).
 
 ## 1. Overview
 
@@ -28,13 +28,13 @@ Layer 2: Platform Modules
 Layer 1: App_Common (networking, database, storage, secrets, IAM)
 ```
 
-**What it does NOT do**: It does not create any GCP resources itself. All infrastructure provisioning is performed by the platform modules (`App_CloudRun`, `App_GKE`) and the shared library (`App_Common`) that consume its outputs.
+**What it does NOT do**: It does not create any GCP resources itself. All infrastructure provisioning is performed by the platform modules (`App CloudRun`, `App GKE`) and the shared library (`App Common`) that consume its outputs.
 
 ---
 
 ## 2. Outputs
 
-`Cyclos_Common` produces three outputs consumed by the wrapper modules.
+`Cyclos Common` produces three outputs consumed by the wrapper modules.
 
 ### `config`
 A comprehensive application configuration object passed to the platform module via `application_config`. It includes:
@@ -200,7 +200,7 @@ Optional Hazelcast cluster configuration for multi-instance deployments:
 
 ## 8. Platform-Specific Differences
 
-| Aspect | Cyclos_CloudRun | Cyclos_GKE |
+| Aspect | Cyclos CloudRun | Cyclos GKE |
 |--------|-----------------|------------|
 | `service_url` | Set to the Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Optional (Auth Proxy sidecar) | Optional (defaults to `false`; Cyclos uses TCP to Cloud SQL private IP) |

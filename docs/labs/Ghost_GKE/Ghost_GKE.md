@@ -56,9 +56,9 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install), [kubectl
 ## Prerequisites
 
 1. A GCP project with billing enabled.
-2. The `Services_GCP` module deployed in the same project (provides VPC, GKE cluster, Cloud SQL instance, and NFS server).
+2. The `Services GCP` module deployed in the same project (provides VPC, GKE cluster, Cloud SQL instance, and NFS server).
 3. Access to the RAD UI with permission to deploy modules in the target GCP project.
-4. The following APIs enabled (Services_GCP handles this):
+4. The following APIs enabled (Services GCP handles this):
    - `container.googleapis.com`
    - `sqladmin.googleapis.com`
    - `secretmanager.googleapis.com`
@@ -111,7 +111,7 @@ Deployment is initiated from the RAD UI. Fill in the variable form and click **D
 
 | Phase | Duration |
 |---|---|
-| VPC and networking (via Services_GCP) | Pre-provisioned |
+| VPC and networking (via Services GCP) | Pre-provisioned |
 | Cloud SQL MySQL instance creation | 8–12 min |
 | GKE namespace and workload identity | 2–3 min |
 | Artifact Registry image build (Cloud Build) | 5–10 min |
@@ -500,7 +500,7 @@ When you are finished with the lab, return to the RAD UI, navigate to your deplo
 
 > **Warning:** This permanently deletes all resources including the database and NFS content. Ensure you have exported any content you wish to keep (Ghost Admin > Settings > Labs > Export).
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 
