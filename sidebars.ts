@@ -645,9 +645,9 @@ const sidebars: SidebarsConfig = {
       label: 'Platform Capabilities',
       items: [
         { type: 'doc', id: 'capabilities/ai', label: 'Artificial Intelligence' },
-        { type: 'doc', id: 'capabilities/container-orchestration', label: 'Container Orchestration' },
-        { type: 'doc', id: 'capabilities/data-and-databases', label: 'Data & Databases' },
-        { type: 'doc', id: 'capabilities/disaster-recovery', label: 'Disaster Recovery' },
+        { type: 'doc', id: 'capabilities/kubernetes', label: 'Container Orchestration' },
+        { type: 'doc', id: 'capabilities/data_and_databases', label: 'Data & Databases' },
+        { type: 'doc', id: 'capabilities/disaster_recovery', label: 'Disaster Recovery' },
         { type: 'doc', id: 'capabilities/hybrid-cloud', label: 'Hybrid Cloud' },
         { type: 'doc', id: 'capabilities/infrastructure-as-code', label: 'Infrastructure as Code' },
         { type: 'doc', id: 'capabilities/modernization', label: 'Modernization' },
