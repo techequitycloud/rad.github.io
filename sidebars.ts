@@ -30,6 +30,7 @@ const sidebars: SidebarsConfig = {
         },
       ],
     },
+
     {
       type: 'category',
       label: 'Module Guides',
@@ -382,6 +383,7 @@ const sidebars: SidebarsConfig = {
             },
       ],
     },
+
     {
       type: 'category',
       label: 'Module Labs',
@@ -709,6 +711,7 @@ const sidebars: SidebarsConfig = {
             },
       ],
     },
+
     {
       type: 'category',
       label: 'Certification Guides',
@@ -769,6 +772,7 @@ const sidebars: SidebarsConfig = {
         },
       ],
     },
+
     {
       type: 'category',
       label: 'Platform Guides',
@@ -811,7 +815,7 @@ const sidebars: SidebarsConfig = {
         },
       ],
     },
-    {
+
     {
       type: 'category',
       label: 'Platform Tutorials',
@@ -827,8 +831,20 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'tutorials/roi', label: 'ROI' },
       ],
     },
-  ],
-};
+    {
+      type: 'category',
+      label: 'Platform Practices',
+      items: [
+        { type: 'doc', id: 'practices/cicd', label: 'CI/CD' },
+        { type: 'doc', id: 'practices/devsecops', label: 'DevSecOps' },
+        { type: 'doc', id: 'practices/finops', label: 'FinOps' },
+        { type: 'doc', id: 'practices/gitops_iac', label: 'GitOps & IaC' },
+        { type: 'doc', id: 'practices/platform_engineering', label: 'IDP' },
+        { type: 'doc', id: 'practices/sre', label: 'SRE' },
+      ],
+    },
+
+    {
       type: 'category',
       label: 'Platform Capabilities',
       items: [
@@ -849,18 +865,7 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'capabilities/zero-trust', label: 'Zero Trust' },
       ],
     },
-    {
-      type: 'category',
-      label: 'Platform Practices',
-      items: [
-        { type: 'doc', id: 'practices/cicd', label: 'CI/CD' },
-        { type: 'doc', id: 'practices/devsecops', label: 'DevSecOps' },
-        { type: 'doc', id: 'practices/finops', label: 'FinOps' },
-        { type: 'doc', id: 'practices/gitops_iac', label: 'GitOps & IaC' },
-        { type: 'doc', id: 'practices/platform_engineering', label: 'IDP' },
-        { type: 'doc', id: 'practices/sre', label: 'SRE' },
-      ],
-    },
+
     {
       type: 'category',
       label: 'Platform Outcomes',
@@ -873,5 +878,8 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'outcomes/security_zero_trust', label: 'Zero Trust Security' },
       ],
     },
+
+  ],
+};
 
 export default sidebars;
