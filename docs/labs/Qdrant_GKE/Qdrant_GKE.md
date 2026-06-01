@@ -143,4 +143,4 @@ You must also expose port 6334 on the Kubernetes Service (or use a separate Serv
 
 ## Next Steps
 
-See the [Lab Guide](Qdrant_GKE_Lab.md) for a step-by-step deployment walkthrough.
+See the [Lab Guide](../Qdrant_GKE_Lab/Qdrant_GKE_Lab.md) for a step-by-step deployment walkthrough.

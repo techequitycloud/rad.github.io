@@ -67,9 +67,9 @@ Metabase requires PostgreSQL (or MySQL) as its application database. This is sep
 
 ## Getting Started
 
-See the [Lab Guide](./Metabase_CloudRun_Lab.md) for step-by-step deployment instructions.
+See the [Lab Guide](../Metabase_CloudRun_Lab/Metabase_CloudRun_Lab.md) for step-by-step deployment instructions.
 
-See the [Configuration Guide](../modules/Metabase_CloudRun.md) for a complete variable reference.
+See the [Configuration Guide](../../modules/Metabase_CloudRun/Metabase_CloudRun.md) for a complete variable reference.
 
 ## Common Configuration Examples
 

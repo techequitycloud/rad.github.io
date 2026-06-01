@@ -40,7 +40,7 @@ Pod Security Admission (the PSP replacement in Kubernetes 1.25+) is not configur
 
 ## VPC-native networking
 
-GKE clusters use IP alias ranges via `ip_allocation_policy` in `gke.tf`, with secondary ranges defined in `network.tf` for pods and services. See [networking-zero-trust](./networking-zero-trust.md).
+GKE clusters use IP alias ranges via `ip_allocation_policy` in `gke.tf`, with secondary ranges defined in `network.tf` for pods and services. See [networking-zero-trust](./networking.md).
 
 ## Workload Identity
 

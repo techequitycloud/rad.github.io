@@ -367,7 +367,7 @@ export DB_SECRET=$(gcloud secrets list \
    > ```
    > POST https://logging.googleapis.com/v2/entries:list
    > {
-   >   "resourceNames": ["projects/<project-id>"],
+   >   "resourceNames": ["projects/&lt;project-id>"],
    >   "filter": "resource.type=\"cloud_run_revision\" resource.labels.service_name=~\"activepieces\"",
    >   "orderBy": "timestamp desc",
    >   "pageSize": 50

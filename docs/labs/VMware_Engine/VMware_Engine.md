@@ -278,7 +278,7 @@ Password: <password-from-gcloud-output>
 >
 > **Linux:** Use Remmina or FreeRDP:
 > ```bash
-> xfreerdp /u:<username> /p:<password> /v:<jump-host-ip>:3389 /dynamic-resolution
+> xfreerdp /u:&lt;username> /p:&lt;password> /v:&lt;jump-host-ip>:3389 /dynamic-resolution
 > ```
 
 ### Step 1.4 — Retrieve vCenter and NSX-T Credentials

@@ -23,7 +23,7 @@ A consolidated view of the security controls the repo implements, what is intent
 - Single public ingress per module (Istio Ingress Gateway or global HTTPS LB with Google-managed certificate).
 - Connect Gateway for attached cluster API access instead of exposed AKS/EKS endpoints.
 
-See [networking-zero-trust](./networking-zero-trust.md).
+See [networking-zero-trust](./networking.md).
 
 ### Workload identity and mTLS
 

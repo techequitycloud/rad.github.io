@@ -74,7 +74,7 @@ Internet
 
 ## Related Resources
 
-- [Full Lab Guide — step-by-step deployment and configuration](Mautic_CloudRun_Lab.md)
+- [Full Lab Guide — step-by-step deployment and configuration](../Mautic_CloudRun_Lab/Mautic_CloudRun_Lab.md)
 - [Configuration Reference](https://docs.radmodules.dev/docs/modules/Mautic_CloudRun)
-- [Mautic_GKE Overview](Mautic_GKE.md)
+- Mautic_GKE Overview
 - [Mautic Documentation](https://docs.mautic.org/)

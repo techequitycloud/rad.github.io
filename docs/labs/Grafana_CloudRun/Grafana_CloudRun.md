@@ -60,9 +60,9 @@ Grafana requires PostgreSQL (or MySQL) for multi-instance deployments. The modul
 
 ## Getting Started
 
-See the [Lab Guide](./Grafana_CloudRun_Lab.md) for step-by-step deployment instructions.
+See the [Lab Guide](../Grafana_CloudRun_Lab/Grafana_CloudRun_Lab.md) for step-by-step deployment instructions.
 
-See the [Configuration Guide](../modules/Grafana_CloudRun.md) for a complete variable reference.
+See the [Configuration Guide](../../modules/Grafana_CloudRun/Grafana_CloudRun.md) for a complete variable reference.
 
 ## Common Configuration Examples
 

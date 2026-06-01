@@ -66,7 +66,7 @@ This document provides a comprehensive reference for the `modules/LibreChat_GKE`
 
 ### B. MongoDB Database
 
-Same as `LibreChat_CloudRun` — see [LibreChat_CloudRun §3.B](./LibreChat_CloudRun.md#b-mongodb-database) for the full connection modes reference.
+Same as `LibreChat_CloudRun` — see [LibreChat_CloudRun §3.B](../LibreChat_CloudRun/LibreChat_CloudRun.md#b-mongodb-database) for the full connection modes reference.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -130,7 +130,7 @@ HPA is configured via `min_instance_count` and `max_instance_count`. The Foundat
 
 ## 5. Advanced Security
 
-Identical to `LibreChat_CloudRun` for Cloud Armor, IAP, Binary Authorization, and VPC Service Controls. See [LibreChat_CloudRun §4](./LibreChat_CloudRun.md#4-advanced-security).
+Identical to `LibreChat_CloudRun` for Cloud Armor, IAP, Binary Authorization, and VPC Service Controls. See [LibreChat_CloudRun §4](../LibreChat_CloudRun/LibreChat_CloudRun.md#4-advanced-security).
 
 **Workload Identity:** The GKE variant uses Workload Identity instead of direct service account bindings. The Kubernetes service account is annotated with the GCP SA email, and the GCP SA is granted `iam.workloadIdentityUser` on the Kubernetes SA.
 
@@ -151,7 +151,7 @@ Same as `LibreChat_CloudRun`. Redis is **strongly recommended** for GKE deployme
 
 ## 7. CI/CD & Delivery
 
-Same variables as `LibreChat_CloudRun`. See [LibreChat_CloudRun §6](./LibreChat_CloudRun.md#6-cicd--delivery).
+Same variables as `LibreChat_CloudRun`. See [LibreChat_CloudRun §6](../LibreChat_CloudRun/LibreChat_CloudRun.md#6-cicd--delivery).
 
 ---
 

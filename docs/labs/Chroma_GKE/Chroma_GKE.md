@@ -107,4 +107,4 @@ client = chromadb.HttpClient(
 
 ## Next Steps
 
-See the [Lab Guide](Chroma_GKE_Lab.md) for a step-by-step deployment walkthrough.
+See the [Lab Guide](../Chroma_GKE_Lab/Chroma_GKE_Lab.md) for a step-by-step deployment walkthrough.

@@ -5,7 +5,7 @@ sidebar_label: "Superset GKE"
 
 # Superset_GKE Module — Configuration Guide
 
-This guide describes every configuration variable available in the `Superset_GKE` module. `Superset_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Superset_Common`](../Superset_Common/) shared application configuration to deploy [Apache Superset](https://superset.apache.org/) on Google Kubernetes Engine (GKE) Autopilot.
+This guide describes every configuration variable available in the `Superset_GKE` module. `Superset_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Superset_Common`](../Superset_Common/Superset_Common.md) shared application configuration to deploy [Apache Superset](https://superset.apache.org/) on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Superset_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the documentation.
 
