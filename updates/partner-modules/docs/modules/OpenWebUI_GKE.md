@@ -6,14 +6,14 @@ This document provides a comprehensive reference for the `modules/OpenWebUI_GKE`
 
 ## 1. Module Overview
 
-Open WebUI is a self-hosted AI interface with 90,000+ GitHub stars, providing a polished ChatGPT-style frontend for Ollama, OpenAI-compatible APIs, and dozens of LLM providers. `OpenWebUI_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning and injects Open WebUI-specific application configuration via `OpenWebUI_Common`.
+Open WebUI is a self-hosted AI interface with 90,000+ GitHub stars, providing a polished ChatGPT-style frontend for Ollama, OpenAI-compatible APIs, and dozens of LLM providers. `OpenWebUI GKE` is a **wrapper module** built on top of `App GKE`. It uses `App GKE` for all GCP infrastructure provisioning and injects Open WebUI-specific application configuration via `OpenWebUI Common`.
 
 **Key Capabilities:**
 *   **Compute**: GKE Autopilot, Kubernetes Deployment, 2 vCPU / 4 Gi by default. HPA scales from `min_instance_count = 0` to `max_instance_count = 3`.
-*   **Data Persistence**: Cloud SQL **PostgreSQL 15**. `OpenWebUI_Common` provisions a `db-init` job.
+*   **Data Persistence**: Cloud SQL **PostgreSQL 15**. `OpenWebUI Common` provisions a `db-init` job.
 *   **IAM**: Workload Identity binds the Kubernetes SA to a GCP SA for Secret Manager and GCS access.
 *   **AI Backend Integration**: `ollama_base_url` and `openai_api_base_url` variables configure backend connections.
-*   **Security**: Inherits Cloud Armor, Binary Authorization, and VPC Service Controls from `App_GKE`. `WEBUI_SECRET_KEY` is auto-generated and stored in Secret Manager.
+*   **Security**: Inherits Cloud Armor, Binary Authorization, and VPC Service Controls from `App GKE`. `WEBUI_SECRET_KEY` is auto-generated and stored in Secret Manager.
 *   **No Redis**: Open WebUI persists sessions and application state in PostgreSQL. No Redis session store required.
 *   **StatefulSet option**: PVC-backed StatefulSet is available via `stateful_pvc_enabled = true` if local file persistence is needed alongside PostgreSQL.
 *   **Health**: Health probes target `/health`.
@@ -31,13 +31,13 @@ Open WebUI is a self-hosted AI interface with 90,000+ GitHub stars, providing a 
 | `description` | 3 | `string` | `'Open WebUI — self-hosted AI interface...'` | Application description. |
 | `application_version` | 3 | `string` | `'latest'` | Open WebUI image version tag. |
 
-**Wrapper architecture:** `OpenWebUI_GKE` calls `OpenWebUI_Common` to produce the application configuration, then forwards `application_modules`, `module_secret_env_vars`, and `module_storage_buckets` to `App_GKE`. `enable_cloudsql_volume` is forwarded through to the OpenWebUI_Common call and merged into the config.
+**Wrapper architecture:** `OpenWebUI GKE` calls `OpenWebUI Common` to produce the application configuration, then forwards `application_modules`, `module_secret_env_vars`, and `module_storage_buckets` to `App GKE`. `enable_cloudsql_volume` is forwarded through to the OpenWebUI Common call and merged into the config.
 
 ---
 
 ## 2. IAM & Access Control
 
-Workload Identity binds the Kubernetes SA to a GCP SA, granting access to Secret Manager secrets (PostgreSQL password, `WEBUI_SECRET_KEY`) and GCS buckets. All IAM provisioning is delegated to `App_GKE`.
+Workload Identity binds the Kubernetes SA to a GCP SA, granting access to Secret Manager secrets (PostgreSQL password, `WEBUI_SECRET_KEY`) and GCS buckets. All IAM provisioning is delegated to `App GKE`.
 
 ---
 

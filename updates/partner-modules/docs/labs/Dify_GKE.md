@@ -28,7 +28,7 @@ Dify is an open-source LLM application development platform for building product
 - Complete the Dify admin setup wizard
 - Configure LLM providers in the Dify console
 - Create and test AI workflows, chatbots, and RAG applications
-- Review logs in Cloud Logging and Kubernetes events
+- Inspect Kubernetes resources and logs
 
 ---
 
@@ -47,16 +47,9 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) | [kubect
 ## Prerequisites
 
 1. A GCP project with billing enabled.
-2. The `Services_GCP` module deployed in the same project (provides VPC, GKE Autopilot cluster, Cloud SQL instance, and NFS server).
-3. The following APIs enabled (Services_GCP handles this):
-   - `container.googleapis.com`
-   - `sqladmin.googleapis.com`
-   - `secretmanager.googleapis.com`
-   - `artifactregistry.googleapis.com`
-   - `cloudbuild.googleapis.com`
-   - `file.googleapis.com`
-4. `gcloud` authenticated: `gcloud auth application-default login`
-5. Access to the RAD UI with permission to deploy modules in the target GCP project.
+2. The `Services GCP` module deployed in the same project (provides VPC, GKE Autopilot cluster, Cloud SQL instance, and NFS server).
+3. `gcloud` authenticated: `gcloud auth application-default login`
+4. Access to the RAD UI with permission to deploy modules in the target GCP project.
 
 ---
 
@@ -77,12 +70,11 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) | [kubect
 | `max_instance_count` | No | `3` | Maximum pod replicas |
 | `db_name` | No | `"dify_db"` | PostgreSQL database name |
 | `db_user` | No | `"dify_user"` | PostgreSQL database username |
-| `enable_redis` | No | `true` | Enable Redis (required) |
+| `enable_redis` | No | `true` | Enable Redis (required for Celery) |
 | `redis_host` | No | `""` | Redis host (defaults to NFS server IP) |
-| `enable_nfs` | No | `true` | Mount NFS (required for Redis co-location) |
+| `enable_nfs` | No | `true` | Mount NFS (required for Redis) |
 | `service_type` | No | `"LoadBalancer"` | Kubernetes Service type |
-| `enable_custom_domain` | No | `false` | Enable custom domain via Kubernetes Gateway |
-| `application_domains` | No | `[]` | Custom domain names |
+| `backup_schedule` | No | `"0 2 * * *"` | Backup cron schedule |
 | `support_users` | No | `[]` | Email addresses for monitoring alerts |
 
 ### Step 1.2 — Initiate Deployment
@@ -99,8 +91,6 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) | [kubect
 | **Total** | **24–40 min** |
 
 ### Step 1.3 — Record Outputs and Configure kubectl
-
-After deployment completes, configure `kubectl` to connect to the GKE cluster:
 
 ```bash
 export PROJECT="your-gcp-project-id"
@@ -121,12 +111,12 @@ gcloud container clusters get-credentials ${CLUSTER} \
 # Discover the Dify namespace
 export NAMESPACE=$(kubectl get namespaces \
   -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep dify | head -1)
+echo "Namespace: ${NAMESPACE}"
 
-# Get the external IP of the Dify service
+# Get the external IP
 export SERVICE_IP=$(kubectl get service -n ${NAMESPACE} \
-  -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}' 2>/dev/null | \
-  awk '{print $1}')
-export SERVICE_URL="http://${SERVICE_IP}:80"
+  -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
+export SERVICE_URL="http://${SERVICE_IP}"
 echo "Dify URL: ${SERVICE_URL}"
 ```
 
@@ -140,7 +130,7 @@ echo "Dify URL: ${SERVICE_URL}"
 kubectl get pods -n ${NAMESPACE}
 ```
 
-**Expected result:** All pods show `Running` status. You should see at least one `dify-api` pod and one `dify-web` pod.
+**Expected result:** All pods show `Running` status — at least one API pod and one web pod.
 
 ### Step 2.2 — Confirm Dify is Reachable
 
@@ -148,15 +138,21 @@ kubectl get pods -n ${NAMESPACE}
 curl -s -o /dev/null -w "%{http_code}" ${SERVICE_URL}/health
 ```
 
-**Expected result:** HTTP `200`. If you see a connection error, wait 30 seconds and retry — the first pod may still be initialising.
+**Expected result:** HTTP `200`.
 
 ### Step 2.3 — Inspect Pod Details
 
 ```bash
-kubectl describe pod -n ${NAMESPACE} -l app=dify | head -50
+kubectl describe pod -n ${NAMESPACE} -l app=dify | grep -A5 "Containers:"
 ```
 
-**Expected result:** Pod details show the Dify API container, Cloud SQL Auth Proxy sidecar, resource limits, and mounted volumes (NFS, Cloud SQL socket).
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}/nodePools"
+```
+
+**Expected result:** Pod details show the Dify API container, Cloud SQL Auth Proxy sidecar, and NFS volume mount.
 
 ---
 
@@ -166,42 +162,52 @@ kubectl describe pod -n ${NAMESPACE} -l app=dify | head -50
 
 Open a browser and navigate to `${SERVICE_URL}`.
 
-**Expected result:** The Dify setup page appears with fields for admin email and password.
+**Expected result:** The Dify setup page appears.
 
 ### Step 3.2 — Create Admin Account
 
-1. Enter your **admin email address**.
-2. Enter a **password** (minimum 8 characters).
-3. Click **Setup**.
-4. Log in with your credentials.
+1. Enter your **admin email address** and **password**.
+2. Click **Setup**.
+3. Log in with your credentials.
 
 **Expected result:** You are logged into the Dify home page.
 
+### Step 3.3 — Verify SECRET_KEY Secret
+
+```bash
+export SECRET_KEY_SECRET=$(gcloud secrets list \
+  --project=${PROJECT} \
+  --filter="name~dify AND name~secret-key" \
+  --format="value(name)" \
+  --limit=1)
+
+gcloud secrets versions access latest \
+  --secret="${SECRET_KEY_SECRET}" \
+  --project=${PROJECT} | wc -c
+```
+
+**Expected result:** The secret has 64 characters.
+
 ---
 
-## Phase 4 — Explore AI Features [MANUAL]
+## Phase 4 — Configure LLM Providers [MANUAL]
 
-### Step 4.1 — Configure LLM Providers
+### Step 4.1 — Add an LLM Provider
 
 1. Navigate to **Settings** > **Model Provider**.
-2. Add a provider (e.g., OpenAI, Anthropic, or a local Ollama endpoint).
-3. Enter the API key and save.
+2. Add a provider and enter your API key.
 
 ### Step 4.2 — Create a Knowledge Base (RAG)
 
 1. Navigate to **Knowledge** > **Create Knowledge**.
-2. Upload a document or paste text.
-3. Process the knowledge base.
+2. Upload a document and process it.
 
-**Expected result:** Documents are chunked, embedded, and stored in the pgvector store (PostgreSQL with the `vector` extension).
+**Expected result:** Documents are embedded and stored in pgvector (PostgreSQL `vector` extension).
 
-### Step 4.3 — Build and Test an Application
+### Step 4.3 — Build an AI Application
 
-1. Create a **Chatbot** or **Agent** application.
-2. Attach the knowledge base as context.
-3. Test with questions from your uploaded document.
-
-**Expected result:** The application retrieves relevant context from the knowledge base and generates accurate responses.
+1. Create a **Chatbot** with the knowledge base as context.
+2. Test it with questions from your uploaded document.
 
 ---
 
@@ -213,33 +219,21 @@ Open a browser and navigate to `${SERVICE_URL}`.
 kubectl get hpa -n ${NAMESPACE}
 ```
 
-**Expected result:** HPA shows the current replica count and scaling thresholds based on CPU and memory utilisation.
+**Expected result:** HPA shows current replica count and scaling thresholds.
 
-### Step 5.2 — View Kubernetes Events
-
-```bash
-kubectl get events -n ${NAMESPACE} --sort-by='.lastTimestamp' | tail -20
-```
-
-**Expected result:** Events show successful pod scheduling and container starts. No `OOMKilled` or `CrashLoopBackOff` events under normal operation.
-
-### Step 5.3 — Inspect the Web Frontend Deployment
+### Step 5.2 — View All Deployments
 
 ```bash
 kubectl get deployments -n ${NAMESPACE}
 ```
 
-**Expected result:** Two Deployments are listed — the Dify API deployment and the `dify-web` Next.js frontend deployment.
+**Expected result:** At least two Deployments: the Dify API and the `dify-web` frontend.
 
-### Step 5.4 — View Application Logs
+### Step 5.3 — View Application Logs
 
 ```bash
 kubectl logs -n ${NAMESPACE} \
-  -l app=dify \
-  --tail=50 \
-  -c dify-api 2>/dev/null || \
-kubectl logs -n ${NAMESPACE} \
-  $(kubectl get pods -n ${NAMESPACE} -o name | grep dify | head -1) \
+  $(kubectl get pods -n ${NAMESPACE} -o name | grep -v web | head -1) \
   --tail=50
 ```
 
@@ -252,7 +246,39 @@ gcloud logging read \
   --format="table(timestamp, textPayload)"
 ```
 
-**Expected result:** Dify startup logs appear, including Flask-Migrate migration output and Celery worker startup messages.
+**REST API equivalent:**
+```bash
+curl -X POST \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  "https://logging.googleapis.com/v2/entries:list" \
+  -d '{
+    "projectIds": ["'"${PROJECT}"'"],
+    "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"'"${NAMESPACE}"'\"",
+    "pageSize": 20
+  }'
+```
+
+**Expected result:** Dify startup logs appear, including Flask-Migrate migration output and Celery worker confirmation.
+
+### Step 5.4 — View Kubernetes Events
+
+```bash
+kubectl get events -n ${NAMESPACE} --sort-by='.lastTimestamp' | tail -20
+```
+
+**Expected result:** Events show successful pod scheduling. No `OOMKilled` or `CrashLoopBackOff` events.
+
+### Step 5.5 — Scale the Deployment
+
+```bash
+kubectl scale deployment -n ${NAMESPACE} \
+  $(kubectl get deployment -n ${NAMESPACE} -o name | grep -v web | head -1) \
+  --replicas=2
+kubectl get pods -n ${NAMESPACE} -w
+```
+
+**Expected result:** A second API pod starts. Press `Ctrl+C` to stop watching. GKE Autopilot provisions additional node capacity automatically.
 
 ---
 
@@ -276,12 +302,14 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | GCS storage bucket | 1 | Yes |
 | Workload Identity binding | 1 | Yes |
 | Container image build (Cloud Build) | 1 | Yes |
-| Get service IP and configure kubectl | 1 | No |
+| Configure kubectl and get service IP | 1 | No |
 | Confirm Dify is reachable | 2 | No |
 | Dify admin setup wizard | 3 | No |
 | Configure LLM providers | 4 | No |
 | Create knowledge base (RAG) | 4 | No |
-| Build and test applications | 4 | No |
+| Build AI application | 4 | No |
 | Inspect HPA and scaling | 5 | No |
-| Review Kubernetes events and logs | 5 | No |
+| View deployments and pods | 5 | No |
+| Review logs and events | 5 | No |
+| Manual scaling test | 5 | No |
 | Undeploy infrastructure | 6 | Yes |

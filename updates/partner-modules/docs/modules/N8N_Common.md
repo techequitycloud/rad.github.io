@@ -1,10 +1,10 @@
-# N8N_Common Shared Configuration Module
+# N8N Common Shared Configuration Module
 
-The `N8N_Common` module defines the n8n workflow automation platform (without AI components) for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`N8N_CloudRun` and `N8N_GKE`).
+The `N8N Common` module defines the n8n workflow automation platform (without AI components) for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`N8N CloudRun` and `N8N GKE`).
 
 ## 1. Overview
 
-**Purpose**: To centralize all n8n-specific configuration — PostgreSQL backend, Redis queue support, GCS data storage, SMTP credentials, and an encryption key secret — in a single module shared by Cloud Run and GKE deployments. This is the standard n8n module; for deployments that also require Qdrant and Ollama AI sidecars, use `N8N_AI_Common` instead.
+**Purpose**: To centralize all n8n-specific configuration — PostgreSQL backend, Redis queue support, GCS data storage, SMTP credentials, and an encryption key secret — in a single module shared by Cloud Run and GKE deployments. This is the standard n8n module; for deployments that also require Qdrant and Ollama AI sidecars, use `N8N AI Common` instead.
 
 **Architecture**:
 
@@ -25,7 +25,7 @@ Layer 2: Platform Modules
 Layer 1: App_Common (networking, database, storage, secrets, IAM)
 ```
 
-**Key differences from `N8N_AI_Common`**:
+**Key differences from `N8N AI Common`**:
 - No AI sidecar services — `config.additional_services` is not present.
 - Redis is **disabled by default** (`enable_redis = false`).
 - Health probes target **`/healthz`** (not `/`), and the startup probe uses a shorter 10s initial delay with a higher 30-failure threshold.
@@ -186,17 +186,17 @@ One `db-init` job runs by default (when `initialization_jobs = []`):
 ## 7. Scripts and Container Image
 
 ### `Dockerfile`
-Identical in structure to `N8N_AI_Common`'s Dockerfile, with one difference in the ENTRYPOINT:
+Identical in structure to `N8N AI Common`'s Dockerfile, with one difference in the ENTRYPOINT:
 
 - Base image: `node:22-alpine3.22`
 - Installs: `python3`, `py3-pip`, `git`, `bash`, `curl`, `jq`, `tini`, `su-exec`
 - Installs n8n globally at the pinned version: `npm install -g n8n@2.4.7`
 - Creates `node` group (GID 1000) and user (UID 1000)
 - Sets `N8N_USER_FOLDER=/home/node/.n8n` and `N8N_PORT=5678`
-- **ENTRYPOINT**: `["tini", "--", "/entrypoint.sh"]` — tini is explicit here as PID 1 (in `N8N_AI_Common` tini is called implicitly via `exec`)
+- **ENTRYPOINT**: `["tini", "--", "/entrypoint.sh"]` — tini is explicit here as PID 1 (in `N8N AI Common` tini is called implicitly via `exec`)
 
 ### `entrypoint.sh`
-Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-native names before starting n8n:
+Identical to `N8N AI Common`'s entrypoint. Translates platform variables to n8n-native names before starting n8n:
 
 1. **Socket detection**: If `DB_HOST` starts with `/`, symlinks to `/tmp/.s.PGSQL.5432` and resets `DB_HOST=/tmp`.
 2. **DB variable mapping** (only when the n8n-native variable is not already set):
@@ -263,7 +263,7 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `gcs_volumes` | `list(object)` | `[]` | GCS Fuse volume mounts; no default volume unlike `N8N_AI_Common` |
+| `gcs_volumes` | `list(object)` | `[]` | GCS Fuse volume mounts; no default volume unlike `N8N AI Common` |
 | `bucket_name` | `string` | `""` | Legacy: GCS bucket name reference (not wired into config) |
 | `service_account_email` | `string` | `""` | Legacy: service account email reference |
 
@@ -271,7 +271,7 @@ Identical to `N8N_AI_Common`'s entrypoint. Translates platform variables to n8n-
 
 ## 9. Platform-Specific Differences
 
-| Aspect | N8N_CloudRun | N8N_GKE |
+| Aspect | N8N CloudRun | N8N GKE |
 |--------|--------------|---------|
 | `service_url` | Predicted Cloud Run service URL (`https://<prefix>-<project_number>.<region>.run.app`) | Internal ClusterIP URL (`http://<service>.<namespace>.svc.cluster.local`), computed before deployment |
 | `enable_cloudsql_volume` | `true` (Auth Proxy sidecar, default) | `true` (Auth Proxy sidecar, default) |

@@ -6,13 +6,13 @@ This document provides a comprehensive reference for the `modules/Nextcloud_GKE`
 
 ## 1. Module Overview
 
-Nextcloud is the leading self-hosted file sync and collaboration platform, used by 400 million+ users across 100,000+ organisations. `Nextcloud_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning and injects Nextcloud-specific application configuration, database initialisation, and storage configuration via `Nextcloud_Common`.
+Nextcloud is the leading self-hosted file sync and collaboration platform, used by 400 million+ users across 100,000+ organisations. `Nextcloud GKE` is a **wrapper module** built on top of `App GKE`. It uses `App GKE` for all GCP infrastructure provisioning and injects Nextcloud-specific application configuration, database initialisation, and storage configuration via `Nextcloud Common`.
 
 **Key Capabilities:**
 *   **Compute**: GKE Autopilot, Apache/PHP container, 2 vCPU / 4 Gi by default. StatefulSet or Deployment workload type; `stateful_pvc_enabled` auto-selects StatefulSet for persistent storage.
 *   **Data Persistence**: Cloud SQL **MySQL 8.0** via Cloud SQL Auth Proxy sidecar. NFS (Cloud Filestore) for shared config and user data. GCS Fuse volumes available for object storage mounts.
-*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_GKE`. Admin password auto-generated and stored in Secret Manager. Workload Identity for secure SA binding.
-*   **Caching**: Redis **enabled by default** (`enable_redis = true`) — `Nextcloud_Common` configures Redis as Nextcloud's distributed cache and file locking backend.
+*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App GKE`. Admin password auto-generated and stored in Secret Manager. Workload Identity for secure SA binding.
+*   **Caching**: Redis **enabled by default** (`enable_redis = true`) — `Nextcloud Common` configures Redis as Nextcloud's distributed cache and file locking backend.
 *   **CI/CD**: Cloud Build custom image pipeline by default; Cloud Deploy progressive delivery optional.
 *   **Reliability**: Health probes target `/status.php`. Pod disruption budget enabled by default. HPA for horizontal scaling.
 
@@ -30,17 +30,17 @@ Nextcloud is the leading self-hosted file sync and collaboration platform, used 
 | `application_description` | 3 | `string` | `'Nextcloud self-hosted collaboration and file sharing platform on GKE Autopilot'` | Workload description. |
 | `application_version` | 3 | `string` | `'30'` | Nextcloud image version tag. |
 
-**Wrapper architecture:** `Nextcloud_GKE` calls `Nextcloud_Common` (with `application_database_name` → `db_name` and `application_database_user` → `db_user`). It merges `NEXTCLOUD_TRUSTED_DOMAINS` (cluster-internal DNS + custom domains), sets `MYSQL_HOST = "127.0.0.1"` for the Cloud SQL Auth Proxy sidecar, and sets `OVERWRITECLIURL = "$(GKE_SERVICE_URL)"` resolved at apply time by `App_GKE`. `module_secret_env_vars` carries the admin password secret reference. `module_storage_buckets` carries the `nextcloud-data` bucket.
+**Wrapper architecture:** `Nextcloud GKE` calls `Nextcloud Common` (with `application_database_name` → `db_name` and `application_database_user` → `db_user`). It merges `NEXTCLOUD_TRUSTED_DOMAINS` (cluster-internal DNS + custom domains), sets `MYSQL_HOST = "127.0.0.1"` for the Cloud SQL Auth Proxy sidecar, and sets `OVERWRITECLIURL = "$(GKE_SERVICE_URL)"` resolved at apply time by `App GKE`. `module_secret_env_vars` carries the admin password secret reference. `module_storage_buckets` carries the `nextcloud-data` bucket.
 
-**MySQL note:** Nextcloud requires **MySQL 8.0** — fixed by `Nextcloud_Common`.
+**MySQL note:** Nextcloud requires **MySQL 8.0** — fixed by `Nextcloud Common`.
 
 ---
 
 ## 2. IAM & Access Control
 
-`Nextcloud_GKE` delegates all IAM provisioning to `App_GKE`. Workload Identity binds the Kubernetes service account to a GCP service account that has access to Cloud SQL, Secret Manager, GCS, and NFS.
+`Nextcloud GKE` delegates all IAM provisioning to `App GKE`. Workload Identity binds the Kubernetes service account to a GCP service account that has access to Cloud SQL, Secret Manager, GCS, and NFS.
 
-**Admin password secret:** `Nextcloud_Common` auto-generates a 24-character alphanumeric admin password at `<resource_prefix>-admin-password` in Secret Manager. Injected as `NEXTCLOUD_ADMIN_PASSWORD`.
+**Admin password secret:** `Nextcloud Common` auto-generates a 24-character alphanumeric admin password at `<resource_prefix>-admin-password` in Secret Manager. Injected as `NEXTCLOUD_ADMIN_PASSWORD`.
 
 **Database initialisation identity:** The `db-init` Kubernetes Job runs under the workload service account. It connects via the Cloud SQL Auth Proxy sidecar socket, then falls back to TCP via `DB_IP`.
 
@@ -91,20 +91,20 @@ For the complete role tables and IAP, password rotation, and Workload Identity d
 
 ### C. Database (Cloud SQL — MySQL 8.0)
 
-Nextcloud requires **MySQL 8.0**. On GKE, the Cloud SQL Auth Proxy sidecar binds on `127.0.0.1:3306`, so `Nextcloud_GKE` hardcodes `MYSQL_HOST = "127.0.0.1"` in the merged environment.
+Nextcloud requires **MySQL 8.0**. On GKE, the Cloud SQL Auth Proxy sidecar binds on `127.0.0.1:3306`, so `Nextcloud GKE` hardcodes `MYSQL_HOST = "127.0.0.1"` in the merged environment.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `application_database_name` | 16 | `'gkeappdb'` | MySQL database name. Passed to `Nextcloud_Common` as `db_name`. **Do not change after initial deployment.** |
-| `application_database_user` | 16 | `'gkeappuser'` | MySQL application user. Passed to `Nextcloud_Common` as `db_user`. |
-| `database_type` | 16 | `'MYSQL_8_0'` | Cloud SQL engine. Fixed at `MYSQL_8_0` by `Nextcloud_Common`. |
+| `application_database_name` | 16 | `'gkeappdb'` | MySQL database name. Passed to `Nextcloud Common` as `db_name`. **Do not change after initial deployment.** |
+| `application_database_user` | 16 | `'gkeappuser'` | MySQL application user. Passed to `Nextcloud Common` as `db_user`. |
+| `database_type` | 16 | `'MYSQL_8_0'` | Cloud SQL engine. Fixed at `MYSQL_8_0` by `Nextcloud Common`. |
 | `database_password_length` | 16 | `32` | Auto-generated password length. Range: 16–64. |
 | `enable_auto_password_rotation` | 16 | `false` | Automated zero-downtime password rotation. |
 | `rotation_propagation_delay_sec` | 16 | `90` | Seconds to wait after rotation before rolling pods. |
 | `enable_mysql_plugins` | 16 | `false` | Install MySQL plugins. |
 | `mysql_plugins` | 16 | `[]` | List of MySQL plugins to install. |
 
-> `db_name` and `db_user` are convenience pass-through variables in `Nextcloud_GKE` that map to `application_database_name` and `application_database_user` respectively.
+> `db_name` and `db_user` are convenience pass-through variables in `Nextcloud GKE` that map to `application_database_name` and `application_database_user` respectively.
 
 ### D. Storage (NFS & GCS)
 
@@ -149,11 +149,11 @@ For persistent per-pod storage (in addition to the shared NFS volume), enable St
 
 ### G. Trusted Domains & URL Override
 
-In GKE, `Nextcloud_GKE`'s `nextcloud.tf` hardcodes the following environment variable merges:
+In GKE, `Nextcloud GKE`'s `nextcloud.tf` hardcodes the following environment variable merges:
 
 - `MYSQL_HOST = "127.0.0.1"` — Cloud SQL Auth Proxy sidecar binds on localhost.
 - `NEXTCLOUD_TRUSTED_DOMAINS` — includes the cluster-internal DNS name (`<resource_prefix>.<namespace>.svc.cluster.local`) plus any `application_domains`.
-- `OVERWRITECLIURL = "$(GKE_SERVICE_URL)"` — sentinel resolved by `App_GKE` to the actual service URL (custom domain, LoadBalancer IP, or cluster-internal) at apply time.
+- `OVERWRITECLIURL = "$(GKE_SERVICE_URL)"` — sentinel resolved by `App GKE` to the actual service URL (custom domain, LoadBalancer IP, or cluster-internal) at apply time.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -206,7 +206,7 @@ In GKE, `Nextcloud_GKE`'s `nextcloud.tf` hardcodes the following environment var
 | `secret_rotation_period` | 5 | `'2592000s'` | Secret Manager rotation notification frequency. |
 | `secret_propagation_delay` | 5 | `30` | Seconds to wait after secret creation. |
 
-**Auto-generated secrets:** `Nextcloud_Common` generates `<resource_prefix>-admin-password` injected as `NEXTCLOUD_ADMIN_PASSWORD`. `DB_PASSWORD` and `ROOT_PASSWORD` are provisioned by `App_GKE`.
+**Auto-generated secrets:** `Nextcloud Common` generates `<resource_prefix>-admin-password` injected as `NEXTCLOUD_ADMIN_PASSWORD`. `DB_PASSWORD` and `ROOT_PASSWORD` are provisioned by `App GKE`.
 
 ---
 
@@ -263,7 +263,7 @@ In GKE, `Nextcloud_GKE`'s `nextcloud.tf` hardcodes the following environment var
 |---|---|---|---|
 | `startup_probe` | 10 | `{ enabled=true, type="HTTP", path="/status.php", initial_delay_seconds=60, timeout_seconds=10, period_seconds=15, failure_threshold=20 }` | Startup probe. Allows `occ maintenance:install` to complete on first boot. |
 | `liveness_probe` | 10 | `{ enabled=true, type="HTTP", path="/status.php", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Liveness probe. Restarts the container after 3 consecutive failures. |
-| `health_check_config` | 10 | `{ enabled=true, path="/healthz" }` | GKE-level health check config (mapped to `startup_probe_config` in `App_GKE`). |
+| `health_check_config` | 10 | `{ enabled=true, path="/healthz" }` | GKE-level health check config (mapped to `startup_probe_config` in `App GKE`). |
 | `startup_probe_config` | 10 | `{ enabled=true, path="/healthz" }` | GKE-level startup probe config. |
 | `uptime_check_config` | 10 | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | 10 | `[]` | Cloud Monitoring metric alert policies. |
@@ -319,7 +319,7 @@ In GKE, `Nextcloud_GKE`'s `nextcloud.tf` hardcodes the following environment var
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `initialization_jobs` | 11 | `[]` | One-shot Kubernetes Jobs. Leave empty for `Nextcloud_Common` to supply the default `db-init` job. |
+| `initialization_jobs` | 11 | `[]` | One-shot Kubernetes Jobs. Leave empty for `Nextcloud Common` to supply the default `db-init` job. |
 | `cron_jobs` | 11 | `[]` | Kubernetes CronJobs for recurring scheduled tasks. |
 | `additional_services` | 11 | `[]` | Additional sidecar or companion GKE services. |
 
@@ -329,29 +329,29 @@ In GKE, `Nextcloud_GKE`'s `nextcloud.tf` hardcodes the following environment var
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| **MySQL 8.0 required** | `database_type = "MYSQL_8_0"` fixed by `Nextcloud_Common` | Nextcloud requires MySQL. PostgreSQL is not supported. |
-| **Admin password auto-generated** | `Nextcloud_Common` creates `<prefix>-admin-password` | Injected as `NEXTCLOUD_ADMIN_PASSWORD`. |
-| **PHP limits baked at build time** | Docker `ARG` in `Nextcloud_Common`'s Dockerfile | `php_memory_limit`, `upload_max_filesize`, `post_max_size` baked and also injected as env vars. |
+| **MySQL 8.0 required** | `database_type = "MYSQL_8_0"` fixed by `Nextcloud Common` | Nextcloud requires MySQL. PostgreSQL is not supported. |
+| **Admin password auto-generated** | `Nextcloud Common` creates `<prefix>-admin-password` | Injected as `NEXTCLOUD_ADMIN_PASSWORD`. |
+| **PHP limits baked at build time** | Docker `ARG` in `Nextcloud Common`'s Dockerfile | `php_memory_limit`, `upload_max_filesize`, `post_max_size` baked and also injected as env vars. |
 | **MySQL host forced to 127.0.0.1** | Hardcoded in `nextcloud.tf` locals merge | Cloud SQL Auth Proxy sidecar on GKE binds on localhost. |
 | **Trusted domains include cluster-internal DNS** | `nextcloud.tf` merges `<resource_prefix>.<namespace>.svc.cluster.local` | Ensures Kubernetes-internal service discovery works. |
-| **OVERWRITECLIURL uses $(GKE_SERVICE_URL)** | `nextcloud.tf` sentinel | Resolved to actual service URL at apply time by `App_GKE`. |
+| **OVERWRITECLIURL uses $(GKE_SERVICE_URL)** | `nextcloud.tf` sentinel | Resolved to actual service URL at apply time by `App GKE`. |
 | **NFS config symlink** | `entrypoint.sh` | Symlinks `/var/www/html/config` → `/mnt/nfs/nextcloud-config` when NFS is mounted. |
 | **NFS enabled by default** | `enable_nfs = true` default | Critical for multi-pod deployments — all replicas must share `config.php` and data. |
 | **Redis enabled by default** | `enable_redis = true` default | Prevents file locking conflicts in multi-pod scenarios. |
-| **Default db-init job** | Supplied by `Nextcloud_Common` when `initialization_jobs = []` | MySQL database and user created with utf8mb4 collation. |
+| **Default db-init job** | Supplied by `Nextcloud Common` when `initialization_jobs = []` | MySQL database and user created with utf8mb4 collation. |
 | **Pod Disruption Budget** | `enable_pod_disruption_budget = true` default | Ensures at least 1 pod is available during node upgrades. |
 
 ---
 
 ## 10. Variable Reference
 
-All user-configurable variables exposed by `Nextcloud_GKE`, sorted by UI group.
+All user-configurable variables exposed by `Nextcloud GKE`, sorted by UI group.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `module_description` | 0 | (Nextcloud GKE platform text) | Platform metadata. |
 | `module_documentation` | 0 | `'https://docs.radmodules.dev/docs/modules/Nextcloud_GKE'` | Platform metadata: documentation URL. |
-| `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
+| `module_dependency` | 0 | `['Services GCP']` | Platform metadata: required modules. |
 | `credit_cost` | 0 | `150` | Platform metadata: deployment credit cost. |
 | `enable_purge` | 0 | `true` | Permits full deletion of module resources on destroy. |
 | `public_access` | 0 | `false` | Platform catalogue visibility. |
@@ -453,8 +453,8 @@ All user-configurable variables exposed by `Nextcloud_GKE`, sorted by UI group.
 | `redis_port` | 15 | `'6379'` | Redis TCP port. |
 | `redis_auth` | 15 | `""` | Redis AUTH password. Sensitive. |
 | `database_type` | 16 | `'MYSQL_8_0'` | Cloud SQL engine. |
-| `application_database_name` | 16 | `'gkeappdb'` | MySQL database name. Maps to `db_name` in `Nextcloud_Common`. |
-| `application_database_user` | 16 | `'gkeappuser'` | MySQL user. Maps to `db_user` in `Nextcloud_Common`. |
+| `application_database_name` | 16 | `'gkeappdb'` | MySQL database name. Maps to `db_name` in `Nextcloud Common`. |
+| `application_database_user` | 16 | `'gkeappuser'` | MySQL user. Maps to `db_user` in `Nextcloud Common`. |
 | `database_password_length` | 16 | `32` | Password length. Range: 16–64. |
 | `enable_auto_password_rotation` | 16 | `false` | Automated password rotation. |
 | `rotation_propagation_delay_sec` | 16 | `90` | Seconds to wait before rolling pods after rotation. |
@@ -528,10 +528,10 @@ All user-configurable variables exposed by `Nextcloud_GKE`, sorted by UI group.
 | Variable | Sensible Default | Risk | Consequence of Incorrect Value |
 |---|---|---|---|
 | `NEXTCLOUD_TRUSTED_DOMAINS` (via `application_domains`) | Auto-populated from `application_domains` + service hostname | **Critical** | Nextcloud enforces a trusted domain whitelist. Any request from a domain not in this list receives "Access through untrusted domain" and the application is unusable. Add all custom domains, load balancer IPs, and Ingress hostnames to `application_domains`. The module appends the LoadBalancer IP automatically at runtime. |
-| `database_type` | `"MYSQL_8_0"` | **Critical** | Nextcloud requires MySQL. `Nextcloud_Common` hardcodes `database_type = "MYSQL_8_0"`. Changing to PostgreSQL breaks the database initialization job and the application will not start. |
+| `database_type` | `"MYSQL_8_0"` | **Critical** | Nextcloud requires MySQL. `Nextcloud Common` hardcodes `database_type = "MYSQL_8_0"`. Changing to PostgreSQL breaks the database initialization job and the application will not start. |
 | `application_database_name` | `"nextcloud"` | **Critical** | Changing after initial deployment orphans the existing database. Nextcloud will connect to a new empty database. All files, users, calendar data, and configuration are lost from the application's perspective. |
 | `enable_cloudsql_volume` | `true` | **Critical** | Nextcloud connects to Cloud SQL MySQL via the Auth Proxy Unix socket. Disabling this removes the socket path, causing all database connections to fail on pod startup. |
-| `container_port` | `80` | **Critical** | `Nextcloud_Common` sets `container_port = 80`. Changing to any other value causes Kubernetes liveness and readiness probes to fail — the pod never passes health checks. |
+| `container_port` | `80` | **Critical** | `Nextcloud Common` sets `container_port = 80`. Changing to any other value causes Kubernetes liveness and readiness probes to fail — the pod never passes health checks. |
 | `enable_nfs` | `false` | **Critical** | Without NFS, Nextcloud data (files, app data, config) is stored in the pod's ephemeral local filesystem and is permanently lost on pod restart or rolling update. NFS is required for any Nextcloud GKE deployment — data persistence depends on it. |
 | `nfs_mount_path` | `"/mnt/nfs"` | **High** | Nextcloud must be configured to use this path as its data directory via `NEXTCLOUD_DATA_DIR`. A mismatch causes Nextcloud to write to the ephemeral pod filesystem while the NFS mount is idle. |
 | `OVERWRITEPROTOCOL` (in `environment_variables`) | `"https"` | **High** | Nextcloud generates all share links and WebDAV endpoints using this value. Setting to `"http"` causes browser mixed-content warnings and WebDAV clients may refuse connections. Keep as `"https"`. |
@@ -539,7 +539,7 @@ All user-configurable variables exposed by `Nextcloud_GKE`, sorted by UI group.
 | `upload_max_filesize` | `"512M"` | **High** | Files larger than this limit cannot be uploaded. Baked into the container image at build time. For organizations needing to upload large videos or archives, increase to `5G` or `10G`. |
 | `post_max_size` | `"512M"` | **High** | PHP's POST body limit. Must be equal to or greater than `upload_max_filesize`. If `post_max_size < upload_max_filesize`, PHP silently drops upload bodies. Always set `post_max_size >= upload_max_filesize`. |
 | `enable_redis` | `false` | **High** | Without Redis, Nextcloud uses file-based locking (`FileLocking`) and local APCu cache. With multiple replicas, file locks become stale and concurrent operations cause "File is locked" errors (HTTP 503). Redis is required for any multi-replica Nextcloud GKE deployment. |
-| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, Nextcloud_Common injects `REDIS_HOST = "$(REDIS_HOST)"` literally. Nextcloud fails to connect to Redis at runtime. Always provide the Memorystore IP or Redis service name. |
+| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, Nextcloud Common injects `REDIS_HOST = "$(REDIS_HOST)"` literally. Nextcloud fails to connect to Redis at runtime. Always provide the Memorystore IP or Redis service name. |
 | `min_instance_count` | `1` | **High** | Reducing to `0` with HPA scale-to-zero means cold starts of 15–30 seconds. For a production file store with WebDAV clients (desktop sync), this causes sync client disconnections and errors. Keep at `1` minimum. |
 | `max_instance_count` | `1` | **High** | Nextcloud with multiple replicas requires Redis for distributed file locking. Running multiple replicas without Redis causes data corruption on concurrent writes. Never increase above `1` without enabling Redis and NFS. |
 | `workload_type` | `null` (auto) | **Medium** | Nextcloud with NFS and stateful data should use `StatefulSet` (via `stateful_pvc_enabled = true`) for stable pod identity and ordered startup. Using `Deployment` with shared NFS may cause write conflicts on concurrent file access. |
@@ -552,4 +552,4 @@ All user-configurable variables exposed by `Nextcloud_GKE`, sorted by UI group.
 | `enable_pod_disruption_budget` | `false` | **Medium** | Without a PDB, GKE cluster maintenance can evict all pods simultaneously, causing full downtime for connected desktop sync clients. Enable when `max_instance_count > 1`. |
 | `NEXTCLOUD_UPDATE` (in `environment_variables`) | `"1"` | **Low** | Auto-runs `occ upgrade` on container startup. This is intentional for minor updates. Set to `"0"` to disable auto-upgrade and manage Nextcloud upgrades manually (required before upgrading across major versions). |
 | `organization_id` | `""` | **Medium** | VPC-SC perimeter is only activated when `organization_id` is explicitly set. `enable_vpc_sc = true` without this value has no effect. |
-| `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` | **High** | Each `App_GKE` deployment sharing the same VPC must use a distinct CIDR. Overlapping with an existing subnet causes GKE node pool provisioning to fail at apply time. |
+| `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` | **High** | Each `App GKE` deployment sharing the same VPC must use a distinct CIDR. Overlapping with an existing subnet causes GKE node pool provisioning to fail at apply time. |

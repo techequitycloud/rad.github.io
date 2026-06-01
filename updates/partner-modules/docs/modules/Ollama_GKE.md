@@ -1,26 +1,26 @@
-# Ollama_GKE Module — Configuration Guide
+# Ollama GKE Module — Configuration Guide
 
 Ollama is an open-source LLM inference server that serves large language models such as Llama,
 Mistral, Gemma, and Phi via a REST API on port 11434. This module deploys Ollama on **GKE
 Autopilot** as a Kubernetes Deployment with model weights persisted to a GCS Fuse volume so
 that pod restarts load models from storage rather than re-downloading them.
 
-`Ollama_GKE` is a **wrapper module** built on top of `App_GKE`. It delegates all GCP
-infrastructure provisioning to App_GKE (GKE cluster, networking, GCS, Secret Manager, CI/CD)
-and uses an `Ollama_Common` sub-module to supply Ollama-specific application configuration, the
-GCS models bucket, and the optional model-pull initialization job. The `Ollama_Common` outputs
-feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts_dir` inputs.
+`Ollama GKE` is a **wrapper module** built on top of `App GKE`. It delegates all GCP
+infrastructure provisioning to App GKE (GKE cluster, networking, GCS, Secret Manager, CI/CD)
+and uses an `Ollama Common` sub-module to supply Ollama-specific application configuration, the
+GCS models bucket, and the optional model-pull initialization job. The `Ollama Common` outputs
+feed into App GKE's `application_config`, `module_storage_buckets`, and `scripts_dir` inputs.
 
-> Ollama_GKE is designed as a **shared in-cluster AI inference endpoint**. Any pod in the same
+> Ollama GKE is designed as a **shared in-cluster AI inference endpoint**. Any pod in the same
 > cluster namespace calls the API via the internal ClusterIP service URL
 > `http://ollama.<namespace>.svc.cluster.local:11434`. For CPU-only, serverless inference
-> use `Ollama_CloudRun`.
+> use `Ollama CloudRun`.
 
 ---
 
 ## §1 · Module Overview
 
-### What `Ollama_GKE` provides
+### What `Ollama GKE` provides
 
 - An **Ollama Kubernetes Deployment** (prebuilt image `ollama/ollama`, mirrored to Artifact
   Registry when `enable_image_mirroring = true`) with a **ClusterIP service** on port `11434`.
@@ -32,11 +32,11 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 - **Horizontal Pod Autoscaler (HPA)** between `min_instance_count` and `max_instance_count`.
 - **No database, no Redis** — Ollama is stateless beyond its GCS-backed model cache.
 
-### Key differences from `App_GKE` defaults
+### Key differences from `App GKE` defaults
 
-| Feature | App_GKE default | Ollama_GKE default |
+| Feature | App GKE default | Ollama GKE default |
 |---|---|---|
-| `container_port` | `8080` | `11434` (set by Ollama_Common) |
+| `container_port` | `8080` | `11434` (set by Ollama Common) |
 | `container_resources.cpu_limit` | `"1000m"` | `"8"` |
 | `container_resources.memory_limit` | `"512Mi"` | `"16Gi"` |
 | `container_resources.cpu_request` | `"500m"` | `"4"` |
@@ -46,7 +46,7 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 | `service_type` | `"ClusterIP"` | `"ClusterIP"` |
 | `enable_redis` | varies | **always `false`** (hard-coded) |
 | Database | varies | **`NONE`** (via `database_type`) |
-| GCS models bucket | none | auto-provisioned via Ollama_Common |
+| GCS models bucket | none | auto-provisioned via Ollama Common |
 | Model-pull job | none | auto-generated when `default_model` is set |
 | Auto-injected env vars | none | `OLLAMA_MODELS`, `OLLAMA_HOST`, `OLLAMA_KEEP_ALIVE` |
 
@@ -62,9 +62,9 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 | `support_users` | `list(string)` | `[]` | Email addresses granted IAM access and monitoring alert recipients. |
 | `resource_labels` | `map(string)` | `{}` | Labels applied to all module-managed resources. |
 | `deployment_region` | `string` | `"us-central1"` | GCP region fallback when network discovery cannot determine region from VPC subnets. Also used as the GCS bucket region. |
-| `module_description` | `string` | *(Ollama_GKE description)* | Platform UI description. |
+| `module_description` | `string` | *(Ollama GKE description)* | Platform UI description. |
 | `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/Ollama_GKE"` | External documentation URL. |
-| `module_dependency` | `list(string)` | `["Services_GCP"]` | Modules that must be deployed before this one. |
+| `module_dependency` | `list(string)` | `["Services GCP"]` | Modules that must be deployed before this one. |
 | `module_services` | `list(string)` | *(GCP service list)* | GCP services consumed by this module. |
 | `credit_cost` | `number` | `150` | Platform credits consumed on deployment. |
 | `require_credit_purchases` | `bool` | `false` | Enforce credit balance check before deployment. |
@@ -94,7 +94,7 @@ feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts
 
 When `default_model` is set and `initialization_jobs` is empty, a Kubernetes Job named
 `model-pull` is created automatically using the `scripts/model-pull.sh` script from
-`Ollama_Common`. The job mounts the `ollama-models` GCS volume so pulled weights persist.
+`Ollama Common`. The job mounts the `ollama-models` GCS volume so pulled weights persist.
 
 ### §3.C · Runtime & Scaling (Group 3)
 
@@ -117,12 +117,12 @@ When `default_model` is set and `initialization_jobs` is empty, a Kubernetes Job
 | `container_protocol` | `string` | `"http1"` | HTTP protocol version. |
 | `service_annotations` | `map(string)` | `{}` | Custom annotations applied to the Kubernetes service. |
 | `service_labels` | `map(string)` | `{}` | Custom labels applied to the Kubernetes service. |
-| `enable_cloudsql_volume` | `bool` | `false` | Not needed for Ollama. Required by the App_GKE interface. |
+| `enable_cloudsql_volume` | `bool` | `false` | Not needed for Ollama. Required by the App GKE interface. |
 | `cloudsql_volume_mount_path` | `string` | `"/cloudsql"` | Cloud SQL Auth Proxy socket path. Present for interface compatibility. |
 
 ### §3.D · Automatically Injected Environment Variables
 
-The following environment variables are set automatically by `Ollama_Common`:
+The following environment variables are set automatically by `Ollama Common`:
 
 | Variable | Value | Purpose |
 |---|---|---|
@@ -171,7 +171,7 @@ The following environment variables are set automatically by `Ollama_Common`:
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `gke_cluster_name` | `string` | `""` | Name of an existing GKE Autopilot cluster. Uses the Services_GCP-managed cluster when empty. |
+| `gke_cluster_name` | `string` | `""` | Name of an existing GKE Autopilot cluster. Uses the Services GCP-managed cluster when empty. |
 | `namespace_name` | `string` | `""` | Kubernetes namespace for the Ollama deployment. Auto-generated from the application name when empty. |
 | `enable_pod_disruption_budget` | `bool` | `true` | Create a PodDisruptionBudget to maintain availability during node upgrades. |
 | `pdb_min_available` | `number` | `1` | Minimum pods available during voluntary disruptions. |
@@ -226,7 +226,7 @@ workload type with GCS Fuse is recommended and these are not needed.
 
 ## §7 · Backup & Maintenance (Group 6)
 
-Ollama has no database — backup settings are present for App_GKE interface compatibility only.
+Ollama has no database — backup settings are present for App GKE interface compatibility only.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -292,10 +292,10 @@ Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is re
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=30, timeout_seconds=5, period_seconds=15, failure_threshold=20 }` | Startup probe forwarded through Ollama_Common to the container spec. The 20-attempt threshold allows up to ~5 minutes for model loading from GCS. |
+| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=30, timeout_seconds=5, period_seconds=15, failure_threshold=20 }` | Startup probe forwarded through Ollama Common to the container spec. The 20-attempt threshold allows up to ~5 minutes for model loading from GCS. |
 | `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=60, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe. 60 s initial delay avoids false restarts during model loading. |
-| `startup_probe_config` | `object` | `{ enabled=true }` | Structured startup probe passed directly to App_GKE (300 s timeout by default). |
-| `health_check_config` | `object` | `{ enabled=true, initial_delay_seconds=60 }` | Structured liveness probe passed directly to App_GKE. |
+| `startup_probe_config` | `object` | `{ enabled=true }` | Structured startup probe passed directly to App GKE (300 s timeout by default). |
+| `health_check_config` | `object` | `{ enabled=true, initial_delay_seconds=60 }` | Structured liveness probe passed directly to App GKE. |
 | `uptime_check_config` | `object` | `{ enabled=true, path="/", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies. |
 
@@ -356,12 +356,12 @@ Ollama's root endpoint (`/`) returns `"Ollama is running"` once the server is re
 | **`OLLAMA_HOST` injected** | Set to `"0.0.0.0:11434"` for Kubernetes service forwarding. |
 | **`OLLAMA_KEEP_ALIVE` injected** | Set to `"24h"`. Override by setting `OLLAMA_KEEP_ALIVE` in `environment_variables`. |
 | **Models bucket always provisioned** | The `<resource_prefix>-models` GCS bucket is always created, regardless of `create_cloud_storage` or `storage_buckets` settings. |
-| **GCS volume always mounted** | The `ollama-models` volume is always appended to `gcs_volumes` inside Ollama_Common. |
+| **GCS volume always mounted** | The `ollama-models` volume is always appended to `gcs_volumes` inside Ollama Common. |
 | **No database, no Redis** | `enable_redis = false` and `database_type = "NONE"` are hard-coded. |
 | **Model-pull job auto-generated** | When `default_model` is set and `initialization_jobs = []`, a Kubernetes Job (`model-pull`) is created using `scripts/model-pull.sh`. Providing any entry in `initialization_jobs` disables it. |
 | **Network discovery** | The module uses the `App_Common/modules/app_networking` module to discover the VPC region from existing subnets. The first discovered region is used as `deployment_region`. Falls back to `var.deployment_region` when no subnets are found. |
 | **Namespace auto-generated** | When `namespace_name = ""`, the namespace defaults to `<resource_prefix>` (the full `app<name><tenant><id>` string). |
-| **`scripts_dir`** | Set to `Ollama_Common`'s bundled `scripts/` directory. |
+| **`scripts_dir`** | Set to `Ollama Common`'s bundled `scripts/` directory. |
 
 ---
 
@@ -373,7 +373,7 @@ Complete variable reference with UIMeta group assignments.
 |---|---|---|
 | `module_description` | *(Ollama GKE description)* | 0 |
 | `module_documentation` | `"https://docs.radmodules.dev/docs/modules/Ollama_GKE"` | 0 |
-| `module_dependency` | `["Services_GCP"]` | 0 |
+| `module_dependency` | `["Services GCP"]` | 0 |
 | `module_services` | *(list of GCP services)* | 0 |
 | `credit_cost` | `150` | 0 |
 | `require_credit_purchases` | `false` | 0 |

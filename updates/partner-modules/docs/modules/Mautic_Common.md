@@ -1,4 +1,4 @@
-# Mautic_Common — Internal Configuration Module
+# Mautic Common — Internal Configuration Module
 
 This document provides a comprehensive reference for the `modules/Mautic_Common` Terraform module. `Mautic_Common` is an **internal shared module** — it is not deployed directly by end users.
 
@@ -6,11 +6,11 @@ This document provides a comprehensive reference for the `modules/Mautic_Common`
 
 ## 1. Module Overview
 
-`Mautic_Common` centralises all Mautic-specific application configuration in a single module shared by both `Mautic_CloudRun` and `Mautic_GKE`. It creates GCP resources (the admin password secret in Secret Manager) and assembles the `config`, `secret_ids`, and `storage_buckets` outputs consumed by the Foundation Modules.
+`Mautic Common` centralises all Mautic-specific application configuration in a single module shared by both `Mautic CloudRun` and `Mautic GKE`. It creates GCP resources (the admin password secret in Secret Manager) and assembles the `config`, `secret_ids`, and `storage_buckets` outputs consumed by the Foundation Modules.
 
 **Key Responsibilities:**
 1. **Secret generation**: Creates `MAUTIC_ADMIN_PASSWORD` in Secret Manager (random 24-character password, no special characters).
-2. **`config` assembly**: Builds the full application configuration object — container image, environment variables, database settings, resource limits, probe configuration, and initialization job — forwarded to `App_CloudRun` or `App_GKE` via `application_config`.
+2. **`config` assembly**: Builds the full application configuration object — container image, environment variables, database settings, resource limits, probe configuration, and initialization job — forwarded to `App CloudRun` or `App GKE` via `application_config`.
 3. **`storage_buckets` definition**: Defines the `mautic-media` GCS bucket to be provisioned by the Foundation Module.
 4. **`secret_ids` exposure**: Returns `{ MAUTIC_ADMIN_PASSWORD = <secret_id> }` for injection into the Cloud Run/GKE environment via `module_secret_env_vars`.
 
@@ -25,7 +25,7 @@ This document provides a comprehensive reference for the `modules/Mautic_Common`
 | `google_secret_manager_secret_version.mautic_admin_password` | Secret version | Initial admin password value. |
 | `time_sleep.wait_for_secrets` | 30-second delay | Allows Secret Manager global replication before dependent resources proceed. |
 
-> `Mautic_Common` does **not** create Cloud SQL, GCS buckets, NFS, or any compute resources — all infrastructure provisioning is delegated to the Foundation Module (`App_CloudRun` or `App_GKE`).
+> `Mautic Common` does **not** create Cloud SQL, GCS buckets, NFS, or any compute resources — all infrastructure provisioning is delegated to the Foundation Module (`App CloudRun` or `App GKE`).
 
 ---
 
@@ -89,7 +89,7 @@ The Foundation Module provisions this bucket and grants the workload service acc
 
 ### `path`
 
-The absolute filesystem path to the `Mautic_Common` module directory. Used by the Application Module to resolve `scripts_dir`:
+The absolute filesystem path to the `Mautic Common` module directory. Used by the Application Module to resolve `scripts_dir`:
 
 ```hcl
 scripts_dir = abspath("${module.mautic_app.path}/scripts")
@@ -99,7 +99,7 @@ scripts_dir = abspath("${module.mautic_app.path}/scripts")
 
 ## 4. Environment Variables
 
-`Mautic_Common` injects the following variables into `config.environment_variables`. These are merged with any caller-provided `environment_variables`:
+`Mautic Common` injects the following variables into `config.environment_variables`. These are merged with any caller-provided `environment_variables`:
 
 | Variable | Value |
 |---|---|
@@ -112,20 +112,20 @@ scripts_dir = abspath("${module.mautic_app.path}/scripts")
 | `MAUTIC_MAILER_FROM_NAME` | `var.mailer_from_name` |
 | `MAUTIC_MAILER_FROM_EMAIL` | `var.mailer_from_email` |
 
-**`Mautic_CloudRun` additionally injects (in its `locals` merge):**
+**`Mautic CloudRun` additionally injects (in its `locals` merge):**
 
 | Variable | Value | Reason |
 |---|---|---|
 | `MAUTIC_SITE_URL` | Predicted Cloud Run service URL | Required for Mautic to generate correct absolute URLs. |
 | `HTTPS` | `on` | Tells Apache/PHP that the upstream connection is HTTPS; prevents HTTP→HTTPS redirect loops. |
 
-`MAUTIC_DB_HOST` and `MAUTIC_DB_PASSWORD` are injected by `App_CloudRun`/`App_GKE` from the `db_password_env_var_name = "MAUTIC_DB_PASSWORD"` parameter and the Cloud SQL socket path, respectively.
+`MAUTIC_DB_HOST` and `MAUTIC_DB_PASSWORD` are injected by `App CloudRun`/`App GKE` from the `db_password_env_var_name = "MAUTIC_DB_PASSWORD"` parameter and the Cloud SQL socket path, respectively.
 
 ---
 
 ## 5. Default Initialization Job
 
-When `initialization_jobs` is empty (the default), `Mautic_Common` provides the following `db-init` job:
+When `initialization_jobs` is empty (the default), `Mautic Common` provides the following `db-init` job:
 
 ```hcl
 {
@@ -162,14 +162,14 @@ All operations are idempotent — the script uses `CREATE USER IF NOT EXISTS` an
 
 ## 6. Health Probe Defaults
 
-Probes are set in `Mautic_Common` and forwarded directly via `var.startup_probe` / `var.liveness_probe`. The Application Module or end user can override them.
+Probes are set in `Mautic Common` and forwarded directly via `var.startup_probe` / `var.liveness_probe`. The Application Module or end user can override them.
 
 | Probe | Default Configuration |
 |---|---|
 | Startup | `{ enabled=true, type="HTTP", path="/index.php/s/login", initial_delay_seconds=60, timeout_seconds=10, period_seconds=15, failure_threshold=20 }` |
 | Liveness | `{ enabled=true, type="HTTP", path="/index.php/s/login", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` |
 
-**Important:** `Mautic_CloudRun` overrides `startup_probe` in its `locals` merge to use `type="TCP"` with `path="/"`. This is because Cloud Run health check traffic arrives over plain HTTP and Apache issues HTTP→HTTPS redirects (301) for HTTP requests, causing HTTP startup probes to never receive a 200 response. TCP probes check only that port 80 is open and are unaffected by application-layer redirects. `Mautic_GKE` retains the HTTP startup probe — GKE probes operate within the pod network and do not trigger the same redirect behaviour.
+**Important:** `Mautic CloudRun` overrides `startup_probe` in its `locals` merge to use `type="TCP"` with `path="/"`. This is because Cloud Run health check traffic arrives over plain HTTP and Apache issues HTTP→HTTPS redirects (301) for HTTP requests, causing HTTP startup probes to never receive a 200 response. TCP probes check only that port 80 is open and are unaffected by application-layer redirects. `Mautic GKE` retains the HTTP startup probe — GKE probes operate within the pod network and do not trigger the same redirect behaviour.
 
 ---
 

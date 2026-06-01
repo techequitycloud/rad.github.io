@@ -43,8 +43,8 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 ## Prerequisites
 
 1. A GCP project with billing enabled.
-2. The `Services_GCP` module deployed in the same project (provides VPC, Cloud SQL instance).
-3. The following APIs enabled (Services_GCP handles this):
+2. The `Services GCP` module deployed in the same project (provides VPC, Cloud SQL instance).
+3. The following APIs enabled (Services GCP handles this):
    - `run.googleapis.com`
    - `sqladmin.googleapis.com`
    - `secretmanager.googleapis.com`
@@ -271,7 +271,7 @@ gcloud logging read \
   --format="table(timestamp, textPayload)"
 ```
 
-**Expected result:** NocoDB startup logs including the database connection confirmation and `NocoDB started successfully` message.
+**Expected result:** NocoDB startup logs including the database connection confirmation.
 
 ### Step 6.2 — Filter for Errors
 

@@ -6,13 +6,13 @@ This document provides a comprehensive reference for the `modules/Nextcloud_Clou
 
 ## 1. Module Overview
 
-Nextcloud is the leading self-hosted file sync and collaboration platform, used by 400 million+ users across 100,000+ organisations including governments and healthcare providers seeking GDPR-compliant alternatives to Google Drive and OneDrive. `Nextcloud_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Nextcloud-specific application configuration, database initialisation, and storage configuration via `Nextcloud_Common`.
+Nextcloud is the leading self-hosted file sync and collaboration platform, used by 400 million+ users across 100,000+ organisations including governments and healthcare providers seeking GDPR-compliant alternatives to Google Drive and OneDrive. `Nextcloud CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects Nextcloud-specific application configuration, database initialisation, and storage configuration via `Nextcloud Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Apache/PHP container, 2 vCPU / 4 Gi by default. Scale-to-zero enabled (`min_instance_count = 0`) by default.
 *   **Data Persistence**: Cloud SQL **MySQL 8.0** (required; PostgreSQL is not supported). NFS (GCE VM or Filestore) for shared `config/` and `data/` directories. GCS Fuse volumes available for object storage mounts.
-*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_CloudRun`. Admin password auto-generated and stored in Secret Manager.
-*   **Caching**: Redis **enabled by default** (`enable_redis = true`) — `Nextcloud_Common` configures Redis as Nextcloud's distributed cache and file locking backend.
+*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`. Admin password auto-generated and stored in Secret Manager.
+*   **Caching**: Redis **enabled by default** (`enable_redis = true`) — `Nextcloud Common` configures Redis as Nextcloud's distributed cache and file locking backend.
 *   **CI/CD**: Cloud Build custom image pipeline by default; Cloud Deploy progressive delivery optional.
 *   **Reliability**: Health probes target `/status.php` (Nextcloud's JSON health endpoint) with a generous startup tolerance to allow database initialisation and `occ maintenance:install` to complete on first boot.
 
@@ -30,9 +30,9 @@ Nextcloud is the leading self-hosted file sync and collaboration platform, used 
 | `description` | 3 | `string` | `'Nextcloud self-hosted collaboration and file sharing platform'` | Cloud Run service description. |
 | `application_version` | 3 | `string` | `'30'` | Nextcloud image version tag. Increment to deploy a new release. |
 
-**Wrapper architecture:** `Nextcloud_CloudRun` calls `Nextcloud_Common` to build a `config` object containing Nextcloud-specific environment variables, probe configuration, build args (PHP limits), and the default `db-init` job definition. `Nextcloud_CloudRun` merges `NEXTCLOUD_TRUSTED_DOMAINS` from `application_domains` into the environment. Runtime URL variables (`OVERWRITEHOST`, `OVERWRITECLIURL`) are derived at startup by `entrypoint.sh` from the `CLOUDRUN_SERVICE_URL` environment variable injected by `App_CloudRun`. `module_storage_buckets` carries the `nextcloud-data` bucket provisioned by `Nextcloud_Common`. `module_secret_env_vars` carries the admin password secret reference.
+**Wrapper architecture:** `Nextcloud CloudRun` calls `Nextcloud Common` to build a `config` object containing Nextcloud-specific environment variables, probe configuration, build args (PHP limits), and the default `db-init` job definition. `Nextcloud CloudRun` merges `NEXTCLOUD_TRUSTED_DOMAINS` from `application_domains` into the environment. Runtime URL variables (`OVERWRITEHOST`, `OVERWRITECLIURL`) are derived at startup by `entrypoint.sh` from the `CLOUDRUN_SERVICE_URL` environment variable injected by `App CloudRun`. `module_storage_buckets` carries the `nextcloud-data` bucket provisioned by `Nextcloud Common`. `module_secret_env_vars` carries the admin password secret reference.
 
-**MySQL note:** Nextcloud requires **MySQL 8.0**. `database_type = "MYSQL_8_0"` is fixed by `Nextcloud_Common` and cannot be overridden.
+**MySQL note:** Nextcloud requires **MySQL 8.0**. `database_type = "MYSQL_8_0"` is fixed by `Nextcloud Common` and cannot be overridden.
 
 ---
 
@@ -40,11 +40,11 @@ Nextcloud is the leading self-hosted file sync and collaboration platform, used 
 
 `Nextcloud_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in [App_CloudRun §2](../App_CloudRun/App_CloudRun.md#2-iam--access-control).
 
-**Admin password secret:** `Nextcloud_Common` auto-generates a 24-character alphanumeric admin password and stores it in Secret Manager at `<resource_prefix>-admin-password`. It is injected into the container as `NEXTCLOUD_ADMIN_PASSWORD` and read by Nextcloud's `occ maintenance:install` on first boot.
+**Admin password secret:** `Nextcloud Common` auto-generates a 24-character alphanumeric admin password and stores it in Secret Manager at `<resource_prefix>-admin-password`. It is injected into the container as `NEXTCLOUD_ADMIN_PASSWORD` and read by Nextcloud's `occ maintenance:install` on first boot.
 
 **Database initialisation identity:** The `db-init` Cloud Run Job runs under the Cloud Run SA. It connects to Cloud SQL MySQL via the Auth Proxy Unix socket (since `enable_cloudsql_volume = true` by default), using `ROOT_PASSWORD` (from Secret Manager) to create the Nextcloud database and user.
 
-**120-second IAM propagation delay:** Inherited from `App_CloudRun` — the Nextcloud service is not deployed until the delay completes, preventing secret-read failures on the first revision start.
+**120-second IAM propagation delay:** Inherited from `App CloudRun` — the Nextcloud service is not deployed until the delay completes, preventing secret-read failures on the first revision start.
 
 For the complete role tables and IAP, password rotation, and public access details, see [App_CloudRun §2](../App_CloudRun/App_CloudRun.md#2-iam--access-control).
 
@@ -54,7 +54,7 @@ For the complete role tables and IAP, password rotation, and public access detai
 
 ### A. Compute (Cloud Run)
 
-Nextcloud is a PHP application that performs database schema migrations and full application installation (`occ maintenance:install`) on first boot. `Nextcloud_CloudRun` exposes `cpu_limit` and `memory_limit` as dedicated top-level variables.
+Nextcloud is a PHP application that performs database schema migrations and full application installation (`occ maintenance:install`) on first boot. `Nextcloud CloudRun` exposes `cpu_limit` and `memory_limit` as dedicated top-level variables.
 
 **Scale-to-zero is enabled** (`min_instance_count = 0`) by default. Nextcloud cold starts can take 60–120 seconds on first boot due to database installation. For production deployments set `min_instance_count = 1` to eliminate cold starts. `max_instance_count = 1` by default — increase for higher concurrency.
 
@@ -77,9 +77,9 @@ Nextcloud is a PHP application that performs database schema migrations and full
 | `service_annotations` | 4 | `{}` | Advanced Cloud Run annotations. |
 | `service_labels` | 4 | `{}` | Labels applied to the Cloud Run service. |
 
-**Differences from `App_CloudRun` defaults:**
+**Differences from `App CloudRun` defaults:**
 
-| Variable | `App_CloudRun` | `Nextcloud_CloudRun` | Reason |
+| Variable | `App CloudRun` | `Nextcloud CloudRun` | Reason |
 |---|---|---|---|
 | `container_port` | `8080` | `80` | Nextcloud Apache binds to port 80. |
 | `cpu_limit` | `'1000m'` | `'2000m'` | PHP + Apache + file operations benefit from 2 vCPU. |
@@ -89,11 +89,11 @@ Nextcloud is a PHP application that performs database schema migrations and full
 
 ### B. Database (Cloud SQL — MySQL 8.0)
 
-Nextcloud requires **MySQL 8.0** — `Nextcloud_Common` fixes `database_type = "MYSQL_8_0"`. The database must use `utf8mb4` character set and `utf8mb4_general_ci` collation; the `db-init.sh` script enforces this.
+Nextcloud requires **MySQL 8.0** — `Nextcloud Common` fixes `database_type = "MYSQL_8_0"`. The database must use `utf8mb4` character set and `utf8mb4_general_ci` collation; the `db-init.sh` script enforces this.
 
-The module uses `db_name` and `db_user` in place of the `application_database_name` and `application_database_user` variables in `App_CloudRun`.
+The module uses `db_name` and `db_user` in place of the `application_database_name` and `application_database_user` variables in `App CloudRun`.
 
-**Unix socket connection with TCP fallback:** `enable_cloudsql_volume` defaults to `true`. `App_CloudRun` injects the Auth Proxy sidecar and sets `DB_HOST` to the socket path under `/cloudsql`. The `entrypoint.sh` script detects that `DB_HOST` is a socket path and overrides it with `DB_IP` for TCP — MySQL 8.0's `caching_sha2_password` authentication requires SSL to complete over TCP, which PHP PDO cannot handle without explicit SSL setup; the socket path bypasses this requirement entirely.
+**Unix socket connection with TCP fallback:** `enable_cloudsql_volume` defaults to `true`. `App CloudRun` injects the Auth Proxy sidecar and sets `DB_HOST` to the socket path under `/cloudsql`. The `entrypoint.sh` script detects that `DB_HOST` is a socket path and overrides it with `DB_IP` for TCP — MySQL 8.0's `caching_sha2_password` authentication requires SSL to complete over TCP, which PHP PDO cannot handle without explicit SSL setup; the socket path bypasses this requirement entirely.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -103,7 +103,7 @@ The module uses `db_name` and `db_user` in place of the `application_database_na
 | `enable_auto_password_rotation` | 12 | `false` | Automated zero-downtime password rotation. See §7.D. |
 | `rotation_propagation_delay_sec` | 12 | `90` | Seconds to wait after rotation before restarting the service. |
 
-> `database_type`, `enable_postgres_extensions`, and `enable_mysql_plugins` are not exposed — Nextcloud only supports MySQL 8.0, and database setup is managed by `Nextcloud_Common`'s `db-init.sh`. `sql_instance_name` and `sql_instance_base_name` are handled transparently by `App_CloudRun`.
+> `database_type`, `enable_postgres_extensions`, and `enable_mysql_plugins` are not exposed — Nextcloud only supports MySQL 8.0, and database setup is managed by `Nextcloud Common`'s `db-init.sh`. `sql_instance_name` and `sql_instance_base_name` are handled transparently by `App CloudRun`.
 
 ### C. Storage (NFS & GCS)
 
@@ -129,7 +129,7 @@ Without NFS, `config.php` is ephemeral: on every pod restart the official entryp
 
 ### D. Nextcloud-Specific Settings
 
-`Nextcloud_CloudRun` exposes four Nextcloud-specific variables (group 23) that control PHP runtime behaviour and admin account creation:
+`Nextcloud CloudRun` exposes four Nextcloud-specific variables (group 23) that control PHP runtime behaviour and admin account creation:
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -147,11 +147,11 @@ Cloud Run uses Direct VPC Egress to reach Cloud SQL's internal IP. Because `enab
 | `ingress_settings` | 5 | `'all'` | `'all'` — public internet; `'internal'` — VPC only; `'internal-and-cloud-load-balancing'` — forces traffic through the HTTPS Load Balancer. |
 | `vpc_egress_setting` | 5 | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` routes only RFC 1918 traffic via VPC. `'ALL_TRAFFIC'` routes all egress via VPC. |
 
-> `network_name` is not exposed. The module auto-discovers the `Services_GCP` VPC network.
+> `network_name` is not exposed. The module auto-discovers the `Services GCP` VPC network.
 
 ### F. Initialization & Bootstrap
 
-A `db-init` Cloud Run Job is automatically provisioned by `Nextcloud_Common` when `initialization_jobs` is left as the default empty list (`[]`). It uses the `mysql:8.0-debian` image and executes `Nextcloud_Common/scripts/db-init.sh`, which performs the following idempotent operations:
+A `db-init` Cloud Run Job is automatically provisioned by `Nextcloud Common` when `initialization_jobs` is left as the default empty list (`[]`). It uses the `mysql:8.0-debian` image and executes `Nextcloud_Common/scripts/db-init.sh`, which performs the following idempotent operations:
 
 1. Connects to Cloud SQL MySQL via the Auth Proxy Unix socket (or falls back to TCP via `DB_IP`).
 2. Creates the Nextcloud database with `utf8mb4` character set and `utf8mb4_general_ci` collation.
@@ -164,7 +164,7 @@ Override `initialization_jobs` with a non-empty list to replace this default wit
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Nextcloud_Common` to supply the default `db-init` job. Non-empty list replaces it entirely. |
+| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Nextcloud Common` to supply the default `db-init` job. Non-empty list replaces it entirely. |
 | `cron_jobs` | 13 | `[]` | Recurring jobs triggered by Cloud Scheduler. Each entry: `name`, `schedule` (cron UTC), `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `parallelism`, `mount_nfs`, `mount_gcs_volumes`, `script_path`, `paused`. |
 
 ---
@@ -218,10 +218,10 @@ When `enable_vpc_sc = true`, all GCP API calls from this module are bound within
 | `secret_rotation_period` | 6 | `'2592000s'` | Frequency at which Secret Manager emits rotation notifications. Default: 30 days. |
 | `secret_propagation_delay` | 6 | `30` | Seconds to wait after secret creation before dependent resources proceed. |
 
-**Auto-generated secrets:** `Nextcloud_Common` generates:
+**Auto-generated secrets:** `Nextcloud Common` generates:
 - `<resource_prefix>-admin-password` — Nextcloud admin account password. Injected as `NEXTCLOUD_ADMIN_PASSWORD`.
 
-The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App_CloudRun`.
+The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App CloudRun`.
 
 ---
 
@@ -250,7 +250,7 @@ When `enable_cdn = true` (requires `enable_cloud_armor = true`), Cloud CDN is at
 
 Custom domains are attached to the Global HTTPS Load Balancer via `application_domains`. Google-managed SSL certificates are provisioned automatically.
 
-**Nextcloud `NEXTCLOUD_TRUSTED_DOMAINS` behaviour:** `Nextcloud_CloudRun` seeds `NEXTCLOUD_TRUSTED_DOMAINS` from `application_domains`. The `entrypoint.sh` script then **appends** the actual Cloud Run hostname (from `CLOUDRUN_SERVICE_URL`) at runtime. This ensures:
+**Nextcloud `NEXTCLOUD_TRUSTED_DOMAINS` behaviour:** `Nextcloud CloudRun` seeds `NEXTCLOUD_TRUSTED_DOMAINS` from `application_domains`. The `entrypoint.sh` script then **appends** the actual Cloud Run hostname (from `CLOUDRUN_SERVICE_URL`) at runtime. This ensures:
 
 1. The `*.run.app` Cloud Run URL is always trusted, regardless of Terraform-computed values.
 2. Custom domains from `application_domains` are also trusted.
@@ -316,9 +316,9 @@ Nextcloud exposes `/status.php` as its canonical health endpoint. It returns a J
 
 ### A. Redis Cache
 
-Redis is **enabled by default** (`enable_redis = true`). `Nextcloud_Common` configures the `REDIS_HOST` and `REDIS_HOST_PORT` environment variables, which Nextcloud uses for its APCu-backed distributed cache and file locking backend.
+Redis is **enabled by default** (`enable_redis = true`). `Nextcloud Common` configures the `REDIS_HOST` and `REDIS_HOST_PORT` environment variables, which Nextcloud uses for its APCu-backed distributed cache and file locking backend.
 
-When `enable_redis = true` and `redis_host` is not provided, `REDIS_HOST` is set to `$(REDIS_HOST)` — a runtime sentinel resolved by `App_CloudRun` to the NFS server IP (where a lightweight Redis instance runs co-located). For production deployments, set `redis_host` to a dedicated Google Cloud Memorystore for Redis instance.
+When `enable_redis = true` and `redis_host` is not provided, `REDIS_HOST` is set to `$(REDIS_HOST)` — a runtime sentinel resolved by `App CloudRun` to the NFS server IP (where a lightweight Redis instance runs co-located). For production deployments, set `redis_host` to a dedicated Google Cloud Memorystore for Redis instance.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -329,7 +329,7 @@ When `enable_redis = true` and `redis_host` is not provided, `REDIS_HOST` is set
 
 ### B. Environment Variables
 
-Nextcloud's application configuration is driven entirely by environment variables (injected by `entrypoint.sh` into the official Nextcloud entrypoint). Key variables set by `Nextcloud_Common`:
+Nextcloud's application configuration is driven entirely by environment variables (injected by `entrypoint.sh` into the official Nextcloud entrypoint). Key variables set by `Nextcloud Common`:
 
 | Variable | Source | Description |
 |---|---|---|
@@ -353,7 +353,7 @@ Use `environment_variables` to add additional plain-text configuration, and `sec
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `environment_variables` | 6 | `{}` | Plain-text env vars. Do not duplicate variables set by `Nextcloud_Common`. |
+| `environment_variables` | 6 | `{}` | Plain-text env vars. Do not duplicate variables set by `Nextcloud Common`. |
 | `secret_environment_variables` | 6 | `{}` | Secret Manager references. Use for SMTP passwords and other sensitive values. |
 
 ### C. Backup Import & Recovery
@@ -382,12 +382,12 @@ Use `environment_variables` to add additional plain-text configuration, and `sec
 
 ## 9. Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `Nextcloud_CloudRun` regardless of variable values. They cannot be overridden via `tfvars`.
+The following behaviours are applied automatically by `Nextcloud CloudRun` regardless of variable values. They cannot be overridden via `tfvars`.
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| **MySQL 8.0 required** | `database_type = "MYSQL_8_0"` fixed by `Nextcloud_Common` | Nextcloud requires MySQL. PostgreSQL is not supported. |
-| **Admin password auto-generated** | `Nextcloud_Common` creates `<prefix>-admin-password` secret | 24-character alphanumeric password stored in Secret Manager. Injected as `NEXTCLOUD_ADMIN_PASSWORD`. |
+| **MySQL 8.0 required** | `database_type = "MYSQL_8_0"` fixed by `Nextcloud Common` | Nextcloud requires MySQL. PostgreSQL is not supported. |
+| **Admin password auto-generated** | `Nextcloud Common` creates `<prefix>-admin-password` secret | 24-character alphanumeric password stored in Secret Manager. Injected as `NEXTCLOUD_ADMIN_PASSWORD`. |
 | **PHP limits baked at build time** | `php_memory_limit`, `upload_max_filesize`, `post_max_size` passed as Docker `ARG` | Dockerfile applies them via `RUN echo "memory_limit=..."` into `php.ini`. Also injected as env vars at runtime. |
 | **NFS config symlink** | `entrypoint.sh` symlinks `/var/www/html/config` → `/mnt/nfs/nextcloud-config` | Prevents `occ maintenance:install` from re-running on every restart. Applied only when NFS is mounted at `/mnt/nfs`. |
 | **Runtime URL discovery** | `entrypoint.sh` reads `CLOUDRUN_SERVICE_URL` | `OVERWRITEHOST` and `OVERWRITECLIURL` are set at container startup, not at Terraform apply time. Avoids broken URLs when `resource_prefix` diverges across separate applies. |
@@ -396,21 +396,21 @@ The following behaviours are applied automatically by `Nextcloud_CloudRun` regar
 | **Database bootstrap fallback** | `entrypoint.sh` uses `ROOT_PASSWORD` if user credentials fail | If the `db-init` job has not run or failed, `entrypoint.sh` attempts database/user creation inline using root credentials via the Unix socket. |
 | **NFS enabled by default** | `enable_nfs = true` default | NFS shared storage is provisioned for Nextcloud config and data persistence. Requires `gen2`. |
 | **Redis enabled by default** | `enable_redis = true` default | Nextcloud's distributed cache and file locking backend. When `redis_host` is blank, the `$(REDIS_HOST)` sentinel resolves to the NFS server IP at deploy time. |
-| **Default db-init job** | Supplied by `Nextcloud_Common` when `initialization_jobs = []` | MySQL database and user are created automatically with utf8mb4. Override with a non-empty `initialization_jobs` list to replace. |
+| **Default db-init job** | Supplied by `Nextcloud Common` when `initialization_jobs = []` | MySQL database and user are created automatically with utf8mb4. Override with a non-empty `initialization_jobs` list to replace. |
 
-**Inline infrastructure** (when no `Services_GCP` stack is present) is identical to `App_CloudRun` §9 — `App_CloudRun` provisions an inline VPC, Cloud NAT, Cloud SQL instance, service accounts, and GCP APIs as required.
+**Inline infrastructure** (when no `Services GCP` stack is present) is identical to `App CloudRun` §9 — `App CloudRun` provisions an inline VPC, Cloud NAT, Cloud SQL instance, service accounts, and GCP APIs as required.
 
 ---
 
 ## 10. Variable Reference
 
-All user-configurable variables exposed by `Nextcloud_CloudRun`, sorted by UI group then order.
+All user-configurable variables exposed by `Nextcloud CloudRun`, sorted by UI group then order.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `module_description` | 0 | (Nextcloud platform text) | Platform metadata: module description. |
 | `module_documentation` | 0 | `'https://docs.radmodules.dev/docs/modules/Nextcloud_CloudRun'` | Platform metadata: documentation URL. |
-| `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
+| `module_dependency` | 0 | `['Services GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `50` | Platform metadata: deployment credit cost. |
 | `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
@@ -501,7 +501,7 @@ All user-configurable variables exposed by `Nextcloud_CloudRun`, sorted by UI gr
 | `db_name_env_var_name` | 12 | `""` | Additional env var name for DB name. |
 | `db_port_env_var_name` | 12 | `""` | Additional env var name for DB port. |
 | `service_url_env_var_name` | 12 | `""` | Additional env var name for service URL. |
-| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Nextcloud_Common` to supply the default `db-init` job. |
+| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Nextcloud Common` to supply the default `db-init` job. |
 | `cron_jobs` | 13 | `[]` | Recurring scheduled Cloud Run Jobs via Cloud Scheduler. |
 | `startup_probe` | 14 | `{ path="/status.php", initial_delay_seconds=60, failure_threshold=20, ... }` | Startup probe. Long tolerance for first-boot `occ maintenance:install`. |
 | `liveness_probe` | 14 | `{ path="/status.php", initial_delay_seconds=120, failure_threshold=3, ... }` | Liveness probe. |
@@ -552,17 +552,17 @@ All user-configurable variables exposed by `Nextcloud_CloudRun`, sorted by UI gr
 | Variable | Sensible Default | Risk | Consequence of Incorrect Value |
 |---|---|---|---|
 | `NEXTCLOUD_TRUSTED_DOMAINS` (via `application_domains`) | Auto-populated from `application_domains` + Cloud Run hostname | **Critical** | Nextcloud enforces a trusted domain whitelist. Any domain not in this list receives a "Access through untrusted domain" error and the application is unusable. When adding a custom domain or load balancer, add it to `application_domains`. The `entrypoint.sh` appends the Cloud Run service hostname automatically at runtime. |
-| `database_type` | `"MYSQL_8_0"` | **Critical** | Nextcloud requires MySQL. `Nextcloud_Common` hardcodes `database_type = "MYSQL_8_0"`. Changing to PostgreSQL breaks the database initialization job and the application will not start. |
+| `database_type` | `"MYSQL_8_0"` | **Critical** | Nextcloud requires MySQL. `Nextcloud Common` hardcodes `database_type = "MYSQL_8_0"`. Changing to PostgreSQL breaks the database initialization job and the application will not start. |
 | `db_name` | `"nextcloud"` | **Critical** | Changing after initial deployment orphans the existing database. Nextcloud will connect to a new empty database. All files, users, calendar data, and configuration are lost from the application's perspective (they remain in the old database but are unreachable). |
 | `db_user` | `"nextcloud"` | **High** | Changing after initial deployment creates a new user without ownership of existing Nextcloud tables. All database operations fail with permission errors. |
 | `enable_cloudsql_volume` | `true` | **Critical** | Nextcloud connects to Cloud SQL MySQL via the Auth Proxy Unix socket. Disabling this removes the socket path, causing all database connections to fail immediately on startup. |
-| `container_port` | `80` | **Critical** | `Nextcloud_Common` sets `container_port = 80` (the Apache web server default). Changing to any other port causes Cloud Run health checks and traffic routing to fail — the container starts but receives no traffic. |
+| `container_port` | `80` | **Critical** | `Nextcloud Common` sets `container_port = 80` (the Apache web server default). Changing to any other port causes Cloud Run health checks and traffic routing to fail — the container starts but receives no traffic. |
 | `OVERWRITEPROTOCOL` (in `environment_variables`) | `"https"` | **High** | Nextcloud generates all file share links, calendar URLs, and WebDAV endpoints using this protocol. Setting to `"http"` causes mixed-content browser warnings and WebDAV clients may reject insecure connections. Cloud Run always serves HTTPS externally — keep as `"https"`. |
 | `php_memory_limit` | `"512M"` | **Medium** | PHP memory limit controls per-request memory. For large file operations, album generation, or Office document editing, `512M` may be insufficient. Increase to `1G` or `2G` for file-heavy workloads. This value is baked into the container image at build time — changing it requires a new Cloud Build run. |
 | `upload_max_filesize` | `"512M"` | **High** | Files larger than this limit cannot be uploaded through the web interface. This value is also baked into the container image at build time. For organizations uploading large videos or archives, increase to `5G` or `10G` and ensure `post_max_size` matches or exceeds it. |
 | `post_max_size` | `"512M"` | **High** | PHP's POST body limit. Must be equal to or greater than `upload_max_filesize`. If `post_max_size < upload_max_filesize`, PHP silently drops the upload body and Nextcloud receives an empty file. Always set `post_max_size >= upload_max_filesize`. |
 | `enable_redis` | `false` | **Medium** | Without Redis, Nextcloud uses a file-based locking mechanism (`FileLocking`) and local APCu cache. With multiple instances or scale-to-zero, file locks become stale and cause 503 "File is locked" errors during concurrent operations. Enable Redis (`REDIS_HOST` and `REDIS_HOST_PORT`) for multi-instance or production deployments. |
-| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, `Nextcloud_Common` injects `REDIS_HOST = "$(REDIS_HOST)"` literally (unresolved shell variable), causing Nextcloud to fail to connect to Redis at runtime. Always provide a valid hostname or IP when enabling Redis. |
+| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, `Nextcloud Common` injects `REDIS_HOST = "$(REDIS_HOST)"` literally (unresolved shell variable), causing Nextcloud to fail to connect to Redis at runtime. Always provide a valid hostname or IP when enabling Redis. |
 | `min_instance_count` | `0` | **High** | Scale-to-zero means Nextcloud cold-starts on every request after idle. Nextcloud's PHP startup includes autoloader initialization and database connection establishment — cold starts are 15–30 seconds. For production use, set `min_instance_count = 1`. |
 | `enable_nfs` | `false` | **High** | Without NFS, all Nextcloud data (uploaded files, app data, config) is stored in the container's ephemeral filesystem. Files are permanently lost on container restart or new revision deployment. NFS is required for any Nextcloud deployment that stores files. |
 | `nfs_mount_path` | `"/mnt/nfs"` | **High** | Nextcloud must be configured to use this path as its data directory via `NEXTCLOUD_DATA_DIR`. A mismatch causes Nextcloud to write to the ephemeral container filesystem while the NFS mount is idle. |
@@ -574,7 +574,7 @@ All user-configurable variables exposed by `Nextcloud_CloudRun`, sorted by UI gr
 | `ingress_settings` | `"all"` | **Medium** | Nextcloud is often used as an internal file store. Restrict to `"internal"` or `"internal-and-cloud-load-balancing"` for non-public deployments. Exposing Nextcloud to the full internet requires strong password policies and rate limiting. |
 | `enable_backup_import` | `false` | **High** | Setting to `true` triggers a database import on every `tofu apply`. If `backup_uri` is not a controlled snapshot, subsequent applies overwrite the live Nextcloud database. Only enable for the initial restore, then set back to `false`. |
 | `application_version` | e.g., `"28"` | **Medium** | Using `"latest"` causes each Cloud Build run to potentially use a different Nextcloud version, making rollbacks difficult and introducing unplanned major version upgrades. Pin to a specific version tag. |
-| `NEXTCLOUD_UPDATE` (in `environment_variables`) | `"1"` | **Low** | `Nextcloud_Common` sets `NEXTCLOUD_UPDATE = "1"`, which auto-runs `occ upgrade` on container startup. This is intentional for automatic minor updates. Set to `"0"` to disable auto-upgrade and manage upgrades manually. |
+| `NEXTCLOUD_UPDATE` (in `environment_variables`) | `"1"` | **Low** | `Nextcloud Common` sets `NEXTCLOUD_UPDATE = "1"`, which auto-runs `occ upgrade` on container startup. This is intentional for automatic minor updates. Set to `"0"` to disable auto-upgrade and manage upgrades manually. |
 
 ---
 

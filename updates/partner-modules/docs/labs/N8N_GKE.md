@@ -47,7 +47,7 @@ The steps in this guide include equivalent `gcloud` commands and Kubernetes (`ku
 
 ## Prerequisites
 
-- A GCP project with the Services_GCP platform module already deployed
+- A GCP project with the Services GCP platform module already deployed
 - `gcloud` CLI authenticated: `gcloud auth login && gcloud config set project PROJECT_ID`
 - `kubectl` installed
 - Owner or Editor role on the target GCP project
@@ -59,7 +59,7 @@ The steps in this guide include equivalent `gcloud` commands and Kubernetes (`ku
 
 ### Variables
 
-In the RAD UI, open the N8N_GKE module and fill in the deployment form with the following values:
+In the RAD UI, open the N8N GKE module and fill in the deployment form with the following values:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
@@ -488,7 +488,7 @@ When you have finished the lab, return to the RAD UI, navigate to your deploymen
 
 **Note:** If `enable_purge = false` was set, some resources (database, buckets) are retained after undeployment to protect against accidental data loss.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

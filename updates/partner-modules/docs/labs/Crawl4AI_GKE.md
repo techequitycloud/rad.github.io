@@ -44,8 +44,8 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) | [kubect
 ## Prerequisites
 
 1. A GCP project with billing enabled.
-2. The `Services_GCP` module deployed in the same project (provides VPC and GKE Autopilot cluster).
-3. The following APIs enabled (Services_GCP handles this):
+2. The `Services GCP` module deployed in the same project (provides VPC and GKE Autopilot cluster).
+3. The following APIs enabled (Services GCP handles this):
    - `container.googleapis.com`
    - `artifactregistry.googleapis.com`
    - `secretmanager.googleapis.com`
@@ -89,6 +89,7 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) | [kubect
 ```bash
 export PROJECT="your-gcp-project-id"
 export REGION="us-central1"
+export TOKEN=$(gcloud auth print-access-token)
 
 # Discover the GKE cluster
 export CLUSTER=$(gcloud container clusters list \
@@ -107,11 +108,18 @@ export NAMESPACE=$(kubectl get namespaces \
   -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep crawl4ai | head -1)
 echo "Namespace: ${NAMESPACE}"
 
-# Get the external IP
+# Get the external IP of the Crawl4AI service
 export SERVICE_IP=$(kubectl get service -n ${NAMESPACE} \
   -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
 export SERVICE_URL="http://${SERVICE_IP}"
 echo "Crawl4AI URL: ${SERVICE_URL}"
+```
+
+**REST API equivalent (list GKE clusters):**
+```bash
+curl -H "Authorization: Bearer ${TOKEN}" \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters" \
+  | jq '.clusters[] | {name: .name, status: .status}'
 ```
 
 ---
@@ -124,7 +132,7 @@ echo "Crawl4AI URL: ${SERVICE_URL}"
 kubectl get pods -n ${NAMESPACE}
 ```
 
-**Expected result:** At least one pod shows `Running` status with all containers ready.
+**Expected result:** At least one pod shows `Running` status with all containers ready (`1/1` or `2/2`).
 
 ### Step 2.2 — Confirm Crawl4AI is Reachable
 
@@ -139,7 +147,23 @@ curl -s "${SERVICE_URL}/health" | jq .
 
 If you see a connection refused error, supervisord may still be starting embedded Redis and Gunicorn (allow 40–60 seconds).
 
-### Step 2.3 — Open the Interactive Playground
+### Step 2.3 — Inspect Pod Details
+
+```bash
+kubectl describe pod -n ${NAMESPACE} \
+  $(kubectl get pods -n ${NAMESPACE} -o name | head -1) | grep -A10 "Containers:"
+```
+
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer ${TOKEN}" \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}/nodePools" \
+  | jq '.nodePools[] | {name: .name, status: .status}'
+```
+
+**Expected result:** Pod details show the Crawl4AI container with emptyDir volume for `/dev/shm`, resource limits (`cpu: "4"`, `memory: "8Gi"`), and Workload Identity service account annotation.
+
+### Step 2.4 — Open the Interactive Playground
 
 Navigate to `${SERVICE_URL}/playground` in a browser.
 
@@ -149,7 +173,9 @@ Navigate to `${SERVICE_URL}/playground` in a browser.
 
 ## Phase 3 — Submit Crawl Jobs [MANUAL]
 
-### Step 3.1 — Synchronous Crawl
+### Step 3.1 — Synchronous Crawl (Simple)
+
+The `/crawl/sync` endpoint blocks until the crawl completes and returns the result directly.
 
 ```bash
 curl -X POST "${SERVICE_URL}/crawl/sync" \
@@ -162,27 +188,35 @@ curl -X POST "${SERVICE_URL}/crawl/sync" \
   }' | jq '.result.markdown | length'
 ```
 
-**Expected result:** A positive integer (number of Markdown characters extracted).
+**Expected result:** A positive integer (number of Markdown characters extracted). Typically 2000–5000 characters for a simple HTML page.
 
-### Step 3.2 — Asynchronous Crawl
+### Step 3.2 — Asynchronous Crawl (Batch)
+
+For longer crawls, submit asynchronously and poll for completion.
 
 ```bash
+# Submit async crawl job
 TASK_ID=$(curl -s -X POST "${SERVICE_URL}/crawl" \
   -H "Content-Type: application/json" \
   -d '{
     "urls": ["https://en.wikipedia.org/wiki/Machine_learning"],
-    "crawler_params": {"headless": true}
+    "crawler_params": {
+      "headless": true
+    }
   }' | jq -r '.task_id')
 echo "Task ID: ${TASK_ID}"
 
+# Poll for completion
 sleep 10
 curl -s "${SERVICE_URL}/task/${TASK_ID}" \
   | jq '{status: .status, markdown_length: (.result.markdown | length)}'
 ```
 
-**Expected result:** Status transitions from `processing` to `completed` with Markdown content extracted.
+**Expected result:** Task status transitions from `processing` to `completed` with Markdown content extracted from the Wikipedia article. The task ID is stored in the embedded Redis instance for up to `redis_task_ttl_seconds` seconds.
 
 ### Step 3.3 — CSS Selector Extraction
+
+Extract structured content using CSS selectors.
 
 ```bash
 curl -X POST "${SERVICE_URL}/crawl/sync" \
@@ -198,6 +232,30 @@ curl -X POST "${SERVICE_URL}/crawl/sync" \
 
 **Expected result:** A list of Hacker News post titles extracted via CSS selector.
 
+### Step 3.4 — Multi-URL Batch Crawl
+
+```bash
+TASK_ID=$(curl -s -X POST "${SERVICE_URL}/crawl" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "urls": [
+      "https://example.com",
+      "https://example.org"
+    ],
+    "crawler_params": {
+      "headless": true,
+      "wait_for": "load"
+    }
+  }' | jq -r '.task_id')
+
+echo "Batch Task ID: ${TASK_ID}"
+sleep 15
+curl -s "${SERVICE_URL}/task/${TASK_ID}" \
+  | jq '{status: .status, results_count: (.results | length)}'
+```
+
+**Expected result:** Status transitions to `completed` with a `results` array containing one entry per URL.
+
 ---
 
 ## Phase 4 — Explore Kubernetes Features [MANUAL]
@@ -210,13 +268,13 @@ kubectl get hpa -n ${NAMESPACE}
 
 **Expected result:** HPA shows current replica count and scaling thresholds based on CPU utilisation.
 
-### Step 4.2 — View Kubernetes Events
+### Step 4.2 — View All Deployments
 
 ```bash
-kubectl get events -n ${NAMESPACE} --sort-by='.lastTimestamp' | tail -20
+kubectl get deployments -n ${NAMESPACE}
 ```
 
-**Expected result:** Events show successful pod scheduling and container starts. No `OOMKilled` or `CrashLoopBackOff` events under normal operation.
+**Expected result:** One Deployment listed — the Crawl4AI application.
 
 ### Step 4.3 — View Application Logs
 
@@ -235,9 +293,40 @@ gcloud logging read \
   --format="table(timestamp, textPayload)"
 ```
 
-**Expected result:** Supervisord startup logs appear (Redis start, Gunicorn start), followed by Crawl4AI request logs.
+**REST API equivalent:**
+```bash
+curl -X POST \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  "https://logging.googleapis.com/v2/entries:list" \
+  -d '{
+    "projectIds": ["'"${PROJECT}"'"],
+    "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"'"${NAMESPACE}"'\"",
+    "pageSize": 20
+  }'
+```
 
-### Step 4.4 — Scale the Deployment
+**Expected result:** Supervisord startup logs appear (Redis start, Gunicorn start), followed by Crawl4AI request logs showing crawled URLs, browser session durations, and extraction results.
+
+### Step 4.4 — View Kubernetes Events
+
+```bash
+kubectl get events -n ${NAMESPACE} --sort-by='.lastTimestamp' | tail -20
+```
+
+**Expected result:** Events show successful pod scheduling and container starts. No `OOMKilled` or `CrashLoopBackOff` events under normal operation.
+
+### Step 4.5 — Check /dev/shm Mount
+
+```bash
+kubectl exec -n ${NAMESPACE} \
+  $(kubectl get pods -n ${NAMESPACE} -o name | head -1) \
+  -- df -h /dev/shm
+```
+
+**Expected result:** `/dev/shm` is mounted as a `tmpfs` volume (the emptyDir providing shared memory for Chromium).
+
+### Step 4.6 — Scale the Deployment
 
 ```bash
 kubectl scale deployment -n ${NAMESPACE} \
@@ -246,7 +335,7 @@ kubectl scale deployment -n ${NAMESPACE} \
 kubectl get pods -n ${NAMESPACE} -w
 ```
 
-**Expected result:** A second pod starts. Press `Ctrl+C` to stop watching. GKE Autopilot provisions additional node capacity automatically.
+**Expected result:** A second pod starts. Press `Ctrl+C` to stop watching. GKE Autopilot provisions additional node capacity automatically. Each additional pod runs its own embedded Redis and Gunicorn stack independently.
 
 ---
 
@@ -270,11 +359,15 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | HPA provisioning | 1 | Yes |
 | Configure kubectl and get service IP | 1 | No |
 | Confirm Crawl4AI is reachable | 2 | No |
+| Inspect pod details | 2 | No |
 | Open playground UI | 2 | No |
 | Submit synchronous crawl jobs | 3 | No |
 | Submit asynchronous crawl jobs | 3 | No |
 | CSS selector extraction | 3 | No |
+| Multi-URL batch crawl | 3 | No |
 | Inspect HPA and scaling | 4 | No |
-| Review Kubernetes events and logs | 4 | No |
+| View deployments | 4 | No |
+| Review logs and events | 4 | No |
+| Verify /dev/shm mount | 4 | No |
 | Manual scaling test | 4 | No |
 | Undeploy infrastructure | 5 | Yes |

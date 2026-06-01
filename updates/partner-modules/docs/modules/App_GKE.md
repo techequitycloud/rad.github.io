@@ -1,4 +1,4 @@
-# App_GKE on Google Cloud Platform
+# App GKE on Google Cloud Platform
 
 This document provides a comprehensive analysis of the `modules/App_GKE` Terraform module on Google Cloud Platform. It details the architecture, IAM configuration, service integrations, and potential enhancements.
 
@@ -33,7 +33,7 @@ The `modules/App_GKE` module is a foundational building block for deploying cont
 
 ## 2. IAM & Access Control
 
-The module implements a least-privilege IAM strategy using dedicated Service Accounts and Workload Identity. IAM bindings are managed directly in `prerequisites.tf`. A `time_sleep` of 120 seconds (`cloudbuild_iam_propagation`) gates Cloud Build builds on IAM propagation to prevent `storage.objects.get denied` errors before the Storage Admin binding has reached GCP's storage backend. The GKE workload SA (`gke-sa-*`) and Cloud Build SA (`gke-build-sa-*`) are created unconditionally (`count = 1`) on every deployment, regardless of whether a Services_GCP network is present. The NFS SA and inline GKE node SA are conditional on whether those inline resources are needed.
+The module implements a least-privilege IAM strategy using dedicated Service Accounts and Workload Identity. IAM bindings are managed directly in `prerequisites.tf`. A `time_sleep` of 120 seconds (`cloudbuild_iam_propagation`) gates Cloud Build builds on IAM propagation to prevent `storage.objects.get denied` errors before the Storage Admin binding has reached GCP's storage backend. The GKE workload SA (`gke-sa-*`) and Cloud Build SA (`gke-build-sa-*`) are created unconditionally (`count = 1`) on every deployment, regardless of whether a Services GCP network is present. The NFS SA and inline GKE node SA are conditional on whether those inline resources are needed.
 
 ### Service Accounts
 
@@ -92,8 +92,8 @@ The module implements a least-privilege IAM strategy using dedicated Service Acc
 *   **VPC Native**: Pods run directly in the VPC network. No additional connector needed.
 *   **Cluster**: Connects to a GKE Autopilot cluster using the cluster's dedicated subnet and secondary IP ranges. The cluster is resolved in the following order:
     1.  An explicit cluster name supplied via `gke_cluster_name` (when `gke_cluster_selection_mode = "explicit"`).
-    2.  A Services_GCP-provisioned cluster discovered on the project's managed network.
-    3.  An **inline cluster** created by this module when no Services_GCP dependency is present. In this mode the module also creates its own VPC, GKE cluster, NFS server, and Cloud SQL instance, making it fully self-contained (see §9).
+    2.  A Services GCP-provisioned cluster discovered on the project's managed network.
+    3.  An **inline cluster** created by this module when no Services GCP dependency is present. In this mode the module also creates its own VPC, GKE cluster, NFS server, and Cloud SQL instance, making it fully self-contained (see §9).
 *   **Cluster Selection Modes** (`gke_cluster_selection_mode`):
     *   `primary` (default) — targets the primary GKE cluster discovered on the project's managed network.
     *   `explicit` — targets the cluster named in `gke_cluster_name` directly; use when multiple clusters share the same network.
@@ -201,7 +201,7 @@ When `enable_vpc_sc = true`, the module provisions a full VPC-SC perimeter aroun
 Secrets are always fetched from Secret Manager and mounted into pods at start time by the GKE-managed Secrets Store CSI Driver — secret values are **never written to Terraform state**.
 
 *   **Driver name**: The GKE managed addon uses the driver name **`secrets-store-gke.csi.k8s.io`** with provider `"gke"`. This is distinct from the community `secrets-store.csi.k8s.io` driver — using the wrong driver name causes `CSIDriver not found` errors at pod creation.
-*   **Cluster enablement**: Services_GCP enables the addon via `null_resource.configure_gke_addons` using `gcloud container clusters update --enable-secret-manager`. For inline clusters (no Services_GCP), App_GKE runs the same `gcloud` command in `null_resource.enable_secret_manager_addon`. A **separate** `null_resource.enable_secret_sync_addon` then runs `gcloud beta container clusters update --enable-secret-sync` (requires GKE 1.33+) to install the Secret Manager Sync controller that materialises native Kubernetes Secrets from CSI-mounted files.
+*   **Cluster enablement**: Services GCP enables the addon via `null_resource.configure_gke_addons` using `gcloud container clusters update --enable-secret-manager`. For inline clusters (no Services GCP), App GKE runs the same `gcloud` command in `null_resource.enable_secret_manager_addon`. A **separate** `null_resource.enable_secret_sync_addon` then runs `gcloud beta container clusters update --enable-secret-sync` (requires GKE 1.33+) to install the Secret Manager Sync controller that materialises native Kubernetes Secrets from CSI-mounted files.
 *   **120 s propagation wait**: `time_sleep.wait_for_secret_manager_addon` blocks for 120 seconds after the addon is enabled so the CSI driver DaemonSet is ready on every Autopilot node before `SecretProviderClass` resources are applied.
 *   **Plan-time CRD guard**: `data.external.csi_driver_crd_installed` probes the live cluster using `kubectl get crd secretproviderclasses.secrets-store.csi.x-k8s.io`. When the CRD is absent, `SecretProviderClass` and `SecretSync` resources are excluded from the plan (`count = csi_driver_crd_ready && sm_backed_secret_count > 0 ? 1 : 0`). A second apply materialises them.
 *   **`sm_backed_secret_count`**: Counts secrets that must be backed by the CSI driver (i.e. not preset "explicit" values). The filter uses **key-based exclusion** (`!contains(keys(local.preset_explicit_secret_values), k)`) rather than value comparison (`v != "explicit"`). This is required because the DB_PASSWORD value flows through `random_id.wrapper_deployment.hex` — an attribute unknown at plan time — making any value-comparison expression unknown, which breaks `count`/`for_each`. Filtering by key is always plan-time-safe.
@@ -216,7 +216,7 @@ When `enable_audit_logging = true`, the module enables Cloud Audit Logs beyond t
 
 *   **`google_project_iam_audit_config.all_services`**: Captures `ADMIN_READ`, `DATA_READ`, and `DATA_WRITE` for all GCP services used by the project.
 *   **Per-service overrides**: Secret Manager and Cloud KMS receive explicit `DATA_READ` / `DATA_WRITE` configs so sensitive secret and key access is always logged even if `allServices` is tuned down elsewhere.
-*   **Equivalent to `Services_GCP enable_audit_logging = true`** — safe to enable at any point; does not affect running workloads. Increases Cloud Logging storage costs.
+*   **Equivalent to `Services GCP enable_audit_logging = true`** — safe to enable at any point; does not affect running workloads. Increases Cloud Logging storage costs.
 *   **Key variable**: `enable_audit_logging` (default `false`)
 
 ---
@@ -376,7 +376,7 @@ When `enable_backup_import = true`, the module runs a `db-import` Kubernetes Job
 Controlled by `configure_service_mesh`. Behaviour differs based on whether the module owns the GKE cluster:
 
 *   **Inline cluster** (`prereq_needs_gke = true`): The module registers the cluster with GKE Fleet Hub (`google_gke_hub_membership`), enables the `servicemesh` Fleet feature, and configures per-cluster membership with `MANAGEMENT_AUTOMATIC`. Required APIs (`gkehub.googleapis.com`, `mesh.googleapis.com`, `meshconfig.googleapis.com`) are enabled automatically.
-*   **External cluster** (Services_GCP-provisioned): The namespace label `"istio.io/rev" = "asm-managed"` is applied, which signals to an already-running ASM control plane that it should inject sidecars into pods in this namespace. Full ASM control-plane management is assumed to be handled by Services_GCP.
+*   **External cluster** (Services GCP-provisioned): The namespace label `"istio.io/rev" = "asm-managed"` is applied, which signals to an already-running ASM control plane that it should inject sidecars into pods in this namespace. Full ASM control-plane management is assumed to be handled by Services GCP.
 *   **Key variable**: `configure_service_mesh` (default: `false`)
 
 ### D. Multi-Cluster Services (MCS)
@@ -385,7 +385,7 @@ Controlled by `configure_service_mesh`. Behaviour differs based on whether the m
 
 When implemented, setting `enable_multi_cluster_service = true` would enable GKE Multi-Cluster Services for the application namespace by creating a Kubernetes `ServiceExport` resource. MCS allows Kubernetes Services to be exported from one cluster and consumed by other clusters registered in the same GKE Fleet, enabling cross-cluster service discovery without requiring an external load balancer or custom DNS.
 
-*   **Prerequisites**: All participating clusters must be registered with the same GKE Fleet. Fleet registration is managed by Services_GCP or by the inline ASM provisioning path in this module (§8.C).
+*   **Prerequisites**: All participating clusters must be registered with the same GKE Fleet. Fleet registration is managed by Services GCP or by the inline ASM provisioning path in this module (§8.C).
 *   **DNS**: Exported services become reachable at `<service>.<namespace>.svc.clusterset.local` from any cluster in the fleet.
 *   **Use case**: Multi-region deployments where a service in one region must call a service in another region using a stable internal name, without traversing a public load balancer.
 *   **Key variable**: `enable_multi_cluster_service` *(accepted but not referenced — no effect on current deployment)*
@@ -394,22 +394,22 @@ When implemented, setting `enable_multi_cluster_service = true` would enable GKE
 
 ## 9. Inline Infrastructure Provisioning
 
-When no Services_GCP dependency is detected, the module is fully self-contained and provisions its own infrastructure stack. This mode is activated when the discovery scripts find no existing VPC, GKE cluster, NFS server, or Cloud SQL instance in the project.
+When no Services GCP dependency is detected, the module is fully self-contained and provisions its own infrastructure stack. This mode is activated when the discovery scripts find no existing VPC, GKE cluster, NFS server, or Cloud SQL instance in the project.
 
 **Resources provisioned inline:**
 
 | Resource | Terraform resource | Condition |
 |---|---|---|
-| VPC network + subnets | `google_compute_network`, `google_compute_subnetwork` | No Services_GCP VPC found |
-| Cloud Router + Cloud NAT | `google_compute_router`, `google_compute_router_nat` | No Services_GCP VPC found |
+| VPC network + subnets | `google_compute_network`, `google_compute_subnetwork` | No Services GCP VPC found |
+| Cloud Router + Cloud NAT | `google_compute_router`, `google_compute_router_nat` | No Services GCP VPC found |
 | GKE Autopilot cluster | `google_container_cluster.inline_gke` | `prereq_needs_gke = true` |
 | NFS server (GCE MIG) | `google_compute_instance_group_manager` + `google_compute_instance_template` | No existing NFS server found (`prereq_needs_nfs = true`) |
 | Cloud SQL — PostgreSQL | `google_sql_database_instance.inline_postgres` | `prereq_needs_postgres = true` |
 | Cloud SQL — MySQL | `google_sql_database_instance.inline_mysql` | `prereq_needs_mysql = true` |
 | ASM via Fleet Hub | `google_gke_hub_membership`, `google_gke_hub_feature` | `configure_service_mesh = true` and inline GKE |
-| PSA connection | `null_resource.inline_psa` (via `gcloud services vpc-peerings connect`) | No Services_GCP VPC found |
-| PSA subnet-route export | `null_resource.inline_psa_subnet_routes` | No Services_GCP VPC found |
-| Service Networking service agent | `google_project_service_identity.servicenetworking_sa`, `google_project_iam_member.servicenetworking_service_agent` | No Services_GCP VPC found (PSA connection required) |
+| PSA connection | `null_resource.inline_psa` (via `gcloud services vpc-peerings connect`) | No Services GCP VPC found |
+| PSA subnet-route export | `null_resource.inline_psa_subnet_routes` | No Services GCP VPC found |
+| Service Networking service agent | `google_project_service_identity.servicenetworking_sa`, `google_project_iam_member.servicenetworking_service_agent` | No Services GCP VPC found (PSA connection required) |
 
 **Startup sequencing**: After the GKE cluster reports `RUNNING`, a `time_sleep` of 90 seconds (`wait_for_gke_api`) ensures the Autopilot control plane is fully reachable before any Kubernetes resources are created. This prevents transient `connection refused` errors during initial cluster warm-up.
 
@@ -422,7 +422,7 @@ When no Services_GCP dependency is detected, the module is fully self-contained 
 
 **PSA service agent**: GCP auto-grants `roles/servicenetworking.serviceAgent` when `servicenetworking.googleapis.com` is enabled, but the grant is asynchronous and can lag beyond the 60 s API-enablement wait on fresh projects. The module explicitly provisions `google_project_service_identity.servicenetworking_sa` and then grants `google_project_iam_member.servicenetworking_service_agent` before `null_resource.inline_psa` (the PSA connection resource — see below) is created, eliminating the race condition.
 
-**`prereq_sql_network_self_link`**: A local that resolves the correct VPC self-link for inline Cloud SQL Private Service Access. When Services_GCP is deployed, its discovered network is used; otherwise the inline VPC is referenced. This prevents an "invalid index" error when deploying into a Services_GCP project where `google_compute_network.inline_vpc` is never created.
+**`prereq_sql_network_self_link`**: A local that resolves the correct VPC self-link for inline Cloud SQL Private Service Access. When Services GCP is deployed, its discovered network is used; otherwise the inline VPC is referenced. This prevents an "invalid index" error when deploying into a Services GCP project where `google_compute_network.inline_vpc` is never created.
 
 **Destroy ordering**: `kubernetes_namespace_v1.app` declares an explicit `depends_on` on `google_container_cluster.inline_gke`. This reverses on destroy so Terraform deletes the namespace (and all Kubernetes resources within it) before deleting the cluster, avoiding `connection refused` errors when the Kubernetes provider loses its API endpoint mid-destroy.
 
@@ -466,7 +466,7 @@ These variables are consumed by the platform UI / billing system and do not affe
 |---|---|---|---|
 | `module_description` | `string` | (long default) | Human-readable description of the module's purpose |
 | `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/applications/gke-app"` | URL to external documentation |
-| `module_dependency` | `list(string)` | `["Services_GCP"]` | Other modules that must be deployed first |
+| `module_dependency` | `list(string)` | `["Services GCP"]` | Other modules that must be deployed first |
 | `module_services` | `list(string)` | (long list) | GCP services consumed by this module |
 | `credit_cost` | `number` | `100` | Platform credits consumed on deployment |
 | `require_credit_purchases` | `bool` | `true` | Enforce credit balance check before deployment |
@@ -479,14 +479,14 @@ These variables are consumed by the platform UI / billing system and do not affe
 |---|---|---|---|
 | `project_id` | `string` | required | GCP project ID for all resources |
 | `application_name` | `string` | `"gkeapp"` | Internal app name; used in resource naming |
-| `application_display_name` | `string` | `"App_GKE Application"` | Human-readable name shown in UI and dashboards |
-| `application_description` | `string` | `"App_GKE Custom Application..."` | Brief description of the application's purpose |
+| `application_display_name` | `string` | `"App GKE Application"` | Human-readable name shown in UI and dashboards |
+| `application_description` | `string` | `"App GKE Custom Application..."` | Brief description of the application's purpose |
 | `application_version` | `string` | `"1.0.0"` | Version tag applied to the container image |
 | `tenant_deployment_id` | `string` | `"demo"` | Deployment environment suffix (e.g. `prod`, `dev`) |
 | `deployment_id` | `string` | `""` | Optional deployment ID; auto-generated if empty |
 | `support_users` | `list(string)` | `[]` | Email addresses of monitoring alert recipients |
 | `resource_labels` | `map(string)` | `{}` | Common labels applied to all resources |
-| `fallback_region` | `string` | `"us-central1"` | GCP region used when no Services_GCP subnet mapping can be auto-discovered |
+| `fallback_region` | `string` | `"us-central1"` | GCP region used when no Services GCP subnet mapping can be auto-discovered |
 | `impersonation_service_account` | `string` | `""` | Service account email to impersonate in discovery / mirror scripts (cross-project deployments) |
 | `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform to create resources |
 | `explicit_secret_values` | `map(string)` | `{}` | Raw secret values provided directly by a wrapper module; bypasses plan-time Secret Manager lookups |
@@ -541,9 +541,9 @@ These variables are consumed by the platform UI / billing system and do not affe
 | `sql_instance_name` | `string` | `""` | Target an existing Cloud SQL instance by name |
 | `database_password_length` | `number` | `32` | Length of the generated DB password (16–64) |
 | `db_password_env_var_name` | `string` | `""` | Additional env var name alongside `DB_PASSWORD` for apps that expect a non-standard name (e.g. `"WORDPRESS_DB_PASSWORD"`) |
-| `enable_postgres_extensions` | `bool` | `false` | Enable installation of PostgreSQL extensions after DB provisioning. **Not referenced in deployment resources** — used for input validation only when deploying App_GKE standalone. The extension flag and list flow from the application module configuration when called from a wrapper module. |
+| `enable_postgres_extensions` | `bool` | `false` | Enable installation of PostgreSQL extensions after DB provisioning. **Not referenced in deployment resources** — used for input validation only when deploying App GKE standalone. The extension flag and list flow from the application module configuration when called from a wrapper module. |
 | `postgres_extensions` | `list(string)` | `[]` | PostgreSQL extensions to install (e.g. `['postgis', 'uuid-ossp']`). **Not referenced directly** — the extension list is derived from the application module configuration (`local.selected_module.postgres_extensions`), not this variable. Setting it when deploying standalone has no effect. |
-| `enable_mysql_plugins` | `bool` | `false` | Enable installation of MySQL plugins after DB provisioning. **Not referenced in deployment resources** — used for input validation only when deploying App_GKE standalone. Plugin configuration flows from the application module when called from a wrapper module. |
+| `enable_mysql_plugins` | `bool` | `false` | Enable installation of MySQL plugins after DB provisioning. **Not referenced in deployment resources** — used for input validation only when deploying App GKE standalone. Plugin configuration flows from the application module when called from a wrapper module. |
 | `mysql_plugins` | `list(string)` | `[]` | MySQL plugins to install (e.g. `['audit_log']`). **Not referenced directly** — the plugin list is derived from the application module configuration (`local.selected_module.mysql_plugins`). Setting it when deploying standalone has no effect. |
 
 ### Storage (§3.C)
@@ -565,11 +565,11 @@ These variables are consumed by the platform UI / billing system and do not affe
 |---|---|---|---|
 | `gke_cluster_selection_mode` | `string` | `"primary"` | `primary`, `explicit`, or `round-robin` |
 | `gke_cluster_name` | `string` | `""` | Explicit cluster name (for `explicit` mode) |
-| `network_name` | `string` | `""` | Name of the VPC network to use. Leave empty to auto-discover a single Services_GCP-managed network |
+| `network_name` | `string` | `""` | Name of the VPC network to use. Leave empty to auto-discover a single Services GCP-managed network |
 | `network_tags` | `list(string)` | `["nfsserver"]` | Network tags applied to GKE nodes and pods for firewall targeting |
 | `enable_network_segmentation` | `bool` | `false` | Enable Kubernetes NetworkPolicies (also sets `ADVANCED_DATAPATH` on inline clusters) |
 | `namespace_name` | `string` | `""` | Kubernetes namespace (auto-generated if empty) |
-| `prereq_gke_subnet_cidr` | `string` | `"10.201.0.0/24"` | Subnet CIDR for the GKE subnet when a Services_GCP VPC exists but no GKE cluster is present |
+| `prereq_gke_subnet_cidr` | `string` | `"10.201.0.0/24"` | Subnet CIDR for the GKE subnet when a Services GCP VPC exists but no GKE cluster is present |
 | `prereq_subnet_cidr_override` | `string` | `""` | Override for the inline VPC primary subnet CIDR (pin to previously-applied value to avoid replacement) |
 | `prereq_gke_pod_cidr_override` | `string` | `""` | Override for the inline GKE pod secondary range CIDR |
 | `prereq_gke_service_cidr_override` | `string` | `""` | Override for the inline GKE service secondary range CIDR |
@@ -781,7 +781,7 @@ This section consolidates sensible starting values and the consequences of misco
 |---|---|---|---|
 | `tenant_deployment_id` | `"prod"` / `"staging"` / `"dev"` (match environment) | **Critical** | **Do not change after initial deployment.** The value is embedded in every resource name (Cloud SQL instance, GCS buckets, secrets, service accounts). Changing it causes Terraform to destroy and recreate all named resources, resulting in data loss and a new, empty database. |
 | `application_name` | Short, lowercase, hyphen-safe identifier (e.g. `"myapp"`) | **Critical** | **Do not change after initial deployment.** Embedded in Kubernetes namespace, service names, and GCP resource names. Renaming orphans existing resources and creates new ones with an empty state. |
-| `fallback_region` | The GCP region where your workloads run (e.g. `"europe-west1"`) | **High** | If left as `"us-central1"` when your Services_GCP stack is in a different region, inline infrastructure (NFS VM, Cloud SQL instance, GKE cluster) is provisioned in the wrong region. Cross-region latency increases significantly; costs rise due to cross-region egress. |
+| `fallback_region` | The GCP region where your workloads run (e.g. `"europe-west1"`) | **High** | If left as `"us-central1"` when your Services GCP stack is in a different region, inline infrastructure (NFS VM, Cloud SQL instance, GKE cluster) is provisioned in the wrong region. Cross-region latency increases significantly; costs rise due to cross-region egress. |
 | `deployment_id` | `""` (auto-generate on first apply; never change) | **Critical** | Auto-generation is safe. If you set a value manually and then change it, every resource whose name includes the deployment ID is destroyed and recreated, causing complete data loss. |
 | `support_users` | List of on-call email addresses | **Medium** | Empty list suppresses all Cloud Monitoring alert emails. Outages go unnotified until a user reports them. |
 
@@ -835,7 +835,7 @@ This section consolidates sensible starting values and the consequences of misco
 
 | Variable | Sensible Default | Risk | Consequence of Incorrect Value |
 |---|---|---|---|
-| `gke_cluster_selection_mode` | `"primary"` (auto-discover the single Services_GCP cluster) | **High** | Using `"explicit"` without a valid `gke_cluster_name` causes the provider to fail at plan time with a cluster-not-found error. Using `"round-robin"` without multiple clusters in the same network deploys to a single cluster anyway (not an error, but misleading). |
+| `gke_cluster_selection_mode` | `"primary"` (auto-discover the single Services GCP cluster) | **High** | Using `"explicit"` without a valid `gke_cluster_name` causes the provider to fail at plan time with a cluster-not-found error. Using `"round-robin"` without multiple clusters in the same network deploys to a single cluster anyway (not an error, but misleading). |
 | `gke_cluster_name` | `""` (auto-discover); only set when `gke_cluster_selection_mode = "explicit"` | **High** | Wrong cluster name in `explicit` mode: Terraform targets the wrong cluster, deploying the application to the wrong environment. All Kubernetes resources are created on the wrong cluster. |
 | `enable_network_segmentation` | `false` (start without segmentation; enable after validating NetworkPolicies) | **High** | Enabling without understanding inter-namespace traffic patterns blocks legitimate pod-to-pod communication. Symptoms: database connections timeout, initialization jobs hang, health checks fail. Debug with `kubectl describe networkpolicy -n NAMESPACE`. |
 | `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` (default; only relevant when inline GKE provisioning is needed) | **Critical** | **Do not change after the inline GKE cluster has been created.** Changing the CIDR causes the existing subnet to be destroyed and recreated, which requires the GKE cluster to be recreated — resulting in complete data loss of all workloads on that cluster. |

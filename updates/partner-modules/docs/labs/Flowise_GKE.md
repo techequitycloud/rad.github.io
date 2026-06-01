@@ -46,7 +46,7 @@ This lab uses three sets of tools:
 ## Prerequisites
 
 - GCP project with billing enabled
-- `Services_GCP` module deployed (provides VPC, GKE Autopilot cluster, Cloud SQL instance, Artifact Registry)
+- `Services GCP` module deployed (provides VPC, GKE Autopilot cluster, Cloud SQL instance, Artifact Registry)
 - Access to the RAD UI with permission to deploy modules in the target GCP project
 - `gcloud` CLI authenticated (`gcloud auth application-default login`)
 - `kubectl` configured or configurable via `gcloud container clusters get-credentials`
@@ -437,7 +437,7 @@ When you have finished the lab, return to the RAD UI, navigate to your deploymen
 
 **Estimated time:** 10–20 minutes
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

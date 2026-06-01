@@ -1,6 +1,6 @@
-# Dify_Common Shared Configuration Module
+# Dify Common Shared Configuration Module
 
-The `Dify_Common` module defines the Dify LLM application platform configuration for the RAD Modules ecosystem. It is a **shared configuration module** — it creates a small set of GCP resources (Secret Manager secret) and produces `config`, `secret_ids`, `storage_buckets`, `secret_values`, and `path` outputs consumed by the platform-specific wrapper modules (`Dify_CloudRun` and `Dify_GKE`).
+The `Dify Common` module defines the Dify LLM application platform configuration for the RAD Modules ecosystem. It is a **shared configuration module** — it creates a small set of GCP resources (Secret Manager secret) and produces `config`, `secret_ids`, `storage_buckets`, `secret_values`, and `path` outputs consumed by the platform-specific wrapper modules (`Dify CloudRun` and `Dify GKE`).
 
 ## 1. Overview
 
@@ -28,9 +28,9 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 - Uses **PostgreSQL 15** with the `pgvector` extension enabled — Dify uses pgvector as its default vector store.
 - Creates **one GCP resource**: a Secret Manager secret for the `SECRET_KEY` (64-character random value).
 - Configures **three Redis connection paths**: Celery broker (db 1), Celery backend (db 1), and event bus (db 0).
-- The `GOOGLE_STORAGE_BUCKET_NAME` is set to `<resource_prefix>-storage` — this bucket is provisioned by `App_CloudRun`/`App_GKE` and used by Dify for file storage via the Google Storage driver.
+- The `GOOGLE_STORAGE_BUCKET_NAME` is set to `<resource_prefix>-storage` — this bucket is provisioned by `App CloudRun`/`App GKE` and used by Dify for file storage via the Google Storage driver.
 - The `db-init.sh` script creates the PostgreSQL database and user idempotently using `postgres:15-alpine`.
-- The `$(NFS_SERVER_IP)` placeholder in Redis configuration is resolved at runtime by `App_CloudRun`/`App_GKE` when `redis_host` is not provided.
+- The `$(NFS_SERVER_IP)` placeholder in Redis configuration is resolved at runtime by `App CloudRun`/`App GKE` when `redis_host` is not provided.
 
 ---
 
@@ -69,7 +69,7 @@ The application configuration object passed to the platform module via `applicat
 
 ### `environment_variables` (within `config`)
 
-The following environment variables are set automatically by `Dify_Common`:
+The following environment variables are set automatically by `Dify Common`:
 
 | Variable | Value | Description |
 |---|---|---|
@@ -173,7 +173,7 @@ The module directory path (`path.module`). Used by wrapper modules to resolve `s
 
 ## 4. Default Initialization Job
 
-When `initialization_jobs = []` (the default), `Dify_Common` injects a single `db-init` job:
+When `initialization_jobs = []` (the default), `Dify Common` injects a single `db-init` job:
 
 | Field | Value |
 |---|---|
@@ -194,11 +194,11 @@ Provide a non-empty `initialization_jobs` list to replace this default with cust
 
 ## 5. Redis URL Construction
 
-`Dify_Common` constructs Redis URLs based on the following logic:
+`Dify Common` constructs Redis URLs based on the following logic:
 
 1. If `enable_redis = false` — all Redis variables are set to empty strings.
 2. If `redis_host` is provided — use it directly.
 3. If `nfs_server_ip` is provided — use it as the host.
-4. Otherwise — use the `$(NFS_SERVER_IP)` placeholder, which `App_CloudRun`/`App_GKE` resolves at runtime.
+4. Otherwise — use the `$(NFS_SERVER_IP)` placeholder, which `App CloudRun`/`App GKE` resolves at runtime.
 
 When `redis_auth` is set, the auth segment is included as `:password@` in the URL. An empty `redis_auth` produces clean `redis://host:port/db` URLs without a malformed `:@` segment.

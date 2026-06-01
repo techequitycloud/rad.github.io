@@ -6,13 +6,13 @@ This document provides a comprehensive reference for the `modules/Ghost_CloudRun
 
 ## 1. Module Overview
 
-Ghost is a professional open-source publishing platform for newsletters, memberships, and content sites. `Ghost_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Ghost-specific application configuration, database initialisation, and storage configuration via `Ghost_Common`.
+Ghost is a professional open-source publishing platform for newsletters, memberships, and content sites. `Ghost CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects Ghost-specific application configuration, database initialisation, and storage configuration via `Ghost Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Node.js container, 2 vCPU / 4 Gi by default. Scale-to-zero (`min_instance_count = 0`) with `max_instance_count = 5` — both hardcoded, not user-configurable.
-*   **Data Persistence**: Cloud SQL **MySQL 8.0** (not PostgreSQL). NFS (GCE VM or Filestore) for shared content files. GCS `ghost-content` bucket auto-provisioned by `Ghost_Common`.
-*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_CloudRun`. No application-level secrets are auto-generated — Ghost manages its own internal keys.
-*   **Caching**: Redis **enabled by default** (`enable_redis = true`) — `Ghost_Common` configures Ghost's page caching backend.
+*   **Data Persistence**: Cloud SQL **MySQL 8.0** (not PostgreSQL). NFS (GCE VM or Filestore) for shared content files. GCS `ghost-content` bucket auto-provisioned by `Ghost Common`.
+*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`. No application-level secrets are auto-generated — Ghost manages its own internal keys.
+*   **Caching**: Redis **enabled by default** (`enable_redis = true`) — `Ghost Common` configures Ghost's page caching backend.
 *   **CI/CD**: Cloud Build custom image pipeline by default; Cloud Deploy progressive delivery optional.
 *   **Reliability**: Health probes target `/` (Ghost's root path) with 90-second initial delay to accommodate database migrations and theme compilation on first boot.
 
@@ -25,13 +25,13 @@ Ghost is a professional open-source publishing platform for newsletters, members
 | `support_users` | 1 | `list(string)` | `[]` | Email recipients for monitoring alerts. |
 | `resource_labels` | 1 | `map(string)` | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 2 | `string` | `'ghost'` | Base resource name. Do not change after initial deployment. |
-| `display_name` | 2 | `string` | `'Ghost Publishing'` | Human-readable name shown in the GCP Console. Maps to `application_display_name` in `App_CloudRun`. |
-| `description` | 2 | `string` | `'Ghost - Professional publishing platform'` | Cloud Run service description. Passed to `Ghost_Common`. |
+| `display_name` | 2 | `string` | `'Ghost Publishing'` | Human-readable name shown in the GCP Console. Maps to `application_display_name` in `App CloudRun`. |
+| `description` | 2 | `string` | `'Ghost - Professional publishing platform'` | Cloud Run service description. Passed to `Ghost Common`. |
 | `application_version` | 2 | `string` | `'6.14.0'` | Ghost image version tag. Increment to deploy a new release. |
 
-**Wrapper architecture:** `Ghost_CloudRun` calls `Ghost_Common` to build an `application_config` object containing Ghost-specific environment variables, probe configuration, and the `db-init` job definition. `Ghost_CloudRun` hardcodes `database__client = "mysql"` into the merged config to ensure Ghost 6.x connects to MySQL rather than falling back to SQLite. `module_storage_buckets` carries the `ghost-content` bucket provisioned by `Ghost_Common`. `scripts_dir` is resolved to `abspath("${module.ghost_app.path}/scripts")` at apply time.
+**Wrapper architecture:** `Ghost CloudRun` calls `Ghost Common` to build an `application_config` object containing Ghost-specific environment variables, probe configuration, and the `db-init` job definition. `Ghost CloudRun` hardcodes `database__client = "mysql"` into the merged config to ensure Ghost 6.x connects to MySQL rather than falling back to SQLite. `module_storage_buckets` carries the `ghost-content` bucket provisioned by `Ghost Common`. `scripts_dir` is resolved to `abspath("${module.ghost_app.path}/scripts")` at apply time.
 
-**MySQL note:** Unlike every other module in this repo, Ghost requires **MySQL 8.0**, not PostgreSQL. `database_type = "MYSQL_8_0"` is fixed by `Ghost_Common` and cannot be overridden.
+**MySQL note:** Unlike every other module in this repo, Ghost requires **MySQL 8.0**, not PostgreSQL. `database_type = "MYSQL_8_0"` is fixed by `Ghost Common` and cannot be overridden.
 
 ---
 
@@ -39,11 +39,11 @@ Ghost is a professional open-source publishing platform for newsletters, members
 
 `Ghost_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in [App_CloudRun §2](../App_CloudRun/App_CloudRun.md#2-iam--access-control).
 
-**No application-level secrets:** Unlike Directus or Django, `Ghost_Common` does not auto-generate application secrets (no equivalent of `SECRET_KEY` or `DIRECTUS_KEY`). Ghost manages its own internal signing keys at runtime. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App_CloudRun` and consumed by the `db-init` job.
+**No application-level secrets:** Unlike Directus or Django, `Ghost Common` does not auto-generate application secrets (no equivalent of `SECRET_KEY` or `DIRECTUS_KEY`). Ghost manages its own internal signing keys at runtime. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App CloudRun` and consumed by the `db-init` job.
 
 **Database initialisation identity:** The `db-init` Cloud Run Job runs under the Cloud Run SA. It connects to Cloud SQL MySQL via the Auth Proxy Unix socket (since `enable_cloudsql_volume = true` by default), using `DB_HOST` (the socket path under `/cloudsql`), `DB_USER`, and `ROOT_PASSWORD` (from Secret Manager).
 
-**120-second IAM propagation delay:** Inherited from `App_CloudRun` — the Ghost service is not deployed until the delay completes, preventing secret-read failures on the first revision start.
+**120-second IAM propagation delay:** Inherited from `App CloudRun` — the Ghost service is not deployed until the delay completes, preventing secret-read failures on the first revision start.
 
 For the complete role tables and IAP, password rotation, and public access details, see [App_CloudRun §2](../App_CloudRun/App_CloudRun.md#2-iam--access-control).
 
@@ -53,11 +53,11 @@ For the complete role tables and IAP, password rotation, and public access detai
 
 ### A. Compute (Cloud Run)
 
-Ghost is a Node.js application with significant resource requirements — it runs database migrations, compiles themes, and initialises membership features on startup. `Ghost_CloudRun` exposes `cpu_limit` and `memory_limit` as dedicated top-level variables with production-ready defaults.
+Ghost is a Node.js application with significant resource requirements — it runs database migrations, compiles themes, and initialises membership features on startup. `Ghost CloudRun` exposes `cpu_limit` and `memory_limit` as dedicated top-level variables with production-ready defaults.
 
 **Scale-to-zero is enabled** (`min_instance_count = 0`). Ghost cold starts can take 15–30 seconds due to theme compilation and database connection setup. For production sites, set `min_instance_count = 1` by editing `main.tf` directly (see §7.A), or accept the cold start latency. `max_instance_count = 5` is hardcoded — both values are set in `main.tf` and are not user-configurable.
 
-**Startup CPU Boost** is always enabled (hardcoded in `App_CloudRun`).
+**Startup CPU Boost** is always enabled (hardcoded in `App CloudRun`).
 
 **Container image:** `container_image_source` defaults to `'custom'`, meaning Cloud Build compiles a custom image using `Ghost_Common`'s Dockerfile (extending the official `ghost` base image). Set `container_image_source = 'prebuilt'` and `container_image = 'ghost:6.14.0'` to skip the build and deploy the upstream image directly.
 
@@ -76,9 +76,9 @@ Ghost is a Node.js application with significant resource requirements — it run
 | `service_annotations` | 3 | `{}` | Advanced Cloud Run annotations. |
 | `service_labels` | 3 | `{}` | Labels applied to the Cloud Run service. |
 
-**Differences from `App_CloudRun` defaults:**
+**Differences from `App CloudRun` defaults:**
 
-| Variable | `App_CloudRun` | `Ghost_CloudRun` | Reason |
+| Variable | `App CloudRun` | `Ghost CloudRun` | Reason |
 |---|---|---|---|
 | `container_port` | `8080` | `2368` | Ghost's native port. |
 | `cpu_limit` | `'1000m'` | `'2000m'` | Ghost requires ≥2 vCPU for theme compilation and member features. |
@@ -90,11 +90,11 @@ Ghost is a Node.js application with significant resource requirements — it run
 
 ### B. Database (Cloud SQL — MySQL 8.0)
 
-Ghost requires **MySQL 8.0** — `Ghost_Common` fixes `database_type = "MYSQL_8_0"` and hardcodes `database__client = "mysql"` in the environment. PostgreSQL, SQL Server, and other engines are unsupported and will cause Ghost to fail at startup.
+Ghost requires **MySQL 8.0** — `Ghost Common` fixes `database_type = "MYSQL_8_0"` and hardcodes `database__client = "mysql"` in the environment. PostgreSQL, SQL Server, and other engines are unsupported and will cause Ghost to fail at startup.
 
-The module uses `db_name` and `db_user` in place of the `application_database_name` and `application_database_user` variables in `App_CloudRun`.
+The module uses `db_name` and `db_user` in place of the `application_database_name` and `application_database_user` variables in `App CloudRun`.
 
-**Unix socket connection:** `enable_cloudsql_volume` defaults to `true`. `App_CloudRun` injects the Auth Proxy sidecar and sets `DB_HOST` to the socket path under `/cloudsql`.
+**Unix socket connection:** `enable_cloudsql_volume` defaults to `true`. `App CloudRun` injects the Auth Proxy sidecar and sets `DB_HOST` to the socket path under `/cloudsql`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -104,19 +104,19 @@ The module uses `db_name` and `db_user` in place of the `application_database_na
 | `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. See §7.D. |
 | `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
 
-> `database_type`, `enable_postgres_extensions`, and `enable_mysql_plugins` are not exposed — Ghost only supports MySQL 8.0, and database setup is managed by `Ghost_Common`'s `db-init.sh` script. `sql_instance_name` and `sql_instance_base_name` are not exposed either; Cloud SQL discovery/inline provisioning is handled transparently by `App_CloudRun`.
+> `database_type`, `enable_postgres_extensions`, and `enable_mysql_plugins` are not exposed — Ghost only supports MySQL 8.0, and database setup is managed by `Ghost Common`'s `db-init.sh` script. `sql_instance_name` and `sql_instance_base_name` are not exposed either; Cloud SQL discovery/inline provisioning is handled transparently by `App CloudRun`.
 
 ### C. Storage (NFS & GCS)
 
 **NFS is enabled by default** (`enable_nfs = true`). Ghost stores uploaded images, themes, and other content files on the NFS share so that all Cloud Run instances access a consistent filesystem. Requires `execution_environment = 'gen2'`.
 
-**GCS content bucket:** `Ghost_Common` automatically provisions a dedicated `ghost-content` GCS bucket and configures Ghost to use it for media storage via GCS Fuse. This bucket is separate from any buckets in `storage_buckets`.
+**GCS content bucket:** `Ghost Common` automatically provisions a dedicated `ghost-content` GCS bucket and configures Ghost to use it for media storage via GCS Fuse. This bucket is separate from any buckets in `storage_buckets`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `enable_nfs` | 10 | `true` | Provisions an NFS volume for shared content files. Requires `gen2`. Set `false` if using only GCS Fuse for content storage. |
 | `nfs_mount_path` | 10 | `'/mnt/nfs'` | Container path where the NFS share is mounted. |
-| `create_cloud_storage` | 10 | `true` | Set `false` to skip additional bucket creation. The `ghost-content` bucket from `Ghost_Common` is always provisioned. |
+| `create_cloud_storage` | 10 | `true` | Set `false` to skip additional bucket creation. The `ghost-content` bucket from `Ghost Common` is always provisioned. |
 | `storage_buckets` | 10 | `[{ name_suffix = "data" }]` | Additional GCS buckets beyond the auto-provisioned content bucket. |
 | `gcs_volumes` | 10 | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). Each entry: `name`, `bucket_name`, `mount_path`, `readonly`, `mount_options`. |
 | `nfs_instance_name` | 8 | `""` | Name of an existing NFS GCE VM. Leave empty to auto-discover or use inline instance. |
@@ -133,24 +133,24 @@ Cloud Run uses Direct VPC Egress to reach Cloud SQL's internal IP. Because `enab
 | `ingress_settings` | 4 | `'all'` | `'all'` — public internet; `'internal'` — VPC only; `'internal-and-cloud-load-balancing'` — forces traffic through the HTTPS Load Balancer. |
 | `vpc_egress_setting` | 4 | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` routes only RFC 1918 traffic via VPC. `'ALL_TRAFFIC'` routes all egress via VPC. |
 
-> `network_name` is not exposed. The module auto-discovers the `Services_GCP` VPC network.
+> `network_name` is not exposed. The module auto-discovers the `Services GCP` VPC network.
 
 ### E. Initialization & Bootstrap
 
-A `db-init` Cloud Run Job is automatically provisioned by `Ghost_Common` when `initialization_jobs` is left as the default empty list (`[]`). It uses the `mysql:8.0-debian` image and executes `Ghost_Common/scripts/db-init.sh`, which performs the following idempotent operations:
+A `db-init` Cloud Run Job is automatically provisioned by `Ghost Common` when `initialization_jobs` is left as the default empty list (`[]`). It uses the `mysql:8.0-debian` image and executes `Ghost_Common/scripts/db-init.sh`, which performs the following idempotent operations:
 
 1. Connects to Cloud SQL MySQL via the Auth Proxy Unix socket.
 2. Creates the `ghost` database user with the password from Secret Manager.
 3. Creates the `ghost` database if it does not exist.
 4. Grants the `ghost` user full privileges on the database.
 
-Override `initialization_jobs` with a non-empty list to replace this default with custom jobs. When `initialization_jobs` is non-empty, `Ghost_Common` does not inject the default `db-init` job.
+Override `initialization_jobs` with a non-empty list to replace this default with custom jobs. When `initialization_jobs` is non-empty, `Ghost Common` does not inject the default `db-init` job.
 
 Additional recurring cron jobs can be defined via `cron_jobs`:
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Ghost_Common` to supply the default `db-init` job. Non-empty list replaces it entirely. Each entry: `name`, `description`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `execution_mode`, `mount_nfs`, `mount_gcs_volumes`, `depends_on_jobs`, `execute_on_apply`, `script_path`. |
+| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Ghost Common` to supply the default `db-init` job. Non-empty list replaces it entirely. Each entry: `name`, `description`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `execution_mode`, `mount_nfs`, `mount_gcs_volumes`, `depends_on_jobs`, `execute_on_apply`, `script_path`. |
 | `cron_jobs` | 12 | `[]` | Recurring jobs triggered by Cloud Scheduler. Each entry: `name`, `schedule` (cron UTC), `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `parallelism`, `mount_nfs`, `mount_gcs_volumes`, `script_path`, `paused`. |
 
 **Backup Import:** If `enable_backup_import = true`, a dedicated Cloud Run Job restores a backup into the MySQL database during the apply. See §8.C for all backup variables.
@@ -161,7 +161,7 @@ Additional recurring cron jobs can be defined via `cron_jobs`:
 
 ### A. Cloud Armor WAF
 
-Identical behaviour to `App_CloudRun`. When `enable_cloud_armor = true`, a Global HTTPS Load Balancer with a Cloud Armor WAF policy (OWASP Top 10, adaptive DDoS, 500 req/min rate limiting) is provisioned in front of Cloud Run.
+Identical behaviour to `App CloudRun`. When `enable_cloud_armor = true`, a Global HTTPS Load Balancer with a Cloud Armor WAF policy (OWASP Top 10, adaptive DDoS, 500 req/min rate limiting) is provisioned in front of Cloud Run.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -182,7 +182,7 @@ See [App_CloudRun §4.B](../App_CloudRun/App_CloudRun.md#b-identity-aware-proxy-
 
 ### C. Binary Authorization
 
-Identical to `App_CloudRun`. When `enable_binary_authorization = true`, Cloud Run enforces that deployed images carry a valid cryptographic attestation.
+Identical to `App CloudRun`. When `enable_binary_authorization = true`, Cloud Run enforces that deployed images carry a valid cryptographic attestation.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -190,7 +190,7 @@ Identical to `App_CloudRun`. When `enable_binary_authorization = true`, Cloud Ru
 
 ### D. VPC Service Controls
 
-Identical to `App_CloudRun`. When `enable_vpc_sc = true`, all GCP API calls from this module are bound within an existing VPC-SC perimeter.
+Identical to `App CloudRun`. When `enable_vpc_sc = true`, all GCP API calls from this module are bound within an existing VPC-SC perimeter.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -200,7 +200,7 @@ Identical to `App_CloudRun`. When `enable_vpc_sc = true`, all GCP API calls from
 
 Ghost application secrets are stored in Secret Manager and injected natively by Cloud Run at revision start — plaintext is never written to Terraform state.
 
-Unlike Directus or Django, `Ghost_Common` does not auto-generate application-level secrets. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App_CloudRun`. User-defined secrets can be added via `secret_environment_variables`.
+Unlike Directus or Django, `Ghost Common` does not auto-generate application-level secrets. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App CloudRun`. User-defined secrets can be added via `secret_environment_variables`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -214,7 +214,7 @@ Unlike Directus or Django, `Ghost_Common` does not auto-generate application-lev
 
 ### A. HTTPS Load Balancer
 
-Identical to `App_CloudRun`. When `enable_cloud_armor = true`, a Global HTTPS Load Balancer backed by a Serverless NEG is provisioned. Traffic flows: Internet → Cloud Armor → Global HTTPS LB → Serverless NEG → Cloud Run.
+Identical to `App CloudRun`. When `enable_cloud_armor = true`, a Global HTTPS Load Balancer backed by a Serverless NEG is provisioned. Traffic flows: Internet → Cloud Armor → Global HTTPS LB → Serverless NEG → Cloud Run.
 
 Setting `ingress_settings = 'internal-and-cloud-load-balancing'` forces all Ghost traffic through the LB, preventing direct `*.run.app` URL access.
 
@@ -249,7 +249,7 @@ After the first apply, retrieve the LB IP from the Terraform output `load_balanc
 
 ### A. Cloud Build Triggers
 
-Identical to `App_CloudRun`. When `enable_cicd_trigger = true`, a Cloud Build GitHub connection and push trigger are provisioned. The trigger builds and deploys a custom Ghost image when code is pushed to the configured branch.
+Identical to `App CloudRun`. When `enable_cicd_trigger = true`, a Cloud Build GitHub connection and push trigger are provisioned. The trigger builds and deploys a custom Ghost image when code is pushed to the configured branch.
 
 **Typical use case:** The default `container_image_source = 'custom'` already uses Cloud Build to build a Ghost image with `Ghost_Common`'s Dockerfile. Enabling a CI/CD trigger automates this pipeline on repository push — useful when Ghost themes, plugins, or configuration are maintained in source control.
 
@@ -282,7 +282,7 @@ See [App_CloudRun §6.B](../App_CloudRun/App_CloudRun.md#b-cloud-deploy-pipeline
 
 Ghost uses Redis-backed page caching, so multiple instances can serve requests without cache inconsistency. Session management uses database-backed or cookie-based sessions, making horizontal scaling safe.
 
-> To change instance counts, you must modify `main.tf` directly (the merge block in the `locals` section) or deploy via `App_CloudRun` with a custom `application_config`.
+> To change instance counts, you must modify `main.tf` directly (the merge block in the `locals` section) or deploy via `App CloudRun` with a custom `application_config`.
 
 ### B. Traffic Splitting
 
@@ -307,9 +307,9 @@ Ghost does not expose a dedicated health endpoint. Both the startup and liveness
 | `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. Alerts notify `support_users` if unreachable. |
 | `alert_policies` | 13 | `[]` | Cloud Monitoring metric alert policies. Each: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
 
-**Differences from `App_CloudRun` probe defaults:**
+**Differences from `App CloudRun` probe defaults:**
 
-| Field | `App_CloudRun` | `Ghost_CloudRun` | Reason |
+| Field | `App CloudRun` | `Ghost CloudRun` | Reason |
 |---|---|---|---|
 | `path` | `/healthz` | `/` | Ghost has no `/healthz` endpoint; root returns HTTP 200 when ready. |
 | Startup `initial_delay_seconds` | `10` | `90` | Ghost runs DB migrations + theme compilation before accepting traffic. |
@@ -318,7 +318,7 @@ Ghost does not expose a dedicated health endpoint. Both the startup and liveness
 
 ### D. Auto Password Rotation
 
-When `enable_auto_password_rotation = true`, a zero-downtime password rotation pipeline is provisioned identically to `App_CloudRun`:
+When `enable_auto_password_rotation = true`, a zero-downtime password rotation pipeline is provisioned identically to `App CloudRun`:
 
 1. Secret Manager emits a rotation notification at every `secret_rotation_period` interval.
 2. Eventarc fires a Cloud Run rotation Job.
@@ -339,7 +339,7 @@ Ghost re-establishes its database connection on restart and reads the updated `D
 
 ### A. Redis Cache
 
-Redis is **enabled by default** (`enable_redis = true`). `Ghost_Common` configures Ghost's caching backend to use Redis, significantly reducing database query load and improving page delivery speed under concurrent traffic.
+Redis is **enabled by default** (`enable_redis = true`). `Ghost Common` configures Ghost's caching backend to use Redis, significantly reducing database query load and improving page delivery speed under concurrent traffic.
 
 When `enable_redis = true` and `redis_host` is not provided, the module defaults to using the NFS server IP as the Redis host (a lightweight Redis instance co-located on the NFS GCE VM). For production deployments, point `redis_host` at a dedicated Google Cloud Memorystore for Redis instance.
 
@@ -350,7 +350,7 @@ When `enable_redis = true` and `redis_host` is not provided, the module defaults
 | `redis_port` | 21 | `'6379'` | Redis server TCP port (string). |
 | `redis_auth` | 21 | `""` | Redis AUTH password. Leave empty if the Redis instance does not require authentication. Sensitive — never stored in state. |
 
-> Note: Redis is in **group 21** in `Ghost_CloudRun` (vs group 10 in `App_CloudRun`).
+> Note: Redis is in **group 21** in `Ghost CloudRun` (vs group 10 in `App CloudRun`).
 
 ### B. Email (SMTP)
 
@@ -404,14 +404,14 @@ When `enable_backup_import = true`, a dedicated Cloud Run Job restores an existi
 | `backup_retention_days` | 6 | `7` | Days to retain backup files in GCS. |
 | `enable_backup_import` | 6 | `false` | Triggers a one-time restore on apply. Set `false` after a successful import. |
 | `backup_source` | 6 | `'gcs'` | `'gcs'` (full GCS URI) or `'gdrive'` (Drive file ID). |
-| `backup_uri` | 6 | `""` | Full GCS URI (e.g., `'gs://my-bucket/ghost-2024-01.sql'`) or Google Drive file ID. Maps to `backup_file` in `App_CloudRun`. |
+| `backup_uri` | 6 | `""` | Full GCS URI (e.g., `'gs://my-bucket/ghost-2024-01.sql'`) or Google Drive file ID. Maps to `backup_file` in `App CloudRun`. |
 | `backup_format` | 6 | `'sql'` | Backup file format. Options: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
 
 > **Warning:** If the database already contains data, the import may produce errors. Test in a non-production environment before importing into production.
 
 ### D. Observability & Alerting
 
-Observability is identical to `App_CloudRun`. A Cloud Monitoring uptime check polls the Ghost endpoint from multiple global locations. Custom alert policies can monitor Cloud Run metrics (latency, error rate, instance count) and notify `support_users`.
+Observability is identical to `App CloudRun`. A Cloud Monitoring uptime check polls the Ghost endpoint from multiple global locations. Custom alert policies can monitor Cloud Run metrics (latency, error rate, instance count) and notify `support_users`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -423,20 +423,20 @@ Observability is identical to `App_CloudRun`. A Cloud Monitoring uptime check po
 
 ## 9. Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `Ghost_CloudRun` regardless of variable values. They cannot be overridden via `tfvars`.
+The following behaviours are applied automatically by `Ghost CloudRun` regardless of variable values. They cannot be overridden via `tfvars`.
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| **MySQL 8.0 required** | `database_type = "MYSQL_8_0"` fixed by `Ghost_Common` | Ghost 6.x only supports MySQL. PostgreSQL is not supported. |
+| **MySQL 8.0 required** | `database_type = "MYSQL_8_0"` fixed by `Ghost Common` | Ghost 6.x only supports MySQL. PostgreSQL is not supported. |
 | **MySQL client forced** | `database__client = "mysql"` hardcoded in `main.tf` | Without this, Ghost 6.x silently falls back to SQLite even when all other database connection variables are present. |
 | **Scale limits fixed** | `min_instance_count = 0`, `max_instance_count = 5` hardcoded in `main.tf` | Not user-configurable via `tfvars`. Modify `main.tf` directly (the `locals` merge block) if different values are required. |
-| **GCS content bucket** | `ghost-content` bucket provisioned by `Ghost_Common` via `module_storage_buckets` | A dedicated GCS bucket for Ghost content is provisioned separately from `storage_buckets`. |
+| **GCS content bucket** | `ghost-content` bucket provisioned by `Ghost Common` via `module_storage_buckets` | A dedicated GCS bucket for Ghost content is provisioned separately from `storage_buckets`. |
 | **Unix socket by default** | `enable_cloudsql_volume = true` default | Ghost connects to Cloud SQL via the Auth Proxy Unix socket. Set `false` for TCP. |
 | **NFS enabled by default** | `enable_nfs = true` default | NFS shared storage is provisioned for Ghost content files. Requires `execution_environment = 'gen2'`. |
 | **Redis enabled by default** | `enable_redis = true` default | Unlike Django (opt-in), Ghost's Redis integration is on by default. When `redis_host` is blank, the NFS server IP is used. |
-| **Default db-init job** | Supplied by `Ghost_Common` when `initialization_jobs = []` | MySQL database and user are created automatically. Override with a non-empty `initialization_jobs` list to replace this behaviour. |
+| **Default db-init job** | Supplied by `Ghost Common` when `initialization_jobs = []` | MySQL database and user are created automatically. Override with a non-empty `initialization_jobs` list to replace this behaviour. |
 | **No auto-generated app secrets** | `module_secret_env_vars = {}` | Ghost manages its own internal signing keys. No `SECRET_KEY` or equivalent is created. |
-| **Scripts directory** | `scripts_dir = abspath("${module.ghost_app.path}/scripts")` | Initialization scripts are sourced from `Ghost_Common`, not from the deployment directory. |
+| **Scripts directory** | `scripts_dir = abspath("${module.ghost_app.path}/scripts")` | Initialization scripts are sourced from `Ghost Common`, not from the deployment directory. |
 
 **Inline infrastructure** (when no `Services_GCP` stack is present) is identical to `App_CloudRun` §9 — `App_CloudRun` provisions an inline VPC, Cloud NAT, Cloud SQL instance, service accounts, and GCP APIs as required. See [App_CloudRun §9](../App_CloudRun/App_CloudRun.md#9-inline-infrastructure-provisioning) for the full inline resource inventory and teardown notes.
 
@@ -444,7 +444,7 @@ The following behaviours are applied automatically by `Ghost_CloudRun` regardles
 
 ## 10. Variable Reference
 
-All user-configurable variables exposed by `Ghost_CloudRun`, sorted by UI group then order. Group 0 variables are reserved for platform metadata — leave them at their defaults for standard deployments.
+All user-configurable variables exposed by `Ghost CloudRun`, sorted by UI group then order. Group 0 variables are reserved for platform metadata — leave them at their defaults for standard deployments.
 
 Variables marked **[fixed]** are hardcoded by the module and cannot be overridden.
 
@@ -452,7 +452,7 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 |---|---|---|---|
 | `module_description` | 0 | (Ghost platform text) | Platform metadata: module description. |
 | `module_documentation` | 0 | (docs URL) | Platform metadata: documentation URL. |
-| `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
+| `module_dependency` | 0 | `['Services GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `50` | Platform metadata: deployment credit cost. |
 | `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
@@ -465,8 +465,8 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `support_users` | 1 | `[]` | Email addresses for monitoring alerts. |
 | `resource_labels` | 1 | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 2 | `'ghost'` | Base resource name. Do not change after initial deployment. |
-| `display_name` | 2 | `'Ghost Publishing'` | Human-readable name. Maps to `application_display_name` in `App_CloudRun`. |
-| `description` | 2 | `'Ghost - Professional publishing platform'` | Service description. Passed to `Ghost_Common`. |
+| `display_name` | 2 | `'Ghost Publishing'` | Human-readable name. Maps to `application_display_name` in `App CloudRun`. |
+| `description` | 2 | `'Ghost - Professional publishing platform'` | Service description. Passed to `Ghost Common`. |
 | `application_version` | 2 | `'6.14.0'` | Ghost container image tag. |
 | `deploy_application` | 3 | `true` | Set `false` for infrastructure-only deployment. |
 | `container_image_source` | 3 | `'custom'` | `'custom'` (Cloud Build) or `'prebuilt'` (existing image). |
@@ -499,7 +499,7 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `backup_retention_days` | 6 | `7` | Days to retain backup files in GCS. |
 | `enable_backup_import` | 6 | `false` | Triggers a one-time restore on apply. |
 | `backup_source` | 6 | `'gcs'` | `'gcs'` (full URI) or `'gdrive'` (file ID). |
-| `backup_uri` | 6 | `""` | Full GCS URI or Google Drive file ID. Maps to `backup_file` in `App_CloudRun`. |
+| `backup_uri` | 6 | `""` | Full GCS URI or Google Drive file ID. Maps to `backup_file` in `App CloudRun`. |
 | `backup_format` | 6 | `'sql'` | Backup format. Options: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
 | `enable_cicd_trigger` | 7 | `false` | Provisions a Cloud Build GitHub trigger. |
 | `github_repository_url` | 7 | `""` | Full HTTPS URL of the GitHub repository. |
@@ -534,7 +534,7 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `database_password_length` | 11 | `32` | Auto-generated password length. Range: 16–64. |
 | `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. |
 | `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
-| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Ghost_Common` to supply the default `db-init` job. Each entry: `name`, `description`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `execution_mode`, `mount_nfs`, `mount_gcs_volumes`, `depends_on_jobs`, `execute_on_apply`, `script_path`. |
+| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Ghost Common` to supply the default `db-init` job. Each entry: `name`, `description`, `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `execution_mode`, `mount_nfs`, `mount_gcs_volumes`, `depends_on_jobs`, `execute_on_apply`, `script_path`. |
 | `cron_jobs` | 12 | `[]` | Recurring scheduled Cloud Run Jobs. Each entry includes `parallelism`, `mount_nfs`, `mount_gcs_volumes`, and `script_path` fields in addition to the standard scheduling fields. |
 | `startup_probe` | 13 | `{ path="/", initial_delay_seconds=90, failure_threshold=10, ... }` | Startup probe. Long initial delay for Ghost DB migrations. |
 | `liveness_probe` | 13 | `{ path="/", initial_delay_seconds=60, failure_threshold=3, ... }` | Liveness probe. |

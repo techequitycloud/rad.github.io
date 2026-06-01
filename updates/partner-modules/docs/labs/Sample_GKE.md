@@ -6,9 +6,9 @@
 
 **Estimated time:** 1.5–2 hours
 
-This lab deploys the Sample reference application on GKE Autopilot. It is a simple Flask application that demonstrates the full App_GKE module feature set: Cloud SQL (PostgreSQL), Filestore NFS, GCS Fuse volume mounts, Redis integration, Workload Identity, Secret Manager, and Cloud Monitoring with uptime checks.
+This lab deploys the Sample reference application on GKE Autopilot. It is a simple Flask application that demonstrates the full App GKE module feature set: Cloud SQL (PostgreSQL), Filestore NFS, GCS Fuse volume mounts, Redis integration, Workload Identity, Secret Manager, and Cloud Monitoring with uptime checks.
 
-Use this module to understand typical application module patterns before building or studying production modules like Django_GKE.
+Use this module to understand typical application module patterns before building or studying production modules like Django GKE.
 
 ### What the Module Automates
 
@@ -64,7 +64,7 @@ gcloud secrets versions access latest --secret=<secret-name> --project <project>
 
 ## Prerequisites
 
-- Services_GCP deployed in the same GCP project (provides VPC, GKE Autopilot cluster, Cloud SQL, Filestore, and Artifact Registry)
+- Services GCP deployed in the same GCP project (provides VPC, GKE Autopilot cluster, Cloud SQL, Filestore, and Artifact Registry)
 - `gcloud` CLI installed and authenticated (`gcloud auth login`)
 - `kubectl` installed
 - `curl` installed
@@ -76,7 +76,7 @@ gcloud secrets versions access latest --secret=<secret-name> --project <project>
 
 ### Variables
 
-In the RAD UI, open the Sample_GKE module and fill in the deployment form:
+In the RAD UI, open the Sample GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
@@ -262,7 +262,7 @@ export DB_SECRET=$(gcloud secrets list \
 
 ## Phase 4 — Explore Module Patterns [MANUAL]
 
-This phase examines the Kubernetes resources created by the App_GKE Foundation Module to understand how application module patterns are implemented.
+This phase examines the Kubernetes resources created by the App GKE Foundation Module to understand how application module patterns are implemented.
 
 ### Steps
 
@@ -381,11 +381,11 @@ This phase examines the Kubernetes resources created by the App_GKE Foundation M
 
 When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module: the Kubernetes Deployment, Service, namespace, Cloud SQL database and user, Secret Manager secrets, Filestore NFS instance, GCS bucket, and static IP.
 
-> **Note:** The Cloud SQL instance, GKE cluster, Filestore instance, and VPC are managed by Services_GCP and are not affected.
+> **Note:** The Cloud SQL instance, GKE cluster, Filestore instance, and VPC are managed by Services GCP and are not affected.
 
 **Expected duration:** 5–10 minutes.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

@@ -4,7 +4,7 @@
 
 This lab guide walks you through the full lifecycle of deploying, configuring, and observing a
 service mesh on Google Kubernetes Engine using **Cloud Service Mesh (CSM)** — Google's managed
-distribution of Istio. You will use the **Services_GCP** and **App_GKE** modules to provision the
+distribution of Istio. You will use the **Services GCP** and **App GKE** modules to provision the
 platform, then explore traffic management, security, and observability capabilities hands-on.
 
 ---
@@ -52,7 +52,7 @@ Key capabilities:
 ### Cloud Service Mesh on GKE
 
 Google Cloud's **Cloud Service Mesh (CSM)** is a fully managed Istio control plane delivered via
-Fleet Hub. When enabled through the `Services_GCP` module, Google manages:
+Fleet Hub. When enabled through the `Services GCP` module, Google manages:
 
 - Istio installation and upgrades on the cluster
 - Certificate management and rotation (Workload Identity–based)
@@ -128,7 +128,7 @@ Module variable wiring:
 | `istioctl` | 1.20+ | `curl -L https://istio.io/downloadIstio | sh -` |
 | `curl` / `jq` | Any | System package manager |
 
-**Access to the RAD UI** with permission to deploy modules (`Services_GCP` and `App_GKE`) in the target GCP project.
+**Access to the RAD UI** with permission to deploy modules (`Services GCP` and `App GKE`) in the target GCP project.
 
 ### GCP Permissions
 
@@ -195,9 +195,9 @@ for api in \
 done
 ```
 
-### 4.2 Deploy the Platform (Services_GCP)
+### 4.2 Deploy the Platform (Services GCP)
 
-Deploy the `Services_GCP` module via the RAD UI. In the variable form, set the following key variables:
+Deploy the `Services GCP` module via the RAD UI. In the variable form, set the following key variables:
 
 | Variable | Value |
 |---|---|
@@ -214,9 +214,9 @@ Click **Deploy** and wait for provisioning to complete.
 > Multi-Cluster Ingress feature. Google's control plane automatically installs the Istio control
 > plane (`istiod`) in the `asm-system` namespace.
 
-### 4.3 Deploy the Application (App_GKE)
+### 4.3 Deploy the Application (App GKE)
 
-Deploy the `App_GKE` module via the RAD UI. In the variable form, set the following key variables:
+Deploy the `App GKE` module via the RAD UI. In the variable form, set the following key variables:
 
 | Variable | Value |
 |---|---|
@@ -344,7 +344,7 @@ injection, and inspect the injected sidecar inside a running pod.
 
 ### Step 2.1 — Verify the Namespace Label
 
-The App_GKE module sets this label when `configure_service_mesh = true`:
+The App GKE module sets this label when `configure_service_mesh = true`:
 
 ```bash
 kubectl get namespace "${APP_NAMESPACE}" --show-labels
@@ -1027,11 +1027,11 @@ Expose the mesh-enabled application externally using the **GKE Gateway API** —
 ingress layer that manages a Google Cloud L7 External Load Balancer, TLS certificates, and
 optionally Cloud Armor WAF and IAP.
 
-The App_GKE module provisions all of this via `gateway.tf` when `enable_custom_domain = true`.
+The App GKE module provisions all of this via `gateway.tf` when `enable_custom_domain = true`.
 
 ### Step 7.1 — Enable the Gateway via RAD UI Update
 
-Return to the RAD UI, navigate to your `App_GKE` deployment, update the following variables, and click **Update**:
+Return to the RAD UI, navigate to your `App GKE` deployment, update the following variables, and click **Update**:
 
 | Variable | Value |
 |---|---|
@@ -1107,7 +1107,7 @@ kubectl describe referencegrant -n "${APP_NAMESPACE}"
 Understand how Kubernetes `NetworkPolicy` resources (backed by GKE Dataplane V2) complement Istio's
 L7 enforcement with L3/L4 restrictions, creating a defence-in-depth posture.
 
-The App_GKE module creates these policies when `enable_network_segmentation = true`.
+The App GKE module creates these policies when `enable_network_segmentation = true`.
 
 ### Step 8.1 — Review the Generated NetworkPolicies
 
@@ -1224,12 +1224,12 @@ curl -s -X POST \
 Enable Cloud Armor Web Application Firewall on the GKE Gateway backend, observe OWASP Top 10
 rule enforcement, and test rate limiting.
 
-The App_GKE module creates an inline Cloud Armor security policy when `enable_cloud_armor = true`
+The App GKE module creates an inline Cloud Armor security policy when `enable_cloud_armor = true`
 and attaches it to the Gateway via `GCPBackendPolicy`.
 
 ### Step 9.1 — Enable Cloud Armor via RAD UI Update
 
-Return to the RAD UI, navigate to your `App_GKE` deployment, update the following variables, and click **Update**:
+Return to the RAD UI, navigate to your `App GKE` deployment, update the following variables, and click **Update**:
 
 | Variable | Value |
 |---|---|
@@ -1346,7 +1346,7 @@ Cluster B without any extra configuration.
 
 ### Prerequisites
 
-A second GKE cluster, or re-apply `Services_GCP` with a second cluster configuration block.
+A second GKE cluster, or re-apply `Services GCP` with a second cluster configuration block.
 
 ### Step 10.1 — Register the Second Cluster
 
@@ -1382,7 +1382,7 @@ curl -s -X POST \
 
 ### Step 10.2 — Enable CSM on the Second Cluster
 
-Via the RAD UI, update the `Services_GCP` deployment to include the second cluster in the Fleet Hub CSM feature. The module's `for_each` over `cluster_network_config` creates a Fleet Hub feature membership for every cluster automatically when `configure_cloud_service_mesh = true`.
+Via the RAD UI, update the `Services GCP` deployment to include the second cluster in the Fleet Hub CSM feature. The module's `for_each` over `cluster_network_config` creates a Fleet Hub feature membership for every cluster automatically when `configure_cloud_service_mesh = true`.
 
 Or apply the mesh feature membership directly:
 
@@ -1423,7 +1423,7 @@ kubectl get serviceentries -A
 ### Step 10.4 — Multi-Cluster Ingress
 
 When `configure_cloud_service_mesh = true` and multiple clusters are registered, the
-`Services_GCP` module creates the `multiclusteringress` Fleet feature, designating one cluster
+`Services GCP` module creates the `multiclusteringress` Fleet feature, designating one cluster
 as the config cluster:
 
 **gcloud:**
@@ -1445,10 +1445,10 @@ curl -s \
 
 When you are finished, return to the RAD UI and undeploy in the following order to avoid ongoing charges:
 
-1. Navigate to the `App_GKE` deployment and click **Undeploy** (or **Delete**).
-2. Once App_GKE is fully removed, navigate to the `Services_GCP` deployment and click **Undeploy** (or **Delete**).
+1. Navigate to the `App GKE` deployment and click **Undeploy** (or **Delete**).
+2. Once App GKE is fully removed, navigate to the `Services GCP` deployment and click **Undeploy** (or **Delete**).
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ### Manual Cleanup (if needed)
 
@@ -1493,14 +1493,14 @@ curl -s -X DELETE \
 
 ### Key Module Variables
 
-#### Services_GCP
+#### Services GCP
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `configure_cloud_service_mesh` | bool | `false` | Enables Fleet Hub Cloud Service Mesh feature with `MANAGEMENT_AUTOMATIC` |
 | `create_google_kubernetes_engine` | bool | `false` | Creates a GKE Autopilot cluster |
 
-#### App_GKE
+#### App GKE
 
 | Variable | Type | Default | Description |
 |---|---|---|---|

@@ -6,12 +6,12 @@ This document provides a comprehensive reference for the `modules/Qdrant_GKE` Te
 
 ## 1. Module Overview
 
-`Qdrant_GKE` is a **wrapper module** built on top of `App_GKE`. It deploys Qdrant — the high-performance vector database and similarity search engine — on GKE Autopilot with production-grade StatefulSet persistence, GCS FUSE storage, optional API key authentication, Workload Identity, and horizontal auto-scaling.
+`Qdrant GKE` is a **wrapper module** built on top of `App GKE`. It deploys Qdrant — the high-performance vector database and similarity search engine — on GKE Autopilot with production-grade StatefulSet persistence, GCS FUSE storage, optional API key authentication, Workload Identity, and horizontal auto-scaling.
 
 **Key Capabilities:**
 - **Compute**: GKE Autopilot, 1 vCPU / 1 Gi by default. StatefulSet or Deployment workload type.
 - **Data Persistence**: StatefulSet PVC (recommended for production) or GCS FUSE-mounted Cloud Storage bucket at `/qdrant/storage`. No Cloud SQL, no Redis.
-- **Security**: Optional API key via Secret Manager injected as `QDRANT__SERVICE__API_KEY`. Inherits Cloud Armor, IAP, and VPC-SC from `App_GKE`.
+- **Security**: Optional API key via Secret Manager injected as `QDRANT__SERVICE__API_KEY`. Inherits Cloud Armor, IAP, and VPC-SC from `App GKE`.
 - **CI/CD**: Cloud Build image pipeline by default; Cloud Deploy progressive delivery optional.
 - **Reliability**: Startup probe targets `/readyz`; liveness probe targets `/livez`. PodDisruptionBudget enabled by default.
 - **gRPC**: Disabled by default. Enable via `environment_variables = { QDRANT__SERVICE__GRPC_PORT = "6334" }` and configure a second Service port manually.
@@ -34,9 +34,9 @@ This document provides a comprehensive reference for the `modules/Qdrant_GKE` Te
 
 ## 2. IAM & Access Control
 
-`Qdrant_GKE` delegates all IAM provisioning to `App_GKE`. Workload Identity is used — the Kubernetes service account is bound to a GCP service account with the minimum required roles (GCS read/write for the storage bucket, Secret Manager accessor for the API key).
+`Qdrant GKE` delegates all IAM provisioning to `App GKE`. Workload Identity is used — the Kubernetes service account is bound to a GCP service account with the minimum required roles (GCS read/write for the storage bucket, Secret Manager accessor for the API key).
 
-**API key:** When `enable_api_key = true`, `Qdrant_Common` generates a 32-character API key and stores it in Secret Manager as `<prefix>-api-key`. It is injected as `QDRANT__SERVICE__API_KEY`. All REST and gRPC calls must include `api-key: <key>` in the request header/metadata.
+**API key:** When `enable_api_key = true`, `Qdrant Common` generates a 32-character API key and stores it in Secret Manager as `<prefix>-api-key`. It is injected as `QDRANT__SERVICE__API_KEY`. All REST and gRPC calls must include `api-key: <key>` in the request header/metadata.
 
 ---
 
@@ -86,7 +86,7 @@ For production deployments, `stateful_pvc_enabled = true` is strongly recommende
 | `stateful_update_strategy` | 7 | `null` | `'RollingUpdate'` for zero-downtime updates |
 | `stateful_fs_group` | 7 | `1000` | GID for PVC write access. Set to `0` to leave unset. |
 
-**PVC prevents GCS double-mount:** When `stateful_pvc_enabled = true`, the wrapper passes `enable_gcs_storage_volume = false` to `Qdrant_Common`, preventing the `<prefix>-storage` bucket from being mounted at `/qdrant/storage` alongside the PVC.
+**PVC prevents GCS double-mount:** When `stateful_pvc_enabled = true`, the wrapper passes `enable_gcs_storage_volume = false` to `Qdrant Common`, preventing the `<prefix>-storage` bucket from being mounted at `/qdrant/storage` alongside the PVC.
 
 ### D. Storage (GCS FUSE)
 
@@ -139,8 +139,8 @@ IAP via the Kubernetes Gateway API. Requires `enable_custom_domain` or `enable_c
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `startup_probe_config` | 10 | `{ path="/readyz", ... }` | Startup probe via `App_GKE` config interface |
-| `health_check_config` | 10 | `{ path="/livez", ... }` | Liveness probe via `App_GKE` config interface |
+| `startup_probe_config` | 10 | `{ path="/readyz", ... }` | Startup probe via `App GKE` config interface |
+| `health_check_config` | 10 | `{ path="/livez", ... }` | Liveness probe via `App GKE` config interface |
 | `startup_probe` | 10 | `{ path="/readyz", initial_delay=15, period=10, threshold=10 }` | Startup probe (legacy format) |
 | `liveness_probe` | 10 | `{ path="/livez", initial_delay=30, period=30, threshold=3 }` | Liveness probe (legacy format) |
 | `uptime_check_config` | 10 | `{ enabled=true, path="/readyz" }` | Cloud Monitoring uptime check |
@@ -164,14 +164,14 @@ IAP via the Kubernetes Gateway API. Requires `enable_custom_domain` or `enable_c
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| No SQL database | `database_type = "NONE"` fixed by `Qdrant_Common` | No Cloud SQL resources created |
+| No SQL database | `database_type = "NONE"` fixed by `Qdrant Common` | No Cloud SQL resources created |
 | No Redis | Not used | Qdrant has no caching dependency |
 | Storage path env var | `QDRANT__STORAGE__STORAGE_PATH=/qdrant/storage` always injected | Aligned with GCS FUSE / PVC mount point |
 | HTTP port env var | `QDRANT__SERVICE__HTTP_PORT=6333` always injected | Explicit port |
 | gRPC disabled by default | `QDRANT__SERVICE__GRPC_PORT` not set | Port 6334 not exposed in default Service. Enable manually via `environment_variables`. |
 | Separate liveness/readiness | Startup: `/readyz`, Liveness: `/livez` | Prevents restart loops during large collection loads |
 | StatefulSet auto-select | `stateful_pvc_enabled = true` | Automatically resolves `workload_type` to `"StatefulSet"` |
-| PVC prevents GCS double-mount | `enable_gcs_storage_volume = false` passed to `Qdrant_Common` | Prevents simultaneous PVC and GCS FUSE at `/qdrant/storage` |
+| PVC prevents GCS double-mount | `enable_gcs_storage_volume = false` passed to `Qdrant Common` | Prevents simultaneous PVC and GCS FUSE at `/qdrant/storage` |
 
 ---
 
@@ -257,7 +257,7 @@ IAP via the Kubernetes Gateway API. Requires `enable_custom_domain` or `enable_c
 | `min_instance_count` | `1` | **Medium** | Scale-to-zero on GKE (`0`) deletes the pod. After restart, Qdrant reloads indexes from PVC, which takes tens of seconds for large collections. For latency-sensitive applications, keep at `1`. |
 | `max_instance_count` | `1` | **High** | Multiple Qdrant replicas sharing a single PVC (RWO) are not supported. RWO PVCs can only be mounted by one pod at a time; scaling beyond 1 prevents additional pods from scheduling. For horizontal scaling, deploy separate Qdrant instances with collection sharding at the application level. |
 | `liveness_probe` (Common) | `/livez` | **High** | Qdrant's `/readyz` returns 503 while loading large collections. Using `/readyz` as the liveness target causes spurious restarts during collection load, which in turn triggers more reloads — a restart loop. Always use `/livez` for liveness checks. |
-| `quota_memory_requests` | `""` | **Critical** | If `enable_resource_quota = true` with a bare integer (e.g. `"4"` instead of `"4Gi"`), Kubernetes treats it as bytes, blocking all pod scheduling. Always use binary suffixes. Note: Qdrant_GKE accepts but does not forward this variable — check `App_GKE`. |
+| `quota_memory_requests` | `""` | **Critical** | If `enable_resource_quota = true` with a bare integer (e.g. `"4"` instead of `"4Gi"`), Kubernetes treats it as bytes, blocking all pod scheduling. Always use binary suffixes. Note: Qdrant GKE accepts but does not forward this variable — check `App GKE`. |
 | `application_version` | `"latest"` | **Medium** | Qdrant's storage format changes between major versions. An unexpected image change via `latest` during rebuild can make existing collections unreadable. Pin to a specific semver tag for production. |
 | `backup_schedule` | `"0 2 * * *"` | **Medium** | Qdrant collections should be snapshotted regularly via the Qdrant API or GCS Fuse volume backup. Ensure the backup job is active and tested before relying on it for production recovery. |
 | `enable_iap` | `false` | **High** | Without IAP, the GKE Ingress endpoint is accessible to any caller. Enable IAP and `enable_api_key = true` together for defense-in-depth on production deployments. |

@@ -1,4 +1,4 @@
-# Twenty_Common — Shared Application Configuration
+# Twenty Common — Shared Application Configuration
 
 This document provides a reference for the `modules/Twenty_Common` Terraform module. `Twenty_Common` is an internal shared module — it is not deployed directly. It is called by `Twenty_CloudRun` and `Twenty_GKE` to produce application configuration, manage secrets, and supply the default database initialisation job.
 
@@ -6,15 +6,15 @@ This document provides a reference for the `modules/Twenty_Common` Terraform mod
 
 ## 1. Purpose
 
-`Twenty_Common` has three responsibilities:
+`Twenty Common` has three responsibilities:
 
-1. **Configuration assembly:** Constructs the `config` output object consumed by the Foundation Module (`App_CloudRun` or `App_GKE`). This includes container image coordinates, environment variables, resource limits, probes, and the database initialisation job definition.
+1. **Configuration assembly:** Constructs the `config` output object consumed by the Foundation Module (`App CloudRun` or `App GKE`). This includes container image coordinates, environment variables, resource limits, probes, and the database initialisation job definition.
 
 2. **Secret management:** Generates and stores `APP_SECRET` in Secret Manager. Outputs the secret ID for injection into the runtime environment.
 
 3. **Storage bucket definition:** When `enable_gcs_storage = true`, outputs the GCS bucket specification that the Foundation Module provisions.
 
-`Twenty_Common` does **not** provision any GCP resources beyond secrets and the `time_sleep` propagation delay — all compute, networking, database, and storage resources are provisioned by the calling Foundation Module.
+`Twenty Common` does **not** provision any GCP resources beyond secrets and the `time_sleep` propagation delay — all compute, networking, database, and storage resources are provisioned by the calling Foundation Module.
 
 ---
 
@@ -22,11 +22,11 @@ This document provides a reference for the `modules/Twenty_Common` Terraform mod
 
 | Output | Type | Description |
 |---|---|---|
-| `config` | `object` | Full application configuration object passed to `App_CloudRun` or `App_GKE` as `application_config`. Includes image coordinates, env vars, resource limits, probes, and the db-init job. |
+| `config` | `object` | Full application configuration object passed to `App CloudRun` or `App GKE` as `application_config`. Includes image coordinates, env vars, resource limits, probes, and the db-init job. |
 | `secret_ids` | `map(string)` | Map of env var name → Secret Manager secret ID for runtime injection. Always contains `{ APP_SECRET = "<secret-id>" }`. |
-| `secret_values` | `map(string)` | Sensitive map of env var name → plaintext secret value. Used by `App_CloudRun`/`App_GKE` for explicit secret value passing where needed. |
+| `secret_values` | `map(string)` | Sensitive map of env var name → plaintext secret value. Used by `App CloudRun`/`App GKE` for explicit secret value passing where needed. |
 | `storage_buckets` | `list(object)` | GCS bucket specifications. Empty list when `enable_gcs_storage = false`. Contains the `twenty-storage` bucket spec when enabled. |
-| `path` | `string` | Absolute filesystem path to the `Twenty_Common` module directory. Used to resolve `scripts_dir`. |
+| `path` | `string` | Absolute filesystem path to the `Twenty Common` module directory. Used to resolve `scripts_dir`. |
 
 ---
 
@@ -93,7 +93,7 @@ The `config` output contains the following fields (simplified):
 
 ### APP_SECRET
 
-`Twenty_Common` generates a random 32-character alphanumeric string using `random_password` and stores it in Secret Manager:
+`Twenty Common` generates a random 32-character alphanumeric string using `random_password` and stores it in Secret Manager:
 
 - **Resource name:** `<resource_prefix>-app-secret`
 - **Secret ID key:** `APP_SECRET`
@@ -112,7 +112,7 @@ To rotate `APP_SECRET` manually, taint the `random_password.app_secret` resource
 
 ## 5. Default Initialization Job
 
-When `initialization_jobs = []` (the default), `Twenty_Common` supplies a single `db-init` job:
+When `initialization_jobs = []` (the default), `Twenty Common` supplies a single `db-init` job:
 
 ```hcl
 {
@@ -139,7 +139,7 @@ All operations are idempotent — re-running `db-init` on an existing database d
 
 ## 6. GCS Storage Bucket
 
-When `enable_gcs_storage = true`, `Twenty_Common` outputs a bucket specification:
+When `enable_gcs_storage = true`, `Twenty Common` outputs a bucket specification:
 
 ```hcl
 [
@@ -161,9 +161,9 @@ The Foundation Module provisions this bucket as `<resource_prefix>-twenty-storag
 
 ## 7. Variables
 
-`Twenty_Common` variables are internal to the module and are not user-configurable directly. They are all passed from the calling Application Module (`Twenty_CloudRun` or `Twenty_GKE`). See the calling module's `variables.tf` for the full set.
+`Twenty Common` variables are internal to the module and are not user-configurable directly. They are all passed from the calling Application Module (`Twenty CloudRun` or `Twenty GKE`). See the calling module's `variables.tf` for the full set.
 
-Key variables consumed by `Twenty_Common`:
+Key variables consumed by `Twenty Common`:
 
 | Variable | Default | Description |
 |---|---|---|

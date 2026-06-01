@@ -6,12 +6,12 @@ This document provides a comprehensive reference for the `modules/Zammad_CloudRu
 
 ## 1. Module Overview
 
-Zammad is an open-source helpdesk and customer support platform — a GDPR-compliant alternative to Zendesk and Freshdesk. `Zammad_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Zammad-specific application configuration, database initialisation, and storage configuration via `Zammad_Common`.
+Zammad is an open-source helpdesk and customer support platform — a GDPR-compliant alternative to Zendesk and Freshdesk. `Zammad CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects Zammad-specific application configuration, database initialisation, and storage configuration via `Zammad Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Rails-based container, 2 vCPU / 4 Gi by default. Scale-to-one (`min_instance_count = 1`) with `max_instance_count = 5` — configurable.
-*   **Data Persistence**: Cloud SQL **PostgreSQL 15** (required — MySQL is not supported). NFS (GCE VM or Filestore) for Zammad attachment storage at `/opt/zammad/storage`. GCS `zammad-attachments` bucket auto-provisioned by `Zammad_Common`.
-*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_CloudRun`. No application-level secrets are auto-generated — Zammad manages its own internal keys.
+*   **Data Persistence**: Cloud SQL **PostgreSQL 15** (required — MySQL is not supported). NFS (GCE VM or Filestore) for Zammad attachment storage at `/opt/zammad/storage`. GCS `zammad-attachments` bucket auto-provisioned by `Zammad Common`.
+*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`. No application-level secrets are auto-generated — Zammad manages its own internal keys.
 *   **Caching & Background Jobs**: Redis **enabled by default** (`enable_redis = true`). Zammad requires Redis for ActionCable WebSocket pub/sub and Sidekiq background job processing. Without Redis, Zammad will fail to start.
 *   **Container Build**: `container_image_source = 'custom'` by default — Cloud Build builds a custom image using `Zammad_Common`'s Dockerfile, which extends the official `zammad/zammad` Docker Hub image and adds the custom `entrypoint.sh`.
 *   **Reliability**: Health probes target `/api/v1/ping` with a 60-second initial delay. Zammad runs DB migrations on every startup — the startup probe is deliberately lenient (30 failure threshold).
@@ -25,11 +25,11 @@ Zammad is an open-source helpdesk and customer support platform — a GDPR-compl
 | `support_users` | 2 | `list(string)` | `[]` | Email recipients for monitoring alerts. |
 | `resource_labels` | 2 | `map(string)` | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 3 | `string` | `'zammad'` | Base resource name. Do not change after initial deployment. |
-| `display_name` | 3 | `string` | `'Zammad Helpdesk'` | Human-readable name shown in the GCP Console. Maps to `application_display_name` in `App_CloudRun`. |
-| `description` | 3 | `string` | `'Zammad - Open-source helpdesk and customer support platform'` | Cloud Run service description. Passed to `Zammad_Common`. |
+| `display_name` | 3 | `string` | `'Zammad Helpdesk'` | Human-readable name shown in the GCP Console. Maps to `application_display_name` in `App CloudRun`. |
+| `description` | 3 | `string` | `'Zammad - Open-source helpdesk and customer support platform'` | Cloud Run service description. Passed to `Zammad Common`. |
 | `application_version` | 3 | `string` | `'6.4.1'` | Zammad image version tag. Increment to deploy a new release. |
 
-**Wrapper architecture:** `Zammad_CloudRun` calls `Zammad_Common` to build an `application_config` object containing Zammad-specific environment variables, probe configuration, and the `db-init` job definition. `Zammad_Common` hardcodes `database_type = "POSTGRES_15"` and sets default environment variables (`POSTGRESQL_PORT`, `RAILS_ENV`, `NODE_ENV`, `ZAMMAD_RAILSSERVER_HOST`, `ZAMMAD_RAILSSERVER_PORT`, `NGINX_SERVER_NAME`). The custom `entrypoint.sh` maps Foundation-injected `DB_*` variables to Zammad's `POSTGRESQL_*` convention and runs `zammad-init` (DB migrations + seed) before starting the Rails server. `REDIS_URL` is constructed in `module_env_vars` at the application module level from `redis_host`, `redis_port`, and `redis_auth`. `module_storage_buckets` carries the `zammad-attachments` bucket provisioned by `Zammad_Common`. `scripts_dir` is resolved to `abspath("${module.zammad_app.path}/scripts")` at apply time.
+**Wrapper architecture:** `Zammad CloudRun` calls `Zammad Common` to build an `application_config` object containing Zammad-specific environment variables, probe configuration, and the `db-init` job definition. `Zammad Common` hardcodes `database_type = "POSTGRES_15"` and sets default environment variables (`POSTGRESQL_PORT`, `RAILS_ENV`, `NODE_ENV`, `ZAMMAD_RAILSSERVER_HOST`, `ZAMMAD_RAILSSERVER_PORT`, `NGINX_SERVER_NAME`). The custom `entrypoint.sh` maps Foundation-injected `DB_*` variables to Zammad's `POSTGRESQL_*` convention and runs `zammad-init` (DB migrations + seed) before starting the Rails server. `REDIS_URL` is constructed in `module_env_vars` at the application module level from `redis_host`, `redis_port`, and `redis_auth`. `module_storage_buckets` carries the `zammad-attachments` bucket provisioned by `Zammad Common`. `scripts_dir` is resolved to `abspath("${module.zammad_app.path}/scripts")` at apply time.
 
 **PostgreSQL requirement:** Zammad requires **PostgreSQL 13 or later**. MySQL is not supported and will be rejected by the `validation.tf` precondition at plan time. The default is PostgreSQL 15.
 
@@ -39,13 +39,13 @@ Zammad is an open-source helpdesk and customer support platform — a GDPR-compl
 
 `Zammad_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in [App_CloudRun §2](../App_CloudRun/App_CloudRun.md#2-iam--access-control).
 
-**No application-level secrets:** `Zammad_Common` does not auto-generate application secrets (`module_secret_env_vars = {}`). Zammad manages its own internal signing keys at runtime. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App_CloudRun` and consumed by the `db-init` job.
+**No application-level secrets:** `Zammad Common` does not auto-generate application secrets (`module_secret_env_vars = {}`). Zammad manages its own internal signing keys at runtime. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App CloudRun` and consumed by the `db-init` job.
 
 **Database initialisation identity:** The `db-init` Cloud Run Job runs under the Cloud Run SA. It uses the `postgres:15-alpine` image and connects to Cloud SQL PostgreSQL via the Auth Proxy Unix socket. The `db-init.sh` script creates the `zammad` database and user, runs the initial schema, and exits idempotently — re-running it is safe.
 
 **Redis connectivity:** When `enable_redis = true`, the `REDIS_URL` environment variable is constructed and injected at apply time. It is a plain-text value — not stored in Secret Manager. If the Redis instance requires AUTH (`redis_auth != ""`), the password is embedded in the URL. For production deployments, consider using a dedicated Memorystore for Redis instance with AUTH enabled.
 
-**120-second IAM propagation delay:** Inherited from `App_CloudRun` — the Zammad service is not deployed until the delay completes, preventing secret-read failures on the first revision start.
+**120-second IAM propagation delay:** Inherited from `App CloudRun` — the Zammad service is not deployed until the delay completes, preventing secret-read failures on the first revision start.
 
 For the complete role tables and IAP, password rotation, and public access details, see [App_CloudRun §2](../App_CloudRun/App_CloudRun.md#2-iam--access-control).
 
@@ -55,13 +55,13 @@ For the complete role tables and IAP, password rotation, and public access detai
 
 ### A. Compute (Cloud Run)
 
-Zammad is a Ruby on Rails application with substantial resource requirements. It performs DB migrations, seeds data, and initialises background worker queues on every startup. `Zammad_CloudRun` exposes `cpu_limit` and `memory_limit` as dedicated top-level variables.
+Zammad is a Ruby on Rails application with substantial resource requirements. It performs DB migrations, seeds data, and initialises background worker queues on every startup. `Zammad CloudRun` exposes `cpu_limit` and `memory_limit` as dedicated top-level variables.
 
 **Minimum memory:** Zammad 6.x requires at least 2 Gi RAM for reliable operation. The default is 4 Gi. Do not reduce below 2 Gi.
 
 **min_instance_count defaults to 1** — Zammad has a long startup time (60–90 seconds) due to DB migrations and worker initialisation. Scale-to-zero (`min_instance_count = 0`) is technically possible but results in user-visible cold starts. For production helpdesks, keep `min_instance_count = 1`.
 
-**Startup CPU Boost** is always enabled (hardcoded in `App_CloudRun`).
+**Startup CPU Boost** is always enabled (hardcoded in `App CloudRun`).
 
 **Container image:** `container_image_source` defaults to `'custom'`, meaning Cloud Build compiles a custom image using `Zammad_Common`'s Dockerfile (which wraps the official `zammad/zammad` image with the GCP-specific `entrypoint.sh`). Set `container_image_source = 'prebuilt'` and `container_image = 'zammad/zammad:6.4.1'` to skip the build and deploy the upstream image directly — however, the custom `entrypoint.sh` is then absent and `DB_*`-to-`POSTGRESQL_*` variable mapping will not occur.
 
@@ -81,9 +81,9 @@ Zammad is a Ruby on Rails application with substantial resource requirements. It
 | `service_annotations` | 4 | `{}` | Advanced Cloud Run annotations. |
 | `service_labels` | 4 | `{}` | Labels applied to the Cloud Run service. |
 
-**Differences from `App_CloudRun` defaults:**
+**Differences from `App CloudRun` defaults:**
 
-| Variable | `App_CloudRun` | `Zammad_CloudRun` | Reason |
+| Variable | `App CloudRun` | `Zammad CloudRun` | Reason |
 |---|---|---|---|
 | `container_port` | `8080` | `3000` | Zammad railsserver listens on port 3000. |
 | `cpu_limit` | `'1000m'` | `'2000m'` | Rails + Sidekiq workers require ≥2 vCPU. |
@@ -93,7 +93,7 @@ Zammad is a Ruby on Rails application with substantial resource requirements. It
 
 ### B. Database (Cloud SQL — PostgreSQL 15)
 
-Zammad requires **PostgreSQL 13 or later** — `Zammad_Common` fixes `database_type = "POSTGRES_15"` and the `validation.tf` precondition rejects any other engine at plan time. MySQL is explicitly unsupported.
+Zammad requires **PostgreSQL 13 or later** — `Zammad Common` fixes `database_type = "POSTGRES_15"` and the `validation.tf` precondition rejects any other engine at plan time. MySQL is explicitly unsupported.
 
 **Unix socket → TCP conversion:** Zammad's `docker-entrypoint.sh` checks PostgreSQL readiness using a TCP bash socket (`echo > /dev/tcp/"${POSTGRESQL_HOST}"/"${POSTGRESQL_PORT}"`). This cannot use a Unix socket path. The custom `entrypoint.sh` handles this: on Cloud Run (where `DB_HOST` is a socket path), it uses `DB_IP` (the Cloud SQL private IP) for `POSTGRESQL_HOST`. On GKE (where `DB_HOST = 127.0.0.1`), the host is used as-is.
 
@@ -106,19 +106,19 @@ Zammad requires **PostgreSQL 13 or later** — `Zammad_Common` fixes `database_t
 | `enable_auto_password_rotation` | 12 | `false` | Automated zero-downtime password rotation. See §7.D. |
 | `rotation_propagation_delay_sec` | 12 | `90` | Seconds to wait after rotation before restarting the service. |
 
-> `database_type` should not be overridden to MySQL or SQL Server — the validation precondition will reject it. `sql_instance_name` and `sql_instance_base_name` are not exposed; Cloud SQL discovery/inline provisioning is handled transparently by `App_CloudRun`.
+> `database_type` should not be overridden to MySQL or SQL Server — the validation precondition will reject it. `sql_instance_name` and `sql_instance_base_name` are not exposed; Cloud SQL discovery/inline provisioning is handled transparently by `App CloudRun`.
 
 ### C. Storage (NFS & GCS)
 
 **NFS is enabled by default** (`enable_nfs = true`). Zammad stores all ticket attachments and uploaded files in `/opt/zammad/storage`. NFS provides a shared filesystem so that all Cloud Run instances access consistent attachment data. Requires `execution_environment = 'gen2'`.
 
-**GCS attachments bucket:** `Zammad_Common` automatically provisions a dedicated `zammad-attachments` GCS bucket via `module_storage_buckets`. This bucket is separate from any buckets in `storage_buckets`.
+**GCS attachments bucket:** `Zammad Common` automatically provisions a dedicated `zammad-attachments` GCS bucket via `module_storage_buckets`. This bucket is separate from any buckets in `storage_buckets`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `enable_nfs` | 11 | `true` | Provisions an NFS volume for Zammad attachment storage at `nfs_mount_path`. Requires `gen2`. |
 | `nfs_mount_path` | 11 | `'/opt/zammad/storage'` | Container path where the NFS share is mounted. Must match Zammad's storage path. |
-| `create_cloud_storage` | 11 | `true` | Set `false` to skip additional bucket creation. The `zammad-attachments` bucket from `Zammad_Common` is always provisioned. |
+| `create_cloud_storage` | 11 | `true` | Set `false` to skip additional bucket creation. The `zammad-attachments` bucket from `Zammad Common` is always provisioned. |
 | `storage_buckets` | 11 | `[{ name_suffix = "data" }]` | Additional GCS buckets beyond the auto-provisioned attachments bucket. |
 | `gcs_volumes` | 11 | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). Each entry: `name`, `bucket_name`, `mount_path`, `readonly`, `mount_options`. |
 | `nfs_instance_name` | 11 | `""` | Name of an existing NFS GCE VM. Leave empty to auto-discover. |
@@ -135,13 +135,13 @@ Cloud Run uses Direct VPC Egress to reach Cloud SQL's internal IP. Because `enab
 | `ingress_settings` | 5 | `'all'` | `'all'` — public internet; `'internal'` — VPC only; `'internal-and-cloud-load-balancing'` — forces traffic through the HTTPS Load Balancer. |
 | `vpc_egress_setting` | 5 | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` routes only RFC 1918 traffic via VPC. `'ALL_TRAFFIC'` routes all egress via VPC (required for Memorystore Redis). |
 
-> `network_name` is not exposed. The module auto-discovers the `Services_GCP` VPC network.
+> `network_name` is not exposed. The module auto-discovers the `Services GCP` VPC network.
 
 **Redis connectivity note:** If Redis is hosted on Google Cloud Memorystore (private IP), `vpc_egress_setting` must be `'ALL_TRAFFIC'` to route outbound Redis connections through the VPC. If the NFS server IP is used (default), `'PRIVATE_RANGES_ONLY'` is sufficient.
 
 ### E. Initialization & Bootstrap
 
-A `db-init` Cloud Run Job is automatically provisioned by `Zammad_Common` when `initialization_jobs` is left as the default empty list (`[]`). It uses the `postgres:15-alpine` image and executes `Zammad_Common/scripts/db-init.sh`, which performs the following idempotent operations:
+A `db-init` Cloud Run Job is automatically provisioned by `Zammad Common` when `initialization_jobs` is left as the default empty list (`[]`). It uses the `postgres:15-alpine` image and executes `Zammad_Common/scripts/db-init.sh`, which performs the following idempotent operations:
 
 1. Connects to Cloud SQL PostgreSQL via the Auth Proxy Unix socket.
 2. Creates the `zammad` database user with the password from Secret Manager.
@@ -154,7 +154,7 @@ Override `initialization_jobs` with a non-empty list to replace the default with
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Zammad_Common` to supply the default `db-init` job. Non-empty list replaces it entirely. |
+| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Zammad Common` to supply the default `db-init` job. Non-empty list replaces it entirely. |
 | `cron_jobs` | 13 | `[]` | Recurring jobs triggered by Cloud Scheduler. Each entry: `name`, `schedule` (cron UTC), `image`, `command`, `args`, `env_vars`, `secret_env_vars`, `cpu_limit`, `memory_limit`, `timeout_seconds`, `max_retries`, `task_count`, `parallelism`, `mount_nfs`, `mount_gcs_volumes`, `script_path`, `paused`. |
 
 ---
@@ -204,7 +204,7 @@ When `enable_vpc_sc = true`, all GCP API calls from this module are bound within
 
 ### E. Secret Manager Integration
 
-Zammad secrets are stored in Secret Manager and injected natively by Cloud Run at revision start. `Zammad_Common` does not auto-generate application-level secrets (`module_secret_env_vars = {}`). The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App_CloudRun`.
+Zammad secrets are stored in Secret Manager and injected natively by Cloud Run at revision start. `Zammad Common` does not auto-generate application-level secrets (`module_secret_env_vars = {}`). The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App CloudRun`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -299,8 +299,8 @@ Zammad exposes a dedicated health endpoint at `/api/v1/ping` that returns `HTTP 
 |---|---|---|---|
 | `startup_probe` | 14 | `{ enabled=true, type="HTTP", path="/api/v1/ping", initial_delay_seconds=60, timeout_seconds=10, period_seconds=15, failure_threshold=30 }` | Startup readiness probe. Container receives no traffic until this succeeds. |
 | `liveness_probe` | 14 | `{ enabled=true, type="HTTP", path="/api/v1/ping", initial_delay_seconds=60, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe. Container is restarted after `failure_threshold` consecutive failures. |
-| `startup_probe_config` | 14 | `{ enabled=true, path="/api/v1/ping", initial_delay_seconds=60, ... }` | Service-level startup probe (forwarded to `App_CloudRun`). |
-| `health_check_config` | 14 | `{ enabled=true, path="/api/v1/ping", initial_delay_seconds=60, ... }` | Service-level liveness probe (forwarded to `App_CloudRun`). |
+| `startup_probe_config` | 14 | `{ enabled=true, path="/api/v1/ping", initial_delay_seconds=60, ... }` | Service-level startup probe (forwarded to `App CloudRun`). |
+| `health_check_config` | 14 | `{ enabled=true, path="/api/v1/ping", initial_delay_seconds=60, ... }` | Service-level liveness probe (forwarded to `App CloudRun`). |
 | `uptime_check_config` | 14 | `{ enabled=true, path="/api/v1/ping" }` | Cloud Monitoring uptime check. Alerts notify `support_users` if unreachable. |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 
@@ -393,34 +393,34 @@ When `enable_backup_import = true`, a dedicated Cloud Run Job restores an existi
 
 ## 9. Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `Zammad_CloudRun` regardless of variable values. They cannot be overridden via `tfvars`.
+The following behaviours are applied automatically by `Zammad CloudRun` regardless of variable values. They cannot be overridden via `tfvars`.
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
 | **PostgreSQL required** | Precondition in `validation.tf` | `database_type` must be `POSTGRES_13`, `POSTGRES_14`, `POSTGRES_15`, or `NONE`. Plan fails for any other value. |
-| **POSTGRES_15 default** | `database_type = "POSTGRES_15"` fixed by `Zammad_Common` | Zammad 6.x is tested against PostgreSQL 15. |
-| **Variable mapping via entrypoint** | Custom `entrypoint.sh` in `Zammad_Common` | Foundation's `DB_*` variables are mapped to Zammad's `POSTGRESQL_*` convention. On Cloud Run, `DB_IP` is used instead of the socket path for TCP readiness checks. |
+| **POSTGRES_15 default** | `database_type = "POSTGRES_15"` fixed by `Zammad Common` | Zammad 6.x is tested against PostgreSQL 15. |
+| **Variable mapping via entrypoint** | Custom `entrypoint.sh` in `Zammad Common` | Foundation's `DB_*` variables are mapped to Zammad's `POSTGRESQL_*` convention. On Cloud Run, `DB_IP` is used instead of the socket path for TCP readiness checks. |
 | **zammad-init on every start** | Runs inside `entrypoint.sh` | DB migrations and seeds run idempotently on every container start before the railsserver process begins. |
 | **REDIS_URL constructed at apply time** | `module_env_vars` in `zammad.tf` | Built from `redis_host`, `redis_port`, and `redis_auth`. Not stored in Secret Manager. |
 | **Redis validation** | Precondition in `validation.tf` | When `enable_redis = true`, either `redis_host` must be set or `enable_nfs` must be true. Prevents silent startup failure. |
-| **GCS attachments bucket** | `zammad-attachments` bucket provisioned by `Zammad_Common` via `module_storage_buckets` | Provisioned separately from `storage_buckets`. |
+| **GCS attachments bucket** | `zammad-attachments` bucket provisioned by `Zammad Common` via `module_storage_buckets` | Provisioned separately from `storage_buckets`. |
 | **NFS mount at `/opt/zammad/storage`** | `nfs_mount_path = "/opt/zammad/storage"` default | Zammad writes attachments to this path. Changing it requires a matching Zammad configuration change. |
 | **Unix socket with TCP fallback** | `enable_cloudsql_volume = true` default + `DB_IP` in entrypoint | The Auth Proxy sidecar handles Cloud SQL auth; `DB_IP` is used for the TCP readiness check that Zammad's init requires. |
-| **Default db-init job** | Supplied by `Zammad_Common` when `initialization_jobs = []` | PostgreSQL database and user are created automatically. Override with a non-empty list to replace. |
+| **Default db-init job** | Supplied by `Zammad Common` when `initialization_jobs = []` | PostgreSQL database and user are created automatically. Override with a non-empty list to replace. |
 | **No auto-generated app secrets** | `module_secret_env_vars = {}` | Zammad manages its own internal signing keys. No `SECRET_KEY` equivalent is created. |
-| **Scripts directory** | `scripts_dir = abspath("${module.zammad_app.path}/scripts")` | Initialization scripts are sourced from `Zammad_Common`, not from the deployment directory. |
+| **Scripts directory** | `scripts_dir = abspath("${module.zammad_app.path}/scripts")` | Initialization scripts are sourced from `Zammad Common`, not from the deployment directory. |
 
 ---
 
 ## 10. Variable Reference
 
-All user-configurable variables exposed by `Zammad_CloudRun`, sorted by UI group then order. Group 0 variables are reserved for platform metadata — leave them at their defaults for standard deployments.
+All user-configurable variables exposed by `Zammad CloudRun`, sorted by UI group then order. Group 0 variables are reserved for platform metadata — leave them at their defaults for standard deployments.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `module_description` | 0 | (Zammad platform text) | Platform metadata: module description. |
 | `module_documentation` | 0 | `'https://docs.radmodules.dev/docs/modules/Zammad_CloudRun'` | Platform metadata: documentation URL. |
-| `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
+| `module_dependency` | 0 | `['Services GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `50` | Platform metadata: deployment credit cost. |
 | `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
@@ -436,8 +436,8 @@ All user-configurable variables exposed by `Zammad_CloudRun`, sorted by UI group
 | `support_users` | 2 | `[]` | Email addresses for monitoring alerts. |
 | `resource_labels` | 2 | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 3 | `'zammad'` | Base resource name. Do not change after initial deployment. |
-| `display_name` | 3 | `'Zammad Helpdesk'` | Human-readable name. Maps to `application_display_name` in `App_CloudRun`. |
-| `description` | 3 | `'Zammad - Open-source helpdesk and customer support platform'` | Service description. Passed to `Zammad_Common`. |
+| `display_name` | 3 | `'Zammad Helpdesk'` | Human-readable name. Maps to `application_display_name` in `App CloudRun`. |
+| `description` | 3 | `'Zammad - Open-source helpdesk and customer support platform'` | Service description. Passed to `Zammad Common`. |
 | `application_version` | 3 | `'6.4.1'` | Zammad container image tag. Increment to trigger a new build. |
 | `deploy_application` | 4 | `true` | Set `false` for infrastructure-only deployment. |
 | `container_image_source` | 4 | `'custom'` | `'custom'` (Cloud Build) or `'prebuilt'` (existing image). |
@@ -508,12 +508,12 @@ All user-configurable variables exposed by `Zammad_CloudRun`, sorted by UI group
 | `database_password_length` | 12 | `32` | Auto-generated password length. Range: 16–64. |
 | `enable_auto_password_rotation` | 12 | `false` | Automated zero-downtime password rotation. |
 | `rotation_propagation_delay_sec` | 12 | `90` | Seconds to wait after rotation before restarting the service. |
-| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Zammad_Common` to supply the default `db-init` job. |
+| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Zammad Common` to supply the default `db-init` job. |
 | `cron_jobs` | 13 | `[]` | Recurring scheduled Cloud Run Jobs. |
 | `startup_probe` | 14 | `{ path="/api/v1/ping", initial_delay_seconds=60, failure_threshold=30, ... }` | Startup probe. Long tolerance for DB migrations. |
 | `liveness_probe` | 14 | `{ path="/api/v1/ping", initial_delay_seconds=60, failure_threshold=3, ... }` | Liveness probe. |
-| `startup_probe_config` | 14 | `{ enabled=true, path="/api/v1/ping", ... }` | Service-level startup probe (forwarded to `App_CloudRun`). |
-| `health_check_config` | 14 | `{ enabled=true, path="/api/v1/ping", ... }` | Service-level liveness probe (forwarded to `App_CloudRun`). |
+| `startup_probe_config` | 14 | `{ enabled=true, path="/api/v1/ping", ... }` | Service-level startup probe (forwarded to `App CloudRun`). |
+| `health_check_config` | 14 | `{ enabled=true, path="/api/v1/ping", ... }` | Service-level liveness probe (forwarded to `App CloudRun`). |
 | `uptime_check_config` | 14 | `{ enabled=true, path="/api/v1/ping" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 | `enable_redis` | 21 | `true` | **Required for production.** Redis for ActionCable and Sidekiq. |
@@ -558,7 +558,7 @@ All user-configurable variables exposed by `Zammad_CloudRun`, sorted by UI group
 |---|---|---|---|
 | `enable_redis` | `false` | **Critical** | Zammad requires Redis for its ActionCable real-time communication layer (live ticket updates, chat). Without Redis, the Zammad scheduler and ActionCable will fail to initialize, causing ticket status updates and agent notifications to stop working entirely. Redis is mandatory for any Zammad deployment beyond a minimal test instance. |
 | `redis_host` | `""` | **Critical** | When `enable_redis = true` and `redis_host` is empty, `REDIS_URL` is not injected into the container (the `module_env_vars` expression short-circuits). Zammad will start but all real-time features and background job processing will fail silently. Set `redis_host` to the Memorystore or Redis server IP. |
-| `database_type` | `"POSTGRES_15"` | **Critical** | Zammad 6.x requires PostgreSQL 15+. The `Zammad_Common` module hardcodes `database_type = "POSTGRES_15"`. Overriding this to MySQL causes the Zammad schema migration to fail immediately — the application will not start. |
+| `database_type` | `"POSTGRES_15"` | **Critical** | Zammad 6.x requires PostgreSQL 15+. The `Zammad Common` module hardcodes `database_type = "POSTGRES_15"`. Overriding this to MySQL causes the Zammad schema migration to fail immediately — the application will not start. |
 | `container_image_source` | `"custom"` | **Critical** | `Zammad_Common` sets `image_source = "custom"` to trigger the Cloud Build pipeline that injects `Zammad_Common`'s `entrypoint.sh`. This script maps Foundation Module `DB_*` variables to Zammad's expected `POSTGRESQL_*` variables. Using `"prebuilt"` without this entrypoint causes all database connections to fail on startup. |
 | `enable_cloudsql_volume` | `true` | **Critical** | Zammad connects to Cloud SQL via the Auth Proxy Unix socket. Disabling this removes the socket, causing all database connections to fail. Do not disable. |
 | `memory_limit` (in `container_resources`) | `"4Gi"` | **High** | Zammad's Rails application, scheduler, and ActionCable server require significant memory. Below `2Gi`, Zammad OOMs during startup or during schema migrations on first deploy. Use `4Gi` for production; the minimum viable value is `2Gi`. |

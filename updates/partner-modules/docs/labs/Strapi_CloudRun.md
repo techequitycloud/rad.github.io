@@ -46,7 +46,7 @@ This lab uses two primary interfaces:
 
 ## Prerequisites
 
-1. **Services_GCP deployed** — this module depends on `Services_GCP`. The VPC network, Cloud SQL instance, Artifact Registry, and shared service accounts must exist before deploying Strapi_CloudRun.
+1. **Services GCP deployed** — this module depends on `Services GCP`. The VPC network, Cloud SQL instance, Artifact Registry, and shared service accounts must exist before deploying Strapi CloudRun.
 2. **GCP project with billing enabled.**
 3. **gcloud CLI** authenticated: `gcloud auth application-default login`
 4. **Sufficient IAM permissions**: Owner or an equivalent custom role on the target project.
@@ -477,7 +477,7 @@ When you are finished with the lab, return to the RAD UI, navigate to your deplo
 
 **Expected result:** The Cloud Run service and jobs, Cloud SQL instance, NFS Filestore, Secret Manager secrets, GCS buckets, Artifact Registry images, and (if enabled) Cloud Armor policy and CDN configuration are all removed from the project.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

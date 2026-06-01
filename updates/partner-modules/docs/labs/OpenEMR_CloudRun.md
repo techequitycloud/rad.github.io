@@ -86,7 +86,7 @@ GET https://run.googleapis.com/v2/projects/PROJECT_ID/locations/REGION/services/
 
 Before beginning this lab, ensure the following are in place:
 
-1. **Services_GCP module deployed** — OpenEMR_CloudRun depends on `Services_GCP` for the VPC network, Cloud SQL instance, and Artifact Registry. The `module_dependency` variable confirms this: `["Services_GCP"]`.
+1. **Services GCP module deployed** — OpenEMR CloudRun depends on `Services GCP` for the VPC network, Cloud SQL instance, and Artifact Registry. The `module_dependency` variable confirms this: `["Services GCP"]`.
 2. **GCP project with billing enabled.**
 3. **`gcloud` CLI installed and authenticated** (`gcloud auth login && gcloud auth application-default login`).
 4. **Sufficient IAM permissions** — Owner or equivalent role on the target project.
@@ -569,7 +569,7 @@ The module removes all resources in reverse dependency order: Cloud Run service 
 
 > Note: `enable_purge = true` (default) allows full deletion. If set to `false`, resources are retained after undeploy. For production healthcare environments, consider setting `enable_purge = false` to protect against accidental deletion of patient data.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

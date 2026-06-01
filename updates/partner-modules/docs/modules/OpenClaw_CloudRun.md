@@ -6,26 +6,26 @@ This document provides a comprehensive reference for the `modules/OpenClaw_Cloud
 
 ## 1. Module Overview
 
-OpenClaw is a serverless, multi-tenant AI agent gateway that provides WebSocket-enabled conversational AI agents with persistent GCS-backed workspace storage. `OpenClaw_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects OpenClaw-specific application configuration, secrets, storage, and container build configuration via `OpenClaw_Common`.
+OpenClaw is a serverless, multi-tenant AI agent gateway that provides WebSocket-enabled conversational AI agents with persistent GCS-backed workspace storage. `OpenClaw CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects OpenClaw-specific application configuration, secrets, storage, and container build configuration via `OpenClaw Common`.
 
 **Key Capabilities:**
 - **Compute**: Cloud Run v2 (Gen2), custom container image built from `ghcr.io/openclaw/openclaw`, scale-to-zero by default (`min_instance_count = 0`). CPU is always allocated (`cpu_always_allocated = true`) to support WebSocket connections and async agent operations.
 - **Data Persistence**: GCS Fuse volume mounted at `/data` for durable agent workspace across container restarts. No database, no Redis — all state lives in GCS.
-- **Security**: `ANTHROPIC_API_KEY` auto-stored in Secret Manager. Optional Telegram and Slack credentials also stored in Secret Manager. Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_CloudRun`.
+- **Security**: `ANTHROPIC_API_KEY` auto-stored in Secret Manager. Optional Telegram and Slack credentials also stored in Secret Manager. Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`.
 - **Messaging**: Optional Telegram and Slack channel integration via dedicated Secret Manager secrets. Webhook/signing secrets for a companion router are stored separately and exposed as dedicated outputs.
 - **Skills Sync**: On every container startup, the entrypoint optionally clones or updates a shared GitHub skills repository into `/data/workspace/skill-library`.
 
-**Wrapper architecture:** `OpenClaw_CloudRun` calls `OpenClaw_Common` to build an `application_config` object containing the container image reference, GCS Fuse workspace volume, environment variable injection, and Secret Manager credential references. `module_secret_env_vars` carries secret IDs from `OpenClaw_Common`. `module_explicit_secret_values` carries raw credential values for initial apply propagation. `module_storage_buckets` carries the workspace GCS bucket. `scripts_dir` is resolved to `OpenClaw_Common/scripts`.
+**Wrapper architecture:** `OpenClaw CloudRun` calls `OpenClaw Common` to build an `application_config` object containing the container image reference, GCS Fuse workspace volume, environment variable injection, and Secret Manager credential references. `module_secret_env_vars` carries secret IDs from `OpenClaw Common`. `module_explicit_secret_values` carries raw credential values for initial apply propagation. `module_storage_buckets` carries the workspace GCS bucket. `scripts_dir` is resolved to `OpenClaw_Common/scripts`.
 
 ---
 
 ## 2. IAM & Access Control
 
-`OpenClaw_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, and password rotation role sets are identical to those in `App_CloudRun`.
+`OpenClaw CloudRun` delegates all IAM provisioning to `App CloudRun`. The Cloud Run SA, Cloud Build SA, and password rotation role sets are identical to those in `App CloudRun`.
 
-**OpenClaw secrets and IAM:** `OpenClaw_Common` creates Secret Manager secrets during provisioning: at minimum, `ANTHROPIC_API_KEY`, and optionally Telegram and Slack credentials. These are injected via `module_secret_env_vars`. The Cloud Run SA requires `roles/secretmanager.secretAccessor`, which is already granted by `App_CloudRun`.
+**OpenClaw secrets and IAM:** `OpenClaw Common` creates Secret Manager secrets during provisioning: at minimum, `ANTHROPIC_API_KEY`, and optionally Telegram and Slack credentials. These are injected via `module_secret_env_vars`. The Cloud Run SA requires `roles/secretmanager.secretAccessor`, which is already granted by `App CloudRun`.
 
-**GCS workspace IAM:** `OpenClaw_Common` provisions a GCS workspace bucket and grants the application SA `roles/storage.objectAdmin`. The OpenClaw container runs as UID 1000, which matches the `uid=1000,gid=1000` GCS Fuse mount options.
+**GCS workspace IAM:** `OpenClaw Common` provisions a GCS workspace bucket and grants the application SA `roles/storage.objectAdmin`. The OpenClaw container runs as UID 1000, which matches the `uid=1000,gid=1000` GCS Fuse mount options.
 
 **No database identity:** OpenClaw has no Cloud SQL dependency. The `db-init` job is not provisioned. `enable_cloudsql_volume = false` is hard-coded.
 
@@ -63,7 +63,7 @@ OpenClaw is a Node.js gateway. The default resource limits (`cpu_limit = "2000m"
 | `service_labels` | 3 | `{}` | Custom labels applied to the Cloud Run service. |
 | `enable_image_mirroring` | 3 | `true` | Mirror the built image to Artifact Registry. |
 | `container_protocol` | 3 | `"http1"` | HTTP protocol. Use `"h2c"` only if all callers support HTTP/2 cleartext. |
-| `cloudsql_volume_mount_path` | 3 | `"/cloudsql"` | Not used by OpenClaw; retained for `App_CloudRun` interface compatibility. |
+| `cloudsql_volume_mount_path` | 3 | `"/cloudsql"` | Not used by OpenClaw; retained for `App CloudRun` interface compatibility. |
 | `traffic_split` | 3 | `[]` | Percentage-based canary/blue-green traffic allocation. All entries must sum to 100. |
 | `max_revisions_to_retain` | 3 | `7` | Maximum Cloud Run revisions to keep after each deployment. |
 
@@ -83,7 +83,7 @@ The default `ingress_settings = "internal"` is intentional — the OpenClaw agen
 
 OpenClaw requires no NFS. All state is persisted via GCS Fuse at `/data`. NFS is disabled by default (`enable_nfs = false`).
 
-The workspace GCS bucket is always provisioned by `OpenClaw_Common` regardless of `create_cloud_storage` or `storage_buckets` settings.
+The workspace GCS bucket is always provisioned by `OpenClaw Common` regardless of `create_cloud_storage` or `storage_buckets` settings.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -176,7 +176,7 @@ When `enable_cloud_armor = true`, a Global HTTPS Load Balancer with a Cloud Armo
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `environment_variables` | 5 | `{}` | Plain-text environment variables. Module-managed vars (`OPENCLAW_STATE_DIR`, `XDG_CONFIG_HOME`, `NODE_ENV`, `NODE_OPTIONS`, `PORT`, `SKILLS_REPO_URL`, `SKILLS_REPO_REF`) always take precedence. |
-| `secret_environment_variables` | 5 | `{}` | Additional Secret Manager references (env var name → secret name). Anthropic, Telegram, and Slack credentials are managed automatically via `OpenClaw_Common`. |
+| `secret_environment_variables` | 5 | `{}` | Additional Secret Manager references (env var name → secret name). Anthropic, Telegram, and Slack credentials are managed automatically via `OpenClaw Common`. |
 | `secret_propagation_delay` | 5 | `30` | Seconds to wait after secret creation. Valid range: 0–300. |
 | `secret_rotation_period` | 5 | `"2592000s"` | Secret Manager rotation notification period (30 days). |
 | `enable_auto_password_rotation` | 5 | `false` | Not applicable for OpenClaw (no database). |
@@ -200,7 +200,7 @@ When `enable_cloud_armor = true`, a Global HTTPS Load Balancer with a Cloud Armo
 
 ## 8. Backup & Maintenance
 
-OpenClaw has no database — backup settings are present for interface compatibility with `App_CloudRun`.
+OpenClaw has no database — backup settings are present for interface compatibility with `App CloudRun`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -218,10 +218,10 @@ OpenClaw exposes `/health` on port 8080. All probes target this path.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `startup_probe` | 13 | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=20, timeout_seconds=5, period_seconds=5, failure_threshold=24 }` | Passed to `OpenClaw_Common`. 20s initial delay and 24-attempt threshold give ~2 minutes for GCS Fuse mount and Node.js startup. |
-| `liveness_probe` | 13 | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Passed to `OpenClaw_Common`. |
-| `startup_probe_config` | 13 | `{ enabled=true }` | Structured startup probe passed directly to `App_CloudRun`. |
-| `health_check_config` | 13 | `{ enabled=true }` | Structured liveness probe passed directly to `App_CloudRun`. |
+| `startup_probe` | 13 | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=20, timeout_seconds=5, period_seconds=5, failure_threshold=24 }` | Passed to `OpenClaw Common`. 20s initial delay and 24-attempt threshold give ~2 minutes for GCS Fuse mount and Node.js startup. |
+| `liveness_probe` | 13 | `{ enabled=true, type="HTTP", path="/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Passed to `OpenClaw Common`. |
+| `startup_probe_config` | 13 | `{ enabled=true }` | Structured startup probe passed directly to `App CloudRun`. |
+| `health_check_config` | 13 | `{ enabled=true }` | Structured liveness probe passed directly to `App CloudRun`. |
 | `uptime_check_config` | 13 | `{ enabled=true, path="/health" }` | Cloud Monitoring uptime check from multiple global locations. |
 | `alert_policies` | 13 | `[]` | Cloud Monitoring metric alert policies. |
 
@@ -244,7 +244,7 @@ OpenClaw has no default initialization job — no database setup is required.
 
 ## 11. Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `OpenClaw_CloudRun` regardless of variable values.
+The following behaviours are applied automatically by `OpenClaw CloudRun` regardless of variable values.
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
@@ -252,10 +252,10 @@ The following behaviours are applied automatically by `OpenClaw_CloudRun` regard
 | **CPU always allocated** | `cpu_always_allocated = true` in `main.tf` | Required for WebSocket connections and async agent operations. Cannot be overridden. |
 | **Gen2 execution environment** | `execution_environment = "gen2"` default | Required for GCS Fuse. Do not change to `"gen1"`. |
 | **Custom image build** | `OpenClaw_Common` sets `image_source = "custom"` | Always builds from `ghcr.io/openclaw/openclaw:<version>` with the custom `entrypoint.sh` layered on top. |
-| **GCS workspace at `/data`** | `OpenClaw_Common` appends `openclaw-data` to `gcs_volumes` | The `<prefix>-storage` bucket is always mounted at `/data` with `uid=1000,gid=1000`. |
+| **GCS workspace at `/data`** | `OpenClaw Common` appends `openclaw-data` to `gcs_volumes` | The `<prefix>-storage` bucket is always mounted at `/data` with `uid=1000,gid=1000`. |
 | **State dir on local disk** | `OPENCLAW_STATE_DIR=/tmp/openclaw` | Prevents npm staging failures caused by GCS Fuse's lack of hard-link support. Agent workspace and agent state are still on `/data`. |
 | **Internal ingress by default** | `ingress_settings = "internal"` default | The gateway is designed to be fronted by a router. Set to `"all"` for direct public access. |
-| **Anthropic secret always created** | `OpenClaw_Common` creates `<prefix>-anthropic-api-key` unconditionally | The secret resource is always created; the secret version is only written when `anthropic_api_key` is non-empty. |
+| **Anthropic secret always created** | `OpenClaw Common` creates `<prefix>-anthropic-api-key` unconditionally | The secret resource is always created; the secret version is only written when `anthropic_api_key` is non-empty. |
 | **Skills sync on startup** | `entrypoint.sh` clones or updates `SKILLS_REPO_URL` | Runs on every container start. Non-fatal — the gateway starts even if the clone fails. |
 | **Config regenerated on startup** | `entrypoint.sh` always overwrites `openclaw.json` | Ensures Terraform-managed env vars always win over stale values on the GCS volume. |
 | **Scripts directory** | `scripts_dir = abspath("${module.openclaw_app.path}/scripts")` | Points to `OpenClaw_Common/scripts`. |
@@ -270,7 +270,7 @@ Complete variable reference with UIMeta group assignments.
 |---|---|---|
 | `module_description` | 0 | *(OpenClaw CloudRun description)* |
 | `module_documentation` | 0 | `"https://docs.radmodules.dev/docs/modules/OpenClaw_CloudRun"` |
-| `module_dependency` | 0 | `["Services_GCP"]` |
+| `module_dependency` | 0 | `["Services GCP"]` |
 | `module_services` | 0 | *(GCP service list)* |
 | `credit_cost` | 0 | `50` |
 | `require_credit_purchases` | 0 | `false` |

@@ -1,4 +1,4 @@
-# Qdrant_Common
+# Qdrant Common
 
 This document provides a reference for the `modules/Qdrant_Common` internal sub-module. `Qdrant_Common` is consumed by `Qdrant_CloudRun` and `Qdrant_GKE` — it is not deployed directly.
 
@@ -6,7 +6,7 @@ This document provides a reference for the `modules/Qdrant_Common` internal sub-
 
 ## 1. Purpose
 
-`Qdrant_Common` assembles the Qdrant-specific application configuration consumed by the foundation modules (`App_CloudRun` / `App_GKE`). It provides:
+`Qdrant Common` assembles the Qdrant-specific application configuration consumed by the foundation modules (`App CloudRun` / `App GKE`). It provides:
 
 - The `config` output containing the full `qdrant_module` object (image, environment variables, resource limits, probes, storage volumes)
 - Optional Secret Manager provisioning for the Qdrant API key
@@ -18,7 +18,7 @@ This document provides a reference for the `modules/Qdrant_Common` internal sub-
 
 ## 2. Fixed Application Defaults
 
-The following values are set by `Qdrant_Common` and cannot be overridden via Application Module variables:
+The following values are set by `Qdrant Common` and cannot be overridden via Application Module variables:
 
 | Setting | Value | Notes |
 |---|---|---|
@@ -30,7 +30,7 @@ The following values are set by `Qdrant_Common` and cannot be overridden via App
 | `enable_postgres_extensions` | `false` | Not applicable |
 | `additional_services` | `[]` | No sidecar services by default |
 
-**gRPC note:** `QDRANT__SERVICE__GRPC_PORT` is intentionally **not set** by `Qdrant_Common`. Neither the default GKE ClusterIP Service nor Cloud Run expose port 6334. If gRPC is needed on GKE, set `QDRANT__SERVICE__GRPC_PORT = "6334"` via `var.environment_variables` and add a second Service port manually.
+**gRPC note:** `QDRANT__SERVICE__GRPC_PORT` is intentionally **not set** by `Qdrant Common`. Neither the default GKE ClusterIP Service nor Cloud Run expose port 6334. If gRPC is needed on GKE, set `QDRANT__SERVICE__GRPC_PORT = "6334"` via `var.environment_variables` and add a second Service port manually.
 
 ---
 
@@ -50,7 +50,7 @@ The foundation module injects `QDRANT__SERVICE__API_KEY` into the container as a
 
 ## 4. Storage Bucket
 
-`Qdrant_Common` always outputs a storage bucket definition:
+`Qdrant Common` always outputs a storage bucket definition:
 
 ```
 name_suffix: "qdrant-storage"
@@ -58,7 +58,7 @@ name: "<wrapper_prefix>-storage"
 mount_path: "/qdrant/storage"
 ```
 
-The `enable_gcs_storage_volume` variable controls whether this bucket is mounted as a GCS FUSE volume. When `Qdrant_GKE` uses a StatefulSet PVC (`stateful_pvc_enabled = true`), the wrapper passes `enable_gcs_storage_volume = false` to avoid mounting both a PVC and a GCS FUSE volume at `/qdrant/storage` simultaneously.
+The `enable_gcs_storage_volume` variable controls whether this bucket is mounted as a GCS FUSE volume. When `Qdrant GKE` uses a StatefulSet PVC (`stateful_pvc_enabled = true`), the wrapper passes `enable_gcs_storage_volume = false` to avoid mounting both a PVC and a GCS FUSE volume at `/qdrant/storage` simultaneously.
 
 The bucket location is left empty so the foundation resolves it to the auto-discovered deployment region. This matches the tested pattern for Qdrant and preserves region alignment across deployments.
 
@@ -79,7 +79,7 @@ Qdrant exposes two distinct health endpoints:
 
 ## 6. Initialization Jobs
 
-`Qdrant_Common` does **not** inject a default initialization job. Qdrant manages its own embedded storage and requires no database bootstrap. If `var.initialization_jobs` is non-empty, the jobs are passed through to the foundation after normalizing all field types.
+`Qdrant Common` does **not** inject a default initialization job. Qdrant manages its own embedded storage and requires no database bootstrap. If `var.initialization_jobs` is non-empty, the jobs are passed through to the foundation after normalizing all field types.
 
 ---
 

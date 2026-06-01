@@ -1,10 +1,10 @@
-# Strapi_Common Module
+# Strapi Common Module
 
 ## Overview
 
-`Strapi_Common` is a pure-configuration Terraform module in the RAD Modules ecosystem. It generates a `config` object consumed by platform modules (`App_CloudRun`, `App_GKE`) to deploy Strapi — an open-source headless CMS — on Google Cloud. The module provisions five GCP Secret Manager secrets (JWT signing keys, token salts, and application keys), defines one GCS bucket for media uploads, and emits all container configuration as Terraform outputs.
+`Strapi Common` is a pure-configuration Terraform module in the RAD Modules ecosystem. It generates a `config` object consumed by platform modules (`App CloudRun`, `App GKE`) to deploy Strapi — an open-source headless CMS — on Google Cloud. The module provisions five GCP Secret Manager secrets (JWT signing keys, token salts, and application keys), defines one GCS bucket for media uploads, and emits all container configuration as Terraform outputs.
 
-Strapi has specific cryptographic requirements: four distinct secrets must be consistent across restarts and instances or existing sessions and tokens become invalid. This module generates all five secrets at provision time and surfaces them through the `secret_ids` output (with a 30-second propagation wait) so that `App_CloudRun`/`App_GKE` can inject them as secret environment variables.
+Strapi has specific cryptographic requirements: four distinct secrets must be consistent across restarts and instances or existing sessions and tokens become invalid. This module generates all five secrets at provision time and surfaces them through the `secret_ids` output (with a 30-second propagation wait) so that `App CloudRun`/`App GKE` can inject them as secret environment variables.
 
 ---
 
@@ -76,7 +76,7 @@ Strapi has specific cryptographic requirements: four distinct secrets must be co
 | `config` | object | Full application configuration for App_CloudRun/App_GKE |
 | `storage_buckets` | list(object) | One bucket spec: `strapi-uploads` |
 | `secret_ids` | map(string) | Secret IDs for all 5 Strapi secrets (gated by 30s sleep) |
-| `secret_values` | map(string) (sensitive) | Plaintext secret values — used by `Strapi_GKE` to inject secrets via `explicit_secret_values` without a Secret Manager data source read |
+| `secret_values` | map(string) (sensitive) | Plaintext secret values — used by `Strapi GKE` to inject secrets via `explicit_secret_values` without a Secret Manager data source read |
 | `path` | string | Absolute path to this module directory |
 
 **`secret_ids` keys:**
@@ -181,7 +181,7 @@ The `$(NFS_SERVER_IP)` placeholder is expanded at container startup by `strapi-e
 8. Grants all privileges on the database and public schema
 9. Signals Cloud SQL Auth Proxy shutdown via `POST http://localhost:9091/quitquitquit` (30 retries, 2s intervals)
 
-> **`CREATEDB` grant:** This is unique to Strapi_Common. Strapi's Knex-based migration system creates and drops databases during certain operations. Without `CREATEDB`, these operations fail with permission errors.
+> **`CREATEDB` grant:** This is unique to Strapi Common. Strapi's Knex-based migration system creates and drops databases during certain operations. Without `CREATEDB`, these operations fail with permission errors.
 
 ---
 
@@ -351,7 +351,7 @@ Node.js requirement: `>=18.0.0 <=20.x.x`.
 
 ## Platform-Specific Differences
 
-| Aspect | Strapi_CloudRun | Strapi_GKE |
+| Aspect | Strapi CloudRun | Strapi GKE |
 |--------|-----------------|------------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Optional (Auth Proxy sidecar) | Not used (TCP to Cloud SQL private IP) |

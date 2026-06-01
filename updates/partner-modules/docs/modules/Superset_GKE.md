@@ -1,8 +1,8 @@
-# Superset_GKE Module — Configuration Guide
+# Superset GKE Module — Configuration Guide
 
 This guide describes every configuration variable available in the `Superset_GKE` module. `Superset_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Superset_Common`](../Superset_Common/) shared application configuration to deploy [Apache Superset](https://superset.apache.org/) on Google Kubernetes Engine (GKE) Autopilot.
 
-Most configuration options in `Superset_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the documentation.
+Most configuration options in `Superset GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the documentation.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -10,7 +10,7 @@ Most configuration options in `Superset_GKE` map directly to the same options in
 
 ## Standard Configuration Reference
 
-| Configuration Area | App_GKE.md Section | Superset-Specific Notes |
+| Configuration Area | App GKE.md Section | Superset-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Superset-specific `module_description` and `module_services` defaults are pre-set. |
 | Project & Identity | §2 IAM & Access Control | Identical. |
@@ -28,10 +28,10 @@ Most configuration options in `Superset_GKE` map directly to the same options in
 
 ---
 
-## How Superset_GKE Relates to App_GKE
+## How Superset GKE Relates to App GKE
 
-1. **`SUPERSET_SECRET_KEY` is auto-generated.** `Superset_Common` creates a 50-character random key in Secret Manager. This key signs Flask sessions — changing it invalidates all active sessions.
-2. **Two-phase initialisation.** `Superset_Common` provides `db-init` (database creation) and `app-init` (Superset schema migration and admin creation) jobs that run automatically on first deploy.
+1. **`SUPERSET_SECRET_KEY` is auto-generated.** `Superset Common` creates a 50-character random key in Secret Manager. This key signs Flask sessions — changing it invalidates all active sessions.
+2. **Two-phase initialisation.** `Superset Common` provides `db-init` (database creation) and `app-init` (Superset schema migration and admin creation) jobs that run automatically on first deploy.
 3. **`superset-data` GCS bucket is provisioned automatically.**
 4. **PostgreSQL 15 is the supported database.** `database_type` defaults to `"POSTGRES_15"`.
 5. **Session affinity is recommended.** `session_affinity = "ClientIP"` is the default to ensure Superset's stateful session handling works correctly across multiple pods.
@@ -45,7 +45,7 @@ Identical to `App_GKE`. See [App_GKE §1](../App_GKE/App_GKE.md#1-module-overvie
 
 **Superset-specific defaults:**
 
-| Variable | Superset_GKE Default | Notes |
+| Variable | Superset GKE Default | Notes |
 |---|---|---|
 | `credit_cost` | `150` | GKE deployments cost more credits than Cloud Run. |
 
@@ -61,11 +61,11 @@ Identical to `App_GKE`. See [App_GKE §2](../App_GKE/App_GKE.md#2-iam--access-co
 
 **Superset-specific defaults:**
 
-| Variable | Superset_GKE Default | App_GKE Default | Notes |
+| Variable | Superset GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `application_name` | `"superset"` | `"gkeapp"` | Base name for all resources. **Do not change after deployment.** |
-| `display_name` | `"Superset"` | *(not in App_GKE)* | Human-readable name. |
-| `description` | `"Apache Superset data visualisation platform"` | *(not in App_GKE)* | Deployment description. |
+| `display_name` | `"Superset"` | *(not in App GKE)* | Human-readable name. |
+| `description` | `"Apache Superset data visualisation platform"` | *(not in App GKE)* | Deployment description. |
 | `application_version` | `"latest"` | `"1.0.0"` | Superset release version. |
 
 ---
@@ -74,7 +74,7 @@ Identical to `App_GKE`. See [App_GKE §2](../App_GKE/App_GKE.md#2-iam--access-co
 
 **Superset-specific defaults:**
 
-| Variable | Superset_GKE Default | App_GKE Default | Notes |
+| Variable | Superset GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `container_port` | `8088` | `8080` | Superset's Gunicorn port. |
 | `cpu_limit` | `"2000m"` | `"1000m"` | Python query execution requires 2 vCPU. |
@@ -106,7 +106,7 @@ Identical to `App_GKE`. See [App_GKE §4](../App_GKE/App_GKE.md#4-advanced-secur
 
 ## Group 5: Environment Variables & Secrets
 
-`SUPERSET_SECRET_KEY` is injected automatically from `Superset_Common`. The value is a 50-character random string stored in Secret Manager — do not rotate it without coordinating session invalidation.
+`SUPERSET_SECRET_KEY` is injected automatically from `Superset Common`. The value is a 50-character random string stored in Secret Manager — do not rotate it without coordinating session invalidation.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -152,11 +152,11 @@ Override `initialization_jobs` with a non-empty list to replace this default pip
 
 **Superset-specific defaults:**
 
-| Variable | Superset_GKE Default | App_GKE Default | Notes |
+| Variable | Superset GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `database_type` | `"POSTGRES_15"` | `"POSTGRES"` | Superset requires PostgreSQL. |
-| `db_name` | `"superset_db"` | *(not in App_GKE)* | Database name passed to `Superset_Common`. |
-| `db_user` | `"superset_user"` | *(not in App_GKE)* | Database user passed to `Superset_Common`. |
+| `db_name` | `"superset_db"` | *(not in App GKE)* | Database name passed to `Superset Common`. |
+| `db_user` | `"superset_user"` | *(not in App GKE)* | Database user passed to `Superset Common`. |
 
 **Automatic password rotation:**
 
@@ -204,7 +204,7 @@ Redis is **disabled by default** but **recommended for production** multi-user d
 |---|---|---|
 | `enable_redis` | `false` | Enables Redis. Recommended for production. |
 | `redis_host` | `""` | Redis hostname or IP. |
-| `redis_port` | `"6379"` | Redis port (**string** in Superset_GKE, unlike number in Superset_CloudRun). |
+| `redis_port` | `"6379"` | Redis port (**string** in Superset GKE, unlike number in Superset CloudRun). |
 | `redis_auth` | `""` | Redis AUTH password. Sensitive. |
 
 ---
@@ -213,7 +213,7 @@ Redis is **disabled by default** but **recommended for production** multi-user d
 
 **Superset-specific defaults:**
 
-| Variable | Superset_GKE Default | App_GKE Default | Notes |
+| Variable | Superset GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `session_affinity` | `"ClientIP"` | `"None"` | Ensures Superset sessions are consistently routed to the same pod. Required for reliable login behaviour. |
 | `workload_type` | `null` | `null` | Defaults to `Deployment`. |

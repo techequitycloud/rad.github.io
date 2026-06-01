@@ -57,7 +57,7 @@ gcloud logging read 'resource.type="k8s_container"' --project=<project-id> --lim
 
 ## Prerequisites
 
-1. **Services_GCP deployed** — This module depends on `Services_GCP`. The VPC network, Cloud SQL instance, GKE Autopilot cluster, Artifact Registry, and shared service accounts must already exist in the target project.
+1. **Services GCP deployed** — This module depends on `Services GCP`. The VPC network, Cloud SQL instance, GKE Autopilot cluster, Artifact Registry, and shared service accounts must already exist in the target project.
 2. **GCP project** with billing enabled.
 3. **Access to the RAD UI** with permission to deploy modules in the target GCP project.
 4. **gcloud CLI** authenticated (`gcloud auth application-default login`).
@@ -499,7 +499,7 @@ When you are done with the lab, return to the RAD UI, navigate to your deploymen
 
 > **Note:** If `enable_purge = false`, certain resources such as the database and storage buckets will be retained after undeployment to prevent accidental data loss.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

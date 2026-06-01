@@ -6,13 +6,13 @@ This document provides a comprehensive reference for the `modules/NocoDB_GKE` Te
 
 ## 1. Module Overview
 
-NocoDB is an open-source no-code database platform (Airtable alternative) with 45,000+ GitHub stars that transforms any database into a smart spreadsheet with a no-code interface, REST and GraphQL APIs, and built-in automations. `NocoDB_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning and injects NocoDB-specific application configuration via `NocoDB_Common`.
+NocoDB is an open-source no-code database platform (Airtable alternative) with 45,000+ GitHub stars that transforms any database into a smart spreadsheet with a no-code interface, REST and GraphQL APIs, and built-in automations. `NocoDB GKE` is a **wrapper module** built on top of `App GKE`. It uses `App GKE` for all GCP infrastructure provisioning and injects NocoDB-specific application configuration via `NocoDB Common`.
 
 **Key Capabilities:**
 *   **Compute**: GKE Autopilot, Kubernetes Deployment (not StatefulSet — NocoDB stores state in PostgreSQL, not on disk). 1 vCPU / 1 Gi by default. HPA scales from `min_instance_count = 1` to `max_instance_count = 10`.
 *   **Data Persistence**: Cloud SQL **PostgreSQL 15** (default). NocoDB also supports MySQL 8.0.
 *   **IAM**: Workload Identity binds the Kubernetes service account to a GCP SA for Secret Manager and GCS access.
-*   **Security**: Inherits Cloud Armor, Binary Authorization, and VPC Service Controls from `App_GKE`.
+*   **Security**: Inherits Cloud Armor, Binary Authorization, and VPC Service Controls from `App GKE`.
 *   **NC_DB_* mapping**: A custom Dockerfile in `NocoDB_Common` maps `DB_*` env vars to `NC_DB_*` variables NocoDB expects when `container_image_source = 'custom'` (default).
 *   **Health**: Health probes target `/api/v1/health` with 30-second initial delay.
 
@@ -29,15 +29,15 @@ NocoDB is an open-source no-code database platform (Airtable alternative) with 4
 | `application_description` | 3 | `string` | `'NocoDB on GKE Autopilot'` | Application description. |
 | `application_version` | 3 | `string` | `'latest'` | NocoDB image version tag. |
 
-**Wrapper architecture:** `NocoDB_GKE` calls `NocoDB_Common` to build an `application_config` object. The GCS uploads bucket name is computed from the resource prefix and injected as `GCS_BUCKET_NAME` and `GCS_BASE_URL`. `module_secret_env_vars = module.nocodb_app.secret_ids` and `module_storage_buckets = module.nocodb_app.storage_buckets` are forwarded to `App_GKE`.
+**Wrapper architecture:** `NocoDB GKE` calls `NocoDB Common` to build an `application_config` object. The GCS uploads bucket name is computed from the resource prefix and injected as `GCS_BUCKET_NAME` and `GCS_BASE_URL`. `module_secret_env_vars = module.nocodb_app.secret_ids` and `module_storage_buckets = module.nocodb_app.storage_buckets` are forwarded to `App GKE`.
 
 ---
 
 ## 2. IAM & Access Control
 
-`NocoDB_GKE` delegates all IAM provisioning to `App_GKE`. Workload Identity binds the Kubernetes SA to a GCP SA, granting access to Secret Manager secrets (database password, application secrets) and GCS buckets.
+`NocoDB GKE` delegates all IAM provisioning to `App GKE`. Workload Identity binds the Kubernetes SA to a GCP SA, granting access to Secret Manager secrets (database password, application secrets) and GCS buckets.
 
-**No application-level secrets:** `NocoDB_Common` does not auto-generate application secrets. NocoDB manages its own JWT and encryption keys at runtime. Use `secret_environment_variables` for custom secrets.
+**No application-level secrets:** `NocoDB Common` does not auto-generate application secrets. NocoDB manages its own JWT and encryption keys at runtime. Use `secret_environment_variables` for custom secrets.
 
 ---
 
@@ -78,7 +78,7 @@ NocoDB is an open-source no-code database platform (Airtable alternative) with 4
 
 ### C. Storage
 
-`NocoDB_Common` auto-provisions a GCS uploads bucket. The bucket name and base URL are injected as `GCS_BUCKET_NAME` and `GCS_BASE_URL`.
+`NocoDB Common` auto-provisions a GCS uploads bucket. The bucket name and base URL are injected as `GCS_BUCKET_NAME` and `GCS_BASE_URL`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|

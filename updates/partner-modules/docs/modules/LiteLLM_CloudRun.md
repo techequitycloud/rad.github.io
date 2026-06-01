@@ -8,12 +8,12 @@ This document provides a comprehensive reference for the `modules/LiteLLM_CloudR
 
 LiteLLM is an open-source LLM proxy and AI gateway with 20,000+ GitHub stars that provides a **unified OpenAI-compatible API** across 100+ LLM providers including OpenAI, Anthropic, Google Gemini, Azure OpenAI, Bedrock, Hugging Face, Ollama, and many more. Organizations use LiteLLM to centralize AI spend tracking, manage virtual API keys, enforce rate limits, and gain full visibility over model usage.
 
-`LiteLLM_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects LiteLLM-specific application configuration, database initialization, and secrets via `LiteLLM_Common`.
+`LiteLLM CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects LiteLLM-specific application configuration, database initialization, and secrets via `LiteLLM Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Python container, 2 vCPU / 2 Gi by default. Configurable min/max instances.
 *   **Database**: **PostgreSQL 15** (Cloud SQL) for usage logging, cost tracking, virtual key storage, and audit trails. The Foundation Module provisions the Cloud SQL instance; LiteLLM's `db-init.sh` creates the database and user.
-*   **Security**: Auto-generated `LITELLM_MASTER_KEY` (prefixed `sk-`) and `LITELLM_SALT_KEY` stored in Secret Manager. Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_CloudRun`.
+*   **Security**: Auto-generated `LITELLM_MASTER_KEY` (prefixed `sk-`) and `LITELLM_SALT_KEY` stored in Secret Manager. Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`.
 *   **Redis**: Optional response caching backend. Reduces latency and cost for repeated identical LLM requests.
 *   **CI/CD**: Uses a **custom Cloud Build image** by default (`image_source = "custom"`) with a Dockerfile in `LiteLLM_Common/scripts`. Cloud Deploy optional.
 *   **Health endpoints**: Uses `/health/readiness` (validates DB connectivity and Prisma migration) for startup, `/health/liveliness` for liveness.
@@ -31,19 +31,19 @@ LiteLLM is an open-source LLM proxy and AI gateway with 20,000+ GitHub stars tha
 | `description` | 3 | `string` | `'LiteLLM AI Gateway - Open-source LLM proxy...'` | Service description. |
 | `application_version` | 3 | `string` | `'main-stable'` | LiteLLM image version tag. |
 
-**Wrapper architecture:** `LiteLLM_CloudRun` calls `LiteLLM_Common` to build an `application_config` object containing LiteLLM environment variables (including `PROXY_BASE_URL`, `STORE_MODEL_IN_DB`, Redis settings), the `db-init` Cloud Run Job, and the `litellm-data` GCS bucket. `module_secret_env_vars` carries `LITELLM_MASTER_KEY` and `LITELLM_SALT_KEY`. The `container_port` override (4000) is applied in the `litellm_module` merge.
+**Wrapper architecture:** `LiteLLM CloudRun` calls `LiteLLM Common` to build an `application_config` object containing LiteLLM environment variables (including `PROXY_BASE_URL`, `STORE_MODEL_IN_DB`, Redis settings), the `db-init` Cloud Run Job, and the `litellm-data` GCS bucket. `module_secret_env_vars` carries `LITELLM_MASTER_KEY` and `LITELLM_SALT_KEY`. The `container_port` override (4000) is applied in the `litellm_module` merge.
 
 ---
 
 ## 2. IAM & Access Control
 
-`LiteLLM_CloudRun` delegates all IAM provisioning to `App_CloudRun`.
+`LiteLLM CloudRun` delegates all IAM provisioning to `App CloudRun`.
 
-**Application-level secrets:** `LiteLLM_Common` auto-generates two secrets:
+**Application-level secrets:** `LiteLLM Common` auto-generates two secrets:
 - `LITELLM_MASTER_KEY` — The primary API key for LiteLLM admin operations. Prefixed `sk-` for OpenAI compatibility. Required for all `/key/generate` and admin endpoint calls.
 - `LITELLM_SALT_KEY` — Used for hashing virtual keys. Never expose or rotate without updating all virtual key hashes.
 
-**Cloud SQL Auth Proxy:** `enable_cloudsql_volume = true` by default. LiteLLM connects to PostgreSQL via the Auth Proxy Unix socket at `/cloudsql`. `DB_HOST`, `DB_USER`, `DB_NAME`, `DB_PASSWORD` are injected automatically by `App_CloudRun`.
+**Cloud SQL Auth Proxy:** `enable_cloudsql_volume = true` by default. LiteLLM connects to PostgreSQL via the Auth Proxy Unix socket at `/cloudsql`. `DB_HOST`, `DB_USER`, `DB_NAME`, `DB_PASSWORD` are injected automatically by `App CloudRun`.
 
 **Database initialization identity:** The `db-init` Cloud Run Job runs under the Cloud Run SA, connecting to Cloud SQL PostgreSQL via the Auth Proxy socket to create the LiteLLM database and user.
 
@@ -72,9 +72,9 @@ LiteLLM is an open-source LLM proxy and AI gateway with 20,000+ GitHub stars tha
 | `max_revisions_to_retain` | 4 | `7` | Not referenced. Interface compatibility only. |
 | `enable_image_mirroring` | 4 | `true` | Mirrors LiteLLM image to Artifact Registry. |
 
-**Differences from `App_CloudRun` defaults:**
+**Differences from `App CloudRun` defaults:**
 
-| Variable | `App_CloudRun` | `LiteLLM_CloudRun` | Reason |
+| Variable | `App CloudRun` | `LiteLLM CloudRun` | Reason |
 |---|---|---|---|
 | `container_port` | `8080` | `4000` | LiteLLM's native port. |
 | `image_source` | `prebuilt` | `custom` | LiteLLM requires a custom Dockerfile with entrypoint script. |
@@ -104,8 +104,8 @@ LiteLLM is configured primarily through environment variables and its `config.ya
 | `LITELLM_MASTER_KEY` | Secret Manager | Primary admin key for LiteLLM API operations. |
 | `LITELLM_SALT_KEY` | Secret Manager | Key hashing salt. Never change after virtual keys have been created. |
 | `DATABASE_URL` | Auto-assembled | PostgreSQL connection string. Assembled by `entrypoint.sh` from `DB_*` vars. |
-| `STORE_MODEL_IN_DB` | LiteLLM_Common | `"true"` — model routing config stored in PostgreSQL, not in config.yaml. |
-| `PROXY_BASE_URL` | LiteLLM_Common | Set to the predicted Cloud Run service URL. |
+| `STORE_MODEL_IN_DB` | LiteLLM Common | `"true"` — model routing config stored in PostgreSQL, not in config.yaml. |
+| `PROXY_BASE_URL` | LiteLLM Common | Set to the predicted Cloud Run service URL. |
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -151,11 +151,11 @@ Alternatively, add keys via the LiteLLM Admin UI or `/key/generate` API after de
 
 ### G. Initialization Jobs
 
-`LiteLLM_Common` provides a default `db-init` job that creates the PostgreSQL database and user. Override with a custom list to replace this default.
+`LiteLLM Common` provides a default `db-init` job that creates the PostgreSQL database and user. Override with a custom list to replace this default.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `LiteLLM_Common` to supply the default `db-init` job. |
+| `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for `LiteLLM Common` to supply the default `db-init` job. |
 | `cron_jobs` | 13 | `[]` | Recurring scheduled Cloud Run Jobs. |
 
 ---
@@ -250,13 +250,13 @@ LiteLLM exposes two health endpoints:
 
 | Behaviour | Detail |
 |---|---|
-| **PostgreSQL 15 required** | `database_type = "POSTGRES_15"` fixed by `LiteLLM_Common`. LiteLLM's Prisma ORM requires PostgreSQL. |
+| **PostgreSQL 15 required** | `database_type = "POSTGRES_15"` fixed by `LiteLLM Common`. LiteLLM's Prisma ORM requires PostgreSQL. |
 | **Custom Docker image** | `image_source = "custom"` — a Dockerfile is built via Cloud Build. Required to embed the entrypoint script that assembles `DATABASE_URL` from injected `DB_*` env vars. |
 | **LITELLM_MASTER_KEY auto-generated** | Prefixed `sk-` for OpenAI-compatible tooling. Stored in Secret Manager. |
 | **LITELLM_SALT_KEY auto-generated** | Used to hash virtual keys. Do not rotate after virtual keys have been issued. |
 | **STORE_MODEL_IN_DB = "true"** | Model routing configuration is stored in PostgreSQL, enabling runtime model management via the Admin UI without container restarts. |
 | **PROXY_BASE_URL injected** | Set to the predicted Cloud Run service URL to ensure correct redirect URLs. |
-| **Default db-init job** | Supplied by `LiteLLM_Common` when `initialization_jobs = []`. Creates the PostgreSQL database and user idempotently. |
+| **Default db-init job** | Supplied by `LiteLLM Common` when `initialization_jobs = []`. Creates the PostgreSQL database and user idempotently. |
 | **Auth Proxy by default** | `enable_cloudsql_volume = true` — Cloud SQL Auth Proxy sidecar is injected. LiteLLM connects via Unix socket. |
 
 ---
@@ -267,7 +267,7 @@ LiteLLM exposes two health endpoints:
 |---|---|---|---|
 | `module_description` | 0 | (LiteLLM platform text) | Platform metadata. |
 | `module_documentation` | 0 | (docs URL) | Platform documentation URL. |
-| `module_dependency` | 0 | `['Services_GCP']` | Required platform modules. |
+| `module_dependency` | 0 | `['Services GCP']` | Required platform modules. |
 | `module_services` | 0 | (GCP service list) | GCP services consumed. |
 | `credit_cost` | 0 | `50` | Platform deployment credit cost. |
 | `require_credit_purchases` | 0 | `false` | Enforces credit balance check. |
@@ -415,4 +415,4 @@ LiteLLM exposes two health endpoints:
 
 ## Destroying Resources
 
-When destroying, the Cloud SQL PostgreSQL instance takes 8–12 minutes to delete. See the Serverless IPv4 address release note in the LibreChat_CloudRun docs for the VPC subnet deletion timing issue.
+When destroying, the Cloud SQL PostgreSQL instance takes 8–12 minutes to delete. See the Serverless IPv4 address release note in the LibreChat CloudRun docs for the VPC subnet deletion timing issue.

@@ -6,7 +6,7 @@
 
 **Estimated time:** 2–3 hours (ERP complexity requires additional setup and exploration time)
 
-This lab walks you through deploying Odoo ERP on Google Cloud Run using the `Odoo_CloudRun` module, then verifying and exploring the deployment manually. The module handles all GCP infrastructure; you perform the post-deployment steps interactively.
+This lab walks you through deploying Odoo ERP on Google Cloud Run using the `Odoo CloudRun` module, then verifying and exploring the deployment manually. The module handles all GCP infrastructure; you perform the post-deployment steps interactively.
 
 ### What the Module Automates
 
@@ -47,7 +47,7 @@ Key tools used in this lab:
 
 ## Prerequisites
 
-1. **Services_GCP deployed** — the `Odoo_CloudRun` module depends on `Services_GCP`. Ensure it is deployed in the same project.
+1. **Services GCP deployed** — the `Odoo CloudRun` module depends on `Services GCP`. Ensure it is deployed in the same project.
 2. **gcloud CLI authenticated** — run `gcloud auth application-default login`.
 3. **GCP project** with billing enabled and the following APIs active (the module enables them automatically on first apply):
    - Cloud Run, Cloud SQL, Cloud Build, Artifact Registry, Secret Manager, Cloud Storage, Cloud Monitoring.
@@ -396,7 +396,7 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 
 > **Warning:** This deletes the Cloud SQL database, GCS bucket contents, and NFS data. Ensure database backups are taken before undeploying if data needs to be preserved.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

@@ -6,12 +6,12 @@ This document provides a comprehensive reference for the `modules/Chroma_CloudRu
 
 ## 1. Module Overview
 
-Chroma is an AI-native open-source vector database purpose-built for embeddings and similarity search. `Chroma_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Chroma-specific application configuration, an optional authentication token, and storage configuration via `Chroma_Common`.
+Chroma is an AI-native open-source vector database purpose-built for embeddings and similarity search. `Chroma CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects Chroma-specific application configuration, an optional authentication token, and storage configuration via `Chroma Common`.
 
 **Key Capabilities:**
 - **Compute**: Cloud Run v2 (Gen2), 1 vCPU / 1 Gi by default. `min_instance_count = 1` to avoid index-loading cold starts. `max_instance_count = 1` — Chroma is a single-writer store.
 - **Data Persistence**: Cloud Storage bucket (`<prefix>-data`) mounted at `/data` via GCS FUSE. No Cloud SQL, no Redis.
-- **Security**: Optional token authentication via Secret Manager. A plan-time validation blocks public ingress (`ingress_settings = "all"`) unless `enable_auth_token = true`. Inherits Cloud Armor, IAP, Binary Authorization, and VPC-SC from `App_CloudRun`.
+- **Security**: Optional token authentication via Secret Manager. A plan-time validation blocks public ingress (`ingress_settings = "all"`) unless `enable_auth_token = true`. Inherits Cloud Armor, IAP, Binary Authorization, and VPC-SC from `App CloudRun`.
 - **CI/CD**: Cloud Build image pipeline by default; Cloud Deploy progressive delivery optional.
 - **Reliability**: Health probes target `/api/v2/heartbeat`.
 
@@ -29,17 +29,17 @@ Chroma is an AI-native open-source vector database purpose-built for embeddings 
 | `description` | 3 | `string` | Chroma description | Cloud Run service description |
 | `application_version` | 3 | `string` | `'latest'` | Chroma image tag |
 
-**Wrapper architecture:** `Chroma_CloudRun` calls `Chroma_Common` to build an `application_config` object containing Chroma-specific environment variables, probe configuration, and the storage volume definition. `module_storage_buckets` carries the `<prefix>-data` GCS bucket. `scripts_dir` is resolved to `abspath("${module.chroma_app.path}/scripts")` at apply time.
+**Wrapper architecture:** `Chroma CloudRun` calls `Chroma Common` to build an `application_config` object containing Chroma-specific environment variables, probe configuration, and the storage volume definition. `module_storage_buckets` carries the `<prefix>-data` GCS bucket. `scripts_dir` is resolved to `abspath("${module.chroma_app.path}/scripts")` at apply time.
 
 ---
 
 ## 2. IAM & Access Control
 
-`Chroma_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, and IAP service agent role sets are identical to those in `App_CloudRun`.
+`Chroma CloudRun` delegates all IAM provisioning to `App CloudRun`. The Cloud Run SA, Cloud Build SA, and IAP service agent role sets are identical to those in `App CloudRun`.
 
-**Auth token:** Unlike most modules, `Chroma_Common` can auto-generate a Chroma authentication token (when `enable_auth_token = true`). The token is stored in Secret Manager as `<prefix>-auth-token` and injected as `CHROMA_SERVER_AUTH_CREDENTIALS`. Applications calling Chroma must include this token in the `Authorization: Bearer <token>` header.
+**Auth token:** Unlike most modules, `Chroma Common` can auto-generate a Chroma authentication token (when `enable_auth_token = true`). The token is stored in Secret Manager as `<prefix>-auth-token` and injected as `CHROMA_SERVER_AUTH_CREDENTIALS`. Applications calling Chroma must include this token in the `Authorization: Bearer <token>` header.
 
-For the complete role tables and IAP details, see the App_CloudRun documentation.
+For the complete role tables and IAP details, see the App CloudRun documentation.
 
 ---
 
@@ -47,7 +47,7 @@ For the complete role tables and IAP details, see the App_CloudRun documentation
 
 ### A. Compute (Cloud Run)
 
-`Chroma_CloudRun` exposes `cpu_limit` and `memory_limit` as dedicated top-level variables. Chroma loads embedding indexes into RAM — size `memory_limit` according to your collection size and index type.
+`Chroma CloudRun` exposes `cpu_limit` and `memory_limit` as dedicated top-level variables. Chroma loads embedding indexes into RAM — size `memory_limit` according to your collection size and index type.
 
 **Single-instance constraint:** `max_instance_count = 1` is strongly recommended. Chroma is a single-writer store — multiple instances against the same GCS FUSE mount will corrupt collections. Scale vertically (increase CPU and memory) rather than horizontally.
 
@@ -70,9 +70,9 @@ For the complete role tables and IAP details, see the App_CloudRun documentation
 | `service_annotations` | 4 | `{}` | Cloud Run service annotations |
 | `service_labels` | 4 | `{}` | Cloud Run service labels |
 
-**Differences from `App_CloudRun` defaults:**
+**Differences from `App CloudRun` defaults:**
 
-| Variable | `App_CloudRun` | `Chroma_CloudRun` | Reason |
+| Variable | `App CloudRun` | `Chroma CloudRun` | Reason |
 |---|---|---|---|
 | `container_port` | `8080` | `8000` | Chroma's native REST API port |
 | `ingress_settings` | `'all'` | `'internal'` | Vector databases should not be publicly exposed by default |
@@ -82,7 +82,7 @@ For the complete role tables and IAP details, see the App_CloudRun documentation
 
 ### B. Storage (GCS FUSE)
 
-Chroma requires persistent storage for its embedded SQLite database, HNSW index files, and collection metadata. `Chroma_Common` automatically provisions a GCS bucket and mounts it at `/data` via GCS FUSE.
+Chroma requires persistent storage for its embedded SQLite database, HNSW index files, and collection metadata. `Chroma Common` automatically provisions a GCS bucket and mounts it at `/data` via GCS FUSE.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -149,7 +149,7 @@ When `enable_cloud_armor = true`, a Global HTTPS Load Balancer with Cloud Armor 
 
 ### A. Health Probes
 
-Chroma exposes a single health endpoint — `/api/v2/heartbeat` — which returns HTTP 200 when the service is fully initialized. Both the startup and liveness probes are hard-coded to this endpoint by `Chroma_Common`.
+Chroma exposes a single health endpoint — `/api/v2/heartbeat` — which returns HTTP 200 when the service is fully initialized. Both the startup and liveness probes are hard-coded to this endpoint by `Chroma Common`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -166,14 +166,14 @@ Chroma exposes a single health endpoint — `/api/v2/heartbeat` — which return
 | `backup_retention_days` | 7 | `7` | Days to retain backup files |
 | `enable_backup_import` | 7 | `false` | Trigger a one-time restore on apply |
 | `backup_source` | 7 | `'gcs'` | `'gcs'` (full GCS URI) or `'gdrive'` (file ID) |
-| `backup_uri` | 7 | `""` | GCS URI or Drive file ID. Mapped to `backup_file` in `App_CloudRun`. |
+| `backup_uri` | 7 | `""` | GCS URI or Drive file ID. Mapped to `backup_file` in `App CloudRun`. |
 | `backup_format` | 7 | `'tar'` | Backup format: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip` |
 
 ---
 
 ## 6. CI/CD & Delivery
 
-Identical to `App_CloudRun`. When `enable_cicd_trigger = true`, a Cloud Build GitHub connection and push trigger are provisioned.
+Identical to `App CloudRun`. When `enable_cicd_trigger = true`, a Cloud Build GitHub connection and push trigger are provisioned.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -192,12 +192,12 @@ Identical to `App_CloudRun`. When `enable_cicd_trigger = true`, a Cloud Build Gi
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| No database | `database_type = "NONE"` fixed by `Chroma_Common` | No Cloud SQL instance is created |
+| No database | `database_type = "NONE"` fixed by `Chroma Common` | No Cloud SQL instance is created |
 | No Redis | `enable_redis = false` hard-coded in `main.tf` | Chroma has no caching dependency |
 | Telemetry disabled | `ANONYMIZED_TELEMETRY=false` always injected | Privacy by default |
 | Port fixed | `CHROMA_SERVER_HTTP_PORT=8000` always injected | Matches `container_port = 8000` |
 | Public ingress blocked | Plan-time validation in `validation.tf` | `ingress_settings = "all"` blocked unless `enable_auth_token = true` |
-| GCS data bucket | `<prefix>-data` provisioned by `Chroma_Common` | Mounted at `/data` via GCS FUSE |
+| GCS data bucket | `<prefix>-data` provisioned by `Chroma Common` | Mounted at `/data` via GCS FUSE |
 | Health probe path | Hard-coded to `/api/v2/heartbeat` | Chroma provides no configurable health path |
 
 ---
@@ -210,7 +210,7 @@ All user-configurable variables, sorted by UI group then order.
 |---|---|---|---|
 | `module_description` | 0 | Chroma platform text | Platform metadata |
 | `module_documentation` | 0 | docs URL | Documentation URL |
-| `module_dependency` | 0 | `['Services_GCP']` | Required modules |
+| `module_dependency` | 0 | `['Services GCP']` | Required modules |
 | `module_services` | 0 | GCP service list | GCP services consumed |
 | `credit_cost` | 0 | `50` | Deployment credit cost |
 | `require_credit_purchases` | 0 | `false` | Enforce credit balance check |
@@ -323,7 +323,7 @@ All user-configurable variables, sorted by UI group then order.
 | `memory_limit` | `"1Gi"` | **High** | Chroma loads HNSW indexes entirely into memory. Each 1M 1536-dimension float32 vectors requires approximately 6 Gi of RAM. The default `1Gi` is only suitable for very small collections (< 100K vectors). Underprovisioning causes OOM kills under query load. |
 | `cpu_always_allocated` | `true` | **Medium** | Chroma must respond to health checks and background index rebuilds even with no active requests. Setting to `false` causes CPU throttling between requests, slowing index operations and potentially causing health check timeouts. |
 | `min_instance_count` | `1` | **Medium** | Scale-to-zero (`0`) causes cold starts during which in-memory indexes must be reloaded from GCS. For latency-sensitive applications, keep at `1`. |
-| `max_instance_count` | `1` | **High** | Multiple Chroma Cloud Run instances do not share state. With `max_instance_count > 1` and GCS Fuse storage, concurrent writes from different instances can corrupt the collection. Chroma Cloud Run is single-instance by design; use `Chroma_GKE` with StatefulSet for multi-replica production deployments. |
+| `max_instance_count` | `1` | **High** | Multiple Chroma Cloud Run instances do not share state. With `max_instance_count > 1` and GCS Fuse storage, concurrent writes from different instances can corrupt the collection. Chroma Cloud Run is single-instance by design; use `Chroma GKE` with StatefulSet for multi-replica production deployments. |
 | `container_port` | `8000` | **Critical** | Chroma listens on port 8000 by default. Changing this requires a matching `CHROMA_SERVER_HTTP_PORT` environment variable to be set, otherwise the container starts but Cloud Run health checks fail and the revision is never promoted. |
 | `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **Low** | `PRIVATE_RANGES_ONLY` is correct when all dependencies are on the VPC. Only change to `ALL_TRAFFIC` if Chroma must reach public endpoints directly (e.g., embedding model APIs). |
 | `timeout_seconds` | `300` | **Medium** | Large similarity searches over millions of vectors can take several seconds. Setting too low causes Cloud Run to return 504 to clients during expensive queries. Increase to `600` for large collection workloads. |

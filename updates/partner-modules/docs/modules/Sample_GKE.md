@@ -1,4 +1,4 @@
-# Sample_GKE Module — Configuration Guide
+# Sample GKE Module — Configuration Guide
 
 `Sample_GKE` is a **wrapper module** that sits on top of [`App_GKE`](../App_GKE/App_GKE.md). It deploys a pre-configured reference Flask application (Python 3.11, PostgreSQL 15, optional Redis, optional NFS) on GKE Autopilot. Its purpose is to serve as a working example of how to build a custom application module on top of `App_GKE`.
 
@@ -10,7 +10,7 @@ Most configuration variables in `Sample_GKE` are passed through unchanged to `Ap
 
 ## Module Architecture
 
-`Sample_GKE` composes two internal layers:
+`Sample GKE` composes two internal layers:
 
 ```
 Sample_GKE
@@ -18,22 +18,22 @@ Sample_GKE
 └── App_GKE        (infrastructure layer — GKE Autopilot, Cloud SQL, NFS, networking, CI/CD)
 ```
 
-**`Sample_Common`** is a shared internal module that produces the application-specific configuration object (`application_config`) consumed by `App_GKE`. It is responsible for:
+**`Sample Common`** is a shared internal module that produces the application-specific configuration object (`application_config`) consumed by `App GKE`. It is responsible for:
 
 - Generating a random 32-character Flask `SECRET_KEY` and storing it in Secret Manager.
 - Defining a `db-init` Kubernetes Job (using `postgres:15-alpine`) that runs the bundled database initialisation script (`scripts/db-init.sh`) on first deployment.
 - Optionally defining an internal Redis additional service (using `redis:alpine`) when `enable_redis = true`.
 - Providing a custom Cloud Build configuration that builds the sample Flask application from the bundled Dockerfile in `Sample_Common/scripts/`.
 
-**`App_GKE`** receives the merged configuration from `Sample_Common` and provisions all GCP and Kubernetes infrastructure: the GKE cluster, Cloud SQL instance, NFS PersistentVolume, Artifact Registry repository, Secret Manager secrets, IAM bindings, networking, CI/CD pipelines, and observability resources.
+**`App GKE`** receives the merged configuration from `Sample Common` and provisions all GCP and Kubernetes infrastructure: the GKE cluster, Cloud SQL instance, NFS PersistentVolume, Artifact Registry repository, Secret Manager secrets, IAM bindings, networking, CI/CD pipelines, and observability resources.
 
-You do not interact with `Sample_Common` directly. All inputs are exposed as variables on `Sample_GKE` itself.
+You do not interact with `Sample Common` directly. All inputs are exposed as variables on `Sample GKE` itself.
 
 ---
 
 ## Pre-configured Application
 
-When deployed with default settings, `Sample_GKE` provides:
+When deployed with default settings, `Sample GKE` provides:
 
 | Component | Details |
 |---|---|
@@ -48,11 +48,11 @@ The `db-init` job and the `SECRET_KEY` secret are managed entirely by the module
 
 ---
 
-## Behaviours Unique to Sample_GKE
+## Behaviours Unique to Sample GKE
 
 ### 1. Minimum Instance Count Override
 
-The `min_instance_count` variable is exposed so you can tune it, but `Sample_GKE` internally overrides the value passed to `App_GKE` to be at least `1`:
+The `min_instance_count` variable is exposed so you can tune it, but `Sample GKE` internally overrides the value passed to `App GKE` to be at least `1`:
 
 ```terraform
 # sample.tf
@@ -65,7 +65,7 @@ sample_module = merge(module.sample_app.config, {
 
 ### 2. Redis Host Fallback to Sidecar (`127.0.0.1`)
 
-When `enable_redis = true` and `redis_host` is not set (or is empty), `Sample_GKE` injects `REDIS_HOST=127.0.0.1` into the application:
+When `enable_redis = true` and `redis_host` is not set (or is empty), `Sample GKE` injects `REDIS_HOST=127.0.0.1` into the application:
 
 ```terraform
 # sample.tf
@@ -76,11 +76,11 @@ REDIS_HOST = var.enable_redis ? (
 
 **Why:** In GKE, the Redis additional service (a separate `redis:alpine` Deployment) runs within the cluster. Using `127.0.0.1` as the fallback host is appropriate for configurations where Redis runs locally alongside the application. For an external Redis instance (e.g. Cloud Memorystore), set `redis_host` explicitly to the instance's private IP address.
 
-**Contrast with `Sample_CloudRun`:** Cloud Run does not support pod-level co-location, so `Sample_CloudRun` does **not** fall back to `127.0.0.1` — you must always provide an explicit `redis_host` when using Redis with Cloud Run.
+**Contrast with `Sample CloudRun`:** Cloud Run does not support pod-level co-location, so `Sample CloudRun` does **not** fall back to `127.0.0.1` — you must always provide an explicit `redis_host` when using Redis with Cloud Run.
 
 ### 3. Explicit Secret Value Injection (`explicit_secret_values`)
 
-`Sample_GKE` passes the raw value of the Flask `SECRET_KEY` directly to `App_GKE` via the `explicit_secret_values` mechanism:
+`Sample GKE` passes the raw value of the Flask `SECRET_KEY` directly to `App GKE` via the `explicit_secret_values` mechanism:
 
 ```terraform
 # main.tf
@@ -89,27 +89,27 @@ explicit_secret_values = {
 }
 ```
 
-**Why:** When a Secret Manager secret is created and then immediately referenced by a Kubernetes workload in the same Terraform apply, there is a read-after-write consistency window during which the secret version may not yet be globally available. By passing the raw value directly, `App_GKE` can create the Kubernetes Secret object without needing to read back from Secret Manager on the first apply. On subsequent applies, the secret is already present and this mechanism has no visible effect.
+**Why:** When a Secret Manager secret is created and then immediately referenced by a Kubernetes workload in the same Terraform apply, there is a read-after-write consistency window during which the secret version may not yet be globally available. By passing the raw value directly, `App GKE` can create the Kubernetes Secret object without needing to read back from Secret Manager on the first apply. On subsequent applies, the secret is already present and this mechanism has no visible effect.
 
-This is a GKE-specific pattern. `Sample_CloudRun` does not use `explicit_secret_values` because Cloud Run fetches secrets from Secret Manager at instance startup (after propagation is complete), avoiding this timing issue.
+This is a GKE-specific pattern. `Sample CloudRun` does not use `explicit_secret_values` because Cloud Run fetches secrets from Secret Manager at instance startup (after propagation is complete), avoiding this timing issue.
 
 ### 4. Resource Naming (`resource_prefix`)
 
-`Sample_GKE` computes a deterministic `resource_prefix` and passes it to `Sample_Common` so that the Flask `SECRET_KEY` secret name is aligned with the naming convention used by `App_GKE` for all other resources:
+`Sample GKE` computes a deterministic `resource_prefix` and passes it to `Sample Common` so that the Flask `SECRET_KEY` secret name is aligned with the naming convention used by `App GKE` for all other resources:
 
 ```terraform
 resource_prefix = "app${var.application_name}${var.tenant_deployment_id}${local.random_id}"
 ```
 
-This ensures the Secret Manager secret created by `Sample_Common` is named consistently with the secrets, Cloud SQL instance, GCS buckets, and Kubernetes resources created by `App_GKE`. You do not need to set this — it is computed automatically.
+This ensures the Secret Manager secret created by `Sample Common` is named consistently with the secrets, Cloud SQL instance, GCS buckets, and Kubernetes resources created by `App GKE`. You do not need to set this — it is computed automatically.
 
 ---
 
 ## Configuration Reference
 
-All configuration variables in `Sample_GKE` are passed through to `App_GKE`. The table below maps each configuration group to the corresponding section of the `App_GKE` Configuration Guide, noting any `Sample_GKE`-specific defaults or overrides.
+All configuration variables in `Sample GKE` are passed through to `App GKE`. The table below maps each configuration group to the corresponding section of the `App GKE` Configuration Guide, noting any `Sample GKE`-specific defaults or overrides.
 
-| Group | Description | Sample_GKE Defaults / Overrides | Reference |
+| Group | Description | Sample GKE Defaults / Overrides | Reference |
 |---|---|---|---|
 | **Group 0** | Module Metadata & Configuration | `module_description` defaults to `"Sample_GKE: A sample application module…"`. `module_documentation` points to the GKE App docs URL. `module_services` includes GKE Autopilot, Cloud Build, Artifact Registry, Cloud SQL, Filestore (NFS), Secret Manager, Workload Identity, Cloud Monitoring, and Uptime Checks. All other variables are identical to `App_GKE`. | [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) |
 | **Group 1** | Project & Identity | No changes. `project_id`, `tenant_deployment_id`, `support_users`, `resource_labels`, and `resource_creator_identity` behave identically to `App_GKE`. | [App_GKE §2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) |
@@ -164,7 +164,7 @@ The table below summarises the three Redis-related variables and how they intera
 
 ## Configuration Pitfalls & Sensible Defaults
 
-The table below identifies the variables most commonly misconfigured in `Sample_GKE` deployments. Because `Sample_GKE` is the reference implementation used to test `App_GKE` Foundation Module changes, the pitfalls here also apply to any new GKE application module built from this template.
+The table below identifies the variables most commonly misconfigured in `Sample GKE` deployments. Because `Sample GKE` is the reference implementation used to test `App GKE` Foundation Module changes, the pitfalls here also apply to any new GKE application module built from this template.
 
 > Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
 
@@ -174,14 +174,14 @@ The table below identifies the variables most commonly misconfigured in `Sample_
 | `tenant_deployment_id` | Match environment: `"prod"`, `"staging"`, `"dev"` | **Critical** | Changing after first deploy orphans the old Cloud SQL instance and Secret Manager secrets. A new empty database is provisioned. |
 | `application_version` | A pinned tag (e.g. `"1.0.0"`); avoid `"latest"` in production | **Medium** | `"latest"` makes rollback ambiguous on GKE — Kubernetes cannot distinguish between two pulls of the same tag from different builds. Pin to a specific digest for staging/production. |
 | `container_port` | `8080` (Flask/Gunicorn default) | **Critical** | Mismatch: the GKE liveness and readiness probes fail. The pod never enters the `Ready` state. Traffic never reaches the Flask app. All requests return 502 from the load balancer. |
-| `quota_memory_requests` | `"512Mi"` minimum (binary suffix required) | **Critical** | A bare integer like `"512"` is treated as **512 bytes** by Kubernetes. The ResourceQuota rejects every pod — **all pods fail to schedule**. Always use `"512Mi"` or `"1Gi"`. This is the most common cause of silent scheduling failures when using `Sample_GKE` for Foundation testing. |
+| `quota_memory_requests` | `"512Mi"` minimum (binary suffix required) | **Critical** | A bare integer like `"512"` is treated as **512 bytes** by Kubernetes. The ResourceQuota rejects every pod — **all pods fail to schedule**. Always use `"512Mi"` or `"1Gi"`. This is the most common cause of silent scheduling failures when using `Sample GKE` for Foundation testing. |
 | `quota_memory_limits` | `"1Gi"` (must be ≥ `quota_memory_requests`) | **Critical** | Same bare-integer issue. Always use binary suffixes (`Mi`, `Gi`). |
-| `min_instance_count` | `0` for dev/testing (scale-to-zero) | **Medium** | `0` during load testing: cold starts (pod scheduling + image pull) add noise to latency measurements. Set `min_instance_count = 1` when benchmarking `App_GKE` Foundation changes. |
+| `min_instance_count` | `0` for dev/testing (scale-to-zero) | **Medium** | `0` during load testing: cold starts (pod scheduling + image pull) add noise to latency measurements. Set `min_instance_count = 1` when benchmarking `App GKE` Foundation changes. |
 | `max_instance_count` | `1` for basic testing; increase only with DB connection pool headroom | **High** | Exceeding Cloud SQL connection limit during load tests: `FATAL: sorry, too many clients already`. All Flask pods fail DB queries simultaneously. |
 | `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` (default) | **Medium** | Memory too low (`< 128Mi`): Flask is OOMKilled on startup when loading Secret Manager client libraries. GKE Autopilot enforces a minimum of 512Mi — requests below the minimum are raised silently. |
 | `FLASK_SECRET_KEY` (generated secret) | Auto-generated 32-character random string stored in Secret Manager | **High** | Not injected into the Flask container: `SECRET_KEY` is unset, Flask raises `RuntimeError` on the first session or CSRF operation. Retrieve from Secret Manager to verify injection. |
 | `enable_redis` | `false` (default) | **Low** | `true` without `redis_host` configured: REDIS_HOST is empty; the Flask app raises `ConnectionRefusedError` on startup if it tries to connect to Redis. Only enable when specifically testing the Redis integration path in the Foundation Module. |
-| `redis_host` | Private IP of Redis instance (or `"127.0.0.1"` for in-cluster sidecar testing) | **High** | Wrong IP: Flask fails to connect to Redis on every request that uses the cache/session. Set to `"127.0.0.1"` when testing with the sidecar Redis deployment that `App_GKE` provisions when `enable_redis = true` and `redis_host = ""`. |
+| `redis_host` | Private IP of Redis instance (or `"127.0.0.1"` for in-cluster sidecar testing) | **High** | Wrong IP: Flask fails to connect to Redis on every request that uses the cache/session. Set to `"127.0.0.1"` when testing with the sidecar Redis deployment that `App GKE` provisions when `enable_redis = true` and `redis_host = ""`. |
 | `workload_type` | `null` (auto-selects Deployment; appropriate for the stateless hello-world pattern) | **Medium** | `"StatefulSet"` for a stateless sample app: creates unnecessary StatefulSet infrastructure. StatefulSets are slower to update and roll back. For Foundation testing keep `null` or `"Deployment"`. |
 | `startup_probe.path` | `"/healthz"` (Flask route returning 200) | **Critical** | `"/healthz"` not implemented in the custom Flask build: GKE kills the pod before it serves traffic. Implement with `@app.route('/healthz') / return 'ok', 200`. |
 | `liveness_probe.path` | `"/healthz"` — must be fast and non-blocking | **High** | Health endpoint that makes a DB call or runs expensive logic: if it times out, GKE restarts all healthy pods simultaneously. Keep the health endpoint < 100 ms. |
@@ -190,9 +190,9 @@ The table below identifies the variables most commonly misconfigured in `Sample_
 | `enable_pod_disruption_budget` | `false` (default; not meaningful at replica count 1) | **High** | `true` with `max_instance_count = 1` and `pdb_min_available = "1"`: GKE node drains are permanently blocked. Autopilot maintenance cannot complete. Enable only when `min_instance_count ≥ 2`. |
 | `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` (appropriate for a reference/test module) | **Critical** | `"REQUIRE_ATTESTATION"` without a CI attestation pipeline: no image can be deployed, including locally built test images. Keep `"ALWAYS_ALLOW"` unless specifically testing Binary Authorization. |
 | `enable_vpc_sc` | `false` (default); use `vpc_sc_dry_run = true` if testing VPC-SC integration | **Critical** | `enable_vpc_sc = true` with `vpc_sc_dry_run = false`: if any SA or IP is absent from the access level, all GKE workload API calls fail simultaneously. Always test in dry-run mode first. |
-| `explicit_secret_values` | `{}` (default; secrets are auto-generated by `Sample_Common`) | **High** | Providing an explicit `FLASK_SECRET_KEY` value via `explicit_secret_values` that is later removed: the auto-generated value from `Sample_Common` replaces it on the next apply. All existing Flask sessions are invalidated. Use consistent explicit values or always rely on the auto-generated value. |
+| `explicit_secret_values` | `{}` (default; secrets are auto-generated by `Sample Common`) | **High** | Providing an explicit `FLASK_SECRET_KEY` value via `explicit_secret_values` that is later removed: the auto-generated value from `Sample Common` replaces it on the next apply. All existing Flask sessions are invalidated. Use consistent explicit values or always rely on the auto-generated value. |
 
-## Validating a Sample_GKE Deployment
+## Validating a Sample GKE Deployment
 
 Because `Sample_GKE` delegates all infrastructure to `App_GKE`, validation follows the same procedures described in the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). The additional resources managed by `Sample_Common` can be validated as follows:
 

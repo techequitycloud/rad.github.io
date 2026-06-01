@@ -55,10 +55,10 @@ gcloud config set project YOUR_PROJECT_ID
 
 Before deploying this module:
 
-1. **Services_GCP deployed** — this module depends on `Services_GCP` for the VPC, Cloud SQL instance, Memorystore Redis, and Serverless VPC Access connector.
+1. **Services GCP deployed** — this module depends on `Services GCP` for the VPC, Cloud SQL instance, Memorystore Redis, and Serverless VPC Access connector.
 2. **GCP project** with billing enabled.
 3. **gcloud CLI** authenticated with Owner or Editor role on the project.
-4. **Redis host** — obtain the Memorystore Redis host IP from the `Services_GCP` outputs and set `redis_host`.
+4. **Redis host** — obtain the Memorystore Redis host IP from the `Services GCP` outputs and set `redis_host`.
 5. Access to the RAD UI with permission to deploy modules in the target GCP project.
 
 ---
@@ -474,7 +474,7 @@ When the lab is complete, return to the RAD UI, navigate to your deployment, and
 
 **Expected result:** The Cloud Run service, Cloud SQL database, GCS buckets, Secret Manager secrets, and IAM bindings created by this module are deleted.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

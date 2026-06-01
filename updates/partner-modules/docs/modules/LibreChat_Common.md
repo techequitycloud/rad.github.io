@@ -1,4 +1,4 @@
-# LibreChat_Common
+# LibreChat Common
 
 This document provides a reference for the `modules/LibreChat_Common` Terraform module — the shared application configuration layer consumed by both `LibreChat_CloudRun` and `LibreChat_GKE`.
 
@@ -6,11 +6,11 @@ This document provides a reference for the `modules/LibreChat_Common` Terraform 
 
 ## 1. Overview
 
-`LibreChat_Common` is the **application-specific shared layer** for LibreChat deployments. It is not deployed directly by users; instead, it is called as a child module by `LibreChat_CloudRun` and `LibreChat_GKE`.
+`LibreChat Common` is the **application-specific shared layer** for LibreChat deployments. It is not deployed directly by users; instead, it is called as a child module by `LibreChat CloudRun` and `LibreChat GKE`.
 
 **Responsibilities:**
 - Provisions and manages all LibreChat-specific Secret Manager secrets: `CREDS_KEY`, `CREDS_IV`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `MONGO_URI`, and optionally `SCRAM_PASSWORD` and `FIRESTORE_HOST`.
-- Builds the `config` output consumed by the Foundation Module (`App_CloudRun` / `App_GKE`), assembling LibreChat environment variables, probe configuration, image settings, and resource limits.
+- Builds the `config` output consumed by the Foundation Module (`App CloudRun` / `App GKE`), assembling LibreChat environment variables, probe configuration, image settings, and resource limits.
 - Manages MongoDB connectivity via three mutually exclusive paths:
   1. Explicit `mongodb_uri` (MongoDB Atlas, self-hosted).
   2. Manual Firestore configuration (`firestore_mongodb_host` + SCRAM credentials).
@@ -22,7 +22,7 @@ This document provides a reference for the `modules/LibreChat_Common` Terraform 
 
 ## 2. Firestore MongoDB Auto-Provisioning
 
-When neither `mongodb_uri` nor `firestore_mongodb_host` is supplied, `LibreChat_Common` follows a three-step discovery/creation pattern:
+When neither `mongodb_uri` nor `firestore_mongodb_host` is supplied, `LibreChat Common` follows a three-step discovery/creation pattern:
 
 1. **Discovery** — scans for an externally-managed ENTERPRISE Firestore database labeled `managed-by=services-gcp`.
 2. **Create if not found** — runs an idempotent `gcloud firestore databases create --edition=enterprise` command via a `null_resource`. Treats HTTP 409 (already exists) as success.

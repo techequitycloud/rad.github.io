@@ -1,8 +1,8 @@
-# Activepieces_GKE Module — Configuration Guide
+# Activepieces GKE Module — Configuration Guide
 
 Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation platform for connecting apps, APIs, and data sources. This module deploys a production-ready Activepieces application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL 15 instance, GCS data storage, and Secret Manager for cryptographic secrets (`AP_ENCRYPTION_KEY` and `AP_JWT_SECRET`).
 
-`Activepieces_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, Filestore, secrets, CI/CD) and adds Activepieces-specific application configuration via the `Activepieces_Common` sub-module.
+`Activepieces GKE` is a **wrapper module** built on top of `App GKE`. It uses `App GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, Filestore, secrets, CI/CD) and adds Activepieces-specific application configuration via the `Activepieces Common` sub-module.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -12,19 +12,19 @@ Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation 
 
 This guide documents variables that are **unique to `Activepieces_GKE`** or that have **Activepieces-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, CI/CD, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
-**Variables fully covered by the App_GKE guide:**
+**Variables fully covered by the App GKE guide:**
 
-| Configuration Area | App_GKE.md Section | Activepieces-Specific Notes |
+| Configuration Area | App GKE.md Section | Activepieces-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Different defaults for `module_description` and `module_documentation`. |
 | Project & Identity | §2 IAM & Access Control | Identical. Plus `region` for fallback region. |
 | Application Identity | §3.A Compute (GKE Autopilot) | See [Activepieces Application Identity](#activepieces-application-identity). `application_name` defaults to `"activepieces"`. |
 | Runtime & Scaling | §3.A Compute (GKE Autopilot) | `min_instance_count` defaults to `1`. `container_image_source` defaults to `"custom"`. See [Scaling Considerations](#scaling-considerations). |
-| Environment Variables & Secrets | §3 Core Service Configuration | `Activepieces_Common` injects all `AP_*` variables automatically — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
+| Environment Variables & Secrets | §3 Core Service Configuration | `Activepieces Common` injects all `AP_*` variables automatically — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
 | Networking & Network Policies | §3.D Networking & Network Policies | `session_affinity` defaults to `"ClientIP"` — see [Session Affinity](#session-affinity). |
-| Initialization Jobs & CronJobs | §3.E Initialization Jobs & CronJobs | See [Initialization Jobs](#initialization-jobs). Default `db-init` job is provided by `Activepieces_Common`. |
+| Initialization Jobs & CronJobs | §3.E Initialization Jobs & CronJobs | See [Initialization Jobs](#initialization-jobs). Default `db-init` job is provided by `Activepieces Common`. |
 | Additional Services | §3.F Additional Services | Identical. |
-| Storage — NFS & GCS | §3.C Storage (NFS / GCS / GCS Fuse) | `enable_nfs` defaults to `false`. GCS data bucket auto-provisioned by `Activepieces_Common`. |
+| Storage — NFS & GCS | §3.C Storage (NFS / GCS / GCS Fuse) | `enable_nfs` defaults to `false`. GCS data bucket auto-provisioned by `Activepieces Common`. |
 | Database Configuration | §3.B Database (Cloud SQL) | See [Activepieces Database Configuration](#activepieces-database-configuration). PostgreSQL 15 required; `pgvector` installed automatically. |
 | Backup Schedule & Retention | §3.B Database (Cloud SQL) | Uses `backup_uri` instead of `backup_file`. |
 | Custom SQL Scripts | §3.E Initialization Jobs & CronJobs | Identical. |
@@ -45,7 +45,7 @@ This guide documents variables that are **unique to `Activepieces_GKE`** or that
 | Resource Quotas | §7.C Resource Quotas | Identical. |
 | Auto Password Rotation | §7.D Auto Password Rotation | See [Password Rotation Propagation Delay](#password-rotation-propagation-delay). |
 | Redis Cache | §8.A Redis | **Activepieces-specific.** See [Redis Queue Mode](#redis-queue-mode). |
-| Backup Import | §8.B Backup Import | Uses `backup_uri` (maps to `App_GKE`'s `backup_file`). |
+| Backup Import | §8.B Backup Import | Uses `backup_uri` (maps to `App GKE`'s `backup_file`). |
 | Service Mesh (ASM) | §8.C Service Mesh (ASM via Fleet) | Identical. |
 | Multi-Cluster Services | §8.D Multi-Cluster Services (MCS) | Identical. |
 
@@ -53,20 +53,20 @@ This guide documents variables that are **unique to `Activepieces_GKE`** or that
 
 ## Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `Activepieces_GKE` (via the `Activepieces_Common` sub-module) regardless of the variable values in your `tfvars` file.
+The following behaviours are applied automatically by `Activepieces GKE` (via the `Activepieces Common` sub-module) regardless of the variable values in your `tfvars` file.
 
 | Behaviour | Detail |
 |---|---|
-| **Activepieces environment variables** | `Activepieces_Common` injects the following environment variables automatically: `AP_DB_TYPE` (`POSTGRES`), `AP_PORT` (`8080`), `AP_POSTGRES_PORT` (`5432`), `AP_FRONTEND_URL`, `AP_WEBHOOK_URL_PREFIX` (from the predicted internal service URL), `AP_ENVIRONMENT` (`production`), `AP_TELEMETRY_ENABLED` (`false`), `AP_EXECUTION_MODE` (`UNSANDBOXED`), `AP_SANDBOX_TYPE` (`NO_SANDBOX`), `AP_SIGN_UP_ENABLED` (`true`). |
+| **Activepieces environment variables** | `Activepieces Common` injects the following environment variables automatically: `AP_DB_TYPE` (`POSTGRES`), `AP_PORT` (`8080`), `AP_POSTGRES_PORT` (`5432`), `AP_FRONTEND_URL`, `AP_WEBHOOK_URL_PREFIX` (from the predicted internal service URL), `AP_ENVIRONMENT` (`production`), `AP_TELEMETRY_ENABLED` (`false`), `AP_EXECUTION_MODE` (`UNSANDBOXED`), `AP_SANDBOX_TYPE` (`NO_SANDBOX`), `AP_SIGN_UP_ENABLED` (`true`). |
 | **AP_POSTGRES_* mapping** | `entrypoint.sh` maps platform-standard `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` to Activepieces-specific `AP_POSTGRES_HOST`, `AP_POSTGRES_DATABASE`, `AP_POSTGRES_USERNAME`, `AP_POSTGRES_PASSWORD` at container startup. Do not set `AP_POSTGRES_*` variables directly in `environment_variables`. |
 | **AP_ENCRYPTION_KEY** | A random 32-character hex string is auto-generated and stored in Secret Manager. It is injected into the container via `module_secret_env_vars`. **Do not set `AP_ENCRYPTION_KEY` in `environment_variables`** — the platform-managed value in Secret Manager takes precedence. |
 | **AP_JWT_SECRET** | A random 32-character alphanumeric string is auto-generated and stored in Secret Manager. Injected via `module_secret_env_vars`. Do not set manually. |
 | **AP_QUEUE_MODE** | Defaults to `"MEMORY"`. Set `enable_redis = true` to switch to `"REDIS"` mode. |
 | **pgvector extension** | The `pgvector` extension (`CREATE EXTENSION IF NOT EXISTS vector`) is installed automatically in the application database during the `db-init` job. Required for Activepieces AI-powered workflow features. |
-| **GCS data bucket** | `Activepieces_Common` provisions a GCS bucket (suffix `ap-data`) and passes it to `App_GKE` via `module_storage_buckets`. The application SA is granted storage access by `App_GKE`. |
+| **GCS data bucket** | `Activepieces Common` provisions a GCS bucket (suffix `ap-data`) and passes it to `App GKE` via `module_storage_buckets`. The application SA is granted storage access by `App GKE`. |
 | **NFS disabled by default** | `enable_nfs` defaults to `false`. Unlike Django, Activepieces stores all state in PostgreSQL. Enable NFS only if co-locating Redis on the NFS server VM or if your deployment requires shared filesystem access across pods. |
 | **Session affinity** | `session_affinity` defaults to `"ClientIP"` to ensure consistent routing for Activepieces UI sessions. |
-| **Secret injection** | `Activepieces_GKE` uses `explicit_secret_values` (the raw secret values) to inject secrets directly into Kubernetes Secrets, bypassing Secret Manager read-after-write consistency issues on the initial apply. |
+| **Secret injection** | `Activepieces GKE` uses `explicit_secret_values` (the raw secret values) to inject secrets directly into Kubernetes Secrets, bypassing Secret Manager read-after-write consistency issues on the initial apply. |
 
 ---
 
@@ -74,13 +74,13 @@ The following behaviours are applied automatically by `Activepieces_GKE` (via th
 
 > **Warning:** Enabling IAP (`enable_iap = true`) requires Google identity authentication for all inbound requests, including **webhook endpoints**. Third-party services that POST to Activepieces webhook URLs will receive authentication errors. Only enable IAP if webhooks are not needed or are called exclusively by internal services.
 
-`Activepieces_GKE` exposes GKE-specific IAP variables not present in `Activepieces_CloudRun`. Two are required when `enable_iap = true`:
+`Activepieces GKE` exposes GKE-specific IAP variables not present in `Activepieces CloudRun`. Two are required when `enable_iap = true`:
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `iap_oauth_client_id` | 19 | `""` | OAuth client ID. Create in Google Cloud Console > APIs & Services > Credentials. Sensitive. Required when `enable_iap = true`. |
 | `iap_oauth_client_secret` | 19 | `""` | OAuth client secret. Sensitive. Required when `enable_iap = true`. |
-| `iap_support_email` | 19 | `""` | **Not referenced** — this variable is defined for UI consistency but is not forwarded to `App_GKE` in the current module version. Has no effect on the deployed IAP configuration. |
+| `iap_support_email` | 19 | `""` | **Not referenced** — this variable is defined for UI consistency but is not forwarded to `App GKE` in the current module version. Has no effect on the deployed IAP configuration. |
 
 A `validation.tf` precondition enforces that both `iap_oauth_client_id` and `iap_oauth_client_secret` are non-empty when `enable_iap = true`.
 
@@ -111,30 +111,30 @@ These variables have Activepieces-specific defaults.
 | `application_display_name` | `"Activepieces Workflow Automation"` | Human-readable name shown in the platform UI and monitoring dashboards. Can be updated freely. |
 | `application_description` | `"Activepieces - Open source workflow automation on GKE Autopilot"` | Brief description populated into Kubernetes annotations and platform documentation. |
 | `application_version` | `"latest"` | Version tag applied to the container image. The custom image wraps `activepieces/activepieces:<version>`. Pin to a specific version (e.g. `"0.20.0"`) in production. |
-| `display_name` | `"Activepieces Workflow Automation"` | Human-readable display name passed to `Activepieces_Common`. Exposed alongside `application_display_name`. |
-| `description` | `"Activepieces - Open source workflow automation platform on GKE Autopilot"` | Description passed to `Activepieces_Common`. |
+| `display_name` | `"Activepieces Workflow Automation"` | Human-readable display name passed to `Activepieces Common`. Exposed alongside `application_display_name`. |
+| `description` | `"Activepieces - Open source workflow automation platform on GKE Autopilot"` | Description passed to `Activepieces Common`. |
 
 ---
 
 ## Activepieces Database Configuration
 
-Activepieces requires PostgreSQL 15 (`database_type = "POSTGRES"` by default in `Activepieces_GKE`). `Activepieces_Common` hardcodes `database_type = "POSTGRES_15"` in the `config` output regardless of what is passed via `application_database_name`/`application_database_user`.
+Activepieces requires PostgreSQL 15 (`database_type = "POSTGRES"` by default in `Activepieces GKE`). `Activepieces Common` hardcodes `database_type = "POSTGRES_15"` in the `config` output regardless of what is passed via `application_database_name`/`application_database_user`.
 
-**Note:** `Activepieces_GKE` exposes **two sets** of database name and user variables, but only `db_name` / `db_user` are actively used:
-- `application_database_name` / `application_database_user` — **not referenced** in this wrapper module. These variables exist for UI consistency with other modules but are not forwarded to `App_GKE`. Cloud SQL provisioning uses the values passed internally through `Activepieces_Common`'s config output.
-- `db_name` / `db_user` — passed to `Activepieces_Common` for the application-level database and user configuration. These are the **authoritative** variables for Activepieces database configuration.
+**Note:** `Activepieces GKE` exposes **two sets** of database name and user variables, but only `db_name` / `db_user` are actively used:
+- `application_database_name` / `application_database_user` — **not referenced** in this wrapper module. These variables exist for UI consistency with other modules but are not forwarded to `App GKE`. Cloud SQL provisioning uses the values passed internally through `Activepieces Common`'s config output.
+- `db_name` / `db_user` — passed to `Activepieces Common` for the application-level database and user configuration. These are the **authoritative** variables for Activepieces database configuration.
 
 Set `db_name` and `db_user` to the desired values. The `application_database_name`/`application_database_user` variables have no effect on the deployed infrastructure.
 
 | Variable | Default | Description & Implications |
 |---|---|---|
-| `application_database_name` | `"activepieces_db"` | **Not referenced** — not forwarded to `App_GKE`. Has no effect on the deployed Cloud SQL instance. |
-| `application_database_user` | `"ap_user"` | **Not referenced** — not forwarded to `App_GKE`. Has no effect on the deployed Cloud SQL user. |
-| `db_name` | `"activepieces_db"` | Passed to `Activepieces_Common` for app configuration. This is the authoritative database name variable. Do not change after initial deployment. |
-| `db_user` | `"ap_user"` | Passed to `Activepieces_Common` for app configuration. This is the authoritative database user variable. |
-| `database_type` | `"POSTGRES"` | **Not referenced** — not forwarded to `App_GKE`. `Activepieces_Common` hardcodes `"POSTGRES_15"` in the app config regardless of this value. |
-| `enable_postgres_extensions` | `false` | **Not referenced** — not forwarded to `App_GKE`. `pgvector` is installed directly by the `db-init.sh` script regardless of this setting. |
-| `postgres_extensions` | `[]` | **Not referenced** — not forwarded to `App_GKE`. Has no effect. |
+| `application_database_name` | `"activepieces_db"` | **Not referenced** — not forwarded to `App GKE`. Has no effect on the deployed Cloud SQL instance. |
+| `application_database_user` | `"ap_user"` | **Not referenced** — not forwarded to `App GKE`. Has no effect on the deployed Cloud SQL user. |
+| `db_name` | `"activepieces_db"` | Passed to `Activepieces Common` for app configuration. This is the authoritative database name variable. Do not change after initial deployment. |
+| `db_user` | `"ap_user"` | Passed to `Activepieces Common` for app configuration. This is the authoritative database user variable. |
+| `database_type` | `"POSTGRES"` | **Not referenced** — not forwarded to `App GKE`. `Activepieces Common` hardcodes `"POSTGRES_15"` in the app config regardless of this value. |
+| `enable_postgres_extensions` | `false` | **Not referenced** — not forwarded to `App GKE`. `pgvector` is installed directly by the `db-init.sh` script regardless of this setting. |
+| `postgres_extensions` | `[]` | **Not referenced** — not forwarded to `App GKE`. Has no effect. |
 
 ### Validating Database Configuration
 
@@ -154,23 +154,23 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep -E "^(AP_ENCRYPTION_KEY|AP_JWT_
 
 ## Activepieces Health Probes
 
-`Activepieces_GKE` exposes **two separate sets** of probe variables with different routing:
+`Activepieces GKE` exposes **two separate sets** of probe variables with different routing:
 
-*   **`startup_probe` / `liveness_probe`** — Activepieces-specific variables passed to `Activepieces_Common`, which uses them to configure the application container's Kubernetes probe spec. Both target `/` by default in the GKE module.
-*   **`startup_probe_config` / `health_check_config`** — `App_GKE`-standard variables passed directly to `App_GKE`.
+*   **`startup_probe` / `liveness_probe`** — Activepieces-specific variables passed to `Activepieces Common`, which uses them to configure the application container's Kubernetes probe spec. Both target `/` by default in the GKE module.
+*   **`startup_probe_config` / `health_check_config`** — `App GKE`-standard variables passed directly to `App GKE`.
 
 Activepieces connects to PostgreSQL and applies database migrations on **first boot** — this can take several minutes. The default `startup_probe` settings (`initial_delay_seconds = 60`, `failure_threshold = 3`, `period_seconds = 10`) provide a 60-second initial delay plus 30 seconds of retry window. Increase `failure_threshold` or `initial_delay_seconds` if migrations are slow.
 
-**`startup_probe` and `liveness_probe` (Activepieces_Common internal probes):**
+**`startup_probe` and `liveness_probe` (Activepieces Common internal probes):**
 
 | Variable | Default | Description & Implications |
 |---|---|---|
-| `startup_probe` | `{ enabled = true, type = "HTTP", path = "/", initial_delay_seconds = 60, timeout_seconds = 3, period_seconds = 10, failure_threshold = 3 }` | Used by `Activepieces_Common` for container startup assessment. Targets `/`. Increase `initial_delay_seconds` to 120+ for first-boot migrations. |
-| `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Used by `Activepieces_Common` for ongoing health assessment. |
+| `startup_probe` | `{ enabled = true, type = "HTTP", path = "/", initial_delay_seconds = 60, timeout_seconds = 3, period_seconds = 10, failure_threshold = 3 }` | Used by `Activepieces Common` for container startup assessment. Targets `/`. Increase `initial_delay_seconds` to 120+ for first-boot migrations. |
+| `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Used by `Activepieces Common` for ongoing health assessment. |
 
-**`startup_probe_config` / `health_check_config` (App_GKE-standard probes):**
+**`startup_probe_config` / `health_check_config` (App GKE-standard probes):**
 
-Django-style App_GKE infrastructure probes. Defaults:
+Django-style App GKE infrastructure probes. Defaults:
 - `startup_probe_config`: `{ enabled = true, type = "TCP", initial_delay_seconds = 0, timeout_seconds = 240, period_seconds = 240, failure_threshold = 1 }`
 - `health_check_config`: `{ enabled = true, type = "HTTP", path = "/", initial_delay_seconds = 0, timeout_seconds = 1, period_seconds = 10, failure_threshold = 3 }`
 
@@ -208,7 +208,7 @@ Activepieces supports two queue modes:
 
 > **Redis host resolution:** When `enable_redis = true` and `redis_host = ""`, the `$(NFS_SERVER_IP)` placeholder is used. This is replaced at runtime by the NFS server's internal IP. This enables a simple co-located Redis + NFS setup. For production deployments, provision a dedicated Cloud Memorystore instance and set `redis_host` explicitly.
 
-> **Provisioning Redis:** `Activepieces_GKE` does not provision a Redis instance. Provision Cloud Memorystore separately, or deploy `Services_GCP` — it provides a shared Memorystore instance auto-discovered when `redis_host` is left blank.
+> **Provisioning Redis:** `Activepieces GKE` does not provision a Redis instance. Provision Cloud Memorystore separately, or deploy `Services GCP` — it provides a shared Memorystore instance auto-discovered when `redis_host` is left blank.
 
 **Validation rule:** A `validation.tf` precondition enforces that when `enable_redis = true`, either `redis_host != ""` or `enable_nfs = true`. This prevents `QUEUE_BULL_REDIS_HOST` from being empty, which would cause the application to fail on startup.
 
@@ -245,7 +245,7 @@ Activepieces is primarily a stateful server-side application. User sessions and 
 
 ## Initialization Jobs
 
-`Activepieces_GKE` does **not** configure a non-empty default `initialization_jobs` list — when `initialization_jobs = []` (the default), `Activepieces_Common` substitutes a single default `db-init` job (`execute_on_apply = true`). Unlike Django, there is no separate `db-migrate` job — Activepieces runs database migrations automatically on startup.
+`Activepieces GKE` does **not** configure a non-empty default `initialization_jobs` list — when `initialization_jobs = []` (the default), `Activepieces Common` substitutes a single default `db-init` job (`execute_on_apply = true`). Unlike Django, there is no separate `db-migrate` job — Activepieces runs database migrations automatically on startup.
 
 The default `db-init` job:
 
@@ -254,7 +254,7 @@ The default `db-init` job:
 | Name | `db-init` |
 | Description | `"Create Activepieces Database and User"` |
 | Image | `postgres:15-alpine` |
-| Script | `scripts/db-init.sh` (from `Activepieces_Common`) |
+| Script | `scripts/db-init.sh` (from `Activepieces Common`) |
 | `execute_on_apply` | `true` |
 | Timeout | `600s` |
 
@@ -324,7 +324,7 @@ If your deployment requires per-pod local storage (e.g., for custom piece artifa
 
 ## Validation Rules
 
-`Activepieces_GKE` includes a `validation.tf` with three cross-variable preconditions enforced at `terraform apply` time:
+`Activepieces GKE` includes a `validation.tf` with three cross-variable preconditions enforced at `terraform apply` time:
 
 | Rule | Condition | Error Message |
 |---|---|---|
@@ -336,7 +336,7 @@ If your deployment requires per-pod local storage (e.g., for custom piece artifa
 
 ## Deployment Prerequisites & Validation
 
-After deploying `Activepieces_GKE`, confirm the deployment is healthy:
+After deploying `Activepieces GKE`, confirm the deployment is healthy:
 
 ```bash
 # Confirm the Activepieces pod is running and ready

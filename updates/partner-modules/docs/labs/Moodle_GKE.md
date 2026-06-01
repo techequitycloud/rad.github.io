@@ -50,8 +50,8 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install), [kubectl
 ## Prerequisites
 
 1. A GCP project with billing enabled.
-2. The `Services_GCP` module deployed in the same project (provides VPC, GKE cluster, Cloud SQL instance, and NFS server).
-3. The following APIs enabled (Services_GCP handles this):
+2. The `Services GCP` module deployed in the same project (provides VPC, GKE cluster, Cloud SQL instance, and NFS server).
+3. The following APIs enabled (Services GCP handles this):
    - `container.googleapis.com`
    - `sqladmin.googleapis.com`
    - `secretmanager.googleapis.com`
@@ -69,7 +69,7 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install), [kubectl
 
 ### Step 1.1 — Configure Variables
 
-In the RAD UI, open the Moodle_GKE module and fill in the deployment form. The table below describes the key variables:
+In the RAD UI, open the Moodle GKE module and fill in the deployment form. The table below describes the key variables:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
@@ -109,7 +109,7 @@ Once the form is filled in, click **Deploy** in the RAD UI. Deployment runs auto
 
 | Phase | Duration |
 |---|---|
-| VPC and networking (via Services_GCP) | Pre-provisioned |
+| VPC and networking (via Services GCP) | Pre-provisioned |
 | Cloud SQL PostgreSQL instance | 8–12 min |
 | GKE namespace, workload identity, NFS | 3–5 min |
 | Artifact Registry image build (Cloud Build) | 8–15 min |
@@ -546,7 +546,7 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 
 > **Warning:** This permanently deletes all resources including the PostgreSQL database and NFS moodledata. Back up any course content before undeploying.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

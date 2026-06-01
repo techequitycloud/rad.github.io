@@ -1,12 +1,12 @@
-# Wikijs_Common Module
+# Wikijs Common Module
 
 ## Overview
 
-`Wikijs_Common` is a pure-configuration Terraform module in the RAD Modules ecosystem. It generates a `config` object consumed by platform modules (`App_CloudRun`, `App_GKE`) to deploy Wiki.js — an open-source Node.js wiki platform — on Google Cloud.
+`Wikijs Common` is a pure-configuration Terraform module in the RAD Modules ecosystem. It generates a `config` object consumed by platform modules (`App CloudRun`, `App GKE`) to deploy Wiki.js — an open-source Node.js wiki platform — on Google Cloud.
 
-Unlike every other `*_Common` module, **Wikijs_Common creates zero GCP resources**. There are no Secret Manager secrets, no IAM bindings, no service enablement. The module consists entirely of `locals` and `output` blocks. Consequently, no `project_id` variable is required.
+Unlike every other `*_Common` module, **Wikijs Common creates zero GCP resources**. There are no Secret Manager secrets, no IAM bindings, no service enablement. The module consists entirely of `locals` and `output` blocks. Consequently, no `project_id` variable is required.
 
-The database password is not generated here; it is managed by the platform layer (`App_CloudRun`/`App_GKE`) and referenced symbolically as `"database_password_secret"` in the `secret_environment_variables` map, which the platform resolves to the actual secret ID at runtime.
+The database password is not generated here; it is managed by the platform layer (`App CloudRun`/`App GKE`) and referenced symbolically as `"database_password_secret"` in the `secret_environment_variables` map, which the platform resolves to the actual secret ID at runtime.
 
 ---
 
@@ -92,7 +92,7 @@ There are no `secret_ids` or `secret_values` outputs — this module creates no 
 | `startup_probe` | object | HTTP `/healthz`, 60s delay | Startup probe config |
 | `liveness_probe` | object | HTTP `/healthz`, 60s delay | Liveness probe config |
 
-> **No `project_id` variable:** Wikijs_Common requires no GCP project reference because it creates no GCP resources.
+> **No `project_id` variable:** Wikijs Common requires no GCP project reference because it creates no GCP resources.
 
 ---
 
@@ -202,7 +202,7 @@ A thin wrapper that maps platform-standard variable names to Wiki.js's expected 
 
 ## Platform-Specific Differences
 
-| Aspect | Wikijs_CloudRun | Wikijs_GKE |
+| Aspect | Wikijs CloudRun | Wikijs GKE |
 |--------|-----------------|------------|
 | `service_url` | Computed Cloud Run service URL | Empty string (not known at plan time) |
 | `enable_cloudsql_volume` | Optional (Auth Proxy sidecar, default `true`) | Optional (Auth Proxy sidecar, default `true`) |
@@ -210,7 +210,7 @@ A thin wrapper that maps platform-standard variable names to Wiki.js's expected 
 | NFS / shared storage | GCS Fuse via `gcs_volumes` (`HA_STORAGE_PATH = /wiki-storage`) | GCS Fuse or NFS mount via `gcs_volumes` |
 | Redis | Not supported | Not supported |
 | Clustering | Multi-instance ready via `HA_STORAGE_PATH` shared storage | Multi-instance ready via `HA_STORAGE_PATH` shared storage |
-| `DB_PASS` secret | Symbolic reference `"database_password_secret"` resolved by `App_CloudRun` | Symbolic reference resolved by `App_GKE` |
+| `DB_PASS` secret | Symbolic reference `"database_password_secret"` resolved by `App CloudRun` | Symbolic reference resolved by `App GKE` |
 
 ---
 

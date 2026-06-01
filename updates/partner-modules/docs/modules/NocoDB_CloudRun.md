@@ -6,12 +6,12 @@ This document provides a comprehensive reference for the `modules/NocoDB_CloudRu
 
 ## 1. Module Overview
 
-NocoDB is an open-source no-code database platform (Airtable alternative) with 45,000+ GitHub stars that transforms any database into a smart spreadsheet with a no-code interface, REST and GraphQL APIs, and built-in automations. `NocoDB_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects NocoDB-specific application configuration, database initialisation, and storage configuration via `NocoDB_Common`.
+NocoDB is an open-source no-code database platform (Airtable alternative) with 45,000+ GitHub stars that transforms any database into a smart spreadsheet with a no-code interface, REST and GraphQL APIs, and built-in automations. `NocoDB CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects NocoDB-specific application configuration, database initialisation, and storage configuration via `NocoDB Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), 1 vCPU / 1 Gi by default. Scale-to-zero (`min_instance_count = 0`) with `max_instance_count = 3` — both are user-configurable.
 *   **Data Persistence**: Cloud SQL **PostgreSQL 15** (default). NocoDB also supports MySQL 8.0. NocoDB connects via private IP TCP rather than the Auth Proxy Unix socket because its internal database URL constructor rejects Unix socket paths — `enable_cloudsql_volume` defaults to `false`.
-*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_CloudRun`. `NocoDB_Common` does not auto-generate application-level secrets — NocoDB manages its own JWT and encryption keys.
+*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`. `NocoDB Common` does not auto-generate application-level secrets — NocoDB manages its own JWT and encryption keys.
 *   **Caching**: Redis **disabled by default** (`enable_redis = false`). Configure `redis_host` and `redis_port` when enabling.
 *   **CI/CD**: Cloud Build custom image pipeline by default (`container_image_source = 'custom'`); Cloud Deploy progressive delivery optional.
 *   **Health**: Health probes target `/api/v1/health` with 30-second initial delay.
@@ -30,7 +30,7 @@ NocoDB is an open-source no-code database platform (Airtable alternative) with 4
 | `application_description` | 3 | `string` | `'NocoDB on Cloud Run'` | Cloud Run service description. |
 | `application_version` | 3 | `string` | `'latest'` | NocoDB image version tag. |
 
-**Wrapper architecture:** `NocoDB_CloudRun` calls `NocoDB_Common` to build an `application_config` object containing NocoDB-specific environment variables and probe configuration. `module_storage_buckets` carries the NocoDB uploads bucket provisioned by `NocoDB_Common`. `scripts_dir` is resolved to `abspath("${module.nocodb_app.path}/scripts")` at apply time.
+**Wrapper architecture:** `NocoDB CloudRun` calls `NocoDB Common` to build an `application_config` object containing NocoDB-specific environment variables and probe configuration. `module_storage_buckets` carries the NocoDB uploads bucket provisioned by `NocoDB Common`. `scripts_dir` is resolved to `abspath("${module.nocodb_app.path}/scripts")` at apply time.
 
 **NC_DB_* note:** The module exposes `db_password_env_var_name`, `db_host_env_var_name`, `db_user_env_var_name`, `db_name_env_var_name`, `db_port_env_var_name`, and `service_url_env_var_name` variables to control what additional env var names are populated alongside the standard `DB_*` names. Defaults are `NC_DB_PASSWORD`, `NC_DB_HOST`, `NC_DB_USER`, `NC_DB_NAME`, `NC_DB_PORT`, and `NC_PUBLIC_URL` respectively.
 
@@ -40,11 +40,11 @@ NocoDB is an open-source no-code database platform (Airtable alternative) with 4
 
 `NocoDB_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in [App_CloudRun §2](../App_CloudRun/App_CloudRun.md#2-iam--access-control).
 
-**No application-level secrets:** `NocoDB_Common` does not auto-generate application secrets such as `NC_AUTH_JWT_SECRET`. NocoDB generates and stores these internally on first boot. User-defined secrets can be added via `secret_environment_variables`.
+**No application-level secrets:** `NocoDB Common` does not auto-generate application secrets such as `NC_AUTH_JWT_SECRET`. NocoDB generates and stores these internally on first boot. User-defined secrets can be added via `secret_environment_variables`.
 
-**Database identity:** NocoDB connects to Cloud SQL PostgreSQL via **private IP TCP** (not Unix socket). `enable_cloudsql_volume` defaults to `false`. The private IP is injected as `DB_HOST` (and `NC_DB_HOST`) by `App_CloudRun`.
+**Database identity:** NocoDB connects to Cloud SQL PostgreSQL via **private IP TCP** (not Unix socket). `enable_cloudsql_volume` defaults to `false`. The private IP is injected as `DB_HOST` (and `NC_DB_HOST`) by `App CloudRun`.
 
-**120-second IAM propagation delay:** Inherited from `App_CloudRun` — the NocoDB service is not deployed until the delay completes, preventing secret-read failures on the first revision start.
+**120-second IAM propagation delay:** Inherited from `App CloudRun` — the NocoDB service is not deployed until the delay completes, preventing secret-read failures on the first revision start.
 
 ---
 
@@ -52,7 +52,7 @@ NocoDB is an open-source no-code database platform (Airtable alternative) with 4
 
 ### A. Compute (Cloud Run)
 
-NocoDB is a lightweight Node.js application. `NocoDB_CloudRun` exposes `cpu_limit` and `memory_limit` with production-ready defaults.
+NocoDB is a lightweight Node.js application. `NocoDB CloudRun` exposes `cpu_limit` and `memory_limit` with production-ready defaults.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -72,9 +72,9 @@ NocoDB is a lightweight Node.js application. `NocoDB_CloudRun` exposes `cpu_limi
 | `service_annotations` | 4 | `{}` | Advanced Cloud Run annotations. |
 | `service_labels` | 4 | `{}` | Labels applied to the Cloud Run service. |
 
-**Differences from `App_CloudRun` defaults:**
+**Differences from `App CloudRun` defaults:**
 
-| Variable | `App_CloudRun` | `NocoDB_CloudRun` | Reason |
+| Variable | `App CloudRun` | `NocoDB CloudRun` | Reason |
 |---|---|---|---|
 | `enable_cloudsql_volume` | `true` | `false` | NocoDB's URL constructor rejects Unix socket paths — private IP TCP is used. |
 | `container_image` | (app-specific) | `'nocodb/nocodb'` | Official NocoDB Docker Hub image. |
@@ -103,7 +103,7 @@ NocoDB supports PostgreSQL (default) and MySQL 8.0. `database_type` defaults to 
 
 ### C. Storage (GCS)
 
-NocoDB stores file uploads in a GCS bucket. `NocoDB_Common` auto-provisions a `nocodb-uploads` bucket. The bucket name is injected as `GCS_BUCKET_NAME` into the Cloud Run service.
+NocoDB stores file uploads in a GCS bucket. `NocoDB Common` auto-provisions a `nocodb-uploads` bucket. The bucket name is injected as `GCS_BUCKET_NAME` into the Cloud Run service.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -123,7 +123,7 @@ NocoDB uses Direct VPC Egress to reach Cloud SQL's private IP.
 |---|---|---|---|
 | `ingress_settings` | 5 | `'all'` | `'all'` — public internet; `'internal'` — VPC only; `'internal-and-cloud-load-balancing'` — forces traffic through the HTTPS Load Balancer. |
 | `vpc_egress_setting` | 5 | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` routes only RFC 1918 traffic via VPC. |
-| `network_name` | 15 | `""` | VPC network name. Leave empty to auto-discover the Services_GCP-managed network. |
+| `network_name` | 15 | `""` | VPC network name. Leave empty to auto-discover the Services GCP-managed network. |
 
 ### E. Initialisation & Bootstrap
 
@@ -216,7 +216,7 @@ When `enable_iap = true`, Cloud Run's native IAP integration is enabled. Useful 
 
 ### A. Scaling & Concurrency
 
-Unlike Ghost or Django modules, `min_instance_count` and `max_instance_count` are **user-configurable** in NocoDB_CloudRun. They default to `0` (scale-to-zero) and `3` respectively. NocoDB is stateless at the request layer — sessions and application state are stored in PostgreSQL.
+Unlike Ghost or Django modules, `min_instance_count` and `max_instance_count` are **user-configurable** in NocoDB CloudRun. They default to `0` (scale-to-zero) and `3` respectively. NocoDB is stateless at the request layer — sessions and application state are stored in PostgreSQL.
 
 ### B. Health Probes & Uptime Monitoring
 
@@ -282,19 +282,19 @@ Redis is **disabled by default** (`enable_redis = false`). NocoDB can use Redis 
 | **NC_DB_* env var mapping** | Custom Dockerfile in `NocoDB_Common` | When `container_image_source = 'custom'`, the Dockerfile maps `DB_*` → `NC_DB_*` automatically. |
 | **GCS uploads bucket** | `GCS_BUCKET_NAME` env var injected in `nocodb.tf` | Uploads bucket name is computed as `app<name><tenant><id>-nocodb-uploads` and injected as `GCS_BUCKET_NAME`. |
 | **Scale-to-zero** | `min_instance_count = 0` default | User-configurable, unlike Ghost. |
-| **No auto-generated app secrets** | `NocoDB_Common` does not create `NC_AUTH_JWT_SECRET` | NocoDB manages its own JWT keys at runtime. Use `secret_environment_variables` for custom secrets. |
+| **No auto-generated app secrets** | `NocoDB Common` does not create `NC_AUTH_JWT_SECRET` | NocoDB manages its own JWT keys at runtime. Use `secret_environment_variables` for custom secrets. |
 
 ---
 
 ## 10. Variable Reference
 
-All user-configurable variables exposed by `NocoDB_CloudRun`, sorted by UI group. Group 0 variables are reserved for platform metadata.
+All user-configurable variables exposed by `NocoDB CloudRun`, sorted by UI group. Group 0 variables are reserved for platform metadata.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `module_description` | 0 | (NocoDB platform text) | Platform metadata: module description. |
 | `module_documentation` | 0 | (docs URL) | Platform metadata: documentation URL. |
-| `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
+| `module_dependency` | 0 | `['Services GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `50` | Platform metadata: deployment credit cost. |
 | `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |

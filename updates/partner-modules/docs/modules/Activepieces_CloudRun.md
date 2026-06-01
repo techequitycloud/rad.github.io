@@ -6,12 +6,12 @@ This document provides a comprehensive reference for the `modules/Activepieces_C
 
 ## 1. Module Overview
 
-Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation platform for connecting apps, APIs, and data sources. `Activepieces_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Activepieces-specific application configuration, secrets, database initialisation, and queue configuration via `Activepieces_Common`.
+Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation platform for connecting apps, APIs, and data sources. `Activepieces CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects Activepieces-specific application configuration, secrets, database initialisation, and queue configuration via `Activepieces Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Node.js container, scale-to-zero supported (`min_instance_count = 0` by default). Custom image build via Cloud Build wraps the upstream `activepieces/activepieces` image.
-*   **Data Persistence**: Cloud SQL PostgreSQL 15 with Cloud SQL Auth Proxy sidecar (`enable_cloudsql_volume = true` by default). The `db-init.sh` script handles socket detection and the `pgvector` extension for AI features. GCS data bucket provisioned automatically by `Activepieces_Common`.
-*   **Security**: `AP_ENCRYPTION_KEY` and `AP_JWT_SECRET` auto-generated and stored in Secret Manager. Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_CloudRun`.
+*   **Data Persistence**: Cloud SQL PostgreSQL 15 with Cloud SQL Auth Proxy sidecar (`enable_cloudsql_volume = true` by default). The `db-init.sh` script handles socket detection and the `pgvector` extension for AI features. GCS data bucket provisioned automatically by `Activepieces Common`.
+*   **Security**: `AP_ENCRYPTION_KEY` and `AP_JWT_SECRET` auto-generated and stored in Secret Manager. Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`.
 *   **Queue Mode**: Memory-based queue by default (`AP_QUEUE_MODE = MEMORY`). Set `enable_redis = true` to switch to Redis queue mode (`AP_QUEUE_MODE = REDIS`), required for horizontal scaling.
 *   **Webhooks**: `ingress_settings = 'all'` is the default so external systems can POST to Activepieces webhook endpoints. Enabling IAP will block public webhooks.
 *   **CI/CD**: Cloud Build custom image pipeline by default; Cloud Deploy progressive delivery optional.
@@ -29,9 +29,9 @@ Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation 
 | `description` | 2 | `string` | `'Activepieces - Open source workflow automation platform'` | Cloud Run service description. Note: uses `description` alias, not `application_description`. |
 | `application_version` | 2 | `string` | `'latest'` | Container image version tag. Increment to deploy a new release. |
 
-**Wrapper architecture:** `Activepieces_CloudRun` calls `Activepieces_Common` to build an `application_config` object containing Activepieces environment variables, the `AP_ENCRYPTION_KEY` and `AP_JWT_SECRET` secrets, database initialisation job configuration, probe settings, and the data GCS bucket definition. `module_env_vars` is empty (all env vars are set inside `Activepieces_Common`). `module_secret_env_vars` carries `Activepieces_Common`-generated secret IDs. `module_storage_buckets` carries the data bucket provisioned by `Activepieces_Common`. `scripts_dir` is resolved to `${module.activepieces_app.path}/scripts`.
+**Wrapper architecture:** `Activepieces CloudRun` calls `Activepieces Common` to build an `application_config` object containing Activepieces environment variables, the `AP_ENCRYPTION_KEY` and `AP_JWT_SECRET` secrets, database initialisation job configuration, probe settings, and the data GCS bucket definition. `module_env_vars` is empty (all env vars are set inside `Activepieces Common`). `module_secret_env_vars` carries `Activepieces Common`-generated secret IDs. `module_storage_buckets` carries the data bucket provisioned by `Activepieces Common`. `scripts_dir` is resolved to `${module.activepieces_app.path}/scripts`.
 
-**Naming note:** Unlike Django, which uses `application_display_name` and `application_description`, `Activepieces_CloudRun` uses `display_name` and `description` aliases. These are mapped to the `App_CloudRun` display name and description fields inside `Activepieces_Common`'s config output.
+**Naming note:** Unlike Django, which uses `application_display_name` and `application_description`, `Activepieces CloudRun` uses `display_name` and `description` aliases. These are mapped to the `App CloudRun` display name and description fields inside `Activepieces Common`'s config output.
 
 ---
 
@@ -39,13 +39,13 @@ Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation 
 
 `Activepieces_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in [App_CloudRun §2](../App_CloudRun/App_CloudRun.md#2-iam--access-control).
 
-**Activepieces auto-generated secrets and IAM:** `Activepieces_Common` creates two Secret Manager secrets during provisioning: `AP_ENCRYPTION_KEY` and `AP_JWT_SECRET`. These are injected into the Cloud Run revision via `module_secret_env_vars`. The Cloud Run SA requires `roles/secretmanager.secretAccessor`, which is already granted by `App_CloudRun`. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App_CloudRun`.
+**Activepieces auto-generated secrets and IAM:** `Activepieces Common` creates two Secret Manager secrets during provisioning: `AP_ENCRYPTION_KEY` and `AP_JWT_SECRET`. These are injected into the Cloud Run revision via `module_secret_env_vars`. The Cloud Run SA requires `roles/secretmanager.secretAccessor`, which is already granted by `App CloudRun`. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App CloudRun`.
 
 **Database initialisation identity:** The `db-init` Cloud Run Job runs under the Cloud Run SA. It connects to Cloud SQL via the Auth Proxy sidecar (since `enable_cloudsql_volume = true` by default). The `db-init.sh` script auto-detects the socket path at runtime.
 
-**GCS data bucket IAM:** `Activepieces_Common` provisions a GCS data bucket and the application SA is granted storage access by `App_CloudRun`.
+**GCS data bucket IAM:** `Activepieces Common` provisions a GCS data bucket and the application SA is granted storage access by `App CloudRun`.
 
-**120-second IAM propagation delay:** Inherited from `App_CloudRun` — the Activepieces service is not deployed until the delay completes, preventing secret-read failures on the first revision start.
+**120-second IAM propagation delay:** Inherited from `App CloudRun` — the Activepieces service is not deployed until the delay completes, preventing secret-read failures on the first revision start.
 
 **Webhook access:** Public access is required for Activepieces webhook endpoints. `ingress_settings = 'all'` is the default. Enabling IAP (`enable_iap = true`) will require Google identity authentication and will block unauthenticated webhook calls from external systems.
 
@@ -55,11 +55,11 @@ Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation 
 
 ### A. Compute (Cloud Run)
 
-Activepieces is a Node.js application with significant memory requirements. The default resource limits (`cpu_limit = "2000m"`, `memory_limit = "2Gi"`) reflect the minimum recommended for production use. Unlike Django (which uses a `container_resources` object), `Activepieces_CloudRun` exposes `cpu_limit` and `memory_limit` as individual top-level variables.
+Activepieces is a Node.js application with significant memory requirements. The default resource limits (`cpu_limit = "2000m"`, `memory_limit = "2Gi"`) reflect the minimum recommended for production use. Unlike Django (which uses a `container_resources` object), `Activepieces CloudRun` exposes `cpu_limit` and `memory_limit` as individual top-level variables.
 
 **Scale-to-zero is enabled by default** (`min_instance_count = 0`). Note: when running in memory queue mode, cold starts cause any in-flight workflow execution data held in memory to be lost. Set `min_instance_count = 1` for production deployments or when using memory queue mode with long-running workflows.
 
-**Container image:** `container_image_source` is hardcoded to `'custom'` inside `Activepieces_Common`. Cloud Build wraps the official `activepieces/activepieces` image with the `entrypoint.sh` script. The `application_version` tag controls which upstream image version is pulled.
+**Container image:** `container_image_source` is hardcoded to `'custom'` inside `Activepieces Common`. Cloud Build wraps the official `activepieces/activepieces` image with the `entrypoint.sh` script. The `application_version` tag controls which upstream image version is pulled.
 
 **Cloud SQL Auth Proxy:** `enable_cloudsql_volume` defaults to `true`. The Cloud SQL Auth Proxy sidecar is injected. `db-init.sh` detects the socket automatically.
 
@@ -82,9 +82,9 @@ Activepieces is a Node.js application with significant memory requirements. The 
 | `service_annotations` | 3 | `{}` | Advanced Cloud Run annotations. |
 | `service_labels` | 3 | `{}` | Labels applied to the Cloud Run service. |
 
-**Differences from `App_CloudRun` defaults:**
+**Differences from `App CloudRun` defaults:**
 
-| Variable | `App_CloudRun` | `Activepieces_CloudRun` | Reason |
+| Variable | `App CloudRun` | `Activepieces CloudRun` | Reason |
 |---|---|---|---|
 | `cpu_limit` (via `container_resources`) | `"1000m"` | `"2000m"` | Activepieces requires more CPU for workflow execution |
 | `memory_limit` (via `container_resources`) | `"512Mi"` | `"2Gi"` | Activepieces Node.js runtime requires significant memory |
@@ -92,9 +92,9 @@ Activepieces is a Node.js application with significant memory requirements. The 
 
 ### B. Database (Cloud SQL — PostgreSQL)
 
-Activepieces requires **PostgreSQL 15** — `Activepieces_Common` hardcodes `database_type = "POSTGRES_15"`. The `db-init.sh` script installs the `pgvector` extension (required for AI-powered workflow features).
+Activepieces requires **PostgreSQL 15** — `Activepieces Common` hardcodes `database_type = "POSTGRES_15"`. The `db-init.sh` script installs the `pgvector` extension (required for AI-powered workflow features).
 
-`Activepieces_CloudRun` uses `db_name` and `db_user` — aliases that differ from `App_CloudRun`'s `application_database_name` / `application_database_user`. These are wired into `Activepieces_Common`'s config output and forwarded correctly.
+`Activepieces CloudRun` uses `db_name` and `db_user` — aliases that differ from `App CloudRun`'s `application_database_name` / `application_database_user`. These are wired into `Activepieces Common`'s config output and forwarded correctly.
 
 **pgvector extension:** The `db-init.sh` script installs `CREATE EXTENSION IF NOT EXISTS vector` as a PostgreSQL superuser during the `db-init` job. This is required for Activepieces AI piece integrations that use vector similarity search.
 
@@ -110,7 +110,7 @@ Activepieces requires **PostgreSQL 15** — `Activepieces_Common` hardcodes `dat
 
 **NFS is disabled by default** (`enable_nfs = false`). Unlike Django, Activepieces does not require shared NFS storage by default — workflow execution state is stored in PostgreSQL. Enable NFS if co-locating Redis with an NFS server VM, or if the deployment requires shared file access.
 
-**GCS data bucket:** `Activepieces_Common` automatically provisions a dedicated data bucket (suffix `ap-data`). Additional GCS buckets can be defined via `storage_buckets`.
+**GCS data bucket:** `Activepieces Common` automatically provisions a dedicated data bucket (suffix `ap-data`). Additional GCS buckets can be defined via `storage_buckets`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -118,7 +118,7 @@ Activepieces requires **PostgreSQL 15** — `Activepieces_Common` hardcodes `dat
 | `nfs_mount_path` | 10 | `'/mnt/nfs'` | Container path where the NFS share is mounted. |
 | `nfs_instance_name` | 8 | `""` | Name of an existing NFS GCE VM to use. |
 | `nfs_instance_base_name` | 8 | `'app-nfs'` | Base name for the inline NFS GCE VM. |
-| `create_cloud_storage` | 10 | `true` | Set `false` to skip additional bucket creation. The `ap-data` bucket from `Activepieces_Common` is always provisioned. |
+| `create_cloud_storage` | 10 | `true` | Set `false` to skip additional bucket creation. The `ap-data` bucket from `Activepieces Common` is always provisioned. |
 | `storage_buckets` | 10 | `[{ name_suffix = "data" }]` | Additional GCS buckets beyond the auto-provisioned data bucket. |
 | `gcs_volumes` | 10 | `[]` | GCS buckets to mount via GCS Fuse (requires `gen2`). |
 | `manage_storage_kms_iam` | 10 | `false` | Creates CMEK KMS keyring and enables CMEK encryption on storage buckets. |
@@ -135,7 +135,7 @@ Public ingress is required for Activepieces webhook endpoints. The default `ingr
 
 ### E. Initialization & Bootstrap
 
-When `initialization_jobs = []` (the default), `Activepieces_Common` substitutes a single default `db-init` job (`execute_on_apply = true`). This creates the PostgreSQL database and user, grants privileges, and installs the `pgvector` extension.
+When `initialization_jobs = []` (the default), `Activepieces Common` substitutes a single default `db-init` job (`execute_on_apply = true`). This creates the PostgreSQL database and user, grants privileges, and installs the `pgvector` extension.
 
 Unlike Django, there is no separate `db-migrate` job — Activepieces runs its own database migrations automatically on application startup.
 
@@ -144,7 +144,7 @@ The `db-init` job uses `postgres:15-alpine` and executes `Activepieces_Common/sc
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Empty list triggers the default `db-init` job with `execute_on_apply = true`. Custom jobs can be provided to override. |
-| `cron_jobs` | 12 | `[]` | **Not referenced** — this variable is defined for UI consistency but is not forwarded to `App_CloudRun` in the current module version. Setting it has no effect on the deployed Cloud Run service. Use `initialization_jobs` for one-off tasks. |
+| `cron_jobs` | 12 | `[]` | **Not referenced** — this variable is defined for UI consistency but is not forwarded to `App CloudRun` in the current module version. Setting it has no effect on the deployed Cloud Run service. Use `initialization_jobs` for one-off tasks. |
 
 ---
 
@@ -189,7 +189,7 @@ When `enable_cloud_armor = true`, a Global HTTPS Load Balancer with a Cloud Armo
 
 ### E. Secret Manager Integration
 
-`Activepieces_Common` auto-generates two secrets: `AP_ENCRYPTION_KEY` (32-character hex string for credential encryption) and `AP_JWT_SECRET` (32-character random string for JWT signing). These are injected via `module_secret_env_vars`.
+`Activepieces Common` auto-generates two secrets: `AP_ENCRYPTION_KEY` (32-character hex string for credential encryption) and `AP_JWT_SECRET` (32-character random string for JWT signing). These are injected via `module_secret_env_vars`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -263,18 +263,18 @@ When `enable_cicd_trigger = true`, a Cloud Build GitHub connection and push trig
 
 ### B. Health Probes
 
-`Activepieces_CloudRun` exposes a dual probe system, consistent with other application modules.
+`Activepieces CloudRun` exposes a dual probe system, consistent with other application modules.
 
-**`startup_probe` / `liveness_probe`** — passed to `Activepieces_Common` to configure how the application container assesses readiness. These target `/api/v1/flags` — the Activepieces flags API endpoint that responds when the server is ready.
+**`startup_probe` / `liveness_probe`** — passed to `Activepieces Common` to configure how the application container assesses readiness. These target `/api/v1/flags` — the Activepieces flags API endpoint that responds when the server is ready.
 
-**`startup_probe_config` / `health_check_config`** — passed directly to `App_CloudRun` and configure the Cloud Run infrastructure-level probes.
+**`startup_probe_config` / `health_check_config`** — passed directly to `App CloudRun` and configure the Cloud Run infrastructure-level probes.
 
 Activepieces connects to PostgreSQL and applies database migrations on **first boot** — allow at least 7 minutes on the initial deployment. The default `startup_probe` settings (`initial_delay_seconds = 120`, `failure_threshold = 10`, `period_seconds = 30`) provide a total startup window of ~5 minutes after the initial delay (120 + 10×30 = 420 seconds).
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `startup_probe` | 13 | `{ enabled=true, type="HTTP", path="/api/v1/flags", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=10 }` | Startup probe used by `Activepieces_Common`. Targets `/api/v1/flags`. Allow 7+ minutes on first boot. |
-| `liveness_probe` | 13 | `{ enabled=true, type="HTTP", path="/api/v1/flags", initial_delay_seconds=30, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Liveness probe used by `Activepieces_Common`. |
+| `startup_probe` | 13 | `{ enabled=true, type="HTTP", path="/api/v1/flags", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=10 }` | Startup probe used by `Activepieces Common`. Targets `/api/v1/flags`. Allow 7+ minutes on first boot. |
+| `liveness_probe` | 13 | `{ enabled=true, type="HTTP", path="/api/v1/flags", initial_delay_seconds=30, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Liveness probe used by `Activepieces Common`. |
 | `startup_probe_config` | 13 | `{ enabled=false }` | Cloud Run infrastructure startup probe. Disabled by default — `startup_probe` above takes effect instead. |
 | `health_check_config` | 13 | `{ enabled=true }` | Cloud Run infrastructure liveness probe. |
 | `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
@@ -310,11 +310,11 @@ If `redis_host` is left empty and `enable_nfs = true`, the NFS server VM's IP is
 | `redis_port` | 20 | `'6379'` | Redis TCP port. Note: type is `string`, not `number`. |
 | `redis_auth` | 20 | `""` | Redis AUTH password. Sensitive — never stored in state in plaintext. |
 
-> **Validation:** A precondition in `Activepieces_GKE`'s `validation.tf` enforces that when `enable_redis = true`, either `redis_host` must be set or `enable_nfs` must be true. The same logic applies logically for the CloudRun variant.
+> **Validation:** A precondition in `Activepieces GKE`'s `validation.tf` enforces that when `enable_redis = true`, either `redis_host` must be set or `enable_nfs` must be true. The same logic applies logically for the CloudRun variant.
 
 ### B. Backup Import & Recovery
 
-`Activepieces_CloudRun` uses `backup_uri` (not `backup_file` as in Django). `backup_uri` is mapped to `App_CloudRun`'s `backup_file` parameter internally.
+`Activepieces CloudRun` uses `backup_uri` (not `backup_file` as in Django). `backup_uri` is mapped to `App CloudRun`'s `backup_file` parameter internally.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -322,7 +322,7 @@ If `redis_host` is left empty and `enable_nfs = true`, the NFS server VM's IP is
 | `backup_retention_days` | 6 | `7` | Days to retain backup files in GCS. |
 | `enable_backup_import` | 6 | `false` | Triggers a one-time restore on apply. |
 | `backup_source` | 6 | `'gcs'` | `'gcs'` (full GCS URI) or `'gdrive'` (Google Drive file ID). |
-| `backup_uri` | 6 | `""` | Full GCS URI (e.g., `gs://my-bucket/backup.sql`) or Google Drive file ID. Maps to `backup_file` in `App_CloudRun`. |
+| `backup_uri` | 6 | `""` | Full GCS URI (e.g., `gs://my-bucket/backup.sql`) or Google Drive file ID. Maps to `backup_file` in `App CloudRun`. |
 | `backup_format` | 6 | `'sql'` | Backup file format. Options: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
 
 ### C. Custom SQL Scripts
@@ -348,29 +348,29 @@ If `redis_host` is left empty and `enable_nfs = true`, the NFS server VM's IP is
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| **PostgreSQL 15 required** | `database_type = "POSTGRES_15"` hardcoded by `Activepieces_Common` | Only PostgreSQL 15 is supported. `database_type` is not exposed as a variable. |
+| **PostgreSQL 15 required** | `database_type = "POSTGRES_15"` hardcoded by `Activepieces Common` | Only PostgreSQL 15 is supported. `database_type` is not exposed as a variable. |
 | **pgvector extension** | Installed by `db-init` job via `Activepieces_Common/scripts/db-init.sh` | `CREATE EXTENSION IF NOT EXISTS vector` is run as the `postgres` superuser. Required for AI-powered workflow pieces. The script is idempotent. |
-| **AP_ENCRYPTION_KEY** | Auto-generated 32-char hex string stored in Secret Manager by `Activepieces_Common` | Injected via `module_secret_env_vars`. Do not set in `environment_variables`. |
-| **AP_JWT_SECRET** | Auto-generated 32-char random string stored in Secret Manager by `Activepieces_Common` | Injected via `module_secret_env_vars`. Do not set in `environment_variables`. |
-| **AP_POSTGRES_* mapping** | `entrypoint.sh` in `Activepieces_Common` | Platform-standard `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` are mapped to Activepieces-specific `AP_POSTGRES_HOST`, `AP_POSTGRES_DATABASE`, `AP_POSTGRES_USERNAME`, `AP_POSTGRES_PASSWORD` at runtime. |
+| **AP_ENCRYPTION_KEY** | Auto-generated 32-char hex string stored in Secret Manager by `Activepieces Common` | Injected via `module_secret_env_vars`. Do not set in `environment_variables`. |
+| **AP_JWT_SECRET** | Auto-generated 32-char random string stored in Secret Manager by `Activepieces Common` | Injected via `module_secret_env_vars`. Do not set in `environment_variables`. |
+| **AP_POSTGRES_* mapping** | `entrypoint.sh` in `Activepieces Common` | Platform-standard `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` are mapped to Activepieces-specific `AP_POSTGRES_HOST`, `AP_POSTGRES_DATABASE`, `AP_POSTGRES_USERNAME`, `AP_POSTGRES_PASSWORD` at runtime. |
 | **AP_FRONTEND_URL / AP_WEBHOOK_URL_PREFIX** | Set to predicted service URL at plan time; corrected at runtime by `entrypoint.sh` from `CLOUDRUN_SERVICE_URL` | Ensures webhook URLs and OAuth redirects always use the actual service URL, not a stale predicted URL. |
 | **Memory queue mode by default** | `AP_QUEUE_MODE = "MEMORY"` unless `enable_redis = true` | Single-instance operation. Do not scale `max_instance_count > 1` in memory mode. |
-| **GCS data bucket** | Provisioned by `Activepieces_Common`, injected via `module_storage_buckets` | A dedicated GCS bucket (suffix `ap-data`) is provisioned for Activepieces data. |
+| **GCS data bucket** | Provisioned by `Activepieces Common`, injected via `module_storage_buckets` | A dedicated GCS bucket (suffix `ap-data`) is provisioned for Activepieces data. |
 | **NFS disabled by default** | `enable_nfs = false` | Unlike Django, NFS is opt-in. Enable only if co-locating Redis or requiring shared filesystem access. |
-| **module_env_vars is empty** | `module_env_vars = {}` | All Activepieces environment variables are set inside `Activepieces_Common`'s `config.environment_variables`. No additional env vars are injected via `module_env_vars`. |
+| **module_env_vars is empty** | `module_env_vars = {}` | All Activepieces environment variables are set inside `Activepieces Common`'s `config.environment_variables`. No additional env vars are injected via `module_env_vars`. |
 | **scripts_dir resolution** | `abspath("${module.activepieces_app.path}/scripts")` | Points to `Activepieces_Common/scripts/`. Initialization scripts are sourced from there. |
 
 ---
 
 ## 10. Variable Reference
 
-All user-configurable variables exposed by `Activepieces_CloudRun`, sorted by UI group then order. Group 0 variables are reserved for platform metadata.
+All user-configurable variables exposed by `Activepieces CloudRun`, sorted by UI group then order. Group 0 variables are reserved for platform metadata.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `module_description` | 0 | (Activepieces Cloud Run platform text) | Platform metadata: module description. |
 | `module_documentation` | 0 | `https://docs.radmodules.dev/docs/modules/Activepieces_CloudRun` | Platform metadata: documentation URL. |
-| `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
+| `module_dependency` | 0 | `['Services GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `50` | Platform metadata: deployment credit cost. |
 | `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
@@ -415,7 +415,7 @@ All user-configurable variables exposed by `Activepieces_CloudRun`, sorted by UI
 | `backup_retention_days` | 6 | `7` | Days to retain backup files in GCS. |
 | `enable_backup_import` | 6 | `false` | Triggers a one-time restore on apply. |
 | `backup_source` | 6 | `'gcs'` | `'gcs'` (full GCS URI) or `'gdrive'` (file ID). |
-| `backup_uri` | 6 | `""` | GCS URI or Google Drive file ID. Maps to `backup_file` in `App_CloudRun`. |
+| `backup_uri` | 6 | `""` | GCS URI or Google Drive file ID. Maps to `backup_file` in `App CloudRun`. |
 | `backup_format` | 6 | `'sql'` | Backup format: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`. |
 | `enable_cicd_trigger` | 7 | `false` | Provisions a Cloud Build GitHub trigger. |
 | `github_repository_url` | 7 | `""` | Full HTTPS URL of the GitHub repository. |
@@ -451,9 +451,9 @@ All user-configurable variables exposed by `Activepieces_CloudRun`, sorted by UI
 | `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. |
 | `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting the service. |
 | `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Empty list triggers the default `db-init` job (`execute_on_apply=true`). |
-| `cron_jobs` | 12 | `[]` | **Not referenced** — not forwarded to `App_CloudRun`. Has no effect in this module version. |
-| `startup_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=120, failure_threshold=10, ... }` | Activepieces_Common startup probe. Allow 7+ minutes on first boot. |
-| `liveness_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=30, failure_threshold=3, ... }` | Activepieces_Common liveness probe. |
+| `cron_jobs` | 12 | `[]` | **Not referenced** — not forwarded to `App CloudRun`. Has no effect in this module version. |
+| `startup_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=120, failure_threshold=10, ... }` | Activepieces Common startup probe. Allow 7+ minutes on first boot. |
+| `liveness_probe` | 13 | `{ path="/api/v1/flags", initial_delay_seconds=30, failure_threshold=3, ... }` | Activepieces Common liveness probe. |
 | `startup_probe_config` | 13 | `{ enabled=false }` | Cloud Run infrastructure startup probe. Disabled — `startup_probe` takes effect. |
 | `health_check_config` | 13 | `{ enabled=true }` | Cloud Run infrastructure liveness probe. |
 | `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |

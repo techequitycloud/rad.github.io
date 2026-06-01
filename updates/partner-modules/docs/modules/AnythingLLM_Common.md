@@ -1,4 +1,4 @@
-# AnythingLLM_Common
+# AnythingLLM Common
 
 This document provides a reference for the `modules/AnythingLLM_Common` Terraform module. `AnythingLLM_Common` is an **internal shared module** called by both `AnythingLLM_CloudRun` and `AnythingLLM_GKE`. It is not intended to be called directly by users.
 
@@ -6,10 +6,10 @@ This document provides a reference for the `modules/AnythingLLM_Common` Terrafor
 
 ## 1. Module Overview
 
-`AnythingLLM_Common` encapsulates all AnythingLLM-specific configuration that is shared between the Cloud Run and GKE deployment targets:
+`AnythingLLM Common` encapsulates all AnythingLLM-specific configuration that is shared between the Cloud Run and GKE deployment targets:
 
 - **Secret generation**: Provisions `JWT_SECRET`, `AUTH_TOKEN`, `SIG_KEY`, and `SIG_SALT` in Secret Manager.
-- **Application config**: Builds the `config` local consumed by `AnythingLLM_CloudRun` and `AnythingLLM_GKE` via their `application_modules` locals.
+- **Application config**: Builds the `config` local consumed by `AnythingLLM CloudRun` and `AnythingLLM GKE` via their `application_modules` locals.
 - **Storage**: Returns a pre-configured `storage_buckets` list containing the `anythingllm-docs` GCS bucket definition.
 - **Initialization jobs**: Supplies the default `db-init` Kubernetes/Cloud Run Job when `initialization_jobs` is left empty.
 - **Environment variables**: Sets fixed values for `SERVER_PORT`, `STORAGE_DIR`, `UID`, and `GID`.
@@ -18,7 +18,7 @@ This document provides a reference for the `modules/AnythingLLM_Common` Terrafor
 
 ## 2. Secrets Provisioned
 
-`AnythingLLM_Common` creates the following Secret Manager secrets on first apply:
+`AnythingLLM Common` creates the following Secret Manager secrets on first apply:
 
 | Secret | Environment Variable | Purpose |
 |---|---|---|
@@ -27,13 +27,13 @@ This document provides a reference for the `modules/AnythingLLM_Common` Terrafor
 | `<prefix>-sig-key` | `SIG_KEY` | HMAC signing key (32 alphanumeric characters). |
 | `<prefix>-sig-salt` | `SIG_SALT` | HMAC salt (32 alphanumeric characters). |
 
-All secrets are generated with `random_password` (32 characters, no special characters) and stored in Secret Manager with automatic replication. A `time_sleep` of 30 seconds delays the `secret_ids` output until Secret Manager has fully propagated the new versions. The `secret_ids` output is consumed by the Application Module and forwarded to `App_CloudRun` or `App_GKE` as `module_secret_env_vars`.
+All secrets are generated with `random_password` (32 characters, no special characters) and stored in Secret Manager with automatic replication. A `time_sleep` of 30 seconds delays the `secret_ids` output until Secret Manager has fully propagated the new versions. The `secret_ids` output is consumed by the Application Module and forwarded to `App CloudRun` or `App GKE` as `module_secret_env_vars`.
 
 ---
 
 ## 3. Fixed Environment Variables
 
-The following environment variables are injected into every AnythingLLM container by `AnythingLLM_Common`:
+The following environment variables are injected into every AnythingLLM container by `AnythingLLM Common`:
 
 | Variable | Value | Purpose |
 |---|---|---|
@@ -42,13 +42,13 @@ The following environment variables are injected into every AnythingLLM containe
 | `UID` | `1000` | Container user ID. |
 | `GID` | `1000` | Container group ID. |
 
-> Do not override these variables via `environment_variables` in the Application Module — they are set by `AnythingLLM_Common` and the Application Module merges them before passing to the Foundation Module.
+> Do not override these variables via `environment_variables` in the Application Module — they are set by `AnythingLLM Common` and the Application Module merges them before passing to the Foundation Module.
 
 ---
 
 ## 4. Default Initialization Job
 
-When `initialization_jobs` is passed as an empty list (`[]`), `AnythingLLM_Common` supplies a single default job:
+When `initialization_jobs` is passed as an empty list (`[]`), `AnythingLLM Common` supplies a single default job:
 
 | Field | Value |
 |---|---|
@@ -70,7 +70,7 @@ To replace the default job, pass a non-empty `initialization_jobs` list to the A
 
 ## 5. Storage Bucket
 
-`AnythingLLM_Common` returns a single pre-configured storage bucket definition in its `storage_buckets` output:
+`AnythingLLM Common` returns a single pre-configured storage bucket definition in its `storage_buckets` output:
 
 | Field | Value |
 |---|---|
@@ -86,7 +86,7 @@ The Application Module sets `GOOGLE_CLOUD_STORAGE_BUCKET_NAME` to `module.anythi
 
 ## 6. Variables
 
-`AnythingLLM_Common` accepts a subset of the variables from the Application Module. These are passed through from the caller — do not modify `AnythingLLM_Common` directly.
+`AnythingLLM Common` accepts a subset of the variables from the Application Module. These are passed through from the caller — do not modify `AnythingLLM Common` directly.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -121,4 +121,4 @@ The Application Module sets `GOOGLE_CLOUD_STORAGE_BUCKET_NAME` to `module.anythi
 | `storage_buckets` | List containing the `anythingllm-docs` bucket definition. |
 | `secret_ids` | Map of environment variable names to Secret Manager secret IDs: `{ JWT_SECRET, AUTH_TOKEN, SIG_KEY, SIG_SALT }`. |
 | `secret_values` | Map of secret plaintext values *(sensitive)*. Used for validation only — not consumed by Application Modules. |
-| `path` | Absolute path to the `AnythingLLM_Common` module directory. Used by Application Modules to resolve `scripts_dir`. |
+| `path` | Absolute path to the `AnythingLLM Common` module directory. Used by Application Modules to resolve `scripts_dir`. |

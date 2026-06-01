@@ -53,7 +53,7 @@ gcloud logging read 'resource.type="cloud_run_revision"' --project=<project-id> 
 
 ## Prerequisites
 
-1. **Services_GCP deployed** — This module depends on `Services_GCP`. The VPC network, Cloud SQL instance, Serverless VPC Access connector, Artifact Registry, and shared service accounts must already exist in the target project.
+1. **Services GCP deployed** — This module depends on `Services GCP`. The VPC network, Cloud SQL instance, Serverless VPC Access connector, Artifact Registry, and shared service accounts must already exist in the target project.
 2. **GCP project** with billing enabled.
 3. **gcloud CLI** authenticated (`gcloud auth application-default login`).
 4. **Permissions** — Owner or equivalent role on the target GCP project.
@@ -480,7 +480,7 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 
 > **Note:** If `enable_purge = false`, certain resources such as the database and storage buckets will be retained after undeployment to prevent accidental data loss.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

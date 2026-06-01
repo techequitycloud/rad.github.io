@@ -47,8 +47,8 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 ## Prerequisites
 
 1. A GCP project with billing enabled.
-2. The `Services_GCP` module deployed in the same project (provides VPC and Cloud SQL instance).
-3. The following APIs enabled (Services_GCP handles this):
+2. The `Services GCP` module deployed in the same project (provides VPC and Cloud SQL instance).
+3. The following APIs enabled (Services GCP handles this):
    - `run.googleapis.com`
    - `sqladmin.googleapis.com`
    - `secretmanager.googleapis.com`
@@ -507,7 +507,7 @@ When finished, return to the RAD UI, navigate to your deployment, and click **Un
 
 > **Warning:** This permanently deletes all resources including the database. Export your Twenty data before undeploying: in the Twenty API, use the metadata export or take a database snapshot via Cloud SQL before undeploying.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 > **Note:** If the destroy fails with a serverless IPv4 address error, wait 20–30 minutes and re-run the destroy — GCP releases serverless IP addresses asynchronously after the Cloud Run service is deleted.
 

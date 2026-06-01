@@ -55,7 +55,7 @@ gcloud config set project YOUR_PROJECT_ID
 
 Before deploying this module:
 
-1. **Services_GCP deployed** — this module depends on `Services_GCP` for the VPC and Serverless VPC Access connector.
+1. **Services GCP deployed** — this module depends on `Services GCP` for the VPC and Serverless VPC Access connector.
 2. **GCP project** with billing enabled.
 3. **gcloud CLI** authenticated with Owner or Editor role on the project.
 4. **Anthropic API key** — required for LLM-powered agent responses. Obtain from [console.anthropic.com](https://console.anthropic.com).
@@ -559,7 +559,7 @@ When the lab is complete, return to the RAD UI, navigate to your deployment, and
 
 **Expected result:** The Cloud Run service, GCS workspace bucket, Secret Manager secrets, and IAM bindings created by this module are deleted.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

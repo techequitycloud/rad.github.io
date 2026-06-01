@@ -45,7 +45,7 @@ This lab uses two sets of tools:
 ## Prerequisites
 
 - GCP project with billing enabled
-- `Services_GCP` module deployed (provides VPC, Cloud SQL instance, Artifact Registry)
+- `Services GCP` module deployed (provides VPC, Cloud SQL instance, Artifact Registry)
 - `gcloud` CLI authenticated (`gcloud auth application-default login`)
 - Access to the RAD UI with permission to deploy modules in the target GCP project
 - An LLM API key (e.g., OpenAI, Google AI) if you want to test live AI nodes
@@ -436,7 +436,7 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 
 **Estimated time:** 10–20 minutes
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

@@ -1,9 +1,9 @@
-# Ollama_Common Shared Configuration Module
+# Ollama Common Shared Configuration Module
 
-The `Ollama_Common` module defines the Ollama LLM inference server configuration for the RAD
+The `Ollama Common` module defines the Ollama LLM inference server configuration for the RAD
 Modules ecosystem. It **creates one GCP resource** (the GCS models bucket, via the
 `storage_buckets` output consumed by the caller) and produces a `config` output consumed by
-platform-specific wrapper modules (`Ollama_CloudRun` and `Ollama_GKE`).
+platform-specific wrapper modules (`Ollama CloudRun` and `Ollama GKE`).
 
 ## 1. Overview
 
@@ -31,7 +31,7 @@ Layer 1: App_Common (networking, storage, secrets, IAM)
 ```
 
 **Key characteristics**:
-- Unlike most `*_Common` modules, `Ollama_Common` creates **no secrets** — Ollama requires
+- Unlike most `*_Common` modules, `Ollama Common` creates **no secrets** — Ollama requires
   no database credentials, API keys, or passwords. Both `secret_ids` and `secret_values`
   output empty maps.
 - The `ollama-models` GCS bucket is always appended to the `gcs_volumes` list, ensuring the
@@ -46,8 +46,8 @@ Layer 1: App_Common (networking, storage, secrets, IAM)
 
 ## 2. GCP Resources Created
 
-`Ollama_Common` itself creates no GCP resources directly. It produces a `storage_buckets`
-output that the calling wrapper module passes to App_CloudRun or App_GKE, which then creates
+`Ollama Common` itself creates no GCP resources directly. It produces a `storage_buckets`
+output that the calling wrapper module passes to App CloudRun or App GKE, which then creates
 the bucket.
 
 | Bucket suffix | Content | Mount path |
@@ -141,7 +141,7 @@ variables such as `OLLAMA_NUM_PARALLEL`.
 
 ## 5. Model-Pull Initialization Job
 
-`Ollama_Common` implements a two-path initialization job strategy:
+`Ollama Common` implements a two-path initialization job strategy:
 
 **Path 1 — Custom jobs provided** (`initialization_jobs` is non-empty): The caller's jobs are
 used verbatim. The auto-generated model-pull job is **not created**.
@@ -217,7 +217,7 @@ start within the retry window.
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `project_id` | `string` | **required** | GCP project ID. |
-| `wrapper_prefix` | `string` | **required** | Prefix for GCS bucket names. Must match the `resource_prefix` used by the calling App_CloudRun or App_GKE module. |
+| `wrapper_prefix` | `string` | **required** | Prefix for GCS bucket names. Must match the `resource_prefix` used by the calling App CloudRun or App GKE module. |
 | `deployment_id` | `string` | `""` | Unique deployment identifier. |
 | `common_labels` | `map(string)` | `{}` | Labels applied to resources created by this module. |
 | `region` | `string` | `"us-central1"` | Region for the GCS models bucket. |
@@ -294,7 +294,7 @@ The `gcs_volumes` entry appended by this module:
 
 ## 9. Platform-Specific Differences
 
-| Aspect | Ollama_CloudRun | Ollama_GKE |
+| Aspect | Ollama CloudRun | Ollama GKE |
 |---|---|---|
 | `region` | Hard-coded to `"us-central1"` in `main.tf` | Auto-discovered from VPC subnets via `app_networking`; falls back to `var.region` |
 | Model-pull job type | Cloud Run Job | Kubernetes Job |

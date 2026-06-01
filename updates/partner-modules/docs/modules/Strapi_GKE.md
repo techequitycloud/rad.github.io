@@ -1,8 +1,8 @@
-# Strapi_GKE Module — Configuration Guide
+# Strapi GKE Module — Configuration Guide
 
 Strapi is an open-source headless CMS that gives developers the freedom to choose their favourite tools and frameworks while enabling content editors to manage their content independently. This module deploys Strapi on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL instance, a Cloud Filestore NFS volume for media uploads, and a GCS bucket for object storage.
 
-`Strapi_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Strapi-specific application configuration and secret management on top.
+`Strapi GKE` is a **wrapper module** built on top of `App GKE`. It uses `App GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Strapi-specific application configuration and secret management on top.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -12,9 +12,9 @@ Strapi is an open-source headless CMS that gives developers the freedom to choos
 
 This guide documents only the variables that are **unique to `Strapi_GKE`** or that have **Strapi-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, storage, CI/CD, observability, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
-**Variables fully covered by the App_GKE guide:**
+**Variables fully covered by the App GKE guide:**
 
-| Configuration Area | App_GKE.md Section | Strapi-Specific Notes |
+| Configuration Area | App GKE.md Section | Strapi-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | [App_GKE §1 Module Overview](../App_GKE/App_GKE.md#1-module-overview) | Different defaults for `module_description` and `module_documentation`. |
 | Project & Identity | [App_GKE §2 IAM & Access Control](../App_GKE/App_GKE.md#2-iam--access-control) | Refer to base App_GKE module documentation. |
@@ -40,7 +40,7 @@ This guide documents only the variables that are **unique to `Strapi_GKE`** or t
 
 ## Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `Strapi_GKE` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
+The following behaviours are applied automatically by `Strapi GKE` regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
 | Behaviour | Detail |
 |---|---|
@@ -57,7 +57,7 @@ The following behaviours are applied automatically by `Strapi_GKE` regardless of
 
 ## Strapi Application Identity
 
-These variables control how the Strapi deployment is named and described. They correspond directly to the `application_name`, `application_display_name`, and `application_description` variables in `App_GKE` and behave identically — the only difference is the Strapi-specific default values.
+These variables control how the Strapi deployment is named and described. They correspond directly to the `application_name`, `application_display_name`, and `application_description` variables in `App GKE` and behave identically — the only difference is the Strapi-specific default values.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -82,9 +82,9 @@ kubectl describe deployment strapi -n NAMESPACE | grep -A5 Labels
 
 Strapi is a Node.js application. The module defaults are sized for a development or small production instance. For high-traffic deployments, increase `container_resources`.
 
-**Strapi-specific runtime defaults that differ from App_GKE:**
+**Strapi-specific runtime defaults that differ from App GKE:**
 
-| Variable | App_GKE Default | Strapi_GKE Default | Reason |
+| Variable | App GKE Default | Strapi GKE Default | Reason |
 |---|---|---|---|
 | `container_image_source` | `"custom"` | `"custom"` | The included Strapi Dockerfile provides a production-ready build. |
 | `container_port` | `8080` | `1337` | Strapi listens on port `1337` by default (configurable via the `PORT` environment variable). |
@@ -119,7 +119,7 @@ kubectl get service strapi -n NAMESPACE \
 
 ## Strapi Database Configuration
 
-Strapi requires PostgreSQL. The module uses `application_database_name` and `application_database_user` (consistent with the App_GKE interface) to configure the database.
+Strapi requires PostgreSQL. The module uses `application_database_name` and `application_database_user` (consistent with the App GKE interface) to configure the database.
 
 All other database variables (`database_type`, `sql_instance_name`, `database_password_length`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`, etc.) behave identically to the App_GKE equivalents — refer to [App_GKE §3.B Database (Cloud SQL)](../App_GKE/App_GKE.md#b-database-cloud-sql) for their documentation.
 
@@ -176,13 +176,13 @@ All other `environment_variables` and `secret_environment_variables` behaviour i
 
 ## Strapi Health Probes
 
-Strapi performs database connection validation and may run pending migrations on startup. The health probes in `Strapi_GKE` use the Strapi-native `/_health` endpoint rather than a generic path, and have extended timeouts to accommodate the Node.js startup sequence and database checks.
+Strapi performs database connection validation and may run pending migrations on startup. The health probes in `Strapi GKE` use the Strapi-native `/_health` endpoint rather than a generic path, and have extended timeouts to accommodate the Node.js startup sequence and database checks.
 
 **Probe routing in Strapi_GKE:** `startup_probe_config` and `health_check_config` each serve a dual role — they are passed to `Strapi_Common` (as `startup_probe` and `liveness_probe` respectively) to configure the Kubernetes container probes, and also forwarded directly to `App_GKE` (using the same `startup_probe_config` / `health_check_config` names) to configure the load balancer backend health checks. Other App_GKE wrapper modules use separate `startup_probe`/`liveness_probe` variables for container probes; Strapi_GKE consolidates both paths into the single `_config` pair. See [App_GKE §5 Traffic & Ingress](../App_GKE/App_GKE.md#5-traffic--ingress) for the App_GKE field reference.
 
-**Strapi-specific probe defaults that differ from App_GKE:**
+**Strapi-specific probe defaults that differ from App GKE:**
 
-| Variable | App_GKE Default `path` | Strapi_GKE Default `path` | Reason |
+| Variable | App GKE Default `path` | Strapi GKE Default `path` | Reason |
 |---|---|---|---|
 | `startup_probe_config` | `"/"` | `"/_health"` | Strapi exposes a dedicated health endpoint at `/_health` that confirms the application and database connection are ready. |
 | `health_check_config` | `"/"` | `"/_health"` | Using `/_health` for the liveness probe ensures Cloud Run only routes traffic to fully initialised Strapi instances. |
@@ -234,7 +234,7 @@ kubectl logs -n NAMESPACE -l app=strapi --since=10m | head -100
 
 ## NFS Storage
 
-Strapi stores media uploads and shared files on the NFS volume. `Strapi_GKE` enables NFS by default, unlike the `App_GKE` base module where NFS is opt-in.
+Strapi stores media uploads and shared files on the NFS volume. `Strapi GKE` enables NFS by default, unlike the `App GKE` base module where NFS is opt-in.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|

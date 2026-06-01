@@ -1,8 +1,8 @@
-# Windmill_GKE Module — Configuration Guide
+# Windmill GKE Module — Configuration Guide
 
 This guide describes every configuration variable available in the `Windmill_GKE` module. `Windmill_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Windmill_Common`](../Windmill_Common/) shared application configuration to deploy the [Windmill](https://www.windmill.dev/) developer platform on Google Kubernetes Engine (GKE) Autopilot.
 
-Most configuration options in `Windmill_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Windmill** are described in full here.
+Most configuration options in `Windmill GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Windmill** are described in full here.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -10,15 +10,15 @@ Most configuration options in `Windmill_GKE` map directly to the same options in
 
 ## Standard Configuration Reference
 
-| Configuration Area | App_GKE.md Section | Windmill-Specific Notes |
+| Configuration Area | App GKE.md Section | Windmill-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Windmill-specific `module_description` and `module_services` defaults are pre-set. |
 | Project & Identity | §2 IAM & Access Control | Identical. |
 | Application Identity | §3.A Compute (GKE Autopilot) | Windmill-specific defaults; see [Group 2: Application Identity](#group-2-application-identity). |
 | Runtime & Scaling | §3.A Compute (GKE Autopilot) | Windmill-specific defaults for `container_port`, `cpu_limit`, `memory_limit`; see [Group 3: Runtime & Scaling](#group-3-runtime--scaling). |
-| Environment Variables & Secrets | §3 Core Service Configuration | Windmill env vars injected by `Windmill_Common`; see [Group 5: Environment Variables & Secrets](#group-5-environment-variables--secrets). |
+| Environment Variables & Secrets | §3 Core Service Configuration | Windmill env vars injected by `Windmill Common`; see [Group 5: Environment Variables & Secrets](#group-5-environment-variables--secrets). |
 | Networking & Network Policies | §3.D Networking & Network Policies | Identical. |
-| Initialization Jobs & CronJobs | §3.E Initialization Jobs & CronJobs | `db-init` PostgreSQL 16 job supplied automatically by `Windmill_Common`; see [Group 8](#group-8-jobs--scheduled-tasks). |
+| Initialization Jobs & CronJobs | §3.E Initialization Jobs & CronJobs | `db-init` PostgreSQL 16 job supplied automatically by `Windmill Common`; see [Group 8](#group-8-jobs--scheduled-tasks). |
 | Storage — GCS | §3.C Storage (NFS / GCS / GCS Fuse) | `windmill-data` GCS bucket provisioned automatically. |
 | Database Configuration | §3.B Database (Cloud SQL) | **PostgreSQL 16 required**; see [Group 11: Database Configuration](#group-11-database-configuration). |
 | Observability & Health Checks | §3.A Compute (GKE Autopilot) | Probes target `/api/version`; see [Group 13: Observability & Health](#group-13-observability--health). |
@@ -35,16 +35,16 @@ Most configuration options in `Windmill_GKE` map directly to the same options in
 
 ---
 
-## How Windmill_GKE Relates to App_GKE
+## How Windmill GKE Relates to App GKE
 
-`Windmill_GKE` passes all variables through to `App_GKE` and adds a `Windmill_Common` sub-module that supplies Windmill-specific defaults and application configuration. The main effects are:
+`Windmill GKE` passes all variables through to `App GKE` and adds a `Windmill Common` sub-module that supplies Windmill-specific defaults and application configuration. The main effects are:
 
 1. **PostgreSQL 16 is required.** Windmill requires PostgreSQL 16. `database_type` defaults to `"POSTGRES_16"` — the only module in this repository with this requirement.
 2. **`MODE=server,worker` is injected automatically.** Windmill runs both the API server and script execution workers in a single process on GKE. For separate worker scaling, define additional Kubernetes Deployments.
 3. **`DISABLE_NSJAIL=true` is required.** GKE Autopilot does not provide `CAP_SYS_ADMIN` or user namespaces. Windmill's Linux namespace isolation is disabled automatically.
-4. **A `windmill-data` GCS bucket is provisioned automatically.** `Windmill_Common` provides a bucket for workflow outputs and artefacts.
-5. **A `db-init` job runs on first deployment.** `Windmill_Common` supplies a default `db-init` Kubernetes Job using `postgres:16-alpine` to initialise the Windmill database schema.
-6. **SMTP password placeholder secret.** `Windmill_Common` provisions `{prefix}-smtp-password` in Secret Manager as a placeholder. Replace before enabling email features.
+4. **A `windmill-data` GCS bucket is provisioned automatically.** `Windmill Common` provides a bucket for workflow outputs and artefacts.
+5. **A `db-init` job runs on first deployment.** `Windmill Common` supplies a default `db-init` Kubernetes Job using `postgres:16-alpine` to initialise the Windmill database schema.
+6. **SMTP password placeholder secret.** `Windmill Common` provisions `{prefix}-smtp-password` in Secret Manager as a placeholder. Replace before enabling email features.
 7. **Health probes target `/api/version`.** Windmill exposes `/api/version` as its primary health endpoint.
 
 ---
@@ -55,7 +55,7 @@ Identical to `App_GKE`. See [App_GKE §1](../App_GKE/App_GKE.md#1-module-overvie
 
 **Windmill-specific defaults:**
 
-| Variable | Windmill_GKE Default | Notes |
+| Variable | Windmill GKE Default | Notes |
 |---|---|---|
 | `module_description` | `"Windmill: Deploy Windmill developer platform on GKE Autopilot…"` | Pre-populated with Windmill-specific description. |
 | `credit_cost` | `150` | GKE deployments cost more credits than Cloud Run. |
@@ -72,11 +72,11 @@ Identical to `App_GKE`. See [App_GKE §2](../App_GKE/App_GKE.md#2-iam--access-co
 
 **Windmill-specific defaults:**
 
-| Variable | Windmill_GKE Default | App_GKE Default | Notes |
+| Variable | Windmill GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `application_name` | `"windmill"` | `"gkeapp"` | Base name for all GCP and Kubernetes resources. **Do not change after deployment.** |
-| `display_name` | `"Windmill"` | *(not in App_GKE)* | Human-readable name for the platform UI. |
-| `description` | `"Windmill developer platform"` | *(not in App_GKE)* | Deployment description. |
+| `display_name` | `"Windmill"` | *(not in App GKE)* | Human-readable name for the platform UI. |
+| `description` | `"Windmill developer platform"` | *(not in App GKE)* | Deployment description. |
 | `application_version` | `"latest"` | `"1.0.0"` | Windmill release version. |
 
 ---
@@ -85,14 +85,14 @@ Identical to `App_GKE`. See [App_GKE §2](../App_GKE/App_GKE.md#2-iam--access-co
 
 **Windmill-specific defaults and behaviour:**
 
-| Variable | Windmill_GKE Default | App_GKE Default | Notes |
+| Variable | Windmill GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `container_port` | `8000` | `8080` | Windmill's native HTTP port. |
 | `cpu_limit` | `"2000m"` | `"1000m"` | Combined server+worker process requires more CPU. |
 | `memory_limit` | `"2Gi"` | `"512Mi"` | Worker execution requires additional memory. |
 | `min_instance_count` | `1` | `1` | At least one Windmill pod always running. |
 | `max_instance_count` | `3` | `3` | Maximum pod replicas. |
-| `container_image_source` | `"custom"` | `"custom"` | `Windmill_Common` supplies a bundled Dockerfile using `ghcr.io/windmill-labs/windmill` as the base. |
+| `container_image_source` | `"custom"` | `"custom"` | `Windmill Common` supplies a bundled Dockerfile using `ghcr.io/windmill-labs/windmill` as the base. |
 | `enable_cloudsql_volume` | `true` | `true` | Cloud SQL Auth Proxy sidecar for PostgreSQL connection. |
 
 The remaining runtime variables behave as described in [App_GKE Group 3](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
@@ -119,7 +119,7 @@ Identical to `App_GKE`. See [App_GKE §4](../App_GKE/App_GKE.md#4-advanced-secur
 
 ## Group 5: Environment Variables & Secrets
 
-`Windmill_Common` injects all Windmill-specific environment variables automatically. The following are hardcoded:
+`Windmill Common` injects all Windmill-specific environment variables automatically. The following are hardcoded:
 
 | Variable | Value | Description |
 |---|---|---|
@@ -135,7 +135,7 @@ Identical to `App_GKE`. See [App_GKE §4](../App_GKE/App_GKE.md#4-advanced-secur
 
 User-supplied variables are merged on top of these defaults via `var.environment_variables`.
 
-The `WINDMILL_SMTP_PASS` secret is injected automatically from `Windmill_Common`. Replace the placeholder value in Secret Manager before enabling email features.
+The `WINDMILL_SMTP_PASS` secret is injected automatically from `Windmill Common`. Replace the placeholder value in Secret Manager before enabling email features.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -169,7 +169,7 @@ Variables available: `enable_cicd_trigger`, `github_repository_url`, `github_tok
 
 **Windmill default `db-init` job:**
 
-When `initialization_jobs` is left as the default empty list, `Windmill_Common` supplies a `db-init` job:
+When `initialization_jobs` is left as the default empty list, `Windmill Common` supplies a `db-init` job:
 
 | Field | Value |
 |---|---|
@@ -179,7 +179,7 @@ When `initialization_jobs` is left as the default empty list, `Windmill_Common` 
 | Execute on every apply | `true` |
 | CPU / Memory | `1000m` / `512Mi` |
 
-Override `initialization_jobs` with a non-empty list to replace this default. The `cron_jobs` variable behaves identically to `App_GKE`.
+Override `initialization_jobs` with a non-empty list to replace this default. The `cron_jobs` variable behaves identically to `App GKE`.
 
 ---
 
@@ -187,7 +187,7 @@ Override `initialization_jobs` with a non-empty list to replace this default. Th
 
 **GCS data bucket:**
 
-`Windmill_Common` automatically provisions a `windmill-data` GCS bucket for workflow outputs and artefacts. You do not need to define it in `storage_buckets`.
+`Windmill Common` automatically provisions a `windmill-data` GCS bucket for workflow outputs and artefacts. You do not need to define it in `storage_buckets`.
 
 | Bucket | `name_suffix` | Purpose |
 |---|---|---|
@@ -203,11 +203,11 @@ NFS (`enable_nfs`) is disabled by default — Windmill does not require NFS shar
 
 **Windmill-specific defaults and restrictions:**
 
-| Variable | Windmill_GKE Default | App_GKE Default | Notes |
+| Variable | Windmill GKE Default | App GKE Default | Notes |
 |---|---|---|---|
 | `database_type` | `"POSTGRES_16"` | `"POSTGRES"` | **Windmill requires PostgreSQL 16.** This is the only module in the repository with this requirement. |
-| `db_name` | `"windmill"` | *(not in App_GKE)* | Database name passed to `Windmill_Common`. |
-| `db_user` | `"windmill"` | *(not in App_GKE)* | Database user passed to `Windmill_Common`. |
+| `db_name` | `"windmill"` | *(not in App GKE)* | Database name passed to `Windmill Common`. |
+| `db_user` | `"windmill"` | *(not in App GKE)* | Database user passed to `Windmill Common`. |
 
 **Automatic password rotation:**
 
@@ -222,22 +222,22 @@ NFS (`enable_nfs`) is disabled by default — Windmill does not require NFS shar
 
 Windmill exposes `/api/version` as its primary health endpoint. This is different from most modules that use `/healthz`.
 
-**Startup probe** (`startup_probe` → `Windmill_Common`):
+**Startup probe** (`startup_probe` → `Windmill Common`):
 
-| Field | Windmill Default | App_GKE Default | Notes |
+| Field | Windmill Default | App GKE Default | Notes |
 |---|---|---|---|
 | `path` | `"/api/version"` | `"/healthz"` | Windmill's version endpoint confirms the service is ready. |
 | `initial_delay_seconds` | `30` | `10` | Allows Windmill 30 seconds to start and connect to the database. |
 | `failure_threshold` | `6` | `3` | Additional tolerance for first-boot database initialisation. |
 
-**Liveness probe** (`liveness_probe` → `Windmill_Common`):
+**Liveness probe** (`liveness_probe` → `Windmill Common`):
 
-| Field | Windmill Default | App_GKE Default | Notes |
+| Field | Windmill Default | App GKE Default | Notes |
 |---|---|---|---|
 | `path` | `"/api/version"` | `"/healthz"` | Same endpoint as startup probe. |
 | `initial_delay_seconds` | `30` | `15` | Gives Windmill time to stabilise. |
 
-**App_GKE-standard probes:**
+**App GKE-standard probes:**
 
 > **Override recommended:** `startup_probe_config` and `health_check_config` default to `path = "/healthz"`. Override both to `path = "/api/version"` to match Windmill's actual health endpoint.
 

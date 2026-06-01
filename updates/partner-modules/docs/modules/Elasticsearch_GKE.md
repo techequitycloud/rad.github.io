@@ -1,28 +1,28 @@
-# Elasticsearch_GKE Module — Configuration Guide
+# Elasticsearch GKE Module — Configuration Guide
 
 Elasticsearch is an open-source distributed search and analytics engine based on Apache Lucene.
 This module deploys a **single-node Elasticsearch cluster** on **GKE Autopilot** as a
 Kubernetes StatefulSet with persistent SSD storage. It is designed as a shared search
-infrastructure dependency — primarily for `RAGFlow_GKE`, which uses it for document vector
+infrastructure dependency — primarily for `RAGFlow GKE`, which uses it for document vector
 storage and full-text search.
 
-`Elasticsearch_GKE` is a **wrapper module** built on top of `App_GKE`. It delegates all GCP
-infrastructure provisioning to `App_GKE` and assembles the Elasticsearch-specific configuration
+`Elasticsearch GKE` is a **wrapper module** built on top of `App GKE`. It delegates all GCP
+infrastructure provisioning to `App GKE` and assembles the Elasticsearch-specific configuration
 locally using a `locals` block (there is no separate `*_Common` module).
 
-> `Elasticsearch_GKE` must be deployed **before** `RAGFlow_GKE`. After deployment, run
-> `tofu output elasticsearch_endpoint` and pass the result to `RAGFlow_GKE`'s
+> `Elasticsearch GKE` must be deployed **before** `RAGFlow GKE`. After deployment, run
+> `tofu output elasticsearch_endpoint` and pass the result to `RAGFlow GKE`'s
 > `elasticsearch_hosts` variable.
 
 ---
 
 ## §1 · Module Overview
 
-### What `Elasticsearch_GKE` provides
+### What `Elasticsearch GKE` provides
 
 - An **Elasticsearch StatefulSet** (prebuilt `docker.elastic.co/elasticsearch/elasticsearch`
   image, optionally mirrored to Artifact Registry) with a **LoadBalancer service** on port
-  9200, enabling cross-namespace access from `RAGFlow_GKE`.
+  9200, enabling cross-namespace access from `RAGFlow GKE`.
 - A **PersistentVolumeClaim** (30 Gi SSD by default) mounted at
   `/usr/share/elasticsearch/data` for durable index storage.
 - A **headless Kubernetes Service** providing stable pod DNS entries.
@@ -30,9 +30,9 @@ locally using a `locals` block (there is no separate `*_Common` module).
 - Probes use TCP (not HTTP) because HTTP probes would fail on Elasticsearch 9.x with
   X-Pack security enabled. TCP probes validate port readiness regardless of auth state.
 
-### Key differences from `App_GKE` defaults
+### Key differences from `App GKE` defaults
 
-| Feature | App_GKE default | Elasticsearch_GKE default |
+| Feature | App GKE default | Elasticsearch GKE default |
 |---|---|---|
 | `container_port` | `8080` | `9200` |
 | `workload_type` | `"Deployment"` | `"StatefulSet"` |
@@ -53,7 +53,7 @@ locally using a `locals` block (there is no separate `*_Common` module).
 | `enable_redis` | varies | `false` (hard-coded) |
 | `create_cloud_storage` | `true` | `false` |
 | `enable_nfs` | `false` | `false` |
-| `module_dependency` | varies | `["Services_GCP"]` |
+| `module_dependency` | varies | `["Services GCP"]` |
 | `credit_cost` | varies | `150` |
 
 ### Architecture
@@ -102,7 +102,7 @@ override any of the above.
 |---|---|---|---|
 | `module_description` | `string` | *(Elasticsearch GKE description)* | Platform UI description. `{{UIMeta group=0 order=1}}` |
 | `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/Elasticsearch_GKE"` | Documentation URL. `{{UIMeta group=0 order=2}}` |
-| `module_dependency` | `list(string)` | `["Services_GCP"]` | Modules that must be deployed first. `{{UIMeta group=0 order=3}}` |
+| `module_dependency` | `list(string)` | `["Services GCP"]` | Modules that must be deployed first. `{{UIMeta group=0 order=3}}` |
 | `module_services` | `list(string)` | `["Google Kubernetes Engine", "Persistent Disk", ...]` | GCP services consumed. `{{UIMeta group=0 order=4}}` |
 | `credit_cost` | `number` | `150` | Platform credits consumed on deployment. `{{UIMeta group=0 order=5}}` |
 | `require_credit_purchases` | `bool` | `false` | Enforce credit balance check. `{{UIMeta group=0 order=6}}` |
@@ -167,7 +167,7 @@ override any of the above.
 | `gke_cluster_selection_mode` | `string` | `"primary"` | Cluster selection strategy. Options: `explicit`, `round-robin`, `primary`. `{{UIMeta group=5 order=2}}` |
 | `namespace_name` | `string` | `""` | Kubernetes namespace. Auto-generated when empty. `{{UIMeta group=5 order=3}}` |
 | `workload_type` | `string` | `"StatefulSet"` | **Required `StatefulSet`** for data persistence. `Deployment` is not recommended — PVC data would not survive pod reschedule. `{{UIMeta group=5 order=4}}` |
-| `service_type` | `string` | `"LoadBalancer"` | `"LoadBalancer"` is required for cross-namespace access from `RAGFlow_GKE`. `"ClusterIP"` requires RAGFlow and Elasticsearch to share the same namespace. Options: `ClusterIP`, `LoadBalancer`, `NodePort`. `{{UIMeta group=5 order=5}}` |
+| `service_type` | `string` | `"LoadBalancer"` | `"LoadBalancer"` is required for cross-namespace access from `RAGFlow GKE`. `"ClusterIP"` requires RAGFlow and Elasticsearch to share the same namespace. Options: `ClusterIP`, `LoadBalancer`, `NodePort`. `{{UIMeta group=5 order=5}}` |
 | `session_affinity` | `string` | `"None"` | Session affinity for the Kubernetes Service. `{{UIMeta group=5 order=6}}` |
 | `enable_multi_cluster_service` | `bool` | `false` | Enable Multi-Cluster Services (MCS). `{{UIMeta group=5 order=7}}` |
 | `configure_service_mesh` | `bool` | `false` | Enable Istio service mesh. `{{UIMeta group=5 order=8}}` |
@@ -260,13 +260,13 @@ Probes use **TCP** (not HTTP) because:
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `startup_probe_config` | `object` | `{ enabled=true, type="HTTP", path="/_cluster/health", initial_delay_seconds=30, period_seconds=10, failure_threshold=18 }` | App_GKE-standard startup probe. The 18-attempt threshold (3 minutes) allows for shard recovery. `{{UIMeta group=9 order=1}}` |
-| `health_check_config` | `object` | `{ enabled=true, type="HTTP", path="/_cluster/health", initial_delay_seconds=60, period_seconds=30, failure_threshold=3 }` | App_GKE-standard liveness probe. `{{UIMeta group=9 order=2}}` |
+| `startup_probe_config` | `object` | `{ enabled=true, type="HTTP", path="/_cluster/health", initial_delay_seconds=30, period_seconds=10, failure_threshold=18 }` | App GKE-standard startup probe. The 18-attempt threshold (3 minutes) allows for shard recovery. `{{UIMeta group=9 order=1}}` |
+| `health_check_config` | `object` | `{ enabled=true, type="HTTP", path="/_cluster/health", initial_delay_seconds=60, period_seconds=30, failure_threshold=3 }` | App GKE-standard liveness probe. `{{UIMeta group=9 order=2}}` |
 | `uptime_check_config` | `object` | `{ enabled=false, path="/_cluster/health", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. Disabled by default. `{{UIMeta group=9 order=3}}` |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies. `{{UIMeta group=9 order=4}}` |
 
 > Note: The container-level probes (forwarded via the application config) use TCP, while
-> `startup_probe_config` and `health_check_config` at the App_GKE level default to HTTP
+> `startup_probe_config` and `health_check_config` at the App GKE level default to HTTP
 > with `/_cluster/health`. When `enable_xpack_security = true`, override both configs to
 > use TCP.
 
@@ -306,7 +306,7 @@ Probes use **TCP** (not HTTP) because:
 
 ## §13 · Database (Group 15) — Not Used
 
-Elasticsearch requires no Cloud SQL. All variables are present for interface compatibility with `App_GKE`.
+Elasticsearch requires no Cloud SQL. All variables are present for interface compatibility with `App GKE`.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -377,7 +377,7 @@ Elasticsearch requires no initialization jobs or custom SQL.
 ### Basic Deployment
 
 Minimal single-node Elasticsearch for RAGFlow integration. Deploy this first, then use
-`elasticsearch_endpoint` in `RAGFlow_GKE`.
+`elasticsearch_endpoint` in `RAGFlow GKE`.
 
 ```hcl
 # config/basic.tfvars

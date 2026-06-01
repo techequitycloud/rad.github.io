@@ -46,7 +46,7 @@ The steps in this guide include equivalent `gcloud` commands alongside the conso
 
 ## Prerequisites
 
-- A GCP project with the Services_GCP platform module already deployed
+- A GCP project with the Services GCP platform module already deployed
 - `gcloud` CLI authenticated: `gcloud auth login && gcloud config set project PROJECT_ID`
 - Owner or Editor role on the target GCP project
 - Access to the RAD UI with permission to deploy modules in the target GCP project
@@ -416,7 +416,7 @@ The undeploy operation removes the Cloud Run service, Cloud Run Jobs, Cloud SQL 
 
 **Note:** If `enable_purge = false` was set, some resources (database, buckets) are retained after undeploy to protect against accidental data loss.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

@@ -6,9 +6,9 @@
 
 **Estimated time:** 1–2 hours
 
-This lab deploys the Sample reference application on Cloud Run (v2). It is a simple Flask application that demonstrates the full App_CloudRun module feature set: Cloud SQL (PostgreSQL), Filestore NFS via gen2 execution environment, GCS Fuse mounts, Redis integration, Secret Manager, Direct VPC Egress, and Cloud Monitoring with uptime checks.
+This lab deploys the Sample reference application on Cloud Run (v2). It is a simple Flask application that demonstrates the full App CloudRun module feature set: Cloud SQL (PostgreSQL), Filestore NFS via gen2 execution environment, GCS Fuse mounts, Redis integration, Secret Manager, Direct VPC Egress, and Cloud Monitoring with uptime checks.
 
-Use this module to understand typical Cloud Run application module patterns before studying production modules like Django_CloudRun.
+Use this module to understand typical Cloud Run application module patterns before studying production modules like Django CloudRun.
 
 ### What the Module Automates
 
@@ -55,7 +55,7 @@ curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
 
 ## Prerequisites
 
-- Services_GCP deployed in the same GCP project (provides VPC, Cloud SQL, Filestore, and Artifact Registry)
+- Services GCP deployed in the same GCP project (provides VPC, Cloud SQL, Filestore, and Artifact Registry)
 - `gcloud` CLI installed and authenticated (`gcloud auth login`)
 - `curl` installed
 - Access to the RAD UI with permission to deploy modules in the target GCP project
@@ -81,7 +81,7 @@ Variables are configured in the RAD UI form before deploying. The table below de
 | `max_instance_count` | No | `1` | Maximum instances (cost ceiling) |
 | `cpu_limit` | No | `1000m` | CPU allocated per container instance |
 | `memory_limit` | No | `512Mi` | Memory allocated per container instance |
-| `application_database_name` | No | `sampleapp` | PostgreSQL database name |
+| `application_database_name` | No | `cloudrunapp` | PostgreSQL database name |
 | `application_database_user` | No | `cloudrunapp` | PostgreSQL user name |
 | `enable_nfs` | No | `true` | Mount a Cloud Filestore NFS volume |
 | `nfs_mount_path` | No | `/mnt/nfs` | Container path for the NFS mount |
@@ -329,11 +329,11 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 
 This removes the Cloud Run service, all revisions, Cloud SQL database and user, Secret Manager secrets, Filestore NFS instance, GCS bucket, and uptime checks.
 
-> **Note:** The Cloud SQL instance, Filestore instance, VPC, and Artifact Registry are managed by Services_GCP and are not destroyed by this action.
+> **Note:** The Cloud SQL instance, Filestore instance, VPC, and Artifact Registry are managed by Services GCP and are not destroyed by this action.
 
 **Expected duration:** 3–7 minutes.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

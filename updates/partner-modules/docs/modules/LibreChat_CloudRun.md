@@ -6,12 +6,12 @@ This document provides a comprehensive reference for the `modules/LibreChat_Clou
 
 ## 1. Module Overview
 
-LibreChat is an open-source AI chat interface with 20,000+ GitHub stars that replicates and extends the ChatGPT experience across 20+ LLM providers (OpenAI, Anthropic, Google Gemini, Mistral, Groq, Ollama, and many more). `LibreChat_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects LibreChat-specific application configuration, secrets, and storage via `LibreChat_Common`.
+LibreChat is an open-source AI chat interface with 20,000+ GitHub stars that replicates and extends the ChatGPT experience across 20+ LLM providers (OpenAI, Anthropic, Google Gemini, Mistral, Groq, Ollama, and many more). `LibreChat CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects LibreChat-specific application configuration, secrets, and storage via `LibreChat Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Node.js container, 2 vCPU / 2 Gi by default. Configurable min/max instances; `min_instance_count = 1` by default to eliminate cold starts for a chat application.
 *   **Database**: MongoDB — either MongoDB Atlas, self-hosted, or **GCP Firestore with MongoDB compatibility** (auto-provisioned when no `mongodb_uri` is supplied). No Cloud SQL is provisioned.
-*   **Security**: Auto-generated JWT secrets (`JWT_SECRET`, `JWT_REFRESH_SECRET`), credential encryption keys (`CREDS_KEY`, `CREDS_IV`), and MongoDB URI all stored in Secret Manager. Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_CloudRun`.
+*   **Security**: Auto-generated JWT secrets (`JWT_SECRET`, `JWT_REFRESH_SECRET`), credential encryption keys (`CREDS_KEY`, `CREDS_IV`), and MongoDB URI all stored in Secret Manager. Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`.
 *   **Storage**: GCS bucket for file uploads (`librechat-uploads`); optional GCS Fuse mounts and NFS.
 *   **Redis**: Optional Redis session management and message queuing. Required for multi-instance deployments to avoid session inconsistency.
 *   **CI/CD**: Defaults to `prebuilt` image from GHCR (`ghcr.io/danny-avila/librechat`), mirrored to Artifact Registry. Cloud Build custom image pipeline and Cloud Deploy optional.
@@ -30,17 +30,17 @@ LibreChat is an open-source AI chat interface with 20,000+ GitHub stars that rep
 | `application_description` | 3 | `string` | `'LibreChat - Open-source AI Chat Interface...'` | Cloud Run service description. |
 | `application_version` | 3 | `string` | `'latest'` | LibreChat image version tag. Increment to deploy a new release. |
 
-**Wrapper architecture:** `LibreChat_CloudRun` calls `LibreChat_Common` to build an `application_config` object containing LibreChat-specific environment variables, probe configuration, MongoDB secret references, and the `librechat-uploads` GCS bucket. `module_secret_env_vars` carries the auto-generated JWT and credential secrets. `module_env_vars` carries `USE_REDIS` and `REDIS_URI` when Redis is enabled. `scripts_dir` is resolved to `abspath("${module.librechat_app.path}/scripts")` at apply time.
+**Wrapper architecture:** `LibreChat CloudRun` calls `LibreChat Common` to build an `application_config` object containing LibreChat-specific environment variables, probe configuration, MongoDB secret references, and the `librechat-uploads` GCS bucket. `module_secret_env_vars` carries the auto-generated JWT and credential secrets. `module_env_vars` carries `USE_REDIS` and `REDIS_URI` when Redis is enabled. `scripts_dir` is resolved to `abspath("${module.librechat_app.path}/scripts")` at apply time.
 
-**MongoDB note:** LibreChat uses **MongoDB**, not Cloud SQL. `database_type = "NONE"` is fixed and no Cloud SQL instance is provisioned. `LibreChat_Common` auto-provisions a Firestore database with MongoDB compatibility if neither `mongodb_uri` nor `firestore_mongodb_host` is supplied.
+**MongoDB note:** LibreChat uses **MongoDB**, not Cloud SQL. `database_type = "NONE"` is fixed and no Cloud SQL instance is provisioned. `LibreChat Common` auto-provisions a Firestore database with MongoDB compatibility if neither `mongodb_uri` nor `firestore_mongodb_host` is supplied.
 
 ---
 
 ## 2. IAM & Access Control
 
-`LibreChat_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in App_CloudRun.
+`LibreChat CloudRun` delegates all IAM provisioning to `App CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in App CloudRun.
 
-**Application-level secrets:** `LibreChat_Common` auto-generates four application secrets at deploy time:
+**Application-level secrets:** `LibreChat Common` auto-generates four application secrets at deploy time:
 - `CREDS_KEY` — 32-byte hex key for AES-GCM encryption of saved AI provider credentials.
 - `CREDS_IV` — 16-byte hex IV paired with `CREDS_KEY`.
 - `JWT_SECRET` — Signs user access tokens. Rotating invalidates all active sessions.
@@ -49,7 +49,7 @@ LibreChat is an open-source AI chat interface with 20,000+ GitHub stars that rep
 
 All secrets are injected natively by Cloud Run at revision start. Plaintext is never written to Terraform state.
 
-**Firestore SCRAM user job:** When Firestore MongoDB compatibility is used (auto-provisioned path), `LibreChat_Common` injects a `init-firestore-scram-user` Cloud Run Job that creates or updates the SCRAM user using `mongosh` with GCP Workload Identity OIDC authentication against the Firestore admin database.
+**Firestore SCRAM user job:** When Firestore MongoDB compatibility is used (auto-provisioned path), `LibreChat Common` injects a `init-firestore-scram-user` Cloud Run Job that creates or updates the SCRAM user using `mongosh` with GCP Workload Identity OIDC authentication against the Firestore admin database.
 
 **Additional Cloud Run SA role:** `roles/datastore.owner` is granted to the Cloud Run service account to allow the application to read and write Firestore data (for session or optional Firestore-backed features).
 
@@ -89,7 +89,7 @@ LibreChat requires MongoDB. The module supports three connection modes:
 
 1. **Explicit URI** — Provide `mongodb_uri` directly (MongoDB Atlas, self-hosted, etc.).
 2. **Firestore manual** — Provide `firestore_mongodb_host`, `firestore_mongodb_username`, and `firestore_mongodb_password`; the MONGO_URI is constructed automatically.
-3. **Firestore auto** — Leave all three empty; `LibreChat_Common` discovers or creates a Firestore database with MongoDB compatibility in the GCP project.
+3. **Firestore auto** — Leave all three empty; `LibreChat Common` discovers or creates a Firestore database with MongoDB compatibility in the GCP project.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -100,7 +100,7 @@ LibreChat requires MongoDB. The module supports three connection modes:
 | `firestore_mongodb_password` | 12 | `""` | SCRAM password. Auto-generated and stored in Secret Manager when not set. Sensitive. |
 | `database_type` | 12 | `'NONE'` | Fixed. Must remain `'NONE'` — no Cloud SQL is provisioned. |
 
-> **Warning:** A plan-time `precondition` in `LibreChat_Common` fails if no MongoDB source is reachable at apply time, preventing deployment with a clear error message rather than a cryptic runtime failure.
+> **Warning:** A plan-time `precondition` in `LibreChat Common` fails if no MongoDB source is reachable at apply time, preventing deployment with a clear error message rather than a cryptic runtime failure.
 
 ### C. LibreChat Application Settings
 
@@ -112,7 +112,7 @@ LibreChat requires MongoDB. The module supports three connection modes:
 
 ### D. Storage (GCS & NFS)
 
-`LibreChat_Common` automatically provisions a dedicated `librechat-uploads` GCS bucket for user file uploads. This bucket is separate from any buckets in `storage_buckets`.
+`LibreChat Common` automatically provisions a dedicated `librechat-uploads` GCS bucket for user file uploads. This bucket is separate from any buckets in `storage_buckets`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -130,11 +130,11 @@ LibreChat requires MongoDB. The module supports three connection modes:
 |---|---|---|---|
 | `ingress_settings` | 5 | `'all'` | `'all'` — public internet; `'internal'` — VPC only; `'internal-and-cloud-load-balancing'` — forces traffic through the HTTPS LB. |
 | `vpc_egress_setting` | 5 | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` routes only RFC 1918 traffic via VPC. |
-| `region` | 1 | `'us-central1'` | GCP region. Auto-discovered from the VPC subnet when `Services_GCP` is present. |
+| `region` | 1 | `'us-central1'` | GCP region. Auto-discovered from the VPC subnet when `Services GCP` is present. |
 
 ### F. Initialization Jobs
 
-The Firestore SCRAM init job is auto-injected by `LibreChat_Common` when Firestore is in use. Additional custom initialization jobs can be appended:
+The Firestore SCRAM init job is auto-injected by `LibreChat Common` when Firestore is in use. Additional custom initialization jobs can be appended:
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -213,7 +213,7 @@ When `enable_iap = true`, Google identity authentication is required before requ
 
 Redis is **optional** but **recommended for all multi-instance deployments**. Without Redis, LibreChat sessions are in-memory per instance, causing session loss when a request is routed to a different instance.
 
-When `enable_redis = true` and `redis_host` is set, `LibreChat_CloudRun` injects `USE_REDIS = "true"` and `REDIS_URI` into the Cloud Run environment. Setting `REDIS_URI` alone is not sufficient — `USE_REDIS = "true"` must also be set.
+When `enable_redis = true` and `redis_host` is set, `LibreChat CloudRun` injects `USE_REDIS = "true"` and `REDIS_URI` into the Cloud Run environment. Setting `REDIS_URI` alone is not sufficient — `USE_REDIS = "true"` must also be set.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -285,16 +285,16 @@ The following behaviours are applied automatically regardless of variable values
 | Behaviour | Implementation | Detail |
 |---|---|---|
 | **MongoDB only — no Cloud SQL** | `database_type = "NONE"` fixed | No Cloud SQL instance is provisioned. Setting `database_type` to any SQL engine provisions an unused instance. |
-| **Firestore auto-provisioning** | `LibreChat_Common` creates ENTERPRISE Firestore DB | When `mongodb_uri` is empty and no `firestore_mongodb_host` is set, a Firestore ENTERPRISE DB is created automatically. |
-| **SCRAM user init job** | Auto-injected by `LibreChat_Common` | Creates/updates the MongoDB SCRAM user in Firestore using workload identity OIDC. No-op when an explicit `mongodb_uri` is supplied. |
-| **JWT/credential secrets auto-generated** | `LibreChat_Common` resources | `CREDS_KEY`, `CREDS_IV`, `JWT_SECRET`, `JWT_REFRESH_SECRET` generated on first apply. Rotating invalidates all active sessions. |
-| **MONGO_URI always present in secret refs** | `LibreChat_Common` secret_ids | The `MONGO_URI` secret reference is always included to prevent silent removal from Cloud Run spec during update runs. |
+| **Firestore auto-provisioning** | `LibreChat Common` creates ENTERPRISE Firestore DB | When `mongodb_uri` is empty and no `firestore_mongodb_host` is set, a Firestore ENTERPRISE DB is created automatically. |
+| **SCRAM user init job** | Auto-injected by `LibreChat Common` | Creates/updates the MongoDB SCRAM user in Firestore using workload identity OIDC. No-op when an explicit `mongodb_uri` is supplied. |
+| **JWT/credential secrets auto-generated** | `LibreChat Common` resources | `CREDS_KEY`, `CREDS_IV`, `JWT_SECRET`, `JWT_REFRESH_SECRET` generated on first apply. Rotating invalidates all active sessions. |
+| **MONGO_URI always present in secret refs** | `LibreChat Common` secret_ids | The `MONGO_URI` secret reference is always included to prevent silent removal from Cloud Run spec during update runs. |
 | **USE_REDIS + REDIS_URI injection** | `module_env_vars` in `librechat.tf` | When `enable_redis = true` and `redis_host != ""`, both env vars are injected. Setting `REDIS_URI` alone via `environment_variables` does not activate Redis in LibreChat. |
 | **Trust proxy forced** | `TRUST_PROXY = "1"` hardcoded | Required for Express.js to read `X-Forwarded-For` correctly behind Cloud Run's ingress and to set Secure cookies over HTTPS. |
 | **NODE_ENV set to production** | `NODE_ENV = "production"` hardcoded | Ensures LibreChat runs with production optimisations. |
-| **GCS uploads bucket** | `librechat-uploads` bucket provisioned by `LibreChat_Common` | Dedicated bucket for user file uploads, separate from `storage_buckets`. |
+| **GCS uploads bucket** | `librechat-uploads` bucket provisioned by `LibreChat Common` | Dedicated bucket for user file uploads, separate from `storage_buckets`. |
 | **datastore.owner role** | `additional_cloudrun_sa_roles` in `main.tf` | Cloud Run SA granted `roles/datastore.owner` for Firestore access. |
-| **Scripts directory** | `scripts_dir` from `LibreChat_Common` | Initialization scripts sourced from `LibreChat_Common`, not the deployment directory. |
+| **Scripts directory** | `scripts_dir` from `LibreChat Common` | Initialization scripts sourced from `LibreChat Common`, not the deployment directory. |
 
 ---
 
@@ -306,7 +306,7 @@ All user-configurable variables, sorted by UI group.
 |---|---|---|---|
 | `module_description` | 0 | (LibreChat platform text) | Platform metadata: module description. |
 | `module_documentation` | 0 | (docs URL) | Platform metadata: documentation URL. |
-| `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
+| `module_dependency` | 0 | `['Services GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `50` | Platform metadata: deployment credit cost. |
 | `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |

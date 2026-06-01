@@ -1,12 +1,12 @@
-# App_GKE — Lab Guide
+# App GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/App_GKE)**
 
 ## Overview
 
-`App_GKE` is the **foundation deployment engine** for all GKE Autopilot application modules in this repository. It is a highly parameterized Terraform child module that provisions a production-ready Kubernetes workload on GKE Autopilot, including Cloud SQL (PostgreSQL or MySQL), Cloud Filestore NFS, GCS storage, Secret Manager, Workload Identity, Cloud Build CI/CD, Cloud Monitoring, and optional Cloud Armor WAF.
+`App GKE` is the **foundation deployment engine** for all GKE Autopilot application modules in this repository. It is a highly parameterized Terraform child module that provisions a production-ready Kubernetes workload on GKE Autopilot, including Cloud SQL (PostgreSQL or MySQL), Cloud Filestore NFS, GCS storage, Secret Manager, Workload Identity, Cloud Build CI/CD, Cloud Monitoring, and optional Cloud Armor WAF.
 
-Application modules such as `Django_GKE`, `Ghost_GKE`, and `Wordpress_GKE` call this module and pass application-specific configuration. You can also call `App_GKE` directly to deploy a generic containerised workload on GKE Autopilot.
+Application modules such as `Django GKE`, `Ghost GKE`, and `Wordpress GKE` call this module and pass application-specific configuration. You can also call `App GKE` directly to deploy a generic containerised workload on GKE Autopilot.
 
 **Estimated time:** 2–3 hours
 
@@ -81,10 +81,10 @@ export DB_SECRET=$(gcloud secrets list \
 | gcloud CLI | Authenticated (`gcloud auth login`) |
 | kubectl | Installed and on PATH |
 | GCP project with billing | Active billing account linked |
-| Services_GCP module deployed | Provides VPC, GKE cluster, Cloud SQL, Artifact Registry, and Filestore |
+| Services GCP module deployed | Provides VPC, GKE cluster, Cloud SQL, Artifact Registry, and Filestore |
 | Service account | `roles/owner` granted in the target project |
 
-The `Services_GCP` module **must** be deployed and healthy before running this module. It supplies the shared VPC, GKE Autopilot cluster, Cloud SQL instance, Artifact Registry repository, and Filestore NFS server that App_GKE discovers automatically at deploy time.
+The `Services GCP` module **must** be deployed and healthy before running this module. It supplies the shared VPC, GKE Autopilot cluster, Cloud SQL instance, Artifact Registry repository, and Filestore NFS server that App GKE discovers automatically at deploy time.
 
 ---
 
@@ -108,13 +108,9 @@ Variables are configured in the RAD UI form before deploying. The table below li
 | `min_instance_count` | `1` | Minimum pod replicas (HPA `minReplicas`) |
 | `max_instance_count` | `3` | Maximum pod replicas (HPA `maxReplicas`) |
 | `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | CPU and memory limits per pod |
-| `workload_type` | `Deployment` | `Deployment` for stateless apps; `StatefulSet` for stateful apps. Setting `stateful_pvc_enabled = true` without specifying this variable automatically selects `StatefulSet` |
-| `stateful_pvc_enabled` | `null` | Enables a PersistentVolumeClaim template in the StatefulSet spec so each pod replica gets its own isolated PVC. Setting this to `true` without `workload_type` auto-selects `StatefulSet` |
-| `stateful_pvc_size` | `null` | Storage size for each PVC (e.g. `"20Gi"`). Only used when `stateful_pvc_enabled = true` |
-| `stateful_pvc_mount_path` | `null` | Container path where the PVC is mounted (e.g. `"/var/lib/data"`). Only used when `stateful_pvc_enabled = true` |
-| `stateful_pvc_storage_class` | `null` | Kubernetes StorageClass for the PVCs. Leave `null` to use the cluster default; for GKE Autopilot `"standard-rwo"` (Balanced PD, ReadWriteOnce) is the default |
+| `workload_type` | `Deployment` | `Deployment` for stateless apps; `StatefulSet` for stateful apps |
 | `service_type` | `LoadBalancer` | `LoadBalancer`, `ClusterIP`, or `NodePort` |
-| `gke_cluster_name` | `""` | Target cluster name — leave empty to auto-discover from Services_GCP |
+| `gke_cluster_name` | `""` | Target cluster name — leave empty to auto-discover from Services GCP |
 | `database_type` | `POSTGRES` | Cloud SQL engine: `POSTGRES`, `MYSQL`, or `NONE` |
 | `application_database_name` | `gkeappdb` | Database name created in Cloud SQL |
 | `application_database_user` | `gkeappuser` | Database user name |
@@ -557,7 +553,7 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Static IP reservation | < 1 minute |
 | **Total** | **8–15 minutes** |
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

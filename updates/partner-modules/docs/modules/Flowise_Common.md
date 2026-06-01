@@ -1,6 +1,6 @@
-# Flowise_Common Shared Configuration Module
+# Flowise Common Shared Configuration Module
 
-The `Flowise_Common` module defines the Flowise visual AI workflow builder for the RAD Modules ecosystem. It **creates GCP resources** (one Secret Manager secret for the admin password) and produces a `config` output consumed by the platform-specific wrapper modules (`Flowise_CloudRun` and `Flowise_GKE`).
+The `Flowise Common` module defines the Flowise visual AI workflow builder for the RAD Modules ecosystem. It **creates GCP resources** (one Secret Manager secret for the admin password) and produces a `config` output consumed by the platform-specific wrapper modules (`Flowise CloudRun` and `Flowise GKE`).
 
 ## 1. Overview
 
@@ -46,7 +46,7 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 
 ## 3. Storage Buckets
 
-`Flowise_Common` produces a single GCS bucket definition via the `storage_buckets` output:
+`Flowise Common` produces a single GCS bucket definition via the `storage_buckets` output:
 
 | Field | Value |
 |---|---|
@@ -118,7 +118,7 @@ Sensitive map containing the raw generated admin password. Used by wrapper modul
 
 ### `path`
 
-The resolved filesystem path of the `Flowise_Common` module directory. Used by wrapper modules to locate the `scripts/` directory:
+The resolved filesystem path of the `Flowise Common` module directory. Used by wrapper modules to locate the `scripts/` directory:
 
 ```hcl
 scripts_dir = abspath("${module.flowise_app.path}/scripts")
@@ -128,7 +128,7 @@ scripts_dir = abspath("${module.flowise_app.path}/scripts")
 
 ## 5. Environment Variables (always injected)
 
-`Flowise_Common` merges the following into `config.environment_variables`, with `var.environment_variables` taking precedence:
+`Flowise Common` merges the following into `config.environment_variables`, with `var.environment_variables` taking precedence:
 
 | Variable | Value | Purpose |
 |---|---|---|
@@ -145,7 +145,7 @@ scripts_dir = abspath("${module.flowise_app.path}/scripts")
 
 ## 6. Initialization Job
 
-When `initialization_jobs` is empty (the default), `Flowise_Common` automatically defines a single bootstrap job:
+When `initialization_jobs` is empty (the default), `Flowise Common` automatically defines a single bootstrap job:
 
 | Field | Value |
 |---|---|
@@ -173,7 +173,7 @@ When `initialization_jobs` is provided by the caller, the custom jobs replace th
 
 ## 7. Scripts Directory
 
-`Flowise_Common` ships three files in `scripts/`:
+`Flowise Common` ships three files in `scripts/`:
 
 | File | Purpose |
 |---|---|
@@ -187,7 +187,7 @@ When `initialization_jobs` is provided by the caller, the custom jobs replace th
 
 ## 8. Input Variables
 
-All variables are passed in by the wrapper modules (`Flowise_CloudRun` and `Flowise_GKE`). `Flowise_Common` is not intended to be called directly by end users.
+All variables are passed in by the wrapper modules (`Flowise CloudRun` and `Flowise GKE`). `Flowise Common` is not intended to be called directly by end users.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -217,11 +217,11 @@ All variables are passed in by the wrapper modules (`Flowise_CloudRun` and `Flow
 
 ## 9. Platform-Specific Differences
 
-| Aspect | Cloud Run (`Flowise_CloudRun`) | GKE (`Flowise_GKE`) |
+| Aspect | Cloud Run (`Flowise CloudRun`) | GKE (`Flowise GKE`) |
 |---|---|---|
 | **`enable_cloudsql_volume` wired** | Passed as-is; controls Cloud Run Cloud SQL sidecar annotation | Passed as-is; controls Cloud SQL Auth Proxy sidecar injection into the pod |
-| **`secret_values` usage** | Passed as `module_explicit_secret_values` to App_CloudRun | Passed as `explicit_secret_values` to App_GKE for direct Kubernetes Secret injection |
-| **`GOOGLE_CLOUD_STORAGE_BUCKET_NAME`** | Injected via `module_env_vars` in Flowise_CloudRun | Injected via `module_env_vars` in Flowise_GKE |
+| **`secret_values` usage** | Passed as `module_explicit_secret_values` to App CloudRun | Passed as `explicit_secret_values` to App GKE for direct Kubernetes Secret injection |
+| **`GOOGLE_CLOUD_STORAGE_BUCKET_NAME`** | Injected via `module_env_vars` in Flowise CloudRun | Injected via `module_env_vars` in Flowise GKE |
 | **`container_build_config`** | Wrapper merges `dockerfile_path = "Dockerfile"` and `context_path = "."` | Wrapper merges `dockerfile_path = "Dockerfile"` and `context_path = "."` |
 | **Scaling** | Serverless; `min_instance_count = 1` to avoid cold starts | Kubernetes Deployment; `min_instance_count = 1` by default |
 | **Scripts directory** | `abspath("${module.flowise_app.path}/scripts")` | `abspath("${module.flowise_app.path}/scripts")` |

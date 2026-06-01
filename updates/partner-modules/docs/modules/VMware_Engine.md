@@ -8,8 +8,8 @@ allocation, default VPC firewall rules, and a Windows Server 2022 jump host VM f
 vCenter, NSX-T Manager, and HCX Manager via RDP.
 
 This module is designed to support **VM migration workflows** and **GCVE lab environments**. It
-is deployed directly to an existing GCP project (not through the standard App_CloudRun or
-App_GKE foundation modules) and has no dependency on `Services_GCP`.
+is deployed directly to an existing GCP project (not through the standard App CloudRun or
+App GKE foundation modules) and has no dependency on `Services GCP`.
 
 > **Provisioning time:** A GCVE private cloud takes **30–90 minutes** to provision.
 > `google_vmwareengine_private_cloud` has a 180-minute timeout. Do not interrupt a running

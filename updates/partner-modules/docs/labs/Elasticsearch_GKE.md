@@ -15,7 +15,7 @@ This lab deploys a single-node Elasticsearch cluster on GKE Autopilot using a St
 - Deploys a StatefulSet with one Elasticsearch pod, configured for single-node discovery
 - Provisions a PersistentVolumeClaim (30 Gi, `standard-rwo` StorageClass) for durable data storage
 - Creates a headless Kubernetes Service for stable pod DNS
-- Creates a ClusterIP Kubernetes Service on port 9200, restricting access to the internal cluster network
+- Creates a LoadBalancer Kubernetes Service exposing port 9200 for cross-namespace access
 - Configures Workload Identity for the pod service account
 - Sets JVM heap size, cluster name, and other Elasticsearch settings via environment variables
 - Creates a PodDisruptionBudget to protect availability during voluntary disruptions
@@ -46,7 +46,7 @@ kubectl get statefulset -n <namespace>
 kubectl get pvc -n <namespace>
 kubectl get svc -n <namespace>
 
-# Elasticsearch REST API (after port-forward or from within the cluster)
+# Elasticsearch REST API (after port-forward or via LoadBalancer IP)
 curl http://localhost:9200/_cluster/health | jq
 curl http://localhost:9200/_cat/indices?v
 curl http://localhost:9200/_nodes/stats | jq
@@ -56,7 +56,7 @@ curl http://localhost:9200/_nodes/stats | jq
 
 ## Prerequisites
 
-- Services_GCP deployed in the same GCP project (provides the VPC, GKE Autopilot cluster, and Artifact Registry)
+- Services GCP deployed in the same GCP project (provides the VPC, GKE Autopilot cluster, and Artifact Registry)
 - Access to the RAD UI with permission to deploy modules in the target GCP project
 - `gcloud` CLI installed and authenticated (`gcloud auth login`)
 - `kubectl` installed
@@ -89,7 +89,7 @@ Variables are configured in the RAD UI form before deploying. Use the table belo
 | `enable_xpack_security` | No | `false` | Enable X-Pack TLS and authentication |
 | `stateful_pvc_size` | No | `30Gi` | PVC storage size for Elasticsearch data |
 | `stateful_pvc_storage_class` | No | `standard-rwo` | Kubernetes StorageClass for the PVC |
-| `service_type` | No | `ClusterIP` | Kubernetes Service type (`ClusterIP` or `LoadBalancer`) |
+| `service_type` | No | `LoadBalancer` | Kubernetes Service type (`ClusterIP` or `LoadBalancer`) |
 | `gke_cluster_name` | No | `""` | GKE cluster name; leave empty to auto-discover |
 | `namespace_name` | No | `""` | Kubernetes namespace; leave empty to auto-generate |
 | `resource_labels` | No | `{}` | Labels applied to all resources |
@@ -116,8 +116,8 @@ After deployment completes, the following outputs are available in the RAD UI de
 
 | Output | Description |
 |---|---|
-| `elasticsearch_endpoint` | Cluster-internal DNS URL (e.g., `http://<svc>.<ns>.svc.cluster.local:9200`) — pass to RAGFlow as `elasticsearch_hosts` |
-| `service_external_ip` | External IP of the service. Returns `null` for ClusterIP services. |
+| `elasticsearch_endpoint` | Full HTTP endpoint (e.g., `http://<ip>:9200`) — pass to RAGFlow as `elasticsearch_hosts` |
+| `service_external_ip` | External IP of the LoadBalancer Service |
 | `service_name` | Kubernetes Service name |
 | `namespace` | Kubernetes namespace for the Elasticsearch pod |
 | `deployment_id` | Generated deployment suffix used in all resource names |
@@ -145,12 +145,9 @@ gcloud container clusters get-credentials ${CLUSTER} \
 export NAMESPACE=$(kubectl get namespaces --no-headers \
   -o custom-columns=":metadata.name" | grep "^appelasticsearch" | head -1)
 
-# Discover the ClusterIP service name
-export SVC_NAME=$(kubectl get svc -n ${NAMESPACE} \
-  --no-headers -o custom-columns=":metadata.name" | grep -v "headless" | head -1)
-
-# Build the cluster-internal endpoint (for use from within the cluster)
-export ES_INTERNAL="http://${SVC_NAME}.${NAMESPACE}.svc.cluster.local:9200"
+# Discover the external IP
+export EXTERNAL_IP=$(kubectl get svc -n ${NAMESPACE} \
+  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
 ```
 
 ---
@@ -197,13 +194,13 @@ export ES_INTERNAL="http://${SVC_NAME}.${NAMESPACE}.svc.cluster.local:9200"
    data-elasticsearch-<suffix>   Bound    pvc-xxx  30Gi       RWO            standard-rwo    8m
    ```
 
-4. Verify the ClusterIP Service is created:
+4. Verify the LoadBalancer Service has received an external IP:
 
    ```bash
    kubectl get svc -n ${NAMESPACE}
    ```
 
-   **Expected result:** The ClusterIP Service shows a cluster-internal IP in the `CLUSTER-IP` column. There is no `EXTERNAL-IP` — traffic is restricted to the internal cluster network.
+   **Expected result:** The LoadBalancer Service shows an `EXTERNAL-IP` (may take 1–2 minutes to provision).
 
 ---
 
@@ -211,14 +208,18 @@ export ES_INTERNAL="http://${SVC_NAME}.${NAMESPACE}.svc.cluster.local:9200"
 
 ### Steps
 
-1. Set the Elasticsearch endpoint. Because the service is a ClusterIP, use port-forward for local access from your workstation:
+1. Set the Elasticsearch endpoint. Either use the LoadBalancer IP or port-forward:
 
+   **Option A — Use the LoadBalancer external IP (from the RAD UI deployment panel):**
    ```bash
-   kubectl port-forward svc/${SVC_NAME} 9200:9200 -n ${NAMESPACE} &
-   ES_URL="http://localhost:9200"
+   ES_URL="http://${EXTERNAL_IP}:9200"
    ```
 
-   > From within the cluster (e.g. a RAGFlow pod in the same namespace), use the cluster-internal DNS URL directly: `http://${SVC_NAME}.${NAMESPACE}.svc.cluster.local:9200`
+   **Option B — Port-forward for local access:**
+   ```bash
+   kubectl port-forward svc/<service-name> 9200:9200 -n ${NAMESPACE}
+   ES_URL="http://localhost:9200"
+   ```
 
 2. Check cluster health:
 
@@ -595,7 +596,7 @@ This removes the StatefulSet, PVC (and underlying persistent disk), Services, Ku
 
 **Expected duration:** 3–6 minutes.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 
@@ -603,7 +604,7 @@ Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE
 
 | Phase | Type | Key Action |
 |---|---|---|
-| Phase 1 — Deploy | AUTOMATED | RAD UI provisions StatefulSet, PVC, and ClusterIP Service |
+| Phase 1 — Deploy | AUTOMATED | RAD UI provisions StatefulSet, PVC, and LoadBalancer Service |
 | Phase 2 — kubectl Access | MANUAL | `gcloud container clusters get-credentials`, verify StatefulSet and PVC |
 | Phase 3 — Cluster Health | MANUAL | `curl /_cluster/health`, verify node stats and index catalogue |
 | Phase 4 — Index and Search | MANUAL | Create index, index documents, run full-text queries |

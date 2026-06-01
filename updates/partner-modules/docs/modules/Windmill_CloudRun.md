@@ -6,12 +6,12 @@ This document provides a comprehensive reference for the `modules/Windmill_Cloud
 
 ## 1. Module Overview
 
-Windmill is an open-source developer platform for building internal tools, scripts, and automation workflows. `Windmill_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Windmill-specific application configuration, database initialisation, and storage configuration via `Windmill_Common`.
+Windmill is an open-source developer platform for building internal tools, scripts, and automation workflows. `Windmill CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects Windmill-specific application configuration, database initialisation, and storage configuration via `Windmill Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), combined server+worker mode, 2 vCPU / 2 Gi by default. Configurable min/max instance count.
-*   **Data Persistence**: Cloud SQL **PostgreSQL 16** (uniquely requires Postgres 16, not 15). GCS `windmill-data` bucket auto-provisioned by `Windmill_Common`.
-*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_CloudRun`. `WINDMILL_SMTP_PASS` secret auto-generated as a placeholder in Secret Manager.
+*   **Data Persistence**: Cloud SQL **PostgreSQL 16** (uniquely requires Postgres 16, not 15). GCS `windmill-data` bucket auto-provisioned by `Windmill Common`.
+*   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`. `WINDMILL_SMTP_PASS` secret auto-generated as a placeholder in Secret Manager.
 *   **Caching**: Redis optional (`enable_redis = false` by default).
 *   **CI/CD**: Cloud Build custom image pipeline using the bundled Dockerfile.
 *   **Reliability**: Health probes target `/api/version` for readiness checks.
@@ -29,9 +29,9 @@ Windmill is an open-source developer platform for building internal tools, scrip
 | `description` | 2 | `string` | `'Windmill developer platform'` | Cloud Run service description. |
 | `application_version` | 2 | `string` | `'latest'` | Windmill image version tag. |
 
-**Wrapper architecture:** `Windmill_CloudRun` calls `Windmill_Common` to build an `application_config` object containing Windmill-specific environment variables, probe configuration, and the `db-init` job definition. `Windmill_Common` injects `MODE=server,worker`, `NUM_WORKERS=3`, `DISABLE_NSJAIL=true`, and structured logging variables. `module_storage_buckets` carries the `windmill-data` bucket. `module_env_vars` is empty — all Windmill environment variables are sourced from `Windmill_Common`.
+**Wrapper architecture:** `Windmill CloudRun` calls `Windmill Common` to build an `application_config` object containing Windmill-specific environment variables, probe configuration, and the `db-init` job definition. `Windmill Common` injects `MODE=server,worker`, `NUM_WORKERS=3`, `DISABLE_NSJAIL=true`, and structured logging variables. `module_storage_buckets` carries the `windmill-data` bucket. `module_env_vars` is empty — all Windmill environment variables are sourced from `Windmill Common`.
 
-**PostgreSQL 16 note:** Unlike every other module in this repo which uses PostgreSQL 15, Windmill requires **PostgreSQL 16**. `database_type = "POSTGRES_16"` is fixed by `Windmill_Common` and cannot be overridden.
+**PostgreSQL 16 note:** Unlike every other module in this repo which uses PostgreSQL 15, Windmill requires **PostgreSQL 16**. `database_type = "POSTGRES_16"` is fixed by `Windmill Common` and cannot be overridden.
 
 ---
 
@@ -39,11 +39,11 @@ Windmill is an open-source developer platform for building internal tools, scrip
 
 `Windmill_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in [App_CloudRun §2](../App_CloudRun/App_CloudRun.md#2-iam--access-control).
 
-**SMTP password placeholder:** `Windmill_Common` auto-generates a placeholder SMTP password (16-char random) and stores it in Secret Manager as `{prefix}-smtp-password`. The `WINDMILL_SMTP_PASS` secret ID is injected into the container via `module_secret_env_vars`. Replace the secret value with your actual SMTP password before enabling email features.
+**SMTP password placeholder:** `Windmill Common` auto-generates a placeholder SMTP password (16-char random) and stores it in Secret Manager as `{prefix}-smtp-password`. The `WINDMILL_SMTP_PASS` secret ID is injected into the container via `module_secret_env_vars`. Replace the secret value with your actual SMTP password before enabling email features.
 
-**Database initialisation identity:** The `db-init` Cloud Run Job runs under the Cloud Run SA. It connects to Cloud SQL PostgreSQL 16 via the Auth Proxy Unix socket, using `postgres:16-alpine` and `scripts/db-init.sh` from `Windmill_Common`.
+**Database initialisation identity:** The `db-init` Cloud Run Job runs under the Cloud Run SA. It connects to Cloud SQL PostgreSQL 16 via the Auth Proxy Unix socket, using `postgres:16-alpine` and `scripts/db-init.sh` from `Windmill Common`.
 
-**120-second IAM propagation delay:** Inherited from `App_CloudRun` — the Windmill service is not deployed until the delay completes, preventing secret-read failures on the first revision start.
+**120-second IAM propagation delay:** Inherited from `App CloudRun` — the Windmill service is not deployed until the delay completes, preventing secret-read failures on the first revision start.
 
 For the complete role tables and IAP, password rotation, and public access details, see [App_CloudRun §2](../App_CloudRun/App_CloudRun.md#2-iam--access-control).
 
@@ -53,11 +53,11 @@ For the complete role tables and IAP, password rotation, and public access detai
 
 ### A. Compute (Cloud Run)
 
-Windmill runs as a combined `server,worker` process on Cloud Run — both the API server and script execution workers run in the same container. This simplifies Cloud Run deployment while limiting worker scalability; for production workloads requiring separate worker scaling, use `Windmill_GKE`.
+Windmill runs as a combined `server,worker` process on Cloud Run — both the API server and script execution workers run in the same container. This simplifies Cloud Run deployment while limiting worker scalability; for production workloads requiring separate worker scaling, use `Windmill GKE`.
 
-**Startup CPU Boost** is always enabled (hardcoded in `App_CloudRun`).
+**Startup CPU Boost** is always enabled (hardcoded in `App CloudRun`).
 
-**Container image:** `container_image_source` defaults to `'custom'`, meaning Cloud Build compiles a custom image using `Windmill_Common`'s bundled Dockerfile. The upstream image `ghcr.io/windmill-labs/windmill` is the build base.
+**Container image:** `container_image_source` defaults to `'custom'`, meaning Cloud Build compiles a custom image using `Windmill Common`'s bundled Dockerfile. The upstream image `ghcr.io/windmill-labs/windmill` is the build base.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -76,9 +76,9 @@ Windmill runs as a combined `server,worker` process on Cloud Run — both the AP
 | `service_annotations` | 3 | `{}` | Advanced Cloud Run annotations. |
 | `service_labels` | 3 | `{}` | Labels applied to the Cloud Run service. |
 
-**Differences from `App_CloudRun` defaults:**
+**Differences from `App CloudRun` defaults:**
 
-| Variable | `App_CloudRun` | `Windmill_CloudRun` | Reason |
+| Variable | `App CloudRun` | `Windmill CloudRun` | Reason |
 |---|---|---|---|
 | `container_port` | `8080` | `8000` | Windmill's native port. |
 | `cpu_limit` | `'1000m'` | `'2000m'` | Combined server+worker requires more CPU. |
@@ -87,9 +87,9 @@ Windmill runs as a combined `server,worker` process on Cloud Run — both the AP
 
 ### B. Database (Cloud SQL — PostgreSQL 16)
 
-Windmill requires **PostgreSQL 16** — `Windmill_Common` fixes `database_type = "POSTGRES_16"`. This is the only module in this repository that uses PostgreSQL 16; all others default to PostgreSQL 15.
+Windmill requires **PostgreSQL 16** — `Windmill Common` fixes `database_type = "POSTGRES_16"`. This is the only module in this repository that uses PostgreSQL 16; all others default to PostgreSQL 15.
 
-**Unix socket connection:** `enable_cloudsql_volume` defaults to `true`. `App_CloudRun` injects the Auth Proxy sidecar and sets `DB_HOST` to the socket path under `/cloudsql`.
+**Unix socket connection:** `enable_cloudsql_volume` defaults to `true`. `App CloudRun` injects the Auth Proxy sidecar and sets `DB_HOST` to the socket path under `/cloudsql`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -101,7 +101,7 @@ Windmill requires **PostgreSQL 16** — `Windmill_Common` fixes `database_type =
 
 ### C. Storage (GCS)
 
-**GCS data bucket:** `Windmill_Common` automatically provisions a `windmill-data` GCS bucket for workflow outputs and artefacts.
+**GCS data bucket:** `Windmill Common` automatically provisions a `windmill-data` GCS bucket for workflow outputs and artefacts.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -119,7 +119,7 @@ Windmill requires **PostgreSQL 16** — `Windmill_Common` fixes `database_type =
 
 ### E. Environment Variables
 
-`Windmill_Common` injects all Windmill-specific environment variables. The following are hardcoded and not user-configurable:
+`Windmill Common` injects all Windmill-specific environment variables. The following are hardcoded and not user-configurable:
 
 | Variable | Value | Description |
 |---|---|---|
@@ -138,16 +138,16 @@ User-supplied variables are merged into this set via `var.environment_variables`
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `environment_variables` | 5 | `{}` | Additional plain-text env vars merged with Windmill defaults. |
-| `secret_environment_variables` | 5 | `{}` | Secret Manager references merged with the SMTP secret auto-injected by `Windmill_Common`. |
+| `secret_environment_variables` | 5 | `{}` | Secret Manager references merged with the SMTP secret auto-injected by `Windmill Common`. |
 | `service_url` | 5 | `""` | Public URL for `BASE_URL` and `BASE_INTERNAL_URL`. Set this to your Cloud Run service URL or custom domain. |
 
 ### F. Initialization & Bootstrap
 
-A `db-init` Cloud Run Job is automatically provisioned by `Windmill_Common` when `initialization_jobs` is left as the default empty list (`[]`). It uses the `postgres:16-alpine` image and executes `Windmill_Common/scripts/db-init.sh`.
+A `db-init` Cloud Run Job is automatically provisioned by `Windmill Common` when `initialization_jobs` is left as the default empty list (`[]`). It uses the `postgres:16-alpine` image and executes `Windmill_Common/scripts/db-init.sh`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Windmill_Common` to supply the default `db-init` job. Non-empty list replaces it entirely. |
+| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Windmill Common` to supply the default `db-init` job. Non-empty list replaces it entirely. |
 | `cron_jobs` | 12 | `[]` | Recurring jobs triggered by Cloud Scheduler. |
 
 ---
@@ -171,7 +171,7 @@ A `db-init` Cloud Run Job is automatically provisioned by `Windmill_Common` when
 
 ### C. Secret Manager Integration
 
-`Windmill_Common` auto-provisions the `WINDMILL_SMTP_PASS` secret with a placeholder value. Replace this value in Secret Manager before enabling SMTP features.
+`Windmill Common` auto-provisions the `WINDMILL_SMTP_PASS` secret with a placeholder value. Replace this value in Secret Manager before enabling SMTP features.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -276,15 +276,15 @@ Windmill exposes Prometheus metrics at `:9001/metrics` via `METRICS_ADDR`. This 
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| **PostgreSQL 16 required** | `database_type = "POSTGRES_16"` fixed by `Windmill_Common` | Windmill requires PG 16. Only module in this repo with this constraint. |
-| **Combined server+worker** | `MODE=server,worker` hardcoded in `Windmill_Common` | Both the API server and worker run in the same process. Suitable for Cloud Run. Use GKE for separate worker scaling. |
-| **DISABLE_NSJAIL** | `DISABLE_NSJAIL=true` hardcoded in `Windmill_Common` | Required when running without `CAP_SYS_ADMIN`. Cloud Run and GKE Autopilot do not have this capability. |
+| **PostgreSQL 16 required** | `database_type = "POSTGRES_16"` fixed by `Windmill Common` | Windmill requires PG 16. Only module in this repo with this constraint. |
+| **Combined server+worker** | `MODE=server,worker` hardcoded in `Windmill Common` | Both the API server and worker run in the same process. Suitable for Cloud Run. Use GKE for separate worker scaling. |
+| **DISABLE_NSJAIL** | `DISABLE_NSJAIL=true` hardcoded in `Windmill Common` | Required when running without `CAP_SYS_ADMIN`. Cloud Run and GKE Autopilot do not have this capability. |
 | **JSON logging** | `JSON_FMT=true`, `RUST_LOG=windmill=info` | Structured JSON for Cloud Logging compatibility. |
-| **SMTP secret placeholder** | `WINDMILL_SMTP_PASS` auto-generated by `Windmill_Common` | Replace the placeholder in Secret Manager before enabling email features. |
-| **GCS data bucket** | `windmill-data` bucket provisioned by `Windmill_Common` | Provisioned separately from user-defined `storage_buckets`. |
+| **SMTP secret placeholder** | `WINDMILL_SMTP_PASS` auto-generated by `Windmill Common` | Replace the placeholder in Secret Manager before enabling email features. |
+| **GCS data bucket** | `windmill-data` bucket provisioned by `Windmill Common` | Provisioned separately from user-defined `storage_buckets`. |
 | **Unix socket by default** | `enable_cloudsql_volume = true` default | Windmill connects to Cloud SQL via the Auth Proxy Unix socket. |
 | **Metrics endpoint** | `METRICS_ADDR=:9001` | Prometheus metrics available within the VPC. |
-| **Empty module_env_vars** | `module_env_vars = {}` in `windmill.tf` | All Windmill environment variables are supplied by `Windmill_Common`; the wrapper does not inject additional vars. |
+| **Empty module_env_vars** | `module_env_vars = {}` in `windmill.tf` | All Windmill environment variables are supplied by `Windmill Common`; the wrapper does not inject additional vars. |
 
 ---
 
@@ -294,7 +294,7 @@ Windmill exposes Prometheus metrics at `:9001/metrics` via `METRICS_ADDR`. This 
 |---|---|---|---|
 | `module_description` | 0 | (Windmill platform text) | Platform metadata: module description. |
 | `module_documentation` | 0 | (docs URL) | Platform metadata: documentation URL. |
-| `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
+| `module_dependency` | 0 | `['Services GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `50` | Platform metadata: deployment credit cost. |
 | `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
@@ -365,7 +365,7 @@ Windmill exposes Prometheus metrics at `:9001/metrics` via `METRICS_ADDR`. This 
 | `database_password_length` | 11 | `32` | Auto-generated password length. |
 | `enable_auto_password_rotation` | 11 | `false` | Automated zero-downtime password rotation. |
 | `rotation_propagation_delay_sec` | 11 | `90` | Seconds to wait after rotation before restarting. |
-| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Windmill_Common` to supply the default `db-init` job. |
+| `initialization_jobs` | 12 | `[]` | One-shot Cloud Run Jobs. Leave empty for `Windmill Common` to supply the default `db-init` job. |
 | `cron_jobs` | 12 | `[]` | Recurring scheduled Cloud Run Jobs. |
 | `startup_probe` | 13 | `{ path="/api/version", initial_delay_seconds=30, failure_threshold=6, ... }` | Startup probe. |
 | `liveness_probe` | 13 | `{ path="/api/version", initial_delay_seconds=30, failure_threshold=3, ... }` | Liveness probe. |

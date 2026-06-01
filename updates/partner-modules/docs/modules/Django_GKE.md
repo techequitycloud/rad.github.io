@@ -1,8 +1,8 @@
-# Django_GKE Module — Configuration Guide
+# Django GKE Module — Configuration Guide
 
 Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design. This module deploys a production-ready Django application on **GKE Autopilot**, backed by a managed Cloud SQL PostgreSQL instance, GCS media storage, and Secret Manager for secrets including the Django `SECRET_KEY`.
 
-`Django_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, Filestore, secrets, CI/CD) and adds Django-specific application configuration on top via the `Django_Common` sub-module.
+`Django GKE` is a **wrapper module** built on top of `App GKE`. It uses `App GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, Filestore, secrets, CI/CD) and adds Django-specific application configuration on top via the `Django Common` sub-module.
 
 > **Note:** Variables marked as *platform-managed* are set and maintained by the platform. You do not normally need to change them.
 
@@ -12,23 +12,23 @@ Django is a high-level Python web framework that encourages rapid development an
 
 This guide documents only the variables that are **unique to `Django_GKE`** or that have **Django-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, CI/CD, networking, IAP, Cloud Armor, and VPC Service Controls — refer directly to the [App_GKE Configuration Guide](../App_GKE/App_GKE.md).
 
-**Variables fully covered by the App_GKE guide:**
+**Variables fully covered by the App GKE guide:**
 
-| Configuration Area | App_GKE.md Section | Django-Specific Notes |
+| Configuration Area | App GKE.md Section | Django-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Different defaults for `module_description` and `module_documentation`. |
 | Project & Identity | §2 IAM & Access Control | Identical. Plus `deployment_region` for fallback region. |
 | Application Identity | §3.A Compute (GKE Autopilot) | See [Django Application Identity](#django-application-identity) below. `application_name` defaults to `"django"`. |
 | Runtime & Scaling | §3.A Compute (GKE Autopilot) | `min_instance_count` defaults to `0`. `container_image_source` defaults to `"custom"`. `container_port` defaults to `8080`. |
-| Environment Variables & Secrets | §3 Core Service Configuration | Django_Common injects `DB_HOST`, `DB_ENGINE`, `SECRET_KEY`, and other database variables automatically — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
+| Environment Variables & Secrets | §3 Core Service Configuration | Django Common injects `DB_HOST`, `DB_ENGINE`, `SECRET_KEY`, and other database variables automatically — see [Platform-Managed Behaviours](#platform-managed-behaviours). |
 | Networking & Network Policies | §3.D Networking & Network Policies | `session_affinity` defaults to `"ClientIP"` — see [Session Affinity](#session-affinity). |
 | Initialization Jobs & CronJobs | §3.E Initialization Jobs & CronJobs | See [Initialization Jobs](#initialization-jobs) for Django-specific job patterns. |
 | Additional Services | §3.F Additional Services | Identical. |
-| Storage — NFS & GCS | §3.C Storage (NFS / GCS / GCS Fuse) | `enable_nfs` defaults to `true` for Django (shared file storage across pods). The media GCS bucket is provisioned automatically by Django_Common. |
-| Database Configuration | §3.B Database (Cloud SQL) | See [Django Database Configuration](#django-database-configuration). PostgreSQL required; Django-specific extensions auto-installed by Django_Common. |
+| Storage — NFS & GCS | §3.C Storage (NFS / GCS / GCS Fuse) | `enable_nfs` defaults to `true` for Django (shared file storage across pods). The media GCS bucket is provisioned automatically by Django Common. |
+| Database Configuration | §3.B Database (Cloud SQL) | See [Django Database Configuration](#django-database-configuration). PostgreSQL required; Django-specific extensions auto-installed by Django Common. |
 | Backup Schedule & Retention | §3.B Database (Cloud SQL) | Identical. |
 | Custom SQL Scripts | §3.E Initialization Jobs & CronJobs | Identical. |
-| Observability & Health Checks | §3.A Compute (GKE Autopilot) | See [Django Health Probes](#django-health-probes) — Django_GKE exposes a dual probe system. |
+| Observability & Health Checks | §3.A Compute (GKE Autopilot) | See [Django Health Probes](#django-health-probes) — Django GKE exposes a dual probe system. |
 | Cloud Armor WAF | §4.A Cloud Armor WAF | Identical. |
 | Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Requires additional GKE-specific variables: `iap_oauth_client_id`, `iap_oauth_client_secret`, `iap_support_email` (group 19). See note below. |
 | Binary Authorization | §4.C Binary Authorization | Identical. |
@@ -45,7 +45,7 @@ This guide documents only the variables that are **unique to `Django_GKE`** or t
 | Resource Quotas | §7.C Resource Quotas | Identical. |
 | Auto Password Rotation | §7.D Auto Password Rotation | See [Password Rotation Propagation Delay](#password-rotation-propagation-delay) below. |
 | Redis Cache | §8.A Redis | `enable_redis` defaults to `false` for Django. See [Redis Configuration](#redis-configuration) for Django-specific usage. |
-| Backup Import | §8.B Backup Import | Uses `backup_uri` instead of `backup_file` — the variable maps directly to App_GKE's `backup_file`. |
+| Backup Import | §8.B Backup Import | Uses `backup_uri` instead of `backup_file` — the variable maps directly to App GKE's `backup_file`. |
 | Service Mesh (ASM) | §8.C Service Mesh (ASM via Fleet) | Identical. |
 | Multi-Cluster Services | §8.D Multi-Cluster Services (MCS) | Identical. |
 
@@ -53,15 +53,15 @@ This guide documents only the variables that are **unique to `Django_GKE`** or t
 
 ## Platform-Managed Behaviours
 
-The following behaviours are applied automatically by `Django_GKE` (via the `Django_Common` sub-module) regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
+The following behaviours are applied automatically by `Django GKE` (via the `Django Common` sub-module) regardless of the variable values in your `tfvars` file. They cannot be overridden by user configuration.
 
 | Behaviour | Detail |
 |---|---|
-| **Django environment variables** | `Django_Common` injects the following environment variables automatically: `DB_ENGINE` (`django.db.backends.postgresql`), `DB_HOST` (Cloud SQL Auth Proxy socket path, e.g. `/cloudsql/PROJECT:REGION:INSTANCE`), `DB_PORT` (`5432`), `DB_NAME`, `DB_USER`. These values are derived from the Cloud SQL instance provisioned by `App_GKE` and do not need to be set manually in `environment_variables`. |
+| **Django environment variables** | `Django Common` injects the following environment variables automatically: `DB_ENGINE` (`django.db.backends.postgresql`), `DB_HOST` (Cloud SQL Auth Proxy socket path, e.g. `/cloudsql/PROJECT:REGION:INSTANCE`), `DB_PORT` (`5432`), `DB_NAME`, `DB_USER`. These values are derived from the Cloud SQL instance provisioned by `App GKE` and do not need to be set manually in `environment_variables`. |
 | **Django secret key** | A random `SECRET_KEY` is auto-generated and stored in Secret Manager. It is injected into the container as the `SECRET_KEY` environment variable via `module_secret_env_vars`. **Do not set `SECRET_KEY` in `environment_variables`** — the platform-managed value in Secret Manager takes precedence. |
 | **PostgreSQL extensions** | The following extensions are installed automatically in the application database during the initialisation job: `pg_trgm`, `unaccent`, `hstore`, `citext`. These are required for Django's full-text search, accent-insensitive lookups, and schema-flexible field types. You do not need to set `enable_postgres_extensions = true` for these extensions. |
 | **Database initialisation** | A dedicated Django database user is created with the password from Secret Manager and granted the permissions required by the application. The `postgres` superuser is used only for the extension and user setup jobs. |
-| **GCS media storage** | When `gcs_volumes` is configured (e.g. a bucket mounted at `/app/media`), `Django_Common` provisions the bucket and grants the application service account `roles/storage.objectAdmin` and `roles/storage.legacyBucketReader`. The Django application can read and write user-uploaded media files directly to the GCS-mounted path. |
+| **GCS media storage** | When `gcs_volumes` is configured (e.g. a bucket mounted at `/app/media`), `Django Common` provisions the bucket and grants the application service account `roles/storage.objectAdmin` and `roles/storage.legacyBucketReader`. The Django application can read and write user-uploaded media files directly to the GCS-mounted path. |
 | **NFS enabled by default** | `enable_nfs` defaults to `true` so that shared persistent storage is available across all pod replicas for Django media files. If you configure GCS volumes for media instead of NFS, set `enable_nfs = false` to suppress Filestore provisioning. |
 | **Session affinity** | `session_affinity` defaults to `"ClientIP"` so that a given user's requests are consistently routed to the same pod. This prevents session inconsistency in deployments that use in-process session storage or local caching rather than Redis. |
 
@@ -69,7 +69,7 @@ The following behaviours are applied automatically by `Django_GKE` (via the `Dja
 
 ## Identity-Aware Proxy (GKE-specific)
 
-`Django_GKE` exposes three IAP variables not present in `Django_CloudRun` or `App_GKE`'s default IAP configuration. These are required when `enable_iap = true`:
+`Django GKE` exposes three IAP variables not present in `Django CloudRun` or `App GKE`'s default IAP configuration. These are required when `enable_iap = true`:
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -87,7 +87,7 @@ These variables have Django-specific defaults. Their semantics are identical to 
 
 | Variable | Default | Description & Implications |
 |---|---|---|
-| `application_name` | `"django"` | Internal identifier used as the base name for GKE workloads, Cloud SQL, GCS buckets, and Artifact Registry. Functionally identical to `application_name` in App_GKE. **Do not change after initial deployment.** |
+| `application_name` | `"django"` | Internal identifier used as the base name for GKE workloads, Cloud SQL, GCS buckets, and Artifact Registry. Functionally identical to `application_name` in App GKE. **Do not change after initial deployment.** |
 | `application_display_name` | `"Django Application"` | Human-readable name shown in the platform UI and monitoring dashboards. Can be updated freely at any time. |
 | `application_description` | `"Django Application - High-level Python Web framework on GKE Autopilot"` | Brief description populated into Kubernetes annotations and platform documentation. |
 | `application_version` | `"latest"` | Version tag applied to the container image. When `container_image_source = "custom"`, incrementing this value triggers a new Cloud Build run. Prefer a pinned version (e.g. `"v1.2.0"`) over `"latest"` in production to ensure reproducible deployments. |
@@ -112,9 +112,9 @@ Django requires PostgreSQL. All database variables behave identically to those d
 |---|---|---|
 | `application_database_name` | `"gkeapp"` | The name of the PostgreSQL database created within the Cloud SQL instance. Injected as `DB_NAME`. **Recommended: change to `"django_db"`** to clearly identify this as a Django database. **Do not change after initial deployment** — renaming the database requires manual data migration. |
 | `application_database_user` | `"gkeapp"` | The PostgreSQL user created for the Django application. Injected as `DB_USER`. **Recommended: change to `"django_user"`** for clarity. The password is auto-generated, stored in Secret Manager, and injected as `DB_PASSWORD`. |
-| `database_type` | `"POSTGRES"` | Cloud SQL database engine. **Django requires PostgreSQL** — do not change to `MYSQL` or `SQLSERVER`. The Django `DB_ENGINE` variable (`django.db.backends.postgresql`) is hard-wired by `Django_Common` and will not work with non-PostgreSQL engines. Use a versioned value such as `"POSTGRES_15"` in production for consistency across environments. |
-| `enable_postgres_extensions` | `false` | You do not need to set this to `true` for Django's required extensions (`pg_trgm`, `unaccent`, `hstore`, `citext`) — these are installed automatically by `Django_Common`. Set `enable_postgres_extensions = true` only if you need to install **additional** extensions beyond those managed by the platform. |
-| `postgres_extensions` | `[]` | Additional PostgreSQL extensions to install. Used only when `enable_postgres_extensions = true`. The Django_Common-managed extensions (`pg_trgm`, `unaccent`, `hstore`, `citext`) are always installed regardless of this list. Common additions: `postgis` (geospatial queries), `uuid-ossp` (UUID generation), `pg_stat_statements` (query performance analysis). |
+| `database_type` | `"POSTGRES"` | Cloud SQL database engine. **Django requires PostgreSQL** — do not change to `MYSQL` or `SQLSERVER`. The Django `DB_ENGINE` variable (`django.db.backends.postgresql`) is hard-wired by `Django Common` and will not work with non-PostgreSQL engines. Use a versioned value such as `"POSTGRES_15"` in production for consistency across environments. |
+| `enable_postgres_extensions` | `false` | You do not need to set this to `true` for Django's required extensions (`pg_trgm`, `unaccent`, `hstore`, `citext`) — these are installed automatically by `Django Common`. Set `enable_postgres_extensions = true` only if you need to install **additional** extensions beyond those managed by the platform. |
+| `postgres_extensions` | `[]` | Additional PostgreSQL extensions to install. Used only when `enable_postgres_extensions = true`. The Django Common-managed extensions (`pg_trgm`, `unaccent`, `hstore`, `citext`) are always installed regardless of this list. Common additions: `postgis` (geospatial queries), `uuid-ossp` (UUID generation), `pg_stat_statements` (query performance analysis). |
 | `enable_mysql_plugins` | `false` | MySQL plugins. Not applicable for Django — Django does not support MySQL in the default module configuration. Leave as `false`. |
 | `mysql_plugins` | `[]` | MySQL plugins list. Not applicable for Django. Leave as `[]`. |
 
@@ -139,21 +139,21 @@ kubectl exec -n NAMESPACE POD_NAME -- env | grep SECRET_KEY
 
 ## Django Health Probes
 
-`Django_GKE` exposes **two separate sets** of probe variables with different routing:
+`Django GKE` exposes **two separate sets** of probe variables with different routing:
 
-*   **`startup_probe` / `liveness_probe`** — Django-specific variables passed to `Django_Common`, which uses them to configure the Django container's Kubernetes probe spec. Both target the `/` path by default; configure a dedicated health endpoint (e.g. `/healthz/`) for cleaner health signalling.
+*   **`startup_probe` / `liveness_probe`** — Django-specific variables passed to `Django Common`, which uses them to configure the Django container's Kubernetes probe spec. Both target the `/` path by default; configure a dedicated health endpoint (e.g. `/healthz/`) for cleaner health signalling.
 *   **`startup_probe_config` / `health_check_config`** — App_GKE-standard variables passed directly to `App_GKE`. These also default to `/` in `Django_GKE` and use App_GKE's standard timeout defaults. See [App_GKE.md §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot) for full documentation.
 
 In practice, use `startup_probe` and `liveness_probe` to tune Django probe behaviour. The `startup_probe_config` / `health_check_config` variables are available for compatibility but are not the primary probe path for the Django container.
 
-**`startup_probe` and `liveness_probe` (Django_Common internal probes):**
+**`startup_probe` and `liveness_probe` (Django Common internal probes):**
 
 | Variable | Default | Description & Implications |
 |---|---|---|
-| `startup_probe` | `{ enabled = true, type = "HTTP", path = "/", initial_delay_seconds = 90, timeout_seconds = 5, period_seconds = 10, failure_threshold = 3 }` | Used by `Django_Common` to assess whether Django has started successfully. `initial_delay_seconds = 90` accounts for Django's startup time (database connection, application loading). The path `/` assumes a Django view responds to the root URL — configure a dedicated `/healthz/` view for cleaner health signalling. |
-| `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/", initial_delay_seconds = 60, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Used by `Django_Common` to assess whether a running Django instance is healthy. |
+| `startup_probe` | `{ enabled = true, type = "HTTP", path = "/", initial_delay_seconds = 90, timeout_seconds = 5, period_seconds = 10, failure_threshold = 3 }` | Used by `Django Common` to assess whether Django has started successfully. `initial_delay_seconds = 90` accounts for Django's startup time (database connection, application loading). The path `/` assumes a Django view responds to the root URL — configure a dedicated `/healthz/` view for cleaner health signalling. |
+| `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/", initial_delay_seconds = 60, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Used by `Django Common` to assess whether a running Django instance is healthy. |
 
-**`startup_probe_config` / `health_check_config` (App_GKE-standard probes):**
+**`startup_probe_config` / `health_check_config` (App GKE-standard probes):**
 
 These variables control the App_GKE-level probes passed directly to the `App_GKE` module. They are documented in [App_GKE.md §3.A](../App_GKE/App_GKE.md#a-compute-gke-autopilot).
 
@@ -186,7 +186,7 @@ kubectl logs -n NAMESPACE -l app=django --since=10m | head -100
 
 ## Redis Configuration
 
-Django uses Redis as a session store and caching backend via `django-redis`. When `enable_redis = true`, the `REDIS_HOST` and `REDIS_PORT` environment variables are injected automatically into the Django container by `Django_Common`.
+Django uses Redis as a session store and caching backend via `django-redis`. When `enable_redis = true`, the `REDIS_HOST` and `REDIS_PORT` environment variables are injected automatically into the Django container by `Django Common`.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|
@@ -195,7 +195,7 @@ Django uses Redis as a session store and caching backend via `django-redis`. Whe
 | `redis_port` | `"6379"` | Port number as string | The TCP port of the Redis server. The default `6379` is the standard Redis port and is correct for Cloud Memorystore and most self-hosted Redis instances. |
 | `redis_auth` | `""` *(no authentication)* | Password string *(sensitive)* | Authentication password for the Redis server. Leave empty if the Redis instance does not require authentication. When set, the value is stored securely and never appears in Terraform state in plaintext. For Cloud Memorystore with AUTH enabled, set this to the instance's auth string. |
 
-> **Provisioning Redis:** The `Django_GKE` module does not provision a Redis instance. Provision a Cloud Memorystore instance separately, or deploy `Services_GCP` first — it provides a shared Memorystore instance that is auto-discovered when `redis_host` is left blank.
+> **Provisioning Redis:** The `Django GKE` module does not provision a Redis instance. Provision a Cloud Memorystore instance separately, or deploy `Services GCP` first — it provides a shared Memorystore instance that is auto-discovered when `redis_host` is left blank.
 
 ### Validating Redis Configuration
 
@@ -225,7 +225,7 @@ Django applications that rely on in-process session storage or local caching ben
 
 Django deployments typically require database setup and schema migration jobs to run before (or immediately after) the application starts. `Django_GKE` supports these via the `initialization_jobs` variable (documented in [App_GKE.md §3.E](../App_GKE/App_GKE.md#e-initialization-jobs--cronjobs)).
 
-`Django_GKE` does **not** configure a default `initialization_jobs` list — the variable defaults to `[]`. You must configure initialization jobs explicitly in your `tfvars` file.
+`Django GKE` does **not** configure a default `initialization_jobs` list — the variable defaults to `[]`. You must configure initialization jobs explicitly in your `tfvars` file.
 
 **Recommended Django initialization jobs:**
 
@@ -317,7 +317,7 @@ The `rotation_propagation_delay_sec` variable controls how long the module waits
 
 ## Configuration Pitfalls & Sensible Defaults
 
-The table below identifies the variables most commonly misconfigured in `Django_GKE` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong. For full variable details see the [App_GKE configuration guide](App_GKE.md).
+The table below identifies the variables most commonly misconfigured in `Django GKE` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong. For full variable details see the [App GKE configuration guide](App GKE.md).
 
 > Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
 
@@ -352,7 +352,7 @@ The table below identifies the variables most commonly misconfigured in `Django_
 
 ## Deployment Prerequisites & Validation
 
-After deploying `Django_GKE`, confirm the deployment is healthy:
+After deploying `Django GKE`, confirm the deployment is healthy:
 
 ```bash
 # Confirm the Django pod is running and ready

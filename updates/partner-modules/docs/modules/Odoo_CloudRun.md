@@ -1,15 +1,15 @@
-# Odoo_CloudRun Module — Configuration Guide
+# Odoo CloudRun Module — Configuration Guide
 
-`Odoo_CloudRun` deploys **Odoo Community Edition** on Google Cloud Run, backed by
+`Odoo CloudRun` deploys **Odoo Community Edition** on Google Cloud Run, backed by
 Cloud SQL PostgreSQL and a Cloud Filestore NFS volume for shared file storage.
-It is a **wrapper module** built on top of `App_CloudRun`. All GCP infrastructure
+It is a **wrapper module** built on top of `App CloudRun`. All GCP infrastructure
 (Cloud Run service, networking, Cloud SQL, GCS, secrets, CI/CD) is provisioned by
-`App_CloudRun`. `Odoo_CloudRun` adds Odoo-specific application configuration,
+`App CloudRun`. `Odoo CloudRun` adds Odoo-specific application configuration,
 two platform-managed initialisation jobs, the master-password secret, and runtime
 defaults tuned for Odoo's startup characteristics.
 
-The module uses `Odoo_Common` as a sub-module to resolve application configuration,
-secrets, and storage bucket lists, which are then passed into `App_CloudRun` via
+The module uses `Odoo Common` as a sub-module to resolve application configuration,
+secrets, and storage bucket lists, which are then passed into `App CloudRun` via
 `application_config`, `module_secret_env_vars`, and `module_storage_buckets`.
 
 ---
@@ -18,8 +18,8 @@ secrets, and storage bucket lists, which are then passed into `App_CloudRun` via
 
 | Attribute | Value |
 |---|---|
-| **Underlying platform** | `App_CloudRun` |
-| **Sub-module** | `Odoo_Common` |
+| **Underlying platform** | `App CloudRun` |
+| **Sub-module** | `Odoo Common` |
 | **Application** | Odoo Community Edition |
 | **Default version** | `18.0` (nightly build channel) |
 | **Database** | Cloud SQL PostgreSQL (required) |
@@ -39,8 +39,8 @@ Odoo_CloudRun (variables.tf / odoo.tf / main.tf)
   └─ App_CloudRun         ← provisions all GCP infrastructure
 ```
 
-`Odoo_Common` outputs:
-- `config` → merged into `application_config` passed to App_CloudRun
+`Odoo Common` outputs:
+- `config` → merged into `application_config` passed to App CloudRun
 - `odoo_master_pass_secret_id` → injected as `ODOO_MASTER_PASS` via `module_secret_env_vars`
 - `storage_buckets` → merged into `module_storage_buckets`
 - `path` → used to resolve `scripts_dir`
@@ -71,9 +71,9 @@ Odoo_CloudRun (variables.tf / odoo.tf / main.tf)
 | `application_description` | `"Odoo ERP on Cloud Run"` | Brief description populated into the Cloud Run service description field. |
 | `application_version` | `"18.0"` | Odoo release version. Maps directly to the nightly build channel used in the Dockerfile (`ODOO_VERSION` build arg). Supported values: `"18.0"`, `"17.0"`, `"16.0"`. Changing this when `container_image_source = "custom"` triggers a new Cloud Build run. |
 
-`application_display_name` and `application_description` are passed to `Odoo_Common`
+`application_display_name` and `application_description` are passed to `Odoo Common`
 as `display_name` and `description`, then merged into the `application_config` object
-consumed by `App_CloudRun`.
+consumed by `App CloudRun`.
 
 ### §3.B · Resource Sizing
 
@@ -146,7 +146,7 @@ explicit_secret_values = {
 
 ### §3.E · Container Image & Build
 
-Odoo_CloudRun defaults to building a custom container image from the official Odoo
+Odoo CloudRun defaults to building a custom container image from the official Odoo
 nightly packages via Cloud Build. Set `container_image_source = "prebuilt"` to
 skip the build and deploy a pre-existing image directly.
 
@@ -261,30 +261,30 @@ traffic_split = [
 Odoo performs database schema validation and full module installation on first boot,
 taking 2–10 minutes. The module exposes **two sets of probe variable names**:
 
-- `startup_probe` / `liveness_probe` — passed to `Odoo_Common`; these are the
+- `startup_probe` / `liveness_probe` — passed to `Odoo Common`; these are the
   primary variables to configure for Odoo probe tuning.
-- `startup_probe_config` / `health_check_config` — the App_CloudRun interface names,
+- `startup_probe_config` / `health_check_config` — the App CloudRun interface names,
   also passed directly. They have Odoo-specific `/web/health` defaults.
 
 When both are supplied, `startup_probe_config` / `health_check_config` take precedence
-on the App_CloudRun side; `startup_probe` / `liveness_probe` apply via Odoo_Common.
+on the App CloudRun side; `startup_probe` / `liveness_probe` apply via Odoo Common.
 
 | Variable | Default | Description |
 |---|---|---|
 | `startup_probe` | `{ enabled = true, type = "TCP", path = "/", initial_delay_seconds = 60, timeout_seconds = 10, period_seconds = 30, failure_threshold = 3 }` | TCP port check on startup. More reliable than HTTP during Odoo's boot phase. For first deployments with schema creation, increase `failure_threshold` to `6`. |
 | `liveness_probe` | `{ enabled = true, type = "HTTP", path = "/web/health", initial_delay_seconds = 120, timeout_seconds = 60, period_seconds = 120, failure_threshold = 3 }` | HTTP check against `/web/health`, which returns 200 only when Odoo has a live database connection. `period_seconds = 120` avoids unnecessary database load. |
-| `startup_probe_config` | `{ enabled = true, path = "/web/health", initial_delay_seconds = 180, timeout_seconds = 60, period_seconds = 120, failure_threshold = 3 }` | Structured App_CloudRun startup probe with Odoo-tuned defaults. |
-| `health_check_config` | `{ enabled = true, path = "/web/health", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Structured App_CloudRun liveness probe with Odoo-tuned defaults. |
+| `startup_probe_config` | `{ enabled = true, path = "/web/health", initial_delay_seconds = 180, timeout_seconds = 60, period_seconds = 120, failure_threshold = 3 }` | Structured App CloudRun startup probe with Odoo-tuned defaults. |
+| `health_check_config` | `{ enabled = true, path = "/web/health", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Structured App CloudRun liveness probe with Odoo-tuned defaults. |
 
 ### §7.B · Storage
 
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Provisions a Cloud Filestore NFS instance. Required for Odoo filestore, session, and extra-addons directories. Requires `execution_environment = "gen2"`. |
-| `nfs_mount_path` | `"/mnt/nfs"` | Container mount path for the NFS volume as seen by `App_CloudRun`. `Odoo_Common` always passes `nfs_mount_path = "/mnt"` inside `application_config`; this variable controls the top-level NFS mount that App_CloudRun provisions. The `nfs-init` job creates subdirectories (`/mnt/filestore`, `/mnt/sessions`, `/mnt/extra-addons`) under `/mnt`. |
+| `nfs_mount_path` | `"/mnt/nfs"` | Container mount path for the NFS volume as seen by `App CloudRun`. `Odoo Common` always passes `nfs_mount_path = "/mnt"` inside `application_config`; this variable controls the top-level NFS mount that App CloudRun provisions. The `nfs-init` job creates subdirectories (`/mnt/filestore`, `/mnt/sessions`, `/mnt/extra-addons`) under `/mnt`. |
 | `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to use. When set, targets this instance directly instead of auto-discovering one. |
 | `nfs_instance_base_name` | `"app-nfs"` | Base name for the inline NFS GCE VM created when no existing NFS server is found. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. `Odoo_Common` may provision additional buckets via `module_storage_buckets`. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. `Odoo Common` may provision additional buckets via `module_storage_buckets`. |
 | `create_cloud_storage` | `true` | Set `false` to skip GCS bucket provisioning. |
 | `gcs_volumes` | `[]` | GCS buckets to mount as GCS Fuse volumes inside the container. |
 | `manage_storage_kms_iam` | `false` | Creates a CMEK KMS keyring and storage key, grants the GCS service account the Cloud KMS encrypter/decrypter role, and enables CMEK encryption on all storage buckets. |
@@ -293,7 +293,7 @@ on the App_CloudRun side; `startup_probe` / `liveness_probe` apply via Odoo_Comm
 ### §7.C · Database
 
 Odoo requires PostgreSQL. `application_database_name` and `application_database_user`
-are the Odoo-specific defaults for the database and user provisioned by `App_CloudRun`.
+are the Odoo-specific defaults for the database and user provisioned by `App CloudRun`.
 All DB connection variables (`DB_NAME`, `DB_USER`, `DB_PASSWORD`, etc.) are injected
 automatically — see §9 Platform-Managed Behaviours.
 
@@ -343,7 +343,7 @@ own session store and users are logged out on requests landing on different inst
 
 ### §8.C · Jobs & Scheduled Tasks
 
-User-defined initialization and cron jobs are passed through to `App_CloudRun` in
+User-defined initialization and cron jobs are passed through to `App CloudRun` in
 addition to the two platform-managed jobs (`nfs-init` and `db-init` — see §9).
 
 | Variable | Default | Description |
@@ -379,18 +379,18 @@ These are set automatically by the module and cannot be overridden via input var
 | Variable | Value / Source | Notes |
 |---|---|---|
 | `ODOO_MASTER_PASS` | Secret Manager ref | Auto-generated 16-char alphanumeric password stored as `app<app_name><tenant_id><random_hex>-master-password` (where `random_hex` is an internally-generated suffix, not the user-supplied `deployment_id`). The secret ID is passed via `module_secret_env_vars`. Used for Odoo's database management interface. |
-| `DB_PASSWORD` | Secret Manager ref | Auto-generated database password from App_CloudRun; injected for the Odoo application user. |
+| `DB_PASSWORD` | Secret Manager ref | Auto-generated database password from App CloudRun; injected for the Odoo application user. |
 | `ROOT_PASSWORD` | Secret Manager ref | Same auto-generated database password; used by `db-init` for superuser setup. |
 
 ### Structural Wiring
 
 | Behaviour | Detail |
 |---|---|
-| `scripts_dir` | Resolved as `abspath("${module.odoo_app.path}/scripts")` — points to `Odoo_Common`'s bundled scripts. |
-| `module_env_vars` | Empty `{}`. All Odoo env vars are set via `environment_variables` or auto-injected by App_CloudRun. |
+| `scripts_dir` | Resolved as `abspath("${module.odoo_app.path}/scripts")` — points to `Odoo Common`'s bundled scripts. |
+| `module_env_vars` | Empty `{}`. All Odoo env vars are set via `environment_variables` or auto-injected by App CloudRun. |
 | `module_secret_env_vars` | `{ ODOO_MASTER_PASS = module.odoo_app.odoo_master_pass_secret_id }`. |
-| `module_storage_buckets` | `module.odoo_app.storage_buckets` from Odoo_Common. |
-| `application_config` | Built from `Odoo_Common` config merged with `container_image_source`, `container_image`, `container_port`, and `container_resources` overrides when set. |
+| `module_storage_buckets` | `module.odoo_app.storage_buckets` from Odoo Common. |
+| `application_config` | Built from `Odoo Common` config merged with `container_image_source`, `container_image`, `container_port`, and `container_resources` overrides when set. |
 
 ---
 
@@ -402,7 +402,7 @@ Complete list of all input variables, grouped by UI section.
 |---|---|---|---|---|
 | 0 | `module_description` | string | *(long description)* | — |
 | 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/modules/Odoo_CloudRun"` | — |
-| 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
+| 0 | `module_dependency` | list(string) | `["Services GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
 | 0 | `credit_cost` | number | `50` | — |
 | 0 | `require_credit_purchases` | bool | `false` | — |

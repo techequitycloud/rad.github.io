@@ -10,7 +10,7 @@ n8n AI extends the standard n8n workflow automation platform with integrated AI 
 
 ### What the Module Automates
 
-All GKE services from N8N_GKE, plus:
+All GKE services from N8N GKE, plus:
 - Qdrant vector database Kubernetes Deployment and ClusterIP Service
 - Ollama LLM server Kubernetes Deployment and ClusterIP Service
 - ClusterIP-based service discovery for Qdrant (port 6333) and Ollama (port 11434)
@@ -41,7 +41,7 @@ All GKE services from N8N_GKE, plus:
 
 ## Prerequisites
 
-- A GCP project with the Services_GCP platform module already deployed
+- A GCP project with the Services GCP platform module already deployed
 - `gcloud` CLI authenticated: `gcloud auth login && gcloud config set project PROJECT_ID`
 - `kubectl` installed
 - Owner or Editor role on the target GCP project
@@ -53,7 +53,7 @@ All GKE services from N8N_GKE, plus:
 
 ### Variables
 
-In the RAD UI, open the N8N_AI_GKE module and fill in the deployment form:
+In the RAD UI, open the N8N AI GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
@@ -561,7 +561,7 @@ kubectl delete pod curl-test -n ${NAMESPACE}
 
 When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module. This removes all Kubernetes resources (n8n, Qdrant, Ollama Deployments and Services), Cloud SQL instance, NFS Filestore, GCS buckets, secrets, and IAM bindings.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

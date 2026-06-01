@@ -46,7 +46,7 @@ This lab uses three primary interfaces:
 
 ## Prerequisites
 
-1. **Services_GCP deployed** — this module depends on `Services_GCP`. The VPC network, Cloud SQL instance, Artifact Registry, and shared service accounts must exist before deploying Directus_CloudRun.
+1. **Services GCP deployed** — this module depends on `Services GCP`. The VPC network, Cloud SQL instance, Artifact Registry, and shared service accounts must exist before deploying Directus CloudRun.
 2. **GCP project with billing enabled.**
 3. **gcloud CLI** authenticated: `gcloud auth application-default login`
 4. **Sufficient IAM permissions**: Owner or an equivalent custom role on the target project.
@@ -427,7 +427,7 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 
 **Expected result:** The Cloud Run service, Cloud SQL instance, NFS Filestore, Secret Manager secrets, GCS buckets, and Artifact Registry images are all removed from the project.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

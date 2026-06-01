@@ -1,4 +1,4 @@
-# Chroma_Common
+# Chroma Common
 
 This document provides a reference for the `modules/Chroma_Common` internal sub-module. `Chroma_Common` is consumed by `Chroma_CloudRun` and `Chroma_GKE` — it is not deployed directly.
 
@@ -6,7 +6,7 @@ This document provides a reference for the `modules/Chroma_Common` internal sub-
 
 ## 1. Purpose
 
-`Chroma_Common` assembles the Chroma-specific application configuration consumed by the foundation modules (`App_CloudRun` / `App_GKE`). It provides:
+`Chroma Common` assembles the Chroma-specific application configuration consumed by the foundation modules (`App CloudRun` / `App GKE`). It provides:
 
 - The `config` output containing the full `chroma_module` object (image, environment variables, resource limits, probes, storage volumes)
 - Optional Secret Manager provisioning for the Chroma authentication token
@@ -17,7 +17,7 @@ This document provides a reference for the `modules/Chroma_Common` internal sub-
 
 ## 2. Fixed Application Defaults
 
-The following values are set by `Chroma_Common` and cannot be overridden via Application Module variables:
+The following values are set by `Chroma Common` and cannot be overridden via Application Module variables:
 
 | Setting | Value | Notes |
 |---|---|---|
@@ -47,7 +47,7 @@ The foundation module injects `CHROMA_SERVER_AUTH_CREDENTIALS` into the containe
 
 ## 4. Storage Bucket
 
-`Chroma_Common` always outputs a storage bucket definition:
+`Chroma Common` always outputs a storage bucket definition:
 
 ```
 name_suffix: "chroma-data"
@@ -55,7 +55,7 @@ name: "<wrapper_prefix>-data"
 mount_path: "/data"
 ```
 
-The `enable_gcs_storage_volume` variable controls whether this bucket is mounted as a GCS FUSE volume. When `Chroma_GKE` uses a StatefulSet PVC (`stateful_pvc_enabled = true`), the wrapper passes `enable_gcs_storage_volume = false` to avoid mounting both a PVC and a GCS FUSE volume at `/data` simultaneously.
+The `enable_gcs_storage_volume` variable controls whether this bucket is mounted as a GCS FUSE volume. When `Chroma GKE` uses a StatefulSet PVC (`stateful_pvc_enabled = true`), the wrapper passes `enable_gcs_storage_volume = false` to avoid mounting both a PVC and a GCS FUSE volume at `/data` simultaneously.
 
 ---
 
@@ -74,7 +74,7 @@ The path override is applied regardless of what the caller passes in — Chroma 
 
 ## 6. Initialization Jobs
 
-`Chroma_Common` does **not** inject a default initialization job. Chroma manages its own embedded storage and requires no database bootstrap. If `var.initialization_jobs` is non-empty, the jobs are passed through to the foundation after normalizing all field types.
+`Chroma Common` does **not** inject a default initialization job. Chroma manages its own embedded storage and requires no database bootstrap. If `var.initialization_jobs` is non-empty, the jobs are passed through to the foundation after normalizing all field types.
 
 ---
 

@@ -52,7 +52,7 @@ This lab uses two sets of tools:
 ## Prerequisites
 
 - GCP project with billing enabled
-- `Services_GCP` module deployed (provides VPC and Artifact Registry)
+- `Services GCP` module deployed (provides VPC and Artifact Registry)
 - `gcloud` CLI authenticated (`gcloud auth application-default login`)
 - Access to the RAD UI with permission to deploy modules in the target GCP project
 - Sufficient Cloud Run quotas: 3B models need `cpu_limit=4000m, memory_limit=8Gi`; 7B models need `cpu_limit=8000m, memory_limit=16Gi`
@@ -535,7 +535,7 @@ When you have finished the lab, return to the RAD UI, navigate to your deploymen
 
 **Estimated time:** 5–10 minutes
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

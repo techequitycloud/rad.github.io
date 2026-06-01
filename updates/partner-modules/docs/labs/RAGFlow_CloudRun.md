@@ -58,8 +58,8 @@ Key REST APIs exercised:
 
 Before deploying, ensure the following:
 
-1. **Services_GCP** module is deployed (provides VPC, Serverless VPC Access connector, Memorystore Redis, Cloud SQL instance).
-2. **Elasticsearch_GKE** module is deployed and its `elasticsearch_endpoint` output (the LoadBalancer external IP on port 9200) is available.
+1. **Services GCP** module is deployed (provides VPC, Serverless VPC Access connector, Memorystore Redis, Cloud SQL instance).
+2. **Elasticsearch GKE** module is deployed and its `elasticsearch_endpoint` output (the LoadBalancer external IP on port 9200) is available.
 3. `gcloud` CLI is authenticated: `gcloud auth application-default login`
 4. You have a GCP project with billing enabled.
 5. (Optional) An OpenAI API key or other LLM endpoint for the chatbot phase.
@@ -94,7 +94,7 @@ Variables are configured in the RAD UI form before deploying. The table below de
 | `elasticsearch_hosts` | No | `""` | Elasticsearch endpoint (e.g., `http://10.0.0.5:9200`) |
 | `elasticsearch_username` | No | `""` | Elasticsearch username (leave blank if security disabled) |
 | `enable_redis` | No | `true` | Enable Redis task queue backend |
-| `redis_host` | No | `""` | Redis server IP (from Services_GCP Memorystore output) |
+| `redis_host` | No | `""` | Redis server IP (from Services GCP Memorystore output) |
 | `redis_port` | No | `6379` | Redis server port |
 | `execution_environment` | No | `gen2` | Cloud Run execution environment (`gen2` required for NFS) |
 | `ingress_settings` | No | `all` | Traffic sources: `all`, `internal`, or `internal-and-cloud-load-balancing` |
@@ -471,7 +471,7 @@ When you are finished with the lab, return to the RAD UI, navigate to your deplo
 
 **What is removed:** Cloud Run service and revisions, Cloud SQL instance and database, GCS bucket(s), Secret Manager secrets, Artifact Registry images, NFS instance (if enabled), Cloud Monitoring uptime checks.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry. Elasticsearch (managed by Elasticsearch_GKE) must also be undeployed separately.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry. Elasticsearch (managed by Elasticsearch GKE) must also be undeployed separately.
 
 ---
 

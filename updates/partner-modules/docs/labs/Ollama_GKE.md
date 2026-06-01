@@ -49,7 +49,7 @@ This lab uses three sets of tools:
 ## Prerequisites
 
 - GCP project with billing enabled
-- `Services_GCP` module deployed (provides VPC and GKE Autopilot cluster)
+- `Services GCP` module deployed (provides VPC and GKE Autopilot cluster)
 - `gcloud` CLI authenticated (`gcloud auth application-default login`)
 - `kubectl` configured or configurable via `gcloud container clusters get-credentials`
 - Access to the RAD UI with permission to deploy modules in the target GCP project
@@ -61,7 +61,7 @@ This lab uses three sets of tools:
 
 ### Variables
 
-In the RAD UI, open the Ollama_GKE module and fill in the deployment form:
+In the RAD UI, open the Ollama GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
@@ -506,7 +506,7 @@ When you have finished the lab, return to the RAD UI, navigate to your deploymen
 
 **Estimated time:** 5–10 minutes
 
-Resources provisioned by the `Services_GCP` module (VPC, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

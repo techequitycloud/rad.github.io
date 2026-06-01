@@ -10,7 +10,7 @@ RAGFlow is an intelligent document analysis and RAG (Retrieval-Augmented Generat
 
 ### What the Module Automates
 
-- GKE Autopilot cluster (via Services_GCP prerequisite)
+- GKE Autopilot cluster (via Services GCP prerequisite)
 - Cloud SQL MySQL 8.0 instance and database/user creation
 - Cloud SQL Auth Proxy sidecar injection into the RAGFlow pod
 - Kubernetes namespace, Deployment, and LoadBalancer Service
@@ -61,8 +61,8 @@ Key REST APIs exercised:
 
 Before deploying, ensure the following:
 
-1. **Services_GCP** module is deployed (provides VPC, GKE cluster, Memorystore Redis, Cloud SQL instance).
-2. **Elasticsearch_GKE** module is deployed and its `elasticsearch_endpoint` output is available.
+1. **Services GCP** module is deployed (provides VPC, GKE cluster, Memorystore Redis, Cloud SQL instance).
+2. **Elasticsearch GKE** module is deployed and its `elasticsearch_endpoint` output is available.
 3. `gcloud` CLI is authenticated: `gcloud auth application-default login`
 4. `kubectl` is installed.
 5. You have a GCP project with billing enabled.
@@ -77,7 +77,7 @@ Before deploying, ensure the following:
 
 ### Variables
 
-In the RAD UI, open the RAGFlow_GKE module and fill in the deployment form:
+In the RAD UI, open the RAGFlow GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
@@ -97,7 +97,7 @@ In the RAD UI, open the RAGFlow_GKE module and fill in the deployment form:
 | `elasticsearch_hosts` | No | `""` | Elasticsearch HTTP endpoint (e.g., `http://10.0.0.5:9200`) |
 | `elasticsearch_username` | No | `""` | Elasticsearch username (leave blank if security disabled) |
 | `enable_redis` | No | `true` | Enable Redis task queue backend |
-| `redis_host` | No | `""` | Redis server IP (from Services_GCP Memorystore output) |
+| `redis_host` | No | `""` | Redis server IP (from Services GCP Memorystore output) |
 | `redis_port` | No | `6379` | Redis server port |
 | `cpu_limit` | No | `4000m` | CPU limit per RAGFlow container |
 | `memory_limit` | No | `8Gi` | Memory limit per RAGFlow container |
@@ -483,9 +483,9 @@ When you are finished with the lab, return to the RAD UI, navigate to your deplo
 
 **What is removed:** Kubernetes Deployment, Service, namespace, Cloud SQL instance and database, GCS bucket(s), Secret Manager secrets, Artifact Registry images, NFS Filestore instance, static IP, Cloud Monitoring uptime checks.
 
-**What is not removed:** The GKE cluster itself (managed by Services_GCP), the VPC (managed by Services_GCP), Elasticsearch (managed by Elasticsearch_GKE).
+**What is not removed:** The GKE cluster itself (managed by Services GCP), the VPC (managed by Services GCP), Elasticsearch (managed by Elasticsearch GKE).
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

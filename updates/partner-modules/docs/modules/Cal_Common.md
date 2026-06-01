@@ -1,4 +1,4 @@
-# Cal_Common
+# Cal Common
 
 This document provides a reference for the `modules/Cal_Common` Terraform module. `Cal_Common` is the shared application configuration module for Cal.diy deployments. It is called by both `Cal_CloudRun` and `Cal_GKE` — never deployed directly.
 
@@ -6,14 +6,14 @@ This document provides a reference for the `modules/Cal_Common` Terraform module
 
 ## 1. Module Overview
 
-`Cal_Common` serves as the application-specific configuration layer for Cal.diy. It performs the following functions:
+`Cal Common` serves as the application-specific configuration layer for Cal.diy. It performs the following functions:
 
 1. **Generates application secrets** — `NEXTAUTH_SECRET` and `CALENDSO_ENCRYPTION_KEY` — using `random_password` and stores them in Secret Manager.
-2. **Assembles the `config` output** consumed by the Foundation Module (`App_CloudRun` or `App_GKE`) via `application_config`.
+2. **Assembles the `config` output** consumed by the Foundation Module (`App CloudRun` or `App GKE`) via `application_config`.
 3. **Defines the default `db-init` Kubernetes/Cloud Run Job** using `postgres:15-alpine` and the `db-init.sh` script from `Cal_Common/scripts/`.
 4. **Exposes the `path` output** so the Application Module can resolve `scripts_dir` to the correct absolute path.
 
-`Cal_Common` does **not** provision any GCP compute resources (no Cloud Run service, no GKE workload). It only creates Secret Manager secrets and assembles output objects consumed downstream.
+`Cal Common` does **not** provision any GCP compute resources (no Cloud Run service, no GKE workload). It only creates Secret Manager secrets and assembles output objects consumed downstream.
 
 ---
 
@@ -80,7 +80,7 @@ Returns an empty list `[]`. Cal.diy does not require dedicated application stora
 
 ### `path`
 
-Returns `path.module` — the absolute path to the `Cal_Common` module directory. Used by Application Modules to resolve `scripts_dir`:
+Returns `path.module` — the absolute path to the `Cal Common` module directory. Used by Application Modules to resolve `scripts_dir`:
 
 ```hcl
 scripts_dir = abspath("${module.cal_app.path}/scripts")
@@ -90,7 +90,7 @@ scripts_dir = abspath("${module.cal_app.path}/scripts")
 
 ## 4. Default Initialization Job
 
-When `initialization_jobs = []` (the default), `Cal_Common` synthesises a single `db-init` job:
+When `initialization_jobs = []` (the default), `Cal Common` synthesises a single `db-init` job:
 
 | Field | Value |
 |---|---|
@@ -111,7 +111,7 @@ To replace the default job, pass a non-empty `initialization_jobs` list to the A
 
 ## 5. Default Probe Configuration
 
-`Cal_Common` sets generous startup probe defaults to accommodate Cal.diy's first-boot operations:
+`Cal Common` sets generous startup probe defaults to accommodate Cal.diy's first-boot operations:
 
 **Startup probe defaults** (when not overridden):
 
@@ -131,14 +131,14 @@ To replace the default job, pass a non-empty `initialization_jobs` list to the A
 | `period_seconds` | `30` |
 | `failure_threshold` | `3` |
 
-**Readiness probe** (hardcoded, not user-configurable via `Cal_Common`):
+**Readiness probe** (hardcoded, not user-configurable via `Cal Common`):
 - `path = "/api/health"`, `initial_delay_seconds = 30`, `period_seconds = 10`, `failure_threshold = 3`.
 
 ---
 
 ## 6. Variables
 
-`Cal_Common` accepts the following variables, which are passed to it by the Application Module:
+`Cal Common` accepts the following variables, which are passed to it by the Application Module:
 
 | Variable | Type | Default | Description |
 |---|---|---|---|

@@ -6,7 +6,7 @@ This document provides a comprehensive reference for the `modules/MongoDB_GKE` T
 
 ## 1. Module Overview
 
-MongoDB is the world's most popular NoSQL database with 35,000+ GitHub stars, used by 35,000+ organisations including Adobe, eBay, and Bosch. It powers flexible document storage for content management, IoT data, mobile backends, and AI/ML feature stores where relational schemas are too rigid. `MongoDB_GKE` is a **self-contained wrapper module** built on top of `App_GKE`. Unlike most other modules in this repository, it does not have a corresponding `Common` module — all MongoDB-specific configuration is assembled directly in `mongodb.tf`.
+MongoDB is the world's most popular NoSQL database with 35,000+ GitHub stars, used by 35,000+ organisations including Adobe, eBay, and Bosch. It powers flexible document storage for content management, IoT data, mobile backends, and AI/ML feature stores where relational schemas are too rigid. `MongoDB GKE` is a **self-contained wrapper module** built on top of `App GKE`. Unlike most other modules in this repository, it does not have a corresponding `Common` module — all MongoDB-specific configuration is assembled directly in `mongodb.tf`.
 
 **Key Capabilities:**
 *   **Compute**: GKE Autopilot, **StatefulSet** (auto-selected when `stateful_pvc_enabled = true`). 1 vCPU / 2 Gi by default. Default: `min_instance_count = 1`, `max_instance_count = 1` (single-node mode).
@@ -36,9 +36,9 @@ MongoDB is the world's most popular NoSQL database with 35,000+ GitHub stars, us
 
 ## 2. IAM & Access Control
 
-`MongoDB_GKE` delegates all IAM provisioning to `App_GKE`. Workload Identity binds the Kubernetes SA to a GCP SA.
+`MongoDB GKE` delegates all IAM provisioning to `App GKE`. Workload Identity binds the Kubernetes SA to a GCP SA.
 
-**Auto-generated root password:** `mongodb_secrets.tf` auto-generates `MONGO_INITDB_ROOT_PASSWORD` and stores it in Secret Manager (`<prefix>-mongo-root-password`) if `MONGO_INITDB_ROOT_PASSWORD` is not present in `secret_environment_variables`. The generated secret is forwarded to `App_GKE` via `module_secret_env_vars` with an implicit `time_sleep` dependency to ensure propagation before the pod starts.
+**Auto-generated root password:** `mongodb_secrets.tf` auto-generates `MONGO_INITDB_ROOT_PASSWORD` and stores it in Secret Manager (`<prefix>-mongo-root-password`) if `MONGO_INITDB_ROOT_PASSWORD` is not present in `secret_environment_variables`. The generated secret is forwarded to `App GKE` via `module_secret_env_vars` with an implicit `time_sleep` dependency to ensure propagation before the pod starts.
 
 To supply a custom root password, add `MONGO_INITDB_ROOT_PASSWORD` to `secret_environment_variables` pointing to an existing Secret Manager secret ID.
 

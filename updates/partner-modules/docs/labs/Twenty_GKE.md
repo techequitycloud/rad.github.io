@@ -49,8 +49,8 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) | [kubect
 ## Prerequisites
 
 1. A GCP project with billing enabled.
-2. The `Services_GCP` module deployed in the same project with a GKE Autopilot cluster.
-3. The following APIs enabled (Services_GCP handles this):
+2. The `Services GCP` module deployed in the same project with a GKE Autopilot cluster.
+3. The following APIs enabled (Services GCP handles this):
    - `container.googleapis.com`
    - `sqladmin.googleapis.com`
    - `secretmanager.googleapis.com`
@@ -461,7 +461,7 @@ When finished, return to the RAD UI, navigate to your deployment, and click **Un
 
 > **Warning:** This permanently deletes all resources including the PostgreSQL database. Export any important Twenty data before undeploying.
 
-Resources provisioned by `Services_GCP` (VPC, GKE cluster, Cloud SQL) are managed separately.
+Resources provisioned by `Services GCP` (VPC, GKE cluster, Cloud SQL) are managed separately.
 
 ---
 

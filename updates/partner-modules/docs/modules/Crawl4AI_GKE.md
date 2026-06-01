@@ -6,12 +6,12 @@ This document provides a comprehensive reference for the `modules/Crawl4AI_GKE` 
 
 ## 1. Module Overview
 
-Crawl4AI is an open-source LLM-friendly web crawler and scraper with 40,000+ GitHub stars. `Crawl4AI_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning and injects Crawl4AI-specific application configuration via `Crawl4AI_Common`.
+Crawl4AI is an open-source LLM-friendly web crawler and scraper with 40,000+ GitHub stars. `Crawl4AI GKE` is a **wrapper module** built on top of `App GKE`. It uses `App GKE` for all GCP infrastructure provisioning and injects Crawl4AI-specific application configuration via `Crawl4AI Common`.
 
 **Key Capabilities:**
 *   **Compute**: GKE Autopilot, Python container, 4 vCPU / 8 Gi default. Supervisord manages embedded Redis (task queue) and Gunicorn ASGI server inside the pod. A dedicated `/dev/shm` emptyDir volume is mounted for Chromium shared memory — GKE provides proper `/dev/shm` support unlike Cloud Run's tmpfs approach.
 *   **Data Persistence**: **Stateless** — no external database is provisioned. Redis runs inside the pod. Horizontal Pod Autoscaler (HPA) manages scaling.
-*   **Security**: Inherits Workload Identity, Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_GKE`. No application secrets are auto-generated.
+*   **Security**: Inherits Workload Identity, Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App GKE`. No application secrets are auto-generated.
 *   **AI Integration**: Supports LLM-based extraction via OpenAI, Anthropic, DeepSeek, Groq, Gemini, and custom providers. API keys are injected via `secret_environment_variables`.
 
 **Architecture note:** On GKE, Crawl4AI benefits from proper `/dev/shm` support via an emptyDir volume, unlike the Cloud Run Gen2 workaround that redirects Chromium to `/tmp`. This makes GKE the preferred platform for high-concurrency crawling workloads.
@@ -20,9 +20,9 @@ Crawl4AI is an open-source LLM-friendly web crawler and scraper with 40,000+ Git
 
 ## 2. IAM & Access Control
 
-`Crawl4AI_GKE` delegates all IAM provisioning to `App_GKE`. Workload Identity binds the Kubernetes service account to a GCP service account for Secret Manager access.
+`Crawl4AI GKE` delegates all IAM provisioning to `App GKE`. Workload Identity binds the Kubernetes service account to a GCP service account for Secret Manager access.
 
-**No auto-generated secrets:** `Crawl4AI_Common` creates no Secret Manager secrets. Inject `SECRET_KEY` (for JWT authentication) and LLM API keys via `secret_environment_variables`.
+**No auto-generated secrets:** `Crawl4AI Common` creates no Secret Manager secrets. Inject `SECRET_KEY` (for JWT authentication) and LLM API keys via `secret_environment_variables`.
 
 ---
 
@@ -143,8 +143,8 @@ Crawl4AI is an open-source LLM-friendly web crawler and scraper with 40,000+ Git
 |---|---|---|---|
 | `startup_probe` | 14 | `{ path="/health", initial_delay_seconds=40, failure_threshold=12, ... }` | Startup probe for Crawl4AI. 40 s initial delay for supervisord boot. |
 | `liveness_probe` | 14 | `{ path="/health", initial_delay_seconds=60, failure_threshold=3, ... }` | Liveness probe. |
-| `startup_probe_config` | 10 | `{ enabled=true }` | App_GKE startup probe config. Takes precedence. |
-| `health_check_config` | 10 | `{ enabled=true }` | App_GKE liveness probe config. Takes precedence. |
+| `startup_probe_config` | 10 | `{ enabled=true }` | App GKE startup probe config. Takes precedence. |
+| `health_check_config` | 10 | `{ enabled=true }` | App GKE liveness probe config. Takes precedence. |
 | `uptime_check_config` | 10 | `{ enabled=false }` | Cloud Monitoring uptime check. |
 | `alert_policies` | 10 | `[]` | Cloud Monitoring alert policies. |
 | `deployment_timeout` | 6 | `1800` | Maximum seconds Terraform waits for the Kubernetes rollout to complete. |
@@ -167,14 +167,14 @@ Crawl4AI is an open-source LLM-friendly web crawler and scraper with 40,000+ Git
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| **No database provisioned** | `database_type = "NONE"` in `Crawl4AI_Common` | Crawl4AI has no external database dependency. |
+| **No database provisioned** | `database_type = "NONE"` in `Crawl4AI Common` | Crawl4AI has no external database dependency. |
 | **Embedded Redis** | Supervisord starts Redis inside the pod | Task results stored in-memory. Lost on pod restart. |
-| **`/dev/shm` support** | emptyDir volume mounted by `App_GKE` | GKE provides proper shared memory for Chromium — no `--disable-dev-shm-usage` workaround needed. |
+| **`/dev/shm` support** | emptyDir volume mounted by `App GKE` | GKE provides proper shared memory for Chromium — no `--disable-dev-shm-usage` workaround needed. |
 | **REDIS_TASK_TTL injected** | `REDIS_TASK_TTL = tostring(var.redis_task_ttl_seconds)` | Prevents unbounded Redis memory growth. |
-| **PYTHONUNBUFFERED=1** | Injected by `Crawl4AI_Common` | Ensures Python log streaming. |
+| **PYTHONUNBUFFERED=1** | Injected by `Crawl4AI Common` | Ensures Python log streaming. |
 | **Prebuilt image by default** | `image_source = "prebuilt"` | Uses `unclecode/crawl4ai:<version>` directly via Artifact Registry mirror. |
-| **No auto-generated secrets** | `secret_ids = {}` from `Crawl4AI_Common` | Inject `SECRET_KEY` via `secret_environment_variables` to enable JWT auth. |
-| **Workload Identity** | Managed by `App_GKE` | Pod accesses GCP APIs via Workload Identity — no service account key files. |
+| **No auto-generated secrets** | `secret_ids = {}` from `Crawl4AI Common` | Inject `SECRET_KEY` via `secret_environment_variables` to enable JWT auth. |
+| **Workload Identity** | Managed by `App GKE` | Pod accesses GCP APIs via Workload Identity — no service account key files. |
 
 ---
 

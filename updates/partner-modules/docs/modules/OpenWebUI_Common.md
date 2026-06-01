@@ -6,7 +6,7 @@ This document provides a reference for the `modules/OpenWebUI_Common` Terraform 
 
 ## 1. Module Overview
 
-`OpenWebUI_Common` is the application-specific configuration layer for Open WebUI. It is called by both `OpenWebUI_CloudRun` and `OpenWebUI_GKE` to produce the standardised `config`, `secret_ids`, and `storage_buckets` outputs that the Foundation Modules consume.
+`OpenWebUI Common` is the application-specific configuration layer for Open WebUI. It is called by both `OpenWebUI CloudRun` and `OpenWebUI GKE` to produce the standardised `config`, `secret_ids`, and `storage_buckets` outputs that the Foundation Modules consume.
 
 **Responsibilities:**
 *   Defines the Open WebUI container configuration: image (`ghcr.io/open-webui/open-webui`), container port (8080), health probe paths (`/health`), and default environment variables.
@@ -28,7 +28,7 @@ This document provides a reference for the `modules/OpenWebUI_Common` Terraform 
 
 ## 2. Variables
 
-`OpenWebUI_Common` variables are set by the calling Application Module and are not directly user-configurable.
+`OpenWebUI Common` variables are set by the calling Application Module and are not directly user-configurable.
 
 | Variable | Default | Description |
 |---|---|---|

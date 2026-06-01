@@ -6,17 +6,17 @@
 
 **Estimated time:** 3–4 hours
 
-Nextcloud is the leading open-source self-hosted file sync and collaboration platform. This lab deploys Nextcloud 30 on Google Kubernetes Engine (GKE) Autopilot backed by Cloud SQL MySQL 8.0, Cloud Filestore NFS for persistent config and data storage, and Redis caching. GKE Autopilot provides managed Kubernetes with horizontal pod autoscaling and StatefulSet support for reliable persistent-storage workloads.
+Nextcloud is the leading open-source self-hosted file sync and collaboration platform, used by governments, healthcare providers, and enterprises as a GDPR-compliant alternative to Google Drive and OneDrive. This lab deploys Nextcloud 30 on Google Kubernetes Engine (GKE) Autopilot backed by Cloud SQL MySQL 8.0, Cloud Filestore NFS for persistent config and data storage, and Redis caching. GKE Autopilot provides managed Kubernetes with horizontal pod autoscaling and StatefulSet support.
 
 ### What the Module Automates
 
 - GKE Autopilot namespace and Kubernetes Deployment (or StatefulSet)
 - Cloud SQL MySQL 8.0 instance, database (utf8mb4), and user (mysql_native_password)
-- Cloud SQL Auth Proxy sidecar injection
+- Cloud SQL Auth Proxy sidecar injection (binds on localhost:3306)
 - Cloud Filestore (NFS) instance for shared `config/` and `data/` persistence
 - GCS storage bucket provisioning
-- Secret Manager secrets (admin password, DB password)
-- Artifact Registry repository and Cloud Build custom image pipeline
+- Secret Manager secrets (admin password, DB password, root password)
+- Artifact Registry repository and Cloud Build custom image pipeline (PHP limits baked in)
 - Workload Identity and IAM bindings
 - Kubernetes Service (LoadBalancer), HPA, and PodDisruptionBudget
 - Cloud Monitoring uptime checks and alert policies
@@ -24,23 +24,24 @@ Nextcloud is the leading open-source self-hosted file sync and collaboration pla
 
 ### What You Do Manually
 
-- Note deployment outputs (external IP, namespace, cluster) from the RAD UI deployment panel
-- Configure `kubectl` with cluster credentials
-- Confirm Nextcloud is reachable at the LoadBalancer IP
-- Log in with admin credentials from Secret Manager
-- Upload files, install apps, and explore Nextcloud features
-- Review pod logs with `kubectl logs`
-- Inspect the StatefulSet/Deployment and persistent volumes
+- Configure kubectl with cluster credentials
+- Confirm Nextcloud is reachable at the external LoadBalancer IP
+- Retrieve admin credentials from Secret Manager
+- Log in and explore Files, Calendar, and Contacts apps
+- Upload files and test WebDAV
+- Run `occ` commands via `kubectl exec`
+- Review pod logs and inspect Kubernetes resources
+- Verify NFS persistence across pod restarts
 
 ---
 
-## CLI and REST API Overview
+## CLI Tools
 
 | Tool | Purpose |
 |---|---|
 | `gcloud` | Access secrets, configure kubectl, view cluster logs |
 | `kubectl` | Inspect pods, view logs, exec into containers |
-| `curl` | Test Nextcloud status and WebDAV endpoints |
+| `curl` | Test Nextcloud status, WebDAV, and OCS API endpoints |
 
 Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) | [kubectl](https://kubernetes.io/docs/tasks/tools/)
 
@@ -49,16 +50,9 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) | [kubect
 ## Prerequisites
 
 1. A GCP project with billing enabled.
-2. The `Services_GCP` module deployed in the same project (provides VPC, Cloud SQL instance, GKE cluster, and NFS server).
-3. The following APIs enabled (Services_GCP handles this):
-   - `container.googleapis.com`
-   - `sqladmin.googleapis.com`
-   - `secretmanager.googleapis.com`
-   - `artifactregistry.googleapis.com`
-   - `cloudbuild.googleapis.com`
-   - `file.googleapis.com`
-4. `gcloud` and `kubectl` installed and authenticated.
-5. Access to the RAD UI with permission to deploy modules in the target GCP project.
+2. The `Services GCP` module deployed in the same project (provides VPC, Cloud SQL instance, GKE cluster, and NFS server).
+3. `gcloud` and `kubectl` installed and authenticated.
+4. Access to the RAD UI with permission to deploy modules.
 
 ---
 
@@ -69,23 +63,22 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) | [kubect
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `project_id` | Yes | — | GCP project ID |
-| `tenant_deployment_id` | No | `"demo"` | Short identifier (e.g. `"prod"`) |
+| `tenant_deployment_id` | No | `"demo"` | Short deployment identifier |
 | `region` | No | `"us-central1"` | GCP region |
 | `application_version` | No | `"30"` | Nextcloud version tag |
 | `nextcloud_admin_user` | No | `"admin"` | Admin account username |
-| `php_memory_limit` | No | `"512M"` | PHP memory limit |
+| `php_memory_limit` | No | `"512M"` | PHP memory limit (baked into image) |
 | `upload_max_filesize` | No | `"512M"` | Max upload file size |
 | `post_max_size` | No | `"512M"` | Max POST body size |
 | `cpu_limit` | No | `"2000m"` | CPU per pod |
 | `memory_limit` | No | `"4Gi"` | Memory per pod |
-| `min_instance_count` | No | `1` | Minimum pod replicas |
-| `max_instance_count` | No | `5` | Maximum pod replicas |
+| `min_instance_count` | No | `1` | Minimum HPA replicas |
+| `max_instance_count` | No | `5` | Maximum HPA replicas |
 | `application_database_name` | No | `"gkeappdb"` | MySQL database name |
 | `application_database_user` | No | `"gkeappuser"` | MySQL database username |
 | `enable_redis` | No | `true` | Enable Redis caching |
 | `enable_nfs` | No | `true` | Mount NFS for persistence |
 | `service_type` | No | `"LoadBalancer"` | Kubernetes Service type |
-| `backup_schedule` | No | `"0 2 * * *"` | Backup cron schedule |
 
 ### Step 1.2 — Initiate Deployment
 
@@ -102,14 +95,12 @@ Click **Deploy** in the RAD UI.
 | **Total (new cluster)** | **28–47 min** |
 | **Total (existing cluster)** | **18–32 min** |
 
-> **First-boot note:** `occ maintenance:install` runs synchronously inside the pod before Apache starts. On a cold Cloud SQL instance this can take 2–5 minutes. The startup probe allows up to 6 minutes of startup tolerance.
-
 ### Step 1.3 — Record Outputs
 
 | Output | Description |
 |---|---|
 | `external_ip` | External LoadBalancer IP for Nextcloud |
-| `service_url` | Full URL (e.g. `http://<IP>`) |
+| `service_url` | Full service URL |
 | `namespace` | Kubernetes namespace |
 | `cluster_name` | GKE cluster name |
 | `database_instance_name` | Cloud SQL instance name |
@@ -123,13 +114,19 @@ export PROJECT="your-gcp-project-id"
 export REGION="us-central1"
 export TOKEN=$(gcloud auth print-access-token)
 
-# Discover cluster
+# Discover the GKE cluster
 export CLUSTER=$(gcloud container clusters list \
   --project=${PROJECT} \
   --region=${REGION} \
   --format="value(name)" \
   --limit=1)
 
+# Configure kubectl
+gcloud container clusters get-credentials ${CLUSTER} \
+  --region=${REGION} \
+  --project=${PROJECT}
+
+# Discover the namespace
 export NAMESPACE=$(kubectl get namespaces \
   --no-headers -o custom-columns=NAME:.metadata.name \
   | grep nextcloud | head -1)
@@ -138,30 +135,19 @@ echo "Cluster: ${CLUSTER}"
 echo "Namespace: ${NAMESPACE}"
 ```
 
-### Step 1.4 — Configure kubectl
+### Step 1.4 — Confirm Pods Are Running
 
 ```bash
-gcloud container clusters get-credentials ${CLUSTER} \
-  --region=${REGION} \
-  --project=${PROJECT}
-
-# Verify connectivity
-kubectl get pods -n ${NAMESPACE}
+kubectl get pods -n ${NAMESPACE} -o wide
 ```
 
-**Expected result:** One or more `nextcloud-*` pods listed with status `Running`.
+**Expected result:** One or more `nextcloud-*` pods with status `Running`. If pods are in `Pending`, GKE Autopilot is provisioning nodes — wait 2–3 minutes.
 
 ---
 
 ## Phase 2 — Access the Application [MANUAL]
 
 ### Step 2.1 — Get the External IP
-
-```bash
-kubectl get service -n ${NAMESPACE} -o wide
-```
-
-**Expected result:** A `LoadBalancer` service with an external IP in the `EXTERNAL-IP` column.
 
 ```bash
 export SERVICE_IP=$(kubectl get service -n ${NAMESPACE} \
@@ -174,14 +160,14 @@ echo "Nextcloud URL: ${SERVICE_URL}"
 ```bash
 gcloud compute forwarding-rules list \
   --project=${PROJECT} \
-  --filter="description~nextcloud" \
-  --format="table(name, IPAddress)"
+  --format="table(name, IPAddress, region)"
 ```
 
 **REST API equivalent:**
 ```bash
 curl -H "Authorization: Bearer ${TOKEN}" \
-  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}"
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
+  | jq '.status'
 ```
 
 ### Step 2.2 — Check the Status Endpoint
@@ -196,19 +182,19 @@ curl -s "${SERVICE_URL}/status.php" | jq .
   "installed": true,
   "maintenance": false,
   "needsDbUpgrade": false,
-  "version": "30.0.x"
+  "version": "30.0.x",
+  "versionstring": "30.0.x"
 }
 ```
 
-If `"installed": false`, the pod is still initialising. Check pod logs:
+If `"installed": false`, check pod logs:
 ```bash
-kubectl logs -n ${NAMESPACE} -l app=nextcloud --tail=50
+kubectl logs -n ${NAMESPACE} -l app=nextcloud -c nextcloud --tail=100 | grep -E "install|error|ERROR"
 ```
 
 ### Step 2.3 — Retrieve Admin Credentials
 
 ```bash
-# Find admin password secret
 ADMIN_SECRET=$(gcloud secrets list \
   --project=${PROJECT} \
   --filter="name~admin-password" \
@@ -219,7 +205,7 @@ ADMIN_PASS=$(gcloud secrets versions access latest \
   --secret="${ADMIN_SECRET}" \
   --project=${PROJECT})
 
-echo "Admin password: ${ADMIN_PASS}"
+echo "Admin password retrieved"
 ```
 
 **REST API equivalent:**
@@ -231,14 +217,14 @@ curl -H "Authorization: Bearer ${TOKEN}" \
 
 **Expected result:** 24-character alphanumeric admin password.
 
-### Step 2.4 — Log In to Nextcloud
+### Step 2.4 — Log In
 
 Open a browser and navigate to `${SERVICE_URL}`.
 
 - **Username:** your `nextcloud_admin_user` value (default: `admin`)
 - **Password:** retrieved in Step 2.3
 
-**Expected result:** The Nextcloud Files dashboard appears.
+**Expected result:** Nextcloud Files dashboard appears.
 
 ---
 
@@ -246,36 +232,47 @@ Open a browser and navigate to `${SERVICE_URL}`.
 
 ### Step 3.1 — Upload a File
 
-1. Click **+** (New) in the Files app.
-2. Select **Upload file**.
-3. Upload a local file.
+1. Click **+** → **Upload file** in the Files app.
+2. Upload a local file.
 
 **Expected result:** File appears in the list. It is stored on NFS at `/mnt/nfs/nextcloud-data`.
 
-### Step 3.2 — Test WebDAV Access
+### Step 3.2 — Test WebDAV
 
 ```bash
 ADMIN_USER="admin"
 
+# List files via WebDAV PROPFIND
 curl -u "${ADMIN_USER}:${ADMIN_PASS}" \
   -X PROPFIND \
   "${SERVICE_URL}/remote.php/dav/files/${ADMIN_USER}/" \
   -H "Depth: 1" 2>&1 | grep "<d:href>"
 ```
 
-**Expected result:** WebDAV XML response with HTTP 207 Multi-Status listing files.
+**Expected result:** XML response with HTTP 207 Multi-Status listing files.
 
 ### Step 3.3 — Upload via WebDAV
 
 ```bash
-echo "GKE WebDAV test file" > /tmp/gke-test.txt
+echo "GKE lab WebDAV test" > /tmp/gke-webdav.txt
 
 curl -u "${ADMIN_USER}:${ADMIN_PASS}" \
-  -T /tmp/gke-test.txt \
-  "${SERVICE_URL}/remote.php/dav/files/${ADMIN_USER}/gke-test.txt"
+  -T /tmp/gke-webdav.txt \
+  "${SERVICE_URL}/remote.php/dav/files/${ADMIN_USER}/gke-webdav.txt"
 ```
 
-**Expected result:** HTTP 201 Created. File appears in the Nextcloud Files UI.
+**Expected result:** HTTP 201 Created. File visible in the Nextcloud UI.
+
+### Step 3.4 — Share a File
+
+1. Hover over a file → click **Share** icon.
+2. Click **Share link** and copy the URL.
+
+```bash
+curl -sI "PASTE_SHARE_LINK" | head -3
+```
+
+**Expected result:** HTTP 200 or redirect response.
 
 ---
 
@@ -284,134 +281,133 @@ curl -u "${ADMIN_USER}:${ADMIN_PASS}" \
 ### Step 4.1 — Install Calendar and Contacts
 
 1. Click the grid icon (top-right) → **Apps**.
-2. Search for **Calendar** → **Download and enable**.
-3. Search for **Contacts** → **Download and enable**.
+2. Install **Calendar** and **Contacts**.
 
-**Expected result:** Both apps appear in the navigation bar.
+**Expected result:** Both apps available in the navigation bar.
 
 ### Step 4.2 — Verify App Persistence Across Pod Restarts
 
 ```bash
-# Simulate a pod restart
 kubectl rollout restart deployment -n ${NAMESPACE}
 kubectl rollout status deployment -n ${NAMESPACE}
 ```
 
-Navigate back to Nextcloud and verify Calendar and Contacts are still installed.
+Navigate back to Nextcloud. Apps are still installed because the app data is on NFS.
 
-**Expected result:** Apps persist because the Nextcloud `apps/` directory is stored on NFS.
+**Expected result:** Calendar and Contacts remain installed after the pod restart.
 
 ---
 
 ## Phase 5 — Inspect Kubernetes Resources [MANUAL]
 
-### Step 5.1 — List Pods
+### Step 5.1 — Examine the Deployment
 
 ```bash
-kubectl get pods -n ${NAMESPACE} -o wide
+kubectl describe deployment -n ${NAMESPACE}
 ```
 
-**Expected result:** One or more `nextcloud-*` pods in `Running` state. Each pod has the Cloud SQL Auth Proxy sidecar.
+**Expected result:** Two containers per pod: `nextcloud` (main) and `cloudsql-proxy` (sidecar). NFS volume mounted at `/mnt/nfs`.
 
-### Step 5.2 — Describe the Pod
-
-```bash
-POD=$(kubectl get pods -n ${NAMESPACE} -o name | grep nextcloud | head -1)
-kubectl describe ${POD} -n ${NAMESPACE}
-```
-
-**Expected result:** Pod details show two containers: the main Nextcloud container and the `cloudsql-proxy` sidecar. NFS volume mount at `/mnt/nfs` is listed.
-
-### Step 5.3 — View Pod Logs
-
-```bash
-# Main container logs
-kubectl logs -n ${NAMESPACE} -l app=nextcloud -c nextcloud --tail=50
-
-# Cloud SQL Auth Proxy sidecar logs
-kubectl logs -n ${NAMESPACE} -l app=nextcloud -c cloudsql-proxy --tail=20
-```
-
-**Expected result:** Nextcloud startup log messages including NFS mount detection, DB host override, MySQL readiness wait, and `occ maintenance:install` status.
-
-### Step 5.4 — Check HPA
+### Step 5.2 — Check the HPA
 
 ```bash
 kubectl get hpa -n ${NAMESPACE}
+kubectl describe hpa -n ${NAMESPACE}
 ```
 
-**Expected result:** HPA resource with current/desired replica count. Min replicas = `min_instance_count`, max = `max_instance_count`.
+**Expected result:** HPA shows min/max replicas and current CPU utilisation.
 
-### Step 5.5 — Check Pod Disruption Budget
+### Step 5.3 — Check the Pod Disruption Budget
 
 ```bash
 kubectl get pdb -n ${NAMESPACE}
 ```
 
-**Expected result:** PDB with `MIN AVAILABLE = 1`, ensuring at least one Nextcloud pod remains running during node upgrades.
+**Expected result:** PDB with `MIN AVAILABLE = 1` ensuring at least one pod remains during node upgrades.
 
-### Step 5.6 — Inspect NFS Volume Mount
+### Step 5.4 — Inspect NFS Volume
 
 ```bash
+POD=$(kubectl get pods -n ${NAMESPACE} -o name | grep nextcloud | head -1)
+
+# Check NFS mount
 kubectl exec -n ${NAMESPACE} -it ${POD} -c nextcloud -- ls -la /mnt/nfs/
-```
 
-**Expected result:** Two directories: `nextcloud-config/` and `nextcloud-data/`. The config directory contains `config.php`.
-
-```bash
-# Verify config.php is on NFS
+# Verify config.php is on NFS via symlink
 kubectl exec -n ${NAMESPACE} -it ${POD} -c nextcloud -- ls -la /var/www/html/config/
 ```
 
-**Expected result:** `/var/www/html/config` is a symlink pointing to `/mnt/nfs/nextcloud-config`. `config.php` is present.
+**Expected result:**
+- `/mnt/nfs/nextcloud-config/` and `/mnt/nfs/nextcloud-data/` directories exist.
+- `/var/www/html/config` is a symlink to `/mnt/nfs/nextcloud-config`.
+- `config.php` is present in the NFS config directory.
+
+### Step 5.5 — View Cloud SQL Auth Proxy Logs
+
+```bash
+kubectl logs -n ${NAMESPACE} ${POD} -c cloudsql-proxy --tail=20
+```
+
+**Expected result:** Auth Proxy startup and connection accept messages. The proxy listens on `127.0.0.1:3306` (the `MYSQL_HOST` value in the Nextcloud container).
 
 ---
 
 ## Phase 6 — Administration [MANUAL]
 
-### Step 6.1 — Access Administration Settings
-
-1. Log in as admin.
-2. Click username (top-right) → **Administration settings**.
-
-**Expected result:** Administration panel with Overview, Basic settings, Security sections.
-
-### Step 6.2 — Create a User
-
-1. Navigate to **Users**.
-2. Click **New user** and create `testuser`.
-
-**Expected result:** User created and listed.
-
-### Step 6.3 — Run an OCC Command via kubectl exec
+### Step 6.1 — Run OCC Commands
 
 ```bash
-kubectl exec -n ${NAMESPACE} -it ${POD} -c nextcloud -- \
-  php occ status
+POD=$(kubectl get pods -n ${NAMESPACE} -o name | grep nextcloud | head -1)
+
+# Check installation status
+kubectl exec -n ${NAMESPACE} -it ${POD} -c nextcloud -- php occ status
 ```
 
-**Expected result:** Nextcloud installation status output:
+**Expected result:**
 ```
   - installed: true
   - version: 30.0.x
-  - versionstring: 30.0.x
   - edition: Community
 ```
 
-### Step 6.4 — List Enabled Apps via OCC
+### Step 6.2 — List Enabled Apps
 
 ```bash
 kubectl exec -n ${NAMESPACE} -it ${POD} -c nextcloud -- \
-  php occ app:list --enabled 2>&1 | head -30
+  php occ app:list --enabled 2>&1 | head -20
 ```
 
-**Expected result:** List of enabled Nextcloud apps including `files`, `calendar`, `contacts`.
+**Expected result:** Enabled apps including `files`, `calendar`, `contacts`.
+
+### Step 6.3 — Add Missing Database Indices (Maintenance)
+
+```bash
+kubectl exec -n ${NAMESPACE} -it ${POD} -c nextcloud -- \
+  php occ db:add-missing-indices
+```
+
+**Expected result:** Index check completes. New indices are added if missing.
+
+### Step 6.4 — Create a User via OCC
+
+```bash
+kubectl exec -n ${NAMESPACE} -it ${POD} -c nextcloud -- \
+  php occ user:add --password-from-env occuser
+```
+
+> Note: Set `OC_PASS` environment variable first:
+```bash
+kubectl exec -n ${NAMESPACE} -it ${POD} -c nextcloud -- \
+  env OC_PASS=MySecurePassword123 php occ user:add --password-from-env occuser
+```
+
+**Expected result:** User `occuser` created and visible in the Nextcloud Users panel.
 
 ---
 
 ## Phase 7 — Explore Cloud Logging [MANUAL]
 
-### Step 7.1 — View Nextcloud Pod Logs in Cloud Logging
+### Step 7.1 — View Nextcloud Pod Logs
 
 Navigate to **Cloud Console > Logging > Logs Explorer**:
 
@@ -425,7 +421,7 @@ resource.labels.container_name="nextcloud"
 **gcloud equivalent:**
 ```bash
 gcloud logging read \
-  'resource.type="k8s_container" AND resource.labels.cluster_name="'${CLUSTER}'" AND resource.labels.namespace_name="'${NAMESPACE}'"' \
+  'resource.type="k8s_container" AND resource.labels.cluster_name="'${CLUSTER}'" AND resource.labels.namespace_name="'${NAMESPACE}'" AND resource.labels.container_name="nextcloud"' \
   --project=${PROJECT} \
   --limit=50 \
   --format="table(timestamp, textPayload)"
@@ -444,7 +440,11 @@ curl -X POST \
   }'
 ```
 
-**Expected result:** Nextcloud startup and runtime logs.
+**Expected result:** Startup logs including:
+- `Nextcloud Container Startup`
+- `NFS mount detected at /mnt/nfs`
+- `MYSQL_HOST set from DB_HOST: 127.0.0.1`
+- `OVERWRITECLIURL` and `NEXTCLOUD_TRUSTED_DOMAINS` values
 
 ### Step 7.2 — View db-init Job Logs
 
@@ -456,7 +456,12 @@ gcloud logging read \
   --format="table(timestamp, textPayload)"
 ```
 
-**Expected result:** Database initialisation log messages from `db-init.sh`.
+**Expected result:**
+- `✓ MySQL is ready`
+- `✓ Database created`
+- `✓ User created with privileges`
+- `✓ Nextcloud database initialization complete`
+- `✓ Cloud SQL Proxy shutdown signal sent`
 
 ### Step 7.3 — Filter for Errors
 
@@ -466,7 +471,7 @@ resource.labels.namespace_name="${NAMESPACE}"
 severity>=WARNING
 ```
 
-**Expected result:** Under normal operation, no warnings appear after initial startup.
+**Expected result:** No warnings under normal operation.
 
 ---
 
@@ -475,7 +480,7 @@ severity>=WARNING
 ### Step 8.1 — Query the OCS API
 
 ```bash
-# List all installed apps
+# List installed apps
 curl -s \
   -u "${ADMIN_USER}:${ADMIN_PASS}" \
   -H "OCS-APIREQUEST: true" \
@@ -493,31 +498,31 @@ curl -s \
   | jq '.ocs.data.users[]'
 ```
 
-**Expected result:** Array containing `admin` and `testuser`.
+**Expected result:** Array of users including `admin`, `testuser`, `occuser`.
 
-### Step 8.3 — Check Storage Usage
+### Step 8.3 — Get Server Capabilities
 
 ```bash
 curl -s \
   -u "${ADMIN_USER}:${ADMIN_PASS}" \
   -H "OCS-APIREQUEST: true" \
-  "${SERVICE_URL}/ocs/v1.php/cloud/users/${ADMIN_USER}?format=json" \
-  | jq '.ocs.data | {quota, used: .quota.used}'
+  "${SERVICE_URL}/ocs/v1.php/cloud/capabilities?format=json" \
+  | jq '.ocs.data.capabilities | keys[]'
 ```
 
-**Expected result:** Quota and used storage for the admin user.
+**Expected result:** List of enabled Nextcloud capability modules.
 
 ---
 
 ## Phase 9 — Undeploy [AUTOMATED]
 
-When finished, return to the RAD UI, navigate to your deployment, and click **Undeploy**.
+When finished, return to the RAD UI and click **Undeploy**.
 
 **Approximate undeploy duration:** 20–30 minutes.
 
-> **Warning:** This permanently deletes all resources including the database, NFS volume, and all uploaded files. Export important data before undeploying: Administration settings > Export.
+> **Warning:** Undeploy permanently deletes the database, NFS volume, and all uploaded files. Export important data before undeploying: Administration settings > Export.
 
-Resources provisioned by the `Services_GCP` module (VPC, GKE cluster, Cloud SQL instance) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by `Services GCP` (VPC, GKE cluster, Cloud SQL instance) must be undeployed separately.
 
 ---
 
@@ -525,21 +530,22 @@ Resources provisioned by the `Services_GCP` module (VPC, GKE cluster, Cloud SQL 
 
 | Action | Phase | Automated |
 |---|---|---|
-| GKE Autopilot cluster preparation | 1 | Yes |
+| GKE Autopilot namespace and workload | 1 | Yes |
 | Cloud SQL MySQL 8.0 (utf8mb4) | 1 | Yes |
 | Cloud Filestore NFS mount | 1 | Yes |
 | Secret Manager credentials | 1 | Yes |
-| Workload Identity and IAM bindings | 1 | Yes |
+| Workload Identity and IAM | 1 | Yes |
 | Cloud Build image pipeline | 1 | Yes |
 | Configure kubectl | 1 | No |
-| Get external IP and confirm Nextcloud reachable | 2 | No |
-| Retrieve admin credentials from Secret Manager | 2 | No |
-| Log in to Nextcloud | 2 | No |
-| Upload files and test WebDAV | 3 | No |
-| Install Calendar and Contacts apps | 4 | No |
-| Verify app persistence across pod restarts | 4 | No |
-| Inspect pods, HPA, PDB, NFS volume | 5 | No |
+| Get external IP | 2 | No |
+| Confirm `/status.php` response | 2 | No |
+| Retrieve admin credentials | 2 | No |
+| Log in and explore Files | 3 | No |
+| Test WebDAV upload and listing | 3 | No |
+| Install Calendar and Contacts | 4 | No |
+| Verify persistence after pod restart | 4 | No |
+| Inspect pods, HPA, PDB, NFS symlink | 5 | No |
 | Run occ commands via kubectl exec | 6 | No |
 | Review Cloud Logging | 7 | No |
-| Query the OCS API | 8 | No |
+| Query OCS API | 8 | No |
 | Undeploy infrastructure | 9 | Yes |

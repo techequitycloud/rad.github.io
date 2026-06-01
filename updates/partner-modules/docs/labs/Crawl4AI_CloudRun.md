@@ -42,8 +42,8 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 ## Prerequisites
 
 1. A GCP project with billing enabled.
-2. The `Services_GCP` module deployed in the same project (provides VPC).
-3. The following APIs enabled (Services_GCP handles this):
+2. The `Services GCP` module deployed in the same project (provides VPC).
+3. The following APIs enabled (Services GCP handles this):
    - `run.googleapis.com`
    - `secretmanager.googleapis.com`
    - `artifactregistry.googleapis.com`
@@ -76,6 +76,8 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 
 ### Step 1.2 — Initiate Deployment
 
+Deployment is initiated from the RAD UI. Fill in the variables form and click **Deploy**.
+
 **Approximate deployment durations:**
 
 | Phase | Duration |
@@ -86,9 +88,12 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 
 ### Step 1.3 — Record Outputs
 
+After deployment completes, set shell variables for use in later steps:
+
 ```bash
 export PROJECT="your-gcp-project-id"
 export REGION="us-central1"
+export TOKEN=$(gcloud auth print-access-token)
 
 export SERVICE=$(gcloud run services list \
   --project=${PROJECT} \
@@ -104,6 +109,13 @@ export SERVICE_URL=$(gcloud run services describe ${SERVICE} \
 echo "Crawl4AI URL: ${SERVICE_URL}"
 ```
 
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer ${TOKEN}" \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services" \
+  | jq '.services[] | select(.name | contains("crawl4ai")) | {name: .name, url: .uri}'
+```
+
 ---
 
 ## Phase 2 — Access the Application [MANUAL]
@@ -112,6 +124,20 @@ echo "Crawl4AI URL: ${SERVICE_URL}"
 
 ```bash
 curl -s "${SERVICE_URL}/health" | jq .
+```
+
+**gcloud equivalent:**
+```bash
+gcloud run services describe ${SERVICE} \
+  --region=${REGION} \
+  --project=${PROJECT} \
+  --format="value(status.url)"
+```
+
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer ${TOKEN}" \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}"
 ```
 
 **Expected result:**
@@ -125,7 +151,7 @@ If you see a timeout on the first request, supervisord is still booting Redis an
 
 Navigate to `${SERVICE_URL}/playground` in a browser.
 
-**Expected result:** The Crawl4AI playground UI loads with fields for URL input, crawl options, and a result viewer.
+**Expected result:** The Crawl4AI playground UI loads with fields for URL input, crawl options, and a result viewer. No login is required by default.
 
 ### Step 2.3 — Inspect the Cloud Run Service
 
@@ -135,13 +161,22 @@ gcloud run services describe ${SERVICE} \
   --project=${PROJECT}
 ```
 
-**Expected result:** Service status shows `Ready` with Gen2 execution environment, resource limits, and VPC egress setting `ALL_TRAFFIC`.
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer ${TOKEN}" \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}" \
+  | jq '{name: .name, uri: .uri, generation: .generation, executionEnvironment: .template.executionEnvironment}'
+```
+
+**Expected result:** Service status shows `Ready` with Gen2 execution environment, resource limits (`cpu: "4000m"`, `memory: "8Gi"`), and VPC egress setting `ALL_TRAFFIC`.
 
 ---
 
 ## Phase 3 — Submit Crawl Jobs [MANUAL]
 
 ### Step 3.1 — Synchronous Crawl (Simple)
+
+The `/crawl/sync` endpoint blocks until the crawl completes and returns the result directly.
 
 ```bash
 curl -X POST "${SERVICE_URL}/crawl/sync" \
@@ -154,9 +189,21 @@ curl -X POST "${SERVICE_URL}/crawl/sync" \
   }' | jq '.result.markdown | length'
 ```
 
-**Expected result:** A positive integer (number of characters in the extracted Markdown).
+**REST API equivalent (using Cloud Run URL):**
+```bash
+curl -s -X POST \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  "${SERVICE_URL}/crawl/sync" \
+  -d '{"urls":["https://example.com"],"crawler_params":{"headless":true}}' \
+  | jq '.result.markdown | length'
+```
+
+**Expected result:** A positive integer (number of characters in the extracted Markdown). Typically 2000–5000 characters for a simple HTML page.
 
 ### Step 3.2 — Asynchronous Crawl (Batch)
+
+For longer crawls, submit asynchronously and poll for completion.
 
 ```bash
 # Submit async crawl job
@@ -175,9 +222,11 @@ sleep 10
 curl -s "${SERVICE_URL}/task/${TASK_ID}" | jq '{status: .status, markdown_length: (.result.markdown | length)}'
 ```
 
-**Expected result:** Task status transitions from `processing` to `completed` with Markdown content extracted from the Wikipedia article.
+**Expected result:** Task status transitions from `processing` to `completed` with Markdown content extracted from the Wikipedia article. The task ID is stored in the embedded Redis instance for up to `redis_task_ttl_seconds` seconds.
 
 ### Step 3.3 — CSS Selector Extraction
+
+Extract structured content using CSS selectors.
 
 ```bash
 curl -X POST "${SERVICE_URL}/crawl/sync" \
@@ -191,7 +240,34 @@ curl -X POST "${SERVICE_URL}/crawl/sync" \
   }' | jq '.result.extracted_content[:500]'
 ```
 
-**Expected result:** A list of Hacker News post titles extracted via CSS selector.
+**Expected result:** A list of Hacker News post titles extracted via CSS selector, returned as a JSON string.
+
+### Step 3.4 — Multi-URL Batch Crawl
+
+Submit multiple URLs in a single asynchronous job.
+
+```bash
+TASK_ID=$(curl -s -X POST "${SERVICE_URL}/crawl" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "urls": [
+      "https://example.com",
+      "https://example.org"
+    ],
+    "crawler_params": {
+      "headless": true,
+      "wait_for": "load"
+    }
+  }' | jq -r '.task_id')
+
+echo "Batch Task ID: ${TASK_ID}"
+
+sleep 15
+curl -s "${SERVICE_URL}/task/${TASK_ID}" \
+  | jq '{status: .status, results_count: (.results | length)}'
+```
+
+**Expected result:** Status transitions to `completed` with a `results` array containing one entry per URL.
 
 ---
 
@@ -207,7 +283,20 @@ gcloud logging read \
   --format="table(timestamp, textPayload)"
 ```
 
-**Expected result:** Supervisord startup logs appear (Redis start, Gunicorn start), followed by Crawl4AI request logs.
+**REST API equivalent:**
+```bash
+curl -X POST \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  "https://logging.googleapis.com/v2/entries:list" \
+  -d '{
+    "projectIds": ["'"${PROJECT}"'"],
+    "filter": "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"'"${SERVICE}"'\"",
+    "pageSize": 30
+  }'
+```
+
+**Expected result:** Supervisord startup logs appear (Redis start, Gunicorn start), followed by Crawl4AI request logs showing crawled URLs, browser session durations, and extraction results.
 
 ### Step 4.2 — Filter for Errors
 
@@ -218,7 +307,7 @@ gcloud logging read \
   --limit=20
 ```
 
-**Expected result:** Under normal operation, no errors appear. Memory warnings may appear during high-concurrency Chromium sessions — increase `memory_limit` if these are frequent.
+**Expected result:** Under normal operation, no errors appear. Memory warnings may appear during high-concurrency Chromium sessions — increase `memory_limit` if these are frequent. Browser launch failures indicate insufficient CPU or memory.
 
 ---
 
@@ -233,7 +322,14 @@ gcloud run revisions list \
   --project=${PROJECT}
 ```
 
-**Expected result:** A list of revisions. The most recent revision serves 100% of traffic.
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer ${TOKEN}" \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}/revisions" \
+  | jq '.revisions[] | {name: .name, createTime: .createTime, conditions: .conditions[0].state}'
+```
+
+**Expected result:** A list of revisions. The most recent revision serves 100% of traffic. Each revision shows the image digest, resource limits, and service account.
 
 ### Step 5.2 — Check Scaling Behaviour
 
@@ -247,15 +343,26 @@ for i in 1 2 3; do
 done
 wait
 
-# Check instance count
+# Check instance count via Cloud Monitoring
 gcloud monitoring time-series list \
   --filter='metric.type="run.googleapis.com/container/instance_count" AND resource.labels.service_name="'${SERVICE}'"' \
   --project=${PROJECT}
 ```
 
-**Expected result:** Cloud Run maintains at least 1 instance (`min_instance_count = 1`) and may scale up for concurrent crawl requests.
+**Expected result:** Cloud Run maintains at least 1 instance (`min_instance_count = 1`) and may scale up for concurrent crawl requests. Each Chromium browser session consumes approximately 500 MB RAM — with 8 Gi per instance, approximately 10–12 concurrent sessions are possible before scale-out.
 
-### Step 5.3 — Review Uptime Check
+### Step 5.3 — Verify Gen2 Execution Environment
+
+```bash
+gcloud run services describe ${SERVICE} \
+  --region=${REGION} \
+  --project=${PROJECT} \
+  --format="json" | jq '.spec.template.metadata.annotations["run.googleapis.com/execution-environment"]'
+```
+
+**Expected result:** `"gen2"`. Gen2 is required for supervisord's process management model. Gen1 does not support running multiple processes inside the container.
+
+### Step 5.4 — Review Uptime Check
 
 Navigate to **Monitoring > Uptime checks** in the Cloud Console.
 
@@ -284,11 +391,14 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Note service URL from RAD UI | 1 | No |
 | Confirm Crawl4AI is reachable | 2 | No |
 | Open playground UI | 2 | No |
+| Inspect Cloud Run service | 2 | No |
 | Submit synchronous crawl jobs | 3 | No |
 | Submit asynchronous crawl jobs | 3 | No |
 | CSS selector extraction | 3 | No |
+| Multi-URL batch crawl | 3 | No |
 | Review Cloud Logging | 4 | No |
 | Examine revisions | 5 | No |
 | Check scaling behaviour | 5 | No |
+| Verify Gen2 environment | 5 | No |
 | Review uptime checks | 5 | No |
 | Undeploy infrastructure | 6 | Yes |

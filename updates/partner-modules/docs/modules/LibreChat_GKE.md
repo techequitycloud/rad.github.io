@@ -6,9 +6,9 @@ This document provides a comprehensive reference for the `modules/LibreChat_GKE`
 
 ## 1. Module Overview
 
-`LibreChat_GKE` deploys LibreChat — the open-source AI chat interface — on **GKE Autopilot** with Kubernetes-native scaling, Workload Identity IAM, and the full Foundation Module (`App_GKE`) infrastructure stack.
+`LibreChat GKE` deploys LibreChat — the open-source AI chat interface — on **GKE Autopilot** with Kubernetes-native scaling, Workload Identity IAM, and the full Foundation Module (`App GKE`) infrastructure stack.
 
-**Key differences from `LibreChat_CloudRun`:**
+**Key differences from `LibreChat CloudRun`:**
 - Runs as a **Kubernetes Deployment** (or StatefulSet when PVC is enabled) instead of Cloud Run.
 - Uses the **GCS Fuse CSI driver** for storage mounts instead of Cloud Run volume mounts.
 - **Horizontal Pod Autoscaler (HPA)** replaces Cloud Run's built-in scaling.
@@ -17,7 +17,7 @@ This document provides a comprehensive reference for the `modules/LibreChat_GKE`
 - `credit_cost` defaults to `150` (vs `50` for Cloud Run) due to the GKE cluster requirements.
 
 **GCP Services deployed:**
-- GKE Autopilot cluster (via `Services_GCP`)
+- GKE Autopilot cluster (via `Services GCP`)
 - Kubernetes Deployments / StatefulSets
 - Kubernetes Services (LoadBalancer / ClusterIP)
 - Artifact Registry
@@ -31,13 +31,13 @@ This document provides a comprehensive reference for the `modules/LibreChat_GKE`
 - Binary Authorization (optional)
 - VPC Service Controls (optional)
 
-**MongoDB note:** LibreChat uses **MongoDB**. No Cloud SQL instance is provisioned (`database_type = "NONE"`). `LibreChat_Common` auto-provisions Firestore with MongoDB compatibility when no `mongodb_uri` is supplied.
+**MongoDB note:** LibreChat uses **MongoDB**. No Cloud SQL instance is provisioned (`database_type = "NONE"`). `LibreChat Common` auto-provisions Firestore with MongoDB compatibility when no `mongodb_uri` is supplied.
 
 ---
 
 ## 2. Prerequisites
 
-1. **Services_GCP** deployed in the same GCP project (provides GKE Autopilot cluster, VPC, NFS server).
+1. **Services GCP** deployed in the same GCP project (provides GKE Autopilot cluster, VPC, NFS server).
 2. **MongoDB** — MongoDB Atlas, self-hosted, or Firestore auto-provisioned by the module.
 3. **Redis** (recommended) — Cloud Memorystore for Redis or existing Redis instance accessible from the GKE cluster's VPC.
 
@@ -61,7 +61,7 @@ This document provides a comprehensive reference for the `modules/LibreChat_GKE`
 
 ### B. MongoDB Database
 
-Same as `LibreChat_CloudRun` — see [LibreChat_CloudRun §3.B](./LibreChat_CloudRun.md#b-mongodb-database) for the full connection modes reference.
+Same as `LibreChat CloudRun` — see [LibreChat CloudRun §3.B](./LibreChat_CloudRun.md#b-mongodb-database) for the full connection modes reference.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -106,7 +106,7 @@ Same as `LibreChat_CloudRun` — see [LibreChat_CloudRun §3.B](./LibreChat_Clou
 
 ### A. StatefulSet and Persistent Volumes
 
-Unlike `LibreChat_CloudRun`, the GKE variant supports persistent PVCs:
+Unlike `LibreChat CloudRun`, the GKE variant supports persistent PVCs:
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -119,13 +119,13 @@ Unlike `LibreChat_CloudRun`, the GKE variant supports persistent PVCs:
 
 ### B. Horizontal Pod Autoscaler
 
-HPA is configured via `min_instance_count` and `max_instance_count`. The Foundation Module (`App_GKE`) manages the HPA resource. LibreChat scales well horizontally when Redis is enabled for session management.
+HPA is configured via `min_instance_count` and `max_instance_count`. The Foundation Module (`App GKE`) manages the HPA resource. LibreChat scales well horizontally when Redis is enabled for session management.
 
 ---
 
 ## 5. Advanced Security
 
-Identical to `LibreChat_CloudRun` for Cloud Armor, IAP, Binary Authorization, and VPC Service Controls. See [LibreChat_CloudRun §4](./LibreChat_CloudRun.md#4-advanced-security).
+Identical to `LibreChat CloudRun` for Cloud Armor, IAP, Binary Authorization, and VPC Service Controls. See [LibreChat CloudRun §4](./LibreChat_CloudRun.md#4-advanced-security).
 
 **Workload Identity:** The GKE variant uses Workload Identity instead of direct service account bindings. The Kubernetes service account is annotated with the GCP SA email, and the GCP SA is granted `iam.workloadIdentityUser` on the Kubernetes SA.
 
@@ -133,7 +133,7 @@ Identical to `LibreChat_CloudRun` for Cloud Armor, IAP, Binary Authorization, an
 
 ## 6. Redis Integration
 
-Same as `LibreChat_CloudRun`. Redis is **strongly recommended** for GKE deployments because pod restarts and rescheduling are more frequent than Cloud Run revisions, making session persistence more critical.
+Same as `LibreChat CloudRun`. Redis is **strongly recommended** for GKE deployments because pod restarts and rescheduling are more frequent than Cloud Run revisions, making session persistence more critical.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -146,7 +146,7 @@ Same as `LibreChat_CloudRun`. Redis is **strongly recommended** for GKE deployme
 
 ## 7. CI/CD & Delivery
 
-Same variables as `LibreChat_CloudRun`. See [LibreChat_CloudRun §6](./LibreChat_CloudRun.md#6-cicd--delivery).
+Same variables as `LibreChat CloudRun`. See [LibreChat CloudRun §6](./LibreChat_CloudRun.md#6-cicd--delivery).
 
 ---
 
@@ -168,7 +168,7 @@ Same variables as `LibreChat_CloudRun`. See [LibreChat_CloudRun §6](./LibreChat
 | **MongoDB only** | `database_type = "NONE"` — no Cloud SQL is provisioned. |
 | **Firestore auto-provisioning** | ENTERPRISE Firestore DB created when no `mongodb_uri` or `firestore_mongodb_host` is set. Never deleted on destroy. |
 | **SCRAM user init job** | Auto-injected initialization job creates/updates MongoDB SCRAM user in Firestore. |
-| **JWT/credential secrets** | `CREDS_KEY`, `CREDS_IV`, `JWT_SECRET`, `JWT_REFRESH_SECRET` auto-generated by `LibreChat_Common`. |
+| **JWT/credential secrets** | `CREDS_KEY`, `CREDS_IV`, `JWT_SECRET`, `JWT_REFRESH_SECRET` auto-generated by `LibreChat Common`. |
 | **Session affinity** | `ClientIP` session affinity set by default in the Kubernetes Service for WebSocket continuity. |
 | **GCS Fuse CSI** | File uploads use GCS Fuse CSI driver mounted at `/uploads`. |
 | **Workload Identity** | GKE SA annotated and bound via Workload Identity instead of direct SA binding. |
@@ -212,4 +212,4 @@ Same variables as `LibreChat_CloudRun`. See [LibreChat_CloudRun §6](./LibreChat
 
 ## Destroying Resources
 
-GKE Autopilot node pools and Kubernetes resources may take 5–10 minutes to fully terminate. The GKE cluster itself is managed by `Services_GCP` and must be destroyed separately.
+GKE Autopilot node pools and Kubernetes resources may take 5–10 minutes to fully terminate. The GKE cluster itself is managed by `Services GCP` and must be destroyed separately.

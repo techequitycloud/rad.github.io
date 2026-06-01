@@ -81,7 +81,7 @@ export DB_SECRET=$(gcloud secrets list \
 | gcloud CLI | Authenticated (`gcloud auth application-default login`) |
 | kubectl | Installed and available on `$PATH` |
 | GCP project | Billing enabled |
-| Services_GCP | Must be deployed first — provides VPC, Cloud SQL instance, Filestore, and GKE cluster |
+| Services GCP | Must be deployed first — provides VPC, Cloud SQL instance, Filestore, and GKE cluster |
 | RAD UI access | Permission to deploy modules in the target GCP project |
 | Service account | `roles/owner` on the target project (or a tightly scoped equivalent) |
 
@@ -91,11 +91,11 @@ export DB_SECRET=$(gcloud secrets list \
 
 ### Step 1.1 — Configure Variables
 
-In the RAD UI, open the Wordpress_GKE module and fill in the deployment form. The table below covers the key variables you are likely to customise.
+In the RAD UI, open the Wordpress GKE module and fill in the deployment form. The table below covers the key variables you are likely to customise.
 
 | Variable | Default | Description |
 |---|---|---|
-| `project_id` | _(required)_ | GCP project ID. Must match the project where Services_GCP is deployed. |
+| `project_id` | _(required)_ | GCP project ID. Must match the project where Services GCP is deployed. |
 | `deployment_id` | _(auto-generated)_ | Short suffix appended to all resource names. Leave empty to auto-generate. |
 | `region` | `"us-central1"` | GCP region for all resources. |
 | `tenant_deployment_id` | `"demo"` | Short environment label (e.g. `"prod"`, `"dev"`). |
@@ -160,7 +160,7 @@ Run the shell variable setup block from the CLI and REST API Overview section ab
 
 ### Step 2.1 — Get Cluster Credentials
 
-Auto-discover the GKE cluster managed by Services_GCP:
+Auto-discover the GKE cluster managed by Services GCP:
 
 ```bash
 # List all clusters in the project
@@ -575,7 +575,7 @@ When you have finished the lab, return to the RAD UI, navigate to your deploymen
 
 **Typical duration:** 10–20 minutes
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

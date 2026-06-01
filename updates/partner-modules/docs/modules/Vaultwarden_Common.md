@@ -1,6 +1,6 @@
-# Vaultwarden_Common Shared Configuration Module
+# Vaultwarden Common Shared Configuration Module
 
-The `Vaultwarden_Common` module defines the Vaultwarden password manager configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates no GCP resources and produces `config` and `storage_buckets` outputs consumed by platform-specific wrapper modules (`Vaultwarden_CloudRun` and `Vaultwarden_GKE`).
+The `Vaultwarden Common` module defines the Vaultwarden password manager configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates no GCP resources and produces `config` and `storage_buckets` outputs consumed by platform-specific wrapper modules (`Vaultwarden CloudRun` and `Vaultwarden GKE`).
 
 ## 1. Overview
 
@@ -25,7 +25,7 @@ Layer 2: Platform Modules
 **Key characteristics**:
 - Supports **both PostgreSQL 15 (default) and MySQL 8.0** — detected automatically via `database_type` regex matching.
 - Creates **no GCP resources** — no Secret Manager secrets, no IAM bindings.
-- Application-specific environment variables (`ROCKET_PORT`, `SIGNUPS_ALLOWED`, `DATA_FOLDER`, `DOMAIN`) are **injected by the wrapper modules** (`vaultwarden.tf`), not by `Vaultwarden_Common`.
+- Application-specific environment variables (`ROCKET_PORT`, `SIGNUPS_ALLOWED`, `DATA_FOLDER`, `DOMAIN`) are **injected by the wrapper modules** (`vaultwarden.tf`), not by `Vaultwarden Common`.
 - Health probes target `/alive` — Vaultwarden's dedicated lightweight health endpoint.
 
 ---
@@ -123,7 +123,7 @@ Vaultwarden starts quickly as a compiled Rust binary, so the probe delays are sh
 
 ## 5. Initialization Job
 
-`Vaultwarden_Common` detects the database engine from `database_type` and supplies an appropriate `db-init` job:
+`Vaultwarden Common` detects the database engine from `database_type` and supplies an appropriate `db-init` job:
 
 | `database_type` | Job Image | Description |
 |---|---|---|
@@ -159,7 +159,7 @@ Database initialisation script. Creates the Vaultwarden database and user, grant
 
 ## 7. Platform-Specific Differences
 
-| Aspect | Vaultwarden_CloudRun | Vaultwarden_GKE |
+| Aspect | Vaultwarden CloudRun | Vaultwarden GKE |
 |---|---|---|
 | `workload_type` | Cloud Run service | StatefulSet (default) |
 | `DATA_FOLDER` | `/data` (injected by wrapper) | `/data` (PVC mount at `/data`) |

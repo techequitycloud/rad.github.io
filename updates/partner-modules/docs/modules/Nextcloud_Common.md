@@ -1,12 +1,12 @@
-# Nextcloud_Common
+# Nextcloud Common
 
-> Internal configuration module shared between Nextcloud_CloudRun and Nextcloud_GKE.
+> Internal configuration module shared between Nextcloud CloudRun and Nextcloud GKE.
 
 ## Overview
 
-`Nextcloud_Common` is an **internal configuration module** shared between `Nextcloud_CloudRun` and `Nextcloud_GKE`. It centralises all Nextcloud-specific configuration — custom container image, MySQL 8.0 database setup, environment variable mapping, health probes, PHP runtime settings, and the default database initialisation job — in a single module consumed by both Cloud Run and GKE deployments.
+`Nextcloud Common` is an **internal configuration module** shared between `Nextcloud CloudRun` and `Nextcloud GKE`. It centralises all Nextcloud-specific configuration — custom container image, MySQL 8.0 database setup, environment variable mapping, health probes, PHP runtime settings, and the default database initialisation job — in a single module consumed by both Cloud Run and GKE deployments.
 
-This module creates **one GCP resource**: a Secret Manager secret for the Nextcloud admin password. All other GCP infrastructure provisioning (Cloud SQL, NFS, VPC, Artifact Registry, IAM) is performed by the platform modules (`App_CloudRun`, `App_GKE`) that consume its outputs. It is called automatically by the application modules — **it is not deployed directly by end users**.
+This module creates **one GCP resource**: a Secret Manager secret for the Nextcloud admin password. All other GCP infrastructure provisioning (Cloud SQL, NFS, VPC, Artifact Registry, IAM) is performed by the platform modules (`App CloudRun`, `App GKE`) that consume its outputs. It is called automatically by the application modules — **it is not deployed directly by end users**.
 
 **Nextcloud-specific characteristics:**
 - Requires **MySQL 8.0** with `utf8mb4` character set and `utf8mb4_general_ci` collation.
@@ -52,7 +52,7 @@ This module creates **one GCP resource**: a Secret Manager secret for the Nextcl
 
 ## Environment Variables Configured
 
-`Nextcloud_Common` builds the `environment_variables` map with:
+`Nextcloud Common` builds the `environment_variables` map with:
 
 | Variable | Value | Condition |
 |---|---|---|
@@ -78,13 +78,13 @@ The `entrypoint.sh` script runs before the official Nextcloud entrypoint and han
 2. **MySQL readiness wait** — Probes `MYSQL_HOST:MYSQL_PORT` via `/dev/tcp` for up to 60 seconds (30 × 2s) before proceeding.
 3. **Database bootstrap fallback** — If the `db-init` job has not run or failed, uses `ROOT_PASSWORD` to create the database and user inline. Prefers Unix socket connection (bypassing `caching_sha2_password` requirement) over TCP for root access.
 4. **NFS config/data persistence** — When `/mnt/nfs` is mounted: creates `nextcloud-config/` and `nextcloud-data/` with `www-data` ownership, symlinks `/var/www/html/config` → `/mnt/nfs/nextcloud-config`, and sets `NEXTCLOUD_DATA_DIR=/mnt/nfs/nextcloud-data`. Without this, `config.php` is ephemeral and `occ maintenance:install` re-runs on every restart.
-5. **Runtime URL derivation (Cloud Run only)** — When `CLOUDRUN_SERVICE_URL` is set: derives `OVERWRITECLIURL` and `OVERWRITEHOST` from the URL, and appends the Cloud Run hostname to `NEXTCLOUD_TRUSTED_DOMAINS`. This is more reliable than Terraform-computed values that can diverge when `resource_prefix` in `Nextcloud_Common` differs from the `App_CloudRun` service name across separate applies.
+5. **Runtime URL derivation (Cloud Run only)** — When `CLOUDRUN_SERVICE_URL` is set: derives `OVERWRITECLIURL` and `OVERWRITEHOST` from the URL, and appends the Cloud Run hostname to `NEXTCLOUD_TRUSTED_DOMAINS`. This is more reliable than Terraform-computed values that can diverge when `resource_prefix` in `Nextcloud Common` differs from the `App CloudRun` service name across separate applies.
 
 ---
 
 ## Default Initialization Job
 
-When `initialization_jobs = []` (the default), `Nextcloud_Common` supplies a single default job:
+When `initialization_jobs = []` (the default), `Nextcloud Common` supplies a single default job:
 
 | Field | Value |
 |---|---|
@@ -174,7 +174,7 @@ When `initialization_jobs = []` (the default), `Nextcloud_Common` supplies a sin
 | `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/status.php", initial_delay_seconds=60, timeout_seconds=10, period_seconds=15, failure_threshold=40 }` |
 | `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/status.php", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` |
 
-Note: The startup `failure_threshold` is **40** in `Nextcloud_Common` (vs 20 in `Nextcloud_CloudRun`). The Common module allows 60s + 40×15s = 660s for `occ maintenance:install` to complete on a cold Cloud SQL instance.
+Note: The startup `failure_threshold` is **40** in `Nextcloud Common` (vs 20 in `Nextcloud CloudRun`). The Common module allows 60s + 40×15s = 660s for `occ maintenance:install` to complete on a cold Cloud SQL instance.
 
 ### Jobs
 

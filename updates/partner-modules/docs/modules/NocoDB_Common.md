@@ -6,7 +6,7 @@ This document provides a reference for the `modules/NocoDB_Common` Terraform mod
 
 ## 1. Module Overview
 
-`NocoDB_Common` is the application-specific configuration layer for NocoDB. It is called by both `NocoDB_CloudRun` and `NocoDB_GKE` to produce the standardised `config`, `secret_ids`, `storage_buckets`, and `path` outputs that the Foundation Modules (`App_CloudRun` and `App_GKE`) consume.
+`NocoDB Common` is the application-specific configuration layer for NocoDB. It is called by both `NocoDB CloudRun` and `NocoDB GKE` to produce the standardised `config`, `secret_ids`, `storage_buckets`, and `path` outputs that the Foundation Modules (`App CloudRun` and `App GKE`) consume.
 
 **Responsibilities:**
 *   Defines the NocoDB container configuration: image, version, container port (8080), health probe paths (`/api/v1/health`), and default environment variable structure.
@@ -22,13 +22,13 @@ This document provides a reference for the `modules/NocoDB_Common` Terraform mod
 | `config` | NocoDB application configuration object consumed by Foundation Modules. |
 | `secret_ids` | Map of env var name → Secret Manager secret ID. Empty by default (no app-level secrets auto-generated). |
 | `storage_buckets` | List of GCS bucket configurations including the NocoDB uploads bucket. |
-| `path` | Absolute path to the `NocoDB_Common` module directory (used by Application Modules to resolve `scripts_dir`). |
+| `path` | Absolute path to the `NocoDB Common` module directory (used by Application Modules to resolve `scripts_dir`). |
 
 ---
 
 ## 2. Variables
 
-`NocoDB_Common` variables are internal — they are set by the calling Application Module (`NocoDB_CloudRun` or `NocoDB_GKE`) and are not directly user-configurable.
+`NocoDB Common` variables are internal — they are set by the calling Application Module (`NocoDB CloudRun` or `NocoDB GKE`) and are not directly user-configurable.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -61,7 +61,7 @@ This document provides a reference for the `modules/NocoDB_Common` Terraform mod
 
 ## 3. Application Module Wiring
 
-Application modules use `NocoDB_Common` as follows:
+Application modules use `NocoDB Common` as follows:
 
 ```hcl
 module "nocodb_app" {

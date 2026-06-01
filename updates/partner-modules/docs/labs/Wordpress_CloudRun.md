@@ -70,7 +70,7 @@ export DB_SECRET=$(gcloud secrets list \
 |---|---|
 | gcloud CLI | Authenticated (`gcloud auth application-default login`) |
 | GCP project | Billing enabled |
-| Services_GCP | Must be deployed first — provides VPC, Serverless VPC Access connector, Cloud SQL instance, and optional Filestore |
+| Services GCP | Must be deployed first — provides VPC, Serverless VPC Access connector, Cloud SQL instance, and optional Filestore |
 | Service account | `roles/owner` on the target project (or a tightly scoped equivalent) |
 | RAD UI access | Permission to deploy modules in the target GCP project |
 
@@ -84,7 +84,7 @@ Variables are configured in the RAD UI form before deploying. The table below de
 
 | Variable | Default | Description |
 |---|---|---|
-| `project_id` | _(required)_ | GCP project ID. Must match the project where Services_GCP is deployed. |
+| `project_id` | _(required)_ | GCP project ID. Must match the project where Services GCP is deployed. |
 | `deployment_id` | _(auto-generated)_ | Short suffix appended to all resource names. Leave empty to auto-generate. |
 | `region` | `"us-central1"` | GCP region for all resources. |
 | `tenant_deployment_id` | `"demo"` | Short environment label (e.g. `"prod"`, `"dev"`). |
@@ -521,7 +521,7 @@ When you have finished the lab, return to the RAD UI, navigate to your deploymen
 
 > **Warning:** This permanently deletes the Cloud Run service, Cloud SQL database, GCS buckets, NFS Filestore instance, Artifact Registry images, and all associated secrets. Ensure any data you want to keep has been exported or backed up before undeploying.
 
-Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 

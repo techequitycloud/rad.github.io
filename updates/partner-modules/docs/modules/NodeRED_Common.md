@@ -1,6 +1,6 @@
-# NodeRED_Common Shared Configuration Module
+# NodeRED Common Shared Configuration Module
 
-The `NodeRED_Common` module defines the Node-RED flow-based programming tool for the RAD Modules ecosystem. It produces a `config` output consumed by platform-specific wrapper modules (`NodeRED_CloudRun` and `NodeRED_GKE`), along with a `storage_buckets` output that provisions the application's GCS bucket.
+The `NodeRED Common` module defines the Node-RED flow-based programming tool for the RAD Modules ecosystem. It produces a `config` output consumed by platform-specific wrapper modules (`NodeRED CloudRun` and `NodeRED GKE`), along with a `storage_buckets` output that provisions the application's GCS bucket.
 
 ## 1. Overview
 
@@ -24,18 +24,18 @@ Layer 2: Platform Modules
 Layer 1: App_Common (networking, storage, secrets, IAM)
 ```
 
-**Key differences from other Common modules (e.g. N8N_Common)**:
+**Key differences from other Common modules (e.g. N8N Common)**:
 - No GCP resources are created directly — no Secret Manager secrets, no Cloud SQL databases.
 - Node-RED does not require a relational database; `database_type = "NONE"` is hardcoded in the config output.
 - No initialization jobs are run by default — `initialization_jobs` defaults to an empty list.
-- A credential secret (`NODE_RED_CREDENTIAL_SECRET`) is managed entirely by the Foundation Module (`App_CloudRun` / `App_GKE`) via the `database_password_length` variable, not by this module.
+- A credential secret (`NODE_RED_CREDENTIAL_SECRET`) is managed entirely by the Foundation Module (`App CloudRun` / `App GKE`) via the `database_password_length` variable, not by this module.
 - `NODE_RED_ENABLE_SAFE_MODE = "false"` is always injected, merged with any caller-supplied `environment_variables`.
 
 ---
 
 ## 2. GCP Resources Created
 
-None. `NodeRED_Common` is a pure configuration-composition module. All GCP resource provisioning (secrets, storage, NFS, IAM, container runtime) is delegated to the Foundation Module.
+None. `NodeRED Common` is a pure configuration-composition module. All GCP resource provisioning (secrets, storage, NFS, IAM, container runtime) is delegated to the Foundation Module.
 
 ---
 
@@ -151,14 +151,14 @@ Unlike database-backed applications, Node-RED requires no schema initialisation,
 
 ## 8. Platform-Specific Differences
 
-| Aspect | NodeRED_CloudRun | NodeRED_GKE |
+| Aspect | NodeRED CloudRun | NodeRED GKE |
 |--------|------------------|-------------|
 | `module_env_vars` passed to Foundation | `{}` (empty) | `{}` (empty) |
 | `module_secret_env_vars` passed to Foundation | `{}` (empty — no auto-generated secrets) | `{}` (empty) |
 | `region` source | not passed (Foundation auto-discovers region) | resolved from `module.network_discovery` before being passed |
 | NFS | enabled by default (`enable_nfs = true`, mount at `/data`) | enabled by default (`enable_nfs = true`, mount at `/data`) |
 | Scaling | Serverless; scale-to-zero supported (`min_instance_count = 0`) | Kubernetes Deployment; minimum 1 replica recommended |
-| Credential secret | Managed by App_CloudRun via `database_password_length` | Managed by App_GKE via `database_password_length` |
+| Credential secret | Managed by App CloudRun via `database_password_length` | Managed by App GKE via `database_password_length` |
 
 ---
 

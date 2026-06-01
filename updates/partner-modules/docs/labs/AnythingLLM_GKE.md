@@ -6,33 +6,33 @@
 
 **Estimated time:** 3–4 hours
 
-AnythingLLM is a private AI workspace and Retrieval-Augmented Generation (RAG) platform. This lab deploys AnythingLLM on Google Kubernetes Engine (GKE) Autopilot backed by Cloud SQL PostgreSQL 15, persistent volume storage for vector data, GCS document storage, and Secret Manager for credential management.
+AnythingLLM is a private AI workspace and Retrieval-Augmented Generation (RAG) platform. This lab deploys AnythingLLM on Google Kubernetes Engine (GKE) Autopilot backed by Cloud SQL PostgreSQL 15, persistent StatefulSet volumes for vector store data, GCS document storage, and Secret Manager.
 
 ### What the Module Automates
 
-- GKE Autopilot namespace, Deployment (or StatefulSet), and Kubernetes Service
-- Cloud SQL PostgreSQL 15 instance, database, and user
-- Cloud SQL Auth Proxy sidecar injection
+- GKE Autopilot namespace, StatefulSet (or Deployment), and Kubernetes Service (LoadBalancer)
+- Cloud SQL PostgreSQL 15 instance, database (`anythingllmdb`), and user (`anythingllmuser`)
+- Cloud SQL Auth Proxy sidecar container per pod
 - Secret Manager secrets: `JWT_SECRET`, `AUTH_TOKEN`, `SIG_KEY`, `SIG_SALT`, `DB_PASSWORD`
 - GCS document storage bucket (`<prefix>-anythingllm-docs`)
-- StatefulSet PVC (`20Gi` per pod at `/app/server/storage`) when `stateful_pvc_enabled = true`
+- PVC per pod at `/app/server/storage` (when `stateful_pvc_enabled = true`, default 20 Gi)
 - Artifact Registry repository and Cloud Build image pipeline
 - Workload Identity and IAM bindings
-- Kubernetes Service (LoadBalancer), HPA (min/max replicas)
+- HPA (Horizontal Pod Autoscaler)
 - Cloud Monitoring uptime checks and alert policies
-- `db-init` Kubernetes Job (PostgreSQL database and user creation)
+- `db-init` Kubernetes Job (creates PostgreSQL database and user)
 
 ### What You Do Manually
 
-- Note the deployment outputs (external IP, namespace) from the RAD UI
 - Configure `kubectl` with cluster credentials
-- Confirm AnythingLLM is reachable via the LoadBalancer IP
-- Create an admin account in the AnythingLLM UI
-- Connect an LLM provider
+- Confirm the LoadBalancer external IP and AnythingLLM reachability
+- Create an AnythingLLM admin account
+- Connect an LLM provider in the Settings UI
+- Configure embedding engine and vector database
 - Create workspaces and upload documents
-- Chat with your documents
-- Review logs in Cloud Logging, inspect pods with `kubectl`
-- Scale pods and observe HPA behaviour
+- Chat with documents using AI
+- Inspect Kubernetes resources (pods, PVCs, jobs, HPA)
+- Review logs in Cloud Logging
 
 ---
 
@@ -40,8 +40,8 @@ AnythingLLM is a private AI workspace and Retrieval-Augmented Generation (RAG) p
 
 | Tool | Purpose |
 |---|---|
-| `gcloud` | Retrieve secrets, query GCP resources, view logs |
-| `kubectl` | Inspect pods, deployments, services, and jobs |
+| `gcloud` | Retrieve secrets, query GCP resources |
+| `kubectl` | Inspect pods, deployments, services, PVCs, and jobs |
 
 Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install), [kubectl](https://kubernetes.io/docs/tasks/tools/)
 
@@ -50,15 +50,16 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install), [kubectl
 ## Prerequisites
 
 1. A GCP project with billing enabled.
-2. The `Services_GCP` module deployed in the same project (provides VPC, GKE Autopilot cluster, Cloud SQL instance).
-3. The following APIs enabled (Services_GCP handles this):
+2. The `Services GCP` module deployed in the same project (provides VPC, GKE Autopilot cluster, Cloud SQL instance).
+3. `gcloud` authenticated: `gcloud auth application-default login`
+4. `kubectl` installed and available in PATH.
+5. Access to the RAD UI with permission to deploy modules.
+6. The following APIs enabled:
    - `container.googleapis.com`
    - `sqladmin.googleapis.com`
    - `secretmanager.googleapis.com`
    - `artifactregistry.googleapis.com`
    - `cloudbuild.googleapis.com`
-4. `gcloud` and `kubectl` authenticated and installed.
-5. Access to the RAD UI with permission to deploy modules.
 
 ---
 
@@ -71,25 +72,27 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install), [kubectl
 | `project_id` | Yes | — | GCP project ID |
 | `tenant_deployment_id` | No | `"demo"` | Short identifier for this deployment |
 | `region` | No | `"us-central1"` | GCP region |
-| `application_name` | No | `"anythingllm"` | Base name for resources |
+| `application_name` | No | `"anythingllm"` | Base name for all resources |
 | `application_version` | No | `"latest"` | Container image version |
-| `gke_cluster_name` | No | `""` | GKE cluster name (auto-discovered if empty) |
-| `container_resources` | No | `{ cpu_limit="2000m", memory_limit="4Gi" }` | CPU and memory limits |
+| `gke_cluster_name` | No | `""` | GKE cluster name (auto-discovered) |
+| `namespace_name` | No | `""` | Kubernetes namespace (auto-generated) |
+| `container_resources` | No | `{ cpu_limit="2000m", memory_limit="4Gi" }` | Pod resource limits |
 | `min_instance_count` | No | `1` | Minimum pod replicas |
 | `max_instance_count` | No | `1` | Maximum pod replicas |
-| `workload_type` | No | `null` | `"Deployment"` or `"StatefulSet"` (auto-selects StatefulSet when `stateful_pvc_enabled = true`) |
-| `stateful_pvc_enabled` | No | `null` | Enable persistent PVC per pod for vector store data |
-| `stateful_pvc_size` | No | `"20Gi"` | Storage per pod |
-| `stateful_pvc_mount_path` | No | `"/app/server/storage"` | PVC mount path (AnythingLLM storage directory) |
+| `workload_type` | No | `null` | Auto-selects StatefulSet when `stateful_pvc_enabled = true` |
+| `stateful_pvc_enabled` | No | `null` | Enable per-pod persistent storage for vector data |
+| `stateful_pvc_size` | No | `"20Gi"` | PVC size per pod |
+| `stateful_pvc_mount_path` | No | `"/app/server/storage"` | PVC mount path |
+| `stateful_fs_group` | No | `1000` | fsGroup GID matching AnythingLLM container user |
 | `application_database_name` | No | `"anythingllmdb"` | PostgreSQL database name |
 | `application_database_user` | No | `"anythingllmuser"` | PostgreSQL user |
 | `environment_variables` | No | `{}` | LLM provider settings |
-| `secret_environment_variables` | No | `{}` | LLM API key references |
-| `enable_redis` | No | `false` | Enable Redis (optional) |
-| `enable_nfs` | No | `false` | Enable NFS for shared file storage |
-| `backup_schedule` | No | `"0 2 * * *"` | Backup schedule |
+| `secret_environment_variables` | No | `{}` | LLM API key references in Secret Manager |
+| `backup_schedule` | No | `"0 2 * * *"` | Backup cron schedule (UTC) |
 | `support_users` | No | `[]` | Alert email addresses |
 | `enable_iap` | No | `false` | Enable Identity-Aware Proxy |
+| `enable_pod_disruption_budget` | No | `false` | Create a PodDisruptionBudget |
+| `enable_topology_spread` | No | `false` | Spread pods across zones |
 
 ### Step 1.2 — Initiate Deployment
 
@@ -99,31 +102,34 @@ Click **Deploy** in the RAD UI.
 
 | Phase | Duration |
 |---|---|
-| GKE cluster validation and namespace creation | 2–5 min |
+| GKE namespace and ServiceAccount creation | 2–4 min |
 | Cloud SQL PostgreSQL instance creation | 8–12 min |
 | Secret Manager secrets | 1–2 min |
 | Cloud Build image pipeline | 5–10 min |
 | `db-init` Kubernetes Job | 2–3 min |
-| GKE Deployment/StatefulSet rollout | 3–5 min |
-| **Total** | **21–37 min** |
+| StatefulSet/Deployment rollout (GKE Autopilot provisioning) | 5–10 min |
+| **Total** | **23–41 min** |
 
-> **Note:** If this is the first deployment to a newly created GKE cluster, `kubernetes_ready` may be `false` on the first apply. The CI/CD pipeline will automatically re-run apply to complete the Kubernetes resource deployment.
+> **Note on `kubernetes_ready`:** If deploying to a newly created inline GKE cluster, the first apply sets `kubernetes_ready = false` and skips Kubernetes resource creation. The CI/CD pipeline automatically re-runs apply to complete the deployment once the cluster endpoint is ready.
 
 ### Step 1.3 — Record Outputs
 
 | Output | Description |
 |---|---|
-| `service_url` | External URL or LoadBalancer IP |
-| `service_external_ip` | External static IP (if `reserve_static_ip = true`) |
+| `service_url` | External service URL |
+| `service_external_ip` | Static external IP (if `reserve_static_ip = true`) |
 | `namespace` | Kubernetes namespace |
 | `database_instance_name` | Cloud SQL instance name |
 | `deployment_id` | Unique deployment identifier |
+| `kubernetes_ready` | Whether Kubernetes resources are fully deployed |
 
 Set shell variables:
 
 ```bash
 export PROJECT="your-gcp-project-id"
 export REGION="us-central1"
+
+# Get GKE cluster name
 export CLUSTER=$(gcloud container clusters list \
   --project=${PROJECT} \
   --region=${REGION} \
@@ -135,33 +141,32 @@ gcloud container clusters get-credentials ${CLUSTER} \
   --region=${REGION} \
   --project=${PROJECT}
 
-# Discover the namespace
+# Discover the AnythingLLM namespace
 export NAMESPACE=$(kubectl get namespaces \
-  --output="jsonpath={.items[*].metadata.name}" | tr ' ' '\n' | grep anythingllm | head -1)
+  -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep anythingllm | head -1)
 
-echo "Namespace: ${NAMESPACE}"
 echo "Cluster: ${CLUSTER}"
+echo "Namespace: ${NAMESPACE}"
 ```
 
 ---
 
 ## Phase 2 — Access the Application [MANUAL]
 
-### Step 2.1 — Get the External IP
+### Step 2.1 — Get the LoadBalancer IP
 
 ```bash
-kubectl get service -n ${NAMESPACE} --output=wide
+kubectl get service -n ${NAMESPACE}
 ```
 
-**gcloud equivalent:**
+**REST API equivalent:**
 ```bash
-gcloud compute addresses list \
-  --project=${PROJECT} \
-  --filter="name~anythingllm" \
-  --format="table(name, address, status)"
+curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}/services" \
+  | jq '.items[] | select(.metadata.namespace=="'${NAMESPACE}'")'
 ```
 
-**Expected result:** The Service shows an `EXTERNAL-IP`. Note this address as `ANYTHINGLLM_IP`.
+**Expected result:** The Service shows an `EXTERNAL-IP` value (the static IP if `reserve_static_ip = true`).
 
 ```bash
 export ANYTHINGLLM_IP=$(kubectl get service -n ${NAMESPACE} \
@@ -175,15 +180,23 @@ echo "AnythingLLM IP: ${ANYTHINGLLM_IP}"
 curl -s http://${ANYTHINGLLM_IP}:3001/api/ping
 ```
 
-**Expected result:** `{"online":true}`. If not yet ready, wait 60–90 seconds and retry.
+**Expected result:** `{"online":true}`. If the response is a connection error, AnythingLLM may still be starting up — wait 60–90 seconds and retry.
 
-### Step 2.3 — Inspect the Pod Status
+### Step 2.3 — Inspect Pod Status
 
 ```bash
 kubectl get pods -n ${NAMESPACE} -o wide
 ```
 
-**Expected result:** At least one AnythingLLM pod with status `Running` and all containers `Ready` (2/2 — application + Cloud SQL Auth Proxy sidecar).
+**Expected result:** Pods show `Running` status with `2/2` containers ready (AnythingLLM + Cloud SQL Auth Proxy sidecar).
+
+```bash
+# Describe the first pod
+kubectl describe pod -n ${NAMESPACE} \
+  $(kubectl get pods -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}')
+```
+
+**Expected result:** Pod description shows resource limits (`cpu: 2000m`, `memory: 4Gi`), volume mounts (`/cloudsql`, `/app/server/storage`), and the Auth Proxy container spec.
 
 ---
 
@@ -191,7 +204,7 @@ kubectl get pods -n ${NAMESPACE} -o wide
 
 ### Step 3.1 — Open AnythingLLM
 
-Navigate to `http://${ANYTHINGLLM_IP}:3001` in a browser (or use the custom domain if configured).
+Navigate to `http://${ANYTHINGLLM_IP}:3001` in a browser.
 
 **Expected result:** AnythingLLM setup wizard appears.
 
@@ -200,118 +213,169 @@ Navigate to `http://${ANYTHINGLLM_IP}:3001` in a browser (or use the custom doma
 1. Enter a username and password.
 2. Click **Get started**.
 
-**Expected result:** You are redirected to the main AnythingLLM interface.
+**Expected result:** Main AnythingLLM interface loads showing the workspace list.
 
-### Step 3.3 — Review Auto-Generated Secrets
+### Step 3.3 — Verify Auto-Generated Secrets
 
 ```bash
+# List AnythingLLM secrets
 gcloud secrets list \
   --project=${PROJECT} \
   --filter="name~anythingllm" \
   --format="table(name, createTime)"
 ```
 
-**Expected result:** Four secrets: `jwt-secret`, `auth-token`, `sig-key`, `sig-salt`, plus the database password secret.
+```bash
+# Read the JWT secret length as a sanity check
+JWT=$(gcloud secrets list \
+  --project=${PROJECT} \
+  --filter="name~anythingllm AND name~jwt-secret" \
+  --format="value(name)" --limit=1)
+
+gcloud secrets versions access latest --secret="${JWT}" --project=${PROJECT} | wc -c
+```
+
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets?filter=name%3Aanythingllm"
+```
+
+**Expected result:** Four application secrets plus the database password secret. JWT secret is 32 characters.
 
 ---
 
 ## Phase 4 — Connect an LLM Provider [MANUAL]
 
-### Step 4.1 — Configure LLM in Settings
+### Step 4.1 — Configure LLM Preference
 
-1. Open **Settings** > **AI Providers** > **LLM Preference**.
-2. Select your provider and enter credentials.
-3. Click **Save changes**.
+1. Open **Settings** (gear icon) > **AI Providers** > **LLM Preference**.
+2. Select a provider (e.g., **OpenAI**) and enter your API key.
+3. Choose a model and click **Save changes**.
 
-**Verify env var injection:**
+**Verify the env var:**
 ```bash
-kubectl get pod -n ${NAMESPACE} -o name | head -1 | xargs -I{} \
-  kubectl exec -n ${NAMESPACE} {} -c anythingllm -- env | grep LLM_PROVIDER
+kubectl exec -n ${NAMESPACE} \
+  $(kubectl get pods -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}') \
+  -c anythingllm -- env | grep -E "LLM_PROVIDER|OPENAI|ANTHROPIC"
 ```
 
-### Step 4.2 — Configure Embedding and Vector Database
+**Expected result:** The env var shows your configured provider.
+
+### Step 4.2 — Configure Embedding and Vector DB
 
 1. **Settings** > **AI Providers** > **Embedding Preference**: Select `Native AnythingLLM Embedder`.
 2. **Settings** > **AI Providers** > **Vector Database**: Select `LanceDB`.
-3. Save both settings.
-
-**Expected result:** All three AI provider settings show green indicators.
+3. Save both.
 
 ---
 
-## Phase 5 — Create a Workspace and Upload Documents [MANUAL]
+## Phase 5 — Workspaces and Documents [MANUAL]
 
 ### Step 5.1 — Create a Workspace
 
 1. Click **+ New Workspace** in the sidebar.
-2. Enter a name and click **Create workspace**.
+2. Name it and click **Create workspace**.
 
 ### Step 5.2 — Upload and Embed Documents
 
 1. Click **Upload documents** in the workspace.
-2. Upload one or more PDF or text files.
-3. Wait for the embedding process to complete.
+2. Upload a PDF or text file.
+3. Wait for embedding to complete.
 
-**Expected result:** Documents show "Embedded" status in the workspace.
+**Monitor embedding from the pod:**
+```bash
+kubectl logs -n ${NAMESPACE} \
+  $(kubectl get pods -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}') \
+  -c anythingllm --tail=20 -f
+```
+
+**Expected result:** Log lines show document processing and vector storage operations.
 
 ### Step 5.3 — Chat with Documents
 
-Type a question in the workspace chat and press Enter.
+Type a question in the workspace chat.
 
-**Expected result:** AnythingLLM returns an AI-generated answer with citations from the uploaded documents.
+**Expected result:** AnythingLLM returns an AI-generated response with citations from the uploaded document.
 
 ---
 
-## Phase 6 — Kubernetes Inspection [MANUAL]
+## Phase 6 — Kubernetes Deep Dive [MANUAL]
 
-### Step 6.1 — Describe the Deployment or StatefulSet
-
-```bash
-# Check for StatefulSet (if stateful_pvc_enabled = true)
-kubectl get statefulset -n ${NAMESPACE}
-
-# Or Deployment (if stateful_pvc_enabled = false)
-kubectl get deployment -n ${NAMESPACE}
-```
-
-**Expected result:** The workload shows `1/1` ready replicas.
-
-### Step 6.2 — Inspect Pod Details
+### Step 6.1 — Inspect the StatefulSet
 
 ```bash
-kubectl describe pod -n ${NAMESPACE} $(kubectl get pods -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}')
+kubectl get statefulset -n ${NAMESPACE} -o wide
 ```
 
-**Expected result:** Pod spec shows:
-- Two containers: `anythingllm` and `cloud-sql-proxy`
-- Resource limits: `cpu: 2000m`, `memory: 4Gi`
-- Volume mounts including `/cloudsql` for Auth Proxy
-- If StatefulSet: PVC mount at `/app/server/storage`
+```bash
+kubectl describe statefulset -n ${NAMESPACE} \
+  $(kubectl get statefulsets -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}')
+```
 
-### Step 6.3 — Inspect Persistent Volume Claims
+**Expected result:** StatefulSet shows `1/1` ready replicas. PVC template shows `20Gi` `standard-rwo` storage.
+
+### Step 6.2 — Inspect Persistent Volume Claims
 
 ```bash
 kubectl get pvc -n ${NAMESPACE}
 ```
 
-**Expected result:** If `stateful_pvc_enabled = true`, one or more PVCs named `<prefix>-storage-<pod-name>` with `Bound` status and 20 Gi capacity.
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
+  | jq '.masterAuth.clusterCaCertificate' -r | base64 -d > /tmp/ca.crt
+```
 
-### Step 6.4 — View the db-init Job
+**Expected result:** One PVC per pod with `Bound` status and `20Gi` capacity. The PVC name follows the pattern `<prefix>-storage-<pod-name>`.
+
+### Step 6.3 — Verify Vector Storage in the PVC
+
+```bash
+kubectl exec -n ${NAMESPACE} \
+  $(kubectl get pods -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}') \
+  -c anythingllm -- ls /app/server/storage
+```
+
+**Expected result:** The storage directory contains AnythingLLM's database files, vector store data (LanceDB directory), and uploaded document caches.
+
+### Step 6.4 — Inspect the db-init Job
 
 ```bash
 kubectl get jobs -n ${NAMESPACE}
-kubectl logs -n ${NAMESPACE} job/$(kubectl get jobs -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}' | head -1)
 ```
 
-**Expected result:** Job shows `1/1 Completions`. Logs show successful PostgreSQL user and database creation.
+```bash
+# Get job logs
+JOB=$(kubectl get jobs -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}')
+kubectl logs -n ${NAMESPACE} job/${JOB}
+```
+
+**Expected result:** Job shows `1/1 Completions`. Logs show PostgreSQL database user and database creation.
 
 ### Step 6.5 — Check the HPA
 
 ```bash
 kubectl get hpa -n ${NAMESPACE}
+kubectl describe hpa -n ${NAMESPACE}
 ```
 
-**Expected result:** HPA shows `MINPODS` and `MAXPODS` matching `min_instance_count` and `max_instance_count`.
+**Expected result:** HPA shows `MINPODS: 1`, `MAXPODS: 1`, `REPLICAS: 1`.
+
+### Step 6.6 — Check Workload Identity
+
+```bash
+kubectl get serviceaccount -n ${NAMESPACE}
+```
+
+```bash
+kubectl get serviceaccount -n ${NAMESPACE} \
+  $(kubectl get serviceaccounts -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}') \
+  -o jsonpath='{.metadata.annotations}'
+```
+
+**Expected result:** The Kubernetes ServiceAccount has an `iam.gke.io/gcp-service-account` annotation pointing to the GCP Workload Identity SA.
 
 ---
 
@@ -327,9 +391,21 @@ gcloud logging read \
   --format="table(timestamp, textPayload)"
 ```
 
-**Expected result:** AnythingLLM startup logs showing `Server running on port 3001` and Prisma database migration completion.
+**Expected result:** AnythingLLM startup logs including `Server running on port 3001` and Prisma migration success.
 
-### Step 7.2 — View Cloud SQL Proxy Logs
+### Step 7.2 — Filter for Errors
+
+```bash
+gcloud logging read \
+  'resource.type="k8s_container" AND resource.labels.cluster_name="'${CLUSTER}'" AND resource.labels.namespace_name="'${NAMESPACE}'" AND severity>=WARNING' \
+  --project=${PROJECT} \
+  --limit=10 \
+  --format="table(timestamp, severity, textPayload)"
+```
+
+**Expected result:** No errors under normal operation.
+
+### Step 7.3 — View Cloud SQL Auth Proxy Logs
 
 ```bash
 gcloud logging read \
@@ -339,41 +415,17 @@ gcloud logging read \
   --format="table(timestamp, textPayload)"
 ```
 
-**Expected result:** Cloud SQL Auth Proxy connection establishment logs.
+**Expected result:** Auth Proxy logs show successful connection to the Cloud SQL PostgreSQL instance.
 
 ---
 
-## Phase 8 — Scaling [MANUAL]
-
-### Step 8.1 — Scale Up
-
-```bash
-kubectl scale deployment -n ${NAMESPACE} \
-  $(kubectl get deployments -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}') \
-  --replicas=2
-```
-
-**Expected result:** A second pod starts. Both pods share the same Cloud SQL instance. If `stateful_pvc_enabled = true`, each pod has its own PVC.
-
-### Step 8.2 — Scale Back Down
-
-```bash
-kubectl scale deployment -n ${NAMESPACE} \
-  $(kubectl get deployments -n ${NAMESPACE} -o jsonpath='{.items[0].metadata.name}') \
-  --replicas=1
-```
-
-**Expected result:** One pod terminates gracefully. Kubernetes respects the `termination_grace_period_seconds = 60` setting.
-
----
-
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 8 — Undeploy [AUTOMATED]
 
 Click **Undeploy** in the RAD UI.
 
 **Approximate undeploy duration:** 20–30 minutes.
 
-> **Warning:** This permanently deletes the database, GCS bucket, PVCs, and all workspace data. Export AnythingLLM data before undeploying if needed.
+> **Warning:** This permanently deletes all resources including the database, GCS bucket, PVCs, and all workspace data. Export AnythingLLM data before undeploying if needed.
 
 ---
 
@@ -381,21 +433,24 @@ Click **Undeploy** in the RAD UI.
 
 | Action | Phase | Automated |
 |---|---|---|
-| GKE namespace and workload provisioning | 1 | Yes |
+| GKE namespace and StatefulSet/Deployment | 1 | Yes |
 | Cloud SQL PostgreSQL 15 | 1 | Yes |
-| Secret Manager secrets | 1 | Yes |
+| Secret Manager secrets (JWT, AUTH, SIG, DB) | 1 | Yes |
 | GCS document bucket | 1 | Yes |
 | Container image build (Cloud Build) | 1 | Yes |
 | db-init Kubernetes Job | 1 | Yes |
 | Configure kubectl | 2 | No |
-| Get external IP | 2 | No |
+| Get LoadBalancer IP | 2 | No |
 | Confirm `/api/ping` returns 200 | 2 | No |
+| Inspect pod status and sidecars | 2 | No |
 | Create admin account | 3 | No |
+| Verify auto-generated secrets | 3 | No |
 | Connect LLM provider | 4 | No |
 | Configure embedding and vector DB | 4 | No |
-| Create workspace and upload documents | 5 | No |
+| Create workspace | 5 | No |
+| Upload and embed documents | 5 | No |
 | Chat with documents | 5 | No |
-| Inspect pods and PVCs | 6 | No |
-| View logs | 7 | No |
-| Scale deployment | 8 | No |
-| Undeploy | 9 | Yes |
+| Inspect StatefulSet, PVCs, and HPA | 6 | No |
+| Verify Workload Identity | 6 | No |
+| Review Cloud Logging | 7 | No |
+| Undeploy | 8 | Yes |

@@ -1,4 +1,4 @@
-# Zammad_Common
+# Zammad Common
 
 This document provides a reference for the `modules/Zammad_Common` Terraform module. `Zammad_Common` is the shared application-configuration layer used by both `Zammad_CloudRun` and `Zammad_GKE`. It is not deployed directly — it is called as a child module.
 
@@ -6,20 +6,20 @@ This document provides a reference for the `modules/Zammad_Common` Terraform mod
 
 ## Purpose
 
-`Zammad_Common` produces three outputs consumed by the foundation modules (`App_CloudRun` / `App_GKE`):
+`Zammad Common` produces three outputs consumed by the foundation modules (`App CloudRun` / `App GKE`):
 
 | Output | Description |
 |---|---|
 | `config` | Application configuration object: container image, environment variables, probes, DB settings, initialization jobs. |
 | `secret_ids` | Map of env var names → Secret Manager secret IDs. Empty for Zammad (`{}`). |
 | `storage_buckets` | List of GCS buckets to provision — the `zammad-attachments` bucket. |
-| `path` | Absolute path to the `Zammad_Common` module directory. Used to resolve `scripts_dir`. |
+| `path` | Absolute path to the `Zammad Common` module directory. Used to resolve `scripts_dir`. |
 
 ---
 
 ## Container Image
 
-`Zammad_Common` hardcodes the base image as `zammad/zammad` and sets `enable_image_mirroring = true`. The `container_image_source` is always `'custom'`, meaning Cloud Build builds a custom image from `Zammad_Common/scripts/Dockerfile` before deployment. The Dockerfile extends the official `zammad/zammad` image and replaces the entrypoint with the GCP-specific `entrypoint.sh`.
+`Zammad Common` hardcodes the base image as `zammad/zammad` and sets `enable_image_mirroring = true`. The `container_image_source` is always `'custom'`, meaning Cloud Build builds a custom image from `Zammad_Common/scripts/Dockerfile` before deployment. The Dockerfile extends the official `zammad/zammad` image and replaces the entrypoint with the GCP-specific `entrypoint.sh`.
 
 **Why a custom image?** The official Zammad Docker image expects `POSTGRESQL_*` environment variables directly. The GCP foundation modules inject database credentials as `DB_HOST`, `DB_USER`, `DB_PASSWORD`, etc. The custom `entrypoint.sh` performs this mapping transparently.
 
@@ -27,7 +27,7 @@ This document provides a reference for the `modules/Zammad_Common` Terraform mod
 
 ## Default Environment Variables
 
-`Zammad_Common` sets the following environment variables in the application config, which are injected into every Zammad container:
+`Zammad Common` sets the following environment variables in the application config, which are injected into every Zammad container:
 
 | Variable | Default Value | Description |
 |---|---|---|
@@ -60,7 +60,7 @@ The custom entrypoint performs the following steps on every container start:
 
 ## Initialization Job (`scripts/db-init.sh`)
 
-When `initialization_jobs = []` (default), `Zammad_Common` supplies a single default initialization job:
+When `initialization_jobs = []` (default), `Zammad Common` supplies a single default initialization job:
 
 | Field | Value |
 |---|---|
@@ -77,7 +77,7 @@ The `db-init.sh` script creates the Zammad PostgreSQL database and user (idempot
 
 ## Storage Buckets
 
-`Zammad_Common` always outputs the following storage bucket definition via `storage_buckets`:
+`Zammad Common` always outputs the following storage bucket definition via `storage_buckets`:
 
 ```hcl
 [
@@ -99,7 +99,7 @@ This bucket is provisioned by the foundation module alongside any buckets in `st
 
 ## Health Probes
 
-`Zammad_Common` sets default startup and liveness probe configurations targeting `/api/v1/ping`:
+`Zammad Common` sets default startup and liveness probe configurations targeting `/api/v1/ping`:
 
 **Startup probe:**
 ```hcl
@@ -144,7 +144,7 @@ This bucket is provisioned by the foundation module alongside any buckets in `st
 
 ## Variables
 
-`Zammad_Common` accepts the following variables from the calling application module:
+`Zammad Common` accepts the following variables from the calling application module:
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -183,4 +183,4 @@ This ensures initialization job scripts are resolved from the `Zammad_Common/scr
 
 ## No Auto-Generated Secrets
 
-`Zammad_Common` returns `secret_ids = {}`. Unlike modules such as Directus or Django, Zammad manages its own internal signing keys at runtime. No `SECRET_KEY_BASE` or equivalent is auto-generated. The DB password and root password are managed by the foundation module.
+`Zammad Common` returns `secret_ids = {}`. Unlike modules such as Directus or Django, Zammad manages its own internal signing keys at runtime. No `SECRET_KEY_BASE` or equivalent is auto-generated. The DB password and root password are managed by the foundation module.

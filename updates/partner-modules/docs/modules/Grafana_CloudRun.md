@@ -8,30 +8,30 @@ This document provides a comprehensive reference for the `modules/Grafana_CloudR
 
 Grafana is the world's leading open-source observability and analytics platform, used by 10M+ users at organizations such as NASA, CERN, and Goldman Sachs. It provides unified dashboards, alerting, and visualization for metrics, logs, and traces from over 100 data sources including Prometheus, BigQuery, Cloud SQL, Elasticsearch, and more.
 
-`Grafana_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Grafana-specific application configuration, probe tuning, and storage configuration via `Grafana_Common`.
+`Grafana CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects Grafana-specific application configuration, probe tuning, and storage configuration via `Grafana Common`.
 
 **Key Capabilities:**
 - **Compute**: Cloud Run v2 (Gen2), 1 vCPU / 2 Gi by default, configurable scaling with `min_instance_count` and `max_instance_count`.
 - **Data Persistence**: Cloud SQL **PostgreSQL 15** as the Grafana application database. SQLite is not safe for multi-instance Cloud Run deployments — the module automatically injects `GF_DATABASE_TYPE=postgres`.
-- **Storage**: A `grafana-data` GCS bucket is automatically provisioned by `Grafana_Common`. GCS Fuse volumes and optional NFS mounts are supported for sharing dashboards and plugins across instances.
-- **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App_CloudRun`.
+- **Storage**: A `grafana-data` GCS bucket is automatically provisioned by `Grafana Common`. GCS Fuse volumes and optional NFS mounts are supported for sharing dashboards and plugins across instances.
+- **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`.
 - **Caching**: Optional Redis support (`enable_redis = false` by default) for Grafana session storage or caching.
 - **CI/CD**: Cloud Build custom image pipeline by default; Cloud Deploy progressive delivery optional.
 - **Reliability**: Health probes target `/api/health` — Grafana's dedicated health endpoint.
 
-**Wrapper architecture:** `Grafana_CloudRun` calls `Grafana_Common` to build an `application_config` object containing Grafana-specific environment variables and probe configuration. `grafana.tf` hardcodes `GF_DATABASE_TYPE = "postgres"` into the merged environment so that Grafana uses the provisioned Cloud SQL PostgreSQL instance rather than falling back to SQLite. `module_storage_buckets` carries the `grafana-data` bucket provisioned by `Grafana_Common`. `scripts_dir` is resolved to `Grafana_Common/scripts` at apply time.
+**Wrapper architecture:** `Grafana CloudRun` calls `Grafana Common` to build an `application_config` object containing Grafana-specific environment variables and probe configuration. `grafana.tf` hardcodes `GF_DATABASE_TYPE = "postgres"` into the merged environment so that Grafana uses the provisioned Cloud SQL PostgreSQL instance rather than falling back to SQLite. `module_storage_buckets` carries the `grafana-data` bucket provisioned by `Grafana Common`. `scripts_dir` is resolved to `Grafana_Common/scripts` at apply time.
 
 ---
 
 ## 2. IAM & Access Control
 
-`Grafana_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in App_CloudRun.
+`Grafana CloudRun` delegates all IAM provisioning to `App CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in App CloudRun.
 
-**Database initialisation:** Unlike Ghost or Metabase, Grafana does not ship a `db-init` Cloud Run Job by default. Grafana auto-migrates its database schema on startup when it connects to a PostgreSQL instance. The provisioned PostgreSQL database and user are passed to the Grafana container via `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` environment variables injected by `App_CloudRun`.
+**Database initialisation:** Unlike Ghost or Metabase, Grafana does not ship a `db-init` Cloud Run Job by default. Grafana auto-migrates its database schema on startup when it connects to a PostgreSQL instance. The provisioned PostgreSQL database and user are passed to the Grafana container via `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` environment variables injected by `App CloudRun`.
 
 **`GF_DATABASE_TYPE` injection:** `grafana.tf` merges `{ GF_DATABASE_TYPE = "postgres" }` into the `environment_variables` map. This is a required override — without it, Grafana defaults to SQLite regardless of the other `GF_DATABASE_*` variables present.
 
-For the complete role tables and IAP, password rotation, and public access details, see the App_CloudRun documentation.
+For the complete role tables and IAP, password rotation, and public access details, see the App CloudRun documentation.
 
 ---
 
@@ -68,7 +68,7 @@ Grafana requires a relational database for persisting dashboards, users, organis
 
 **SQLite is not safe for multi-instance deployments.** SQLite uses file locking, which fails when multiple Cloud Run instances attempt concurrent writes. The module hardcodes `GF_DATABASE_TYPE = "postgres"` in `grafana.tf` to ensure PostgreSQL is used regardless of other settings.
 
-**Unix socket connection:** `enable_cloudsql_volume` defaults to `true`. `App_CloudRun` injects the Auth Proxy sidecar and sets `DB_HOST` to the socket path under `/cloudsql`.
+**Unix socket connection:** `enable_cloudsql_volume` defaults to `true`. `App CloudRun` injects the Auth Proxy sidecar and sets `DB_HOST` to the socket path under `/cloudsql`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -83,7 +83,7 @@ Grafana requires a relational database for persisting dashboards, users, organis
 
 **NFS is disabled by default** (`enable_nfs = false`). Enable it when multiple Cloud Run instances need to share Grafana plugins or custom dashboards stored on a shared filesystem. Requires `execution_environment = 'gen2'`.
 
-**GCS data bucket:** `Grafana_Common` automatically provisions a `grafana-data` GCS bucket. GCS Fuse volumes can be mounted into the container for direct filesystem access to GCS objects.
+**GCS data bucket:** `Grafana Common` automatically provisions a `grafana-data` GCS bucket. GCS Fuse volumes can be mounted into the container for direct filesystem access to GCS objects.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -292,9 +292,9 @@ environment_variables = {
 
 | Behaviour | Implementation | Detail |
 |---|---|---|
-| **PostgreSQL 15 required** | `database_type = "POSTGRES_15"` fixed by `Grafana_Common` | SQLite is not safe for multi-instance deployments. |
+| **PostgreSQL 15 required** | `database_type = "POSTGRES_15"` fixed by `Grafana Common` | SQLite is not safe for multi-instance deployments. |
 | **PostgreSQL client forced** | `GF_DATABASE_TYPE = "postgres"` injected in `grafana.tf` | Without this, Grafana falls back to SQLite even when all other `GF_DATABASE_*` variables are set. |
-| **GCS data bucket** | `grafana-data` bucket provisioned by `Grafana_Common` via `module_storage_buckets` | A dedicated GCS bucket for Grafana data is provisioned automatically. |
+| **GCS data bucket** | `grafana-data` bucket provisioned by `Grafana Common` via `module_storage_buckets` | A dedicated GCS bucket for Grafana data is provisioned automatically. |
 | **Unix socket by default** | `enable_cloudsql_volume = true` default | Grafana connects to Cloud SQL via the Auth Proxy Unix socket. |
 | **Custom image by default** | `container_image_source = 'custom'` | Cloud Build compiles a custom image using `Grafana_Common`'s Dockerfile extending the official `grafana/grafana` image. |
 | **No default db-init job** | `initialization_jobs = []` | Grafana auto-migrates its schema on startup. No explicit database initialization job is needed. |
@@ -311,7 +311,7 @@ All user-configurable variables, sorted by UI group then order. Group 0 variable
 |---|---|---|---|
 | `module_description` | 0 | (Grafana platform text) | Platform metadata: module description. |
 | `module_documentation` | 0 | `https://docs.radmodules.dev/docs/modules/Grafana_CloudRun` | Platform metadata: documentation URL. |
-| `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
+| `module_dependency` | 0 | `['Services GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
 | `credit_cost` | 0 | `50` | Platform metadata: deployment credit cost. |
 | `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |

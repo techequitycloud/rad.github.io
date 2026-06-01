@@ -6,12 +6,12 @@ This document provides a comprehensive reference for the `modules/Zammad_GKE` Te
 
 ## 1. Module Overview
 
-Zammad is an open-source helpdesk and customer support platform — a GDPR-compliant alternative to Zendesk and Freshdesk. `Zammad_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP and Kubernetes infrastructure provisioning and injects Zammad-specific application configuration via `Zammad_Common`.
+Zammad is an open-source helpdesk and customer support platform — a GDPR-compliant alternative to Zendesk and Freshdesk. `Zammad GKE` is a **wrapper module** built on top of `App GKE`. It uses `App GKE` for all GCP and Kubernetes infrastructure provisioning and injects Zammad-specific application configuration via `Zammad Common`.
 
 **Key Capabilities:**
 *   **Compute**: GKE Autopilot, Rails-based container, 2 vCPU / 4 Gi by default. Horizontal Pod Autoscaling with configurable `min_instance_count` / `max_instance_count`.
 *   **Data Persistence**: Cloud SQL **PostgreSQL 15** (required). NFS (GCE VM or Filestore) for Zammad attachment storage at `/opt/zammad/storage`. GCS `zammad-attachments` bucket auto-provisioned.
-*   **Security**: Workload Identity for secure GCP API access without key files. Inherits Cloud Armor WAF (via GKE Ingress), IAP, Binary Authorization, NetworkPolicy, and PodDisruptionBudget from `App_GKE`.
+*   **Security**: Workload Identity for secure GCP API access without key files. Inherits Cloud Armor WAF (via GKE Ingress), IAP, Binary Authorization, NetworkPolicy, and PodDisruptionBudget from `App GKE`.
 *   **StatefulSet support**: `stateful_pvc_enabled` enables per-pod PVCs for workloads that require persistent local storage alongside the shared NFS volume.
 *   **Caching & Background Jobs**: Redis **enabled by default** (`enable_redis = true`). Zammad requires Redis for ActionCable WebSocket pub/sub and Sidekiq background job processing.
 *   **Container Build**: `container_image_source = 'custom'` by default — Cloud Build builds a custom image from `Zammad_Common`'s Dockerfile, extending `zammad/zammad` with the GCP-specific `entrypoint.sh`.
@@ -29,7 +29,7 @@ Zammad is an open-source helpdesk and customer support platform — a GDPR-compl
 | `application_description` | 3 | `string` | `'Zammad Open-source Helpdesk on GKE Autopilot'` | Application description. |
 | `application_version` | 3 | `string` | `'6.4.1'` | Zammad image version tag. Increment to trigger a new build. |
 
-**Wrapper architecture:** `Zammad_GKE` calls the `App_GKE` foundation module directly (it does not have a separate `zammad.tf` application locals file in the same style as the Cloud Run variant — the `App_GKE` call in `main.tf` passes all configuration inline). `Zammad_Common` provides the container image configuration, `db-init` job, and `zammad-attachments` storage bucket. The custom `entrypoint.sh` maps Foundation-injected `DB_*` variables to Zammad's `POSTGRESQL_*` convention and runs `zammad-init` on startup. On GKE, `DB_HOST = 127.0.0.1` (the cloud-sql-proxy sidecar), which is TCP-addressable — no `DB_IP` fallback is needed.
+**Wrapper architecture:** `Zammad GKE` calls the `App GKE` foundation module directly (it does not have a separate `zammad.tf` application locals file in the same style as the Cloud Run variant — the `App GKE` call in `main.tf` passes all configuration inline). `Zammad Common` provides the container image configuration, `db-init` job, and `zammad-attachments` storage bucket. The custom `entrypoint.sh` maps Foundation-injected `DB_*` variables to Zammad's `POSTGRESQL_*` convention and runs `zammad-init` on startup. On GKE, `DB_HOST = 127.0.0.1` (the cloud-sql-proxy sidecar), which is TCP-addressable — no `DB_IP` fallback is needed.
 
 **PostgreSQL requirement:** Zammad requires **PostgreSQL 13 or later**. MySQL is not supported and is rejected at plan time.
 
@@ -37,15 +37,15 @@ Zammad is an open-source helpdesk and customer support platform — a GDPR-compl
 
 ## 2. IAM & Access Control
 
-`Zammad_GKE` delegates all IAM provisioning to `App_GKE`. Kubernetes workloads use **Workload Identity** — the pod's Kubernetes Service Account is federated to a GCP Service Account, eliminating the need for key files.
+`Zammad GKE` delegates all IAM provisioning to `App GKE`. Kubernetes workloads use **Workload Identity** — the pod's Kubernetes Service Account is federated to a GCP Service Account, eliminating the need for key files.
 
-**Key IAM bindings provisioned by `App_GKE`:**
+**Key IAM bindings provisioned by `App GKE`:**
 - Cloud SQL Client role on the GCP SA (for Cloud SQL Auth Proxy sidecar)
 - Secret Manager Secret Accessor on the GCP SA (for Secret Manager CSI driver or env var injection)
 - Artifact Registry Reader (for image pulls)
 - GCS bucket read/write on the `zammad-attachments` bucket SA
 
-**No application-level secrets:** `Zammad_Common` does not auto-generate application secrets. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App_GKE`.
+**No application-level secrets:** `Zammad Common` does not auto-generate application secrets. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App GKE`.
 
 **Session affinity:** `session_affinity = "ClientIP"` by default — Kubernetes routes each client to the same pod, which is important for Zammad's WebSocket connections (though Redis pub/sub handles cross-pod event delivery).
 
@@ -61,7 +61,7 @@ Zammad is a Ruby on Rails application. The GKE deployment uses a Kubernetes Depl
 
 **Minimum memory:** Zammad 6.x requires at least 2 Gi RAM. The default is 4 Gi. Do not reduce below 2 Gi.
 
-**Workload type:** Defaults to `null` (auto-resolved by `App_GKE`). Set `stateful_pvc_enabled = true` to automatically use a StatefulSet. Do not set `workload_type = "Deployment"` alongside `stateful_pvc_enabled = true` — this combination fails at plan time.
+**Workload type:** Defaults to `null` (auto-resolved by `App GKE`). Set `stateful_pvc_enabled = true` to automatically use a StatefulSet. Do not set `workload_type = "Deployment"` alongside `stateful_pvc_enabled = true` — this combination fails at plan time.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -210,7 +210,7 @@ Identical requirement to the Cloud Run variant. Zammad requires PostgreSQL 15+ a
 
 ## 6. Redis (Required)
 
-Redis is **enabled by default** and required for Zammad. See `Zammad_CloudRun §8.A` for the full description. The same `REDIS_URL` construction logic applies.
+Redis is **enabled by default** and required for Zammad. See `Zammad CloudRun §8.A` for the full description. The same `REDIS_URL` construction logic applies.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -272,27 +272,27 @@ Redis is **enabled by default** and required for Zammad. See `Zammad_CloudRun §
 | Behaviour | Implementation | Detail |
 |---|---|---|
 | **PostgreSQL required** | Validation in `variables.tf` | `database_type` must be `POSTGRES_13`, `POSTGRES_14`, `POSTGRES_15`, or `NONE`. |
-| **Variable mapping via entrypoint** | Custom `entrypoint.sh` in `Zammad_Common` | `DB_HOST = 127.0.0.1` on GKE (Auth Proxy sidecar) — directly TCP-addressable. No `DB_IP` fallback needed unlike Cloud Run. |
+| **Variable mapping via entrypoint** | Custom `entrypoint.sh` in `Zammad Common` | `DB_HOST = 127.0.0.1` on GKE (Auth Proxy sidecar) — directly TCP-addressable. No `DB_IP` fallback needed unlike Cloud Run. |
 | **zammad-init on every start** | `entrypoint.sh` | DB migrations run idempotently on every pod start before the railsserver process. |
 | **Redis mandatory** | Validation precondition | When `enable_redis = true`, `redis_host` or `enable_nfs` must be set. |
 | **Session affinity** | `session_affinity = "ClientIP"` default | Routes each client to the same pod for WebSocket session continuity. Redis pub/sub handles cross-pod event delivery. |
 | **PDB enabled by default** | `enable_pod_disruption_budget = true` | `pdb_min_available = "1"` ensures at least one Zammad pod remains available during node maintenance. |
 | **Network tags include `nfsserver`** | `network_tags = ["nfsserver"]` default | Required for GKE node-to-NFS firewall rules to function. |
 | **NFS at `/opt/zammad/storage`** | `nfs_mount_path` default | Matches Zammad's expected attachment storage path. |
-| **GCS attachments bucket** | Provisioned via `Zammad_Common` | `zammad-attachments` bucket is always provisioned separately from `storage_buckets`. |
+| **GCS attachments bucket** | Provisioned via `Zammad Common` | `zammad-attachments` bucket is always provisioned separately from `storage_buckets`. |
 | **StatefulSet auto-select** | When `stateful_pvc_enabled = true` | `workload_type` resolves automatically to `"StatefulSet"`. Setting `workload_type = "Deployment"` alongside `stateful_pvc_enabled = true` fails at plan time. |
 
 ---
 
 ## 10. Variable Reference
 
-All user-configurable variables exposed by `Zammad_GKE`, sorted by UI group then order.
+All user-configurable variables exposed by `Zammad GKE`, sorted by UI group then order.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
 | `module_description` | 0 | (Zammad GKE text) | Platform metadata. |
 | `module_documentation` | 0 | `'https://docs.radmodules.dev/docs/modules/Zammad_GKE'` | Documentation URL. |
-| `module_dependency` | 0 | `['Services_GCP']` | Required modules. |
+| `module_dependency` | 0 | `['Services GCP']` | Required modules. |
 | `module_services` | 0 | (GCP service list) | GCP services consumed. |
 | `credit_cost` | 0 | `150` | Platform credit cost. |
 | `require_credit_purchases` | 0 | `false` | Enforces credit balance check. |
@@ -469,7 +469,7 @@ All user-configurable variables exposed by `Zammad_GKE`, sorted by UI group then
 |---|---|---|---|
 | `enable_redis` | `false` | **Critical** | Zammad requires Redis for its ActionCable real-time communication layer. Without Redis, live ticket updates, agent notifications, and the Zammad scheduler all fail to initialize. Redis is mandatory for any Zammad deployment beyond a minimal test instance. |
 | `redis_host` | `""` | **Critical** | When `enable_redis = true` and `redis_host` is empty, `REDIS_URL` is not injected. Zammad starts but all real-time features and background job processing fail silently at runtime. Set to the Memorystore IP or Redis service hostname. |
-| `database_type` | `"POSTGRES_15"` | **Critical** | Zammad 6.x requires PostgreSQL 15+. `Zammad_Common` hardcodes this. Overriding to MySQL causes the schema migration job to fail — the application will not start. |
+| `database_type` | `"POSTGRES_15"` | **Critical** | Zammad 6.x requires PostgreSQL 15+. `Zammad Common` hardcodes this. Overriding to MySQL causes the schema migration job to fail — the application will not start. |
 | `container_image_source` | `"custom"` | **Critical** | `Zammad_Common` sets `image_source = "custom"` to include the `entrypoint.sh` that maps Foundation Module `DB_*` variables to Zammad's expected `POSTGRESQL_*` variables. Using `"prebuilt"` without this entrypoint causes all database connections to fail. |
 | `enable_cloudsql_volume` | `true` | **Critical** | Zammad connects to Cloud SQL via the Auth Proxy Unix socket. Disabling this removes the socket path and all database connections fail on pod startup. |
 | `application_database_name` | `"zammad"` | **Critical** | Changing after initial deployment orphans the existing database. Zammad will connect to a new empty database, losing all ticket history, user accounts, and configuration. |
@@ -490,4 +490,4 @@ All user-configurable variables exposed by `Zammad_GKE`, sorted by UI group then
 | `session_affinity` | `"None"` | **Medium** | With multiple replicas and Redis, session state is handled via Redis (stateless). Without Redis, `"ClientIP"` affinity prevents random session losses when requests route to different pods. |
 | `enable_backup_import` | `false` | **High** | Setting to `true` triggers a database import on every `tofu apply`. Subsequent applies will overwrite live helpdesk data if `backup_uri` is not properly managed. Only enable for the initial restore. |
 | `organization_id` | `""` | **Medium** | VPC-SC perimeter is only activated when `organization_id` is explicitly set. `enable_vpc_sc = true` without this value has no effect. |
-| `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` | **High** | Each `App_GKE` deployment sharing the same VPC must use a distinct CIDR. Overlapping with an existing subnet causes GKE node pool provisioning to fail at apply time. |
+| `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` | **High** | Each `App GKE` deployment sharing the same VPC must use a distinct CIDR. Overlapping with an existing subnet causes GKE node pool provisioning to fail at apply time. |
