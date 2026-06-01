@@ -487,13 +487,13 @@ kubectl get pods -n ${NAMESPACE} -w
 
 ---
 
-## Phase 10 — Undeploy [AUTOMATED]
+## Phase 10 — Delete [AUTOMATED]
 
-When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module. This removes all Kubernetes resources, Cloud SQL instance, NFS Filestore, GCS buckets, secrets, and IAM bindings created by this module.
+When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module. This removes all Kubernetes resources, Cloud SQL instance, NFS Filestore, GCS buckets, secrets, and IAM bindings created by this module.
 
-**Note:** If `enable_purge = false` was set, some resources (database, buckets) are retained after undeployment to protect against accidental data loss.
+**Note:** If `enable_purge = false` was set, some resources (database, buckets) are retained after deletion to protect against accidental data loss.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -510,4 +510,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | 7 | Cloud Logging — query workflow events | Manual (gcloud / console) |
 | 8 | Cloud Monitoring — pod metrics | Manual (console) |
 | 9 | HPA scaling configuration | Manual (kubectl) |
-| 10 | Undeploy all resources | Automated (RAD UI) |
+| 10 | Delete all resources | Automated (RAD UI) |

@@ -407,13 +407,13 @@ gcloud monitoring time-series list \
 
 ---
 
-## Phase 7 — Undeploy [AUTOMATED]
+## Phase 7 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** to remove all resources.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources.
 
-**Approximate undeploy duration:** 5–10 minutes.
+**Approximate delete duration:** 5–10 minutes.
 
-> **Warning:** This permanently deletes the Chroma data bucket and all stored collections. Export collection data before undeploying if needed.
+> **Warning:** This permanently deletes the Chroma data bucket and all stored collections. Export collection data before deleting if needed.
 
 ---
 
@@ -435,4 +435,4 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Run similarity searches | 4 | No |
 | Review Cloud Logging | 5 | No |
 | Inspect Cloud Run service | 6 | No |
-| Undeploy infrastructure | 7 | Yes |
+| Delete infrastructure | 7 | Yes |

@@ -591,17 +591,17 @@ Elasticsearch writes JVM and server logs to stdout/stderr, which GKE captures an
 
 ---
 
-## Phase 10 — Undeploy [AUTOMATED]
+## Phase 10 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
 This removes the StatefulSet, PVC (and underlying persistent disk), Services, Kubernetes namespace, and Artifact Registry mirrored image.
 
-> **Warning:** Undeploying the module deletes the PVC and all indexed data permanently. Back up any data you want to keep before undeploying.
+> **Warning:** Deleting the module removes the PVC and all indexed data permanently. Back up any data you want to keep before deleting.
 
 **Expected duration:** 3–6 minutes.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -618,4 +618,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Phase 7 — X-Pack Security | MANUAL | Verify auth, generate enrollment tokens (if enabled) |
 | Phase 8 — Cloud Logging | MANUAL | Filter GKE container logs for JVM and server events |
 | Phase 9 — Cloud Monitoring | MANUAL | Review pod CPU, memory, and disk I/O metrics |
-| Phase 10 — Undeploy | AUTOMATED | RAD UI removes all module resources and data |
+| Phase 10 — Delete | AUTOMATED | RAD UI removes all module resources and data |

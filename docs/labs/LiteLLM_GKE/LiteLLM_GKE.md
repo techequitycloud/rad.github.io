@@ -280,13 +280,13 @@ gcloud logging read \
 
 ---
 
-## Phase 7 — Undeploy [AUTOMATED]
+## Phase 7 — Delete [AUTOMATED]
 
-Return to the RAD UI and click **Undeploy**.
+Return to the RAD UI and click **Delete**.
 
-**Approximate undeploy duration:** 15–20 minutes (Cloud SQL deletion takes the longest).
+**Approximate delete duration:** 15–20 minutes (Cloud SQL deletion takes the longest).
 
-> **Warning:** All resources including PostgreSQL usage logs and virtual keys are permanently deleted. Export usage data from the Admin UI before undeploying.
+> **Warning:** All resources including PostgreSQL usage logs and virtual keys are permanently deleted. Export usage data from the Admin UI before deleting.
 
 ---
 
@@ -308,4 +308,4 @@ Return to the RAD UI and click **Undeploy**.
 | Generate virtual keys | 4 | No |
 | Inspect Workload Identity | 5 | No |
 | Review Cloud Logging | 6 | No |
-| Undeploy | 7 | Yes |
+| Delete | 7 | Yes |

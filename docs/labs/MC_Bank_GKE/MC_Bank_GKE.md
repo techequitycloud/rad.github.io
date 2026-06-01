@@ -774,7 +774,7 @@ per-cluster cost breakdown.
 
 ## 13. Cleanup
 
-Return to the RAD UI and click **Undeploy** on the `MC_Bank_GKE` deployment. This removes
+Return to the RAD UI and click **Delete** on the `MC_Bank_GKE` deployment. This removes
 all clusters, VPC, Multi-Cluster Ingress, and Multi-Cluster Services resources.
 
 > **Important:** The module's `mcs.tf` runs a cleanup provisioner to gracefully remove MCI

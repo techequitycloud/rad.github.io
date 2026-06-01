@@ -425,13 +425,13 @@ Navigate to **Monitoring > Uptime checks** in the Cloud Console.
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-When finished, return to the RAD UI, navigate to your deployment, and click **Undeploy**.
+When finished, return to the RAD UI, navigate to your deployment, and click **Delete**.
 
-**Approximate undeploy duration:** 15–20 minutes (Cloud SQL deletion takes the longest).
+**Approximate delete duration:** 15–20 minutes (Cloud SQL deletion takes the longest).
 
-> **Warning:** This permanently deletes all resources including the PostgreSQL database with all usage logs and virtual keys. Export usage data from the LiteLLM Admin UI before undeploying.
+> **Warning:** This permanently deletes all resources including the PostgreSQL database with all usage logs and virtual keys. Export usage data from the LiteLLM Admin UI before deleting.
 
 ---
 
@@ -455,4 +455,4 @@ When finished, return to the RAD UI, navigate to your deployment, and click **Un
 | Review cost and usage dashboards | 6 | No |
 | Inspect PostgreSQL tables | 7 | No |
 | Review Cloud Logging | 8 | No |
-| Undeploy | 9 | Yes |
+| Delete | 9 | Yes |

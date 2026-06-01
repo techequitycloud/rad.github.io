@@ -384,13 +384,13 @@ Navigate to **Monitoring > Uptime checks**.
 
 ---
 
-## Phase 8 — Undeploy [AUTOMATED]
+## Phase 8 — Delete [AUTOMATED]
 
-Return to the RAD UI and click **Undeploy**.
+Return to the RAD UI and click **Delete**.
 
-**Approximate undeploy duration:** 12–18 minutes.
+**Approximate delete duration:** 12–18 minutes.
 
-> **Warning:** Undeploying permanently deletes all resources. Export your vault from any Bitwarden client (Settings > Export vault) before undeploying.
+> **Warning:** Deleting permanently deletes all resources. Export your vault from any Bitwarden client (Settings > Export vault) before deleting.
 
 ---
 
@@ -413,4 +413,4 @@ Return to the RAD UI and click **Undeploy**.
 | Configure SMTP | 6 | No |
 | Review Cloud Logging | 7 | No |
 | Monitor uptime check | 7 | No |
-| Undeploy infrastructure | 8 | Yes |
+| Delete infrastructure | 8 | Yes |

@@ -386,13 +386,13 @@ Navigate to **Monitoring > Alerting** to review any alert policies created by th
 
 ---
 
-## Phase 10 — Undeploy [AUTOMATED]
+## Phase 10 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-> **Warning:** This deletes the Cloud SQL database, GCS bucket contents, and NFS data. Ensure backups are taken before undeploying if data needs to be preserved.
+> **Warning:** This deletes the Cloud SQL database, GCS bucket contents, and NFS data. Ensure backups are taken before deleting if data needs to be preserved.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -409,4 +409,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Phase 7 — Storage | Manual | Uploaded assets, verified GCS Fuse mount and bucket contents |
 | Phase 8 — Logging | Manual | Explored Wiki.js logs via Cloud Logging and gcloud |
 | Phase 9 — Monitoring | Manual | Reviewed uptime check, Cloud Run metrics, alert policies |
-| Phase 10 — Undeploy | Automated | Tore down all module-managed infrastructure |
+| Phase 10 — Delete | Automated | Tore down all module-managed infrastructure |

@@ -853,7 +853,7 @@ for Connect Gateway access.
 
 ## 13. Cleanup
 
-Return to the RAD UI and click **Undeploy** on the `EKS_GKE` deployment. This removes:
+Return to the RAD UI and click **Delete** on the `EKS_GKE` deployment. This removes:
 - The GKE Fleet membership
 - The AWS EKS cluster and node group
 - The AWS VPC, subnets, NAT Gateway, internet gateway, and all associated resources

@@ -432,13 +432,13 @@ Navigate to **Monitoring > Uptime checks**.
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-Return to the RAD UI and click **Undeploy**.
+Return to the RAD UI and click **Delete**.
 
-**Approximate undeploy duration:** 15–20 minutes.
+**Approximate delete duration:** 15–20 minutes.
 
-> **Warning:** Undeploying permanently deletes all resources including the database. Export scripts, flows, and apps from Windmill Settings before undeploying.
+> **Warning:** Deleting permanently deletes all resources including the database. Export scripts, flows, and apps from Windmill Settings before deleting.
 
 ---
 
@@ -463,4 +463,4 @@ Return to the RAD UI and click **Undeploy**.
 | Review Cloud Logging | 6 | No |
 | Scale pod replicas | 7 | No |
 | Review Cloud Monitoring | 8 | No |
-| Undeploy infrastructure | 9 | Yes |
+| Delete infrastructure | 9 | Yes |

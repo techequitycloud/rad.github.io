@@ -472,13 +472,13 @@ kill ${PF_PID}
 
 ---
 
-## Phase 7 — Undeploy [AUTOMATED]
+## Phase 7 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** to remove all resources.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources.
 
-**Approximate undeploy duration:** 10–15 minutes.
+**Approximate delete duration:** 10–15 minutes.
 
-> **Warning:** This permanently deletes all resources including the PVC and all stored Qdrant collections. Use Qdrant's snapshot API or the automated backup job to export collections before undeploying.
+> **Warning:** This permanently deletes all resources including the PVC and all stored Qdrant collections. Use Qdrant's snapshot API or the automated backup job to export collections before deleting.
 
 ---
 
@@ -504,4 +504,4 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Inspect Kubernetes features | 6 | No |
 | Create collection snapshots | 6 | No |
 | Review logs | 6 | No |
-| Undeploy infrastructure | 7 | Yes |
+| Delete infrastructure | 7 | Yes |

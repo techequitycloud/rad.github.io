@@ -819,7 +819,7 @@ affected.
 
 ## 13. Cleanup
 
-When you are finished, return to the RAD UI and click **Undeploy** on the `AKS_GKE` deployment.
+When you are finished, return to the RAD UI and click **Delete** on the `AKS_GKE` deployment.
 This removes:
 - The GKE Fleet membership
 - The Azure AKS cluster

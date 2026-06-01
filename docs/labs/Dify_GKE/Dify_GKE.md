@@ -287,11 +287,11 @@ kubectl get pods -n ${NAMESPACE} -w
 
 ---
 
-## Phase 6 — Undeploy [AUTOMATED]
+## Phase 6 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-**Approximate undeploy duration:** 15–25 minutes.
+**Approximate delete duration:** 15–25 minutes.
 
 > **Warning:** This permanently deletes all Kubernetes resources, the database, vector store data, and GCS file storage.
 
@@ -317,4 +317,4 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | View deployments and pods | 5 | No |
 | Review logs and events | 5 | No |
 | Manual scaling test | 5 | No |
-| Undeploy infrastructure | 6 | Yes |
+| Delete infrastructure | 6 | Yes |

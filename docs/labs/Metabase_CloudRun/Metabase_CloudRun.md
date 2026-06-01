@@ -447,15 +447,15 @@ To allow dashboard public sharing:
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources.
 
-**Approximate undeploy duration:** 15–20 minutes (Cloud SQL deletion takes the longest).
+**Approximate delete duration:** 15–20 minutes (Cloud SQL deletion takes the longest).
 
-> **Warning:** This permanently deletes all resources including the Metabase application database (all questions, dashboards, users, collections). Export your data model before undeploying: **Admin > Serialization** (Metabase Pro/Enterprise) or export individual questions as CSV/JSON.
+> **Warning:** This permanently deletes all resources including the Metabase application database (all questions, dashboards, users, collections). Export your data model before deleting: **Admin > Serialization** (Metabase Pro/Enterprise) or export individual questions as CSV/JSON.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -478,4 +478,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance) are
 | Review Cloud Logging | 6 | No |
 | Examine revisions and scaling | 7 | No |
 | Configure SMTP and authentication | 8 | No |
-| Undeploy infrastructure | 9 | Yes |
+| Delete infrastructure | 9 | Yes |

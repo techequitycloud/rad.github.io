@@ -451,15 +451,15 @@ GET https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
 **Expected result:** All Kubernetes workloads, Cloud SQL instance, GCS buckets, Secret Manager secrets, static IP, and IAM bindings are removed.
 
-> Note: `enable_purge = true` (default) allows full deletion. If set to `false`, resources are retained after undeployment.
+> Note: `enable_purge = true` (default) allows full deletion. If set to `false`, resources are retained after deletion.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -475,4 +475,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Phase 6 — Currency & Products | MANUAL | Explore account types, currencies, transfer types, fees |
 | Phase 7 — Cloud Logging | MANUAL | View Tomcat logs in Log Explorer |
 | Phase 8 — Cloud Monitoring | MANUAL | Review GKE metrics, uptime check, alert policies |
-| Phase 9 — Undeploy | AUTOMATED | RAD UI removes all resources |
+| Phase 9 — Delete | AUTOMATED | RAD UI removes all resources |

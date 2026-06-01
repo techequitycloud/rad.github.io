@@ -1018,7 +1018,7 @@ The new report appears in **Migration Center → Reports** within 5 minutes.
 
 ## 13. Cleanup
 
-Return to the RAD UI and click **Undeploy** on the `Migration Center` deployment. This removes
+Return to the RAD UI and click **Delete** on the `Migration Center` deployment. This removes
 the VPC network, Windows VM, Linux VMs, Cloud Storage bucket, and associated firewall rules.
 
 > **Note:** Migration Center resources — discovery sources, import jobs, asset groups,
@@ -1070,7 +1070,7 @@ curl -s -X DELETE \
   -H "Authorization: Bearer $(gcloud auth print-access-token)"
 ```
 
-**Delete Compute resources (if Terraform undeploy fails):**
+**Delete Compute resources (if Terraform delete fails):**
 ```bash
 # Delete Windows VM
 gcloud compute instances delete "${WINDOWS_VM}" \

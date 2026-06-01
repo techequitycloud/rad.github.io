@@ -492,15 +492,15 @@ kubectl scale deployment ghost -n ${NAMESPACE} --replicas=1
 
 ---
 
-## Phase 10 — Undeploy Infrastructure [AUTOMATED]
+## Phase 10 — Delete Infrastructure [AUTOMATED]
 
-When you are finished with the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished with the lab, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-**Approximate undeploy duration:** 15–25 minutes (Cloud SQL deletion takes the longest).
+**Approximate delete duration:** 15–25 minutes (Cloud SQL deletion takes the longest).
 
 > **Warning:** This permanently deletes all resources including the database and NFS content. Ensure you have exported any content you wish to keep (Ghost Admin > Settings > Labs > Export).
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -524,4 +524,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Review application logs | 7 | No |
 | Review Cloud Monitoring metrics | 8 | No |
 | Scale pod replicas | 9 | No |
-| Undeploy infrastructure | 10 | Yes |
+| Delete infrastructure | 10 | Yes |

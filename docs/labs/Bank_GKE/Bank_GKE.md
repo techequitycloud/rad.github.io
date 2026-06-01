@@ -872,7 +872,7 @@ echo "https://console.cloud.google.com/traces/list?project=${PROJECT_ID}"
 
 ## 14. Cleanup
 
-Return to the RAD UI and click **Undeploy** on the `Bank_GKE` deployment. This removes the
+Return to the RAD UI and click **Delete** on the `Bank_GKE` deployment. This removes the
 GKE cluster, VPC, Cloud Service Mesh Fleet feature, and all application resources.
 
 ### Manual Cleanup (if needed)

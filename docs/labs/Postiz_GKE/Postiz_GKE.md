@@ -475,13 +475,13 @@ gcloud monitoring metrics list \
 
 ---
 
-## Phase 10 — Undeploy [AUTOMATED]
+## Phase 10 — Delete [AUTOMATED]
 
-When the lab is complete, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When the lab is complete, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
 **Expected result:** All Kubernetes resources, Cloud SQL database, GCS buckets, Secret Manager secrets, and IAM bindings created by this module are deleted. The GKE cluster and VPC managed by `Services GCP` are not affected.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -498,4 +498,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Phase 7 — Team Collaboration | Manual | Invite team members and manage roles |
 | Phase 8 — Cloud Logging | Manual | Application and worker log exploration |
 | Phase 9 — Cloud Monitoring | Manual | GKE pod metrics and Redis queue depth |
-| Phase 10 — Undeploy | Automated | Tears down all module-managed resources |
+| Phase 10 — Delete | Automated | Tears down all module-managed resources |

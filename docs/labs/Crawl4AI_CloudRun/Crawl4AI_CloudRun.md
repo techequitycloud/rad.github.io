@@ -375,11 +375,11 @@ Navigate to **Monitoring > Uptime checks** in the Cloud Console.
 
 ---
 
-## Phase 6 — Undeploy [AUTOMATED]
+## Phase 6 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-**Approximate undeploy duration:** 5–10 minutes.
+**Approximate delete duration:** 5–10 minutes.
 
 > **Note:** Crawl4AI is stateless — no database or persistent storage is provisioned by default. Task results in the embedded Redis instance are lost on container restart. This is expected behaviour.
 
@@ -406,4 +406,4 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Check scaling behaviour | 5 | No |
 | Verify Gen2 environment | 5 | No |
 | Review uptime checks | 5 | No |
-| Undeploy infrastructure | 6 | Yes |
+| Delete infrastructure | 6 | Yes |

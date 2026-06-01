@@ -579,15 +579,15 @@ GET https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs
 
 ---
 
-## Phase 11 — Undeploy [AUTOMATED]
+## Phase 11 — Delete [AUTOMATED]
 
-When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
 The module removes all resources in reverse dependency order: Kubernetes workloads, Cloud SQL instance, NFS server VM, GCS buckets, Secret Manager secrets, static IP, and IAM bindings.
 
-> Note: `enable_purge = true` (default) allows full deletion. If set to `false`, resources are retained after undeployment. For production healthcare environments, consider setting `enable_purge = false` to protect against accidental deletion of patient data.
+> Note: `enable_purge = true` (default) allows full deletion. If set to `false`, resources are retained after deletion. For production healthcare environments, consider setting `enable_purge = false` to protect against accidental deletion of patient data.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -605,4 +605,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Phase 8 — Backup Configuration | MANUAL | Review Google Drive backup, verify schedule, trigger manual backup |
 | Phase 9 — Cloud Logging | MANUAL | View PHP/Apache logs, audit logs, Cloud SQL Auth Proxy logs |
 | Phase 10 — Cloud Monitoring | MANUAL | GKE metrics, uptime check, Redis session metrics |
-| Phase 11 — Undeploy | AUTOMATED | RAD UI removes all resources |
+| Phase 11 — Delete | AUTOMATED | RAD UI removes all resources |

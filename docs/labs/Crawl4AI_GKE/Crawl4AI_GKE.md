@@ -344,11 +344,11 @@ kubectl get pods -n ${NAMESPACE} -w
 
 ---
 
-## Phase 5 — Undeploy [AUTOMATED]
+## Phase 5 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-**Approximate undeploy duration:** 5–10 minutes.
+**Approximate delete duration:** 5–10 minutes.
 
 > **Note:** Crawl4AI is stateless — no database or persistent storage is provisioned by default. Task results in the embedded Redis instance are lost on pod restart. This is expected behaviour.
 
@@ -375,4 +375,4 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Review logs and events | 4 | No |
 | Verify /dev/shm mount | 4 | No |
 | Manual scaling test | 4 | No |
-| Undeploy infrastructure | 5 | Yes |
+| Delete infrastructure | 5 | Yes |

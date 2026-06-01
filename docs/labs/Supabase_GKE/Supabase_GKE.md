@@ -450,13 +450,13 @@ View container metrics in **Monitoring > Metrics Explorer**:
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-Return to the RAD UI and click **Undeploy**.
+Return to the RAD UI and click **Delete**.
 
-**Approximate undeploy duration:** 15–20 minutes.
+**Approximate delete duration:** 15–20 minutes.
 
-> **Warning:** Undeploying permanently deletes all resources including the PostgreSQL database and all Secret Manager secrets.
+> **Warning:** Deleting permanently deletes all resources including the PostgreSQL database and all Secret Manager secrets.
 
 ---
 
@@ -478,4 +478,4 @@ Return to the RAD UI and click **Undeploy**.
 | Test authentication | 6 | No |
 | Review logs | 7 | No |
 | Review uptime check | 8 | No |
-| Undeploy infrastructure | 9 | Yes |
+| Delete infrastructure | 9 | Yes |

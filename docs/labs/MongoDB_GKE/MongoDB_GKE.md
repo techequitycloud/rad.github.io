@@ -310,13 +310,13 @@ kill ${PF_PID}
 
 ---
 
-## Phase 8 — Undeploy [AUTOMATED]
+## Phase 8 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-**Approximate undeploy duration:** 5–10 minutes.
+**Approximate delete duration:** 5–10 minutes.
 
-> **Warning:** This permanently deletes the StatefulSet, PVC, and all MongoDB data. Export your data using `mongodump` before undeploying:
+> **Warning:** This permanently deletes the StatefulSet, PVC, and all MongoDB data. Export your data using `mongodump` before deleting:
 > ```bash
 > mongodump --uri="mongodb://admin:${MONGO_PASSWORD}@localhost:27017/admin" --out=/tmp/mongodb-backup
 > ```
@@ -342,4 +342,4 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Review Cloud Logging | 5 | No |
 | Examine StatefulSet and security context | 6 | No |
 | Export data with mongodump | 8 | No |
-| Undeploy infrastructure | 8 | Yes |
+| Delete infrastructure | 8 | Yes |

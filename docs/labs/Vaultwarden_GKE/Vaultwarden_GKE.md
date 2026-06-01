@@ -419,13 +419,13 @@ kubectl describe pdb -n ${NAMESPACE}
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-Return to the RAD UI and click **Undeploy**.
+Return to the RAD UI and click **Delete**.
 
-**Approximate undeploy duration:** 15–20 minutes.
+**Approximate delete duration:** 15–20 minutes.
 
-> **Warning:** Undeploying permanently deletes all resources including the PVC and database. Export your vault from any Bitwarden client (Settings > Export vault > .json) before undeploying.
+> **Warning:** Deleting permanently deletes all resources including the PVC and database. Export your vault from any Bitwarden client (Settings > Export vault > .json) before deleting.
 
 ---
 
@@ -452,4 +452,4 @@ Return to the RAD UI and click **Undeploy**.
 | Simulate pod restart | 8 | No |
 | Verify PVC data persistence | 8 | No |
 | Check PodDisruptionBudget | 8 | No |
-| Undeploy infrastructure | 9 | Yes |
+| Delete infrastructure | 9 | Yes |

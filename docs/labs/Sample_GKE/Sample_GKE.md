@@ -382,15 +382,15 @@ This phase examines the Kubernetes resources created by the App GKE Foundation M
 
 ---
 
-## Phase 6 — Undeploy [AUTOMATED]
+## Phase 6 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module: the Kubernetes Deployment, Service, namespace, Cloud SQL database and user, Secret Manager secrets, Filestore NFS instance, GCS bucket, and static IP.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module: the Kubernetes Deployment, Service, namespace, Cloud SQL database and user, Secret Manager secrets, Filestore NFS instance, GCS bucket, and static IP.
 
 > **Note:** The Cloud SQL instance, GKE cluster, Filestore instance, and VPC are managed by Services GCP and are not affected.
 
 **Expected duration:** 5–10 minutes.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -403,4 +403,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Phase 3 — Access Application | MANUAL | `curl` the root, `/health`, and `/db` endpoints |
 | Phase 4 — Explore Module Patterns | MANUAL | Inspect Deployment, Workload Identity, PVC, and Secret Manager integration |
 | Phase 5 — Logging and Monitoring | MANUAL | View pod logs, uptime check status, and CPU/memory metrics |
-| Phase 6 — Undeploy | AUTOMATED | RAD UI removes all module resources |
+| Phase 6 — Delete | AUTOMATED | RAD UI removes all module resources |

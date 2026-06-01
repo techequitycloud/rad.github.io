@@ -510,11 +510,11 @@ Temporal emits Prometheus-format metrics which GKE Autopilot scrapes and forward
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-When you are finished with the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module: the Helm release, Kubernetes namespace, Cloud SQL databases and user, and the Secret Manager secret.
+When you are finished with the lab, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module: the Helm release, Kubernetes namespace, Cloud SQL databases and user, and the Secret Manager secret.
 
-> **Note:** The Cloud SQL PostgreSQL instance itself is managed by Services GCP and is not affected. Resources provisioned by the `Services GCP` module must be undeployed via their own RAD UI deployment entry.
+> **Note:** The Cloud SQL PostgreSQL instance itself is managed by Services GCP and is not affected. Resources provisioned by the `Services GCP` module must be deleted via their own RAD UI deployment entry.
 
 **Expected duration:** 3–6 minutes.
 
@@ -532,4 +532,4 @@ When you are finished with the lab, return to the RAD UI, navigate to your deplo
 | Phase 6 — Workflow History | Manual | `temporal workflow show`, inspect event history |
 | Phase 7 — Cloud Logging | Manual | Filter GKE container logs by namespace `temporal` |
 | Phase 8 — Cloud Monitoring | Manual | Review pod metrics and GKE dashboards |
-| Phase 9 — Undeploy | Automated | RAD UI removes all module resources |
+| Phase 9 — Delete | Automated | RAD UI removes all module resources |

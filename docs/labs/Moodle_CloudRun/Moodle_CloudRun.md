@@ -551,15 +551,15 @@ Navigate to **SQL > Instances > [your-instance] > Monitoring**.
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
 **Approximate destroy duration:** 15–25 minutes (Cloud SQL and Cloud Filestore deletion take the longest).
 
-> **Warning:** This permanently deletes all resources including the PostgreSQL database, NFS moodledata, and Cloud Scheduler jobs. Export any course content before undeploying using **Site administration > Courses > Restore/Backup**.
+> **Warning:** This permanently deletes all resources including the PostgreSQL database, NFS moodledata, and Cloud Scheduler jobs. Export any course content before deleting using **Site administration > Courses > Restore/Backup**.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -587,4 +587,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Review PHP/Apache logs in Cloud Logging | 7 | No |
 | Review Cloud Run and Cloud SQL metrics | 8 | No |
 | Review CDN metrics (if enabled) | 8 | No |
-| Undeploy infrastructure | 9 | Yes |
+| Delete infrastructure | 9 | Yes |

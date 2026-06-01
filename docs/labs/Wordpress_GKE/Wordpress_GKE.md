@@ -572,15 +572,15 @@ Return to the RAD UI, set `max_instance_count` back to `1`, and click **Update**
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-> **Warning:** This permanently deletes the GKE namespace, Cloud SQL database, Filestore instance, GCS buckets, and all associated secrets. Ensure any data you want to keep has been exported or backed up before undeploying.
+> **Warning:** This permanently deletes the GKE namespace, Cloud SQL database, Filestore instance, GCS buckets, and all associated secrets. Ensure any data you want to keep has been exported or backed up before deleting.
 
 **Typical duration:** 10–20 minutes
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -596,7 +596,7 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Phase 6 | Explore Cloud Logging: WordPress, nginx, PHP-FPM logs | Manual |
 | Phase 7 | Explore Cloud Monitoring: dashboards, uptime checks, pod metrics | Manual |
 | Phase 8 | Scale pods, verify session affinity, test concurrency | Manual |
-| Phase 9 | Undeploy all infrastructure via RAD UI | Automated |
+| Phase 9 | Delete all infrastructure via RAD UI | Automated |
 
 | Resource | Notes |
 |---|---|

@@ -381,13 +381,13 @@ for i in $(seq 1 20); do curl -s -o /dev/null ${SERVICE_URL}/health & done; wait
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-Return to the RAD UI and click **Undeploy**.
+Return to the RAD UI and click **Delete**.
 
-**Approximate undeploy duration:** 12–18 minutes.
+**Approximate delete duration:** 12–18 minutes.
 
-> **Warning:** Undeploying permanently deletes all resources including the Superset metadata database (dashboards, charts, datasets). Export dashboards via **Settings > Export all** before undeploying.
+> **Warning:** Deleting permanently deletes all resources including the Superset metadata database (dashboards, charts, datasets). Export dashboards via **Settings > Export all** before deleting.
 
 ---
 
@@ -410,4 +410,4 @@ Return to the RAD UI and click **Undeploy**.
 | Configure alerts and reports | 6 | No |
 | Review Cloud Logging | 7 | No |
 | Check scaling behaviour | 8 | No |
-| Undeploy infrastructure | 9 | Yes |
+| Delete infrastructure | 9 | Yes |

@@ -267,13 +267,13 @@ gcloud run revisions list \
 
 ---
 
-## Phase 7 — Undeploy [AUTOMATED]
+## Phase 7 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-**Approximate undeploy duration:** 5–10 minutes (no database to delete).
+**Approximate delete duration:** 5–10 minutes (no database to delete).
 
-> **Note:** SearXNG is stateless — there is no user data to export before undeploying.
+> **Note:** SearXNG is stateless — there is no user data to export before deleting.
 
 ---
 
@@ -291,4 +291,4 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Review SEARXNG_SECRET in Secret Manager | 4 | No |
 | Review Cloud Logging | 5 | No |
 | Examine scale-to-zero and revisions | 6 | No |
-| Undeploy infrastructure | 7 | Yes |
+| Delete infrastructure | 7 | Yes |

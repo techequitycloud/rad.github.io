@@ -455,13 +455,13 @@ curl -s -X POST "${SERVICE_URL}/collections/my_knowledge_base/snapshots" \
 
 ---
 
-## Phase 7 — Undeploy [AUTOMATED]
+## Phase 7 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** to remove all resources.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources.
 
-**Approximate undeploy duration:** 5–10 minutes.
+**Approximate delete duration:** 5–10 minutes.
 
-> **Warning:** This permanently deletes the Qdrant storage bucket and all stored collections. Use Qdrant's snapshot API to export collections before undeploying.
+> **Warning:** This permanently deletes the Qdrant storage bucket and all stored collections. Use Qdrant's snapshot API to export collections before deleting.
 
 ---
 
@@ -484,4 +484,4 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Run filtered searches | 4 | No |
 | Create collection snapshots | 6 | No |
 | Review Cloud Logging | 5 | No |
-| Undeploy infrastructure | 7 | Yes |
+| Delete infrastructure | 7 | Yes |

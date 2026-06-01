@@ -424,15 +424,15 @@ export DB_SECRET=$(gcloud secrets list \
 
 ---
 
-## Phase 10 — Undeploy [AUTOMATED]
+## Phase 10 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-> **Note:** `enable_purge = true` (the default) ensures all resources including GCS buckets, the Cloud SQL instance, and Cloud Run services are deleted. Set `enable_purge = false` before undeploying if you want to retain data.
+> **Note:** `enable_purge = true` (the default) ensures all resources including GCS buckets, the Cloud SQL instance, and Cloud Run services are deleted. Set `enable_purge = false` before deleting if you want to retain data.
 
 **Expected result:** The Cloud Run service, Cloud SQL instance, NFS Filestore, Secret Manager secrets, GCS buckets, and Artifact Registry images are all removed from the project.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -449,4 +449,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Phase 7 — Webhooks | Manual | Create webhook, test WebSocket real-time connection |
 | Phase 8 — Logging | Manual | Query Cloud Logging for Cloud Run request and application logs |
 | Phase 9 — Monitoring | Manual | Review Cloud Run metrics, uptime checks, and alert policies |
-| Phase 10 — Undeploy | Automated | RAD UI Undeploy removes all resources |
+| Phase 10 — Delete | Automated | RAD UI Delete removes all resources |

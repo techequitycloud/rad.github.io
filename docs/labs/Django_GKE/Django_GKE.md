@@ -629,9 +629,9 @@ kubectl get hpa -n ${NAMESPACE}
 
 ---
 
-## Phase 9 — Undeploy Infrastructure [AUTOMATED]
+## Phase 9 — Delete Infrastructure [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
 **Expected destroy times:**
 
@@ -644,7 +644,7 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Static IP reservation | < 1 minute |
 | **Total** | **8–15 minutes** |
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -663,4 +663,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Query logs in Cloud Logging | 6 | Manual |
 | View GKE metrics and uptime checks | 7 | Manual |
 | Scale deployment and trigger rolling update | 8 | Manual |
-| Undeploy all module resources | 9 | Automated |
+| Delete all module resources | 9 | Automated |

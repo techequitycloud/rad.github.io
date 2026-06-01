@@ -562,11 +562,11 @@ kubectl delete pod curl-test -n ${NAMESPACE}
 
 ---
 
-## Phase 13 — Undeploy [AUTOMATED]
+## Phase 13 — Delete [AUTOMATED]
 
-When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module. This removes all Kubernetes resources (n8n, Qdrant, Ollama Deployments and Services), Cloud SQL instance, NFS Filestore, GCS buckets, secrets, and IAM bindings.
+When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module. This removes all Kubernetes resources (n8n, Qdrant, Ollama Deployments and Services), Cloud SQL instance, NFS Filestore, GCS buckets, secrets, and IAM bindings.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -586,4 +586,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | 10 | AI Agent workflow with Ollama LLM | Manual (browser + curl) |
 | 11 | Qdrant vector store — store and search | Manual (browser + curl) |
 | 12 | RAG pipeline — end-to-end document QA | Manual (browser + curl) |
-| 13 | Undeploy all resources | Automated (RAD UI) |
+| 13 | Delete all resources | Automated (RAD UI) |

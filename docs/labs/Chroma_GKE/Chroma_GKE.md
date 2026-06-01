@@ -353,13 +353,13 @@ kill ${PF_PID}
 
 ---
 
-## Phase 6 — Undeploy [AUTOMATED]
+## Phase 6 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** to remove all resources.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources.
 
-**Approximate undeploy duration:** 10–15 minutes.
+**Approximate delete duration:** 10–15 minutes.
 
-> **Warning:** This permanently deletes all resources including the PVC and stored collections. Export Chroma collection data before undeploying if needed.
+> **Warning:** This permanently deletes all resources including the PVC and stored collections. Export Chroma collection data before deleting if needed.
 
 ---
 
@@ -381,4 +381,4 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Run similarity searches | 4 | No |
 | Inspect Kubernetes features | 5 | No |
 | Review logs | 5 | No |
-| Undeploy infrastructure | 6 | Yes |
+| Delete infrastructure | 6 | Yes |

@@ -518,15 +518,15 @@ Each unique revision name in the log output corresponds to a running container i
 
 ---
 
-## Phase 8 — Undeploy [AUTOMATED]
+## Phase 8 — Delete [AUTOMATED]
 
-When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
 **Typical duration:** 8–15 minutes
 
-> **Warning:** This permanently deletes the Cloud Run service, Cloud SQL database, GCS buckets, NFS Filestore instance, Artifact Registry images, and all associated secrets. Ensure any data you want to keep has been exported or backed up before undeploying.
+> **Warning:** This permanently deletes the Cloud Run service, Cloud SQL database, GCS buckets, NFS Filestore instance, Artifact Registry images, and all associated secrets. Ensure any data you want to keep has been exported or backed up before deleting.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -541,7 +541,7 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Phase 5 | Explore Cloud Run revisions, traffic splitting, concurrency, scale-to-zero | Manual |
 | Phase 6 | Explore Cloud Logging: WordPress logs, HTTP access, PHP errors | Manual |
 | Phase 7 | Explore Cloud Monitoring: request metrics, error rates, uptime checks | Manual |
-| Phase 8 | Undeploy all infrastructure via RAD UI | Automated |
+| Phase 8 | Delete all infrastructure via RAD UI | Automated |
 
 | Resource | Notes |
 |---|---|

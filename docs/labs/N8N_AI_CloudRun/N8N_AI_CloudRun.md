@@ -567,15 +567,15 @@ curl -X POST http://localhost:11434/api/generate \
 
 ---
 
-## Phase 12 — Undeploy [AUTOMATED]
+## Phase 12 — Delete [AUTOMATED]
 
-When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-The undeploy operation removes all Cloud Run services (n8n, Qdrant, Ollama), Cloud SQL instance, NFS Filestore, GCS buckets, Private Service Connect resources, secrets, and IAM bindings.
+The delete operation removes all Cloud Run services (n8n, Qdrant, Ollama), Cloud SQL instance, NFS Filestore, GCS buckets, Private Service Connect resources, secrets, and IAM bindings.
 
 **Note:** If `enable_purge = false` was set, some resources are retained to protect against accidental data loss.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -594,4 +594,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | 9 | AI Agent workflow with Ollama LLM | Manual (browser + curl) |
 | 10 | Qdrant vector store — ingest and search | Manual (browser + curl) |
 | 11 | RAG pipeline — end-to-end document QA | Manual (browser + curl) |
-| 12 | Undeploy all resources | Automated (RAD UI) |
+| 12 | Delete all resources | Automated (RAD UI) |

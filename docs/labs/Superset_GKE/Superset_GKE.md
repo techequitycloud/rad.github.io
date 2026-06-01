@@ -402,13 +402,13 @@ Navigate to **Monitoring > Uptime checks**.
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-Return to the RAD UI and click **Undeploy**.
+Return to the RAD UI and click **Delete**.
 
-**Approximate undeploy duration:** 15–20 minutes.
+**Approximate delete duration:** 15–20 minutes.
 
-> **Warning:** Undeploying permanently deletes all resources including the metadata database with all dashboards, charts, and datasets. Export everything via **Settings > Export all** before undeploying.
+> **Warning:** Deleting permanently deletes all resources including the metadata database with all dashboards, charts, and datasets. Export everything via **Settings > Export all** before deleting.
 
 ---
 
@@ -434,4 +434,4 @@ Return to the RAD UI and click **Undeploy**.
 | Verify session consistency | 7 | No |
 | View Cloud Monitoring metrics | 8 | No |
 | Review uptime check | 8 | No |
-| Undeploy infrastructure | 9 | Yes |
+| Delete infrastructure | 9 | Yes |

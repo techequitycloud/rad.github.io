@@ -449,15 +449,15 @@ Navigate to **Monitoring > Uptime checks** in the Cloud Console.
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-**Approximate undeploy duration:** 15–20 minutes (Cloud SQL deletion takes the longest).
+**Approximate delete duration:** 15–20 minutes (Cloud SQL deletion takes the longest).
 
-> **Warning:** This permanently deletes all resources including the database and NFS content. Export your Ghost content before undeploying: Ghost Admin > Settings > Labs > Export.
+> **Warning:** This permanently deletes all resources including the database and NFS content. Export your Ghost content before deleting: Ghost Admin > Settings > Labs > Export.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -481,4 +481,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Review Cloud Logging | 7 | No |
 | Examine revisions and traffic splitting | 8 | No |
 | Review uptime checks | 8 | No |
-| Undeploy infrastructure | 9 | Yes |
+| Delete infrastructure | 9 | Yes |

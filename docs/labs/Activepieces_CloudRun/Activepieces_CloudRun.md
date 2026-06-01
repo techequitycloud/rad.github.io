@@ -411,15 +411,15 @@ export DB_SECRET=$(gcloud secrets list \
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
 **Expected result:** All Cloud Run services, Cloud SQL instance, Secret Manager secrets, Cloud Storage buckets, and supporting IAM resources are deleted.
 
-> **Note:** If `enable_purge = false`, certain resources such as the database and storage buckets will be retained after undeployment to prevent accidental data loss.
+> **Note:** If `enable_purge = false`, certain resources such as the database and storage buckets will be retained after deletion to prevent accidental data loss.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -442,4 +442,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Add a connection (API key / Basic Auth) | 6 | No |
 | Explore logs in Cloud Logging | 7 | No |
 | Review metrics in Cloud Monitoring | 8 | No |
-| Undeploy all resources | 9 | Yes |
+| Delete all resources | 9 | Yes |

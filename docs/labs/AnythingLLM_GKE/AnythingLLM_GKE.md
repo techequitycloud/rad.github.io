@@ -424,13 +424,13 @@ gcloud logging read \
 
 ---
 
-## Phase 8 — Undeploy [AUTOMATED]
+## Phase 8 — Delete [AUTOMATED]
 
-Click **Undeploy** in the RAD UI.
+Click **Delete** in the RAD UI.
 
-**Approximate undeploy duration:** 20–30 minutes.
+**Approximate delete duration:** 20–30 minutes.
 
-> **Warning:** This permanently deletes all resources including the database, GCS bucket, PVCs, and all workspace data. Export AnythingLLM data before undeploying if needed.
+> **Warning:** This permanently deletes all resources including the database, GCS bucket, PVCs, and all workspace data. Export AnythingLLM data before deleting if needed.
 
 ---
 
@@ -458,4 +458,4 @@ Click **Undeploy** in the RAD UI.
 | Inspect StatefulSet, PVCs, and HPA | 6 | No |
 | Verify Workload Identity | 6 | No |
 | Review Cloud Logging | 7 | No |
-| Undeploy | 8 | Yes |
+| Delete | 8 | Yes |

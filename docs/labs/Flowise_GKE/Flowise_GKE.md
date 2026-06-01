@@ -428,9 +428,9 @@ gcloud secrets list --project=${PROJECT} --filter="name~flowise"
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
 **What is removed:**
 - Kubernetes Deployment, Service, and namespace
@@ -442,7 +442,7 @@ When you have finished the lab, return to the RAD UI, navigate to your deploymen
 
 **Estimated time:** 10–20 minutes
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -458,4 +458,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Phase 6 — Marketplace | Manual | Importing pre-built flow templates |
 | Phase 7 — Cloud Logging | Manual | Viewing Flowise container logs in GKE |
 | Phase 8 — Cloud Monitoring | Manual | CPU/memory metrics and HPA status |
-| Phase 9 — Undeploy | Automated | Clean teardown of all resources |
+| Phase 9 — Delete | Automated | Clean teardown of all resources |

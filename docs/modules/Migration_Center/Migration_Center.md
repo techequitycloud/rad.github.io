@@ -675,7 +675,7 @@ curl -s \
 
 ### Cleaning Up
 
-Use the RAD UI **Undeploy** button to remove all Terraform-managed resources. Manually delete
+Use the RAD UI **Delete** button to remove all Terraform-managed resources. Manually delete
 Migration Center resources that are not tracked by Terraform:
 
 ```bash

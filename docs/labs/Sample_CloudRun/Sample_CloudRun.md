@@ -328,9 +328,9 @@ export SERVICE_URL=$(gcloud run services describe ${SERVICE} \
 
 ---
 
-## Phase 5 — Undeploy [AUTOMATED]
+## Phase 5 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
 This removes the Cloud Run service, all revisions, Cloud SQL database and user, Secret Manager secrets, Filestore NFS instance, GCS bucket, and uptime checks.
 
@@ -338,7 +338,7 @@ This removes the Cloud Run service, all revisions, Cloud SQL database and user, 
 
 **Expected duration:** 3–7 minutes.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -350,4 +350,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Phase 2 — Access Application | MANUAL | `curl` the service URL, test `/health` and `/db` endpoints |
 | Phase 3 — Explore Cloud Run Features | MANUAL | Inspect revisions, traffic splits, auto-scaling, and VPC egress |
 | Phase 4 — Logging and Monitoring | MANUAL | View request logs, uptime check status, and Cloud Run metrics |
-| Phase 5 — Undeploy | AUTOMATED | RAD UI removes all module resources |
+| Phase 5 — Delete | AUTOMATED | RAD UI removes all module resources |

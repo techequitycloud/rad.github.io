@@ -398,13 +398,13 @@ Navigate to **Conversations** in the admin panel to view all user conversations 
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-When finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** to remove all resources.
+When finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources.
 
-**Approximate undeploy duration:** 5–10 minutes.
+**Approximate delete duration:** 5–10 minutes.
 
-> **Warning:** Undeploy permanently deletes all resources including Secret Manager secrets and GCS upload files. Export conversation history via the LibreChat UI before undeploying: **Settings > Data Controls > Export**.
+> **Warning:** Deleting permanently removes all resources including Secret Manager secrets and GCS upload files. Export conversation history via the LibreChat UI before deleting: **Settings > Data Controls > Export**.
 
 > **Note:** The Firestore ENTERPRISE database is **not deleted** on destroy (ABANDON policy). It must be manually deleted via the GCP Console if no longer needed.
 
@@ -432,4 +432,4 @@ Resources provisioned by the `Services GCP` module (VPC, GKE cluster) are manage
 | Examine Cloud Run revisions | 7 | No |
 | Review uptime check | 7 | No |
 | Manage users via admin panel | 8 | No |
-| Undeploy infrastructure | 9 | Yes |
+| Delete infrastructure | 9 | Yes |

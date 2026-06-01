@@ -536,11 +536,11 @@ Navigate to **Monitoring > Uptime checks** to view the uptime check configured b
 
 ---
 
-## Phase 8 — Undeploy [AUTOMATED]
+## Phase 8 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-**Expected undeploy times:**
+**Expected delete times:**
 
 | Resource | Typical duration |
 |---|---|
@@ -553,7 +553,7 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Uptime checks and alert policies | < 1 minute |
 | **Total** | **6–12 minutes** |
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -572,4 +572,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Explore revisions, traffic splitting, concurrency | 5 | Manual |
 | Query structured logs in Cloud Logging | 6 | Manual |
 | View request latency, instance count, uptime checks | 7 | Manual |
-| Undeploy all module resources | 8 | Automated |
+| Delete all module resources | 8 | Automated |

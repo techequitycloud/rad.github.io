@@ -929,7 +929,7 @@ curl -s -X POST \
 
 ## 13. Cleanup
 
-Return to the RAD UI and click **Undeploy** on the `VMware_Engine` deployment. This removes
+Return to the RAD UI and click **Delete** on the `VMware_Engine` deployment. This removes
 the GCVE private cloud, VMware Engine Network, peer VPC, jump host, and all associated
 resources.
 

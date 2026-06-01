@@ -468,15 +468,15 @@ export DB_SECRET=$(gcloud secrets list \
 
 ---
 
-## Phase 10 — Undeploy [AUTOMATED]
+## Phase 10 — Delete [AUTOMATED]
 
 **Duration:** 5–10 minutes
 
-When you are finished with the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished with the lab, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
 **What is removed:** Cloud Run service and revisions, Cloud SQL instance and database, GCS bucket(s), Secret Manager secrets, Artifact Registry images, NFS instance (if enabled), Cloud Monitoring uptime checks.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry. Elasticsearch (managed by Elasticsearch GKE) must also be undeployed separately.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry. Elasticsearch (managed by Elasticsearch GKE) must also be deleted separately.
 
 ---
 
@@ -493,4 +493,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | 7 — API Access | Manual | Generate API key, test REST endpoints | 10 min |
 | 8 — Cloud Logging | Manual | Query Cloud Run logs and parsing events | 5 min |
 | 9 — Cloud Monitoring | Manual | Review Cloud Run metrics and uptime checks | 5 min |
-| 10 — Undeploy | Automated | RAD UI removes all module resources | 5–10 min |
+| | 10 — Delete | Automated | RAD UI removes all module resources | 5–10 min |

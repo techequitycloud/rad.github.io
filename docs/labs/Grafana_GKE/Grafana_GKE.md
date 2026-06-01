@@ -343,15 +343,15 @@ kubectl get pod -n ${NAMESPACE} -l app=grafana -o jsonpath='{.items[0].spec.secu
 
 ---
 
-## Phase 8 — Undeploy [AUTOMATED]
+## Phase 8 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources.
 
-**Approximate undeploy duration:** 15–25 minutes (Cloud SQL and PVC deletion take the longest).
+**Approximate delete duration:** 15–25 minutes (Cloud SQL and PVC deletion take the longest).
 
-> **Warning:** This permanently deletes all resources including the database and PVCs. Export your dashboards before undeploying using the Grafana HTTP API or the Export JSON function in the Grafana UI.
+> **Warning:** This permanently deletes all resources including the database and PVCs. Export your dashboards before deleting using the Grafana HTTP API or the Export JSON function in the Grafana UI.
 
-Resources provisioned by the `Services GCP` module (VPC, GKE cluster, Cloud SQL instance) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, GKE cluster, Cloud SQL instance) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -373,4 +373,4 @@ Resources provisioned by the `Services GCP` module (VPC, GKE cluster, Cloud SQL 
 | Create dashboards and panels | 5 | No |
 | Observe pods, logs, HPA | 6 | No |
 | Verify StatefulSet PVC (if enabled) | 7 | No |
-| Undeploy infrastructure | 8 | Yes |
+| Delete infrastructure | 8 | Yes |

@@ -294,13 +294,13 @@ Navigate to **Monitoring > Uptime checks** in the Cloud Console.
 
 ---
 
-## Phase 8 — Undeploy [AUTOMATED]
+## Phase 8 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-**Approximate undeploy duration:** 15–20 minutes (Cloud SQL deletion takes the longest).
+**Approximate delete duration:** 15–20 minutes (Cloud SQL deletion takes the longest).
 
-> **Warning:** This permanently deletes all resources including the database and all chat history. Export your data before undeploying.
+> **Warning:** This permanently deletes all resources including the database and all chat history. Export your data before deleting.
 
 ---
 
@@ -320,4 +320,4 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | User management and role configuration | 5 | No |
 | Review Cloud Logging | 6 | No |
 | Examine revisions and uptime checks | 7 | No |
-| Undeploy infrastructure | 8 | Yes |
+| Delete infrastructure | 8 | Yes |

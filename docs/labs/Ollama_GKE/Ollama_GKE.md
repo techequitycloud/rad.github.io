@@ -497,9 +497,9 @@ gcloud container clusters describe <cluster-name> \
 
 ---
 
-## Phase 10 — Undeploy [AUTOMATED]
+## Phase 10 — Delete [AUTOMATED]
 
-When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you have finished the lab, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
 **What is removed:**
 - Kubernetes Deployment, Service, and namespace
@@ -511,7 +511,7 @@ When you have finished the lab, return to the RAD UI, navigate to your deploymen
 
 **Estimated time:** 5–10 minutes
 
-Resources provisioned by the `Services GCP` module (VPC, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -528,4 +528,4 @@ Resources provisioned by the `Services GCP` module (VPC, GKE cluster) are manage
 | Phase 7 — GCS Model Storage | Manual | Verifying GCS persistence and testing pod restart durability |
 | Phase 8 — Cloud Logging | Manual | Viewing Ollama server logs and model load events |
 | Phase 9 — Cloud Monitoring | Manual | CPU/memory utilization during inference, HPA status |
-| Phase 10 — Undeploy | Automated | Clean teardown of all resources |
+| Phase 10 — Delete | Automated | Clean teardown of all resources |

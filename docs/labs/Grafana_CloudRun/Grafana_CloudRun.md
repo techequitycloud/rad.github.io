@@ -435,13 +435,13 @@ secret_environment_variables = {
 
 ---
 
-## Phase 8 — Undeploy [AUTOMATED]
+## Phase 8 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources.
 
-**Approximate undeploy duration:** 15–20 minutes (Cloud SQL deletion takes the longest).
+**Approximate delete duration:** 15–20 minutes (Cloud SQL deletion takes the longest).
 
-> **Warning:** This permanently deletes all resources including the database (dashboards, users, organizations) and storage buckets. Export your dashboards before undeploying: **Dashboards > Export JSON** or use the Grafana HTTP API.
+> **Warning:** This permanently deletes all resources including the database (dashboards, users, organizations) and storage buckets. Export your dashboards before deleting: **Dashboards > Export JSON** or use the Grafana HTTP API.
 
 ```bash
 # Export all dashboards via Grafana API
@@ -451,7 +451,7 @@ curl -s -u admin:password ${SERVICE_URL}/api/search?type=dash-db \
   | jq '.dashboard' > dashboards-backup.json
 ```
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -474,4 +474,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance) are
 | Examine revisions and scaling | 6 | No |
 | Review uptime checks | 6 | No |
 | Configure SMTP, plugins, OAuth | 7 | No |
-| Undeploy infrastructure | 8 | Yes |
+| Delete infrastructure | 8 | Yes |

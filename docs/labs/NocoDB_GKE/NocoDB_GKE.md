@@ -313,13 +313,13 @@ Navigate to **Monitoring > Uptime checks** in the Cloud Console.
 
 ---
 
-## Phase 8 — Undeploy [AUTOMATED]
+## Phase 8 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-**Approximate undeploy duration:** 15–20 minutes (Cloud SQL deletion takes the longest).
+**Approximate delete duration:** 15–20 minutes (Cloud SQL deletion takes the longest).
 
-> **Warning:** This permanently deletes all resources including the database and GCS bucket contents. Export your NocoDB data before undeploying: NocoDB UI > Team & Settings > Export.
+> **Warning:** This permanently deletes all resources including the database and GCS bucket contents. Export your NocoDB data before deleting: NocoDB UI > Team & Settings > Export.
 
 ---
 
@@ -341,4 +341,4 @@ When you are finished, return to the RAD UI, navigate to your deployment, and cl
 | Explore REST API | 4–5 | No |
 | Review Cloud Logging | 6 | No |
 | Examine HPA and uptime checks | 7 | No |
-| Undeploy infrastructure | 8 | Yes |
+| Delete infrastructure | 8 | Yes |

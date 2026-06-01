@@ -1448,12 +1448,12 @@ curl -s \
 
 ## 15. Cleanup
 
-When you are finished, return to the RAD UI and undeploy in the following order to avoid ongoing charges:
+When you are finished, return to the RAD UI and delete in the following order to avoid ongoing charges:
 
-1. Navigate to the `App GKE` deployment and click **Undeploy** (or **Delete**).
-2. Once App GKE is fully removed, navigate to the `Services GCP` deployment and click **Undeploy** (or **Delete**).
+1. Navigate to the `App GKE` deployment and click **Delete**.
+2. Once App GKE is fully removed, navigate to the `Services GCP` deployment and click **Delete**.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ### Manual Cleanup (if needed)
 

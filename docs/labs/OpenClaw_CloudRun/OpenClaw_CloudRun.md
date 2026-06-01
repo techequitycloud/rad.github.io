@@ -558,13 +558,13 @@ gcloud run services describe ${SERVICE} \
 
 ---
 
-## Phase 10 — Undeploy [AUTOMATED]
+## Phase 10 — Delete [AUTOMATED]
 
-When the lab is complete, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When the lab is complete, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
 **Expected result:** The Cloud Run service, GCS workspace bucket, Secret Manager secrets, and IAM bindings created by this module are deleted.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -581,4 +581,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Phase 7 — State Persistence | Manual | GCS Fuse workspace durability across container restarts |
 | Phase 8 — Cloud Logging | Manual | Agent and API request log exploration |
 | Phase 9 — Cloud Monitoring | Manual | Cloud Run metrics and uptime checks |
-| Phase 10 — Undeploy | Automated | Tears down all module-managed resources |
+| Phase 10 — Delete | Automated | Tears down all module-managed resources |

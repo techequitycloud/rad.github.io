@@ -427,13 +427,13 @@ Navigate to **Monitoring > Uptime checks** in the Cloud Console.
 
 ---
 
-## Phase 9 — Undeploy [AUTOMATED]
+## Phase 9 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI and click **Undeploy** (or **Delete**).
+When you are finished, return to the RAD UI and click **Delete**.
 
-**Approximate undeploy duration:** 12–18 minutes.
+**Approximate delete duration:** 12–18 minutes.
 
-> **Warning:** This permanently deletes the database, GCS bucket, and all uploaded documents and workspace data. Export AnythingLLM data before undeploying if needed.
+> **Warning:** This permanently deletes the database, GCS bucket, and all uploaded documents and workspace data. Export AnythingLLM data before deleting if needed.
 
 ---
 
@@ -459,4 +459,4 @@ When you are finished, return to the RAD UI and click **Undeploy** (or **Delete*
 | Verify GCS bucket | 6 | No |
 | Review Cloud Logging | 7 | No |
 | Examine revisions and uptime checks | 8 | No |
-| Undeploy | 9 | Yes |
+| Delete | 9 | Yes |

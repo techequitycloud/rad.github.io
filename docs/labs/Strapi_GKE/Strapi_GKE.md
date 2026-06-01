@@ -458,15 +458,15 @@ export DB_SECRET=$(gcloud secrets list \
 
 ---
 
-## Phase 10 — Undeploy [AUTOMATED]
+## Phase 10 — Delete [AUTOMATED]
 
-When you are finished with the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished with the lab, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
-> **Note:** `enable_purge = true` (the default) ensures all resources including GCS buckets and the Cloud SQL instance are deleted. Set `enable_purge = false` before deploying if you want to retain data after undeployment.
+> **Note:** `enable_purge = true` (the default) ensures all resources including GCS buckets and the Cloud SQL instance are deleted. Set `enable_purge = false` before deploying if you want to retain data after deletion.
 
 **Expected result:** All Kubernetes workloads, the Cloud SQL instance, NFS Filestore, Secret Manager secrets, GCS buckets, and Artifact Registry images are removed from the project.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -483,4 +483,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | Phase 7 — Media Library | Manual | Upload images, verify NFS/GCS storage, use in content |
 | Phase 8 — Logging | Manual | Query Cloud Logging for Strapi Node.js container logs |
 | Phase 9 — Monitoring | Manual | Review GKE metrics, uptime checks, and alert policies |
-| Phase 10 — Undeploy | Automated | RAD UI removes all resources |
+| Phase 10 — Delete | Automated | RAD UI removes all resources |

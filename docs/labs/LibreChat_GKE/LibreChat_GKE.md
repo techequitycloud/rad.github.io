@@ -306,13 +306,13 @@ gcloud logging read \
 
 ---
 
-## Phase 8 — Undeploy [AUTOMATED]
+## Phase 8 — Delete [AUTOMATED]
 
-Return to the RAD UI and click **Undeploy** to remove all resources.
+Return to the RAD UI and click **Delete** to remove all resources.
 
-**Approximate undeploy duration:** 10–15 minutes (GKE pod termination + Kubernetes resource cleanup).
+**Approximate delete duration:** 10–15 minutes (GKE pod termination + Kubernetes resource cleanup).
 
-> **Warning:** Undeploy permanently deletes Secret Manager secrets and GCS upload files. Export conversation history before undeploying.
+> **Warning:** Deleting permanently removes Secret Manager secrets and GCS upload files. Export conversation history before deleting.
 
 > **Note:** The Firestore ENTERPRISE database is NOT deleted on destroy (ABANDON policy). Delete manually via the GCP Console if no longer needed.
 
@@ -338,4 +338,4 @@ Return to the RAD UI and click **Undeploy** to remove all resources.
 | Test file uploads | 5 | No |
 | Inspect Workload Identity | 6 | No |
 | Review uptime check | 6 | No |
-| Undeploy | 8 | Yes |
+| Delete | 8 | Yes |

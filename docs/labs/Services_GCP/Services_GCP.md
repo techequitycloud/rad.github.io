@@ -699,13 +699,13 @@ gcloud compute instances describe ${NFS_VM} \
 
 ---
 
-## Phase 8 — Undeploy [AUTOMATED]
+## Phase 8 — Delete [AUTOMATED]
 
-When you are finished, return to the RAD UI, navigate to your `Services GCP` deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished, return to the RAD UI, navigate to your `Services GCP` deployment, and click **Delete** to remove all resources provisioned by this module.
 
-> **Important:** All application modules (`*_CloudRun`, `*_GKE`) that depend on this `Services GCP` deployment **must be undeployed first**. Destroying `Services GCP` while application modules are still running will break their database, NFS, and network connectivity.
+> **Important:** All application modules (`*_CloudRun`, `*_GKE`) that depend on this `Services GCP` deployment **must be deleted first**. Destroying `Services GCP` while application modules are still running will break their database, NFS, and network connectivity.
 
-**Expected undeploy times:**
+**Expected delete times:**
 
 | Resource | Typical duration |
 |---|---|
@@ -740,4 +740,4 @@ When you are finished, return to the RAD UI, navigate to your `Services GCP` dep
 | Configure kubectl and verify GKE cluster and fleet (if enabled) | 5 | Manual |
 | Verify CMEK, Binary Authorization, and VPC-SC (if enabled) | 6 | Manual |
 | Review audit logs, alert policies, and Compute metrics | 7 | Manual |
-| Undeploy all module resources | 8 | Automated |
+| Delete all module resources | 8 | Automated |

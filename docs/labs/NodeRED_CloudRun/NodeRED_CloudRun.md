@@ -513,15 +513,15 @@ The `node-red-dashboard` package provides UI widgets that render at `/ui`. This 
 
 ---
 
-## Phase 10 — Undeploy [AUTOMATED]
+## Phase 10 — Delete [AUTOMATED]
 
 **Duration:** 5–10 minutes
 
-When you are finished with the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
+When you are finished with the lab, return to the RAD UI, navigate to your deployment, and click **Delete** to remove all resources provisioned by this module.
 
 **What is removed:** Cloud Run service and revisions, Cloud Filestore NFS instance, GCS bucket, Secret Manager secrets, Artifact Registry images, Cloud Monitoring uptime checks.
 
-Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be deleted via their own RAD UI deployment entry.
 
 ---
 
@@ -538,4 +538,4 @@ Resources provisioned by the `Services GCP` module (VPC, Cloud SQL instance, GKE
 | 7 — Dashboard | Manual | Install node-red-dashboard, add gauge widget | 5–10 min |
 | 8 — Cloud Logging | Manual | Query Cloud Run logs and HTTP request events | 5 min |
 | 9 — Cloud Monitoring | Manual | Review Cloud Run metrics, scale-to-zero behavior | 5 min |
-| 10 — Undeploy | Automated | RAD UI removes all module resources | 5–10 min |
+| | 10 — Delete | Automated | RAD UI removes all module resources | 5–10 min |
