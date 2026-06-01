@@ -1,5 +1,4 @@
 # PCD Certification Preparation Guide: Section 4 — Integrating applications with Google Cloud services (~21% of the exam)
-<YouTubeEmbed videoId="-nxyHJr01Po" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pcd_section4.png" />
 
 <br/>
 

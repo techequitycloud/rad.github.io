@@ -4,7 +4,6 @@ title: "RAD Benefits"
 
 # RAD Benefits
 
-<YouTubeEmbed videoId="U4oU0Z8jH3Q" poster="https://storage.googleapis.com/rad-public-2b65/getting_started/RAD_Benefits.png" />
 
 <br/>
 

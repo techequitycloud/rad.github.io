@@ -1,8 +1,6 @@
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Partner Guide
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/partner_guide.m4a" title="Partner Quick Start Audio" />
 
 ## 1. Introduction
 

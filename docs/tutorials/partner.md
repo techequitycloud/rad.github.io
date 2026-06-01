@@ -4,8 +4,6 @@ title: Partner Tutorial
 
 # Tutorial: Partner Workflow
 
-<YouTubeEmbed videoId="4EyLflZFXQc" />
-
 ## 1. Introduction
 This tutorial is for Partners. You will learn how to connect your own Git repository and publish a private module for deployment.
 

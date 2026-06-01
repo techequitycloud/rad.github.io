@@ -4,8 +4,6 @@ title: ROI Tutorial
 
 # Tutorial: Maximizing ROI with the Calculator
 
-<YouTubeEmbed videoId="UoKmb0znHzA" />
-
 ## 1. Introduction
 This tutorial will guide you through using the ROI Calculator to build a business case for the RAD platform. You will learn how to input your specific data to see exactly how much time and money you can save.
 

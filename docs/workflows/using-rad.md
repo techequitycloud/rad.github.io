@@ -1,8 +1,6 @@
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Deploying with RAD
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflows/using_rad.m4a" title="Using RAD Audio" />
 
 ## 1. Introduction
 

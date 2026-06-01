@@ -5,11 +5,9 @@ slug: /guides/finance
 
 # Finance Guide
 
-<YouTubeEmbed videoId="vVRLTTaOBto" poster="https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.png" />
 
 # Finance Guide
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/finance_guide.m4a" title="Finance Quick Start Audio" />
 
 ## 1. Introduction
 

@@ -3,11 +3,8 @@ title: Partner Features
 slug: /features/partners
 ---
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
-
 <br/>
 
-<AudioPlayer src="https://storage.googleapis.com/rad-public-2b65/features/partner_features.m4a" />
 
 <br/>
 

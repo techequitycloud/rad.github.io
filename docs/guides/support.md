@@ -1,8 +1,6 @@
-import AudioPlayer from '@site/src/components/AudioPlayer';
 
 # Support Guide
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/support_guide.m4a" title="Support Quick Start Audio" />
 
 ## 1. Introduction
 

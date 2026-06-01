@@ -5,7 +5,6 @@ sidebar_label: "Credit Management"
 
 # Credit Management
 
-<YouTubeEmbed videoId="KcVygBU4tfc" poster="https://storage.googleapis.com/rad-public-2b65/getting_started/Credit_Management.png" />
 
 <br/>
 

@@ -1,5 +1,4 @@
 # PDE Certification Preparation Guide: Section 3 — Applying site reliability engineering practices (~18% of the exam)
-<YouTubeEmbed videoId="Q9wkLb9Xggc" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pde_section3.png" />
 
 <br/>
 

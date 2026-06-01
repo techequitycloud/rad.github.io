@@ -1,5 +1,4 @@
 # PSE Certification Preparation Guide: Section 4 — Managing operations (~19% of the exam)
-<YouTubeEmbed videoId="BNZvw8Sbeck" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pse_section4.png" />
 
 <br/>
 

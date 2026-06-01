@@ -1,5 +1,4 @@
 # PCA Certification Preparation Guide: Section 5 — Managing implementation (~12.5% of the exam)
-<YouTubeEmbed videoId="qx_H91r5Eo0" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pca_section5.png" />
 
 <br/>
 

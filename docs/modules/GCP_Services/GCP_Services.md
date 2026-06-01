@@ -1,6 +1,5 @@
 # Services GCP Module
 
-<YouTubeEmbed videoId="AbseyUBpOqM" poster="https://storage.googleapis.com/rad-public-2b65/modules/Services_GCP.png" />
 
 <br/>
 

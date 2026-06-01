@@ -1,5 +1,4 @@
 # PDE Certification Preparation Guide: Section 5 — Optimizing performance and cost (~12% of the exam)
-<YouTubeEmbed videoId="SH_-SABGmjE" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pde_section5.png" />
 
 <br/>
 

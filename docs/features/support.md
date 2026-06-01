@@ -3,11 +3,8 @@ title: Support Features
 slug: /features/support
 ---
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
-
 <br/>
 
-<AudioPlayer src="https://storage.googleapis.com/rad-public-2b65/features/support_features.m4a" />
 
 <br/>
 

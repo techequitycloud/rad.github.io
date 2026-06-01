@@ -1,5 +1,4 @@
 # PSE Certification Preparation Guide: Section 5 — Supporting compliance requirements (~11% of the exam)
-<YouTubeEmbed videoId="K_Ejp4mEAw0" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pse_section5.png" />
 
 <br/>
 

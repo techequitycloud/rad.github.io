@@ -1,5 +1,4 @@
 # PCA Certification Preparation Guide: Section 2 — Managing and provisioning a cloud solution infrastructure (~17.5% of the exam)
-<YouTubeEmbed videoId="vzR87W5HX8Y" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pca_section2.png" />
 
 <br/>
 

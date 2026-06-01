@@ -1,5 +1,4 @@
 # PDE Certification Preparation Guide: Section 2 — Building and implementing CI/CD pipelines (~25% of the exam)
-<YouTubeEmbed videoId="VNQJCYZ1ndE" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pde_section2.png" />
 
 <br/>
 

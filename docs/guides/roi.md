@@ -1,7 +1,6 @@
 
 # ROI Guide
 
-<YouTubeEmbed videoId="0UefEWxQ9Rk" poster="https://storage.googleapis.com/rad-public-2b65/guides/roi_guide.png" />
 
 <br/>
 

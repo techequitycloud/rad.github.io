@@ -1,5 +1,4 @@
 # PSE Certification Preparation Guide: Section 1 — Configuring access (~25% of the exam)
-<YouTubeEmbed videoId="sfZbVonDKLI" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pse_section1.png" />
 
 <br/>
 

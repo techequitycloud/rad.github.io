@@ -4,8 +4,6 @@ title: Admin Tutorial
 
 # Tutorial: Administrator Setup
 
-<YouTubeEmbed videoId="Cn54xF-P0Go" />
-
 ## 1. Introduction
 This tutorial covers the essential tasks for setting up a new RAD platform instance. You will configure global settings, connect the platform repository, publish modules, and configure monetization settings like subscription tiers and user credits.
 

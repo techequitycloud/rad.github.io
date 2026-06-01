@@ -5,11 +5,9 @@ slug: /workflows/support
 
 # Support Workflow
 
-<YouTubeEmbed videoId="l-mKpdHP-1M" poster="https://storage.googleapis.com/rad-public-2b65/workflows/support_workflow.png" />
 
 # Support Workflow
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflows/support_workflow.m4a" title="Support Workflow Audio" />
 
 ## 1. Introduction
 This tutorial is designed for **Support** users. You will learn how to use your enhanced permissions to troubleshoot user deployments, restore soft-deleted deployments, manage the module catalog, and leverage the Jules AI assistant to debug module issues.

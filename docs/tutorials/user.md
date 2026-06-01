@@ -4,8 +4,6 @@ title: User Tutorial
 
 # Tutorial: User Guide
 
-<YouTubeEmbed videoId="Gxo4EuwmLcU" />
-
 ## 1. Introduction
 Welcome to the platform! This tutorial covers the core actions you'll perform as a user: deploying applications, managing them, and tracking your credits.
 

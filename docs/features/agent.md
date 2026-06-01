@@ -3,11 +3,8 @@ title: Agent Features
 slug: /features/agents
 ---
 
-import AudioPlayer from '@site/src/components/AudioPlayer';
-
 <br/>
 
-<AudioPlayer src="https://storage.googleapis.com/rad-public-2b65/features/agent_features.m4a" />
 
 <br/>
 

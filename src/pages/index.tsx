@@ -5,7 +5,6 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import HomepageFeatures from '@site/src/components/HomepageFeatures';
 import Heading from '@theme/Heading';
-import YouTubeEmbed from '@site/src/components/YouTubeEmbed';
 
 import styles from './index.module.css';
 
@@ -30,21 +29,6 @@ function HomepageHeader() {
   );
 }
 
-function HomepageVideo() {
-  return (
-    <section>
-      <div className="container" style={{margin: '2rem auto'}}>
-        <div style={{maxWidth: '50%', margin: '0 auto', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'}}>
-          <YouTubeEmbed
-            videoId="40t9A7sN8Yo"
-            poster="https://storage.googleapis.com/rad-public-2b65/gcp/gcp_cert_accelerator.png"
-            title="GCP Certification Accelerator"
-          />
-        </div>
-      </div>
-    </section>
-  );
-}
 
 export default function Home(): ReactNode {
   const {siteConfig} = useDocusaurusContext();
@@ -55,7 +39,6 @@ export default function Home(): ReactNode {
       <HomepageHeader />
       <main>
         <HomepageFeatures />
-        <HomepageVideo />
       </main>
     </Layout>
   );

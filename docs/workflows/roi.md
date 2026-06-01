@@ -1,7 +1,6 @@
 
 # ROI Workflow
 
-<YouTubeEmbed videoId="RkWtwF0fPdw" poster="https://storage.googleapis.com/rad-public-2b65/workflows/roi_workflow.png" />
 
 <br/>
 

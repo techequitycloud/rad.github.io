@@ -5,11 +5,9 @@ slug: /workflows/admin
 
 # Tutorial: Administrator Workflow
 
-<YouTubeEmbed videoId="l-mKpdHP-1M" poster="https://storage.googleapis.com/rad-public-2b65/workflows/admin_workflow.png" />
 
 # Tutorial: Administrator Workflow
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflows/admin_workflow.m4a" title="Admin Workflow Audio" />
 
 ## 1. Introduction
 This tutorial covers the essential tasks for setting up a new RAD platform instance. You will configure global settings, connect the platform repository, publish modules, and configure monetization settings like subscription tiers and user credits.

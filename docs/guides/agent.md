@@ -5,11 +5,9 @@ slug: /guides/agent
 
 # Agent Guide
 
-<YouTubeEmbed videoId="2R4Ek8airqI" poster="https://storage.googleapis.com/rad-public-2b65/guides/agent_guide.png" />
 
 # Agent Guide
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/guides/agent_guide.m4a" title="Agent Quick Start Audio" />
 
 ## 1. Introduction
 

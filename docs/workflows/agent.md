@@ -5,11 +5,9 @@ slug: /workflows/agent
 
 # Agent Workflow
 
-<YouTubeEmbed videoId="dP3jBocmh4k" poster="https://storage.googleapis.com/rad-public-2b65/workflows/agent_workflow.png" />
 
 # Agent Workflow
 
-<AudioPlayer url="https://storage.googleapis.com/rad-public-2b65/workflows/agent_workflow.m4a" title="Agent Workflow Audio" />
 
 ## 1. Introduction
 The Agent Program allows you to earn revenue by referring new users to the platform. This tutorial explains how to find your referral code, track your earnings, and use the Jules AI assistant to support your referred users.

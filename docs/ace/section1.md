@@ -1,5 +1,4 @@
 # ACE Certification Preparation Guide: Section 1 — Setting up a Cloud Solution Environment (~23% of the exam)
-<YouTubeEmbed videoId="2OKs5qD_sx0" poster="https://storage.googleapis.com/rad-public-2b65/gcp/ace_section1.png" />
 
 <br/>
 

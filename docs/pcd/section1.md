@@ -1,5 +1,4 @@
 # PCD Certification Preparation Guide: Section 1 — Designing highly scalable, available, and reliable cloud-native applications (~36% of the exam)
-<YouTubeEmbed videoId="jmnCizibwSo" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pcd_section1.png" />
 
 <br/>
 

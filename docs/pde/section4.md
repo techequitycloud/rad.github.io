@@ -1,5 +1,4 @@
 # PDE Certification Preparation Guide: Section 4 — Implementing observability practices and troubleshooting issues (~25% of the exam)
-<YouTubeEmbed videoId="_lc9jAQk_jA" poster="https://storage.googleapis.com/rad-public-2b65/gcp/pde_section4.png" />
 
 <br/>
 

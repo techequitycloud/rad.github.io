@@ -1,5 +1,4 @@
 # ACE Certification Preparation Guide: Section 4 — Configuring access and security (~20% of the exam)
-<YouTubeEmbed videoId="uw32ChdWkTg" poster="https://storage.googleapis.com/rad-public-2b65/gcp/ace_section4.png" />
 
 <br/>
 

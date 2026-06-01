@@ -1,5 +1,4 @@
 # ACE Certification Preparation Guide: Section 2 — Planning and implementing a cloud solution (~30% of the exam)
-<YouTubeEmbed videoId="O9Ac6Q4dlZs" poster="https://storage.googleapis.com/rad-public-2b65/gcp/ace_section2.png" />
 
 <br/>
 
