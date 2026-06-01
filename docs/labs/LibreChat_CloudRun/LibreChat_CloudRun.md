@@ -107,4 +107,4 @@ These are injected natively by Cloud Run — never stored in plaintext.
 
 ## Lab Guide
 
-For hands-on deployment steps, see the [LibreChat Cloud Run Lab Guide](./LibreChat_CloudRun_Lab.md).
+For hands-on deployment steps, see the [LibreChat Cloud Run Lab Guide](../LibreChat_CloudRun_Lab/LibreChat_CloudRun_Lab.md).

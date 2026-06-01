@@ -50,4 +50,4 @@ LiteLLM is an open-source LLM proxy and AI gateway providing a **unified OpenAI-
 
 ## Lab Guide
 
-For hands-on deployment steps, see the [LiteLLM GKE Lab Guide](./LiteLLM_GKE_Lab.md).
+For hands-on deployment steps, see the [LiteLLM GKE Lab Guide](../LiteLLM_GKE_Lab/LiteLLM_GKE_Lab.md).

@@ -52,7 +52,7 @@ This document provides a comprehensive reference for the `modules/LiteLLM_GKE` T
 
 ### B. Database (Cloud SQL — PostgreSQL 15)
 
-Same as `LiteLLM_CloudRun`. See [LiteLLM_CloudRun §3.B](./LiteLLM_CloudRun.md#b-database-cloud-sql--postgresql-15).
+Same as `LiteLLM_CloudRun`. See [LiteLLM_CloudRun §3.B](../LiteLLM_CloudRun/LiteLLM_CloudRun.md#b-database-cloud-sql--postgresql-15).
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -71,7 +71,7 @@ Same as `LiteLLM_CloudRun`. See [LiteLLM_CloudRun §3.B](./LiteLLM_CloudRun.md#b
 
 ### D. Storage & Networking
 
-Same variables as `LiteLLM_CloudRun`. See [LiteLLM_CloudRun §3.E](./LiteLLM_CloudRun.md#e-storage) and [§3.F](./LiteLLM_CloudRun.md#f-networking).
+Same variables as `LiteLLM_CloudRun`. See [LiteLLM_CloudRun §3.E](../LiteLLM_CloudRun/LiteLLM_CloudRun.md#e-storage) and [§3.F](../LiteLLM_CloudRun/LiteLLM_CloudRun.md#f-networking).
 
 ### E. Initialization
 

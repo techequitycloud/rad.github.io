@@ -70,9 +70,9 @@ The GKE module, like the Cloud Run variant, automatically injects `GF_DATABASE_T
 
 ## Getting Started
 
-See the [Lab Guide](./Grafana_GKE_Lab.md) for step-by-step deployment instructions.
+See the [Lab Guide](../Grafana_GKE_Lab/Grafana_GKE_Lab.md) for step-by-step deployment instructions.
 
-See the [Configuration Guide](../modules/Grafana_GKE.md) for a complete variable reference.
+See the [Configuration Guide](../../modules/Grafana_GKE/Grafana_GKE.md) for a complete variable reference.
 
 ## Common Configuration Examples
 

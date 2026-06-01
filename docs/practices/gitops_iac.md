@@ -1,5 +1,5 @@
 ---
-id: gitops-iac
+id: gitops_iac
 title: GitOps & IaC
 ---
 

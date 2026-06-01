@@ -2,6 +2,9 @@
 title: User Features
 slug: /features/users
 ---
+
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 <img src="https://storage.googleapis.com/rad-public-2b65/features/user_features.png" alt="User Features Infographic" />
 
 <br/>

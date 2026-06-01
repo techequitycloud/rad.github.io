@@ -2,6 +2,9 @@
 title: Agent Features
 slug: /features/agents
 ---
+
+import AudioPlayer from '@site/src/components/AudioPlayer';
+
 <img src="https://storage.googleapis.com/rad-public-2b65/features/agent_features.png" alt="Agent Features Infographic" />
 
 <br/>

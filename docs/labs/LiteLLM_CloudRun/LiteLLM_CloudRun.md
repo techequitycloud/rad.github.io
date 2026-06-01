@@ -107,4 +107,4 @@ module "litellm" {
 
 ## Lab Guide
 
-For hands-on deployment steps, see the [LiteLLM Cloud Run Lab Guide](./LiteLLM_CloudRun_Lab.md).
+For hands-on deployment steps, see the [LiteLLM Cloud Run Lab Guide](../LiteLLM_CloudRun_Lab/LiteLLM_CloudRun_Lab.md).

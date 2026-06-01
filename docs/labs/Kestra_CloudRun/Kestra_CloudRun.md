@@ -267,7 +267,7 @@ export DB_SECRET=$(gcloud secrets list \
 
    > **REST API equivalent:**
    > ```
-   > POST https://<service-url>/api/v1/executions/hello-world
+   > POST https://&lt;service-url>/api/v1/executions/hello-world
    > {
    >   "namespace": "company.team"
    > }
@@ -330,7 +330,7 @@ export DB_SECRET=$(gcloud secrets list \
 
    > **REST API equivalent (list executions):**
    > ```
-   > GET https://<service-url>/api/v1/executions?namespace=company.team&flowId=hello-world
+   > GET https://&lt;service-url>/api/v1/executions?namespace=company.team&flowId=hello-world
    > ```
 
 ---
@@ -373,7 +373,7 @@ export DB_SECRET=$(gcloud secrets list \
 
    > **REST API equivalent (list namespaces):**
    > ```
-   > GET https://<service-url>/api/v1/namespaces
+   > GET https://&lt;service-url>/api/v1/namespaces
    > ```
 
 ---
@@ -424,7 +424,7 @@ export DB_SECRET=$(gcloud secrets list \
    > ```
    > POST https://logging.googleapis.com/v2/entries:list
    > {
-   >   "resourceNames": ["projects/<project-id>"],
+   >   "resourceNames": ["projects/&lt;project-id>"],
    >   "filter": "resource.type=\"cloud_run_revision\" resource.labels.service_name=~\"kestra\"",
    >   "orderBy": "timestamp desc",
    >   "pageSize": 50

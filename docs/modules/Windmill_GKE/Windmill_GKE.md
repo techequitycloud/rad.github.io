@@ -5,7 +5,7 @@ sidebar_label: "Windmill GKE"
 
 # Windmill_GKE Module — Configuration Guide
 
-This guide describes every configuration variable available in the `Windmill_GKE` module. `Windmill_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Windmill_Common`](../Windmill_Common/) shared application configuration to deploy the [Windmill](https://www.windmill.dev/) developer platform on Google Kubernetes Engine (GKE) Autopilot.
+This guide describes every configuration variable available in the `Windmill_GKE` module. `Windmill_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Windmill_Common`](../Windmill_Common/Windmill_Common.md) shared application configuration to deploy the [Windmill](https://www.windmill.dev/) developer platform on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Windmill_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Windmill** are described in full here.
 
