@@ -1,18 +1,11 @@
 ---
-title: "Wikijs CloudRun Module — Configuration Guide"
+title: "Wikijs_CloudRun Module — Configuration Guide"
 sidebar_label: "Wikijs CloudRun"
 ---
 
-# Wikijs CloudRun Module — Configuration Guide
+# Wikijs_CloudRun Module — Configuration Guide
 
-<YouTubeEmbed videoId="XpWRyS4o48o" poster="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
-`Wikijs_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Cloud Run Gen2. Wiki.js has 28,000+ GitHub stars and is adopted by software teams, healthcare organizations (including the Indonesia Ministry of Health), educational institutions, and government agencies (including Brazil social services). It replaces expensive Confluence licenses — saving $5–10/user/month — with support for Markdown, WYSIWYG editing, LDAP/SAML/OAuth, and Git sync for version-controlled knowledge management.
+`Wikijs_CloudRun` is a pre-configured wrapper around the [`App_CloudRun`](../App_CloudRun/App_CloudRun.md) module that deploys [Wiki.js](https://js.wiki/) — a powerful open-source wiki platform — on Google Cloud Run Gen2.
 
 Every variable in this module is passed through to `App_CloudRun`. The wrapper's role is to supply Wiki.js-appropriate defaults and to call the `Wikijs_Common` sub-module, which generates the application's container image configuration, database initialisation logic, GCS Fuse storage mounts, and database password wiring. You configure this module exactly as you would `App_CloudRun`; the sections below highlight only the variables whose defaults or behaviour differ meaningfully from `App_CloudRun`, or that are unique to this wrapper.
 
@@ -426,6 +419,34 @@ The table below covers all variables unique to or with notable defaults in `Wiki
 | `organization_id` | `string` | `""` | 21 | GCP Org ID for VPC-SC policy |
 | `enable_audit_logging` | `bool` | `false` | 21 | Enable Cloud Audit Logs |
 | `enable_vpc_sc` | `bool` | `false` | 21 | VPC Service Controls |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `DB_TYPE` | `"postgres"` (hardcoded in Common) | **Critical** | The Common module hardcodes `DB_TYPE = "postgres"` and enables the `pg_trgm` extension for full-text search. Overriding to `"mysql"` or `"sqlite"` via `environment_variables` will cause Wiki.js to misconnect and the `pg_trgm` extension install to fail during the db-init job. |
+| `DB_PASS` | Auto-injected from `database_password_secret` | **Critical** | Overriding `DB_PASS` via `environment_variables` (plain text) bypasses Secret Manager and exposes the database password in Terraform state and Cloud Run environment variable logs. Always use `secret_environment_variables`. |
+| `db_name` | `"wikijs"` | **High** | Must exactly match `DB_NAME` in `environment_variables`. The Common module pre-populates both to `"wikijs"`. If you change one, change the other. Mismatches cause the db-init job to create a different database than the one Wiki.js connects to. Immutable after first apply. |
+| `db_user` | `"wikijs"` | **High** | Must exactly match `DB_USER` in `environment_variables`. Same immutability constraint as `db_name`. |
+| `HA_STORAGE_PATH` | `"/wiki-storage"` (hardcoded in Common) | **High** | Wiki.js uses this path for file uploads and assets. The GCS volume is mounted at this path by the module. Overriding without also changing the GCS volume mount path causes Wiki.js to write uploads to the ephemeral container disk, which is lost on each new revision. |
+| `memory_limit` | `"2Gi"` | **High** | Under 512Mi the Node.js/Wiki.js process is OOM-killed on startup. Wiki.js renders pages in-process with markdown/HTML pipelines that are memory-intensive. Minimum `"1Gi"`; `"2Gi"` recommended. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Required for the Cloud SQL Auth Proxy sidecar. Disabling with a PostgreSQL backend causes all DB connections to fail immediately. |
+| `application_version` | `"2.5.311"` | **High** | Wiki.js 2.x and 3.x have different database schemas that are not forward-compatible. Do not mix versions between the container image and any existing database. Always test upgrades in staging. |
+| `startup_probe.initial_delay_seconds` | `60` | **High** | Wiki.js performs database schema migrations and module loading on first start. Reducing below 30 causes the container to be killed before the app is ready to serve requests. |
+| `startup_probe.failure_threshold` | `3` | **Medium** | With `period_seconds = 10` the default allows only 30 s for the app to become healthy after the initial delay. Increase `failure_threshold` to `12` or more for environments with slow Cloud SQL cold-start times. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero causes cold starts of 15–30 s. Wiki.js must reconnect to PostgreSQL and reload its module system, during which all page requests return errors. |
+| `max_instance_count` | `3` | **Medium** | Wiki.js uses PostgreSQL for persistent state and the GCS volume for file uploads. Multiple instances are safe for reads. However, the GCS FUSE mount is shared — ensure `gcs_volumes` is configured correctly before scaling out. |
+| `gcs_volumes` | `[]` (default; Common creates the bucket) | **High** | The storage bucket is created by the Common module but the GCS FUSE volume mount is not auto-configured. Ensure `gcs_volumes` is set in the CloudRun module to mount the bucket at `HA_STORAGE_PATH`, otherwise file uploads go to ephemeral disk. |
+| `enable_iap` | `false` | **High** | Leaves the Wiki.js login page publicly accessible. For internal wikis, always enable IAP or set `ingress_settings = "internal-and-cloud-load-balancing"`. |
+| `ingress_settings` | `"all"` | **High** | Default exposes Wiki.js to the public internet. For internal-only deployments restrict ingress. |
+| `enable_redis` | `false` | **Low** | Wiki.js does not natively integrate Redis for core functionality. Enabling Redis and providing `redis_host` is optional but not required for standard deployments. |
+| `postgres_extensions` | `["pg_trgm"]` (hardcoded in Common) | **High** | The `pg_trgm` extension is required by Wiki.js for full-text search. Do not disable `enable_postgres_extensions` (set to `true` by the Common module) or remove `pg_trgm` from the extensions list. Doing so causes all search operations to fail with a PostgreSQL function-not-found error. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Disabling automated backups leaves all wiki content, user accounts, and page history unprotected against accidental deletion. |
+| `enable_auto_password_rotation` | `false` | **Medium** | Enabling without sufficient `rotation_propagation_delay_sec` causes brief intervals of DB connectivity failures during the rotation window, making all wiki pages temporarily inaccessible. |
+| `secret_environment_variables` | `{ DB_PASS = "database_password_secret" }` | **Critical** | Removing `DB_PASS` from `secret_environment_variables` breaks the database connection — Wiki.js will fail to authenticate to PostgreSQL on startup. |
+| `timeout_seconds` | `300` | **Low** | Exporting large wiki spaces can take several minutes. Reducing below 120 s may abort in-progress export operations. |
 
 ## Destroying Resources
 

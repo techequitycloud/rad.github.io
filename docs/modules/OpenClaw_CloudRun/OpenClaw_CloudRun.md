@@ -5,20 +5,13 @@ sidebar_label: "OpenClaw CloudRun"
 
 # OpenClaw on Google Cloud Run
 
-<YouTubeEmbed videoId="Uu_1bO4NLsI" poster="https://storage.googleapis.com/rad-public-2b65/modules/OpenClaw_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/OpenClaw_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
 This document provides a comprehensive reference for the `modules/OpenClaw_CloudRun` Terraform module. It covers architecture, configuration variables, OpenClaw-specific behaviors, and operational patterns for deploying the OpenClaw AI agent gateway on Google Cloud Run (v2).
 
 ---
 
 ## 1. Module Overview
 
-OpenClaw is an open-source local AI agent that takes actions (not just generates responses), gaining rapid GitHub traction in late 2025. Its ecosystem of derivative startups generated approximately $400K/month in revenue within the first quarter of availability. Top use cases include contract review (legal teams report ~40% reduction in document review time), competitor monitoring, AI-powered content research, inbox triage, and DevOps security scanning. `OpenClaw_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects OpenClaw-specific application configuration, secrets, storage, and container build configuration via `OpenClaw_Common`, with per-tenant isolation for multi-tenant deployments.
+OpenClaw is a serverless, multi-tenant AI agent gateway that provides WebSocket-enabled conversational AI agents with persistent GCS-backed workspace storage. `OpenClaw_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects OpenClaw-specific application configuration, secrets, storage, and container build configuration via `OpenClaw_Common`.
 
 **Key Capabilities:**
 - **Compute**: Cloud Run v2 (Gen2), custom container image built from `ghcr.io/openclaw/openclaw`, scale-to-zero by default (`min_instance_count = 0`). CPU is always allocated (`cpu_always_allocated = true`) to support WebSocket connections and async agent operations.
@@ -281,10 +274,10 @@ Complete variable reference with UIMeta group assignments.
 | Variable | Group | Default |
 |---|---|---|
 | `module_description` | 0 | *(OpenClaw CloudRun description)* |
-| `module_documentation` | 0 | `"https://docs.radmodules.dev/docs/applications/openclaw"` |
+| `module_documentation` | 0 | `"https://docs.radmodules.dev/docs/modules/OpenClaw_CloudRun"` |
 | `module_dependency` | 0 | `["Services_GCP"]` |
 | `module_services` | 0 | *(GCP service list)* |
-| `credit_cost` | 0 | `100` |
+| `credit_cost` | 0 | `50` |
 | `require_credit_purchases` | 0 | `false` |
 | `enable_purge` | 0 | `true` |
 | `public_access` | 0 | `true` |
@@ -464,6 +457,32 @@ telegram_webhook_secret = "a1b2c3d4..."  # openssl rand -hex 32
 skills_repo_url = "https://github.com/my-org/openclaw-skills"
 skills_repo_ref = "main"
 ```
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `anthropic_api_key` | Required on first deploy | **Critical** | Must be provided on initial deployment. Without a valid Anthropic API key, the agent container starts but all AI requests fail with 401 authentication errors — the agent cannot process any task. The key is stored in Secret Manager; subsequent updates can be made via Secret Manager directly without redeploying. |
+| `gateway_token` | Auto-generated 64-character hex token | **High** | If left empty, a secure token is auto-generated and stored in Secret Manager. Supplying a weak or guessable value (e.g., a short word) allows unauthorised parties to invoke the OpenClaw gateway API if the service is publicly accessible. Retrieve the auto-generated token from Secret Manager before registering clients. |
+| `OPENCLAW_GATEWAY_TOKEN` consistency | Must match gateway_token | **Critical** | The gateway validates every incoming request against `OPENCLAW_GATEWAY_TOKEN`. If the token is rotated in Secret Manager without redeploying the Cloud Run service, the in-memory token and the Secret Manager value diverge — all client requests are rejected with 401 errors until the service is redeployed. |
+| `enable_telegram` | `false` | **Medium** | Setting to `true` without providing `telegram_bot_token` causes the Secret Manager secret to be created with an empty value — the Telegram bot will fail to authenticate with the Telegram API. Both `telegram_bot_token` and `telegram_webhook_secret` must be set when `enable_telegram = true`. |
+| `telegram_bot_token` | `""` | **High** | Required when `enable_telegram = true`. An empty token causes the Telegram integration to fail with API authentication errors; Telegram will not deliver any messages to the bot. |
+| `telegram_webhook_secret` | `""` | **High** | Required when `enable_telegram = true`. Used by the router to validate webhook payloads from Telegram. An empty or incorrect value allows any HTTP client to inject fake Telegram events into the agent. Generate with `openssl rand -hex 32`. |
+| `enable_slack` | `false` | **Medium** | Setting to `true` without providing `slack_bot_token` causes the Slack integration to start with an empty token, failing all Slack API calls silently. Both `slack_bot_token` and `slack_signing_secret` must be set together. |
+| `slack_bot_token` | `""` | **High** | Required when `enable_slack = true`. Must be a valid `xoxb-...` bot token. An invalid token causes all Slack API calls to fail with authentication errors; the bot cannot send or receive messages. |
+| `slack_signing_secret` | `""` | **High** | Required when `enable_slack = true`. Used to verify Slack request signatures in the router. An empty value disables signature verification, allowing any HTTP client to inject fake Slack events. |
+| `skills_repo_url` | `""` (no skill sync) | **Medium** | When set, the skills repository is cloned at container startup. An unreachable or incorrect URL causes the container startup to fail or hang, depending on the git timeout. Use a private repository URL only when the container has network access to the git host. |
+| `skills_repo_ref` | `"main"` | **Medium** | A non-existent branch or tag causes the git clone to fail at startup, preventing the agent from loading any skills. Always verify the ref exists in the repository before deploying. |
+| `NODE_ENV` (module-managed) | `"production"` | **Medium** | The module sets `NODE_ENV=production` automatically. Do not override this via `environment_variables` to `development` in a production deployment — it enables verbose debug logging, disables some security hardening, and increases memory usage. |
+| `container_port` | `8080` | **High** | Must match the `PORT` environment variable. A mismatch causes Cloud Run's health check to fail — the service starts but all requests return connection refused or timeout, and Cloud Run marks the revision as unhealthy. |
+| `min_instance_count` | `1` | **High** | Setting to `0` enables scale-to-zero. An agent that is scaled to zero cannot respond to Telegram/Slack webhook events until the instance warms up (15–30 seconds). Users experience delayed or dropped messages during cold-start periods. |
+| `enable_cloudsql_volume` | `false` by default (no SQL) | **Low** | OpenClaw uses GCS for state storage, not Cloud SQL. If a SQL database is provisioned, `enable_cloudsql_volume` must be `true`. Leave `false` if no SQL backend is used — enabling it without a Cloud SQL instance causes the sidecar to fail to connect. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | An empty string disables automated workspace backups. OpenClaw stores conversation history, agent state, and configuration in GCS. Without backups, a GCS object deletion or accidental bucket purge results in permanent loss of all agent state. |
+| `execution_environment` | `"gen2"` | **High** | Gen2 is required for NFS mounts and GCS Fuse. Gen1 does not support the socket paths or filesystem options required for GCS-backed workspace storage. |
+| `enable_iap` | `false` | **Medium** | Enabling IAP without `iap_oauth_client_id` and `iap_oauth_client_secret` leaves the service either fully blocked or unprotected. IAP also bypasses webhook signature verification — ensure Telegram/Slack webhook endpoints are exempted from IAP if they share the same service URL. |
+| `enable_vpc_sc` | `false` | **High** | Requires explicit `organization_id`. Without it, VPC Service Controls are silently skipped, giving a false sense of perimeter security around the API key secrets. |
 
 ## Destroying Resources
 

@@ -21,7 +21,7 @@ Consequences: self-identifying resources in Cloud Console / billing / audit logs
 
 ### 2. Per-deployment Terraform state (cross-ref)
 
-`_DEPLOYMENT_BUCKET_ID` substitution scopes Terraform state per tenant — no shared state file, no cross-tenant locking, independent upgrade cadence. Canonical in [practices/gitops-iac.md](../practices/gitops-iac.md) §2.
+`_DEPLOYMENT_BUCKET_ID` substitution scopes Terraform state per tenant — no shared state file, no cross-tenant locking, independent upgrade cadence. Canonical in [practices/gitops_iac.md](../practices/gitops_iac.md) §2.
 
 ### 3. Per-deployment VPC-SC perimeters (canonical multi-tenant strategy)
 
@@ -59,7 +59,7 @@ Identity-tier control mechanics canonical in [practices/devsecops.md](../practic
 - **`deploy_application = false`** — platform exists without the application, useful for onboarding/offboarding.
 - **`cloudbuild-destroy.yaml`** — clean per-tenant teardown.
 - **`cloudbuild-purge.yaml`** — aggressive cleanup for orphans.
-- **Backup/restore** — tenant data portability between deployments / projects / regions, canonical in [capabilities/disaster-recovery.md](disaster-recovery.md).
+- **Backup/restore** — tenant data portability between deployments / projects / regions, canonical in [capabilities/disaster_recovery.md](disaster_recovery.md).
 
 ### 7. Multi-tenant pipeline architecture (cross-ref)
 
@@ -67,7 +67,7 @@ A single Cloud Build pipeline serves all tenants via substitutions. New tenants 
 
 ### 8. Application catalogue as a marketplace surface
 
-The pre-built application modules constitute a curated catalogue an operator can offer to tenants as turnkey deployments. Canonical list in [outcomes/developer-productivity.md](../outcomes/developer-productivity.md).
+The pre-built application modules constitute a curated catalogue an operator can offer to tenants as turnkey deployments. Canonical list in [outcomes/developer_productivity.md](../outcomes/developer_productivity.md).
 
 ### 9. Partner-aware role documentation
 
@@ -76,10 +76,10 @@ The pre-built application modules constitute a curated catalogue an operator can
 ## Cross-references
 
 - [practices/devsecops.md](../practices/devsecops.md) — VPC-SC, IAM, WIF (control mechanics)
-- [practices/gitops-iac.md](../practices/gitops-iac.md) — per-deployment state isolation
+- [practices/gitops_iac.md](../practices/gitops_iac.md) — per-deployment state isolation
 - [practices/cicd.md](../practices/cicd.md) — multi-tenant pipeline
 - [practices/finops.md](../practices/finops.md) — per-tenant chargeback via Cloud Billing labels
 - [capabilities/networking.md](networking.md) — VPC-SC and inline CIDR networking implications
-- [capabilities/disaster-recovery.md](disaster-recovery.md) — tenant data portability
-- [outcomes/developer-productivity.md](../outcomes/developer-productivity.md) — application catalogue
-- [outcomes/compliance-governance.md](../outcomes/compliance-governance.md) — segregation of duties via persona docs
+- [capabilities/disaster_recovery.md](disaster_recovery.md) — tenant data portability
+- [outcomes/developer_productivity.md](../outcomes/developer_productivity.md) — application catalogue
+- [outcomes/compliance_governance.md](../outcomes/compliance_governance.md) — segregation of duties via persona docs

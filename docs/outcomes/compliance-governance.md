@@ -8,7 +8,7 @@
 
 - **Every change is a Git commit** — reviewed, attributable, reversible. Standard change-management evidence.
 - **Every deployment is a Cloud Build run** — inputs, build steps, outputs, durations all recorded; auditable and exportable.
-- **Reproducible builds** — `commit_hash.txt` + `repo_url.txt` per deployment make any prior production state reconstructible. IaC mechanics canonical in [practices/gitops-iac.md](../practices/gitops-iac.md).
+- **Reproducible builds** — `commit_hash.txt` + `repo_url.txt` per deployment make any prior production state reconstructible. IaC mechanics canonical in [practices/gitops_iac.md](../practices/gitops_iac.md).
 - **No "click-ops"** — all controls expressed as Terraform resources.
 
 `BUSINESS_CASE.md`: *"Infrastructure code can be scanned and audited. Changes are tracked via Git (Audit Trail), essential for SOC2/ISO27001 compliance."*
@@ -29,8 +29,8 @@ Map of common audit-control families to their canonical home in this repo:
 | Supply chain integrity (Binary Authorization, AR, CMEK) | [practices/devsecops.md](../practices/devsecops.md) §5 |
 | Network controls (Cloud Armor, NetworkPolicy, firewall) | [practices/devsecops.md](../practices/devsecops.md) §6 |
 | Audit logging (Cloud Audit Logs, SCC) | [capabilities/observability.md](../capabilities/observability.md) §4–5 |
-| Backup / DR | [capabilities/disaster-recovery.md](../capabilities/disaster-recovery.md) |
-| Tenant isolation | [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) |
+| Backup / DR | [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md) |
+| Tenant isolation | [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) |
 | Change management | [practices/cicd.md](../practices/cicd.md), `AGENTS.md` `/maintain` |
 
 ### 4. Mandatory `/security` audit workflow
@@ -48,7 +48,7 @@ Map of common audit-control families to their canonical home in this repo:
 
 ### 5. Change-management discipline
 
-`AGENTS.md` `/maintain` codifies the change process (canonical in [capabilities/disaster-recovery.md](../capabilities/disaster-recovery.md) §8): pre-change state review and backup; post-change verification and metric monitoring; critical-change gates for VPC / NFS / DB.
+`AGENTS.md` `/maintain` codifies the change process (canonical in [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md) §8): pre-change state review and backup; post-change verification and metric monitoring; critical-change gates for VPC / NFS / DB.
 
 ### 6. Segregation-of-duties via persona docs
 
@@ -73,19 +73,19 @@ This persona separation is the structural evidence auditors look for as proof of
 | Secret rotation | Manual or bespoke scripting | Automated via Cloud Scheduler + Cloud Run Jobs (`enable_auto_password_rotation`) |
 | Control drift detection | Periodic manual review | IaC re-apply reverts drift; plan-time validation blocks misconfigurations before apply |
 
-Quantified provisioning and operational savings: [outcomes/developer-productivity.md](developer-productivity.md) §4.
+Quantified provisioning and operational savings: [outcomes/developer_productivity.md](developer_productivity.md) §4.
 
 ### 8. Per-tenant compliance (cross-ref)
 
-Per-deployment VPC-SC perimeters, per-tenant Cloud Billing labels, per-app service accounts — multi-tenant isolation that satisfies tenant-scoped compliance requirements. Canonical in [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md).
+Per-deployment VPC-SC perimeters, per-tenant Cloud Billing labels, per-app service accounts — multi-tenant isolation that satisfies tenant-scoped compliance requirements. Canonical in [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md).
 
 ## Cross-references
 
 - [practices/devsecops.md](../practices/devsecops.md) — the controls themselves (§2–6)
 - [capabilities/observability.md](../capabilities/observability.md) — audit-log and security-finding sources (§4–5)
-- [practices/gitops-iac.md](../practices/gitops-iac.md) — IaC reproducibility / immutable change history
+- [practices/gitops_iac.md](../practices/gitops_iac.md) — IaC reproducibility / immutable change history
 - [practices/cicd.md](../practices/cicd.md) — pipeline-level change management (§4)
-- [capabilities/disaster-recovery.md](../capabilities/disaster-recovery.md) — backup, rollback, change-management checklist (§1–2, §8)
-- [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) — per-tenant isolation (§2–5)
-- [outcomes/skills-development.md](skills-development.md) — `/security` workflow alongside other agent workflows (§5)
-- [outcomes/zero-trust-security.md](zero-trust-security.md) — security-posture framing of the same controls
+- [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md) — backup, rollback, change-management checklist (§1–2, §8)
+- [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) — per-tenant isolation (§2–5)
+- [outcomes/education_enablement.md](education_enablement.md) — `/security` workflow alongside other agent workflows (§5)
+- [outcomes/security_zero_trust.md](security_zero_trust.md) — security-posture framing of the same controls

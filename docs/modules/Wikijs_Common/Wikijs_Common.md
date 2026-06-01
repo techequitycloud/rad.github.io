@@ -1,9 +1,9 @@
 ---
-title: "Wikijs Common Module"
+title: "Wikijs_Common Module"
 sidebar_label: "Wikijs Common"
 ---
 
-# Wikijs Common Module
+# Wikijs_Common Module
 
 ## Overview
 
@@ -21,23 +21,23 @@ The database password is not generated here; it is managed by the platform layer
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                          Wikijs_Common (Layer 1)                             │
 │                                                                              │
-│  Inputs: application_name, db_name, db_user, environment_variables, ...      │
+│  Inputs: application_name, db_name, db_user, environment_variables, ...     │
 │                                                                              │
-│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐     │
-│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │     │
-│  │                      │    │                                         │     │
-│  │  (none)              │    │  container_image: "requarks/wiki:2"     │     │
-│  │                      │    │  container_port: 3000                   │     │
-│  │                      │    │  database_type: POSTGRES_15             │     │
-│  │                      │    │  enable_postgres_extensions: true       │     │
-│  │                      │    │  postgres_extensions: ["pg_trgm"]       │     │
-│  │  GCS Bucket          │    │  secret_environment_variables:          │     │
-│  │   wikijs-storage     │    │    DB_PASS → "database_password_secret" │     │
-│  │  (created by         │    │  HA_STORAGE_PATH: "/wiki-storage"       │     │
-│  │   Layer 2)           │    │  initialization_jobs: [db-init]         │     │
-│  │                      │    │  startup_probe: HTTP /healthz 60s       │     │
-│  └──────────────────────┘    │  liveness_probe: HTTP /healthz 60s      │     │
-│                              └─────────────────────────────────────────┘     │
+│  ┌──────────────────────┐    ┌─────────────────────────────────────────┐    │
+│  │  GCP Resources       │    │  Config Output (consumed by Layer 2)    │    │
+│  │                      │    │                                         │    │
+│  │  (none)              │    │  container_image: "requarks/wiki:2"     │    │
+│  │                      │    │  container_port: 3000                   │    │
+│  │                      │    │  database_type: POSTGRES_15             │    │
+│  │                      │    │  enable_postgres_extensions: true       │    │
+│  │                      │    │  postgres_extensions: ["pg_trgm"]       │    │
+│  │  GCS Bucket          │    │  secret_environment_variables:          │    │
+│  │   wikijs-storage     │    │    DB_PASS → "database_password_secret" │    │
+│  │  (created by         │    │  HA_STORAGE_PATH: "/wiki-storage"       │    │
+│  │   Layer 2)           │    │  initialization_jobs: [db-init]         │    │
+│  │                      │    │  startup_probe: HTTP /healthz 60s       │    │
+│  └──────────────────────┘    │  liveness_probe: HTTP /healthz 60s      │    │
+│                              └─────────────────────────────────────────┘    │
 └──────────────────────────────────────────────────────────────────────────────┘
                     │
                     ▼
@@ -55,7 +55,7 @@ The database password is not generated here; it is managed by the platform layer
 
 | Bucket Suffix | Location | Storage Class | `force_destroy` | `versioning_enabled` | `public_access_prevention` | Purpose |
 |---------------|----------|---------------|-----------------|----------------------|----------------------------|---------|
-| `wikijs-storage` | `var.region` | `STANDARD` | `true` | `false` | `"inherited"` | Wiki.js asset storage and uploads |
+| `wikijs-storage` | `var.deployment_region` | `STANDARD` | `true` | `false` | `"inherited"` | Wiki.js asset storage and uploads |
 
 > **Note:** `public_access_prevention = "inherited"` means the bucket follows the organisation or project-level policy rather than enforcing a private-only setting. This differs from the `"enforced"` default used by most other modules. It allows GCS Fuse (which mounts the bucket into the container) to work without additional IAM overrides in some configurations.
 
@@ -86,7 +86,7 @@ There are no `secret_ids` or `secret_values` outputs — this module creates no 
 | `memory_limit` | string | `"2Gi"` | Memory limit (higher than most — Chromium/Puppeteer) |
 | `min_instance_count` | number | `1` | Minimum instances (stays warm) |
 | `max_instance_count` | number | `3` | Maximum instances |
-| `region` | string | `"us-central1"` | Region for the GCS bucket |
+| `deployment_region` | string | `"us-central1"` | Region for the GCS bucket |
 | `tenant_deployment_id` | string | `"demo"` | Tenant identifier |
 | `deployment_id` | string | `""` | Deployment identifier |
 | `enable_cloudsql_volume` | bool | `true` | Enable Cloud SQL Auth Proxy sidecar |
@@ -225,7 +225,7 @@ A thin wrapper that maps platform-standard variable names to Wiki.js's expected 
 module "wikijs_common" {
   source = "./modules/Wikijs_Common"
 
-  region               = "us-central1"
+  deployment_region    = "us-central1"
   tenant_deployment_id = "prod"
   application_version  = "2.5.311"
 

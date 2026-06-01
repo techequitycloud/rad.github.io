@@ -7,1087 +7,521 @@ sidebar_label: "Ghost GKE"
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Ghost_GKE)**
 
-This lab guide walks you through deploying, exploring, and operating the **Ghost** publishing
-platform on Google Kubernetes Engine (GKE) Autopilot using the **Ghost_GKE** module. You will
-explore a production-grade Kubernetes CMS architecture backed by Cloud SQL MySQL 8.0, Cloud
-Filestore NFS shared content storage, Workload Identity IAM, and Secret Manager — and practice
-Kubernetes workload inspection, database management, security verification, observability
-queries, and horizontal scaling using kubectl, gcloud CLI, and REST API.
+## Overview
+
+**Estimated time:** 3–4 hours
+
+Ghost is an open-source publishing platform for creating professional online publications — blogs, newsletters, and membership sites. This lab deploys Ghost 6.x on Google Kubernetes Engine (GKE) Autopilot backed by Cloud SQL MySQL 8.0, Cloud Filestore NFS for content storage, and Redis caching.
+
+### What the Module Automates
+
+- GKE Autopilot namespace and Kubernetes Deployment
+- Cloud SQL MySQL 8.0 instance, database, and user
+- Cloud SQL Auth Proxy sidecar injection
+- Cloud Filestore (NFS) instance for shared content storage
+- GCS Fuse volumes and Cloud Storage buckets
+- Secret Manager secrets (admin password, DB password)
+- Artifact Registry repository and Cloud Build image pipeline
+- Workload Identity and IAM bindings
+- Kubernetes Service (LoadBalancer), HPA, and PodDisruptionBudget
+- Cloud Monitoring uptime checks and alert policies
+
+### What You Do Manually
+
+- Note the deployment outputs (external IP, namespace, etc.) from the RAD UI deployment panel
+- Obtain the external load balancer IP and confirm Ghost is reachable
+- Configure kubectl with cluster credentials
+- Complete the Ghost admin setup wizard
+- Create and publish content (posts, pages, tags)
+- Configure membership tiers and newsletter settings
+- Explore themes and design settings
+- Review logs in Cloud Logging and metrics in Cloud Monitoring
+- Scale pods and observe HPA behaviour
 
 ---
 
-## Table of Contents
+## CLI and REST API Overview
 
-1. [Overview](#1-overview)
-2. [Architecture](#2-architecture)
-3. [Prerequisites](#3-prerequisites)
-4. [Lab Setup](#4-lab-setup)
-5. [Exercise 1 — Access Ghost](#exercise-1--access-ghost)
-6. [Exercise 2 — Content Management](#exercise-2--content-management)
-7. [Exercise 3 — Kubernetes Workloads](#exercise-3--kubernetes-workloads)
-8. [Exercise 4 — Database and Migrations](#exercise-4--database-and-migrations)
-9. [Exercise 5 — Workload Identity and Security](#exercise-5--workload-identity-and-security)
-10. [Exercise 6 — Cloud Logging](#exercise-6--cloud-logging)
-11. [Exercise 7 — Cloud Monitoring](#exercise-7--cloud-monitoring)
-12. [Exercise 8 — Scaling and Operations](#exercise-8--scaling-and-operations)
-13. [Cleanup](#13-cleanup)
-14. [Reference](#14-reference)
+This lab uses two tools to interact with the deployment:
 
----
-
-## 1. Overview
-
-### What Is Ghost?
-
-Ghost is a professional open-source publishing platform for newsletters, memberships, and
-content sites — trusted by Buffer, Cloudflare, DuckDuckGo, Duolingo, FreeCodeCamp, Revolut,
-and Kickstarter. With 22,000+ active customers and 100,000+ websites, Ghost delivers built-in
-subscription monetization, native SEO, and superior page speed. The `Ghost_GKE` module
-deploys Ghost 6.x on GKE Autopilot with Cloud SQL MySQL 8.0, Cloud Filestore NFS, Redis
-caching, Workload Identity, and a Kubernetes LoadBalancer service.
-
-### Key Capabilities Demonstrated
-
-| Capability | What It Demonstrates |
+| Tool | Purpose |
 |---|---|
-| **GKE Autopilot** | Managed Kubernetes with automatic node provisioning and security hardening |
-| **MySQL 8.0 Backend** | Cloud SQL MySQL 8.0 connected via Cloud SQL Auth Proxy sidecar |
-| **Workload Identity** | Pod-level GCP IAM without service account keys |
-| **Shared NFS Storage** | Cloud Filestore NFS mounted into all Ghost pods for consistent content |
-| **Redis Page Caching** | Redis backend reducing DB query load across multiple pods |
-| **Horizontal Pod Autoscaler** | Automatic scaling based on CPU utilization |
-| **Kubernetes Operations** | Deployment inspection, rolling updates, manual scaling, and rollbacks |
+| `gcloud` | Retrieve secrets, query GCP resources |
+| `kubectl` | Inspect pods, deployments, and services |
+
+Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install), [kubectl](https://kubernetes.io/docs/tasks/tools/)
 
 ---
 
-## 2. Architecture
+## Prerequisites
 
-```
-External Traffic (HTTP)
-        │
-        ▼
-  Kubernetes Service (LoadBalancer)
-  External IP → NodePort → Ghost Pod(s)
-  ┌──────────────────────────────────────────────┐
-  │  Ghost Deployment  (namespace: appghost…)    │
-  │                                              │
-  │  ┌─────────────────────────────────────────┐ │
-  │  │ ghost container                          │ │
-  │  │   entrypoint.sh → Ghost 6.x Node.js      │ │
-  │  │   port 2368                              │ │
-  │  │ cloudsql-proxy sidecar                   │ │
-  │  │   /cloudsql/<instance-connection-name>   │ │
-  │  └─────────────────────────────────────────┘ │
-  │  NFS PVC → Cloud Filestore /mnt/nfs          │
-  └──────────────────────────────────────────────┘
-        │ VPC Private Networking
-        ├────────────────────────────┐
-        ▼                            ▼
-  Cloud SQL MySQL 8.0         Cloud Filestore NFS
-  ghost database              shared content volume
-        │
-        ▼
-  Redis (NFS VM IP:6379)
-  Ghost page cache
-```
-
-### Infrastructure
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  Google Cloud Project                                            │
-│  ┌────────────────────────────────────────────────────────────┐  │
-│  │  GKE Autopilot Cluster                                     │  │
-│  │                                                            │  │
-│  │  ┌──────────────────────────────────────────────────────┐  │  │
-│  │  │  Namespace: appghost<tenant><id>                     │  │  │
-│  │  │                                                      │  │  │
-│  │  │  Deployment: ghost         HPA: min=1 max=5          │  │  │
-│  │  │  Service: LoadBalancer     PDB: minAvailable=1       │  │  │
-│  │  │  ServiceAccount (Workload Identity bound)            │  │  │
-│  │  │  Job: db-init (completed)                            │  │  │
-│  │  └──────────────────────────────────────────────────────┘  │  │
-│  └────────────────────────────────────────────────────────────┘  │
-│                                                                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐   │
-│  │  Cloud SQL   │  │  Filestore   │  │  Redis (NFS VM)       │   │
-│  │  MySQL 8.0   │  │  NFS share   │  │  page cache           │   │
-│  └──────────────┘  └──────────────┘  └───────────────────────┘   │
-│                                                                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐   │
-│  │  Secret Mgr  │  │  Logging     │  │  Monitoring           │   │
-│  │  DB creds    │  │  k8s_container│  │  uptime check         │  │
-│  └──────────────┘  └──────────────┘  └───────────────────────┘   │
-└──────────────────────────────────────────────────────────────────┘
-
-Module variable wiring:
-
-  Ghost_GKE
-    application_version   = "6.14.0"  →  Ghost container image tag
-    min_instance_count    = 1         →  always one pod running
-    max_instance_count    = 5         →  HPA maximum replicas
-    enable_nfs            = true      →  Cloud Filestore NFS mounted
-    enable_redis          = true      →  Redis page caching enabled
-    enable_cloudsql_volume= true      →  Auth Proxy sidecar injected
-    database_type         = MYSQL_8_0 →  Ghost requires MySQL 8.0
-```
+1. A GCP project with billing enabled.
+2. The `Services_GCP` module deployed in the same project (provides VPC, GKE cluster, Cloud SQL instance, and NFS server).
+3. Access to the RAD UI with permission to deploy modules in the target GCP project.
+4. The following APIs enabled (Services_GCP handles this):
+   - `container.googleapis.com`
+   - `sqladmin.googleapis.com`
+   - `secretmanager.googleapis.com`
+   - `artifactregistry.googleapis.com`
+   - `cloudbuild.googleapis.com`
+   - `file.googleapis.com`
+5. `gcloud` authenticated: `gcloud auth application-default login`
+6. `kubectl` installed and available in PATH.
 
 ---
 
-## 3. Prerequisites
+## Phase 1 — Deploy Infrastructure [AUTOMATED]
 
-### Required Tools
+### Step 1.1 — Configure Variables
 
-| Tool | Minimum Version | Install |
-|---|---|---|
-| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
-| `kubectl` | 1.29+ | `gcloud components install kubectl` |
-| `curl` / `jq` | Any | System package manager |
+Variables are configured in the RAD UI form before deploying. Use the table below to understand what each field controls.
 
-### GCP Permissions
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `project_id` | Yes | — | GCP project ID |
+| `tenant_deployment_id` | No | `"demo"` | Short identifier for this deployment (e.g. `"prod"`) |
+| `deployment_id` | No | `""` | Auto-generated suffix appended to resource names |
+| `region` | No | `"us-central1"` | GCP region for resources |
+| `application_name` | No | `"ghost"` | Base name used in Kubernetes and GCP resource naming |
+| `application_version` | No | `"6.14.0"` | Ghost container image version |
+| `deploy_application` | No | `true` | Set `false` to provision infrastructure only |
+| `gke_cluster_name` | No | `""` | Target GKE cluster name (auto-discovered if empty) |
+| `min_instance_count` | No | `1` | Minimum pod replicas |
+| `max_instance_count` | No | `5` | Maximum pod replicas |
+| `cpu_limit` | No | `"2000m"` | CPU limit per Ghost container |
+| `memory_limit` | No | `"4Gi"` | Memory limit per Ghost container |
+| `db_name` | No | `"ghost"` | MySQL database name |
+| `db_user` | No | `"ghost"` | MySQL database username |
+| `enable_redis` | No | `true` | Enable Redis caching |
+| `redis_host` | No | `""` | Redis host IP (defaults to NFS server IP) |
+| `redis_port` | No | `"6379"` | Redis port |
+| `enable_nfs` | No | `true` | Mount Cloud Filestore NFS for content |
+| `nfs_mount_path` | No | `"/mnt/nfs"` | NFS mount path inside the container |
+| `environment_variables` | No | SMTP defaults | SMTP settings: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SSL`, `EMAIL_FROM` |
+| `backup_schedule` | No | `"0 2 * * *"` | Cron schedule for automated backups |
+| `backup_retention_days` | No | `7` | Days to retain backup files |
+| `support_users` | No | `[]` | Email addresses for monitoring alerts |
+| `resource_labels` | No | `{}` | Labels applied to all resources |
 
-```
-roles/owner                    # or the following fine-grained set:
-roles/container.developer
-roles/cloudsql.admin
-roles/secretmanager.viewer
-roles/logging.viewer
-roles/monitoring.viewer
-roles/iam.serviceAccountViewer
-```
+### Step 1.2 — Initiate Deployment
 
-### Environment Variables
+Deployment is initiated from the RAD UI. Fill in the variable form and click **Deploy**.
+
+**Approximate deployment durations:**
+
+| Phase | Duration |
+|---|---|
+| VPC and networking (via Services_GCP) | Pre-provisioned |
+| Cloud SQL MySQL instance creation | 8–12 min |
+| GKE namespace and workload identity | 2–3 min |
+| Artifact Registry image build (Cloud Build) | 5–10 min |
+| Ghost pod start and health checks | 3–5 min |
+| **Total** | **18–30 min** |
+
+### Step 1.3 — Record Outputs
+
+After deployment completes, the following outputs are available in the RAD UI deployment panel.
+
+| Output | Description |
+|---|---|
+| `service_external_ip` | External LoadBalancer IP |
+| `service_name` | Kubernetes service name |
+| `namespace` | Kubernetes namespace |
+| `database_instance_name` | Cloud SQL instance name |
+| `database_password_secret` | Secret Manager secret name for the DB password |
+| `nfs_server_ip` | NFS server IP (Filestore) |
+| `deployment_id` | Unique deployment identifier |
+
+Set shell variables for use in later steps using discovery commands:
 
 ```bash
-export PROJECT="your-gcp-project-id"
-export REGION="us-central1"
-export CLUSTER="your-gke-cluster-name"
-
-gcloud config set project "${PROJECT}"
-gcloud config set compute/region "${REGION}"
-```
-
----
-
-## 4. Lab Setup
-
-### 4.1 Deploy via RAD UI
-
-Deploy the `Ghost_GKE` module via the RAD UI. In the variable form, set:
-
-| Variable | Value | Notes |
-|---|---|---|
-| `project_id` | `your-gcp-project-id` | Required |
-| `region` | `us-central1` | GCP region |
-| `application_name` | `ghost` | Base resource name |
-| `application_version` | `6.14.0` | Ghost image tag |
-| `tenant_deployment_id` | `demo` | Short deployment suffix |
-| `deploy_application` | `true` | Deploy the Ghost workload |
-| `enable_nfs` | `true` | Cloud Filestore NFS for content |
-| `enable_redis` | `true` | Redis page caching |
-| `db_name` | `ghost` | MySQL database name |
-| `db_user` | `ghost` | MySQL application user |
-| `min_instance_count` | `1` | Minimum pod replicas |
-| `max_instance_count` | `5` | Maximum pod replicas (HPA) |
-| `cpu_limit` | `2000m` | CPU per Ghost pod |
-| `memory_limit` | `4Gi` | Memory per Ghost pod |
-| `support_users` | `[your-email]` | Alert notification recipients |
-
-Click **Deploy** and wait for provisioning to complete (approximately 20–30 minutes).
-
-> **What this provisions:** GKE Autopilot namespace with Kubernetes Deployment, Service
-> (LoadBalancer), HPA, PodDisruptionBudget, and ServiceAccount with Workload Identity.
-> Cloud SQL MySQL 8.0 instance with `ghost` database and user. Cloud Filestore NFS instance.
-> Secret Manager secrets for DB password. Artifact Registry repository. Cloud Build image
-> pipeline. Cloud Monitoring uptime check. A `db-init` Kubernetes Job runs automatically
-> during deployment to initialize the MySQL schema.
-
-### 4.2 Configure Shell Environment
-
-```bash
-export PROJECT="your-gcp-project-id"
-export REGION="us-central1"
+export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
+export REGION="us-central1"             # the region you deployed into
+export TOKEN=$(gcloud auth print-access-token)
 
 # Discover the GKE cluster
 export CLUSTER=$(gcloud container clusters list \
-  --project="${PROJECT}" \
+  --project=${PROJECT} \
   --format="value(name)" \
   --limit=1)
 
-echo "Cluster: ${CLUSTER}"
+# Configure kubectl
+gcloud container clusters get-credentials ${CLUSTER} \
+  --region=${REGION} \
+  --project=${PROJECT}
 
-# Discover the DB password secret
-export DB_SECRET=$(gcloud secrets list \
-  --project="${PROJECT}" \
-  --filter="name~ghost" \
-  --format="value(name)" \
-  --limit=1)
-
-echo "DB Secret: ${DB_SECRET}"
-```
-
-### 4.3 Configure kubectl
-
-```bash
-gcloud container clusters get-credentials "${CLUSTER}" \
-  --region="${REGION}" \
-  --project="${PROJECT}"
-
-kubectl cluster-info
-kubectl get nodes
-
-# Discover the Ghost namespace (pattern: appghost<tenant><id>)
+# Discover the namespace (pattern: app<appname><tenant><deploymentid>)
 export NAMESPACE=$(kubectl get namespaces --no-headers \
   -o custom-columns=":metadata.name" | grep "^appghost" | head -1)
 
-echo "Namespace: ${NAMESPACE}"
-
 # Discover the external IP
-export EXTERNAL_IP=$(kubectl get svc -n "${NAMESPACE}" \
+export EXTERNAL_IP=$(kubectl get svc -n ${NAMESPACE} \
   -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
 
-echo "Ghost URL: http://${EXTERNAL_IP}"
-```
-
----
-
-## Exercise 1 — Access Ghost
-
-### Objective
-
-Retrieve the external LoadBalancer IP, confirm Ghost is reachable, and log into the Ghost
-Admin panel for the first time.
-
-### Step 1.1 — Get the External Service IP
-
-**kubectl:**
-```bash
-kubectl get service -n "${NAMESPACE}"
-
-EXTERNAL_IP=$(kubectl get svc -n "${NAMESPACE}" \
-  -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
-echo "Ghost URL: http://${EXTERNAL_IP}"
-```
-
-**gcloud:**
-```bash
-gcloud compute forwarding-rules list \
-  --project="${PROJECT}" \
-  --format="table(name, IPAddress, target)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '.name'
-```
-
-**Expected result:** An external IP address is returned. If the IP shows `<pending>`, wait 1–2 minutes for the load balancer to provision.
-
-### Step 1.2 — Verify Ghost is Running
-
-**kubectl:**
-```bash
-kubectl get pods -n "${NAMESPACE}"
-```
-
-Expected output:
-```
-NAME                        READY   STATUS    RESTARTS   AGE
-ghost-<hash>-<hash>         2/2     Running   0          5m
-db-init-<hash>              0/1     Completed 0          6m
-```
-
-**Expected result:** The Ghost pod shows `2/2 READY` (ghost container + Cloud SQL Auth Proxy sidecar). The `db-init` job shows `Completed`.
-
-### Step 1.3 — Confirm Ghost is Reachable via HTTP
-
-```bash
-curl -s -o /dev/null -w "%{http_code}" "http://${EXTERNAL_IP}"
-```
-
-**Expected result:** HTTP `200` (or a redirect). If `000`, wait for the pod to become fully ready.
-
-### Step 1.4 — Access the Ghost Admin Setup Wizard
-
-Open `http://${EXTERNAL_IP}/ghost` in a browser.
-
-Complete the setup wizard:
-1. Enter a site title (e.g. "My Ghost Blog").
-2. Enter your admin name, email, and password.
-3. Click **Create your account**.
-4. Ghost redirects to the Admin dashboard.
-
-**Expected result:** You are logged into Ghost Admin at `http://${EXTERNAL_IP}/ghost/#/dashboard`.
-
-### Step 1.5 — Retrieve DB Credentials from Secret Manager
-
-```bash
-# List Ghost-related secrets
-gcloud secrets list \
-  --project="${PROJECT}" \
+# Discover the database password secret
+export DB_SECRET=$(gcloud secrets list \
+  --project=${PROJECT} \
   --filter="name~ghost" \
-  --format="table(name, createTime)"
-
-# Access the DB password
-gcloud secrets versions access latest \
-  --secret="${DB_SECRET}" \
-  --project="${PROJECT}"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets?filter=name%3Aghost" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '.secrets[].name'
-```
-
-**Expected result:** Ghost-related secrets are listed and the DB password is returned as a plaintext value.
-
----
-
-## Exercise 2 — Content Management
-
-### Objective
-
-Create and publish posts, manage pages and tags, upload images, and verify content appears
-on the public Ghost site.
-
-### Step 2.1 — Create and Publish a Post
-
-1. In Ghost Admin, click **Posts** in the left sidebar.
-2. Click **New post** (top-right).
-3. Enter a title and body text.
-4. Click the settings gear to add a tag and featured image.
-5. Click **Publish** → **Publish** to confirm.
-
-**Expected result:** The post appears in the Posts list with status `Published`. Navigate to `http://${EXTERNAL_IP}` — the post is visible on the front page.
-
-### Step 2.2 — Create a Static Page
-
-1. Click **Pages** in the sidebar.
-2. Click **New page**, enter "About" as the title, add content.
-3. Click **Publish** → **Publish**.
-
-**Expected result:** The page is accessible at `http://${EXTERNAL_IP}/about`.
-
-### Step 2.3 — Upload an Image
-
-1. Open a post in the editor.
-2. Click **+** to add a card, select **Image**, and upload a file.
-
-**kubectl — verify NFS mount is active:**
-```bash
-kubectl describe pod -n "${NAMESPACE}" \
-  $(kubectl get pods -n "${NAMESPACE}" -l app=ghost -o jsonpath='{.items[0].metadata.name}') \
-  | grep -A5 "Volumes:"
-```
-
-**Expected result:** The NFS volume appears in the pod's volume list at `/mnt/nfs`, confirming uploaded images are stored on shared NFS.
-
-### Step 2.4 — Manage Tags
-
-1. Navigate to **Tags** in the left sidebar.
-2. Click **New tag**, enter a name and description.
-3. Associate the tag with your post via the post settings panel.
-
-**Expected result:** Tags appear as filters on the public site.
-
-### Step 2.5 — Verify Content Persists Across Pods
-
-```bash
-# Check that multiple pods see the same NFS content
-kubectl get pods -n "${NAMESPACE}" -l app=ghost
-```
-
-**Expected result:** All ghost pods share the `/mnt/nfs` volume via the Cloud Filestore NFS mount, ensuring content created on one pod is visible on all pods.
-
----
-
-## Exercise 3 — Kubernetes Workloads
-
-### Objective
-
-Inspect the Ghost Kubernetes Deployment, Service, ConfigMap, and NFS PersistentVolumeClaim
-to understand how the module wires together GKE resources.
-
-### Step 3.1 — Inspect the Deployment
-
-**kubectl:**
-```bash
-kubectl describe deployment -n "${NAMESPACE}"
-```
-
-```bash
-kubectl get deployment -n "${NAMESPACE}" -o json \
-  | jq '{
-    name: .items[0].metadata.name,
-    replicas: .items[0].spec.replicas,
-    image: .items[0].spec.template.spec.containers[0].image,
-    cpu: .items[0].spec.template.spec.containers[0].resources.limits.cpu,
-    memory: .items[0].spec.template.spec.containers[0].resources.limits.memory
-  }'
-```
-
-**Expected result:** The Deployment shows the Ghost 6.x image, 2 vCPU / 4Gi resource limits, and 1 replica (minimum).
-
-### Step 3.2 — Inspect the LoadBalancer Service
-
-**kubectl:**
-```bash
-kubectl get service -n "${NAMESPACE}" -o wide
-
-kubectl describe service -n "${NAMESPACE}"
-```
-
-**gcloud:**
-```bash
-gcloud compute forwarding-rules list \
-  --project="${PROJECT}" \
-  --filter="name~ghost" \
-  --format="table(name, IPAddress, portRange, region)"
-```
-
-**Expected result:** The Kubernetes Service of type `LoadBalancer` maps external port 80 to container port 2368.
-
-### Step 3.3 — Inspect the Pod and Containers
-
-**kubectl:**
-```bash
-GHOST_POD=$(kubectl get pod -n "${NAMESPACE}" -l app=ghost \
-  -o jsonpath='{.items[0].metadata.name}')
-
-# List containers in the pod
-kubectl get pod "${GHOST_POD}" -n "${NAMESPACE}" \
-  -o jsonpath='{.spec.containers[*].name}' | tr ' ' '\n'
-
-# View ghost container logs
-kubectl logs "${GHOST_POD}" -n "${NAMESPACE}" -c ghost --tail=30
-
-# View Cloud SQL Proxy sidecar logs
-kubectl logs "${GHOST_POD}" -n "${NAMESPACE}" -c cloud-sql-proxy --tail=20
-```
-
-**Expected result:** Two containers are listed: `ghost` and `cloud-sql-proxy`. Ghost logs show `Ghost boot 6.x.x` and database connection confirmation.
-
-### Step 3.4 — Inspect the NFS Volume Mount
-
-**kubectl:**
-```bash
-kubectl get pod "${GHOST_POD}" -n "${NAMESPACE}" -o json \
-  | jq '.spec.volumes[] | select(.name | test("nfs"))'
-
-kubectl exec "${GHOST_POD}" -n "${NAMESPACE}" -c ghost -- \
-  ls /mnt/nfs/ 2>/dev/null || echo "NFS directory accessible"
-```
-
-**Expected result:** The NFS volume is mounted at `/mnt/nfs` inside the Ghost container. The content directory may show Ghost subdirectories (images, themes, files).
-
-### Step 3.5 — Check Horizontal Pod Autoscaler
-
-**kubectl:**
-```bash
-kubectl get hpa -n "${NAMESPACE}"
-kubectl describe hpa -n "${NAMESPACE}"
-```
-
-**Expected result:** The HPA shows `min=1`, `max=5`, current CPU utilization, and the CPU target threshold (typically 80%). Current replicas is `1` under no-load conditions.
-
----
-
-## Exercise 4 — Database and Migrations
-
-### Objective
-
-Inspect the Cloud SQL MySQL instance, verify the `db-init` job completed successfully,
-examine the Ghost database schema, and understand how Auth Proxy provides database access.
-
-### Step 4.1 — Inspect the Cloud SQL Instance
-
-**gcloud:**
-```bash
-export SQL_INSTANCE=$(gcloud sql instances list \
-  --project="${PROJECT}" \
-  --filter="databaseVersion:MYSQL_8_0" \
   --format="value(name)" \
   --limit=1)
 
-gcloud sql instances describe "${SQL_INSTANCE}" \
-  --project="${PROJECT}" \
-  --format="json" \
-  | jq '{name: .name, version: .databaseVersion, tier: .settings.tier, state: .state}'
+export GHOST_URL="http://${EXTERNAL_IP}"
 ```
-
-**REST API:**
-```bash
-curl -s \
-  "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '.items[] | {name: .name, version: .databaseVersion, state: .state}'
-```
-
-**Expected result:** A `MYSQL_8_0` Cloud SQL instance is listed as `RUNNABLE`.
-
-### Step 4.2 — Verify the db-init Job Completed
-
-**kubectl:**
-```bash
-kubectl get jobs -n "${NAMESPACE}"
-kubectl describe job -l app=db-init -n "${NAMESPACE}" 2>/dev/null || \
-  kubectl get pods -n "${NAMESPACE}" --show-labels | grep db-init
-```
-
-**Expected result:** The `db-init` job shows `Completed` status with `1/1` successful completions. This job ran the `db-init.sh` script to create the `ghost` database and user with proper MySQL 8.0 charset and collation.
-
-### Step 4.3 — Verify Ghost Database Exists
-
-**gcloud:**
-```bash
-gcloud sql databases list \
-  --instance="${SQL_INSTANCE}" \
-  --project="${PROJECT}" \
-  --format="table(name, charset, collation)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances/${SQL_INSTANCE}/databases" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '.items[] | {name: .name, charset: .charset, collation: .collation}'
-```
-
-**Expected result:** The `ghost` database is listed with `utf8mb4` charset and `utf8mb4_0900_ai_ci` collation — the MySQL 8.0 defaults required by Ghost 6.x.
-
-### Step 4.4 — Inspect Auth Proxy Connection String
-
-**kubectl:**
-```bash
-kubectl get pod "${GHOST_POD}" -n "${NAMESPACE}" -o json \
-  | jq '.spec.containers[] | select(.name == "cloud-sql-proxy") | .args'
-```
-
-**gcloud (check Cloud SQL instance connection name):**
-```bash
-gcloud sql instances describe "${SQL_INSTANCE}" \
-  --project="${PROJECT}" \
-  --format="value(connectionName)"
-```
-
-**Expected result:** The Auth Proxy container argument contains the Cloud SQL instance connection string in the format `project:region:instance`. The Ghost container connects via Unix socket at `/cloudsql/<connection-name>`.
-
-### Step 4.5 — Review Ghost Database Environment Variables
-
-**kubectl:**
-```bash
-kubectl exec "${GHOST_POD}" -n "${NAMESPACE}" -c ghost -- env \
-  | grep -E "^DB_|^database__" | sort
-```
-
-**Expected result:** Database connection variables are present (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`). These are translated by `entrypoint.sh` into Ghost's double-underscore config syntax (`database__connection__host`, etc.).
 
 ---
 
-## Exercise 5 — Workload Identity and Security
+## Phase 2 — Configure kubectl [MANUAL]
 
-### Objective
+### Step 2.1 — Fetch Cluster Credentials
 
-Inspect the Kubernetes ServiceAccount Workload Identity binding, verify IAM roles assigned
-to the Ghost GCP service account, and review Kubernetes Secrets used by the deployment.
-
-### Step 5.1 — Inspect the Kubernetes ServiceAccount
-
-**kubectl:**
 ```bash
-kubectl get serviceaccounts -n "${NAMESPACE}" \
-  -o wide
-
-kubectl describe serviceaccount -n "${NAMESPACE}" \
-  $(kubectl get sa -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')
+gcloud container clusters get-credentials \
+  $(gcloud container clusters list --project=${PROJECT} --format="value(name)" | head -1) \
+  --region=${REGION} \
+  --project=${PROJECT}
 ```
 
-**Expected result:** The Ghost ServiceAccount has an annotation:
-`iam.gke.io/gcp-service-account=<gcp-sa-email>@${PROJECT}.iam.gserviceaccount.com`
-This binds the Kubernetes SA to a GCP service account via Workload Identity.
-
-### Step 5.2 — Inspect Workload Identity IAM Binding
-
-**gcloud:**
+**gcloud equivalent:**
 ```bash
-# Get the GCP service account email from the k8s SA annotation
-export GCP_SA=$(kubectl get serviceaccount -n "${NAMESPACE}" \
-  $(kubectl get sa -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}') \
-  -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}')
-
-echo "GCP SA: ${GCP_SA}"
-
-# List IAM roles for this service account
-gcloud projects get-iam-policy "${PROJECT}" \
-  --flatten="bindings[].members" \
-  --filter="bindings.members:${GCP_SA}" \
-  --format="table(bindings.role)"
+gcloud container clusters list --project=${PROJECT}
 ```
 
-**REST API:**
+**REST API equivalent:**
 ```bash
-curl -s -X POST \
-  "https://cloudresourcemanager.googleapis.com/v1/projects/${PROJECT}:getIamPolicy" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  -H "Content-Type: application/json" \
-  -d '{}' \
-  | jq --arg sa "${GCP_SA}" '.bindings[] | select(.members[] | test($sa)) | .role'
+curl -H "Authorization: Bearer ${TOKEN}" \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters"
 ```
 
-**Expected result:** The GCP service account has roles including `roles/cloudsql.client`, `roles/secretmanager.secretAccessor`, and `roles/storage.objectAdmin`.
+**Expected result:** kubectl is configured and the context is set to your GKE cluster.
 
-### Step 5.3 — Verify the Workload Identity Binding on the GCP SA
+### Step 2.2 — Verify Ghost Pod is Running
 
-**gcloud:**
 ```bash
-gcloud iam service-accounts get-iam-policy "${GCP_SA}" \
-  --project="${PROJECT}" \
-  --format="json" \
-  | jq '.bindings[] | select(.role == "roles/iam.workloadIdentityUser")'
+kubectl get pods -n ${NAMESPACE}
+kubectl get service -n ${NAMESPACE}
 ```
 
-**Expected result:** The binding shows `serviceAccount:${PROJECT}.svc.id.goog[${NAMESPACE}/<k8s-sa-name>]` as a member with `roles/iam.workloadIdentityUser`, confirming Workload Identity federation is correctly configured.
+**Expected result:** The Ghost pod shows `Running` status and `1/1` containers ready. The service shows an `EXTERNAL-IP` address matching the RAD UI output.
 
-### Step 5.4 — Inspect Kubernetes Secrets
+Wait until the external IP is assigned (may take 1–2 minutes after deployment):
 
-**kubectl:**
 ```bash
-kubectl get secrets -n "${NAMESPACE}" \
-  --field-selector type=Opaque \
-  -o custom-columns="NAME:.metadata.name,TYPE:.type,AGE:.metadata.creationTimestamp"
+kubectl get svc -n ${NAMESPACE} --watch
 ```
 
-**Expected result:** Kubernetes Secrets are listed for DB credentials and other sensitive configuration. Secret values are base64-encoded and never stored in plaintext in the cluster.
+### Step 2.3 — Confirm Ghost is Reachable
 
-### Step 5.5 — Verify Secrets Store CSI Integration
-
-**kubectl:**
 ```bash
-kubectl get secretproviderclass -n "${NAMESPACE}" 2>/dev/null || echo "Secrets Store CSI not configured in this deployment"
-
-# Check if secrets are mounted as files
-kubectl exec "${GHOST_POD}" -n "${NAMESPACE}" -c ghost -- \
-  ls /run/secrets/ 2>/dev/null || echo "No mounted secret files"
+curl -s -o /dev/null -w "%{http_code}" http://${EXTERNAL_IP}
 ```
 
-**Expected result:** If the Secrets Store CSI driver is enabled, a `SecretProviderClass` resource exists and secrets from Secret Manager are mounted as files into the pod.
+**Expected result:** HTTP `200` (or a redirect to Ghost's front page).
 
 ---
 
-## Exercise 6 — Cloud Logging
+## Phase 3 — Set Up Ghost Admin [MANUAL]
 
-### Objective
+### Step 3.1 — Access the Admin Setup Wizard
 
-Query Ghost application logs, filter for Kubernetes container logs, inspect HTTP access
-patterns, and investigate error events using Cloud Logging.
+Open a browser and navigate to:
 
-### Step 6.1 — View Ghost Application Logs
+```
+http://${EXTERNAL_IP}/ghost
+```
 
-**gcloud:**
+Ghost displays a setup wizard on the first visit.
+
+**Expected result:** The Ghost setup wizard appears with fields for site title, admin name, email, and password.
+
+### Step 3.2 — Retrieve Admin Credentials from Secret Manager
+
+If admin credentials were pre-generated by the module, retrieve them:
+
+```bash
+# List Ghost-related secrets
+gcloud secrets list --project=${PROJECT} --filter="name~ghost"
+
+# Retrieve admin password
+gcloud secrets versions access latest \
+  --secret="${DB_SECRET}" \
+  --project=${PROJECT}
+```
+
+**gcloud equivalent (list secret versions):**
+```bash
+gcloud secrets versions list ${DB_SECRET} --project=${PROJECT}
+```
+
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer ${TOKEN}" \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}/versions/latest:access"
+```
+
+**Expected result:** The admin password is returned as a base64-encoded payload. Decode with `base64 -d`.
+
+### Step 3.3 — Complete Initial Setup
+
+1. Enter a **site title** (e.g. "My Ghost Blog").
+2. Enter your **admin name, email, and password** (or the password retrieved above).
+3. Click **Create your account**.
+4. Ghost redirects to the Admin dashboard.
+
+**Expected result:** You are logged into the Ghost Admin panel at `/ghost/#/dashboard`.
+
+---
+
+## Phase 4 — Explore the Publishing Platform [MANUAL]
+
+### Step 4.1 — Create a New Post
+
+1. In the Admin panel, click **Posts** in the left sidebar.
+2. Click **New post** (top-right button).
+3. Enter a title and body text in the editor.
+4. Click the settings gear (top-right) to add tags and a featured image.
+5. Click **Publish** > **Publish** to confirm.
+
+**Expected result:** The post appears in the **Posts** list with status `Published`. The public site at `http://${EXTERNAL_IP}` shows the post on the front page.
+
+### Step 4.2 — Explore Pages and Tags
+
+1. Navigate to **Pages** in the sidebar — create a static page (e.g. "About").
+2. Navigate to **Tags** — create a tag and associate it with a post.
+
+**Expected result:** Tags appear on the front page; the static page is accessible via its slug.
+
+### Step 4.3 — View the Public Site
+
+Open `http://${EXTERNAL_IP}` in a browser.
+
+**Expected result:** The default Ghost Casper theme renders with your published post visible.
+
+---
+
+## Phase 5 — Members and Newsletter Setup [MANUAL]
+
+### Step 5.1 — Configure Membership Settings
+
+1. In Ghost Admin, navigate to **Settings** (gear icon) > **Members**.
+2. Review the **Access** setting (Free / Paid tiers).
+3. Enable the **Members feature** if not already enabled.
+
+**Expected result:** The Members section is active and shows zero subscribers initially.
+
+### Step 5.2 — Explore Newsletter Settings
+
+1. Navigate to **Settings** > **Email newsletter**.
+2. Review the **Sender name** and **Reply-to address** fields.
+3. Note the SMTP configuration section — it uses the `SMTP_HOST`, `SMTP_PORT`, and `SMTP_USER` values set in `environment_variables`.
+
+**gcloud — verify SMTP env vars are injected:**
+```bash
+kubectl describe deployment -n ${NAMESPACE} | grep -A5 "SMTP_HOST"
+```
+
+**Expected result:** SMTP settings reflect the values you configured. For newsletters to send, a valid SMTP provider (e.g. Mailgun, SendGrid) must be configured.
+
+### Step 5.3 — Review the Subscription Portal
+
+1. Navigate to **Settings** > **Portal**.
+2. Click **Customise** to adjust the sign-up form appearance.
+3. Click **Preview** to see the subscription portal.
+
+**Expected result:** A styled sign-up portal overlay appears. Members can subscribe using their email address.
+
+---
+
+## Phase 6 — Theme and Customisation [MANUAL]
+
+### Step 6.1 — Explore Themes
+
+1. Navigate to **Settings** > **Theme**.
+2. The default **Casper** theme is active.
+3. Click **Change theme** to browse or upload a custom theme.
+
+**Expected result:** The Themes page lists available themes. Casper is active with a tick icon.
+
+### Step 6.2 — Explore Design Settings
+
+1. Navigate to **Settings** > **Design**.
+2. Adjust the **accent colour**, **logo**, and **cover image**.
+3. Preview changes on the public site.
+
+**Expected result:** Changes appear immediately on the public front page after saving.
+
+### Step 6.3 — Ghost Handlebars Templates (Overview)
+
+Ghost uses the [Handlebars](https://handlebarsjs.com/) templating language. Key template files:
+- `index.hbs` — front page
+- `post.hbs` — individual post layout
+- `default.hbs` — base wrapper
+
+Custom themes are stored in the Ghost content directory, which is on the NFS volume at `${NFS_MOUNT_PATH}/themes/`.
+
+---
+
+## Phase 7 — Explore Cloud Logging [MANUAL]
+
+### Step 7.1 — View Ghost Application Logs
+
+In the Google Cloud Console, navigate to **Logging > Logs Explorer** (`https://console.cloud.google.com/logs`).
+
+Use the following query to view Ghost pod logs:
+
+```
+resource.type="k8s_container"
+resource.labels.namespace_name="${NAMESPACE}"
+resource.labels.container_name="ghost"
+```
+
+**gcloud equivalent:**
 ```bash
 gcloud logging read \
-  "resource.type=\"k8s_container\" \
-   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
-   AND resource.labels.container_name=\"ghost\"" \
-  --project="${PROJECT}" \
+  'resource.type="k8s_container" AND resource.labels.namespace_name="'${NAMESPACE}'"' \
+  --project=${PROJECT} \
   --limit=50 \
   --format="table(timestamp, jsonPayload.message)"
 ```
 
-**kubectl (live logs):**
+**REST API equivalent:**
 ```bash
-kubectl logs -n "${NAMESPACE}" \
-  "$(kubectl get pod -n "${NAMESPACE}" -l app=ghost -o jsonpath='{.items[0].metadata.name}')" \
-  -c ghost --tail=30
-```
-
-**REST API:**
-```bash
-curl -s -X POST \
-  "https://logging.googleapis.com/v2/entries:list" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+curl -X POST \
+  -H "Authorization: Bearer ${TOKEN}" \
   -H "Content-Type: application/json" \
+  "https://logging.googleapis.com/v2/entries:list" \
   -d '{
     "projectIds": ["'"${PROJECT}"'"],
-    "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"'"${NAMESPACE}"'\" AND resource.labels.container_name=\"ghost\"",
-    "orderBy": "timestamp desc",
+    "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"'"${NAMESPACE}"'\"",
     "pageSize": 20
-  }' | jq '.entries[] | {timestamp: .timestamp, message: .jsonPayload.message}'
+  }'
 ```
 
-**Expected result:** Ghost startup logs appear, including `Ghost boot 6.x.x` banner and database connection messages.
+**Expected result:** Ghost startup logs appear, including database connection messages and the Ghost version banner. Look for lines like `Ghost boot 6.x.x` to confirm successful startup.
 
-### Step 6.2 — View Cloud SQL Auth Proxy Logs
+### Step 7.2 — Filter for Errors
 
-**gcloud:**
-```bash
-gcloud logging read \
-  "resource.type=\"k8s_container\" \
-   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
-   AND resource.labels.container_name=\"cloud-sql-proxy\"" \
-  --project="${PROJECT}" \
-  --limit=20 \
-  --format="table(timestamp, textPayload)"
+Use the query filter `severity>=ERROR` to surface warnings:
+
+```
+resource.type="k8s_container"
+resource.labels.namespace_name="${NAMESPACE}"
+severity>=ERROR
 ```
 
-**kubectl:**
-```bash
-kubectl logs -n "${NAMESPACE}" \
-  "$(kubectl get pod -n "${NAMESPACE}" -l app=ghost -o jsonpath='{.items[0].metadata.name}')" \
-  -c cloud-sql-proxy --tail=20
-```
-
-**Expected result:** Cloud SQL Auth Proxy logs show connection establishment to the MySQL instance via Unix socket.
-
-### Step 6.3 — Filter for Errors
-
-**gcloud:**
-```bash
-gcloud logging read \
-  "resource.type=\"k8s_container\" \
-   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
-   AND severity>=ERROR" \
-  --project="${PROJECT}" \
-  --limit=20 \
-  --format="table(timestamp, severity, jsonPayload.message)"
-```
-
-**Expected result:** Under normal operation, no critical errors appear after startup completes. Warnings may appear during first-boot database migrations.
-
-### Step 6.4 — Query for HTTP Access Logs
-
-**gcloud:**
-```bash
-gcloud logging read \
-  "resource.type=\"k8s_container\" \
-   AND resource.labels.namespace_name=\"${NAMESPACE}\" \
-   AND jsonPayload.message=~\"GET|POST\"" \
-  --project="${PROJECT}" \
-  --limit=20 \
-  --format="json" \
-  | jq '.[] | {timestamp: .timestamp, message: .jsonPayload.message}'
-```
-
-**Expected result:** HTTP access log entries show GET requests served by Ghost, including response status codes and request paths.
-
-### Step 6.5 — Navigate to Logs Explorer
-
-```bash
-echo "https://console.cloud.google.com/logs/query;query=resource.type%3D%22k8s_container%22%0Aresource.labels.namespace_name%3D%22${NAMESPACE}%22?project=${PROJECT}"
-```
-
-**Expected result:** The Logs Explorer opens pre-filtered to the Ghost namespace, enabling interactive log exploration.
+**Expected result:** Under normal operation, no critical errors should appear after startup completes.
 
 ---
 
-## Exercise 7 — Cloud Monitoring
+## Phase 8 — Explore Cloud Monitoring [MANUAL]
 
-### Objective
+### Step 8.1 — View Service Metrics
 
-Explore GKE container metrics for Ghost, review uptime check status, and inspect the
-pre-configured alert policies for the deployment.
+Navigate to **Monitoring > Metrics Explorer** (`https://console.cloud.google.com/monitoring/metrics-explorer`).
 
-### Step 7.1 — View Container CPU and Memory Metrics
+Useful metrics for GKE Ghost deployments:
 
-Navigate to Metrics Explorer:
-```bash
-echo "https://console.cloud.google.com/monitoring/metrics-explorer?project=${PROJECT}"
-```
+| Metric | Description |
+|---|---|
+| `kubernetes.io/container/cpu/usage_time` | CPU usage per container |
+| `kubernetes.io/container/memory/used_bytes` | Memory usage per container |
+| `kubernetes.io/pod/restart_count` | Pod restart count |
+| `loadbalancing.googleapis.com/https/request_count` | Requests per second |
 
-Select:
-- **Resource type:** `k8s_container`
-- **Metric:** `kubernetes.io/container/cpu/core_usage_time`
-- **Filter:** `namespace_name = ${NAMESPACE}`
-
-**gcloud:**
+**gcloud equivalent (list metric descriptors):**
 ```bash
 gcloud monitoring metrics list \
   --filter="metric.type:kubernetes.io/container" \
-  --project="${PROJECT}" \
-  --format="table(name)"
+  --project=${PROJECT}
 ```
 
-**REST API (query CPU usage):**
-```bash
-curl -s -X POST \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "fetch k8s_container::kubernetes.io/container/cpu/limit_utilization | filter resource.namespace_name = \"'"${NAMESPACE}"'\" | within 30m | group_by [resource.container_name], mean(val())"
-  }' | jq '.timeSeriesData[] | {container: .labelValues[0].stringValue, utilisation: .pointData[-1].values[0].doubleValue}'
-```
+**Expected result:** Metrics charts show Ghost CPU and memory usage. With no traffic, CPU should be near zero and memory around 200–400 MB.
 
-**Expected result:** CPU utilization for the Ghost container is near zero under no-load conditions and increases during content publishing or page rendering.
+### Step 8.2 — Review Uptime Checks
 
-### Step 7.2 — View Pod Restart Count
+Navigate to **Monitoring > Uptime checks**.
 
-**kubectl:**
-```bash
-kubectl get pods -n "${NAMESPACE}" \
-  -o custom-columns="NAME:.metadata.name,RESTARTS:.status.containerStatuses[0].restartCount,STATUS:.status.phase"
-```
-
-**REST API:**
-```bash
-curl -s -X POST \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "fetch k8s_pod::kubernetes.io/pod/restart_count | filter resource.namespace_name = \"'"${NAMESPACE}"'\" | within 1h | group_by [resource.pod_name], max(val())"
-  }' | jq '.timeSeriesData[] | {pod: .labelValues[0].stringValue, restarts: .pointData[-1].values[0].int64Value}'
-```
-
-**Expected result:** Restart count is `0` under normal operation. Frequent restarts indicate resource pressure or health probe failures.
-
-### Step 7.3 — Review the Uptime Check
-
-**gcloud:**
-```bash
-gcloud monitoring uptime list-configs \
-  --project="${PROJECT}" \
-  --format="table(name, displayName, httpCheck.path, period, timeout)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '.uptimeCheckConfigs[] | {name: .name, displayName: .displayName, host: .httpCheck.host}'
-```
-
-**Expected result:** An uptime check polls Ghost at `GET /` every 60 seconds from multiple global regions and shows **Passing** status.
-
-### Step 7.4 — View the GKE Monitoring Dashboard
-
-```bash
-echo "https://console.cloud.google.com/kubernetes/clusters/details/${REGION}/${CLUSTER}/observability?project=${PROJECT}"
-```
-
-Explore:
-- **Workloads** — CPU, memory, and network for the Ghost deployment
-- **Nodes** — Autopilot node provisioning and resource consumption
-- **Logs** — Integrated log streaming from the dashboard
-
-**Expected result:** The GKE monitoring dashboard shows the Ghost deployment health with real-time metrics.
+**Expected result:** A preconfigured uptime check (if `uptime_check_config.enabled = true` in variables) runs every 60 seconds and shows **Passing** status.
 
 ---
 
-## Exercise 8 — Scaling and Operations
+## Phase 9 — Scaling [MANUAL]
 
-### Objective
-
-Scale the Ghost deployment horizontally, trigger a rolling update, observe HPA behavior,
-and practice rollback procedures.
-
-### Step 8.1 — Scale the Deployment Manually
-
-**kubectl:**
-```bash
-# Scale to 2 replicas
-kubectl scale deployment -n "${NAMESPACE}" \
-  $(kubectl get deployment -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}') \
-  --replicas=2
-
-# Watch pods coming up
-kubectl get pods -n "${NAMESPACE}" -w
-```
-
-**gcloud (via Cloud Console):**
-```bash
-echo "https://console.cloud.google.com/kubernetes/workload/${REGION}/${CLUSTER}/${NAMESPACE}/ghost?project=${PROJECT}"
-```
-
-**Expected result:** A second Ghost pod starts within 60–90 seconds. Both pods share the NFS content volume, so content created on one pod is immediately available on the other.
-
-### Step 8.2 — Observe HPA Behavior
-
-**kubectl:**
-```bash
-kubectl get hpa -n "${NAMESPACE}" -w
-```
+### Step 9.1 — Check Current HPA Status
 
 ```bash
-kubectl describe hpa -n "${NAMESPACE}"
+kubectl get hpa -n ${NAMESPACE}
 ```
 
-**Expected result:** The HPA shows current CPU utilization and may scale down to `min_instance_count=1` when load is low, overriding the manual scale if CPU drops below the target.
+**Expected result:** The HPA shows current replicas, minimum (`1`), maximum (`5`), and current CPU utilisation.
 
-### Step 8.3 — Trigger a Rolling Update
+### Step 9.2 — Manually Scale the Deployment
+
+Scale to 2 replicas manually:
 
 ```bash
-DEPLOY_NAME=$(kubectl get deployment -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')
-
-# Trigger a rolling update by updating an environment variable
-kubectl set env "deployment/${DEPLOY_NAME}" \
-  APP_LAB_VERSION=lab-test \
-  -n "${NAMESPACE}"
-
-# Watch the rolling update
-kubectl rollout status "deployment/${DEPLOY_NAME}" -n "${NAMESPACE}"
+kubectl scale deployment ghost -n ${NAMESPACE} --replicas=2
 ```
 
-**Expected result:** The rolling update replaces pods one at a time (respecting the PodDisruptionBudget), ensuring zero downtime. Both old and new pods run briefly during the transition.
-
-### Step 8.4 — Rollback the Deployment
+Observe the new pod starting:
 
 ```bash
-# View rollout history
-kubectl rollout history "deployment/${DEPLOY_NAME}" -n "${NAMESPACE}"
-
-# Rollback to the previous revision
-kubectl rollout undo "deployment/${DEPLOY_NAME}" -n "${NAMESPACE}"
-
-kubectl rollout status "deployment/${DEPLOY_NAME}" -n "${NAMESPACE}"
+kubectl get pods -n ${NAMESPACE} --watch
 ```
 
-**REST API (get deployment details):**
+**gcloud equivalent (via GKE Workloads console):**
+Navigate to **Kubernetes Engine > Workloads**, select the Ghost deployment, click **Actions > Scale**.
+
+**REST API equivalent:**
 ```bash
-curl -s \
-  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  | jq '.status.conditions[] | {type: .type, status: .status}'
+curl -X PATCH \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json-patch+json" \
+  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}/namespaces/${NAMESPACE}/deployments/ghost" \
+  -d '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
 ```
 
-**Expected result:** The rollback completes successfully and the previous revision is restored. The Ghost service continues to serve traffic throughout.
+**Expected result:** A second Ghost pod starts within 60–90 seconds. Both pods share the same NFS content volume.
 
-### Step 8.5 — Return to Minimum Replicas
+### Step 9.3 — Return to Minimum Replicas
 
 ```bash
-kubectl scale deployment -n "${NAMESPACE}" "${DEPLOY_NAME}" --replicas=1
-
-kubectl get pods -n "${NAMESPACE}"
+kubectl scale deployment ghost -n ${NAMESPACE} --replicas=1
 ```
 
-**Expected result:** One pod terminates gracefully. The remaining pod continues serving traffic. The Ghost content on NFS persists unchanged.
+**Expected result:** One pod terminates gracefully; the remaining pod continues serving traffic.
 
 ---
 
-## 13. Cleanup
+## Phase 10 — Undeploy Infrastructure [AUTOMATED]
 
-Return to the RAD UI and click **Undeploy** on the `Ghost_GKE` deployment. This removes
-the Kubernetes namespace and all workloads, Cloud SQL instance, NFS Filestore, GCS buckets,
-Secret Manager secrets, Workload Identity bindings, and all associated IAM resources.
+When you are finished with the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
 
-> **Warning:** This permanently deletes all resources including the database and NFS content.
-> Export Ghost content before undeploying: Ghost Admin → Settings → Labs → Export.
+**Approximate undeploy duration:** 15–25 minutes (Cloud SQL deletion takes the longest).
 
-### Manual Cleanup (if needed)
+> **Warning:** This permanently deletes all resources including the database and NFS content. Ensure you have exported any content you wish to keep (Ghost Admin > Settings > Labs > Export).
 
-**kubectl:**
-```bash
-# Delete the namespace and all its resources
-kubectl delete namespace "${NAMESPACE}"
-```
-
-**gcloud:**
-```bash
-# Delete Cloud SQL instance
-gcloud sql instances delete "${SQL_INSTANCE}" \
-  --project="${PROJECT}" --quiet
-
-# Delete secrets
-gcloud secrets delete "${DB_SECRET}" \
-  --project="${PROJECT}" --quiet
-```
-
-**REST API — delete Cloud SQL instance:**
-```bash
-curl -s -X DELETE \
-  "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances/${SQL_INSTANCE}" \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)"
-```
+Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 
-## 14. Reference
+## Summary
 
-### Key Module Variables
-
-| Variable | Type | Default | Description |
-|---|---|---|---|
-| `project_id` | `string` | — | GCP project ID (required) |
-| `region` | `string` | `us-central1` | GCP region for all resources |
-| `application_name` | `string` | `ghost` | Base resource name |
-| `application_version` | `string` | `6.14.0` | Ghost container image tag |
-| `tenant_deployment_id` | `string` | `demo` | Short suffix appended to resource names |
-| `deploy_application` | `bool` | `true` | Deploy the Ghost workload (false = infra only) |
-| `gke_cluster_name` | `string` | `""` | Target GKE cluster name (auto-discovered if empty) |
-| `cpu_limit` | `string` | `2000m` | CPU per Ghost pod |
-| `memory_limit` | `string` | `4Gi` | Memory per Ghost pod |
-| `min_instance_count` | `number` | `1` | HPA minimum replicas |
-| `max_instance_count` | `number` | `5` | HPA maximum replicas |
-| `enable_nfs` | `bool` | `true` | Cloud Filestore NFS for shared content |
-| `nfs_mount_path` | `string` | `/mnt/nfs` | NFS mount path inside containers |
-| `enable_redis` | `bool` | `true` | Redis page caching |
-| `redis_host` | `string` | `""` | Redis hostname (blank = NFS server IP) |
-| `redis_port` | `string` | `6379` | Redis TCP port |
-| `db_name` | `string` | `ghost` | MySQL database name |
-| `db_user` | `string` | `ghost` | MySQL application user |
-| `database_password_length` | `number` | `32` | Auto-generated password length |
-| `enable_auto_password_rotation` | `bool` | `false` | Automated DB password rotation |
-| `enable_cloudsql_volume` | `bool` | `true` | Cloud SQL Auth Proxy sidecar |
-| `backup_schedule` | `string` | `0 2 * * *` | Cron schedule for automated backups |
-| `backup_retention_days` | `number` | `7` | Days to retain backup files |
-| `support_users` | `list(string)` | `[]` | Email addresses for monitoring alerts |
-| `resource_labels` | `map(string)` | `{}` | Labels applied to all provisioned resources |
-
-### Useful Commands Reference
-
-```bash
-# Get Ghost external IP
-kubectl get svc -n "${NAMESPACE}" -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
-
-# View Ghost pod logs
-kubectl logs -n "${NAMESPACE}" -l app=ghost -c ghost --tail=50
-
-# Tail Ghost logs live
-kubectl logs -n "${NAMESPACE}" -l app=ghost -c ghost -f
-
-# Check pod health
-kubectl get pods -n "${NAMESPACE}" -o wide
-
-# Describe deployment
-kubectl describe deployment -n "${NAMESPACE}"
-
-# Check HPA status
-kubectl get hpa -n "${NAMESPACE}"
-
-# Scale deployment
-kubectl scale deployment -n "${NAMESPACE}" <name> --replicas=<n>
-
-# Rolling update status
-kubectl rollout status deployment/<name> -n "${NAMESPACE}"
-
-# Rollback deployment
-kubectl rollout undo deployment/<name> -n "${NAMESPACE}"
-
-# View GCP service account IAM
-gcloud projects get-iam-policy "${PROJECT}" \
-  --flatten="bindings[].members" \
-  --filter="bindings.members:serviceAccount:${GCP_SA}" \
-  --format="table(bindings.role)"
-
-# List Cloud SQL instances
-gcloud sql instances list --project="${PROJECT}"
-```
-
-### Further Reading
-
-- [Ghost documentation](https://ghost.org/docs/)
-- [GKE Autopilot overview](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
-- [Workload Identity for GKE](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
-- [Cloud SQL Auth Proxy for GKE](https://cloud.google.com/sql/docs/mysql/connect-kubernetes-engine)
-- [Kubernetes Horizontal Pod Autoscaling](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
-- [Cloud Filestore NFS for GKE](https://cloud.google.com/filestore/docs/accessing-fileshares)
-- [Secret Manager with GKE Workload Identity](https://cloud.google.com/secret-manager/docs/using-other-products/google-kubernetes-engine)
-- [Cloud Monitoring for GKE](https://cloud.google.com/stackdriver/docs/solutions/gke)
+| Action | Phase | Automated |
+|---|---|---|
+| GKE namespace and workload provisioning | 1 | Yes |
+| Cloud SQL MySQL 8.0 database | 1 | Yes |
+| Cloud Filestore NFS mount | 1 | Yes |
+| Secret Manager credentials | 1 | Yes |
+| Workload Identity and IAM | 1 | Yes |
+| Container image build (Cloud Build) | 1 | Yes |
+| Configure kubectl | 2 | No |
+| Verify Ghost pod running | 2 | No |
+| Ghost admin setup wizard | 3 | No |
+| Retrieve admin credentials from Secret Manager | 3 | No |
+| Create and publish posts | 4 | No |
+| Configure membership and newsletter | 5 | No |
+| Explore themes and design settings | 6 | No |
+| Review application logs | 7 | No |
+| Review Cloud Monitoring metrics | 8 | No |
+| Scale pod replicas | 9 | No |
+| Undeploy infrastructure | 10 | Yes |

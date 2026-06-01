@@ -1,18 +1,11 @@
 ---
-title: "NodeRED CloudRun Module — Configuration Guide"
+title: "NodeRED_CloudRun Module — Configuration Guide"
 sidebar_label: "NodeRED CloudRun"
 ---
 
-# NodeRED CloudRun Module — Configuration Guide
+# NodeRED_CloudRun Module — Configuration Guide
 
-<YouTubeEmbed videoId="PighVjgAzuw" poster="https://storage.googleapis.com/rad-public-2b65/modules/NodeRed_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/NodeRed_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
-Node-RED is a leading open-source, browser-based flow programming tool originally developed by IBM, with 4,000+ community connector nodes and a growing ecosystem spanning smart manufacturing and edge computing. It is the de facto standard for IoT, IIoT, and industrial automation — integrating legacy OT systems (Modbus, OPC-UA, Siemens S7, MQTT) with modern cloud services. Gartner projects that 70%+ of all applications will use low-code technologies by 2026, and the low-code platform market is tracking toward $16.5B by 2027. This module deploys Node-RED on **Google Cloud Run Gen2** with NFS-backed persistent flow storage and optional Redis context storage.
+Node-RED is a leading open-source flow-based programming tool designed for wiring together IoT devices, APIs, and online services through a browser-based visual editor. This module deploys Node-RED on **Google Cloud Run Gen2** with NFS-backed persistent flow storage and optional Redis context storage.
 
 `NodeRED_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP infrastructure provisioning to App_CloudRun (Cloud Run service, networking, Secret Manager, GCS, NFS, CI/CD) and uses a `NodeRED_Common` sub-module to supply Node-RED-specific application configuration. The `NodeRED_Common` outputs feed into App_CloudRun's `application_config`, `module_storage_buckets`, and `scripts_dir` inputs.
 
@@ -62,10 +55,10 @@ Node-RED is a leading open-source, browser-based flow programming tool originall
 | `support_users` | `[]` | Email addresses granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `{}` | Labels applied to all module-managed resources. |
 | `module_description` | *(Node-RED Cloud Run description)* | Platform UI description. |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/node-red"` | External documentation URL. |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/NodeRED_CloudRun"` | External documentation URL. |
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed first. |
 | `module_services` | *(Cloud Run, NFS, GCS, etc.)* | GCP services used by this module. |
-| `credit_cost` | `75` | Platform credits consumed on deployment. |
+| `credit_cost` | `50` | Platform credits consumed on deployment. |
 | `require_credit_purchases` | `false` | Enforces credit balance check. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
 | `public_access` | `true` | Visibility to all platform users. |
@@ -345,10 +338,10 @@ Complete list of all input variables, grouped by UI section.
 | Group | Variable | Type | Default | Updatable |
 |---|---|---|---|---|
 | 0 | `module_description` | string | *(long description)* | — |
-| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/applications/node-red"` | — |
+| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/modules/NodeRED_CloudRun"` | — |
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
-| 0 | `credit_cost` | number | `75` | — |
+| 0 | `credit_cost` | number | `50` | — |
 | 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
 | 0 | `public_access` | bool | `true` | — |
@@ -520,6 +513,34 @@ alert_policies = [
   }
 ]
 ```
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `NODE_RED_CREDENTIAL_SECRET` (auto-generated, length from `database_password_length`) | Auto-generated random string stored in Secret Manager | **Critical** | This secret encrypts all flow credentials at rest in the `flows_cred.json` file. If this secret is rotated or changed after flows are deployed, Node-RED cannot decrypt existing credentials — all stored secrets (API keys, passwords, tokens) in flows are permanently lost and must be re-entered. |
+| `enable_auto_password_rotation` | `false` | **Critical** | Enabling automatic rotation of `NODE_RED_CREDENTIAL_SECRET` changes the encryption key used for credentials. All existing encrypted credentials become unreadable after rotation. Only enable if you have a process to re-encrypt credentials after each rotation. |
+| `database_password_length` | `32` | **Medium** | Controls the length of the auto-generated `NODE_RED_CREDENTIAL_SECRET`. Valid range: 16–64. Values outside this range are rejected by the built-in variable validation. Shorter lengths reduce encryption entropy. |
+| `enable_nfs` | `true` | **Critical** | Node-RED stores all flow definitions, credentials, and installed custom nodes in its `/data` directory. Without NFS (or another persistent volume), every Cloud Run restart or scale event starts Node-RED with a completely empty `/data` directory — all flows, nodes, and settings are lost. |
+| `nfs_mount_path` | `"/mnt/nfs"` | **High** | Node-RED's entrypoint script configures `/data` to point to the NFS mount. Changing this path without a corresponding update to the Node-RED settings file causes flows to be written to the ephemeral container filesystem. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts require the gen2 execution environment. Changing to `gen1` causes NFS mount failures and container startup errors. |
+| `application_name` | `"nodered"` | **Critical** | Immutable after first deploy. Changing it renames all GCP resources, triggers full resource recreation, and the NFS instance is disconnected from the new deployment. |
+| `min_instance_count` | `0` | **High** | Scale-to-zero causes cold starts of 10–20 seconds. More importantly, when Node-RED scales back up after idle, it must remount the NFS volume before the health check passes. If a webhook fires during this window, it will be lost. Set to `1` for production webhook workloads. |
+| `max_instance_count` | `1` | **High** | Node-RED's flow state and context are stored locally. Running multiple instances without session affinity causes each instance to have different context state. Node-RED is not designed for active-active horizontal scaling — keep `max_instance_count = 1`. |
+| `memory_limit` | `"1Gi"` | **Medium** | The default is adequate for standard flows. Flows that process large payloads, use the `node-red-contrib-image-tools` node, or install heavy npm dependencies can require `2Gi` or more. |
+| `cpu_limit` | `"1000m"` | **Low** | Node-RED is primarily I/O-bound. However, CPU-intensive function nodes or heavy message transformation can cause throttling at values below `500m`. |
+| `database_type` | `"NONE"` | **High** | Node-RED does not require a database. Setting this to `POSTGRES` or `MYSQL` enables the Cloud SQL Auth Proxy sidecar unnecessarily, increasing startup time and cost. Leave as `"NONE"`. |
+| `enable_cloudsql_volume` | `false` | **Medium** | Node-RED has no database. Setting `enable_cloudsql_volume = true` with `database_type = "NONE"` causes the Cloud SQL Auth Proxy sidecar to fail to start, blocking the main container. |
+| `secret_environment_variables` | `{}` | **Medium** | Do not manually set `NODE_RED_CREDENTIAL_SECRET` via `secret_environment_variables`. It is auto-managed by the Foundation Module via `database_password_length`. Overriding it breaks the credential encryption key management. |
+| `environment_variables` | `{}` | **Medium** | Do not set `NODE_RED_ENABLE_SAFE_MODE = "true"` in production — safe mode disables all flows, preventing any automation from running. It is injected as `"false"` by default. |
+| `ingress_settings` | `"all"` | **Medium** | Setting to `"internal"` blocks all incoming webhook messages from external services. Use `"internal-and-cloud-load-balancing"` with Cloud Armor for production deployments receiving public webhooks. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **Medium** | Setting to `"all-traffic"` routes outbound Node-RED HTTP calls through the VPC connector. If VPC firewall rules restrict external egress, all `http request` nodes calling public APIs will fail. |
+| `enable_iap` | `false` | **High** | Enabling IAP without valid `iap_authorized_users` or `iap_authorized_groups` causes all requests to return 403, blocking access to the Node-RED editor. |
+| `enable_cloud_armor` | `false` | **Medium** | The Node-RED editor UI is publicly accessible by default. Enable Cloud Armor with `admin_ip_ranges` to restrict editor access in production. |
+| `enable_redis` | `false` | **Low** | Node-RED does not use Redis natively. Enabling Redis provisions the connection strings but they are not used by Node-RED core. Only enable if custom nodes explicitly require Redis. |
+| `secret_rotation_period` | `"2592000s"` (30 days) | **Low** | This governs the SMTP password rotation period. Very short rotation periods can cause Node-RED SMTP nodes to use stale credentials during the propagation window. |
 
 ## Destroying Resources
 

@@ -1,27 +1,15 @@
 ---
-title: "Elasticsearch GKE Module — Configuration Guide"
+title: "Elasticsearch_GKE Module — Configuration Guide"
 sidebar_label: "Elasticsearch GKE"
 ---
 
-# Elasticsearch GKE Module — Configuration Guide
+# Elasticsearch_GKE Module — Configuration Guide
 
-<YouTubeEmbed videoId="x6k595QKqzs" poster="https://storage.googleapis.com/rad-public-2b65/modules/Elasticsearch_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Elasticsearch_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
-Elasticsearch is an open-source distributed search and analytics engine based on Apache Lucene,
-used by 58,220+ companies with a 4.43% DBMS market share. Elastic revenue reached $450M in Q3
-FY2026 (+18% YoY), and the managed Elasticsearch market is projected to grow from $1.52B (2024)
-to $11.98B by 2033 at a 21.7% CAGR. Beyond traditional full-text search, Elasticsearch has
-become central to enterprise AI architectures as a vector database powering semantic search and
-RAG pipelines. It drives e-commerce product search, log analytics, application performance
-monitoring (APM), SIEM, and fraud detection at scale. This module deploys a **single-node
-Elasticsearch cluster** on **GKE Autopilot** as a Kubernetes StatefulSet with persistent SSD
-storage. It is designed as a shared search infrastructure dependency — primarily for
-`RAGFlow_GKE`, which uses it for document vector storage and full-text search.
+Elasticsearch is an open-source distributed search and analytics engine based on Apache Lucene.
+This module deploys a **single-node Elasticsearch cluster** on **GKE Autopilot** as a
+Kubernetes StatefulSet with persistent SSD storage. It is designed as a shared search
+infrastructure dependency — primarily for `RAGFlow_GKE`, which uses it for document vector
+storage and full-text search.
 
 `Elasticsearch_GKE` is a **wrapper module** built on top of `App_GKE`. It delegates all GCP
 infrastructure provisioning to `App_GKE` and assembles the Elasticsearch-specific configuration
@@ -71,7 +59,7 @@ locally using a `locals` block (there is no separate `*_Common` module).
 | `create_cloud_storage` | `true` | `false` |
 | `enable_nfs` | `false` | `false` |
 | `module_dependency` | varies | `["Services_GCP"]` |
-| `credit_cost` | varies | `80` |
+| `credit_cost` | varies | `150` |
 
 ### Architecture
 
@@ -118,21 +106,20 @@ override any of the above.
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `module_description` | `string` | *(Elasticsearch GKE description)* | Platform UI description. `{{UIMeta group=0 order=1}}` |
-| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/applications/elasticsearch"` | Documentation URL. `{{UIMeta group=0 order=2}}` |
+| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/Elasticsearch_GKE"` | Documentation URL. `{{UIMeta group=0 order=2}}` |
 | `module_dependency` | `list(string)` | `["Services_GCP"]` | Modules that must be deployed first. `{{UIMeta group=0 order=3}}` |
 | `module_services` | `list(string)` | `["Google Kubernetes Engine", "Persistent Disk", ...]` | GCP services consumed. `{{UIMeta group=0 order=4}}` |
-| `credit_cost` | `number` | `80` | Platform credits consumed on deployment. `{{UIMeta group=0 order=5}}` |
+| `credit_cost` | `number` | `150` | Platform credits consumed on deployment. `{{UIMeta group=0 order=5}}` |
 | `require_credit_purchases` | `bool` | `false` | Enforce credit balance check. `{{UIMeta group=0 order=6}}` |
 | `enable_purge` | `bool` | `true` | Permit full deletion on destroy. `{{UIMeta group=0 order=7}}` |
 | `public_access` | `bool` | `true` | Platform UI visibility. `{{UIMeta group=0 order=8}}` |
-| `shared_users` | `list(string)` | `[]` | Users granted access regardless of `public_access`. Actively enforced by the platform. `{{UIMeta group=0 order=9}}` |
-| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated when blank. `{{UIMeta group=0 order=10}}` |
-| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Terraform service account. `{{UIMeta group=0 order=11}}` |
+| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated when blank. `{{UIMeta group=0 order=9}}` |
+| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Terraform service account. `{{UIMeta group=0 order=9}}` |
 | `project_id` | `string` | **required** | GCP project ID. `{{UIMeta group=1 order=1}}` |
 | `tenant_deployment_id` | `string` | `"demo"` | 1–20 lowercase letters, numbers, hyphens. `{{UIMeta group=1 order=2}}` |
 | `support_users` | `list(string)` | `[]` | Email addresses granted IAM access and monitoring alerts. `{{UIMeta group=1 order=3}}` |
 | `resource_labels` | `map(string)` | `{}` | Labels applied to all resources. `{{UIMeta group=1 order=4}}` |
-| `region` | `string` | `"us-central1"` | GCP region fallback when VPC discovery finds no subnets. `{{UIMeta group=1 order=5}}` |
+| `deployment_region` | `string` | `"us-central1"` | GCP region fallback when VPC discovery finds no subnets. `{{UIMeta group=1 order=5}}` |
 
 ---
 
@@ -459,3 +446,28 @@ resource_labels = {
   service = "elasticsearch"
 }
 ```
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `es_java_heap` | `"512m"` | **Critical** | JVM heap must be set to no more than half of `memory_limit`. The default `512m` heap with the default `4Gi` memory limit is safe but under-provisioned for production. Setting `es_java_heap` greater than `memory_limit / 2` causes the JVM to compete with OS page cache, severely degrading performance and eventually causing OOM kills. For a `4Gi` container, the heap should be no more than `2g`. |
+| `memory_limit` | `"4Gi"` | **Critical** | Elasticsearch requires enough memory for JVM heap plus OS page cache. The container memory must be at least `2 × es_java_heap`. Setting `memory_limit` below `2 × es_java_heap` causes the Elasticsearch process to be killed by the OOM killer during index operations. For production with `es_java_heap = "2g"`, set `memory_limit = "4Gi"` or higher. |
+| `stateful_pvc_enabled` | `null` | **Critical** | Without a PVC, Elasticsearch stores all indexes in the ephemeral pod filesystem. Any pod restart, rolling update, or node eviction permanently destroys all indexed data. Set `stateful_pvc_enabled = true` for all production deployments. |
+| `stateful_pvc_size` | `"30Gi"` | **High** | An undersized PVC causes Elasticsearch to trigger flood-stage watermark protection (default: 95% full), making the index read-only. All write operations are rejected until disk is freed. Index data cannot be reduced without deleting indices — plan capacity with 50–100% headroom above expected data volume. |
+| `stateful_pvc_mount_path` | `"/usr/share/elasticsearch/data"` | **Critical** | Must match Elasticsearch's `path.data` configuration. A mismatch causes Elasticsearch to write data to the ephemeral container layer, silently losing all indexes on pod restart. Do not change this value. |
+| `cluster_name` | `"ragflow"` | **Critical** | `cluster.name` is baked into node identity. Changing the cluster name after initial deployment causes Elasticsearch to treat itself as a new cluster, rejecting all existing data on the PVC as foreign. Rename requires full data re-indexing. Choose a meaningful name before first deploy. |
+| `enable_xpack_security` | `false` | **High** | When `false`, the Elasticsearch HTTP endpoint is accessible without credentials. Any caller who can reach port 9200 can read, modify, or delete all indexes. Enable for production. Note: enabling on an existing deployment that was created with `false` requires certificate generation and rolling restart — plan carefully. |
+| `workload_type` | `null` | **High** | Elasticsearch requires `StatefulSet` for stable pod identity and orderly PVC attachment. Defaulting to `Deployment` without PVC support risks data inconsistency. Use `stateful_pvc_enabled = true` which auto-selects `StatefulSet`. |
+| `cpu_limit` | `"2000m"` | **High** | Elasticsearch is CPU-intensive during indexing (BM25 scoring, vector kNN graph construction). Under `1000m`, indexing throughput degrades and cluster bootstrap can time out. For RAGFlow use, `2000m` is a reasonable baseline; scale to `4000m` for heavy ingestion. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero is not supported for Elasticsearch — the GKE StatefulSet pod should always be running. Setting `min_instance_count = 0` with HPA can cause the pod to be removed, losing all in-memory state and requiring a slow recovery from PVC. |
+| `max_instance_count` | `1` | **Medium** | This module deploys a single-node Elasticsearch cluster. Increasing `max_instance_count` beyond `1` provisions multiple isolated single-node clusters, not a distributed cluster. For multi-node Elasticsearch, use a dedicated operator (e.g., ECK). |
+| `index mapping immutability` | *(immutable after first indexing)* | **Critical** | Elasticsearch index mappings (field types, `dense_vector` dimensions) are immutable after documents are indexed. Changing an embedding dimension (e.g. from 768 to 1536) requires deleting the index and re-indexing all documents. Plan embedding model selection carefully before production deployment. |
+| `fsgroup_id` | `1000` | **High** | Elasticsearch runs as UID/GID 1000. The `fsGroup` in the StatefulSet security context chowns the PVC mount to this GID. Setting `fsgroup_id = 0` (disabled) leaves the PVC mounted as root-owned; the Elasticsearch process cannot write to it and crashes immediately. |
+| `stateful_pvc_storage_class` | `"standard-rwo"` | **Medium** | Balanced PD is adequate for typical log/search workloads. High-throughput vector kNN indexing benefits from `premium-rwo`. Storage class cannot be changed after PVC creation. |
+| `enable_image_mirroring` | `true` | **Low** | Disabling mirroring pulls from the Elastic Docker registry directly. Docker Hub / Elastic registry pull rate limits can cause intermittent deployment failures. Keep mirroring enabled. |
+| `application_version` | `"8.13.4"` | **Medium** | Elasticsearch minor version upgrades are generally safe. Major version upgrades (7.x → 8.x) require index compatibility checks and may need a re-index of all data. Do not upgrade major versions without consulting the Elasticsearch migration guide. |
+| `enable_iap` | `false` | **High** | Without IAP, the GKE LoadBalancer endpoint is accessible to any caller (subject to firewall). Enable `enable_xpack_security = true` and IAP together for defense-in-depth on public-facing deployments. |
+| `quota_memory_requests` | `""` | **Critical** | If `enable_resource_quota = true` and this value is set as a bare integer (e.g. `"4"` instead of `"4Gi"`), Kubernetes treats it as bytes, blocking all pod scheduling. Always use binary suffixes (`Gi` or `Mi`). |

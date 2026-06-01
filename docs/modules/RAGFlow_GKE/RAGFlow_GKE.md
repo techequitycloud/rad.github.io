@@ -1,28 +1,14 @@
 ---
-title: "RAGFlow GKE Module — Configuration Guide"
+title: "RAGFlow_GKE Module — Configuration Guide"
 sidebar_label: "RAGFlow GKE"
 ---
 
-# RAGFlow GKE Module — Configuration Guide
-
-<YouTubeEmbed videoId="_nyxsxS_XCU" poster="https://storage.googleapis.com/rad-public-2b65/modules/RAGFlow_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/RAGFlow_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
+# RAGFlow_GKE Module — Configuration Guide
 
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG)
-platform with 80,000+ GitHub stars and 2,596% year-over-year contributor growth — named one of
-GitHub's fastest-growing open-source projects (Apache 2.0). Unlike generic RAG frameworks,
-RAGFlow is purpose-built for deep document understanding: it correctly parses PDFs, tables, and
-visual layouts before chunking and retrieval, making it significantly more accurate on structured
-enterprise content. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and
-embeds them, stores vectors in Elasticsearch, exposes a REST API for question-answering, and
-provides a web UI for knowledge base management and enterprise search. Typical deployments power
-enterprise knowledge bases, legal research tools, financial document analysis, and customer
-support systems where retrieval accuracy depends on document parsing quality. v0.25 (April 2026)
-added agentic memory, sandbox code execution, and prebuilt ingestion pipelines.
+platform. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and embeds
+them, stores vectors in Elasticsearch, exposes a REST API for question-answering, and provides
+a web UI for knowledge base management and enterprise search.
 
 `RAGFlow_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all
 GCP infrastructure provisioning (GKE Autopilot cluster, networking, Cloud SQL Auth Proxy, GCS,
@@ -100,7 +86,7 @@ RAGFlow_GKE
 | **Custom image build** | RAGFlow always builds a custom image via `RAGFlow_Common/scripts/Dockerfile` using Cloud Build. The `APP_VERSION` build arg is set from `application_version`. |
 | **`db-init` job auto-generated** | A MySQL initialization Job (`mysql:8.0-debian`) runs `scripts/db-init.sh` on first deploy. It creates the database and user with `mysql_native_password` auth. |
 | **`service_conf.yaml` generated at startup** | The custom entrypoint (`scripts/entrypoint.sh`) writes `/ragflow/conf/service_conf.yaml` from environment variables before starting the RAGFlow processes. |
-| **Network discovery** | The module uses `App_Common/modules/app_networking` to discover the VPC region from existing subnets. Falls back to `var.deployment_region` when no subnets are found. |
+| **Network discovery** | The module uses `App_Common/modules/app_networking` to discover the VPC region from existing subnets. Falls back to `var.region` when no subnets are found. |
 | **`min_instance_count` hard-capped at 1** | `RAGFlow_GKE` hard-codes `min_instance_count = 1` in the `locals` merge, regardless of `var.min_instance_count`. |
 
 ---
@@ -110,21 +96,20 @@ RAGFlow_GKE
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `module_description` | `string` | *(RAGFlow GKE description)* | Platform UI description. `{{UIMeta group=0 order=1}}` |
-| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/applications/ragflow"` | Documentation URL. `{{UIMeta group=0 order=2}}` |
+| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/RAGFlow_GKE"` | Documentation URL. `{{UIMeta group=0 order=2}}` |
 | `module_dependency` | `list(string)` | `["Services_GCP", "Elasticsearch_GKE"]` | Modules that must be deployed first. `{{UIMeta group=0 order=3}}` |
 | `module_services` | `list(string)` | *(GKE, MySQL, Elasticsearch, Redis, etc.)* | GCP services consumed. `{{UIMeta group=0 order=4}}` |
 | `credit_cost` | `number` | `150` | Platform credits consumed on deployment. `{{UIMeta group=0 order=5}}` |
 | `require_credit_purchases` | `bool` | `false` | Enforce credit balance check. `{{UIMeta group=0 order=6}}` |
 | `enable_purge` | `bool` | `true` | Permit full deletion on destroy. `{{UIMeta group=0 order=7}}` |
 | `public_access` | `bool` | `true` | Platform UI visibility. `{{UIMeta group=0 order=8}}` |
-| `shared_users` | `list(string)` | `[]` | Users granted access regardless of `public_access`. Actively enforced by the platform. `{{UIMeta group=0 order=9}}` |
-| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated when blank. `{{UIMeta group=0 order=10}}` |
-| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Terraform service account. `{{UIMeta group=0 order=11}}` |
+| `deployment_id` | `string` | `""` | Fixed deployment ID; auto-generated when blank. `{{UIMeta group=0 order=9}}` |
+| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Terraform service account. `{{UIMeta group=0 order=10}}` |
 | `project_id` | `string` | **required** | GCP project ID. `{{UIMeta group=1 order=1}}` |
 | `tenant_deployment_id` | `string` | `"demo"` | 1–20 lowercase letters, numbers, hyphens. `{{UIMeta group=1 order=2}}` |
 | `support_users` | `list(string)` | `[]` | Email addresses granted IAM access and monitoring alerts. `{{UIMeta group=1 order=3}}` |
 | `resource_labels` | `map(string)` | `{}` | Labels applied to all resources. `{{UIMeta group=1 order=4}}` |
-| `region` | `string` | `"us-central1"` | GCP region fallback. `{{UIMeta group=1 order=2}}` |
+| `region` | `string` | `"us-central1"` | GCP region fallback. `{{UIMeta group=1 order=5}}` |
 
 ---
 
@@ -376,7 +361,7 @@ These settings apply only when `workload_type = "StatefulSet"`.
 | `health_check_config` | `object` | `{ enabled=true, path="/v1/health", initial_delay_seconds=120, period_seconds=30 }` | App_GKE-standard liveness probe. `{{UIMeta group=9 order=2}}` |
 | `uptime_check_config` | `object` | `{ enabled=false, path="/v1/health", check_interval="60s", timeout="10s" }` | Cloud Monitoring uptime check. `{{UIMeta group=9 order=3}}` |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies. `{{UIMeta group=9 order=4}}` |
-| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=120, timeout_seconds=10, period_seconds=10, failure_threshold=60 }` | Container startup probe forwarded to `RAGFlow_Common`. `{{UIMeta group=9 order=5}}` |
+| `startup_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=60, timeout_seconds=10, period_seconds=10, failure_threshold=18 }` | Container startup probe forwarded to `RAGFlow_Common`. `{{UIMeta group=9 order=5}}` |
 | `liveness_probe` | `object` | `{ enabled=true, type="HTTP", path="/v1/health", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Container liveness probe forwarded to `RAGFlow_Common`. `{{UIMeta group=9 order=6}}` |
 
 ---
@@ -497,3 +482,30 @@ resource_labels = {
   service = "ragflow"
 }
 ```
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `elasticsearch_hosts` | *(required — no default)* | **Critical** | RAGFlow cannot index or search documents without a reachable Elasticsearch endpoint. Must be set to the `elasticsearch_endpoint` output from a deployed `Elasticsearch_GKE` instance (e.g. `http://10.0.0.5:9200`). Leaving blank causes a plan-time error; RAGFlow will not deploy. |
+| `enable_redis` | `true` | **Critical** | Redis is required for RAGFlow's document processing task queue. Setting to `false` disables the task queue backend; document parsing jobs are never executed and uploaded files remain unprocessed indefinitely. |
+| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, the module falls back to a default address. Pointing to a wrong or unreachable Memorystore Redis host causes all async document workers to fail silently. Use the Redis IP from `Services_GCP`. |
+| `database_type` | `"MYSQL_8_0"` | **Critical** | RAGFlow only supports MySQL 8.0. Changing to `POSTGRES` or `NONE` removes the required database backend; RAGFlow cannot store user accounts, knowledge bases, or task state. |
+| `min_instance_count` | `1` | **High** | RAGFlow loads embedding models during pod startup, which takes 2–3 minutes. Setting to `0` enables scale-to-zero on GKE; requests during cold-start periods will time out. Keep at `1` or more in production. |
+| `stateful_pvc_enabled` | `null` | **High** | RAGFlow on GKE stores model artifacts and temporary processing files on disk. Without a PVC (`null` defaults to no PVC), pod restarts lose all in-progress processing state. Set `stateful_pvc_enabled = true` for production deployments. |
+| `stateful_pvc_size` | `"20Gi"` (when enabled) | **High** | Undersized PVCs fill up when large document batches are processed. Once full, the pod enters CrashLoopBackOff. Provision at least `50Gi` for production. PVC size cannot be reduced after creation. |
+| `workload_type` | `null` | **High** | `null` resolves to `Deployment` (stateless). Combined with `stateful_pvc_enabled = true`, the module automatically selects `StatefulSet`. Explicitly setting `workload_type = "Deployment"` alongside `stateful_pvc_enabled = true` fails at plan time. |
+| `quota_memory_requests` | `""` | **Critical** | If `enable_resource_quota = true` and `quota_memory_requests` is a bare integer (e.g. `"4"`) rather than a binary suffix string (e.g. `"4Gi"`), Kubernetes treats it as bytes — blocking all pod scheduling. Always use `Gi` or `Mi` suffixes. |
+| `enable_cloudsql_volume` | `true` | **Critical** | RAGFlow connects to Cloud SQL MySQL via Unix socket. Disabling this sidecar removes the socket path; RAGFlow crashes on startup with a database connection error. |
+| `container_resources.memory_limit` | `"4Gi"` | **High** | RAGFlow loads embedding models plus the application server. Values below `4Gi` cause OOM kills during document processing. Scale to `8Gi`–`16Gi` for production. |
+| `container_resources.cpu_limit` | `"2000m"` | **Medium** | Document parsing (OCR, chunking) is CPU-intensive. Under `1000m`, processing throughput degrades noticeably. Recommend `4000m`+ for production ingestion workloads. |
+| `max_instance_count` | `5` | **Medium** | GKE HPA scales pods based on CPU/memory. Multiple RAGFlow replicas sharing a MySQL database must have sufficient connection pool headroom (`max_connections` in Cloud SQL). Scaling aggressively without increasing Cloud SQL tier causes connection exhaustion. |
+| `elasticsearch_username` | `""` | **High** | If the Elasticsearch_GKE instance has `enable_xpack_security = true`, RAGFlow must authenticate. Leaving this blank causes HTTP 401 from Elasticsearch, breaking all index and search operations. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Daily MySQL backups protect against data loss. Setting too-infrequent or omitting a schedule increases RPO. |
+| `backup_retention_days` | `7` | **Low** | Short retention limits point-in-time recovery. Consider 30 days for production. |
+| `enable_iap` | `false` | **High** | Without IAP, the GKE Ingress (when using external load balancer) is accessible to any caller. Enable IAP with `iap_authorized_users`/`iap_authorized_groups` for production. Requires `iap_oauth_client_id` and `iap_oauth_client_secret`. |
+| `application_version` | `"v0.13.0"` | **Medium** | Incrementing triggers an image rebuild and rolling pod restart. Ensure the new RAGFlow version is compatible with the existing MySQL schema — migrations run automatically but major version jumps may be irreversible. |
+| `secret_propagation_delay` | `30` | **Medium** | If set too low in large or multi-region projects, the Kubernetes job may attempt to read a secret before it propagates. Increase to `60` for cross-region deployments. |
+| `enable_auto_password_rotation` | `false` | **Low** | Without rotation, a compromised database credential remains valid indefinitely. Enable in production with `rotation_propagation_delay_sec >= 90`. |

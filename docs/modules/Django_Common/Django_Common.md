@@ -1,9 +1,9 @@
 ---
-title: "Django Common Shared Configuration Module"
+title: "Django_Common Shared Configuration Module"
 sidebar_label: "Django Common"
 ---
 
-# Django Common Shared Configuration Module
+# Django_Common Shared Configuration Module
 
 The `Django_Common` module defines the Django web framework configuration for the RAD Modules ecosystem. Like `Directus_Common`, it **creates GCP resources** (a Secret Manager secret for the Django `SECRET_KEY`) and produces a `config` output consumed by platform-specific wrapper modules (`Django_CloudRun` and `Django_GKE`).
 

@@ -1,18 +1,11 @@
 ---
-title: "NodeRED GKE Module — Configuration Guide"
+title: "NodeRED_GKE Module — Configuration Guide"
 sidebar_label: "NodeRED GKE"
 ---
 
-# NodeRED GKE Module — Configuration Guide
+# NodeRED_GKE Module — Configuration Guide
 
-<YouTubeEmbed videoId="uluvGXNPkbE" poster="https://storage.googleapis.com/rad-public-2b65/modules/NodeRed_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/NodeRed_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
-Node-RED is a leading open-source, browser-based flow programming tool originally developed by IBM, with 4,000+ community connector nodes and a growing ecosystem spanning smart manufacturing and edge computing. It is the de facto standard for IoT, IIoT, and industrial automation — integrating legacy OT systems (Modbus, OPC-UA, Siemens S7, MQTT) with modern cloud services. Gartner projects that 70%+ of all applications will use low-code technologies by 2026, and the low-code platform market is tracking toward $16.5B by 2027. This module deploys Node-RED on **GKE Autopilot** with NFS-backed persistent flow storage, optional Redis context storage, and full Kubernetes reliability controls.
+Node-RED is a leading open-source flow-based programming tool designed for wiring together IoT devices, APIs, and online services through a browser-based visual editor. This module deploys Node-RED on **GKE Autopilot** with NFS-backed persistent flow storage, optional Redis context storage, and full Kubernetes reliability controls.
 
 `NodeRED_GKE` is a **wrapper module** built on top of `App_GKE`. It delegates all GCP infrastructure provisioning to App_GKE (GKE Autopilot cluster, networking, Cloud Storage, NFS, Secret Manager, CI/CD) and uses a `NodeRED_Common` sub-module to supply Node-RED-specific application configuration. The `NodeRED_Common` outputs feed into App_GKE's `application_config`, `module_storage_buckets`, and `scripts_dir` inputs.
 
@@ -66,10 +59,10 @@ Node-RED is a leading open-source, browser-based flow programming tool originall
 | `support_users` | `[]` | Email addresses granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `{}` | Labels applied to all module-managed resources. |
 | `module_description` | *(Node-RED GKE description)* | Platform UI description. |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/node-red"` | External documentation URL. |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/NodeRED_GKE"` | External documentation URL. |
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed first. |
 | `module_services` | *(GKE Autopilot, Filestore, GCS, etc.)* | GCP services used by this module. |
-| `credit_cost` | `75` | Platform credits consumed on deployment. |
+| `credit_cost` | `150` | Platform credits consumed on deployment. |
 | `require_credit_purchases` | `false` | Enforces credit balance check. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
 | `public_access` | `true` | Visibility to all platform users. |
@@ -442,10 +435,10 @@ Complete list of all input variables, grouped by UI section.
 | Group | Variable | Type | Default | Updatable |
 |---|---|---|---|---|
 | 0 | `module_description` | string | *(long description)* | — |
-| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/applications/node-red"` | — |
+| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/modules/NodeRED_GKE"` | — |
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
-| 0 | `credit_cost` | number | `75` | — |
+| 0 | `credit_cost` | number | `150` | — |
 | 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
 | 0 | `public_access` | bool | `true` | — |
@@ -707,3 +700,29 @@ environment_variables = {
   NODE_OPTIONS             = "--max-old-space-size=512"
 }
 ```
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `NODE_RED_CREDENTIAL_SECRET` (auto-generated, length from `database_password_length`) | Auto-generated random string stored in Secret Manager | **Critical** | Encrypts all flow credentials at rest. Changing or rotating this key after flows are deployed renders all stored credentials unreadable — every API key, password, and token in every flow must be manually re-entered. |
+| `enable_auto_password_rotation` (if supported) | `false` | **Critical** | Automatic rotation of `NODE_RED_CREDENTIAL_SECRET` changes the encryption key, making all existing flow credentials permanently inaccessible. Only enable with a credential re-encryption procedure in place. |
+| `database_password_length` | `32` | **Medium** | Controls the length of `NODE_RED_CREDENTIAL_SECRET`. Valid range: 16–64. The GKE validation guard blocks values outside this range. |
+| `enable_nfs` | `true` | **Critical** | Node-RED stores all flow definitions, credentials (`flows_cred.json`), and installed nodes in `/data`. Without NFS persistent storage, every pod restart, rescheduling, or Kubernetes node upgrade erases all flows and credentials. |
+| `nfs_mount_path` | `"/mnt/nfs"` | **High** | The `/data` directory must point to the NFS mount. Changing this path without updating Node-RED's settings file causes flows to be written to ephemeral pod storage. |
+| `application_name` | `"nodered"` | **Critical** | Immutable after first deploy. Changing it renames all GCP and Kubernetes resources, causing full recreation. The NFS instance is disconnected from the new deployment. |
+| `min_instance_count` | `1` (GKE default) | **High** | GKE does not support true scale-to-zero without KEDA. The HPA validation guard rejects `min > max`. Unlike Cloud Run, scale-to-zero in GKE leaves the pod in a pending/terminated state rather than cleanly scaling. |
+| `max_instance_count` | `1` | **High** | Node-RED is not designed for active-active horizontal scaling — flow context and state are per-instance. Increasing above `1` without `stateful_pvc_enabled = true` or a shared NFS `/data` mount causes each pod to have isolated, potentially conflicting flow state. |
+| `workload_type` | `null` (defaults to `Deployment`) | **High** | For Node-RED with persistent `/data`, a `StatefulSet` with a PVC provides stronger pod-to-storage binding than a Deployment with NFS. Setting `stateful_pvc_enabled = true` without explicit `workload_type` automatically resolves to `StatefulSet`. |
+| `stateful_pvc_enabled` | `false` | **Medium** | A PVC-backed StatefulSet is safer than NFS for single-replica Node-RED — it guarantees the same pod always mounts the same storage. However, PVC size is immutable after creation. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` (not enforced) | **High** | Must use binary suffixes (`"1Gi"`, `"2048Mi"`). Bare integers are treated as bytes by Kubernetes and block all pod scheduling. |
+| `database_type` | `"NONE"` | **High** | Node-RED has no database dependency. Setting this to `POSTGRES` or `MYSQL` provisions an unnecessary Cloud SQL sidecar. The GKE validation guard blocks `enable_cloudsql_volume = true` when `database_type = "NONE"`. |
+| `enable_cloudsql_volume` | `false` | **High** | Setting `true` with `database_type = "NONE"` is blocked at plan time by the GKE validation guard with the message: "enable_cloudsql_volume should not be true when database_type is 'NONE'." |
+| `environment_variables` | `{}` | **Medium** | Do not override `NODE_RED_ENABLE_SAFE_MODE = "true"` in production — safe mode disables all flows. Do not set `NODE_RED_CREDENTIAL_SECRET` here; it is managed by the Foundation Module. |
+| `session_affinity` | `"ClientIP"` | **Medium** | Node-RED's editor uses WebSocket connections for the flow deployment UI. Disabling affinity causes editor disconnections and "deploy failed" errors when subsequent requests route to a different pod. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | Disabling PDB allows GKE to evict the Node-RED pod during node maintenance, causing a complete service outage and potential flow data loss if the NFS write was in progress. |
+| `termination_grace_period_seconds` | `30` | **Medium** | Node-RED needs time to finish processing in-flight messages before shutdown. Values below `15` may truncate message processing in active flows. |
+| `enable_iap` | `false` | **High** | Enabling IAP without both `iap_oauth_client_id` and `iap_oauth_client_secret` is blocked at plan time by the GKE validation guard. |
+| `enable_topology_spread` | `false` | **Low** | With `max_instance_count = 1`, topology spread has no effect. Only relevant if multiple replicas are deployed (not recommended for Node-RED). |

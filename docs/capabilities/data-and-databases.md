@@ -5,7 +5,7 @@ sidebar_label: "Data & Databases"
 
 # Data & Databases
 
-> **Scope.** Canonical home for the managed database, cache, and shared-storage backends, plus the lifecycle automation (user creation, extension installation, init scripts) that wires them to applications. Backup/restore tooling is in [capabilities/disaster-recovery.md](disaster-recovery.md); CMEK and private-IP enforcement are in [practices/devsecops.md](../practices/devsecops.md).
+> **Scope.** Canonical home for the managed database, cache, and shared-storage backends, plus the lifecycle automation (user creation, extension installation, init scripts) that wires them to applications. Backup/restore tooling is in [capabilities/disaster_recovery.md](disaster_recovery.md); CMEK and private-IP enforcement are in [practices/devsecops.md](../practices/devsecops.md).
 
 ## What this repo uniquely brings to data
 
@@ -75,7 +75,7 @@ Sub-modules under `modules/App_Common/modules/` let Application Modules locate P
 
 ## Cross-references
 
-- [capabilities/disaster-recovery.md](disaster-recovery.md) — backup/restore scripts (`export-backup.sh`, `import-gcs-backup.sh`, `import-gdrive-backup.sh`)
+- [capabilities/disaster_recovery.md](disaster_recovery.md) — backup/restore scripts (`export-backup.sh`, `import-gcs-backup.sh`, `import-gdrive-backup.sh`)
 - [practices/devsecops.md](../practices/devsecops.md) — CMEK, private IP, password generation, SSL/TLS enforcement
 - [practices/finops.md](../practices/finops.md) — tier configurability (cost lens)
 - [capabilities/networking.md](networking.md) — PSA peering, private IP for Cloud SQL

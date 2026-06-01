@@ -30,7 +30,7 @@ This is a portable pattern for any stateful workload that cannot or should not b
 
 ## Post-migration lifecycle: GitOps
 
-The Migrate-to-Containers lab lands workloads on Kubernetes, but the repo does not currently prescribe a GitOps workflow for ongoing delivery. The natural next step after migration is enabling **Anthos Config Management** (Config Sync) on the target cluster so that application manifests are sourced from Git rather than applied imperatively. See [hybrid-cloud-fleet](./hybrid-cloud.md) for the ACM/Config Sync model.
+The Migrate-to-Containers lab lands workloads on Kubernetes, but the repo does not currently prescribe a GitOps workflow for ongoing delivery. The natural next step after migration is enabling **Anthos Config Management** (Config Sync) on the target cluster so that application manifests are sourced from Git rather than applied imperatively. See [hybrid-cloud-fleet](./hybrid-cloud-fleet.md) for the ACM/Config Sync model.
 
 ## Migrate-to-Containers lab
 

@@ -1,9 +1,9 @@
 ---
-title: "Flowise Common Shared Configuration Module"
+title: "Flowise_Common Shared Configuration Module"
 sidebar_label: "Flowise Common"
 ---
 
-# Flowise Common Shared Configuration Module
+# Flowise_Common Shared Configuration Module
 
 The `Flowise_Common` module defines the Flowise visual AI workflow builder for the RAD Modules ecosystem. It **creates GCP resources** (one Secret Manager secret for the admin password) and produces a `config` output consumed by the platform-specific wrapper modules (`Flowise_CloudRun` and `Flowise_GKE`).
 
@@ -244,7 +244,6 @@ module "flowise_app" {
   project_id           = var.project_id
   tenant_deployment_id = var.tenant_deployment_id
   deployment_id        = local.random_id
-  region               = local.region
   resource_labels      = var.resource_labels
 
   application_name    = var.application_name

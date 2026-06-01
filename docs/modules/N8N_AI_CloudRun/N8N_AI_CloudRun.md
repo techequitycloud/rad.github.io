@@ -1,18 +1,16 @@
 ---
-title: "N8N AI CloudRun Module — Configuration Guide"
+title: "N8N_AI_CloudRun Module — Configuration Guide"
 sidebar_label: "N8N AI CloudRun"
 ---
 
-# N8N AI CloudRun Module — Configuration Guide
+# N8N_AI_CloudRun Module — Configuration Guide
 
-<YouTubeEmbed videoId="VaplhsAOazI" poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_AI_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/N8N_AI_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
-n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), trusted by a quarter of the Fortune 500. `N8N_AI_CloudRun` is the AI-augmented variant — pre-configured with native LLM nodes, agent loops, and vector store integrations so teams can build production AI automation pipelines without boilerplate. AI-specific template usage is the fastest-growing segment within the N8N community. This module deploys n8n on **Google Cloud Run** alongside two companion AI services: **Qdrant** (vector database for RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis workflows without external AI API dependencies.
+n8n is an open-source workflow automation platform that lets you connect services, run logic,
+and build AI-powered pipelines through a visual node-based interface. This module deploys n8n
+on **Google Cloud Run** alongside two companion AI services: **Qdrant** (vector database for
+RAG and document search) and **Ollama** (local LLM inference for privacy-first AI). Together
+they form an AI Starter Kit for building intelligent agents, chatbots, and document analysis
+workflows without external AI API dependencies.
 
 `N8N_AI_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all
 GCP infrastructure provisioning to App_CloudRun (Cloud Run service, Cloud SQL, networking,
@@ -87,7 +85,7 @@ Their semantics are identical to the App_CloudRun equivalents — refer to
 | `support_users` | `[]` | Email addresses granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `{}` | Labels applied to all module-managed resources. |
 | `module_description` | *(N8N AI description string)* | Platform UI description. Do not modify unless customising the module. |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/n8n-ai"` | External documentation URL displayed in the platform UI. |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/N8N_AI_CloudRun"` | External documentation URL displayed in the platform UI. |
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed before this one. |
 | `deployment_id` | `""` | Optional fixed deployment ID. Auto-generated when blank. |
 
@@ -481,10 +479,10 @@ Complete reference of all `N8N_AI_CloudRun` variables, their defaults, and UI me
 | Variable | Default | Group |
 |---|---|---|
 | `module_description` | *(N8N AI description)* | 0 |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/n8n-ai"` | 0 |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/N8N_AI_CloudRun"` | 0 |
 | `module_dependency` | `["Services_GCP"]` | 0 |
 | `module_services` | *(list of GCP services)* | 0 |
-| `credit_cost` | `100` | 0 |
+| `credit_cost` | `50` | 0 |
 | `require_credit_purchases` | `false` | 0 |
 | `enable_purge` | `true` | 0 |
 | `public_access` | `true` | 0 |
@@ -585,6 +583,36 @@ Complete reference of all `N8N_AI_CloudRun` variables, their defaults, and UI me
 | `delete_untagged_images` | `true` | 9 |
 | `image_retention_days` | `30` | 9 |
 | `max_revisions_to_retain` | `7` | 3 |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `N8N_ENCRYPTION_KEY` (auto-generated secret) | Auto-generated 32-char random string stored in Secret Manager | **Critical** | Changing after first run permanently destroys all saved credentials in every workflow. Never rotate unless you are prepared to re-enter every credential. |
+| `application_name` | `"n8nai"` | **Critical** | Immutable after first deploy. Changing it renames all GCP resources, triggering full recreation, database loss, and service outage. |
+| `db_name` | `"n8n_db"` | **Critical** | Immutable after first deploy. Changing it causes n8n to connect to a new empty database, losing all workflows, execution history, and AI pipeline configurations. |
+| `WEBHOOK_URL` / `N8N_EDITOR_BASE_URL` (injected from `service_url`) | Predicted Cloud Run service URL | **Critical** | Must match the actual public URL. If wrong, webhook triggers and OAuth callbacks silently fail, breaking all AI workflow integrations. |
+| `enable_ai_components` | `true` | **High** | Master toggle for the AI stack. Setting to `false` prevents Qdrant and Ollama from deploying. Both `enable_qdrant` and `enable_ollama` require this to be `true` — plan-time validation blocks the combination if `enable_ai_components = false`. |
+| `enable_qdrant` | `true` | **High** | Qdrant is the vector database for RAG pipelines and AI memory nodes. Disabling it with active n8n AI workflows that reference Qdrant causes those workflows to fail at runtime with connection errors. |
+| `enable_ollama` | `true` | **High** | Ollama serves the local LLM. Disabling it breaks all n8n AI nodes that reference the Ollama endpoint. Use `false` only if you are exclusively using external AI providers (OpenAI, Anthropic, etc). |
+| `ollama_model` | `"llama3.2"` | **Medium** | This variable is not referenced by the application module and has no effect on deployment. The actual model must be pulled by the Ollama service at runtime via a separate initialization step or API call. |
+| `qdrant_version` | `"latest"` | **Medium** | Using `"latest"` in production means Qdrant can upgrade automatically on restart, potentially changing the binary API format. Pin to a specific version (e.g., `"v1.9.0"`) for production stability. |
+| `ollama_version` | `"latest"` | **Medium** | Same risk as `qdrant_version` — unpinned tags cause uncontrolled upgrades. Pin for production. |
+| `enable_redis` | `true` | **High** | Disabling Redis while `max_instance_count > 1` causes split-brain execution. AI workflow pipelines often have long-running multi-step executions that are especially susceptible to duplicate runs. |
+| `redis_host` | `""` (uses NFS server IP when `enable_nfs = true`) | **High** | When `enable_redis = true` and both `redis_host` and `enable_nfs` are empty/false, n8n fails to start due to an empty Redis connection string. |
+| `memory_limit` | `"4Gi"` | **High** | AI workloads involving embedding generation, vector search, and LLM inference chains consume significantly more memory than standard automation. Values below `4Gi` cause frequent OOM kills on AI-heavy workflows. |
+| `cpu_limit` | `"2000m"` | **Medium** | AI nodes (code execution, embedding, JSON processing) are CPU-intensive. Values below `2000m` cause severe throttling on AI pipeline workflows. |
+| `min_instance_count` | `0` | **Medium** | Scale-to-zero with AI components means Qdrant and Ollama also cold-start, introducing 30–60 second delays for the first request after idle. Set to `1` for production AI deployments. |
+| `max_instance_count` | `1` | **High** | Increasing above `1` requires Redis to be enabled and properly configured. AI pipeline steps are stateful and cannot safely be split across instances without queue coordination. |
+| `enable_nfs` | `true` | **High** | Qdrant stores its vector index at `/mnt/gcs/qdrant` and Ollama stores model files at `/mnt/gcs/ollama/models`. Without persistent storage, model files and vector indexes are lost on restart. GCS Fuse volumes are configured automatically when AI components are enabled. |
+| `enable_iap` | `false` | **High** | Enabling IAP without providing both `iap_oauth_client_id` and `iap_oauth_client_secret` blocks all user access to the n8n UI. |
+| `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` | **Medium** | Changing to `"REQUIRE_ATTESTATION"` blocks all deployments (including Qdrant and Ollama sidecar services) unless each image has a valid attestation. Configure attestors before enforcing. |
+| `secret_environment_variables` | `{}` | **Medium** | External AI provider API keys (e.g., OpenAI, Anthropic, Google AI) must be passed via `secret_environment_variables` with references to existing Secret Manager secrets, not via plain `environment_variables`. Passing API keys as plain env vars exposes them in Cloud Run console and audit logs. |
+| `enable_vpc_sc` | `false` | **Medium** | Requires `organization_id` to be explicitly set. If left empty, VPC-SC is silently skipped. |
+| `vpc_sc_dry_run` | `true` | **Low** | Leaving dry-run enabled in production means VPC-SC rules are logged but not enforced. |
+| `ingress_settings` | `"all"` | **Medium** | Setting to `"internal"` blocks webhook callbacks from external AI APIs and OAuth providers. Use `"internal-and-cloud-load-balancing"` with Cloud Armor in production. |
 
 ## Destroying Resources
 

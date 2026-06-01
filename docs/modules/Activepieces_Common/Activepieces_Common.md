@@ -1,9 +1,9 @@
 ---
-title: "Activepieces Common Shared Configuration Module"
+title: "Activepieces_Common Shared Configuration Module"
 sidebar_label: "Activepieces Common"
 ---
 
-# Activepieces Common Shared Configuration Module
+# Activepieces_Common Shared Configuration Module
 
 The `Activepieces_Common` module defines the Activepieces workflow automation platform configuration for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets for cryptographic keys) and produces a `config` output consumed by the platform-specific wrapper modules (`Activepieces_CloudRun` and `Activepieces_GKE`).
 
@@ -124,7 +124,7 @@ The resource naming prefix passed into the module. Exposed for downstream use by
 
 ---
 
-## 4. Environment Variables Injected by Activepieces Common
+## 4. Environment Variables Injected by Activepieces_Common
 
 `Activepieces_Common` merges the following default environment variables into the `config.environment_variables` field. User-supplied `var.environment_variables` are merged last and take precedence over any of these defaults.
 
@@ -277,7 +277,7 @@ Database setup script used by the default `db-init` initialization job. See §5 
 
 ## 8. Platform-Specific Differences
 
-| Aspect | Activepieces CloudRun | Activepieces GKE |
+| Aspect | Activepieces_CloudRun | Activepieces_GKE |
 |--------|-----------------------|------------------|
 | `service_url` | Predicted Cloud Run URL: `https://<name>-<project_number>.<region>.run.app` | Internal cluster URL: `http://<name>.<namespace>.svc.cluster.local` |
 | `enable_cloudsql_volume` | Defaults to `true` | Defaults to `true` |

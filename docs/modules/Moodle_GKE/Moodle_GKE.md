@@ -1,18 +1,11 @@
 ---
-title: "Moodle GKE Module — Configuration Guide"
+title: "Moodle_GKE Module — Configuration Guide"
 sidebar_label: "Moodle GKE"
 ---
 
-# Moodle GKE Module — Configuration Guide
+# Moodle_GKE Module — Configuration Guide
 
-<YouTubeEmbed videoId="m9pdsCMhhd8" poster="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
-Moodle is the world's most widely deployed open-source Learning Management System (LMS), holding 14% global market share and dominant positions in Europe (69%) and Latin America (73%). The global LMS market is growing from $24.5B in 2024 to $107.9B by 2033 at a 17.9% CAGR, driven by demand for corporate training, higher education, and government certification programs. This module deploys Moodle on **GKE Autopilot** using a custom PHP 8.3/Apache container, backed by a managed Cloud SQL PostgreSQL instance and shared NFS storage for course materials, with horizontal pod autoscaling to support thousands of concurrent students.
+Moodle is the world's most popular open-source Learning Management System (LMS), used by educational institutions, corporations, and online learning platforms worldwide. This module deploys Moodle on **GKE Autopilot** using a custom PHP 8.3/Apache container, backed by a managed Cloud SQL PostgreSQL instance and shared NFS storage for course materials.
 
 `Moodle_GKE` is a **wrapper module** built on top of `App_GKE`. It uses `App_GKE` for all GCP infrastructure provisioning (cluster, networking, Cloud SQL, GCS, secrets, CI/CD) and adds Moodle-specific application configuration, an automated cron Cloud Scheduler job, and database initialisation on top.
 
@@ -371,3 +364,31 @@ kubectl port-forward -n NAMESPACE svc/moodle 8080:80 &
 curl -s http://localhost:8080/health.php
 # Expect: a 200 response indicating PHP and database are healthy
 ```
+
+---
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `project_id` | _(required)_ | **Critical** | No default — deployment fails immediately. |
+| `database_type` | `"POSTGRES_15"` | **Critical** | Moodle supports both MySQL and PostgreSQL. The GKE module defaults to PostgreSQL 15. Changing to `MYSQL` requires matching the credential injection and config generation logic. Setting `NONE` leaves Moodle with no persistence. |
+| `enable_nfs` | `true` | **Critical** | Moodle `moodledata` must be on a shared volume accessible by all pods. Without NFS, each pod has an isolated data directory — uploaded course files are not visible across replicas, student submissions to one pod are lost on pod reschedule, and Moodle's locking mechanism fails. NFS is mandatory for any multi-pod Moodle deployment. |
+| `enable_redis` | `true` | **High** | Without Redis, Moodle uses file-based PHP sessions. With multiple pods, a student's session is tied to the specific pod that created it — any request routed to a different pod loses the session, causing random logouts. Redis provides a shared session store accessible by all pods. |
+| `redis_host` | `""` | **High** | Falls back to NFS server IP when empty. If NFS is disabled and no explicit host is given, Moodle session initialisation fails. Specify an explicit Redis host for production GKE deployments. |
+| `session_affinity` | `"ClientIP"` | **High** | Even with Redis, Moodle has some in-process PHP state. `"ClientIP"` affinity prevents unnecessary cross-pod session handoffs. Disable only with a dedicated Redis-backed session store. |
+| `cron_jobs` | `[]` (none) | **Critical** | Moodle requires a Kubernetes CronJob running `php /var/www/html/admin/cli/cron.php` every 1–5 minutes. Without it, grade notifications, course completion triggers, forum digests, quiz availability windows, and scheduled backups do not execute. This is the most common Moodle GKE misconfiguration. |
+| `container_resources.memory_limit` | `"512Mi"` (GKE default) | **Critical** | The base GKE `container_resources.memory_limit` default is `512Mi`. Moodle requires at least `1Gi` to start, and 2–4Gi for production workloads with multiple plugins. A `512Mi` limit causes PHP OOM kills immediately on startup. Always override to at least `2Gi`. |
+| `container_resources.cpu_limit` | `"1000m"` (GKE default) | **Medium** | Moodle course rendering and quiz grading are CPU-intensive. Under-provisioning with many concurrent students causes request queuing and timeouts. Increase to at least `2000m` for production. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (GKE-specific) | Must use binary suffixes (`Gi`, `Mi`) when set. Bare integers are treated as bytes by Kubernetes, preventing all pods from scheduling. |
+| `min_instance_count` | `1` | **High** | `0` allows scale-to-zero. Moodle cold starts on GKE take 30–60 seconds. Students arriving after idle periods experience request failures or very slow first loads. Keep at `1` for any scheduled live learning activity. |
+| `application_database_name` | `"moodle"` (via `application_database_name`) | **Critical** | Immutable after first deployment — changing this recreates the database and destroys all course data, grades, and enrolments. |
+| `application_database_user` | `"moodle"` | **Critical** | Immutable after first deployment — changing this recreates the user and breaks the application database connection. |
+| `workload_type` | `null` | **Medium** | Setting `stateful_pvc_enabled = true` auto-selects `StatefulSet`. Setting `workload_type = "Deployment"` alongside `stateful_pvc_enabled = true` fails at plan time. |
+| `stateful_pvc_size` | `"10Gi"` | **Medium** | Moodle course files and user submissions accumulate quickly. A site with hundreds of students and video submissions can exhaust `10Gi` within weeks. Plan for 100Gi+ for active courses. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | Already enabled. Disabling allows all pods to be evicted simultaneously during node upgrades, causing a full Moodle outage during an active exam period. |
+| `pdb_min_available` | `"1"` | **Medium** | With a single replica and `pdb_min_available = "1"`, node upgrades stall indefinitely. Run at least 2 replicas in production to allow rolling maintenance. |
+| `enable_cloud_armor` | `false` | **Medium** | Moodle login is a target for credential stuffing at scale. Recommended for institutions with student-facing Moodle deployments. |
+| `backup_retention_days` | `7` | **High** | Educational institutions may have compliance requirements for longer data retention. Increase to 90+ days for accredited programmes. |

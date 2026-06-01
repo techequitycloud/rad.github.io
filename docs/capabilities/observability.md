@@ -5,7 +5,7 @@ sidebar_label: "Observability"
 
 # Observability
 
-> **Scope.** Canonical home for metrics, logs, dashboards, alerts, and audit telemetry — Cloud Monitoring, Cloud Logging, Cloud Audit Logs, Security Command Center, and mesh telemetry. The SRE-specific framing of how to use these signals is in [practices/sre.md](../practices/sre.md); the auditor-evidence framing is in [outcomes/compliance-governance.md](../outcomes/compliance-governance.md).
+> **Scope.** Canonical home for metrics, logs, dashboards, alerts, and audit telemetry — Cloud Monitoring, Cloud Logging, Cloud Audit Logs, Security Command Center, and mesh telemetry. The SRE-specific framing of how to use these signals is in [practices/sre.md](../practices/sre.md); the auditor-evidence framing is in [outcomes/compliance_governance.md](../outcomes/compliance_governance.md).
 
 ## What this repo uniquely brings to observability
 
@@ -83,7 +83,7 @@ Cloud Build history, Skaffold-generated artifacts, Cloud Deploy release and roll
 ## Cross-references
 
 - [practices/sre.md](../practices/sre.md) — SLO usage, DORA metrics, incident response (signal-consumption lens)
-- [outcomes/compliance-governance.md](../outcomes/compliance-governance.md) — audit-evidence framing
+- [outcomes/compliance_governance.md](../outcomes/compliance_governance.md) — audit-evidence framing
 - [practices/devsecops.md](../practices/devsecops.md) — VPC-SC dry-run, Binary Authorization, security-finding sources
 - [practices/cicd.md](../practices/cicd.md) — pipeline observability
 - [practices/finops.md](../practices/finops.md) — cost observability

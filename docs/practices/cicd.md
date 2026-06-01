@@ -5,7 +5,7 @@ title: CI/CD
 
 # Continuous Integration and Continuous Delivery (CI/CD)
 
-> **Scope.** Canonical home for the deployment pipeline: Cloud Build configurations, build triggers, image build, progressive delivery, validation gates, and integration tests. The IaC mechanics underneath (state, drift, OpenTofu) are in [practices/gitops-iac.md](gitops-iac.md).
+> **Scope.** Canonical home for the deployment pipeline: Cloud Build configurations, build triggers, image build, progressive delivery, validation gates, and integration tests. The IaC mechanics underneath (state, drift, OpenTofu) are in [practices/gitops_iac.md](gitops_iac.md).
 
 > **Last reviewed:** 2026-05-04
 
@@ -23,7 +23,7 @@ All pipelines run `tofu init / plan / apply` in a custom Terraform-aware contain
 
 ### 2. Parameterised, multi-tenant pipelines
 
-A single pipeline serves every tenant and module via substitutions: `_MODULE_NAME`, `_DEPLOYMENT_ID`, `_DEPLOYMENT_BUCKET_ID`, `_MODULE_GIT_REPO_URL`. New apps and tenants require zero pipeline changes. See [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) for the multi-tenant model.
+A single pipeline serves every tenant and module via substitutions: `_MODULE_NAME`, `_DEPLOYMENT_ID`, `_DEPLOYMENT_BUCKET_ID`, `_MODULE_GIT_REPO_URL`. New apps and tenants require zero pipeline changes. See [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) for the multi-tenant model.
 
 ### 3. Image build and progressive delivery (canonical)
 
@@ -50,7 +50,7 @@ A single pipeline serves every tenant and module via substitutions: `_MODULE_NAM
 
 ### 7. Local developer loop
 
-- **`scripts/create_modules.sh`** — scaffolds a new CloudRun + GKE + Common triple in one command (see [outcomes/developer-productivity.md](../outcomes/developer-productivity.md) for the full self-service surface).
+- **`scripts/create_modules.sh`** — scaffolds a new CloudRun + GKE + Common triple in one command (see [outcomes/developer_productivity.md](../outcomes/developer_productivity.md) for the full self-service surface).
 - Standard `tofu init / validate / plan / apply` works in any module directory.
 
 ### 8. Branch strategy
@@ -95,9 +95,9 @@ Cache invalidation: bump the cache key (image tag or GCS path prefix) whenever t
 
 ## Cross-references
 
-- [practices/gitops-iac.md](gitops-iac.md) — OpenTofu, state, drift detection, idempotent re-apply
+- [practices/gitops_iac.md](gitops_iac.md) — OpenTofu, state, drift detection, idempotent re-apply
 - [practices/finops.md](finops.md) — revision pruning, AR cleanup policies (lifecycle automation)
 - [practices/sre.md](sre.md) — DORA-metric impact of fast deploys, incident response
 - [practices/devsecops.md](devsecops.md) — secret-handling rules in pipelines
-- [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) — multi-tenant pipeline parameterisation
+- [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) — multi-tenant pipeline parameterisation
 - [capabilities/observability.md](../capabilities/observability.md) — Cloud Monitoring alert policies for build failures

@@ -1,9 +1,9 @@
 ---
-title: "Ollama Common Shared Configuration Module"
+title: "Ollama_Common Shared Configuration Module"
 sidebar_label: "Ollama Common"
 ---
 
-# Ollama Common Shared Configuration Module
+# Ollama_Common Shared Configuration Module
 
 The `Ollama_Common` module defines the Ollama LLM inference server configuration for the RAD
 Modules ecosystem. It **creates one GCP resource** (the GCS models bucket, via the
@@ -225,7 +225,7 @@ start within the retry window.
 | `wrapper_prefix` | `string` | **required** | Prefix for GCS bucket names. Must match the `resource_prefix` used by the calling App_CloudRun or App_GKE module. |
 | `deployment_id` | `string` | `""` | Unique deployment identifier. |
 | `common_labels` | `map(string)` | `{}` | Labels applied to resources created by this module. |
-| `region` | `string` | `"us-central1"` | GCP region for resource deployment. Used as the location for the GCS models bucket. |
+| `region` | `string` | `"us-central1"` | Region for the GCS models bucket. |
 
 ### Application Details
 
@@ -301,7 +301,7 @@ The `gcs_volumes` entry appended by this module:
 
 | Aspect | Ollama_CloudRun | Ollama_GKE |
 |---|---|---|
-| `region` | Passed as `"us-central1"` from `main.tf` | Auto-discovered from VPC subnets via `app_networking`; falls back to `var.region` |
+| `region` | Hard-coded to `"us-central1"` in `main.tf` | Auto-discovered from VPC subnets via `app_networking`; falls back to `var.region` |
 | Model-pull job type | Cloud Run Job | Kubernetes Job |
 | `mount_gcs_volumes` | `["ollama-models"]` mounted in the Cloud Run Job | `["ollama-models"]` mounted in the Kubernetes Job |
 | GCS Fuse driver | GCS Fuse (Cloud Run gen2) | GCS Fuse CSI driver (GKE) |
@@ -324,7 +324,7 @@ module "ollama_app" {
   common_labels = local.common_labels
 
   wrapper_prefix = local.wrapper_prefix
-  region         = var.region
+  region         = "us-central1"
 
   application_name         = var.application_name
   application_display_name = var.application_display_name

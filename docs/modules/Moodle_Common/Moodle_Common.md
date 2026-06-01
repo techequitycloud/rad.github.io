@@ -1,9 +1,9 @@
 ---
-title: "Moodle Common Shared Configuration Module"
+title: "Moodle_Common Shared Configuration Module"
 sidebar_label: "Moodle Common"
 ---
 
-# Moodle Common Shared Configuration Module
+# Moodle_Common Shared Configuration Module
 
 The `Moodle_Common` module defines the Moodle Learning Management System (LMS) configuration for the RAD Modules ecosystem. It **creates GCP resources** (two Secret Manager secrets) and produces a `config` output consumed by platform-specific wrapper modules (`Moodle_CloudRun` and `Moodle_GKE`).
 

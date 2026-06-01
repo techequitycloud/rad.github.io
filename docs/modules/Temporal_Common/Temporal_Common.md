@@ -1,9 +1,9 @@
 ---
-title: "Temporal Common Shared Infrastructure Module"
+title: "Temporal_Common Shared Infrastructure Module"
 sidebar_label: "Temporal Common"
 ---
 
-# Temporal Common Shared Infrastructure Module
+# Temporal_Common Shared Infrastructure Module
 
 The `Temporal_Common` module provisions the database infrastructure required by the Temporal Workflow Engine on Google Cloud Platform. It **creates Cloud SQL resources** (a database user, two PostgreSQL databases, and one Secret Manager secret) and exposes outputs consumed by `Temporal_GKE`.
 

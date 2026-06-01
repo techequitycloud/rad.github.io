@@ -1,18 +1,11 @@
 ---
-title: "Directus GKE Module — Configuration Guide"
+title: "Directus_GKE Module — Configuration Guide"
 sidebar_label: "Directus GKE"
 ---
 
-# Directus GKE Module — Configuration Guide
+# Directus_GKE Module — Configuration Guide
 
-<YouTubeEmbed videoId="bY_QvUBz9W8" poster="https://storage.googleapis.com/rad-public-2b65/modules/Directus_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Directus_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
-`Directus_GKE` is a wrapper module that deploys [Directus](https://directus.io/) — an open-source composable data platform and headless CMS with 34,500+ GitHub stars, trusted by Tripadvisor, Adobe, and Mercedes-Benz — on Google Kubernetes Engine (GKE) Autopilot. Directus wraps any SQL database with instant REST and GraphQL APIs and a no-code admin panel without modifying your schema. Its native MCP server support (introduced in v11.13, November 2025) enables direct AI tool integration, and it is consistently ranked among the top open-source headless CMS choices in 2026 for Backend-as-a-Service, internal dashboards, and omnichannel content delivery. It composes two underlying modules:
+`Directus_GKE` is a wrapper module that deploys [Directus](https://directus.io/) — an open-source headless CMS and data API platform — on Google Kubernetes Engine (GKE) Autopilot. It composes two underlying modules:
 
 - **[App_GKE](../App_GKE/App_GKE.md)** — provides all GKE infrastructure: cluster targeting, Kubernetes workloads, networking, security, CI/CD, storage, observability, and backup.
 - **Directus_Common** — generates the Directus application configuration, database initialisation scripts, migration jobs, and Directus-specific environment variables. Its outputs are injected into `App_GKE` via the `application_config`, `module_env_vars`, `module_secret_env_vars`, and `module_storage_buckets` inputs.
@@ -28,7 +21,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Configuration Area | App_GKE.md Section | Directus-Specific Notes |
 |---|---|---|
 | Module Metadata & Configuration | §1 Module Overview | Directus-specific `module_description`, `module_documentation`, and `module_services` defaults are pre-set. `resource_creator_identity` — see [Resource Creator Identity](#resource-creator-identity) below. |
-| Project & Identity | §2 IAM & Access Control | Identical, plus `region` unique to this module — see [Project & Identity](#project--identity) below. |
+| Project & Identity | §2 IAM & Access Control | Identical, plus `deployment_region` unique to this module — see [Project & Identity](#project--identity) below. |
 | Application Identity | §3.A Compute (GKE Autopilot) | Directus-specific defaults; also exposes `db_name`, `db_user`, and `description` — see [Application & Database Identity](#application--database-identity) below. |
 | Runtime & Scaling | §3.A Compute (GKE Autopilot) | Directus-specific defaults for `container_port`, scaling counts, and `enable_cloudsql_volume`; also exposes `cpu_limit`, `memory_limit`, `startup_probe`, and `liveness_probe` — see [Runtime Configuration](#runtime-configuration) below. |
 | Environment Variables & Secrets | §3 Core Service Configuration | Identical. |
@@ -72,7 +65,7 @@ The following variables are shared with `App_GKE` but have different default val
 | `application_version` | `"11.1.0"` | `"1.0.0"` | Pins the Directus container image version. |
 | `container_port` | `8055` | `8080` | Directus listens on port 8055 by default. |
 | `min_instance_count` | `0` | `1` | Scale-to-zero is the default; set to `1` or more to eliminate cold starts. |
-| `max_instance_count` | `8` | `3` | Higher default to accommodate Directus workloads under load. |
+| `max_instance_count` | `3` | `3` | Directus default; increase for high-traffic deployments. |
 | `cpu_limit` (`container_resources.cpu_limit`) | `"2000m"` | `"1000m"` | Directus benefits from 2 vCPU for responsive API generation. |
 | `memory_limit` (`container_resources.memory_limit`) | `"2Gi"` | `"512Mi"` | Directus requires at minimum 512Mi; 2Gi is recommended for production. |
 | `enable_nfs` | `true` | `true` | Shared NFS storage is used for Directus uploaded assets and media. |
@@ -314,6 +307,37 @@ When `workload_type` is set to `"StatefulSet"` (see [App_GKE.md §3.A](../App_GK
 | `stateful_headless_service` | `true` | `true` / `false` | When `true`, creates a headless Kubernetes Service alongside the StatefulSet. A headless Service gives each pod a stable DNS name of the form `POD_NAME.SERVICE_NAME.NAMESPACE.svc.cluster.local`, enabling pod-level DNS discovery. This is the standard configuration for StatefulSets and is required if Directus extensions or other services need to address individual pod replicas by name. |
 | `stateful_pod_management_policy` | `"OrderedReady"` | `OrderedReady` / `Parallel` | Controls the order in which StatefulSet pods are created and deleted. **`OrderedReady`** (default): pods are started and stopped sequentially — pod `N` must be Running and Ready before pod `N+1` starts. Use for stateful applications where startup order matters, such as database replicas with a primary-replica topology. **`Parallel`**: all pods are started or stopped simultaneously without waiting for each other. Use when startup order does not matter and faster scaling is preferred. |
 | `stateful_update_strategy` | `"RollingUpdate"` | `RollingUpdate` / `OnDelete` | Controls how StatefulSet pods are updated when the pod template changes. **`RollingUpdate`** (default): pods are updated one at a time in reverse ordinal order, waiting for each pod to become Ready before continuing. This provides zero-downtime updates. **`OnDelete`**: pods are only updated when manually deleted — the controller does not replace them automatically. Use `OnDelete` when you need full manual control over when individual pods are replaced. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+The table below identifies the variables most commonly misconfigured in `Directus_GKE` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong.
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `application_name` | `"directus"` (default; do not change after first deploy) | **Critical** | Embedded in GKE namespace name, Artifact Registry repo, and Secret Manager secret IDs. Changing recreates all named resources — existing `KEY` and `SECRET` values are replaced, invalidating all user sessions, access tokens, and signed file URLs. |
+| `tenant_deployment_id` | Match environment: `"prod"`, `"staging"`, `"dev"` | **Critical** | Changing after first deploy orphans the old Cloud SQL instance. A new empty database and fresh `KEY`/`SECRET` pair are generated — all existing user sessions and API integrations are invalidated. |
+| `KEY` (generated secret) | Auto-generated 32-character random string stored in Secret Manager | **Critical** | Rotating the `KEY` after first deploy: all active user sessions and access tokens are immediately invalidated. All users are logged out. Never rotate without a planned maintenance window and client notification. |
+| `SECRET` (generated secret) | Auto-generated 32-character random string stored in Secret Manager | **Critical** | Rotating `SECRET` after first deploy: all JWT tokens issued to API clients become invalid. Third-party integrations fail with HTTP 401 until tokens are re-issued. Never rotate without updating all dependent API clients first. |
+| `workload_type` | `null` (auto-selects Deployment) | **Critical** | Setting `"StatefulSet"` without `stateful_pvc_enabled = true` creates a StatefulSet with no stable storage per pod. Setting `"Deployment"` alongside `stateful_pvc_enabled = true` fails at plan time. For most Directus deployments, keep `null` (Deployment) and use `enable_nfs = true` for shared assets. |
+| `quota_memory_requests` | `"4Gi"` (use binary suffix) | **Critical** | A bare integer like `"4"` is treated as **4 bytes** by Kubernetes. The ResourceQuota rejects every pod that requests more than 4 bytes of memory — **all pods fail to schedule permanently**. Always use `"4Gi"` or `"4096Mi"`. |
+| `quota_memory_limits` | `"8Gi"` (must be ≥ `quota_memory_requests`) | **Critical** | Same bare-integer issue. A value of `"8"` = 8 bytes, blocking all pod scheduling. |
+| `database_type` | `"POSTGRES_15"` (default; Directus requires PostgreSQL for full feature support) | **Critical** | Changing to `MYSQL` after first deploy: a new empty MySQL instance is provisioned; all data remains in the orphaned PostgreSQL instance. Directus schema (JSONB, UUID primary keys) is incompatible with MySQL. |
+| `ADMIN_EMAIL` | `"admin@example.com"` (hardcoded default) — **must be overridden** via `environment_variables` | **High** | Left as default: the Directus admin account is created with a guessable email. Override with a real email before first deploy using `environment_variables = { ADMIN_EMAIL = "you@example.com" }`. |
+| `enable_redis` | `false` (default); set `true` for production multi-replica deployments | **High** | `false` with `max_instance_count > 1`: each pod maintains its own in-process cache. Cache inconsistency between pods causes stale API responses. Directus rate-limiting is also per-pod — clients can bypass rate limits by hitting different replicas. Enable Redis for any multi-replica deployment. |
+| `REDIS` (secret env var) | Full Redis URL: `redis://:<password>@<host>:<port>` | **High** | URL omits authentication password when Redis requires it: `AUTH` fails and Directus falls back to in-process cache. Rate-limiting breaks. Always include the password in the URL if the Redis instance has auth enabled. |
+| `enable_nfs` | `true` (default; required for shared upload storage across replicas) | **High** | `false` with `max_instance_count > 1` and local storage driver: uploaded files on one pod's ephemeral disk are invisible to other pods. Users see 404 for assets uploaded by a different replica. All local files are lost on pod restart. Use `STORAGE_GCS_DRIVER = "gcs"` (the default) to avoid this — NFS is only required for non-GCS workloads. |
+| `nfs_mount_path` | `"/mnt/nfs"` (default) — must match any local storage configuration | **High** | Mismatch: Directus writes local files to an ephemeral path instead of the shared NFS volume. Files are lost on pod restart. |
+| `stateful_pvc_size` | `"10Gi"` (default) — provision based on expected local data volume | **High** | PVC storage cannot be decreased after provisioning. Too small: Directus extension cache or local DB files fill the disk, causing I/O errors and pod crashes. Total storage = `stateful_pvc_size` × `max_instance_count`. |
+| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` minimum; `1024Mi` recommended | **High** | Memory too low: Directus is OOMKilled when loading complex collection schemas or processing image transformations. GKE Autopilot enforces a minimum of 512Mi — increase for production workloads. |
+| `min_instance_count` | `1` for production (eliminates cold starts on GKE) | **Medium** | `0` in production: GKE scales Directus pods to zero when idle. Cold starts (image pull + DB schema load) take 20–40 s. Users experience long delays on first API request after an idle period. |
+| `enable_pod_disruption_budget` | `false` (default; safe at replica count 1) | **High** | `true` with `max_instance_count = 1` and `pdb_min_available = "1"`: GKE node drains are permanently blocked. Autopilot maintenance windows cannot complete. Only enable when `min_instance_count ≥ 2`. |
+| `startup_probe` | `{ path = "/server/ping", failure_threshold = 30, period_seconds = 10 }` | **Critical** | `failure_threshold` too low on first deploy: Directus runs schema migrations that can take 2–3 minutes on a fresh database. Kubernetes kills the pod before migrations complete, causing a restart loop. Increase `failure_threshold` to `40` if first-deploy timeouts occur. |
+| `liveness_probe` | `{ path = "/server/ping", period_seconds = 30, failure_threshold = 3 }` — must be fast | **High** | Liveness endpoint that touches the DB: if the DB is slow, all healthy Directus pods are restarted simultaneously by the probe. Use `"/server/ping"` which Directus resolves without a synchronous DB query. |
+| `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` until CI pipeline attests images | **Critical** | `"REQUIRE_ATTESTATION"` without a working attestation pipeline: no new Directus image can be deployed to GKE, and rollbacks also fail. |
+| `enable_vpc_sc` | `false` until VPC-SC perimeter exists; use `vpc_sc_dry_run = true` first | **Critical** | `enable_vpc_sc = true` with `vpc_sc_dry_run = false`: if the Directus GKE SA is missing from the VPC-SC access level, Cloud SQL, Secret Manager, and Artifact Registry calls all fail simultaneously. |
+| `enable_audit_logging` | `false` for dev; `true` for production environments handling personal data | **Low** | `false` in production: reads of `KEY`, `SECRET`, and `ADMIN_PASSWORD` secrets are not logged. Compliance frameworks may require access logs for cryptographic keys. |
 
 ### Validating StatefulSet Configuration
 

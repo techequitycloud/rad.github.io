@@ -5,7 +5,7 @@ title: IDP
 
 # Platform Engineering
 
-> **Scope.** Canonical home for the architectural intent of the repo as an Internal Developer Platform (IDP): the four-tier module pattern, golden paths, the self-service surface, and the operating model. The IaC mechanics underneath (state, OpenTofu, drift) are in [practices/gitops-iac.md](gitops-iac.md); the developer-facing experience is in [outcomes/developer-productivity.md](../outcomes/developer-productivity.md).
+> **Scope.** Canonical home for the architectural intent of the repo as an Internal Developer Platform (IDP): the four-tier module pattern, golden paths, the self-service surface, and the operating model. The IaC mechanics underneath (state, OpenTofu, drift) are in [practices/gitops_iac.md](gitops_iac.md); the developer-facing experience is in [outcomes/developer_productivity.md](../outcomes/developer_productivity.md).
 
 > **Last reviewed:** 2026-05-04
 
@@ -38,7 +38,7 @@ The repo ships paved roads for the most common archetypes:
 - Stateless web service (Cloud Run) with one-flag IAP and CDN
 - Stateful / long-running workload (GKE Autopilot) with PDBs, Gateway API, NetworkPolicy
 - AI/inference workloads (Ollama, Flowise, RAGFlow, N8N AI) — see [capabilities/ai.md](../capabilities/ai.md)
-- A pre-built application catalogue (canonical in [outcomes/developer-productivity.md](../outcomes/developer-productivity.md))
+- A pre-built application catalogue (canonical in [outcomes/developer_productivity.md](../outcomes/developer_productivity.md))
 
 ### 3. Convention enforcement (canonical)
 
@@ -64,7 +64,7 @@ Cross-cutting capabilities (Binary Auth, VPC-SC, IAP, CMEK) are defined once in 
 With 14 supported applications and two Foundation variants (CloudRun, GKE), breaking changes require a structured migration path:
 
 - **Deprecation notice** — deprecated variables or outputs are annotated with `# DEPRECATED: <reason>. Remove after <date>.` in `variables.tf` and listed in `CHANGELOG.md`. A minimum 60-day deprecation window applies.
-- **Migration guide** — each MAJOR version bump (see [practices/gitops-iac.md](gitops-iac.md) §7) includes a `docs/migrations/vN-to-vN+1.md` file with a step-by-step migration checklist for each affected Application Module.
+- **Migration guide** — each MAJOR version bump (see [practices/gitops_iac.md](gitops_iac.md) §7) includes a `docs/migrations/vN-to-vN+1.md` file with a step-by-step migration checklist for each affected Application Module.
 - **Automated sync tooling** — `update_cloudrun.py`, `update_gke.py`, `sync_gke_vars.py` propagate non-breaking variable additions across all Application Modules automatically. Breaking changes (variable renames, type changes, removed outputs) require manual PR review per module.
 - **Freeze window** — during the 14-day period after a MAJOR Foundation release, no further breaking changes are merged to Foundation or Platform tiers; this gives app teams a stable migration window.
 
@@ -73,7 +73,7 @@ With 14 supported applications and two Foundation variants (CloudRun, GKE), brea
 The default deployment is single-region (GCP region set via `var.region`). For applications requiring geo-redundancy or lower global latency:
 
 - **Cloud Run multi-region** — deploy the same Application Module to two or more regions with `_DEPLOYMENT_ID` suffixed by region (e.g. `myapp-us-central1`, `myapp-europe-west1`). A Global External Application Load Balancer with geo-routing is provisioned outside the module scope (see [capabilities/networking.md](../capabilities/networking.md)).
-- **GKE multi-cluster** — GKE Autopilot clusters are regional; a second cluster in a different region uses the same Application Module with a different `region` variable. Multi-cluster service mesh (Fleet) and Gateway API multi-cluster routing patterns are documented in [capabilities/disaster-recovery.md](../capabilities/disaster-recovery.md).
+- **GKE multi-cluster** — GKE Autopilot clusters are regional; a second cluster in a different region uses the same Application Module with a different `region` variable. Multi-cluster service mesh (Fleet) and Gateway API multi-cluster routing patterns are documented in [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md).
 - **Shared services** — Cloud SQL and Filestore NFS in `Services_GCP` are single-region. For cross-region HA, use Cloud SQL with a read replica in the secondary region or Cloud Spanner for globally consistent data; Filestore HA (`ENTERPRISE` tier) supports zonal failover within a region.
 - **State isolation** — each regional deployment uses its own `_DEPLOYMENT_BUCKET_ID`; cross-region deployments are independent state machines with no shared lock contention.
 
@@ -88,10 +88,10 @@ The UIMeta tag system (`{{UIMeta group=N order=M}}`) is designed to drive an aut
 
 ## Cross-references
 
-- [practices/gitops-iac.md](gitops-iac.md) — OpenTofu, four-tier state isolation, drift detection, module versioning
-- [outcomes/developer-productivity.md](../outcomes/developer-productivity.md) — application catalogue, scaffolding, self-service onboarding (developer-facing view of the IDP)
-- [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) — operating model for multi-tenant deployments
+- [practices/gitops_iac.md](gitops_iac.md) — OpenTofu, four-tier state isolation, drift detection, module versioning
+- [outcomes/developer_productivity.md](../outcomes/developer_productivity.md) — application catalogue, scaffolding, self-service onboarding (developer-facing view of the IDP)
+- [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) — operating model for multi-tenant deployments
 - [practices/cicd.md](cicd.md) — pipeline that delivers the platform
 - [practices/sre.md](sre.md) — platform SLOs, on-call model, post-mortems
-- [outcomes/skills-development.md](../outcomes/skills-development.md) — agent workflows and skill guides
-- [capabilities/disaster-recovery.md](../capabilities/disaster-recovery.md) — multi-cluster HA and cross-region DR patterns
+- [outcomes/education_enablement.md](../outcomes/education_enablement.md) — agent workflows and skill guides
+- [capabilities/disaster_recovery.md](../capabilities/disaster_recovery.md) — multi-cluster HA and cross-region DR patterns

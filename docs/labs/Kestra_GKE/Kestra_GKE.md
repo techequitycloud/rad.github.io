@@ -1,852 +1,531 @@
 ---
-title: "Kestra on GKE — Lab Guide"
+title: "Kestra on GKE Autopilot — Lab Guide"
 sidebar_label: "Kestra GKE"
 ---
 
-# Kestra on GKE — Lab Guide
+# Kestra on GKE Autopilot — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Kestra_GKE)**
 
-Kestra is an open-source, declarative, event-driven workflow orchestration platform (Apache 2.0) with
-26,000+ GitHub stars, trusted by more than 30,000 organisations. This lab deploys Kestra in
-**standalone mode** on GKE Autopilot — the server, worker, and scheduler run in a single container
-backed by Cloud SQL PostgreSQL 15 and GCS artifact storage. You will explore kubectl-based access,
-YAML flow authoring, scheduling and webhook triggers, plugin integrations, Kubernetes workload
-management, Workload Identity, and GCP observability.
+## Overview
+
+**Estimated time:** 1–2 hours
+
+Kestra is an open-source, Apache 2.0-licensed data orchestration and workflow scheduling platform. It uses YAML-based flow definitions, supports namespaces for organization, and has a rich plugin ecosystem for ETL/ELT pipelines, data pipelines, and API orchestration. This module deploys Kestra in standalone mode on GKE Autopilot — the server, worker, and scheduler run in a single container backed by Cloud SQL PostgreSQL 15 and GCS artifact storage.
+
+### What the Module Automates
+
+- GKE Autopilot namespace and Kubernetes Deployment (with HPA)
+- Cloud SQL PostgreSQL 15 instance, database, and user
+- Secret Manager secrets for database credentials
+- Artifact Registry repository and container image mirroring via Cloud Build
+- Cloud Storage bucket for Kestra artifact and internal storage
+- GCS Fuse CSI Driver volume mounts
+- Workload Identity binding and IAM service accounts
+- Kubernetes LoadBalancer Service with session affinity (ClientIP)
+- Cloud SQL Auth Proxy sidecar injection
+- Optional Cloud Filestore (NFS) instance
+- Database initialization jobs
+- Automated daily database backups (cron schedule: `0 2 * * *`)
+- Cloud Monitoring notification channels
+
+### What You Do Manually
+
+- Note the deployment outputs (external IP, namespace, etc.) from the RAD UI deployment panel
+- Access the GKE cluster with kubectl
+- Verify Kestra pods are running
+- Navigate the Kestra UI and explore namespaces
+- Create and execute your first YAML-based flow
+- Configure schedule and webhook triggers
+- Manage namespaces and namespace-level variables
+- Explore Cloud Logging and Cloud Monitoring
 
 ---
 
-## Table of Contents
+## CLI and REST API Overview
 
-1. [Overview](#1-overview)
-2. [Architecture](#2-architecture)
-3. [Prerequisites](#3-prerequisites)
-4. [Lab Setup](#4-lab-setup)
-5. [Exercise 1 — Access Kestra](#exercise-1--access-kestra)
-6. [Exercise 2 — Create Flows and Schedules](#exercise-2--create-flows-and-schedules)
-7. [Exercise 3 — Plugins and Integrations](#exercise-3--plugins-and-integrations)
-8. [Exercise 4 — Kubernetes Workloads](#exercise-4--kubernetes-workloads)
-9. [Exercise 5 — Security and Workload Identity](#exercise-5--security-and-workload-identity)
-10. [Exercise 6 — Cloud Logging and Monitoring](#exercise-6--cloud-logging-and-monitoring)
-11. [Cleanup](#cleanup)
-12. [Reference](#reference)
+The lab uses the following tools:
 
----
+- **gcloud** — Google Cloud CLI for cluster access and resource inspection
+- **kubectl** — Kubernetes CLI for pod/service management
+- **curl** — HTTP client for webhook trigger testing
 
-## 1. Overview
-
-### What Is Kestra?
-
-Kestra is a **declarative orchestration platform** for data pipelines, ETL/ELT workflows, and
-API automation. Every flow is a plain YAML document with tasks, triggers, and namespace-scoped
-variables — fully version-controllable. The `Kestra_GKE` module deploys Kestra in standalone
-mode on GKE Autopilot with a Kubernetes LoadBalancer service, Cloud SQL Auth Proxy sidecar, and
-Workload Identity for secure GCS access.
-
-### Key Capabilities Demonstrated
-
-| Capability | What It Demonstrates |
-|---|---|
-| **kubectl Access** | Cluster credentials, pod inspection, and port-forwarding |
-| **YAML Flow Authoring** | Create and execute workflow definitions via the UI and API |
-| **Scheduling and Webhooks** | Cron triggers and HTTP-triggered executions |
-| **Plugins and Integrations** | GCS, HTTP, and parameterised task integrations |
-| **Kubernetes Workloads** | Pod lifecycle, HPA scaling, Cloud SQL sidecar |
-| **Workload Identity** | GKE pod-to-GCP resource authentication without key files |
-| **GCP Observability** | Cloud Logging structured logs, Cloud Monitoring pod metrics |
-
----
-
-## 2. Architecture
-
-```
-Browser / API Client
-       │
-       ▼ HTTP:8080 (LoadBalancer)
-┌──────────────────────────────────────────────────────────────────┐
-│  GKE Autopilot Cluster                                           │
-│  ┌────────────────────────────────────────────────────────────┐  │
-│  │  Kubernetes Namespace (appkestra<tenant><id>)              │  │
-│  │                                                            │  │
-│  │  ┌─────────────────────────────────────────────────────┐   │  │
-│  │  │  Kestra Pod (2/2 READY)                             │   │  │
-│  │  │  ┌─────────────────┐  ┌───────────────────────────┐ │   │  │
-│  │  │  │  kestra         │  │  cloud-sql-proxy          │ │   │  │
-│  │  │  │  container      │  │  sidecar                  │ │   │  │
-│  │  │  │  (JVM server +  │  │  TCP 127.0.0.1:5432       │ │   │  │
-│  │  │  │  worker +       │  │  → Cloud SQL              │ │   │  │
-│  │  │  │  scheduler)     │  │                           │ │   │  │
-│  │  │  └─────────────────┘  └───────────────────────────┘ │   │  │
-│  │  └─────────────────────────────────────────────────────┘   │  │
-│  │                                                            │  │
-│  │  LoadBalancer Service :8080 → Kestra pod :8080            │   │
-│  │  HPA: minReplicas=1, maxReplicas=1                        │   │
-│  └────────────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────────┘
-       │                    │
-       ▼                    ▼
-┌─────────────────┐  ┌─────────────────────────────────────────┐
-│  GCS Bucket     │  │  Cloud SQL PostgreSQL 15                │
-│  kestra-storage │  │  Queue + Repository backend             │
-│  Workload       │  │  (executions, flows, logs)              │
-│  Identity SA    │  └─────────────────────────────────────────┘
-└─────────────────┘
-
-Supporting resources:
-  Secret Manager     → KESTRA_BASICAUTH_PASSWORD (admin password)
-  Artifact Registry  → custom Kestra container image
-  Cloud Build        → image build and mirroring
-  Workload Identity  → pod SA ↔ GCP SA binding
-  Cloud Monitoring   → pod CPU/memory metrics
-```
-
-Module variable wiring:
-
-```
-Kestra_GKE
-  application_name     = "kestra"
-  cpu_limit            = "2000m"   → JVM needs ≥ 2 vCPU
-  memory_limit         = "4Gi"     → JVM heap + OS overhead
-  min_instance_count   = 1         → single replica (standalone mode)
-  max_instance_count   = 1         → standalone mode: single pod
-  KESTRA_QUEUE_TYPE    = postgres  → PostgreSQL execution queue
-  KESTRA_STORAGE_TYPE  = gcs       → GCS artifact storage
-```
-
----
-
-## 3. Prerequisites
-
-### Required Tools
-
-| Tool | Minimum Version | Install |
-|---|---|---|
-| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
-| `kubectl` | 1.29+ | `gcloud components install kubectl` |
-| `curl` | Any | System package manager |
-| `jq` | Any | System package manager |
-
-### GCP Permissions
-
-```
-roles/owner                    # or the following fine-grained set:
-roles/container.admin
-roles/cloudsql.admin
-roles/secretmanager.admin
-roles/storage.admin
-roles/logging.viewer
-roles/monitoring.viewer
-```
-
-### Environment Variables
+Key gcloud commands used in this lab:
 
 ```bash
-export PROJECT="your-gcp-project-id"   # your GCP project ID
-export REGION="us-central1"             # region you deployed into
+gcloud container clusters get-credentials <cluster> --region <region> --project <project-id>
+gcloud secrets versions access latest --secret=<secret-name> --project=<project-id>
+gcloud logging read 'resource.type="k8s_container"' --project=<project-id> --limit=50
+```
+
+---
+
+## Prerequisites
+
+1. **Services_GCP deployed** — This module depends on `Services_GCP`. The VPC network, Cloud SQL instance, GKE Autopilot cluster, Artifact Registry, and shared service accounts must already exist in the target project.
+2. **GCP project** with billing enabled.
+3. **Access to the RAD UI** with permission to deploy modules in the target GCP project.
+4. **gcloud CLI** authenticated (`gcloud auth application-default login`).
+5. **kubectl** installed.
+6. **Permissions** — Owner or equivalent role on the target GCP project.
+
+---
+
+## Phase 1 — Deploy [AUTOMATED]
+
+### Variables
+
+Variables are configured in the RAD UI form before deploying. Use the table below to understand what each field controls.
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `project_id` | Yes | — | GCP project ID (e.g., `my-project-123`) |
+| `deployment_id` | No | auto-generated | Short suffix appended to all resource names |
+| `region` | No | `us-central1` | GCP region for resource deployment |
+| `tenant_deployment_id` | No | `demo` | Unique tenant identifier for resource naming |
+| `application_name` | No | `kestra` | Base name for Kubernetes deployment and secrets |
+| `application_version` | No | `latest` | Container image version tag (e.g., `0.17.0`) |
+| `deploy_application` | No | `true` | Set false to provision infra only without deploying |
+| `min_instance_count` | No | `1` | Minimum HPA pod replicas (keep at 1 — JVM cold start is slow) |
+| `max_instance_count` | No | `1` | Maximum HPA pod replicas (standalone mode; set to 1 for predictable state) |
+| `cpu_limit` | No | `2000m` | CPU limit per container instance |
+| `memory_limit` | No | `4Gi` | Memory limit per container instance |
+| `gke_cluster_name` | No | `""` | GKE cluster name (auto-discovered if empty) |
+| `db_name` | No | `kestra` | PostgreSQL database name |
+| `db_user` | No | `kestra` | PostgreSQL user name |
+| `database_password_length` | No | `32` | Generated password length (16–64) |
+
+### Initiate Deployment
+
+Deployment is initiated from the RAD UI. Fill in the variable form and click **Deploy**.
+
+### Approximate Provisioning Duration
+
+| Resource | Estimated Time |
+|---|---|
+| GKE Autopilot cluster (if new) | 8–12 min |
+| Cloud SQL PostgreSQL 15 instance | 5–8 min |
+| Container image build (Cloud Build) | 3–5 min |
+| Kubernetes Deployment rollout | 5–10 min (JVM startup) |
+| Secret Manager secrets | < 1 min |
+| Cloud Storage bucket | < 1 min |
+| **Total (existing cluster)** | **~15–20 min** |
+| **Total (new cluster)** | **~25–35 min** |
+
+> Note: Kestra uses a Java JVM. The startup probe allows up to ~14 minutes (`initial_delay_seconds=30` + `failure_threshold=40` × `period_seconds=20`). This is normal for a fresh database migration on first boot.
+
+> Note: On the very first deploy of a new inline GKE cluster, `kubernetes_ready` will be `false`. A second deploy may be required to complete Kubernetes resource deployment.
+
+### Record Outputs
+
+After deployment completes, the following outputs are available in the RAD UI deployment panel.
+
+| Output | Description |
+|---|---|
+| `service_url` | `http://<external-ip>:8080` |
+| `service_external_ip` | LoadBalancer IP |
+| `namespace` | Kubernetes namespace |
+| `database_instance_name` | Cloud SQL instance name |
+| `database_password_secret` | Secret Manager secret name for the DB password |
+
+Set shell variables for use in later steps using discovery commands:
+
+```bash
+export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
+export REGION="us-central1"             # the region you deployed into
 export TOKEN=$(gcloud auth print-access-token)
 
-gcloud config set project "${PROJECT}"
-gcloud config set compute/region "${REGION}"
-```
-
----
-
-## 4. Lab Setup
-
-### 4.1 Deploy via RAD UI
-
-Deploy the `Kestra_GKE` module via the RAD UI. In the variable form, set:
-
-| Variable | Value | Notes |
-|---|---|---|
-| `project_id` | `your-gcp-project-id` | Required |
-| `region` | `us-central1` | GCP region |
-| `application_name` | `kestra` | Base resource name |
-| `cpu_limit` | `2000m` | Minimum 2 vCPU for JVM |
-| `memory_limit` | `4Gi` | Minimum 4Gi for JVM heap |
-| `min_instance_count` | `1` | Single replica for standalone mode |
-| `max_instance_count` | `1` | Standalone mode only |
-
-Click **Deploy** and wait for provisioning (approximately 15–35 minutes).
-
-> **What this provisions:** GKE Autopilot namespace and Deployment, Kubernetes LoadBalancer
-> Service, Cloud SQL PostgreSQL 15 instance and database, Secret Manager secret for admin
-> password, Artifact Registry repository, Cloud Build custom image pipeline, HPA, Workload
-> Identity binding, and Cloud Monitoring notification channels.
-
-### 4.2 Configure Shell Environment
-
-```bash
 # Discover the GKE cluster
 export CLUSTER=$(gcloud container clusters list \
-  --project="${PROJECT}" \
+  --project=${PROJECT} \
   --format="value(name)" \
   --limit=1)
 
-echo "Cluster: ${CLUSTER}"
-```
+# Configure kubectl
+gcloud container clusters get-credentials ${CLUSTER} \
+  --region=${REGION} \
+  --project=${PROJECT}
 
-### 4.3 Configure kubectl
-
-```bash
-gcloud container clusters get-credentials "${CLUSTER}" \
-  --region="${REGION}" \
-  --project="${PROJECT}"
-
-kubectl cluster-info
-kubectl get nodes
-```
-
-```bash
-# Discover the Kestra namespace
+# Discover the namespace (pattern: app<appname><tenant><deploymentid>)
 export NAMESPACE=$(kubectl get namespaces --no-headers \
   -o custom-columns=":metadata.name" | grep "^appkestra" | head -1)
 
-echo "Namespace: ${NAMESPACE}"
-
 # Discover the external IP
-export EXTERNAL_IP=$(kubectl get svc -n "${NAMESPACE}" \
+export EXTERNAL_IP=$(kubectl get svc -n ${NAMESPACE} \
   -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
 
-echo "Kestra URL: http://${EXTERNAL_IP}:8080"
-
-# Discover the admin password secret
-export ADMIN_SECRET=$(gcloud secrets list \
-  --project="${PROJECT}" \
-  --filter="name~kestra.*admin" \
+# Discover the database password secret
+export DB_SECRET=$(gcloud secrets list \
+  --project=${PROJECT} \
+  --filter="name~kestra" \
   --format="value(name)" \
   --limit=1)
 ```
 
 ---
 
-## Exercise 1 — Access Kestra
+## Phase 2 — Verify GKE Deployment [MANUAL]
 
-### Objective
+**Objective:** Connect to the GKE cluster and verify the Kestra pod is running.
 
-Connect to the GKE cluster, verify the Kestra pod is running, and access the Kestra UI via
-the LoadBalancer external IP.
+1. Retrieve cluster credentials:
 
-### Step 1.1 — Verify the Pod Is Running
+   ```bash
+   gcloud container clusters get-credentials ${CLUSTER} \
+     --region ${REGION} \
+     --project ${PROJECT}
+   ```
 
-```bash
-kubectl get pods -n "${NAMESPACE}"
-```
+   **Expected result:** `kubeconfig` entry created for the cluster.
 
-**Expected result:** Pod in `Running` status with `2/2` containers ready:
-```
-NAME                  READY   STATUS    RESTARTS   AGE
-kestra-<hash>         2/2     Running   0          8m
-```
+   > **gcloud equivalent:**
+   > ```bash
+   > gcloud container clusters list --project ${PROJECT}
+   > ```
 
-The `2/2` indicates the Kestra JVM container plus the Cloud SQL Auth Proxy sidecar.
+2. Verify pods are running:
 
-### Step 1.2 — Check the LoadBalancer Service
+   ```bash
+   kubectl get pods -n ${NAMESPACE}
+   ```
 
-**kubectl:**
-```bash
-kubectl get svc -n "${NAMESPACE}"
-```
+   **Expected result:** Pod in `Running` status, e.g.:
+   ```
+   NAME                  READY   STATUS    RESTARTS   AGE
+   kestra-<hash>         2/2     Running   0          8m
+   ```
 
-**Expected result:** A `LoadBalancer` service with an `EXTERNAL-IP` assigned and port `8080`.
+   > The `2/2` indicates the Kestra container plus the Cloud SQL Auth Proxy sidecar.
 
-**gcloud:**
-```bash
-gcloud container clusters describe "${CLUSTER}" \
-  --region="${REGION}" \
-  --project="${PROJECT}" \
-  --format="value(status)"
-```
+3. Check the service and external IP:
 
-**REST API:**
-```bash
-curl -s \
-  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '{status: .status, nodeCount: .currentNodeCount}'
-```
+   ```bash
+   kubectl get svc -n ${NAMESPACE}
+   ```
 
-### Step 1.3 — Check the Kestra Health Endpoint
+   **Expected result:** A `LoadBalancer` service with an `EXTERNAL-IP` assigned and port `8080` exposed.
 
-```bash
-curl -s "http://${EXTERNAL_IP}:8080/health"
-```
+   > **REST API equivalent:**
+   > ```
+   > GET https://container.googleapis.com/v1/projects/{project}/locations/{region}/clusters/{cluster}
+   > ```
 
-**Expected result:** `{"status":"UP"}` JSON response.
+4. Verify the Kestra health endpoint is responding:
 
-> If the endpoint returns a connection error, the pod may still be starting. The JVM startup
-> probe allows up to 14 minutes (`initial_delay_seconds=30` + `failure_threshold=40` x
-> `period_seconds=20`).
+   ```bash
+   curl -s "${EXTERNAL_IP}:8080/health"
+   ```
 
-### Step 1.4 — Retrieve the Admin Password
-
-```bash
-gcloud secrets versions access latest \
-  --secret="${ADMIN_SECRET}" \
-  --project="${PROJECT}"
-```
-
-**Expected result:** 24-character alphanumeric admin password.
-
-### Step 1.5 — Explore the Kestra UI
-
-Navigate to `http://${EXTERNAL_IP}:8080` in a browser. Log in with:
-- Username: `admin`
-- Password: (value from Step 1.4)
-
-Explore the main navigation tabs:
-- **Flows** — YAML flow definitions
-- **Executions** — execution history and task logs
-- **Logs** — aggregated system logs
-- **Namespaces** — hierarchical namespace management
-- **Audit Log** — full activity audit trail
+   **Expected result:** `{"status":"UP"}` or similar JSON health response.
 
 ---
 
-## Exercise 2 — Create Flows and Schedules
+## Phase 3 — Explore the Kestra UI [MANUAL]
 
-### Objective
+**Objective:** Navigate the Kestra interface and understand its core concepts.
 
-Author YAML flows, add cron and webhook triggers, and verify execution history.
+1. Open the Kestra UI in a browser:
 
-### Step 2.1 — Create a Hello World Flow
+   Navigate to `http://${EXTERNAL_IP}:8080`.
 
-In the Kestra UI, navigate to **Flows > Create** and enter:
+   **Expected result:** The Kestra dashboard loads showing the main navigation.
 
-```yaml
-id: hello-world
-namespace: company.team
-tasks:
-  - id: hello
-    type: io.kestra.plugin.core.log.Log
-    message: "Hello from Kestra on GKE!"
-  - id: show_date
-    type: io.kestra.plugin.core.log.Log
-    message: "Trigger type: {{ trigger.type ?? 'manual' }}"
-```
+2. Explore the main navigation tabs:
+   - **Flows** — List and manage YAML flow definitions
+   - **Executions** — View execution history, status, and logs per run
+   - **Logs** — Aggregated execution and system logs
+   - **Namespaces** — Organize flows into logical groups
+   - **Audit Log** — Full audit trail of all user and system actions
 
-Click **Save** then **Execute**.
+3. Notice the YAML-based nature of Kestra flows. Unlike GUI-only tools, every flow in Kestra is a plain YAML document that can be version-controlled.
 
-**Expected result:** Execution completes with `SUCCESS` state.
-
-### Step 2.2 — Execute via REST API
-
-```bash
-curl -s -X POST \
-  "http://${EXTERNAL_IP}:8080/api/v1/executions/company.team/hello-world" \
-  -H "Content-Type: application/json" \
-  -u "admin:$(gcloud secrets versions access latest --secret=${ADMIN_SECRET} --project=${PROJECT})" \
-  | jq '{id: .id, state: .state.current}'
-```
-
-**Expected result:** JSON with execution `id` and `state: "SUCCESS"` or `"RUNNING"`.
-
-### Step 2.3 — Add Schedule and Webhook Triggers
-
-Edit the `hello-world` flow and update it:
-
-```yaml
-id: hello-world
-namespace: company.team
-tasks:
-  - id: hello
-    type: io.kestra.plugin.core.log.Log
-    message: "Triggered by: {{ trigger.type ?? 'manual' }}"
-triggers:
-  - id: schedule
-    type: io.kestra.plugin.core.trigger.Schedule
-    cron: "*/5 * * * *"
-  - id: webhook
-    type: io.kestra.plugin.core.trigger.Webhook
-    key: gke-lab-key
-```
-
-Click **Save**.
-
-### Step 2.4 — Test the Webhook Trigger
-
-```bash
-curl -s -X POST \
-  "http://${EXTERNAL_IP}:8080/api/v1/executions/webhook/company.team/hello-world/gke-lab-key" \
-  -H "Content-Type: application/json" \
-  -d '{"source": "kubectl-lab", "timestamp": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}'
-```
-
-**Expected result:** JSON with `id` field — the new execution ID.
-
-### Step 2.5 — Verify Executions via kubectl Logs
-
-```bash
-kubectl logs -n "${NAMESPACE}" \
-  deployment/kestra --tail=30
-```
-
-**Expected result:** JVM log lines showing execution events for the triggered flow.
+4. Check the **Plugins** section (if visible) to see available plugin categories:
+   - Core plugins (Log, HTTP, Script)
+   - Data plugins (BigQuery, GCS, PostgreSQL)
+   - Cloud plugins (GCP, AWS, Azure)
 
 ---
 
-## Exercise 3 — Plugins and Integrations
+## Phase 4 — Create Your First Flow [MANUAL]
 
-### Objective
+**Objective:** Write and execute a simple YAML flow using the Kestra flow editor.
 
-Explore the Kestra plugin ecosystem and test HTTP and GCP integrations.
+1. Navigate to **Flows** in the left navigation and click **Create**.
 
-### Step 3.1 — Browse Available Plugins via API
+2. In the YAML editor, replace the default content with the following flow definition:
 
-**REST API:**
-```bash
-curl -s \
-  "http://${EXTERNAL_IP}:8080/api/v1/plugins" \
-  -u "admin:$(gcloud secrets versions access latest --secret=${ADMIN_SECRET} --project=${PROJECT})" \
-  | jq '.[].group' | sort | uniq
-```
+   ```yaml
+   id: hello-world
+   namespace: company.team
+   tasks:
+     - id: hello
+       type: io.kestra.plugin.core.log.Log
+       message: "Hello from Kestra on GCP!"
+   ```
 
-**Expected result:** Plugin groups including `io.kestra.plugin.core`, `io.kestra.plugin.gcp`.
+   Click **Save**.
 
-### Step 3.2 — Create a Flow with an HTTP Task
+   **Expected result:** The flow `hello-world` appears in the `company.team` namespace.
 
-In the Kestra UI, create a new flow:
+3. Click **Execute** (the play button) to run the flow.
 
-```yaml
-id: http-integration
-namespace: lab.experiments
-tasks:
-  - id: fetch_data
-    type: io.kestra.plugin.core.http.Request
-    uri: "https://httpbin.org/json"
-    method: GET
-  - id: log_response
-    type: io.kestra.plugin.core.log.Log
-    message: "HTTP status: {{ outputs.fetch_data.code }}"
-```
+   **Expected result:** A new execution is created and the status transitions from `CREATED` → `RUNNING` → `SUCCESS`.
 
-Execute the flow and verify `HTTP status: 200` in the task logs.
+4. Click on the execution to view the **Execution Graph** — a visual representation of the task topology.
 
-### Step 3.3 — Create a Parameterised Flow
+5. Click on the `hello` task in the graph to view its **Logs** tab.
 
-```yaml
-id: parameterised-flow
-namespace: lab.experiments
-inputs:
-  - id: message
-    type: STRING
-    defaults: "Hello from GKE"
-tasks:
-  - id: log
-    type: io.kestra.plugin.core.log.Log
-    message: "{{ inputs.message }}"
-```
+   **Expected result:** The log entry `Hello from Kestra on GCP!` appears in the task output.
 
-Execute with a custom input via REST API:
+   > **gcloud equivalent (check pod logs):**
+   > ```bash
+   > kubectl logs -n ${NAMESPACE} \
+   >   deployment/kestra --tail=50
+   > ```
 
-```bash
-curl -s -X POST \
-  "http://${EXTERNAL_IP}:8080/api/v1/executions/lab.experiments/parameterised-flow" \
-  -H "Content-Type: multipart/form-data" \
-  -F "message=Custom input from kubectl" \
-  -u "admin:$(gcloud secrets versions access latest --secret=${ADMIN_SECRET} --project=${PROJECT})" \
-  | jq '{id: .id, state: .state.current}'
-```
-
-**Expected result:** Execution succeeds with the custom message in task output.
-
-### Step 3.4 — Inspect Namespace Variables
-
-In the Kestra UI, navigate to **Namespaces > Create** and add namespace `lab.experiments`.
-
-Under **Variables**, add:
-- Key: `gcs_bucket`
-- Value: the name of your Kestra storage bucket
-
-Add a second variable:
-- Key: `environment`
-- Value: `gke-lab`
-
-### Step 3.5 — Create a GCS-Aware Flow
-
-```yaml
-id: gcs-list
-namespace: lab.experiments
-tasks:
-  - id: list
-    type: io.kestra.plugin.gcp.gcs.List
-    serviceAccount: "{{ secret('GCS_SERVICE_ACCOUNT') }}"
-    projectId: "{{ envs.project_id }}"
-    from: "gs://{{ namespace.gcs_bucket }}"
-  - id: log_count
-    type: io.kestra.plugin.core.log.Log
-    message: "Found {{ outputs.list.blobs | length }} objects"
-```
-
-> Note: Executing this flow requires GCS credentials configured as a Kestra secret. The
-> structure demonstrates how the GCS plugin integrates with namespace variables and secrets.
+   > **REST API equivalent:**
+   > ```
+   > POST https://<kestra-host>:8080/api/v1/executions/hello-world
+   > {
+   >   "namespace": "company.team"
+   > }
+   > ```
 
 ---
 
-## Exercise 4 — Kubernetes Workloads
+## Phase 5 — Triggers and Scheduling [MANUAL]
 
-### Objective
+**Objective:** Add a Schedule trigger and a Webhook trigger to the flow, and test them.
 
-Inspect the Kestra GKE deployment, understand the pod structure, Cloud SQL sidecar, HPA
-configuration, and perform a rolling restart.
+1. Navigate to your `hello-world` flow and click **Edit**.
 
-### Step 4.1 — Inspect the Deployment
+2. Add a Schedule trigger that runs every 5 minutes:
 
-```bash
-kubectl describe deployment kestra -n "${NAMESPACE}"
-```
+   ```yaml
+   id: hello-world
+   namespace: company.team
+   tasks:
+     - id: hello
+       type: io.kestra.plugin.core.log.Log
+       message: "Hello from Kestra on GCP!"
+   triggers:
+     - id: schedule
+       type: io.kestra.plugin.core.trigger.Schedule
+       cron: "*/5 * * * *"
+     - id: webhook
+       type: io.kestra.plugin.core.trigger.Webhook
+       key: my-secret-key
+   ```
 
-Key sections to review:
-- **Image**: Artifact Registry custom Kestra image
-- **Containers**: `kestra` (JVM) + `cloud-sql-proxy` (sidecar)
-- **Resources**: CPU and memory limits
-- **Env from**: Secret references
+   Click **Save**.
 
-### Step 4.2 — Inspect the Kestra Pod in Detail
+   **Expected result:** The flow now shows two triggers in the flow definition.
 
-```bash
-KESTRA_POD=$(kubectl get pod -n "${NAMESPACE}" -l app=kestra \
-  -o jsonpath='{.items[0].metadata.name}')
+3. Retrieve the webhook trigger URL. In the Kestra UI, click on the flow then navigate to the **Triggers** tab. The webhook URL will be shown in the form:
 
-# List containers in the pod
-kubectl get pod "${KESTRA_POD}" -n "${NAMESPACE}" \
-  -o jsonpath='{.spec.containers[*].name}' | tr ' ' '\n'
+   ```
+   http://${EXTERNAL_IP}:8080/api/v1/executions/webhook/company.team/hello-world/my-secret-key
+   ```
 
-# Check resource usage
-kubectl top pod "${KESTRA_POD}" -n "${NAMESPACE}"
-```
+4. Test the webhook trigger with curl:
 
-**Expected result:** Two containers: `kestra` and `cloud-sql-proxy`.
+   ```bash
+   curl -X POST \
+     "http://${EXTERNAL_IP}:8080/api/v1/executions/webhook/company.team/hello-world/my-secret-key" \
+     -H "Content-Type: application/json" \
+     -d '{"triggered_by": "lab-test"}'
+   ```
 
-### Step 4.3 — Inspect the Cloud SQL Proxy Sidecar
+   **Expected result:** JSON response with an `executionId` field indicating the triggered execution.
 
-```bash
-kubectl logs "${KESTRA_POD}" -n "${NAMESPACE}" -c cloud-sql-proxy --tail=20
-```
+5. Navigate to **Executions** in the Kestra UI.
 
-**Expected result:** Cloud SQL Auth Proxy log lines showing it is listening on
-`127.0.0.1:5432` and connected to the Cloud SQL instance.
+   **Expected result:** A new execution triggered by the webhook appears in the list with `TRIGGER_SOURCE: WEBHOOK`.
 
-### Step 4.4 — Check HPA Status
+6. Wait 5 minutes and verify that the schedule trigger fires automatically.
 
-**kubectl:**
-```bash
-kubectl get hpa -n "${NAMESPACE}"
-kubectl describe hpa -n "${NAMESPACE}"
-```
+   **Expected result:** A new execution appears with `TRIGGER_SOURCE: SCHEDULE`.
 
-**Expected result:** HPA showing `MINPODS=1`, `MAXPODS=1`, `REPLICAS=1`.
-
-**REST API:**
-```bash
-curl -s \
-  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.nodeConfig | {machineType, diskSizeGb}'
-```
-
-### Step 4.5 — Rolling Restart
-
-```bash
-kubectl rollout restart deployment/kestra -n "${NAMESPACE}"
-kubectl rollout status deployment/kestra -n "${NAMESPACE}" --timeout=300s
-```
-
-**Expected result:** Deployment rolls to a new pod without downtime (session affinity preserves existing connections).
+   > **REST API equivalent (list executions):**
+   > ```
+   > GET https://<kestra-host>:8080/api/v1/executions?namespace=company.team&flowId=hello-world
+   > ```
 
 ---
 
-## Exercise 5 — Security and Workload Identity
+## Phase 6 — Namespace Management [MANUAL]
 
-### Objective
+**Objective:** Create a new namespace, organize flows within it, and explore namespace-level settings.
 
-Verify Workload Identity bindings between the Kubernetes service account and the GCP service
-account, and inspect Secret Manager access patterns.
+1. Navigate to **Namespaces** in the left navigation.
 
-### Step 5.1 — List Service Accounts in the Namespace
+2. Click **Create Namespace** and enter a new namespace name, e.g., `lab.experiments`.
 
-```bash
-kubectl get serviceaccounts -n "${NAMESPACE}"
-```
+   **Expected result:** The namespace `lab.experiments` appears in the namespace list.
 
-**Expected result:** At least one service account for the Kestra workload.
+3. Create a new flow in the new namespace by navigating to **Flows > Create** and setting:
 
-### Step 5.2 — Check Workload Identity Annotation
+   ```yaml
+   id: namespace-test
+   namespace: lab.experiments
+   tasks:
+     - id: log
+       type: io.kestra.plugin.core.log.Log
+       message: "Running in lab.experiments namespace"
+   ```
 
-```bash
-kubectl get serviceaccount -n "${NAMESPACE}" \
-  -o yaml | grep -A3 "iam.gke.io"
-```
+   Click **Save**.
 
-**Expected result:** Annotation `iam.gke.io/gcp-service-account` pointing to a GCP service account.
+4. In the **Namespaces** view, click on `lab.experiments` and explore:
+   - **Variables** — Namespace-level key-value pairs shared across all flows in the namespace
+   - **Secrets** — Namespace-scoped secrets (backed by Secret Manager in this deployment)
+   - **Permissions** — Access control for the namespace
 
-### Step 5.3 — Verify GCP Service Account IAM Binding
+5. Add a namespace variable:
+   - Click **Variables > Add Variable**
+   - Key: `environment`, Value: `lab`
 
-**gcloud:**
-```bash
-gcloud iam service-accounts list \
-  --project="${PROJECT}" \
-  --filter="email~kestra OR email~appkestra" \
-  --format="table(email, displayName)"
-```
+   **Expected result:** The variable is saved and can be referenced in flows as `{{ namespace.environment }}`.
 
-**REST API:**
-```bash
-curl -s \
-  "https://iam.googleapis.com/v1/projects/${PROJECT}/serviceAccounts" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.accounts[] | select(.email | test("kestra")) | {email: .email, displayName: .displayName}'
-```
+6. Verify namespace-level permissions — note that namespaces provide organizational isolation, allowing different teams to manage their own flows without interfering with others.
 
-**Expected result:** A service account for the Kestra workload with access to Cloud SQL, GCS, and Secret Manager.
-
-### Step 5.4 — Verify Secret Manager Access
-
-```bash
-gcloud secrets list \
-  --project="${PROJECT}" \
-  --filter="name~kestra" \
-  --format="table(name, createTime)"
-```
-
-```bash
-# Access the admin password secret (verifies IAM is correct)
-gcloud secrets versions access latest \
-  --secret="${ADMIN_SECRET}" \
-  --project="${PROJECT}"
-```
-
-**Expected result:** Admin password value returned — confirms Secret Manager IAM binding is correct.
-
-### Step 5.5 — Inspect Kubernetes Secrets
-
-```bash
-kubectl get secrets -n "${NAMESPACE}"
-```
-
-```bash
-# View the non-sensitive keys (not values) of a secret
-kubectl get secret -n "${NAMESPACE}" \
-  -o jsonpath='{range .items[*]}{.metadata.name}: {range .data}{.key}{"\t"}{end}{"\n"}{end}'
-```
-
-**Expected result:** Kubernetes secrets containing database credentials and Kestra admin password, injected directly from Secret Manager values at deployment time.
+   > **REST API equivalent (list namespaces):**
+   > ```
+   > GET https://<kestra-host>:8080/api/v1/namespaces
+   > ```
 
 ---
 
-## Exercise 6 — Cloud Logging and Monitoring
+## Phase 7 — Explore Cloud Logging [MANUAL]
 
-### Objective
+**Objective:** Find Kestra execution and system logs in Cloud Logging.
 
-View Kestra execution logs in Cloud Logging and review pod-level resource metrics in Cloud
-Monitoring.
+1. Open Cloud Logging in the GCP console:
+   `https://console.cloud.google.com/logs/query?project=${PROJECT}`
 
-### Step 6.1 — View Logs in Cloud Logging Console
+2. Use the following query to filter Kestra container logs:
 
-Navigate to:
-```
-https://console.cloud.google.com/logs/query?project=${PROJECT}
-```
+   ```
+   resource.type="k8s_container"
+   resource.labels.namespace_name="${NAMESPACE}"
+   resource.labels.container_name="kestra"
+   ```
 
-Filter for Kestra pod logs:
-```
-resource.type="k8s_container"
-resource.labels.namespace_name="${NAMESPACE}"
-resource.labels.container_name="kestra"
-```
+   **Expected result:** Application logs showing JVM startup, flow execution events, and scheduler ticks.
 
-**Expected result:** JVM startup, database migration, execution events, and scheduler ticks.
+3. Filter for execution-related log entries:
 
-### Step 6.2 — Query Logs via gcloud
+   ```
+   resource.type="k8s_container"
+   resource.labels.namespace_name="${NAMESPACE}"
+   resource.labels.container_name="kestra"
+   jsonPayload.flow_id="hello-world"
+   ```
 
-**gcloud:**
-```bash
-gcloud logging read \
-  'resource.type="k8s_container" AND resource.labels.namespace_name="'"${NAMESPACE}"'"' \
-  --project="${PROJECT}" \
-  --limit=20 \
-  --format=json \
-  | jq '.[].jsonPayload // .[].textPayload'
-```
+4. Filter for errors:
 
-**REST API:**
-```bash
-curl -s -X POST \
-  "https://logging.googleapis.com/v2/entries:list" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "resourceNames": ["projects/'"${PROJECT}"'"],
-    "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"'"${NAMESPACE}"'\"",
-    "orderBy": "timestamp desc",
-    "pageSize": 20
-  }' | jq '.entries[] | {timestamp, payload: (.jsonPayload // .textPayload)}'
-```
+   ```
+   resource.type="k8s_container"
+   resource.labels.namespace_name="${NAMESPACE}"
+   severity>=ERROR
+   ```
 
-### Step 6.3 — Filter for Flow Execution Logs
+5. From the command line:
 
-```bash
-gcloud logging read \
-  'resource.type="k8s_container" AND resource.labels.namespace_name="'"${NAMESPACE}"'" AND resource.labels.container_name="kestra" AND severity>=INFO' \
-  --project="${PROJECT}" \
-  --limit=15
-```
+   ```bash
+   gcloud logging read \
+     'resource.type="k8s_container" AND resource.labels.namespace_name="'${NAMESPACE}'"' \
+     --project=${PROJECT} \
+     --limit=50 \
+     --format=json | jq '.[].jsonPayload // .[].textPayload'
+   ```
 
-**Expected result:** Structured log entries showing flow IDs, execution states, and task outputs.
-
-### Step 6.4 — View Cloud Monitoring Metrics
-
-Navigate to:
-```
-https://console.cloud.google.com/monitoring?project=${PROJECT}
-```
-
-In **Metrics Explorer**, query:
-- `kubernetes.io/container/cpu/request_utilization` — CPU usage vs request (JVM: 20–60%)
-- `kubernetes.io/container/memory/request_utilization` — JVM heap usage
-- `kubernetes.io/pod/network/received_bytes_count` — inbound network traffic
-
-Filter by `resource.namespace_name = "${NAMESPACE}"`.
-
-**gcloud:**
-```bash
-gcloud monitoring time-series list \
-  --project="${PROJECT}" \
-  --filter='metric.type="kubernetes.io/container/memory/limit_utilization" AND resource.label.namespace_name="'"${NAMESPACE}"'"'
-```
-
-**REST API:**
-```bash
-curl -s -X POST \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "fetch k8s_container::kubernetes.io/container/memory/limit_utilization | filter resource.namespace_name = \"'"${NAMESPACE}"'\" | within 30m | group_by [resource.container_name], mean(val())"
-  }' | jq '.timeSeriesData[] | {container: .labelValues[0].stringValue, utilization: .pointData[-1].values[0].doubleValue}'
-```
-
-### Step 6.5 — Check HPA from Monitoring
-
-```bash
-kubectl describe hpa -n "${NAMESPACE}"
-```
-
-**Expected result:** HPA status showing current replica count = 1 and scaling thresholds.
+   > **REST API equivalent:**
+   > ```
+   > POST https://logging.googleapis.com/v2/entries:list
+   > {
+   >   "resourceNames": ["projects/<project-id>"],
+   >   "filter": "resource.type=\"k8s_container\" resource.labels.namespace_name=\"<namespace>\"",
+   >   "orderBy": "timestamp desc",
+   >   "pageSize": 50
+   > }
+   > ```
 
 ---
 
-## Cleanup
+## Phase 8 — Explore Cloud Monitoring [MANUAL]
 
-Return to the RAD UI and click **Undeploy** on the `Kestra_GKE` deployment. This removes the
-Kubernetes workloads, Cloud SQL instance, Secret Manager secrets, GCS bucket, Artifact Registry
-images, Workload Identity bindings, and all supporting IAM resources.
+**Objective:** Review pod-level and execution metrics in Cloud Monitoring.
 
-### Manual Cleanup (if needed)
+1. Open Cloud Monitoring in the GCP console:
+   `https://console.cloud.google.com/monitoring?project=${PROJECT}`
 
-**kubectl:**
-```bash
-kubectl delete namespace "${NAMESPACE}"
-```
+2. Navigate to **Metrics Explorer** and explore the following metrics:
+   - `kubernetes.io/container/cpu/request_utilization` — CPU usage vs request (JVM typically holds 20–60%)
+   - `kubernetes.io/container/memory/request_utilization` — Memory usage vs request (Kestra JVM heap)
+   - `kubernetes.io/pod/network/received_bytes_count` — Inbound network traffic
 
-**gcloud:**
-```bash
-# Delete Cloud SQL instance
-INSTANCE=$(gcloud sql instances list \
-  --project="${PROJECT}" --filter="name~kestra" \
-  --format="value(name)" --limit=1)
-gcloud sql instances delete "${INSTANCE}" --project="${PROJECT}" --quiet
+3. Filter by:
+   - `resource.namespace_name = ${NAMESPACE}`
+   - `resource.pod_name =~ kestra.*`
 
-# Delete GCS bucket
-BUCKET=$(gcloud storage buckets list --project="${PROJECT}" \
-  --filter="name~kestra-storage" --format="value(name)" | head -1)
-gcloud storage rm -r "gs://${BUCKET}/"
+   **Expected result:** Charts showing JVM CPU and memory consumption for the Kestra pod.
 
-# Delete secrets
-gcloud secrets list --project="${PROJECT}" --filter="name~kestra" \
-  --format="value(name)" | \
-  xargs -I{} gcloud secrets delete {} --project="${PROJECT}" --quiet
-```
+4. Check HPA status:
 
-**REST API — delete GKE namespace workloads:**
-```bash
-curl -s -X DELETE \
-  "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters/${CLUSTER}" \
-  -H "Authorization: Bearer ${TOKEN}"
-```
+   ```bash
+   kubectl describe hpa -n ${NAMESPACE}
+   ```
+
+   **Expected result:** HPA status showing current replica count = 1 and scaling thresholds.
+
+5. Check queue depth — with Kestra standalone mode, the execution queue depth can be approximated by counting `RUNNING` executions in the Kestra UI **Executions** tab.
+
+   > **gcloud equivalent:**
+   > ```bash
+   > gcloud monitoring time-series list \
+   >   --project=${PROJECT} \
+   >   --filter='metric.type="kubernetes.io/container/memory/limit_utilization"'
+   > ```
+
+   > **REST API equivalent:**
+   > ```
+   > GET https://monitoring.googleapis.com/v3/projects/{project}/timeSeries
+   >   ?filter=metric.type="kubernetes.io/container/cpu/request_utilization"
+   > ```
 
 ---
 
-## Reference
+## Phase 9 — Undeploy [AUTOMATED]
 
-### Key Module Variables
+When you are done with the lab, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
 
-| Variable | Type | Default | Description |
-|---|---|---|---|
-| `project_id` | string | — | GCP project ID (required) |
-| `region` | string | `us-central1` | GCP region |
-| `application_name` | string | `kestra` | Base name for Kubernetes resources |
-| `application_version` | string | `latest` | Container image version tag |
-| `gke_cluster_name` | string | `""` | GKE cluster name (auto-discovered if empty) |
-| `cpu_limit` | string | `2000m` | CPU limit (JVM needs ≥ 2 vCPU) |
-| `memory_limit` | string | `4Gi` | Memory limit (JVM needs ≥ 2Gi) |
-| `min_instance_count` | number | `1` | Minimum pod replicas |
-| `max_instance_count` | number | `1` | Maximum pod replicas (standalone mode) |
-| `db_name` | string | `kestra` | PostgreSQL database name |
-| `db_user` | string | `kestra` | PostgreSQL user |
-| `database_password_length` | number | `32` | Auto-generated password length |
-| `enable_nfs` | bool | `false` | Mount Cloud Filestore NFS |
-| `backup_schedule` | string | `0 2 * * *` | Daily backup cron (UTC) |
-| `backup_retention_days` | number | `7` | Backup retention period |
+**Expected result:** All Kubernetes workloads, Cloud SQL instance, Secret Manager secrets, Cloud Storage buckets, and supporting IAM resources are deleted.
 
-### Key Environment Variables (Auto-Injected)
+> **Note:** If `enable_purge = false`, certain resources such as the database and storage buckets will be retained after undeployment to prevent accidental data loss.
 
-| Variable | Value | Purpose |
+Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
+
+---
+
+## Summary
+
+| Action | Phase | Automated |
 |---|---|---|
-| `KESTRA_QUEUE_TYPE` | `postgres` | PostgreSQL execution queue |
-| `KESTRA_REPOSITORY_TYPE` | `postgres` | PostgreSQL flow repository |
-| `KESTRA_STORAGE_TYPE` | `gcs` | GCS artifact storage |
-| `KESTRA_BASICAUTH_ENABLED` | `true` | Enable basic auth |
-| `KESTRA_BASICAUTH_USERNAME` | `admin` | Default admin username |
-| `MICRONAUT_SERVER_PORT` | `8080` | Kestra server port |
-| `OLLAMA_HOST` | — | N/A (Kestra-specific) |
-
-### Useful Commands
-
-```bash
-# Get external IP
-kubectl get svc -n "${NAMESPACE}" -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
-
-# Check pod health
-kubectl get pods -n "${NAMESPACE}"
-
-# View Kestra logs
-kubectl logs deployment/kestra -n "${NAMESPACE}" --tail=50
-
-# View Cloud SQL proxy logs
-kubectl logs "${KESTRA_POD}" -n "${NAMESPACE}" -c cloud-sql-proxy --tail=20
-
-# Retrieve admin password
-gcloud secrets versions access latest --secret="${ADMIN_SECRET}" --project="${PROJECT}"
-
-# Trigger a webhook execution
-curl -X POST "http://${EXTERNAL_IP}:8080/api/v1/executions/webhook/<ns>/<flowId>/<key>"
-
-# List all executions
-curl -s "http://${EXTERNAL_IP}:8080/api/v1/executions?size=10" -u "admin:<password>"
-
-# Rolling restart
-kubectl rollout restart deployment/kestra -n "${NAMESPACE}"
-
-# View GKE logs
-gcloud logging read 'resource.type="k8s_container"' --project="${PROJECT}" --limit=20
-```
-
-### Further Reading
-
-- [Kestra documentation](https://kestra.io/docs)
-- [Kestra plugin index](https://kestra.io/plugins)
-- [GKE Autopilot overview](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
-- [Workload Identity for GKE](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
-- [Cloud SQL Auth Proxy for GKE](https://cloud.google.com/sql/docs/postgres/connect-kubernetes-engine)
-- [Cloud Logging for GKE](https://cloud.google.com/stackdriver/docs/solutions/gke/managing-logs)
+| Provision GKE namespace and Deployment | 1 | Yes |
+| Create Cloud SQL PostgreSQL 15 instance | 1 | Yes |
+| Mirror container image via Cloud Build | 1 | Yes |
+| Configure Secret Manager secrets | 1 | Yes |
+| Create Cloud Storage bucket | 1 | Yes |
+| Configure HPA and pod disruption budget | 1 | Yes |
+| Set up Workload Identity and IAM | 1 | Yes |
+| Verify kubectl access and pod status | 2 | No |
+| Explore Kestra UI tabs | 3 | No |
+| Create and execute hello-world flow | 4 | No |
+| Add schedule and webhook triggers | 5 | No |
+| Test webhook trigger with curl | 5 | No |
+| Create and configure a new namespace | 6 | No |
+| Add namespace-level variables | 6 | No |
+| Explore logs in Cloud Logging | 7 | No |
+| Review metrics in Cloud Monitoring | 8 | No |
+| Undeploy all resources | 9 | Yes |

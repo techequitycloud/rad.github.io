@@ -1,18 +1,14 @@
 ---
-title: "N8N CloudRun Module — Configuration Guide"
+title: "N8N_CloudRun Module — Configuration Guide"
 sidebar_label: "N8N CloudRun"
 ---
 
-# N8N CloudRun Module — Configuration Guide
+# N8N_CloudRun Module — Configuration Guide
 
-<YouTubeEmbed videoId="Aez900at3EU" poster="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
-n8n is an open-source, fair-code workflow automation platform with **189,000+ GitHub stars** (top 50 on all of GitHub), **230,000+ active users**, and a **$2.5B valuation** as of 2025 — growing from $350M in under four months and serving a quarter of the Fortune 500. With $240M raised across four funding rounds, 400+ integrations, and native AI nodes, n8n connects apps, APIs, and data sources with full code flexibility. It is self-hostable for total data sovereignty and no per-execution fees. This module deploys n8n on **Google Cloud Run** with a managed Cloud SQL PostgreSQL database and GCS-backed storage persistence.
+n8n is an open-source workflow automation platform that lets you connect services, run logic,
+and build automated pipelines through a visual node-based interface. This module deploys n8n
+on **Google Cloud Run** with a managed Cloud SQL PostgreSQL database and GCS-backed storage
+persistence.
 
 `N8N_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP
 infrastructure provisioning to App_CloudRun (Cloud Run service, Cloud SQL, networking, Secret
@@ -86,7 +82,7 @@ Their semantics are identical to the App_CloudRun equivalents — refer to
 | `support_users` | `[]` | Email addresses granted IAM access and added to monitoring alert channels. |
 | `resource_labels` | `{}` | Labels applied to all module-managed resources. |
 | `module_description` | *(N8N description string)* | Platform UI description. Do not modify unless customising the module. |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/n8n"` | External documentation URL displayed in the platform UI. |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/N8N_CloudRun"` | External documentation URL displayed in the platform UI. |
 | `module_dependency` | `["Services_GCP"]` | Platform modules that must be deployed before this one. |
 | `deployment_id` | `""` | Optional fixed deployment ID. Auto-generated when blank. |
 
@@ -465,10 +461,10 @@ Complete list of all input variables, grouped by UI section.
 | Group | Variable | Type | Default | Updatable |
 |---|---|---|---|---|
 | 0 | `module_description` | string | *(long description)* | — |
-| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/applications/n8n"` | — |
+| 0 | `module_documentation` | string | `"https://docs.radmodules.dev/docs/modules/N8N_CloudRun"` | — |
 | 0 | `module_dependency` | list(string) | `["Services_GCP"]` | — |
 | 0 | `module_services` | list(string) | *(service list)* | — |
-| 0 | `credit_cost` | number | `100` | — |
+| 0 | `credit_cost` | number | `50` | — |
 | 0 | `require_credit_purchases` | bool | `false` | — |
 | 0 | `enable_purge` | bool | `true` | — |
 | 0 | `public_access` | bool | `true` | — |
@@ -563,6 +559,38 @@ Complete list of all input variables, grouped by UI section.
 | 21 | `vpc_sc_dry_run` | bool | `true` | yes |
 | 21 | `organization_id` | string | `""` | yes |
 | 21 | `enable_audit_logging` | bool | `false` | yes |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `N8N_ENCRYPTION_KEY` (auto-generated secret) | Auto-generated 32-char random string stored in Secret Manager | **Critical** | Changing this key after first run permanently loses all saved credentials (OAuth tokens, API keys, passwords) stored in workflows. Never rotate unless you are prepared to re-enter every credential. |
+| `application_name` | `"n8n"` | **Critical** | Immutable after first deploy. Changing it renames all GCP resources, causing a full resource recreation, database loss, and service outage. |
+| `db_name` | `"n8n_db"` | **Critical** | Immutable after first deploy. Changing it after data exists causes n8n to connect to a new empty database, losing all workflows, credentials, and execution history. |
+| `WEBHOOK_URL` / `N8N_EDITOR_BASE_URL` (injected from `service_url`) | Predicted Cloud Run service URL | **Critical** | Must match the actual public URL of the service. If wrong, all webhook triggers (including OAuth callbacks) will silently fail. After deployment, verify the predicted URL matches the actual Cloud Run service URL. |
+| `enable_redis` | `true` | **High** | n8n defaults to `true` for queue mode. Disabling Redis while `max_instance_count > 1` causes split-brain execution: each instance runs its own queue, producing duplicate and conflicting workflow executions. Keep `max_instance_count = 1` when Redis is disabled. |
+| `redis_host` | `""` (uses NFS server IP when `enable_nfs = true`) | **High** | When `enable_redis = true` and `redis_host` is empty, the module falls back to the NFS server IP. If `enable_nfs = false` and `redis_host` is also empty, the Redis connection string is blank and n8n fails to start. |
+| `memory_limit` | `"4Gi"` | **High** | n8n loads all active workflow definitions and holds execution context in memory. Values below `2Gi` cause OOM kills under moderate load. The default 4 Gi is the recommended minimum for production with Redis queue mode enabled. |
+| `cpu_limit` | `"2000m"` | **Medium** | Values below `1000m` cause throttling on workflow execution, especially for multi-step automations with code nodes. |
+| `min_instance_count` | `0` | **Medium** | Setting to `0` enables scale-to-zero, which causes cold-start delays of 5–15 seconds for the first webhook or scheduled trigger after idle periods. Set to `1` for time-sensitive webhook workloads. |
+| `max_instance_count` | `1` | **High** | Increasing above `1` without enabling Redis leads to split-brain queue processing. Only increase with `enable_redis = true`. |
+| `enable_nfs` | `true` | **High** | n8n uses `filesystem` binary data mode by default (`N8N_DEFAULT_BINARY_DATA_MODE = "filesystem"`). Without NFS, binary data (file attachments, large payloads) is written to the ephemeral container filesystem and lost on every restart or scale event. |
+| `nfs_mount_path` | `"/mnt/nfs"` | **High** | Must match the path configured in n8n's binary data storage settings. Mismatches cause binary attachment writes to fail silently or fall back to in-memory storage. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts require the gen2 execution environment. Changing to `gen1` causes NFS mount failures and container startup errors. |
+| `ingress_settings` | `"all"` | **Medium** | Setting to `"internal"` blocks all webhook traffic from the public internet, breaking integrations with external services (Slack, GitHub, etc). Use `"internal-and-cloud-load-balancing"` when combined with Cloud Armor. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **Medium** | Setting to `"all-traffic"` routes all outbound traffic through the VPC connector, which may block external API calls if the VPC has restrictive firewall rules. |
+| `enable_iap` | `false` | **High** | If `enable_iap = true` but `iap_authorized_users` and `iap_authorized_groups` are both empty, the service is protected by IAP but no users are granted access, causing 403 errors for all requests. |
+| `backup_schedule` | `"0 2 * * *"` (daily at 02:00) | **Medium** | An excessively frequent schedule can increase Cloud SQL costs and I/O pressure. Ensure the schedule aligns with your RPO requirements. |
+| `backup_retention_days` | `7` | **Medium** | Retaining fewer than 3 days of backups is unsafe for production. Increasing above 30 days significantly increases Cloud SQL storage costs. |
+| `enable_binary_authorization` | `false` | **Medium** | Enabling Binary Authorization with `binauthz_evaluation_mode = "REQUIRE_ATTESTATION"` blocks all deployments unless the n8n image has a valid attestation. Use `"ALWAYS_ALLOW"` initially and add attestors before enforcing. |
+| `enable_cloud_armor` | `false` | **Medium** | Leaving Cloud Armor disabled exposes the service to unauthenticated traffic at scale. Enable with `admin_ip_ranges` to restrict access in production environments. |
+| `secret_rotation_period` | `"2592000s"` (30 days) | **Low** | Very short rotation periods (e.g., `"3600s"`) can cause the SMTP password to rotate before n8n reads the new value, causing email-sending failures until the next pod restart. Use the `secret_propagation_delay` variable to add a buffer. |
+| `enable_auto_password_rotation` | `false` | **Medium** | Enabling this without configuring `rotation_propagation_delay_sec` correctly can cause the application to use an old password during the propagation window, resulting in authentication failures. |
+| `enable_vpc_sc` | `false` | **Medium** | VPC-SC requires `organization_id` to be explicitly set. If left empty with `enable_vpc_sc = true`, VPC-SC perimeter creation is silently skipped with a warning rather than failing the apply. |
+| `vpc_sc_dry_run` | `true` | **Low** | Leaving dry-run mode enabled in production means VPC-SC rules are logged but not enforced. Set to `false` only after validating perimeter rules in dry-run mode. |
+| `organization_id` | `""` | **Medium** | Required for VPC-SC. If empty, VPC Service Controls are not activated regardless of `enable_vpc_sc`. |
 
 ## Destroying Resources
 

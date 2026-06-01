@@ -5,20 +5,13 @@ sidebar_label: "Ghost CloudRun"
 
 # Ghost on Google Cloud Run
 
-<YouTubeEmbed videoId="DHyeZ8q7xhU" poster="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
 This document provides a comprehensive reference for the `modules/Ghost_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Ghost-specific behaviours, and operational patterns for deploying Ghost on Google Cloud Run (v2).
 
 ---
 
 ## 1. Module Overview
 
-Ghost is a professional open-source publishing platform for newsletters, memberships, and content sites — trusted by Buffer, Cloudflare, DuckDuckGo, Duolingo, FreeCodeCamp, Revolut, and Kickstarter. With 22,000+ active customers and 100,000+ websites growing at roughly 15%/year (ahead of the 11% CMS market average), Ghost's built-in subscription monetization, native SEO, and superior page speed make it the leading alternative to WordPress for content-first businesses. `Ghost_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Ghost-specific application configuration, database initialisation, and storage configuration via `Ghost_Common`.
+Ghost is a professional open-source publishing platform for newsletters, memberships, and content sites. `Ghost_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It uses `App_CloudRun` for all GCP infrastructure provisioning and injects Ghost-specific application configuration, database initialisation, and storage configuration via `Ghost_Common`.
 
 **Key Capabilities:**
 *   **Compute**: Cloud Run v2 (Gen2), Node.js container, 2 vCPU / 4 Gi by default. Scale-to-zero (`min_instance_count = 0`) with `max_instance_count = 5` — both hardcoded, not user-configurable.
@@ -206,7 +199,7 @@ Identical to `App_CloudRun`. When `enable_vpc_sc = true`, all GCP API calls from
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `enable_vpc_sc` | 21 | `false` | Registers module API calls within the project's VPC-SC perimeter. A perimeter must already exist before enabling. |
+| `enable_vpc_sc` | 22 | `false` | Registers module API calls within the project's VPC-SC perimeter. A perimeter must already exist before enabling. |
 
 ### E. Secret Manager Integration
 
@@ -357,12 +350,12 @@ When `enable_redis = true` and `redis_host` is not provided, the module defaults
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `enable_redis` | 20 | `true` | Enables Redis for Ghost page caching. Recommended for all deployments. |
-| `redis_host` | 20 | `""` | Redis server hostname or IP. Leave blank to use the NFS server IP. Override with a Memorystore instance for production. |
-| `redis_port` | 20 | `'6379'` | Redis server TCP port (string). |
-| `redis_auth` | 20 | `""` | Redis AUTH password. Leave empty if the Redis instance does not require authentication. Sensitive — never stored in state. |
+| `enable_redis` | 21 | `true` | Enables Redis for Ghost page caching. Recommended for all deployments. |
+| `redis_host` | 21 | `""` | Redis server hostname or IP. Leave blank to use the NFS server IP. Override with a Memorystore instance for production. |
+| `redis_port` | 21 | `'6379'` | Redis server TCP port (string). |
+| `redis_auth` | 21 | `""` | Redis AUTH password. Leave empty if the Redis instance does not require authentication. Sensitive — never stored in state. |
 
-> Note: Redis is in **group 20** in `Ghost_CloudRun` (vs group 10 in `App_CloudRun`).
+> Note: Redis is in **group 21** in `Ghost_CloudRun` (vs group 10 in `App_CloudRun`).
 
 ### B. Email (SMTP)
 
@@ -466,7 +459,7 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `module_documentation` | 0 | (docs URL) | Platform metadata: documentation URL. |
 | `module_dependency` | 0 | `['Services_GCP']` | Platform metadata: required modules. |
 | `module_services` | 0 | (GCP service list) | Platform metadata: GCP services consumed. |
-| `credit_cost` | 0 | `100` | Platform metadata: deployment credit cost. |
+| `credit_cost` | 0 | `50` | Platform metadata: deployment credit cost. |
 | `require_credit_purchases` | 0 | `false` | Platform metadata: enforces credit balance check. |
 | `enable_purge` | 0 | `true` | Permits full deletion of module resources on destroy. |
 | `public_access` | 0 | `true` | Platform catalogue visibility. |
@@ -552,15 +545,15 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `liveness_probe` | 13 | `{ path="/", initial_delay_seconds=60, failure_threshold=3, ... }` | Liveness probe. |
 | `uptime_check_config` | 13 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | 13 | `[]` | Cloud Monitoring metric alert policies. |
-| `enable_redis` | 20 | `true` | **Enabled by default.** Redis for Ghost page caching. |
-| `redis_host` | 20 | `""` | Redis hostname/IP. Defaults to NFS server IP when empty. |
-| `redis_port` | 20 | `'6379'` | Redis TCP port (string). |
-| `redis_auth` | 20 | `""` | Redis AUTH password. Sensitive. |
-| `enable_vpc_sc` | 21 | `false` | Registers API calls within the project's VPC-SC perimeter. |
-| `vpc_cidr_ranges` | 21 | `[]` | VPC subnet CIDR ranges for VPC-SC network access level. Auto-discovered when empty. |
-| `vpc_sc_dry_run` | 21 | `true` | Logs VPC-SC violations without blocking. Set `false` to enforce. |
-| `organization_id` | 21 | `""` | GCP Organization ID for VPC-SC. Auto-discovered from project when empty. |
-| `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ). |
+| `enable_redis` | 21 | `true` | **Enabled by default.** Redis for Ghost page caching. |
+| `redis_host` | 21 | `""` | Redis hostname/IP. Defaults to NFS server IP when empty. |
+| `redis_port` | 21 | `'6379'` | Redis TCP port (string). |
+| `redis_auth` | 21 | `""` | Redis AUTH password. Sensitive. |
+| `enable_vpc_sc` | 22 | `false` | Registers API calls within the project's VPC-SC perimeter. |
+| `vpc_cidr_ranges` | 22 | `[]` | VPC subnet CIDR ranges for VPC-SC network access level. Auto-discovered when empty. |
+| `vpc_sc_dry_run` | 22 | `true` | Logs VPC-SC violations without blocking. Set `false` to enforce. |
+| `organization_id` | 22 | `""` | GCP Organization ID for VPC-SC. Auto-discovered from project when empty. |
+| `enable_audit_logging` | 22 | `false` | Enables detailed Cloud Audit Logs (DATA_READ, DATA_WRITE, ADMIN_READ). |
 
 ---
 
@@ -583,6 +576,36 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `container_image` | Container image used for the deployment. |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 | `github_repository_url` | GitHub repository URL connected for CI/CD. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `project_id` | _(required)_ | **Critical** | No default — deployment fails immediately. |
+| `database_type` | `"MYSQL_8_0"` | **Critical** | Ghost requires MySQL exclusively. Setting to `POSTGRES` or `NONE` will cause Ghost to fail at startup with a database connection error — Ghost's knex adapter in this module targets MySQL only. |
+| `enable_redis` | `true` | **High** | Redis is enabled by default. When no `redis_host` is provided the module uses the NFS server IP — if `enable_nfs = false` as well, Ghost will fail to connect to Redis at startup. Disable Redis (`enable_redis = false`) only when a dedicated Redis is not available and NFS is also off. |
+| `redis_host` | `""` (auto-resolves to NFS IP) | **High** | Relies on NFS server IP when blank. If `enable_nfs = false` and `redis_host` remains empty with `enable_redis = true`, Ghost cannot initialise its caching layer and will crash on startup. |
+| `enable_nfs` | `true` | **Critical** | Ghost stores all content (themes, images, routes, settings) under `/var/lib/ghost/content`. Without NFS, this directory is ephemeral — all uploaded images and theme customisations are lost on every new Cloud Run revision. Multiple instances will serve inconsistent content. |
+| `container_image_source` | `"custom"` | **High** | Ghost requires a custom build to inject GCP configuration (database socket path, content path symlinks). Using `"prebuilt"` with the upstream `ghost` Docker Hub image may work for local testing but will fail to connect to Cloud SQL via Unix socket in Cloud Run. |
+| `container_port` | `2368` | **Critical** | Ghost listens on `2368` by default. Changing this without matching the Ghost `url` configuration causes Cloud Run health probes to fail and the service to be marked unhealthy. |
+| `memory_limit` | `"4Gi"` | **High** | Ghost 6.x with image processing, newsletter rendering, and theme compilation requires significant memory. Reducing below `1Gi` causes Node.js OOM crashes under moderate load. The documented minimum is `512Mi` — this is only viable for low-traffic or dev deployments. |
+| `min_instance_count` | `1` | **Medium** | Scale-to-zero (`0`) causes cold starts of 10–30 seconds. Ghost performs database migrations on first boot — cold starts can cause request timeouts for impatient visitors. Set to `1` for any production publication. |
+| `ingress_settings` | `"all"` | **Medium** | `"all"` exposes Ghost's admin panel (`/ghost`) to the public internet. For admin-only access, consider `enable_iap = true` or restricting the `/ghost` path via Cloud Armor. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts require `gen2`. Switching to `"gen1"` while `enable_nfs = true` causes the Cloud Run revision to fail to start. |
+| `db_name` | `"ghost"` | **Critical** | Immutable after first deployment — changing this causes Terraform to recreate the database, destroying all Ghost content, posts, and members data. |
+| `db_user` | `"ghost"` | **Critical** | Immutable after first deployment — changing this recreates the Cloud SQL user and invalidates all stored credentials. |
+| `database_password_length` | `32` | **Medium** | Minimum is 16 (enforced). Short passwords increase database brute-force risk. |
+| `environment_variables` (SMTP) | `{ SMTP_HOST = "", SMTP_PORT = "25", ... }` | **High** | Ghost uses SMTP for member welcome emails, newsletters, and password resets. Leaving `SMTP_HOST` empty disables email entirely — members cannot receive newsletters and cannot reset passwords. Configure a real SMTP provider (SendGrid, Mailgun, SES) before going live. |
+| `backup_retention_days` | `7` | **Medium** | Seven days is insufficient for active publications. Losing more than 7 days of posts and member data is a serious content loss. Increase to 30+ days for any production Ghost blog. |
+| `enable_cloud_armor` | `false` | **Medium** | Without Cloud Armor, the Ghost admin panel is protected only by Ghost's own auth. Bot traffic and credential stuffing attacks against `/ghost` are common. Recommended for any publicly visible publication. |
+| `enable_backup_import` | `false` | **Critical** | Requires `backup_uri` to be a valid, accessible GCS or Drive path. Enabling with an empty `backup_uri` causes the restore Cloud Run job to fail during `tofu apply`. |
+| `startup_probe` initial_delay_seconds | `90` | **High** | Ghost runs database migrations on first boot which can take 60–120 seconds. Reducing `initial_delay_seconds` below 60 causes Cloud Run to kill the container before Ghost is ready, creating a crash-restart loop. |
+| `enable_iap` | `false` | **Medium** | With IAP disabled and `ingress_settings = "all"`, anyone can reach the Ghost admin panel URL. Consider enabling IAP for staff-only Ghost installations. |
+| `enable_cdn` | `false` | **Medium** | Without CDN, all requests hit Cloud Run directly. For publications with significant static asset traffic (images, JS), CDN significantly reduces cost and latency. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **Medium** | Ghost needs to reach external SMTP servers and the Unsplash API for stock images. `PRIVATE_RANGES_ONLY` permits direct public egress. Changing to `"ALL_TRAFFIC"` with a restrictive VPC firewall will block these outbound connections. |
+| `secret_propagation_delay` | `30` | **Low** | Occasionally insufficient in multi-region setups. Increase to 60–90s if `ghost` secrets are not found during apply. |
 
 ## Destroying Resources
 

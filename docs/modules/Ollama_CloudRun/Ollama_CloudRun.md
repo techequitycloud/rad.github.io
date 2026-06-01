@@ -1,27 +1,14 @@
 ---
-title: "Ollama CloudRun Module — Configuration Guide"
+title: "Ollama_CloudRun Module — Configuration Guide"
 sidebar_label: "Ollama CloudRun"
 ---
 
-# Ollama CloudRun Module — Configuration Guide
+# Ollama_CloudRun Module — Configuration Guide
 
-<YouTubeEmbed videoId="Uu_1bO4NLsI" poster="https://storage.googleapis.com/rad-public-2b65/modules/Ollama_CloudRun.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Ollama_CloudRun.pdf" target="_blank">View Presentation (PDF)</a>
-
-
-Ollama is the de facto standard runtime for running large language models locally, with 169,000+
-GitHub stars and support for 4,500+ models — including Llama 3.1 (112M+ pulls), DeepSeek-R1
-(82.7M pulls), and Gemma. It attracts 110,000+ monthly developer searches, reflecting its
-dominant position in self-hosted LLM inference. Ollama is critical for financial services,
-healthcare, legal, and government deployments with strict data sovereignty requirements where
-models cannot leave the organisation's infrastructure. This module deploys Ollama on **Google
+Ollama is an open-source LLM inference server that serves large language models such as Llama,
+Mistral, Gemma, and Phi via a REST API on port 11434. This module deploys Ollama on **Google
 Cloud Run** (serverless, CPU-only) with model weights persisted to a GCS Fuse volume so that
-container restarts load models from storage rather than re-downloading them. It is designed as a
-shared AI inference endpoint for Flowise, N8N, RAGFlow, Django, and other applications in the
-same VPC.
+container restarts load models from storage rather than re-downloading them.
 
 `Ollama_CloudRun` is a **wrapper module** built on top of `App_CloudRun`. It delegates all GCP
 infrastructure provisioning to App_CloudRun (Cloud Run service, networking, Secret Manager, GCS,
@@ -83,11 +70,10 @@ and `scripts_dir` inputs.
 | `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/Ollama_CloudRun"` | External documentation URL. |
 | `module_dependency` | `list(string)` | `["Services_GCP"]` | Modules that must be deployed before this one. |
 | `module_services` | `list(string)` | *(GCP service list)* | GCP services consumed by this module. |
-| `credit_cost` | `number` | `100` | Platform credits consumed on deployment. |
+| `credit_cost` | `number` | `50` | Platform credits consumed on deployment. |
 | `require_credit_purchases` | `bool` | `false` | Enforce credit balance check before deployment. |
 | `enable_purge` | `bool` | `true` | Permit full deletion of all module resources on destroy. |
 | `public_access` | `bool` | `true` | Controls platform UI visibility. |
-| `shared_users` | `list(string)` | `[]` | Users granted access to this module regardless of `public_access`. Actively enforced by the platform. |
 | `deployment_id` | `string` | `""` | Optional fixed deployment ID. Auto-generated when blank. |
 
 ---
@@ -103,7 +89,7 @@ and `scripts_dir` inputs.
 | `description` | `string` | `"Ollama — standalone open-source LLM inference server..."` | Brief description surfaced in resource metadata. |
 | `application_version` | `string` | `"latest"` | Ollama Docker image tag. Use a pinned tag (e.g. `"0.3.12"`) in production. |
 
-### §3.B · Ollama Model Configuration (Group 19)
+### §3.B · Ollama Model Configuration (Group 18)
 
 These are the Ollama-specific variables that have no equivalent in other wrapper modules.
 
@@ -366,14 +352,13 @@ Complete variable reference with UIMeta group assignments.
 | Variable | Default | Group |
 |---|---|---|
 | `module_description` | *(Ollama CloudRun description)* | 0 |
-| `module_documentation` | `"https://docs.radmodules.dev/docs/applications/ollama"` | 0 |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/Ollama_CloudRun"` | 0 |
 | `module_dependency` | `["Services_GCP"]` | 0 |
 | `module_services` | *(list of GCP services)* | 0 |
-| `credit_cost` | `100` | 0 |
+| `credit_cost` | `50` | 0 |
 | `require_credit_purchases` | `false` | 0 |
 | `enable_purge` | `true` | 0 |
 | `public_access` | `true` | 0 |
-| `shared_users` | `[]` | 0 |
 | `deployment_id` | `""` | 0 |
 | `resource_creator_identity` | `"rad-module-creator@..."` | 0 |
 | `project_id` | *(required)* | 1 |
@@ -457,8 +442,8 @@ Complete variable reference with UIMeta group assignments.
 | `delete_untagged_images` | `true` | 13 |
 | `image_retention_days` | `30` | 13 |
 | `max_revisions_to_retain` | `7` | 13 |
-| `default_model` | `""` | 19 |
-| `model_pull_timeout_seconds` | `3600` | 19 |
+| `default_model` | `""` | 18 |
+| `model_pull_timeout_seconds` | `3600` | 18 |
 
 ---
 
@@ -525,6 +510,34 @@ resource_labels = {
 
 enable_image_mirroring = true
 ```
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `memory_limit` | `8Gi` (3B model) / `16Gi` (7B model) | **Critical** | Insufficient memory causes OOM-kill mid-inference; container crashes in a restart loop. Cloud Run max is 32Gi — allocate at least 2× the model's quantised weight size. |
+| `cpu_limit` | `4000m` (3B) / `8000m` (7B) | **High** | Insufficient CPU makes token generation extremely slow (minutes per token on 7B). Cloud Run CPU is throttled when not handling a request — set `cpu_always_allocated = true` (via annotations) when using `min_instance_count ≥ 1`. |
+| `min_instance_count` | `1` | **High** | Setting to `0` enables scale-to-zero but causes 60–120 s cold starts while the model reloads from GCS. Inappropriate for interactive use cases or services where other modules call Ollama synchronously. |
+| `default_model` | `""` (empty, skip pull) | **Medium** | Leaving empty is safe for initial infrastructure-only deploy but the service returns 404 on inference until a model is pulled manually or via a subsequent deploy with this variable set. |
+| `model_pull_timeout_seconds` | `3600` | **High** | Too short a timeout (e.g., `300`) causes the init job to fail midway through pulling a large model (7B = ~4 GB, 13B+ = 8 GB+). The Cloud Run service then starts without the expected model. Default 3600 s is appropriate for most cases; increase to `7200` for 70B+ models. |
+| `application_version` | `"latest"` | **Medium** | Using `latest` means a new Ollama version is pulled on each redeploy. Pin to a specific tag (e.g., `"0.3.12"`) in production to prevent unintended API-breaking upgrades. |
+| `ingress_settings` | `"all"` | **Critical** | `"all"` exposes the Ollama REST API publicly — any caller can load, query, or delete models without authentication. Set to `"internal"` for VPC-only access or front with IAP. Ollama has no built-in auth. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **Medium** | Required when Ollama needs to reach other VPC services (e.g., a NFS volume or another Cloud Run service). If set incorrectly, requests to VPC-internal addresses time out. |
+| `enable_iap` | `false` | **Critical** | Without IAP or VPC restriction (`ingress_settings = "internal"`), the Ollama API is unauthenticated and publicly reachable. Always enable IAP or restrict ingress for any non-isolated deployment. |
+| `environment_variables.OLLAMA_ORIGINS` | `"*"` (Ollama default) | **High** | If not explicitly set, Ollama's CORS policy defaults to accepting any origin, enabling cross-site requests to the API from arbitrary browser contexts. Set to the specific UI origin (e.g., `"https://openwebui.example.com"`) when exposing through a load balancer. |
+| `environment_variables.OLLAMA_KEEP_ALIVE` | `"5m"` (Ollama default) | **Medium** | Ollama unloads a model from memory after 5 minutes of inactivity by default. This causes a 30–60 s reload delay on the next request. Set `OLLAMA_KEEP_ALIVE = "24h"` for warm-always deployments or `"-1"` to never unload. |
+| `environment_variables.OLLAMA_NUM_PARALLEL` | `1` (Ollama default) | **Medium** | Default of 1 serialises all inference requests. For production use with concurrent callers (OpenWebUI, N8N, Flowise), increase to `2`–`4` to allow parallel request handling, subject to available memory. |
+| `max_instance_count` | `3` | **High** | Each Ollama instance independently loads the model into memory. Multiple instances are safe with GCS Fuse persistence but significantly increase cost. For large models, set to `1` unless horizontal scaling is explicitly required. |
+| `storage_buckets` | Auto-provisioned | **High** | The GCS bucket for model weights is auto-provisioned. If `enable_purge = true` and the module is destroyed, all downloaded model weights are deleted permanently. Set `enable_purge = false` on the storage bucket to protect models. |
+| `gcs_volumes` mount options | `implicit-dirs` | **Medium** | Omitting `implicit-dirs` from the GCS Fuse mount options causes directory listings to fail, breaking Ollama's model discovery. Always include this option. |
+| `startup_probe.failure_threshold` | `20` | **High** | Ollama can take 60–120 s to mount GCS and initialise. A low `failure_threshold` (e.g., `5`) combined with a short `period_seconds` causes Cloud Run to kill and restart the container before it is ready. |
+| `enable_cloud_armor` | `false` | **Medium** | Cloud Armor is not enabled by default. Without it, DDoS and rate-limiting protection is absent. Consider enabling when `ingress_settings = "all"`. |
+| `timeout_seconds` | `300` | **High** | LLM inference for large models can exceed 5 minutes per request. Requests to long-running generations are terminated with a 504 if `timeout_seconds` is too low. Increase to `3600` for interactive multi-turn inference. |
+| `enable_image_mirroring` | `true` | **Medium** | Setting to `false` pulls directly from Docker Hub at deploy time, which is subject to rate limits. Keep `true` in production to use Artifact Registry. |
+| `backup_schedule` | `""` (disabled) | **Medium** | Without a backup schedule, there is no automated protection for stored model configurations. Model weights themselves are stored in GCS and are inherently durable, but initialization-job metadata is not automatically backed up. |
+| `execution_environment` | `"gen2"` | **High** | Gen1 does not support NFS mounts or Direct VPC Egress. If `enable_nfs = true`, gen1 silently fails to mount the volume. Always use gen2. |
 
 ## Destroying Resources
 

@@ -1,6 +1,6 @@
 # Security & Zero Trust
 
-> **Scope.** Outcomes-framing of the platform's security posture: what classes of attack are eliminated, what the zero-trust access model delivers, and how the platform hardens the software supply chain and data perimeter. The control implementation mechanics are canonical in [practices/devsecops.md](../practices/devsecops.md); the auditor-evidence framing is in [outcomes/compliance-governance.md](compliance-governance.md).
+> **Scope.** Outcomes-framing of the platform's security posture: what classes of attack are eliminated, what the zero-trust access model delivers, and how the platform hardens the software supply chain and data perimeter. The control implementation mechanics are canonical in [practices/devsecops.md](../practices/devsecops.md); the auditor-evidence framing is in [outcomes/compliance_governance.md](compliance_governance.md).
 
 ## What this repo uniquely brings to security posture
 
@@ -57,7 +57,7 @@ Supply chain and container security canonical in [practices/devsecops.md](../pra
 - Per-tenant perimeters ensure Customer A cannot reach Customer B's Cloud SQL, GCS, or Secret Manager resources.
 - `vpc_sc_dry_run = true` enables a safe observation window before enforcement; violation logs surface in Cloud Audit Logs for review.
 
-VPC-SC mechanics canonical in [practices/devsecops.md](../practices/devsecops.md) §4. Per-tenant perimeter strategy in [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) §3.
+VPC-SC mechanics canonical in [practices/devsecops.md](../practices/devsecops.md) §4. Per-tenant perimeter strategy in [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) §3.
 
 ### 6. Principle of least privilege by default
 
@@ -78,7 +78,7 @@ The `AGENTS.md` `/security` workflow provides a 30+ point recurring audit checkl
 ## Cross-references
 
 - [practices/devsecops.md](../practices/devsecops.md) — control implementation mechanics (§2–6)
-- [outcomes/compliance-governance.md](compliance-governance.md) — auditor-evidence framing of these controls
+- [outcomes/compliance_governance.md](compliance_governance.md) — auditor-evidence framing of these controls
 - [capabilities/observability.md](../capabilities/observability.md) — SCC, Cloud Audit Logs, security-finding surfaces (§4–5)
-- [capabilities/multitenancy-saas.md](../capabilities/multitenancy-saas.md) — per-tenant VPC-SC perimeters (§3)
+- [capabilities/multitenancy_saas.md](../capabilities/multitenancy_saas.md) — per-tenant VPC-SC perimeters (§3)
 - [capabilities/networking.md](../capabilities/networking.md) — network security layer (Cloud Armor, Kubernetes NetworkPolicy, firewall rules)

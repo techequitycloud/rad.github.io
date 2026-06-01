@@ -1,18 +1,11 @@
 ---
-title: "Wordpress GKE Module — Configuration Guide"
+title: "Wordpress_GKE Module — Configuration Guide"
 sidebar_label: "Wordpress GKE"
 ---
 
-# Wordpress GKE Module — Configuration Guide
+# Wordpress_GKE Module — Configuration Guide
 
-<YouTubeEmbed videoId="D53ep0Eb6IU" poster="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
-
-This guide describes the configuration variables that are **unique to the `Wordpress_GKE` module**. Because `Wordpress_GKE` is a wrapper around `App_GKE`, the vast majority of its variables are passed directly to that base module and are fully documented in the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). This guide explains the WordPress-specific additions, the differences in default values, and what the `Wordpress_Common` sub-module provisions automatically. WordPress is the world's most widely-deployed CMS, powering 43.5% of all websites and holding 62.8% of the CMS market — approximately 480–590 million sites globally. WooCommerce controls 36% of all online stores with roughly $35B in GMV in 2025, and an ecosystem of 60,000+ plugins makes WordPress the default choice for marketing sites, news publishers, e-commerce, and membership platforms at any scale.
+This guide describes the configuration variables that are **unique to the `Wordpress_GKE` module**. Because `Wordpress_GKE` is a wrapper around `App_GKE`, the vast majority of its variables are passed directly to that base module and are fully documented in the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). This guide explains the WordPress-specific additions, the differences in default values, and what the `Wordpress_Common` sub-module provisions automatically.
 
 > **Where to look:** If a variable you are configuring is not described here, consult the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). All `App_GKE` features — GKE cluster selection, session affinity, network policies, Cloud Armor, IAP, CI/CD, Cloud Deploy, Binary Authorization, StatefulSets, resource quotas, and VPC Service Controls — are available in `Wordpress_GKE` with identical behaviour and configuration.
 
@@ -270,3 +263,32 @@ Refer to [App_GKE — Deployment Prerequisites & Dependency Analysis](../App_GKE
 Refer to [App_GKE — Dependency on `Services_GCP` for Shared Resources](../App_GKE/App_GKE.md#dependency-on-services_gcp-for-shared-resources) for a full comparison of standalone versus `Services_GCP`-backed deployments.
 
 **WordPress-specific benefit:** when `Services_GCP` provides a shared Cloud SQL instance, the `db-init` job connects to it and creates only the WordPress database and user within the shared instance — eliminating the cost of a dedicated Cloud SQL instance per WordPress site. This is the recommended model for multi-tenant platforms where many independent WordPress deployments share the same GCP project.
+
+---
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `project_id` | _(required)_ | **Critical** | No default — deployment fails immediately. |
+| `database_type` | `"MYSQL_8_0"` | **Critical** | WordPress requires MySQL. Setting to `POSTGRES` or `NONE` breaks the application — WordPress's `wpdb` class is not compatible with PostgreSQL. |
+| `enable_nfs` | `true` | **Critical** | WordPress `wp-content` must be on a shared volume. Without NFS, plugins, themes, and media are isolated per pod and lost on pod restart. With multiple replicas and no NFS, each pod serves a different version of the site. |
+| `nfs_mount_path` | `"/mnt/nfs"` | **High** | The container startup script symlinks `wp-content` to this path. If the path changes after initial deployment, the symlink breaks and WordPress cannot find plugins or media. |
+| `container_image_source` | `"custom"` | **High** | The custom WordPress image wires the NFS symlink and Cloud SQL socket. Using `"prebuilt"` with the vanilla WordPress image breaks Cloud SQL socket connectivity. |
+| `enable_redis` | `false` | **Medium** | WordPress without Redis object cache hits MySQL for every cached value. With multiple pods and no Redis, there is no shared cache — each pod has an isolated in-memory cache, resulting in redundant database queries. Enabling Redis with a shared host dramatically improves response times. |
+| `redis_host` | `""` | **High** | Required when `enable_redis = true`. Without an explicit host and NFS not configured, Redis connection silently fails and WordPress falls back to no caching. |
+| `session_affinity` | `"ClientIP"` | **High** | WordPress uses PHP sessions for the admin panel. Without `"ClientIP"` affinity, admin users are logged out on every request that lands on a different pod. Keep session affinity enabled for any multi-replica deployment. |
+| `container_resources.memory_limit` | `"512Mi"` (GKE default) | **High** | WordPress with WooCommerce or Elementor requires at least 2Gi. The default GKE `container_resources` memory is `512Mi` which will cause PHP OOM errors under plugin-heavy workloads. Override to `2Gi` or more. |
+| `php_memory_limit` | `"512M"` | **Medium** | Must be within the container memory limit. Setting `php_memory_limit` higher than `container_resources.memory_limit` means PHP will hit the container limit first with an OOM kill. |
+| `application_database_name` | `"wordpress"` | **Critical** | Immutable after first deployment — changing this recreates the database and destroys all WordPress data. |
+| `application_database_user` | `"wordpress"` | **Critical** | Immutable after first deployment — changing this recreates the user and breaks the existing database connection. |
+| `workload_type` | `null` | **Medium** | Setting `stateful_pvc_enabled = true` auto-selects `StatefulSet`. Setting `workload_type = "Deployment"` alongside `stateful_pvc_enabled = true` fails at plan time. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (GKE-specific) | Must use binary suffixes (`Gi`, `Mi`) when set. Bare integers prevent all pods from being scheduled (treated as bytes by Kubernetes). |
+| `enable_cloud_armor` | `false` | **High** | WordPress is the most-attacked CMS on the internet. Without Cloud Armor, `/wp-login.php` and `xmlrpc.php` are exposed to brute-force attacks. Strongly recommended for any public WordPress GKE deployment. |
+| `min_instance_count` | `1` | **Medium** | Setting to `0` permits scale-to-zero. WordPress cold starts on GKE (image pull + WordPress init) can take 30–60 seconds, resulting in visible 504 errors for the first visitor after idle. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | Already enabled. Disabling allows all pods to be terminated simultaneously during node upgrades, causing a complete outage. |
+| `backup_retention_days` | `7` | **Medium** | Insufficient for e-commerce or content sites. Increase to 30+ days for production. |
+| `stateful_pvc_size` | `"10Gi"` | **Medium** | WordPress media libraries grow quickly. `10Gi` is a minimum starting point. A site with large video uploads or many years of media can exhaust this quickly. Plan for 50–200Gi for active sites. |
+| `enable_network_segmentation` | `false` | **Medium** | Without NetworkPolicy, any pod in the cluster can reach WordPress pods directly. Enable for multi-tenant clusters. |

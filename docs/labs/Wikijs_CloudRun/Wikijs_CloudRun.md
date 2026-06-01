@@ -7,909 +7,406 @@ sidebar_label: "Wikijs CloudRun"
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Wikijs_CloudRun)**
 
-This lab guide walks you through deploying, exploring, and operating **Wiki.js** on Google
-Cloud Run Gen2 using the **Wikijs_CloudRun** module. You will experience a modern open-source
-wiki platform backed by Cloud SQL PostgreSQL with full-text search, GCS Fuse asset storage,
-and Secret Manager credential management — all running as a scalable serverless service.
+## Overview
+
+**Estimated time:** 1–2 hours
+
+This lab walks you through deploying Wiki.js on Google Cloud Run Gen2 using the `Wikijs_CloudRun` module, then verifying and exploring the deployment manually. The module handles all GCP infrastructure; you perform the post-deployment steps interactively.
+
+### What the Module Automates
+
+- Cloud Run Gen2 service with auto-scaling (configurable min/max instances)
+- Cloud SQL PostgreSQL 15 instance, database, and user; `pg_trgm` extension installed automatically
+- Cloud Build image build and push to Artifact Registry
+- GCS Fuse volume mounted at `/wiki-storage` for persistent asset storage
+- Cloud Filestore (NFS) optional persistent share (`/mnt/nfs`) — requires gen2 execution environment
+- Cloud SQL Auth Proxy sidecar via Cloud Run volume (Unix socket at `/cloudsql`)
+- Serverless VPC Access connector for private Cloud SQL and Redis connectivity
+- Secret Manager secrets (DB password, JWT secret)
+- Cloud Monitoring uptime check and alert policies
+- Backup Cloud Run Job (daily at 02:00 UTC via Cloud Scheduler)
+- Redis environment variable injection (when `enable_redis = true`)
+
+### What You Do Manually
+
+- Note the service URL from the RAD UI deployment panel
+- Complete the Wiki.js first-run setup wizard (or retrieve seeded admin credentials from Secret Manager)
+- Create pages and explore the Markdown editor
+- Test full-text search powered by `pg_trgm`
+- Configure authentication providers and access-control groups
+- Verify GCS Fuse asset storage
+- Explore Cloud Logging and Cloud Monitoring
 
 ---
 
-## Table of Contents
+## CLI and REST API Overview
 
-1. [Overview](#1-overview)
-2. [Architecture](#2-architecture)
-3. [Prerequisites](#3-prerequisites)
-4. [Lab Setup](#4-lab-setup)
-5. [Exercise 1 — Access Wiki.js](#exercise-1--access-wikijs)
-6. [Exercise 2 — Create and Edit Pages](#exercise-2--create-and-edit-pages)
-7. [Exercise 3 — Navigation and Search](#exercise-3--navigation-and-search)
-8. [Exercise 4 — User Management and Permissions](#exercise-4--user-management-and-permissions)
-9. [Exercise 5 — Assets and Storage](#exercise-5--assets-and-storage)
-10. [Exercise 6 — Storage and Database](#exercise-6--storage-and-database)
-11. [Exercise 7 — Cloud Logging](#exercise-7--cloud-logging)
-12. [Exercise 8 — Cloud Monitoring](#exercise-8--cloud-monitoring)
-13. [Cleanup](#cleanup)
-14. [Reference](#reference)
+Key tools used in this lab:
 
----
-
-## 1. Overview
-
-### What Is Wiki.js?
-
-Wiki.js is a modern, powerful open-source wiki platform built on Node.js with 28,000+ GitHub
-stars. It is adopted by software teams, healthcare organisations, educational institutions, and
-government agencies as a cost-effective replacement for Confluence ($5–10/user/month savings).
-The `Wikijs_CloudRun` module deploys version **2.5.311** on Cloud Run Gen2 backed by Cloud SQL
-PostgreSQL 15 with the `pg_trgm` extension for native full-text search.
-
-### Key Capabilities Demonstrated
-
-| Capability | What It Demonstrates |
+| Tool | Purpose |
 |---|---|
-| **Rich Editing** | Markdown editor, visual editor, diagram support, page tree navigation |
-| **Full-Text Search** | PostgreSQL `pg_trgm` trigram-based search engine with instant results |
-| **Authentication** | Local auth, SAML 2.0, OAuth 2.0/OIDC, LDAP/Active Directory |
-| **Access Control** | Groups, page-level permissions, role-based access |
-| **Asset Storage** | GCS Fuse volume mounted at `/wiki-storage` for persistent file uploads |
-| **Serverless Scaling** | Cloud Run Gen2 auto-scaling with scale-to-zero, Direct VPC Egress |
-| **Secret Management** | Database password managed by Secret Manager, injected at runtime |
-| **Observability** | Cloud Logging structured logs, Cloud Monitoring uptime checks |
+| `gcloud` | Authenticate, query GCP resources, read secrets, inspect Cloud Run |
+| Google Cloud Console | Cloud Logging, Cloud Monitoring, Secret Manager UI |
 
 ---
 
-## 2. Architecture
+## Prerequisites
 
-```
-Browser / Client
-       │
-       ▼ HTTPS
-┌─────────────────────────────────────────────────────────────────┐
-│  Cloud Run Gen2 Service (wikijs)                                │
-│                                                                 │
-│  ┌──────────────────────────────────────────┐                   │
-│  │  Container: requarks/wiki:2 (custom)      │                  │
-│  │  Port: 3000  │  Chromium (PDF export)     │                  │
-│  │  DB_TYPE=postgres  DB_PORT=5432           │                  │
-│  │  HA_STORAGE_PATH=/wiki-storage            │                  │
-│  └──────────────────────────────────────────┘                   │
-│                                                                 │
-│  ┌──────────────────┐  ┌───────────────────┐                    │
-│  │  GCS Fuse Volume  │  │  NFS Filestore     │                  │
-│  │  /wiki-storage    │  │  /mnt/nfs          │                  │
-│  └──────────────────┘  └───────────────────┘                    │
-└─────────────────────────────────────────────────────────────────┘
-       │ Unix socket via Cloud SQL Auth Proxy (sidecar)
-       ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Cloud SQL PostgreSQL 15                                        │
-│  pg_trgm extension (full-text search)                           │
-│  DB password → Secret Manager                                   │
-└─────────────────────────────────────────────────────────────────┘
-
-Supporting Services:
-  Artifact Registry  ← container image (custom build)
-  Secret Manager     ← DB_PASS, JWT secret
-  GCS Bucket         ← wikijs-storage (asset uploads)
-  Cloud Scheduler    ← daily backup job at 02:00 UTC
-  Cloud Monitoring   ← uptime check, alert policies
-```
-
-Module variable wiring:
-
-```
-  Wikijs_CloudRun
-    application_name      = "wikijs"     →  Cloud Run service name prefix
-    application_version   = "2.5.311"   →  container image tag
-    min_instance_count    = 0            →  scale-to-zero
-    max_instance_count    = 1            →  cost ceiling
-    enable_nfs            = true         →  Filestore NFS at /mnt/nfs
-    enable_cloudsql_volume = true        →  Auth Proxy sidecar
-    cpu_limit             = "1000m"      →  1 vCPU
-    memory_limit          = "2Gi"        →  Chromium/PDF export
-```
+1. **Services_GCP deployed** — the `Wikijs_CloudRun` module depends on `Services_GCP`. Ensure it is deployed in the same project.
+2. **gcloud CLI authenticated** — run `gcloud auth application-default login`.
+3. **GCP project** with billing enabled and the following APIs active (the module enables them automatically on first deploy):
+   - Cloud Run, Cloud SQL, Cloud Build, Artifact Registry, Secret Manager, Cloud Storage, Cloud Monitoring, Serverless VPC Access.
+4. Access to the RAD UI with permission to deploy modules in the target GCP project.
 
 ---
 
-## 3. Prerequisites
+## Phase 1 — Deploy [AUTOMATED]
 
-### Required Tools
+### Variables
 
-| Tool | Minimum Version | Install |
-|---|---|---|
-| `gcloud` CLI | 480.0.0 | [Install guide](https://cloud.google.com/sdk/docs/install) |
-| `curl` | Any | System package manager |
-| `jq` | 1.6+ | System package manager |
+Variables are configured in the RAD UI form before deploying. The table below describes each variable you can fill in.
 
-### GCP Permissions
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `project_id` | **Yes** | — | GCP project ID |
+| `deployment_id` | No | *(auto-generated)* | Stable suffix appended to all resource names |
+| `region` | No | `us-central1` | GCP region for resource deployment |
+| `application_name` | No | `wikijs` | Base name for the Cloud Run service and secrets |
+| `application_version` | No | `2.5.311` | Container image version tag |
+| `deploy_application` | No | `true` | Set `false` to provision infrastructure only |
+| `min_instance_count` | No | `0` | Minimum Cloud Run instances (0 enables scale-to-zero) |
+| `max_instance_count` | No | `1` | Maximum Cloud Run instances |
+| `cpu_limit` | No | `1000m` | CPU limit per instance (millicores) |
+| `memory_limit` | No | `2Gi` | Memory limit per instance |
+| `db_name` | No | `wikijs` | PostgreSQL database name |
+| `db_user` | No | `wikijs` | PostgreSQL user name |
+| `enable_redis` | No | `false` | Enable Redis session/cache backend |
+| `redis_host` | No | `""` | Redis hostname or IP (required when `enable_redis=true`) |
+| `enable_nfs` | No | `true` | Mount Cloud Filestore NFS share into the service |
+| `tenant_deployment_id` | No | `demo` | Deployment environment identifier |
+| `support_users` | No | `[]` | Email addresses for monitoring alert notifications |
+| `ingress_settings` | No | `all` | Traffic sources allowed: `all`, `internal`, `internal-and-cloud-load-balancing` |
 
-```
-roles/owner                    # or the following fine-grained set:
-roles/run.admin
-roles/cloudsql.admin
-roles/secretmanager.admin
-roles/storage.admin
-roles/monitoring.admin
-roles/logging.admin
-```
+### Deploy
 
-### Environment Variables
+Deployment is initiated from the RAD UI. After filling in the variable form, click **Deploy** to start the deployment.
+
+### Deployment Duration
+
+| Stage | Estimated Duration |
+|---|---|
+| Cloud SQL PostgreSQL 15 provisioning | 8–12 min |
+| Cloud Build image build | 3–5 min |
+| Cloud Run service deployment | 1–2 min |
+| NFS Filestore provisioning (if enabled) | 5–8 min |
+| **Total (first deploy)** | **15–25 min** |
+
+### Key Outputs
+
+After deployment completes, the following outputs are available in the RAD UI deployment panel:
+
+| Output | Description |
+|---|---|
+| `service_url` | HTTPS URL of the Cloud Run service |
+| `service_name` | Cloud Run service name |
+| `database_instance_name` | Cloud SQL instance name |
+| `database_password_secret` | Secret Manager secret name for DB password |
+| `container_registry` | Artifact Registry repository |
+| `deployment_id` | Unique deployment suffix |
+
+Set shell variables for use in later steps:
 
 ```bash
-export PROJECT="your-gcp-project-id"
-export REGION="us-central1"
+export PROJECT="your-gcp-project-id"   # set this first — your GCP project ID
+export REGION="us-central1"             # the region you deployed into
 export TOKEN=$(gcloud auth print-access-token)
 
-gcloud config set project "${PROJECT}"
-gcloud config set run/region "${REGION}"
-```
-
----
-
-## 4. Lab Setup
-
-### 4.1 Deploy via RAD UI
-
-Deploy the `Wikijs_CloudRun` module via the RAD UI. In the variable form, set:
-
-| Variable | Value | Notes |
-|---|---|---|
-| `project_id` | `your-gcp-project-id` | Required |
-| `region` | `us-central1` | GCP region |
-| `application_name` | `wikijs` | Base resource name |
-| `application_version` | `2.5.311` | Wiki.js version |
-| `min_instance_count` | `0` | Scale-to-zero |
-| `max_instance_count` | `1` | Single instance |
-| `enable_nfs` | `true` | Filestore NFS mount |
-| `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy |
-
-Click **Deploy** and wait for provisioning to complete (approximately 15–25 minutes).
-
-> **What this provisions:** Cloud Run Gen2 service, Cloud SQL PostgreSQL 15 with `pg_trgm`
-> extension, Artifact Registry (custom image build), GCS bucket (`wikijs-storage`), Cloud
-> Filestore NFS, Secret Manager secrets (DB password, JWT), uptime check, and alert policies.
-
-### 4.2 Configure Shell Environment
-
-```bash
-export PROJECT="your-gcp-project-id"
-export REGION="us-central1"
-export TOKEN=$(gcloud auth print-access-token)
-
-# Discover the Cloud Run service
+# Discover the Cloud Run service (filter by app name "wikijs")
 export SERVICE=$(gcloud run services list \
-  --project="${PROJECT}" \
-  --region="${REGION}" \
+  --project=${PROJECT} \
+  --region=${REGION} \
   --format="value(metadata.name)" \
-  --filter="metadata.name~wikijs" \
   --limit=1)
-
-# Get the service URL
-export SERVICE_URL=$(gcloud run services describe "${SERVICE}" \
-  --project="${PROJECT}" \
-  --region="${REGION}" \
+export SERVICE_URL=$(gcloud run services describe ${SERVICE} \
+  --project=${PROJECT} \
+  --region=${REGION} \
   --format="value(status.url)")
 
-# Discover the database password secret
+# Discover the database password secret (filter by app name)
 export DB_SECRET=$(gcloud secrets list \
-  --project="${PROJECT}" \
+  --project=${PROJECT} \
   --filter="name~wikijs" \
   --format="value(name)" \
   --limit=1)
-
-echo "Wiki.js URL: ${SERVICE_URL}"
-echo "Service: ${SERVICE}"
-echo "DB Secret: ${DB_SECRET}"
 ```
 
 ---
 
-## Exercise 1 — Access Wiki.js
+## Phase 2 — Get the Service URL [MANUAL]
 
-### Objective
+### 1. Retrieve the Cloud Run Service URL
 
-Retrieve the Wiki.js service URL, verify the health endpoint, obtain admin credentials from
-Secret Manager, and complete the first-run setup wizard.
-
-### Step 1.1 — Get the Service URL
-
-**gcloud:**
 ```bash
-gcloud run services describe "${SERVICE}" \
-  --project="${PROJECT}" \
-  --region="${REGION}" \
-  --format="value(status.url)"
+echo "Wiki.js URL: ${SERVICE_URL}"
 ```
 
-**REST API:**
+Using gcloud:
+
 ```bash
-curl -s \
-  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '{name, uri: .urls[0], latestReadyRevision}'
+gcloud run services describe ${SERVICE} \
+  --region ${REGION} \
+  --project ${PROJECT} \
+  --format "value(status.url)"
 ```
 
-**Expected result:** A URL in the form `https://wikijs-<hash>-uc.a.run.app`.
+**Expected result:** A URL in the form `https://<service-name>-<hash>-<region>.run.app`.
 
-### Step 1.2 — Verify the Health Endpoint
-
+**REST API equivalent:**
 ```bash
-curl -s -o /dev/null -w "%{http_code}" "${SERVICE_URL}/healthz"
+curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}"
 ```
 
-**Expected result:** `200` — the health endpoint confirms the application is running and
-connected to PostgreSQL.
+### 2. Verify the Service is Healthy
 
-### Step 1.3 — Retrieve Admin Credentials from Secret Manager
-
-**gcloud:**
 ```bash
-# Access the DB password (also used as initial admin credential)
+gcloud run services list --project ${PROJECT} --region ${REGION}
+```
+
+**Expected result:** The service appears with status `Ready`.
+
+Check the health endpoint:
+```bash
+curl -s -o /dev/null -w "%{http_code}" https://${SERVICE_URL}/healthz
+```
+
+**Expected result:** `200`
+
+---
+
+## Phase 3 — Complete Wiki.js Setup [MANUAL]
+
+### 1. Open the Wiki.js URL
+
+Navigate to the `service_url` in a browser.
+
+On first run, Wiki.js displays the setup wizard (if the database is empty) or the login page (if the module seeded initial state).
+
+### 2. Retrieve Admin Credentials from Secret Manager
+
+```bash
 gcloud secrets versions access latest \
   --secret="${DB_SECRET}" \
-  --project="${PROJECT}"
+  --project ${PROJECT}
 ```
 
-**REST API:**
+List available secrets if the name is uncertain:
 ```bash
-curl -s \
-  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}/versions/latest:access" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq -r '.payload.data' | base64 --decode
+gcloud secrets list --project ${PROJECT} --filter="name~wikijs"
 ```
 
-Note the password for the Wiki.js admin setup.
+**REST API equivalent:**
+```bash
+curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${DB_SECRET}/versions/latest:access"
+```
 
-### Step 1.4 — Complete the Setup Wizard
+### 3. Complete the Setup Wizard (if displayed)
 
-1. Navigate to `${SERVICE_URL}` in a browser.
-2. On first run, the Wiki.js setup wizard appears — enter site title, admin email, and admin
-   password (from Step 1.3).
-3. Click **Install**.
+- Enter site title, admin email, and admin password.
+- Click **Install**.
 
 **Expected result:** Wiki.js redirects to the home page or admin dashboard.
 
-### Step 1.5 — Explore the Admin Panel
+### 4. Log In and Explore the Admin Panel
 
-1. Navigate to **Administration** (gear icon in the sidebar).
-2. Review **General** settings, **Theme**, and **SEO** configuration.
-3. Note the **System Info** page showing Node.js version and database connection status.
-
-**Expected result:** Administration panel loads confirming database and storage are connected.
+- Navigate to **Administration** (gear icon in the sidebar).
+- Review General settings, Theme, and SEO configuration.
 
 ---
 
-## Exercise 2 — Create and Edit Pages
+## Phase 4 — Create Pages and Content [MANUAL]
 
-### Objective
+### 1. Create a New Page
 
-Use the Markdown editor and visual editor to create pages, build a page tree, and apply tags.
-
-### Step 2.1 — Create a Page with the Markdown Editor
-
-1. Click **New Page** in the top navigation bar.
-2. Select **Markdown** as the editor type.
-3. Set the path to `lab/getting-started`.
+1. Click **New Page** in the top navigation.
+2. Choose **Markdown** as the editor.
+3. Set a page path (e.g., `lab/getting-started`).
 4. Add content including:
-   - Heading: `# Getting Started with Wiki.js on Cloud Run`
-   - A paragraph describing the module
-   - A code block with a gcloud command
-   - A table with two columns
+   - Headings (`# H1`, `## H2`)
+   - A code block (triple backtick)
+   - A table
 5. Click **Create** to save.
 
-**Expected result:** The page renders with formatted content and appears in the left navigation
-tree under `lab/`.
+**Expected result:** The page renders and appears in the left navigation tree.
 
-### Step 2.2 — Build a Page Tree
+### 2. Create a Page Tree (Nested Pages)
 
-Create two additional pages at these paths:
-- `lab/architecture` — describe the Cloud Run architecture
-- `lab/deployment` — describe the deployment steps
+Create additional pages with paths like `lab/architecture` and `lab/deployment`. Wiki.js automatically groups them under `lab/` in the navigation.
 
-Wiki.js automatically groups them under `lab/` in the sidebar navigation.
+### 3. Add Tags
 
-**Expected result:** The left sidebar shows a `lab` section with three nested pages.
+Open a page, click **Page Actions > Properties**, add one or more tags (e.g., `gcp`, `tutorial`), and save.
 
-### Step 2.3 — Use the Visual (WYSIWYG) Editor
+### 4. View the Public Page
 
-1. Create another page at `lab/visual-test`.
-2. Select **Visual Editor** instead of Markdown.
-3. Use the toolbar to add bold text, a bulleted list, and an image placeholder.
-4. Save the page.
-
-**Expected result:** The page is saved and displays with the visual formatting applied.
-
-### Step 2.4 — Add Tags to a Page
-
-1. Open one of the created pages.
-2. Click **Page Actions** (three-dot menu or gear) → **Properties**.
-3. In the **Tags** field, add `gcp`, `cloud-run`, and `tutorial`.
-4. Save.
-
-**Expected result:** Tags appear below the page title and are searchable.
-
-### Step 2.5 — View Page History
-
-1. On any page you edited, click **Page Actions** → **History**.
-2. Review the list of versions with timestamps and editor information.
-
-**Expected result:** Each save appears as a version entry, demonstrating Wiki.js's built-in
-version control.
+Navigate to the page URL directly (without being logged in) to verify public read access if the wiki is configured for open access.
 
 ---
 
-## Exercise 3 — Navigation and Search
+## Phase 5 — Search Functionality [MANUAL]
 
-### Objective
+### 1. Use the Wiki.js Search
 
-Explore sidebar navigation, test full-text search powered by PostgreSQL `pg_trgm`, and verify
-search engine configuration.
+Click the search icon in the top bar, type a keyword from one of your pages, and observe the full-text results.
 
-### Step 3.1 — Explore Sidebar Navigation
+**Expected result:** Pages containing the keyword appear in results. Search is powered by PostgreSQL `pg_trgm` trigram indexing.
 
-1. From the home page, observe the left sidebar showing the page tree.
-2. Expand the `lab/` folder to see nested pages.
-3. Click **Browse** in the navigation to see all pages in a flat or tree view.
+### 2. Verify the pg_trgm Search Engine
 
-**Expected result:** All created pages appear in the navigation hierarchy.
-
-### Step 3.2 — Test Full-Text Search
-
-1. Click the **Search** icon in the top bar (or press `S`).
-2. Type `Cloud Run` — observe instant results appearing.
-3. Try a partial word like `arch` — `pg_trgm` trigram matching finds `architecture`.
-
-**Expected result:** Pages containing the search terms appear with highlighted excerpts.
-
-### Step 3.3 — Verify the Search Engine Configuration
-
-**gcloud (verify pg_trgm extension was installed):**
-```bash
-# Check the Cloud SQL database for the pg_trgm extension
-gcloud sql databases list \
-  --instance=$(gcloud sql instances list \
-    --project="${PROJECT}" \
-    --format="value(name)" --limit=1) \
-  --project="${PROJECT}"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.items[] | {name, state, databaseVersion}'
-```
-
-1. Navigate to **Administration > Search Engine** in the Wiki.js admin panel.
-2. Confirm **Database — PostgreSQL** is selected.
-3. Click **Rebuild Index** to force re-indexing all pages.
-
-**Expected result:** Search engine shows `Database - PostgreSQL` as active, confirming `pg_trgm`
-full-text search is operational.
-
-### Step 3.4 — Browse by Tags
-
-1. Click on one of the tags you added in Exercise 2 (`gcp`, `cloud-run`, etc.).
-2. Observe the tag page showing all pages with that tag.
-
-**Expected result:** Pages tagged with the selected tag appear in a filtered list view.
+1. Navigate to **Administration > Search Engine**.
+2. Confirm **Database — PostgreSQL** is selected as the search engine.
+3. Click **Rebuild Index** to force a re-index of all pages.
 
 ---
 
-## Exercise 4 — User Management and Permissions
+## Phase 6 — Authentication and Access Control [MANUAL]
 
-### Objective
-
-Create user groups with different permission levels, add users, and configure page-level
-access control.
-
-### Step 4.1 — Review Default Groups
-
-1. Navigate to **Administration > Groups**.
-2. Observe the two default groups: **Administrators** and **Guests**.
-3. Click **Administrators** and review the permission rules — note that administrators have
-   full access to all pages.
-
-**Expected result:** Two default groups exist with different permission scopes.
-
-### Step 4.2 — Create an Editors Group
-
-1. Click **New Group** and name it `Editors`.
-2. Under **Page Rules**, add a rule:
-   - Path: `/` (all pages)
-   - Access: Read + Write + Comment
-3. Save the group.
-
-**Expected result:** `Editors` group appears in the list with the configured page rules.
-
-### Step 4.3 — Create a New User
-
-1. Navigate to **Administration > Users**.
-2. Click **New User**.
-3. Enter:
-   - Email: `editor@example.com`
-   - Name: `Lab Editor`
-   - Password: a test password
-4. Assign the user to the **Editors** group.
-5. Save.
-
-**gcloud (verify Secret Manager not involved for local auth — secrets are for DB only):**
-```bash
-gcloud secrets list \
-  --project="${PROJECT}" \
-  --filter="name~wikijs" \
-  --format="table(name, createTime)"
-```
-
-**Expected result:** New user appears in the Users list assigned to the Editors group.
-
-### Step 4.4 — Configure Page Permissions
-
-1. Open the `lab/getting-started` page.
-2. Click **Page Actions** → **Page Permissions**.
-3. Under **Specific Rules**, restrict the page to **Administrators only** for write access.
-4. Save.
-
-**Expected result:** The page now has explicit permission rules restricting write access.
-
-### Step 4.5 — Test Authentication Providers
+### 1. Review Local Authentication
 
 1. Navigate to **Administration > Authentication**.
-2. Review the available providers: Local, SAML 2.0, OAuth 2.0/OIDC, LDAP/AD.
-3. Click **Google** (under OAuth providers) to review the configuration options — note the
-   Client ID and Client Secret fields that would be populated for production SSO.
+2. Click on the **Local** strategy — this is active by default.
+3. Review settings such as self-registration and login via email.
 
-**Expected result:** Authentication strategy list shows multiple provider options including
-enterprise SSO protocols.
+### 2. Explore Additional Auth Providers
+
+Review the available providers listed on the Authentication page:
+- **SAML 2.0** — for enterprise SSO integration
+- **OAuth 2.0 / OpenID Connect** — for Google, GitHub, or custom providers
+- **LDAP / Active Directory** — for corporate directory integration
+
+No activation is required for this lab.
+
+### 3. Manage Groups and Permissions
+
+1. Navigate to **Administration > Groups**.
+2. Observe the default **Administrators** and **Guests** groups.
+3. Click **Administrators** and review the page permission rules.
+4. Click **New Group**, name it `Editors`, assign read+write permissions to `/`, and save.
 
 ---
 
-## Exercise 5 — Assets and Storage
+## Phase 7 — Storage and Assets [MANUAL]
 
-### Objective
-
-Upload images and files via the page editor, verify storage in the GCS bucket via GCS Fuse,
-and inspect the bucket contents.
-
-### Step 5.1 — Upload an Image
+### 1. Upload an Image in the Page Editor
 
 1. Open or create a page in Markdown editor.
-2. Click the **Image** icon in the toolbar.
-3. In the **Assets Manager**, click **Upload** and select a local image file.
-4. Insert the image into the page.
-5. Save the page.
+2. Click the image icon in the toolbar.
+3. Upload a local image file.
 
-**Expected result:** The image appears rendered in the page and is stored in the GCS bucket
-mounted at `/wiki-storage` via GCS Fuse.
+**Expected result:** The image is stored in the GCS bucket mounted at `/wiki-storage` via GCS Fuse.
 
-### Step 5.2 — Verify GCS Fuse Configuration
+### 2. Verify GCS Fuse Configuration
 
-1. Navigate to **Administration > Storage**.
-2. Verify a storage target is active with path `/wiki-storage`.
+Navigate to **Administration > Storage**. Confirm that a storage target using the `/wiki-storage` path is active (this corresponds to the GCS Fuse volume mounting the `wikijs-data-*` bucket).
 
-**gcloud:**
-```bash
-# List GCS buckets for this project (filter by wikijs)
-gcloud storage buckets list \
-  --project="${PROJECT}" \
-  --filter="name~wikijs" \
-  --format="table(name, location, storageClass)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://storage.googleapis.com/storage/v1/b?project=${PROJECT}" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.items[] | select(.name | test("wikijs")) | {name, location, storageClass}'
-```
-
-**Expected result:** A `wikijs-storage` bucket appears in the project.
-
-### Step 5.3 — List Bucket Contents
+### 3. Check the GCS Bucket
 
 ```bash
-# Get the bucket name
-BUCKET=$(gcloud storage buckets list \
-  --project="${PROJECT}" \
-  --filter="name~wikijs" \
-  --format="value(name)" \
-  --limit=1)
-
-# List objects in the bucket
-gcloud storage ls "gs://${BUCKET}/"
+gcloud storage ls gs://<PROJECT_ID>-wikijs-data-<DEPLOYMENT_ID>/
 ```
 
-**Expected result:** Uploaded image files appear as objects within the GCS bucket, confirming
-GCS Fuse is writing assets through to Cloud Storage.
-
-### Step 5.4 — Verify Cloud Run Service Volume Configuration
-
-**gcloud:**
+List all buckets for the project and filter by deployment:
 ```bash
-gcloud run services describe "${SERVICE}" \
-  --project="${PROJECT}" \
-  --region="${REGION}" \
-  --format="yaml(spec.template.spec.volumes)"
+gcloud storage buckets list --project ${PROJECT} --filter="name~wikijs"
 ```
 
-**REST API:**
+**REST API equivalent:**
 ```bash
-curl -s \
-  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.template.volumes'
+curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://storage.googleapis.com/storage/v1/b?project=${PROJECT}"
 ```
 
-**Expected result:** Volume entries appear for the Cloud SQL socket, GCS Fuse (`wikijs-storage`),
-and NFS (`/mnt/nfs`) mounts.
+**Expected result:** Uploaded images appear as objects in the bucket.
 
 ---
 
-## Exercise 6 — Storage and Database
+## Phase 8 — Explore Cloud Logging [MANUAL]
 
-### Objective
+### 1. View Cloud Run Logs
 
-Inspect the Cloud SQL PostgreSQL instance, verify database connectivity, and explore the
-database schema created by Wiki.js.
-
-### Step 6.1 — Inspect the Cloud SQL Instance
-
-**gcloud:**
-```bash
-gcloud sql instances list --project="${PROJECT}" \
-  --format="table(name, state, databaseVersion, region, settings.tier)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.items[] | {name, state, databaseVersion, region}'
-```
-
-**Expected result:** A Cloud SQL PostgreSQL 15 instance appears with status `RUNNABLE`.
-
-### Step 6.2 — List Databases in the Instance
-
-```bash
-SQL_INSTANCE=$(gcloud sql instances list \
-  --project="${PROJECT}" \
-  --format="value(name)" --limit=1)
-
-gcloud sql databases list \
-  --instance="${SQL_INSTANCE}" \
-  --project="${PROJECT}"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances/${SQL_INSTANCE}/databases" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.items[] | {name, charset, collation}'
-```
-
-**Expected result:** The `wikijs` database appears in the list.
-
-### Step 6.3 — Verify Cloud SQL Auth Proxy Sidecar
-
-**gcloud:**
-```bash
-gcloud run services describe "${SERVICE}" \
-  --project="${PROJECT}" \
-  --region="${REGION}" \
-  --format="yaml(spec.template.spec.containers)"
-```
-
-**Expected result:** Container configuration shows the main `wikijs` container and the Cloud
-SQL Auth Proxy configured as a volume-based Unix socket connection at `/cloudsql`.
-
-### Step 6.4 — Check Cloud Run Environment Variables
-
-```bash
-gcloud run services describe "${SERVICE}" \
-  --project="${PROJECT}" \
-  --region="${REGION}" \
-  --format="yaml(spec.template.spec.containers[0].env)"
-```
-
-**Expected result:** Environment variables include `DB_TYPE=postgres`, `DB_PORT=5432`,
-`DB_USER=wikijs`, `DB_NAME=wikijs`, `DB_SSL=false`, and `HA_STORAGE_PATH=/wiki-storage`.
-
----
-
-## Exercise 7 — Cloud Logging
-
-### Objective
-
-Explore Wiki.js application logs via Cloud Logging, including startup messages, database
-connection events, and HTTP request logs.
-
-### Step 7.1 — View Cloud Run Logs via gcloud
-
-**gcloud:**
 ```bash
 gcloud logging read \
-  "resource.type=\"cloud_run_revision\" \
-   AND resource.labels.service_name=\"${SERVICE}\"" \
-  --project="${PROJECT}" \
-  --limit=50 \
-  --format="table(timestamp,severity,textPayload)"
+  'resource.type="cloud_run_revision" AND resource.labels.service_name="'${SERVICE}'"' \
+  --project ${PROJECT} \
+  --limit 50 \
+  --format "table(timestamp, textPayload)"
 ```
 
-**REST API:**
+Or stream logs in real time:
 ```bash
-curl -s -X POST \
-  "https://logging.googleapis.com/v2/entries:list" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"resourceNames\": [\"projects/${PROJECT}\"],
-    \"filter\": \"resource.type=\\\"cloud_run_revision\\\" AND resource.labels.service_name=\\\"${SERVICE}\\\"\",
-    \"orderBy\": \"timestamp desc\",
-    \"pageSize\": 20
-  }" | jq '.entries[] | {timestamp, severity, textPayload}'
+gcloud beta run services logs tail ${SERVICE} \
+  --region ${REGION} \
+  --project ${PROJECT}
 ```
 
-### Step 7.2 — Stream Live Logs
+### 2. View Logs in Cloud Logging Console
 
-```bash
-gcloud beta run services logs tail "${SERVICE}" \
-  --region="${REGION}" \
-  --project="${PROJECT}"
-```
-
-Then in another terminal, make a request to generate log entries:
-```bash
-curl -s "${SERVICE_URL}/healthz"
-```
-
-**Expected result:** Log stream shows the incoming HTTP request and health check response.
-
-### Step 7.3 — Filter for Startup Messages
-
-In the Cloud Console Log Explorer, run:
+Navigate to **Logging > Log Explorer** and run:
 
 ```
 resource.type="cloud_run_revision"
 resource.labels.service_name="${SERVICE}"
-textPayload=~"wiki|database|pg_trgm|started"
 ```
 
-**gcloud:**
-```bash
-gcloud logging read \
-  "resource.type=\"cloud_run_revision\" \
-   AND resource.labels.service_name=\"${SERVICE}\" \
-   AND textPayload=~\"database|pg_trgm|started\"" \
-  --project="${PROJECT}" \
-  --limit=20
-```
-
-**Expected result:** Log entries confirming database connection established and `pg_trgm`
-search engine initialised on startup.
-
-### Step 7.4 — Filter for Error Logs
-
-```bash
-gcloud logging read \
-  "resource.type=\"cloud_run_revision\" \
-   AND resource.labels.service_name=\"${SERVICE}\" \
-   AND severity>=ERROR" \
-  --project="${PROJECT}" \
-  --limit=10
-```
-
-**Expected result:** Under normal operation, no error entries should appear. If errors exist,
-they indicate connectivity or configuration issues to investigate.
-
-### Step 7.5 — View Cloud SQL Auth Proxy Logs
-
-In the Cloud Console Log Explorer:
-
-```
-resource.type="cloud_run_revision"
-resource.labels.service_name="${SERVICE}"
-textPayload=~"cloud-sql-proxy|pq:"
-```
-
-**Expected result:** Log entries showing the Auth Proxy establishing the Cloud SQL connection
-at startup.
+Look for startup messages confirming database connection and `pg_trgm` index initialization.
 
 ---
 
-## Exercise 8 — Cloud Monitoring
+## Phase 9 — Explore Cloud Monitoring [MANUAL]
 
-### Objective
+### 1. View Cloud Run Metrics
 
-Explore Cloud Monitoring metrics for the Cloud Run service, inspect the uptime check, and
-review alert policies created by the module.
+In the Cloud Console, navigate to **Monitoring > Dashboards** and open the **Cloud Run** dashboard. Observe request count, latency, and instance count metrics.
 
-### Step 8.1 — View Cloud Run Request Metrics
+### 2. Check the Uptime Check
 
-Navigate to the Cloud Console and open:
+1. Navigate to **Monitoring > Uptime checks**.
+2. Find the uptime check created for this deployment.
+3. Verify that the check is passing (green) from multiple global locations.
+
+**gcloud equivalent:**
 ```bash
-echo "https://console.cloud.google.com/monitoring/metrics-explorer?project=${PROJECT}"
+gcloud monitoring uptime list-configs --project ${PROJECT}
 ```
 
-Query request count by response code class:
+### 3. View Alert Policies
 
-**REST API (MQL):**
-```bash
-curl -s -X POST \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/timeSeries:query" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"query\": \"fetch cloud_run_revision | metric 'run.googleapis.com/request_count' | filter resource.service_name = '${SERVICE}' | group_by [metric.response_code_class], sum(val()) | within 1h\"
-  }" | jq '.timeSeriesData[] | {labels: .labelValues, count: .pointData[-1].values[0].int64Value}'
-```
-
-### Step 8.2 — Check the Uptime Check
-
-**gcloud:**
-```bash
-gcloud monitoring uptime list-configs \
-  --project="${PROJECT}" \
-  --format="table(displayName, httpCheck.path, period, selectedRegions)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/uptimeCheckConfigs" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.uptimeCheckConfigs[] | {displayName, period, httpCheck}'
-```
-
-**Expected result:** An uptime check for the Wiki.js service appears, probing the service URL
-from multiple global locations every 60 seconds.
-
-### Step 8.3 — View Alert Policies
-
-**gcloud:**
-```bash
-gcloud alpha monitoring policies list \
-  --project="${PROJECT}" \
-  --format="table(displayName, conditions[0].displayName, enabled)"
-```
-
-**REST API:**
-```bash
-curl -s \
-  "https://monitoring.googleapis.com/v3/projects/${PROJECT}/alertPolicies" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  | jq '.alertPolicies[] | {displayName, enabled: .enabled}'
-```
-
-**Expected result:** Alert policies for CPU utilisation and memory appear, configured to notify
-the `support_users` email addresses.
-
-### Step 8.4 — Monitor Instance Count
-
-In the Cloud Console Metrics Explorer, plot:
-- Metric: `run.googleapis.com/container/instance_count`
-- Filter: `service_name = ${SERVICE}`
-
-Generate load to observe scale-up:
-```bash
-for i in {1..20}; do
-  curl -s "${SERVICE_URL}/healthz" &
-done
-wait
-```
-
-**Expected result:** Instance count rises from 0 (cold start) to 1 as requests arrive, then
-scales back to zero after the idle period.
+Navigate to **Monitoring > Alerting** to review any alert policies created by the module.
 
 ---
 
-## Cleanup
+## Phase 10 — Undeploy [AUTOMATED]
 
-Return to the RAD UI and click **Undeploy** on the `Wikijs_CloudRun` deployment. This removes
-the Cloud Run service, Cloud SQL database and user, GCS bucket, NFS Filestore, Secret Manager
-secrets, and monitoring resources.
+When you are finished, return to the RAD UI, navigate to your deployment, and click **Undeploy** (or **Delete**) to remove all resources provisioned by this module.
 
-> **Warning:** Undeploy deletes the Cloud SQL database, GCS bucket contents, and NFS data.
-> Back up any important data before proceeding.
+> **Warning:** This deletes the Cloud SQL database, GCS bucket contents, and NFS data. Ensure backups are taken before undeploying if data needs to be preserved.
 
-### Manual Cleanup (if needed)
-
-**gcloud:**
-```bash
-# Delete the Cloud Run service
-gcloud run services delete "${SERVICE}" \
-  --region="${REGION}" \
-  --project="${PROJECT}" --quiet
-
-# Delete secrets
-gcloud secrets delete "${DB_SECRET}" \
-  --project="${PROJECT}" --quiet
-
-# List and delete GCS bucket
-BUCKET=$(gcloud storage buckets list \
-  --project="${PROJECT}" \
-  --filter="name~wikijs" \
-  --format="value(name)" --limit=1)
-gcloud storage rm -r "gs://${BUCKET}" --quiet
-```
-
-**REST API — delete Cloud Run service:**
-```bash
-curl -s -X DELETE \
-  "https://run.googleapis.com/v2/projects/${PROJECT}/locations/${REGION}/services/${SERVICE}" \
-  -H "Authorization: Bearer ${TOKEN}"
-```
+Resources provisioned by the `Services_GCP` module (VPC, Cloud SQL instance, GKE cluster) are managed separately and must be undeployed via their own RAD UI deployment entry.
 
 ---
 
-## Reference
+## Summary
 
-### Key Module Variables
-
-| Variable | Type | Default | Description |
-|---|---|---|---|
-| `project_id` | string | — | GCP project ID (required) |
-| `region` | string | `us-central1` | GCP region for all resources |
-| `application_name` | string | `wikijs` | Base name for Cloud Run service and secrets |
-| `application_version` | string | `2.5.311` | Wiki.js image tag |
-| `min_instance_count` | number | `0` | Scale-to-zero (set to `1` to eliminate cold starts) |
-| `max_instance_count` | number | `1` | Maximum instances (cost ceiling) |
-| `cpu_limit` | string | `1000m` | CPU per instance (increase for heavy editing) |
-| `memory_limit` | string | `2Gi` | Memory per instance (required for Chromium) |
-| `db_name` | string | `wikijs` | PostgreSQL database name |
-| `db_user` | string | `wikijs` | PostgreSQL user name |
-| `enable_nfs` | bool | `true` | Mount Cloud Filestore at `/mnt/nfs` |
-| `enable_redis` | bool | `false` | Enable Redis session cache |
-| `redis_host` | string | `""` | Redis hostname (required when `enable_redis=true`) |
-| `enable_cloudsql_volume` | bool | `true` | Cloud SQL Auth Proxy sidecar |
-| `ingress_settings` | string | `all` | `all`, `internal`, or `internal-and-cloud-load-balancing` |
-| `vpc_egress_setting` | string | `PRIVATE_RANGES_ONLY` | VPC egress routing |
-| `tenant_deployment_id` | string | `demo` | Tenant identifier appended to resource names |
-| `support_users` | list | `[]` | Email addresses for monitoring alerts |
-| `enable_iap` | bool | `false` | Identity-Aware Proxy authentication |
-| `enable_cloud_armor` | bool | `false` | Cloud Armor WAF |
-
-### Useful Commands
-
-```bash
-# Get Wiki.js service URL
-gcloud run services describe ${SERVICE} \
-  --region=${REGION} --project=${PROJECT} \
-  --format="value(status.url)"
-
-# Check service health
-curl -s -o /dev/null -w "%{http_code}" "${SERVICE_URL}/healthz"
-
-# View latest logs
-gcloud logging read \
-  "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${SERVICE}\"" \
-  --project=${PROJECT} --limit=20
-
-# List revisions
-gcloud run revisions list \
-  --service=${SERVICE} --region=${REGION} --project=${PROJECT}
-
-# Access DB password secret
-gcloud secrets versions access latest \
-  --secret="${DB_SECRET}" --project=${PROJECT}
-
-# List uptime checks
-gcloud monitoring uptime list-configs --project=${PROJECT}
-
-# List GCS buckets
-gcloud storage buckets list --project=${PROJECT} --filter="name~wikijs"
-```
-
-### Further Reading
-
-- [Wiki.js documentation](https://docs.requarks.io/)
-- [Wiki.js GitHub repository](https://github.com/requarks/wiki)
-- [Cloud Run Gen2 documentation](https://cloud.google.com/run/docs/about-execution-environments)
-- [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/sql-proxy)
-- [GCS Fuse for Cloud Run](https://cloud.google.com/run/docs/tutorials/network-filesystems-fuse)
-- [Secret Manager for Cloud Run](https://cloud.google.com/run/docs/configuring/secrets)
-- [Cloud Monitoring for Cloud Run](https://cloud.google.com/run/docs/monitoring)
+| Phase | Type | What You Did |
+|---|---|---|
+| Phase 1 — Deploy | Automated | Provisioned Cloud Run service, Cloud SQL (PostgreSQL 15 + pg_trgm), GCS Fuse, NFS, secrets |
+| Phase 2 — Service URL | Manual | Retrieved Cloud Run service URL, verified health endpoint |
+| Phase 3 — Setup | Manual | Completed Wiki.js first-run wizard, retrieved admin credentials from Secret Manager |
+| Phase 4 — Content | Manual | Created pages with Markdown, nested page tree, tags |
+| Phase 5 — Search | Manual | Tested pg_trgm full-text search, verified search engine config |
+| Phase 6 — Auth | Manual | Reviewed local auth, explored SAML/OAuth/LDAP providers, managed groups |
+| Phase 7 — Storage | Manual | Uploaded assets, verified GCS Fuse mount and bucket contents |
+| Phase 8 — Logging | Manual | Explored Wiki.js logs via Cloud Logging and gcloud |
+| Phase 9 — Monitoring | Manual | Reviewed uptime check, Cloud Run metrics, alert policies |
+| Phase 10 — Undeploy | Automated | Tore down all module-managed infrastructure |

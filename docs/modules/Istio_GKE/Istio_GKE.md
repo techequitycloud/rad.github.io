@@ -1,20 +1,13 @@
 ---
-title: "Istio GKE Module Documentation"
-sidebar_label: "Istio GKE"
+title: "Istio_GKE Module Documentation"
+sidebar_label: "Istio_GKE"
 ---
 
-# Istio GKE Module
-
-<YouTubeEmbed videoId="xBcB4IG23uY" poster="https://storage.googleapis.com/rad-public-2b65/modules/Istio_GKE.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/Istio_GKE.pdf" target="_blank">View Presentation (PDF)</a>
-
+# Istio_GKE Module
 
 ## Overview
 
-The Istio GKE module provisions a complete Google Kubernetes Engine (GKE) Standard cluster and installs the **open-source Istio service mesh** onto it. Unlike Google Cloud Service Mesh (which is Google's managed, commercially supported Istio distribution), this module works directly with upstream Istio — the same project maintained by the Cloud Native Computing Foundation (CNCF) — giving platform engineers hands-on experience with the technology in its original, unmodified form.
+The Istio_GKE module provisions a complete Google Kubernetes Engine (GKE) Standard cluster and installs the **open-source Istio service mesh** onto it. Unlike Google Cloud Service Mesh (which is Google's managed, commercially supported Istio distribution), this module works directly with upstream Istio — the same project maintained by the Cloud Native Computing Foundation (CNCF) — giving platform engineers hands-on experience with the technology in its original, unmodified form.
 
 This module is designed as a deep learning environment for platform engineers who want to understand how Istio works from the ground up: how the control plane manages the data plane, how proxies intercept and observe traffic, and how the two fundamentally different data plane architectures — **sidecar mode** and **ambient mode** — approach the same problems with different trade-offs.
 
@@ -60,38 +53,38 @@ The module deploys approximately **10–12 minutes** to a single GCP project and
 │                                                                            │
 │   ┌──────────────────────────────────────────────────────────────────┐     │
 │   │  VPC Network                                                     │     │
-│   │  ┌──────────────────────────────────────────────────────────┐   │      │
-│   │  │  Subnet (10.132.0.0/16)                                  │   │      │
-│   │  │  Pod secondary range:     10.62.128.0/17                 │   │      │
-│   │  │  Service secondary range: 10.64.128.0/20                 │   │      │
-│   │  │                                                          │   │      │
-│   │  │  ┌──────────────────────────────────────────────────┐   │   │       │
-│   │  │  │  GKE Standard Cluster                            │   │   │       │
-│   │  │  │  • VPC-native networking                         │   │   │       │
-│   │  │  │  • Workload Identity                             │   │   │       │
-│   │  │  │  • Security Posture                              │   │   │       │
-│   │  │  │  • Managed Prometheus                            │   │   │       │
-│   │  │  │  • Gateway API                                   │   │   │       │
-│   │  │  │                                                  │   │   │       │
-│   │  │  │  Node Pool (2 × e2-standard-2, preemptible)      │   │   │       │
-│   │  │  │                                                  │   │   │       │
-│   │  │  │  Istio Control Plane (istio-system)              │   │   │       │
-│   │  │  │  • istiod (service discovery + config + CA)      │   │   │       │
-│   │  │  │  • Ingress Gateway (LoadBalancer)                │   │   │       │
-│   │  │  │                                                  │   │   │       │
-│   │  │  │  SIDECAR MODE              AMBIENT MODE          │   │   │       │
-│   │  │  │  ┌──────────────┐          ┌──────────────────┐  │   │   │       │
-│   │  │  │  │ App Pod      │          │ ztunnel (per node│  │   │   │       │
-│   │  │  │  │ ┌──────────┐ │          │ L4 mTLS + policy)│  │   │   │       │
-│   │  │  │  │ │ App      │ │          └────────┬─────────┘  │   │   │       │
-│   │  │  │  │ │ Envoy    │ │                   │            │   │   │       │
-│   │  │  │  │ │ sidecar  │ │          ┌────────▼─────────┐  │   │   │       │
-│   │  │  │  │ └──────────┘ │          │ Waypoint Proxy   │  │   │   │       │
-│   │  │  │  └──────────────┘          │ (optional, L7)   │  │   │   │       │
-│   │  │  │                            └──────────────────┘  │   │   │       │
-│   │  │  │  Observability: Prometheus · Jaeger · Grafana · Kiali   │   │    │
-│   │  │  └──────────────────────────────────────────────────┘   │   │       │
-│   │  └──────────────────────────────────────────────────────────┘   │      │
+│   │  ┌──────────────────────────────────────────────────────────┐   │     │
+│   │  │  Subnet (10.132.0.0/16)                                  │   │     │
+│   │  │  Pod secondary range:     10.62.128.0/17                 │   │     │
+│   │  │  Service secondary range: 10.64.128.0/20                 │   │     │
+│   │  │                                                          │   │     │
+│   │  │  ┌──────────────────────────────────────────────────┐   │   │     │
+│   │  │  │  GKE Standard Cluster                            │   │   │     │
+│   │  │  │  • VPC-native networking                         │   │   │     │
+│   │  │  │  • Workload Identity                             │   │   │     │
+│   │  │  │  • Security Posture                              │   │   │     │
+│   │  │  │  • Managed Prometheus                            │   │   │     │
+│   │  │  │  • Gateway API                                   │   │   │     │
+│   │  │  │                                                  │   │   │     │
+│   │  │  │  Node Pool (2 × e2-standard-2, preemptible)      │   │   │     │
+│   │  │  │                                                  │   │   │     │
+│   │  │  │  Istio Control Plane (istio-system)              │   │   │     │
+│   │  │  │  • istiod (service discovery + config + CA)      │   │   │     │
+│   │  │  │  • Ingress Gateway (LoadBalancer)                │   │   │     │
+│   │  │  │                                                  │   │   │     │
+│   │  │  │  SIDECAR MODE              AMBIENT MODE          │   │   │     │
+│   │  │  │  ┌──────────────┐          ┌──────────────────┐  │   │   │     │
+│   │  │  │  │ App Pod      │          │ ztunnel (per node│  │   │   │     │
+│   │  │  │  │ ┌──────────┐ │          │ L4 mTLS + policy)│  │   │   │     │
+│   │  │  │  │ │ App      │ │          └────────┬─────────┘  │   │   │     │
+│   │  │  │  │ │ Envoy    │ │                   │            │   │   │     │
+│   │  │  │  │ │ sidecar  │ │          ┌────────▼─────────┐  │   │   │     │
+│   │  │  │  │ └──────────┘ │          │ Waypoint Proxy   │  │   │   │     │
+│   │  │  │  └──────────────┘          │ (optional, L7)   │  │   │   │     │
+│   │  │  │                            └──────────────────┘  │   │   │     │
+│   │  │  │  Observability: Prometheus · Jaeger · Grafana · Kiali   │   │     │
+│   │  │  └──────────────────────────────────────────────────┘   │   │     │
+│   │  └──────────────────────────────────────────────────────────┘   │     │
 │   │  Cloud Router + Cloud NAT (outbound egress)                      │     │
 │   └──────────────────────────────────────────────────────────────────┘     │
 └────────────────────────────────────────────────────────────────────────────┘
@@ -315,7 +308,7 @@ kubectl get pods -n gmp-system
 
 # Query a Kubernetes metric via Cloud Monitoring PromQL
 # (run in Cloud Console: Monitoring → Metrics Explorer → PromQL)
-# kubernetes io:container_memory_used_bytes{cluster="gke-cluster"}
+# kubernetes_io:container_memory_used_bytes{cluster="gke-cluster"}
 ```
 
 ### Gateway API
@@ -1082,7 +1075,7 @@ kubectl port-forward -n istio-system svc/prometheus 9090:9090
 # rate(istio_requests_total{destination_service_name="my-service"}[5m])
 
 # Query P99 latency for a service
-# histogram quantile(0.99, rate(istio_request_duration_milliseconds_bucket{destination_service_name="my-service"}[5m]))
+# histogram_quantile(0.99, rate(istio_request_duration_milliseconds_bucket{destination_service_name="my-service"}[5m]))
 ```
 
 **Explore in the Cloud Console:** Navigate to **Monitoring → Metrics Explorer**. In the metric picker, search for `istio` to see all Istio metrics forwarded by Google Cloud Managed Service for Prometheus (if GMP integration is enabled). Set the aggregation to `sum by (destination_service_name)` to see per-service request rates.
@@ -1177,7 +1170,7 @@ kubectl patch configmap istio -n istio-system --type=merge \
 
 ## Configuration Reference
 
-The following table covers the key configuration parameters that affect the behaviour of the Istio GKE module. These are the settings available when using the module.
+The following table covers the key configuration parameters that affect the behaviour of the Istio_GKE module. These are the settings available when using the module.
 
 ### GKE Cluster Settings
 
@@ -1246,7 +1239,7 @@ Understanding the module's default configuration helps avoid surprises when expl
 
 ## Prerequisites
 
-Before deploying the Istio GKE module, verify the following:
+Before deploying the Istio_GKE module, verify the following:
 
 ### Google Cloud
 
@@ -1412,3 +1405,47 @@ gcloud container clusters list
 - **Envoy proxy documentation:** https://www.envoyproxy.io/docs/envoy/latest/
 - **Kubernetes Gateway API:** https://gateway-api.sigs.k8s.io/
 - **CNCF Service Mesh Landscape:** https://landscape.cncf.io/card-mode?category=service-mesh
+
+---
+
+## Common Issues and Variable Dependencies
+
+### Variables That Depend on Each Other
+
+**`install_ambient_mesh` selects between two mutually exclusive Istio installations**: When `install_ambient_mesh = false` (default), `null_resource.install_sidecar_mesh` runs — it installs Istio with the default profile and enables sidecar injection in the `default` namespace. When `install_ambient_mesh = true`, `null_resource.install_ambient_mesh` runs instead — it installs Istio with the `--set profile=ambient` flag, labels the `default` namespace with `istio.io/dataplane-mode=ambient`, and applies a Waypoint proxy. Exactly one of the two null resources is created; setting both would require changing the `count` expressions.
+
+**`create_cluster = false` requires a pre-existing cluster named `gke_cluster` in `region`**: When `create_cluster = false`, the module uses `data.google_container_cluster.existing_cluster`. If the cluster does not exist, the data source fails. No service account, node pool, or IAM resources are created when reusing an existing cluster.
+
+**`deploy_application` deploys the Istio Bookinfo app using `istioctl` and `kubectl`**: The application deployment (`null_resource` in `outputs.tf`) is not shown explicitly — the lab guide covers this manually. The Bookinfo manifests are part of the downloaded Istio release bundle at `$HOME/istio-<version>/samples/bookinfo/platform/kube/`.
+
+**`create_network = false` requires `network_name` and `subnet_name` to identify an existing network**: The subnet must have secondary IP ranges with names matching `pod_ip_range` and `service_ip_range`. The cluster requires these range names in its `ip_allocation_policy`.
+
+**`enable_services` must be `true` for a fresh project**: The module only enables two APIs: `cloudapis.googleapis.com` and `container.googleapis.com`. If these are not enabled, the `google_container_cluster` resource will fail. The `null_resource.wait_for_container_api` polls until `container.googleapis.com` is confirmed active.
+
+### Variables That Affect Other Variables' Behavior
+
+**`istio_version` determines the download URL, Helm chart, and observability addon URLs**: The sidecar and ambient install scripts download the Istio release from GitHub using `var.istio_version` as the version tag. The observability addons (Prometheus, Grafana, Jaeger, Kiali) are installed from `raw.githubusercontent.com/istio/istio/release-<major.minor>/samples/addons/`. Specifying an invalid version will cause the download to fail.
+
+**`istio_version` regex is evaluated at plan time**: The expression `regex("^(\\d+\\.\\d+)", var.istio_version)[0]` extracts the `major.minor` portion. If the version string does not start with digits and a dot (e.g., if a prerelease tag like `1.24.2-rc1` is used), the regex will still match the leading `1.24` portion correctly. However, the release branch URL (`release-1.24`) must exist on GitHub.
+
+**GKE cluster uses `LEGACY_DATAPATH`**: The cluster is created with `datapath_provider = "LEGACY_DATAPATH"` (kube-proxy mode, not eBPF/Dataplane V2). This is required for open-source Istio compatibility — Dataplane V2 (eBPF) conflicts with Istio's packet-interception model. Do not change this setting.
+
+**GKE cluster uses `allow_net_admin = true`**: This grants the `NET_ADMIN` Linux capability to pods, which Istio's `istio-init` init container requires to configure iptables rules for traffic interception (sidecar mode). In ambient mode, ztunnel handles interception at the node level, but `allow_net_admin` is still set globally.
+
+**`resource_creator_identity` is used in `gcloud container clusters get-credentials` calls**: Both the sidecar and ambient install scripts optionally pass `--impersonate-service-account=<identity>` to `gcloud`. If the runner is authenticated as a user (not a service account), this impersonation may succeed only if the user has `iam.serviceAccounts.actAs` on the target service account.
+
+### Common Pitfalls
+
+1. **Istio download must succeed before installation**: The install scripts use `curl -fL ... | tar xz`. If the GitHub release URL is unavailable or the version does not exist, the command fails and the Terraform apply aborts. The `set -eo pipefail` in the script ensures failures propagate. Verify the version exists at `https://github.com/istio/istio/releases` before applying.
+
+2. **Node pool uses preemptible nodes**: The Standard cluster node pool uses `preemptible = true`. Preemptible nodes can be reclaimed by GCP with 30 seconds notice. If a node is preempted during Istio installation, the install script may fail waiting for nodes to be ready. The `--timeout=300s` on `kubectl wait` provides a buffer.
+
+3. **`istioctl verify-install` may report warnings**: The script runs `istioctl verify-install || echo "Warning..."` — failures are non-fatal. Common warnings include missing CRDs for Istio components not deployed in the profile. These are normal and do not indicate a broken installation.
+
+4. **Observability addon installation may fail silently**: The addon install loop (`for addon in prometheus jaeger grafana kiali`) uses `|| echo "Warning: Failed..."` — individual addon failures do not abort the script. Check `kubectl get pods -n istio-system` after installation to verify which addons are running.
+
+5. **Sidecar mode labels the `default` namespace only**: The `install_sidecar_mesh` script labels `default` with `istio-injection=enabled`. Other namespaces created after installation will not have sidecar injection unless explicitly labeled.
+
+6. **Ambient mode applies a Waypoint proxy to the `default` namespace**: The `istioctl waypoint apply --namespace default` command deploys a Waypoint Deployment. This Waypoint handles L7 traffic policies for the namespace. Without the Waypoint, AuthorizationPolicy and other L7 resources have no effect in ambient mode.
+
+7. **Destroy provisioners are graceful (`set +e`)**: Both the sidecar and ambient destroy provisioners use `set +e` to prevent individual cleanup step failures from aborting the destroy. This means a failed Istio uninstall during destroy will log a warning but not block GKE cluster deletion.
