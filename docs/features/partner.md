@@ -3,7 +3,6 @@ title: Partner Features
 slug: /features/partners
 ---
 
-[Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/partner_features.pdf)
 
 ## 1. Introduction
 

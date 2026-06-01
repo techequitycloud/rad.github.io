@@ -3,7 +3,6 @@ title: Finance Features
 slug: /features/finance
 ---
 
-[Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/finance_features.pdf)
 
 ## 1. Introduction
 

@@ -3,7 +3,6 @@ title: Agent Features
 slug: /features/agents
 ---
 
-[Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/agent_features.pdf)
 
 ## 1. Introduction
 

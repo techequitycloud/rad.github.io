@@ -3,7 +3,6 @@ title: Admin Features
 slug: /features/admins
 ---
 
-[Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/admin_features.pdf)
 
 ## 1. Introduction
 
