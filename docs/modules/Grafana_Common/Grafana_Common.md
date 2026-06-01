@@ -38,11 +38,23 @@ sidebar_label: "Grafana Common"
 
 Both the startup and liveness probes target `/api/health` — Grafana's dedicated health endpoint. The startup probe uses a generous initial delay and failure threshold to accommodate database migrations on first boot:
 
-| Probe | Path | Initial Delay | Period | Failure Threshold |
-|---|---|---|---|---|
-| Startup | `/api/health` | 30s | 10s | 12 (total tolerance: ~150s) |
-| Liveness | `/api/health` | 60s | 30s | 3 |
-| Readiness | `/api/health` | 15s | 10s | 3 |
+<table>
+<colgroup>
+  <col style={{width: '16%'}} />
+  <col style={{width: '18%'}} />
+  <col style={{width: '20%'}} />
+  <col style={{width: '16%'}} />
+  <col style={{width: '30%'}} />
+</colgroup>
+<thead>
+<tr><th>Probe</th><th>Path</th><th>Initial Delay</th><th>Period</th><th>Failure Threshold</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Startup</strong></td><td><code>/api/health</code></td><td>30s</td><td>10s</td><td>12 (total tolerance: ~150s)</td></tr>
+<tr><td><strong>Liveness</strong></td><td><code>/api/health</code></td><td>60s</td><td>30s</td><td>3</td></tr>
+<tr><td><strong>Readiness</strong></td><td><code>/api/health</code></td><td>15s</td><td>10s</td><td>3</td></tr>
+</tbody>
+</table>
 
 ---
 

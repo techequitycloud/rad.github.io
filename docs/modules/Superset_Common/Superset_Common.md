@@ -119,10 +119,23 @@ Layer 2: Platform Modules
 
 ## 4. Health Probes
 
-| Probe | Path | Initial Delay | Timeout | Period | Failure Threshold |
-|---|---|---|---|---|---|
-| **Startup** | `/health` | 60s | 5s | 10s | 12 |
-| **Liveness** | `/health` | 30s | 5s | 30s | 3 |
+<table>
+<colgroup>
+  <col style={{width: '14%'}} />
+  <col style={{width: '14%'}} />
+  <col style={{width: '17%'}} />
+  <col style={{width: '14%'}} />
+  <col style={{width: '14%'}} />
+  <col style={{width: '27%'}} />
+</colgroup>
+<thead>
+<tr><th>Probe</th><th>Path</th><th>Initial Delay</th><th>Timeout</th><th>Period</th><th>Failure Threshold</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Startup</strong></td><td><code>/health</code></td><td>60s</td><td>5s</td><td>10s</td><td>12</td></tr>
+<tr><td><strong>Liveness</strong></td><td><code>/health</code></td><td>30s</td><td>5s</td><td>30s</td><td>3</td></tr>
+</tbody>
+</table>
 
 The 60-second initial delay and 12-failure threshold give Superset up to 180 seconds of total startup tolerance. Gunicorn worker pool initialisation with psycopg2 connection pooling can be slow on first boot.
 

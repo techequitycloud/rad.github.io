@@ -451,9 +451,7 @@ const sidebars: SidebarsConfig = {
               label: 'Activepieces',
               items: [
                 { type: 'doc', id: 'labs/Activepieces_CloudRun/Activepieces_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Activepieces_CloudRun_Lab/Activepieces_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Activepieces_GKE/Activepieces_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Activepieces_GKE_Lab/Activepieces_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             { type: 'doc', id: 'labs/AKS_GKE/AKS_GKE', label: 'AKS (Azure)' },
@@ -462,9 +460,7 @@ const sidebars: SidebarsConfig = {
               label: 'AnythingLLM',
               items: [
                 { type: 'doc', id: 'labs/AnythingLLM_CloudRun/AnythingLLM_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/AnythingLLM_CloudRun_Lab/AnythingLLM_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/AnythingLLM_GKE/AnythingLLM_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/AnythingLLM_GKE_Lab/AnythingLLM_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -472,9 +468,7 @@ const sidebars: SidebarsConfig = {
               label: 'Application',
               items: [
                 { type: 'doc', id: 'labs/App_CloudRun/App_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/App_CloudRun_Lab/App_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/App_GKE/App_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/App_GKE_Lab/App_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -482,9 +476,7 @@ const sidebars: SidebarsConfig = {
               label: 'Chroma',
               items: [
                 { type: 'doc', id: 'labs/Chroma_CloudRun/Chroma_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Chroma_CloudRun_Lab/Chroma_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Chroma_GKE/Chroma_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Chroma_GKE_Lab/Chroma_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             { type: 'doc', id: 'labs/Bank_GKE/Bank_GKE', label: 'Cloud Service Mesh' },
@@ -494,9 +486,7 @@ const sidebars: SidebarsConfig = {
               label: 'Crawl4AI',
               items: [
                 { type: 'doc', id: 'labs/Crawl4AI_CloudRun/Crawl4AI_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Crawl4AI_CloudRun_Lab/Crawl4AI_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Crawl4AI_GKE/Crawl4AI_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Crawl4AI_GKE_Lab/Crawl4AI_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -504,9 +494,7 @@ const sidebars: SidebarsConfig = {
               label: 'Cyclos',
               items: [
                 { type: 'doc', id: 'labs/Cyclos_CloudRun/Cyclos_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Cyclos_CloudRun_Lab/Cyclos_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Cyclos_GKE/Cyclos_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Cyclos_GKE_Lab/Cyclos_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -514,9 +502,7 @@ const sidebars: SidebarsConfig = {
               label: 'Dify',
               items: [
                 { type: 'doc', id: 'labs/Dify_CloudRun/Dify_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Dify_CloudRun_Lab/Dify_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Dify_GKE/Dify_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Dify_GKE_Lab/Dify_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -524,9 +510,7 @@ const sidebars: SidebarsConfig = {
               label: 'Directus',
               items: [
                 { type: 'doc', id: 'labs/Directus_CloudRun/Directus_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Directus_CloudRun_Lab/Directus_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Directus_GKE/Directus_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Directus_GKE_Lab/Directus_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -534,22 +518,17 @@ const sidebars: SidebarsConfig = {
               label: 'Django',
               items: [
                 { type: 'doc', id: 'labs/Django_CloudRun/Django_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Django_CloudRun_Lab/Django_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Django_GKE/Django_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Django_GKE_Lab/Django_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             { type: 'doc', id: 'labs/EKS_GKE/EKS_GKE', label: 'EKS (AWS)' },
             { type: 'doc', id: 'labs/Elasticsearch_GKE/Elasticsearch_GKE', label: 'Elasticsearch' },
-            { type: 'doc', id: 'labs/Elasticsearch_GKE_Lab/Elasticsearch_GKE_Lab', label: 'Elasticsearch' },
             {
               type: 'category',
               label: 'Flowise',
               items: [
                 { type: 'doc', id: 'labs/Flowise_CloudRun/Flowise_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Flowise_CloudRun_Lab/Flowise_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Flowise_GKE/Flowise_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Flowise_GKE_Lab/Flowise_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             { type: 'doc', id: 'labs/Services_GCP/Services_GCP', label: 'GCP Services' },
@@ -558,9 +537,7 @@ const sidebars: SidebarsConfig = {
               label: 'Ghost',
               items: [
                 { type: 'doc', id: 'labs/Ghost_CloudRun/Ghost_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Ghost_CloudRun_Lab/Ghost_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Ghost_GKE/Ghost_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Ghost_GKE_Lab/Ghost_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             { type: 'doc', id: 'labs/MC_Bank_GKE/MC_Bank_GKE', label: 'GKE Multi-Cluster' },
@@ -569,21 +546,16 @@ const sidebars: SidebarsConfig = {
               label: 'Grafana',
               items: [
                 { type: 'doc', id: 'labs/Grafana_CloudRun/Grafana_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Grafana_CloudRun_Lab/Grafana_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Grafana_GKE/Grafana_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Grafana_GKE_Lab/Grafana_GKE_Lab', label: 'GKE Lab' },
               ],
             },
-            { type: 'doc', id: 'labs/Istio_GKE_Lab/Istio_GKE_Lab', label: 'Istio' },
             { type: 'doc', id: 'labs/Istio_GKE/Istio_GKE', label: 'Istio Service Mesh' },
             {
               type: 'category',
               label: 'Kestra',
               items: [
                 { type: 'doc', id: 'labs/Kestra_CloudRun/Kestra_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Kestra_CloudRun_Lab/Kestra_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Kestra_GKE/Kestra_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Kestra_GKE_Lab/Kestra_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -591,9 +563,7 @@ const sidebars: SidebarsConfig = {
               label: 'LibreChat',
               items: [
                 { type: 'doc', id: 'labs/LibreChat_CloudRun/LibreChat_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/LibreChat_CloudRun_Lab/LibreChat_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/LibreChat_GKE/LibreChat_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/LibreChat_GKE_Lab/LibreChat_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -601,9 +571,7 @@ const sidebars: SidebarsConfig = {
               label: 'LiteLLM',
               items: [
                 { type: 'doc', id: 'labs/LiteLLM_CloudRun/LiteLLM_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/LiteLLM_CloudRun_Lab/LiteLLM_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/LiteLLM_GKE/LiteLLM_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/LiteLLM_GKE_Lab/LiteLLM_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -611,22 +579,17 @@ const sidebars: SidebarsConfig = {
               label: 'Metabase',
               items: [
                 { type: 'doc', id: 'labs/Metabase_CloudRun/Metabase_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Metabase_CloudRun_Lab/Metabase_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Metabase_GKE/Metabase_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Metabase_GKE_Lab/Metabase_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             { type: 'doc', id: 'labs/Migration_Center/Migration_Center', label: 'Migration Center' },
             { type: 'doc', id: 'labs/MongoDB_GKE/MongoDB_GKE', label: 'MongoDB' },
-            { type: 'doc', id: 'labs/MongoDB_GKE_Lab/MongoDB_GKE_Lab', label: 'MongoDB' },
             {
               type: 'category',
               label: 'Moodle',
               items: [
                 { type: 'doc', id: 'labs/Moodle_CloudRun/Moodle_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Moodle_CloudRun_Lab/Moodle_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Moodle_GKE/Moodle_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Moodle_GKE_Lab/Moodle_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -634,9 +597,7 @@ const sidebars: SidebarsConfig = {
               label: 'N8N',
               items: [
                 { type: 'doc', id: 'labs/N8N_CloudRun/N8N_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/N8N_CloudRun_Lab/N8N_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/N8N_GKE/N8N_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/N8N_GKE_Lab/N8N_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -644,9 +605,7 @@ const sidebars: SidebarsConfig = {
               label: 'N8N AI',
               items: [
                 { type: 'doc', id: 'labs/N8N_AI_CloudRun/N8N_AI_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/N8N_AI_CloudRun_Lab/N8N_AI_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/N8N_AI_GKE/N8N_AI_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/N8N_AI_GKE_Lab/N8N_AI_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -654,9 +613,7 @@ const sidebars: SidebarsConfig = {
               label: 'NocoDB',
               items: [
                 { type: 'doc', id: 'labs/NocoDB_CloudRun/NocoDB_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/NocoDB_CloudRun_Lab/NocoDB_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/NocoDB_GKE/NocoDB_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/NocoDB_GKE_Lab/NocoDB_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -664,9 +621,7 @@ const sidebars: SidebarsConfig = {
               label: 'Node-RED',
               items: [
                 { type: 'doc', id: 'labs/NodeRED_CloudRun/NodeRED_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/NodeRED_CloudRun_Lab/NodeRED_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/NodeRED_GKE/NodeRED_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/NodeRED_GKE_Lab/NodeRED_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -674,9 +629,7 @@ const sidebars: SidebarsConfig = {
               label: 'Odoo',
               items: [
                 { type: 'doc', id: 'labs/Odoo_CloudRun/Odoo_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Odoo_CloudRun_Lab/Odoo_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Odoo_GKE/Odoo_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Odoo_GKE_Lab/Odoo_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -684,9 +637,7 @@ const sidebars: SidebarsConfig = {
               label: 'Ollama',
               items: [
                 { type: 'doc', id: 'labs/Ollama_CloudRun/Ollama_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Ollama_CloudRun_Lab/Ollama_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Ollama_GKE/Ollama_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Ollama_GKE_Lab/Ollama_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -694,9 +645,7 @@ const sidebars: SidebarsConfig = {
               label: 'OpenClaw',
               items: [
                 { type: 'doc', id: 'labs/OpenClaw_CloudRun/OpenClaw_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/OpenClaw_CloudRun_Lab/OpenClaw_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/OpenClaw_GKE/OpenClaw_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/OpenClaw_GKE_Lab/OpenClaw_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -704,9 +653,7 @@ const sidebars: SidebarsConfig = {
               label: 'OpenEMR',
               items: [
                 { type: 'doc', id: 'labs/OpenEMR_CloudRun/OpenEMR_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/OpenEMR_CloudRun_Lab/OpenEMR_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/OpenEMR_GKE/OpenEMR_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/OpenEMR_GKE_Lab/OpenEMR_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -714,9 +661,7 @@ const sidebars: SidebarsConfig = {
               label: 'OpenWebUI',
               items: [
                 { type: 'doc', id: 'labs/OpenWebUI_CloudRun/OpenWebUI_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/OpenWebUI_CloudRun_Lab/OpenWebUI_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/OpenWebUI_GKE/OpenWebUI_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/OpenWebUI_GKE_Lab/OpenWebUI_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -724,9 +669,7 @@ const sidebars: SidebarsConfig = {
               label: 'Postiz',
               items: [
                 { type: 'doc', id: 'labs/Postiz_CloudRun/Postiz_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Postiz_CloudRun_Lab/Postiz_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Postiz_GKE/Postiz_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Postiz_GKE_Lab/Postiz_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -734,9 +677,7 @@ const sidebars: SidebarsConfig = {
               label: 'Qdrant',
               items: [
                 { type: 'doc', id: 'labs/Qdrant_CloudRun/Qdrant_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Qdrant_CloudRun_Lab/Qdrant_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Qdrant_GKE/Qdrant_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Qdrant_GKE_Lab/Qdrant_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -744,9 +685,7 @@ const sidebars: SidebarsConfig = {
               label: 'RAGFlow',
               items: [
                 { type: 'doc', id: 'labs/RAGFlow_CloudRun/RAGFlow_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/RAGFlow_CloudRun_Lab/RAGFlow_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/RAGFlow_GKE/RAGFlow_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/RAGFlow_GKE_Lab/RAGFlow_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -754,9 +693,7 @@ const sidebars: SidebarsConfig = {
               label: 'Sample',
               items: [
                 { type: 'doc', id: 'labs/Sample_CloudRun/Sample_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Sample_CloudRun_Lab/Sample_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Sample_GKE/Sample_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Sample_GKE_Lab/Sample_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -764,9 +701,7 @@ const sidebars: SidebarsConfig = {
               label: 'SearXNG',
               items: [
                 { type: 'doc', id: 'labs/SearXNG_CloudRun/SearXNG_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/SearXNG_CloudRun_Lab/SearXNG_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/SearXNG_GKE/SearXNG_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/SearXNG_GKE_Lab/SearXNG_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -774,9 +709,7 @@ const sidebars: SidebarsConfig = {
               label: 'Strapi',
               items: [
                 { type: 'doc', id: 'labs/Strapi_CloudRun/Strapi_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Strapi_CloudRun_Lab/Strapi_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Strapi_GKE/Strapi_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Strapi_GKE_Lab/Strapi_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -784,7 +717,6 @@ const sidebars: SidebarsConfig = {
               label: 'Supabase',
               items: [
                 { type: 'doc', id: 'labs/Supabase_GKE/Supabase_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Supabase_GKE_Lab/Supabase_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -792,9 +724,7 @@ const sidebars: SidebarsConfig = {
               label: 'Superset',
               items: [
                 { type: 'doc', id: 'labs/Superset_CloudRun/Superset_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Superset_CloudRun_Lab/Superset_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Superset_GKE/Superset_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Superset_GKE_Lab/Superset_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -802,7 +732,6 @@ const sidebars: SidebarsConfig = {
               label: 'Temporal',
               items: [
                 { type: 'doc', id: 'labs/Temporal_GKE/Temporal_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Temporal_GKE_Lab/Temporal_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -810,9 +739,7 @@ const sidebars: SidebarsConfig = {
               label: 'Vaultwarden',
               items: [
                 { type: 'doc', id: 'labs/Vaultwarden_CloudRun/Vaultwarden_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Vaultwarden_CloudRun_Lab/Vaultwarden_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Vaultwarden_GKE/Vaultwarden_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Vaultwarden_GKE_Lab/Vaultwarden_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             { type: 'doc', id: 'labs/VMware_Engine/VMware_Engine', label: 'VMware Engine' },
@@ -821,9 +748,7 @@ const sidebars: SidebarsConfig = {
               label: 'Wiki.js',
               items: [
                 { type: 'doc', id: 'labs/Wikijs_CloudRun/Wikijs_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Wikijs_CloudRun_Lab/Wikijs_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Wikijs_GKE/Wikijs_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Wikijs_GKE_Lab/Wikijs_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -831,9 +756,7 @@ const sidebars: SidebarsConfig = {
               label: 'Windmill',
               items: [
                 { type: 'doc', id: 'labs/Windmill_CloudRun/Windmill_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Windmill_CloudRun_Lab/Windmill_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Windmill_GKE/Windmill_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Windmill_GKE_Lab/Windmill_GKE_Lab', label: 'GKE Lab' },
               ],
             },
             {
@@ -841,9 +764,7 @@ const sidebars: SidebarsConfig = {
               label: 'Wordpress',
               items: [
                 { type: 'doc', id: 'labs/Wordpress_CloudRun/Wordpress_CloudRun', label: 'Cloud Run' },
-                { type: 'doc', id: 'labs/Wordpress_CloudRun_Lab/Wordpress_CloudRun_Lab', label: 'Cloud Run Lab' },
                 { type: 'doc', id: 'labs/Wordpress_GKE/Wordpress_GKE', label: 'GKE' },
-                { type: 'doc', id: 'labs/Wordpress_GKE_Lab/Wordpress_GKE_Lab', label: 'GKE Lab' },
               ],
             },
       ],

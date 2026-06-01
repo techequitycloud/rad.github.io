@@ -52,11 +52,23 @@ sidebar_label: "Metabase Common"
 
 Both the startup and liveness probes target `/api/health`. Metabase requires a generous initial delay due to JVM startup time:
 
-| Probe | Path | Initial Delay | Period | Failure Threshold |
-|---|---|---|---|---|
-| Startup | `/api/health` | 120s | 10s | 15 (total tolerance: ~270s) |
-| Liveness | `/api/health` | 120s | 30s | 3 |
-| Readiness | `/api/health` | 60s | 15s | 3 |
+<table>
+<colgroup>
+  <col style={{width: '16%'}} />
+  <col style={{width: '18%'}} />
+  <col style={{width: '20%'}} />
+  <col style={{width: '16%'}} />
+  <col style={{width: '30%'}} />
+</colgroup>
+<thead>
+<tr><th>Probe</th><th>Path</th><th>Initial Delay</th><th>Period</th><th>Failure Threshold</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Startup</strong></td><td><code>/api/health</code></td><td>120s</td><td>10s</td><td>15 (total tolerance: ~270s)</td></tr>
+<tr><td><strong>Liveness</strong></td><td><code>/api/health</code></td><td>120s</td><td>30s</td><td>3</td></tr>
+<tr><td><strong>Readiness</strong></td><td><code>/api/health</code></td><td>60s</td><td>15s</td><td>3</td></tr>
+</tbody>
+</table>
 
 ---
 

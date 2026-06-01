@@ -117,10 +117,23 @@ Layer 2: Platform Modules
 
 Default probe values (used when `startup_probe` and `liveness_probe` are not overridden):
 
-| Probe | Path | Initial Delay | Timeout | Period | Failure Threshold |
-|---|---|---|---|---|---|
-| **Startup** | `/alive` | 30s | 5s | 10s | 6 |
-| **Liveness** | `/alive` | 30s | 5s | 30s | 3 |
+<table>
+<colgroup>
+  <col style={{width: '14%'}} />
+  <col style={{width: '14%'}} />
+  <col style={{width: '17%'}} />
+  <col style={{width: '14%'}} />
+  <col style={{width: '14%'}} />
+  <col style={{width: '27%'}} />
+</colgroup>
+<thead>
+<tr><th>Probe</th><th>Path</th><th>Initial Delay</th><th>Timeout</th><th>Period</th><th>Failure Threshold</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Startup</strong></td><td><code>/alive</code></td><td>30s</td><td>5s</td><td>10s</td><td>6</td></tr>
+<tr><td><strong>Liveness</strong></td><td><code>/alive</code></td><td>30s</td><td>5s</td><td>30s</td><td>3</td></tr>
+</tbody>
+</table>
 
 Vaultwarden starts quickly as a compiled Rust binary, so the probe delays are shorter than Node.js or Python-based modules.
 

@@ -128,10 +128,23 @@ The absolute path to the `Supabase Common` module directory, used by `Supabase G
 
 ## 4. Health Probes
 
-| Probe | Path | Initial Delay | Timeout | Period | Failure Threshold |
-|---|---|---|---|---|---|
-| **Startup** | `/health` | 30s | 5s | 10s | 6 |
-| **Liveness** | `/health` | 30s | 5s | 30s | 3 |
+<table>
+<colgroup>
+  <col style={{width: '14%'}} />
+  <col style={{width: '14%'}} />
+  <col style={{width: '17%'}} />
+  <col style={{width: '14%'}} />
+  <col style={{width: '14%'}} />
+  <col style={{width: '27%'}} />
+</colgroup>
+<thead>
+<tr><th>Probe</th><th>Path</th><th>Initial Delay</th><th>Timeout</th><th>Period</th><th>Failure Threshold</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Startup</strong></td><td><code>/health</code></td><td>30s</td><td>5s</td><td>10s</td><td>6</td></tr>
+<tr><td><strong>Liveness</strong></td><td><code>/health</code></td><td>30s</td><td>5s</td><td>30s</td><td>3</td></tr>
+</tbody>
+</table>
 
 Kong's `/health` endpoint confirms the gateway process is ready and routing is configured.
 
