@@ -15,7 +15,7 @@ Cyclos is a professional banking and payment system designed for microfinance in
 
 ## How This Guide Is Structured
 
-This guide documents only the variables that are **unique to `Cyclos_GKE`** or that have **Cyclos-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, storage, CI/CD, observability, networking, IAP, and Cloud Armor — refer directly to the [App_GKE Module Guide](../App_GKE/App_GKE.md).
+This guide documents only the variables that are **unique to `Cyclos_GKE`** or that have **Cyclos-specific defaults** that differ from the `App_GKE` base module. For all other variables — project identity, runtime scaling, backend configuration, storage, CI/CD, observability, networking, IAP, and Cloud Armor — refer directly to the [App GKE Module Guide](../App_GKE/App_GKE.md).
 
 **Variables fully covered by the App GKE guide:**
 

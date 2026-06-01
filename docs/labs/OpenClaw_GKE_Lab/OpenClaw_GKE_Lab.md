@@ -80,7 +80,7 @@ Before deploying this module:
 
 ### Variables
 
-In the RAD UI, open the OpenClaw_GKE module and fill in the deployment form:
+In the RAD UI, open the OpenClaw GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|

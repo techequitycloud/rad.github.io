@@ -82,7 +82,7 @@ Before deploying, ensure the following:
 
 ### Variables
 
-In the RAD UI, open the RAGFlow_GKE module and fill in the deployment form:
+In the RAD UI, open the RAGFlow GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|

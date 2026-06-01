@@ -1,9 +1,9 @@
 ---
-title: "MC_Bank_GKE Module"
+title: "MC Bank GKE Module"
 sidebar_label: "MC Bank GKE"
 ---
 
-# MC_Bank_GKE Module
+# MC Bank GKE Module
 
 ## Overview
 
@@ -2646,7 +2646,7 @@ gcloud compute backend-services list --global --project PROJECT_ID \
 
 ### Mutually Exclusive Variable Combinations
 
-- **`create_autopilot_cluster = false` with Standard clusters**: Standard clusters in this module use a fixed node pool configuration (e2-standard-4 nodes, 2 per cluster). There is no `node_count` or `machine_type` variable in MC_Bank_GKE — these are hardcoded in `gke.tf`. This is different from the single-cluster Bank_GKE module, which exposes node pool configuration variables.
+- **`create_autopilot_cluster = false` with Standard clusters**: Standard clusters in this module use a fixed node pool configuration (e2-standard-4 nodes, 2 per cluster). There is no `node_count` or `machine_type` variable in MC_Bank_GKE — these are hardcoded in `gke.tf`. This is different from the single-cluster Bank GKE module, which exposes node pool configuration variables.
 
 - **`deploy_application = false` skips MCI cleanup**: The `null_resource.cleanup_mci_resources` that deletes MultiClusterIngress and MultiClusterService resources on destroy only runs when `deploy_application = true`. If the application was originally deployed with `deploy_application = true` and then `terraform apply` is run with `deploy_application = false`, the MCI/MCS resources will remain in the cluster and may block cluster deletion during `terraform destroy`.
 

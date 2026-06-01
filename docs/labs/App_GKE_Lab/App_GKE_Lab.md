@@ -86,7 +86,7 @@ export DB_SECRET=$(gcloud secrets list \
 | gcloud CLI | Authenticated (`gcloud auth login`) |
 | kubectl | Installed and on PATH |
 | GCP project with billing | Active billing account linked |
-| Services_GCP module deployed | Provides VPC, GKE cluster, Cloud SQL, Artifact Registry, and Filestore |
+| Services GCP module deployed | Provides VPC, GKE cluster, Cloud SQL, Artifact Registry, and Filestore |
 | Service account | `roles/owner` granted in the target project |
 
 The `Services_GCP` module **must** be deployed and healthy before running this module. It supplies the shared VPC, GKE Autopilot cluster, Cloud SQL instance, Artifact Registry repository, and Filestore NFS server that App_GKE discovers automatically at deploy time.

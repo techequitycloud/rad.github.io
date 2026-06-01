@@ -67,7 +67,7 @@ Key tools used in this lab:
 
 ### Variables
 
-In the RAD UI, open the Odoo_GKE module and fill in the deployment form:
+In the RAD UI, open the Odoo GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|

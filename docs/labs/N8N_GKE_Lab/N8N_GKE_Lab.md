@@ -64,7 +64,7 @@ The steps in this guide include equivalent `gcloud` commands and Kubernetes (`ku
 
 ### Variables
 
-In the RAD UI, open the N8N_GKE module and fill in the deployment form with the following values:
+In the RAD UI, open the N8N GKE module and fill in the deployment form with the following values:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|

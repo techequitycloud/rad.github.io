@@ -68,7 +68,7 @@ This lab uses three primary interfaces:
 
 ### Variables
 
-In the RAD UI, open the Strapi_GKE module and fill in the deployment form:
+In the RAD UI, open the Strapi GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|

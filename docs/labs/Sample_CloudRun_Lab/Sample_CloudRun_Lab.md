@@ -11,7 +11,7 @@ sidebar_label: "Sample CloudRun Lab"
 
 **Estimated time:** 1–2 hours
 
-This lab deploys the Sample reference application on Cloud Run (v2). It is a simple Flask application that demonstrates the full App_CloudRun module feature set: Cloud SQL (PostgreSQL), Filestore NFS via gen2 execution environment, GCS Fuse mounts, Redis integration, Secret Manager, Direct VPC Egress, and Cloud Monitoring with uptime checks.
+This lab deploys the Sample reference application on Cloud Run (v2). It is a simple Flask application that demonstrates the full App CloudRun module feature set: Cloud SQL (PostgreSQL), Filestore NFS via gen2 execution environment, GCS Fuse mounts, Redis integration, Secret Manager, Direct VPC Egress, and Cloud Monitoring with uptime checks.
 
 Use this module to understand typical Cloud Run application module patterns before studying production modules like Django_CloudRun.
 

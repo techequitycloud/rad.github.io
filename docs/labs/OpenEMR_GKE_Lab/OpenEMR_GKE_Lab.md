@@ -92,7 +92,7 @@ GET https://sqladmin.googleapis.com/v1/projects/PROJECT_ID/instances/INSTANCE_NA
 
 Before beginning this lab, ensure the following are in place:
 
-1. **Services_GCP module deployed** — OpenEMR_GKE depends on `Services_GCP` for the VPC network, Cloud SQL instance, GKE Autopilot cluster, and Artifact Registry. The `module_dependency` variable confirms this: `["Services_GCP"]`.
+1. **Services GCP module deployed** — OpenEMR_GKE depends on `Services_GCP` for the VPC network, Cloud SQL instance, GKE Autopilot cluster, and Artifact Registry. The `module_dependency` variable confirms this: `["Services_GCP"]`.
 2. **GCP project with billing enabled.**
 3. **`gcloud` CLI installed and authenticated** (`gcloud auth login && gcloud auth application-default login`).
 4. **`kubectl` installed** — available via `gcloud components install kubectl`.

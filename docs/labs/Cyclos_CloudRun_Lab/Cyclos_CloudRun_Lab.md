@@ -85,7 +85,7 @@ POST https://run.googleapis.com/v2/projects/PROJECT_ID/locations/REGION/jobs/JOB
 
 Before beginning this lab, ensure the following are in place:
 
-1. **Services_GCP module deployed** — Cyclos_CloudRun depends on `Services_GCP` for the VPC network, Cloud SQL instance, and Artifact Registry. The `module_dependency` variable confirms this: `["Services_GCP"]`.
+1. **Services GCP module deployed** — Cyclos_CloudRun depends on `Services_GCP` for the VPC network, Cloud SQL instance, and Artifact Registry. The `module_dependency` variable confirms this: `["Services_GCP"]`.
 2. **GCP project with billing enabled.**
 3. **`gcloud` CLI installed and authenticated** (`gcloud auth login && gcloud auth application-default login`).
 4. **Sufficient IAM permissions** — Owner or equivalent role on the target project.

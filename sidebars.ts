@@ -258,7 +258,6 @@ const sidebars: SidebarsConfig = {
                 { type: 'doc', id: 'modules/Moodle_Common/Moodle_Common', label: 'Common' },
               ],
             },
-            { type: 'doc', id: 'modules/MULTI_CLUSTER_GUIDE/MULTI_CLUSTER_GUIDE', label: 'Multi-Cluster Guide' },
             {
               type: 'category',
               label: 'N8N',

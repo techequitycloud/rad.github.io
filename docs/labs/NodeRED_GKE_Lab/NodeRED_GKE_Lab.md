@@ -77,7 +77,7 @@ Before deploying, ensure the following:
 
 ### Variables
 
-In the RAD UI, open the NodeRED_GKE module and fill in the deployment form:
+In the RAD UI, open the NodeRED GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|

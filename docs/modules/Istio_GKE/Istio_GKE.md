@@ -1,13 +1,13 @@
 ---
-title: "Istio_GKE Module Documentation"
+title: "Istio GKE Module Documentation"
 sidebar_label: "Istio_GKE"
 ---
 
-# Istio_GKE Module
+# Istio GKE Module
 
 ## Overview
 
-The Istio_GKE module provisions a complete Google Kubernetes Engine (GKE) Standard cluster and installs the **open-source Istio service mesh** onto it. Unlike Google Cloud Service Mesh (which is Google's managed, commercially supported Istio distribution), this module works directly with upstream Istio — the same project maintained by the Cloud Native Computing Foundation (CNCF) — giving platform engineers hands-on experience with the technology in its original, unmodified form.
+The Istio GKE module provisions a complete Google Kubernetes Engine (GKE) Standard cluster and installs the **open-source Istio service mesh** onto it. Unlike Google Cloud Service Mesh (which is Google's managed, commercially supported Istio distribution), this module works directly with upstream Istio — the same project maintained by the Cloud Native Computing Foundation (CNCF) — giving platform engineers hands-on experience with the technology in its original, unmodified form.
 
 This module is designed as a deep learning environment for platform engineers who want to understand how Istio works from the ground up: how the control plane manages the data plane, how proxies intercept and observe traffic, and how the two fundamentally different data plane architectures — **sidecar mode** and **ambient mode** — approach the same problems with different trade-offs.
 
@@ -298,7 +298,7 @@ gcloud container clusters describe gke-cluster \
 
 ### Cloud Logging and Managed Prometheus
 
-The cluster is configured to send both **system component logs** and **workload logs** to Cloud Logging, and has **Managed Prometheus** enabled — the same observability integration described in the EKS_GKE module, now running on a native GKE cluster.
+The cluster is configured to send both **system component logs** and **workload logs** to Cloud Logging, and has **Managed Prometheus** enabled — the same observability integration described in the EKS GKE module, now running on a native GKE cluster.
 
 This creates an interesting learning comparison: the Istio observability add-ons (Prometheus, Jaeger, Grafana, Kiali) are open-source tools running *inside* the cluster, while GKE's Managed Prometheus collects metrics *from* the cluster and forwards them to Google Cloud Monitoring. Both exist simultaneously — you can query the same Kubernetes metrics either through the in-cluster Prometheus instance or through Cloud Monitoring's PromQL interface.
 
@@ -1170,7 +1170,7 @@ kubectl patch configmap istio -n istio-system --type=merge \
 
 ## Configuration Reference
 
-The following table covers the key configuration parameters that affect the behaviour of the Istio_GKE module. These are the settings available when using the module.
+The following table covers the key configuration parameters that affect the behaviour of the Istio GKE module. These are the settings available when using the module.
 
 ### GKE Cluster Settings
 
@@ -1239,7 +1239,7 @@ Understanding the module's default configuration helps avoid surprises when expl
 
 ## Prerequisites
 
-Before deploying the Istio_GKE module, verify the following:
+Before deploying the Istio GKE module, verify the following:
 
 ### Google Cloud
 

@@ -349,7 +349,7 @@ injection, and inspect the injected sidecar inside a running pod.
 
 ### Step 2.1 — Verify the Namespace Label
 
-The App_GKE module sets this label when `configure_service_mesh = true`:
+The App GKE module sets this label when `configure_service_mesh = true`:
 
 ```bash
 kubectl get namespace "${APP_NAMESPACE}" --show-labels
@@ -1032,7 +1032,7 @@ Expose the mesh-enabled application externally using the **GKE Gateway API** —
 ingress layer that manages a Google Cloud L7 External Load Balancer, TLS certificates, and
 optionally Cloud Armor WAF and IAP.
 
-The App_GKE module provisions all of this via `gateway.tf` when `enable_custom_domain = true`.
+The App GKE module provisions all of this via `gateway.tf` when `enable_custom_domain = true`.
 
 ### Step 7.1 — Enable the Gateway via RAD UI Update
 
@@ -1112,7 +1112,7 @@ kubectl describe referencegrant -n "${APP_NAMESPACE}"
 Understand how Kubernetes `NetworkPolicy` resources (backed by GKE Dataplane V2) complement Istio's
 L7 enforcement with L3/L4 restrictions, creating a defence-in-depth posture.
 
-The App_GKE module creates these policies when `enable_network_segmentation = true`.
+The App GKE module creates these policies when `enable_network_segmentation = true`.
 
 ### Step 8.1 — Review the Generated NetworkPolicies
 
@@ -1229,7 +1229,7 @@ curl -s -X POST \
 Enable Cloud Armor Web Application Firewall on the GKE Gateway backend, observe OWASP Top 10
 rule enforcement, and test rate limiting.
 
-The App_GKE module creates an inline Cloud Armor security policy when `enable_cloud_armor = true`
+The App GKE module creates an inline Cloud Armor security policy when `enable_cloud_armor = true`
 and attaches it to the Gateway via `GCPBackendPolicy`.
 
 ### Step 9.1 — Enable Cloud Armor via RAD UI Update

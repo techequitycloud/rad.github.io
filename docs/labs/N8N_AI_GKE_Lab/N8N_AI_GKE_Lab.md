@@ -58,7 +58,7 @@ All GKE services from N8N_GKE, plus:
 
 ### Variables
 
-In the RAD UI, open the N8N_AI_GKE module and fill in the deployment form:
+In the RAD UI, open the N8N AI GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|

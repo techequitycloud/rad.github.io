@@ -73,7 +73,7 @@ gcloud logging read 'resource.type="k8s_container"' --project <project>
 
 ### Variables
 
-In the RAD UI, open the Temporal_GKE module and fill in the deployment form:
+In the RAD UI, open the Temporal GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|

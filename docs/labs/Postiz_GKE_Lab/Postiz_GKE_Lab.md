@@ -79,7 +79,7 @@ Before deploying this module:
 
 ### Variables
 
-In the RAD UI, open the Postiz_GKE module and fill in the deployment form:
+In the RAD UI, open the Postiz GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|

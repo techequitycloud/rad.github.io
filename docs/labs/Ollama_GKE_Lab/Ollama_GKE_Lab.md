@@ -66,7 +66,7 @@ This lab uses three sets of tools:
 
 ### Variables
 
-In the RAD UI, open the Ollama_GKE module and fill in the deployment form:
+In the RAD UI, open the Ollama GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|

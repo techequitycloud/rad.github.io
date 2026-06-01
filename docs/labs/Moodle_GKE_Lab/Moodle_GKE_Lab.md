@@ -74,7 +74,7 @@ Install: [Google Cloud SDK](https://cloud.google.com/sdk/docs/install), [kubectl
 
 ### Step 1.1 — Configure Variables
 
-In the RAD UI, open the Moodle_GKE module and fill in the deployment form. The table below describes the key variables:
+In the RAD UI, open the Moodle GKE module and fill in the deployment form. The table below describes the key variables:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|

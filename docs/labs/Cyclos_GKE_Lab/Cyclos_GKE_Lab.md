@@ -83,7 +83,7 @@ GET https://container.googleapis.com/v1/projects/PROJECT_ID/locations/REGION/clu
 
 Before beginning this lab, ensure the following are in place:
 
-1. **Services_GCP module deployed** — Cyclos_GKE depends on `Services_GCP` for the VPC network, Cloud SQL instance, GKE Autopilot cluster, and Artifact Registry.
+1. **Services GCP module deployed** — Cyclos_GKE depends on `Services_GCP` for the VPC network, Cloud SQL instance, GKE Autopilot cluster, and Artifact Registry.
 2. **GCP project with billing enabled.**
 3. **Access to the RAD UI** with permission to deploy modules in the target GCP project.
 4. **`gcloud` CLI installed and authenticated** (`gcloud auth login && gcloud auth application-default login`).

@@ -11,7 +11,7 @@ sidebar_label: "Sample GKE Lab"
 
 **Estimated time:** 1.5–2 hours
 
-This lab deploys the Sample reference application on GKE Autopilot. It is a simple Flask application that demonstrates the full App_GKE module feature set: Cloud SQL (PostgreSQL), Filestore NFS, GCS Fuse volume mounts, Redis integration, Workload Identity, Secret Manager, and Cloud Monitoring with uptime checks.
+This lab deploys the Sample reference application on GKE Autopilot. It is a simple Flask application that demonstrates the full App GKE module feature set: Cloud SQL (PostgreSQL), Filestore NFS, GCS Fuse volume mounts, Redis integration, Workload Identity, Secret Manager, and Cloud Monitoring with uptime checks.
 
 Use this module to understand typical application module patterns before building or studying production modules like Django_GKE.
 
@@ -81,7 +81,7 @@ gcloud secrets versions access latest --secret=<secret-name> --project <project>
 
 ### Variables
 
-In the RAD UI, open the Sample_GKE module and fill in the deployment form:
+In the RAD UI, open the Sample GKE module and fill in the deployment form:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|

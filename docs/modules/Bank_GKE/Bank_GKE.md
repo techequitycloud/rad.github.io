@@ -1,9 +1,9 @@
 ---
-title: "Bank_GKE Module"
+title: "Bank GKE Module"
 sidebar_label: "Bank GKE"
 ---
 
-# Bank_GKE Module
+# Bank GKE Module
 
 ## Overview
 
@@ -1094,7 +1094,7 @@ gcloud monitoring services slos describe ${SLO_ID} \
 
 ## Module Configuration Options
 
-The following options are available when deploying the Bank_GKE module. Engineers who do not have access to the underlying Terraform code configure these options through the platform UI or deployment parameters.
+The following options are available when deploying the Bank GKE module. Engineers who do not have access to the underlying Terraform code configure these options through the platform UI or deployment parameters.
 
 ### Project and Region
 

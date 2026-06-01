@@ -96,7 +96,7 @@ export DB_SECRET=$(gcloud secrets list \
 
 ### Step 1.1 — Configure Variables
 
-In the RAD UI, open the Wordpress_GKE module and fill in the deployment form. The table below covers the key variables you are likely to customise.
+In the RAD UI, open the Wordpress GKE module and fill in the deployment form. The table below covers the key variables you are likely to customise.
 
 | Variable | Default | Description |
 |---|---|---|

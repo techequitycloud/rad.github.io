@@ -73,7 +73,7 @@ export DB_SECRET=$(gcloud secrets list \
 |---|---|
 | gcloud CLI | Authenticated (`gcloud auth login`) |
 | GCP project with billing | Active billing account linked |
-| Services_GCP module deployed | Provides VPC, Cloud SQL, Artifact Registry, and Filestore |
+| Services GCP module deployed | Provides VPC, Cloud SQL, Artifact Registry, and Filestore |
 | Service account | `roles/owner` granted in the target project |
 | RAD UI access | Permission to deploy modules in the target GCP project |
 
