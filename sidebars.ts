@@ -151,7 +151,7 @@ const sidebars: SidebarsConfig = {
                 { type: 'doc', id: 'modules/Grafana_Common/Grafana_Common', label: 'Common' },
               ],
             },
-            { type: 'doc', id: 'modules/Istio_GKE/Istio_GKE', label: 'Istio Service Mesh' },
+            { type: 'doc', id: 'modules/Istio_GKE/Istio_GKE', label: 'Istio GKE' },
             {
               type: 'category',
               label: 'Kestra',
@@ -491,7 +491,7 @@ const sidebars: SidebarsConfig = {
                 { type: 'doc', id: 'labs/Grafana_GKE/Grafana_GKE', label: 'GKE' },
               ],
             },
-            { type: 'doc', id: 'labs/Istio_GKE/Istio_GKE', label: 'Istio Service Mesh' },
+            { type: 'doc', id: 'labs/Istio_GKE/Istio_GKE', label: 'Istio GKE' },
             {
               type: 'category',
               label: 'Kestra',
