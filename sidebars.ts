@@ -812,6 +812,23 @@ const sidebars: SidebarsConfig = {
       ],
     },
     {
+    {
+      type: 'category',
+      label: 'Platform Tutorials',
+      items: [
+        { type: 'doc', id: 'tutorials/getting-started', label: 'Quick Start' },
+        { type: 'doc', id: 'tutorials/admin', label: 'Admin' },
+        { type: 'doc', id: 'tutorials/partner', label: 'Partner' },
+        { type: 'doc', id: 'tutorials/user', label: 'User' },
+        { type: 'doc', id: 'tutorials/agent', label: 'Agent' },
+        { type: 'doc', id: 'tutorials/finance', label: 'Finance' },
+        { type: 'doc', id: 'workflows/credits', label: 'Credit Management' },
+        { type: 'doc', id: 'tutorials/support', label: 'Support' },
+        { type: 'doc', id: 'tutorials/roi', label: 'ROI' },
+      ],
+    },
+  ],
+};
       type: 'category',
       label: 'Platform Capabilities',
       items: [
@@ -856,22 +873,5 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'outcomes/security_zero_trust', label: 'Zero Trust Security' },
       ],
     },
-    {
-      type: 'category',
-      label: 'Platform Tutorials',
-      items: [
-        { type: 'doc', id: 'tutorials/getting-started', label: 'Quick Start' },
-        { type: 'doc', id: 'tutorials/admin', label: 'Admin' },
-        { type: 'doc', id: 'tutorials/partner', label: 'Partner' },
-        { type: 'doc', id: 'tutorials/user', label: 'User' },
-        { type: 'doc', id: 'tutorials/agent', label: 'Agent' },
-        { type: 'doc', id: 'tutorials/finance', label: 'Finance' },
-        { type: 'doc', id: 'workflows/credits', label: 'Credit Management' },
-        { type: 'doc', id: 'tutorials/support', label: 'Support' },
-        { type: 'doc', id: 'tutorials/roi', label: 'ROI' },
-      ],
-    },
-  ],
-};
 
 export default sidebars;
