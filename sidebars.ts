@@ -709,6 +709,7 @@ const sidebars: SidebarsConfig = {
             },
       ],
     },
+    {
       type: 'category',
       label: 'Certification Guides',
       items: [
@@ -768,7 +769,6 @@ const sidebars: SidebarsConfig = {
         },
       ],
     },
-    {
     {
       type: 'category',
       label: 'Platform Guides',
