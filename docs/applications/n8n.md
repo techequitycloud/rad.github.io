@@ -6,8 +6,6 @@ slug: /applications/n8n
 
 # N8N on Google Cloud Platform
 
-<br/>
-
 ## Overview
 The **N8N** module deploys n8n, a fair-code workflow automation tool, onto Google Cloud. This tool allows your business to connect disparate apps, APIs, and data sources to automate processes without writing complex code.
 

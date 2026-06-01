@@ -6,8 +6,6 @@ slug: /applications/moodle
 
 # Moodle on Google Cloud Platform
 
-<br/>
-
 ## Overview
 The **Moodle** module enables educational institutions and training organizations to launch a powerful Learning Management System (LMS) on Google Cloud. It transforms the complex task of setting up Moodle servers into a simple automated process, providing a robust platform for online learning.
 

@@ -6,8 +6,6 @@ slug: /applications/wiki-js
 
 # Wiki.js on Google Cloud Platform
 
-<br/>
-
 ## Overview
 The **Wiki.js** module deploys the most powerful and extensible open-source wiki software on Google Cloud. It is designed to make knowledge management beautiful and intuitive for teams of all sizes.
 

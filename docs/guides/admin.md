@@ -1,7 +1,6 @@
 
 # Admin Guide
 
-
 ## 1. Introduction
 
 Welcome to the Administrator Guide for the Rapid Application Deployment (RAD) platform. As an administrator, you have full control over the platform's configuration, user management, billing, and deployment oversight. You also retain all capabilities of a standard user, including the ability to deploy modules and view credit information. This guide will walk you through your key responsibilities and the tools available to you.

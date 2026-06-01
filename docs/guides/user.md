@@ -1,7 +1,6 @@
 
 # User Guide
 
-
 ## 1. Introduction
 
 Welcome to the User Guide for the Rapid Application Deployment (RAD) platform. This guide will help you navigate the platform, deploy modules, and manage your account.

@@ -6,8 +6,6 @@ slug: /applications/ghost
 
 # Ghost on Google Cloud Platform
 
-<br/>
-
 ## Overview
 The **Ghost** module deploys the Ghost publishing platform on Google Cloud. Ghost is a powerful app for professional publishers to create, share, and grow a business around their content.
 

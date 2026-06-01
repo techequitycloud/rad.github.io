@@ -1,7 +1,6 @@
 
 # Partner Workflow
 
-
 ## 1. Introduction
 This tutorial is for Partners. You will learn how to connect your own Git repository, publish private modules, deploy and test them, retrieve deployment outputs, and use the Jules AI assistant to refine your modules.
 

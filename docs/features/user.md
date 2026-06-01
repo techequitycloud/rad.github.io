@@ -3,13 +3,6 @@ title: User Features
 slug: /features/users
 ---
 
-<br/>
-
-
-<br/>
-
-<br/>
-
 [Download Feature PDF](https://storage.googleapis.com/rad-public-2b65/features/user_features.pdf)
 
 ## 1. Introduction

@@ -1,9 +1,6 @@
 
 # ROI Workflow
 
-
-<br/>
-
 ## 1. Introduction
 This tutorial walks through the Return on Investment (ROI) calculator on the RAD platform. The ROI calculator helps you quantify the time and cost savings achieved by automating infrastructure deployments with RAD compared to manual provisioning workflows.
 

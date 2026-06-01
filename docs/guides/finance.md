@@ -5,9 +5,7 @@ slug: /guides/finance
 
 # Finance Guide
 
-
 # Finance Guide
-
 
 ## 1. Introduction
 

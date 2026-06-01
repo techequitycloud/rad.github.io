@@ -1,7 +1,6 @@
 
 # Deploying with RAD
 
-
 ## 1. Introduction
 
 This guide covers the full deployment lifecycle on the Rapid Application Deployment (RAD) platform — from browsing and deploying a module for the first time, to monitoring progress, fixing failures, updating or removing deployments, and managing your credit balance.

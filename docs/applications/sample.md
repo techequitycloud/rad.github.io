@@ -6,8 +6,6 @@ slug: /applications/sample
 
 # Sample web application on Google Cloud Platform
 
-<br/>
-
 ## Overview
 The **Sample** module acts as a reference implementation for deploying custom web applications on Google Cloud Platform. It demonstrates how to build a production-ready "Wrapper Module" that inherits the platform's best practices while deploying a custom Python Flask application.
 

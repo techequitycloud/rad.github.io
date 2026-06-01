@@ -6,8 +6,6 @@ slug: /applications/openemr
 
 # OpenEMR on Google Cloud Platform
 
-<br/>
-
 ## Overview
 The **OpenEMR** module deploys a leading open-source electronic health records (EHR) and medical practice management solution. It is designed for healthcare providers who need a secure, HIPAA-compliant-ready environment to manage patient data, scheduling, and billing.
 

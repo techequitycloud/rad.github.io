@@ -6,8 +6,6 @@ slug: /applications/odoo
 
 # Odoo on Google Cloud Platform
 
-<br/>
-
 ## Overview
 The **Odoo** module deploys a comprehensive Enterprise Resource Planning (ERP) suite. Odoo offers a single platform for CRM, Accounting, Inventory, Manufacturing, eCommerce, and more. This module provides a turnkey solution to host Odoo Enterprise or Community on Google Cloud, ensuring it is secure, backed up, and scalable.
 

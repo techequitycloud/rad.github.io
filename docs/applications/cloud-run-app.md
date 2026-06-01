@@ -6,8 +6,6 @@ slug: /applications/cloud-run-app
 
 # CloudRunApp on Google Cloud Platform
 
-<br/>
-
 This document provides a comprehensive analysis of the `CloudRunApp` module on Google Cloud Platform. It details the architecture, IAM configuration, service integrations, and potential enhancements.
 
 ---

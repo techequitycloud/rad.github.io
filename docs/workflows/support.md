@@ -5,9 +5,7 @@ slug: /workflows/support
 
 # Support Workflow
 
-
 # Support Workflow
-
 
 ## 1. Introduction
 This tutorial is designed for **Support** users. You will learn how to use your enhanced permissions to troubleshoot user deployments, restore soft-deleted deployments, manage the module catalog, and leverage the Jules AI assistant to debug module issues.

@@ -6,8 +6,6 @@ slug: /applications/gcp-services
 
 # GCP Services on Google Cloud Platform
 
-<br/>
-
 ## Overview
 The **GCP Services** module acts as the foundation builder for your applications. Once your project is created, this module lays down the necessary infrastructure "plumbing"—networks, databases, and shared storage—that your applications need to run. It ensures that all services are connected securely and efficiently.
 

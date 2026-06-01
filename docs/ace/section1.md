@@ -1,7 +1,5 @@
 # ACE Certification Preparation Guide: Section 1 — Setting up a Cloud Solution Environment (~23% of the exam)
 
-<br/>
-
 This guide helps candidates preparing for the Google Cloud Associate Cloud Engineer (ACE) certification explore Section 1 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure (VPC networking, databases, GKE clusters, IAM service accounts, and APIs); **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot. Both application modules depend on GCP Services and share the App GCP library for discovery and integration logic.
 
 You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. Variables are organised into numbered groups in the RAD UI deployment form — for example, "(Group 3)" refers to the third collapsible section of settings for that module. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights ACE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.

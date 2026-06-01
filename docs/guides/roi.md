@@ -1,9 +1,6 @@
 
 # ROI Guide
 
-
-<br/>
-
 ## 1. Introduction
 
 The ROI (Return on Investment) Calculator is an interactive tool available to all platform users. It allows you to estimate the time and cost savings your organisation achieves by deploying infrastructure with RAD compared to traditional manual provisioning workflows. This guide explains each input field, how calculations are performed, and how to interpret the results.

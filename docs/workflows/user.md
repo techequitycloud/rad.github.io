@@ -1,7 +1,6 @@
 
 # User Workflow
 
-
 ## 1. Introduction
 Welcome to the platform! This tutorial covers the core actions you'll perform as a user: deploying applications, managing them, retrieving deployment outputs, and tracking your credits.
 

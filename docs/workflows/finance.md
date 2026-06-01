@@ -5,9 +5,7 @@ slug: /workflows/finance
 
 # Finance Workflow
 
-
 # Finance Workflow
-
 
 ## 1. Introduction
 The Finance role provides deep visibility into the platform's economics — revenue by partner and user, credit spending, project infrastructure costs, payment provider activity, and automated reconciliation.

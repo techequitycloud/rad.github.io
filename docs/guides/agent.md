@@ -5,9 +5,7 @@ slug: /guides/agent
 
 # Agent Guide
 
-
 # Agent Guide
-
 
 ## 1. Introduction
 

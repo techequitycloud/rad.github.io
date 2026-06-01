@@ -6,8 +6,6 @@ slug: /applications/cyclos
 
 # Cyclos on Google Cloud Platform
 
-<br/>
-
 ## Overview
 The **Cyclos** module creates a complete, secure environment for hosting the Cyclos Banking System on Google Cloud. Cyclos is a payment and banking software for microfinance institutions, local banks, and complementary currency systems. This module takes the complexity out of deploying Cyclos by automating the setup of its web servers, database, and storage.
 

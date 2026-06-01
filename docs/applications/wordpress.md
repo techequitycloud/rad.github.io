@@ -6,8 +6,6 @@ slug: /applications/wordpress
 
 # Wordpress on Google Cloud Platform
 
-<br/>
-
 ## Overview
 The **Wordpress** module deploys the world's most popular Content Management System (CMS) on Google Cloud's modern serverless platform. It is perfect for corporate websites, blogs, and marketing landing pages that need to be fast, secure, and auto-scalable.
 

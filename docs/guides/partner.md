@@ -1,7 +1,6 @@
 
 # Partner Guide
 
-
 ## 1. Introduction
 
 Welcome to the Partner Guide. As a Partner, you play a special role in the ecosystem. You have the ability to publish your own **Private Modules** and deploy them, in addition to the standard platform modules available to everyone. Your navigation bar includes **Credits**, **Explore** (if Jules AI is configured), **Publish** (once your repository is connected), **Deployments**, **Deploy**, **ROI**, and **Help**.
