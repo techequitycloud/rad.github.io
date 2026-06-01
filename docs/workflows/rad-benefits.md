@@ -94,42 +94,64 @@ RAD provides deployment modules covering **21 application types** across two Goo
 
 ### Application Modules
 
-| Module | Description | Cloud Run | GKE |
-| :--- | :--- | :---: | :---: |
-| **Activepieces** | Open-source workflow automation platform with a no-code builder. Demonstrates event-driven automation, webhook integration, and PostgreSQL-backed workflow state management. | Yes | Yes |
-| **Application** | Base containerised application module and foundation for all wrapper modules. Covers the complete Cloud Run or GKE infrastructure stack for any containerised workload. | Yes | Yes |
-| **Cyclos** | Community banking and mutual credit platform. Demonstrates financial application deployment with strict data isolation requirements. | Yes | Yes |
-| **Directus** | Headless CMS and data platform with REST and GraphQL APIs. Illustrates API-first architecture with Cloud SQL and GCS integration. | Yes | Yes |
-| **Django** | Python web framework for rapid application development. Demonstrates application-tier deployment with Cloud SQL backend and automated schema migration. | Yes | Yes |
-| **Elasticsearch** | Distributed search and analytics engine deployed as a GKE StatefulSet with persistent SSD storage. Serves as the vector search backend for RAGFlow. | — | Yes |
-| **Flowise** | Visual AI workflow builder for constructing LLM pipelines and chatbots. Demonstrates AI application deployment with PostgreSQL backend and GCS file storage. | Yes | Yes |
-| **Ghost** | Modern publishing platform and content management system. Covers CDN integration, GCS media storage, and Cloud Run autoscaling for variable publishing traffic. | Yes | Yes |
-| **Kestra** | Workflow orchestration platform for data pipelines and scheduled tasks. Demonstrates standalone-mode deployment with PostgreSQL queue and repository backends and a GCS artifact store. | Yes | Yes |
-| **Moodle** | Open-source Learning Management System (LMS). Demonstrates stateful application deployment with NFS shared storage (Filestore), high user concurrency, and persistent session requirements. | Yes | Yes |
-| **N8N** | Open-source workflow automation platform. Illustrates event-driven architecture, webhook integration, and background job processing on both Cloud Run and GKE. | Yes | Yes |
-| **N8N AI** | Workflow automation with integrated AI components. Deploys N8N alongside Qdrant (vector database) and Ollama (local LLM inference), demonstrating multi-container AI workload orchestration, GCS Fuse for model storage, and Kubernetes service discovery. | Yes | Yes |
-| **Node-RED** | Flow-based programming tool for visual event-driven applications. Demonstrates GCS-backed flow persistence and low-code IoT and integration patterns. | Yes | Yes |
-| **Odoo** | Open-source ERP and business management suite. Covers enterprise application deployment with complex database schema initialisation, module installation, and multi-process worker configuration. | Yes | Yes |
-| **Ollama** | Local LLM inference server. Demonstrates GPU-accelerated and CPU-based model hosting with GCS model storage and optional model-pull initialisation jobs. | Yes | Yes |
-| **OpenClaw** | AI gateway platform supporting multi-channel messaging and LLM integration. Demonstrates GCS Fuse workspace volumes, Secret Manager credential injection, and messaging platform webhook configuration. | Yes | Yes |
-| **OpenEMR** | Open-source Electronic Health Record (EHR) system. Demonstrates healthcare data workload deployment with strict security controls, private database access, and audit logging — patterns directly relevant to HIPAA compliance scenarios in the PCA exam. | Yes | Yes |
-| **RAGFlow** | Document intelligence and Retrieval-Augmented Generation (RAG) platform. Demonstrates AI search architectures combining Elasticsearch for vector storage with LLM-based question-answering over ingested documents. | Yes | Yes |
-| **Sample** | Minimal reference application. A clean baseline for learning the module configuration process without application-specific complexity. | Yes | Yes |
-| **Strapi** | Headless CMS and API builder. Illustrates content API deployment with GCS media storage, Cloud SQL backend, and automated build pipelines. | Yes | Yes |
-| **Wiki.js** | Modern collaborative wiki and documentation platform. Demonstrates full-text search integration, database-backed content storage, and Cloud Run deployment with persistent volume requirements. | Yes | Yes |
-| **Wordpress** | The world's most widely used CMS. Covers PHP application deployment with Cloud SQL, GCS media storage, and CDN-backed static asset delivery. | Yes | Yes |
+<table>
+<colgroup>
+  <col style={{width: '18%'}} />
+  <col style={{width: '62%'}} />
+  <col style={{width: '10%'}} />
+  <col style={{width: '10%'}} />
+</colgroup>
+<thead>
+<tr><th>Module</th><th>Description</th><th align="center">Cloud Run</th><th align="center">GKE</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Activepieces</strong></td><td>Open-source workflow automation platform with a no-code builder. Demonstrates event-driven automation, webhook integration, and PostgreSQL-backed workflow state management.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Application</strong></td><td>Base containerised application module and foundation for all wrapper modules. Covers the complete Cloud Run or GKE infrastructure stack for any containerised workload.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Cyclos</strong></td><td>Community banking and mutual credit platform. Demonstrates financial application deployment with strict data isolation requirements.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Directus</strong></td><td>Headless CMS and data platform with REST and GraphQL APIs. Illustrates API-first architecture with Cloud SQL and GCS integration.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Django</strong></td><td>Python web framework for rapid application development. Demonstrates application-tier deployment with Cloud SQL backend and automated schema migration.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Elasticsearch</strong></td><td>Distributed search and analytics engine deployed as a GKE StatefulSet with persistent SSD storage. Serves as the vector search backend for RAGFlow.</td><td align="center">—</td><td align="center">Yes</td></tr>
+<tr><td><strong>Flowise</strong></td><td>Visual AI workflow builder for constructing LLM pipelines and chatbots. Demonstrates AI application deployment with PostgreSQL backend and GCS file storage.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Ghost</strong></td><td>Modern publishing platform and content management system. Covers CDN integration, GCS media storage, and Cloud Run autoscaling for variable publishing traffic.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Kestra</strong></td><td>Workflow orchestration platform for data pipelines and scheduled tasks. Demonstrates standalone-mode deployment with PostgreSQL queue and repository backends and a GCS artifact store.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Moodle</strong></td><td>Open-source Learning Management System (LMS). Demonstrates stateful application deployment with NFS shared storage (Filestore), high user concurrency, and persistent session requirements.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>N8N</strong></td><td>Open-source workflow automation platform. Illustrates event-driven architecture, webhook integration, and background job processing on both Cloud Run and GKE.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>N8N AI</strong></td><td>Workflow automation with integrated AI components. Deploys N8N alongside Qdrant (vector database) and Ollama (local LLM inference), demonstrating multi-container AI workload orchestration, GCS Fuse for model storage, and Kubernetes service discovery.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Node-RED</strong></td><td>Flow-based programming tool for visual event-driven applications. Demonstrates GCS-backed flow persistence and low-code IoT and integration patterns.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Odoo</strong></td><td>Open-source ERP and business management suite. Covers enterprise application deployment with complex database schema initialisation, module installation, and multi-process worker configuration.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Ollama</strong></td><td>Local LLM inference server. Demonstrates GPU-accelerated and CPU-based model hosting with GCS model storage and optional model-pull initialisation jobs.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>OpenClaw</strong></td><td>AI gateway platform supporting multi-channel messaging and LLM integration. Demonstrates GCS Fuse workspace volumes, Secret Manager credential injection, and messaging platform webhook configuration.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>OpenEMR</strong></td><td>Open-source Electronic Health Record (EHR) system. Demonstrates healthcare data workload deployment with strict security controls, private database access, and audit logging — patterns directly relevant to HIPAA compliance scenarios in the PCA exam.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>RAGFlow</strong></td><td>Document intelligence and Retrieval-Augmented Generation (RAG) platform. Demonstrates AI search architectures combining Elasticsearch for vector storage with LLM-based question-answering over ingested documents.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Sample</strong></td><td>Minimal reference application. A clean baseline for learning the module configuration process without application-specific complexity.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Strapi</strong></td><td>Headless CMS and API builder. Illustrates content API deployment with GCS media storage, Cloud SQL backend, and automated build pipelines.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Wiki.js</strong></td><td>Modern collaborative wiki and documentation platform. Demonstrates full-text search integration, database-backed content storage, and Cloud Run deployment with persistent volume requirements.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+<tr><td><strong>Wordpress</strong></td><td>The world's most widely used CMS. Covers PHP application deployment with Cloud SQL, GCS media storage, and CDN-backed static asset delivery.</td><td align="center">Yes</td><td align="center">Yes</td></tr>
+
+</tbody>
+</table>
 
 ### Platform Modules
 
 In addition to application modules, RAD provides infrastructure modules for advanced deployment patterns. Source code for all platform modules is available in the [rad-modules GitHub repository](https://github.com/techequitycloud/rad-modules/tree/main/modules).
 
-| Module | Description |
-| :--- | :--- |
-| **GKE Multi-Cloud (Azure)** | Connects an Azure Kubernetes Service (AKS) cluster to a GKE fleet using Anthos, demonstrating multi-cloud workload management and unified observability. |
-| **GKE Multi-Cloud (AWS)** | Connects an Amazon EKS cluster to a GKE fleet using Anthos, demonstrating cross-cloud federation and policy enforcement. |
-| **Cloud Service Mesh** | Deploys a managed Cloud Service Mesh (Istio-compatible) on GKE with mTLS, traffic management, and observability sidecar injection. |
-| **Istio Service Mesh** | Deploys the open-source Istio service mesh on GKE with full traffic control, circuit breaking, and distributed tracing. |
-| **GKE Multi-Cluster** | Provisions a multi-cluster GKE environment with fleet registration, multi-cluster ingress, and cross-cluster service discovery. |
+<table>
+<colgroup>
+  <col style={{width: '25%'}} />
+  <col style={{width: '75%'}} />
+</colgroup>
+<thead>
+<tr><th>Module</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>GKE Multi-Cloud (Azure)</strong></td><td>Connects an Azure Kubernetes Service (AKS) cluster to a GKE fleet using Anthos, demonstrating multi-cloud workload management and unified observability.</td></tr>
+<tr><td><strong>GKE Multi-Cloud (AWS)</strong></td><td>Connects an Amazon EKS cluster to a GKE fleet using Anthos, demonstrating cross-cloud federation and policy enforcement.</td></tr>
+<tr><td><strong>Cloud Service Mesh</strong></td><td>Deploys a managed Cloud Service Mesh (Istio-compatible) on GKE with mTLS, traffic management, and observability sidecar injection.</td></tr>
+<tr><td><strong>Istio Service Mesh</strong></td><td>Deploys the open-source Istio service mesh on GKE with full traffic control, circuit breaking, and distributed tracing.</td></tr>
+<tr><td><strong>GKE Multi-Cluster</strong></td><td>Provisions a multi-cluster GKE environment with fleet registration, multi-cluster ingress, and cross-cluster service discovery.</td></tr>
+
+</tbody>
+</table>
 
 ---
 
