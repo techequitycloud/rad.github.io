@@ -48,8 +48,8 @@
   word-break: break-word;
 }
 
-.markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) :is(th, td):nth-child(1) { width: 22%; } /* Variable */
-.markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) :is(th, td):nth-child(2) { width: 8%;  } /* Group */
+.markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) :is(th, td):nth-child(1) { width: 26%; } /* Variable */
+.markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) :is(th, td):nth-child(2) { width: 4%;  } /* Group */
 .markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) :is(th, td):nth-child(3) { width: 10%; } /* Type */
 .markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) :is(th, td):nth-child(4) { width: 12%; } /* Default */
 .markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) :is(th, td):nth-child(5) { width: 48%; } /* Description */
