@@ -542,6 +542,42 @@ All user-configurable variables exposed by `Cal_CloudRun`, sorted by UI group th
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 | `github_repository_url` | GitHub repository URL connected for CI/CD. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `container_port` | `3000` | **Critical** | Cal.com is a Next.js app that listens on port 3000. Changing this to `8080` or any other value means Cloud Run's health checks and traffic routing will target the wrong port, causing immediate startup failure and no traffic served. |
+| `NEXT_PUBLIC_WEBAPP_URL` (in `environment_variables`) | Auto-derived from predicted Cloud Run URL | **Critical** | Cal.com embeds this URL into every static Next.js chunk at startup via `replace-placeholder.sh`. If it does not match the public domain users reach, OAuth callbacks, booking links, and email confirmation links will all point to the wrong host. Must be overridden when using a custom domain or load balancer. |
+| `NEXTAUTH_URL` (in `environment_variables`) | Auto-derived from predicted Cloud Run URL | **Critical** | NextAuth uses this to validate OAuth redirect URIs. A mismatch causes authentication failures for all users. Set to the same value as `NEXT_PUBLIC_WEBAPP_URL` when using a custom domain. |
+| `database_type` | `"POSTGRES_15"` | **Critical** | Cal.com requires PostgreSQL with Prisma. Changing to MySQL or any non-PostgreSQL engine will break the database schema migration job and the application will not start. |
+| `db_name` | `"calcom"` | **Critical** | Changing after the initial deployment orphans the existing database, leaving the application pointing at a new empty database. The old database and all data remain in Cloud SQL but are no longer connected. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Cal.com connects to Cloud SQL via Unix socket through the Auth Proxy sidecar. Disabling this removes the socket, causing all database connections to fail immediately. |
+| `container_image_source` | `"prebuilt"` | **High** | The `Cal_Common` module sets `image_source = "custom"` and provides a `container_build_config`. Using `"prebuilt"` without a custom Cloud Build configuration skips the build pipeline — the official `calcom/cal.com` image has no `latest` tag and the build step populates the `APP_VERSION` build arg. Use `"custom"` (as set by `Cal_Common`) or provide a fully built image URI via `container_image`. |
+| `application_version` | `"v6.2.0"` | **High** | `calcom/cal.diy` does not publish a `latest` tag. Leaving this blank or using an invalid tag causes the Cloud Build step to fail with an image-not-found error. Always pin to a valid versioned release tag (e.g., `v6.2.0`). |
+| `startup_probe.initial_delay_seconds` | `180` (via `Cal_Common`) | **High** | Cal.com's startup runs `replace-placeholder.sh` (rewrites Next.js static chunks, ~2.5 min) then Prisma migrations (~60 s) and seed-app-store (~30 s). The `Cal_Common` defaults are tuned for this. The `Cal_CloudRun` variable default of `60s` is insufficient — always rely on `Cal_Common`'s longer defaults or leave the probe configuration at `Cal_Common` values. |
+| `startup_probe.failure_threshold` | `18` (via `Cal_Common`) | **High** | With `period_seconds = 10`, a `failure_threshold` of `18` gives Cal.com up to 6 minutes to complete startup. Reducing this below `12` causes Cloud Run to kill and restart the container before initialization completes, resulting in an infinite restart loop. |
+| `memory_limit` | `"2Gi"` | **High** | Cal.com's startup process (static chunk rewriting + Prisma migration) requires at least 2 GiB. Memory below `2Gi` causes OOM kills during the first startup. For multi-user production use `4Gi` is recommended. |
+| `cpu_limit` | `"2000m"` | **Medium** | The startup `replace-placeholder.sh` script is CPU-intensive. Below `1000m`, startup time increases significantly and may breach the startup probe window, causing restart loops. |
+| `min_instance_count` | `0` | **Medium** | Scale-to-zero is enabled by default. Cold starts for Cal.com take 3–5 minutes due to the startup script. For production scheduling services, set `min_instance_count = 1` to eliminate cold start latency for end users. |
+| `enable_redis` | `false` | **Medium** | Without Redis, Cal.com uses in-memory session caching. With multiple instances (`max_instance_count > 1`) or when using scale-to-zero, sessions are not shared between instances, causing users to be unexpectedly logged out. Enable Redis for multi-instance or production deployments. |
+| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, the Redis URL injected into the application is malformed, causing runtime connection errors. Must be set to a valid hostname or IP when Redis is enabled. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **High** | When Redis (Memorystore) is used, its private IP is not in the VPC private ranges that Cloud Run routes by default. Change to `"ALL_TRAFFIC"` to ensure Redis connections work, or ensure Memorystore is on a VPC that Cloud Run can reach. |
+| `ingress_settings` | `"all"` | **Medium** | Leaving as `"all"` exposes the service to the public internet. For internal booking tools or intranet scheduling, change to `"internal"` or `"internal-and-cloud-load-balancing"` and use IAP or a load balancer for access control. |
+| `enable_iap` | `false` | **Medium** | Without IAP, Cal.com's own authentication (NextAuth) is the only access control. If `ingress_settings = "all"`, the service is publicly reachable. For internal deployments, enable IAP to add Google identity as an additional layer. |
+| `SMTP_HOST` / `SMTP_PORT` (in `environment_variables`) | `""` / `"587"` | **Medium** | Without a valid SMTP configuration, Cal.com cannot send booking confirmation emails, calendar invites, or password reset emails. Configure SMTP for any production use. |
+| `EMAIL_FROM` (in `environment_variables`) | `"no-reply@example.com"` | **Low** | Emails sent with `@example.com` as the sender domain are likely to be rejected or land in spam. Set to a real domain with SPF/DKIM records. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Backup runs at 02:00 UTC daily. In high-traffic time zones this may be during active hours. Adjust to a low-traffic window appropriate for your users. |
+| `enable_backup_import` | `false` | **High** | Setting `enable_backup_import = true` triggers a database import job on every `tofu apply`. If `backup_uri` is not a fresh restore snapshot, this will overwrite live data on subsequent applies. Only enable for the initial restore, then set back to `false`. |
+| `secret_rotation_period` | `"2592000s"` | **Low** | Default is 30 days. For compliance-sensitive environments, reduce to `"604800s"` (7 days). Ensure `rotation_propagation_delay_sec` is set high enough for the Cloud Run service to restart before the old password expires. |
+| `enable_auto_password_rotation` | `false` | **Medium** | With manual passwords, a compromised database credential remains valid indefinitely. Enable for production to reduce the window of exposure. |
+| `vpc_sc_dry_run` | `true` | **Medium** | VPC-SC dry run logs violations but does not block them. After verifying no false positives in Cloud Logging, switch to `false` for actual enforcement. Leaving as `true` permanently provides no security benefit. |
+| `organization_id` | `""` | **Medium** | VPC-SC perimeter is only activated when `organization_id` is explicitly set. Without it, `enable_vpc_sc = true` has no effect. |
+| `execution_environment` | `"gen2"` | **Medium** | `gen1` does not support NFS mounts. If `enable_nfs = true` is set, the execution environment must be `gen2`. Mismatching causes a plan-time error. |
+
+---
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

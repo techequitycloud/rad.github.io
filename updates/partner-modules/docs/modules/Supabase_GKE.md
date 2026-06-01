@@ -255,6 +255,39 @@ Refer to the [Supabase self-hosting documentation](https://supabase.com/docs/gui
 
 ---
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `jwt_secret` | Auto-generated 32-byte random secret | **Critical** | Changing `jwt_secret` after initial deploy invalidates every issued JWT — all client connections break immediately. `anon_key` and `service_role_key` must be regenerated together whenever `jwt_secret` changes. Treat as permanently immutable after first deploy. |
+| `anon_key` | Empty (placeholder stored in Secret Manager) | **Critical** | Must be a valid JWT signed with the current `jwt_secret` and payload `{ "role": "anon" }`. A mismatched or placeholder value means the Supabase JavaScript client cannot authenticate any request — all API calls return 401. |
+| `service_role_key` | Empty (placeholder stored in Secret Manager) | **Critical** | Must be a valid JWT signed with `jwt_secret` and payload `{ "role": "service_role" }`. A mismatched value breaks all server-side calls that bypass RLS. This key has full database access; never expose it in client-side code. |
+| `anon_key` + `service_role_key` (pair) | Generated together with `jwt_secret` | **Critical** | All three JWT credentials must be regenerated as an atomic set. Providing a new `jwt_secret` with old derived keys, or vice versa, causes immediate authentication failures across every Supabase service (GoTrue, PostgREST, Realtime, Storage). |
+| `db_name` | `postgres` | **High** | The Supabase schema initialisation scripts target the `postgres` database by name. Using a different name requires fully custom init scripts; the default Kong configuration will fail to connect. |
+| `db_user` | `supabase_admin` | **High** | PostgREST, GoTrue, and Realtime all connect using the `supabase_admin` user. Changing this without updating all microservice configurations causes connection failures across every Supabase service. |
+| `min_instance_count` | `1` | **High** | Setting to `0` enables scale-to-zero. Kong gateway cold starts under Kubernetes take 15–30 seconds, making the Supabase API appear unavailable and breaking OAuth redirect flows that expect immediate responses. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Must be `true`. Supabase uses the Cloud SQL Auth Proxy Unix socket for all database connections. Setting this to `false` causes GoTrue, PostgREST, and Storage to fail on startup with connection errors. |
+| `application_version` | `2.8.1` | **Medium** | Pinning to `latest` risks pulling a Kong version incompatible with the bundled Supabase Kong configuration. Always pin to a tested version and test upgrades in a staging environment first. |
+| `cpu_limit` | `1000m` | **High** | The Kong gateway handles all Supabase API traffic plus JWT validation for every request. Insufficient CPU causes elevated latency and 504 timeouts under moderate load. 2000m is recommended for production. |
+| `memory_limit` | `2Gi` | **High** | Kong with Lua plugins and the Supabase declarative configuration requires at least 512Mi; less than 1Gi causes OOM kills under concurrent load. 2Gi is the minimum for production. |
+| `startup_probe.failure_threshold` | `18` | **High** | Supabase init jobs and database schema creation can take up to 3 minutes on first deploy. Reducing this threshold below 12 causes the pod to be killed before GoTrue finishes initialising, resulting in a CrashLoopBackOff. |
+| `liveness_probe.initial_delay_seconds` | `60` | **Medium** | Too short an initial delay causes the liveness probe to fire before Kong is ready, triggering a premature restart loop on every fresh pod start. |
+| `enable_nfs` | `false` | **Low** | NFS is not required for Supabase; storage is handled via GCS. Enabling NFS adds unnecessary cost and a Filestore dependency that can delay cluster provisioning. |
+| `enable_redis` | `false` | **Medium** | Redis is optional. If provided, `redis_host` must point to a reachable endpoint before Supabase starts. An unreachable Redis host causes connection timeout errors in Kong at startup. |
+| `redis_auth` | `""` | **Medium** | If Redis requires authentication, leaving `redis_auth` empty causes Kong to fail connecting. If Redis is open, setting `redis_auth` to a non-empty value also causes failure. Must match the Redis instance's actual auth configuration. |
+| `stateful_pvc_enabled` | `false` | **High** | Supabase state is stored in Cloud SQL and GCS. Enabling StatefulSet PVCs adds persistent storage that is never actually written to by the Kong gateway, wastes resources, and increases the risk of pod scheduling failures when Autopilot cannot provision the requested disk. |
+| `enable_binary_authorization` | `false` | **Medium** | When enabled with `REQUIRE_ATTESTATION`, all Supabase microservice images must carry valid Binary Authorization attestations. An unattested image blocks pod scheduling with no error shown in the application — only visible in GKE events. |
+| `quota_memory_requests` / `quota_memory_limits` | `"4Gi"` / `"8Gi"` | **Critical** | Values must use binary unit suffixes (e.g., `"4Gi"`, `"8192Mi"`). A bare integer (e.g., `"4"`) is treated as bytes by Kubernetes, setting an effectively zero memory quota and blocking all pod scheduling immediately. |
+| `enable_vpc_sc` | `false` | **High** | Requires `organization_id` to be explicitly set. Without it, VPC Service Controls are silently skipped. Enabling `enable_vpc_sc` without a valid org ID leaves the perimeter not created, giving a false sense of security. |
+| `organization_id` | `""` | **High** | Required when `enable_vpc_sc = true`. Auto-discovery is intentionally disabled to prevent unintended VPC-SC activation. An empty value silently skips perimeter creation. |
+| `enable_iap` | `false` | **Medium** | When IAP is enabled, `iap_oauth_client_id` and `iap_oauth_client_secret` must both be set. Missing values cause IAP to be misconfigured, potentially blocking all access or leaving the service unprotected. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | An empty string disables automated backups entirely. With no backup, a Cloud SQL deletion or schema corruption cannot be recovered without manual intervention. Ensure a schedule is set before go-live. |
+| `enable_artifact_registry_cmek` | `false` | **Medium** | Enabling CMEK without first running `ensure_storage_key_enabled.sh` to verify the key is active causes the Artifact Registry repository creation to fail if the KMS key is in `DESTROY_SCHEDULED` or `DISABLED` state. |
+
+---
+
 ## Module Outputs
 
 | Output | Description |

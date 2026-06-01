@@ -560,19 +560,35 @@ All user-configurable variables exposed by `Twenty_CloudRun`, sorted by UI group
 
 ---
 
-## 12. Configuration Pitfalls
+## 12. Configuration Pitfalls & Sensible Defaults
 
-**`SERVER_URL` must be set explicitly.** `Twenty_Common` injects `SERVER_URL = ""` by default. Without a valid URL, Twenty generates broken API links and CORS errors. Always set `SERVER_URL` and `FRONT_BASE_URL` via `environment_variables` to the public URL of your deployment.
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
 
-**Local storage is ephemeral.** When `enable_gcs_storage = false`, file attachments uploaded to Twenty are stored in the container's local filesystem. These files are lost when the container restarts or a new revision is deployed. Use `enable_gcs_storage = true` for production.
-
-**GCS HMAC keys are required for GCS storage.** When `enable_gcs_storage = true`, you must generate HMAC keys in GCP Console and supply them via `secret_environment_variables`. The module does not auto-generate these credentials.
-
-**bull-mq requires a dedicated worker.** When `enable_redis = true`, Twenty switches to bull-mq but the main Cloud Run service does not run the worker process by default. Deploy a dedicated worker via `additional_services` using the same image with the worker entrypoint command, or set `MESSAGE_QUEUE_TYPE` back to `pg-boss` manually.
-
-**`application_version = 'latest'` is not suitable for production.** The `latest` tag resolves to a different image on each Cloud Build run. Pin to a specific version (e.g., `'0.50.0'`) to ensure reproducible deployments.
-
-**Do not change `db_name` or `db_user` after initial deployment.** These values are baked into the database and secret names. Changing them after the first apply will create a new empty database while the existing one is orphaned.
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `SERVER_URL` (in `environment_variables`) | `""` | **Critical** | `Twenty_Common` injects `SERVER_URL = ""` by default. Without a valid URL, Twenty generates broken API links, CORS errors on all API calls, and OAuth integrations fail entirely. Set `SERVER_URL` and `FRONT_BASE_URL` to the public URL of your deployment before first use. |
+| `FRONT_BASE_URL` (in `environment_variables`) | `""` | **Critical** | Twenty uses `FRONT_BASE_URL` for all frontend redirects and email links. An empty value breaks email notifications and invitation links. Must match `SERVER_URL`. |
+| `APP_SECRET` (via `secret_environment_variables`) | Auto-generated, stored in Secret Manager | **Critical** | `Twenty_Common` generates `APP_SECRET` once at plan time and stores it in Secret Manager. Rotating or deleting the secret invalidates all active JWT tokens, immediately logging out every user. Never manually rotate unless prepared for a full session invalidation. |
+| `database_type` | `"POSTGRES_15"` | **Critical** | Twenty CRM requires PostgreSQL. Changing to MySQL breaks the Prisma schema migration job — the application will not start and the db-init job will fail. |
+| `db_name` | `"twenty"` | **Critical** | Changing after initial deployment orphans the existing database. All CRM data remains in Cloud SQL but Twenty will connect to a new empty database. |
+| `db_user` | `"twenty"` | **Critical** | Changing after initial deployment creates a new database user but the old user still owns the database objects. Permission errors will occur on every database operation. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Twenty connects to Cloud SQL via the Auth Proxy Unix socket. Disabling this removes the socket, causing all database connections to fail. |
+| `enable_gcs_storage` | `false` | **High** | When `false`, file attachments are stored in the container's ephemeral local filesystem and are permanently lost on container restart or new revision deployment. Set to `true` for any production use where file retention matters. |
+| `STORAGE_S3_ACCESS_KEY_ID` / `STORAGE_S3_SECRET_ACCESS_KEY` (in `secret_environment_variables`) | Not auto-generated | **High** | When `enable_gcs_storage = true`, the module sets `STORAGE_TYPE = "s3"` (pointing to GCS's S3-compatible endpoint), but HMAC keys are not auto-generated. Without valid HMAC credentials in `secret_environment_variables`, all file upload and download operations will fail with authentication errors. |
+| `enable_redis` | `false` | **Medium** | Without Redis, Twenty uses `MESSAGE_QUEUE_TYPE = "pg-boss"` (PostgreSQL-backed job queue) and `CACHE_STORAGE_TYPE = "memory"`. Pg-boss is suitable for low-volume deployments but has significantly higher latency than bull-mq. For high-volume CRM workloads, enable Redis. |
+| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, the Redis URL is computed as an empty string, causing Twenty to fail to connect to Redis on startup. All background jobs will stop processing. |
+| `MESSAGE_QUEUE_TYPE` (in `environment_variables`) | `"pg-boss"` (or `"bull-mq"` when Redis enabled) | **High** | When `enable_redis = true`, `Twenty_Common` automatically sets `MESSAGE_QUEUE_TYPE = "bull-mq"`. The bull-mq worker process is separate from the main web service. Without a dedicated worker running the bull-mq consumer (via `additional_services`), background jobs (email sending, data sync, webhooks) will be queued but never processed. |
+| `additional_services` (worker config) | `[]` | **High** | When `enable_redis = true`, a separate worker service must be added via `additional_services` using the same Twenty image with the worker entrypoint. Without it, no background jobs are processed even though bull-mq is active. |
+| `application_version` | `"0.50.0"` | **High** | The `latest` tag resolves to a different image on each Cloud Build run, making rollbacks unpredictable. Pin to a specific version for reproducible deployments. |
+| `container_port` | `3000` | **High** | Twenty's web server listens on port 3000. Changing this to any other value causes Cloud Run health checks to fail and the service to never become healthy. |
+| `memory_limit` | `"2Gi"` | **Medium** | Twenty's Node.js process and pg-boss/bull-mq job processing require at least 2 GiB. Below this, the process may be OOM-killed under load. Use `4Gi` for production with large datasets. |
+| `min_instance_count` | `0` | **Medium** | Scale-to-zero means cold starts of 30–60 seconds for a Node.js application. For a production CRM that needs to receive webhook notifications and process background jobs continuously, set `min_instance_count = 1`. |
+| `enable_cicd_trigger` | `false` | **Medium** | The CI/CD pipeline uses a custom Cloud Build step to build the Twenty image from source. Without `github_repository_url` and valid `github_token`, enabling this will fail at apply time. |
+| `secret_rotation_period` | `"2592000s"` | **Low** | Default is 30-day rotation. For compliance environments, reduce to `"604800s"` (7 days). Ensure `rotation_propagation_delay_sec` is sufficient for the service to restart before the old password expires. |
+| `enable_backup_import` | `false` | **High** | Setting to `true` triggers a database import job on every `tofu apply`. If `backup_uri` is not a controlled snapshot, subsequent applies will overwrite live CRM data. Only enable for the initial restore, then set back to `false`. |
+| `ingress_settings` | `"all"` | **Medium** | A production CRM should restrict ingress. Use `"internal-and-cloud-load-balancing"` with Cloud Armor, or `"internal"` for internal-only deployments. Leaving as `"all"` exposes the API to the public internet without WAF protection. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **High** | When Redis (Memorystore) is used, its private IP may not be in the default VPC private ranges for Cloud Run routing. Change to `"ALL_TRAFFIC"` if Redis connections are failing. |
+| `vpc_sc_dry_run` | `true` | **Medium** | VPC-SC dry run logs violations without blocking. Switch to `false` only after reviewing Cloud Logging for false positives to avoid accidentally blocking legitimate API calls. |
 
 ---
 

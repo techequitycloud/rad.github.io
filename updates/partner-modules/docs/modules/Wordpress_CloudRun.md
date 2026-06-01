@@ -427,6 +427,36 @@ The table below covers all variables unique to or with notable defaults in `Word
 | `organization_id` | `string` | `""` | 21 | GCP org ID for VPC-SC; auto-discovered when empty |
 | `enable_audit_logging` | `bool` | `false` | 21 | Enable DATA_READ/WRITE audit logs |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `project_id` | _(required)_ | **Critical** | No default — deployment fails immediately. |
+| `database_type` | `"MYSQL_8_0"` | **Critical** | WordPress requires MySQL. Setting to `POSTGRES` or `NONE` breaks database connectivity — WordPress's `wpdb` class only supports MySQL. |
+| `enable_nfs` | `true` | **Critical** | WordPress stores all uploaded media, installed plugins, and themes under `wp-content/`. Without NFS, the `wp-content` directory is ephemeral — every new Cloud Run revision wipes all plugins, themes, and media uploads. This makes WordPress on Cloud Run non-functional for any real site. |
+| `nfs_mount_path` | `"/mnt/nfs"` | **High** | The WordPress container startup script symlinks `/var/www/html/wp-content` to the NFS path. If the path does not match the startup script expectations, the symlink is broken and WordPress cannot find plugins or themes. |
+| `container_image_source` | `"custom"` | **High** | WordPress requires a custom build that wires the NFS `wp-content` symlink, the Cloud SQL socket path, and PHP configuration. Using `"prebuilt"` with the upstream `wordpress` Docker Hub image will not have these integrations and will fail to connect to Cloud SQL via Unix socket. |
+| `enable_redis` | `false` | **Medium** | WordPress without a persistent object cache hits MySQL for every page request. For sites with plugin-heavy pages or moderate traffic, enabling Redis with the WP Redis plugin reduces database load by 60–90% and dramatically improves page load times. |
+| `redis_host` | `""` | **High** | Required when `enable_redis = true`. Leaving empty causes the WordPress Redis Object Cache plugin to fail silently — WordPress falls back to no caching rather than erroring, masking the misconfiguration. |
+| `php_memory_limit` | `"512M"` | **Medium** | Many WordPress plugins (WooCommerce, Elementor, ACF) require 256M–512M of PHP memory. The default `512M` is sufficient for most sites. Reducing below `256M` causes plugin activation failures and white screen of death (WSOD). |
+| `upload_max_filesize` | `"64M"` | **Medium** | Sites publishing high-resolution images or video need a higher limit. The default `64M` is insufficient for video uploads. Must be less than or equal to `post_max_size`. |
+| `post_max_size` | `"64M"` | **Medium** | Must be greater than or equal to `upload_max_filesize`. Setting `upload_max_filesize > post_max_size` silently truncates uploads. |
+| `application_database_name` | `"wordpress"` | **Critical** | Immutable after first deployment — changing this recreates the database and destroys all WordPress posts, users, settings, and media records. |
+| `application_database_user` | `"wordpress"` | **Critical** | Immutable after first deployment — changing this recreates the user and breaks the existing database connection. |
+| `min_instance_count` | `1` | **Medium** | Scale-to-zero (`0`) causes 10–20 second cold starts. WordPress is not designed for serverless — cold starts disrupt persistent connections. For sites with consistent traffic, `min_instance_count = 1` is required. |
+| `memory_limit` | varies | **High** | Running WordPress with popular plugins (WooCommerce, Elementor) requires at least 2Gi of container memory. The minimum viable value depends on the plugin ecosystem. Insufficient memory causes PHP fatal errors. |
+| `ingress_settings` | `"all"` | **Medium** | `"all"` exposes the WordPress admin panel (`/wp-admin`) to the public internet. Consider enabling Cloud Armor WAF rules to restrict `/wp-admin` and `/wp-login.php` access to known IP ranges. |
+| `enable_cloud_armor` | `false` | **High** | WordPress login pages (`/wp-login.php`, `xmlrpc.php`) are prime targets for brute-force and credential stuffing attacks. Cloud Armor WAF is strongly recommended for any public WordPress site. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts require Cloud Run gen2. Changing to `"gen1"` with `enable_nfs = true` causes the service to fail to start with a volume mount error. |
+| `enable_backup_import` | `false` | **Critical** | Requires `backup_uri` to be valid and accessible. Enabling with an empty `backup_uri` causes the restore job to fail during `tofu apply`. |
+| `backup_retention_days` | `7` | **Medium** | Seven days is inadequate for e-commerce or news sites. Losing more than a week of WooCommerce orders or content is a serious business risk. Increase to 30+ days. |
+| `database_password_length` | `32` | **Medium** | Do not reduce. The minimum enforced by validation is 16, but 32+ is recommended for production database credentials. |
+| `enable_cicd_trigger` | `false` | **Low** | Requires `github_repository_url` and either `github_token` or `github_app_installation_id` when enabled. Enabling without these causes the Cloud Build trigger creation to fail. |
+| `secret_propagation_delay` | `30` | **Low** | May be insufficient in multi-region projects. Increase to 60s if Secret Manager reads intermittently fail during deployment. |
+| `enable_iap` | `false` | **Medium** | With IAP disabled, WordPress admin access is protected only by WordPress authentication. Enabling IAP is recommended for admin-only Cloud Run deployments. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

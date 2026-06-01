@@ -310,6 +310,31 @@ All user-configurable variables, sorted by UI group then order.
 
 ---
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `enable_auth_token` | `false` | **Critical** | Without an authentication token, any caller who can reach the Cloud Run service can read, write, or delete any Chroma collection. Set to `true` for any deployment reachable outside the VPC. The generated token is stored in Secret Manager and must be provided in the `Authorization: Bearer <token>` header by all clients. |
+| `ingress_settings` | `"internal"` | **High** | Default is `internal` (VPC-only). Changing to `"all"` exposes the Chroma API to the public internet with no authentication unless `enable_auth_token = true`. Never set to `"all"` without authentication enabled. |
+| `enable_nfs` | `false` | **High** | Without NFS, Chroma stores its collection data inside the container filesystem. On Cloud Run, this storage is ephemeral — a new revision deployment or instance restart erases all collections. Enable NFS (requires `execution_environment = "gen2"`) or GCS Fuse (`enable_gcs_storage_volume = true`) for persistence. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts require Gen2. If `enable_nfs = true` is set while `execution_environment = "gen1"`, the Cloud Run deployment fails. |
+| `memory_limit` | `"1Gi"` | **High** | Chroma loads HNSW indexes entirely into memory. Each 1M 1536-dimension float32 vectors requires approximately 6 Gi of RAM. The default `1Gi` is only suitable for very small collections (< 100K vectors). Underprovisioning causes OOM kills under query load. |
+| `cpu_always_allocated` | `true` | **Medium** | Chroma must respond to health checks and background index rebuilds even with no active requests. Setting to `false` causes CPU throttling between requests, slowing index operations and potentially causing health check timeouts. |
+| `min_instance_count` | `1` | **Medium** | Scale-to-zero (`0`) causes cold starts during which in-memory indexes must be reloaded from GCS. For latency-sensitive applications, keep at `1`. |
+| `max_instance_count` | `1` | **High** | Multiple Chroma Cloud Run instances do not share state. With `max_instance_count > 1` and GCS Fuse storage, concurrent writes from different instances can corrupt the collection. Chroma Cloud Run is single-instance by design; use `Chroma_GKE` with StatefulSet for multi-replica production deployments. |
+| `container_port` | `8000` | **Critical** | Chroma listens on port 8000 by default. Changing this requires a matching `CHROMA_SERVER_HTTP_PORT` environment variable to be set, otherwise the container starts but Cloud Run health checks fail and the revision is never promoted. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **Low** | `PRIVATE_RANGES_ONLY` is correct when all dependencies are on the VPC. Only change to `ALL_TRAFFIC` if Chroma must reach public endpoints directly (e.g., embedding model APIs). |
+| `timeout_seconds` | `300` | **Medium** | Large similarity searches over millions of vectors can take several seconds. Setting too low causes Cloud Run to return 504 to clients during expensive queries. Increase to `600` for large collection workloads. |
+| `enable_gcs_storage_volume` | `true` (in Common) | **High** | GCS Fuse is the primary persistence mechanism for Cloud Run Chroma deployments. Disabling it means collections are lost on instance restart. Leave enabled unless NFS is used instead. |
+| `application_version` | `"latest"` | **Medium** | Using `latest` means the deployed image can change on rebuild without an explicit version bump. Pin to a specific Chroma version tag for reproducible production deployments. |
+| `backup_schedule` | *(varies by module)* | **Medium** | Chroma data is stored in GCS/NFS; regular snapshots of the GCS bucket are the primary backup mechanism. Ensure GCS object versioning or the module's backup job is configured for disaster recovery. |
+| `enable_iap` | `false` | **High** | When `ingress_settings = "all"` and `enable_auth_token = false`, the service is fully open. Enable IAP as an additional authentication layer for user-facing deployments. |
+| `secret_propagation_delay` | `30` | **Medium** | If the auth token secret is created but not yet propagated when Cloud Run reads it, the container may start with an empty auth token. Increase to `60` in large projects. |
+| `enable_cloudsql_volume` | `false` | **Low** | Chroma does not use a relational database. This variable should remain `false`; enabling it injects a Cloud SQL Auth Proxy sidecar that serves no purpose and consumes container resources. |
+| `resource_labels` | `{}` | **Low** | Without labels, cost attribution and resource filtering in GCP Console is difficult. Add at minimum `env` and `service` labels for production. |
+
 ## 10. Destroying Resources
 
 When `enable_purge = true`, `tofu destroy` removes all module-managed resources. After Cloud Run service deletion, GCP may hold serverless IPv4 addresses on the VPC subnet for 20–30 minutes before release. If the destroy attempt fails with a subnet deletion error, wait and re-run:

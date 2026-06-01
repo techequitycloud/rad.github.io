@@ -330,3 +330,36 @@ cron_jobs = [
 | `enable_purge` | 0 | `true` | Allow full resource deletion on destroy. |
 | `public_access` | 0 | `false` | Make module visible in the public catalogue. |
 | `shared_users` | 0 | `[]` | Users who can access regardless of `public_access`. Enforced by the platform. |
+
+---
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `project_id` | _(required)_ | **Critical** | No default — deployment fails immediately without a valid project ID. |
+| `database_type` | `"MYSQL_8_0"` | **Critical** | Mautic requires MySQL. Setting to `POSTGRES` or `NONE` will break application startup — Mautic's ORM is not compatible with PostgreSQL in this module. |
+| `enable_redis` | `true` | **High** | Without Redis, Mautic uses file-based caching. With multiple pod replicas, each pod has an isolated cache and file lock state, causing cache inconsistency and potential data corruption. |
+| `redis_host` | `""` (auto-resolves to NFS IP) | **High** | When `enable_redis = true` and `redis_host = ""`, the module uses the NFS server IP as the Redis host. If `enable_nfs = false`, there is no valid fallback — Mautic will fail to connect. Set `redis_host` explicitly when NFS is disabled. |
+| `enable_nfs` | `true` | **Critical** | Mautic uploads (images, email attachments) are written to NFS. Without NFS, files are lost on pod restart and are not shared across replicas. Media links in campaigns break immediately. |
+| `cron_jobs` | `[]` (none configured) | **Critical** | Mautic campaigns, email queues, lead segment updates, and automation triggers are entirely cron-driven. Without a cron job running `app/console mautic:segments:update` and `mautic:campaigns:trigger` at regular intervals, campaigns never fire and no emails are sent. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero (`0`) means Mautic cron jobs have no running instance to target. Cold starts also delay campaign processing. Keep at `1` for any active marketing automation workload. |
+| `container_resources.memory_limit` | `"4Gi"` (via `memory_limit` variable) | **High** | The GKE `container_resources` default is only `512Mi`. For Mautic, this causes PHP out-of-memory errors during contact import and campaign sends. Override to at least `2Gi` for production. |
+| `container_resources.cpu_limit` | `"2000m"` (via `cpu_limit` variable) | **Medium** | The GKE `container_resources` default is only `1000m`. Mautic's segment recalculation and campaign processing are CPU-intensive. Under-provisioning causes visible slowdowns. |
+| `session_affinity` | `"ClientIP"` | **High** | Mautic uses PHP sessions. Without session affinity (`"None"`), requests from the same browser hit different pods and lose session state on every request, making login impossible with multiple replicas. Keep `"ClientIP"`. |
+| `workload_type` | `null` (auto-resolves) | **Medium** | Setting `stateful_pvc_enabled = true` automatically uses `StatefulSet`. Setting `workload_type = "Deployment"` alongside `stateful_pvc_enabled = true` fails at plan time. |
+| `mautic_admin_email` | `"admin@example.com"` | **High** | Placeholder — system notifications go to an unreachable address. Set to a real admin email before production. |
+| `mailer_from_email` | `"mautic@example.com"` | **High** | The default is a placeholder. Emails from this unverified address will be rejected or flagged as spam by receiving servers. Set to a domain with valid SPF/DKIM. |
+| `enable_iap` | `false` | **Medium** | Mautic admin panel is publicly accessible without IAP protection. For GKE, the service is exposed via a LoadBalancer. Enable IAP or restrict via `admin_ip_ranges` and Cloud Armor for admin-facing deployments. |
+| `enable_backup_import` | `false` | **Critical** | Requires `backup_uri` (or `backup_file`) to be set. Enabling without a valid backup path causes the import Kubernetes Job to fail. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (GKE-specific) | If set, values must use binary suffixes (`Gi`, `Mi`). Bare integers (e.g., `"4"`) are treated as bytes by Kubernetes and will prevent all pods from being scheduled. |
+| `application_database_name` (via `db_name`) | `"mautic"` | **Critical** | Immutable after first deployment. Renaming recreates the database and destroys all data. |
+| `application_database_user` (via `db_user`) | `"mautic"` | **Critical** | Immutable after first deployment. Renaming recreates the user and invalidates stored credentials. |
+| `backup_retention_days` | `7` | **Medium** | Insufficient for compliance workloads. Increase to 30–90 days for production. |
+| `enable_network_segmentation` | `false` | **Medium** | Without NetworkPolicy, all pods in the cluster can communicate freely. Enable for multi-tenant clusters or compliance-sensitive environments. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | Already enabled by default. Disabling allows all pods to be terminated simultaneously during cluster upgrades, causing a full outage. |
+| `pdb_min_available` | `"1"` | **Medium** | With `min_instance_count = 1` and `pdb_min_available = "1"`, voluntary disruptions (node upgrades) will stall indefinitely since the single pod cannot be evicted. Increase `min_instance_count` to at least 2 if availability during maintenance is required. |
+| `secret_propagation_delay` | `30` | **Low** | May be insufficient for global Secret Manager replication. Increase to 60–90 seconds for multi-region deployments. |
+| `enable_cloud_armor` | `false` | **Medium** | Mautic admin and API endpoints are exposed without WAF protection. Recommended for public-facing marketing automation. |

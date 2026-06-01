@@ -545,6 +545,39 @@ All user-configurable variables exposed by `Nextcloud_CloudRun`, sorted by UI gr
 
 ---
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `NEXTCLOUD_TRUSTED_DOMAINS` (via `application_domains`) | Auto-populated from `application_domains` + Cloud Run hostname | **Critical** | Nextcloud enforces a trusted domain whitelist. Any domain not in this list receives a "Access through untrusted domain" error and the application is unusable. When adding a custom domain or load balancer, add it to `application_domains`. The `entrypoint.sh` appends the Cloud Run service hostname automatically at runtime. |
+| `database_type` | `"MYSQL_8_0"` | **Critical** | Nextcloud requires MySQL. `Nextcloud_Common` hardcodes `database_type = "MYSQL_8_0"`. Changing to PostgreSQL breaks the database initialization job and the application will not start. |
+| `db_name` | `"nextcloud"` | **Critical** | Changing after initial deployment orphans the existing database. Nextcloud will connect to a new empty database. All files, users, calendar data, and configuration are lost from the application's perspective (they remain in the old database but are unreachable). |
+| `db_user` | `"nextcloud"` | **High** | Changing after initial deployment creates a new user without ownership of existing Nextcloud tables. All database operations fail with permission errors. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Nextcloud connects to Cloud SQL MySQL via the Auth Proxy Unix socket. Disabling this removes the socket path, causing all database connections to fail immediately on startup. |
+| `container_port` | `80` | **Critical** | `Nextcloud_Common` sets `container_port = 80` (the Apache web server default). Changing to any other port causes Cloud Run health checks and traffic routing to fail — the container starts but receives no traffic. |
+| `OVERWRITEPROTOCOL` (in `environment_variables`) | `"https"` | **High** | Nextcloud generates all file share links, calendar URLs, and WebDAV endpoints using this protocol. Setting to `"http"` causes mixed-content browser warnings and WebDAV clients may reject insecure connections. Cloud Run always serves HTTPS externally — keep as `"https"`. |
+| `php_memory_limit` | `"512M"` | **Medium** | PHP memory limit controls per-request memory. For large file operations, album generation, or Office document editing, `512M` may be insufficient. Increase to `1G` or `2G` for file-heavy workloads. This value is baked into the container image at build time — changing it requires a new Cloud Build run. |
+| `upload_max_filesize` | `"512M"` | **High** | Files larger than this limit cannot be uploaded through the web interface. This value is also baked into the container image at build time. For organizations uploading large videos or archives, increase to `5G` or `10G` and ensure `post_max_size` matches or exceeds it. |
+| `post_max_size` | `"512M"` | **High** | PHP's POST body limit. Must be equal to or greater than `upload_max_filesize`. If `post_max_size < upload_max_filesize`, PHP silently drops the upload body and Nextcloud receives an empty file. Always set `post_max_size >= upload_max_filesize`. |
+| `enable_redis` | `false` | **Medium** | Without Redis, Nextcloud uses a file-based locking mechanism (`FileLocking`) and local APCu cache. With multiple instances or scale-to-zero, file locks become stale and cause 503 "File is locked" errors during concurrent operations. Enable Redis (`REDIS_HOST` and `REDIS_HOST_PORT`) for multi-instance or production deployments. |
+| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, `Nextcloud_Common` injects `REDIS_HOST = "$(REDIS_HOST)"` literally (unresolved shell variable), causing Nextcloud to fail to connect to Redis at runtime. Always provide a valid hostname or IP when enabling Redis. |
+| `min_instance_count` | `0` | **High** | Scale-to-zero means Nextcloud cold-starts on every request after idle. Nextcloud's PHP startup includes autoloader initialization and database connection establishment — cold starts are 15–30 seconds. For production use, set `min_instance_count = 1`. |
+| `enable_nfs` | `false` | **High** | Without NFS, all Nextcloud data (uploaded files, app data, config) is stored in the container's ephemeral filesystem. Files are permanently lost on container restart or new revision deployment. NFS is required for any Nextcloud deployment that stores files. |
+| `nfs_mount_path` | `"/mnt/nfs"` | **High** | Nextcloud must be configured to use this path as its data directory via `NEXTCLOUD_DATA_DIR`. A mismatch causes Nextcloud to write to the ephemeral container filesystem while the NFS mount is idle. |
+| `max_instance_count` | `1` | **Medium** | Nextcloud with multiple instances requires Redis for distributed file locking and shared session storage. Running multiple instances without Redis causes severe data integrity issues — concurrent writes to the same file can corrupt it. Never increase above `1` without enabling Redis and NFS. |
+| `nextcloud_admin_user` | `"admin"` | **Medium** | The default admin username `"admin"` is a common brute-force target. Change to a less guessable username for public-facing deployments. This is only applied on first installation — changing after deployment has no effect. |
+| `NEXTCLOUD_ADMIN_PASSWORD` (auto-generated secret) | Auto-generated, stored in Secret Manager | **High** | The admin password is auto-generated at first deploy and stored in Secret Manager. If the secret is deleted or rotated without updating Nextcloud's database, the admin account password becomes unknown and recovery requires database access. |
+| `memory_limit` (container) | `"1Gi"` | **Medium** | Nextcloud's PHP process and the Apache web server together require adequate memory. Below `512Mi`, PHP processes are killed under load. For workloads with Office integration or video thumbnailing, use `2Gi` or more. |
+| `cpu_limit` | `"1000m"` | **Medium** | File scanning, thumbnail generation, and Office document operations are CPU-intensive. Below `500m`, these background tasks cause visible slowness in the web interface. Use `2000m` for production. |
+| `ingress_settings` | `"all"` | **Medium** | Nextcloud is often used as an internal file store. Restrict to `"internal"` or `"internal-and-cloud-load-balancing"` for non-public deployments. Exposing Nextcloud to the full internet requires strong password policies and rate limiting. |
+| `enable_backup_import` | `false` | **High** | Setting to `true` triggers a database import on every `tofu apply`. If `backup_uri` is not a controlled snapshot, subsequent applies overwrite the live Nextcloud database. Only enable for the initial restore, then set back to `false`. |
+| `application_version` | e.g., `"28"` | **Medium** | Using `"latest"` causes each Cloud Build run to potentially use a different Nextcloud version, making rollbacks difficult and introducing unplanned major version upgrades. Pin to a specific version tag. |
+| `NEXTCLOUD_UPDATE` (in `environment_variables`) | `"1"` | **Low** | `Nextcloud_Common` sets `NEXTCLOUD_UPDATE = "1"`, which auto-runs `occ upgrade` on container startup. This is intentional for automatic minor updates. Set to `"0"` to disable auto-upgrade and manage upgrades manually. |
+
+---
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

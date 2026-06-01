@@ -487,6 +487,34 @@ Complete list of all input variables, grouped by UI section.
 | 21 | `organization_id` | string | `""` | yes |
 | 21 | `enable_audit_logging` | bool | `false` | yes |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `database_type` | `MYSQL_8_0` | **Critical** | OpenEMR is MySQL-only. Changing to PostgreSQL causes the initialisation job and all OpenEMR PHP code to fail immediately — OpenEMR does not support PostgreSQL. |
+| `OE_USER` (hardcoded in Common) | `admin` | **High** | The initial admin username is hardcoded to `admin` in the OpenEMR Common init job. Changing it via `environment_variables` after initial deployment does not rename the existing account — it creates a second account or fails silently. |
+| `OE_PASS` (via Secret Manager) | Auto-generated 20-character random password | **High** | The auto-generated admin password is stored in Secret Manager. Retrieve it from Secret Manager before attempting to log in. Passing a custom `OE_PASS` via `environment_variables` on an already-initialised database has no effect — OpenEMR reads the password from the database, not env vars, after setup. |
+| `MANUAL_SETUP` (hardcoded in Common) | `no` | **Critical** | Hardcoded to `no`, triggering automatic database initialisation via `auto_configure.php`. Setting to `yes` skips auto-setup and expects a pre-existing database schema — the service starts but presents a blank database error page until the schema is created manually. |
+| `K8S` (in init job) | `admin` (init job mode) | **Critical** | The init job runs with `K8S=admin` to perform schema creation without starting Apache. Changing this environment variable in the init job definition causes auto-setup to be skipped, leaving the database uninitialised and the service unable to start. |
+| `ephemeral_storage_limit` | `"2Gi"` | **High** | OpenEMR writes PHP opcache, Apache logs, session files, and installation temp files to the container writable layer. The default GKE Autopilot 1Gi ephemeral storage limit is insufficient and causes the pod to be evicted. Must be at least 2Gi; set to 3–4Gi for production. |
+| `MYSQL_ROOT_PASS` (via `environment_variables`) | `BLANK` | **High** | OpenEMR's init scripts use `MYSQL_ROOT_PASS` to create the application user. The value `BLANK` is a special sentinel meaning "no root password required" (Cloud SQL Auth Proxy authenticates differently). Changing this to a real value causes the init job to attempt password-based MySQL root authentication, which fails against Cloud SQL. |
+| `enable_redis` | `false` | **Medium** | When `enable_redis = true`, `redis_host` must point to a reachable Redis instance before OpenEMR starts. An unreachable Redis host causes PHP session handling to fail, preventing any user from logging in. |
+| `redis_host` | `""` | **High** | Required when `enable_redis = true`. An empty value causes OpenEMR session handling to attempt connection to an empty hostname, producing PHP warnings and login failures for all users. |
+| `enable_nfs` (via NFS mount for sites dir) | NFS required for multi-instance | **High** | OpenEMR stores the `sites/` directory (documents, configuration) on NFS for multi-instance setups. Without NFS, each Cloud Run instance has its own isolated `sites/` directory — patient documents uploaded to one instance are invisible on others, and configuration changes are not shared. |
+| `min_instance_count` | `1` | **High** | Setting to `0` enables scale-to-zero. OpenEMR has a slow cold-start (Apache + PHP-FPM initialisation typically takes 20–40 seconds). Scale-to-zero causes unacceptable delays for clinical workflows where response time is critical. |
+| `cpu_limit` | `1000m` | **High** | OpenEMR runs Apache + PHP-FPM with multiple worker processes. Under concurrent load, insufficient CPU causes PHP worker timeouts and Apache 503 errors. 2000m is recommended for production deployments with multiple concurrent users. |
+| `memory_limit` | `1Gi` | **High** | OpenEMR's PHP processes are memory-intensive (patient record loading, PDF generation, billing processing). Less than 512Mi causes PHP-FPM worker OOM kills mid-request; 1Gi is the minimum for reliable single-user operation. |
+| `execution_environment` | `"gen2"` | **High** | Gen2 is required for NFS mounts needed by the OpenEMR sites directory. Gen1 does not support Unix socket paths in the expected Cloud SQL Auth Proxy location, causing both NFS and database connection failures. |
+| `enable_cloudsql_volume` | `true` | **Critical** | OpenEMR connects to Cloud SQL via the Auth Proxy Unix socket. Disabling this causes all MySQL connections to fail at startup — OpenEMR cannot function without database access. |
+| `backup_schedule` | `"0 2 * * *"` | **Critical** | An empty string disables automated backups entirely. OpenEMR contains protected health information (PHI). Without automated backups, a Cloud SQL failure results in permanent loss of patient records — a HIPAA compliance violation. Always configure a backup schedule. |
+| `backup_retention_days` | `7` | **Medium** | Setting to `0` or `1` reduces the recovery window for accidental data deletion or corruption. For HIPAA-regulated environments, retain at least 90 days of backups. |
+| `enable_iap` | `false` | **Medium** | Enabling IAP without setting `iap_oauth_client_id` and `iap_oauth_client_secret` causes a partial IAP configuration that may leave the service inaccessible or unprotected. For clinical deployments, consider IAP to restrict access to authorised staff only. |
+| `timeout_seconds` | `300` | **Medium** | OpenEMR's billing and reporting features generate large PDFs that can exceed 60 seconds. A timeout below 120 seconds causes these operations to fail mid-execution. Increase to 600+ for production deployments. |
+| `enable_vpc_sc` | `false` | **High** | Requires explicit `organization_id`. Without it, VPC Service Controls are silently skipped. For HIPAA environments, VPC-SC is a key control for preventing data exfiltration. |
+| `enable_auto_password_rotation` | `false` | **Medium** | When enabled, the Cloud SQL password rotates on schedule. The Cloud Run revision must be redeployed after rotation; otherwise OpenEMR uses an invalid MySQL password until connections fail and the service becomes unavailable. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

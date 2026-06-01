@@ -527,3 +527,30 @@ All user-configurable variables exposed by `AnythingLLM_GKE`, sorted by UI group
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 | `kubernetes_ready` | True when the GKE cluster endpoint is available and all Kubernetes workload resources have been deployed. |
 | `artifact_registry_repository` | Artifact Registry repository for container images. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `JWT_SECRET` (auto-generated) | Random secret in Secret Manager | **Critical** | Signs all AnythingLLM authentication tokens. Rotating or regenerating invalidates all active sessions simultaneously. Treat as immutable after first user login. |
+| `AUTH_TOKEN` (optional) | `""` (no token) | **High** | Leaving empty means the AnythingLLM REST API is accessible to any pod in the same namespace without a token. Provide a strong bearer token for production cluster deployments. |
+| `STORAGE_DIR` / GCS Fuse mount | Mounted at `/app/server/storage` | **Critical** | All workspace documents, vector indices, and conversation attachments are stored under `STORAGE_DIR`. Without a persistent volume mount, all data is lost when the pod is evicted or rescheduled. `stateful_pvc_enabled = true` or GCS Fuse is mandatory for production. |
+| `stateful_pvc_enabled` | `false` | **High** | GCS Fuse is the default persistence backend. If disabled accidentally and no PVC is configured, the pod writes to the ephemeral container filesystem and all data is lost on restart. |
+| `nfs_mount_path` | `"/mnt/nfs"` | **High** | Must match the `STORAGE_DIR` environment variable. A mismatch causes AnythingLLM to write to a local path while the NFS share is unused. |
+| `LLM_PROVIDER` (via `environment_variables`) | `"native"` | **Critical** | Without a correctly configured LLM provider and its associated API key in `secret_environment_variables`, all AI inference requests fail. `LLM_PROVIDER` must match the keys provided (e.g., `"openai"` requires `OPENAI_API_KEY`). |
+| `EMBEDDING_ENGINE` (via `environment_variables`) | `"native"` | **High** | Changing the embedding engine after workspace ingestion makes all existing vector indices incompatible. The engine must remain consistent for the lifetime of the data, or all documents must be re-ingested. |
+| `secret_environment_variables` | `{}` | **Critical** | All LLM provider API keys must come from Secret Manager references. Providing sensitive keys as plain `environment_variables` exposes them in Kubernetes pod specs and GCP audit logs. |
+| `container_resources.memory_limit` | `4Gi` | **High** | AnythingLLM's native embedding pipeline requires 3–4 Gi RAM during ingestion. OOM-kill during document processing causes partial ingestion and corrupted vector indices. |
+| `quota_memory_requests` / `quota_memory_limits` | `"4Gi"` / `"8Gi"` | **Critical** | Must use binary suffixes (`Gi`, `Mi`). Bare integers are treated as bytes, preventing all pod scheduling in the namespace. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Must remain `true` for Cloud SQL connectivity. Disabling causes all database connections to fail and AnythingLLM to crash on startup with a PostgreSQL connection error. |
+| `database_type` | `"POSTGRES"` | **Critical** | AnythingLLM requires PostgreSQL. Without a relational database, workspace metadata, users, and conversation history cannot be persisted. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero requires the pod and the GCS Fuse mount to re-initialise on each cold start (30–60 s). Any in-flight AI operations during scale-down are lost. |
+| `timeout_seconds` | `300` | **High** | Long document ingestion operations or slow LLM completions cause 504 errors if the timeout is exceeded. Increase to `600`–`3600` for document-heavy or slow-LLM deployments. |
+| `enable_nfs` | `false` | **Medium** | Required for multi-replica deployments with shared file access. Without NFS or a shared PVC, each pod has an isolated storage view and cross-pod document access is impossible. |
+| `workload_type` | `null` (auto-select) | **Medium** | Setting `stateful_pvc_enabled = true` auto-selects `StatefulSet`. Setting both `stateful_pvc_enabled = true` and `workload_type = "Deployment"` fails at plan time with a validation error. |
+| `enable_redis` | `false` | **Low** | Optional for AnythingLLM. If `enable_redis = true`, `redis_host` must be resolvable from the pod or startup fails. |
+| `backup_schedule` | `""` (disabled) | **High** | Without automated PostgreSQL backups, workspace metadata (users, workspaces, settings) is unprotected. Enable for production. |
+| `enable_image_mirroring` | `true` | **Medium** | Disabling pulls from the upstream registry (rate-limited in CI/CD environments). Keep enabled in production. |
+| `application_version` | `"latest"` | **Medium** | Unpinned versions risk schema-breaking upgrades. Pin to a specific release tag for production stability. |

@@ -144,3 +144,28 @@ Same as `LiteLLM_CloudRun`. Redis response caching is optional but recommended f
 | `deployment_id` | Deployment ID suffix used in resource names. |
 | `database_instance_name` | Cloud SQL PostgreSQL instance name. |
 | `database_name` | LiteLLM database name. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `LITELLM_MASTER_KEY` (auto-generated) | `"sk-<random>"` in Secret Manager | **Critical** | Controls all administrative operations and authenticates proxy API calls. Rotation immediately breaks all integrations holding existing virtual keys or the master key. Treat as immutable unless performing a coordinated key rotation with all consumers. |
+| `LITELLM_SALT_KEY` (auto-generated) | Random secret in Secret Manager | **Critical** | Salts all virtual API keys in the database. Changing it makes every previously issued virtual key permanently invalid. All API consumers must be issued new keys. Treat as permanently immutable. |
+| `STORE_MODEL_IN_DB` (via `environment_variables`) | `"True"` | **High** | Required for database-backed model and key management via the Admin UI. Setting to `"False"` disables the Admin UI model management and reverts to YAML-file-only configuration. |
+| `enable_cloudsql_volume` | `true` | **Critical** | The Cloud SQL Auth Proxy sidecar is required for PostgreSQL connectivity in the GKE pod. Disabling it causes Prisma to fail connecting to the database at startup. |
+| `database_type` | `"POSTGRES"` | **Critical** | LiteLLM requires PostgreSQL for virtual key management and spend tracking. Without it, the `STORE_MODEL_IN_DB` features are unavailable and key management is disabled. |
+| `enable_redis` | `false` | **High** | Without Redis, rate-limit counters are per-pod and not shared across replicas. For accurate rate limiting and response caching in a multi-replica GKE deployment, Redis is essential. |
+| `redis_host` | `""` | **High** | Must be set when `enable_redis = true`. An empty `redis_host` with Redis enabled causes LiteLLM to log cache connection errors on every request. |
+| `quota_memory_requests` / `quota_memory_limits` | Binary unit defaults | **Critical** | Must include binary unit suffixes (`Gi`, `Mi`). Bare integer values are treated as bytes by Kubernetes and block all pod scheduling. |
+| `stateful_pvc_enabled` | `false` | **Medium** | GCS Fuse is the default persistence backend for any config files. Enabling PVC storage for LiteLLM config prevents pod migration across nodes and complicates rolling updates. |
+| `workload_type` | `null` (auto-select) | **Medium** | Setting `stateful_pvc_enabled = true` alongside `workload_type = "Deployment"` fails at plan time. Let auto-selection handle this. |
+| `min_instance_count` | `1` | **High** | LiteLLM is a shared API gateway. Cold starts (30–60 s on GKE Autopilot node provision) cause queuing in all dependent services. Keep at least 1 replica running at all times. |
+| `timeout_seconds` | `600` | **High** | Large language model inference can take several minutes. Proxy requests are terminated by the load balancer if the backend pod takes longer than `timeout_seconds` to respond. |
+| `service_type` (Kubernetes) | `"ClusterIP"` | **Critical** | Exposing with `LoadBalancer` makes the LiteLLM master key and all virtual keys accessible over the public internet. Always use ClusterIP with an authenticated ingress or Gateway in front. |
+| `iap_oauth_client_id` / `iap_oauth_client_secret` | `""` | **Critical** | Required when `enable_iap = true`. Missing values prevent the IAP gateway from initialising and make the service unreachable. |
+| `NUM_WORKERS` (via `environment_variables`) | `"1"` | **Medium** | A single worker serialises all requests. Increase to `2`–`4` for high-throughput deployments and scale `cpu_limit` proportionally. |
+| `backup_schedule` | `""` (disabled) | **High** | The PostgreSQL database holds all virtual keys and spend data. Without automated backups, accidental deletion or corruption causes permanent loss of key assignments and usage history. |
+| `enable_vertical_pod_autoscaling` | `false` | **Medium** | Enabling VPA disables HPA (conflict). On GKE Autopilot, VPA is the recommended approach for right-sizing pods. Choose one or the other. |
+| `application_version` | `"main-stable"` | **Medium** | LiteLLM releases frequently and may change the Prisma schema or break virtual key formats. Pin to a specific release for production stability. |

@@ -477,3 +477,30 @@ resource_labels = {
   service = "ragflow"
 }
 ```
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `elasticsearch_hosts` | *(required — no default)* | **Critical** | RAGFlow cannot index or search documents without a reachable Elasticsearch endpoint. Must be set to the `elasticsearch_endpoint` output from a deployed `Elasticsearch_GKE` instance (e.g. `http://10.0.0.5:9200`). Leaving blank causes a plan-time error; RAGFlow will not deploy. |
+| `enable_redis` | `true` | **Critical** | Redis is required for RAGFlow's document processing task queue. Setting to `false` disables the task queue backend; document parsing jobs are never executed and uploaded files remain unprocessed indefinitely. |
+| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, the module falls back to a default address. Pointing to a wrong or unreachable Memorystore Redis host causes all async document workers to fail silently. Use the Redis IP from `Services_GCP`. |
+| `database_type` | `"MYSQL_8_0"` | **Critical** | RAGFlow only supports MySQL 8.0. Changing to `POSTGRES` or `NONE` removes the required database backend; RAGFlow cannot store user accounts, knowledge bases, or task state. |
+| `min_instance_count` | `1` | **High** | RAGFlow loads embedding models during pod startup, which takes 2–3 minutes. Setting to `0` enables scale-to-zero on GKE; requests during cold-start periods will time out. Keep at `1` or more in production. |
+| `stateful_pvc_enabled` | `null` | **High** | RAGFlow on GKE stores model artifacts and temporary processing files on disk. Without a PVC (`null` defaults to no PVC), pod restarts lose all in-progress processing state. Set `stateful_pvc_enabled = true` for production deployments. |
+| `stateful_pvc_size` | `"20Gi"` (when enabled) | **High** | Undersized PVCs fill up when large document batches are processed. Once full, the pod enters CrashLoopBackOff. Provision at least `50Gi` for production. PVC size cannot be reduced after creation. |
+| `workload_type` | `null` | **High** | `null` resolves to `Deployment` (stateless). Combined with `stateful_pvc_enabled = true`, the module automatically selects `StatefulSet`. Explicitly setting `workload_type = "Deployment"` alongside `stateful_pvc_enabled = true` fails at plan time. |
+| `quota_memory_requests` | `""` | **Critical** | If `enable_resource_quota = true` and `quota_memory_requests` is a bare integer (e.g. `"4"`) rather than a binary suffix string (e.g. `"4Gi"`), Kubernetes treats it as bytes — blocking all pod scheduling. Always use `Gi` or `Mi` suffixes. |
+| `enable_cloudsql_volume` | `true` | **Critical** | RAGFlow connects to Cloud SQL MySQL via Unix socket. Disabling this sidecar removes the socket path; RAGFlow crashes on startup with a database connection error. |
+| `container_resources.memory_limit` | `"4Gi"` | **High** | RAGFlow loads embedding models plus the application server. Values below `4Gi` cause OOM kills during document processing. Scale to `8Gi`–`16Gi` for production. |
+| `container_resources.cpu_limit` | `"2000m"` | **Medium** | Document parsing (OCR, chunking) is CPU-intensive. Under `1000m`, processing throughput degrades noticeably. Recommend `4000m`+ for production ingestion workloads. |
+| `max_instance_count` | `5` | **Medium** | GKE HPA scales pods based on CPU/memory. Multiple RAGFlow replicas sharing a MySQL database must have sufficient connection pool headroom (`max_connections` in Cloud SQL). Scaling aggressively without increasing Cloud SQL tier causes connection exhaustion. |
+| `elasticsearch_username` | `""` | **High** | If the Elasticsearch_GKE instance has `enable_xpack_security = true`, RAGFlow must authenticate. Leaving this blank causes HTTP 401 from Elasticsearch, breaking all index and search operations. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Daily MySQL backups protect against data loss. Setting too-infrequent or omitting a schedule increases RPO. |
+| `backup_retention_days` | `7` | **Low** | Short retention limits point-in-time recovery. Consider 30 days for production. |
+| `enable_iap` | `false` | **High** | Without IAP, the GKE Ingress (when using external load balancer) is accessible to any caller. Enable IAP with `iap_authorized_users`/`iap_authorized_groups` for production. Requires `iap_oauth_client_id` and `iap_oauth_client_secret`. |
+| `application_version` | `"v0.13.0"` | **Medium** | Incrementing triggers an image rebuild and rolling pod restart. Ensure the new RAGFlow version is compatible with the existing MySQL schema — migrations run automatically but major version jumps may be irreversible. |
+| `secret_propagation_delay` | `30` | **Medium** | If set too low in large or multi-region projects, the Kubernetes job may attempt to read a secret before it propagates. Increase to `60` for cross-region deployments. |
+| `enable_auto_password_rotation` | `false` | **Low** | Without rotation, a compromised database credential remains valid indefinitely. Enable in production with `rotation_propagation_delay_sec >= 90`. |

@@ -277,6 +277,35 @@ OpenClaw uses GCS Fuse for state. NFS is disabled by default and not required.
 
 ---
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `anthropic_api_key` | Required on first deploy | **Critical** | Must be provided on initial deployment. Without a valid key, the agent starts but all AI requests fail with 401 errors. The key is stored in Secret Manager; subsequent updates can be made directly without redeploying the Kubernetes workload. |
+| `gateway_token` | Auto-generated 64-character hex token | **High** | An empty value generates a secure token automatically and stores it in Secret Manager. Supplying a weak or guessable value allows unauthorised access to the OpenClaw gateway API. Retrieve the auto-generated token from Secret Manager before configuring clients. |
+| `OPENCLAW_GATEWAY_TOKEN` consistency | Must match gateway_token | **Critical** | If the token is rotated in Secret Manager without triggering a pod restart (e.g., via a rolling update), the in-memory token and the new Secret Manager value diverge — all client requests are rejected with 401 until pods are recycled. |
+| `enable_telegram` | `false` | **Medium** | Setting to `true` without providing both `telegram_bot_token` and `telegram_webhook_secret` creates Secret Manager secrets with empty values. The Telegram bot fails to authenticate with the API and cannot send or receive any messages. |
+| `telegram_bot_token` | `""` | **High** | Required when `enable_telegram = true`. An empty token causes the Telegram integration to fail with API authentication errors. All incoming Telegram messages are dropped. |
+| `telegram_webhook_secret` | `""` | **High** | Required when `enable_telegram = true`. Validates incoming Telegram webhook payloads in the router. An empty value disables signature verification, allowing any HTTP client to inject fake Telegram events into the agent. Generate with `openssl rand -hex 32`. |
+| `enable_slack` | `false` | **Medium** | Setting to `true` without `slack_bot_token` and `slack_signing_secret` creates empty Secret Manager secrets. The Slack integration fails all API calls silently and cannot verify incoming webhook signatures. |
+| `slack_bot_token` | `""` | **High** | Required when `enable_slack = true`. Must be a valid `xoxb-...` token. An invalid token causes all Slack API calls to fail with authentication errors. |
+| `slack_signing_secret` | `""` | **High** | Required when `enable_slack = true`. Verifies Slack request signatures in the router. An empty value disables verification, allowing any HTTP client to inject fake Slack events. |
+| `skills_repo_url` | `""` (no skill sync) | **Medium** | When set, the skills repository is cloned at container startup. An unreachable or incorrect URL causes the container init to fail, putting the pod in CrashLoopBackOff. Only use a private repository URL when the GKE pod has network access to the git host. |
+| `skills_repo_ref` | `"main"` | **Medium** | A non-existent branch or tag causes the git clone to fail at startup, preventing the agent from loading skills. Always verify the ref exists before deploying. |
+| `stateful_pvc_enabled` | `false` | **Medium** | OpenClaw uses GCS for workspace storage. Enabling StatefulSet PVCs adds unused local disk, wastes resources, and can block pod rescheduling when GKE Autopilot cannot provision the requested disk type. |
+| `workload_type` | `"Deployment"` | **Medium** | Setting `stateful_pvc_enabled = true` auto-resolves to `StatefulSet`. Explicitly setting `workload_type = "Deployment"` alongside `stateful_pvc_enabled = true` fails at plan time. |
+| `min_instance_count` | `1` | **High** | Unlike the CloudRun variant (which defaults to 0), GKE defaults to 1. Reducing to 0 means HPA scales down to zero; Telegram/Slack webhook events are dropped during the pod cold-start window (typically 30–60 seconds for GKE pod init + skills clone). |
+| `quota_memory_requests` / `quota_memory_limits` | `"4Gi"` / `"8Gi"` | **Critical** | Must use binary unit suffixes (e.g., `"4Gi"`, `"8192Mi"`). Bare integers are treated as bytes by Kubernetes, creating a near-zero memory quota that immediately blocks all pod scheduling. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | Disabling PDB allows GKE node upgrades to evict all OpenClaw pods simultaneously, causing the agent to be unreachable during maintenance and dropping any in-flight conversations. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | An empty string disables automated workspace backups. OpenClaw stores conversation history, agent state, and workspace data in GCS. Without backups, an accidental bucket purge results in permanent loss of all agent state. |
+| `enable_vpc_sc` | `false` | **High** | Requires explicit `organization_id`. Without it, VPC Service Controls are silently skipped, leaving the Anthropic API key secret and other credentials without perimeter protection. |
+| `enable_iap` | `false` | **Medium** | Enabling IAP without `iap_oauth_client_id`, `iap_oauth_client_secret`, and `iap_support_email` results in partial IAP configuration that may block all traffic or leave the gateway unprotected. Webhook endpoints from Telegram/Slack must not be protected by IAP (they cannot authenticate with Google identity). |
+| `enable_auto_password_rotation` | `false` | **Medium** | If a SQL backend is used, rotating the database password without restarting the pod causes the agent to use the old (now invalid) credentials until connections fail and the pod enters CrashLoopBackOff. |
+
+---
+
 ## Outputs
 
 | Output | Description |

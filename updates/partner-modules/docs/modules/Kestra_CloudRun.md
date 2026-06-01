@@ -390,6 +390,37 @@ gcs_volumes = [
 ]
 ```
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `KESTRA_BASICAUTH_PASSWORD` (auto-generated secret) | Auto-generated and stored in Secret Manager | **Critical** | The admin password is the sole access control gate for the Kestra UI. There is no secondary authentication — losing this password requires a direct database update to reset it. |
+| `KESTRA_BASICAUTH_USERNAME` (injected as `"admin"`) | `"admin"` | **High** | This is a well-known default. Override via `environment_variables = { KESTRA_BASICAUTH_USERNAME = "your-admin-name" }` before first deploy to reduce credential-stuffing risk. |
+| `KESTRA_BASICAUTH_ENABLED` (injected as `"true"`) | `"true"` | **Critical** | Disabling basic auth via `environment_variables` exposes the Kestra UI and all API endpoints without authentication. Only disable if an upstream authentication proxy (IAP, Cloud Armor) is in place. |
+| `application_name` | `"kestra"` | **Critical** | Immutable after first deploy. Changing it renames all GCP resources and causes full recreation with data loss. |
+| `db_name` | `"kestra"` | **Critical** | Immutable after first deploy. Changing it causes Kestra to connect to a new empty database, losing all flow definitions, execution history, triggers, and namespaces. |
+| `KESTRA_QUEUE_TYPE` (injected as `"postgres"`) | `"postgres"` | **High** | Kestra uses PostgreSQL as both its queue and repository backend in this deployment. Changing via `environment_variables` to an unsupported backend type causes startup failures — no other queue backend is provisioned. |
+| `KESTRA_REPOSITORY_TYPE` (injected as `"postgres"`) | `"postgres"` | **High** | Same as `KESTRA_QUEUE_TYPE` — only the PostgreSQL repository backend is provisioned. Changing this causes Kestra to fail to find flow definitions and execution records. |
+| `KESTRA_STORAGE_TYPE` (injected as `"gcs"`) | `"gcs"` | **High** | Kestra stores flow inputs, outputs, and internal storage in GCS. Changing this to `"local"` causes all storage operations to write to ephemeral container filesystem, losing all execution artifacts on restart. |
+| `KESTRA_STORAGE_GCS_BUCKET` (auto-set from resource prefix) | `"<prefix>-kestra-storage"` | **High** | The GCS bucket is created by the module. Overriding with a non-existent bucket name via `environment_variables` causes Kestra to fail all flow executions that produce storage outputs. |
+| `memory_limit` | `"4Gi"` | **High** | Kestra loads all flow definitions and active execution contexts into the JVM heap. Values below `2Gi` cause frequent JVM GC pauses and OutOfMemoryErrors under concurrent execution load. The default 4 Gi is the recommended minimum for production. |
+| `cpu_limit` | `"2000m"` | **Medium** | Kestra's task runners are CPU-intensive. Values below `1000m` cause severe execution throttling, especially for flows with parallel task groups. |
+| `min_instance_count` | `1` | **High** | Kestra must remain running to process scheduled triggers and poll for new executions. Scale-to-zero (`0`) means scheduled flows miss their trigger window during cold starts. Always keep at least `1` instance warm for scheduler-dependent workloads. |
+| `max_instance_count` | `1` (Kestra default — single-instance only) | **High** | Kestra in standalone mode uses PostgreSQL-based queue locking. Running multiple instances without proper Kestra Enterprise configuration causes task double-assignment. Keep `max_instance_count = 1` for the Community Edition. |
+| `FLYWAY_DATASOURCES_POSTGRES_BASELINE_ON_MIGRATE` (injected as `"true"`) | `"true"` | **High** | Required to allow Flyway to baseline against an already-initialized PostgreSQL database (Cloud SQL installs extensions in the public schema by default). Removing this override via `environment_variables` causes all 52 Kestra migrations to fail on first run with "non-empty schema" errors. |
+| `enable_nfs` | `true` | **Medium** | Kestra stores flow scripts and execution artifacts via GCS storage. NFS is used for binary data mode. Without NFS, local file operations in flow tasks fail. |
+| `ingress_settings` | `"all"` | **Medium** | Setting to `"internal"` blocks all external webhook triggers and flow API calls from outside the VPC. Use `"internal-and-cloud-load-balancing"` with Cloud Armor for controlled public access. |
+| `enable_iap` | `false` | **High** | Enabling IAP without valid `iap_authorized_users` or groups blocks all access to the Kestra UI. The basic auth login page is unreachable when IAP returns 403. |
+| `backup_schedule` | `"0 2 * * *"` (daily at 02:00) | **Medium** | Kestra's entire state (flows, triggers, namespaces, execution history) lives in PostgreSQL. Ensure the backup schedule aligns with your RPO. |
+| `enable_cloud_armor` | `false` | **Medium** | The Kestra API and UI are publicly accessible by default. Enable Cloud Armor with `admin_ip_ranges` to restrict access in production. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts require gen2. Changing to `gen1` causes NFS mount failures and container startup errors. |
+| `secret_propagation_delay` | `30` seconds | **Low** | Too short a delay may cause the Kestra JVM to start before the `KESTRA_BASICAUTH_PASSWORD` secret has propagated from Secret Manager, causing the initial login to use a stale password. |
+| `enable_vpc_sc` | `false` | **Medium** | Requires `organization_id`. If empty, VPC-SC is silently skipped. |
+| `vpc_sc_dry_run` | `true` | **Low** | Leaving dry-run enabled means VPC-SC rules are logged but not enforced. |
+| `ENDPOINTS_ALL_PORT` (injected as `"8080"`) | `"8080"` | **High** | Exposes the Micronaut management endpoints (including `/health`) on the main server port for Cloud Run startup and liveness probes. Overriding this port via `environment_variables` breaks health checks, causing continuous container restarts. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

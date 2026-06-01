@@ -412,3 +412,31 @@ secret_environment_variables = {
   SMTP_PASSWORD = "sendgrid-api-key-secret"
 }
 ```
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `N8N_ENCRYPTION_KEY` (auto-generated secret) | Auto-generated 32-char random string stored in Secret Manager | **Critical** | Changing after first run permanently destroys all saved credentials in every workflow. Never rotate unless prepared to re-enter all credentials. |
+| `application_name` | `"n8nai"` | **Critical** | Immutable after first deploy. Renaming triggers full Kubernetes and GCP resource recreation with data loss. |
+| `db_name` | `"n8n_db"` | **Critical** | Immutable after first deploy. Changing causes n8n to connect to a new empty database, losing all workflows and AI pipeline configs. |
+| `WEBHOOK_URL` / `N8N_EDITOR_BASE_URL` (injected from `service_url`) | Predicted service URL | **Critical** | Must match the actual public URL. Incorrect values break all webhook triggers and OAuth callbacks. |
+| `enable_ai_components` | `true` | **High** | Master toggle. Setting to `false` prevents Qdrant and Ollama from deploying. GKE validation blocks `enable_qdrant = true` or `enable_ollama = true` when this is `false`. |
+| `enable_qdrant` | `true` | **High** | Qdrant stores the vector index at `/mnt/gcs/qdrant`. Disabling it with active AI workflows referencing Qdrant causes runtime connection failures in those workflows. |
+| `enable_ollama` | `true` | **High** | Ollama serves local LLMs. Disabling it breaks all n8n AI nodes using the Ollama endpoint. Only disable when exclusively using external providers. |
+| `enable_redis` | `true` | **High** | Disabling Redis with `max_instance_count > 1` causes split-brain execution. GKE validation blocks: "When enable_redis is true, either redis_host must be set or enable_nfs must be true." |
+| `redis_host` | `""` (uses NFS server IP when `enable_nfs = true`) | **High** | When `enable_redis = true`, `redis_host` is empty, and `enable_nfs = false`, plan-time validation fails with a blocking error. |
+| `memory_limit` | `"4Gi"` | **High** | AI workflows and embedding generation are memory-intensive. Values below `4Gi` cause OOM kills on active AI pipelines. Increase to `8Gi` for large model workflows. |
+| `workload_type` | `null` (defaults to `Deployment`) | **High** | Setting `workload_type = "StatefulSet"` without `stateful_pvc_enabled = true` creates a StatefulSet with ephemeral storage. Setting `stateful_pvc_enabled = true` without explicit `workload_type` automatically resolves to `StatefulSet`. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` (not enforced) | **High** | Must use binary suffixes (`"4Gi"`, `"8192Mi"`). Bare integers (e.g. `"4"`) are treated as bytes by Kubernetes and block all pod scheduling. |
+| `min_instance_count` | `1` (GKE default) | **High** | GKE does not support true scale-to-zero without KEDA. The HPA validation guard rejects `min > max`. Setting to `0` may leave the deployment in an inconsistent HPA state. |
+| `enable_nfs` | `true` | **High** | Qdrant and Ollama use GCS Fuse volumes for persistent storage. Without NFS/GCS volumes, model files and vector indexes are lost on pod restart or rescheduling. |
+| `enable_iap` | `false` | **High** | Enabling IAP without both `iap_oauth_client_id` and `iap_oauth_client_secret` is blocked at plan time by validation. |
+| `session_affinity` | `"ClientIP"` | **Medium** | n8n AI editor holds WebSocket connections. Disabling affinity (`"None"`) can cause UI disconnections when requests route to different pods. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | Disabling PDB allows GKE to evict all pods during maintenance, causing a complete outage including loss of in-flight AI executions. |
+| `termination_grace_period_seconds` | `30` | **Medium** | AI workflow steps (embedding generation, LLM calls) can be long-running. Values below `30` may abort active AI pipeline executions mid-run. |
+| `secret_environment_variables` | `{}` | **Medium** | External AI provider API keys must be passed via `secret_environment_variables` pointing to existing Secret Manager secrets. Passing them as plain env vars exposes them in Kubernetes pod specs and GCP audit logs. |
+| `organization_id` | `""` | **Medium** | Required for VPC-SC. If empty, VPC Service Controls are silently skipped regardless of `enable_vpc_sc`. |
+| `enable_topology_spread` | `false` | **Low** | Without topology spread, all pods (n8n, Qdrant, Ollama) may schedule on the same node, creating a single point of failure for the entire AI stack. |

@@ -233,3 +233,27 @@ IAP via the Kubernetes Gateway API. Requires `enable_custom_domain` or `enable_c
 | `enable_vpc_sc` | 22 | `false` | VPC Service Controls |
 | `organization_id` | 22 | `""` | Org ID for VPC-SC |
 | `enable_audit_logging` | 22 | `false` | Cloud Audit Logs |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `enable_auth_token` | `false` | **Critical** | Without an auth token, any caller who can reach the Chroma service endpoint can read, write, or delete any collection. Set to `true` for any internet-facing or shared cluster deployment. The generated token is stored in Secret Manager and must be passed as `Authorization: Bearer <token>`. |
+| `stateful_pvc_enabled` | `null` | **High** | Without a PVC, Chroma stores collection data in the ephemeral container filesystem. A pod restart or rolling update erases all collections and their vectors. Set `stateful_pvc_enabled = true` for any persistent production deployment. |
+| `stateful_pvc_size` | `"20Gi"` | **High** | Undersized PVCs fill up as vector collections grow. A full PVC causes Chroma to crash with disk-full errors, making all collections unavailable. HNSW indexes for 1M vectors at 1536 dimensions require approximately 6 Gi. Size generously — PVC capacity cannot be reduced after provisioning. |
+| `workload_type` | `null` | **High** | Defaults to `Deployment` (stateless). Setting `stateful_pvc_enabled = true` without an explicit `workload_type` automatically resolves to `StatefulSet`. Explicitly setting `workload_type = "Deployment"` alongside `stateful_pvc_enabled = true` fails at plan time. |
+| `stateful_pvc_storage_class` | `"standard-rwo"` | **Medium** | Balanced PD (`standard-rwo`) provides adequate IOPS for most workloads. Large-scale ANN searches (HNSW with `ef_search` > 100) benefit from `premium-rwo` (SSD). Changing storage class after PVC creation requires manual data migration. |
+| `memory_limit` | `"1Gi"` | **High** | Chroma loads full HNSW indexes into memory. The default `1Gi` supports only very small collections. For production workloads, provision at least `4Gi`; large embeddings (> 1M vectors) may require `16Gi` or more. OOM kills terminate the pod, dropping all in-flight queries. |
+| `cpu_limit` | `"1000m"` | **Medium** | HNSW index builds and similarity searches are CPU-bound. Under high query concurrency, CPU throttling degrades p99 latency significantly. Increase to `2000m`–`4000m` for production. |
+| `min_instance_count` | `1` | **Medium** | Scale-to-zero (`0`) on GKE causes the pod to be deleted. After scaling back up, Chroma must reload the HNSW index from the PVC (or GCS), which can take tens of seconds for large collections. Keep at `1` for latency-sensitive workloads. |
+| `max_instance_count` | `1` | **High** | Multiple Chroma replicas sharing a single PVC are not supported. Chroma does not have a distributed lock on its storage. Using `max_instance_count > 1` with a single PVC causes concurrent write corruption. For horizontal scaling, use a Chroma cluster deployment with separate PVCs per pod (one collection set per replica). |
+| `enable_gcs_storage_volume` (Common) | `true` | **High** | If GCS Fuse is the storage backend (no PVC) and it is disabled, all data is stored in the ephemeral container layer and lost on restart. Do not disable unless PVC persistence is configured. |
+| `quota_memory_requests` | `""` | **Critical** | If `enable_resource_quota = true` and this value is set without binary suffixes (e.g. `"4"` instead of `"4Gi"`), Kubernetes treats it as bytes, blocking all pod scheduling in the namespace. Always use `Gi` or `Mi`. Note: in Chroma_GKE this variable is accepted but not forwarded; verify in App_GKE if enabled. |
+| `stateful_pvc_mount_path` | `"/data"` | **Critical** | Chroma defaults to `/data` for its storage directory. If the mount path does not match the `CHROMA_SERVER_PERSIST_DIRECTORY` environment variable, Chroma will use the ephemeral in-container path, silently losing data on restart. |
+| `application_version` | `"latest"` | **Medium** | Using `"latest"` makes deployments non-reproducible. Chroma's data format has changed between major versions; upgrading across incompatible versions can make existing collections unreadable. Pin to a specific version tag in production. |
+| `enable_nfs` | `false` | **Low** | NFS is not recommended for primary Chroma storage on GKE — prefer PVCs for better IOPS and exclusive access semantics. NFS is useful for shared read-only data. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Regular backups of the PVC (via Kubernetes VolumeSnapshot or GCS export) are essential. The default daily schedule may not meet aggressive RPO targets. |
+| `enable_iap` | `false` | **High** | Without IAP, the GKE LoadBalancer endpoint is accessible to any caller (depending on firewall rules). Enable IAP with `iap_authorized_users`/`iap_authorized_groups` for user-facing deployments. |
+| `iap_oauth_client_id` / `iap_oauth_client_secret` | `""` | **High** | Setting `enable_iap = true` without valid OAuth credentials causes the IAP configuration to fail silently or block all traffic. Obtain these from the GCP Console OAuth consent screen before enabling IAP. |

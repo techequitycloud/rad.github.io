@@ -402,6 +402,33 @@ environment_variables = {
 | `database_password_secret` | Secret Manager secret name for the database password. |
 | `container_image` | Container image used for the deployment. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `memory_limit` | `"4Gi"` | **Critical** | Metabase runs on the JVM. Under 2 Gi the JVM cannot complete startup and the container restarts continuously with `java.lang.OutOfMemoryError`. Minimum safe value is `"2Gi"`; default `"4Gi"` is recommended for production. |
+| `cpu_limit` | `"2000m"` | **High** | Metabase's JVM compilation phase during startup requires significant CPU. Under 500m the startup can take over 5 minutes, triggering Cloud Run startup-probe failures before the service becomes healthy. |
+| `MB_JAVA_OPTS` (via `environment_variables`) | Not set | **High** | If set, always include `-Xmx` that stays below `memory_limit`. For example with `memory_limit = "4Gi"`, use `-Xmx3500m`. Setting `-Xmx` higher than available container memory causes OOM kills. |
+| `MB_JETTY_PORT` | `"3000"` (hardcoded in Common) | **High** | Hard-coded in the Common module to `"3000"`. Overriding via `environment_variables` to any other port without also changing `container_port` causes health checks and all routing to fail. |
+| `JAVA_TIMEZONE` | `"UTC"` (hardcoded in Common) | **Medium** | Overriding with a non-UTC timezone causes Metabase reports and scheduled questions to use a different timezone than the database, producing inconsistent date filtering results. |
+| `application_database_name` | `"metabase"` | **High** | Changing after the database is initialised orphans the Metabase application schema. All question/dashboard metadata is lost. Immutable after first apply. |
+| `application_database_user` | `"metabase"` | **High** | The database user is created in the db-init job. Renaming it requires manual Cloud SQL intervention. Immutable after first apply. |
+| `application_version` | `"v0.51.3"` | **High** | Metabase does not support downgrading versions — a migration applied by a newer version cannot be reverted. Always test upgrades in a staging environment before applying to production. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero causes cold starts of 60–90 s (JVM startup + DB migrations check). Cloud Run health checks must be configured with a generous `startup_probe.failure_threshold` (default 30, = 300 s total). Reducing `failure_threshold` below 10 causes premature restarts. |
+| `startup_probe.initial_delay_seconds` | `60` | **High** | Metabase needs at least 60 s before it can serve health-check traffic. Reducing this below 30 causes perpetual restart loops on first boot. |
+| `startup_probe.failure_threshold` | `30` (= 300 s) | **High** | Reducing causes premature container kills before Metabase completes JVM startup and DB migration. Do not reduce below `20`. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Required for the Cloud SQL Auth Proxy sidecar to function. Disabling it with a PostgreSQL backend causes all database connections to fail. |
+| `enable_iap` | `false` | **High** | Metabase's own login page is reachable publicly without IAP. For internal business intelligence tools, always enable IAP or restrict `ingress_settings`. |
+| `ingress_settings` | `"all"` | **High** | Leaves Metabase accessible from the public internet. For internal deployments set to `"internal-and-cloud-load-balancing"`. |
+| `max_instance_count` | `1` (check your setting) | **Medium** | Metabase uses PostgreSQL for shared state, so multiple instances are safe for read queries. However, the embedded Metabase scheduler (question execution, alert polling) should run on a single instance — keep at `1` unless you have a clear need for horizontal scale. |
+| `enable_redis` | `false` | **Low** | Metabase does not natively integrate with Redis for caching. Enabling without a Metabase Enterprise licence that supports it has no effect. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | The Metabase application database contains all saved questions, dashboards, collections, and user metadata. Disabling automated backups means this cannot be recovered after accidental deletion. |
+| `enable_auto_password_rotation` | `false` | **Medium** | Enabling DB password rotation without sufficient `rotation_propagation_delay_sec` causes brief intervals where Metabase holds a stale password and returns `500` errors during the rotation window. |
+| `timeout_seconds` | `300` | **Medium** | Metabase complex query execution can take a long time. Reducing below 120 s causes in-flight analytical queries to be aborted. |
+| `MB_DB_*` env vars (MB_DB_HOST, MB_DB_PORT, etc.) | Injected by entrypoint | **Critical** | The Common module's entrypoint injects these from platform-level DB_* variables. Manually overriding them via `environment_variables` can create conflicting connection strings and cause startup failures. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

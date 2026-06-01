@@ -400,6 +400,33 @@ Windmill exposes Prometheus metrics at `:9001/metrics` via `METRICS_ADDR`. This 
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 | `github_repository_url` | GitHub repository URL connected for CI/CD. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `service_url` / `BASE_URL` (via Common) | Auto-predicted from Cloud Run service URL | **High** | `BASE_URL` and `BASE_INTERNAL_URL` are derived from `service_url` in Windmill Common. If this is empty or incorrect, OAuth callbacks fail (GitHub, Google, etc.), script execution webhooks point to the wrong host, and Windmill's UI deep-links are broken. Always verify the predicted service URL matches the actual Cloud Run service URL. |
+| `database_type` | `POSTGRES_15` | **Critical** | The Windmill module description mentions PostgreSQL 16 support in some contexts. Ensure the Cloud SQL instance version matches what Windmill's migration scripts expect. Using a lower PostgreSQL version (e.g., 13) can cause migration failures during the init job, leaving the database in a partially-initialised state. |
+| `db_name` | `windmill` | **High** | Changing after first deploy causes Windmill to connect to a database with no schema, resulting in migration errors at startup and a non-functional service. |
+| `db_user` | `windmill` | **High** | Windmill's initialisation job creates the schema under this user. Changing it after deploy breaks the database connection unless the Cloud SQL user grants and Secret Manager password are also updated in sync. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Windmill connects to Cloud SQL via the Auth Proxy Unix socket. Disabling this causes the database connection to fail and Windmill to crash immediately on startup. |
+| `cpu_limit` | `2000m` | **High** | Windmill Cloud Run runs in combined `server,worker` mode (both server and worker processes in the same container). Insufficient CPU (below 1000m) causes worker script execution to be severely throttled, increasing job queue latency and causing timeouts on long-running scripts. |
+| `memory_limit` | `2Gi` | **High** | Windmill workers execute arbitrary user scripts (Python, TypeScript, Go, Bash). A 512Mi limit causes OOM kills during script execution. 2Gi is the functional minimum; 4Gi is recommended for production Python workloads. |
+| `min_instance_count` | `1` | **High** | Setting to `0` enables scale-to-zero. Windmill webhooks and scheduled jobs require the service to be running at all times. Scale-to-zero causes missed scheduled executions and HTTP 503 for webhook triggers until the instance warms up. |
+| `timeout_seconds` | `300` | **Medium** | Windmill jobs that exceed the Cloud Run request timeout are killed mid-execution. For long-running scripts, increase this up to 3600. Windmill's internal job timeout must be set below this value to ensure graceful termination. |
+| `smtp_*` via Secret Manager | SMTP password stored as a dummy secret | **Medium** | Windmill creates a dummy SMTP password secret at deploy time. SMTP is only functional when `WINDMILL_SMTP_HOST`, `WINDMILL_SMTP_PORT`, `WINDMILL_SMTP_FROM`, and the actual SMTP password are all set together. Configuring some but not all SMTP variables causes silent email delivery failures. |
+| `enable_redis` | `false` | **Medium** | Redis enables Windmill's distributed queue mode for multi-worker setups. Without Redis, multiple Cloud Run instances each process only their own queue, which can cause job duplication or starvation under concurrent load. |
+| `redis_host` | `""` | **High** | Required when `enable_redis = true`. An empty value causes the Windmill container to start without a valid Redis connection string, defaulting to in-memory queue mode silently — losing all benefits of the Redis queue. |
+| `worker_group` / `NUM_WORKERS` (via Common) | `"default"` / `"3"` | **Medium** | Cloud Run combined mode runs 3 workers by default within the container. Increasing `NUM_WORKERS` without increasing `cpu_limit` and `memory_limit` proportionally causes resource contention and worker starvation. Each worker needs approximately 500m CPU and 512Mi RAM. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | An empty string disables automated database backups. Windmill stores all flows, scripts, variables, and job history in PostgreSQL. Without backups, a Cloud SQL failure results in complete loss of all automation definitions. |
+| `ingress_settings` | `"all"` | **Medium** | Setting to `internal` restricts Windmill to VPC-only access. Webhooks from external services (GitHub, Slack, etc.) will not reach the service. Use `internal-and-cloud-load-balancing` when behind a GCLB for public webhook access with VPC-internal routing. |
+| `enable_iap` | `false` | **Medium** | IAP requires `iap_oauth_client_id` and `iap_oauth_client_secret`. Enabling IAP without both values causes the IAP binding to fail. IAP also requires a custom domain on a GCLB — direct Cloud Run URL access bypasses IAP entirely. |
+| `max_instance_count` | `3` | **Medium** | Each Cloud Run instance runs multiple workers in combined mode. More than 3 instances without Redis-based queue coordination causes the same job to be picked up by multiple workers simultaneously, leading to duplicate executions. Use Redis when scaling beyond 1 instance. |
+| `execution_environment` | `"gen2"` | **High** | Gen2 is required for NFS mounts. If NFS is needed for shared script storage, gen1 does not support the required Unix socket paths and NFS protocol. |
+| `enable_vpc_sc` | `false` | **High** | Requires explicit `organization_id`. Without it, VPC Service Controls are silently skipped, giving a false sense of perimeter security. |
+| `enable_auto_password_rotation` | `false` | **Medium** | When enabled, the Cloud SQL password rotates on a schedule. The Cloud Run revision must be redeployed after rotation to pick up the new Secret Manager version; otherwise Windmill uses an invalid password until connections fail. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

@@ -238,3 +238,30 @@ Redis is **disabled by default** but **recommended for production** multi-user d
 | `storage_buckets` | Created GCS storage buckets. |
 | `container_image` | Container image used. |
 | `kubernetes_ready` | `true` when Kubernetes resources are deployed. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `SUPERSET_SECRET_KEY` (via Secret Manager) | Auto-generated 50-char random string | **Critical** | If this value is changed after the first deployment, all existing user sessions are immediately invalidated and all encrypted data source credentials stored in Superset's PostgreSQL schema become permanently unreadable. Treat as immutable after first deploy. |
+| `container_resources.memory_limit` | `"2Gi"` | **High** | Under 1 Gi gunicorn workers are OOM-killed during query execution. `"2Gi"` is the minimum; `"4Gi"` is recommended for production. On GKE Autopilot, `mem_request` also drives node provisioning — set close to `memory_limit`. |
+| `container_resources.cpu_limit` | `"2000m"` | **High** | Superset migrations (run by the app-init job) and gunicorn startup require significant CPU. Under 1000m the init job may time out in its 1800 s window. |
+| `container_resources.mem_request` | `null` (defaults to limit) | **Medium** | On GKE Autopilot, setting `mem_request` far below `memory_limit` leads to burstable scheduling and possible OOM eviction under memory pressure. |
+| `enable_redis` | `false` | **High** | Without Redis, Celery workers have no broker or result backend. Async query execution, cache warming, and scheduled reports are all non-functional. For GKE production deployments, always set `enable_redis = true`. |
+| `redis_host` | `null` | **High** | Required when `enable_redis = true`. An empty value causes all Celery workers to fail to connect on pod startup, making async queries permanently unavailable. |
+| `SUPERSET_PORT` | `"8088"` (injected) | **High** | Must match `container_port`. Changing one without the other breaks all routing and health checks. |
+| `application_database_name` | `"superset"` | **High** | Immutable after the db-init job has run. Changing orphans the entire Superset schema. |
+| `application_database_user` | `"superset"` | **High** | Immutable after the db-init job has run. Renaming requires manual Cloud SQL intervention. |
+| `application_version` | `"latest"` | **Medium** | Pinning to a specific version prevents uncontrolled upgrades that may introduce breaking API changes. Always test upgrades in staging. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero terminates Celery workers; async queries submitted while the pod is cold are lost. Superset has a 30–60 s startup time. |
+| `max_instance_count` | (check your setting) | **Medium** | Multiple replicas share PostgreSQL but require Redis as a shared Celery result backend. Without Redis, async results are only accessible to the instance that executed the query. |
+| `quota_memory_requests` / `quota_memory_limits` | `"4Gi"` / `"8Gi"` | **High** | GKE-specific: must use binary suffixes (`Gi`, `Mi`). Bare integers (e.g., `"4"`) are treated as bytes by Kubernetes and block all pod scheduling. |
+| `stateful_pvc_enabled` | `false` | **Medium** | Superset does not need persistent volumes — state is in PostgreSQL and Redis. Enabling adds unnecessary StatefulSet complexity. |
+| `pdb_min_available` | `"1"` | **Medium** | Setting to `"0"` allows all pods to be evicted simultaneously during node upgrades, causing a full Superset outage. |
+| `enable_iap` | `false` | **High** | Without IAP the Superset login form is reachable from the load-balancer IP. Always enable IAP or configure Kubernetes network policies for production. |
+| `startup_probe_config.failure_threshold` | `30` | **High** | Reducing below 15 causes GKE to kill pods before Superset completes db migrations and starts gunicorn. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Disabling automated backups leaves all dashboards, charts, and RLS rules unprotected. |
+| `db_tier` | `"db-f1-micro"` (Common default) | **Medium** | Insufficient for production Superset workloads. Override to at least `"db-custom-2-7680"` in production environments. |
+| `SUPERSET_LOAD_EXAMPLES` | `"no"` (injected) | **Medium** | Overriding to `"yes"` populates the workspace with demo data on every startup and significantly increases init time. |

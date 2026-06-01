@@ -398,3 +398,37 @@ cron_jobs = [
 | `enable_purge` | 0 | `true` | Allow full resource deletion on destroy. |
 | `public_access` | 0 | `false` | Make module visible in the public catalogue. |
 | `shared_users` | 0 | `[]` | Users who can access regardless of `public_access`. Enforced by the platform. |
+
+---
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `project_id` | _(required)_ | **Critical** | No default — deployment fails immediately without a valid project ID. |
+| `database_type` | `"MYSQL_8_0"` | **Critical** | Mautic requires MySQL. Setting this to `POSTGRES` or `NONE` will break the application — Mautic's Doctrine ORM is not compatible with PostgreSQL in this module. |
+| `enable_redis` | `true` | **High** | Defaults to `true`. Without Redis, Mautic falls back to file-based caching, which is incompatible with multi-instance deployments and causes session loss between requests. |
+| `redis_host` | `""` (auto-resolves to NFS IP) | **High** | When `enable_redis = true` and `redis_host = ""`, the module uses the NFS server IP. If `enable_nfs = false`, there is no fallback — Mautic will fail to connect to Redis on startup. Set `redis_host` explicitly when NFS is disabled. |
+| `enable_nfs` | `true` | **Critical** | Mautic stores uploaded media assets (images, attachments) on the NFS share. Without NFS, media uploads are lost on container restart and are not shared across multiple instances. |
+| `min_instance_count` | `1` | **High** | Setting to `0` causes scale-to-zero. Mautic cron jobs rely on the container being reachable; cold starts also delay email delivery and campaign processing. Keep at `1` for production. |
+| `cron_jobs` | `[]` (none configured) | **Critical** | Mautic campaigns, email queues, and lead scoring are entirely driven by cron. Without a configured cron job running `app/console mautic:segments:update` and `mautic:campaigns:trigger`, no campaigns fire, no emails are sent, and lead automation is completely non-functional. |
+| `mautic_admin_email` | `"admin@example.com"` | **High** | The default email is a placeholder. Leaving it unchanged means system notifications and Mautic admin login recovery go to an unreachable address. |
+| `mailer_from_email` | `"mautic@example.com"` | **High** | Mautic uses this as the `From` address for all outgoing campaign emails. The default is a placeholder — emails sent from this address will likely be rejected by receiving mail servers as the domain does not have SPF/DKIM configured. Set to a verified sending domain. |
+| `ingress_settings` | `"all"` | **High** | The default `"all"` allows public internet access directly to the Cloud Run service URL. For production, use `"internal-and-cloud-load-balancing"` when fronted by Cloud Armor, or enable IAP to restrict admin access. |
+| `enable_iap` | `false` | **Medium** | Mautic admin panel is publicly accessible when IAP is disabled and `ingress_settings = "all"`. Recommend enabling IAP or Cloud Armor for admin-facing deployments. |
+| `enable_backup_import` | `false` | **Critical** | When set to `true`, `backup_uri` must be provided and accessible. An empty `backup_uri` with `enable_backup_import = true` will cause the deployment job to fail. |
+| `backup_uri` | `""` | **Critical** | Required when `enable_backup_import = true`. An empty value with import enabled causes the restore job to error out during apply. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts require gen2. Switching to `"gen1"` while `enable_nfs = true` will cause the Cloud Run service to fail to start with a volume mount error. |
+| `memory_limit` | `"4Gi"` | **High** | Mautic is a PHP application with significant memory usage during campaign sends and contact imports. The described minimum is `512Mi` but production with large contact lists requires 2–4Gi. Too little memory causes PHP fatal errors and container OOM kills. |
+| `cpu_limit` | `"2000m"` | **Medium** | Reducing below `1000m` significantly degrades Mautic's email processing and contact segment recalculation. |
+| `timeout_seconds` | `300` | **Medium** | Mautic contact import and campaign send jobs can take longer than 300 seconds for large lists. Increase to `3600` for deployments that trigger long-running operations via HTTP. |
+| `application_database_name` | `"mautic"` | **Critical** | Immutable after first deployment — changing this recreates the database resource and destroys all application data. |
+| `application_database_user` | `"mautic"` | **Critical** | Immutable after first deployment — changing this recreates the user and invalidates stored credentials. |
+| `database_password_length` | `32` | **Medium** | Do not reduce below 16 (enforced by validation). Short passwords increase brute-force risk for the database endpoint. |
+| `backup_retention_days` | `7` | **Medium** | Seven days is insufficient for compliance workloads. Increase to 30 or 90 days for production. |
+| `enable_cloud_armor` | `false` | **Medium** | Without Cloud Armor, Mautic is exposed to bot traffic and credential stuffing attacks on the login endpoint. Recommended for public-facing marketing automation deployments. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **Medium** | Mautic must reach external SMTP and third-party APIs. `PRIVATE_RANGES_ONLY` routes only private traffic through VPC — public outbound traffic exits directly. If your firewall blocks direct public egress, change to `"ALL_TRAFFIC"`. |
+| `enable_custom_sql_scripts` | `false` | **Medium** | Requires `custom_sql_scripts_bucket` and `custom_sql_scripts_path` to be set when enabled. Leaving them empty with the flag `true` causes the init job to fail silently. |
+| `secret_propagation_delay` | `30` | **Low** | In multi-region projects, 30 seconds may be insufficient for Secret Manager replication. Increase to 60–90 seconds if deployments intermittently fail with "secret not found" errors. |

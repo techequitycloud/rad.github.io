@@ -290,3 +290,28 @@ Metabase does not natively use Redis. The `enable_redis` variable injects `REDIS
 | `database_user` | Name of the application database user. |
 | `database_password_secret` | Secret Manager secret name for the database password. |
 | `container_image` | Container image used for the deployment. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `container_resources.memory_limit` | `"4Gi"` | **Critical** | Metabase runs on the JVM. Under 2 Gi the process crashes with `OutOfMemoryError` on startup. Minimum safe value is `"2Gi"`; `"4Gi"` is recommended for production. |
+| `container_resources.cpu_limit` | `"2000m"` | **High** | JVM JIT compilation during startup requires significant CPU. Under 500m startup can exceed the probe `failure_threshold`, causing perpetual container restarts. |
+| `container_resources.mem_request` | `null` (defaults to limit) | **High** | On GKE Autopilot, `mem_request` drives node provisioning. Setting it far below `memory_limit` causes GKE to schedule the pod on a node with insufficient physical memory, resulting in OOM eviction. |
+| `MB_JAVA_OPTS` (via `environment_variables`) | Not set | **High** | Always pair `-Xmx` with a value below `memory_limit` (e.g., `-Xmx3500m` when limit is `"4Gi"`). A heap ceiling exceeding container memory causes OOM kills. |
+| `MB_JETTY_PORT` | `"3000"` (hardcoded in Common) | **High** | Overriding without also changing `container_port` breaks all routing and health checks. |
+| `application_database_name` | `"metabase"` | **High** | Immutable after first apply. Changing orphans the entire Metabase schema. |
+| `application_database_user` | `"metabase"` | **High** | Immutable after first apply. Renaming requires manual Cloud SQL intervention. |
+| `application_version` | `"v0.51.3"` | **High** | Metabase migrations are one-way. Downgrading to a previous version after a migration has run corrupts the application schema. Always stage upgrades. |
+| `startup_probe_config.initial_delay_seconds` | `60` | **High** | Metabase JVM startup + DB migration check takes 60–90 s. Reducing below 30 causes premature pod kills before the app is ready. |
+| `startup_probe_config.failure_threshold` | `30` (= 300 s) | **High** | Reducing causes premature container kills before Metabase completes JVM startup. Do not reduce below `20`. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero causes 60–90 s cold starts (JVM + DB migration check). This triggers request timeouts for users and alert delivery failures. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Required for the Cloud SQL Auth Proxy sidecar. Disabling with a PostgreSQL backend causes all DB connections to be refused. |
+| `quota_memory_requests` / `quota_memory_limits` | `"4Gi"` / `"8Gi"` | **High** | GKE-specific: must use binary suffixes (`Gi`, `Mi`). A bare integer (e.g., `"4"`) is treated as bytes and blocks all pod scheduling. |
+| `stateful_pvc_enabled` | `false` | **Medium** | Metabase does not require persistent volumes — all state is in PostgreSQL. Enabling may introduce stuck rollouts for a service that does not need it. |
+| `pdb_min_available` | `"1"` | **Medium** | Setting to `"0"` allows all pods to be evicted during node upgrades, causing a full Metabase outage. |
+| `enable_iap` | `false` | **High** | Without IAP, the Metabase login page is accessible from the load-balancer IP. Enable IAP or configure Kubernetes network policies for internal-only deployments. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Disabling automated backups means all saved dashboards, questions, and user definitions can be permanently lost. |
+| `JAVA_TIMEZONE` | `"UTC"` (hardcoded in Common) | **Medium** | Overriding causes Metabase date filtering and report scheduling to use a different timezone than the database, producing incorrect results. |

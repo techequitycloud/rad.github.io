@@ -312,6 +312,31 @@ All user-configurable variables, sorted by UI group then order.
 
 ---
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `enable_api_key` (Common) | `false` | **Critical** | Without an API key, any caller who can reach the Qdrant endpoint can read, modify, or delete all collections and their vectors. Enable for any deployment reachable outside the VPC. The generated key is stored in Secret Manager and must be passed as `api-key: <key>` in all gRPC/HTTP requests. |
+| `ingress_settings` | `"internal"` | **Critical** | Default is `internal` (VPC-only). Changing to `"all"` exposes the Qdrant REST and gRPC ports to the public internet. Never set to `"all"` without `enable_api_key = true`. |
+| `enable_nfs` | `false` | **High** | Without NFS, Qdrant stores its collection storage at `/qdrant/storage` inside the ephemeral container filesystem. Any Cloud Run revision deployment or instance restart erases all collections and their vectors permanently. Enable NFS (requires `execution_environment = "gen2"`) for persistence. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts require Gen2. If `enable_nfs = true` is set with `execution_environment = "gen1"`, the Cloud Run deployment fails at plan time. |
+| `memory_limit` | `"1Gi"` | **High** | Qdrant loads vector indexes (HNSW graphs) entirely into memory. Each 1M vectors at 1536 dimensions requires approximately 6 Gi. The default `1Gi` supports only very small collections. OOM kills terminate all in-flight queries and cause a cold restart from storage. |
+| `cpu_limit` | `"1000m"` | **Medium** | HNSW index builds are CPU-intensive; concurrent similarity searches compete for CPU. Under `1000m`, p99 query latency degrades noticeably. Scale to `2000m`–`4000m` for production. |
+| `collection vector dimensions` | *(set at collection creation time via client)* | **Critical** | The vector dimension parameter in a Qdrant collection is immutable after creation. If the dimension does not match the embedding model used to generate vectors (e.g., 768 vs. 1536), all upsert operations fail with a dimension mismatch error and the collection is permanently unusable. Always verify the embedding model dimension before creating a collection. |
+| `min_instance_count` | `1` | **Medium** | Scale-to-zero (`0`) causes Qdrant to restart and reload indexes from NFS/GCS on the next request. For collections with millions of vectors, this reload can take tens of seconds, causing request timeouts. Keep at `1` for latency-sensitive workloads. |
+| `max_instance_count` | `1` | **High** | Multiple Qdrant Cloud Run instances cannot share a single NFS collection storage safely. Qdrant does not support distributed operation in this topology. Keep at `1` or use `Qdrant_GKE` with StatefulSet for production scale. |
+| `container_port` | `6333` | **Critical** | Qdrant listens on HTTP port 6333 and gRPC port 6334. Changing the HTTP port requires a matching `QDRANT__SERVICE__HTTP_PORT` environment variable; mismatches cause health check failures and no-traffic revisions. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **Low** | Correct for VPC-only deployments. Change to `ALL_TRAFFIC` only if Qdrant must fetch snapshots or reach public endpoints directly. |
+| `timeout_seconds` | `300` | **Medium** | Large ANN searches or snapshot upload/download operations can take longer than the default. Increase to `600` for collections with tens of millions of vectors. |
+| `application_version` | `"latest"` | **Medium** | Using `"latest"` is non-reproducible. Qdrant's storage format can change between major versions. Upgrading across incompatible storage formats requires exporting and re-importing all collections. Pin to a specific version tag in production. |
+| `enable_gcs_storage_volume` (Common) | `true` | **High** | GCS Fuse is the fallback persistence mechanism when NFS is disabled. Disabling it with `enable_nfs = false` means all data is lost on instance restart. Do not disable unless NFS is used. |
+| `enable_iap` | `false` | **High** | Without IAP, the endpoint (when public) is accessible to any caller. Enable IAP for user-facing deployments and ensure `enable_api_key = true` as well for defense in depth. |
+| `liveness_probe` (Common) | `/livez` endpoint | **High** | Qdrant exposes `/livez` (always 200) and `/readyz` (503 while loading large collections). Using `/readyz` as the liveness target causes spurious pod restarts whenever Qdrant loads a large collection. Always use `/livez` for liveness and `/readyz` for readiness. |
+| `enable_image_mirroring` | `true` | **Low** | Disabling mirroring skips copying the Qdrant image into Artifact Registry. Deployments then pull directly from Docker Hub and are subject to pull rate limits, causing intermittent deployment failures in CI/CD. |
+| `secret_propagation_delay` | `30` | **Medium** | In large projects, Secret Manager replication may exceed 30 seconds. Increase to `60` to prevent the deployment from reading an empty API key secret. |
+
 ## 10. Destroying Resources
 
 When `enable_purge = true`, `tofu destroy` removes all module-managed resources. After Cloud Run service deletion, GCP may hold serverless IPv4 addresses for 20–30 minutes. Re-run `tofu destroy` after that window if the first attempt fails.

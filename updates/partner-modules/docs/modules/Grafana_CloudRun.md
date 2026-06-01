@@ -429,6 +429,34 @@ All user-configurable variables, sorted by UI group then order. Group 0 variable
 | `container_image` | Container image used for the deployment. |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `GF_SECURITY_ADMIN_PASSWORD` (via `secret_environment_variables`) | Grafana default `"admin"` | **Critical** | Grafana ships with user `admin` / password `admin`. This module does not auto-rotate it. Always inject a strong password via Secret Manager using `secret_environment_variables = { GF_SECURITY_ADMIN_PASSWORD = "your-secret-name" }` before the first deployment. |
+| `GF_SECURITY_ADMIN_USER` (via `environment_variables`) | `"admin"` | **High** | The well-known default admin username is a brute-force target. Set to a non-obvious value via `environment_variables`. |
+| `GF_DATABASE_TYPE` | `"postgres"` (hardcoded in `grafana.tf`) | **Critical** | Always injected as `"postgres"` by the module. Overriding to `"sqlite3"` via `environment_variables` causes data loss: SQLite is stored on the container ephemeral disk and lost on every new Cloud Run revision. |
+| `GF_SERVER_ROOT_URL` | Not set (Grafana default) | **High** | Must exactly match the public URL of the deployment (e.g., `https://grafana.example.com`). Without it, OAuth redirects, email notification links, and embed iframe src attributes all point to the wrong origin and break. |
+| `GF_SERVER_DOMAIN` | Not set (Grafana default) | **High** | Used for cookie domain and SMTP sender identity. Must match the domain part of `GF_SERVER_ROOT_URL` or cookie-based auth will fail across subdomains. |
+| `GF_SMTP_ENABLED` | Not set | **Medium** | Alerting notifications and user invitation emails are silently dropped when SMTP is not configured. Must be set alongside `GF_SMTP_HOST`, `GF_SMTP_USER`, `GF_SMTP_PASSWORD`, and `GF_SMTP_FROM_ADDRESS` — omitting any one of the five makes the entire SMTP stack non-functional. |
+| `GF_SMTP_HOST` | Not set | **Medium** | Required when `GF_SMTP_ENABLED = "true"`. Must include port, e.g., `smtp.gmail.com:587`. |
+| `GF_AUTH_ANONYMOUS_ENABLED` | Not set (defaults to `false`) | **Critical** | Setting to `"true"` exposes all dashboards to unauthenticated users. Only set if the Grafana instance is intentionally public. Always combine with `ingress_settings` restrictions. |
+| `db_name` | `"grafana"` | **High** | Changing after the database is initialised orphans the existing schema. Immutable after first apply. |
+| `db_user` | `"grafana"` | **High** | Changing after the db-init job has run requires manual Cloud SQL re-provisioning. Immutable after first apply. |
+| `memory_limit` | `"2Gi"` | **High** | Grafana loads all dashboard JSON into memory. Under 512Mi the container exits with OOM errors. Default `"2Gi"` is safe for up to ~100 dashboards; reduce with caution. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero (`0`) causes cold starts where Grafana must reconnect to PostgreSQL and re-read all dashboards — typically 10–20 s. Alert channels will miss notifications fired during this window. |
+| `max_instance_count` | `3` | **Medium** | Grafana Cloud Run instances share a PostgreSQL backend but not in-memory state. Alerting can fire duplicate notifications if multiple instances evaluate the same rule simultaneously. Use `1` for simple deployments or configure a shared alerting backend. |
+| `enable_iap` | `false` | **High** | Without IAP, the Grafana login page is publicly accessible. Combine with `GF_AUTH_DISABLE_LOGIN_FORM = "true"` only if OAuth is fully configured; otherwise keep IAP enabled or set `ingress_settings = "internal-and-cloud-load-balancing"`. |
+| `GF_AUTH_GOOGLE_CLIENT_ID` / `GF_AUTH_GOOGLE_CLIENT_SECRET` | Not set | **High** | Google OAuth for Grafana requires both values to be set together. Providing only one results in a failed OAuth exchange and a login error page. |
+| `GF_FEATURE_TOGGLES_ENABLE` | Not set | **Low** | Enabling experimental feature toggles in production may cause unexpected dashboard rendering failures after Grafana upgrades. |
+| `application_version` | `"11.4.0"` | **Medium** | Pinning to a specific version is recommended for production. Leaving as `"latest"` causes uncontrolled upgrades on every container rebuild, which may introduce breaking dashboard API changes. |
+| `enable_redis` | `false` | **Low** | Grafana does not require Redis for its core function. Enabling it without providing `redis_host` raises a validation error. |
+| `ingress_settings` | `"all"` | **High** | The Cloud Run default allows traffic from any source. For internal-only deployments set to `"internal-and-cloud-load-balancing"` to restrict. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Disabling scheduled backups leaves dashboard configurations and user definitions unprotected against accidental deletion or Cloud SQL corruption. |
+| `enable_auto_password_rotation` | `false` | **Low** | If enabled, ensure `rotation_propagation_delay_sec` is large enough for all running Cloud Run instances to pick up the new DB password before the old version expires, otherwise services will intermittently lose DB connectivity. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

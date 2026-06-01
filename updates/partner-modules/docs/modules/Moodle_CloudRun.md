@@ -587,6 +587,34 @@ group they belong to.
 | `image_retention_days` | `30` | 9 |
 | `max_revisions_to_retain` | `7` | 3 |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `project_id` | _(required)_ | **Critical** | No default — deployment fails immediately. |
+| `database_type` | `"POSTGRES_15"` | **Critical** | Moodle supports both MySQL and PostgreSQL, but this module defaults to PostgreSQL 15. Changing to `MYSQL` requires verifying the Moodle config generation logic wires MySQL-specific settings. Setting `NONE` breaks all data persistence. |
+| `enable_nfs` | `true` | **Critical** | Moodle stores all `moodledata` (course files, user submissions, plugin caches, session data) on NFS. Without NFS, the `moodledata` directory is ephemeral — uploaded course materials and student submissions are lost on every new revision. Multiple instances will have inconsistent data directories. NFS is mandatory for any real Moodle deployment. |
+| `enable_redis` | `true` | **High** | Moodle uses Redis for session storage and application caching. Without Redis, multiple Cloud Run instances use isolated PHP file sessions — students hitting different instances lose their sessions between page loads. Redis is essential for multi-instance Moodle deployments. |
+| `redis_host` | `""` (auto-resolves to NFS IP) | **High** | When `redis_host = ""` the module uses the NFS server IP. If `enable_nfs = false` and `redis_host` is also empty, Moodle cannot initialise sessions and will fail to serve authenticated pages. |
+| `cron_jobs` | `[]` (none configured) | **Critical** | Moodle requires a cron job running `php /var/www/html/admin/cli/cron.php` at least every minute (recommended every 5 minutes) to process course notifications, grade calculations, forum digests, assignment reminders, and scheduled tasks. Without cron, these functions are silently skipped — grade changes may not notify students, forum digests never send, and scheduled quiz windows do not open or close. |
+| `memory_limit` | `"2Gi"` | **High** | The default is `2Gi`. Moodle with active plugin suites (Turnitin, H5P, BigBlueButton) can require 4–8Gi per instance under load. Insufficient memory causes PHP fatal errors during course rendering or file processing. Never run below `1Gi`. |
+| `cpu_limit` | `"1000m"` | **Medium** | Moodle course rendering and quiz grading are CPU-intensive. For deployments with concurrent student activity, 2000m is recommended to avoid request queuing. |
+| `min_instance_count` | `0` | **High** | The default is `0` (scale-to-zero). Cold starts for Moodle are 30–60 seconds (PHP init + database connection pool). Students arriving during a cold start experience login failures or 504 timeouts. Set to `1` for any scheduled exam or live class period. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts require gen2. Changing to `"gen1"` with `enable_nfs = true` causes the Cloud Run service to fail to start with a volume mount error. |
+| `application_database_name` | `"moodle"` | **Critical** | Immutable after first deployment — changing this recreates the database, destroying all course data, enrolments, grades, and user accounts. |
+| `application_database_user` | `"moodle"` | **Critical** | Immutable after first deployment — changing this recreates the user, breaks the existing database connection, and locks out the application. |
+| `database_password_length` | `32` | **Medium** | Minimum 16 enforced. Moodle config stores the database password — longer passwords reduce brute-force risk on the Cloud SQL endpoint. |
+| `ingress_settings` | `"all"` | **Medium** | `"all"` exposes the Moodle admin panel to the public internet. Consider `enable_iap = true` or Cloud Armor rules to restrict `/admin` access to known IP ranges. |
+| `enable_cloud_armor` | `false` | **Medium** | Moodle login pages are common targets for credential stuffing, particularly for institutions with many student accounts. Cloud Armor WAF is recommended for any public-facing LMS. |
+| `enable_backup_import` | `false` | **Critical** | Requires `backup_uri` to be set and accessible. Enabling with an empty `backup_uri` causes the restore job to fail during apply. |
+| `backup_retention_days` | `7` | **High** | Educational data including grades and course records must be retained longer than 7 days for compliance. Increase to at least 30 days; 90+ days for accredited institutions. |
+| `timeout_seconds` | `300` | **Medium** | Moodle operations like course backup/restore, gradebook exports, and plugin installations can exceed 300 seconds. Increase to `3600` for deployments performing heavy administrative operations via HTTP. |
+| `enable_custom_sql_scripts` | `false` | **Medium** | Requires `custom_sql_scripts_bucket` and `custom_sql_scripts_path` when enabled. Leaving them empty with the flag `true` causes the init job to fail. |
+| `secret_propagation_delay` | `30` | **Low** | Increase to 60–90 seconds in multi-region deployments to prevent "secret not found" errors during apply. |
+| `enable_iap` | `false` | **Medium** | Moodle admin access is protected only by Moodle's own auth when IAP is disabled. Recommended for institutional deployments. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

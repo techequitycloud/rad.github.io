@@ -195,6 +195,30 @@ IAP is not recommended for MongoDB (a database, not a web application). Use Kube
 
 ## 9. Outputs
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `MONGO_INITDB_ROOT_PASSWORD` (via `secret_environment_variables`) | *(auto-generated — stored in Secret Manager)* | **Critical** | MongoDB requires a root password set via `MONGO_INITDB_ROOT_PASSWORD` at first startup. The module auto-generates and stores this in Secret Manager. If not injected, MongoDB starts with no authentication on the root account — any caller inside the cluster can connect with admin privileges. Never remove or override with an empty value. |
+| `mongo_root_username` | `"admin"` | **High** | The root username is baked into the MongoDB data directory at first init. Changing `mongo_root_username` after the PVC already exists causes startup failure because the existing authentication database does not match. Choose a meaningful username before first deploy; do not change after data is written. |
+| `stateful_pvc_enabled` | `null` | **Critical** | Without a PVC, MongoDB stores all data in the ephemeral pod filesystem. Any pod restart, rolling update, or node eviction permanently destroys all databases and collections. Set `stateful_pvc_enabled = true` for all production deployments. |
+| `stateful_pvc_size` | `"20Gi"` | **High** | An undersized PVC fills up as documents accumulate. A full disk causes MongoDB to crash with `No space left on device` errors, making all write operations fail. MongoDB does not gracefully degrade on disk-full — it crashes. Provision at least 2–3× the expected initial data volume. PVC size cannot be decreased after creation. |
+| `stateful_pvc_mount_path` | `"/data/db"` | **Critical** | Must match MongoDB's `--dbpath`. If the PVC is mounted at a different path, MongoDB writes data to the ephemeral container layer, losing all data on pod restart. Do not change this value. |
+| `workload_type` | `null` | **High** | MongoDB requires `StatefulSet` for stable pod identity and ordered PVC binding. `null` defaults to `Deployment`. With `stateful_pvc_enabled = true`, the module auto-selects `StatefulSet`. Explicitly setting `workload_type = "Deployment"` alongside `stateful_pvc_enabled = true` fails at plan time. |
+| `memory_limit` | `"2Gi"` | **High** | MongoDB's WiredTiger cache defaults to approximately `(memory_limit - 1 Gi) × 0.5`. With `2Gi`, the cache is ~500 Mi. Insufficient cache causes excessive disk I/O, severely degrading query performance. Scale to `4Gi`–`8Gi` for production document workloads. |
+| `cpu_limit` | `"1000m"` | **Medium** | MongoDB aggregation pipelines and index builds are CPU-intensive. Below `500m`, complex queries and index creation degrade significantly. Scale to `2000m` for production. |
+| `replica set (standalone vs replica set)` | *(standalone — no `--replSet` flag)* | **High** | This module deploys a standalone MongoDB instance. Standalone deployments do not support change streams, transactions, or oplog-based replication. If your application requires these features, you must configure a replica set (single-member or three-member). Changing from standalone to replica set after data exists requires a full `rs.initiate()` and potentially a data migration. |
+| `mongo_initdb_database` | `"admin"` | **Medium** | The initial database created at first startup. Applications expecting a non-admin initial database (e.g., `appdb`) should set this before first deploy. Changing after PVC exists has no effect — the `MONGO_INITDB_DATABASE` variable is only applied on first-run initialization. |
+| `connection string format` | *(application-specific)* | **High** | The correct MongoDB connection string for this module is `mongodb://<username>:<password>@<service_url>:27017/<db>?authSource=admin`. Missing `authSource=admin` causes authentication failures when connecting to non-admin databases with the root credential. |
+| `stateful_pvc_storage_class` | `"standard-rwo"` | **Medium** | Balanced PD is adequate for typical document workloads. High-throughput write-heavy workloads benefit from `premium-rwo` (SSD). Storage class cannot be changed after PVC creation without data migration. |
+| `quota_memory_requests` | `""` | **Critical** | If `enable_resource_quota = true` and set without binary suffixes (e.g. `"4"` instead of `"4Gi"`), Kubernetes treats the value as bytes, blocking all pod scheduling. Always use `Gi` or `Mi`. |
+| `quota_memory_limits` | `""` | **Critical** | Same constraint as `quota_memory_requests`. If limits are below actual pod memory requirements × replica count, pods fail to schedule. |
+| `enable_iap` | `false` | **Low** | MongoDB uses a ClusterIP service (internal-only by default). IAP is not applicable for database-tier services. Ensure network policies restrict MongoDB access to only the application pods that need it. |
+| `application_version` | *(module default)* | **High** | MongoDB major version upgrades (e.g., 6.0 → 7.0) change the on-disk storage format and WiredTiger compatibility. Downgrading after a major upgrade is not supported. Always test upgrades against a replica of the production PVC before applying to production. |
+| `backup_schedule` | `"0 2 * * *"` | **High** | MongoDB has no built-in automatic backups in this module. The backup job runs `mongodump` to GCS. Ensure the job is active and tested — a missed backup combined with a PVC deletion (`enable_purge = true`) results in permanent data loss. |
+
 | Output | Description |
 |---|---|
 | `service_name` | Name of the Kubernetes Service. |

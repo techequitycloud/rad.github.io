@@ -182,6 +182,34 @@ Same variables as `LibreChat_CloudRun`. See [LibreChat_CloudRun §6](./LibreChat
 | `kubernetes_ready` | True when the GKE cluster is available and all Kubernetes resources are deployed. |
 | `deployment_id` | Deployment ID suffix used in resource names. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `CREDS_KEY` (auto-generated) | Random 32-byte hex key in Secret Manager | **Critical** | Encrypts all saved AI provider credentials for every user. Changing it after first use destroys all stored credentials — every user must re-enter their API keys. Treat as immutable after the first user saves credentials. |
+| `CREDS_IV` (auto-generated) | Random 16-byte hex IV in Secret Manager | **Critical** | AES-GCM IV paired with `CREDS_KEY`. Same consequences as rotating `CREDS_KEY` — all stored credentials become undecryptable. |
+| `JWT_SECRET` (auto-generated) | Random secret in Secret Manager | **High** | Signs all access and refresh tokens. Rotation logs out all users immediately. Plan rotation during a maintenance window. |
+| `mongodb_uri` | Auto-discovered Firestore MongoDB endpoint | **Critical** | LibreChat requires MongoDB or Firestore MongoDB compatibility. If auto-discovery fails and no manual URI is provided, the pod crashes on startup and serves no traffic. |
+| `firestore_mongodb_host` | Auto-discovered | **High** | Manual host override. A stale or incorrect value breaks all data operations and renders the service non-functional. |
+| `enable_cloudsql_volume` | `false` | **Critical** | Must remain `false`. LibreChat does not use Cloud SQL. Enabling injects an unnecessary Cloud SQL Auth Proxy sidecar and can conflict with MongoDB-only connection routing. |
+| `enable_custom_sql_scripts` | `false` | **Critical** | Must remain `false`. LibreChat does not use Cloud SQL. Enabling this causes the init job to attempt SQL script execution against a non-existent Cloud SQL instance. |
+| `allow_registration` | `true` | **High** | Combined with a LoadBalancer-exposed service, open registration allows anyone on the network to create an account. Disable after the admin account is created or restrict with IAP. |
+| `USE_REDIS` / `enable_redis` | `false` | **High** | Without Redis, multiple pod replicas each have isolated in-memory session state. Users experience session drops when requests land on different pods. Set `enable_redis = true` and provide `redis_host` for all multi-replica deployments. |
+| `redis_host` | `""` | **High** | Required when `enable_redis = true`. If not set and Redis is enabled, LibreChat fails to connect to Redis on startup and session caching is broken. |
+| `MEILI_MASTER_KEY` (auto-generated) | Random secret in Secret Manager | **High** | If changed after the search index is built, all indices are invalidated. A full re-index of all messages is required after any key rotation. |
+| `stateful_pvc_enabled` | `false` | **High** | Without a PVC or NFS for file uploads, attachments shared in chat are stored on the container's ephemeral filesystem and are lost when the pod is evicted. Enable PVC or NFS for production. |
+| `quota_memory_requests` / `quota_memory_limits` | Binary unit defaults | **Critical** | Must use binary suffixes (`Gi`, `Mi`). Bare integers are treated as bytes by Kubernetes, blocking all pod scheduling in the namespace. |
+| `secret_environment_variables` (AI provider keys) | `{}` | **Critical** | Provider API keys must reference Secret Manager secrets. Injecting them as plain `environment_variables` exposes them in pod specs visible in `kubectl describe pod`. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero drops all in-flight SSE streaming connections. Keep at least 1 replica for a reliable chat experience. |
+| `timeout_seconds` | `600` | **High** | Long AI responses via SSE streaming can exceed several minutes. Insufficient timeout truncates responses mid-stream. |
+| `enable_nfs` | `false` | **Medium** | NFS is needed for shared file storage across multiple pod replicas. Without it, uploaded files are pod-local and invisible to other replicas. |
+| `workload_type` | `null` (auto-select) | **Medium** | Setting `stateful_pvc_enabled = true` auto-selects `StatefulSet`. Manually setting `workload_type = "Deployment"` alongside `stateful_pvc_enabled = true` fails at plan time. |
+| `backup_schedule` | `""` (disabled) | **High** | Without NFS backup schedules, conversation and user data backed only by Firestore/MongoDB have no GCS-level snapshots. Enable for production. |
+| `iap_oauth_client_id` / `iap_oauth_client_secret` | `""` | **Critical** | Required when `enable_iap = true`. If not provided, the IAP gateway fails to initialise and the service becomes unreachable. |
+| `application_version` | `"latest"` | **Medium** | Unplanned LibreChat upgrades can change MongoDB schema. Pin to a specific release in production. |
+
 ## Destroying Resources
 
 GKE Autopilot node pools and Kubernetes resources may take 5–10 minutes to fully terminate. The GKE cluster itself is managed by `Services_GCP` and must be destroyed separately.

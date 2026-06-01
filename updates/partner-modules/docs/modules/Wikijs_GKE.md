@@ -217,6 +217,37 @@ OpenTofu/Terraform `>= 1.0` is required.
 
 ---
 
+## Configuration Pitfalls & Sensible Defaults
+
+The table below identifies the variables most commonly misconfigured in `Wikijs_GKE` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong.
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `application_name` | `"wikijs"` (default; do not change after first deploy) | **Critical** | Embedded in GKE namespace name, Artifact Registry repo, and Secret Manager secret IDs. Changing recreates all named resources — existing wiki content, page history, and user accounts are left in the orphaned Cloud SQL instance. |
+| `tenant_deployment_id` | Match environment: `"prod"`, `"staging"`, `"dev"` | **Critical** | Changing after first deploy orphans the old Cloud SQL instance. A new empty PostgreSQL database is provisioned. All wiki pages, attachments, and user accounts are left behind and inaccessible. |
+| `application_database_name` and `DB_NAME` | Both `"wikijs"` (must match) | **Critical** | Mismatch between `application_database_name` and the `DB_NAME` value in `environment_variables`: the `db-init` job creates one database while Wiki.js connects to a different (non-existent) one. Wiki.js crashes on startup with a DB-not-found error. Change both together or leave both at the default. |
+| `application_database_user` and `DB_USER` | Both `"wikijs"` (must match) | **High** | Mismatch: `db-init` creates grants for one user while Wiki.js authenticates as another. DB authentication fails. Outage until both values are corrected and `db-init` re-runs. |
+| `quota_memory_requests` | `"2Gi"` minimum (binary suffix required) | **Critical** | A bare integer like `"2"` is treated as **2 bytes** by Kubernetes. The ResourceQuota rejects every pod — **all Wiki.js pods fail to schedule**. Always use `"2Gi"` or `"2048Mi"`. |
+| `quota_memory_limits` | `"4Gi"` (must be ≥ `quota_memory_requests`) | **Critical** | Same bare-integer issue. Always use binary suffixes. |
+| `memory_limit` | `"2Gi"` (default) — minimum `"1Gi"` | **High** | Wiki.js (Node.js) is OOMKilled under `512Mi`. Rendering complex pages with many embedded images or running search indexing can spike memory to 1–2 Gi. Increase to `"2Gi"` for wikis with significant content. |
+| `DB_TYPE` | `"postgres"` (hardcoded in `Wikijs_Common`) | **Critical** | `Wikijs_Common` hardcodes `DB_TYPE = "postgres"` and installs the `pg_trgm` extension. Overriding to `"mysql"` or `"sqlite"` via `environment_variables` causes a schema mismatch and the `db-init` job fails. Do not override `DB_TYPE`. |
+| `enable_postgres_extensions` and `postgres_extensions` | `true` and `["pg_trgm"]` (set by Common) | **Critical** | `pg_trgm` is required for Wiki.js full-text search. Disabling extensions or removing `pg_trgm` causes all search operations to fail with a PostgreSQL function-not-found error. Never override these values from the Common module defaults. |
+| `enable_nfs` | `true` (default; required for shared file uploads across replicas) | **High** | `false` with `max_instance_count > 1`: uploaded files written by one pod are invisible to other pods. Users see 404 for assets recently uploaded by a different replica. Files on a pod are lost on pod restart. Configure NFS correctly before scaling beyond 1 replica. |
+| `nfs_mount_path` | `"/mnt/nfs"` (default) | **High** | Mismatch with `HA_STORAGE_PATH` (`"/wiki-storage"` set by Common): Wiki.js writes uploads to the unshared path and files are lost on pod restart. The NFS mount path and `HA_STORAGE_PATH` must resolve to the same physical location. |
+| `HA_STORAGE_PATH` | `"/wiki-storage"` (hardcoded in `Wikijs_Common`) | **High** | Overriding without also changing `nfs_mount_path` to match: Wiki.js writes to the new path, which is not on the NFS volume. All uploads are lost on pod restart. Always override both together. |
+| `workload_type` | `null` (auto-selects Deployment) | **Medium** | `"StatefulSet"` without `stateful_pvc_enabled = true` creates a StatefulSet with no persistent per-pod storage. Wiki.js shared storage is handled by NFS, not per-pod PVCs. |
+| `startup_probe.failure_threshold` | `3` (default; allows 30 s after initial delay) | **High** | Too low on first deploy: Wiki.js must connect to PostgreSQL and run schema migrations before serving requests. With a freshly provisioned Cloud SQL instance, migrations can take 30–60 s. Increase `failure_threshold` to `12` or `initial_delay_seconds` to `90` for first-deploy reliability. |
+| `startup_probe.path` | `"/healthz"` (Wiki.js built-in health endpoint) | **Critical** | Wrong path: GKE kills the pod before it accepts traffic. `"/healthz"` returns `200 OK` once Wiki.js is fully initialised and connected to PostgreSQL. Do not use `"/"` — it serves the UI and may be slow to render. |
+| `min_instance_count` | `1` (default; Wiki.js benefits from a warm connection pool) | **High** | `0` (scale-to-zero): Wiki.js Node.js startup + DB reconnect + module loading takes 15–30 s. Incoming requests during cold start are queued and may time out. |
+| `max_instance_count` | `3` (default) | **Medium** | Wiki.js uses PostgreSQL for persistent state and NFS for file storage — both are shared safely across replicas. However, ensure `max_instance_count` × connection pool size stays within Cloud SQL's `max_connections` limit to avoid `FATAL: too many clients`. |
+| `network_tags` | `["nfsserver"]` (default; required for NFS firewall rule) | **High** | Removing `"nfsserver"`: the GKE node loses the tag matching the NFS firewall rule. The NFS mount fails, Wiki.js cannot write uploads, and the pod may fail to start if NFS is a required volume. |
+| `enable_pod_disruption_budget` | `false` (default) | **High** | `true` with `max_instance_count = 1` and `pdb_min_available = "1"`: GKE node drains are permanently blocked. Autopilot maintenance windows cannot complete. Enable only when `min_instance_count ≥ 2`. |
+| `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` until CI pipeline attests images | **Critical** | `"REQUIRE_ATTESTATION"` without a working attestation pipeline: no new Wiki.js image can be deployed to GKE, and rollbacks also fail. |
+| `enable_vpc_sc` | `false` until perimeter is validated; use `vpc_sc_dry_run = true` first | **Critical** | `enable_vpc_sc = true` with `vpc_sc_dry_run = false`: if the Wiki.js GKE SA is absent from the VPC-SC access level, Cloud SQL, Secret Manager, and Artifact Registry calls all fail simultaneously. |
+| `secret_environment_variables` | `{ DB_PASS = "database_password_secret" }` (auto-set by Common) | **Critical** | Removing `DB_PASS`: Wiki.js cannot authenticate to PostgreSQL on startup. The pod enters a crash loop. |
+
 ## Deployment Prerequisites & Dependency Analysis
 
 `Wikijs_GKE` inherits all prerequisites and dependency requirements from `App_GKE`. See [App_GKE — Deployment Prerequisites & Dependency Analysis](../App_GKE/App_GKE.md#deployment-prerequisites--dependency-analysis) for the full reference.
@@ -239,3 +270,30 @@ With `enable_nfs = true` (the default), the NFS server or Filestore instance mus
 ### `DB_USER` / `DB_NAME` consistency
 
 The values of `application_database_user` and `application_database_name` (Group 17) must exactly match the `DB_USER` and `DB_NAME` entries in `environment_variables` (Group 5). The module pre-populates both to `"wikijs"`. If you change one, change the other to match.
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `DB_TYPE` | `"postgres"` (hardcoded in Common) | **Critical** | Overriding to `"mysql"` or `"sqlite"` causes Wiki.js to misconnect and the `pg_trgm` extension install to fail during the db-init job. |
+| `DB_PASS` | Auto-injected from `database_password_secret` | **Critical** | Overriding via plain-text `environment_variables` exposes the DB password in Terraform state. Always use `secret_environment_variables`. |
+| `application_database_name` / `db_name` | `"wikijs"` | **High** | Must exactly match `DB_NAME` in `environment_variables`. Mismatches cause the db-init job to create a different database than the one Wiki.js connects to. Immutable after first apply. |
+| `application_database_user` / `db_user` | `"wikijs"` | **High** | Must exactly match `DB_USER` in `environment_variables`. Immutable after first apply. |
+| `HA_STORAGE_PATH` | `"/wiki-storage"` (hardcoded in Common) | **High** | Must match the GCS volume mount path. Overriding without changing the GCS volume mount causes uploads to go to the pod ephemeral disk, which is lost on every pod restart. |
+| `container_resources.memory_limit` | `"2Gi"` | **High** | Under 512Mi Wiki.js is OOM-killed on startup. On GKE Autopilot, `mem_request` drives node provisioning — set close to `memory_limit` to avoid burstable eviction. |
+| `container_resources.mem_request` | `null` (defaults to limit) | **Medium** | Far below `memory_limit` leads to burstable scheduling and possible eviction under memory pressure on a shared GKE Autopilot node. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Required for the Cloud SQL Auth Proxy sidecar. Disabling causes all PostgreSQL connections to fail. |
+| `application_version` | `"2.5.311"` | **High** | Wiki.js 2.x and 3.x schemas are incompatible. Do not mix versions across upgrade cycles without staging validation. |
+| `startup_probe_config.initial_delay_seconds` | `60` | **High** | Wiki.js performs database migrations and module loading on first start. Reducing below 30 causes GKE to kill the pod before it is ready. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero terminates in-flight database migrations and causes a 15–30 s cold start on the next request. |
+| `max_instance_count` | `3` | **Medium** | Multiple replicas are safe for read-heavy wikis. Ensure GCS volumes are correctly mounted on all pods before scaling out. |
+| `postgres_extensions` | `["pg_trgm"]` (hardcoded in Common) | **High** | Required for Wiki.js full-text search. Do not remove or disable. |
+| `quota_memory_requests` / `quota_memory_limits` | `"4Gi"` / `"8Gi"` | **High** | GKE-specific: must use binary suffixes (`Gi`, `Mi`). A bare integer (e.g., `"4"`) is treated as bytes and blocks all pod scheduling. |
+| `pdb_min_available` | `"1"` | **Medium** | Setting to `"0"` allows all Wiki.js pods to be evicted during GKE node upgrades, causing a full wiki outage. |
+| `enable_iap` | `false` | **High** | Without IAP or network policies the Wiki.js interface is reachable from the load-balancer IP. Enable IAP for internal wikis. |
+| `enable_nfs` | `true` | **Medium** | Wiki.js relies on the NFS mount for shared storage across replicas. Disabling while `max_instance_count > 1` causes split-brain storage where each pod has its own local upload directory. |
+| `network_tags` | `["nfsserver"]` | **Medium** | Changing this without updating the corresponding NFS firewall rule in `Services_GCP` breaks the NFS mount and causes pod startup failures when `enable_nfs = true`. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Disabling automated backups leaves all wiki content and user accounts unprotected. |
+| `secret_environment_variables` | `{ DB_PASS = "database_password_secret" }` | **Critical** | Removing `DB_PASS` breaks the database connection — Wiki.js will fail to authenticate to PostgreSQL on startup. |

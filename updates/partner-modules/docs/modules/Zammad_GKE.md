@@ -458,3 +458,36 @@ All user-configurable variables exposed by `Zammad_GKE`, sorted by UI group then
 | `container_image` | Container image deployed. |
 | `namespace` | Kubernetes namespace. |
 | `cicd_enabled` | Whether CI/CD pipeline is enabled. |
+
+---
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `enable_redis` | `false` | **Critical** | Zammad requires Redis for its ActionCable real-time communication layer. Without Redis, live ticket updates, agent notifications, and the Zammad scheduler all fail to initialize. Redis is mandatory for any Zammad deployment beyond a minimal test instance. |
+| `redis_host` | `""` | **Critical** | When `enable_redis = true` and `redis_host` is empty, `REDIS_URL` is not injected. Zammad starts but all real-time features and background job processing fail silently at runtime. Set to the Memorystore IP or Redis service hostname. |
+| `database_type` | `"POSTGRES_15"` | **Critical** | Zammad 6.x requires PostgreSQL 15+. `Zammad_Common` hardcodes this. Overriding to MySQL causes the schema migration job to fail — the application will not start. |
+| `container_image_source` | `"custom"` | **Critical** | `Zammad_Common` sets `image_source = "custom"` to include the `entrypoint.sh` that maps Foundation Module `DB_*` variables to Zammad's expected `POSTGRESQL_*` variables. Using `"prebuilt"` without this entrypoint causes all database connections to fail. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Zammad connects to Cloud SQL via the Auth Proxy Unix socket. Disabling this removes the socket path and all database connections fail on pod startup. |
+| `application_database_name` | `"zammad"` | **Critical** | Changing after initial deployment orphans the existing database. Zammad will connect to a new empty database, losing all ticket history, user accounts, and configuration. |
+| `container_resources.memory_limit` | `"4Gi"` | **High** | Zammad's Rails stack (web, scheduler, ActionCable) requires at least 2 GiB. Below this, OOM kills occur during schema migrations or under load. Use `4Gi` for production. |
+| `min_instance_count` | `1` | **High** | Reducing to `0` with HPA scale-to-zero means 60–90 second cold starts for agents receiving the first ticket. Keep at `1` minimum for production helpdesks. |
+| `max_instance_count` | `3` | **Medium** | Multiple Zammad pods require Redis for ActionCable coordination. Running multiple replicas without Redis causes race conditions on ticket assignment and real-time state divergence. Ensure Redis is configured before scaling beyond 1 replica. |
+| `RAILS_ENV` (in `environment_variables`) | `"production"` | **High** | Changing to `"development"` disables asset caching, enables verbose debug output, and may expose sensitive configuration. Never set development mode in a production cluster. |
+| `ZAMMAD_RAILSSERVER_PORT` (in `environment_variables`) | `"3000"` | **High** | Must match `container_port`. A mismatch causes Kubernetes liveness and readiness probes to fail — the pod never passes health checks and receives no traffic. |
+| `container_port` | `3000` | **High** | Must match `ZAMMAD_RAILSSERVER_PORT`. Changing without updating the env var causes all health checks to fail. |
+| `nfs_mount_path` | `"/opt/zammad/storage"` | **High** | Changing this causes Zammad to write attachments to the ephemeral pod filesystem. Existing attachments stored on NFS become inaccessible. Always keep consistent with Zammad's configured storage path. |
+| `enable_nfs` | `true` (recommended) | **High** | Without NFS, Zammad attachment storage is ephemeral inside the pod. All uploaded files are lost on pod restart or rolling update. NFS is required for any stateful Zammad deployment. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **High** | When `enable_resource_quota = true`, these must use binary suffixes (e.g., `"8Gi"`, `"16384Mi"`). Bare integers are treated as bytes by Kubernetes, blocking all pod scheduling. A plan-time validation enforces the format. |
+| `stateful_pvc_enabled` with `workload_type = "Deployment"` | — | **High** | This combination fails at plan time. Use `stateful_pvc_enabled = true` alone — it automatically resolves to `StatefulSet`. |
+| `workload_type` | `null` (auto) | **Medium** | Zammad with NFS storage should use `StatefulSet` for stable pod identities. Using `Deployment` with shared NFS may cause write conflicts if multiple pods access the same attachment directories concurrently. |
+| `startup_probe_config.initial_delay_seconds` | `60` | **High** | Zammad performs schema migrations on first startup. For large databases, `60s` may be insufficient. Increase to `120–180s` to prevent premature pod restarts that loop endlessly on migration. |
+| `enable_topology_spread` | `false` | **Medium** | Without topology spread, all Zammad pods may schedule on a single availability zone. A zone failure takes down the entire helpdesk. Enable for production multi-replica deployments. |
+| `enable_pod_disruption_budget` | `false` | **Medium** | Without a PDB, GKE cluster maintenance can evict all Zammad pods simultaneously. Enable when `max_instance_count > 1`. |
+| `session_affinity` | `"None"` | **Medium** | With multiple replicas and Redis, session state is handled via Redis (stateless). Without Redis, `"ClientIP"` affinity prevents random session losses when requests route to different pods. |
+| `enable_backup_import` | `false` | **High** | Setting to `true` triggers a database import on every `tofu apply`. Subsequent applies will overwrite live helpdesk data if `backup_uri` is not properly managed. Only enable for the initial restore. |
+| `organization_id` | `""` | **Medium** | VPC-SC perimeter is only activated when `organization_id` is explicitly set. `enable_vpc_sc = true` without this value has no effect. |
+| `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` | **High** | Each `App_GKE` deployment sharing the same VPC must use a distinct CIDR. Overlapping with an existing subnet causes GKE node pool provisioning to fail at apply time. |

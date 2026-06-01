@@ -499,18 +499,32 @@ All user-configurable variables exposed by `Twenty_GKE`.
 
 ---
 
-## 10. Configuration Pitfalls
+## 10. Configuration Pitfalls & Sensible Defaults
 
-**`SERVER_URL` must be set explicitly.** `Twenty_Common` injects `SERVER_URL = ""` by default. Without a valid URL, Twenty generates broken API links and CORS errors. Set `SERVER_URL` and `FRONT_BASE_URL` via `environment_variables`.
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
 
-**ResourceQuota memory values must use binary suffixes.** `quota_memory_requests` and `quota_memory_limits` must be strings like `'4Gi'` or `'8192Mi'`. Bare integers (e.g., `'4'`) are treated as bytes by Kubernetes and block all pod scheduling. A plan-time validation enforces this.
-
-**`stateful_pvc_enabled = true` with `workload_type = "Deployment"` fails at plan time.** Use `stateful_pvc_enabled = true` alone — it automatically selects `StatefulSet`.
-
-**GCS HMAC keys are required for GCS storage.** When `enable_gcs_storage = true`, generate HMAC keys manually in GCP Console and supply them via `secret_environment_variables` as `STORAGE_S3_ACCESS_KEY_ID` and `STORAGE_S3_SECRET_ACCESS_KEY`.
-
-**bull-mq requires a dedicated worker.** When `enable_redis = true`, configure a worker via `additional_services` using the same Twenty image with the worker entrypoint command.
-
-**`prereq_gke_subnet_cidr` must not overlap existing subnets.** Each `App_GKE` deployment sharing the same VPC must use a distinct CIDR. Default is `10.201.0.0/24`.
-
-**VPC-SC requires explicit `organization_id`.** Auto-discovery is disabled. Set `organization_id` explicitly to activate VPC-SC controls.
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `SERVER_URL` (in `environment_variables`) | `""` | **Critical** | `Twenty_Common` injects `SERVER_URL = ""` by default. Without a valid URL, all API calls return broken links, CORS errors block frontend requests, and OAuth integrations fail. Set `SERVER_URL` and `FRONT_BASE_URL` to the public URL after the LoadBalancer IP or custom domain is known. |
+| `FRONT_BASE_URL` (in `environment_variables`) | `""` | **Critical** | Twenty uses `FRONT_BASE_URL` for all frontend redirects and email invitation links. An empty value breaks user invitations and notification emails. Must match `SERVER_URL`. |
+| `APP_SECRET` (via `secret_environment_variables`) | Auto-generated once, stored in Secret Manager | **Critical** | `Twenty_Common` generates `APP_SECRET` once at plan time. Rotating or deleting the secret invalidates all active JWT tokens, immediately logging out every user. Never manually rotate unless a full session invalidation is intentional. |
+| `database_type` | `"POSTGRES_15"` | **Critical** | Twenty requires PostgreSQL. Changing to MySQL or NONE breaks Prisma schema migrations — the db-init job fails and the application will not start. |
+| `application_database_name` | `"twenty"` | **Critical** | Changing after initial deployment orphans the existing database. Twenty will connect to a new empty database while the old data remains in Cloud SQL but unreferenced. |
+| `application_database_user` | `"twenty"` | **Critical** | Changing after initial deployment creates a new user without permissions on existing database objects. All database operations will fail with permission errors. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Twenty connects to Cloud SQL via the Auth Proxy Unix socket. Disabling this removes the socket path, causing all database connections to fail on pod startup. |
+| `enable_gcs_storage` | `false` | **High** | When `false`, file attachments are stored in the pod's ephemeral local filesystem and are permanently lost on pod restart or rolling update. Set to `true` for any production deployment where file retention is required. |
+| `STORAGE_S3_ACCESS_KEY_ID` / `STORAGE_S3_SECRET_ACCESS_KEY` (in `secret_environment_variables`) | Not auto-generated | **High** | When `enable_gcs_storage = true`, the module sets `STORAGE_TYPE = "s3"` targeting GCS's S3-compatible endpoint, but HMAC keys are not generated automatically. Without them, all file upload and download operations fail with authentication errors. Generate HMAC keys in GCP Console. |
+| `enable_redis` | `false` | **Medium** | Without Redis, Twenty uses `MESSAGE_QUEUE_TYPE = "pg-boss"` and `CACHE_STORAGE_TYPE = "memory"`. Memory caching is not shared between pods, causing cache inconsistency with multiple replicas. Enable Redis for any multi-replica GKE deployment. |
+| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, the Redis URL is empty, causing Twenty to fail to connect. All background jobs stop processing immediately. |
+| `additional_services` (worker config) | `[]` | **High** | When `enable_redis = true`, bull-mq is enabled but the main deployment does not run the worker consumer. Background jobs (email, webhooks, data sync) queue up but are never processed without a dedicated worker via `additional_services`. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **High** | When `enable_resource_quota = true`, these must use binary suffixes (e.g., `"4Gi"`, `"8192Mi"`). Bare integers are treated as bytes by Kubernetes, causing a quota-exceeded error that blocks all pod scheduling. A plan-time validation enforces the format. |
+| `stateful_pvc_enabled` with `workload_type = "Deployment"` | — | **High** | This combination fails at plan time. Use `stateful_pvc_enabled = true` alone — it automatically resolves to `StatefulSet`. |
+| `container_resources.memory_limit` | `"2Gi"` | **Medium** | Twenty's Node.js runtime and background processing require at least 2 GiB. Below this, OOM kills occur under load. Use `4Gi` for production workloads with large datasets. |
+| `min_instance_count` | `1` | **Medium** | Setting to `0` with HPA allows scale-to-zero. Twenty cold starts take 30–60 seconds. For a CRM receiving webhooks or running scheduled jobs, ensure at least 1 replica is always running. |
+| `session_affinity` | `"None"` | **Medium** | Twenty uses JWT-based authentication (stateless), so session affinity is not required for auth. However, if any in-memory caching is relied upon (Redis disabled), `"ClientIP"` affinity can reduce cache misses. |
+| `enable_topology_spread` | `false` | **Medium** | Without topology spread, all Twenty pods may schedule on a single availability zone. A zone failure takes down the entire CRM. Enable for production. |
+| `enable_pod_disruption_budget` | `false` | **Medium** | Without a PodDisruptionBudget, GKE cluster maintenance can evict all pods simultaneously. Enable when `max_instance_count > 1` to ensure availability during maintenance windows. |
+| `organization_id` | `""` | **Medium** | VPC-SC perimeter is only activated when `organization_id` is explicitly set. `enable_vpc_sc = true` without this value has no effect. |
+| `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` | **High** | Each `App_GKE` deployment sharing the same VPC must use a distinct CIDR. Overlapping with an existing subnet causes the GKE node pool provisioning to fail at apply time. |
+| `enable_backup_import` | `false` | **High** | Setting to `true` triggers a database import on every `tofu apply`. If `backup_uri` is not a controlled restore snapshot, subsequent applies will overwrite live CRM data. |
+| `vpc_sc_dry_run` | `true` | **Medium** | Dry-run mode logs VPC-SC violations without enforcing them. Switch to `false` only after auditing Cloud Logging to confirm no false positives. |

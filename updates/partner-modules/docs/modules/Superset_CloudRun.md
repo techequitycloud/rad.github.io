@@ -312,6 +312,34 @@ Configure SMTP for alert and report notifications via `environment_variables`.
 | `container_image` | Container image used. |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `SUPERSET_SECRET_KEY` (via Secret Manager) | Auto-generated 50-char random string | **Critical** | The module auto-generates a secret key and injects it as `SUPERSET_SECRET_KEY`. If this value is changed or the secret is rotated, all existing user sessions are immediately invalidated and all encrypted database credentials stored in Superset (connected data sources) become permanently unreadable. Treat as immutable after first deploy. |
+| `container_resources.cpu_limit` | `"2000m"` | **High** | Superset's Python/Flask stack is CPU-intensive at startup. Under 1000m the `superset db upgrade` migration step (run by the app-init job) times out, leaving the database in a partially migrated state. |
+| `container_resources.memory_limit` | `"2Gi"` | **High** | Under 1 Gi the gunicorn workers are OOM-killed during heavy query execution. `"2Gi"` is the minimum; `"4Gi"` is recommended for production with many concurrent users. |
+| `SUPERSET_PORT` | `"8088"` (injected in `superset.tf`) | **High** | Hardcoded by the module to match `container_port`. Overriding to a different value without also changing `container_port` causes health checks and routing to fail entirely. |
+| `container_port` | `8088` | **High** | Must match `SUPERSET_PORT`. Changing one without the other causes a port mismatch between the Cloud Run health check target and the gunicorn bind address. |
+| `enable_redis` | `false` | **High** | Without Redis, async query execution (Celery workers), dashboard cache warming, and result backend are all disabled. Superset falls back to synchronous execution, which blocks gunicorn workers on long-running queries and can cause a full service hang under moderate load. Always set `enable_redis = true` for production. |
+| `redis_host` | `null` | **High** | Required when `enable_redis = true`. Injected as `REDIS_HOST` and `REDIS_PORT` into the runtime environment. An empty value causes all Celery workers to fail to connect on startup. |
+| `SUPERSET_LOAD_EXAMPLES` | `"no"` (injected in `superset.tf`) | **Medium** | If overridden to `"yes"`, Superset loads example dashboards and datasets into the database on every startup, increasing init time significantly and polluting the workspace with demo data. |
+| `application_database_name` | `"superset"` | **High** | Changing after the database is initialised orphans the Superset application schema including all dashboards, charts, and database connections. Immutable after first apply. |
+| `application_database_user` | `"superset"` | **High** | The database user is created in the db-init job. Renaming requires manual Cloud SQL intervention. Immutable after first apply. |
+| `application_version` | `"latest"` | **Medium** | Pinning to a specific version is strongly recommended for production. `"latest"` triggers uncontrolled upgrades on every container rebuild, which may introduce breaking changes to the Superset config API or require new migration steps that the app-init job must handle. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero causes Celery workers to shut down; any async queries scheduled while the container is cold will be lost. Superset itself has a 30–60 s startup time. |
+| `max_instance_count` | `1` (check your setting) | **Medium** | Multiple Superset instances share PostgreSQL but need Redis as a shared result backend for Celery. Without Redis, running `max_instance_count > 1` causes async query results to be unavailable to the instance that did not execute the query. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Required for the Cloud SQL Auth Proxy sidecar. Disabling causes all PostgreSQL connections to fail. |
+| `ingress_settings` | `"all"` | **High** | Leaves the Superset UI accessible from the public internet. For internal BI tools, set to `"internal-and-cloud-load-balancing"`. |
+| `enable_iap` | `false` | **High** | Without IAP, Superset's login form is publicly reachable. Always enable IAP or restrict ingress for production deployments. |
+| `timeout_seconds` | `300` | **Medium** | Superset complex SQL queries can run for several minutes. Reducing below 120 s causes long-running analytical queries to be aborted mid-execution. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Disabling automated backups leaves all dashboards, charts, database connection configs, and RLS rules unprotected. |
+| `enable_auto_password_rotation` | `false` | **Medium** | Enabling without sufficient `rotation_propagation_delay_sec` causes brief intervals of DB connectivity failures during the rotation window. |
+| `startup_probe.failure_threshold` | `30` | **High** | Reducing below 15 causes Cloud Run to kill the container before the app-init job migrations complete and Superset first boots. |
+| `db_tier` | `"db-f1-micro"` (Common default) | **Medium** | The Common module defaults to `"db-f1-micro"` for Cloud SQL. This is insufficient for production Superset workloads with concurrent users. Override to at least `"db-custom-2-7680"` in production. |
+
 ## Destroying Resources
 
 When destroying a Cloud Run deployment, you may encounter:

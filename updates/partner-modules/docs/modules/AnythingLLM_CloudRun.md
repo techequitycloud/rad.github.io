@@ -523,6 +523,35 @@ All user-configurable variables exposed by `AnythingLLM_CloudRun`, sorted by UI 
 | `cloudbuild_trigger_name` | Cloud Build trigger name for CI/CD. |
 | `monitoring_enabled` | Whether monitoring is configured. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `JWT_SECRET` (auto-generated) | Random secret stored in Secret Manager | **Critical** | AnythingLLM uses `JWT_SECRET` to sign all user authentication tokens. Rotating or changing it immediately invalidates all active sessions and logs out every user. Treat as immutable after first login. |
+| `AUTH_TOKEN` (optional) | `""` (no token required) | **High** | `AUTH_TOKEN` acts as a global API bearer token for AnythingLLM's REST API. If left empty, the API is unauthenticated (only protected by network-level controls). Set a strong value and distribute it only to authorised callers. |
+| `STORAGE_DIR` / document storage | GCS Fuse mount | **Critical** | AnythingLLM stores all workspace documents, vector embeddings, and LLM configuration under `STORAGE_DIR`. If this directory is not on a persistent volume (GCS Fuse or NFS), all data is lost on every container restart. Never point `STORAGE_DIR` to the container's local filesystem without a persistent backend. |
+| `enable_nfs` | `false` | **High** | Without NFS or GCS Fuse, vector indices and uploaded documents are ephemeral. For multi-instance deployments (`max_instance_count > 1`) shared storage is required or each pod has an inconsistent view of the workspace data. |
+| `nfs_mount_path` | `"/mnt/nfs"` | **High** | Must match the `STORAGE_DIR` environment variable passed to AnythingLLM. A mismatch means the app writes to a local path while the NFS mount is unused, and data is lost on restart. |
+| `LLM_PROVIDER` (via `environment_variables`) | `"native"` (built-in) | **Critical** | Without setting the correct `LLM_PROVIDER` value and corresponding API key, AnythingLLM falls back to its built-in model or errors on all AI requests. When using OpenAI, set `LLM_PROVIDER = "openai"` and provide `OPENAI_API_KEY` via `secret_environment_variables`. |
+| `EMBEDDING_ENGINE` (via `environment_variables`) | `"native"` | **High** | The embedding engine must be consistent across all documents in a workspace. Changing `EMBEDDING_ENGINE` after ingesting documents makes existing vector indices incompatible — re-ingest all documents after any change. |
+| `secret_environment_variables` (API keys) | `{}` (none) | **Critical** | AI provider API keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.) must be provided via `secret_environment_variables` pointing to existing Secret Manager secrets. Providing them as plain `environment_variables` exposes them in Cloud Run revision metadata. |
+| `memory_limit` | `4Gi` | **High** | AnythingLLM loads embedding models into memory during document ingestion. Running the native embedding engine with less than 4 Gi causes OOM-kills during ingestion of large documents. |
+| `cpu_limit` | `2000m` | **Medium** | AnythingLLM AI workloads are CPU-intensive. With less than 2 vCPU, embedding and inference operations run slowly and Cloud Run requests may time out. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero causes 30–60 s cold starts. For a knowledge workspace used interactively, set to `1` to keep a warm instance. With scale-to-zero, in-memory vector index state is rebuilt on each cold start from the persistent storage. |
+| `timeout_seconds` | `300` | **High** | Document ingestion for large files (PDFs, long text) can take several minutes. Requests time out with a 504 if `timeout_seconds` is too low. Increase to `600`–`3600` for document-heavy workloads. |
+| `database_type` | `"POSTGRES"` | **Critical** | AnythingLLM requires PostgreSQL for workspace metadata, user accounts, and conversation history. Using `"NONE"` causes the application to fall back to SQLite which is not persistent on Cloud Run. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Disabling the Cloud SQL Auth Proxy while relying on Cloud SQL causes all database connections to fail at startup. |
+| `ingress_settings` | `"all"` | **High** | `"all"` exposes the AnythingLLM workspace publicly. Only the login form protects it. Enable IAP (`enable_iap = true`) for production deployments, especially if `AUTH_TOKEN` is not set. |
+| `enable_iap` | `false` | **High** | Without IAP, access control relies solely on the application login. Enabling IAP provides an additional authentication layer before the application is reached. |
+| `gcs_volumes` | Auto-provisioned for document storage | **High** | The GCS volume stores all workspace documents. Without `implicit-dirs` in the mount options, AnythingLLM cannot list files stored in subdirectories and document browsing fails. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts require gen2. If `enable_nfs = true` with gen1, the NFS volume silently fails to mount and all document writes go to the ephemeral container filesystem. |
+| `backup_schedule` | `""` (disabled) | **High** | Without automated backups, the PostgreSQL metadata database (workspaces, users, settings) is unprotected. Enable and set `backup_retention_days` for production. |
+| `enable_redis` | `false` | **Low** | Redis is optional for AnythingLLM core functionality. If enabled, `redis_host` must be set or the container will fail to start with a connection error on Redis initialisation. |
+| `VECTOR_DB` (via `environment_variables`) | `"lancedb"` (built-in) | **High** | Changing the vector database engine after workspaces have been populated requires re-ingesting all documents. Existing vectors are stored in the previous engine's format and are not automatically migrated. |
+| `application_version` | `"latest"` | **Medium** | AnythingLLM releases may change the database schema. An unplanned upgrade can run migrations that are incompatible with the current schema, crashing startup. Pin to a specific release in production. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

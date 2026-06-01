@@ -468,6 +468,36 @@ All user-configurable variables exposed by `Activepieces_CloudRun`, sorted by UI
 | `organization_id` | 21 | `""` | GCP Organization ID for the VPC-SC policy. |
 | `enable_audit_logging` | 21 | `false` | Enables detailed Cloud Audit Logs for all supported services. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `AP_ENCRYPTION_KEY` (auto-generated 32-char hex secret) | Auto-generated and stored in Secret Manager | **Critical** | The encryption key is used to encrypt all connection credentials and flow step secrets. Changing it after first run permanently corrupts all stored credentials — they cannot be decrypted and must be re-entered. The key must be exactly 32 hex characters (16 random bytes). |
+| `AP_JWT_SECRET` (auto-generated secret) | Auto-generated and stored in Secret Manager | **Critical** | Used to sign all user session tokens. Rotating it immediately invalidates all active user sessions, forcing all users to log out and re-authenticate. Do not rotate without a maintenance window. |
+| `application_name` | `"activepieces"` | **Critical** | Immutable after first deploy. Changing it renames all GCP resources, triggering full recreation and data loss. |
+| `db_name` | `"activepieces"` | **Critical** | Immutable after first deploy. Changing it causes Activepieces to connect to a new empty database, losing all flows, connections, and execution history. |
+| `AP_FRONTEND_URL` / `AP_WEBHOOK_URL_PREFIX` (injected from `service_url`) | Predicted Cloud Run service URL | **Critical** | Both must match the actual public service URL. Incorrect values break webhook triggers from external systems and OAuth callbacks. After deployment, verify the predicted URL matches the Cloud Run service URL. |
+| `enable_redis` | `true` | **High** | Activepieces defaults to `REDIS` queue mode when Redis is enabled (`AP_QUEUE_MODE = "REDIS"`). Without Redis and with `max_instance_count > 1`, the queue mode falls back to `MEMORY`, meaning each instance maintains its own in-memory queue — causing duplicate flow executions and lost runs. |
+| `redis_host` | `""` (uses NFS server IP when `enable_nfs = true`) | **High** | When `enable_redis = true` and `redis_host` is empty and `enable_nfs = false`, the Redis connection string is blank and Activepieces fails to connect to Redis at startup. |
+| `AP_EXECUTION_MODE` (injected as `"UNSANDBOXED"`) | `"UNSANDBOXED"` | **Medium** | Activepieces is deployed in unsandboxed mode by default because Cloud Run does not support sandboxed execution (which requires privileged containers). Changing to `"SANDBOXED"` via `environment_variables` will cause container startup failures. |
+| `memory_limit` | `"2Gi"` | **High** | Activepieces runs flow steps in-process. Values below `1Gi` cause OOM kills during concurrent flow executions with multiple active steps. |
+| `cpu_limit` | `"1000m"` | **Medium** | Low CPU limits cause execution throttling, especially for flows that process large payloads or run JavaScript/TypeScript code steps. Increase to `2000m` for production workloads. |
+| `min_instance_count` | `0` | **Medium** | Scale-to-zero causes cold-start delays of 5–15 seconds for incoming webhook triggers after idle. Set to `1` for time-sensitive webhook flows in production. |
+| `max_instance_count` | `1` | **High** | Increasing above `1` without Redis changes the queue mode to `MEMORY` per-instance, causing duplicate executions. Only increase with `enable_redis = true`. |
+| `enable_nfs` | `true` | **High** | Activepieces stores flow artifacts and binary data at the NFS mount path. Without NFS, any file-handling steps lose their data on container restart. |
+| `AP_SIGN_UP_ENABLED` (injected as `"true"`) | `"true"` | **High** | Leaving sign-up enabled in production allows anyone with the service URL to create an account. Override via `environment_variables = { AP_SIGN_UP_ENABLED = "false" }` after creating the initial admin user. |
+| `enable_iap` | `false` | **High** | Enabling IAP without valid `iap_authorized_users` or `iap_authorized_groups` causes all requests to return 403. |
+| `ingress_settings` | `"all"` | **Medium** | Setting to `"internal"` blocks all webhook callbacks from external services. Use `"internal-and-cloud-load-balancing"` with Cloud Armor for production. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **Medium** | Setting to `"all-traffic"` routes all outbound calls through the VPC connector. If VPC firewall rules block egress to external APIs, all flow steps that call external services will fail. |
+| `backup_schedule` | `"0 2 * * *"` (daily at 02:00) | **Medium** | Ensure the backup schedule is aligned with your RPO. Activepieces execution history and connections are stored in PostgreSQL and are only recoverable from backups. |
+| `enable_binary_authorization` | `false` | **Medium** | Enabling with `"REQUIRE_ATTESTATION"` blocks all deployments unless the Activepieces image has a valid attestation. Use `"ALWAYS_ALLOW"` initially. |
+| `enable_cloud_armor` | `false` | **Medium** | Activepieces webhooks are publicly accessible by default. Enable Cloud Armor to enforce IP allowlists for the admin UI and restrict webhook ingress in production. |
+| `enable_vpc_sc` | `false` | **Medium** | Requires `organization_id` to be set. If empty, VPC-SC is silently skipped regardless of `enable_vpc_sc`. |
+| `secret_propagation_delay` | `30` seconds | **Low** | Too short a delay may cause the application to start before Secret Manager has propagated new secret versions, resulting in startup failures on first deploy. |
+| `enable_auto_password_rotation` | `false` | **Medium** | Enabling without tuning `rotation_propagation_delay_sec` can cause brief authentication failures during the propagation window between database password rotation and application restart. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

@@ -213,6 +213,35 @@ Open WebUI exposes `/health`. Both startup and liveness probes target this path.
 | `storage_buckets` | Created GCS storage buckets. |
 | `container_image` | Container image used for the deployment. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `ollama_base_url` | `""` (disabled) | **Critical** | If neither `ollama_base_url` nor `openai_api_base_url` is set, Open WebUI starts but has no AI backend. All model requests fail with "No connection to Ollama" or equivalent. At least one backend URL must be provided for AI functionality. |
+| `openai_api_base_url` | `""` (disabled) | **High** | Required for OpenAI-compatible backends (LiteLLM, OpenRouter, etc.). Must include the full path including `/v1` (e.g., `"https://api.openai.com/v1"`). Omitting `/v1` causes API call failures that are hard to diagnose. |
+| `WEBUI_SECRET_KEY` (auto-generated) | Random 32-char secret in Secret Manager | **Critical** | `WEBUI_SECRET_KEY` is used to sign all user sessions. Rotating or changing it after first use immediately invalidates all active sessions, logging out every user. Treat as immutable after the first login. Never set this to a predictable value. |
+| `webui_auth` | `true` | **Critical** | Setting to `false` disables the login form entirely — anyone who can reach the URL has full access without credentials. Only safe for single-user or fully air-gapped deployments behind IAP or VPN. |
+| `default_user_role` | `"pending"` | **High** | Setting to `"user"` auto-approves all self-registered accounts without admin review. In a publicly accessible deployment this allows unrestricted signups. Use `"pending"` and enable `enable_iap` for production. |
+| `enable_signup` | `true` | **High** | With `webui_auth = true` and `default_user_role = "user"`, any visitor can self-register and immediately access all models. Set `default_user_role = "pending"` or `enable_signup = false` to restrict access. |
+| `min_instance_count` | `0` | **Medium** | Scale-to-zero causes 20–40 s cold starts (Cloud SQL connection + Python startup). For teams using Open WebUI interactively, set to `1` to keep a warm instance. |
+| `memory_limit` | `4Gi` | **High** | Open WebUI's RAG pipeline (document ingestion with embedding models) can consume 3–6 Gi under load. If memory is insufficient, the container is OOM-killed mid-ingestion and the document import silently fails. |
+| `db_host` | Auto-discovered (Cloud SQL proxy socket) | **Critical** | Leaving empty with `enable_cloudsql_volume = true` works automatically. If set to a manual IP without the Cloud SQL proxy, SSL/IAM auth is bypassed and the connection may be rejected. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Disabling while relying on Cloud SQL causes all database connections to fail. Only disable when connecting to an external PostgreSQL instance via TCP. |
+| `ollama_base_url` (format) | `"http://<host>:11434"` | **High** | Must not include a trailing slash and must be reachable from the Cloud Run VPC. If Ollama is on GKE, use the ClusterIP service DNS name (only reachable within the cluster — not from Cloud Run). Use the internal VPC IP or a shared VPC service instead. |
+| `service_url` | Auto-set from Cloud Run URL | **Medium** | Open WebUI uses `WEBUI_URL` for constructing share links and OAuth redirect URIs. If set incorrectly (e.g., to `http://` in a TLS deployment), OAuth social logins and sharing links break. |
+| `ingress_settings` | `"all"` | **High** | `"all"` exposes the UI to the public internet. Combine with `webui_auth = true` and `default_user_role = "pending"` or enable IAP for access control. |
+| `enable_iap` | `false` | **High** | Without IAP, the only access control is Open WebUI's built-in auth. If `webui_auth = false` is set accidentally, the deployment is completely unprotected. |
+| `timeout_seconds` | `300` | **Medium** | Document ingestion and large model responses can exceed 5 minutes. Requests are cut off with a 504. Increase to `3600` for deployments handling large file uploads or slow LLM backends. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts and Direct VPC Egress are not supported in gen1. Always use gen2. |
+| `database_type` | `"POSTGRES"` | **Critical** | Open WebUI requires PostgreSQL. Changing to `"MYSQL"` or `"NONE"` leaves the application unable to store users, chats, or settings. |
+| `gcs_volumes` (data persistence) | Auto-provisioned GCS bucket | **High** | Open WebUI stores uploaded documents, user avatars, and model files in GCS Fuse. Unmounting or changing the bucket path without migrating existing data causes all uploaded content to disappear. |
+| `enable_nfs` | `false` | **Medium** | NFS is needed for shared file access when running multiple instances (`max_instance_count > 1`). Without shared storage, each instance has isolated file state and uploaded documents may not be visible across replicas. |
+| `application_version` | `"latest"` | **Medium** | Pinning to `"latest"` risks unintended upgrades that change the database schema. Open WebUI performs automatic schema migrations on startup; a failed migration crashes the container. Pin to a specific release tag in production. |
+| `backup_schedule` | `""` (disabled) | **High** | Without automated backups, the PostgreSQL database (users, conversations, RAG index) is unprotected. Enable with a cron expression (e.g., `"0 2 * * *"`) for daily backups. |
+| `enable_auto_password_rotation` | `false` | **Medium** | Enabling password rotation without configuring `rotation_propagation_delay` can cause a race condition where Cloud Run restarts before the new secret is available, resulting in connection errors. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

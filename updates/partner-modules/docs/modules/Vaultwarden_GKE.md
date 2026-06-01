@@ -264,6 +264,34 @@ Identical to `App_GKE`. See [App_GKE §7](../App_GKE/App_GKE.md#7-reliability--s
 
 ---
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `domain` | `""` (empty — not injected) | **High** | Must be the full public URL (e.g., `https://vault.example.com`). Without it, TOTP/2FA QR codes link to `localhost`, organisation invitation emails contain broken links, and attachment download URLs are invalid. Set this before any user enables 2FA. |
+| `signups_allowed` | `false` | **Critical** | The module defaults to `false`. If set to `true` before initial admin setup, any internet user can register on the vault. Lock down registrations immediately after the first admin account is created. |
+| `admin_token` (via `environment_variables`) | Not set (admin panel disabled) | **High** | When `ADMIN_TOKEN` is absent, the `/admin` panel is completely disabled — the intended secure default. If admin access is needed, set `ADMIN_TOKEN` to an Argon2 hash or a strong random string via `environment_variables`. |
+| `stateful_pvc_enabled` | `false` (defaults to Deployment) | **High** | Setting to `true` without setting a `stateful_pvc_size` will use the Kubernetes default disk size. Vaultwarden data is served from Cloud SQL; local PVC data will be lost if the StatefulSet is deleted. Consider whether persistent local disk is truly needed alongside Cloud SQL. |
+| `workload_type` + `stateful_pvc_enabled` | Deployment / false | **High** | Setting `workload_type = "Deployment"` and `stateful_pvc_enabled = true` fails at plan time. StatefulSet is auto-selected when `stateful_pvc_enabled = true`; do not set both explicitly. |
+| `database_type` | `POSTGRES_15` | **High** | Changing the database type after first deploy causes Vaultwarden to connect to an empty database. All vault data will appear lost until the original type is restored. |
+| `db_name` | `vaultwarden` | **High** | Changing after initial deploy causes Vaultwarden to see an empty database on the next pod restart. All credentials appear lost until the name is restored. |
+| `min_instance_count` | `1` | **High** | Setting to `0` enables scale-to-zero in GKE (via HPA). A password manager with scale-to-zero means the vault is unavailable for several seconds after a cold start; Bitwarden clients show connection errors during this window. |
+| `container_port` | `80` | **High** | Must match the `ROCKET_PORT` environment variable. A mismatch means the Kubernetes readiness probe fails and the pod never enters the Ready state, blocking all traffic indefinitely. |
+| `container_protocol` | `http1` | **Medium** | Vaultwarden uses HTTP/1.1 for its REST API. Setting to `h2c` will cause the GKE load balancer to use h2c-specific connection handling that Vaultwarden does not support, resulting in protocol negotiation failures and 502 errors. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Must be `true`. Vaultwarden connects to Cloud SQL via the Auth Proxy Unix socket. Disabling this causes all database connections to fail and the pod enters a CrashLoopBackOff immediately. |
+| `smtp_*` variables (via `environment_variables`) | Not set | **High** | SMTP variables (`SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_SECURITY`) must all be set together or not at all. Partial configuration causes silent email delivery failures — Vaultwarden logs no error but invitation, 2FA recovery, and password-reset emails are never delivered. |
+| `quota_memory_requests` / `quota_memory_limits` | `"4Gi"` / `"8Gi"` | **Critical** | Values must use binary unit suffixes (e.g., `"4Gi"`, `"8192Mi"`). Bare integers are treated as bytes by Kubernetes, creating an effectively zero memory quota that blocks all pod scheduling immediately. |
+| `enable_resource_quota` | `false` | **Medium** | When enabled with incorrect quota values, the namespace quota immediately prevents the Vaultwarden pod from being scheduled. Verify `quota_memory_requests` and `quota_memory_limits` values before enabling. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | An empty string disables automated backups. A password manager without backups means a Cloud SQL failure results in permanent credential loss for all vault users. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | Disabling PDB allows GKE node upgrades to evict the Vaultwarden pod without waiting, causing a vault outage during cluster maintenance windows. |
+| `session_affinity` | `false` | **Low** | Enabling session affinity is not needed for Vaultwarden since all session state is in the database. It can cause uneven pod load distribution when multiple replicas are running. |
+| `enable_vpc_sc` | `false` | **High** | Requires explicit `organization_id`. Without it, VPC Service Controls are silently skipped. Enabling without a valid org ID leaves the perimeter uncreated. |
+| `enable_iap` | `false` | **Medium** | When enabled, `iap_oauth_client_id` and `iap_oauth_client_secret` must both be provided. Partial configuration leaves the backend either fully blocked or unprotected. |
+
+---
+
 ## Module Outputs
 
 | Output | Description |

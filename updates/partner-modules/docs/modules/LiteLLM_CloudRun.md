@@ -386,6 +386,33 @@ LiteLLM exposes two health endpoints:
 | `database_user` | LiteLLM database user. |
 | `storage_buckets` | Created GCS storage buckets. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `LITELLM_MASTER_KEY` (auto-generated) | `"sk-<random>"` stored in Secret Manager | **Critical** | The master key controls all administrative access to LiteLLM (creating virtual keys, managing models, viewing usage). Rotating it invalidates the `Authorization: Bearer` header on all existing API integrations. All callers must update their keys immediately after rotation. |
+| `LITELLM_SALT_KEY` (auto-generated) | Random secret in Secret Manager | **Critical** | Used to hash and salt all virtual API keys stored in the database. Changing it makes all previously issued virtual keys invalid — they cannot be verified and every API consumer loses access. The only recovery is to regenerate all virtual keys. Treat as permanently immutable. |
+| `STORE_MODEL_IN_DB` (via `environment_variables`) | `"True"` | **High** | Required for the LiteLLM Admin UI to manage models and virtual keys via the database. If set to `"False"`, model configuration reverts to the YAML file and the database is not used for key management, breaking the Admin UI workflows. |
+| `model_list` / model config YAML | Provided via environment or mounted file | **Critical** | LiteLLM requires at least one model to be configured to serve requests. An empty or malformed model list causes all proxy calls to return 404 or 500 errors. Validate the YAML format before deployment. |
+| `database_type` | `"POSTGRES"` | **Critical** | LiteLLM's key management, spend tracking, and audit logging require PostgreSQL. Without a database, virtual key management and usage reporting are completely disabled. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Disabling the Cloud SQL Auth Proxy sidecar when using Cloud SQL causes all database connections to fail at startup. LiteLLM crashes with a Prisma connection error. |
+| `enable_redis` | `false` | **High** | Without Redis, LiteLLM cannot cache responses, and all multi-instance deployments have isolated in-memory rate limit counters. Enable Redis for accurate rate limiting and response caching across multiple Cloud Run instances. |
+| `redis_host` | `""` | **High** | Required when `enable_redis = true`. Leaving empty with Redis enabled causes LiteLLM to fail to connect to Redis on startup and log cache errors for every request. |
+| `timeout_seconds` | `600` | **High** | LLM inference calls to slow models (e.g., large reasoning models or remote endpoints with high latency) can exceed several minutes. Insufficient timeout causes proxied requests to be terminated with 504 before the LLM responds. |
+| `ingress_settings` | `"all"` | **Critical** | LiteLLM's proxy endpoint is typically called programmatically by other services. `"all"` exposes it publicly. Any holder of a valid virtual key (or the master key if leaked) can make paid API calls. Set to `"internal"` for VPC-only access in multi-service architectures. |
+| `enable_iap` | `false` | **High** | IAP blocks all direct API calls since it requires a browser-based OAuth flow. Only enable IAP on the Admin UI path, not the main proxy endpoint — or accept that programmatic API access will require IAP service accounts. |
+| `min_instance_count` | `1` | **High** | LiteLLM acts as a shared API gateway. Cold starts (20–40 s) cause request queuing in dependent services. Set to `1` or more for low-latency gateway use. |
+| `memory_limit` | `2Gi` | **Medium** | The default 2 Gi is sufficient for standard proxy use. If many models are loaded simultaneously or response caching stores large payloads in memory, increase to 4 Gi. |
+| `NUM_WORKERS` (via `environment_variables`) | `"1"` | **Medium** | A single gunicorn worker limits concurrent request throughput. Increase to `2`–`4` for high-throughput proxy deployments. Also increase `cpu_limit` proportionally. |
+| `PROXY_BASE_URL` (via `service_url`) | Auto-set from Cloud Run URL | **Medium** | Must match the externally reachable URL. Incorrect values break OpenAI-compatible client auto-configuration and the Swagger docs. |
+| `backup_schedule` | `""` (disabled) | **High** | The PostgreSQL database stores all virtual keys, spend records, and audit logs. Without backups, an accidental drop or Cloud SQL deletion loses all key assignments and usage history. |
+| `enable_auto_password_rotation` | `false` | **Medium** | Enabling without a `rotation_propagation_delay` can cause a race condition where Cloud Run restarts before the new database password reaches all instances, causing connection failures. |
+| `ingress_settings` (Admin UI path) | `"all"` | **High** | The LiteLLM Admin UI is served on the same port as the proxy API. A leaked or brute-forced master key on a publicly accessible endpoint gives an attacker full control over model routing, spend limits, and virtual key management. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts (for config file delivery) and Direct VPC Egress are gen2-only. Always use gen2. |
+| `application_version` | `"main-stable"` | **Medium** | LiteLLM updates frequently. Unpinned versions may change the Prisma schema or break existing virtual key formats. Pin to a specific release for production stability. |
+
 ## Destroying Resources
 
 When destroying, the Cloud SQL PostgreSQL instance takes 8–12 minutes to delete. See the Serverless IPv4 address release note in the LibreChat_CloudRun docs for the VPC subnet deletion timing issue.

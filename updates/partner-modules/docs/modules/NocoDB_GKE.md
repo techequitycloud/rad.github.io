@@ -141,3 +141,27 @@ NocoDB is an open-source no-code database platform (Airtable alternative) with 4
 | `database_instance_name` | Name of the Cloud SQL instance. |
 | `database_name` | Name of the application database. |
 | `database_password_secret` | Secret Manager secret name for the database password. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `NC_AUTH_JWT_SECRET` (via Secret Manager) | Auto-generated 32-char random string | **Critical** | Changing or rotating this value after the first deployment immediately invalidates all existing user sessions and API tokens. All users are forcibly logged out. Treat as immutable after first deploy. |
+| `GCS_BUCKET_NAME` | Auto-set from module output | **High** | Do not override. An incorrect bucket name causes all NocoDB file attachments to fail silently. |
+| `application_database_name` | `"nocodb"` | **High** | Immutable after first apply. Changing orphans the NocoDB application schema. |
+| `application_database_user` | `"nocodb"` | **High** | Immutable after first apply. Renaming requires manual Cloud SQL intervention. |
+| `container_resources.memory_limit` | `"1Gi"` | **High** | Under 512Mi the NocoDB Node.js process is OOM-killed on startup. On GKE Autopilot, `mem_request` must also be set appropriately to avoid eviction. Minimum `"1Gi"`. |
+| `container_resources.mem_request` | `null` (defaults to limit) | **Medium** | On GKE Autopilot, setting `mem_request` far below `memory_limit` leads to burstable scheduling and possible eviction under memory pressure. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Required for the Cloud SQL Auth Proxy sidecar. Disabling with a PostgreSQL backend causes all DB connections to fail. |
+| `enable_redis` | `false` | **Medium** | Without Redis, NocoDB cannot share session/cache state across multiple pods. Required when `max_instance_count > 1`. Enabling without a valid `redis_host` raises a validation error at plan time. |
+| `redis_host` | `null` | **High** | Required when `enable_redis = true`. An empty host causes all Redis connections to fail on pod startup. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero terminates background automation workers. Webhook callbacks fired during a cold-start window will time out. |
+| `max_instance_count` | `10` | **Medium** | Running multiple pods without Redis causes session invalidation when requests are load-balanced to different pods. Enable Redis before increasing above `1`. |
+| `quota_memory_requests` / `quota_memory_limits` | `"4Gi"` / `"8Gi"` | **High** | GKE-specific: must use binary suffixes (`Gi`, `Mi`). A bare integer (e.g., `"4"`) is treated as bytes by Kubernetes and blocks all pod scheduling. |
+| `enable_iap` | `false` | **High** | Without IAP the NocoDB interface is reachable from the load-balancer IP. Enable IAP or configure Kubernetes network policies for internal workspaces. |
+| `pdb_min_available` | `"1"` | **Medium** | Setting to `"0"` allows all pods to be evicted during node upgrades, causing a full NocoDB outage. |
+| `application_version` | `"latest"` | **Medium** | Pinning to a specific version prevents uncontrolled upgrades. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Disabling automated backups leaves all table data, views, and automations unprotected. |
+| `stateful_pvc_enabled` | `false` | **Low** | NocoDB does not require persistent volumes — state is in PostgreSQL and GCS. Enabling adds unnecessary StatefulSet complexity. |

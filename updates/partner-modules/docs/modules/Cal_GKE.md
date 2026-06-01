@@ -520,3 +520,35 @@ Use `secret_environment_variables` for `SMTP_PASSWORD`. `NODE_ENV`, `NEXT_PUBLIC
 | `static_ip_address` | Reserved external IP address (if `reserve_static_ip = true`). |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 | `github_repository_url` | GitHub repository URL connected for CI/CD. |
+
+---
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `container_port` | `3000` | **Critical** | Cal.com is a Next.js application that listens on port 3000. Setting this to `8080` or any other value causes liveness and readiness probes to target the wrong port, the pod will never pass health checks, and no traffic will be served. |
+| `NEXT_PUBLIC_WEBAPP_URL` (in `environment_variables`) | Auto-derived from predicted GKE LoadBalancer URL | **Critical** | Cal.com rewrites this URL into every static Next.js chunk during startup. If it does not match the public address users reach, OAuth callbacks, booking links, and email confirmation links will all be broken. Must be set once the LoadBalancer external IP or custom domain is known. |
+| `NEXTAUTH_URL` (in `environment_variables`) | Auto-derived from predicted GKE LoadBalancer URL | **Critical** | NextAuth uses this for OAuth redirect URI validation. A mismatch will prevent all users from logging in. Update to match the actual public URL after first deploy. |
+| `database_type` | `"POSTGRES_15"` | **Critical** | Cal.com requires PostgreSQL with Prisma ORM. Setting this to MySQL or NONE breaks database schema migrations — the init job will fail and the application will not start. |
+| `application_database_name` | `"calcom"` | **Critical** | Changing this after initial deployment orphans the existing database. The application will connect to a new empty database while the old data remains in Cloud SQL but unreferenced. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Cal.com connects to Cloud SQL via the Auth Proxy Unix socket. Disabling this removes the socket path, causing all database connections to fail immediately on pod startup. |
+| `application_version` | `"v6.2.0"` | **High** | `calcom/cal.diy` has no `latest` tag. Using an invalid or missing tag causes the Cloud Build step to fail with an image-not-found error. Always pin to a specific versioned release tag. |
+| `container_resources.memory_limit` | `"2Gi"` | **High** | Cal.com's startup process (static chunk rewriting + Prisma migration) requires at least 2 GiB. Memory below `2Gi` causes OOM kills before the application is ready. Use `4Gi` for production multi-user workloads. |
+| `startup_probe.initial_delay_seconds` | `60` (variable default), but `Cal_Common` sets `180` | **High** | Cal.com startup takes 3–5 minutes (replace-placeholder.sh + Prisma migrations + seed-app-store). The `Cal_GKE` variable default of `60s` is too short. Use the `Cal_Common`-derived defaults by leaving `startup_probe` at its default or explicitly setting `initial_delay_seconds = 180` and `failure_threshold = 18`. |
+| `startup_probe.failure_threshold` | `18` (via `Cal_Common`) | **High** | With `period_seconds = 10` and `failure_threshold = 18`, the pod has up to 6 minutes to complete startup. Reducing below `12` causes Kubernetes to kill the container before initialization completes. |
+| `min_instance_count` | `1` | **Medium** | GKE defaults to 1 replica (unlike Cloud Run's scale-to-zero default). Setting to `0` with HPA could allow scale-to-zero; Cal.com's 3–5 minute cold start makes this unsuitable for production scheduling. Keep at `1` minimum for production. |
+| `enable_redis` | `false` | **Medium** | Without Redis, Cal.com uses in-memory session caching. With multiple replicas, sessions are not shared, causing users to be logged out when requests are routed to different pods. Enable Redis for any multi-replica deployment. |
+| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, the Redis URL injected into the application is malformed. The application starts but all session operations fail at runtime. |
+| `container_image_source` | `"prebuilt"` | **High** | `Cal_Common` overrides this to `"custom"` with a `container_build_config`. The `Cal_GKE` variable's `"prebuilt"` default is overridden at the module level, but setting `container_image_source = "prebuilt"` explicitly in `Cal_GKE` will pass through and skip the build pipeline. |
+| `service_type` | `"LoadBalancer"` | **Medium** | Using `"ClusterIP"` without an Ingress resource makes the service inaccessible from outside the cluster. Use `"LoadBalancer"` for direct external access, or `"ClusterIP"` with `enable_custom_domain = true` to route through an Ingress. |
+| `session_affinity` | `"None"` | **Medium** | Cal.com's in-memory session caching (when Redis is disabled) requires `"ClientIP"` session affinity to avoid random logouts across replicas. Either enable Redis or set `session_affinity = "ClientIP"`. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **High** | If `enable_resource_quota = true`, these must use binary suffixes (e.g., `"4Gi"`, `"8192Mi"`). Bare integers (e.g., `"4"`) are treated as bytes by Kubernetes, blocking all pod scheduling with a quota-exceeded error. |
+| `stateful_pvc_enabled = true` with `workload_type = "Deployment"` | — | **High** | This combination fails at plan time. `stateful_pvc_enabled = true` auto-selects `StatefulSet`. Do not explicitly set `workload_type = "Deployment"` alongside it. |
+| `enable_topology_spread` | `false` | **Medium** | Without topology spread, multiple Cal.com replicas may schedule on a single zone. A zone-level failure takes down all replicas simultaneously. Enable for production to ensure zone resilience. |
+| `enable_pod_disruption_budget` | `false` | **Medium** | Without a PodDisruptionBudget, GKE cluster maintenance can evict all Cal.com pods simultaneously, causing full service downtime. Enable when `max_instance_count > 1`. |
+| `termination_grace_period_seconds` | `30` | **Low** | Cal.com handles active booking requests at shutdown. Increase to `60` for production to allow in-flight requests to complete before the pod is killed. |
+| `organization_id` | `""` | **Medium** | VPC-SC perimeter is only activated when `organization_id` is explicitly set. Without it, `enable_vpc_sc = true` has no effect. |
+| `enable_binary_authorization` | `false` | **Medium** | When enabled, only attested images can be deployed. Ensure the Cal.com image is properly attested in Binary Authorization before enabling, otherwise deployments will be blocked. |

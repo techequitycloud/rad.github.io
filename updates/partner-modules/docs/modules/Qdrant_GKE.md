@@ -238,3 +238,27 @@ IAP via the Kubernetes Gateway API. Requires `enable_custom_domain` or `enable_c
 | `enable_vpc_sc` | 22 | `false` | VPC Service Controls |
 | `organization_id` | 22 | `""` | GCP Org ID for VPC-SC |
 | `enable_audit_logging` | 22 | `false` | Cloud Audit Logs |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `enable_api_key` (Common) | `false` | **Critical** | Without an API key, any caller who can reach the Qdrant service can read, modify, or delete all collections. Set to `true` for any deployment reachable outside the pod namespace. The key is stored in Secret Manager. |
+| `stateful_pvc_enabled` | `null` | **High** | Without a PVC, Qdrant stores collection data in the ephemeral pod filesystem. Any pod restart, rolling update, or node eviction erases all collections permanently. Set `stateful_pvc_enabled = true` for any production deployment. |
+| `stateful_pvc_size` | `"20Gi"` | **High** | An undersized PVC fills up as collections grow (HNSW index + payload storage). A full disk causes Qdrant to crash and makes collections unrecoverable without manual PVC expansion. Provision generously — PVC capacity cannot be decreased after creation. For 1M vectors at 1536 dims, allow at least 10 Gi per collection. |
+| `workload_type` | `null` | **High** | `null` resolves to `Deployment`. With `stateful_pvc_enabled = true`, the module auto-selects `StatefulSet`. Explicitly combining `workload_type = "Deployment"` with `stateful_pvc_enabled = true` fails at plan time. |
+| `stateful_pvc_storage_class` | `"standard-rwo"` | **Medium** | Balanced PD is adequate for most query loads. High-throughput real-time index builds benefit from `premium-rwo`. Storage class cannot be changed after PVC creation without data migration. |
+| `stateful_pvc_mount_path` | `"/qdrant/storage"` | **Critical** | Must match Qdrant's `storage.storage_path` configuration. If the PVC is mounted to a different path than Qdrant reads, all data is stored in the ephemeral container layer and lost on restart. Do not change without a matching `QDRANT__STORAGE__STORAGE_PATH` environment variable override. |
+| `collection vector dimensions` | *(immutable — set at collection creation via client)* | **Critical** | Qdrant collection vector dimensions are immutable after creation. A mismatch with the embedding model dimension causes all upsert operations to fail. There is no migration path — the collection must be deleted and recreated, losing all vectors. |
+| `memory_limit` | `"1Gi"` | **High** | Qdrant loads HNSW graphs into memory. The default `1Gi` supports only small test collections. Production workloads need `4Gi`–`16Gi` or more. OOM kills drop all in-flight queries and trigger a full index reload from disk. |
+| `cpu_limit` | `"1000m"` | **Medium** | HNSW index builds and high-concurrency searches are CPU-bound. Throttling below `1000m` degrades p99 latency and slows index construction. Scale to `2000m`–`4000m` for production. |
+| `min_instance_count` | `1` | **Medium** | Scale-to-zero on GKE (`0`) deletes the pod. After restart, Qdrant reloads indexes from PVC, which takes tens of seconds for large collections. For latency-sensitive applications, keep at `1`. |
+| `max_instance_count` | `1` | **High** | Multiple Qdrant replicas sharing a single PVC (RWO) are not supported. RWO PVCs can only be mounted by one pod at a time; scaling beyond 1 prevents additional pods from scheduling. For horizontal scaling, deploy separate Qdrant instances with collection sharding at the application level. |
+| `liveness_probe` (Common) | `/livez` | **High** | Qdrant's `/readyz` returns 503 while loading large collections. Using `/readyz` as the liveness target causes spurious restarts during collection load, which in turn triggers more reloads — a restart loop. Always use `/livez` for liveness checks. |
+| `quota_memory_requests` | `""` | **Critical** | If `enable_resource_quota = true` with a bare integer (e.g. `"4"` instead of `"4Gi"`), Kubernetes treats it as bytes, blocking all pod scheduling. Always use binary suffixes. Note: Qdrant_GKE accepts but does not forward this variable — check `App_GKE`. |
+| `application_version` | `"latest"` | **Medium** | Qdrant's storage format changes between major versions. An unexpected image change via `latest` during rebuild can make existing collections unreadable. Pin to a specific semver tag for production. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Qdrant collections should be snapshotted regularly via the Qdrant API or GCS Fuse volume backup. Ensure the backup job is active and tested before relying on it for production recovery. |
+| `enable_iap` | `false` | **High** | Without IAP, the GKE Ingress endpoint is accessible to any caller. Enable IAP and `enable_api_key = true` together for defense-in-depth on production deployments. |
+

@@ -434,6 +434,34 @@ All user-configurable variables, sorted by UI group.
 | `artifact_registry_url` | Artifact Registry URL for the mirrored container image. |
 | `storage_buckets` | Created GCS storage buckets. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `CREDS_KEY` (auto-generated) | Random 32-byte hex key in Secret Manager | **Critical** | Used for AES-GCM encryption of all saved AI provider credentials (OpenAI keys, Anthropic keys, etc.). Rotating or changing this key after credentials have been saved permanently corrupts all stored provider credentials — they cannot be decrypted and must be re-entered manually by every user. |
+| `CREDS_IV` (auto-generated) | Random 16-byte hex IV in Secret Manager | **Critical** | The AES-GCM initialisation vector paired with `CREDS_KEY`. Changing it after first use has the same effect as changing `CREDS_KEY` — all stored credentials are lost. |
+| `JWT_SECRET` (auto-generated) | Random secret in Secret Manager | **High** | Used to sign all user access and refresh tokens. Rotating it logs out every active user simultaneously. Plan key rotation during a maintenance window and notify users. |
+| `mongodb_uri` | Auto-discovered Firestore MongoDB endpoint | **Critical** | LibreChat requires MongoDB (or Firestore MongoDB compatibility). If neither `mongodb_uri` nor `firestore_mongodb_host` is provided and auto-discovery fails, the container crashes on startup with a MongoDB connection error and serves no traffic. |
+| `firestore_mongodb_host` | Auto-discovered | **High** | Manual override of the Firestore host. If set to a wrong value (typo, stale endpoint), all LibreChat data operations fail and the service is non-functional. Use auto-discovery when possible. |
+| `enable_cloudsql_volume` | `false` | **Critical** | LibreChat does not use Cloud SQL — must remain `false`. If set to `true`, the Cloud SQL Auth Proxy sidecar is injected unnecessarily. The description in variables.tf explicitly warns that this must stay false. |
+| `database_type` | `"NONE"` | **Critical** | LibreChat manages its own MongoDB connection and does not use Cloud SQL. Setting `database_type` to `"POSTGRES"` or `"MYSQL"` provisions an unused Cloud SQL instance and adds cost without benefiting the application. |
+| `allow_registration` | `true` | **High** | Leaving registration open on a publicly accessible deployment allows anyone to create an account. Disable after the admin account is created (`allow_registration = false`) or require Google OAuth (`allow_social_login = true`) for organisational accounts only. |
+| `allow_social_login` | `false` | **Medium** | Enabling social login without configuring the corresponding OAuth credentials (e.g., `GOOGLE_CLIENT_ID`) causes social login buttons to appear but fail, confusing users. Configure all required OAuth env vars before enabling. |
+| `MEILI_MASTER_KEY` (auto-generated) | Random secret in Secret Manager | **High** | MeiliSearch master key. If rotated, all existing search indices require a full rebuild. LibreChat also manages a separate `MEILI_KEY` derived from this. Treat as immutable once the search index is populated. |
+| `min_instance_count` | `1` | **High** | LibreChat is a stateful chat application. Scale-to-zero causes cold starts and drops in-flight SSE streaming connections. Set to `1` or more for a reliable chat experience. |
+| `timeout_seconds` | `600` | **High** | SSE streaming for long AI responses can exceed several minutes. Low timeouts (e.g., `60`) terminate the stream mid-response. Set to at least `600`; increase further for slow LLM backends. |
+| `secret_environment_variables` (AI provider keys) | `{}` | **Critical** | AI provider API keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.) must be injected via `secret_environment_variables` referencing Secret Manager. Providing them as plain `environment_variables` exposes them in Cloud Run revision metadata and GCP audit logs. |
+| `ingress_settings` | `"all"` | **High** | `"all"` exposes LibreChat to the public internet. Only the application login form protects it. Always pair with `enable_iap = true` for production or restrict to `"internal"`. |
+| `enable_iap` | `false` | **High** | Without IAP, access control is application-only. A misconfigured `allow_registration = true` on a public deployment creates a security risk. |
+| `USE_REDIS` / `enable_redis` | Depends on module | **Medium** | Without Redis, LibreChat stores session data in memory. Multiple Cloud Run instances each have isolated session state, causing users to lose sessions when requests land on a different instance. Set `USE_REDIS = "true"` and provide `redis_host` for multi-instance deployments. |
+| `backup_schedule` | `""` (disabled) | **High** | Without backups, all LibreChat conversation history and user data in MongoDB/Firestore are unprotected. Enable daily backups for production. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts are not supported in gen1. Always use gen2 for NFS-enabled deployments. |
+| `gcs_volumes` | Auto-provisioned | **High** | LibreChat stores uploaded files (images, documents shared in chat) in GCS Fuse. Without the `implicit-dirs` mount option, file listings fail and attachments cannot be retrieved. |
+| `application_version` | `"latest"` | **Medium** | Unplanned LibreChat upgrades can change the MongoDB schema or break existing API integrations. Pin to a specific release tag in production. |
+| `app_title` | `"LibreChat"` | **Low** | Displayed in the browser tab and login screen. Purely cosmetic but worth setting for white-label deployments. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

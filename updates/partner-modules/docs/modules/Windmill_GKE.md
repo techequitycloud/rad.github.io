@@ -280,6 +280,34 @@ Notable defaults for Windmill:
 
 ---
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `service_url` / `BASE_URL` (via Common) | Auto-predicted from GKE service URL | **High** | `BASE_URL` and `BASE_INTERNAL_URL` are set from `service_url` in Windmill Common. An incorrect or empty value breaks OAuth callbacks, webhook endpoints, and Windmill UI deep-links. Verify the predicted GKE service URL (load balancer IP or custom domain) matches the actual external endpoint before the first deploy. |
+| `database_type` | `POSTGRES_15` | **Critical** | The GKE module description references PostgreSQL 16 in the database instance name output. Ensure the Cloud SQL instance version matches what Windmill's migration job expects. Using a mismatched version causes the init job to fail with unsupported migration SQL, leaving the database uninitialised. |
+| `db_name` | `windmill` | **High** | Changing after first deploy causes Windmill to connect to an empty database, producing migration errors at startup and a non-functional service. |
+| `db_user` | `windmill` | **High** | Changing after deploy breaks the database connection unless Cloud SQL user grants and the Secret Manager password are updated simultaneously. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Windmill connects to Cloud SQL via the Auth Proxy Unix socket. Disabling this causes database connection failures and Windmill enters CrashLoopBackOff immediately on startup. |
+| `cpu_limit` | `2000m` | **High** | GKE Windmill runs in combined mode on single-replica deployments. Insufficient CPU throttles worker script execution. Each worker needs approximately 500m CPU; the default 3 workers require at least 2000m total. |
+| `memory_limit` | `2Gi` | **High** | Windmill executes arbitrary user scripts in worker subprocesses. Python and TypeScript jobs with large dependencies can exceed 512Mi easily. OOM kills during script execution cause job failures with no visible error in the Windmill UI. |
+| `min_instance_count` | `1` | **High** | Setting to `0` enables scale-to-zero via HPA. Scheduled Windmill jobs will be missed while the pod is scaled down; webhook triggers will return 503 until the pod is ready. Keep at least 1 replica running at all times. |
+| `container_protocol` | `http1` | **High** | Windmill's HTTP server uses HTTP/1.1. Setting to `h2c` causes the GKE load balancer to use h2c framing for requests that Windmill does not support, resulting in 502 errors for all API and UI traffic. |
+| `quota_memory_requests` / `quota_memory_limits` | `"4Gi"` / `"8Gi"` | **Critical** | Must use binary unit suffixes (e.g., `"4Gi"`, `"8192Mi"`). Bare integers are treated as bytes by Kubernetes, creating a near-zero memory quota that immediately blocks all pod scheduling. |
+| `smtp_*` via Secret Manager | Dummy SMTP password secret created at deploy | **Medium** | SMTP is only functional when all of `WINDMILL_SMTP_HOST`, `WINDMILL_SMTP_PORT`, `WINDMILL_SMTP_FROM`, and the SMTP password secret are properly configured together. Partial SMTP configuration causes silent email delivery failures with no runtime error. |
+| `enable_redis` | `false` | **Medium** | Redis enables Windmill's distributed queue. Without Redis on GKE multi-replica deployments, each pod processes only its own local queue — jobs submitted to one pod are invisible to others, causing unpredictable load distribution and potential job duplication. |
+| `worker_group` (via `environment_variables`) | `"default"` | **Medium** | Windmill uses worker groups to route jobs to specific worker pools. If a flow or script specifies a custom worker group that does not exist, the job sits in the queue indefinitely with no timeout or error. |
+| `stateful_pvc_enabled` | `false` | **Medium** | Windmill state is in Cloud SQL and GCS. Enabling StatefulSet PVCs adds persistent storage not used by Windmill, wastes resources, and can block pod rescheduling when the PVC cannot be mounted on the new node. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | Disabling PDB allows GKE node upgrades to evict all Windmill pods simultaneously, causing a service outage and losing all in-flight job execution state. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | An empty string disables automated backups. Windmill stores all scripts, flows, variables, resources, and job history in PostgreSQL. Without backups, any Cloud SQL failure results in complete loss of all automation definitions. |
+| `enable_iap` | `false` | **Medium** | IAP requires `iap_oauth_client_id` and `iap_oauth_client_secret`. Enabling without both values leaves the backend either fully blocked or unprotected. External webhook sources cannot reach IAP-protected endpoints without explicit allowlisting. |
+| `enable_vpc_sc` | `false` | **High** | Requires explicit `organization_id`. Without it, VPC Service Controls are silently skipped, giving a false sense of perimeter security. |
+| `enable_auto_password_rotation` | `false` | **Medium** | When enabled, the Cloud SQL password rotates on schedule. The Windmill pod must be restarted after rotation; otherwise it continues using the old (now invalid) password until connections fail and the pod enters CrashLoopBackOff. |
+
+---
+
 ## Module Outputs
 
 | Output | Description |

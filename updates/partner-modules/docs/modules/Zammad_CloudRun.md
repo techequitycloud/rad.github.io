@@ -550,18 +550,35 @@ All user-configurable variables exposed by `Zammad_CloudRun`, sorted by UI group
 
 ---
 
-## 12. Configuration Pitfalls
+## 12. Configuration Pitfalls & Sensible Defaults
 
-| Pitfall | Symptom | Resolution |
-|---|---|---|
-| `enable_redis = true` with no `redis_host` and `enable_nfs = false` | Plan fails with precondition error | Set `redis_host` explicitly, or set `enable_nfs = true` to use the NFS server IP as the Redis host. |
-| `database_type = "MYSQL_8_0"` | Plan fails with precondition error | Zammad requires PostgreSQL. Use `POSTGRES_15`. |
-| `enable_cloudsql_volume = true` with `database_type = "NONE"` | Plan fails with precondition error | Either disable the Cloud SQL volume or configure a database. |
-| `container_image_source = 'prebuilt'` without custom entrypoint | Zammad fails to start — `DB_*` variables not mapped to `POSTGRESQL_*` | Use `'custom'` (default) so the Cloud Build pipeline includes `Zammad_Common`'s `entrypoint.sh`. |
-| `memory_limit` below `2Gi` | Zammad OOMs during startup or schema migration | Keep `memory_limit` at `4Gi` or above. Minimum is `2Gi`. |
-| `min_instance_count = 0` on a production helpdesk | 60–90 second cold starts visible to users | Set `min_instance_count = 1`. |
-| Redis on Memorystore with `vpc_egress_setting = 'PRIVATE_RANGES_ONLY'` | Redis connection refused | Memorystore uses a private IP — set `vpc_egress_setting = 'ALL_TRAFFIC'`. |
-| `nfs_mount_path` changed from `/opt/zammad/storage` | Zammad cannot find attachments | Leave `nfs_mount_path` at its default, or configure `ZAMMAD_STORAGE_PROVIDER` to match the new path. |
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `enable_redis` | `false` | **Critical** | Zammad requires Redis for its ActionCable real-time communication layer (live ticket updates, chat). Without Redis, the Zammad scheduler and ActionCable will fail to initialize, causing ticket status updates and agent notifications to stop working entirely. Redis is mandatory for any Zammad deployment beyond a minimal test instance. |
+| `redis_host` | `""` | **Critical** | When `enable_redis = true` and `redis_host` is empty, `REDIS_URL` is not injected into the container (the `module_env_vars` expression short-circuits). Zammad will start but all real-time features and background job processing will fail silently. Set `redis_host` to the Memorystore or Redis server IP. |
+| `database_type` | `"POSTGRES_15"` | **Critical** | Zammad 6.x requires PostgreSQL 15+. The `Zammad_Common` module hardcodes `database_type = "POSTGRES_15"`. Overriding this to MySQL causes the Zammad schema migration to fail immediately — the application will not start. |
+| `container_image_source` | `"custom"` | **Critical** | `Zammad_Common` sets `image_source = "custom"` to trigger the Cloud Build pipeline that injects `Zammad_Common`'s `entrypoint.sh`. This script maps Foundation Module `DB_*` variables to Zammad's expected `POSTGRESQL_*` variables. Using `"prebuilt"` without this entrypoint causes all database connections to fail on startup. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Zammad connects to Cloud SQL via the Auth Proxy Unix socket. Disabling this removes the socket, causing all database connections to fail. Do not disable. |
+| `memory_limit` (in `container_resources`) | `"4Gi"` | **High** | Zammad's Rails application, scheduler, and ActionCable server require significant memory. Below `2Gi`, Zammad OOMs during startup or during schema migrations on first deploy. Use `4Gi` for production; the minimum viable value is `2Gi`. |
+| `cpu_limit` (in `container_resources`) | `"2000m"` | **Medium** | Zammad performs schema migrations and asset compilation on startup, both CPU-intensive. Below `1000m`, startup time increases significantly and the application may exceed the startup probe window. |
+| `min_instance_count` | `0` | **High** | Scale-to-zero on a helpdesk means agents experience 60–90 second cold starts when the first ticket arrives. For any production helpdesk, set `min_instance_count = 1`. |
+| `max_instance_count` | `5` | **Medium** | Multiple Zammad instances require Redis for ActionCable coordination. Running more than one instance without Redis causes race conditions on ticket assignment and real-time state divergence. Ensure Redis is configured before increasing replicas beyond 1. |
+| `RAILS_ENV` (in `environment_variables`) | `"production"` | **High** | Changing `RAILS_ENV` to `"development"` enables verbose logging, disables asset caching, and enables Rails development middleware. Never use development mode in production — it significantly degrades performance and may expose debug information. |
+| `ZAMMAD_RAILSSERVER_PORT` (in `environment_variables`) | `"3000"` | **High** | This must match `container_port`. Changing one without changing the other means Cloud Run routes traffic to a port the application is not listening on, causing all requests to fail. |
+| `container_port` | `3000` | **High** | Must match `ZAMMAD_RAILSSERVER_PORT`. Changing this without updating the env var causes Cloud Run health checks and traffic routing to fail. |
+| `nfs_mount_path` | `"/opt/zammad/storage"` | **High** | Changing this path without reconfiguring Zammad's storage provider causes Zammad to write attachments to the local container filesystem (ephemeral) instead of NFS. Existing attachments stored on NFS become inaccessible. |
+| `enable_nfs` | `false` | **High** | Without NFS, Zammad stores attachments in the local container filesystem. In Cloud Run, this storage is ephemeral — all attachments are permanently lost on container restart. Enable NFS for any production deployment where attachment retention is required. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **High** | When Redis (Memorystore) is used, its private IP may not be in the default VPC private ranges. Redis connections will be refused. Change to `"ALL_TRAFFIC"` to ensure Memorystore is reachable from Cloud Run. |
+| `db_name` | `"zammad"` | **Critical** | Changing after initial deployment orphans the existing database. Zammad will connect to a new empty database, losing all ticket history, user accounts, and configuration. |
+| `db_user` | `"zammad"` | **High** | Changing after initial deployment creates a new user without permissions on existing Zammad database objects. All database operations fail with permission errors. |
+| `ingress_settings` | `"all"` | **Medium** | A production helpdesk may need to restrict direct internet access in favour of a load balancer or VPN. Use `"internal-and-cloud-load-balancing"` with Cloud Armor for internet-facing deployments. |
+| `startup_probe.initial_delay_seconds` | `60` | **High** | Zammad performs schema migrations, asset compilation, and ActiveRecord initialization on first startup. `60s` may be insufficient for large databases. If the startup probe kills Zammad before it finishes migrating, it enters a restart loop. Increase to `120s` for large databases. |
+| `enable_backup_import` | `false` | **High** | Setting to `true` triggers a database import on every `tofu apply`. If `backup_uri` points to a previous backup rather than the current live dump, subsequent applies overwrite live helpdesk data. Only enable for the initial restore. |
+| `backup_format` | `"sql"` | **Medium** | Zammad's `pg_dump` produces plain SQL. Using `"tar"` or `"gz"` requires the import job to decompress before loading. Ensure the backup format matches what was produced by the backup job. |
+| `enable_iap` | `false` | **Medium** | Without IAP, Zammad's own authentication is the only access control layer. For internal helpdesks, enabling IAP adds Google identity verification before the Zammad login page is reached. |
+| `vpc_sc_dry_run` | `true` | **Medium** | Dry-run mode logs violations without blocking. Switch to `false` only after confirming no false positives in Cloud Logging — a misconfigured perimeter in enforce mode blocks all API calls. |
 
 ---
 

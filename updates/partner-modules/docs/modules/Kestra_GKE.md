@@ -490,3 +490,31 @@ stateful_headless_service      = false
 stateful_pod_management_policy = "OrderedReady"
 stateful_update_strategy       = "RollingUpdate"
 ```
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `KESTRA_BASICAUTH_PASSWORD` (auto-generated secret) | Auto-generated and stored in Secret Manager | **Critical** | The only admin access credential. Losing the secret reference or destroying the Secret Manager secret requires a direct database update to reset. |
+| `KESTRA_BASICAUTH_ENABLED` (injected as `"true"`) | `"true"` | **Critical** | Disabling basic auth via `environment_variables` exposes the Kestra UI and full REST API without authentication. Only disable behind a trusted authentication proxy. |
+| `application_name` | `"kestra"` | **Critical** | Immutable after first deploy. Changing it renames all Kubernetes and GCP resources, causing full recreation with data loss. |
+| `db_name` | `"kestra"` | **Critical** | Immutable after first deploy. Changing it causes Kestra to connect to a new empty database, losing all flow definitions, execution history, and namespace configurations. |
+| `KESTRA_QUEUE_TYPE` / `KESTRA_REPOSITORY_TYPE` (both `"postgres"`) | `"postgres"` | **High** | Only the PostgreSQL backend is provisioned. Overriding either value to an unsupported type causes startup failures. |
+| `KESTRA_STORAGE_TYPE` (injected as `"gcs"`) | `"gcs"` | **High** | Changing to `"local"` causes all execution storage to write to ephemeral pod storage, losing all flow artifacts on pod restart or rescheduling. |
+| `min_instance_count` | `1` (GKE default) | **High** | Kestra must remain running to process scheduled triggers. Setting to `0` causes scheduled flows to miss their trigger windows during cold-start periods. GKE HPA validation blocks `min > max`. |
+| `max_instance_count` | `1` (Kestra Community — single-instance) | **High** | Kestra Community Edition uses PostgreSQL-based queue locking. Running multiple replicas causes task double-assignment and execution conflicts. Keep `max_instance_count = 1` for the Community Edition. |
+| `memory_limit` | `"4Gi"` | **High** | Kestra's JVM requires substantial heap for loading all flow definitions and execution contexts. Values below `2Gi` cause OutOfMemoryErrors and pod crashes under moderate load. |
+| `workload_type` | `null` (defaults to `Deployment`) | **High** | Setting `stateful_pvc_enabled = true` without an explicit `workload_type` automatically resolves to `StatefulSet`. Setting `workload_type = "Deployment"` with `stateful_pvc_enabled = true` fails at plan time. |
+| `stateful_pvc_enabled` | `false` | **Medium** | For single-instance Kestra deployments, a PVC provides reliable local storage. However, PVC size is immutable after creation — plan capacity in advance. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` (not enforced) | **High** | Must use binary suffixes (`"4Gi"`, `"8192Mi"`). Bare integers (e.g. `"4"`) are treated as bytes by Kubernetes and block all pod scheduling in the namespace. |
+| `enable_nfs` | `true` | **Medium** | Without NFS, Kestra cannot write local binary outputs for flow tasks. GCS storage handles most artifacts, but some task runners require local mount access. |
+| `FLYWAY_DATASOURCES_POSTGRES_BASELINE_ON_MIGRATE` (injected as `"true"`) | `"true"` | **High** | Required for Flyway to baseline against an already-initialized PostgreSQL database. Removing this causes all 52 Kestra migrations to fail on first run. |
+| `enable_iap` | `false` | **High** | Enabling IAP without both `iap_oauth_client_id` and `iap_oauth_client_secret` is blocked at plan time by the GKE validation guard. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | Disabling PDB allows GKE to evict the Kestra pod during maintenance, which interrupts all running flow executions. |
+| `enable_cloudsql_volume` | `true` | **High** | The Cloud SQL Auth Proxy sidecar is required for PostgreSQL connectivity in GKE. Disabling it while `database_type != "NONE"` is blocked by the GKE validation guard. |
+| `session_affinity` | `"ClientIP"` | **Medium** | The Kestra UI uses persistent connections for real-time execution log streaming. Disabling affinity can cause UI log streams to disconnect when routed to different pods. |
+| `termination_grace_period_seconds` | `30` | **Medium** | Kestra needs time to finish in-flight task executions before shutdown. Values below `30` may abort active flow runs mid-execution. Increase to `60` or more for long-running tasks. |
+| `enable_topology_spread` | `false` | **Low** | Without topology spread and with `max_instance_count > 1`, all Kestra pods may schedule on the same node. (Note: Community Edition should use `max_instance_count = 1`.) |
+| `organization_id` | `""` | **Medium** | Required for VPC-SC. If empty, VPC Service Controls are silently skipped. |

@@ -332,6 +332,28 @@ Crawl4AI exposes a `/health` HTTP endpoint. Supervisord boots Redis (priority 10
 | `container_image` | Container image used for the deployment. |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `vpc_egress_setting` | `"ALL_TRAFFIC"` | **Critical** | Crawl4AI crawls arbitrary public URLs on the internet. Using `"PRIVATE_RANGES_ONLY"` routes only RFC-1918 traffic through the VPC and blocks all external crawl targets. All crawl jobs to public websites will fail with connection errors. `ALL_TRAFFIC` is required and is the correct default. |
+| `memory_limit` | `"8Gi"` | **Critical** | Crawl4AI spawns Chromium browser instances for JavaScript-rendered pages. Each concurrent browser context uses 200–500 MB. The default config allows up to 40 concurrent browser pages. Below `4Gi`, Chromium processes are OOM-killed mid-crawl, returning partial or empty results. Below `2Gi`, the container itself fails to start. `8Gi` is the recommended minimum for production. |
+| `cpu_limit` | `"4000m"` | **High** | Chromium JavaScript rendering and DOM processing are CPU-intensive. Under `2000m`, Chromium triggers internal timeouts on complex pages, and crawl times balloon. The default `4000m` supports moderate concurrency; scale up for heavy parallel crawls. |
+| `execution_environment` | `"gen2"` | **High** | Crawl4AI uses Direct VPC Egress (not a VPC connector). Direct VPC Egress is only available on Gen2. Downgrading to `gen1` prevents the service from deploying with VPC network configuration. |
+| `min_instance_count` | `1` | **High** | Crawl4AI has a significant cold start due to Chromium initialization and the embedded Redis/Supervisord stack. Scale-to-zero (`0`) causes the first request after a cold start to time out (30–60 seconds). Keep at `1` for responsive crawl APIs. |
+| `max_instance_count` | `3` | **Medium** | Each additional instance spawns its own Chromium pool and embedded Redis. At high concurrency, costs scale linearly with instance count. Set an explicit limit matching your concurrency budget. |
+| `timeout_seconds` | `3600` | **Medium** | Deep crawls or LLM-based extraction of large pages can take several minutes. The default `3600` seconds (1 hour) is intentionally high. Reduce for short-lived crawl APIs where zombie requests should be killed faster. |
+| `redis_task_ttl_seconds` | `3600` | **Medium** | Crawl4AI stores task results in its embedded Redis. Too-short TTL (< 300 s) causes completed task results to expire before clients poll for them. Too-long TTL (> 86400 s) causes unbounded memory growth from accumulated results. The valid range is 300–86400. |
+| `LLM_API_KEY` (env var) | *(not set)* | **High** | LLM-based extraction strategies (e.g., `LLMExtractionStrategy`) require a valid API key. Setting an invalid or expired key causes extraction jobs to fail with 401 errors from the LLM provider. Inject via `environment_variables` or `secret_environment_variables` — never hardcode in plain text. |
+| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` (env var) | *(not set)* | **High** | When using provider-specific extraction strategies, the corresponding API key must be present. Missing keys cause extraction to fail silently (empty or null `extracted_content` in results). |
+| `container_port` | `11235` | **Critical** | Crawl4AI's REST API listens on port 11235. Changing this without a matching `UVICORN_PORT` environment variable causes health checks to fail, preventing the revision from receiving traffic. |
+| `enable_iap` | `false` | **High** | The default `ingress_settings = "all"` exposes the crawl API publicly. Without IAP or a crawl API token, any caller can submit crawl jobs, consuming cloud resources. Enable IAP or inject `CRAWL4AI_API_TOKEN` via environment variables. |
+| `application_version` | `"latest"` | **Medium** | Using `"latest"` makes deployments non-reproducible. A rebuild may pull a new Crawl4AI version with breaking API changes. Pin to a specific version tag for production. |
+| `enable_image_mirroring` | `true` | **Low** | Crawl4AI images are large (~3–4 Gi compressed). Without mirroring to Artifact Registry, every Cloud Run deployment pulls from Docker Hub, risking rate limit failures and slow cold starts. Keep mirroring enabled. |
+| `enable_cicd_trigger` | `false` | **Low** | When enabled, ensure `github_token` and `github_repository_url` are correctly set. An invalid token silently prevents Cloud Build triggers from firing. |
+
 ## Destroying Resources
 
 When destroying a Cloud Run deployment, you may encounter a serverless IPv4 address release error. Wait 20–30 minutes after the initial destroy attempt before re-running `tofu destroy`.

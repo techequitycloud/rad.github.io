@@ -571,3 +571,30 @@ resource_labels = {
 
 enable_image_mirroring = true
 ```
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `container_resources.memory_limit` | `16Gi` (7B) / `8Gi` (3B) | **Critical** | Insufficient memory causes OOM-kill mid-inference and crash-loops the pod. GKE Autopilot will not schedule the pod if the requested memory exceeds node capacity. Allocate at least 2× the quantised model weight size. |
+| `container_resources.cpu_limit` | `8` (7B) / `4` (3B) | **High** | Too few CPUs causes multi-second token latency on large models. For production throughput on 7B models, 6–8 cores are recommended. |
+| `container_resources` (GPU) | CPU-only defaults | **High** | The module documentation notes NVIDIA L4 GPU support. To enable GPU inference, you must provision an NVIDIA L4 node pool in the GKE Autopilot cluster (outside this module) and add `nvidia.com/gpu: 1` as a resource request via `container_resources`. Without this, GPU acceleration is silently not used and inference runs on CPU. |
+| `min_instance_count` | `1` | **High** | Setting to `0` allows scale-to-zero but causes 60–120 s cold starts (GCS Fuse mount + model load). Inappropriate for low-latency inference workloads. |
+| `model_pull_timeout_seconds` | `3600` | **High** | A short timeout (e.g., `300`) causes the model-pull Kubernetes Job to fail before the download completes for models larger than ~2 GB. The service starts but no default model is loaded. |
+| `default_model` | `""` (skip pull) | **Medium** | If no model is pulled at deploy time, the Ollama API returns an error on all inference requests until a model is manually pulled. |
+| `workload_type` | `null` (auto-select) | **Medium** | Using `"StatefulSet"` without enabling `stateful_pvc_enabled` results in pods with no persistent local storage. Conversely, setting `stateful_pvc_enabled = true` while specifying `workload_type = "Deployment"` fails at plan time. |
+| `service_type` | `"ClusterIP"` | **Critical** | Setting `service_type = "LoadBalancer"` exposes the Ollama API (port 11434) publicly without authentication. Ollama has no built-in auth. Always keep `ClusterIP` for internal cluster-only access. |
+| `environment_variables.OLLAMA_ORIGINS` | `"*"` (Ollama default) | **High** | If not explicitly restricted, CORS accepts any origin. Set to the specific UI origins (e.g., `"http://openwebui.namespace.svc.cluster.local:8080"`) to prevent cross-cluster or external browser access to the API. |
+| `environment_variables.OLLAMA_KEEP_ALIVE` | `"5m"` (Ollama default) | **Medium** | Ollama evicts models from GPU/CPU memory after 5 minutes idle. Subsequent requests trigger a full reload (30–60 s). Set to `"24h"` or `"-1"` for always-warm deployments. |
+| `environment_variables.OLLAMA_NUM_PARALLEL` | `1` | **Medium** | Serialises all inference requests. For shared cluster deployments with multiple callers (OpenWebUI, Flowise, N8N), increase to `2`–`4` based on available CPU/memory. |
+| `stateful_pvc_enabled` | `false` | **Medium** | Using GCS Fuse (default) means model weight loading at startup incurs network latency. A local PVC (StatefulSet) eliminates this but prevents pod migration during node pool upgrades. |
+| `quota_memory_requests` / `quota_memory_limits` | `"16Gi"` / `"32Gi"` | **Critical** | Must use binary unit suffixes (`Gi`, `Mi`). A bare integer (e.g., `"4"`) is treated as bytes by Kubernetes and will block all pod scheduling in the namespace. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | With `pdb_min_available = 1` and only one replica, rolling node upgrades stall because Kubernetes cannot evict the single pod. Ensure `max_instance_count ≥ 2` when using a PDB with `pdb_min_available = 1`. |
+| `deployment_timeout` | `600` | **High** | The default 600 s wait for the Deployment to become ready may be insufficient when pulling a large model (13B+) from GCS for the first time. Increase to `1200` for models over 8 GB. |
+| `session_affinity` | `"None"` | **Low** | Setting to `"ClientIP"` routes all requests from the same caller to the same pod, which improves context continuity for multi-turn conversations but unevenly distributes load across replicas. |
+| `enable_resource_quota` | `false` | **Medium** | Without a ResourceQuota, a misconfigured or runaway Ollama pod can consume all cluster resources. Enable and tune quotas in shared clusters. |
+| `enable_image_mirroring` | `true` | **Medium** | Disabling pulls directly from Docker Hub (rate-limited). Keep `true` in production. |
+| `gcs_volumes` mount options | `implicit-dirs` | **Medium** | Without `implicit-dirs` in GCS Fuse mount options, directory listings fail and Ollama cannot discover models stored in GCS subdirectories. |
+| `max_instance_count` | `3` | **High** | Each pod independently loads the full model into memory. For a 7B model (16 GiB each), three replicas require 48 GiB of cluster memory. Size the node pool accordingly or cap at `1` for large models. |

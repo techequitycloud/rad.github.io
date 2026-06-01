@@ -572,6 +572,36 @@ Variables marked **[fixed]** are hardcoded by the module and cannot be overridde
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 | `github_repository_url` | GitHub repository URL connected for CI/CD. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `project_id` | _(required)_ | **Critical** | No default — deployment fails immediately. |
+| `database_type` | `"MYSQL_8_0"` | **Critical** | Ghost requires MySQL exclusively. Setting to `POSTGRES` or `NONE` will cause Ghost to fail at startup with a database connection error — Ghost's knex adapter in this module targets MySQL only. |
+| `enable_redis` | `true` | **High** | Redis is enabled by default. When no `redis_host` is provided the module uses the NFS server IP — if `enable_nfs = false` as well, Ghost will fail to connect to Redis at startup. Disable Redis (`enable_redis = false`) only when a dedicated Redis is not available and NFS is also off. |
+| `redis_host` | `""` (auto-resolves to NFS IP) | **High** | Relies on NFS server IP when blank. If `enable_nfs = false` and `redis_host` remains empty with `enable_redis = true`, Ghost cannot initialise its caching layer and will crash on startup. |
+| `enable_nfs` | `true` | **Critical** | Ghost stores all content (themes, images, routes, settings) under `/var/lib/ghost/content`. Without NFS, this directory is ephemeral — all uploaded images and theme customisations are lost on every new Cloud Run revision. Multiple instances will serve inconsistent content. |
+| `container_image_source` | `"custom"` | **High** | Ghost requires a custom build to inject GCP configuration (database socket path, content path symlinks). Using `"prebuilt"` with the upstream `ghost` Docker Hub image may work for local testing but will fail to connect to Cloud SQL via Unix socket in Cloud Run. |
+| `container_port` | `2368` | **Critical** | Ghost listens on `2368` by default. Changing this without matching the Ghost `url` configuration causes Cloud Run health probes to fail and the service to be marked unhealthy. |
+| `memory_limit` | `"4Gi"` | **High** | Ghost 6.x with image processing, newsletter rendering, and theme compilation requires significant memory. Reducing below `1Gi` causes Node.js OOM crashes under moderate load. The documented minimum is `512Mi` — this is only viable for low-traffic or dev deployments. |
+| `min_instance_count` | `1` | **Medium** | Scale-to-zero (`0`) causes cold starts of 10–30 seconds. Ghost performs database migrations on first boot — cold starts can cause request timeouts for impatient visitors. Set to `1` for any production publication. |
+| `ingress_settings` | `"all"` | **Medium** | `"all"` exposes Ghost's admin panel (`/ghost`) to the public internet. For admin-only access, consider `enable_iap = true` or restricting the `/ghost` path via Cloud Armor. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts require `gen2`. Switching to `"gen1"` while `enable_nfs = true` causes the Cloud Run revision to fail to start. |
+| `db_name` | `"ghost"` | **Critical** | Immutable after first deployment — changing this causes Terraform to recreate the database, destroying all Ghost content, posts, and members data. |
+| `db_user` | `"ghost"` | **Critical** | Immutable after first deployment — changing this recreates the Cloud SQL user and invalidates all stored credentials. |
+| `database_password_length` | `32` | **Medium** | Minimum is 16 (enforced). Short passwords increase database brute-force risk. |
+| `environment_variables` (SMTP) | `{ SMTP_HOST = "", SMTP_PORT = "25", ... }` | **High** | Ghost uses SMTP for member welcome emails, newsletters, and password resets. Leaving `SMTP_HOST` empty disables email entirely — members cannot receive newsletters and cannot reset passwords. Configure a real SMTP provider (SendGrid, Mailgun, SES) before going live. |
+| `backup_retention_days` | `7` | **Medium** | Seven days is insufficient for active publications. Losing more than 7 days of posts and member data is a serious content loss. Increase to 30+ days for any production Ghost blog. |
+| `enable_cloud_armor` | `false` | **Medium** | Without Cloud Armor, the Ghost admin panel is protected only by Ghost's own auth. Bot traffic and credential stuffing attacks against `/ghost` are common. Recommended for any publicly visible publication. |
+| `enable_backup_import` | `false` | **Critical** | Requires `backup_uri` to be a valid, accessible GCS or Drive path. Enabling with an empty `backup_uri` causes the restore Cloud Run job to fail during `tofu apply`. |
+| `startup_probe` initial_delay_seconds | `90` | **High** | Ghost runs database migrations on first boot which can take 60–120 seconds. Reducing `initial_delay_seconds` below 60 causes Cloud Run to kill the container before Ghost is ready, creating a crash-restart loop. |
+| `enable_iap` | `false` | **Medium** | With IAP disabled and `ingress_settings = "all"`, anyone can reach the Ghost admin panel URL. Consider enabling IAP for staff-only Ghost installations. |
+| `enable_cdn` | `false` | **Medium** | Without CDN, all requests hit Cloud Run directly. For publications with significant static asset traffic (images, JS), CDN significantly reduces cost and latency. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **Medium** | Ghost needs to reach external SMTP servers and the Unsplash API for stock images. `PRIVATE_RANGES_ONLY` permits direct public egress. Changing to `"ALL_TRAFFIC"` with a restrictive VPC firewall will block these outbound connections. |
+| `secret_propagation_delay` | `30` | **Low** | Occasionally insufficient in multi-region setups. Increase to 60–90s if `ghost` secrets are not found during apply. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

@@ -309,6 +309,36 @@ For the full variable reference, refer to [App_GKE §8.B](../App_GKE/App_GKE.md#
 
 ---
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `database_type` | `MYSQL_8_0` | **Critical** | OpenEMR is MySQL-only. Setting to PostgreSQL causes the initialisation job and all OpenEMR PHP code to fail immediately. The `MYSQL_PASS` env var and Cloud SQL Auth Proxy socket are hardwired for MySQL protocol. |
+| `OE_USER` (hardcoded in Common) | `admin` | **High** | Hardcoded to `admin` in the OpenEMR Common init job. The K8S init job creates the admin user and schema under this name. Overriding via `environment_variables` after first deploy has no effect on the existing account. |
+| `OE_PASS` (via Secret Manager) | Auto-generated 20-character random password | **High** | Retrieve from Secret Manager before first login. Once the schema is initialised, the password is stored in the MySQL database — changing the Secret Manager value alone does not update the login password. |
+| `K8S` (in init job) | `admin` (init job only) | **Critical** | The init job runs with `K8S=admin` to execute `auto_configure.php` and write `$config=1` to NFS (`sqlconf.php`). Changing this value in the init job environment causes auto-setup to be skipped, leaving the database uninitialised. The main pod waits for `$config=1` on NFS before starting Apache and will wait indefinitely. |
+| `ephemeral_storage_limit` | `"2Gi"` | **Critical** | OpenEMR writes PHP opcache, Apache logs, session files, and installation temp files to the container writable layer. GKE Autopilot's default 1Gi ephemeral storage limit is insufficient and causes the pod to be evicted during startup. Must be at least 2Gi. The Cloud SQL Auth Proxy sidecar also consumes 1Gi, so the combined pod limit is 3Gi minimum. |
+| `MYSQL_ROOT_PASS` (via `environment_variables`) | `BLANK` | **High** | The sentinel value `BLANK` means "no root password" (Cloud SQL Auth Proxy handles authentication). Changing this to a real password causes the init job to attempt direct MySQL root auth, which fails against Cloud SQL and prevents database initialisation. |
+| `enable_nfs` | `true` (required) | **Critical** | OpenEMR requires NFS for the `sites/` directory, which holds patient documents, configuration, and the `sqlconf.php` file that signals init completion. Without NFS, the init job cannot write `$config=1`, the main pod never starts serving, and patient documents cannot be shared across pod restarts. |
+| `nfs_mount_path` | `/mnt/nfs` | **High** | Must match the path expected by OpenEMR's init scripts and the main container entrypoint. A mismatch causes the init job to write `sqlconf.php` to a location the main container never checks, and the main container loops waiting for setup completion. |
+| `enable_redis` | `false` | **Medium** | When `enable_redis = true`, `redis_host` must point to a reachable Redis instance. An unreachable host causes PHP session handling to fail, preventing all users from logging in. |
+| `redis_host` | `""` | **High** | Required when `enable_redis = true`. An empty value causes OpenEMR to attempt connection to an empty hostname, producing PHP session errors and login failures for all users. |
+| `enable_cloudsql_volume` | `true` | **Critical** | OpenEMR connects to Cloud SQL via the Auth Proxy Unix socket. Disabling this causes all MySQL connections to fail at startup — the pod enters CrashLoopBackOff immediately. |
+| `cpu_limit` | `2000m` | **High** | OpenEMR on GKE runs Apache + PHP-FPM with multiple workers. Under concurrent load, insufficient CPU causes PHP-FPM worker timeouts. For production deployments with multiple concurrent clinicians, 2000m is the recommended minimum. |
+| `memory_limit` | `2Gi` | **High** | OpenEMR PDF generation, billing reports, and patient record loading are memory-intensive. Less than 1Gi causes OOM kills mid-request; 2Gi is the recommended minimum for reliable operation. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero is inappropriate for a clinical EHR. A cold start takes 20–40 seconds; a clinician attempting to access a patient record during that window sees an error that could be mistaken for a system failure. Keep at least 1 replica running. |
+| `quota_memory_requests` / `quota_memory_limits` | `"4Gi"` / `"8Gi"` | **Critical** | Must use binary unit suffixes (e.g., `"4Gi"`, `"8192Mi"`). Bare integers are treated as bytes by Kubernetes, creating a near-zero memory quota that immediately blocks all pod scheduling. |
+| `backup_schedule` | `"0 2 * * *"` | **Critical** | An empty string disables automated backups. OpenEMR contains protected health information (PHI). Without backups, a Cloud SQL failure results in permanent loss of patient records — a HIPAA compliance violation. |
+| `backup_retention_days` | `7` | **Medium** | For HIPAA-regulated environments, retain at least 90 days of backups. Setting to `0` or `1` leaves an unacceptably narrow recovery window. |
+| `enable_pod_disruption_budget` | `true` | **High** | Disabling PDB allows GKE node upgrades to evict all OpenEMR pods simultaneously, causing a full EHR service outage during maintenance windows. For a clinical system, this is unacceptable. |
+| `stateful_pvc_enabled` | `false` | **Medium** | OpenEMR uses NFS (not PVCs) for shared persistent storage. Enabling PVCs adds unused local disk, wastes resources, and can block pod rescheduling when GKE Autopilot cannot provision the requested disk type. |
+| `enable_vpc_sc` | `false` | **High** | Requires explicit `organization_id`. For HIPAA environments, VPC Service Controls prevent data exfiltration. Enabling without a valid org ID silently skips perimeter creation, giving a false sense of security. |
+| `enable_auto_password_rotation` | `false` | **Medium** | When enabled, the MySQL password rotates on schedule. The OpenEMR pod must be restarted after rotation; otherwise it continues using the old (now invalid) password until connections fail and the pod enters CrashLoopBackOff. |
+
+---
+
 ## Deployment Prerequisites & Validation
 
 After deploying `OpenEMR_GKE`, confirm the deployment is healthy:

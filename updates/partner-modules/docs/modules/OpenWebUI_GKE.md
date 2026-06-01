@@ -113,3 +113,28 @@ Workload Identity binds the Kubernetes SA to a GCP SA, granting access to Secret
 | `database_instance_name` | Name of the Cloud SQL PostgreSQL instance. |
 | `database_name` | Name of the application database. |
 | `database_password_secret` | Secret Manager secret name for the database password. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `ollama_base_url` | `""` (disabled) | **Critical** | If neither `ollama_base_url` nor `openai_api_base_url` is configured, Open WebUI has no AI backend and all model inference requests fail. For GKE-to-GKE communication, use the ClusterIP DNS name: `http://ollama.<namespace>.svc.cluster.local:11434`. |
+| `openai_api_base_url` | `""` (disabled) | **High** | Must include `/v1` suffix for standard OpenAI-compatible APIs. Omitting it causes 404 errors on all model listing and completion calls. |
+| `WEBUI_SECRET_KEY` (auto-generated) | Random 32-char secret stored in Secret Manager | **Critical** | Immutable after first use. Changing the secret key (e.g., by redeploying with a new random value) logs out every active user simultaneously and invalidates all remember-me tokens. |
+| `webui_auth` | `true` | **Critical** | Disabling removes the login form. Any pod-level network access immediately grants full admin control. Only safe behind IAP or in isolated development namespaces. |
+| `default_user_role` | `"pending"` | **High** | `"user"` auto-approves registrations. Combined with a publicly exposed Kubernetes ingress, this allows unrestricted self-signup. |
+| `enable_signup` | `true` | **High** | Disabling is the strongest registration control short of IAP. Set `enable_signup = false` after the admin account is created in production. |
+| `min_instance_count` | `1` | **Medium** | Scale-to-zero (`0`) causes pod cold starts (30–60 s for Cloud SQL proxy + app startup). The GKE Autopilot node may also need to provision. Set to `1` for interactive team use. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Disabling the Cloud SQL Auth Proxy sidecar breaks all database connections when the module is configured to use Cloud SQL. Only disable when connecting to an external PostgreSQL over TCP with direct network access. |
+| `enable_vertical_pod_autoscaling` | `false` | **Medium** | Enabling VPA disables HPA (they conflict). On GKE Autopilot, VPA is the recommended approach for right-sizing. If both are configured simultaneously, HPA CPU/memory scaling is silently dropped. |
+| `quota_memory_requests` / `quota_memory_limits` | `"4Gi"` / `"8Gi"` | **Critical** | Must use binary suffixes (`Gi`, `Mi`). A bare integer is treated as bytes by Kubernetes, preventing all pod scheduling in the namespace. |
+| `stateful_pvc_enabled` | `false` | **Medium** | Enabling PVC storage for Open WebUI prevents pod migration and complicates rolling updates (a StatefulSet pod must be manually deleted for rescheduling). Use GCS Fuse unless local IOPS are critical. |
+| `timeout_seconds` | `300` | **Medium** | Long-running document ingestion or streaming LLM responses are cut off if the load balancer timeout is exceeded. Increase to `600`–`3600` for document-heavy RAG workloads. |
+| `database_type` | `"POSTGRES"` | **Critical** | Open WebUI requires PostgreSQL. Any other database type results in failed migrations and a completely non-functional application. |
+| `enable_nfs` | `false` | **Medium** | Without NFS or a shared PVC, uploaded files are local to each pod. With multiple replicas, a file uploaded via one pod is not accessible via another. |
+| `backup_schedule` | `""` (disabled) | **High** | Without scheduled backups, the PostgreSQL database (all user accounts, conversations, RAG data) is unprotected against accidental deletion. |
+| `enable_image_mirroring` | `true` | **Medium** | Disabling mirrors from GitHub Container Registry directly. GHCR has rate limits that can block deployments during high-traffic periods. |
+| `application_version` | `"latest"` | **Medium** | Auto-applying the latest Open WebUI version on each deploy risks breaking schema migrations. Pin to a specific release (e.g., `"0.4.8"`) in production. |
+| `service_type` (Kubernetes) | `"ClusterIP"` | **High** | Using `LoadBalancer` for Open WebUI on GKE exposes the service without TLS termination or authentication unless an ingress controller handles it. Use ClusterIP behind an Ingress/Gateway resource. |

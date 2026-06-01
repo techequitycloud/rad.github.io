@@ -489,6 +489,35 @@ resource_labels = {
 }
 ```
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `elasticsearch_hosts` | *(required — no default)* | **Critical** | RAGFlow cannot index or search documents without a reachable Elasticsearch endpoint. Must be set to the `elasticsearch_endpoint` output from a deployed `Elasticsearch_GKE` instance (e.g. `http://10.0.0.5:9200`). Leaving blank causes the application to start but all ingestion and retrieval operations fail immediately. |
+| `enable_redis` | `true` | **Critical** | Redis is required for RAGFlow's document processing task queue. Setting to `false` disables the task queue backend; document parsing jobs are never executed and uploaded files remain unprocessed indefinitely. |
+| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, RAGFlow falls back to the NFS-hosted Redis sidecar (requires `enable_nfs = true`). Pointing to a wrong or unreachable host causes all async document workers to fail silently. Use the Memorystore Redis IP from `Services_GCP`. |
+| `database_type` | `"MYSQL_8_0"` | **Critical** | RAGFlow only supports MySQL 8.0. Changing to `POSTGRES` or `NONE` removes the required database backend; RAGFlow cannot store user accounts, knowledge bases, or task state. |
+| `min_instance_count` | `1` | **High** | RAGFlow loads embedding models and the RAGFlow server during cold start, a process that can take 2–3 minutes. Setting to `0` causes scale-to-zero; every cold start request will time out for end users until the instance is warm. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **High** | Memorystore Redis is accessed over a private VPC IP. If changed to a value that does not route private RFC-1918 traffic through the VPC connector, Redis connections fail and the task queue stops working. Use `ALL_TRAFFIC` only when all dependencies (Redis, MySQL, Elasticsearch) are accessed via public IPs with appropriate firewall rules. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts (Cloud Filestore) require the Gen2 execution environment. Switching to `gen1` with `enable_nfs = true` causes the Cloud Run deployment to fail at plan or apply time. |
+| `enable_cloudsql_volume` | `true` | **Critical** | RAGFlow connects to Cloud SQL MySQL via a Unix socket injected by the Cloud SQL Auth Proxy sidecar. Disabling this sidecar removes the socket; RAGFlow cannot reach its database and will crash on startup. |
+| `memory_limit` | `"4Gi"` | **High** | RAGFlow loads embedding models (typically 1–2 Gi each) alongside the Python application server. Values below `4Gi` cause OOM kills during document processing, especially for PDF or image-heavy workloads. Scale to `8Gi`–`16Gi` for production. |
+| `cpu_limit` | `"2000m"` | **Medium** | Document parsing (OCR, table extraction, chunking) is CPU-intensive. Under `1000m`, processing throughput degrades noticeably; CPU throttling causes slow queue drain. Recommend `4000m`+ for production ingestion workloads. |
+| `timeout_seconds` | `600` | **Medium** | Large document uploads can take several minutes to parse and respond. Values below `300` cause Cloud Run to return 504 to the client before processing completes, leaving the task orphaned in the queue. |
+| `enable_nfs` | `true` | **High** | RAGFlow uses NFS storage for shared document files accessible to all instances. Disabling NFS with `max_instance_count > 1` causes different instances to have inconsistent views of uploaded files. Required for multi-instance deployments. |
+| `max_instance_count` | `1` | **Medium** | RAGFlow's document processing workers use shared filesystem state. Scaling beyond `1` without NFS enabled can cause split-brain data access. Ensure `enable_nfs = true` before increasing. |
+| `container_image_source` | `"custom"` | **Medium** | The `custom` source builds a RAGFlow image from `RAGFlow_Common/scripts/Dockerfile` in Artifact Registry. Using `prebuilt` without setting `container_image` to a valid URI causes deployment to fail when the default image tag does not exist in the project's AR. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Daily MySQL backups protect against data loss. Setting an invalid cron expression or too-infrequent schedule increases recovery point objective (RPO). Backups are stored in GCS and subject to `backup_retention_days`. |
+| `backup_retention_days` | `7` | **Low** | Short retention windows limit point-in-time recovery options. For production, consider at least 30 days. |
+| `ingress_settings` | `"all"` | **High** | Public ingress exposes the RAGFlow web UI to the internet. For internal-only deployments, set to `"internal"` or `"internal-and-cloud-load-balancing"` and use IAP or a private load balancer. |
+| `enable_iap` | `false` | **High** | Without IAP, the Cloud Run service (when `ingress_settings = "all"`) is accessible to any unauthenticated caller. Enable IAP and populate `iap_authorized_users` / `iap_authorized_groups` for production deployments. |
+| `secret_propagation_delay` | `30` | **Medium** | If set too low in projects with slow Secret Manager replication, the deployment job may attempt to read a secret before it is fully propagated, causing transient failures. Increase to `60` for large or cross-region projects. |
+| `elasticsearch_username` | `""` | **High** | If the Elasticsearch_GKE instance is deployed with `enable_xpack_security = true`, RAGFlow must authenticate. Leaving this blank causes HTTP 401 errors from Elasticsearch, breaking all index and search operations. |
+| `enable_auto_password_rotation` | `false` | **Low** | Without password rotation, a compromised database credential remains valid indefinitely. Enable in production with `rotation_propagation_delay_sec >= 90` to allow Cloud Run revisions to pick up the new secret version before rotation completes. |
+| `application_version` | `"v0.13.0"` | **Medium** | Incrementing this value triggers an image rebuild. Ensure the new RAGFlow version is compatible with the existing MySQL schema — RAGFlow migrations run automatically on startup but major version jumps may be irreversible. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

@@ -162,6 +162,36 @@ The table below summarises the three Redis-related variables and how they intera
 
 ---
 
+## Configuration Pitfalls & Sensible Defaults
+
+The table below identifies the variables most commonly misconfigured in `Sample_GKE` deployments. Because `Sample_GKE` is the reference implementation used to test `App_GKE` Foundation Module changes, the pitfalls here also apply to any new GKE application module built from this template.
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `application_name` | `"sample"` (default; do not change after first deploy) | **Critical** | Embedded in GKE namespace, Artifact Registry repo, and Secret Manager secret IDs (`FLASK_SECRET_KEY`). Changing recreates all named resources. Existing secrets are orphaned and new random values are generated. |
+| `tenant_deployment_id` | Match environment: `"prod"`, `"staging"`, `"dev"` | **Critical** | Changing after first deploy orphans the old Cloud SQL instance and Secret Manager secrets. A new empty database is provisioned. |
+| `application_version` | A pinned tag (e.g. `"1.0.0"`); avoid `"latest"` in production | **Medium** | `"latest"` makes rollback ambiguous on GKE — Kubernetes cannot distinguish between two pulls of the same tag from different builds. Pin to a specific digest for staging/production. |
+| `container_port` | `8080` (Flask/Gunicorn default) | **Critical** | Mismatch: the GKE liveness and readiness probes fail. The pod never enters the `Ready` state. Traffic never reaches the Flask app. All requests return 502 from the load balancer. |
+| `quota_memory_requests` | `"512Mi"` minimum (binary suffix required) | **Critical** | A bare integer like `"512"` is treated as **512 bytes** by Kubernetes. The ResourceQuota rejects every pod — **all pods fail to schedule**. Always use `"512Mi"` or `"1Gi"`. This is the most common cause of silent scheduling failures when using `Sample_GKE` for Foundation testing. |
+| `quota_memory_limits` | `"1Gi"` (must be ≥ `quota_memory_requests`) | **Critical** | Same bare-integer issue. Always use binary suffixes (`Mi`, `Gi`). |
+| `min_instance_count` | `0` for dev/testing (scale-to-zero) | **Medium** | `0` during load testing: cold starts (pod scheduling + image pull) add noise to latency measurements. Set `min_instance_count = 1` when benchmarking `App_GKE` Foundation changes. |
+| `max_instance_count` | `1` for basic testing; increase only with DB connection pool headroom | **High** | Exceeding Cloud SQL connection limit during load tests: `FATAL: sorry, too many clients already`. All Flask pods fail DB queries simultaneously. |
+| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` (default) | **Medium** | Memory too low (`< 128Mi`): Flask is OOMKilled on startup when loading Secret Manager client libraries. GKE Autopilot enforces a minimum of 512Mi — requests below the minimum are raised silently. |
+| `FLASK_SECRET_KEY` (generated secret) | Auto-generated 32-character random string stored in Secret Manager | **High** | Not injected into the Flask container: `SECRET_KEY` is unset, Flask raises `RuntimeError` on the first session or CSRF operation. Retrieve from Secret Manager to verify injection. |
+| `enable_redis` | `false` (default) | **Low** | `true` without `redis_host` configured: REDIS_HOST is empty; the Flask app raises `ConnectionRefusedError` on startup if it tries to connect to Redis. Only enable when specifically testing the Redis integration path in the Foundation Module. |
+| `redis_host` | Private IP of Redis instance (or `"127.0.0.1"` for in-cluster sidecar testing) | **High** | Wrong IP: Flask fails to connect to Redis on every request that uses the cache/session. Set to `"127.0.0.1"` when testing with the sidecar Redis deployment that `App_GKE` provisions when `enable_redis = true` and `redis_host = ""`. |
+| `workload_type` | `null` (auto-selects Deployment; appropriate for the stateless hello-world pattern) | **Medium** | `"StatefulSet"` for a stateless sample app: creates unnecessary StatefulSet infrastructure. StatefulSets are slower to update and roll back. For Foundation testing keep `null` or `"Deployment"`. |
+| `startup_probe.path` | `"/healthz"` (Flask route returning 200) | **Critical** | `"/healthz"` not implemented in the custom Flask build: GKE kills the pod before it serves traffic. Implement with `@app.route('/healthz') / return 'ok', 200`. |
+| `liveness_probe.path` | `"/healthz"` — must be fast and non-blocking | **High** | Health endpoint that makes a DB call or runs expensive logic: if it times out, GKE restarts all healthy pods simultaneously. Keep the health endpoint < 100 ms. |
+| `enable_nfs` | `false` (default for Sample; the reference app does not require shared storage) | **Low** | `true` without an NFS server reachable from the cluster: the NFS mount hangs and the pod never becomes `Ready`. Only enable when specifically testing NFS integration in the Foundation Module. |
+| `network_tags` | `["nfsserver"]` (default; required for NFS firewall rule if NFS is enabled) | **High** | Removing `"nfsserver"` and enabling NFS: the GKE node loses the tag matching the NFS firewall rule. NFS mount fails, pod never starts. Only relevant when `enable_nfs = true`. |
+| `enable_pod_disruption_budget` | `false` (default; not meaningful at replica count 1) | **High** | `true` with `max_instance_count = 1` and `pdb_min_available = "1"`: GKE node drains are permanently blocked. Autopilot maintenance cannot complete. Enable only when `min_instance_count ≥ 2`. |
+| `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` (appropriate for a reference/test module) | **Critical** | `"REQUIRE_ATTESTATION"` without a CI attestation pipeline: no image can be deployed, including locally built test images. Keep `"ALWAYS_ALLOW"` unless specifically testing Binary Authorization. |
+| `enable_vpc_sc` | `false` (default); use `vpc_sc_dry_run = true` if testing VPC-SC integration | **Critical** | `enable_vpc_sc = true` with `vpc_sc_dry_run = false`: if any SA or IP is absent from the access level, all GKE workload API calls fail simultaneously. Always test in dry-run mode first. |
+| `explicit_secret_values` | `{}` (default; secrets are auto-generated by `Sample_Common`) | **High** | Providing an explicit `FLASK_SECRET_KEY` value via `explicit_secret_values` that is later removed: the auto-generated value from `Sample_Common` replaces it on the next apply. All existing Flask sessions are invalidated. Use consistent explicit values or always rely on the auto-generated value. |
+
 ## Validating a Sample_GKE Deployment
 
 Because `Sample_GKE` delegates all infrastructure to `App_GKE`, validation follows the same procedures described in the [App_GKE Configuration Guide](../App_GKE/App_GKE.md). The additional resources managed by `Sample_Common` can be validated as follows:

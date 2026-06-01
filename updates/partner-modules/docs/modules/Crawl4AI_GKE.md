@@ -188,3 +188,25 @@ Crawl4AI is an open-source LLM-friendly web crawler and scraper with 40,000+ Git
 | `deployment_id` | Deployment ID suffix used in resource names. |
 | `container_image` | Container image used for the deployment. |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `memory_limit` | `"8Gi"` | **Critical** | Crawl4AI spawns Chromium browser instances for JavaScript rendering. Each concurrent browser context uses 200–500 MB. Below `4Gi`, Chromium processes are OOM-killed mid-crawl returning partial results. Below `2Gi`, the container fails to start. Scale to `16Gi`+ for high-concurrency GKE deployments. |
+| `cpu_limit` | `"4000m"` | **High** | Chromium rendering and DOM parsing are CPU-intensive. CPU throttling below `2000m` causes internal browser timeouts on complex pages and significantly slows crawl throughput. |
+| `/dev/shm for Chromium (GKE emptyDir)` | *(must be configured via emptyDir medium: Memory in pod spec)* | **High** | On GKE, Chromium by default uses `/dev/shm` (shared memory) for inter-process communication. The default `/dev/shm` size in Kubernetes is 64 Mi, which is insufficient for Chromium. Crawl4AI's default config uses `--disable-dev-shm-usage` (Chrome uses `/tmp` instead), but if this flag is removed, configure an `emptyDir` volume with `medium: Memory` mounted at `/dev/shm` with adequate size. Insufficient `/dev/shm` causes browser crashes. |
+| `min_instance_count` | `1` | **High** | Crawl4AI has a significant cold start (Chromium + embedded Redis + Supervisord). Scale-to-zero (`0`) means the first request after a cold start encounters a 30–60 second delay and likely times out. Keep at `1` in production. |
+| `max_instance_count` | `3` | **Medium** | Each GKE pod runs its own Chromium pool and embedded Redis. Costs scale with pod count. Set a ceiling matching your crawl concurrency budget. |
+| `redis_task_ttl_seconds` | `3600` | **Medium** | Task results in the embedded Redis expire after this TTL. Too-short values (< 300 s) cause results to expire before async clients poll for them. Too-long values cause memory growth. Valid range: 300–86400. |
+| `workload_type` | `null` | **Medium** | Crawl4AI is stateless — `Deployment` is appropriate. Using `StatefulSet` without `stateful_pvc_enabled = true` wastes scheduler resources. Use `Deployment` unless local PVC caching is explicitly needed. |
+| `quota_memory_requests` | `"32Gi"` | **Critical** | Must use binary unit suffixes (`Gi`, `Mi`). A bare integer (e.g. `"32"`) is treated as 32 bytes by Kubernetes, blocking all pod scheduling. Only active when `enable_resource_quota = true`. |
+| `quota_memory_limits` | `"64Gi"` | **Critical** | Same constraint as `quota_memory_requests` — binary suffixes required. If set below the actual pod memory limit × replica count, pods fail to schedule. |
+| `LLM_API_KEY` (env var via `environment_variables`) | *(not set)* | **High** | LLM-based extraction strategies require a valid provider API key injected as an environment variable. Missing or expired keys cause extraction jobs to return empty `extracted_content`. Use `secret_environment_variables` for production to avoid plain-text exposure. |
+| `container_port` | `11235` | **Critical** | Crawl4AI listens on port 11235. Changing this without a matching `UVICORN_PORT` or Kubernetes Service port update causes health probes to fail and the service to receive no traffic. |
+| `timeout_seconds` | `300` | **Medium** | Deep crawls of complex pages can exceed 5 minutes. Increase to `600`–`3600` for workloads involving JavaScript-heavy sites or LLM-based extraction. |
+| `enable_iap` | `false` | **High** | Without IAP, the GKE LoadBalancer is accessible to any caller. Enable IAP or inject `CRAWL4AI_API_TOKEN` via environment variables for production deployments. |
+| `application_version` | `"latest"` | **Medium** | Using `"latest"` is non-reproducible. Pin to a specific version tag to prevent unexpected API changes on rebuild. |
+| `enable_image_mirroring` | `true` | **Low** | Crawl4AI images are large. Disable only if Artifact Registry already holds the correct image; otherwise every pod start pulls from Docker Hub and risks rate-limit failures. |

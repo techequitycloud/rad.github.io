@@ -506,6 +506,35 @@ Complete list of all input variables, grouped by UI section.
 | 22 | `organization_id` | string | `""` | yes |
 | 22 | `enable_audit_logging` | bool | `false` | yes |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `project_id` | _(required)_ | **Critical** | No default — deployment fails immediately. |
+| `database_type` | `"POSTGRES_15"` | **Critical** | Odoo requires PostgreSQL exclusively. Setting to `MYSQL` will cause Odoo to fail at startup with a database driver error — Odoo's ORM (psycopg2) is PostgreSQL-only. Setting `NONE` leaves Odoo with no database and prevents any ERP functionality. |
+| `enable_nfs` | `true` | **Critical** | Odoo stores all file attachments, binary fields, and the filestore (images, documents, compiled assets) under its data directory. Without NFS, all attachments and uploaded documents are ephemeral — lost on every container revision and not shared across multiple instances. Odoo running without NFS is suitable only for stateless testing. |
+| `enable_redis` | `false` | **Medium** | Redis is not enabled by default for Odoo. Odoo can use Redis for session storage in multi-worker deployments. Without Redis, multiple Cloud Run instances use isolated sessions — enabling Redis with a valid `redis_host` is recommended for production deployments with multiple instances. |
+| `redis_host` | `""` | **High** | Required when `enable_redis = true`. An empty `redis_host` with `enable_redis = true` causes Odoo session connection failures at startup. |
+| `application_version` | `"18.0"` | **High** | Odoo uses `application_version` to select the nightly build URL. An invalid or non-existent version tag (e.g., a specific patch version that is not a nightly tag) causes the Cloud Build step to fail when downloading the Odoo source. Always use a valid major version string (`"18.0"`, `"17.0"`). |
+| `container_image_source` | `"custom"` | **High** | Odoo requires a custom-built image to wire the PostgreSQL socket path, addons directory, and filestore paths. Using `"prebuilt"` with an upstream Odoo image that is not configured for Cloud SQL Unix socket connections will fail to connect to the database. |
+| `execution_environment` | `"gen2"` | **High** | NFS mounts require gen2. Changing to `"gen1"` while `enable_nfs = true` causes the Cloud Run service to fail to start with a volume mount error. |
+| `memory_limit` | varies | **High** | Odoo is a heavy Python application. Running with less than `2Gi` causes out-of-memory errors during module installation and heavy ERP operations. For production with accounting, manufacturing, and e-commerce modules, provision 4–8Gi. |
+| `cpu_limit` | varies | **Medium** | Odoo workers are CPU-intensive under concurrent user load. Reduce below `1000m` at your own risk — Odoo's long-polling (gevent) worker requires consistent CPU availability. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero (`0`) causes Odoo cold starts of 30–60 seconds. Odoo also has background schedulers that require a live instance — cold starts disrupt cron job execution. Keep at `1` for any production ERP deployment. |
+| `application_database_name` | `"odoo"` | **Critical** | Immutable after first deployment — changing this recreates the database and destroys all ERP data including accounting records, inventory, customers, and orders. |
+| `application_database_user` | `"odoo"` | **Critical** | Immutable after first deployment — changing this recreates the user and breaks all database connections. |
+| `ingress_settings` | `"all"` | **High** | `"all"` exposes the Odoo web portal to the public internet. The Odoo database manager page (`/web/database/manager`) should be protected — it allows unauthenticated database creation and deletion. Restrict access via Cloud Armor or set a strong `ODOO_MASTER_PASS`. |
+| `explicit_secret_values` (ODOO_ADMIN_PASSWD) | — | **Critical** | The Odoo master password (`ODOO_ADMIN_PASSWD`) is used to access the database manager and perform critical database operations. If left at the default or set to a weak value, any user who can reach `/web/database/manager` can drop the Odoo database. Always set a strong, unique master password. |
+| `enable_backup_import` | `false` | **Critical** | Requires a valid `backup_uri` (or `backup_file`). Enabling with an empty path causes the restore job to fail during apply. |
+| `backup_retention_days` | `7` | **High** | Odoo contains critical business data (financial records, contracts, orders). Seven days is insufficient for most businesses. Increase to 30+ days; many jurisdictions require financial data retention for 7 years. |
+| `enable_cloud_armor` | `false` | **High** | The Odoo database manager and admin portal should be protected from public internet access. Cloud Armor WAF is strongly recommended for any production ERP deployment. |
+| `timeout_seconds` | `300` | **Medium** | Odoo module installation, data migration, and large report generation can exceed 300 seconds. Increase to `3600` for deployments that run long administrative operations via HTTP. |
+| `secret_propagation_delay` | `30` | **Low** | Increase to 60–90 seconds in multi-region projects to prevent sporadic "secret not found" errors during apply. |
+| `enable_iap` | `false` | **Medium** | Odoo admin panel and CRM data are sensitive. Enabling IAP adds a layer of authentication before reaching the Odoo login screen. Recommended for internal ERP deployments. |
+| `database_password_length` | `32` | **Medium** | The minimum enforced is 16. For a business-critical ERP, do not reduce the default 32-character password. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

@@ -250,3 +250,29 @@ For deployments requiring persistent local storage (e.g., custom model caches), 
 | `nfs_server_ip` | NFS server internal IP *(sensitive)*. |
 | `container_image` | Container image used for the deployment. |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `SECRET_KEY` (auto-generated) | Random secret in Secret Manager | **Critical** | All Dify service pods (api, worker) must share the same `SECRET_KEY`. A key mismatch between pods causes authentication failures on internal service-to-service calls. Rotating the key simultaneously redeploys all pods but logs out all users. Treat as immutable once the cluster is running. |
+| `enable_redis` / `redis_host` | Required for Dify | **Critical** | Dify's Celery worker (responsible for all workflow executions, document indexing, and background LLM calls) requires Redis as a message broker. Without a reachable Redis instance, all async operations fail silently. `redis_host` must be resolvable from within the pod. |
+| `VECTOR_STORE` (via `environment_variables`) | `"weaviate"` (Dify default) | **High** | Changing the vector store after knowledge bases are populated requires migrating all vectors. Existing knowledge base queries return empty results until migration is complete. |
+| `STORAGE_TYPE` (via `environment_variables`) | `"local"` or GCS | **High** | Setting `STORAGE_TYPE = "s3"` without providing `S3_*` credentials, or `"google-storage"` without a valid service account, causes all file uploads to fail at runtime. Dify does not validate storage configuration at startup. |
+| `database_type` | `"POSTGRES"` | **Critical** | Dify's API server and worker both require PostgreSQL for all metadata, workflow state, and user accounts. Without it, all pods fail to start. |
+| `enable_cloudsql_volume` | `true` | **Critical** | The Cloud SQL Auth Proxy sidecar injects the PostgreSQL Unix socket into the pod. Disabling it breaks all database connectivity. |
+| `stateful_pvc_enabled` | `false` | **High** | Without a PVC or NFS, all locally stored files (model assets, temporary processing files) are lost on pod eviction. Enable PVC or NFS for production deployments storing files locally. |
+| `quota_memory_requests` / `quota_memory_limits` | Binary unit defaults | **Critical** | Must use binary unit suffixes (`Gi`, `Mi`). Bare integers are treated as bytes by Kubernetes, blocking all pod scheduling in the namespace. |
+| `enable_nfs` | `false` | **High** | Required for shared document storage across multiple pod replicas. Without NFS, documents uploaded to one pod are not accessible to another replica's worker for indexing. |
+| `nfs_mount_path` | `"/mnt/nfs"` | **High** | Must match the `STORAGE_PATH` or equivalent environment variable. A mismatch means Dify writes files to an ephemeral local path and the NFS share is unused. |
+| `min_instance_count` | `1` | **High** | Dify maintains persistent connections to Redis, PostgreSQL, and the vector store. Scale-to-zero causes 30–60 s cold starts and in-flight async tasks are abandoned. Keep at least 1 replica running. |
+| `timeout_seconds` | `300` | **High** | Multi-step Dify workflows and RAG document indexing can exceed several minutes. Increase to `3600` for complex workflow deployments. |
+| `WEB_API_CORS_ALLOW_ORIGINS` (via `environment_variables`) | `"*"` | **High** | Restrict to the Dify web console URL in production to prevent cross-site requests to the API. |
+| `iap_oauth_client_id` / `iap_oauth_client_secret` | `""` | **Critical** | Required when `enable_iap = true`. Missing values prevent IAP gateway initialisation and make the service unreachable. |
+| `secret_environment_variables` (LLM provider keys) | `{}` | **Critical** | Provider API keys must come from Secret Manager references. Plain `environment_variables` expose them in pod specs visible to anyone with `kubectl describe pod` access. |
+| `backup_schedule` | `""` (disabled) | **High** | Dify's PostgreSQL stores all workflow definitions, knowledge base metadata, user accounts, and API keys. Without automated backups, accidental deletion or corruption is unrecoverable. |
+| `enable_vertical_pod_autoscaling` | `false` | **Medium** | Enabling VPA disables HPA (they conflict). Choose VPA for right-sizing or HPA for horizontal scaling, not both. |
+| `application_version` | `"latest"` | **Medium** | Dify releases frequently and may change the database schema. Unpinned versions risk breaking schema migrations during routine redeploys. Pin to a specific version in production. |
+| `CELERY_BROKER_URL` (derived from redis config) | Auto-constructed | **Critical** | Incorrect `redis_host` or `redis_port` produces a malformed Celery broker URL. The worker starts but cannot dequeue tasks, causing all background processing to stall without surfacing obvious errors to users. |

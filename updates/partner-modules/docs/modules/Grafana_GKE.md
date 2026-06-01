@@ -283,3 +283,29 @@ IAP for GKE requires OAuth 2.0 credentials. Unlike the CloudRun variant, the GKE
 | `database_user` | Name of the application database user. |
 | `database_password_secret` | Secret Manager secret name for the database password. |
 | `container_image` | Container image used for the deployment. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `GF_SECURITY_ADMIN_PASSWORD` (via `secret_environment_variables`) | Grafana default `"admin"` | **Critical** | Grafana ships with `admin`/`admin` credentials. Always inject a strong password via Secret Manager using `secret_environment_variables` before the first deployment. |
+| `GF_SECURITY_ADMIN_USER` (via `environment_variables`) | `"admin"` | **High** | Well-known default is a brute-force target. Override with a non-obvious value. |
+| `GF_DATABASE_TYPE` | `"postgres"` (hardcoded in `grafana.tf`) | **Critical** | Overriding to `"sqlite3"` causes data loss: the SQLite file lives on the pod ephemeral disk and is lost on every pod restart or rolling upgrade. |
+| `GF_SERVER_ROOT_URL` | Not set | **High** | Must match the public URL of the service. Without it, OAuth redirects, email links, and embedded iframes all point to the wrong origin and break. |
+| `GF_SERVER_DOMAIN` | Not set | **High** | Must match the domain part of `GF_SERVER_ROOT_URL`. Mismatches break cookie-based authentication. |
+| `GF_SMTP_ENABLED` + all SMTP vars | Not set | **Medium** | Alert notifications silently fail if SMTP is not fully configured. All five vars (`GF_SMTP_ENABLED`, `GF_SMTP_HOST`, `GF_SMTP_USER`, `GF_SMTP_PASSWORD`, `GF_SMTP_FROM_ADDRESS`) must be set together. |
+| `GF_AUTH_ANONYMOUS_ENABLED` | `false` | **Critical** | Setting to `"true"` exposes all dashboards without authentication. |
+| `container_resources.memory_limit` | `"2Gi"` | **High** | Under 512Mi Grafana crashes with OOM errors. On GKE Autopilot, pod memory requests also determine node provisioning — set `mem_request` to match or close to `memory_limit`. |
+| `container_resources.mem_request` | `null` (defaults to limit) | **Medium** | On GKE Autopilot, setting `mem_request` far below `memory_limit` leads to burstable scheduling and potential eviction under memory pressure on a shared node. |
+| `application_version` | `"11.4.0"` | **Medium** | Pinning to a specific version prevents uncontrolled upgrades that may introduce breaking dashboard API changes. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero on GKE means pods are terminated; Grafana alerting evaluations are missed during the cold-start window. |
+| `max_instance_count` | `3` | **Medium** | Multiple replicas share the PostgreSQL backend but not in-memory alert state. Alerts can fire duplicates. Use `1` unless a shared alert backend is configured. |
+| `quota_memory_requests` / `quota_memory_limits` | `"4Gi"` / `"8Gi"` | **High** | GKE-specific: must use binary suffixes (`Gi`, `Mi`). A bare integer (e.g., `"4"`) is treated as bytes by Kubernetes and blocks all pod scheduling. |
+| `enable_iap` | `false` | **High** | Without IAP the Grafana login page is reachable from the internet. At minimum configure network policies or IAP. |
+| `db_name` / `db_user` | `"grafana"` / `"grafana"` | **High** | Changing after the db-init job has run orphans the existing schema. Immutable after first apply. |
+| `stateful_pvc_enabled` | `false` | **Medium** | Not required for Grafana as persistence is in PostgreSQL. Enabling without understanding StatefulSet semantics can cause stuck rollouts. |
+| `pdb_min_available` | `"1"` | **Medium** | Setting to `"0"` allows all replicas to be evicted simultaneously during node upgrades, causing a full Grafana outage. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Disabling automated backups leaves dashboard and user data unprotected against Cloud SQL data loss. |
+| `enable_redis` | `false` | **Low** | Grafana does not require Redis. Enabling it without a valid `redis_host` raises a validation error at plan time. |

@@ -478,3 +478,33 @@ kubectl exec -n NAMESPACE POD_NAME -- \
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled |
 | `github_repository_url` | GitHub repository URL connected for CI/CD |
 | `kubernetes_ready` | `true` when the GKE cluster endpoint is reachable and all Kubernetes workload resources are deployed. `false` on the first apply of a new inline cluster — the cluster is created but the endpoint is not yet readable, so Kubernetes resources are skipped. The CI/CD pipeline must re-run apply to complete the deployment. |
+
+---
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `project_id` | _(required)_ | **Critical** | No default — deployment fails immediately. |
+| `database_type` | `"MYSQL_8_0"` | **Critical** | Ghost requires MySQL. Setting to `POSTGRES` or `NONE` causes Ghost to fail at startup with a database driver error. The GKE module wires MySQL credentials automatically; mismatched database type breaks all credential injection. |
+| `enable_redis` | `true` | **High** | Redis is on by default. When `redis_host = ""` the module falls back to the NFS server IP. If `enable_nfs = false` and `redis_host` is also empty, Ghost cannot connect to its caching layer and will crash at startup. |
+| `redis_host` | `""` | **High** | Auto-resolves to NFS IP. If NFS is disabled and no explicit host is given, Ghost caching fails at boot. |
+| `enable_nfs` | `true` | **Critical** | Ghost content (images, themes, uploaded files) must be stored on a shared volume. Without NFS, the `/var/lib/ghost/content` directory is isolated per pod — content uploaded to one pod is invisible to others, and all content is lost on pod restart. |
+| `container_image_source` | `"custom"` | **High** | Ghost requires a custom-built image to wire Cloud SQL socket paths and NFS content mounts. Using the upstream Ghost Docker Hub image with `"prebuilt"` will fail to connect to Cloud SQL via Unix socket. |
+| `container_port` | `2368` | **Critical** | Ghost listens on `2368`. Changing this without matching the container's bound port causes all health probes to fail. |
+| `container_resources.memory_limit` | `"4Gi"` (via `memory_limit`) | **High** | The GKE `container_resources` default is only `512Mi`. Ghost 6.x requires at least `1Gi` at rest; active newsletter sends require 2–4Gi. Under-provisioning causes Node.js OOM crashes. |
+| `session_affinity` | `"ClientIP"` | **High** | Ghost uses server-side sessions for the admin panel. Without session affinity, admin users are logged out on every request that routes to a different pod. Keep `"ClientIP"` for any multi-replica Ghost GKE deployment. |
+| `db_name` | `"ghost"` | **Critical** | Immutable after deployment — changing this recreates the database and destroys all Ghost content. |
+| `db_user` | `"ghost"` | **Critical** | Immutable after deployment — changing this recreates the user, invalidates credentials, and breaks Ghost's database connection. |
+| `environment_variables` (SMTP) | `{ SMTP_HOST = "", ... }` | **High** | Ghost relies on SMTP for member emails and password resets. An empty `SMTP_HOST` disables all outbound email. Configure a valid SMTP provider before inviting members. |
+| `min_instance_count` | `1` | **Medium** | `0` allows scale-to-zero, causing cold starts during which Ghost runs database migrations. First requests after scale-up time out. Set to `1` for publications with consistent traffic. |
+| `workload_type` | `null` | **Medium** | Setting `stateful_pvc_enabled = true` automatically selects `StatefulSet`. Do not set `workload_type = "Deployment"` alongside `stateful_pvc_enabled = true` — this fails at plan time. |
+| `stateful_pvc_size` | `"10Gi"` | **Medium** | Ghost content directories can grow quickly with media uploads. `10Gi` is a minimum — provision 50–100Gi for active publications accepting media uploads. PVC size can be expanded but not reduced. |
+| `backup_retention_days` | `7` | **Medium** | Too short for active publications. Increase to 30+ days. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (GKE-specific) | Must use binary suffixes (`Gi`, `Mi`) when set. Bare integers are treated as bytes and prevent all pods from being scheduled. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | Already enabled. Disabling allows all pods to be terminated simultaneously during node upgrades. |
+| `pdb_min_available` | `"1"` | **Medium** | With a single replica, PDB prevents voluntary disruptions indefinitely. Use at least 2 replicas in production to allow rolling maintenance. |
+| `startup_probe` initial_delay_seconds | `90` | **High** | Ghost runs migrations on first boot. Reducing `initial_delay_seconds` below 60 causes Kubernetes to restart the pod before Ghost finishes initialising, creating a restart loop. |
+| `enable_cloud_armor` | `false` | **Medium** | Without Cloud Armor, Ghost admin (`/ghost`) is protected only by Ghost's own authentication. Enable for any publicly accessible deployment. |

@@ -518,3 +518,38 @@ All user-configurable variables exposed by `Nextcloud_GKE`, sorted by UI group.
 | `container_image` | Container image used for the deployment. |
 | `namespace` | Kubernetes namespace. |
 | `cluster_name` | GKE cluster name. |
+
+---
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `NEXTCLOUD_TRUSTED_DOMAINS` (via `application_domains`) | Auto-populated from `application_domains` + service hostname | **Critical** | Nextcloud enforces a trusted domain whitelist. Any request from a domain not in this list receives "Access through untrusted domain" and the application is unusable. Add all custom domains, load balancer IPs, and Ingress hostnames to `application_domains`. The module appends the LoadBalancer IP automatically at runtime. |
+| `database_type` | `"MYSQL_8_0"` | **Critical** | Nextcloud requires MySQL. `Nextcloud_Common` hardcodes `database_type = "MYSQL_8_0"`. Changing to PostgreSQL breaks the database initialization job and the application will not start. |
+| `application_database_name` | `"nextcloud"` | **Critical** | Changing after initial deployment orphans the existing database. Nextcloud will connect to a new empty database. All files, users, calendar data, and configuration are lost from the application's perspective. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Nextcloud connects to Cloud SQL MySQL via the Auth Proxy Unix socket. Disabling this removes the socket path, causing all database connections to fail on pod startup. |
+| `container_port` | `80` | **Critical** | `Nextcloud_Common` sets `container_port = 80`. Changing to any other value causes Kubernetes liveness and readiness probes to fail — the pod never passes health checks. |
+| `enable_nfs` | `false` | **Critical** | Without NFS, Nextcloud data (files, app data, config) is stored in the pod's ephemeral local filesystem and is permanently lost on pod restart or rolling update. NFS is required for any Nextcloud GKE deployment — data persistence depends on it. |
+| `nfs_mount_path` | `"/mnt/nfs"` | **High** | Nextcloud must be configured to use this path as its data directory via `NEXTCLOUD_DATA_DIR`. A mismatch causes Nextcloud to write to the ephemeral pod filesystem while the NFS mount is idle. |
+| `OVERWRITEPROTOCOL` (in `environment_variables`) | `"https"` | **High** | Nextcloud generates all share links and WebDAV endpoints using this value. Setting to `"http"` causes browser mixed-content warnings and WebDAV clients may refuse connections. Keep as `"https"`. |
+| `php_memory_limit` | `"512M"` | **Medium** | PHP memory per request. For large file operations, Office integration, or thumbnail generation, `512M` may be insufficient. Increase to `1G` or `2G` for file-heavy workloads. This is baked into the container image at build time — a new Cloud Build run is required to change it. |
+| `upload_max_filesize` | `"512M"` | **High** | Files larger than this limit cannot be uploaded. Baked into the container image at build time. For organizations needing to upload large videos or archives, increase to `5G` or `10G`. |
+| `post_max_size` | `"512M"` | **High** | PHP's POST body limit. Must be equal to or greater than `upload_max_filesize`. If `post_max_size < upload_max_filesize`, PHP silently drops upload bodies. Always set `post_max_size >= upload_max_filesize`. |
+| `enable_redis` | `false` | **High** | Without Redis, Nextcloud uses file-based locking (`FileLocking`) and local APCu cache. With multiple replicas, file locks become stale and concurrent operations cause "File is locked" errors (HTTP 503). Redis is required for any multi-replica Nextcloud GKE deployment. |
+| `redis_host` | `""` | **High** | When `enable_redis = true` and `redis_host` is empty, Nextcloud_Common injects `REDIS_HOST = "$(REDIS_HOST)"` literally. Nextcloud fails to connect to Redis at runtime. Always provide the Memorystore IP or Redis service name. |
+| `min_instance_count` | `1` | **High** | Reducing to `0` with HPA scale-to-zero means cold starts of 15–30 seconds. For a production file store with WebDAV clients (desktop sync), this causes sync client disconnections and errors. Keep at `1` minimum. |
+| `max_instance_count` | `1` | **High** | Nextcloud with multiple replicas requires Redis for distributed file locking. Running multiple replicas without Redis causes data corruption on concurrent writes. Never increase above `1` without enabling Redis and NFS. |
+| `workload_type` | `null` (auto) | **Medium** | Nextcloud with NFS and stateful data should use `StatefulSet` (via `stateful_pvc_enabled = true`) for stable pod identity and ordered startup. Using `Deployment` with shared NFS may cause write conflicts on concurrent file access. |
+| `stateful_pvc_enabled` with `workload_type = "Deployment"` | — | **High** | This combination fails at plan time. Use `stateful_pvc_enabled = true` alone — it automatically resolves to `StatefulSet`. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **High** | When `enable_resource_quota = true`, these must use binary suffixes (e.g., `"4Gi"`, `"8192Mi"`). Bare integers are treated as bytes by Kubernetes, blocking all pod scheduling. |
+| `nextcloud_admin_user` | `"admin"` | **Medium** | The default `"admin"` username is a common brute-force target. Change to a non-obvious name for public-facing deployments. Only applied on first installation — no effect after initial setup. |
+| `NEXTCLOUD_ADMIN_PASSWORD` (auto-generated secret) | Auto-generated, stored in Secret Manager | **High** | If the Secret Manager secret is deleted or rotated without updating Nextcloud's database, the admin account password becomes unknown. Recovery requires direct database access. |
+| `session_affinity` | `"None"` | **Medium** | Nextcloud with Redis handles PHP sessions via Redis (stateless). Without Redis, `"ClientIP"` affinity is needed to prevent session losses when requests route to different pods. |
+| `enable_topology_spread` | `false` | **Medium** | Without topology spread, all Nextcloud pods may schedule on a single availability zone. A zone failure takes down the entire file store. Enable for multi-replica production deployments. |
+| `enable_pod_disruption_budget` | `false` | **Medium** | Without a PDB, GKE cluster maintenance can evict all pods simultaneously, causing full downtime for connected desktop sync clients. Enable when `max_instance_count > 1`. |
+| `NEXTCLOUD_UPDATE` (in `environment_variables`) | `"1"` | **Low** | Auto-runs `occ upgrade` on container startup. This is intentional for minor updates. Set to `"0"` to disable auto-upgrade and manage Nextcloud upgrades manually (required before upgrading across major versions). |
+| `organization_id` | `""` | **Medium** | VPC-SC perimeter is only activated when `organization_id` is explicitly set. `enable_vpc_sc = true` without this value has no effect. |
+| `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` | **High** | Each `App_GKE` deployment sharing the same VPC must use a distinct CIDR. Overlapping with an existing subnet causes GKE node pool provisioning to fail at apply time. |

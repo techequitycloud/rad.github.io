@@ -465,6 +465,33 @@ All user-configurable variables exposed by `Dify_CloudRun`, sorted by UI group t
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 | `github_repository_url` | GitHub repository URL connected for CI/CD. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `SECRET_KEY` (auto-generated) | Random secret in Secret Manager | **Critical** | Used by Dify's Flask/API server to sign sessions, CSRF tokens, and encrypted fields. Rotating it after first use logs out all users and invalidates all active sessions. All Dify service containers (api, worker) must share the same `SECRET_KEY` — a mismatch causes authentication failures between services. Treat as immutable. |
+| `enable_redis` / `redis_host` | `true` + auto-discovered | **Critical** | Dify's Celery task queue (used for workflow execution, document indexing, and async LLM calls) requires Redis. Without a reachable Redis instance, all background tasks fail silently. `enable_redis` must be `true` and `redis_host` must be correct for any workflow or document processing to function. |
+| `redis_host` | Auto-discovered from VPC | **Critical** | If `redis_host` is not set and auto-discovery fails, the Celery worker cannot connect to Redis and all async operations (document ingestion, workflow runs) are queued indefinitely. |
+| `VECTOR_STORE` (via `environment_variables`) | `"weaviate"` (Dify default) | **High** | Changing the vector store after populating knowledge bases requires migrating all existing vectors to the new backend. Without migration, all knowledge base queries return empty results. Dify supports Weaviate, Qdrant, Milvus, and others. |
+| `storage` (GCS/S3 configuration) | GCS Fuse or environment-configured | **High** | Dify stores all uploaded files (documents, images, audio) via the configured storage backend. If `STORAGE_TYPE` is set to `"s3"` without providing `S3_*` credentials, or `"google-storage"` without a service account, all file uploads fail and knowledge base ingestion cannot proceed. |
+| `database_type` | `"POSTGRES"` | **Critical** | Dify requires PostgreSQL for application metadata, workflow definitions, API key storage, and user accounts. Without a database, the Dify API container fails to start. |
+| `enable_cloudsql_volume` | `true` | **Critical** | The Cloud SQL Auth Proxy sidecar is required for PostgreSQL connectivity. Disabling it with Cloud SQL as the backend causes all database operations to fail. |
+| `WEB_API_CORS_ALLOW_ORIGINS` (via `environment_variables`) | `"*"` (Dify default) | **High** | The default `"*"` allows cross-origin requests from any domain. In production, restrict to the specific Dify web frontend URL (e.g., `"https://dify.example.com"`) to prevent cross-site API abuse. |
+| `CONSOLE_WEB_URL` / `APP_WEB_URL` (auto-set from `service_url`) | Derived from Cloud Run URL | **High** | Must match the externally reachable URL. Incorrect values break OAuth callbacks, invitation links, and the Dify web console's API URL auto-configuration. |
+| `min_instance_count` | `1` | **High** | Dify uses session state and maintains connections to Redis and PostgreSQL. Scale-to-zero causes 30–60 s cold starts and in-flight workflow tasks are abandoned. Set to `1` or more for production. |
+| `timeout_seconds` | `300` | **High** | LLM workflow execution and document indexing can take several minutes. Requests are cut off with a 504 if the timeout is insufficient. Increase to `3600` for complex multi-step workflows. |
+| `memory_limit` | `4Gi` | **High** | Dify processes document embedding in the same container as the API in single-container configurations. Under-resourced containers OOM-kill during document ingestion, leaving knowledge bases in a partially-indexed state. |
+| `execution_environment` | `"gen2"` | **High** | Required for NFS mounts, GCS Fuse, and Direct VPC Egress. Always use gen2. |
+| `ingress_settings` | `"all"` | **High** | `"all"` makes the Dify console publicly accessible. The login form is the only access control. Enable IAP or restrict to `"internal"` for internal deployments. |
+| `enable_iap` | `false` | **High** | Without IAP, access control is application-only. An unauthenticated Dify console is a high risk in production environments. |
+| `secret_environment_variables` (LLM provider keys) | `{}` | **Critical** | Provider API keys must come from Secret Manager references. Injecting them as plain `environment_variables` exposes them in Cloud Run revision metadata, logs, and GCP audit trail. |
+| `backup_schedule` | `""` (disabled) | **High** | Without automated backups, Dify's PostgreSQL database (workflow definitions, knowledge base metadata, API keys, user accounts) is unprotected. Enable daily backups for production. |
+| `enable_nfs` | `false` | **Medium** | Without NFS or shared GCS storage, uploaded files are pod-local. With `max_instance_count > 1`, files uploaded to one instance are not visible on others. |
+| `application_version` | `"latest"` | **Medium** | Dify updates frequently and releases may change the database schema. Pinning to a specific version (e.g., `"0.14.0"`) prevents unplanned migrations that could break the application. |
+| `CELERY_BROKER_URL` (derived from redis config) | Auto-constructed from `redis_host`/`redis_port` | **Critical** | If `redis_host` is incorrect, the Celery broker URL is malformed and the worker process fails to connect. All asynchronous tasks (document indexing, model provider sync) queue indefinitely without error surfacing to users. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

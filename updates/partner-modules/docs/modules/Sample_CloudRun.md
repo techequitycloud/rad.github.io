@@ -494,6 +494,35 @@ Complete list of all input variables, grouped by UI section.
 | 21 | `organization_id` | string | `""` | yes |
 | 21 | `enable_audit_logging` | bool | `false` | yes |
 
+## Configuration Pitfalls & Sensible Defaults
+
+The table below identifies the variables most commonly misconfigured in `Sample_CloudRun` deployments. Because `Sample_CloudRun` is the reference implementation used to test `App_CloudRun` Foundation Module changes, the pitfalls here also apply to any new application module built from this template.
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `application_name` | `"sample"` (default; do not change after first deploy) | **Critical** | Embedded in Cloud Run service name, Artifact Registry repo, Secret Manager secret IDs (including `FLASK_SECRET_KEY`). Changing after first deploy recreates all named resources — any state stored in Secret Manager is orphaned and new secrets are generated. |
+| `tenant_deployment_id` | Match environment: `"prod"`, `"staging"`, `"dev"` | **Critical** | Changing after first deploy recreates all named resources. The old Cloud SQL instance (if used) and Secret Manager secrets are orphaned. A new empty database is created. |
+| `application_version` | A pinned tag (e.g. `"1.0.0"`); avoid `"latest"` in production | **Medium** | `"latest"` makes rollback ambiguous. Cloud Run cannot distinguish between two `"latest"` revisions. Always pin to a digest or version tag in staging and production. |
+| `container_port` | `8080` (Flask/Gunicorn default; set in `Sample_Common`) | **Critical** | Mismatch: Cloud Run's startup probe fails immediately. All requests return 502. The revision never becomes healthy and enters a continuous restart loop. |
+| `startup_probe_config.path` | `"/healthz"` (Flask route that returns 200) | **Critical** | `"/healthz"` route not implemented in the sample Flask app: Cloud Run never routes traffic. The revision is healthy at the infra level but continuously restarts. Implement the route with `return "ok", 200`. |
+| `min_instance_count` | `0` for dev/testing (scale-to-zero appropriate for a reference app) | **Medium** | `0` in a load-testing scenario: cold starts (5–10 s for the sample Flask image) inflate p99 latency. Set `min_instance_count = 1` when benchmarking `App_CloudRun` Foundation Module changes to eliminate cold-start noise. |
+| `max_instance_count` | `1` for dev; `≤ Cloud SQL max_connections ÷ pool_size` for load tests | **High** | Exceeding Cloud SQL connection limit during load tests: `FATAL: sorry, too many clients already`. All Flask instances fail DB queries simultaneously. |
+| `cpu_limit` | `"1000m"` (1 vCPU; sufficient for the hello-world pattern) | **Medium** | Too low (`< 250m`): CPU throttling causes slow Flask request handling and may cause the startup probe to time out. GCP bills minimum 0.083 vCPU for Cloud Run regardless. |
+| `memory_limit` | `"512Mi"` (sufficient for Flask + `FLASK_SECRET_KEY`) | **Medium** | Too low (`< 128Mi`): Flask is OOMKilled on startup when loading the application module and Secret Manager client libraries. |
+| `FLASK_SECRET_KEY` (generated secret) | Auto-generated 32-character random string stored in Secret Manager | **High** | Not injected into the Flask container: `SECRET_KEY` is unset, Flask raises `RuntimeError` on the first session or CSRF operation. Retrieve from Secret Manager: `gcloud secrets versions access latest --secret=<PREFIX>-secret-key`. |
+| `enable_cloudsql_volume` | `true` (default; required when `database_type != "NONE"`) | **Critical** | `false` with a PostgreSQL database: Flask must connect via TCP to Cloud SQL's private IP. If Private Service Access is not configured, all DB connections fail at startup. The `db-init` job also fails, blocking first-deploy. |
+| `execution_environment` | `"gen2"` (required for NFS mounts; recommended for all new deployments) | **High** | `"gen1"` with `enable_nfs = true`: NFS mount fails at container startup. All instances fail to start. |
+| `enable_nfs` | `false` (default for Sample; the reference app does not require shared storage) | **Low** | `true` without the NFS server IP configured: the NFS mount hangs at container startup and the instance never becomes healthy. Only enable when testing NFS integration specifically. |
+| `ingress_settings` | `"all"` for testing; `"internal-and-cloud-load-balancing"` when using Cloud Armor | **Medium** | `"all"` with Cloud Armor enabled: requests bypass the WAF via the direct `*.run.app` URL. For security testing the Sample module with Cloud Armor, use `"internal-and-cloud-load-balancing"`. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` (default) | **Medium** | `"PRIVATE_RANGES_ONLY"` when Redis or Cloud SQL is on a non-RFC-1918 private IP: connections fail. Use `"ALL_TRAFFIC"` to route all egress via VPC for those configurations. |
+| `enable_iap` | `false` for public sample; `true` when testing IAP integration | **High** | `true` without `iap_oauth_client_id`/`iap_oauth_client_secret`: IAP is silently disabled and the app is exposed without authentication. With credentials but no `iap_authorized_users`: all requests return HTTP 403. |
+| `enable_redis` | `false` (default; Sample does not use Redis by default) | **Low** | `true` without `redis_host` set: the sample Flask app attempts to connect to an empty Redis host string, causing a `ConnectionRefusedError` on startup. Only enable Redis when specifically testing the Redis integration path. |
+| `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` (default; appropriate for a reference/test module) | **Critical** | `"REQUIRE_ATTESTATION"` in the Sample module without a CI attestation pipeline: no image can be deployed, including test images built locally. The Sample module is designed for testing — keep `"ALWAYS_ALLOW"` unless specifically testing Binary Authorization enforcement. |
+| `enable_vpc_sc` | `false` (default); use `vpc_sc_dry_run = true` if testing VPC-SC | **Critical** | `enable_vpc_sc = true` with `vpc_sc_dry_run = false` in a test environment: if any SA or IP is missing from the access level, Cloud Run, Cloud SQL, and Secret Manager access all fail simultaneously. Always test VPC-SC in dry-run mode first. |
+| `enable_audit_logging` | `false` for dev/test | **Low** | `true` in a high-traffic test environment: audit logs for Secret Manager reads (one per container startup for `FLASK_SECRET_KEY`) accumulate rapidly and increase Cloud Logging costs. Keep disabled for load tests. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

@@ -349,6 +349,35 @@ secret_environment_variables = {
 
 ---
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `domain` | `""` (empty — not injected) | **High** | Must be the full public URL of the Vaultwarden instance (e.g., `https://vault.example.com`). Without it, TOTP/2FA QR codes link to `localhost`, organisation invitation emails contain broken links, and attachment download URLs are invalid. Set this before any user enables 2FA. |
+| `signups_allowed` | `false` | **Critical** | The module defaults to `false` (registrations closed). If set to `true` before initial setup completes, any internet user can create an account on the vault. Lock down registrations immediately after the first admin account is created. |
+| `admin_token` (via `environment_variables`) | Not set (admin panel disabled) | **High** | When `ADMIN_TOKEN` is absent, the Vaultwarden admin panel at `/admin` is completely disabled. This is the intended secure default. If admin panel access is required, pass `ADMIN_TOKEN` via `environment_variables` using a strong Argon2 hash or a long random string — never a weak password. |
+| `database_type` | `POSTGRES_15` | **High** | Vaultwarden supports PostgreSQL and SQLite. Changing the database type after deploy (e.g., from PostgreSQL to SQLite) abandons all existing vault data in the old database. Never change this after the first deploy. |
+| `db_name` | `vaultwarden` | **High** | Changing after first deploy causes Vaultwarden to connect to an empty database on the next restart, presenting an empty vault to all users. All credentials appear lost until the name is restored. |
+| `min_instance_count` | `1` | **High** | Setting to `0` enables scale-to-zero. A password manager with scale-to-zero means the vault is unavailable for 5–15 seconds after the first request following a cold start. Bitwarden clients will show connection errors until the instance is ready. |
+| `cpu_limit` | `1000m` | **High** | Cloud Run gen2 with always-allocated CPU requires at least 1000m. Values below 1000m cause Cloud Run to reject the service definition at deploy time. Vaultwarden itself is lightweight (Rust) and 1000m is sufficient for most workloads. |
+| `container_port` | `80` | **High** | Must match `ROCKET_PORT`. A mismatch means Cloud Run's health check and load balancer route traffic to the wrong port — the service starts but all requests return connection refused or timeout. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Required when `database_type` is not `NONE`. Vaultwarden connects to Cloud SQL via the Auth Proxy Unix socket. Disabling this causes all database connections to fail at startup. |
+| `web_vault_enabled` | `true` | **Medium** | Setting to `false` disables the Vaultwarden web UI. Users can still access the vault via native Bitwarden clients, but browser-based access is blocked. Intended for deployments where only native clients are used. |
+| `execution_environment` | `"gen2"` | **High** | Gen2 is required for NFS mounts and improved networking. Gen1 does not support Unix socket paths used by the Cloud SQL Auth Proxy in the expected location, causing database connection failures. |
+| `enable_redis` | `false` | **Low** | Redis is not required for Vaultwarden single-instance deployments. Enabling Redis without a valid `redis_host` causes the container to fail to start if Redis connectivity is checked at startup. |
+| `smtp_*` variables (via `environment_variables`) | Not set | **High** | SMTP for Vaultwarden is configured as a group via environment variables (`SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_SECURITY`). Setting some but not all SMTP variables causes silent email delivery failures — Vaultwarden will not error, but invitation emails, 2FA recovery emails, and password reset emails will not be sent. Configure all SMTP variables together or none at all. |
+| `enable_cloud_armor` | `false` | **Medium** | Enabling Cloud Armor requires `application_domains` to be set. Without a custom domain, the load balancer has no backend to attach the policy to, and the apply fails with a resource dependency error. |
+| `application_domains` | `[]` | **Medium** | Required when `enable_cloud_armor = true` or `enable_iap = true`. An empty list with either feature enabled causes plan-time resource reference errors. |
+| `enable_iap` | `false` | **Medium** | When IAP is enabled, `iap_oauth_client_id` and `iap_oauth_client_secret` must both be provided. Partial configuration leaves the service either fully blocked or fully unprotected depending on which value is missing. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | An empty string disables automated backups. A password manager without backups means a Cloud SQL failure or accidental deletion results in permanent credential loss for all users. |
+| `enable_auto_password_rotation` | `false` | **Medium** | When enabled, the database password is rotated on a schedule. The Cloud Run revision must be redeployed after rotation to pick up the new Secret Manager version; otherwise Vaultwarden continues using the old (now invalid) password until connections fail. |
+| `timeout_seconds` | `300` | **Low** | Valid range is 0–3600. A very low value (e.g., `30`) causes large vault sync operations to time out mid-request, corrupting partial sync state on the client. |
+| `max_revisions_to_retain` | platform default | **Low** | Cloud Run retains old revisions for rollback. Too many retained revisions increase artifact storage costs. Too few (e.g., `1`) prevents any rollback if a new revision is faulty. |
+
+---
+
 ## 11. Outputs
 
 | Output | Description |

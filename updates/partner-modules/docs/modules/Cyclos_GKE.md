@@ -289,6 +289,37 @@ The `rotation_propagation_delay_sec` variable is used together with `enable_auto
 
 ---
 
+## Configuration Pitfalls & Sensible Defaults
+
+The table below identifies the variables most commonly misconfigured in `Cyclos_GKE` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong.
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `application_name` | `"cyclos"` (default; do not change after first deploy) | **Critical** | Embedded in GKE namespace, Artifact Registry repo, Secret Manager secrets, and GCS bucket name. Changing recreates all named resources — existing financial data, transaction history, and uploaded files become inaccessible. |
+| `tenant_deployment_id` | Match environment: `"prod"`, `"staging"`, `"dev"` | **Critical** | Changing after first deploy orphans the old Cloud SQL instance and GCS bucket. A new empty PostgreSQL database is provisioned. All Cyclos accounts, transaction history, and member data are left in the abandoned instance. |
+| `workload_type` | `null` (auto-selects Deployment) | **Critical** | Cyclos does not support horizontal scaling in the Community Edition. Do not set `"StatefulSet"` unless running an enterprise cluster configuration. Setting `"Deployment"` with `stateful_pvc_enabled = true` fails at plan time. |
+| `quota_memory_requests` | `"4Gi"` (use binary suffix) | **Critical** | A bare integer like `"4"` is treated as **4 bytes** by Kubernetes. The ResourceQuota rejects every pod that requests more than 4 bytes of memory — **all Cyclos pods fail to schedule**. Always use `"4Gi"` or `"4096Mi"`. |
+| `quota_memory_limits` | `"8Gi"` (must be ≥ `quota_memory_requests`) | **Critical** | Same bare-integer issue. A value of `"8"` = 8 bytes, blocking all pod scheduling. |
+| `memory_limit` | `"4Gi"` (default) — never reduce below `2Gi` | **Critical** | Cyclos is a Java application. Insufficient memory: the JVM throws `OutOfMemoryError` and the container crashes. GKE OOMKills the pod (exit code 137). Minimum recommended: `2Gi` for light workloads, `4Gi` for production. |
+| `CYCLOS_OPTIONS` (via `environment_variables`) | `"-Xmx3g"` for a 4 Gi limit — set via `environment_variables = { CYCLOS_OPTIONS = "-Xmx3g" }` | **Critical** | No `-Xmx` flag: the JVM grows to consume all available container memory, leaving no room for OS and JVM metaspace overhead. Under load the pod is OOMKilled. Set `-Xmx` to ~75% of `memory_limit`. |
+| `database_type` | `"POSTGRES_15"` (hardcoded in `Cyclos_Common`) | **Critical** | PostgreSQL with multiple extensions (`pg_trgm`, `uuid-ossp`, `cube`, `earthdistance`, `postgis`, `unaccent`) is the only supported database. These are auto-provisioned by the `db-init` job. Do not attempt to use MySQL or SQL Server. |
+| `max_instance_count` | `1` (default; Cyclos Community Edition is not horizontally scalable) | **Critical** | `> 1` without a Cyclos enterprise clustering license: multiple pods compete for the same database without coordination. Transaction logic (balance checks, transfers) becomes non-atomic, causing financial data corruption. |
+| `min_instance_count` | `1` (default; Cyclos benefits from a warm JVM) | **High** | `0` (scale-to-zero on GKE): Cyclos JVM startup + DB extension loading takes 45–120 seconds. Incoming requests time out while the pod warms up. If `startup_probe.failure_threshold` is too low, GKE kills the pod before it finishes starting. |
+| `container_resources` | `{ cpu_limit = "2000m", memory_limit = "4Gi" }` (default) | **High** | CPU too low: Java GC and Cyclos startup are CPU-bound. With `< 1000m` CPU, startup can exceed 3 minutes, causing the startup probe to kill the pod before it finishes initialising. |
+| `startup_probe.failure_threshold` | `10` (default; ~11.5 min total tolerance at 60 s periods) | **High** | Too low: the `db-init` job must complete (creating 6 PostgreSQL extensions) before the main container starts. First-deploy extension creation can take 2–3 minutes. Keep `failure_threshold ≥ 10` with `period_seconds = 60`. |
+| `startup_probe.path` | `"/api"` (Cyclos REST API root) | **Critical** | Wrong path: startup probe always fails. GKE kills the pod before it accepts traffic. `"/api"` returns `200 OK` once Cyclos is fully initialised and the database schema is applied. |
+| `db_name` | `"cyclos"` (default; do not change after first deploy) | **Critical** | Renaming creates a new empty database. The `db-init` job initialises the new DB. All existing transaction history and account data remain in the old (orphaned) database. |
+| `db_user` | `"cyclos"` (default; do not change after first deploy) | **High** | Changing creates a new DB user without required privileges. Cyclos cannot authenticate. Outage until `db-init` re-runs and grants are applied. |
+| `enable_cloudsql_volume` | `true` (for GKE — Cloud SQL Auth Proxy sidecar) | **High** | `false` on GKE: Cyclos must connect to Cloud SQL over TCP via private IP. If the GKE node subnet does not have Private Service Access configured, all DB connections fail. The `db-init` job also fails, blocking first-deploy. |
+| `cyclos.storedFileContentManager` env var | `"gcs"` (hardcoded in `Cyclos_Common`) | **Critical** | Overriding to `"local"`: Cyclos writes uploaded files to the pod's ephemeral storage. All profile photos and transaction attachments are lost on pod restart or rescheduling. Never override this value. |
+| `stateful_pvc_size` | `"10Gi"` (default if PVC enabled) — size for local data only (logs, temp) | **High** | PVC cannot be shrunk after provisioning. Too small: JVM temporary files and Cyclos logs fill the PVC and crash the container. Size based on expected log volume and JVM heap dump space. |
+| `enable_pod_disruption_budget` | `false` (default) | **High** | `true` with `max_instance_count = 1` and `pdb_min_available = "1"`: GKE node drains are permanently blocked. Autopilot node upgrades stall. Enable only when `min_instance_count ≥ 2`. |
+| `secret_environment_variables` | Auto-managed: `ROOT_PASSWORD` and `DB_PASSWORD` via `db-init` | **High** | DB credentials in plain `environment_variables`: visible in GKE pod spec, kubectl describe output, and Terraform state. Always use `secret_environment_variables` for passwords. |
+| `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` until CI pipeline attests images | **Critical** | `"REQUIRE_ATTESTATION"` without a working attestation pipeline: no new Cyclos image can be deployed to GKE, and rollbacks also fail. |
+| `enable_backup_import` | `false` after a successful restore | **High** | Leaving `true`: the restore job re-runs on every `tofu apply`, overwriting the live Cyclos financial database with the stale backup. All transactions and balances since the backup are destroyed. |
+
 ## Deployment Prerequisites & Validation
 
 After deploying `Cyclos_GKE`, confirm the deployment is healthy:

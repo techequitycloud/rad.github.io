@@ -303,3 +303,32 @@ curl -s -o /dev/null -w "%{http_code}" http://EXTERNAL_IP/web/health
 # Confirm the ODOO_MASTER_PASS secret was created in Secret Manager
 gcloud secrets list --project=PROJECT_ID --filter="name:master-password"
 ```
+
+---
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `project_id` | _(required)_ | **Critical** | No default — deployment fails immediately. |
+| `database_type` | `"POSTGRES_15"` | **Critical** | Odoo requires PostgreSQL exclusively. Setting to `MYSQL` causes Odoo to fail at startup — Odoo's ORM uses psycopg2 and is incompatible with MySQL. Setting `NONE` leaves Odoo with no database. |
+| `enable_nfs` | `true` | **Critical** | Odoo's filestore (attachments, binary fields, session files, static assets) must reside on a shared volume. Without NFS, each pod has an isolated filestore — attachments uploaded to one pod are invisible to others, and all files are lost on pod restart. NFS is mandatory for any multi-pod Odoo GKE deployment. |
+| `enable_redis` | `false` | **Medium** | Odoo can use Redis for session management in multi-worker configurations. Without Redis, sessions are memory-resident per pod — users are logged out when routed to a different pod. For production with multiple replicas, enable Redis with an explicit `redis_host`. |
+| `redis_host` | `""` | **High** | Required when `enable_redis = true`. An empty value causes Odoo session backend failures at startup. |
+| `application_version` | `"18.0"` | **High** | Used to select the Odoo nightly build. An invalid version tag causes Cloud Build to fail when downloading the source. Use only valid major version strings like `"18.0"` or `"17.0"`. |
+| `container_image_source` | `"custom"` | **High** | Odoo requires a custom image wiring the PostgreSQL socket path and filestore configuration. The upstream Odoo Docker Hub image is not configured for Cloud SQL Unix socket connectivity. |
+| `container_resources.memory_limit` | `"512Mi"` (GKE default) | **Critical** | The base GKE `container_resources.memory_limit` default is `512Mi`. Odoo requires at least `2Gi` to start and load its ERP modules. A `512Mi` limit causes immediate Python OOM crashes during module loading. Always override to at least `2Gi`. |
+| `session_affinity` | `"ClientIP"` | **High** | Without session affinity, Odoo users are routed to different pods per request and lose their sessions continuously. Keep `"ClientIP"` for any multi-replica Odoo GKE deployment without a shared Redis session store. |
+| `application_database_name` | `"odoo"` | **Critical** | Immutable after first deployment — changing this recreates the database and destroys all ERP data. |
+| `application_database_user` | `"odoo"` | **Critical** | Immutable after first deployment — changing this recreates the user and breaks the database connection. |
+| `workload_type` | `null` | **Medium** | Setting `stateful_pvc_enabled = true` auto-selects `StatefulSet`. Do not set `workload_type = "Deployment"` alongside `stateful_pvc_enabled = true` — this fails at plan time. |
+| `stateful_pvc_size` | `"10Gi"` | **Medium** | Odoo attachments and the filestore grow quickly in any active ERP — invoices, contracts, and product images accumulate. Plan for 100Gi+ for production deployments with active document management. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (GKE-specific) | Must use binary suffixes (`Gi`, `Mi`) when set. Bare integers are treated as bytes by Kubernetes and prevent all pods from scheduling. |
+| `explicit_secret_values` (ODOO_ADMIN_PASSWD / master password) | — | **Critical** | The Odoo master password controls access to the database manager (`/web/database/manager`). A weak or default password allows any user who can reach the URL to drop the entire Odoo database. Set a strong, unique value before production launch. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero causes 30–60 second Odoo cold starts and disrupts Odoo's background scheduler (cron). Keep at `1` for any production ERP deployment. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | Already enabled. Disabling allows all pods to terminate simultaneously during node upgrades, causing a full ERP outage. |
+| `backup_retention_days` | `7` | **High** | Odoo contains financial records with legal retention requirements (often 7 years). Seven days of backups is dangerously insufficient. Increase to 90+ days and consider separate long-term backup archiving. |
+| `enable_cloud_armor` | `false` | **High** | The Odoo database manager and web portal contain highly sensitive business data. Cloud Armor WAF is strongly recommended for any internet-accessible Odoo GKE deployment. |
+| `enable_network_segmentation` | `false` | **Medium** | Without NetworkPolicy, any pod in the GKE cluster can reach Odoo pods and the PostgreSQL Cloud SQL proxy. Enable for multi-tenant clusters. |

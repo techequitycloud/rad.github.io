@@ -426,6 +426,33 @@ All user-configurable variables exposed by `NocoDB_CloudRun`, sorted by UI group
 | `container_image` | Container image used for the deployment. |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `NC_AUTH_JWT_SECRET` (via Secret Manager) | Auto-generated 32-char random string | **Critical** | The module auto-generates this secret and injects it as `NC_AUTH_JWT_SECRET`. Changing or rotating this value after the first deployment immediately invalidates all existing user sessions and API tokens. All users are forcibly logged out. Treat as immutable after first deploy. |
+| `NC_PUBLIC_URL` | Auto-set from Cloud Run service URL | **High** | NocoDB uses this value to construct absolute URLs in email notifications, webhooks, and share links. An incorrect value causes all share links and webhook callbacks to point to the wrong origin. This is controlled by `service_url_env_var_name`, which defaults to `"NC_PUBLIC_URL"` — do not change this variable name. |
+| `GCS_BUCKET_NAME` | Auto-set from module output | **High** | Do not override. The module injects this as the NocoDB upload/attachment storage backend. An incorrect bucket name causes all file attachments to fail silently. |
+| `application_database_name` | `"nocodb"` | **High** | Changing after the database is initialised orphans the NocoDB application schema and all table/view metadata. Immutable after first apply. |
+| `application_database_user` | `"nocodb"` | **High** | Created by the db-init job. Renaming requires manual Cloud SQL intervention. Immutable after first apply. |
+| `memory_limit` | `"1Gi"` | **High** | Under 512Mi the NocoDB Node.js process is OOM-killed on startup. `"1Gi"` is the minimum for small deployments; production workloads with many views/automations need `"2Gi"`. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Required for the Cloud SQL Auth Proxy sidecar. Disabling with a PostgreSQL backend causes all database connections to fail. |
+| `enable_redis` | `false` | **Medium** | Without Redis, NocoDB cannot share session state or cache results across multiple instances. Required when `max_instance_count > 1`. Enabling without a valid `redis_host` raises a validation error. |
+| `redis_host` | `null` | **High** | Required when `enable_redis = true`. An empty host causes all Redis connections to fail on startup. If `enable_nfs = true`, the NFS server IP is used as the default Redis host. |
+| `NC_REDIS_URL` format | Auto-built from `redis_host`/`redis_port`/`redis_auth` | **High** | If manually overriding via `environment_variables`, the URL must follow `redis://:password@host:port` or `redis://host:port`. An invalid format causes NocoDB to start without Redis even if `enable_redis = true`. |
+| `min_instance_count` | `1` | **High** | Scale-to-zero causes cold starts of 10–20 s. Webhook callbacks fired during this window will time out and be dropped by the sending service. |
+| `max_instance_count` | `10` | **Medium** | Running multiple instances without Redis causes users' sessions to be invalidated when routed to a different instance. Always enable Redis before increasing above `1`. |
+| `enable_iap` | `false` | **High** | Without IAP the NocoDB interface is publicly accessible. For internal workspaces, enable IAP or restrict `ingress_settings`. |
+| `ingress_settings` | `"all"` | **High** | Leaves NocoDB reachable from the public internet. For internal-only deployments set to `"internal-and-cloud-load-balancing"`. |
+| `application_version` | `"latest"` | **Medium** | Pinning to a specific version is recommended. `"latest"` triggers uncontrolled upgrades on every container rebuild. |
+| `cpu_always_allocated` | `false` | **Medium** | NocoDB has background automation and webhook retry logic. With `false`, the CPU is throttled to near-zero when the request ends, causing background tasks to stall until the next request arrives. Set to `true` for automation-heavy workloads. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Disabling automated backups leaves all NocoDB table schemas, views, automations, and row data unprotected. |
+| `timeout_seconds` | `300` | **Medium** | Bulk import/export operations on large tables can exceed 5 minutes. Reducing below 120 s causes these operations to be aborted mid-run. |
+| `enable_auto_password_rotation` | `false` | **Medium** | Enabling without sufficient `rotation_propagation_delay_sec` causes brief intervals of DB connectivity failures during the rotation window. |
+| `secret_propagation_delay` | `"30s"` | **Low** | Reducing below 15 s causes the Cloud Run service to start before the Secret Manager secret is fully propagated, resulting in a failed first startup that requires a manual revision deployment. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

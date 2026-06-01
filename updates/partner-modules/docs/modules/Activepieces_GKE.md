@@ -371,3 +371,30 @@ kubectl exec -n NAMESPACE POD_NAME -- curl -s http://localhost:8080/api/v1/flags
 | Variable | Default | Description & Implications |
 |---|---|---|
 | `resource_creator_identity` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | The service account used by Terraform to create and manage GCP resources. For enhanced security, replace with a project-scoped service account. |
+
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `AP_ENCRYPTION_KEY` (auto-generated 32-char hex secret) | Auto-generated and stored in Secret Manager | **Critical** | Changing this key after first run permanently corrupts all stored connection credentials. They cannot be decrypted and must be re-entered for every integration. |
+| `AP_JWT_SECRET` (auto-generated secret) | Auto-generated and stored in Secret Manager | **Critical** | Rotating this key immediately invalidates all active user sessions, forcing all users to log out. Do not rotate without a planned maintenance window. |
+| `application_name` | `"activepieces"` | **Critical** | Immutable after first deploy. Changing it renames all Kubernetes and GCP resources, causing full recreation and data loss. |
+| `db_name` | `"activepieces"` | **Critical** | Immutable after first deploy. Changing it causes Activepieces to connect to a new empty database, losing all flows, connections, and history. |
+| `AP_FRONTEND_URL` / `AP_WEBHOOK_URL_PREFIX` (injected from `service_url`) | Predicted service URL | **Critical** | Must match the actual public URL. Incorrect values break all webhook integrations and OAuth callbacks. |
+| `enable_redis` | `true` | **High** | Without Redis, `AP_QUEUE_MODE` falls back to `MEMORY`. With `max_instance_count > 1`, each pod maintains its own queue, causing duplicate flow executions. GKE validation blocks: "When enable_redis is true, either redis_host must be set or enable_nfs must be true." |
+| `redis_host` | `""` (uses NFS server IP when `enable_nfs = true`) | **High** | When `enable_redis = true`, `redis_host` is empty, and `enable_nfs = false`, plan-time validation fails with a blocking error. |
+| `memory_limit` | `"2Gi"` | **High** | Values below `1Gi` cause OOM kills during concurrent flow executions. Kubernetes will restart pods repeatedly under load, causing flow execution failures. |
+| `min_instance_count` | `1` (GKE default) | **High** | GKE HPA requires `min <= max`. The validation guard rejects invalid combinations. Setting below `1` may leave the HPA in an inconsistent state. |
+| `max_instance_count` | `3` | **High** | Increasing without Redis causes in-memory queue splitting across pods, leading to duplicate and lost executions. |
+| `workload_type` | `null` (defaults to `Deployment`) | **High** | Setting `stateful_pvc_enabled = true` without explicit `workload_type` automatically resolves to `StatefulSet`. Setting `workload_type = "Deployment"` with `stateful_pvc_enabled = true` fails at plan time. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` (not enforced) | **High** | Must use binary suffixes (`"2Gi"`, `"4096Mi"`). Bare integers are treated as bytes by Kubernetes and block all pod scheduling in the namespace. |
+| `enable_nfs` | `true` | **High** | Activepieces stores flow artifacts at the NFS mount. Without persistent storage, file-handling steps lose their data on pod restart or rescheduling. |
+| `AP_SIGN_UP_ENABLED` (injected as `"true"`) | `"true"` | **High** | Leaving sign-up enabled exposes the platform to unauthorized account creation. Override via `environment_variables = { AP_SIGN_UP_ENABLED = "false" }` after creating the initial admin. |
+| `enable_iap` | `false` | **High** | Enabling IAP without both `iap_oauth_client_id` and `iap_oauth_client_secret` is blocked at plan time by the validation guard. |
+| `session_affinity` | `"ClientIP"` | **Medium** | Activepieces uses persistent WebSocket connections for real-time flow run updates. Disabling affinity (`"None"`) causes UI disconnections when requests route to different pods. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | Disabling PDB allows GKE to evict all pods simultaneously during node maintenance, causing a complete service outage. |
+| `enable_cloudsql_volume` | `true` | **High** | The Cloud SQL Auth Proxy sidecar is required for PostgreSQL connectivity. Disabling it while `database_type != "NONE"` is blocked by the Strapi/Activepieces GKE validation guard. |
+| `enable_topology_spread` | `false` | **Low** | Without topology spread, all Activepieces pods may schedule on a single node, creating a single point of failure. |
+| `pdb_min_available` | `"1"` | **Medium** | Setting to `"0"` with single-replica deployments allows GKE to evict the only running pod with no replacement guarantee. |

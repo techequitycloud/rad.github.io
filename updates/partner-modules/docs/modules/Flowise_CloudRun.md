@@ -519,6 +519,35 @@ Complete list of all input variables, grouped by UI section.
 | `cloudbuild_trigger_id` | Cloud Build trigger ID for CI/CD | — |
 | `cicd_configuration` | Complete CI/CD configuration details | — |
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `flowise_username` | `"admin"` | **Critical** | Default admin username is publicly known. Always change before exposing the service externally — combined with a weak or default password it grants immediate full access to all AI flows. |
+| `FLOWISE_PASSWORD` (via Secret Manager) | Auto-generated 32-char random secret | **Critical** | The module auto-generates the password; if you override it with a weak value via `environment_variables`, all flows and credentials stored in the DB are accessible to any attacker who guesses it. |
+| `FLOWISE_SECRETKEY_OVERWRITE` | Not set (Flowise internal default) | **Critical** | If set initially and later changed or removed, all Flowise credential secrets (LLM API keys, vector-store tokens) stored in the database are permanently unreadable. Treat this as immutable after first deploy. |
+| `application_database_name` | `"flowisedb"` | **High** | Changing this after the database has been provisioned orphans the old database and causes Flowise to fail on startup until a new database is initialised. Immutable after first apply. |
+| `application_database_user` | `"flowiseuser"` | **High** | Same as above — the database user is created in the db-init job and cannot be renamed without manual Cloud SQL intervention. Immutable after first apply. |
+| `STORAGE_TYPE` / `GCLOUD_PROJECT` | `"gcs"` / project injected | **High** | Overriding `STORAGE_TYPE` to anything other than `"gcs"` breaks the GCS-backed file storage. Flowise will fall back to local disk, which is ephemeral on Cloud Run and lost on each new revision. |
+| `GOOGLE_CLOUD_STORAGE_BUCKET_NAME` | Auto-set from module output | **High** | Do not override this env var. The module sets it from `module.flowise_app.storage_buckets[0].name`. An incorrect bucket name causes all file uploads to fail silently. |
+| `memory_limit` | `"1Gi"` | **High** | Flowise loads LangChain/LlamaIndex into Node.js. Under 512Mi the process is OOM-killed immediately on startup, causing perpetual cold-start failures. Minimum recommended is `"1Gi"`; production with large flow graphs needs `"2Gi"`. |
+| `cpu_limit` | `"1000m"` | **Medium** | Under 500m Flowise flow execution becomes very slow and health-check timeouts may kill the container. Set to at least `"1000m"`. |
+| `min_instance_count` | `1` | **High** | Setting to `0` on Cloud Run enables scale-to-zero but causes cold starts of 10–20 s for every inbound request when Flowise is idle. Combined with downstream LLM latency, this frequently triggers client timeouts. |
+| `max_instance_count` | `1` | **Medium** | Flowise stores in-memory flow execution state. Running more than one instance without a shared Redis session store causes flow executions to fail when load-balanced to a different instance. Keep at `1` unless Redis is configured. |
+| `APIKEY_STORAGE_TYPE` | `"db"` | **High** | Changing to `"json"` reverts to file-based API key storage, which is lost on every Cloud Run revision deployment. Always keep `"db"`. |
+| `DATABASE_TYPE` | `"postgres"` (hardcoded) | **Critical** | Hard-coded in the Common module. Do not override to `"sqlite"` via `environment_variables` — SQLite on Cloud Run is ephemeral and all flow definitions are lost on the next revision. |
+| `enable_cloudsql_volume` | `true` | **Critical** | If set to `false` with a Postgres database, the Cloud SQL Auth Proxy sidecar is not injected and the database connection will be refused. The module's GKE validation guard rejects this combination at plan time. |
+| `enable_iap` | `false` | **High** | Leaving IAP disabled exposes the Flowise UI directly to the internet over Cloud Run's public URL. At minimum set `ingress_settings = "internal-and-cloud-load-balancing"` or enable IAP to restrict access. |
+| `ingress_settings` | `"all"` | **High** | The default allows traffic from any source. For internal-only deployments set to `"internal-and-cloud-load-balancing"` to restrict to VPC and load-balancer traffic. |
+| `startup_probe.failure_threshold` | `30` (= 300 s total) | **Medium** | Reducing this below 10 causes Cloud Run to restart the container before Flowise has finished its DB migrations on first boot. |
+| `liveness_probe.path` | `"/api/v1/ping"` | **High** | Changing the probe path to a non-existent endpoint causes continuous liveness failures and rolling restarts once the app is running. |
+| `enable_redis` | `false` | **Medium** | Without Redis, Flowise cannot share session/queue state across instances. Only relevant when `max_instance_count > 1`. Enabling Redis without providing `redis_host` raises a validation error. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | Leaving the backup schedule at default is safe; removing or disabling it means no automated Cloud SQL backups and potential unrecoverable data loss. |
+| `vpc_egress_setting` | `"private-ranges-only"` | **Medium** | Set to `"all-traffic"` only if Flowise must call public LLM APIs through an egress NAT. Leaving at default reduces egress costs and attack surface. |
+| `secret_rotation_period` | `"720h"` | **Low** | Very short rotation periods (e.g., `"24h"`) cause frequent secret version churn; ensure `rotation_propagation_delay_sec` is set high enough that all running instances pick up the new secret before the old version expires. |
+
 ## Destroying Resources
 
 ### Known Deletion Issue: Serverless IPv4 Address Release

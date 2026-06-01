@@ -263,6 +263,35 @@ kubectl exec -n <k8s-namespace> deploy/<app-name> -- \
 
 ---
 
+## Configuration Pitfalls & Sensible Defaults
+
+> Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
+
+| Variable | Sensible Default | Risk | Consequence of Incorrect Value |
+|---|---|---|---|
+| `num_history_shards` | `4` (dev/demo), `512`+ (production) | **Critical** | **Permanently immutable after first deploy.** The shard count is written into the Temporal database schema during initialisation. Changing it requires a full data wipe and re-initialisation — all in-flight and historical workflow data is lost. Set correctly before the first `tofu apply`. Use `512` or higher for any production deployment. |
+| `application_database_name` | `temporal` | **Critical** | Hardcoded in the schema initialisation job. Changing this after first deploy orphans the existing schema and causes Temporal server to start with an uninitialised database, crashing on every boot. |
+| `db_visibility_name` | `temporal_visibility` | **Critical** | Temporal's visibility store is initialised separately from the main database. Changing this after first deploy causes Temporal to lose all workflow search/filter capability and fail to write execution records, breaking the Temporal Web UI. |
+| `db_user` | `temporal` | **High** | Both `temporal` and `temporal_visibility` databases share this user. Changing the user after deploy without updating the Cloud SQL IAM grants and Secret Manager password causes all Temporal server connections to fail with authentication errors. |
+| `container_protocol` | `h2c` | **Critical** | Temporal uses gRPC for all inter-service and client-to-server communication. Changing to `http1` breaks gRPC entirely — SDK workers cannot connect, workflow execution stops, and the Temporal Web UI becomes non-functional. h2c (HTTP/2 cleartext) is mandatory. |
+| `postgres_instance_name` | Auto-discovered from Services_GCP | **Critical** | Must not be empty. If Services_GCP has not been deployed first, or its Cloud SQL instance is not labelled `managed-by=services-gcp`, Temporal Common cannot resolve the instance name and the plan fails immediately. |
+| `enable_elasticsearch` | `false` | **Medium** | When set to `true`, `elasticsearch_url` must point to a reachable Elasticsearch 7.x or 8.x endpoint before Temporal starts. An unreachable endpoint causes Temporal to crash on startup — it does not fall back to PostgreSQL visibility. |
+| `elasticsearch_url` | `""` | **High** | Required when `enable_elasticsearch = true`. An empty value with Elasticsearch enabled causes Temporal server to start without a valid visibility store URL, crashing immediately. Format must be `host:port` or `http://host:port`. |
+| `elasticsearch_version` | `"v7"` | **High** | Must match the actual Elasticsearch cluster version (`v7` for 7.x, `v8` for 8.x). A mismatch causes Temporal's index management to use incompatible mappings, resulting in visibility write failures and missing workflow entries. |
+| `elasticsearch_index_visibility` | `"temporal_visibility_v1"` | **Medium** | Temporal auto-creates this index on first start. Changing the name after initial deployment means the new index is empty — all historical visibility data is in the old index and cannot be queried. |
+| `min_instance_count` | `1` | **High** | Setting to `0` allows scale-to-zero. Temporal requires at least one running pod at all times to process workflow timers, activity retries, and heartbeats. Scale-to-zero causes missed timers and stalled workflows. |
+| `cpu_limit` | `2000m` | **High** | Temporal's all-in-one mode runs history, matching, frontend, and worker services in a single process. Insufficient CPU (below 1000m) causes high scheduling latency and timer fires to be delayed, directly impacting workflow SLAs. |
+| `memory_limit` | `2Gi` | **High** | Temporal holds shard state in memory proportional to `num_history_shards`. With the default 4 shards and a modest workflow load, 1Gi is the absolute minimum; 2Gi is the recommended starting point for production. |
+| `quota_memory_requests` / `quota_memory_limits` | `"4Gi"` / `"8Gi"` | **Critical** | Must use binary unit suffixes (e.g., `"4Gi"`, `"8192Mi"`). A bare integer is treated as bytes by Kubernetes, sets an effectively zero quota, and immediately blocks all pod scheduling. |
+| `stateful_pvc_enabled` | `false` | **High** | Temporal stores all durable state in Cloud SQL PostgreSQL. Enabling PVCs adds persistent storage that is never written by Temporal, wastes resources, and can cause pod scheduling failures on Autopilot when disk quota is not available. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Must be `true`. Temporal connects to Cloud SQL via the Auth Proxy Unix socket. Setting to `false` causes all database connections to fail and Temporal to crash on startup. Direct private IP is not used — only the socket path. |
+| `backup_schedule` | `"0 2 * * *"` | **Medium** | An empty string disables automated database backups. Without backups, a Cloud SQL failure or accidental schema mutation cannot be recovered without data loss. Always configure a schedule before go-live. |
+| `enable_pod_disruption_budget` | `true` | **Medium** | Disabling PDB means GKE node upgrades can evict all Temporal pods simultaneously, causing a full service interruption including dropped gRPC connections from all SDK workers. |
+| `workload_type` | `"Deployment"` | **Medium** | Temporal is stateless at the pod level (state is in PostgreSQL). Using `StatefulSet` is not recommended and provides no benefit; it adds complexity around pod identity and PVC management. |
+| `session_affinity` | `false` | **Low** | Temporal gRPC connections use long-lived streams managed by the SDK. Session affinity is not required and can cause uneven pod load distribution. Leave disabled. |
+| `enable_vpc_sc` | `false` | **High** | Requires explicit `organization_id`. Without it, VPC Service Controls are silently skipped, giving a false sense of perimeter security. |
+| `enable_auto_password_rotation` | `false` | **Medium** | When enabled, the Cloud SQL password is rotated on a schedule. The Temporal pod must be restarted after rotation to pick up the new Secret Manager version; without a restart, Temporal continues with the old (now invalid) password until connections fail. |
+
 ## 10. Variable Reference (All Groups)
 
 Variables are organised into UIMeta groups for platform UI rendering:
