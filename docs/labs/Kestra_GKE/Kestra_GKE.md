@@ -285,7 +285,7 @@ export DB_SECRET=$(gcloud secrets list \
 
    > **REST API equivalent:**
    > ```
-   > POST https://<kestra-host>:8080/api/v1/executions/hello-world
+   > POST https://&lt;kestra-host>:8080/api/v1/executions/hello-world
    > {
    >   "namespace": "company.team"
    > }
@@ -348,7 +348,7 @@ export DB_SECRET=$(gcloud secrets list \
 
    > **REST API equivalent (list executions):**
    > ```
-   > GET https://<kestra-host>:8080/api/v1/executions?namespace=company.team&flowId=hello-world
+   > GET https://&lt;kestra-host>:8080/api/v1/executions?namespace=company.team&flowId=hello-world
    > ```
 
 ---
@@ -391,7 +391,7 @@ export DB_SECRET=$(gcloud secrets list \
 
    > **REST API equivalent (list namespaces):**
    > ```
-   > GET https://<kestra-host>:8080/api/v1/namespaces
+   > GET https://&lt;kestra-host>:8080/api/v1/namespaces
    > ```
 
 ---
@@ -444,8 +444,8 @@ export DB_SECRET=$(gcloud secrets list \
    > ```
    > POST https://logging.googleapis.com/v2/entries:list
    > {
-   >   "resourceNames": ["projects/<project-id>"],
-   >   "filter": "resource.type=\"k8s_container\" resource.labels.namespace_name=\"<namespace>\"",
+   >   "resourceNames": ["projects/&lt;project-id>"],
+   >   "filter": "resource.type=\"k8s_container\" resource.labels.namespace_name=\"&lt;namespace>\"",
    >   "orderBy": "timestamp desc",
    >   "pageSize": 50
    > }

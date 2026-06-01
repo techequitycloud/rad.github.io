@@ -1,5 +1,5 @@
 ---
-id: idp
+id: platform_engineering
 title: IDP
 ---
 

@@ -81,9 +81,9 @@ Metabase is stateless — all application state is stored in PostgreSQL. Use the
 
 ## Getting Started
 
-See the [Lab Guide](./Metabase_GKE_Lab.md) for step-by-step deployment instructions.
+See the [Lab Guide](../Metabase_GKE_Lab/Metabase_GKE_Lab.md) for step-by-step deployment instructions.
 
-See the [Configuration Guide](../modules/Metabase_GKE.md) for a complete variable reference.
+See the [Configuration Guide](../../modules/Metabase_GKE/Metabase_GKE.md) for a complete variable reference.
 
 ## Common Configuration Examples
 

@@ -5,7 +5,7 @@ sidebar_label: "Vaultwarden GKE"
 
 # Vaultwarden_GKE Module — Configuration Guide
 
-This guide describes every configuration variable available in the `Vaultwarden_GKE` module. `Vaultwarden_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Vaultwarden_Common`](../Vaultwarden_Common/) shared application configuration to deploy [Vaultwarden](https://github.com/dani-garcia/vaultwarden) on Google Kubernetes Engine (GKE) Autopilot.
+This guide describes every configuration variable available in the `Vaultwarden_GKE` module. `Vaultwarden_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Vaultwarden_Common`](../Vaultwarden_Common/Vaultwarden_Common.md) shared application configuration to deploy [Vaultwarden](https://github.com/dani-garcia/vaultwarden) on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Vaultwarden_GKE` map directly to the same options in `App_GKE`. Where a variable is identical in behaviour, this guide references the `App_GKE` guide rather than repeating the same documentation.
 

@@ -233,7 +233,7 @@ gcloud secrets versions access latest \
 
 > **REST API equivalent:**
 > ```bash
-> SECRET_NAME="<admin-password-secret-name>"
+> SECRET_NAME="&lt;admin-password-secret-name>"
 > curl -s -H "Authorization: Bearer ${TOKEN}" \
 >   "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${SECRET_NAME}/versions/latest:access" \
 >   | jq -r '.payload.data' | base64 --decode

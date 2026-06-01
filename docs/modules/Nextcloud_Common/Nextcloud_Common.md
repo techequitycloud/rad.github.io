@@ -200,4 +200,4 @@ Note: The startup `failure_threshold` is **40** in `Nextcloud_Common` (vs 20 in 
 
 ## License
 
-Licensed under the [Apache 2.0 License](../../LICENSE).
+Licensed under the [Apache 2.0 License](#).

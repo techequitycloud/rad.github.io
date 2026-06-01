@@ -311,7 +311,7 @@ Password: m1grat10nc#nt#r
 
 > **Tip:** On macOS use **Microsoft Remote Desktop**. On Linux use Remmina or FreeRDP:
 > ```bash
-> xfreerdp /u:migrationcenter /p:'m1grat10nc#nt#r' /v:<external-ip>:3389 /dynamic-resolution
+> xfreerdp /u:migrationcenter /p:'m1grat10nc#nt#r' /v:&lt;external-ip>:3389 /dynamic-resolution
 > ```
 
 > **If RDP fails to connect:** The Windows startup script may still be running. Wait 3–5 minutes

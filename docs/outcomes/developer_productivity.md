@@ -38,7 +38,7 @@ Per `BUSINESS_CASE.md`:
 
 | Metric | Manual | This repo | Improvement |
 |---|---|---|---|
-| Setup time per app | 3–5 days | <2 hours | ~95% faster |
+| Setup time per app | 3–5 days | &lt;2 hours | ~95% faster |
 | Cost per setup | $3,200 | $200 | $3,000 saved |
 | Maintenance for 10-app fleet | 40 h, $4,000 | 2 h, $200 | 95% reduction |
 

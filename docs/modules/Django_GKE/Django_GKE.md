@@ -322,7 +322,7 @@ The `rotation_propagation_delay_sec` variable controls how long the module waits
 
 ## Configuration Pitfalls & Sensible Defaults
 
-The table below identifies the variables most commonly misconfigured in `Django_GKE` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong. For full variable details see the [App_GKE configuration guide](App_GKE.md).
+The table below identifies the variables most commonly misconfigured in `Django_GKE` deployments, explains the sensible starting value, and describes exactly what happens when the value is wrong. For full variable details see the [App_GKE configuration guide](../App_GKE/App_GKE.md).
 
 > Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
 

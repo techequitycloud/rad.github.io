@@ -474,8 +474,8 @@ The `temporalio/auto-setup` container emits structured JSON logs. All four Tempo
    > ```
    > POST https://logging.googleapis.com/v2/entries:list
    > {
-   >   "resourceNames": ["projects/<project-id>"],
-   >   "filter": "resource.type=\"k8s_container\" resource.labels.namespace_name=\"<namespace>\"",
+   >   "resourceNames": ["projects/&lt;project-id>"],
+   >   "filter": "resource.type=\"k8s_container\" resource.labels.namespace_name=\"&lt;namespace>\"",
    >   "orderBy": "timestamp desc",
    >   "pageSize": 50
    > }

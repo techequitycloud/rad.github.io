@@ -121,4 +121,4 @@ client = chromadb.HttpClient(
 
 ## Next Steps
 
-See the [Lab Guide](Chroma_CloudRun_Lab.md) for a step-by-step deployment walkthrough.
+See the [Lab Guide](../Chroma_CloudRun_Lab/Chroma_CloudRun_Lab.md) for a step-by-step deployment walkthrough.

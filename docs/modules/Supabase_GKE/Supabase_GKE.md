@@ -5,7 +5,7 @@ sidebar_label: "Supabase GKE"
 
 # Supabase_GKE Module — Configuration Guide
 
-This guide describes every configuration variable available in the `Supabase_GKE` module. `Supabase_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Supabase_Common`](../Supabase_Common/) shared application configuration to deploy [Supabase](https://supabase.com/) — an open-source Firebase alternative — on Google Kubernetes Engine (GKE) Autopilot.
+This guide describes every configuration variable available in the `Supabase_GKE` module. `Supabase_GKE` is a **wrapper module** that combines the generic [`App_GKE`](../App_GKE/App_GKE.md) infrastructure module with the [`Supabase_Common`](../Supabase_Common/Supabase_Common.md) shared application configuration to deploy [Supabase](https://supabase.com/) — an open-source Firebase alternative — on Google Kubernetes Engine (GKE) Autopilot.
 
 > **GKE-only:** Supabase is available in the GKE variant only. There is no `Supabase_CloudRun` module, as Supabase's multi-service architecture (Kong API gateway, Auth, Storage, Realtime, PostgREST) requires persistent connections and Kubernetes primitives that Cloud Run does not support.
 

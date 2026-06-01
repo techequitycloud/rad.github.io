@@ -68,7 +68,7 @@ Neither deployment currently integrates Google Certificate Authority Service (CA
 
 | Control | Why it is missing | How to add it |
 |---|---|---|
-| **VPC Service Controls** | Project-level data perimeter; outside the per-module `network.tf` pattern | Add `google_access_context_manager_service_perimeter` at project level; see [multitenancy-saas](multitenancy-saas) for the per-deployment strategy |
+| **VPC Service Controls** | Project-level data perimeter; outside the per-module `network.tf` pattern | Add `google_access_context_manager_service_perimeter` at project level; see [multitenancy-saas](multitenancy_saas) for the per-deployment strategy |
 | **Cloud Armor WAF/DDoS** | Not attached to any module's HTTPS LB | Attach `security_policy` to `google_compute_backend_service` in `glb.tf`; see [networking](networking) §6 |
 | **`AuthorizationPolicy` deny-by-default** | Default allows all east-west mesh traffic | Add a namespace-level deny-all base policy with explicit allow rules per service pair |
 | **Shielded Nodes** | Omitted for lab simplicity | `shielded_instance_config` block in `gke.tf`; see [security](security) |
@@ -78,7 +78,7 @@ Neither deployment currently integrates Google Certificate Authority Service (CA
 - [service-mesh](service-mesh) — mTLS enforcement, PeerAuthentication modes, certificate CA details
 - [security](security) — consolidated security control inventory, production hardening table
 - [networking](networking) — Cloud Armor WAF, VPC-SC, NetworkPolicy, full firewall model
-- [multitenancy-saas](multitenancy-saas) — per-deployment VPC-SC perimeter strategy
+- [multitenancy-saas](multitenancy_saas) — per-deployment VPC-SC perimeter strategy
 - [hybrid-cloud](hybrid-cloud) — Connect Gateway for attached cluster API access
-- [container-orchestration](container-orchestration) — VPC-native pod networking, Workload Identity
+- [container-orchestration](kubernetes) — VPC-native pod networking, Workload Identity
 - [practices/devsecops.md](../practices/devsecops.md) — IAP, Workload Identity Federation, CMEK

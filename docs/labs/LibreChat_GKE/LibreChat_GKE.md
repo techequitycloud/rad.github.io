@@ -62,4 +62,4 @@ redis_port   = 6379
 
 ## Lab Guide
 
-For hands-on deployment steps, see the [LibreChat GKE Lab Guide](./LibreChat_GKE_Lab.md).
+For hands-on deployment steps, see the [LibreChat GKE Lab Guide](../LibreChat_GKE_Lab/LibreChat_GKE_Lab.md).

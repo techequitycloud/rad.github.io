@@ -115,4 +115,4 @@ client = QdrantClient(
 
 ## Next Steps
 
-See the [Lab Guide](Qdrant_CloudRun_Lab.md) for a step-by-step deployment walkthrough.
+See the [Lab Guide](../Qdrant_CloudRun_Lab/Qdrant_CloudRun_Lab.md) for a step-by-step deployment walkthrough.
