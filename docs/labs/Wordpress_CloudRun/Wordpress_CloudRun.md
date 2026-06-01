@@ -467,7 +467,7 @@ curl -s -X POST \
 
 ### Step 7.1 — Request Metrics
 
-In the Google Cloud Console, navigate to **Cloud Run > Services > ${SERVICE} > Metrics**. Explore:
+In the Google Cloud Console, navigate to **Cloud Run > Services > `${SERVICE}` > Metrics**. Explore:
 
 - **Request count** — total requests per minute
 - **Request latencies** — p50, p95, p99 percentiles
