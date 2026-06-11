@@ -55,23 +55,23 @@ Caching: `Services_GCP` provisions Memorystore with `create_redis` (default `fal
 5. You know it worked when the traffic chart on the Revisions tab shows the 90/10 split and instance count returns to zero after load stops.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A latency-sensitive API on Cloud Run shows 4-second p99 spikes after idle periods. Which two settings fix this, and what is the cost trade-off?&lt;/summary>
+<details>
+<summary>Q1: A latency-sensitive API on Cloud Run shows 4-second p99 spikes after idle periods. Which two settings fix this, and what is the cost trade-off?</summary>
 
 A: Set `min_instance_count >= 1` to keep a warm instance (eliminates cold starts, bills the idle instance continuously) and keep `cpu_always_allocated = true` so background initialization isn't throttled between requests. The trade-off is paying for instance time even with zero traffic — the opposite of the scale-to-zero default.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: You must roll out a risky change to 5% of users with instant rollback. How do you do it on Cloud Run without a load balancer?&lt;/summary>
+<details>
+<summary>Q2: You must roll out a risky change to 5% of users with instant rollback. How do you do it on Cloud Run without a load balancer?</summary>
 
 A: Deploy the change as a new revision and use revision-based traffic splitting (`traffic_split` / `gcloud run services update-traffic`) to send 5% to it, optionally with a `tag` for a direct test URL. Rollback is routing 100% back to the previous revision — no rebuild or redeploy, because revisions are immutable.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: When would you choose App_GKE over App_CloudRun for the same container?&lt;/summary>
+<details>
+<summary>Q3: When would you choose App_GKE over App_CloudRun for the same container?</summary>
 
 A: When the workload needs stable per-pod storage (StatefulSet via `stateful_pvc_enabled`), Kubernetes-native controls (NetworkPolicy, ResourceQuota, PDB, topology spread), long-lived non-HTTP protocols, or sidecars you define yourself. Cloud Run wins for bursty stateless HTTP because of scale-to-zero and per-request billing.
-&lt;/details>
+</details>
 
 **Beyond the modules** — The exam also tests API design and async patterns the modules don't implement: REST versioning and OpenAPI specs behind **API Gateway** or **Apigee** (try `gcloud api-gateway gateways list` in a scratch project), gRPC application code (the platform side is covered — `container_protocol = "h2c"` is the module equivalent of `gcloud run deploy --use-http2` — but writing the gRPC service/client is study-only), **Pub/Sub** publish/subscribe and push-vs-pull decisions, **Cloud Tasks** for rate-limited dispatch, **Workflows** for multi-step orchestration, and **Eventarc** triggers (the modules use Eventarc only internally for secret rotation). Also study Cloud Run concurrency tuning (`--concurrency`) since the modules pin the default of 80.
 
@@ -120,23 +120,23 @@ A: When the workload needs stable per-pod storage (StatefulSet via `stateful_pvc
 4. You know it worked when the secret version list shows a new ENABLED version and a DISABLED prior version after a rotation fires, and anonymous requests stop returning 200 once IAP is on.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Your app reads DB_PASSWORD from an env var sourced from Secret Manager with version "latest". A rotation writes a new version while 20 instances are running. What happens, and how does the RAD design avoid an outage?&lt;/summary>
+<details>
+<summary>Q1: Your app reads DB_PASSWORD from an env var sourced from Secret Manager with version "latest". A rotation writes a new version while 20 instances are running. What happens, and how does the RAD design avoid an outage?</summary>
 
 A: Running instances keep the value they resolved at startup — env-var secret references resolve when the instance starts, not per request. The rotator avoids breakage by being dual-version: the database accepts the new password (`ALTER USER`) before the new secret version is published, the old secret version is only disabled after a propagation delay, and the workload is restarted so new instances pick up "latest". An exam answer should mention that env-var secrets require a new revision/restart to refresh.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A team must guarantee only images built by their CI pipeline run in production. Which two RAD variables implement this, and what happens to a hand-pushed image?&lt;/summary>
+<details>
+<summary>Q2: A team must guarantee only images built by their CI pipeline run in production. Which two RAD variables implement this, and what happens to a hand-pushed image?</summary>
 
 A: `enable_binary_authorization = true` plus `binauthz_evaluation_mode = "REQUIRE_ATTESTATION"`. The CI pipeline signs each image with the KMS-backed attestor after building; a locally built image pushed straight to Artifact Registry has no attestation, so admission is denied at deploy time (enforcement is block-and-audit-log).
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: You enable `enable_cloud_armor = true` without setting `application_domains`. What happens?&lt;/summary>
+<details>
+<summary>Q3: You enable `enable_cloud_armor = true` without setting `application_domains`. What happens?</summary>
 
 A: The plan fails. A validation in App_CloudRun requires at least one domain because the global HTTPS LB needs a hostname for its Google-managed certificate. (CDN without Cloud Armor can fall back to a nip.io hostname derived from the static IP, but Cloud Armor cannot.)
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study Identity Platform (end-user/CIAM auth — the modules only do IAP for Google identities), OAuth 2.0/OIDC token flows and the difference between access tokens and ID tokens, signed URLs vs IAM for object access, and Web Security Scanner. VPC Service Controls exist in the modules (`enable_vpc_sc`, dry-run by default, with graceful permission-probe skips) but perimeter design questions go deeper — read the VPC-SC ingress/egress rules documentation.
 
@@ -189,23 +189,23 @@ Consistency facts to anchor: Cloud SQL is strongly consistent on the primary; re
 4. You know it worked when the bucket shows your lifecycle rule and `versioning: enabled`, and the SQL instance reports REGIONAL with a failover replica zone.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: An app needs to survive a zone outage with zero data loss on its relational store. Daily backups are already enabled. What change is required and why aren't backups enough?&lt;/summary>
+<details>
+<summary>Q1: An app needs to survive a zone outage with zero data loss on its relational store. Daily backups are already enabled. What change is required and why aren't backups enough?</summary>
 
 A: Set `postgres_database_availability_type = "REGIONAL"` — synchronous replication to a standby in another zone gives automatic failover with no data loss. Backups (and even PITR) are recovery mechanisms with restore time and potential data loss back to the last transaction logs; they don't provide availability.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A product catalog is read 50:1 vs writes and the Cloud SQL primary is CPU-saturated. Rank the RAD options.&lt;/summary>
+<details>
+<summary>Q2: A product catalog is read 50:1 vs writes and the Cloud SQL primary is CPU-saturated. Rank the RAD options.</summary>
 
 A: First add Memorystore caching (`create_redis = true` + app-side `enable_redis`) — it removes repeated reads entirely and is cheapest. Second, `create_postgres_read_replica = true` to offload remaining reads (code must route reads to the replica and tolerate replication lag). Vertical scaling (`postgres_tier`) is the fallback because it has a ceiling and scales cost linearly.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Why might a developer choose `gcs_volumes` (GCS Fuse) over the Cloud Storage client library?&lt;/summary>
+<details>
+<summary>Q3: Why might a developer choose `gcs_volumes` (GCS Fuse) over the Cloud Storage client library?</summary>
 
 A: Fuse lets unmodified code use filesystem semantics (good for legacy apps, ML model files, static assets at startup) at the cost of object-storage performance characteristics and POSIX edge cases. The client library is the right answer for high-throughput object I/O, signed URLs, and metadata operations. Fuse requires `execution_environment = "gen2"` on Cloud Run — validated at plan time.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Spanner (interleaved tables, avoiding hotspotting primary keys), Bigtable (row-key design, single-index model, eventual consistency across replicated clusters), BigQuery write paths (Storage Write API vs batch loads), and signed URL generation (`blob.generate_signed_url`, requires `roles/iam.serviceAccountTokenCreator` or a key) are all absent from the modules and all examined. The Firestore database can be created here (`create_firestore = true`) but SDK usage — documents, composite indexes, real-time listeners, transactions — must be practiced with the client libraries or the emulator.
 

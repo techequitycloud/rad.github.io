@@ -42,23 +42,23 @@ gcloud compute firewall-rules list \
 4. You know it worked when you can explain every rule's source range — Google LB health checks, the IAP range, or intra-VPC — and the Cloud SQL instance shows only a private IP.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: VMs in a private subnet must download OS packages but must never accept inbound internet connections. Which component, and why not external IPs?&lt;/summary>
+<details>
+<summary>Q1: VMs in a private subnet must download OS packages but must never accept inbound internet connections. Which component, and why not external IPs?</summary>
 
 A: Cloud NAT — it provides source NAT for egress with no inbound path, and removes the per-VM external IP attack surface. External IPs would work for egress but expose every VM to inbound scanning and violate the requirement.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does Cloud SQL need a "private services access" peering range instead of just living in your subnet?&lt;/summary>
+<details>
+<summary>Q2: Why does Cloud SQL need a "private services access" peering range instead of just living in your subnet?</summary>
 
 A: Cloud SQL instances run in a Google-managed producer VPC, not yours. Private services access allocates an IP range from your VPC and peers it to the producer network, so the instance gets an RFC-1918 address reachable from your subnets — which is why this module can disable the public IP entirely and keep the database off the public internet.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: An auditor asks how admins SSH to the NFS VM with no public IP and no VPN. What is the answer in this topology?&lt;/summary>
+<details>
+<summary>Q3: An auditor asks how admins SSH to the NFS VM with no public IP and no VPN. What is the answer in this topology?</summary>
 
 A: IAP TCP forwarding — the `fw-allow-iap-ssh` rule admits tcp:22 only from Google's IAP range `35.235.240.0/20`, and admins use `gcloud compute ssh --tunnel-through-iap`. Identity is verified by IAP before any packet reaches the VM.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: Shared VPC, VPC peering between customer VPCs, Cloud VPN / Cloud Interconnect (hybrid), Network Connectivity Center, Cloud DNS, VPC flow logs, and hierarchical firewall policies. These are heavily examined — study "Choosing a Network Connectivity product" (Dedicated vs Partner Interconnect vs HA VPN decision tree, 99.99% SLA requires HA VPN or redundant Interconnect attachments), and Shared VPC host/service project IAM. In a scratch project, try `gcloud compute networks subnets update <subnet> --enable-flow-logs`.
 
@@ -95,17 +95,17 @@ gcloud storage buckets describe gs://<bucket-name> \
 5. You know it worked when the lifecycle rule shows in the describe output and a fresh dump object exists after the forced run.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Compliance requires keeping uploaded documents for 90 days in fast storage, then cheap storage for 7 years, then deletion — with no application changes. How?&lt;/summary>
+<details>
+<summary>Q1: Compliance requires keeping uploaded documents for 90 days in fast storage, then cheap storage for 7 years, then deletion — with no application changes. How?</summary>
 
 A: Object Lifecycle Management on the bucket: a SetStorageClass transition (e.g. to COLDLINE/ARCHIVE) at age 90 days and a Delete action at ~2,645 days. Lifecycle rules run server-side, so the application never changes. If regulators require *immutability*, add a retention policy with Bucket Lock — lifecycle alone does not prevent deletion.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: The team enables object versioning "as a backup" but the bucket bill triples in a month. What happened and what fixes it?&lt;/summary>
+<details>
+<summary>Q2: The team enables object versioning "as a backup" but the bucket bill triples in a month. What happened and what fixes it?</summary>
 
 A: Every overwrite/delete keeps a noncurrent version billed at full storage rates. Add lifecycle rules keyed on `num_newer_versions` (or noncurrent age) to prune old versions — exactly what `lifecycle_rules` in the `storage_buckets` entry expresses. Versioning protects against accidental deletion; it is not a managed backup with retention built in.
-&lt;/details>
+</details>
 
 **⚠️ Exam trap** — The scheduled SQL-dump job and Cloud SQL automated backups are different layers: automated backups + PITR restore the *instance*; dumps in GCS are portable, survive instance deletion, and can seed migrations. A scenario about "restore after the instance was deleted" needs the export, not PITR.
 
@@ -141,23 +141,23 @@ gcloud container clusters describe <cluster-name> \
 5. You know it worked when the describe output reflects each portal change without you touching a node, VM, or YAML file.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A team with no Kubernetes operations experience needs GKE for its API ecosystem but must not manage nodes, upgrades, or bin-packing. Which mode and why?&lt;/summary>
+<details>
+<summary>Q1: A team with no Kubernetes operations experience needs GKE for its API ecosystem but must not manage nodes, upgrades, or bin-packing. Which mode and why?</summary>
 
 A: Autopilot (`gke_cluster_mode = "AUTOPILOT"`, the default here). Google manages nodes, repairs, and upgrades; billing is per pod resource request, so right-sizing requests is the only capacity task left. Standard mode is for workloads needing specific machine types, GPUs/local SSDs, or scheduling control — the module's own variable description calls out latency-sensitive gRPC workloads as the Standard-mode use case.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: On Autopilot, what is the cost lever equivalent to "choosing a smaller machine type" on Standard?&lt;/summary>
+<details>
+<summary>Q2: On Autopilot, what is the cost lever equivalent to "choosing a smaller machine type" on Standard?</summary>
 
 A: Pod resource *requests* (`container_resources`) — Autopilot bills what pods request, not nodes. Over-requested CPU/memory is pure waste; VPA (enabled at the cluster level, and exposed per-workload via `enable_vertical_pod_autoscaling` in App_GKE) right-sizes requests from observed usage. `gke_autoscaling_profile = "OPTIMIZE_UTILIZATION"` additionally tightens scale-down.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: When would you accept Standard mode's extra operational burden in this platform?&lt;/summary>
+<details>
+<summary>Q3: When would you accept Standard mode's extra operational burden in this platform?</summary>
 
 A: When workloads need explicit node control: a specific machine series (`gke_node_machine_type`), disk types, or scheduling behavior Autopilot constrains. The module then provisions a single explicit node pool with autoscaling 1–5 nodes and Shielded VM protections — operational burden traded for hardware control.
-&lt;/details>
+</details>
 
 **⚠️ Exam trap** — Autopilot ≠ "no capacity planning." You still set requests/limits, and HPA/quota math still applies — App_GKE's `quota_memory_requests`-style values must use binary suffixes (`"4Gi"`), because a bare `"4"` is parsed by Kubernetes as 4 *bytes* and blocks all scheduling.
 
@@ -174,11 +174,11 @@ A: When workloads need explicit node control: a specific machine series (`gke_no
 **Beyond the modules** — Study Vertex AI Pipelines (Kubeflow Pipelines / TFX as pipeline definitions), Vertex AI Feature Store (online vs batch serving, preventing training-serving skew), BigQuery as the training data source and BigQuery ML for in-warehouse models, and accelerator selection (GPU vs TPU, on-demand vs reservations). In a scratch project, run the Vertex AI "Hello custom training" quickstart and `gcloud ai custom-jobs list` to see the job lifecycle.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A model performs well offline but degrades in production; investigation shows features are computed differently at serving time. Which Vertex AI component addresses this?&lt;/summary>
+<details>
+<summary>Q1: A model performs well offline but degrades in production; investigation shows features are computed differently at serving time. Which Vertex AI component addresses this?</summary>
 
 A: Vertex AI Feature Store — it centralizes feature definitions and serves the same feature values for training (batch) and prediction (online), eliminating training-serving skew caused by duplicated feature logic.
-&lt;/details>
+</details>
 
 ---
 
@@ -203,10 +203,10 @@ gcloud run services describe <service-name> --region=us-central1 \
 3. You know it worked when the env entry shows `valueSource.secretKeyRef` rather than a literal value.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A product needs OCR on scanned invoices and a conversational support agent. Which pre-trained APIs, and when would you switch to custom training?&lt;/summary>
+<details>
+<summary>Q1: A product needs OCR on scanned invoices and a conversational support agent. Which pre-trained APIs, and when would you switch to custom training?</summary>
 
 A: Cloud Vision API (OCR/document text detection) and Dialogflow CX (conversational agents). Switch to custom training (Vertex AI) only when the pre-trained model's quality on your domain data is insufficient — e.g. specialized invoice layouts needing Document AI custom processors or fine-tuned models. Pre-trained first is the exam's default posture.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study the official API categories (Vision, Imagen, Video Intelligence, Speech, Dialogflow, Vertex AI Search), Model Garden deployment options, and grounding/RAG patterns with Vertex AI Search. Try `gcloud ml vision detect-text <image-path>` in a scratch project for a two-minute taste of a pre-trained API.

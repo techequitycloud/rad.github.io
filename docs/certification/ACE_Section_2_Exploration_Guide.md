@@ -54,23 +54,23 @@ This guide covers exam Section 2 using the RAD platform foundation modules as a 
 5. You know it worked when the HPA shows `MINPODS 1 / MAXPODS 3` (or your overrides) and the Cloud Run revision shows your CPU/memory limits.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A stateless HTTP API has unpredictable, bursty traffic and the team wants to pay nothing during idle nights. Cloud Run or GKE — and which RAD variable expresses the decision?&lt;/summary>
+<details>
+<summary>Q1: A stateless HTTP API has unpredictable, bursty traffic and the team wants to pay nothing during idle nights. Cloud Run or GKE — and which RAD variable expresses the decision?</summary>
 
 A: Cloud Run with `min_instance_count = 0` — Cloud Run scales to zero between requests and bills only while serving. GKE Autopilot pods (HPA minimum of 1 in this module) keep billing for their resource requests around the clock. The trade-off is cold-start latency on the first request after idle.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: You set &lt;code>stateful_pvc_enabled = true&lt;/code> in App_GKE without touching &lt;code>workload_type&lt;/code>. What gets deployed and why?&lt;/summary>
+<details>
+<summary>Q2: You set <code>stateful_pvc_enabled = true</code> in App_GKE without touching <code>workload_type</code>. What gets deployed and why?</summary>
 
 A: A StatefulSet. The module auto-selects StatefulSet whenever per-pod PVCs are requested, because Deployments cannot give each replica its own stable volume and identity. Forcing `workload_type = "Deployment"` alongside it fails validation at plan time.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: On GKE Autopilot, what happens if a container spec has no CPU/memory requests, and why does the module always set them?&lt;/summary>
+<details>
+<summary>Q3: On GKE Autopilot, what happens if a container spec has no CPU/memory requests, and why does the module always set them?</summary>
 
 A: Autopilot requires resource requests — it either rejects the pod or applies defaults, and it bills per requested resource. The module always renders `container_resources` into requests/limits so scheduling and billing are deterministic.
-&lt;/details>
+</details>
 
 **Beyond the modules** — General-purpose Compute Engine, App Engine, and Cloud Functions are not implemented. For the exam:
 - Create a VM yourself: `gcloud compute instances create test-vm --zone=us-central1-a --machine-type=e2-micro`, then SSH with `gcloud compute ssh test-vm --zone=us-central1-a`. Study machine families (E2/N2/C3), Spot VMs, instance templates, and MIG autoscaling/rolling updates.
@@ -122,23 +122,23 @@ On the application side, `storage_buckets` (default `[]`, with `create_cloud_sto
 4. You know it worked when the bucket shows `NEARLINE` class with versioning on, and the SQL instance shows `availabilityType: ZONAL` with backups enabled.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: The application needs a shared read-write filesystem mounted by 10 Cloud Run instances simultaneously. GCS, Filestore, or a persistent disk?&lt;/summary>
+<details>
+<summary>Q1: The application needs a shared read-write filesystem mounted by 10 Cloud Run instances simultaneously. GCS, Filestore, or a persistent disk?</summary>
 
 A: Filestore (or the module's NFS server) — it is a managed NFS file share supporting concurrent multi-writer POSIX access, which RAD mounts via `enable_nfs`/`nfs_mount_path`. Persistent disks are single-writer block devices for VMs; GCS is object storage (the GCS Fuse mount is eventually-consistent object semantics, not a POSIX filesystem).
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Production launch review: the Cloud SQL instance must survive a zone outage. Which single variable changes, and what does it actually do?&lt;/summary>
+<details>
+<summary>Q2: Production launch review: the Cloud SQL instance must survive a zone outage. Which single variable changes, and what does it actually do?</summary>
 
 A: `postgres_database_availability_type = "REGIONAL"`. Cloud SQL then maintains a synchronous standby in a second zone of the same region with automatic failover. It roughly doubles instance cost and is not the same as a read replica (asynchronous, zonal in this module, no automatic failover).
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Why does the module reject &lt;code>redis_tier = "BASIC"&lt;/code> when &lt;code>resource_labels.environment = "production"&lt;/code>?&lt;/summary>
+<details>
+<summary>Q3: Why does the module reject <code>redis_tier = "BASIC"</code> when <code>resource_labels.environment = "production"</code>?</summary>
 
 A: BASIC tier is a single node with no replication and no SLA — a maintenance event or node failure flushes the cache and causes downtime. STANDARD_HA adds a replica with automatic failover, and only STANDARD_HA supports RDB/AOF persistence in this module.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: BigQuery, Spanner, Bigtable, Datastore mode, Pub/Sub as an application messaging bus, Memcached, and Storage Transfer Service. For the exam: load a CSV into BigQuery (`bq load` + `bq query --dry_run` for cost estimation), create and delete a small Spanner instance, publish/pull a Pub/Sub message (`gcloud pubsub topics create t && gcloud pubsub subscriptions create s --topic=t`), and review GCS storage classes (Standard/Nearline/Coldline/Archive with 0/30/90/365-day minimums).
 
@@ -177,23 +177,23 @@ On the edge: in `App_CloudRun`, `vpc_egress_setting` (default `PRIVATE_RANGES_ON
 5. You know it worked when the firewall list shows the health-check and IAP ranges above, and the security policy shows deny(403) WAF rules plus a rate-based ban rule.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: The Cloud SQL instance has no public IP, yet Cloud Run connects to it. Name the two mechanisms involved.&lt;/summary>
+<details>
+<summary>Q1: The Cloud SQL instance has no public IP, yet Cloud Run connects to it. Name the two mechanisms involved.</summary>
 
 A: Private Services Access gives the Cloud SQL instance a private IP in a peered Google-managed range, and Cloud Run reaches that RFC 1918 address through Direct VPC egress (`vpc_egress_setting = "PRIVATE_RANGES_ONLY"` routes private-range traffic into the VPC), with the Cloud SQL Auth Proxy handling authentication/encryption.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A VM in the subnet must download OS packages but must never be reachable from the internet. What provides this, and what would you check if downloads fail?&lt;/summary>
+<details>
+<summary>Q2: A VM in the subnet must download OS packages but must never be reachable from the internet. What provides this, and what would you check if downloads fail?</summary>
 
 A: Cloud NAT — it gives instances without external IPs outbound internet access with no inbound exposure. If downloads fail, check that the NAT gateway covers the subnet/region (`gcloud compute routers nats describe`) and that no egress-deny firewall rule outranks the default allow.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Why does enabling Cloud Armor in App_CloudRun also flip ingress away from "all"?&lt;/summary>
+<details>
+<summary>Q3: Why does enabling Cloud Armor in App_CloudRun also flip ingress away from "all"?</summary>
 
 A: Cloud Armor evaluates traffic at the load balancer. If the Cloud Run service still accepted direct `run.app` traffic (`ingress = all`), attackers could bypass the WAF entirely; restricting ingress to `internal-and-cloud-load-balancing` forces every request through the protected path.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: Shared VPC (host/service projects), VPC peering between your own VPCs, Cloud DNS zones and records, Cloud VPN / Interconnect, custom static routes, VPC flow logs, and internal load balancers. For the exam: create a private Cloud DNS zone (`gcloud dns managed-zones create`), peer two scratch VPCs and verify non-transitivity, review HA VPN (99.99% SLA, requires Cloud Router/BGP), and practice `gcloud compute networks subnets expand-ip-range` (ranges can grow, never shrink).
 
@@ -217,17 +217,17 @@ A: Cloud Armor evaluates traffic at the load balancer. If the Cloud Run service 
 5. You know it worked when the plan output for step 3 shows your console edit being reverted (an in-place update back to `512Mi` or your configured value).
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A teammate "fixed" production by editing a firewall rule in the console. The next scheduled IaC apply un-fixed it. What happened and what is the correct workflow?&lt;/summary>
+<details>
+<summary>Q1: A teammate "fixed" production by editing a firewall rule in the console. The next scheduled IaC apply un-fixed it. What happened and what is the correct workflow?</summary>
 
 A: Terraform reconciles real resources to the declared configuration, so out-of-band console edits are reverted as drift. The correct workflow is to change the variable/configuration in source (or the portal) and apply through the pipeline — console edits to IaC-managed resources should be reserved for break-glass emergencies and immediately backported.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does `tofu plan` matter on the exam (and in this platform) before `apply`?&lt;/summary>
+<details>
+<summary>Q2: Why does `tofu plan` matter on the exam (and in this platform) before `apply`?</summary>
 
 A: `plan` computes the exact create/update/destroy diff against state without touching anything, letting you catch destructive changes (e.g. a database replacement) before they happen. The RAD pipeline always runs `plan -out=plan.tfplan` and applies that saved plan, guaranteeing what was reviewed is what executes.
-&lt;/details>
+</details>
 
 **Beyond the modules** — The portal abstracts state management, so practice separately: configure a GCS backend with versioning for remote state (`terraform { backend "gcs" { bucket = "..." } }`), know why remote state + locking matters for teams, and skim Config Connector (GCP resources as Kubernetes CRDs) and the Cloud Foundation Toolkit/Terraform blueprints. Also drill the raw CLI equivalents the exam loves: `gcloud compute instances create`, `gcloud container clusters create-auto`, `gcloud run deploy` — IaC questions are often really "do you know what this automates".
 

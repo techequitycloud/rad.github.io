@@ -53,23 +53,23 @@ Plus Adaptive Protection with Layer 7 DDoS defense enabled. Attachment differs b
 4. You know it worked when the SQLi probe logs `outcome: DENY, priority: 1000` and the burst shows 200s flipping to 429s.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Legitimate admin traffic from the office keeps tripping the XSS rule on the GKE app. Fix without weakening protection for everyone?&lt;/summary>
+<details>
+<summary>Q1: Legitimate admin traffic from the office keeps tripping the XSS rule on the GKE app. Fix without weakening protection for everyone?</summary>
 
 A: Populate `admin_ip_ranges` — the module inserts an `allow` rule at priority 100, which evaluates *before* the WAF rules (lower number = earlier). That is the generic Cloud Armor answer too: scoped allow rule above the blocking rule. Both engines now insert this rule; on Cloud Run the same variable also feeds the VPC-SC access levels. The manual equivalent is `gcloud compute security-policies rules create 100 --security-policy=<service>-waf-policy --src-ip-ranges=<office-cidr> --action=allow`.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: When do you need an *edge* security policy instead of the backend policy RAD uses?&lt;/summary>
+<details>
+<summary>Q2: When do you need an *edge* security policy instead of the backend policy RAD uses?</summary>
 
 A: Edge policies evaluate at Google's edge before the cache, so they can filter requests served from Cloud CDN cache hits and protect backend buckets (GCS). Backend policies (RAD's type) evaluate only on cache misses / non-CDN traffic. "Block country X from cached content" → edge policy.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Why does enabling Cloud Armor on App_CloudRun change the service's ingress setting?&lt;/summary>
+<details>
+<summary>Q3: Why does enabling Cloud Armor on App_CloudRun change the service's ingress setting?</summary>
 
 A: Cloud Armor enforces only on traffic that traverses the load balancer. The default Cloud Run URL (`*.run.app`) would bypass it, so the module overrides ingress to `internal-and-cloud-load-balancing` — the standard exam-grade companion control. The same logic appears as "use `internal-and-cloud-load-balancing` + LB" whenever WAF/CDN/IAP-on-LB must not be bypassable.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study: rate limiting variants (throttle vs RAD's rate-based ban; enforce-on-key options beyond IP — HTTP header, cookie, XFF-IP), preconfigured rule *sensitivity levels* and opt-out fields (`evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 1})`), bot management with reCAPTCHA action-tokens and redirect actions, Google Threat Intelligence expressions (`evaluateThreatIntelligence('iplist-known-malicious-ips')`), and Adaptive Protection's *granular models* + automatic rule deployment (RAD enables detection; triage of its suggested rules is manual).
 
@@ -124,17 +124,17 @@ App_GKE intentionally creates no firewall rules — Gateway/LoadBalancer control
 4. You know it worked when the de-tagged instance stops accepting port-2049 connections within seconds — tag changes apply live, no restart.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Tags or service accounts as firewall targets for a high-security workload?&lt;/summary>
+<details>
+<summary>Q1: Tags or service accounts as firewall targets for a high-security workload?</summary>
 
 A: Service accounts (or IAM-governed *secure tags* in NGFW policies). Classic network tags are mutable by anyone with `instanceAdmin` on the VM — an attacker who can edit tags can re-scope firewall rules, exactly the manipulation you performed in the Try it. Service-account targets change only with a VM identity change, and secure tags require `tagUser` IAM. RAD uses classic tags for operational simplicity; know the harder answer.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: An org must guarantee "deny tcp/22 from internet" across 200 projects, with project teams unable to override. Mechanism?&lt;/summary>
+<details>
+<summary>Q2: An org must guarantee "deny tcp/22 from internet" across 200 projects, with project teams unable to override. Mechanism?</summary>
 
 A: A hierarchical firewall policy at the org/folder node with a deny rule — hierarchical rules evaluate *before* network policies and VPC rules, and `goto_next` vs `allow`/`deny` controls delegation. Per-project VPC rules (RAD's mechanism) cannot enforce this centrally.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study: evaluation order (hierarchical → global network policy → regional network policy → VPC rules, modulated by the network's `firewall_policy_enforcement_order`), migration tooling from VPC rules to network policies, NGFW tiers (Essentials = policies/secure tags; Standard adds FQDN/geo/Threat Intelligence objects; Enterprise adds TLS-inspecting L7 IPS via firewall endpoints), and NGFW with GKE/Cloud LB traffic. Docs: "Cloud NGFW overview", "Hierarchical firewall policies", "Migrate VPC firewall rules".
 
@@ -177,17 +177,17 @@ A: A hierarchical firewall policy at the org/folder node with a deny rule — hi
 4. You know it worked when the reported egress IP equals `nat-egress-ip` and stays stable across VM recreation. (Revert afterward; the Terraform module will otherwise show drift.)
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A partner allowlists your egress IP, but after traffic growth some connections fail with timeouts and NAT logs show allocation drops. Diagnosis and fixes?&lt;/summary>
+<details>
+<summary>Q1: A partner allowlists your egress IP, but after traffic growth some connections fail with timeouts and NAT logs show allocation drops. Diagnosis and fixes?</summary>
 
 A: Port exhaustion: each NAT IP provides ~64k ports shared across VMs; with static allocation each VM holds a fixed block (`min_ports_per_vm`). Fixes: enable dynamic port allocation (per-VM ports grow on demand between min and max), raise `min_ports_per_vm`, or add NAT IPs. The metric/log signals are `dropped_sent_packets_count` with reason OUT_OF_RESOURCES and ERRORS_ONLY NAT logs.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Compliance requires that workloads may reach only `*.github.com` and `pypi.org`. NAT or Secure Web Proxy?&lt;/summary>
+<details>
+<summary>Q2: Compliance requires that workloads may reach only `*.github.com` and `pypi.org`. NAT or Secure Web Proxy?</summary>
 
 A: Secure Web Proxy — NAT is L3/L4 and cannot filter by hostname/URL. SWP is an explicit (or policy-routed) proxy with rules on FQDN/URL/path and SA/secure-tag source identity, deployed per region with its own certificate and Gateway resource. NAT and SWP commonly coexist: SWP for HTTP(S) policy, NAT for everything else.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study "Cloud NAT port reservation" (the math), NAT rules (different IPs per destination), Private NAT (NCC/inter-VPC overlap cases), and "Secure Web Proxy overview" (`gcloud network-services gateways create --type=SECURE_WEB_GATEWAY`, `SecurityPolicy`/`UrlList` objects, TLS inspection option).
 
@@ -231,17 +231,17 @@ A: Secure Web Proxy — NAT is L3/L4 and cannot filter by hostname/URL. SWP is a
 3. You know it worked when tcpdump on the collector VM shows cloned packets (both directions) from the mirrored subnet.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: An NVA must inspect traffic between a "trusted" and "untrusted" VPC. Why multi-NIC, and what's the routing rule?&lt;/summary>
+<details>
+<summary>Q1: An NVA must inspect traffic between a "trusted" and "untrusted" VPC. Why multi-NIC, and what's the routing rule?</summary>
 
 A: Each NIC attaches to a different VPC (NICs are fixed at VM creation), making the appliance the only L3 path between them; each VPC gets a custom route with next hop the appliance's NIC IP — or, for HA, an internal passthrough LB per VPC fronting an NVA MIG with `--next-hop-ilb`. Symmetric routing matters: replies must traverse the same appliance, which is where policy-based routes (which can also steer by source) come in for multi-NIC HA designs.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Security wants full packet capture of east-west traffic for IDS without touching workloads. Flow logs, firewall logs, or Packet Mirroring?&lt;/summary>
+<details>
+<summary>Q2: Security wants full packet capture of east-west traffic for IDS without touching workloads. Flow logs, firewall logs, or Packet Mirroring?</summary>
 
 A: Packet Mirroring — it clones entire packets (headers + payload) to a collector ILB backed by IDS instances. Flow logs are sampled 5-tuple metadata; firewall logs record rule decisions. Mirroring filters (CIDR/protocol/direction) keep collector volume manageable; mirrored traffic is charged egress.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study "Packet Mirroring overview" (policy scoping by subnet/tag/instance, collector must be an internal passthrough LB with `--is-mirroring-collector` on the forwarding rule, same region), "Internal TCP/UDP load balancer as next hop" (symmetric hashing, no health-check-based failover to a different region), policy-based routes for NVA insertion with `--next-hop-ilb` and skip-rules for the appliance's own subnet, and the managed alternative positioning: Cloud IDS / NGFW Enterprise vs self-managed NVAs.
 

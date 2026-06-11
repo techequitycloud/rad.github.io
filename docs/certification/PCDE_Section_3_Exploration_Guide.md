@@ -49,23 +49,23 @@ What the modules deliberately do **not** do: connect to an *external* source, ru
 5. You know it worked when the import execution succeeds and the destination row counts equal the source's.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A 2 TB on-premises PostgreSQL 14 database must move to Cloud SQL with under 5 minutes of downtime. Is the platform's import-job pattern appropriate? What is?&lt;/summary>
+<details>
+<summary>Q1: A 2 TB on-premises PostgreSQL 14 database must move to Cloud SQL with under 5 minutes of downtime. Is the platform's import-job pattern appropriate? What is?</summary>
 
 A: No — a dump/restore of 2 TB takes hours, all of it downtime (the pattern is right only when an extended outage is acceptable). Use Database Migration Service: initial snapshot plus continuous CDC replication from the source, let lag drain while the source stays live, then a minutes-long cutover. DMS homogeneous migrations to Cloud SQL are free, which the exam likes to mention.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: After cutover to Cloud SQL, the business demands a fallback path for two weeks. What is the mechanism, and what must remain true at the source?&lt;/summary>
+<details>
+<summary>Q2: After cutover to Cloud SQL, the business demands a fallback path for two weeks. What is the mechanism, and what must remain true at the source?</summary>
 
 A: Reverse replication: replicate changes from the new Cloud SQL primary back to the old source (DMS supports configuring the old source as a replica of the migrated instance for PostgreSQL/MySQL, or you maintain logical replication yourself), so the application can be repointed back without data loss. The source must remain schema-compatible and reachable, and no writes may go to it directly during the fallback window — otherwise the two diverge.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: An Oracle-to-PostgreSQL migration stalls because of incompatible PL/SQL and data types. Which class of work is this, and which tools address it?&lt;/summary>
+<details>
+<summary>Q3: An Oracle-to-PostgreSQL migration stalls because of incompatible PL/SQL and data types. Which class of work is this, and which tools address it?</summary>
 
 A: DDL/DML conversion — heterogeneous migrations need schema and code translation, not just data movement. Tools: DMS's Oracle-to-PostgreSQL conversion workspaces (Ora2Pg-based), manual rewrite of stored procedures, plus type-mapping decisions (NUMBER → numeric, DATE → timestamp). In this platform the converted DDL would be applied through the custom-SQL-scripts job; the conversion itself is always engineering work the exam expects you to schedule before data sync.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Most of Section 3 lives here; budget real study time:
 - **Database Migration Service (DMS)**: connection profiles, migration jobs, homogeneous (MySQL/PostgreSQL → Cloud SQL/AlloyDB, free) vs heterogeneous (Oracle/SQL Server → PostgreSQL, conversion workspaces). In a scratch project walk through `gcloud database-migration connection-profiles create postgresql ...` and `gcloud database-migration migration-jobs create ... --type=CONTINUOUS`, even if only to the validation step — the *verify* phase (`gcloud database-migration migration-jobs verify`) is exam-favored.

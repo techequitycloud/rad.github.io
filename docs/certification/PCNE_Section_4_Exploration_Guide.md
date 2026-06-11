@@ -34,17 +34,17 @@ Honest framing up front: the RAD foundation modules implement **none** of this s
 3. You know you understand it when you can say why the attachment references the *Cloud Router* (BGP termination) and what changes for a Dedicated attachment (you specify the `--interconnect` instead of getting a pairing key). Delete the attachment afterward to avoid charges.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: 5 Gbps needed, no presence in a colocation facility, and traffic must be encrypted. Design?&lt;/summary>
+<details>
+<summary>Q1: 5 Gbps needed, no presence in a colocation facility, and traffic must be encrypted. Design?</summary>
 
 A: Partner Interconnect (no colo presence rules out Dedicated, which starts at 10 Gbps physical circuits) with HA VPN over Interconnect for encryption — Interconnect itself is unencrypted, and MACsec availability depends on the connection type/location. For an L3 partner, the partner's router peers with Cloud Router on your behalf; for L2, you run BGP to Cloud Router yourself.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: What exactly earns the 99.99% Interconnect SLA?&lt;/summary>
+<details>
+<summary>Q2: What exactly earns the 99.99% Interconnect SLA?</summary>
 
 A: Four VLAN attachments on at least two Dedicated/Partner connections in **two metros**, attachments spread across both edge availability domains in each metro, Cloud Routers in at least two regions, and **global** dynamic routing mode — plus on-prem redundancy. Two attachments in one metro across both availability domains gets only 99.9%.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study "Cloud Interconnect overview", "Partner Interconnect provisioning", "Cross-Cloud Interconnect" (Google-managed dedicated links to AWS/Azure, same VLAN-attachment + Cloud Router model), "HA VPN over Cloud Interconnect" (VPN gateways on the attachments, doubles as the encryption answer), and MACsec for Cloud Interconnect. Memorize: Dedicated = 10/100 Gbps physical, your colo; Partner = 50 Mbps–50 Gbps via provider; attachments are regional and bind to a Cloud Router.
 
@@ -89,17 +89,17 @@ A: Four VLAN attachments on at least two Dedicated/Partner connections in **two 
 3. You know it worked when a VM (or the NFS server VM, tag `nfsserver`) in the RAD VPC can ping a scratch-VPC VM through the tunnel — remember the intra-VPC firewall rules only allow internal CIDRs, so add an ingress allow for the remote CIDR first.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: An on-prem device supports only policy-based VPN with static routing. HA VPN or Classic?&lt;/summary>
+<details>
+<summary>Q1: An on-prem device supports only policy-based VPN with static routing. HA VPN or Classic?</summary>
 
 A: Classic VPN — HA VPN requires BGP. Policy-based/route-based static tunnels exist only on Classic VPN (99.9% SLA, deprecated for new dynamic deployments). The better exam answer when the device *can* do BGP is always HA VPN with two tunnels for 99.99%.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: HA VPN is up but on-prem can't reach Cloud SQL's private IP, while VMs can. Why?&lt;/summary>
+<details>
+<summary>Q2: HA VPN is up but on-prem can't reach Cloud SQL's private IP, while VMs can. Why?</summary>
 
 A: The Cloud SQL instance lives in the *producer* VPC behind PSA peering. Peering routes aren't advertised over BGP unless the consumer exports them: enable custom-route export on the PSA peering (RAD already does) **and** add the PSA /16 to Cloud Router's custom advertised routes — the PSA range is not a subnet of the consumer VPC, so default advertisement misses it.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study "HA VPN topologies" (GCP↔GCP, GCP↔on-prem with 2 or 4 tunnels, active/active vs active/passive and the bandwidth-halving caveat), IKE ciphers, and tunnel troubleshooting (Section 5.2). Know link-local BGP addressing (169.254.x.x/30 per tunnel interface, as in the commands above).
 
@@ -134,17 +134,17 @@ A: The Cloud SQL instance lives in the *producer* VPC behind PSA peering. Peerin
 2. You know it worked when `describe` shows `advertiseMode: CUSTOM` with your range. Revert to `--advertisement-mode=DEFAULT` afterward to avoid Terraform drift on the next platform apply.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Two Interconnect attachments; you want one preferred for traffic *to* on-prem and on-prem to prefer one path *back*. Which knobs?&lt;/summary>
+<details>
+<summary>Q1: Two Interconnect attachments; you want one preferred for traffic *to* on-prem and on-prem to prefer one path *back*. Which knobs?</summary>
 
 A: Inbound to Google: on-prem influences Google's choice via MED it sends; Google-side preference for learned identical prefixes follows the route's priority (derived from MED + inter-regional cost). Outbound from Google: set `--advertised-route-priority` (MED Google sends) per BGP peer — lower MED = more preferred by on-prem. Asymmetry questions almost always resolve to "MED in each direction".
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Failover between two VPN tunnels takes ~60s. How do you make it sub-second?&lt;/summary>
+<details>
+<summary>Q2: Failover between two VPN tunnels takes ~60s. How do you make it sub-second?</summary>
 
 A: Enable BFD on both BGP peers (`gcloud compute routers update-bgp-peer --bfd-session-initialization-mode=ACTIVE --bfd-min-transmit-interval=...`). BGP hold timers alone are tens of seconds; BFD detects dataplane failure in hundreds of milliseconds and tears the route down immediately.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study "Cloud Router overview": ASN rules (private 64512–65534/4200000000+ ranges; Google's side of PSA-style peering vs your `--asn`), regional vs global dynamic routing and how it changes which subnets the router advertises, MD5 authentication on BGP sessions, and legacy vs standard best-path selection modes. Also note each NAT-only router (RAD's case) still counts against router quotas.
 
@@ -176,17 +176,17 @@ A: Enable BFD on both BGP peers (`gcloud compute routers update-bgp-peer --bfd-s
 2. You know it worked when the spoke shows `ACTIVE` and the hub's route table includes prefixes learned from the tunnels.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Two branch offices, each VPN'd to GCP, need branch-to-branch traffic without new circuits. Solution?&lt;/summary>
+<details>
+<summary>Q1: Two branch offices, each VPN'd to GCP, need branch-to-branch traffic without new circuits. Solution?</summary>
 
 A: NCC hub with both VPN tunnel sets as hybrid spokes and site-to-site data transfer enabled — branch traffic transits Google's backbone between the spokes. Without NCC, two VPN tunnels into one VPC do *not* forward traffic between each other (a VPC is not a transit router for external-to-external flows).
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Where do router appliances fit?&lt;/summary>
+<details>
+<summary>Q2: Where do router appliances fit?</summary>
 
 A: A router appliance spoke is a VM (typically a vendor SD-WAN appliance) in the VPC that BGP-peers with Cloud Router; NCC then treats its learned prefixes like any hybrid spoke. It's the answer pattern for "integrate our SD-WAN fabric with Google Cloud".
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study "NCC site-to-site data transfer" (supported regions, billing), router-appliance BGP setup, mixing VPC spokes with hybrid spokes (hub provides the transitivity that peering lacks — but VPC spokes and hybrid spokes interoperate per documented rules, not unconditionally), and Private NAT at the hub for overlapping site ranges.
 

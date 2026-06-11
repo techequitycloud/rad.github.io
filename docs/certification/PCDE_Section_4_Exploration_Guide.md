@@ -60,23 +60,23 @@ This guide covers Section 4 of the Professional Cloud Database Engineer (PCDE) e
    You know it worked when the failover operation completes with the primary in a new zone, the promoted instance reports `CLOUD_SQL_INSTANCE` (no longer a replica), and a fresh `tofu plan` over the *unmodified* configuration shows no unexpected changes (idempotence) — while the post-promotion plan visibly flags the drift.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: During a failover test of the REGIONAL instance, the application reconnected automatically without any configuration change. Why — and which connection pattern from this platform made that possible?&lt;/summary>
+<details>
+<summary>Q1: During a failover test of the REGIONAL instance, the application reconnected automatically without any configuration change. Why — and which connection pattern from this platform made that possible?</summary>
 
 A: Cloud SQL HA failover keeps the instance's identity: the connection name and private IP move to the promoted standby. Because the app connects through the Cloud SQL connector volume (Cloud Run) or Auth Proxy sidecar (GKE) addressed by *connection name*, and reads credentials from Secret Manager, nothing client-side referenced the failed zone. Hardcoded zonal IPs are the anti-pattern this design avoids.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A scenario requires read traffic served in two regions and a documented region-loss runbook. Which variables build the topology, and which two steps remain manual?&lt;/summary>
+<details>
+<summary>Q2: A scenario requires read traffic served in two regions and a documented region-loss runbook. Which variables build the topology, and which two steps remain manual?</summary>
 
 A: `availability_regions = ["us-central1", "us-east1"]`, `postgres_database_availability_type = "REGIONAL"`, `create_postgres_read_replica = true`, `postgres_read_replica_count ≥ 1` — replicas are placed in the secondary region and their endpoints published as secrets. Manual in a disaster: promoting the replica (`gcloud sql instances promote-replica`) and repointing applications to the promoted endpoint (e.g. updating the host secret). Cross-region failover is never automatic for Cloud SQL — a recurring exam point.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Why is Terraform-based provisioning itself an HA control, not just a convenience?&lt;/summary>
+<details>
+<summary>Q3: Why is Terraform-based provisioning itself an HA control, not just a convenience?</summary>
 
 A: Reproducibility is recoverability: the entire database estate (instances, flags, networks, secrets, alerting) can be re-created in another project or region from code with `tofu apply`, and configuration drift is detected by `tofu plan`. Manual console-built instances cannot be rebuilt reliably under incident pressure. The exam frames this as "automate instance provisioning" — IaC plus idempotent re-application is the expected answer.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Three gaps to study: (1) **managed cross-region promotion workflows** — the modules build the replica but have no promotion/runbook automation; read "Promoting replicas" and "Cross-region replicas for disaster recovery" in the Cloud SQL docs, including how to re-establish replication after promotion; (2) **multi-region write systems** — Spanner multi-region instance configurations and AlloyDB secondary clusters (`gcloud alloydb clusters create-secondary`) with switchover/failover semantics; (3) **replication-lag alerting** — the module alerts on CPU/memory/disk but not on `cloudsql.googleapis.com/database/replication/replica_lag`; practice adding that alert in **Console > Monitoring > Alerting** or via `gcloud alpha monitoring policies create` in a scratch project, since lag is *the* HA health signal for read-replica topologies.
 

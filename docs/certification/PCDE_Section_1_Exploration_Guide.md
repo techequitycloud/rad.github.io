@@ -42,17 +42,17 @@ Storage is deliberately *not* a variable: the PostgreSQL instance is fixed to a 
 4. You know it worked when the describe output shows the new tier and `storageAutoResize: True` with `PD_SSD`.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A reporting workload on a db-custom-1-3840 instance shows 95% memory utilization and frequent disk reads, but CPU sits at 20%. Which single change in this module addresses it most cost-effectively?&lt;/summary>
+<details>
+<summary>Q1: A reporting workload on a db-custom-1-3840 instance shows 95% memory utilization and frequent disk reads, but CPU sits at 20%. Which single change in this module addresses it most cost-effectively?</summary>
 
 A: Change `postgres_tier` to a custom shape with more RAM (e.g. `db-custom-2-13312`) rather than more vCPUs. Cloud SQL custom tiers let you scale memory to enlarge the buffer cache — which converts disk reads to cache hits — without paying for unused CPU. Adding storage or replicas would not fix a working-set-doesn't-fit-in-RAM problem.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does the module enable disk autoresize instead of provisioning a large disk up front, and what is the one-way street you must remember for the exam?&lt;/summary>
+<details>
+<summary>Q2: Why does the module enable disk autoresize instead of provisioning a large disk up front, and what is the one-way street you must remember for the exam?</summary>
 
 A: Autoresize means you pay only for storage actually used while never hitting a disk-full outage. The trap: Cloud SQL storage can grow but **never shrink** — once autoresize (or a manual edit) enlarges the disk, the only way back to a smaller disk is to export and import into a new instance.
-&lt;/details>
+</details>
 
 **Beyond the modules** — The modules always use `PD_SSD`; the exam also tests when HDD storage is acceptable (rarely — archival/low-IOPS only) and how per-GB SSD pricing compares to instance pricing. They also fix the Cloud SQL edition to `ENTERPRISE`; study the Enterprise Plus edition (higher per-instance limits, data cache, near-zero-downtime maintenance) in the "Cloud SQL editions" docs page. Practice estimating with the official pricing calculator and `gcloud sql tiers list`.
 
@@ -96,23 +96,23 @@ Maintenance windows **are** configured on the Cloud SQL instances: `sql_maintena
 4. You know it worked when `gcloud sql instances describe cloudsql-<prefix>-postgres --format="value(gceZone)"` reports a different zone than before the failover, and the replica still lists `instanceType: READ_REPLICA_INSTANCE` in the secondary region.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A customer requires the database to survive a complete region outage with an RPO of minutes, but reads/writes during normal operation must stay in one region for latency. Which two module settings deliver this, and what manual step remains in a disaster?&lt;/summary>
+<details>
+<summary>Q1: A customer requires the database to survive a complete region outage with an RPO of minutes, but reads/writes during normal operation must stay in one region for latency. Which two module settings deliver this, and what manual step remains in a disaster?</summary>
 
 A: `postgres_database_availability_type = "REGIONAL"` (zone-level HA with automatic failover) plus `availability_regions = ["primary", "secondary"]` with `create_postgres_read_replica = true` (asynchronous cross-region replica, RPO = replication lag, usually seconds-to-minutes). In a region loss you must still **promote** the replica (`gcloud sql instances promote-replica`) and repoint applications — cross-region failover is not automatic.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why is enabling REGIONAL availability alone insufficient for a "we accidentally dropped a table" recovery requirement?&lt;/summary>
+<details>
+<summary>Q2: Why is enabling REGIONAL availability alone insufficient for a "we accidentally dropped a table" recovery requirement?</summary>
 
 A: The HA standby is a synchronous copy — the `DROP TABLE` is replicated to it instantly. Logical/operator errors are recovered with point-in-time recovery (enabled in this module with 7 days of transaction logs) or backups, not with HA. HA addresses infrastructure failure; PITR addresses data failure.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Where would you configure when Cloud SQL applies maintenance, and what does this module do about it?&lt;/summary>
+<details>
+<summary>Q3: Where would you configure when Cloud SQL applies maintenance, and what does this module do about it?</summary>
 
 A: Via the instance's maintenance window (`gcloud sql instances patch <name> --maintenance-window-day=SUN --maintenance-window-hour=2`) and optional deny-maintenance periods. This module sets one declaratively — `sql_maintenance_window_day`/`sql_maintenance_window_hour`/`sql_maintenance_update_track` (defaults: Sunday, 03:00 UTC, `stable`) on both engines. For exam purposes know that HA instances get rolling maintenance on the standby first, and that maintenance notifications can be subscribed to per instance.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Deny-maintenance periods and maintenance notifications are not configured here (the window itself is — see above): practice `gcloud sql instances patch --deny-maintenance-period-start-date/--deny-maintenance-period-end-date` and the "About maintenance on Cloud SQL instances" docs page. Truly multi-regional *write* topologies (Spanner multi-region configurations, AlloyDB secondary clusters with switchover) are also out of scope for these modules — study "Spanner instance configurations" and "AlloyDB cross-region replication" docs.
 
@@ -153,17 +153,17 @@ A: Via the instance's maintenance window (`gcloud sql instances patch <name> --m
 4. You know it worked when psql returns the PostgreSQL 17 version string and the describe output showed `ipv4Enabled: false` with `sslMode: ENCRYPTED_ONLY`.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: An application running outside the VPC (a partner data center) must reach this Cloud SQL instance. The instance is private-IP only. What are the legitimate options?&lt;/summary>
+<details>
+<summary>Q1: An application running outside the VPC (a partner data center) must reach this Cloud SQL instance. The instance is private-IP only. What are the legitimate options?</summary>
 
 A: Either extend private connectivity (Cloud VPN/Interconnect into the VPC, since PSA-peered ranges are reachable through the VPC with custom route export — which this platform already enables on the peering), or run the Cloud SQL Auth Proxy somewhere with VPC reachability and let the partner connect to it. Enabling public IP plus authorized networks is possible but contradicts the security posture; the exam favors keeping private IP and fixing the network path.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does the GKE module deploy an Auth Proxy sidecar when the database is already on a private IP it could dial directly?&lt;/summary>
+<details>
+<summary>Q2: Why does the GKE module deploy an Auth Proxy sidecar when the database is already on a private IP it could dial directly?</summary>
 
 A: The proxy adds IAM-checked, certificate-based TLS without managing client certificates: every connection is authorized against the pod's (Workload Identity) service account and encrypted end-to-end regardless of driver settings. Direct private-IP connections work, but the proxy gives uniform encryption + IAM enforcement + connection name stability across failovers — the Google-recommended pattern the exam expects.
-&lt;/details>
+</details>
 
 **Beyond the modules** — **Session poolers are not implemented.** Cloud SQL's built-in *Managed Connection Pooling* and the PgBouncer-in-the-middle pattern are exam topics — study "Managed connection pooling" in the Cloud SQL docs, and know when a pooler (thousands of short-lived serverless connections) beats raising `max_connections`. Per-service data-access *audit policies* narrower than this module's allServices switch, and Private Service Connect endpoints for Cloud SQL (as opposed to PSA peering), are also worth a docs pass.
 
@@ -209,23 +209,23 @@ For the generative-AI angle: AlloyDB is the module's designated vector platform,
 4. You know it worked when the AlloyDB list shows a `PRIMARY` and a `READ_POOL` instance and Firestore shows edition Enterprise in the chosen location.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A team is migrating a MongoDB application to Google Cloud and wants a managed service without rewriting the data access layer. Which option demonstrated by this platform fits, and what is its limitation?&lt;/summary>
+<details>
+<summary>Q1: A team is migrating a MongoDB application to Google Cloud and wants a managed service without rewriting the data access layer. Which option demonstrated by this platform fits, and what is its limitation?</summary>
 
 A: Firestore Enterprise with MongoDB-compatible data access (exactly what the platform provisions). It speaks the MongoDB wire protocol against a fully managed backend. Limitations: it must be a *named* database (no `(default)`), and compatibility covers the common driver surface, not every MongoDB feature — verify feature parity before committing, which is itself an exam-style answer.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: When would you pick AlloyDB over Cloud SQL for PostgreSQL, given both are PostgreSQL-compatible and both appear in this module?&lt;/summary>
+<details>
+<summary>Q2: When would you pick AlloyDB over Cloud SQL for PostgreSQL, given both are PostgreSQL-compatible and both appear in this module?</summary>
 
 A: When the workload mixes OLTP with heavy analytical reads or vector search: AlloyDB adds a columnar engine, ScaNN-indexed pgvector, scale-out read pools (1–20 nodes here), and higher per-instance performance — at a higher floor cost (minimum 2 vCPU, no shared-core tier, as the `alloydb_cpu_count` validation shows). Pure lightweight CRUD on a budget → Cloud SQL; HTAP/AI or aggressive read scaling → AlloyDB.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: The compliance team mandates customer-managed keys and data-access audit trails for every database. Which two variables satisfy this across all engines in the platform, and what org-level concern remains?&lt;/summary>
+<details>
+<summary>Q3: The compliance team mandates customer-managed keys and data-access audit trails for every database. Which two variables satisfy this across all engines in the platform, and what org-level concern remains?</summary>
 
 A: `enable_cmek = true` (CMEK on Cloud SQL and AlloyDB via the shared `cloudsql` KMS key) and `enable_audit_logging = true` (DATA_READ/DATA_WRITE audit logs for all services). Remaining concern: organization policy constraints (e.g. `constraints/gcp.restrictNonCmekServices`, location restrictions) are *not* managed by these modules — they live at the org/folder level and the exam expects you to know they override anything a project-level module does.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented, and all examinable: **Spanner** (horizontal write scaling, external consistency, multi-region configs), **Bigtable** (wide-column, time-series, single-digit-ms at scale), **BigQuery** (analytics; also *federated queries* to Cloud SQL — study `EXTERNAL_QUERY()` for the "multiple database solutions / federation" subtopic), **Memorystore for Memcached**, and **Vertex AI Vector Search** for embedding retrieval beyond pgvector. Try in a scratch project: `gcloud spanner instances create test --config=regional-us-central1 --nodes=1 --description=test` and a BigQuery federated query via `bq query --use_legacy_sql=false 'SELECT * FROM EXTERNAL_QUERY("<connection>", "SELECT 1;")'`. For decision practice, the "Google Cloud database options" decision tree page is the single highest-value read.
 

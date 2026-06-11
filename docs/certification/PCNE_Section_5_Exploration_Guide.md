@@ -56,17 +56,17 @@ This section tests operating a network: which logs exist and where to enable the
 5. You know it worked when flow-log entries show 5-tuple records with `src_instance`/`dest_instance` annotations and the NAT log stream stays empty until you exhaust ports (see 6.3).
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Security asks for a record of every allowed and denied connection to the NFS VM. What do you enable, and what's the catch?&lt;/summary>
+<details>
+<summary>Q1: Security asks for a record of every allowed and denied connection to the NFS VM. What do you enable, and what's the catch?</summary>
 
 A: Firewall rules logging on the relevant rules (`gcloud compute firewall-rules update vpc-network-<prefix>-fw-allow-nfs-tcp --enable-logging`). Catches: logging is per-*rule*, only TCP/UDP rules can log, and there is no log for traffic dropped by the implied deny — you must create an explicit low-priority deny rule with logging to capture denials. VPC Flow Logs complement this but sample flows and don't record the rule decision.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Which metric tells you an Interconnect VLAN attachment is approaching capacity, and which tells you a VPN tunnel's bandwidth ceiling?&lt;/summary>
+<details>
+<summary>Q2: Which metric tells you an Interconnect VLAN attachment is approaching capacity, and which tells you a VPN tunnel's bandwidth ceiling?</summary>
 
 A: Attachment: `interconnect.googleapis.com/network/attachment/sent_bytes_count` (vs configured capacity). VPN: `vpn.googleapis.com/network/sent_bytes_count` per tunnel against the ~3 Gbps-per-tunnel ceiling — the standard answer for "VPN slow under load" is adding tunnels (ECMP), not resizing a tunnel.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study the per-product logging pages: "VPC Flow Logs" (sampling, aggregation, metadata annotations, cost levers), "Firewall Rules Logging", "Cloud NAT logging" (TRANSLATIONS_ONLY vs ERRORS_ONLY), "Cloud DNS logging" (query logs via server policies for private zones; public-zone query logging on the zone), VPC-SC audit logs (denials appear in the *org-level* policy audit log), and NCC/Cloud Router logs (`bgp_routes` status via `get-status`, router task logs). Also Firewall Insights and Flow Analyzer (5.3).
 
@@ -105,17 +105,17 @@ A: Attachment: `interconnect.googleapis.com/network/attachment/sent_bytes_count`
 4. You know it worked when you can correlate the MIG recreation event in **Console > Compute Engine > Instance groups** with the health-check state change.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: You must take an ALB backend MIG out of service for maintenance with zero dropped requests. Steps?&lt;/summary>
+<details>
+<summary>Q1: You must take an ALB backend MIG out of service for maintenance with zero dropped requests. Steps?</summary>
 
 A: Set connection draining on the backend service (`--connection-draining-timeout`), then remove/abandon the backend (or set its capacity-scaler to 0): in-flight requests complete during the drain window while new requests route to remaining backends. For RAD's serverless NEG the analogue is shifting `traffic_split` to another revision before deleting the old one.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: HA VPN tunnel shows ESTABLISHED but BGP session stays down. Top causes?&lt;/summary>
+<details>
+<summary>Q2: HA VPN tunnel shows ESTABLISHED but BGP session stays down. Top causes?</summary>
 
 A: Link-local interface/peer IPs mismatched between the Cloud Router interface and the peer config; wrong peer ASN; on-prem firewall blocking TCP/179 over the tunnel; or MD5 auth mismatch. `gcloud compute routers get-status <router> --region=...` shows the BGP session state and is the first diagnostic the exam expects. (Tunnel not ESTABLISHED at all → IKE version/shared-secret/peer-IP issues instead.)
-&lt;/details>
+</details>
 
 **Beyond the modules** — Practice the canonical triage flows: "Troubleshoot Cloud VPN" (IKE phase failures, rekey drops, MTU/MSS clamping — VPN MTU ~1460 minus ESP overhead, clamp MSS to ~1360), "Troubleshoot Cloud Interconnect" (LACP, light levels, attachment state), BGP flap diagnosis with BFD counters, and Packet Mirroring as the deep-inspection tool when logs aren't enough (see 6.4).
 
@@ -149,17 +149,17 @@ A: Link-local interface/peer IPs mismatched between the Cloud Router interface a
 4. You know it worked when the first test returns `result: REACHABLE` with a trace step showing the peering hop, and the blocked test names the specific deny.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Users in Frankfurt report slow access to us-central1 backends, but app metrics look healthy. Which NIC tool first?&lt;/summary>
+<details>
+<summary>Q1: Users in Frankfurt report slow access to us-central1 backends, but app metrics look healthy. Which NIC tool first?</summary>
 
 A: Performance Dashboard — it shows Google-measured inter-region latency and packet loss for your project's traffic versus the global baseline, separating "the network is slow" from "the app is slow". If the network is clean, move to LB `backend_latencies` vs `total_latencies` to split origin time from edge time.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A new deny rule was added and an app broke, but there are dozens of candidate rules. Fastest path to the culprit?&lt;/summary>
+<details>
+<summary>Q2: A new deny rule was added and an app broke, but there are dozens of candidate rules. Fastest path to the culprit?</summary>
 
 A: A Connectivity Test for the exact 5-tuple — its trace names the matched rule (allow or deny) at each step, including implied rules. Firewall Insights complements it for hygiene (shadowed-rule detection: a rule never hit because a higher-priority rule masks it).
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study "Network Analyzer insights reference" (it flags exactly the things RAD's design prevents: overlapping PSA allocations, GKE pod-range exhaustion, invalid next hops), "Flow Analyzer" (BigQuery-backed analysis of VPC Flow Logs — requires you to have enabled flow logs, as in 5.1), and Connectivity Tests' *live data plane analysis* (sends real probe packets for supported paths, vs the always-available config analysis).
 

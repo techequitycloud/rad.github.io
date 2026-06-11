@@ -52,17 +52,17 @@ gcloud logging read \
 5. You know it worked when channels list your email, PromQL returns series for your namespace, the audit entry names you, and the uptime check turns green from multiple regions.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Your GKE pod's memory metrics appear in Cloud Monitoring, but your custom application metric (`orders_processed_total`) does not. The app exposes it on `/metrics`. What's missing?&lt;/summary>
+<details>
+<summary>Q1: Your GKE pod's memory metrics appear in Cloud Monitoring, but your custom application metric (`orders_processed_total`) does not. The app exposes it on `/metrics`. What's missing?</summary>
 
 A: Platform metrics are automatic, but Prometheus-format application metrics need scraping. With managed Prometheus enabled (as Services_GCP does), you still must add a `PodMonitoring` custom resource targeting the pod's metrics port — collection infrastructure being enabled doesn't mean your endpoint is being scraped.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does the NFS VM memory alert require the Ops Agent while the CPU alert does not?&lt;/summary>
+<details>
+<summary>Q2: Why does the NFS VM memory alert require the Ops Agent while the CPU alert does not?</summary>
 
 A: CPU utilization (`compute.googleapis.com/instance/cpu/utilization`) is measured by the hypervisor; guest memory usage is not visible from outside the OS, so it requires the in-guest Ops Agent reporting `agent.googleapis.com/memory/percent_used`. A standard exam distinction between hypervisor and agent metrics.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Scripted synthetic monitors (Cloud Functions-based synthetics beyond plain uptime checks), private uptime checks against internal endpoints, Cloud Trace (distributed latency tracing — instrument via OpenTelemetry; Cloud Run propagates `X-Cloud-Trace-Context`), Cloud Profiler (continuous CPU/heap profiling), and log-based metrics are all untouched by the modules. In a scratch project: `gcloud monitoring uptime create` against a private endpoint, the Trace explorer waterfall view, and `gcloud logging metrics create` are quick to try and frequently examined.
 
@@ -106,23 +106,23 @@ kubectl logs <pod> -n <namespace> --previous   # logs from the crashed container
 6. You know it worked when you can state the failure cause from `status.conditions` or the event stream *before* opening application logs.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A new Cloud Run revision deploys but receives 0% traffic and the previous revision still serves. The deploy command reported failure. What happened and why is this good?&lt;/summary>
+<details>
+<summary>Q1: A new Cloud Run revision deploys but receives 0% traffic and the previous revision still serves. The deploy command reported failure. What happened and why is this good?</summary>
 
 A: The startup probe (or container start) failed, so Cloud Run never marked the revision Ready and never shifted traffic — the previous revision keeps serving. This is fail-safe deployment: a broken image can't take an outage. Diagnosis: `status.conditions` on the revision, then its startup logs.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: `kubectl logs` returns nothing for a pod stuck in `CrashLoopBackOff` with restarts climbing. What two commands get you the evidence?&lt;/summary>
+<details>
+<summary>Q2: `kubectl logs` returns nothing for a pod stuck in `CrashLoopBackOff` with restarts climbing. What two commands get you the evidence?</summary>
 
 A: `kubectl logs <pod> --previous` (the *crashed* container's output — the current one may not have logged yet) and `kubectl describe pod <pod>` (exit code, OOMKilled status, probe failures, events). Events and last-state often answer it without any application log at all.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: A scheduled job worked for months, then silently stopped producing output. Logs show nothing at the expected time. Where do you look on this platform?&lt;/summary>
+<details>
+<summary>Q3: A scheduled job worked for months, then silently stopped producing output. Logs show nothing at the expected time. Where do you look on this platform?</summary>
 
 A: Absence of logs at the expected time means the job never ran — check the trigger layer, not the application: CronJob status/`suspend` flag and events on GKE (`kubectl get cronjob -n <ns>`), or the Cloud Run job execution history. Then check audit logs for who changed it.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Error Reporting (automatic exception grouping), Log Analytics (SQL over logs), trace-correlated log views, and `gcloud builds log <id> --stream` for live build debugging. Practice the Logs Explorer query language seriously — `resource.type`, `severity>=`, `jsonPayload.field=`, and timestamp bounds appear in exam answers verbatim.
 
@@ -168,23 +168,23 @@ gcloud alpha monitoring policies list \
 5. You know it worked when the policy appears with your threshold and duration, the incident opens and closes as traffic starts/stops, and email lands at the `support_users` address.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: The Cloud Run CPU alert reduces with the 99th percentile across series while GKE reduces by mean grouped by pod. Why might the same "CPU > 90%" intent be aggregated differently?&lt;/summary>
+<details>
+<summary>Q1: The Cloud Run CPU alert reduces with the 99th percentile across series while GKE reduces by mean grouped by pod. Why might the same "CPU > 90%" intent be aggregated differently?</summary>
 
 A: Cloud Run instances are interchangeable and short-lived — alerting on the p99 across instances catches the worst instances without paging on a single outlier mean shift. GKE pods are longer-lived, fewer, and individually meaningful, so a per-pod mean (grouped by pod name) identifies *which* pod is hot. Aggregation strategy should match the failure unit you'd act on.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: An alert has duration 300s. CPU spikes to 95% for 90 seconds, four times an hour. Does it fire?&lt;/summary>
+<details>
+<summary>Q2: An alert has duration 300s. CPU spikes to 95% for 90 seconds, four times an hour. Does it fire?</summary>
 
 A: No — the condition must hold continuously for the full duration window. 90-second spikes reset the clock each time. That's the false-positive defense duration provides, and also why genuinely bursty problems may need a shorter duration or a percentile aligner instead.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: How does the Services_GCP "NFS instance down" alert detect an outage when a dead VM emits no metrics at all?&lt;/summary>
+<details>
+<summary>Q3: How does the Services_GCP "NFS instance down" alert detect an outage when a dead VM emits no metrics at all?</summary>
 
 A: It's a metric-*absence* condition on `compute.googleapis.com/instance/cpu/utilization`: no data for the window means the instance stopped reporting, which is the failure signal. Threshold conditions can't catch "no data" — absence conditions exist precisely for dead-emitter detection.
-&lt;/details>
+</details>
 
 **Beyond the modules** — SLO-based (burn-rate) alerting, log-match alert conditions, multi-condition policies with AND/OR combiners, webhook/PagerDuty/Slack notification channel types (only `email` is created here), MQL/PromQL alert queries, and dashboard `Compare to past` workflows. Each is a 10-minute console exercise on top of the deployed lab.
 

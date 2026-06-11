@@ -43,17 +43,17 @@ gcloud run services describe <service-name> \
 5. You know it worked when the Metrics tab shows the instance count touching zero and a budget with 50%/90%/100% thresholds exists.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A startup runs an internal admin tool used a few hours per day and wants the lowest possible bill without exposing it to the internet. Which two settings from this platform meet both requirements?&lt;/summary>
+<details>
+<summary>Q1: A startup runs an internal admin tool used a few hours per day and wants the lowest possible bill without exposing it to the internet. Which two settings from this platform meet both requirements?</summary>
 
 A: `min_instance_count = 0` (scale-to-zero eliminates idle compute cost) and `enable_iap = true` with an authorized-users list (identity-based zero-trust access instead of a VPN or IP allowlist). IAP authenticates every request at Google's edge before it reaches the service, so no always-on network infrastructure is needed.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Finance wants to be warned before, not after, the monthly cloud budget is exhausted. What do you configure?&lt;/summary>
+<details>
+<summary>Q2: Finance wants to be warned before, not after, the monthly cloud budget is exhausted. What do you configure?</summary>
 
 A: A billing budget with multiple alert thresholds — here `budget_alert_thresholds = [0.5, 0.9, 1.0]` notifies at 50% and 90% of `budget_amount`, before the 100% mark. Budgets alert but do not stop spending; pair them with `max_instance_count` caps if hard limits matter.
-&lt;/details>
+</details>
 
 **Beyond the modules** — The exam also tests business analysis the modules cannot show: defining KPIs and success measures, CapEx-vs-OpEx framing, total cost of ownership, and build/buy/modify/deprecate workload disposition. Study the Google Cloud pricing calculator, "Cloud Billing reports" docs, and the Architecture Framework's cost optimization pillar. Try `gcloud billing accounts list` and explore **Billing > Reports** grouped by SKU in a scratch project.
 
@@ -101,23 +101,23 @@ kubectl get hpa -n <namespace> -o wide
 5. You know it worked when `availabilityType` returns `REGIONAL` with a populated `secondaryGceZone`, and `kubectl get hpa` shows utilization targets of 70% (CPU) and 80% (memory).
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: An e-commerce database must survive a zone outage with no manual intervention, and the reporting team's heavy queries are slowing checkout. What two changes do you make?&lt;/summary>
+<details>
+<summary>Q1: An e-commerce database must survive a zone outage with no manual intervention, and the reporting team's heavy queries are slowing checkout. What two changes do you make?</summary>
 
 A: Set the instance to REGIONAL availability (synchronous standby plus automatic failover handles the zone outage) and add a read replica, pointing the reporting workload at it (offloads reads). Neither substitutes for the other: replication to a read replica is asynchronous with no automatic failover, and a REGIONAL standby serves no read traffic.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A session cache on BASIC-tier Memorystore loses all data during maintenance, breaking user logins. Cheapest fix that survives both maintenance and instance failure?&lt;/summary>
+<details>
+<summary>Q2: A session cache on BASIC-tier Memorystore loses all data during maintenance, breaking user logins. Cheapest fix that survives both maintenance and instance failure?</summary>
 
 A: Move to `STANDARD_HA`, which adds a replica and automatic failover — exactly what the module's production guardrail enforces. Persistence (`RDB`/`AOF`) additionally protects against full restarts. BASIC tier has no replica, so any failure event means a cold cache.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Why does the module skip creating a PodDisruptionBudget when `max_instance_count = 1`?&lt;/summary>
+<details>
+<summary>Q3: Why does the module skip creating a PodDisruptionBudget when `max_instance_count = 1`?</summary>
 
 A: A PDB with `minAvailable: 1` on a single-replica workload would make the one pod unevictable, blocking node drains and GKE upgrades indefinitely. PDBs only make sense when spare replicas can keep serving during voluntary disruption — a validation in App_GKE also requires `pdb_min_available` to be less than `max_instance_count` (percentages exempt).
-&lt;/details>
+</details>
 
 **⚠️ Exam trap** — Backups ≠ PITR ≠ HA. Backups recover to a snapshot time, PITR replays transaction logs to any moment within retention, and REGIONAL HA prevents the outage in the first place. A scenario asking to "recover the database to 14:32 yesterday" needs PITR; "no downtime during zone failure" needs REGIONAL; neither solves the other.
 
@@ -169,23 +169,23 @@ kubectl get statefulset,pvc -n <namespace>
 5. You know it worked when a StatefulSet with a bound PVC exists, and the deliberate misconfiguration was rejected at plan time, not at runtime.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A legacy CMS needs a shared writable filesystem across six replicas, with a strict SLA and no ops staff to babysit a file server. Which option here, and why not the default?&lt;/summary>
+<details>
+<summary>Q1: A legacy CMS needs a shared writable filesystem across six replicas, with a strict SLA and no ops staff to babysit a file server. Which option here, and why not the default?</summary>
 
 A: Filestore (`create_filestore_nfs = true`) — a managed service with no VM to patch or heal. The default self-managed NFS VM is far cheaper but is a single zonal `e2-small` whose recovery depends on MIG auto-healing and daily snapshots; "no ops staff + strict SLA" rules it out.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does Cloud Run gen2 matter for this platform's NFS support?&lt;/summary>
+<details>
+<summary>Q2: Why does Cloud Run gen2 matter for this platform's NFS support?</summary>
 
 A: NFS and GCS Fuse volume mounts require Cloud Run's gen2 execution environment (full Linux kernel compatibility); gen1 does not support them. The module encodes this as a plan-time validation: `enable_nfs = true` with `execution_environment = "gen1"` is rejected before anything deploys.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: A team must run a container with one persistent volume per replica and stable network identities. Cloud Run or GKE, and which workload type?&lt;/summary>
+<details>
+<summary>Q3: A team must run a container with one persistent volume per replica and stable network identities. Cloud Run or GKE, and which workload type?</summary>
 
 A: GKE with a StatefulSet — per-replica PVCs (`volumeClaimTemplates`) and stable pod identities are StatefulSet features. Cloud Run instances are ephemeral and share-nothing; its volume options (Cloud SQL socket, NFS, GCS Fuse) are shared, not per-instance block storage.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented here: Shared VPC host/service projects, VPC Network Peering between VPCs, Cloud DNS, internal load balancers, Spanner, Bigtable, and BigQuery. For the exam, be able to place each: Spanner for globally consistent relational scale, Bigtable for high-throughput wide-column time series, BigQuery for analytics. Read "Choose a storage option" and "Compare Google Cloud database services" in the official docs.
 
@@ -214,17 +214,17 @@ gcloud sql operations list --instance=<instance-name> --limit=5
 4. You know it worked when the import job execution succeeds and your tables exist in the application database.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A company must move a 400 TB on-premises archive to GCS over a 100 Mbps link within a month. Which transfer approach?&lt;/summary>
+<details>
+<summary>Q1: A company must move a 400 TB on-premises archive to GCS over a 100 Mbps link within a month. Which transfer approach?</summary>
 
 A: Transfer Appliance (offline hardware). At 100 Mbps, 400 TB takes roughly a year online — far beyond the window. Storage Transfer Service or `gcloud storage` suits online transfers only when bandwidth × time covers the volume.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: In a phased migration, which workloads move first?&lt;/summary>
+<details>
+<summary>Q2: In a phased migration, which workloads move first?</summary>
 
 A: Rehost (lift-and-shift) stateless, low-dependency workloads first for quick wins; refactor strategically valuable apps where cloud-native gains justify the effort; defer tightly coupled legacy systems until dependencies are mapped. The exam rewards "assess and map dependencies before moving anything."
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study Migration Center (discovery and assessment), Migrate to Virtual Machines, Database Migration Service (continuous replication into Cloud SQL with minimal downtime), and Storage Transfer Service vs Transfer Appliance selection. Also review the network prerequisites for migration — HA VPN and Cloud Interconnect — none of which the modules provision. Walk the **Migration Center** console flow in a scratch project.
 
@@ -252,10 +252,10 @@ gcloud compute networks subnets list \
 3. You know it worked when the subnets your Services_GCP deployment created appear — the same signal a future App_GKE deployment would use to attach to them.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A platform team wants application teams to deploy onto shared infrastructure when it exists, but self-provision in isolated sandboxes when it does not. What architectural pattern supports this?&lt;/summary>
+<details>
+<summary>Q1: A platform team wants application teams to deploy onto shared infrastructure when it exists, but self-provision in isolated sandboxes when it does not. What architectural pattern supports this?</summary>
 
 A: Discovery with inline fallback — probe for tagged/labeled shared resources at plan time and provision local equivalents only when absent, exactly as App_CloudRun does for VPC, SQL, NFS, and Artifact Registry. A policy flag (`require_services_gcp_module`) converts the fallback into a hard requirement for production.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study the evolution mechanisms the modules do not show: event-driven decoupling with Pub/Sub and Eventarc, strangler-fig migration off monoliths, API versioning behind API Gateway/Apigee, and tracking Google Cloud release notes ("What's new") as ongoing architectural input.

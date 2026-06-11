@@ -30,17 +30,17 @@ gcloud projects get-ancestors $GOOGLE_PROJECT_ID
 4. You know it worked when the `team` and `env` labels appear alongside the module-injected `managed-by` and `tenant` labels, and `get-ancestors` shows where your lab project sits in the hierarchy.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Your company wants every non-production project to be restricted to us-central1 while production projects stay multi-region. Where do you implement this with the least ongoing effort?&lt;/summary>
+<details>
+<summary>Q1: Your company wants every non-production project to be restricted to us-central1 while production projects stay multi-region. Where do you implement this with the least ongoing effort?</summary>
 
 A: Attach a `constraints/gcp.resourceLocations` organization policy to a `non-production` folder and place all non-prod projects under it. Policies inherit down the hierarchy, so new projects get the restriction automatically — no per-project configuration or Terraform changes needed.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why do the RAD modules stamp a `tenant` and `deployment` label on every resource instead of relying on resource names?&lt;/summary>
+<details>
+<summary>Q2: Why do the RAD modules stamp a `tenant` and `deployment` label on every resource instead of relying on resource names?</summary>
 
 A: Labels are queryable in billing exports, log filters, and asset inventory, while names are free-form strings. Labels give you cost showback and operational grouping across heterogeneous resource types — the same mechanism the exam expects for chargeback in a multi-team organization.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study the resource hierarchy and organization policy docs directly: practice `gcloud resource-manager folders list --organization=<ORG_ID>`, `gcloud org-policies list --project=<PROJECT>`, and review the Cloud Foundation Fabric/FAST landing-zone blueprints for how enterprises bootstrap folders, billing, and IAM with Terraform. Also know that a billing account is linked to projects but lives outside the hierarchy.
 
@@ -74,17 +74,17 @@ The deployment-control variable is `deploy_application` (default `true`) — set
 4. You know it worked when step 2's plan proposes an in-place update reverting your manual change, while step 3 shows "No changes" for the image attribute.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: After a hotfix was deployed with `gcloud run services update --image=...`, the next `terraform apply` reverted it and re-broke production. What design prevents this class of incident?&lt;/summary>
+<details>
+<summary>Q1: After a hotfix was deployed with `gcloud run services update --image=...`, the next `terraform apply` reverted it and re-broke production. What design prevents this class of incident?</summary>
 
 A: Either route all image changes through the pipeline that Terraform delegates to (Cloud Deploy) and have Terraform ignore the image attribute, as this platform does, or make the emergency path update the IaC source first. The root cause is two writers owning one attribute; the fix is explicitly assigning ownership.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does the repo run `tofu validate` and `tofu test` in CI rather than only `tofu plan` against live infrastructure?&lt;/summary>
+<details>
+<summary>Q2: Why does the repo run `tofu validate` and `tofu test` in CI rather than only `tofu plan` against live infrastructure?</summary>
 
 A: Validation and unit tests run without credentials or a live project (`-backend=false`), so they catch syntax, type, and precondition violations cheaply on every commit. Plans against live state are slower, need secrets, and belong to the deployment pipeline, not the code-review gate.
-&lt;/details>
+</details>
 
 **⚠️ Exam trap** — `terraform plan` detects drift only for *attributes Terraform manages*. Resources created entirely outside Terraform are invisible to it; finding those requires Cloud Asset Inventory or config scanning, not a plan.
 
@@ -121,23 +121,23 @@ gcloud container binauthz attestations list \
 4. You know it worked when the image appears in Artifact Registry with the commit-SHA tag, an attestation exists for its digest, and the dev stage shows a successful rollout.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Why does the attestation step sign the image digest rather than the `:latest` or commit-SHA tag?&lt;/summary>
+<details>
+<summary>Q1: Why does the attestation step sign the image digest rather than the `:latest` or commit-SHA tag?</summary>
 
 A: Tags are mutable pointers; a digest is the content-addressed identity of the image. Binary Authorization verifies attestations against the digest being deployed, so signing a tag would let a re-pushed image inherit a signature it never earned.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A teammate sets `enable_cloud_deploy = true` but leaves `enable_cicd_trigger = false`, and the plan fails with a precondition error. Bug or design?&lt;/summary>
+<details>
+<summary>Q2: A teammate sets `enable_cloud_deploy = true` but leaves `enable_cicd_trigger = false`, and the plan fails with a precondition error. Bug or design?</summary>
 
 A: Design — a plan-time precondition rejects `enable_cloud_deploy = true` without `enable_cicd_trigger = true`, because a delivery pipeline without a CI trigger to feed it releases would sit empty. The exam parallel: CD is downstream of CI; design the stack as one flow.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Why Kaniko instead of a Docker daemon build step?&lt;/summary>
+<details>
+<summary>Q3: Why Kaniko instead of a Docker daemon build step?</summary>
 
 A: Kaniko builds OCI images entirely in userspace inside the build container — no privileged Docker daemon socket — which shrinks the attack surface of the build environment and is the recommended pattern in Cloud Build.
-&lt;/details>
+</details>
 
 **⚠️ Exam trap** — `binauthz_evaluation_mode = "ALWAYS_ALLOW"` (the default here) means Binary Authorization is *configured but not enforcing*. Attestations being created in the pipeline does nothing until the policy says `REQUIRE_ATTESTATION`.
 
@@ -184,17 +184,17 @@ gcloud deploy rollouts approve <rollout-name> \
 4. You know it worked when the prod rollout required an explicit approval and all three services report the same image digest in `gcloud run services describe ... --format="value(spec.template.spec.containers[0].image)"`.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Staging validated image digest X, but prod is running digest Y after promotion. In a correctly designed pipeline, is this possible?&lt;/summary>
+<details>
+<summary>Q1: Staging validated image digest X, but prod is running digest Y after promotion. In a correctly designed pipeline, is this possible?</summary>
 
 A: No — Cloud Deploy promotes the *release*, which pins image digests at release-creation time. If prod shows a different digest, something outside the pipeline deployed it (audit logs will show who), or the pipeline rebuilds per stage, which defeats the build-once/promote-many principle the exam expects.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Where would you add a fully automatic dev → staging hop while keeping the prod gate?&lt;/summary>
+<details>
+<summary>Q2: Where would you add a fully automatic dev → staging hop while keeping the prod gate?</summary>
 
 A: Set `auto_promote = true` on the dev stage — the module then creates a Cloud Deploy automation with an advance-rollout rule scoped to the dev target. Prod keeps `require_approval = true`, so automation never bypasses the human gate.
-&lt;/details>
+</details>
 
 **Beyond the modules** — The lab keeps all stages in one project. For exam completeness, study per-environment *project* isolation (separate IAM, quotas, VPCs per environment), Cloud Deploy deploy parameters and custom targets, and post-deployment verification (`verify` in Skaffold profiles), none of which the modules configure.
 

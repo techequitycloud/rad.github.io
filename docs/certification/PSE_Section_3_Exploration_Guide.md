@@ -39,23 +39,23 @@ gcloud logging read 'protoPayload.serviceName="secretmanager.googleapis.com" AND
 5. You know it worked when the version table shows the dual-version history and the data-access log names the workload SA as the only payload reader.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Scenario — during password rotation, users must see zero failed logins. Order the steps correctly and explain the critical ordering decision.&lt;/summary>
+<details>
+<summary>Q1: Scenario — during password rotation, users must see zero failed logins. Order the steps correctly and explain the critical ordering decision.</summary>
 
 A: Generate new password → update the database user (`ALTER USER`) → add the new Secret Manager version → wait a propagation delay → disable the old version. The critical choice: the DB is updated *before* the secret version, and the old version is disabled only *after* propagation — during the window both old (cached) and new credentials authenticate, so no client fails. Disabling (not destroying) the old version preserves rollback.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does Secret Manager's rotation feature alone not rotate anything?&lt;/summary>
+<details>
+<summary>Q2: Why does Secret Manager's rotation feature alone not rotate anything?</summary>
 
 A: `rotation` on a secret only publishes a Pub/Sub notification on schedule. Something must consume it and perform the change — here, Eventarc fires the dispatcher, which executes the rotator job. The exam loves this distinction: rotation schedule = notification; rotation handler = your code.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: A teammate proposes declaring Secret Manager secret versions directly in Terraform for API tokens. What is the risk and the deployed alternative?&lt;/summary>
+<details>
+<summary>Q3: A teammate proposes declaring Secret Manager secret versions directly in Terraform for API tokens. What is the risk and the deployed alternative?</summary>
 
 A: That resource stores the plaintext payload in Terraform state — anyone with state access (or a committed state file) reads the secret. The module instead pushes the value with `gcloud secrets versions add` in a provisioner, so only a non-reversible hash is kept in state and workloads read the secret by ID at runtime.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Sensitive Data Protection (Cloud DLP) is not implemented: study infoType inspection of Cloud Storage/BigQuery, de-identification (redaction, `CryptoDeterministicConfig` tokenization, format-preserving encryption with `CryptoReplaceFfxFpeConfig`), and routing findings to SCC. Scratch command: `gcloud dlp inspect-templates create` or inspect a string via the API: `gcloud alpha dlp text inspect --content="My SSN is 123-45-6789" --info-types=US_SOCIAL_SECURITY_NUMBER` (or use the **Security > Sensitive Data Protection** console). Also study BigQuery column-level security and dynamic data masking — no BigQuery exists in the platform.
 
@@ -89,23 +89,23 @@ gcloud sql instances describe <instance> --format="value(diskEncryptionConfigura
 3. You know it worked when the Cloud SQL instance reports your CMEK key name and the disabled key version is ENABLED again after the next plan.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Scenario — a regulator requires that you can render all customer data unrecoverable on demand ("crypto-shredding"). How does the deployed CMEK design satisfy this, and what is the irreversible step?&lt;/summary>
+<details>
+<summary>Q1: Scenario — a regulator requires that you can render all customer data unrecoverable on demand ("crypto-shredding"). How does the deployed CMEK design satisfy this, and what is the irreversible step?</summary>
 
 A: All Cloud SQL/GCS/AR data is encrypted under customer-managed keys. Disabling the key versions makes data immediately inaccessible but reversible; scheduling destruction (`gcloud kms keys versions destroy`) and letting the 24-hour-plus pending window elapse destroys the key material, making every byte encrypted under it permanently unrecoverable — including backups. Destruction of the key version is the irreversible step.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: After automatic rotation creates key version 5, can data encrypted under version 2 still be read?&lt;/summary>
+<details>
+<summary>Q2: After automatic rotation creates key version 5, can data encrypted under version 2 still be read?</summary>
 
 A: Yes. Rotation changes the *primary* version used for new encryption; existing ciphertext stays decryptable by its original version as long as that version remains enabled. This is why disabling/destroying *old* versions, not rotation itself, is what cuts access to old data.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Cloud SQL instance creation fails with "Cloud KMS key is disabled, destroyed, or scheduled to be destroyed." What does the platform do about this class of failure, and what would you answer on the exam?&lt;/summary>
+<details>
+<summary>Q3: Cloud SQL instance creation fails with "Cloud KMS key is disabled, destroyed, or scheduled to be destroyed." What does the platform do about this class of failure, and what would you answer on the exam?</summary>
 
 A: The platform's plan-time `data "external"` probe restores `DESTROY_SCHEDULED` versions and re-enables `DISABLED` ones before dependent resources are touched. The exam answer: restore the key version (possible only during the scheduled-destruction window) or re-enable it, and verify the service agent still holds `roles/cloudkms.cryptoKeyEncrypterDecrypter` on the key.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: Cloud HSM protection level (FIPS 140-2 Level 3 — `--protection-level=hsm` at key creation), Cloud EKM (keys held outside Google entirely), customer-supplied encryption keys (CSEK), key import, Confidential Computing (AMD SEV Confidential VMs / Confidential GKE Nodes), and client-side/application-layer encryption (e.g., Tink). Scratch commands: `gcloud kms keys create hsm-key --keyring=KR --location=L --purpose=encryption --protection-level=hsm` and `gcloud compute instances create cvm --confidential-compute --maintenance-policy=TERMINATE`.
 
@@ -131,17 +131,17 @@ gcloud access-context-manager perimeters dry-run describe vpcsc_<prefix>_perimet
 2. You know you've internalized the mapping when you can state which deployed control would cover `aiplatform.googleapis.com` if it were added to a perimeter (the same access-level + restricted-service mechanism).
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Scenario — a fine-tuned internal LLM occasionally outputs employee phone numbers from its training data. Which two Google Cloud controls address this, at which stage?&lt;/summary>
+<details>
+<summary>Q1: Scenario — a fine-tuned internal LLM occasionally outputs employee phone numbers from its training data. Which two Google Cloud controls address this, at which stage?</summary>
 
 A: Sensitive Data Protection de-identification of the training corpus *before* fine-tuning (prevents memorization of PII), and Model Armor response filters on the serving path to detect and block PII leakage in outputs. IAM/VPC-SC don't help — the leak is via legitimate model responses.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: What changes in your security responsibilities between training on Compute Engine GPUs (IaaS) versus Vertex AI Training (PaaS)?&lt;/summary>
+<details>
+<summary>Q2: What changes in your security responsibilities between training on Compute Engine GPUs (IaaS) versus Vertex AI Training (PaaS)?</summary>
 
 A: IaaS: you own OS hardening (Shielded VM), patching, inter-node lateral-movement controls (no external IPs, firewall rules), plus data/IAM controls. PaaS: Google runs the nodes; your scope narrows to Vertex AI IAM roles, CMEK on artifacts, VPC-SC on the Vertex AI API, and private endpoints. Same shared-responsibility narrowing logic as GKE Standard vs Autopilot.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study: Model Armor templates (prompt-injection/jailbreak/PII filters for Gemini and Vertex endpoints), Vertex AI security controls (CMEK, VPC-SC support, Private Service Connect endpoints, granular roles such as `roles/aiplatform.user`), and the OWASP Top 10 for LLM Applications. Scratch commands: `gcloud ai models list --region=us-central1` and review **Vertex AI > Model Armor** in the console.
 

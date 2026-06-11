@@ -41,23 +41,23 @@ Memorystore Redis additionally exposes the choice directly: `redis_connect_mode`
 4. You know it worked when the PSA address shows `prefixLength: 16` and the Cloud SQL instance's private IP (visible in **SQL > instance > Connections**) falls inside that range.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A Cloud Run service must reach a Cloud SQL private IP and an on-prem CIDR via VPN. Direct VPC egress or Serverless VPC Access connector — and what egress setting?&lt;/summary>
+<details>
+<summary>Q1: A Cloud Run service must reach a Cloud SQL private IP and an on-prem CIDR via VPN. Direct VPC egress or Serverless VPC Access connector — and what egress setting?</summary>
 
 A: Either works for routing into the VPC, but Direct VPC egress (what RAD uses) avoids connector instance cost and gives higher throughput. To reach on-prem, `vpc_egress_setting = "ALL_TRAFFIC"` is not strictly required — `PRIVATE_RANGES_ONLY` (RAD's default) routes RFC 1918 destinations through the VPC, which covers a private on-prem CIDR. `ALL_TRAFFIC` is needed when *public* destinations must also traverse the VPC (e.g., for NAT-based egress IP allowlisting).
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does the platform reserve a /16 for private services access instead of a /24?&lt;/summary>
+<details>
+<summary>Q2: Why does the platform reserve a /16 for private services access instead of a /24?</summary>
 
 A: Each service producer (Cloud SQL, Memorystore, Filestore) carves per-region subnets out of the allocated range inside Google's producer VPC. A small allocation can be exhausted as instances, replicas, and regions are added, and growing it later requires updating the reservation. A /16 leaves headroom for every producer the platform might enable.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Which network tier do the module-created load balancers use?&lt;/summary>
+<details>
+<summary>Q3: Which network tier do the module-created load balancers use?</summary>
 
 A: Global external Application Load Balancers with `EXTERNAL_MANAGED` scheme require Premium Tier, which is the project default. The modules never set a `network_tier`, so everything runs Premium. Standard Tier would force regional load balancing and regional forwarding rules — one reason a "global static IP + Standard Tier" design is an exam trap.
-&lt;/details>
+</details>
 
 **Beyond the modules** — The exam also tests: Premium vs Standard network tiers (study "Network Service Tiers overview"; try `gcloud compute project-info describe --format="value(defaultNetworkTier)"`); DNS resolution topology (Cloud DNS private zones, split horizon — nothing in RAD); IAM roles for network design (`roles/compute.networkAdmin` vs `networkUser` vs `securityAdmin` — only `roles/compute.networkUser` appears, granted to the GKE service account); and quotas/limits (study "VPC resource quotas": subnet ranges per network, secondary ranges per subnet, peering limits). For PSC study "Private Service Connect types" — RAD uses *only* PSA peering, never PSC endpoints, despite the resource name `psconnect_private_ip_alloc`.
 
@@ -101,17 +101,17 @@ The discovery layer runs `gcloud compute networks subnets list --filter="descrip
 4. You know it worked when two subnets appear, one per region, each carrying the `managed-by=services-gcp` description.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Two App_GKE deployments in one project, no Services_GCP. Why is the hashed-CIDR scheme necessary rather than a fixed 192.168.0.0/24 for both?&lt;/summary>
+<details>
+<summary>Q1: Two App_GKE deployments in one project, no Services_GCP. Why is the hashed-CIDR scheme necessary rather than a fixed 192.168.0.0/24 for both?</summary>
 
 A: Both inline VPCs peer with the same Service Networking producer via PSA. If two consumer VPCs advertise identical subnet CIDRs, the producer installs a return route for only one of them, silently black-holing reply traffic for the other deployment. Deterministic, hash-distinct /24s guarantee non-overlapping advertisements — the same reason on-prem/cloud IP plans must never overlap.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A customer needs 40 service projects to share one network with centralized firewall administration. Standalone VPCs with peering, or Shared VPC?&lt;/summary>
+<details>
+<summary>Q2: A customer needs 40 service projects to share one network with centralized firewall administration. Standalone VPCs with peering, or Shared VPC?</summary>
 
 A: Shared VPC. Peering does not scale administratively (full mesh, non-transitive, per-VPC firewall ownership) and has peering-group route limits. Shared VPC keeps subnets, routes, and firewall rules in one host project while service projects attach workloads via `roles/compute.networkUser` on specific subnets. RAD's "one VPC per project" model deliberately avoids this — know both.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented and heavily tested: **Shared VPC** (host/service projects, subnet-level IAM — try `gcloud compute shared-vpc enable HOST_PROJECT` in a scratch org), **VPC Network Peering** between your own VPCs (`gcloud compute networks peerings create`, remember non-transitivity and no overlapping CIDRs), **NCC star/mesh** topologies for many-VPC designs, **IPv6** (dual-stack subnets, `--stack-type=IPV4_IPV6`), **BYOIP/PUPI**, **Private NAT** for overlapping ranges, **MTU** decisions (1460 default, 8896 jumbo for intra-VPC and supported Interconnect), and **NVA insertion** with custom/policy-based routes plus internal LB. Study pages: "Shared VPC overview", "VPC Network Peering", "Create and use IPv6", "MTU of a VPC network".
 
@@ -141,17 +141,17 @@ A: Shared VPC. Peering does not scale administratively (full mesh, non-transitiv
 3. You know you understand it when you can explain why this router could later host both NAT and VPN BGP sessions on the same network.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: An enterprise needs 99.99% SLA connectivity to on-prem with encryption in transit. Which design?&lt;/summary>
+<details>
+<summary>Q1: An enterprise needs 99.99% SLA connectivity to on-prem with encryption in transit. Which design?</summary>
 
 A: HA VPN over Cloud Interconnect (or plain HA VPN if Interconnect isn't justified). The 99.99% Interconnect SLA requires four VLAN attachments across two metros (two edge availability domains each) with global dynamic routing; Interconnect alone is not encrypted, so the exam answer for "encrypted + 99.99%" is HA VPN over Interconnect, or MACsec on supported Interconnect connections.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: On-prem hosts must call Google APIs privately through the Interconnect. What do you configure?&lt;/summary>
+<details>
+<summary>Q2: On-prem hosts must call Google APIs privately through the Interconnect. What do you configure?</summary>
 
 A: Advertise `199.36.153.4/30` (restricted.googleapis.com) or `199.36.153.8/30` (private.googleapis.com) from Cloud Router as a custom route advertisement, create a Cloud DNS private zone for `googleapis.com` mapping `*.googleapis.com` to those VIPs, and make it resolvable on-prem via DNS forwarding/inbound server policy. Note RAD's GKE NetworkPolicy already allowlists exactly those two /30s for pod egress — same VIPs, different enforcement point.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study the full 1.3 list deliberately: Dedicated vs Partner vs Cross-Cloud Interconnect ("Cloud Interconnect overview"); HA VPN topologies incl. VPN between two VPCs; regional vs global dynamic routing mode and its effect on which subnets Cloud Router advertises; accessing multiple VPCs from on-prem (per-VPC attachments vs NCC hub); hybrid DNS (forwarding zones, inbound DNS policies, DNS peering, cross-project binding); IP planning across on-prem and cloud (internal ranges, Private NAT for overlap); MTU over hybrid links (1440 typical for VPN, up to 8896 on Interconnect); MACsec. Scratch-project commands worth memorizing: `gcloud compute vpn-gateways create` (HA VPN gives two interfaces automatically), `gcloud compute interconnects attachments partner create`, `gcloud compute routers add-bgp-peer`.
 
@@ -198,23 +198,23 @@ Each subnet carries two **named secondary ranges** (`gke-{prefix}-pods-{i}`, `gk
    ```
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: With defaults, why can the platform support 10 clusters (gke_cluster_count max) without IP collisions?&lt;/summary>
+<details>
+<summary>Q1: With defaults, why can the platform support 10 clusters (gke_cluster_count max) without IP collisions?</summary>
 
 A: Each base CIDR is sliced using the cluster index: 16 possible /14 pod slices in `10.64.0.0/10`, 16 /20 service slices in `10.8.0.0/16`, and node /20s spaced 16 apart inside `10.128.0.0/12`. The arithmetic guarantees disjoint ranges for indexes 1–10 — the same precomputation discipline the exam expects for "plan IP space for N clusters".
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A regulated customer demands nodes with no public IPs and a control plane reachable only from a bastion subnet. What changes relative to the RAD design?&lt;/summary>
+<details>
+<summary>Q2: A regulated customer demands nodes with no public IPs and a control plane reachable only from a bastion subnet. What changes relative to the RAD design?</summary>
 
 A: Add a private cluster configuration with private nodes (nodes get only internal IPs; Cloud NAT — which RAD already provides — handles their internet egress) and either a private endpoint or a public endpoint restricted by authorized networks listing only the bastion CIDR. RAD's clusters are public-endpoint by design because the CI/CD path (Cloud Build) needs API-server access; the inline cluster even opens authorized networks to `0.0.0.0/0` (auth still required) — recognize that as a convenience trade-off, not a security best practice.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Pods schedule but new Services fail with "range exhausted". Which range is the problem and can you fix it in place?&lt;/summary>
+<details>
+<summary>Q3: Pods schedule but new Services fail with "range exhausted". Which range is the problem and can you fix it in place?</summary>
 
 A: The *services* secondary range. It is fixed at cluster creation and cannot be replaced; pods get relief via additional pod ranges (`--additional-pod-ipv4-ranges` / per-node-pool pod ranges), but service-range exhaustion requires recreating the cluster with a larger range — why the exam (and RAD's /20 default) push you to size it up front.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study: private clusters and the three control-plane access patterns (public endpoint, public + authorized networks, private endpoint) plus the newer **DNS-based control plane endpoint**; non-RFC 1918 and PUPI pod ranges (RAD's inline path already uses `100.64.0.0/10` for services); IPv6/dual-stack GKE; GKE load balancing options (container-native LB with NEGs — covered in Section 3); node-pool design (taints, local SSD, spot). Docs: "Alias IP ranges", "GKE address management", "About private clusters".
 
