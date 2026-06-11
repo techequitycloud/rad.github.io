@@ -1,93 +1,191 @@
 ---
-title: "PDE Certification Preparation Guide: Section 4 — Implementing observability practices and troubleshooting issues (~25% of the exam)"
-sidebar_label: "PDE Section 4 Exploration Guide"
+title: "PDE Certification Preparation Guide: Section 4 \u2014 Implementing observability practices and troubleshooting issues (~25% of the exam)"
 ---
 
 # PDE Certification Preparation Guide: Section 4 — Implementing observability practices and troubleshooting issues (~25% of the exam)
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud DevOps Engineer (PDE) certification explore Section 4 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
+This guide covers exam Section 4 — the second-heaviest domain — using the RAD foundation modules. The observability surface is built from the monitoring layer (notification channels + alert policies), auto-generated per-platform dashboards, Data Access audit logging in every module, and the GKE cluster's logging/monitoring configuration. Deploy the **Observability baseline** profile from the [Lab Map](PDE_Certification_Guide.md); the GKE parts also need the **GKE release engineer** profile.
 
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PDE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+One scoping note up front: the application engines create a real synthetic uptime check from `uptime_check_config` (default `{ enabled = true, path = "/" }`) — but **only when the endpoint is publicly reachable**. Cloud Run probes the first `application_domains` entry, else the nip.io LB host, else the run.app URL when `ingress_settings = "all"`; GKE probes the custom domain via the Gateway (HTTPS:443) or the LoadBalancer Service ingress IP over HTTP on `service_port`. Internal-only deployments get no check, and the `uptime_check_names` output returns the created check's name (empty when skipped).
 
 ---
 
 ## 4.1 Instrumenting and collecting telemetry
 
-### Synthetic Monitors and Uptime Checks
-**Concept:** Proactively probing systems from external vantage points to detect availability and performance degradation before users report it.
+> ⏱ ~60 min · 💰 low–moderate (log ingestion if audit logging is on) · ⚙️ Requires: Observability baseline profile; GKE release engineer profile for cluster telemetry
 
-**In the RAD UI:**
-*   **Synthetic Uptime Monitors:** The modules automatically provision Cloud Monitoring uptime checks that continuously probe application endpoints from multiple global regions. These checks verify that the Cloud Run or GKE service is reachable and returns a healthy HTTP status code within the configured timeout. Failures trigger alerts via the configured notification channels.
+**Why the exam cares** — Telemetry questions test what is collected automatically vs. what needs opt-in: Cloud Run and GKE emit logs and platform metrics natively; workload metrics, data-access audit logs, Prometheus metrics, traces, and synthetic probes all require deliberate enablement. You should know which agent/config produces which signal.
 
-**Console Exploration:**
-Navigate to **Monitoring > Uptime checks**. Review the deployed uptime check targeting your Cloud Run or GKE application endpoint. Observe the check interval, timeout, and the set of global regions used as probe origins. Click a check to see its current status across regions and the historical availability graph. Navigate to **Monitoring > Alerting** to see the alert policy linked to the uptime check, which fires when the configured number of regions report a failure simultaneously.
+**How RAD implements it**
 
-**Real-world example:** An e-commerce platform deploys Cloud Run services across three regions. Their Cloud Monitoring uptime checks probe all three endpoints every 60 seconds from 6 global regions. When a misconfigured deployment causes the Frankfurt endpoint to return HTTP 503, the uptime check detects the failure within 60 seconds from 3 of 6 probe regions, triggers a P1 alert to the on-call engineer via PagerDuty (configured as a notification channel), and the team rolls back before a single customer in EMEA reports an error.
+| Signal | How it's produced |
+|---|---|
+| Application logs | automatic — Cloud Run revisions and GKE containers write stdout/stderr to Cloud Logging; the GKE cluster explicitly enables system-component and workload logging |
+| Platform metrics | automatic (`run.googleapis.com/*`, `kubernetes.io/*`); the cluster enables system-component monitoring |
+| Prometheus metrics | Managed Service for Prometheus is enabled on every Services_GCP cluster — it scrapes workload metrics, queryable with PromQL in Metrics Explorer |
+| Notification channels | `support_users` (app modules) → one email channel each (created with force-delete enabled); `notification_alert_emails` + `configure_email_notification = true` in Services_GCP for platform alerts |
+| Audit telemetry | `enable_audit_logging` (default `false`) → `ADMIN_READ`/`DATA_READ`/`DATA_WRITE` on `allServices` + explicit Secret Manager and KMS configs |
+| VM-level metrics | the Services_GCP self-managed NFS VM's memory alert uses the Ops Agent metric `agent.googleapis.com/memory/percent_used` — memory is invisible to the hypervisor without the agent |
+| Build/deploy telemetry | Cloud Build logs forced to `CLOUD_LOGGING_ONLY` |
+| Uptime checks | `<service>-uptime-check` (HTTP GET, period from `check_interval` default `"60s"`, timeout default `"10s"`) plus `<service>-uptime-check-alert` on `monitoring.googleapis.com/uptime_check/check_passed`, created only for publicly reachable endpoints (see note above) |
 
-### Cloud Monitoring Notification Channels
-**Concept:** Routing alert notifications to designated operators through structured, auditable channels.
+Note the activation logic in `App_CloudRun`: monitoring is configured when `support_users` is non-empty, or `alert_policies` is non-empty, or `uptime_check_config.enabled` is true — but the email channels and the built-in CPU/memory alerts are only created when `support_users` has at least one entry.
 
-**In the RAD UI:**
-*   **Notification Channels:** `support_users` (Group 1) and `notification_alert_emails` (Group 17 in GCP Services) are provisioned as Cloud Monitoring Notification Channels. These channels receive alert notifications when any alert policy threshold is breached — covering uptime failures, resource utilization thresholds, and custom metric alerts.
+**Try it**
+1. Apply the Observability baseline profile, then confirm the channels exist:
 
-**Console Exploration:**
-Navigate to **Monitoring > Alerting > Notification channels**. Review the provisioned email channels and confirm which alert policies are routed to each. Navigate to **Monitoring > Alerting** and inspect a specific alert policy to trace the full path from condition trigger → notification channel → recipient.
+```bash
+gcloud beta monitoring channels list \
+  --format="table(displayName,type,labels.email_address)"
+```
 
-**Real-world example:** A DevOps team configures `notification_alert_emails` to route to their team's shared ops mailbox and a dedicated PagerDuty webhook (added as a webhook notification channel). When GKE pod CPU exceeds 90% for 5 minutes, Cloud Monitoring triggers the alert, sends email to the ops mailbox for logging, and simultaneously pages the on-call engineer via PagerDuty — ensuring the right person is notified without relying on anyone monitoring dashboards manually at 02:00.
+2. Query workload telemetry with PromQL: **Console > Monitoring > Metrics Explorer > PromQL** and run `rate(container_cpu_usage_seconds_total[5m])` against the GKE namespace (works because managed Prometheus is enabled cluster-wide).
+3. Verify the audit pipeline: read a secret, then find your own `AccessSecretVersion` entry:
 
-### 💡 Additional Telemetry Objectives & Learning Guidelines
-*   **Ops Agent for Compute Engine:** Research the Ops Agent, which collects logs and metrics from Compute Engine VMs at higher fidelity than the legacy Monitoring and Logging agents it replaces. The Ops Agent uses OpenTelemetry under the hood and supports third-party application metrics (e.g., MySQL, Nginx, Redis) via built-in receivers. Navigate to **Compute Engine > VM instances > [instance] > Observability** to install the Ops Agent and immediately see rich memory, disk I/O, and process-level metrics that are not available from the hypervisor alone.
-*   **Cloud Trace — Distributed Tracing:** Research Cloud Trace for end-to-end latency analysis across microservices. Trace context propagates automatically for Cloud Run services instrumented with the Cloud Trace API or OpenTelemetry SDK, capturing per-span latency for every hop in a request path (load balancer → Cloud Run → Cloud SQL → Secret Manager). Navigate to **Trace > Trace list** to explore waterfall diagrams showing where latency is accumulated. Trace is essential for identifying whether a p99 latency regression is in the application code, the database query, or the network.
-*   **Cloud Profiler — Continuous Production Profiling:** Research Cloud Profiler for sampling CPU time, heap allocation, and goroutine/thread contention in production workloads with low overhead (&lt;1% CPU impact). Profiler agents are integrated directly into application code (Go, Java, Node.js, Python) and continuously upload flame graph data to Cloud Profiler. Navigate to **Profiler** in the console to compare flame graphs between two time periods (e.g., before and after a deployment) to identify regressions introduced by new code paths.
-*   **Log-Based Metrics:** Research how to create user-defined metrics derived from log data. A log-based metric counts log entries matching a filter (e.g., all log entries containing `"status": 500`) or extracts a distribution of values from a structured log field (e.g., the `latency_ms` field from request logs). Navigate to **Logging > Log-based metrics > Create metric** to define a counter or distribution metric. Log-based metrics appear in Cloud Monitoring and can be used in dashboards and alert policies exactly like native metrics — enabling alerting on any structured log field without application code changes.
-*   **OpenTelemetry Integration:** Research how to instrument Cloud Run and GKE workloads with the OpenTelemetry SDK to emit traces, metrics, and logs in a vendor-neutral format. Google Cloud supports the OpenTelemetry Protocol (OTLP) natively: the Cloud Monitoring exporter and Cloud Trace exporter for OpenTelemetry SDKs are available for all major languages. For GKE, deploy the OpenTelemetry Collector as a DaemonSet to centrally receive telemetry from all pods and forward it to Cloud Monitoring and Cloud Trace — avoiding per-pod API credentials and providing a single point of telemetry configuration.
+```bash
+gcloud logging read \
+  'protoPayload.serviceName="secretmanager.googleapis.com"' --limit=3 \
+  --format="table(timestamp,protoPayload.methodName,protoPayload.authenticationInfo.principalEmail)"
+```
+
+4. Inspect the module-created synthetic check (publicly reachable deployments only): `gcloud monitoring uptime list-configs` shows `<service>-uptime-check`; open it in **Console > Monitoring > Uptime checks** and trace the attached `<service>-uptime-check-alert` policy back to your email channel.
+5. You know it worked when channels list your email, PromQL returns series for your namespace, the audit entry names you, and the uptime check turns green from multiple regions.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: Your GKE pod's memory metrics appear in Cloud Monitoring, but your custom application metric (`orders_processed_total`) does not. The app exposes it on `/metrics`. What's missing?&lt;/summary>
+
+A: Platform metrics are automatic, but Prometheus-format application metrics need scraping. With managed Prometheus enabled (as Services_GCP does), you still must add a `PodMonitoring` custom resource targeting the pod's metrics port — collection infrastructure being enabled doesn't mean your endpoint is being scraped.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: Why does the NFS VM memory alert require the Ops Agent while the CPU alert does not?&lt;/summary>
+
+A: CPU utilization (`compute.googleapis.com/instance/cpu/utilization`) is measured by the hypervisor; guest memory usage is not visible from outside the OS, so it requires the in-guest Ops Agent reporting `agent.googleapis.com/memory/percent_used`. A standard exam distinction between hypervisor and agent metrics.
+&lt;/details>
+
+**Beyond the modules** — Scripted synthetic monitors (Cloud Functions-based synthetics beyond plain uptime checks), private uptime checks against internal endpoints, Cloud Trace (distributed latency tracing — instrument via OpenTelemetry; Cloud Run propagates `X-Cloud-Trace-Context`), Cloud Profiler (continuous CPU/heap profiling), and log-based metrics are all untouched by the modules. In a scratch project: `gcloud monitoring uptime create` against a private endpoint, the Trace explorer waterfall view, and `gcloud logging metrics create` are quick to try and frequently examined.
+
+**⚠️ Exam trap** — "Monitoring is enabled" has many layers: a variable that *accepts* monitoring config is not by itself evidence the signal is collected (earlier platform releases accepted `uptime_check_config` without creating any check; verify in the console — today it provisions one, but only for public endpoints). On the exam, match each signal to its producer: agent, platform, scrape config, or audit config.
 
 ---
 
 ## 4.2 Troubleshooting and analyzing issues
 
-### Cloud Logging and Error Reporting
-**Concept:** Capturing structured application and infrastructure logs centrally, and surfacing automatically detected errors for rapid triage and root cause analysis.
+> ⏱ ~75 min · 💰 no additional cost · ⚙️ Requires: any deployed application; GKE profile for the Kubernetes paths
 
-**In the RAD UI:**
-*   **Structured Application Logs:** Cloud Run and GKE Autopilot workloads emit logs automatically to Cloud Logging. Applications that write structured JSON to stdout (with fields like `severity`, `message`, `httpRequest.status`, and `labels`) have their logs automatically parsed by Cloud Logging, enabling precise filtering, alerting, and metric extraction without additional configuration.
-*   **Infrastructure and Audit Logs:** All Terraform operations executed via Cloud Build generate Admin Activity audit logs, providing an immutable, chronological record of every infrastructure change made during module deployments. These logs are essential for troubleshooting deployment failures and auditing configuration drift.
-*   **Error Reporting:** Cloud Logging automatically forwards unhandled exception stack traces from Cloud Run and GKE workloads to Error Reporting, which groups related errors, tracks their frequency over time, and highlights newly introduced errors (first-seen timestamp).
+**Why the exam cares** — Troubleshooting questions are scenario-driven: a revision won't start, pods crash-loop, a deploy succeeded but traffic fails. The skill tested is choosing the right diagnostic surface — Logs Explorer filters, Kubernetes events, revision status conditions, build logs — and reading them in the right order.
 
-**Console Exploration:**
-Navigate to **Logging > Logs Explorer**. In the query editor, filter logs by resource type (`cloud_run_revision` or `k8s_container`) to see application logs. Use the structured log viewer to expand a JSON log entry and observe how individual fields (severity, labels, httpRequest) are parsed and indexed for filtering. Add a filter on `severity=ERROR` to isolate error logs. Navigate to **Error Reporting** to see automatically grouped error clusters. Click any error group to view the stack trace, the first-seen and last-seen timestamps, the affected service version, and a link back to the specific log entries in Logs Explorer.
+**How RAD implements it** — The modules don't add troubleshooting tools per se; they produce richly labeled, predictable workloads to troubleshoot. Useful structure the modules guarantee: every resource carries `application`, `deployment`, `tenant`, and `managed-by` labels; Cloud Run revisions gate on a startup probe (`/healthz` by default) so misconfigured apps fail *visibly* at deploy time; GKE workloads run in a dedicated namespace with a deterministic name; init jobs (database setup, NFS setup) run as Cloud Run jobs / Kubernetes Jobs whose logs explain most first-deploy failures; and Cloud Build logs are in Cloud Logging (`CLOUD_LOGGING_ONLY`).
 
-**Real-world example:** A team deploys a new Cloud Run revision that introduces a bug causing `NullPointerException` in the payment processing path. The application writes structured JSON logs to stdout. Within 2 minutes of deployment, Error Reporting surfaces a new error group with the full stack trace, labels it as "First seen 4 minutes ago," and notes the error is occurring 200 times per minute — correlated with the traffic split to the new revision. The on-call engineer identifies the problem, triggers a rollback to the previous revision via Cloud Run traffic splitting, and the error rate drops to zero within 90 seconds — without requiring any log query expertise.
+**Try it**
+1. Stage a failure: in the portal, point `container_image` at a tag that doesn't exist (or set `startup_probe_config.path` to a bogus path) and apply.
+2. Cloud Run diagnosis path — revision conditions first, logs second:
 
-### 💡 Additional Troubleshooting Objectives & Learning Guidelines
-*   **Logs Explorer — Advanced Filtering and Analysis:** Research the Logs Explorer query language for complex log investigation. Key operators include: `severity>=WARNING` (threshold filtering), `jsonPayload.user_id="12345"` (structured field extraction), `timestamp>="2024-01-01T00:00:00Z"` (time bounding), and `resource.labels.service_name="checkout"` (resource scoping). Practice creating log queries that pinpoint the exact request causing a failure — combining resource labels, severity, and structured payload fields. Use the **Histogram** view to visualize log volume spikes correlated with deployment events.
-*   **Cloud Trace for Latency Troubleshooting:** Beyond instrumentation, use Cloud Trace's analysis tools to troubleshoot latency issues. Navigate to **Trace > Analysis reports** to see latency distribution percentiles (p50, p95, p99) and automatically identified latency outliers. Use the **Trace comparison** feature to compare latency profiles between two time windows — for example, the 30 minutes before and after a deployment — to isolate whether a latency regression is specific to a new code path, a downstream dependency, or infrastructure contention.
-*   **Cloud Monitoring — Metrics Explorer for Troubleshooting:** Navigate to **Monitoring > Metrics Explorer** and build ad-hoc metric queries to troubleshoot performance regressions. Key metrics to know: `run.googleapis.com/request_latencies` (Cloud Run request latency percentiles), `run.googleapis.com/container/instance_count` (active instance count for scaling analysis), `kubernetes.io/container/restart_count` (pod restart count for CrashLoopBackOff diagnosis), and `cloudsql.googleapis.com/database/cpu/utilization` (database CPU for slow query correlation). Combine multiple metrics on one chart with different Y-axes to visually correlate a latency spike with a database CPU spike.
-*   **Identifying Misconfigurations with GKE Events:** For GKE workloads, Kubernetes events capture infrastructure-level failures that do not appear in application logs — including scheduling failures (`Insufficient memory`, `Unschedulable`), image pull errors (`ErrImagePull`), and liveness probe failures. Navigate to **Kubernetes Engine > Workloads > [deployment]** and check the **Events** tab. Alternatively, filter Cloud Logging for `resource.type="k8s_node"` or use `kubectl get events --sort-by=.lastTimestamp -n [namespace]` from Cloud Shell to see the chronological event stream.
-*   **Cloud Run Troubleshooting — Revision Diagnostics:** Cloud Run provides deployment-time validation and runtime diagnostics. Navigate to **Cloud Run > [service] > Revisions** and click a failed revision to see its status condition details (e.g., `ContainerFailed: The user-provided container failed to start`). Check the **Logs** tab on the revision directly to see startup logs. Common issues to diagnose: container fails health check (misconfigured `containerPort`), container exits immediately (missing required environment variable), or container exceeds memory limit (under-provisioned `memory` setting).
+```bash
+gcloud run revisions list --service=<service> --region=us-central1
+gcloud run revisions describe <bad-revision> --region=us-central1 \
+  --format="yaml(status.conditions)"
+gcloud logging read \
+  'resource.type="cloud_run_revision"
+   AND resource.labels.service_name="<service>"
+   AND severity>=ERROR' --limit=10
+```
+
+3. GKE diagnosis path — events first, then pod state, then logs:
+
+```bash
+kubectl get events -n <namespace> --sort-by=.lastTimestamp | tail -20
+kubectl get pods -n <namespace>          # look for ImagePullBackOff / CrashLoopBackOff
+kubectl describe pod <pod> -n <namespace>
+kubectl logs <pod> -n <namespace> --previous   # logs from the crashed container
+```
+
+4. In **Console > Logging > Logs Explorer**, reproduce step 2's query with the UI filters, switch on the **Histogram**, and correlate the error spike with the deploy timestamp.
+5. Fix the variable, re-apply, and confirm recovery: the new revision reports `Ready: True` / pods reach `Running`.
+6. You know it worked when you can state the failure cause from `status.conditions` or the event stream *before* opening application logs.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: A new Cloud Run revision deploys but receives 0% traffic and the previous revision still serves. The deploy command reported failure. What happened and why is this good?&lt;/summary>
+
+A: The startup probe (or container start) failed, so Cloud Run never marked the revision Ready and never shifted traffic — the previous revision keeps serving. This is fail-safe deployment: a broken image can't take an outage. Diagnosis: `status.conditions` on the revision, then its startup logs.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: `kubectl logs` returns nothing for a pod stuck in `CrashLoopBackOff` with restarts climbing. What two commands get you the evidence?&lt;/summary>
+
+A: `kubectl logs <pod> --previous` (the *crashed* container's output — the current one may not have logged yet) and `kubectl describe pod <pod>` (exit code, OOMKilled status, probe failures, events). Events and last-state often answer it without any application log at all.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q3: A scheduled job worked for months, then silently stopped producing output. Logs show nothing at the expected time. Where do you look on this platform?&lt;/summary>
+
+A: Absence of logs at the expected time means the job never ran — check the trigger layer, not the application: CronJob status/`suspend` flag and events on GKE (`kubectl get cronjob -n <ns>`), or the Cloud Run job execution history. Then check audit logs for who changed it.
+&lt;/details>
+
+**Beyond the modules** — Error Reporting (automatic exception grouping), Log Analytics (SQL over logs), trace-correlated log views, and `gcloud builds log <id> --stream` for live build debugging. Practice the Logs Explorer query language seriously — `resource.type`, `severity>=`, `jsonPayload.field=`, and timestamp bounds appear in exam answers verbatim.
+
+**⚠️ Exam trap** — `kubectl logs` without `--previous` shows the *current* container instance. In a crash loop, the current instance is often seconds old and empty; the evidence is in the previous instance's logs.
 
 ---
 
 ## 4.3 Managing metrics, dashboards, and alerts
 
-### Custom Dashboards and MQL-Based Alert Policies
-**Concept:** Visualizing the health of deployed workloads in real time and generating actionable alerts when Service Level Indicators (SLIs) approach their Service Level Objectives (SLOs).
+> ⏱ ~60 min · 💰 low · ⚙️ Requires: Observability baseline profile
 
-**In the RAD UI:**
-*   **Custom Operational Dashboards:** The modules automatically provision custom Cloud Monitoring dashboards aggregating the key metrics for Cloud Run or GKE — CPU utilization, memory utilization, request latency, error rate, and instance/pod count. These dashboards give operators immediate, contextual visibility into the deployed workload without requiring manual dashboard construction.
-*   **Resource Utilization Alert Policies:** `alert_cpu_threshold`, `alert_memory_threshold`, and `alert_disk_threshold` (Group 17 in GCP Services) configure MQL-based alert policies that fire when the configured resource utilization thresholds are exceeded for a sustained duration. These serve as baseline health guards for both Cloud Run and GKE workloads.
-*   **Alert Routing:** Alert notifications are routed to the notification channels provisioned from `support_users` (Group 1) and `notification_alert_emails` (Group 17), ensuring alerts reach the correct operators.
+**Why the exam cares** — The exam tests alert policy mechanics — filters, aligners, reducers, duration windows, notification routing, renotification — and dashboard design that surfaces the four golden signals (latency, traffic, errors, saturation). You should be able to read an alert policy definition and predict exactly when it fires.
 
-**Console Exploration:**
-Navigate to **Monitoring > Dashboards** to find the custom operational dashboard created by the module. Explore each chart — hover over data points to inspect precise metric values, change the time range to compare current behavior against historical baselines, and use the **Compare** feature to overlay metrics from different time windows. Navigate to **Monitoring > Alerting** to review active alert policies. Click into an alert policy to inspect its MQL condition, the evaluation window (e.g., 5 minutes), the threshold value, and the notification channels it targets. Review the **Incidents** tab to see a history of triggered alerts and their resolution status.
+**How RAD implements it**
 
-**Real-world example:** A platform engineering team sets `alert_cpu_threshold = 80` and `alert_memory_threshold = 85` for their GKE-based order processing service. During a flash sale, order volume triples. Cloud Monitoring's alert policy detects that average pod CPU has exceeded 80% for 5 consecutive minutes and fires an alert to the team's Slack channel (configured as a notification channel). The on-call engineer pulls up the custom dashboard, observes the correlated memory and CPU spike across all pods, and scales up the node pool — resolving the pressure before any user-facing latency degradation occurs.
+- **Fixed alerts** (the monitoring layer, created when `support_users` is non-empty): CPU and memory utilization, threshold `0.9`, greater-than comparison, duration `60s`, renotify every `1800s`. Aggregation differs by platform deliberately — Cloud Run aligns by delta and reduces with the 99th percentile over `run.googleapis.com/container/cpu/utilizations`; GKE aligns and reduces by mean grouped by pod name over `kubernetes.io/container/cpu/limit_utilization`.
+- **Custom alerts**: the `alert_policies` variable (list of `{name, metric_type, comparison, threshold_value, duration_seconds, aggregation_period}`) becomes one policy per entry, auto-filtered to this service/namespace, aligned by mean, and routed to the same email channels.
+- **Dashboards**: Cloud Run gets Request Count, Request Latency (p95), Container Instance Count, and Container CPU Utilization, pre-filtered to the service; GKE gets CPU Usage (Cores), Memory Usage (Bytes), Pod Restart Count, and Network Egress (Bytes), pre-filtered to the namespace.
+- **Platform-layer alerts** (Services_GCP, gated on `configure_email_notification`, default `false`): Cloud SQL CPU/memory/disk policies driven by `alert_cpu_threshold`/`alert_memory_threshold`/`alert_disk_threshold` (all default `80`, divided by 100 into ratios), plus NFS-server CPU, memory (Ops Agent metric), and an instance-down policy built on *metric absence* of CPU utilization.
 
-### 💡 Additional Metrics and Alerting Objectives & Learning Guidelines
-*   **SLO-Based Alerting and Error Budget Burn Rate:** Research Cloud Monitoring's native SLO monitoring, which defines availability and latency SLOs directly in Cloud Monitoring and automatically calculates error budget consumption. Navigate to **Monitoring > Services > Create SLO** to define a request-based SLO (e.g., 99.9% of requests respond within 500ms). Configure burn rate alerts that fire when the error budget is being consumed faster than sustainable — for example, a 14x burn rate alert that fires when 2% of the monthly error budget has been spent in the last 60 minutes (the Google SRE "multiwindow, multi-burn-rate" alerting pattern).
-*   **PromQL for GKE Metric Queries:** For GKE workloads, Cloud Monitoring supports PromQL in addition to MQL, enabling teams already familiar with Prometheus query syntax to write alert conditions and dashboard queries without relearning a new language. Navigate to **Monitoring > Metrics Explorer**, select **PromQL** as the query language, and write Kubernetes-native queries (e.g., `rate(container_cpu_usage_seconds_total[5m])` or `kube_pod_container_resource_requests{resource="memory"}`). GKE Autopilot automatically exports Kubernetes system metrics to Cloud Monitoring in a Prometheus-compatible format.
-*   **Alerting Policy Best Practices — Reducing Noise:** Study alert policy design patterns to minimise false positives: use alignment periods long enough to smooth transient spikes (5 minutes for CPU, not 1 minute); use `ALIGN_PERCENTILE_99` for latency metrics rather than `ALIGN_MEAN` to alert on tail latency; configure a "renotification interval" to suppress repeated notifications for long-duration incidents; and use alert policy labels and user labels to route different alert types to different notification channels (infrastructure alerts to ops, application error alerts to developers). Navigate to **Monitoring > Alerting > [policy] > Edit** to explore all available condition options.
-*   **Multi-Condition Alert Policies:** Research how to combine multiple conditions in a single alert policy to reduce alert fatigue. A composite alert policy can fire only when both CPU > 80% AND memory > 80% are simultaneously true — preventing false positives from transient single-resource spikes. Use the `AND` condition combiner in the alert policy editor. Alternatively, use the `OR` combiner to create a single "service health degraded" alert that aggregates multiple error signals (high 5xx rate OR high latency OR low availability) into one actionable notification.
-*   **Alerting on Logs — Log-Based Alert Policies:** Research how to create alert policies that trigger directly on log entries matching a filter — without requiring a separate log-based metric. Navigate to **Monitoring > Alerting > Create policy > Log match condition** and define a log filter (e.g., `severity=CRITICAL AND resource.type="cloud_run_revision"`). This provides the fastest alerting path for conditions that are naturally expressed as log patterns (security events, specific error messages, audit log entries) without the latency of first converting them to a metric.
+**Try it**
+1. Add a latency alert via the portal:
 
----
+```hcl
+alert_policies = [{
+  name             = "p99-latency-high"
+  metric_type      = "run.googleapis.com/request_latencies"
+  comparison       = "COMPARISON_GT"
+  threshold_value  = 1000
+  duration_seconds = 300
+}]
+```
+
+2. Apply, then read back exactly what was created:
+
+```bash
+gcloud alpha monitoring policies list \
+  --format="table(displayName,conditions[0].conditionThreshold.thresholdValue,conditions[0].conditionThreshold.duration)"
+```
+
+3. Open **Console > Monitoring > Dashboards**, find the module dashboard (named `<display name> - Cloud Run Dashboard (<deployment-id>)` or the GKE variant), and walk each widget; note the `dashboardFilters` pinning it to your service/namespace.
+4. Force a notification: temporarily set a custom alert with `threshold_value = 1` on `run.googleapis.com/request_count`, generate traffic, and confirm the email arrives; check **Monitoring > Alerting > Incidents** for the open incident, then remove the test policy.
+5. You know it worked when the policy appears with your threshold and duration, the incident opens and closes as traffic starts/stops, and email lands at the `support_users` address.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: The Cloud Run CPU alert reduces with the 99th percentile across series while GKE reduces by mean grouped by pod. Why might the same "CPU > 90%" intent be aggregated differently?&lt;/summary>
+
+A: Cloud Run instances are interchangeable and short-lived — alerting on the p99 across instances catches the worst instances without paging on a single outlier mean shift. GKE pods are longer-lived, fewer, and individually meaningful, so a per-pod mean (grouped by pod name) identifies *which* pod is hot. Aggregation strategy should match the failure unit you'd act on.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: An alert has duration 300s. CPU spikes to 95% for 90 seconds, four times an hour. Does it fire?&lt;/summary>
+
+A: No — the condition must hold continuously for the full duration window. 90-second spikes reset the clock each time. That's the false-positive defense duration provides, and also why genuinely bursty problems may need a shorter duration or a percentile aligner instead.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q3: How does the Services_GCP "NFS instance down" alert detect an outage when a dead VM emits no metrics at all?&lt;/summary>
+
+A: It's a metric-*absence* condition on `compute.googleapis.com/instance/cpu/utilization`: no data for the window means the instance stopped reporting, which is the failure signal. Threshold conditions can't catch "no data" — absence conditions exist precisely for dead-emitter detection.
+&lt;/details>
+
+**Beyond the modules** — SLO-based (burn-rate) alerting, log-match alert conditions, multi-condition policies with AND/OR combiners, webhook/PagerDuty/Slack notification channel types (only `email` is created here), MQL/PromQL alert queries, and dashboard `Compare to past` workflows. Each is a 10-minute console exercise on top of the deployed lab.
+
+**⚠️ Exam trap** — Renotification (every 1800s here) controls reminders for a *still-open* incident; it does not re-evaluate or re-fire the condition. Confusing renotification with re-alerting leads to wrong answers about alert noise tuning.

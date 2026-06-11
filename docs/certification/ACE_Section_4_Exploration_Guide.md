@@ -1,132 +1,131 @@
 ---
-title: "ACE Certification Preparation Guide: Section 4 — Configuring access and security (~20% of the exam)"
-sidebar_label: "ACE Section 4 Exploration Guide"
+title: "ACE Certification Preparation Guide: Section 4 \u2014 Configuring access and security (~20% of the exam)"
 ---
 
 # ACE Certification Preparation Guide: Section 4 — Configuring access and security (~20% of the exam)
 
-This guide helps candidates preparing for the Google Cloud Associate Cloud Engineer (ACE) certification explore Section 4 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
-
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights ACE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+This guide covers exam Section 4 using the RAD platform foundation modules. Security is where the modules shine as a lab: every deployment creates dedicated least-privilege service accounts (`Services_GCP` plus the platform's IAM layer), `App_GKE` uses Workload Identity, `Services_GCP` can stand up Workload Identity Federation, and secrets live exclusively in Secret Manager. Deploy the **Serverless application** profile plus the **Operations & security add-ons** profile (IAP, audit logging) from the [Lab Map](ACE_Certification_Guide.md).
 
 ---
 
 ## 4.1 Managing Identity and Access Management (IAM)
 
-### Viewing and creating IAM policies
-**Concept:** Understanding the IAM policy model and how bindings are composed to grant access.
+> ⏱ ~60 min · 💰 no additional cost (audit logging adds log volume) · ⚙️ Requires: any deployed profile; `enable_audit_logging = true` for the audit-log lab
 
-**In the RAD UI:**
-The RAD platform constructs IAM bindings automatically for every service account it creates. The IAM policy for the project is the sum of all bindings — each binding maps a role to one or more members (users, groups, service accounts, or domain identities).
+**Why the exam cares** — IAM questions test the policy model (principal + role + resource, inherited down the hierarchy), the three role types (basic, predefined, custom) and when each is appropriate, and reading/troubleshooting effective access. The recurring decision criterion: prefer predefined roles on groups; never hand out `roles/owner`/`roles/editor` in production; basic roles are pre-IAM legacy.
 
-**Console Exploration:**
-Navigate to **IAM & Admin > IAM** to view all IAM bindings in the project. Observe:
-- The **principal** (who), the **role** (what permissions), and optionally a **condition** (when/where).
-- Use **Filter** to search for a specific principal or role name.
-- Click **Grant access** to add a new binding — select a principal and one or more roles.
-- Use **IAM conditions** to scope a role to specific resources (e.g. grant `roles/storage.objectViewer` only for objects with a specific prefix in a bucket).
+**How RAD implements it** — The modules are a worked example of least privilege:
+- `Services_GCP` creates `cloudbuild-sa-{prefix}`, `clouddeploy-sa-{prefix}`, `cloudrun-sa-{prefix}`, `nfs-sa-{prefix}`, and `gke-sa-{prefix}`, each granted only the predefined roles its job needs — no basic roles anywhere.
+- The platform's IAM layer narrows further: the runtime service account gets `roles/secretmanager.secretAccessor` *per secret* and `roles/storage.objectAdmin` *per bucket* (resource-level bindings, not project-level), and Cloud Build gets `roles/iam.serviceAccountUser` only on the identity it must deploy as.
+- `enable_audit_logging` (default `false`, available on `Services_GCP` and both app modules) enables Data Access audit logs (`ADMIN_READ`/`DATA_READ`/`DATA_WRITE`) for `allServices` plus explicit Secret Manager and KMS configs — the mechanism for answering "who did what".
+- `support_users` (default `[]`) is the human-principal entry point: emails become monitoring notification targets; bind your operators as groups where possible.
 
-Practice using the **Policy Troubleshooter** (**IAM & Admin > Policy Troubleshooter**) — enter a principal email, resource, and permission to get an instant explanation of whether access is granted and why.
+**Try it**
+1. Dump and read the project IAM policy the way the exam expects:
+   ```bash
+   gcloud projects get-iam-policy $GOOGLE_CLOUD_PROJECT \
+     --flatten="bindings[].members" \
+     --filter="bindings.members:serviceAccount" \
+     --format="table(bindings.members, bindings.role)" | sort
+   ```
+   Confirm the module SAs hold only narrow predefined roles.
+2. See a *resource-level* binding (a concept many candidates miss):
+   ```bash
+   gcloud secrets get-iam-policy <secret-name>
+   gcloud storage buckets get-iam-policy gs://<bucket-name>
+   ```
+   The runtime SA appears here, not in the project policy — least privilege in action.
+3. Explore role definitions: `gcloud iam roles describe roles/secretmanager.secretAccessor` — note it contains essentially one permission (`secretmanager.versions.access`). Compare with `gcloud iam roles describe roles/editor` to see why basic roles are discouraged.
+4. With audit logging enabled, change any IAM binding in the console, then find it:
+   ```bash
+   gcloud logging read 'protoPayload.methodName="SetIamPolicy"' --limit=5 \
+     --format="table(timestamp, protoPayload.authenticationInfo.principalEmail)"
+   ```
+5. You know it worked when steps 2–4 show per-resource bindings, single-permission predefined roles, and your own email on the `SetIamPolicy` entry.
 
-### Understanding IAM role types
-**Concept:** Selecting the appropriate role type for a given access requirement.
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: A developer needs to view Cloud Run services and read their logs — nothing else. Which roles, and why not &lt;code>roles/viewer&lt;/code>?&lt;/summary>
 
-Google Cloud IAM has three role types:
-- **Basic roles (primitive roles):** `roles/viewer`, `roles/editor`, `roles/owner`. These are very broad — `roles/editor` grants write access to most GCP services. Use basic roles only in development environments or for small projects where the additional management overhead of predefined roles is not justified. **Never assign `roles/owner` or `roles/editor` to service accounts in production.**
-- **Predefined roles:** Curated sets of permissions scoped to a specific service and action (e.g. `roles/cloudsql.client` — only connect to Cloud SQL instances; `roles/run.invoker` — only invoke Cloud Run services). These are the recommended choice for both human users and service accounts. The RAD platform uses predefined roles exclusively.
-- **Custom roles:** User-defined roles containing a specific set of permissions. Reserved for cases where no predefined role matches the required permission set. Custom roles require manual maintenance — when Google adds new API methods, custom roles do not automatically include them, potentially breaking applications.
+A: `roles/run.viewer` plus `roles/logging.viewer` — predefined roles scoped to exactly the needed services. `roles/viewer` (a basic role) grants read access across nearly *every* service in the project, violating least privilege and exposing data (e.g. listing secrets, reading buckets' metadata) the developer has no business seeing.
+&lt;/details>
 
-Navigate to **IAM & Admin > Roles** to explore the predefined role catalogue. Filter by service (e.g. "Cloud Run") to see all available predefined roles for that service.
+&lt;details>
+&lt;summary>Q2: A service account has &lt;code>roles/secretmanager.secretAccessor&lt;/code> on secret &lt;code>app-db-password&lt;/code> only, but the exam scenario says it "can't list secrets in the console". Is something wrong?&lt;/summary>
 
-### 💡 Additional IAM Objectives & Learning Guidelines
+A: No — `secretAccessor` permits *reading versions* of that one secret, not listing secrets (that needs `secretmanager.secrets.list`, in roles like `roles/secretmanager.viewer` at project level). Resource-level grants don't confer project-level browse access; this asymmetry is intended and frequently tested.
+&lt;/details>
 
-*   **Predefined vs. Custom Roles:** The RAD platform uses predefined roles (e.g. `roles/cloudsql.client`, `roles/secretmanager.secretAccessor`) because they are maintained by Google, kept up to date as services evolve, and represent the recommended approach for the vast majority of use cases. Navigate to **IAM & Admin > Roles** and explore the predefined role catalogue — each role lists its exact permissions. Custom roles exist for the exceptional case where a predefined role is either too permissive (grants access to more APIs than needed) and no narrower predefined role exists, or where a very specific combination of permissions across services is required that no predefined role covers. The additional operational overhead of custom roles (they must be manually updated as APIs change) means they should not be the default choice.
+&lt;details>
+&lt;summary>Q3: Access granted at the folder level — can a project-level admin in a child project remove it?&lt;/summary>
 
-    > **Real-World Example:** A developer needs read-only access to Cloud Run services. The predefined `roles/run.viewer` role covers exactly this need — no custom role is required. A custom role would only be appropriate if, for example, the developer needed exactly `run.services.list` and `run.services.get` but not `run.services.getIamPolicy` (which `roles/run.viewer` includes) and there was a documented security reason to exclude that permission.
+A: No. IAM policies are inherited downward and the *effective* policy is the union of all levels; a child resource cannot revoke or restrict a grant made on its ancestor. You'd need to change the folder-level binding (or use IAM deny policies / conditions, managed above the project).
+&lt;/details>
 
-*   **Audit Logging:** Navigate to **Logging > Logs Explorer**. Query the `cloudaudit.googleapis.com` logs. Practice finding logs for Data Access (e.g., someone reading a Cloud Storage object) versus Admin Activity (e.g., someone creating a new Cloud SQL instance). Note that Data Access audit logs must be explicitly enabled per service — they are not on by default — while Admin Activity logs are always enabled and cannot be disabled.
+**Beyond the modules** — Not implemented: custom role creation, IAM Conditions, Policy Troubleshooter, and org-level policy administration. For the exam: create a throwaway custom role (`gcloud iam roles create labRole --project=$GOOGLE_CLOUD_PROJECT --permissions=run.services.list`), run **IAM & Admin > Policy Troubleshooter** against a principal/resource/permission triple, and review IAM role recommendations in **IAM** (Active Assist flags over-granted bindings based on 90-day usage).
 
-    > **Real-World Example:** After a security incident, an administrator queries Admin Activity logs filtered by `protoPayload.methodName="SetIamPolicy"` to find every IAM policy change made in the past 30 days — revealing that an IAM binding was added to a production service account the day before the incident occurred.
-
-*   **IAM Policy Troubleshooting:** Use the **IAM & Admin > Policy Analyzer** tool to determine exactly why a specific user does or does not have access to a specific resource (like a BigQuery dataset). Policy Analyzer traces the full IAM inheritance chain — direct bindings, group memberships, and organisation policy constraints — and returns a clear explanation of what is granting or blocking access.
+**⚠️ Exam trap** — Removing a user from IAM does not invalidate already-issued access tokens (up to ~1 hour) and does not touch resource-level bindings you may have forgotten — checking *both* project and resource policies is the complete answer.
 
 ---
 
 ## 4.2 Managing service accounts
 
-### Using service accounts in IAM policies with minimum permissions
-**Concept:** Ensuring that compute resources run under restricted identities rather than highly privileged default accounts.
+> ⏱ ~75 min · 💰 no additional cost · ⚙️ Requires: Serverless or Kubernetes application profile; `enable_iap = true` with authorized users for the IAP lab
 
-**In the RAD UI:**
-*   **Custom Service Accounts:** The RAD platform strictly uses dedicated custom service accounts (e.g., a Cloud Run SA or a GKE SA) rather than the default compute service account. The platform automatically assigns them the minimum required predefined roles (like `roles/cloudsql.client` or `roles/artifactregistry.reader`). Using the default compute service account is an anti-pattern because it is automatically granted broad Editor permissions — a violation of the principle of least privilege.
+**Why the exam cares** — Service accounts are the workload identity story: creating dedicated SAs instead of using defaults, attaching them to compute, avoiding exported JSON keys (Workload Identity / Workload Identity Federation / impersonation instead), and protecting application credentials. The exam's consistent theme: *keys are a last resort*.
 
-*   **Workload Identity (GKE):** In the `App GKE` module, Workload Identity securely maps a Kubernetes Service Account (KSA) to the underlying Google Service Account (GSA). This allows pods to natively authenticate to Google Cloud APIs without managing JSON keys. Workload Identity is the Google-recommended approach for GKE workloads — exporting service account JSON keys introduces key management risk (keys don't auto-rotate, can be exfiltrated, and are hard to audit).
+**How RAD implements it** —
 
-    > **Real-World Example:** A GKE pod needs to read from a Cloud Storage bucket. Without Workload Identity, a developer might mount a service account JSON key as a Kubernetes Secret — that key could be read by anyone with access to the cluster namespace and, if leaked, grants access indefinitely until manually rotated. With Workload Identity, the pod's Kubernetes Service Account is bound to a GSA that has `roles/storage.objectViewer` on the bucket. No key is stored anywhere — credentials are ephemeral tokens exchanged automatically by the metadata server.
+*Dedicated runtime identities:* the Cloud Run service runs as its tenant-scoped `cloudrun-sa-*`, never the default Compute Engine service account. On GKE, `App_GKE` implements Workload Identity end-to-end: a Kubernetes ServiceAccount annotated `iam.gke.io/gcp-service-account`, and a `roles/iam.workloadIdentityUser` binding to `serviceAccount:{project}.svc.id.goog[namespace/ksa]` — pods get short-lived Google credentials with no key file anywhere.
 
-**Console Exploration:**
-In the GCP Console, navigate to **IAM & Admin > Service Accounts**. Locate the service accounts provisioned by the RAD platform for your application. Click on the **Permissions** tab to verify exactly which roles it holds, confirming that it only has access to the resources required by the application. On the service account list, note that the default Compute Engine service account (`PROJECT_NUMBER-compute@developer.gserviceaccount.com`) exists — in the RAD platform's architecture, this account is never used for workload identity.
+*Keyless CI/CD:* `Services_GCP`'s `enable_workload_identity_federation` (default `false`) creates pool `wif-pool` with a provider per `wif_provider_type` (default `"github"`; also `gitlab` or `generic` OIDC) and binds the pool's principals (`roles/iam.workloadIdentityUser`) to the Cloud Build, Cloud Deploy, and Cloud Run SAs — external CI authenticates by exchanging its OIDC token, no exported keys.
 
-### Securing Secrets
-**Concept:** Protecting sensitive configuration data from being exposed in source code, environment variables, or Terraform state.
+*Impersonation:* the platform itself runs as `resource_creator_identity`, and `impersonation_service_account` (default `""`) makes the modules' shell scripts call GCP APIs as a target SA — the same `--impersonate-service-account` pattern the exam tests for humans.
 
-**In the RAD UI:**
-*   **Secret Manager Integration:** The application modules use Secret Manager to store sensitive configurations like database passwords. In the RAD UI, the `enable_auto_password_rotation` (Group 11 for Cloud Run, Group 17 for GKE) variable configures automated secret rotation. The secret values are fetched dynamically during deployment and mounted as environment variables or volumes, meaning the plaintext secret is never exposed.
+*Secrets:* `secret_environment_variables` maps env var names to Secret Manager secrets resolved at runtime (a secret-reference env source on Cloud Run; the Secret Manager CSI driver on GKE). The DB password is generated randomly (`database_password_length` default `32`), stored only in Secret Manager, and `enable_auto_password_rotation` (default `false`) deploys an Eventarc-triggered rotation job doing a dual-version, zero-downtime rotation (`rotation_propagation_delay_sec` default `90`). The plain `secret_rotation_period` (default `"2592000s"`) only publishes rotation *notifications* — it does not rotate anything by itself.
 
-**Console Exploration:**
-Navigate to **Security > Secret Manager** in the GCP Console. View the list of secrets provisioned for the application. Notice that you cannot see the value without explicit permission — access to view secret material requires the `roles/secretmanager.secretAccessor` role, which is separate from the `roles/secretmanager.viewer` role that allows listing secrets without reading their values. Look at the **Versions** tab to see the history of secret rotations.
+*Identity-gated access:* `enable_iap` (default `false`) turns on IAP. On Cloud Run, the v2 service enables IAP (BETA launch stage) and the module grants `roles/run.invoker` to the IAP service agent and `roles/iap.httpsResourceAccessor` to `iap_authorized_users`/`iap_authorized_groups`. On GKE, IAP additionally requires `iap_oauth_client_id`, `iap_oauth_client_secret`, `iap_support_email`, and at least one authorized principal — all enforced by plan-time validations.
 
-**Real-world example:** A Cloud Run service connects to Cloud SQL using a database password stored in Secret Manager. When the database password is rotated quarterly, the `enable_auto_password_rotation` feature updates the secret version in Secret Manager automatically. The Cloud Run service fetches the current version at startup — no redeployment is needed, and the old version remains accessible for a grace period in case any instances are still starting up with the previous password. The plaintext password is never written to a config file, environment variable in source code, or Terraform state file.
+**Try it**
+1. Confirm the workload runs as a dedicated SA, not the default:
+   ```bash
+   gcloud run services describe <service-name> --region=us-central1 \
+     --format="value(spec.template.spec.serviceAccountName)"
+   ```
+2. On GKE, verify Workload Identity from inside a pod:
+   ```bash
+   kubectl get serviceaccount -n <namespace> -o yaml | grep gcp-service-account
+   kubectl run wi-test -n <namespace> --rm -it --image=google/cloud-sdk:slim \
+     --overrides='{"spec":{"serviceAccountName":"<ksa-name>"}}' \
+     -- gcloud auth list
+   ```
+   The active account is the Google SA — no key was mounted.
+3. Practice impersonation (grant yourself `roles/iam.serviceAccountTokenCreator` on the SA first):
+   ```bash
+   gcloud storage ls --impersonate-service-account=cloudrun-sa-<prefix>@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com
+   ```
+4. Inspect secret handling: `gcloud secrets versions list <secret-name>` and, after enabling `enable_auto_password_rotation`, watch a new version appear while the previous is disabled (dual-version rotation).
+5. Enable IAP with `iap_authorized_users = ["user:you@example.com"]`, redeploy, then open the service URL in an incognito window — you are pushed through Google sign-in, and a non-listed account gets a 403. You know it worked when your account passes and others don't.
 
-### Identity-Aware Proxy (IAP)
-**Concept:** Controlling application access based on user identity and context, removing the need for traditional VPNs.
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: A GKE pod must read a GCS bucket. A teammate suggests mounting a service account JSON key as a Kubernetes Secret. What is the exam-correct alternative and why?&lt;/summary>
 
-**In the RAD UI:**
-*   **Zero-Trust Access:** Both modules support configuring IAP via the `enable_iap` variable (Group 4). You then provide specific users or groups via `iap_authorized_users` (Group 4) and `iap_authorized_groups` (Group 4). IAP evaluates policies at the edge before traffic ever reaches the backend Cloud Run service or GKE Gateway, restricting access to authenticated Google users. Because authentication happens at the Google Front End — before the request reaches your application — IAP protects against unauthenticated access even if the application itself has a vulnerability.
+A: Workload Identity — bind the pod's KSA to a Google SA with `roles/storage.objectViewer` (the `roles/iam.workloadIdentityUser` pattern used by `App_GKE`). JSON keys never expire, can be exfiltrated by anyone who can read the namespace's secrets, and require manual rotation; Workload Identity issues short-lived tokens automatically with full audit attribution.
+&lt;/details>
 
-    > **Real-World Example:** An internal HR portal is deployed on Cloud Run. Rather than setting up and maintaining a VPN for all employees, the security team enables IAP and grants `IAP-secured Web App User` to `hr-employees@company.com`. Employees open the URL in any browser, are redirected to Google sign-in, and are granted access if their authenticated identity is in the group — no VPN client, no certificate management, and access is instantly revoked by removing someone from the group.
+&lt;details>
+&lt;summary>Q2: GitHub Actions needs to deploy to Cloud Run. Options: download a key for the Cloud Build SA, or use Workload Identity Federation. Compare.&lt;/summary>
 
-**Console Exploration:**
-In the GCP Console, navigate to **Security > Identity-Aware Proxy**. Locate the backend service associated with your deployment. Notice the toggle switch indicating whether IAP is enabled. Look at the right-hand panel to view the access list, showing exactly which users, groups, or domains have been granted the `IAP-secured Web App User` role. Note that IAP context-aware access can be extended with Access Context Manager levels (part of BeyondCorp Enterprise) to enforce additional conditions such as device compliance or source IP range alongside identity.
+A: WIF (the module's `wif-pool` + GitHub OIDC provider) lets the workflow exchange its GitHub-issued OIDC token for short-lived GCP credentials — nothing stored in repo secrets, automatically scoped and auditable. A downloaded key is a long-lived bearer credential sitting in GitHub secrets; if leaked it works until manually destroyed. The exam answer is WIF (or impersonation) over keys, essentially always.
+&lt;/details>
 
-### Defining Internal Access Controls (GKE)
-**Concept:** Implementing defense-in-depth networking to restrict pod-to-pod communication.
+&lt;details>
+&lt;summary>Q3: With IAP enabled on Cloud Run, a user authenticates successfully with their Google account but still gets a 403. What two grants must both exist?&lt;/summary>
 
-**In the RAD UI:**
-*   **Network Policies (GKE):** The `App GKE` module defines strict internal access controls using the `enable_network_segmentation` variable (Group 9). This ensures that even if a pod within the namespace is compromised, lateral movement is strictly restricted (e.g., denying ingress from all namespaces except the Gateway API or specific whitelisted pods).
+A: The *user* needs `roles/iap.httpsResourceAccessor` (via `iap_authorized_users`/`iap_authorized_groups`), and the *IAP service agent* needs `roles/run.invoker` on the service so it can forward authenticated requests. Authentication (who you are) passing while authorization (what you may access) fails is exactly this split — the module creates both bindings for you.
+&lt;/details>
 
-**Console Exploration:**
-In the GCP Console, navigate to **Kubernetes Engine > Workloads**, select your deployment, and view the "Networking" section to inspect assigned labels and selectors that drive these network policies. Alternatively, use `kubectl describe networkpolicies -n <namespace>` via Cloud Shell.
+**Beyond the modules** — Not implemented: service account key creation/rotation workflows (deliberately — the modules avoid keys entirely), short-lived token minting (`gcloud auth print-access-token --impersonate-service-account=...`, `gcloud auth print-identity-token`), disabling/undeleting service accounts, and cross-project SA usage. Practice in a scratch project: `gcloud iam service-accounts create`, `gcloud iam service-accounts keys create` (then delete it and explain why), and `gcloud iam service-accounts add-iam-policy-binding <sa> --member=user:you@... --role=roles/iam.serviceAccountTokenCreator` to wire impersonation. Also review the default Compute Engine SA (`PROJECT_NUMBER-compute@developer.gserviceaccount.com`) and why attaching it with Editor-scope access is the canonical anti-pattern.
 
-### Managing service account impersonation and short-lived credentials
-**Concept:** Allowing one identity to temporarily act as a service account, and generating time-limited credentials rather than long-lived key files.
-
-**In the RAD UI:**
-The RAD platform uses its own deployment identity to provision resources. For the exam, you must understand how human users and automated pipelines can assume service account identities without downloading JSON keys.
-
-**Service Account Impersonation:**
-Service account impersonation allows a user (or another service account) to make API calls *as* a target service account, without downloading a key. The calling identity must have `roles/iam.serviceAccountTokenCreator` on the target service account.
-
-- **Console:** Navigate to **IAM & Admin > Service Accounts**, select a service account, and view the **Permissions** tab. Grant `roles/iam.serviceAccountTokenCreator` to the identity that needs to impersonate it.
-- **Command line:** `gcloud <command> --impersonate-service-account=<sa-email>`. For example, `gcloud storage ls --impersonate-service-account=deployer@project.iam.gserviceaccount.com` lists buckets as if you were the deployer service account.
-
-Impersonation is audited — every API call made under the impersonated identity is logged with both the original caller and the service account being impersonated. This makes it far more traceable than shared credentials.
-
-**Real-world example:** A CI/CD pipeline runs as a Cloud Build service account with broad `roles/run.admin` permissions. A developer needs to test the deployment script locally but should not receive those same permissions permanently. Rather than downloading a key or granting the developer `roles/run.admin`, the developer is granted `roles/iam.serviceAccountTokenCreator` on the Cloud Build SA — they can impersonate it for local testing, with every action logged under both identities.
-
-**Short-lived service account credentials:**
-Instead of static JSON keys (which never expire), short-lived credentials are generated on demand and expire automatically. Key types:
-- **Access tokens:** OAuth 2.0 bearer tokens valid for 1 hour (default) up to 12 hours. Generated via `gcloud auth print-access-token --impersonate-service-account=<sa>` or the IAM Service Account Credentials API (`generateAccessToken`).
-- **ID tokens:** JWT tokens for authenticating to Cloud Run, Cloud Functions, or IAP-protected endpoints. Generated via `gcloud auth print-identity-token` or `generateIdToken`.
-- **Service account keys (discouraged):** Long-lived JSON private keys. The Google recommendation is to avoid service account keys wherever possible and use impersonation or Workload Identity instead. If a key must be created, navigate to **IAM & Admin > Service Accounts > Keys** to create and download it — and immediately configure a monitoring alert for key age in Active Assist.
-
-### 💡 Additional Security Objectives & Learning Guidelines
-The ACE exam tests knowledge of managing encryption keys and securing raw compute instances.
-
-*   **Cloud KMS (Key Management Service):** Practice creating a Key Ring and a symmetric Key under **Security > Key Management**. Then, practice encrypting a Cloud Storage bucket or a Compute Engine disk using that Customer-Managed Encryption Key (CMEK) instead of the default Google-managed keys. CMEK gives you control over the key lifecycle — you can rotate, disable, or destroy the key, which effectively revokes GCP's ability to decrypt the protected data even for its own operations.
-
-    > **Real-World Example:** A legal firm stores client documents in Cloud Storage. Regulatory requirements state that the firm must be able to immediately revoke all access to data if required by a court order. By encrypting the bucket with a CMEK in Cloud KMS, the firm can disable the KMS key — making all encrypted objects immediately inaccessible — without deleting a single object or modifying IAM policies. Re-enabling the key restores access.
-
-*   **Compute Engine SSH Keys:** Navigate to **Compute Engine > Metadata**. Practice adding a project-wide public SSH key, then SSH into a Linux VM to understand how GCP propagates keys to the `~/.ssh/authorized_keys` file. Compare this to the recommended **OS Login** approach, which ties SSH access to IAM roles (`roles/compute.osLogin` or `roles/compute.osAdminLogin`) and eliminates the need to manage SSH key files entirely. OS Login is the Google-recommended method because access is controlled through IAM, revoked instantly when a user's IAM binding is removed, and produces audit log entries in Cloud Logging for every login.
-
-    > **Real-World Example:** A company using project-wide SSH keys discovers that a former employee's key was added to the project metadata 18 months ago and never removed — granting silent SSH access to every VM in the project. Migrating to OS Login removes all metadata-based keys; access is then controlled purely through IAM and is automatically audited.
+**⚠️ Exam trap** — `roles/iam.serviceAccountUser` (attach/run *as* the SA) and `roles/iam.serviceAccountTokenCreator` (mint tokens to *impersonate* it) are different roles; questions often hinge on which one a deployer or impersonator actually needs. The modules grant `serviceAccountUser` to Cloud Build precisely so it can deploy services that run as the runtime SA.

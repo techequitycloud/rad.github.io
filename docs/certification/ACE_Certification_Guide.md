@@ -1,130 +1,147 @@
 ---
-title: "Associate Cloud Engineer (ACE) Certification Exploration Guide"
-sidebar_label: "ACE Certification Guide"
+title: "Associate Cloud Engineer (ACE) Certification Lab Map"
 ---
 
-# Associate Cloud Engineer (ACE) Certification Exploration Guide
+# Associate Cloud Engineer (ACE) Certification Lab Map
 
-This document maps the features and configurations of the deployed Cloud Run and GKE applications to the Associate Cloud Engineer (ACE) certification exam domains. It serves as an exploration guide for candidates to understand how Google Cloud concepts are practically implemented through these modules. You can experiment with these configurations directly through your web-based deployment portal.
+The Associate Cloud Engineer certification validates that you can deploy applications, monitor operations, and manage enterprise solutions on Google Cloud using both the console and the command line. The RAD platform's four foundation modules — `Services_GCP` (shared VPC networking, Cloud SQL, Redis, Filestore, GKE Autopilot, service accounts), `App_CloudRun` (Cloud Run v2 deployment engine), `App_GKE` (GKE deployment engine), and the `App_Common` shared library (secrets, IAM, storage, CMEK, CI/CD plumbing) — give you a live, inspectable lab: every toggle in your deployment portal maps to real GCP resources you can then explore with `gcloud`, `kubectl`, and the console. Application wrapper modules (Django, WordPress, etc.) exist on top of these but are not needed for exam preparation.
 
----
+## How to use this guide
 
-## Section 1: Setting up a cloud solution environment
+- Deploy one of the profiles below from your deployment portal, then work through the matching section guide.
+- Every section-guide subsection has a **Try it** block — do the CLI steps, not just the console clicks. The ACE exam assumes `gcloud`/`kubectl` fluency.
+- Use the coverage legend to know which exam topics you must study outside the platform; the section guides flag these in **Beyond the modules** blocks.
+- ACE is entry-level: focus on creating, inspecting, and modifying resources, not on architecture trade-offs.
 
-### 1.1 Setting up cloud projects and accounts
-*   **Concept:** Setting up the foundational environment involves configuring projects, applying IAM roles, managing APIs, and organizing resources with labels.
-*   **Implementation Context:** Both modules require an existing Google Cloud project where foundational APIs have been enabled. They use variables to target the deployment to a specific project and apply labels to all created resources for organizational and billing purposes.
-*   **Exploration:**
-    *   **Target Project:** Review the `existing_project_id` variable. Modifying this allows you to deploy resources into different isolated project environments. Navigate to **IAM & Admin > Labels** to see existing project-level labels.
-    *   **Resource Labeling:** Use the `resource_labels` variable (e.g., `{ env = "dev", cost-center = "123" }`) to apply tags across all resources created by the modules. Navigate to **Compute Engine > VM instances** (or other resource pages) and check the "Labels" column or click into a resource to view its attached labels.
-    *   **Support Users:** The `support_users` variable grants specific email addresses access to project-level monitoring alerts and dashboards. Navigate to **IAM & Admin > IAM** and search for the email addresses you provided in `support_users` to view the specific roles (like Monitoring Viewer) they were granted.
-*   **Customization:** Try adding a new label like `{ team = "engineering", project-code = "alpha" }` and observe how it propagates to newly created Cloud Storage buckets or Cloud Run services. Explore **Billing > Budgets & alerts** and try creating a budget that triggers when costs associated with your specific `env = "dev"` label exceed a certain threshold.
+**Coverage legend**
 
-### 1.2 Managing billing configuration
-*   **Concept:** Managing billing configuration includes establishing budgets, linking projects to billing accounts, and monitoring costs through alerts and exports.
-*   **Implementation Context:** While Terraform modules typically provision resources rather than manage billing accounts directly, the resource labels applied by the modules are critical for cost allocation and billing exports.
-*   **Exploration:**
-    *   **Cost Tracking:** Configure the `resource_labels` variable with key-value pairs representing cost centers or departments. Navigate to **Billing > Reports**. In the "Filters" pane on the right, look for the "Labels" section. Filter by the keys you defined (e.g., `cost-center: 123`) to see the specific costs associated with your deployment.
-*   **Customization:** Explore **Billing > Budgets & alerts** and try creating a budget that triggers when costs associated with your specific `env = "dev"` label exceed a certain threshold.
+| Symbol | Meaning |
+|---|---|
+| ✅ | Fully demonstrated — deploy it, see it, modify it in the RAD platform |
+| 🟡 | Partially demonstrated — the modules touch the concept; supplement with docs |
+| 📘 | Concept-only — not implemented by the modules; study pointers provided |
 
----
+## Deployment profiles
 
-## Section 2: Planning and implementing a cloud solution
+### Profile: Baseline platform
+*Purpose:* the shared infrastructure layer every other profile builds on — VPC, Cloud NAT, private Cloud SQL, NFS/Redis VM, service accounts.
+*Modules:* `Services_GCP` only.
+| Variable | Value |
+|---|---|
+| `project_id` | your project ID |
+| `tenant_deployment_id` | `demo` (default) |
+| `create_postgres` | `true` (default) |
+| `create_network_filesystem` | `true` (default) |
+| `support_users` | your email address |
+| `resource_labels` | `{ environment = "dev", cost-center = "lab" }` |
 
-### 2.1 Planning and implementing compute resources
-*   **Concept:** Selecting and deploying compute resources, such as Compute Engine, GKE, or Cloud Run, and configuring them for autoscaling and specific workloads.
-*   **Implementation Context:** These modules demonstrate two primary compute paradigms: serverless containers (Cloud Run) and managed Kubernetes (GKE Autopilot). They configure deployment images, resource limits, and autoscaling behaviors.
-*   **Exploration:**
-    *   **Compute Choices:** Compare the `App_CloudRun` and `App_GKE` modules to understand when to use serverless vs. managed Kubernetes.
-    *   **Deploying Containers:** Use the `container_image` variable to specify the image URI to deploy. For Cloud Run, navigate to **Cloud Run** and click on your deployed service. View the "Revisions" tab to see the container image URL being used. For GKE, navigate to **Kubernetes Engine > Workloads** and inspect the Pod specifications.
-    *   **Autoscaling Configurations:** In `App_CloudRun`, adjust `min_instance_count` and `max_instance_count`. Set `min_instance_count = 0` to explore scale-to-zero capabilities. In **Cloud Run**, view the "Metrics" tab and look at the "Instance count" chart over time. In **Kubernetes Engine > Workloads**, view the "Autoscaling" details for your Deployment.
-    *   **Resource Allocation:** Modify the `container_resources` variable to set custom `cpu_limit` and `memory_limit`. In **Cloud Run**, click "Edit & Deploy New Revision" to see how your `cpu_limit` and `memory_limit` variables map directly to the "Capacity" settings in the console UI.
-    *   **GKE Specifics:** In the `App_GKE` module, modify `workload_type` to switch between a `Deployment` and a `StatefulSet`. Adjust `service_type` to expose the workload via `LoadBalancer`, `ClusterIP`, or `NodePort`. Then, navigate to **Kubernetes Engine > Services & Ingress** to observe how the network endpoint is exposed differently based on your choice.
-*   **Customization:** Change `container_image_source` to `custom` and configure `container_build_config` to build an image directly from a Dockerfile using Cloud Build.
+*Estimated incremental cost:* low–moderate — the dominant drivers are the `db-custom-1-3840` Cloud SQL instance and the `e2-small` NFS VM running 24/7.
 
-### 2.2 Planning and implementing storage and data solutions
-*   **Concept:** Choosing, deploying, and integrating storage products (Cloud Storage, Filestore) and data products (Cloud SQL, Memorystore/Redis) to meet application requirements.
-*   **Implementation Context:** The modules dynamically provision Cloud Storage buckets, set up Cloud SQL databases (PostgreSQL or MySQL), establish NFS file shares, and configure Redis caching environments.
-*   **Exploration:**
-    *   **Cloud Storage:** Use the `create_cloud_storage` toggle and `storage_buckets` object list to provision customized buckets. Navigate to **Cloud Storage > Buckets**. Click on a bucket provisioned by the module. Check the "Lifecycle" tab to see any rules applied via your `lifecycle_rules` configuration.
-    *   **File Storage (NFS):** Set `enable_nfs = true` to provision a Cloud Filestore instance. Navigate to **Filestore > Instances** to view the managed NFS server. Then, check the Cloud Run "Volumes" configuration (in the "Revisions" tab) to see how it mounts to the `nfs_mount_path`.
-    *   **Cloud SQL Provisioning:** Use the `database_type` variable to select a database engine (e.g., `POSTGRES_15`, `MYSQL_8_0`). Navigate to **SQL**. Click your instance to view the overview. Under "Connections", note that public IP might be disabled, and the connection relies on the Cloud SQL Auth Proxy sidecar injected by `enable_cloudsql_volume`.
-    *   **Redis Cache:** Toggle `enable_redis` and pass the `redis_host` and `redis_auth` sensitive variables. Navigate to **Memorystore for Redis**. View your instance's properties, noting its Internal IP and Port, which map to the `REDIS_HOST` and `REDIS_PORT` environment variables injected into your app.
-*   **Customization:** Try changing `database_type` to a different version (e.g., from `POSTGRES_14` to `POSTGRES_15`) to understand how major version upgrades are handled. Change the `storage_class` in your configuration to `NEARLINE` or `COLDLINE` for a bucket and verify the updated class in the console.
+### Profile: Serverless application
+*Purpose:* Cloud Run service with database, storage buckets, NFS mount, revisions, and scheduled backups — covers most of Sections 2 and 3.
+*Modules:* Baseline platform + `App_CloudRun`.
+| Variable | Value |
+|---|---|
+| `container_image_source` | `prebuilt` |
+| `container_image` | `us-docker.pkg.dev/cloudrun/container/hello` |
+| `min_instance_count` | `0` (default — scale to zero) |
+| `max_instance_count` | `3` |
+| `database_type` | `POSTGRES` (default) |
+| `storage_buckets` | one entry, e.g. `[{ name_suffix = "media" }]` |
+| `support_users` | your email address |
 
-### 2.3 Planning and implementing networking resources
-*   **Concept:** Establishing network connectivity, creating VPCs, applying firewall rules, and deploying load balancers to secure and route traffic.
-*   **Implementation Context:** The modules secure outbound traffic through VPC egress settings, control inbound traffic using load balancers and Cloud Armor, and configure DNS/CDN layers.
-*   **Exploration:**
-    *   **VPC Connectivity:** In `App_CloudRun`, configure `vpc_egress_setting`. In **Cloud Run**, edit a revision and view the "Networking" tab. Observe the "VPC Network" section to see whether traffic is routed via "All traffic" or "Private IPs only".
-    *   **Load Balancing and Security:** Toggle `enable_cloud_armor = true` to deploy a Global External Application Load Balancer with a Cloud Armor WAF policy. Navigate to **Network Services > Load balancing**. Inspect the frontend IP, backend services, and the attached Cloud Armor security policy. Navigate to **Network Security > Cloud Armor** to view the specific WAF rules (like the `admin_ip_ranges` allowlist).
-    *   **Content Delivery:** Enable `enable_cdn` to activate Cloud CDN on the load balancer. In the Load Balancer backend service details, look for the "Cloud CDN" checkmark. Navigate to **Network Services > Cloud CDN** to view cache hit ratios.
-    *   **Traffic Ingress:** Modify the `ingress_settings` in `App_CloudRun`. In the Cloud Run console "Networking" tab, look at "Ingress". Observe how changing the variable shifts the setting from "Allow all traffic" to "Allow internal traffic and traffic from Cloud Load Balancing".
-*   **Customization:** Use `application_domains` to define custom domains. Then, check the **Load balancing** console to see the Google-managed SSL certificates automatically provisioned for those domains.
+*Estimated incremental cost:* low — Cloud Run scales to zero; cost is dominated by what the baseline platform already runs.
 
-### 2.4 Planning and implementing resources through infrastructure as code
-*   **Concept:** Using tools like Terraform to plan, execute, version, and update infrastructure deployments.
-*   **Implementation Context:** The entire repository is built on Terraform, demonstrating modular architecture, state management, and repeatable infrastructure delivery.
-*   **Exploration:**
-    *   **Variables:** Variables like `tenant_deployment_id` and `application_version` are exposed in the deployment portal to allow parameterizing configurations so identical environments (dev, staging, prod) can be deployed.
-    *   **IaC Workflows:** By modifying any variable (like `min_instance_count`) via the web-based deployment portal and triggering an update, you can observe how the infrastructure calculates diffs and updates live resources safely without requiring direct access to the codebase. Navigate to **Cloud Storage** and locate your deployment's state bucket. Understand that this state file is the source of truth linking your portal configurations to the actual console resources.
-*   **Customization:** Intentionally delete a managed resource via the console, then trigger a re-deployment from the portal to observe IaC drift detection and remediation in action.
+### Profile: Kubernetes application
+*Purpose:* GKE Autopilot cluster plus a namespaced workload with HPA, ResourceQuota, PodDisruptionBudget, and NetworkPolicy — the `kubectl` half of the exam.
+*Modules:* `Services_GCP` (re-applied with GKE enabled) + `App_GKE`.
+| Variable | Value |
+|---|---|
+| `create_google_kubernetes_engine` (Services_GCP) | `true` |
+| `gke_cluster_mode` (Services_GCP) | `AUTOPILOT` (default) |
+| `container_image_source` (App_GKE) | `prebuilt` |
+| `container_image` (App_GKE) | `us-docker.pkg.dev/cloudrun/container/hello` |
+| `enable_resource_quota` (App_GKE) | `true` |
+| `enable_network_segmentation` (App_GKE) | `true` |
 
----
+*Estimated incremental cost:* moderate — Autopilot bills per pod resource request plus the cluster management fee.
 
-## Section 3: Ensuring successful operation of a cloud solution
+### Profile: Operations & security add-ons
+*Purpose:* billing budget, alerting, audit logs, edge security, and IAP for Sections 1, 3.4, and 4. Apply on top of either application profile.
+*Modules:* `Services_GCP` + one application module.
+| Variable | Value |
+|---|---|
+| `create_billing_budget` (Services_GCP) | `true` |
+| `budget_amount` (Services_GCP) | `100` (default) |
+| `configure_email_notification` (Services_GCP) | `true` |
+| `notification_alert_emails` (Services_GCP) | your email address |
+| `enable_audit_logging` (Services_GCP or app module) | `true` |
+| `enable_cloud_armor` + `application_domains` (App_CloudRun) | `true` + a domain you control |
+| `enable_iap` + `iap_authorized_users` (App_CloudRun) | `true` + `["user:you@example.com"]` |
 
-### 3.1 Managing compute resources
-*   **Concept:** Monitoring running instances, managing Kubernetes resources, deploying new application versions, and managing traffic splits or canary deployments.
-*   **Implementation Context:** The modules support sophisticated release strategies, including multi-stage deployment pipelines and traffic splitting mechanisms.
-*   **Exploration:**
-    *   **Traffic Management:** In `App_CloudRun`, explore the `traffic_split` list variable. After applying a split, navigate to the **Cloud Run** service and click the "Revisions" tab. You will visually see the traffic percentage slider distributing load between different revisions.
-    *   **CI/CD Pipelines:** Set `enable_cicd_trigger = true` and configure `github_repository_url`. Navigate to **Cloud Build > Triggers**. You will see the trigger created by Terraform. Push code to your repo and navigate to **Cloud Build > History** to watch the build pipeline execute in real-time.
-    *   **Cloud Deploy:** Toggle `enable_cloud_deploy = true` and define `cloud_deploy_stages`. Navigate to **Cloud Deploy > Delivery pipelines**. View the visual representation of your promotion stages (e.g., dev -> staging -> prod). Practice clicking "Promote" to manually approve a release to the next environment.
-*   **Customization:** Deploy version 1.0, then deploy version 2.0. Modify `traffic_split` to allocate 90% to version 1.0 and 10% to version 2.0 to practice a canary release.
+*Estimated incremental cost:* moderate — the global external load balancer (forwarding rule + Cloud Armor policy) is the dominant driver; audit logging adds Cloud Logging volume.
 
-### 3.2 Managing storage and data solutions
-*   **Concept:** Managing object lifecycle, backing up and restoring database instances, and securing data.
-*   **Implementation Context:** The modules automate routine database maintenance tasks and facilitate automated database schema initializations.
-*   **Exploration:**
-    *   **Automated Backups:** Adjust the `backup_schedule` cron expression and `backup_retention_days`. Navigate to **Cloud Scheduler**. Find the job targeting your backup Cloud Run task. You can manually click "Force Run" to trigger an immediate backup. Then, navigate to the **Cloud Storage** backup bucket to verify the generated `.sql` file.
-    *   **Data Restoration/Import:** Set `enable_backup_import = true`, define `backup_source`, and specify `backup_file`. Navigate to **Cloud Run > Jobs**. Find the import job and view its logs to watch the database restoration process step-by-step.
-    *   **SQL Initialization:** Set `enable_custom_sql_scripts = true` in the portal and provide a GCS path. Upload a basic `.sql` script (e.g., `CREATE TABLE test (id INT);`) to the defined bucket. Trigger a deployment via the portal, then connect to your Cloud SQL instance via Cloud Shell (`gcloud sql connect...`) to verify the table was created.
-*   **Customization:** Experiment with different `backup_schedule` cron expressions to understand how automated backup frequency affects your recovery point objective (RPO).
+## Section 1: Setting up a cloud solution environment (~23% of the exam)
 
-### 3.3 Managing networking resources
-*   **Concept:** Modifying VPC subnets, reserving static IP addresses, and configuring DNS/NAT.
-*   **Implementation Context:** While core VPC networks are typically provisioned by a foundational module, these app modules consume those networks and allocate specific IP resources.
-*   **Exploration:**
-    *   **Static IP Allocation:** In `App_GKE`, ensure `reserve_static_ip = true`. Navigate to **VPC network > IP addresses**. You will see the reserved external IP address listed here, explicitly attached to your Forwarding Rule (Load Balancer).
-*   **Customization:** Try toggling `reserve_static_ip` to false and observe how the load balancer receives an ephemeral IP instead, demonstrating the operational risk of not reserving static IPs for production services.
+The modules deploy into an existing project, enable ~45 APIs automatically, create least-privilege service accounts, and can create a real billing budget — but project creation, resource hierarchy, and Cloud Identity remain console/`gcloud` exercises.
 
-### 3.4 Monitoring and logging
-*   **Concept:** Viewing logs, creating custom metrics, deploying Ops Agents, and configuring alerting based on resource utilization.
-*   **Implementation Context:** The modules automatically provision integrated Google Cloud Observability resources, including uptime checks and threshold alerts.
-*   **Exploration:**
-    *   **Uptime Checks:** Modify the `uptime_check_config` variable object. Navigate to **Monitoring > Uptime checks**. You will see the global health check running against your application URL. Click into it to view latency graphs from different geographic regions.
-    *   **Probes:** Configure `health_check_config` and `startup_probe_config`. In **Cloud Run**, look at the "Health Checks" section under the "Revisions" tab. In **Kubernetes Engine > Workloads**, view the YAML or the UI representation of the Liveness and Readiness probes.
-    *   **Alert Policies:** Use the `alert_policies` list variable to create custom Cloud Monitoring alerts. Navigate to **Monitoring > Alerting**. You will see the policies created by Terraform. Click one to view the conditions (e.g., CPU > 80%). You can also see the notification channels linked to your `support_users`.
-*   **Customization:** Change the `path` on a health check to a non-existent endpoint (e.g., `/broken-health`). Apply the change and observe how the deployment fails to become ready in the console because the probe fails.
+| Exam topic | Coverage | Where in RAD | Guide |
+|---|---|---|---|
+| 1.1 Enabling APIs within projects | ✅ | `enable_services` (default `true`), `additional_apis` | [Section 1 guide](ACE_Section_1_Exploration_Guide.md#11-setting-up-cloud-projects-and-accounts) |
+| 1.1 Granting IAM roles within a project | ✅ | dedicated SAs + predefined-role bindings | [Section 1 guide](ACE_Section_1_Exploration_Guide.md#11-setting-up-cloud-projects-and-accounts) |
+| 1.1 Creating projects / resource hierarchy / Cloud Identity | 📘 | modules deploy into an existing `project_id` only | [Section 1 guide](ACE_Section_1_Exploration_Guide.md#11-setting-up-cloud-projects-and-accounts) |
+| 1.1 Assessing quotas | 🟡 | `max_instance_count` and friends consume quotas; no quota management | [Section 1 guide](ACE_Section_1_Exploration_Guide.md#11-setting-up-cloud-projects-and-accounts) |
+| 1.2 Budgets and alerts | ✅ | `create_billing_budget`, `budget_amount` (default `100`), `budget_alert_thresholds` | [Section 1 guide](ACE_Section_1_Exploration_Guide.md#12-managing-billing-configuration) |
+| 1.2 Linking billing accounts / billing exports | 📘 | billing account is auto-discovered, never managed | [Section 1 guide](ACE_Section_1_Exploration_Guide.md#12-managing-billing-configuration) |
 
----
+## Section 2: Planning and implementing a cloud solution (~30% of the exam)
 
-## Section 4: Configuring access and security
+The strongest section for the lab: Cloud Run and GKE deployments are fully demonstrated, along with Cloud SQL, GCS, Filestore, Memorystore, a custom-mode VPC, Cloud NAT, firewall rules, and a global external load balancer with Cloud Armor. Compute Engine appears only as the self-managed NFS VM; App Engine and Cloud Functions are not implemented.
 
-### 4.1 Managing Identity and Access Management (IAM)
-*   **Concept:** Viewing and creating IAM policies, defining roles, and applying the principle of least privilege.
-*   **Implementation Context:** The modules automatically generate and assign dedicated, least-privilege service accounts to the compute instances rather than relying on default compute service accounts.
-*   **Exploration:**
-    *   **Identity Provisioning:** Review how the `resource_creator_identity` variable delegates resource creation permissions securely. Navigate to **IAM & Admin > IAM**. Search for the custom service account created for your application (e.g., `crapp-run-sa@...`). Inspect its roles (like Secret Manager Secret Accessor or Cloud SQL Client) to verify it follows the principle of least privilege.
-    *   **Security Perimeters:** Toggle `enable_vpc_sc = true` to enforce VPC Service Controls. Navigate to **Security > VPC Service Controls**. If your project is part of a perimeter, you can view the protected APIs and the ingress/egress rules that secure the data boundary.
-*   **Customization:** Temporarily assign a broader role to the application service account directly in the GCP Console. Note the change, but understand that re-running the deployment from your portal will revert this permission back to the least-privilege state, demonstrating Infrastructure as Code drift detection.
+| Exam topic | Coverage | Where in RAD | Guide |
+|---|---|---|---|
+| 2.1 Cloud Run deployment and autoscaling | ✅ | `min_instance_count` (default `0`), `max_instance_count` (default `1`), `container_resources` | [Section 2 guide](ACE_Section_2_Exploration_Guide.md#21-planning-and-implementing-compute-resources) |
+| 2.1 GKE workloads (Deployment/StatefulSet, HPA) | ✅ | `workload_type`, `stateful_pvc_enabled`, `container_resources` | [Section 2 guide](ACE_Section_2_Exploration_Guide.md#21-planning-and-implementing-compute-resources) |
+| 2.1 Compute Engine VMs / MIGs | 🟡 | the NFS VM MIG only | [Section 2 guide](ACE_Section_2_Exploration_Guide.md#21-planning-and-implementing-compute-resources) |
+| 2.1 App Engine, Cloud Functions, Spot VMs | 📘 | not implemented | [Section 2 guide](ACE_Section_2_Exploration_Guide.md#21-planning-and-implementing-compute-resources) |
+| 2.2 Cloud SQL, GCS, Filestore, Memorystore | ✅ | `create_postgres` (default `true`), `storage_buckets`, `create_filestore_nfs`, `create_redis` | [Section 2 guide](ACE_Section_2_Exploration_Guide.md#22-planning-and-implementing-storage-and-data-solutions) |
+| 2.2 AlloyDB, Firestore | ✅ | `enable_alloydb`, `create_firestore` (both default `false`) | [Section 2 guide](ACE_Section_2_Exploration_Guide.md#22-planning-and-implementing-storage-and-data-solutions) |
+| 2.2 BigQuery, Spanner, Bigtable, Pub/Sub messaging | 📘 | not implemented | [Section 2 guide](ACE_Section_2_Exploration_Guide.md#22-planning-and-implementing-storage-and-data-solutions) |
+| 2.3 VPC, subnets, firewall rules, Cloud NAT, PSA | ✅ | `availability_regions`, `subnet_cidr_range` | [Section 2 guide](ACE_Section_2_Exploration_Guide.md#23-planning-and-implementing-networking-resources) |
+| 2.3 Load balancing, Cloud Armor, CDN | ✅ | `enable_cloud_armor`, `application_domains`, `enable_cdn` | [Section 2 guide](ACE_Section_2_Exploration_Guide.md#23-planning-and-implementing-networking-resources) |
+| 2.3 Shared VPC, Cloud DNS, VPN/Interconnect | 📘 | not implemented | [Section 2 guide](ACE_Section_2_Exploration_Guide.md#23-planning-and-implementing-networking-resources) |
+| 2.4 Infrastructure as code workflow | 🟡 | the entire repository (OpenTofu modules), `deploy_application`, Cloud Build pipelines; portal abstracts state | [Section 2 guide](ACE_Section_2_Exploration_Guide.md#24-planning-and-implementing-resources-through-infrastructure-as-code) |
 
-### 4.2 Managing service accounts
-*   **Concept:** Creating service accounts, managing IAM permissions, and utilizing them with GKE and Cloud Run applications.
-*   **Implementation Context:** The modules securely inject configuration into these identities at runtime without exposing sensitive data.
-*   **Exploration:**
-    *   **Secret Management:** Use `secret_environment_variables` to map environment variable keys to Secret Manager secret names. Navigate to **Security > Secret Manager**. You will see the secrets provisioned by the module. In **Cloud Run**, view the "Variables & Secrets" tab to see how the secrets are mounted as environment variables, with the values securely hidden.
-    *   **Secret Rotation:** Enable `enable_auto_password_rotation`. In **Secret Manager**, click your database password secret and view the "Rotation" tab to see the active schedule. You can also manually trigger a rotation from the console.
-    *   **Identity-Aware Proxy (IAP):** Toggle `enable_iap = true` and configure `iap_authorized_users` and `iap_authorized_groups`. Navigate to **Security > Identity-Aware Proxy**. You will see your backend service listed with IAP turned on. The right-hand panel shows the users and groups granted the "IAP-secured Web App User" role.
-*   **Customization:** Try accessing your application URL from an incognito window after enabling IAP. You will be redirected to a Google login page. Only accounts listed in your `iap_authorized_users` list will successfully access the app.
+## Section 3: Ensuring successful operation of a cloud solution (~27% of the exam)
+
+Revision management, traffic splitting, CI/CD with Cloud Build and Cloud Deploy, scheduled database backups, GCS lifecycle rules, static IPs, a full set of preconfigured alert policies, and synthetic uptime checks on publicly reachable endpoints are all live. Log routing/sinks are study-outside topics.
+
+| Exam topic | Coverage | Where in RAD | Guide |
+|---|---|---|---|
+| 3.1 Revisions, traffic splitting, canary releases | ✅ | `traffic_split`, `max_revisions_to_retain` (default `7`) | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#31-managing-compute-resources) |
+| 3.1 CI/CD with Cloud Build and Cloud Deploy | ✅ | `enable_cicd_trigger`, `cloud_deploy_stages` | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#31-managing-compute-resources) |
+| 3.1 Kubernetes operations (kubectl, HPA, PDB, quota) | ✅ | `enable_resource_quota`, `enable_pod_disruption_budget` | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#31-managing-compute-resources) |
+| 3.1 VM lifecycle, SSH, snapshots, node pools | 🟡 | NFS VM MIG with daily snapshots | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#31-managing-compute-resources) |
+| 3.2 Database backups, restore, custom SQL | ✅ | `backup_schedule` (default `0 2 * * *`), `enable_backup_import`, `enable_custom_sql_scripts` | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#32-managing-storage-and-database-solutions) |
+| 3.2 GCS object lifecycle and versioning | ✅ | `storage_buckets[].lifecycle_rules`, `backup_retention_days` | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#32-managing-storage-and-database-solutions) |
+| 3.3 Static IPs, multi-region subnets | 🟡 | `reserve_static_ip` (default `true`), `availability_regions` | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#33-managing-networking-resources) |
+| 3.3 Routes, peering, DNS operations | 📘 | not implemented | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#33-managing-networking-resources) |
+| 3.4 Alert policies, channels, dashboards | ✅ | `support_users`, `alert_policies`, `alert_cpu_threshold` (default `80`) | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#34-monitoring-and-logging) |
+| 3.4 Audit logs | ✅ | `enable_audit_logging` | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#34-monitoring-and-logging) |
+| 3.4 Uptime checks | ✅ | `uptime_check_config` (default `{ enabled = true, path = "/" }`) | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#34-monitoring-and-logging) |
+| 3.4 Log sinks, log-based metrics | 📘 | not implemented | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#34-monitoring-and-logging) |
+
+## Section 4: Configuring access and security (~20% of the exam)
+
+Strong coverage: every module creates dedicated least-privilege service accounts, App_GKE uses Workload Identity, Services_GCP can create a Workload Identity Federation pool, secrets live in Secret Manager with optional automatic rotation, and IAP can gate both platforms.
+
+| Exam topic | Coverage | Where in RAD | Guide |
+|---|---|---|---|
+| 4.1 Viewing and creating IAM policies, role types | ✅ | predefined-role-only bindings, per-resource grants | [Section 4 guide](ACE_Section_4_Exploration_Guide.md#41-managing-identity-and-access-management-iam) |
+| 4.1 Audit logs for access review | ✅ | `enable_audit_logging` | [Section 4 guide](ACE_Section_4_Exploration_Guide.md#41-managing-identity-and-access-management-iam) |
+| 4.1 Custom roles, IAM Conditions, Policy Troubleshooter | 📘 | not implemented | [Section 4 guide](ACE_Section_4_Exploration_Guide.md#41-managing-identity-and-access-management-iam) |
+| 4.2 Dedicated service accounts on compute | ✅ | `cloudrun-sa-*`/`gke-sa-*` runtime identities | [Section 4 guide](ACE_Section_4_Exploration_Guide.md#42-managing-service-accounts) |
+| 4.2 Workload Identity (GKE) and WIF (keyless CI) | ✅ | KSA→GSA binding, `enable_workload_identity_federation` | [Section 4 guide](ACE_Section_4_Exploration_Guide.md#42-managing-service-accounts) |
+| 4.2 Secret Manager and rotation | ✅ | `secret_environment_variables`, `enable_auto_password_rotation` | [Section 4 guide](ACE_Section_4_Exploration_Guide.md#42-managing-service-accounts) |
+| 4.2 IAP identity-gated access | ✅ | `enable_iap`, `iap_authorized_users`/`iap_authorized_groups` | [Section 4 guide](ACE_Section_4_Exploration_Guide.md#42-managing-service-accounts) |
+| 4.2 SA key management, short-lived tokens | 📘 | deliberately keyless — study `gcloud iam service-accounts keys` separately | [Section 4 guide](ACE_Section_4_Exploration_Guide.md#42-managing-service-accounts) |

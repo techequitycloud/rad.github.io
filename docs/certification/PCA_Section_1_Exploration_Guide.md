@@ -1,171 +1,261 @@
 ---
-title: "PCA Certification Preparation Guide: Section 1 — Designing and planning a cloud solution architecture (~25% of the exam)"
-sidebar_label: "PCA Section 1 Exploration Guide"
+title: "PCA Certification Preparation Guide: Section 1 \u2014 Designing and planning a cloud solution architecture (~25% of the exam)"
 ---
 
 # PCA Certification Preparation Guide: Section 1 — Designing and planning a cloud solution architecture (~25% of the exam)
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud Architect (PCA) certification explore Section 1 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
-
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCA objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
-
-Familiarity with the Google Cloud Well-Architected Framework is a key requirement for this section, and its six pillars (operational excellence, security, reliability, performance optimization, cost optimization, and sustainability) are woven throughout these modules.
-
-**Exam case studies:** The PCA exam uses four official case studies as context for scenario-based questions. You should review all four before the exam:
-- **Altostrat Media** — a media company adopting cloud-native architecture for content delivery and streaming at global scale
-- **Cymbal Retail** — a global retailer modernizing its data, analytics, and inventory management platform on Google Cloud
-- **EHR Healthcare** — a healthcare organization managing electronic health records under strict HIPAA and data sovereignty requirements
-- **KnightMotives Automotive** — an automotive company leveraging generative AI to transform customer and dealer experiences
-
-As you explore these modules, practice mapping the infrastructure patterns deployed by GCP Services, App CloudRun, and App GKE to the business and technical requirements described in each case study scenario.
+This is the heaviest-weighted PCA section, and it is about *choices*: which compute platform, which availability tier, which storage type — and why. All four foundation modules are exercised here. Deploy the **Lean baseline** profile from the [Lab Map](PCA_Certification_Guide.md) first, then apply the **Resilient data tier** and **GKE architecture** profiles as you reach 1.2 and 1.3, so you can compare the cheap architecture and the resilient one in the same project.
 
 ---
 
 ## 1.1 Designing a cloud solution infrastructure that meets business requirements
 
-### Security, Compliance, and Data Movement
-**Concept:** Ensuring the architecture meets strict organizational security policies, handles data securely during transit, and protects secrets.
+> ⏱ ~60 min · 💰 low — baseline profile only · ⚙️ Requires: Lean baseline profile
 
-**In the RAD UI:**
-*   **Identity-Aware Proxy (IAP):** Review the `enable_iap` (Group 4) variable. IAP protects applications by verifying user identity and context before allowing requests to reach the service.
-*   **Cloud Armor (WAF):** Activating `enable_cloud_armor` (Group 9 for Cloud Run, Group 13 for GKE) deploys a Global External Application Load Balancer with a Serverless Network Endpoint Group (NEG) or Gateway backend, attaching Web Application Firewall (WAF) policies.
-*   **Secret Manager Integration:** The `enable_auto_password_rotation` (Group 11 for Cloud Run, Group 17 for GKE) variable configures automated secret rotation, preventing plaintext secrets in environments.
+**Why the exam cares** — PCA scenarios open with business constraints, not technical ones: "minimize cost," "the security team requires zero-trust access," "leadership needs spend visibility." You are tested on translating those into platform decisions — scale-to-zero vs warm capacity, identity-based access vs network-based access, budgets and alerts as financial guardrails — and on recognizing which requirement drives which knob.
 
-**Console Exploration:**
-Navigate to **Security > Identity-Aware Proxy** to view access policies. Navigate to **Network Security > Cloud Armor** to inspect the edge WAF rules. Navigate to **Security > Secret Manager** to see how environment variables resolve securely.
+**How RAD implements it**
 
-**Real-world example:** A financial services firm uses IAP to allow remote employees to access an internal risk dashboard without a corporate VPN — only users whose Google Workspace identity belongs to an authorized group can reach the application, with every other request rejected at the Google edge before touching the workload. Cloud Armor adds a second layer of protection by blocking OWASP Top 10 attacks such as SQL injection and applying adaptive rate-limiting to throttle credential-stuffing bots during peak periods.
+| Business requirement | Variable (default) | Module |
+|---|---|---|
+| Minimize idle cost | `min_instance_count` (default `0`) — Cloud Run scales to zero | App_CloudRun |
+| Cap maximum spend on compute | `max_instance_count` (default `1`) | App_CloudRun |
+| CPU billing trade-off | `cpu_always_allocated` (default `true`) — set `false` to bill CPU only during request processing | App_CloudRun |
+| Financial guardrails | `create_billing_budget` (default `false`), `budget_amount` (default `100`), `budget_alert_thresholds` (default `[0.5, 0.9, 1.0]`) | Services_GCP |
+| Zero-trust access for internal apps | `enable_iap` (default `false`) + `iap_authorized_users` / `iap_authorized_groups` | App_CloudRun |
+| Stakeholder visibility | `support_users` — becomes Cloud Monitoring email notification channels | App_CloudRun / App_GKE |
 
-### Cost Optimization and Success Measurements
-**Concept:** Mapping capacity to demand automatically to avoid paying for idle resources, optimizing CapEx/OpEx, and proving ROI via KPIs.
+Cost-relevant platform choices also live in Services_GCP: the default database is a single zonal `db-custom-1-3840` PostgreSQL 17 instance (`postgres_tier`), and the default shared filesystem is a single `e2-small` VM (`create_network_filesystem`, default `true`) rather than managed Filestore — a deliberate cost-over-resilience default you will invert in 1.2.
 
-**In the RAD UI:**
-*   **Serverless Autoscaling (Cloud Run):** Setting `min_instance_count` (Group 3) to 0 enables scale-to-zero, drastically reducing costs during idle periods. `max_instance_count` (Group 3) caps expenditure.
-*   **Billing Budgets:** In **GCP Services**, `create_billing_budget` (Group 18) allows you to define hard budget alerts (`budget_alert_thresholds`) to measure financial success and prevent runaway OpEx.
+**Try it**
 
-**Console Exploration:**
-Navigate to **Cloud Run**, select the service, and review the **Revisions** tab. Navigate to **Billing > Budgets & alerts** to review the financial guardrails.
+1. Deploy the Lean baseline profile. In **Console > Cloud Run**, open your service and confirm "Min instances: 0" on the service details.
+2. Watch the instance count fall to zero after an idle period on the service's **Metrics** tab, then send a request and observe the cold start.
+3. Verify the scaling bounds from the CLI:
 
-**Real-world example:** A retail analytics service that generates nightly batch reports sets `min_instance_count` to `0`, eliminating all compute costs during the 22 hours per day when the service is idle. A billing budget with threshold alerts at 50% and 90% of the monthly cap ensures that an unexpected traffic spike does not silently overshoot the agreed OpEx target.
+```bash
+gcloud run services describe <service-name> \
+  --region=us-central1 \
+  --format="yaml(spec.template.scaling)"
+```
 
-### Observability
-**Concept:** Meeting business requirements for monitoring health, performance, and uptime to ensure service level objectives (SLOs) are maintained.
+4. Set `create_billing_budget = true` on the Services_GCP deployment and inspect **Console > Billing > Budgets & alerts**.
+5. You know it worked when the Metrics tab shows the instance count touching zero and a budget with 50%/90%/100% thresholds exists.
 
-**In the RAD UI:**
-*   **Integrated Monitoring & Logging:** The platform automatically creates synthetic uptime checks and custom dashboarding based on deployment metadata and the `support_users` (Group 1) list.
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: A startup runs an internal admin tool used a few hours per day and wants the lowest possible bill without exposing it to the internet. Which two settings from this platform meet both requirements?&lt;/summary>
 
-**Console Exploration:**
-Navigate to **Monitoring > Dashboards** and view the custom Cloud Run or GKE dashboards to see visualized metrics like Request Count and Latency (p95).
+A: `min_instance_count = 0` (scale-to-zero eliminates idle compute cost) and `enable_iap = true` with an authorized-users list (identity-based zero-trust access instead of a VPN or IP allowlist). IAP authenticates every request at Google's edge before it reaches the service, so no always-on network infrastructure is needed.
+&lt;/details>
 
-### 💡 Additional Business Design Objectives & Learning Guidelines
-*   **Functional and Non-Functional Requirements:** Practice decomposing a business problem into functional requirements (what the system must do) and non-functional requirements (how the system must perform — availability, latency, throughput, scalability, and compliance). For example, a payments API might have a functional requirement to process card transactions and a non-functional requirement of 99.99% availability with sub-200ms response time at 10,000 requests per second.
-*   **Movement of Data:** Understand data movement patterns for each scenario: batch transfers (Storage Transfer Service, Transfer Appliance for offline petabyte-scale migrations), real-time streaming (Pub/Sub, Dataflow), and event-driven pipelines (Eventarc). Factor in egress costs, data residency regulations, and encryption-in-transit requirements when designing cross-region data flows.
-*   **Design Decision Trade-offs:** Architects must evaluate competing objectives. Study the trade-offs between strong consistency (Cloud Spanner) and eventual consistency (Firestore), managed simplicity (Cloud Run) and orchestration flexibility (GKE), higher availability (REGIONAL Cloud SQL) and lower cost (ZONAL), and synchronous REST APIs and asynchronous Pub/Sub messaging. Understanding CAP theorem and the cost-reliability-performance triangle is essential for answering PCA scenario questions.
-*   **Business Continuity vs. Disaster Recovery (DR):** Understand the difference between keeping the business running during an outage (Continuity) versus restoring IT systems post-outage (DR).
-*   **Workload Disposition Strategies:** Practice evaluating whether to Build, Buy, Modify, or Deprecate a legacy application based on ROI and technical debt.
-*   **Integration Patterns with External Systems:** Study API Gateways, Pub/Sub event-driven architectures, and hybrid cloud message queues.
+&lt;details>
+&lt;summary>Q2: Finance wants to be warned before, not after, the monthly cloud budget is exhausted. What do you configure?&lt;/summary>
+
+A: A billing budget with multiple alert thresholds — here `budget_alert_thresholds = [0.5, 0.9, 1.0]` notifies at 50% and 90% of `budget_amount`, before the 100% mark. Budgets alert but do not stop spending; pair them with `max_instance_count` caps if hard limits matter.
+&lt;/details>
+
+**Beyond the modules** — The exam also tests business analysis the modules cannot show: defining KPIs and success measures, CapEx-vs-OpEx framing, total cost of ownership, and build/buy/modify/deprecate workload disposition. Study the Google Cloud pricing calculator, "Cloud Billing reports" docs, and the Architecture Framework's cost optimization pillar. Try `gcloud billing accounts list` and explore **Billing > Reports** grouped by SKU in a scratch project.
+
+**⚠️ Exam trap** — Budgets never *stop* spending; they only notify. If a scenario demands spend *enforcement*, the answer involves quotas, instance caps, or programmatic budget-response automation — not the budget alone.
 
 ---
 
 ## 1.2 Designing a cloud solution infrastructure that meets technical requirements
 
-### High Availability and Fail-over Design
-**Concept:** Designing resilient systems that withstand regional or zonal failures in accordance with the Well-Architected Framework.
+> ⏱ ~90 min · 💰 high — REGIONAL Cloud SQL roughly doubles instance cost; HA Redis and a read replica add more · ⚙️ Requires: Resilient data tier profile (+ GKE architecture profile for the HPA/PDB steps)
 
-**In the RAD UI:**
-*   **Global Load Balancing:** When `enable_cloud_armor` is active, it provisions a global L7 load balancer capable of routing across regions.
-*   **Pod Disruption Budgets (GKE):** The `pdb_min_available` variable (Group 27) ensures a minimum number of replicas are always available during voluntary disruptions.
-*   **Database HA:** `postgres_database_availability_type` (Group 3 in GCP Services) allows switching between ZONAL and REGIONAL (multi-zone high availability) configurations. A REGIONAL instance provisions a synchronous hot standby in a separate zone and automatically promotes it within approximately 60 seconds if the primary zone fails.
+**Why the exam cares** — High availability, scalability, and reliability requirements ("99.95% uptime," "survive a zone failure," "handle 10× Black Friday traffic") each map to a specific mechanism with a specific cost. The exam expects you to know that zonal→regional Cloud SQL buys automatic zone failover, that read replicas buy read throughput but *not* HA, and that BASIC-tier Redis offers no replication at all.
 
-**Console Exploration:**
-Navigate to **SQL** to verify the high availability configuration of the database. Navigate to **Network Services > Load balancing** to view the global frontend.
+**How RAD implements it**
 
-**Real-world example:** A healthcare provider's patient appointment portal requires a 99.99% monthly uptime SLA. Using a REGIONAL Cloud SQL instance, the database automatically promotes its hot standby to primary within approximately 60 seconds if the primary zone fails — meeting the recovery time objective without any manual intervention from the operations team.
+| Requirement | Mechanism | Variable (default) |
+|---|---|---|
+| Database survives zone failure | Cloud SQL REGIONAL = synchronous standby in a second zone, automatic failover | `postgres_database_availability_type` (default `ZONAL`) |
+| Read scale-out | Read replicas — always ZONAL in this module | `create_postgres_read_replica` (default `false`), `postgres_read_replica_count` (default `1`) |
+| Point-in-time recovery | PITR with 7-day transaction log retention, 7 retained daily backups starting 04:00 UTC | always on for PostgreSQL |
+| Cache survives instance failure | Memorystore `STANDARD_HA` = replica + automatic failover | `redis_tier` (default `BASIC`) |
+| Cache survives restart | RDB snapshots or AOF | `redis_persistence_mode` (default `DISABLED`) |
+| App scales with traffic (GKE) | HPA targeting 70% CPU / 80% memory utilization — created only when `max_instance_count` > 1 and `enable_vertical_pod_autoscaling = false` | `min_instance_count` (default `1`), `max_instance_count` (default `3`) in App_GKE |
+| Voluntary-disruption protection | PodDisruptionBudget, skipped when `max_instance_count = 1` | `enable_pod_disruption_budget` (default `true`), `pdb_min_available` (default `"1"`) |
 
-### Scalability to Meet Growth Requirements
-**Concept:** Architecting for seamless traffic spikes without manual intervention.
+A guardrail worth studying: the platform's Redis layer carries two plan-time preconditions — one **blocks `redis_tier = "BASIC"` when `resource_labels.environment = "production"`**, and a second **blocks `redis_persistence_mode = "DISABLED"` on a production `STANDARD_HA` instance**, so production caches must enable `RDB` or `AOF`. That is the exam's "BASIC tier is not production-grade" lesson — and "cached state must survive failover" — encoded as validations.
 
-**In the RAD UI:**
-*   **Cloud Run Architecture:** Because the application is deployed on Cloud Run, it scales instances horizontally natively. Review the concurrency limits and `container_resources` (Group 3).
-*   **GKE Architecture:** The `enable_vertical_pod_autoscaling` variable (Group 3) enables the Vertical Pod Autoscaler (VPA), which automatically right-sizes the CPU and memory *resource requests* of individual pods based on observed utilization. Unlike the Horizontal Pod Autoscaler (HPA), which scales the *number* of pods in response to traffic, VPA optimizes the resource allocation of each individual pod, reducing waste and improving node bin-packing efficiency on Autopilot.
+**Try it**
 
-**Console Exploration:**
-Review the **Revisions** tab in Cloud Run for concurrency limits, and the **Autoscaling** tab in GKE Workloads.
+1. Apply the Resilient data tier profile. In **Console > SQL**, open the instance — the overview shows high availability (regional) and a failover option.
+2. Confirm from the CLI and find the standby zone:
 
-### Backup and Recovery
-**Concept:** Guaranteeing Recovery Point Objectives (RPO) and Recovery Time Objectives (RTO).
+```bash
+gcloud sql instances describe <instance-name> \
+  --format="value(settings.availabilityType, gceZone, secondaryGceZone)"
+```
 
-**In the RAD UI:**
-*   **Automated Jobs & Cloud Scheduler:** The `backup_schedule` (Group 6) and `backup_retention_days` (Group 6) variables configure automated Cloud Scheduler jobs that trigger containerized Cloud Run Jobs or Kubernetes CronJobs to stream database backups securely to Cloud Storage.
+3. In **Console > Memorystore > Redis**, verify the instance tier shows Standard.
+4. On the GKE profile, inspect the autoscaler:
 
-**Console Exploration:**
-Go to **Cloud Scheduler** to see the cron configuration, and **Cloud Run > Jobs** to see the containerized execution history.
+```bash
+kubectl get hpa -n <namespace> -o wide
+```
 
-**Real-world example:** A SaaS company configures a daily 02:00 UTC backup with a 30-day retention window. When a developer accidentally drops a production table, the on-call engineer restores the closest backup from Cloud Storage to a new Cloud SQL instance and updates the application's connection string — recovering all but the most recent hours of data and meeting the agreed RTO without manual backup scripts.
+5. You know it worked when `availabilityType` returns `REGIONAL` with a populated `secondaryGceZone`, and `kubectl get hpa` shows utilization targets of 70% (CPU) and 80% (memory).
 
-### 💡 Additional Technical Design Objectives & Learning Guidelines
-*   **Flexibility of Cloud Resources:** Understand how Managed Instance Groups (MIGs) on Compute Engine provide autoscaling and rolling update capabilities for VM-based workloads, allowing the fleet to grow and shrink in response to demand without manual provisioning. Multi-region deployments behind a global load balancer add geographic flexibility. Regional Managed Instance Groups can spread VMs across zones automatically for fault tolerance.
-*   **Performance and Latency Optimization:** Study how Cloud CDN reduces latency for globally distributed users by caching static content at Google edge points of presence, cutting round-trip time for cacheable responses from hundreds of milliseconds to single-digit milliseconds. Memorystore (managed Redis/Valkey or Memcached) eliminates repetitive database reads for hot data such as session tokens, rate-limit counters, and product catalogue entries. For GKE workloads, co-locating pods in the same zone as their Cloud SQL instance and using connection pooling (e.g., via Cloud SQL Auth Proxy) reduces inter-zone latency costs and improves sustained throughput.
-*   **Gemini Cloud Assist:** In the GCP Console, look for the Gemini (sparkle) icon. Practice using Gemini to ask architectural questions, summarize logs, or optimize configurations based on the Well-Architected Framework.
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: An e-commerce database must survive a zone outage with no manual intervention, and the reporting team's heavy queries are slowing checkout. What two changes do you make?&lt;/summary>
+
+A: Set the instance to REGIONAL availability (synchronous standby plus automatic failover handles the zone outage) and add a read replica, pointing the reporting workload at it (offloads reads). Neither substitutes for the other: replication to a read replica is asynchronous with no automatic failover, and a REGIONAL standby serves no read traffic.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: A session cache on BASIC-tier Memorystore loses all data during maintenance, breaking user logins. Cheapest fix that survives both maintenance and instance failure?&lt;/summary>
+
+A: Move to `STANDARD_HA`, which adds a replica and automatic failover — exactly what the module's production guardrail enforces. Persistence (`RDB`/`AOF`) additionally protects against full restarts. BASIC tier has no replica, so any failure event means a cold cache.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q3: Why does the module skip creating a PodDisruptionBudget when `max_instance_count = 1`?&lt;/summary>
+
+A: A PDB with `minAvailable: 1` on a single-replica workload would make the one pod unevictable, blocking node drains and GKE upgrades indefinitely. PDBs only make sense when spare replicas can keep serving during voluntary disruption — a validation in App_GKE also requires `pdb_min_available` to be less than `max_instance_count` (percentages exempt).
+&lt;/details>
+
+**⚠️ Exam trap** — Backups ≠ PITR ≠ HA. Backups recover to a snapshot time, PITR replays transaction logs to any moment within retention, and REGIONAL HA prevents the outage in the first place. A scenario asking to "recover the database to 14:32 yesterday" needs PITR; "no downtime during zone failure" needs REGIONAL; neither solves the other.
 
 ---
 
 ## 1.3 Designing network, storage, and compute resources
 
-### Cloud-Native Networking
-**Concept:** Connecting managed compute to internal resources securely.
+> ⏱ ~90 min · 💰 moderate — Filestore's 1024 GB minimum and the GKE cluster are the drivers · ⚙️ Requires: GKE architecture profile, optionally `create_filestore_nfs = true`
 
-**In the RAD UI:**
-*   **Direct VPC Egress:** Review `vpc_egress_setting` (Group 4) for Cloud Run Direct VPC Egress.
-*   **Private Service Connect:** The platform establishes peered VPC connections for managed services implicitly, securing database traffic.
+**Why the exam cares** — This is the product-selection subsection: VPC layout and private access patterns, file vs object vs block vs relational storage, and the serverless-vs-Kubernetes compute decision. The exam rewards knowing the *decision criteria* — POSIX semantics demand file storage, per-pod persistent state demands a StatefulSet, operational simplicity favors Cloud Run.
 
-**Console Exploration:**
-Check the Cloud Run service's **Networking** tab in the Console. Go to **Network Connectivity > Private Service Connect**.
+**How RAD implements it**
 
-**Real-world example:** A Cloud Run service that queries a Cloud SQL database uses Direct VPC Egress to route all traffic through the private VPC rather than the public internet. This eliminates exposure of database credentials over a public network path and avoids the latency overhead of routing through the Cloud SQL Auth Proxy, while still benefiting from Google's managed Private Service Connect endpoint for the database.
+*Network*: a custom-mode VPC (subnets are not auto-created) with one subnet per entry in `availability_regions` (default `["us-central1"]`) sized by `subnet_cidr_range` (default `["10.0.0.0/24"]`); a Cloud Router and Cloud NAT per region (covering all subnets and IP ranges) so private workloads get outbound-only internet; and private services access (a global VPC-peering address range plus a service networking connection) carrying Cloud SQL and Memorystore traffic privately — the PostgreSQL instance has no public IP and uses encrypted-only SSL connections. GKE clusters are VPC-native (alias-IP), with pod/service secondary ranges derived per cluster from `gke_pod_base_cidr` (default `10.64.0.0/10`) and `gke_service_base_cidr` (default `10.8.0.0/16`).
 
-### Choosing Appropriate Storage Types
-**Concept:** Selecting purpose-built storage based on structured/unstructured data and latency needs.
+*Storage* — the module set is a storage-selection matrix:
 
-**In the RAD UI:**
-*   **Cloud SQL (Relational):** Check `create_postgres` / `create_mysql` (Group 3 in GCP Services).
-*   **Cloud Storage (Object Storage):** Look at the `storage_buckets` variable (Group 10 for Cloud Run, Group 17 for GKE).
-*   **Filestore (File/NFS Storage):** Review `create_filestore_nfs` (Group 6 in GCP Services).
+| Need | Service | Variable (default) |
+|---|---|---|
+| Relational, transactional | Cloud SQL PostgreSQL/MySQL, AlloyDB | `create_postgres` (default `true`), `create_mysql` (`false`), `enable_alloydb` (`false`) |
+| Document / NoSQL | Firestore (Native mode, Enterprise edition) | `create_firestore` (default `false`) |
+| Shared POSIX filesystem, managed | Filestore (`BASIC_HDD`/`BASIC_SSD`/`ENTERPRISE`) | `create_filestore_nfs` (default `false`), `filestore_capacity_gb` (default `1024`) |
+| Shared POSIX filesystem, cheap | Self-managed NFS on an `e2-small` MIG with a stateful pd-ssd data disk, auto-healing, daily snapshots | `create_network_filesystem` (default `true`), `network_filesystem_capacity` (default `10` GB) |
+| Object storage | GCS buckets with versioning, lifecycle rules, CMEK | `storage_buckets` list in App_CloudRun / App_GKE |
+| In-memory cache | Memorystore Redis | `create_redis` (default `false`) |
+| Per-pod block storage | StatefulSet PVCs (GKE only) | `stateful_pvc_enabled`, `stateful_pvc_size` |
 
-**Console Exploration:**
-Visit **Filestore** and **SQL** in the GCP Console to see how different storage tiers match differing technical constraints.
+The Filestore-vs-NFS-VM pair is a textbook managed-vs-self-managed trade-off: Filestore costs more (1 TiB minimum on BASIC tiers) but removes patching, healing, and snapshot management; the VM is cheap but is a single zonal instance whose resilience is only MIG auto-healing and daily disk snapshots. The platform's NFS-discovery layer prefers Filestore when both exist.
 
-**Real-world example:** A media company uses three storage tiers in tandem: Cloud SQL stores structured user subscription records (relational, transactional), Cloud Storage hosts uploaded video files and rendered thumbnails (object, durable, high throughput), and Filestore provides a shared NFS mount for a legacy transcoding fleet that requires POSIX filesystem semantics. Selecting the wrong tier — for example, using Cloud Storage for a high-frequency transactional workload — would result in unacceptable latency and consistency trade-offs.
+*Compute* — the same App_Common wiring deploys to either engine. Cloud Run: request-driven, `execution_environment` default `gen2` (required — and validated — for NFS and GCS Fuse mounts), `timeout_seconds` default `300`, no per-instance persistent volumes. GKE: `workload_type` (default `null`) auto-resolves — `stateful_pvc_enabled = true` selects a StatefulSet, otherwise a Deployment; setting `workload_type = "Deployment"` *alongside* `stateful_pvc_enabled = true` fails at plan time because Deployments do not honor per-replica volume claim templates.
 
-### Mapping Compute Needs to Platform Products
-**Concept:** Justifying the selection of Serverless over Kubernetes, or vice versa.
+**Try it**
 
-**In the RAD UI:**
-The choice between **App CloudRun** and **App GKE** modules forces the architect to map compute needs. Cloud Run favors low operational overhead and rapid scaling from zero. GKE favors complex orchestrations and persistent state.
+1. In **Console > VPC network > VPC networks**, open the platform VPC; note custom subnet mode and the GKE subnet's two secondary ranges.
+2. List the private services access allocation:
 
-**Console Exploration:**
-Navigate between **Cloud Run** and **Kubernetes Engine** in the console to observe the operational differences.
+```bash
+gcloud compute addresses list --global --filter="purpose=VPC_PEERING"
+gcloud services vpc-peerings list --network=<vpc-network-name>
+```
 
-### 💡 Additional Network/Storage/Compute Objectives & Learning Guidelines
-*   **Google Cloud AI and Machine Learning:** Research Vertex AI, Gemini LLMs, Agent Builder, and Model Garden. Understand when to use pre-trained APIs versus custom model training on AI Hypercomputers.
-*   **Data Processing Solutions:** Differentiate between Cloud Dataflow (Apache Beam, streaming/batch), Dataproc (managed Hadoop/Spark), and Pub/Sub (event ingestion).
-*   **Compute Volatility:** Understand Spot VMs (preemptible, cheap, fault-tolerant workloads) vs. Custom Machine Types vs. Sole-Tenant nodes.
-*   **Cloud Run Functions:** Understand when to use single-purpose, event-driven functions over full containerized apps on Cloud Run.
+3. Deploy App_GKE with `stateful_pvc_enabled = true`, `stateful_pvc_size = "10Gi"`, and a `stateful_pvc_mount_path`; leave `workload_type` unset. Then:
+
+```bash
+kubectl get statefulset,pvc -n <namespace>
+```
+
+4. Now set `workload_type = "Deployment"` while keeping `stateful_pvc_enabled = true` and run a plan — read the validation error, then revert.
+5. You know it worked when a StatefulSet with a bound PVC exists, and the deliberate misconfiguration was rejected at plan time, not at runtime.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: A legacy CMS needs a shared writable filesystem across six replicas, with a strict SLA and no ops staff to babysit a file server. Which option here, and why not the default?&lt;/summary>
+
+A: Filestore (`create_filestore_nfs = true`) — a managed service with no VM to patch or heal. The default self-managed NFS VM is far cheaper but is a single zonal `e2-small` whose recovery depends on MIG auto-healing and daily snapshots; "no ops staff + strict SLA" rules it out.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: Why does Cloud Run gen2 matter for this platform's NFS support?&lt;/summary>
+
+A: NFS and GCS Fuse volume mounts require Cloud Run's gen2 execution environment (full Linux kernel compatibility); gen1 does not support them. The module encodes this as a plan-time validation: `enable_nfs = true` with `execution_environment = "gen1"` is rejected before anything deploys.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q3: A team must run a container with one persistent volume per replica and stable network identities. Cloud Run or GKE, and which workload type?&lt;/summary>
+
+A: GKE with a StatefulSet — per-replica PVCs (`volumeClaimTemplates`) and stable pod identities are StatefulSet features. Cloud Run instances are ephemeral and share-nothing; its volume options (Cloud SQL socket, NFS, GCS Fuse) are shared, not per-instance block storage.
+&lt;/details>
+
+**Beyond the modules** — Not implemented here: Shared VPC host/service projects, VPC Network Peering between VPCs, Cloud DNS, internal load balancers, Spanner, Bigtable, and BigQuery. For the exam, be able to place each: Spanner for globally consistent relational scale, Bigtable for high-throughput wide-column time series, BigQuery for analytics. Read "Choose a storage option" and "Compare Google Cloud database services" in the official docs.
+
+**⚠️ Exam trap** — "NoSQL" is not one answer. Firestore (the only NoSQL engine deployable here) suits document data with mobile/web sync; Bigtable suits petabyte time series; Memorystore is a cache, not a system of record — especially with persistence `DISABLED`, the default.
 
 ---
 
 ## 1.4 Creating a migration plan
-### 💡 Additional Migration Objectives & Learning Guidelines
-The RAD modules deploy greenfield applications, but the PCA exam focuses heavily on migrating existing workloads.
-*   **Google Cloud Migration Center:** Explore the Migration Center in the console. Understand how it performs discovery, assesses dependencies, and recommends target architectures (e.g., fit for GKE or Compute Engine).
-*   **Migration Methodologies:** Study Lift and Shift (Rehosting), Improve and Move (Replatforming), and Rip and Replace (Refactoring). Understand workload testing (running the migrated system in parallel before cutover), network planning (provisioning HA VPN or Cloud Interconnect before migration), and dependency mapping (ensuring dependent services are migrated in the correct order).
-*   **Integrating Solutions with Existing Systems:** Legacy environments rarely disappear overnight. Design integration points using Apigee or Cloud Endpoints to expose on-premises functionality as APIs consumable by cloud services. Use Pub/Sub to decouple on-premises event producers from cloud consumers asynchronously. Cloud Interconnect or HA VPN provides secure hybrid network connectivity during the transition period, allowing cloud and on-premises workloads to communicate as if on the same private network.
-*   **Software Licensing:** Understand how BYOL (Bring Your Own License) impacts architecture, particularly the use of Sole-Tenant nodes for strict core-based licensing (e.g., Windows Server, SQL Server).
+
+> ⏱ ~30 min reading + a short lab on the import jobs · 💰 no additional cost · ⚙️ Requires: default deployment
+
+**Why the exam cares** — Migration scenarios test sequencing (assess → plan → migrate → optimize), choosing rehost/replatform/refactor per workload, and data-transfer mechanics: online vs offline, downtime windows, dependency order.
+
+**How RAD implements it** — The foundation modules deploy greenfield infrastructure; there is no migration tooling. The nearest adjacent capability is the data-import path in App_CloudRun/App_GKE: `enable_backup_import` (default `false`) with `backup_source` (`gcs` or `gdrive`), `backup_file`, and `backup_format` runs a containerized job that restores an existing database dump into the new Cloud SQL instance — a miniature "migrate the data, then cut over" exercise. Notice the real plan-time constraint: `backup_format = "auto"` is rejected when `backup_source = "gdrive"`.
+
+**Try it**
+
+1. Export a small PostgreSQL dump from any existing system and upload it to a GCS bucket.
+2. Redeploy with `enable_backup_import = true`, `backup_source = "gcs"`, and the `backup_file` path; watch the import job in **Console > Cloud Run > Jobs**.
+3. Verify activity on the target instance:
+
+```bash
+gcloud sql operations list --instance=<instance-name> --limit=5
+```
+
+4. You know it worked when the import job execution succeeds and your tables exist in the application database.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: A company must move a 400 TB on-premises archive to GCS over a 100 Mbps link within a month. Which transfer approach?&lt;/summary>
+
+A: Transfer Appliance (offline hardware). At 100 Mbps, 400 TB takes roughly a year online — far beyond the window. Storage Transfer Service or `gcloud storage` suits online transfers only when bandwidth × time covers the volume.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: In a phased migration, which workloads move first?&lt;/summary>
+
+A: Rehost (lift-and-shift) stateless, low-dependency workloads first for quick wins; refactor strategically valuable apps where cloud-native gains justify the effort; defer tightly coupled legacy systems until dependencies are mapped. The exam rewards "assess and map dependencies before moving anything."
+&lt;/details>
+
+**Beyond the modules** — Study Migration Center (discovery and assessment), Migrate to Virtual Machines, Database Migration Service (continuous replication into Cloud SQL with minimal downtime), and Storage Transfer Service vs Transfer Appliance selection. Also review the network prerequisites for migration — HA VPN and Cloud Interconnect — none of which the modules provision. Walk the **Migration Center** console flow in a scratch project.
 
 ---
 
 ## 1.5 Envisioning future solution improvements
-### 💡 Additional Future Solutions Objectives & Learning Guidelines
-*   **Cloud and Technology Improvements:** Google Cloud continuously releases new managed services, regional expansions, and AI capabilities. Design systems with clear abstraction layers — for example, routing events through Pub/Sub rather than hardcoding service-to-service HTTP calls — so that the underlying technology can be upgraded or replaced without application refactoring. Track the Google Cloud release notes and "What's New" page as part of an architect's ongoing practice.
-*   **Evolution of Business Needs:** Anticipate that product strategies, compliance requirements, and scale targets will change. Design solutions with loose coupling (Pub/Sub, Eventarc, Cloud Tasks), modular IaC using versioned Terraform modules, and well-defined API contracts so that new business requirements can be addressed without wholesale architectural rework. For example, a monolithic application can be incrementally strangled by extracting individual capabilities as Cloud Run services behind an API Gateway, migrating traffic gradually using weighted routing.
-*   **Cloud-First Design:** Research how to evolve a hybrid "lift-and-shift" architecture into a cloud-native architecture over time by strangling the monolith, adopting managed services (like Cloud Spanner), and utilizing serverless event-driven patterns.
+
+> ⏱ ~30 min reading · 💰 no additional cost · ⚙️ Requires: default deployment
+
+**Why the exam cares** — Architects design for change: new regions, new compliance regimes, replacing components without rework. The exam probes whether your design has seams — abstraction layers, loose coupling, declarative definitions — that let it evolve.
+
+**How RAD implements it** — Not a deployable feature, but the repository itself is the exhibit. Two patterns are worth internalizing as exam-ready talking points. First, the **layered module architecture** (Platform → Foundation → Application): swapping Cloud Run for GKE is a one-layer change because both foundation engines consume the same shared configuration. Second, the **discovery-vs-inline pattern**: App_CloudRun and App_GKE probe for Services_GCP-managed resources (subnets carrying the description `managed-by=services-gcp`, labeled Artifact Registry repos) and provision inline equivalents only when the platform layer is absent — with `require_services_gcp_module` (default `true`) able to enforce platform presence. That is "design for evolving deployment topologies" in working code.
+
+**Try it**
+
+1. Note that the platform discovers shared subnets by the `managed-by=services-gcp` description filter.
+2. Reproduce the discovery query the module runs:
+
+```bash
+gcloud compute networks subnets list \
+  --filter="description~managed-by=services-gcp" \
+  --format="table(name,network,region,description)"
+```
+
+3. You know it worked when the subnets your Services_GCP deployment created appear — the same signal a future App_GKE deployment would use to attach to them.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: A platform team wants application teams to deploy onto shared infrastructure when it exists, but self-provision in isolated sandboxes when it does not. What architectural pattern supports this?&lt;/summary>
+
+A: Discovery with inline fallback — probe for tagged/labeled shared resources at plan time and provision local equivalents only when absent, exactly as App_CloudRun does for VPC, SQL, NFS, and Artifact Registry. A policy flag (`require_services_gcp_module`) converts the fallback into a hard requirement for production.
+&lt;/details>
+
+**Beyond the modules** — Study the evolution mechanisms the modules do not show: event-driven decoupling with Pub/Sub and Eventarc, strangler-fig migration off monoliths, API versioning behind API Gateway/Apigee, and tracking Google Cloud release notes ("What's new") as ongoing architectural input.

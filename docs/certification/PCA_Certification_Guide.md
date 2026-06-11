@@ -1,178 +1,153 @@
 ---
-title: "Professional Cloud Architect (PCA) Certification Exploration Guide"
-sidebar_label: "PCA Certification Guide"
+title: "Professional Cloud Architect (PCA) Certification Lab Map"
 ---
 
-# Professional Cloud Architect (PCA) Certification Exploration Guide
+# Professional Cloud Architect (PCA) Certification Lab Map
 
-This document maps the features and configurations of the deployed Cloud Run and GKE applications to the Professional Cloud Architect (PCA) certification exam domains. It serves as an exploration guide for candidates to understand how cloud architecture concepts are practically implemented in Google Cloud. You can experiment with these configurations directly through your web-based deployment portal.
+The Professional Cloud Architect certification validates your ability to design, plan, and manage secure, scalable, highly available cloud solutions — and to justify the trade-offs behind every design choice. The RAD platform's four foundation modules give you a live laboratory for exactly those trade-offs: `Services_GCP` (the shared platform layer — VPC, Cloud SQL, Redis, Filestore, GKE, CMEK, VPC-SC), `App_CloudRun` and `App_GKE` (two deployment engines for the *same* containerized workload, embodying the serverless-vs-orchestrated decision the PCA exam returns to again and again), and `App_Common` (shared layers implementing discovery, secrets, IAM, storage, and CI/CD patterns). Every toggle in your deployment portal is a design decision you can deploy, inspect in the GCP console, and reverse.
 
----
+## How to use this guide
+
+- Deploy one of the profiles below through your deployment portal, then work through the matching section guide(s).
+- Each section guide pairs "why the exam cares" decision criteria with the exact variables that implement the concept, hands-on steps, and self-check questions.
+- Use the coverage legend honestly: 📘 topics (hybrid connectivity, migration planning, Vertex AI, org hierarchy) must be studied outside the platform — the "Beyond the modules" blocks tell you what and where.
+- **Case studies (📘):** the PCA exam includes scenario questions built on official case studies such as EHR Healthcare, Helicopter Racing League, Mountkirk Games, and TerramEarth. The modules are an excellent rehearsal ground: read a case study's requirements, then write down which portal variables would satisfy each one (e.g. EHR Healthcare's encryption and audit demands map to `enable_cmek`, `enable_audit_logging`, and `enable_vpc_sc`; Mountkirk Games' global, autoscaled, container-based platform maps to GKE Autopilot with a global Gateway and Cloud Armor). Where a requirement has *no* matching variable — hybrid Interconnect for TerramEarth, multi-region Spanner for Mountkirk — you have found a study gap.
+
+**Coverage legend**
+
+| Symbol | Meaning |
+|---|---|
+| ✅ | Fully demonstrated — deploy it, see it, modify it in the RAD platform |
+| 🟡 | Partially demonstrated — the modules touch the concept; supplement with docs |
+| 📘 | Concept-only — not implemented by the modules; study pointers provided |
+
+## Deployment profiles
+
+### Profile: Lean baseline
+*Purpose:* the lowest-cost architecture — zonal database, scale-to-zero serverless, self-managed NFS VM — your reference point for every cost/availability trade-off.
+*Modules:* Services_GCP, then App_CloudRun.
+| Variable | Value |
+|---|---|
+| `create_postgres` | `true` (default) |
+| `postgres_database_availability_type` | `ZONAL` (default) |
+| `create_network_filesystem` | `true` (default — e2-small NFS/Redis VM) |
+| `min_instance_count` | `0` (default, App_CloudRun) |
+| `max_instance_count` | `1` (default, App_CloudRun) |
+
+*Estimated incremental cost:* low — the zonal `db-custom-1-3840` Cloud SQL instance and the e2-small NFS VM dominate; Cloud Run scales to zero.
+
+### Profile: Resilient data tier
+*Purpose:* upgrade the baseline to high availability so you can compare ZONAL vs REGIONAL Cloud SQL, BASIC vs STANDARD_HA Redis, and VM-based NFS vs managed Filestore side by side.
+*Modules:* Services_GCP (update in place), App_CloudRun unchanged.
+| Variable | Value |
+|---|---|
+| `postgres_database_availability_type` | `REGIONAL` |
+| `create_postgres_read_replica` | `true` |
+| `create_redis` | `true` |
+| `redis_tier` | `STANDARD_HA` |
+| `redis_persistence_mode` | `RDB` |
+| `create_filestore_nfs` | `true` |
+| `filestore_tier` | `BASIC_HDD` (default) |
+
+*Estimated incremental cost:* high — REGIONAL Cloud SQL roughly doubles instance cost, the read replica adds another instance, STANDARD_HA Redis doubles Redis cost, and Filestore bills a minimum 1024 GB.
+
+### Profile: GKE architecture
+*Purpose:* deploy the same workload on GKE Autopilot to exercise the Cloud Run vs GKE decision, Kubernetes governance (quotas, PDBs, NetworkPolicy), and Gateway API exposure.
+*Modules:* Services_GCP (update), then App_GKE.
+| Variable | Value |
+|---|---|
+| `create_google_kubernetes_engine` | `true` (Services_GCP) |
+| `gke_cluster_mode` | `AUTOPILOT` (default) |
+| `enable_resource_quota` | `true` (App_GKE) |
+| `enable_network_segmentation` | `true` (App_GKE) |
+| `enable_pod_disruption_budget` | `true` (default, App_GKE) |
+| `stateful_pvc_enabled` | `true`, with `stateful_pvc_size = "10Gi"` and a mount path |
+
+*Estimated incremental cost:* moderate — Autopilot bills per pod resource request plus a cluster management fee; the stateful PVC adds a small persistent disk.
+
+### Profile: Security and delivery
+*Purpose:* layer in defense-in-depth (CMEK, Binary Authorization, VPC-SC dry run, audit logs) and a full CI/CD pipeline with progressive delivery — the backbone for Sections 3, 4, and 6.
+*Modules:* Services_GCP (update), App_CloudRun (update).
+| Variable | Value |
+|---|---|
+| `enable_cmek` | `true` (Services_GCP) |
+| `enable_binary_authorization` | `true`, `binauthz_evaluation_mode = "REQUIRE_ATTESTATION"` (Services_GCP) |
+| `enable_vpc_sc` | `true`, `vpc_sc_dry_run = true` (Services_GCP; needs org + `admin_ip_ranges`) |
+| `enable_audit_logging` | `true` (Services_GCP) |
+| `enable_cloud_armor` | `true`, plus `application_domains` (App_CloudRun) |
+| `enable_iap` | `true`, plus `iap_authorized_users` (App_CloudRun) |
+| `enable_cicd_trigger` | `true`, plus `github_repository_url` (App_CloudRun) |
+| `enable_cloud_deploy` | `true` (App_CloudRun) |
+| `enable_auto_password_rotation` | `true` (App_CloudRun) |
+
+*Estimated incremental cost:* moderate — KMS keys, the global load balancer forwarding rule, and audit-log storage are the main drivers; VPC-SC and Binary Authorization are free.
 
 ## Section 1: Designing and planning a cloud solution architecture (~25% of the exam)
 
-### 1.1 Designing a cloud solution infrastructure that meets business requirements
+The heart of the PCA exam: choosing architectures that satisfy business and technical requirements. The modules embody the canonical trade-offs — serverless vs orchestrated compute, zonal vs regional databases, managed vs self-managed file storage — but business analysis, migration planning, and futures thinking live outside any Terraform module.
 
-**Security and compliance**
-*   **Concept:** Applying zero-trust remote access, edge security, and secure credential handling.
-*   **Implementation Context:**
-    *   Set `enable_iap = true` (Group 10) to deploy Identity-Aware Proxy.
-    *   Set `enable_cloud_armor = true` (Group 11) for OWASP Top 10 protection.
-    *   Configure `enable_auto_password_rotation` (Group 13).
-*   **Exploration:**
-    *   In the GCP Console, navigate to **Security > Identity-Aware Proxy** and verify access policies instead of checking open firewalls.
-    *   Go to **Network Security > Cloud Armor** and review the WAF rules applied to the backend service.
-    *   Navigate to **Security > Secret Manager** to check the rotation schedules of the provisioned database credentials.
-*   **Customization:** Try modifying the Cloud Armor rules in `security.tf` to block a specific IP address block and attempt to access the application to see the 403 response.
-
-**Cost optimization**
-*   **Concept:** Minimizing operational expenses (OpEx) during idle times while scaling to demand.
-*   **Implementation Context:** In `App_CloudRun`, adjust `min_instance_count = 0` and `max_instance_count` (Group 2).
-*   **Exploration:** Go to **Cloud Run**, select the deployed service, and monitor the **Metrics** tab during idle periods and load spikes to see instances drop to zero.
-*   **Customization:** Deploy two instances of the application: one with `min_instance_count = 1` and another with `0`. Use the GCP Pricing Calculator to compare estimated monthly costs.
-
-**Observability**
-*   **Concept:** Establishing automated alerting and dashboarding for operational health.
-*   **Implementation Context:** Populate `support_users` (Group 1) with email addresses.
-*   **Exploration:** Navigate to **Monitoring > Dashboards** to explore custom metrics (Request Count, Latency). Check **Monitoring > Alerting** for automatically configured HTTP 5xx error policies.
-*   **Customization:** Introduce an artificial error in the application (if possible) and observe the alert triggering in the Console and arriving via email.
-
-### 1.2 Designing a cloud solution infrastructure that meets technical requirements
-
-**High availability and fail-over design**
-*   **Concept:** Building resilient frontend architectures using global load balancing.
-*   **Implementation Context:** Set `custom_domains` (Group 11) to provision a Global External Application Load Balancer.
-*   **Exploration:** Navigate to **Network Services > Load balancing**. Inspect the Frontend and Backend service configurations (Serverless NEGs for Cloud Run or Gateways for GKE).
-*   **Customization:** Add multiple regions to a Cloud Run deployment and attach them to the same backend service to observe global traffic routing.
-
-**Scalability to meet growth requirements**
-*   **Concept:** Handling demand seamlessly through autoscaling mechanisms.
-*   **Implementation Context:** For `App_GKE`, configure `container_resources` (Group 2) with proper resource limits/requests.
-*   **Exploration:** In GKE, navigate to **Kubernetes Engine > Workloads** and review the Horizontal Pod Autoscaler (HPA) metrics. For Cloud Run, review concurrency settings.
-*   **Customization:** Use a load testing tool (like Apache Bench or hey) to generate traffic and watch the GKE pods or Cloud Run instances scale out in real-time on the monitoring dashboards.
-
-**Backup and recovery**
-*   **Concept:** Meeting Recovery Point Objective (RPO) and Recovery Time Objective (RTO) targets.
-*   **Implementation Context:** Configure `backup_uri` (Group 14) to trigger automated database exports.
-*   **Exploration:** Navigate to **Cloud Scheduler** to see the cron job configuration and **Cloud Run > Jobs** (or GKE CronJobs) to view the execution history.
-*   **Customization:** Manually trigger a backup job from the Console and verify the resulting `.sql` or `.dump` file appears in the designated Cloud Storage bucket.
-
-### 1.3 Designing network, storage, and compute resources
-
-**Cloud-native networking**
-*   **Concept:** Secure internal connectivity and micro-segmentation.
-*   **Implementation Context:**
-    *   In `App_CloudRun`, set `vpc_egress_setting = "ALL_TRAFFIC"` (Group 2).
-    *   In `App_GKE`, deploy multiple namespaces relying on Dataplane V2.
-*   **Exploration:**
-    *   Check **Cloud Run > Networking** for egress settings.
-    *   In GKE, use `kubectl describe networkpolicy` to review the isolated namespaces.
-*   **Customization:** Attempt to ping a database from an unauthorized GKE namespace to verify the Dataplane V2 network policies drop the traffic.
-
-**Choosing appropriate storage types**
-*   **Concept:** Selecting relational, block, or file storage based on workload requirements.
-*   **Implementation Context:** Set `database_type` (Group 5), `storage_buckets` (Group 6), and `enable_nfs = true` (Group 7).
-*   **Exploration:** Visit **SQL**, **Cloud Storage**, and **Filestore** in the Console to compare how each service is managed and monitored natively.
-*   **Customization:** Mount the NFS Filestore instance to multiple pods in GKE and write a file from one pod to verify it is immediately readable by the other.
-
-**Mapping compute needs to platform products**
-*   **Concept:** Choosing between serverless (Cloud Run) and orchestrated containers (GKE).
-*   **Implementation Context:** Deploy the same container image to both `App_CloudRun` and `App_GKE`.
-*   **Exploration:** Compare the deployment speed, operational overhead, and Console interfaces for both platforms.
-*   **Customization:** Try deploying a stateful application requiring persistent volume claims (PVCs) and evaluate why GKE is a better fit than Cloud Run.
-
----
+| Exam topic | Coverage | Where in RAD | Guide |
+|---|---|---|---|
+| 1.1 Business requirements (cost, security, success measures) | 🟡 | `min_instance_count`, `create_billing_budget`, `enable_iap`, `support_users` | [Section 1 guide](PCA_Section_1_Exploration_Guide.md#11-designing-a-cloud-solution-infrastructure-that-meets-business-requirements) |
+| 1.2 Technical requirements (HA, scalability, reliability) | ✅ | `postgres_database_availability_type`, `redis_tier`, `create_postgres_read_replica`, HPA/PDB in App_GKE | [Section 1 guide](PCA_Section_1_Exploration_Guide.md#12-designing-a-cloud-solution-infrastructure-that-meets-technical-requirements) |
+| 1.3 Network, storage, and compute design | ✅ | VPC + Cloud NAT + private services access, Filestore vs self-managed NFS, App_CloudRun vs App_GKE | [Section 1 guide](PCA_Section_1_Exploration_Guide.md#13-designing-network-storage-and-compute-resources) |
+| 1.4 Creating a migration plan | 📘 | nearest: `enable_backup_import` data import jobs | [Section 1 guide](PCA_Section_1_Exploration_Guide.md#14-creating-a-migration-plan) |
+| 1.5 Envisioning future solution improvements | 📘 | nearest: layered module architecture, discovery-vs-inline pattern | [Section 1 guide](PCA_Section_1_Exploration_Guide.md#15-envisioning-future-solution-improvements) |
 
 ## Section 2: Managing and provisioning a cloud solution infrastructure (~17.5% of the exam)
 
-### 2.1 Configuring network topologies
+Provisioning is what the modules do for a living: a custom-mode VPC with Cloud NAT and private services access, four database engines, three flavors of file/object storage, and two container platforms — all declaratively. Hybrid topologies and the two Vertex AI subsections are study-only.
 
-**Security protection and VPC design**
-*   **Concept:** Controlling external exposure and managing internal traffic flow.
-*   **Implementation Context:** Set `public_access = false` (Group 0) alongside IAP, or review the Global External Load Balancer setup.
-*   **Exploration:** Navigate to **VPC network > Firewall** and inspect the network tags generated for GKE node pools or Cloud SQL instances.
-*   **Customization:** Enable Cloud CDN on the load balancer backend and observe cache hit ratios in **Network Services > Cloud CDN** during a load test.
-
-### 2.2 Configuring individual storage systems
-
-**Data retention, lifecycle management, and protection**
-*   **Concept:** Automating data governance and ensuring durability.
-*   **Implementation Context:** Define lifecycle rules in `storage_buckets` (Group 6) and backup schedules in `backup_uri` (Group 14).
-*   **Exploration:**
-    *   Navigate to **Cloud Storage > Buckets > Lifecycle** to see object transition rules.
-    *   Review **Cloud Scheduler** for backup execution frequency.
-*   **Customization:** Set a lifecycle rule to transition objects to `COLDLINE` storage after 30 days. Upload a test object and verify the metadata reflects the upcoming transition.
-
-### 2.3 Configuring compute systems
-
-**Compute resource provisioning and orchestration**
-*   **Concept:** Using declarative Infrastructure as Code (IaC) vs manual provisioning.
-*   **Implementation Context:** Review the entire `terraform apply` process for both modules.
-*   **Exploration:** Read the `terraform plan` output to understand the state dependency graph. Compare how Cloud Run handles automatic provisioning vs GKE's ReplicaSets and Pod Disruption Budgets.
-*   **Customization:** Intentionally delete a managed resource (like a Cloud Scheduler job) via the Console, then run `terraform apply` again to see IaC drift detection and remediation in action.
-
-### 2.4 Leveraging Vertex AI for end-to-end ML workflows
-
-**Using AI Hypercomputer and ML workloads**
-*   **Concept:** Orchestrating ML pipelines from application compute resources.
-*   **Implementation Context:** Use `environment_variables` (Group 3) to inject Vertex AI endpoints into the application container.
-*   **Exploration:** If applicable, navigate to **Vertex AI > Pipelines** to monitor jobs triggered by the application.
-*   **Customization:** Provision a GKE node pool with GPUs and deploy an application that leverages those accelerators for inference tasks.
-
-### 2.5 Configuring prebuilt solutions or APIs with Vertex AI
-
-**Differentiating between Google AI APIs**
-*   **Concept:** Securely integrating generative AI models.
-*   **Implementation Context:** Inject Vertex AI or Gemini API keys securely via `secret_environment_variables` (Group 3).
-*   **Exploration:** Check **Security > Secret Manager** to confirm the API keys are stored securely and not exposed in the Cloud Run or GKE pod environment plain text logs.
-*   **Customization:** Update the secret payload in Secret Manager and restart the Cloud Run revision or GKE pod to verify it picks up the new credentials without changing the application code.
-
----
+| Exam topic | Coverage | Where in RAD | Guide |
+|---|---|---|---|
+| 2.1 Configuring network topologies | 🟡 | `availability_regions`, `subnet_cidr_range`, Cloud NAT + private services access; no hybrid/Shared VPC | [Section 2 guide](PCA_Section_2_Exploration_Guide.md#21-configuring-network-topologies) |
+| 2.2 Configuring individual storage systems | ✅ | `storage_buckets`, `backup_schedule`, `create_filestore_nfs`, Cloud SQL PITR | [Section 2 guide](PCA_Section_2_Exploration_Guide.md#22-configuring-individual-storage-systems) |
+| 2.3 Configuring compute systems | ✅ | `gke_cluster_mode`, `gke_autoscaling_profile`, `container_resources`, `execution_environment` | [Section 2 guide](PCA_Section_2_Exploration_Guide.md#23-configuring-compute-systems) |
+| 2.4 Leveraging Vertex AI for end-to-end ML workflows | 📘 | not implemented | [Section 2 guide](PCA_Section_2_Exploration_Guide.md#24-leveraging-vertex-ai-for-end-to-end-ml-workflows) |
+| 2.5 Configuring prebuilt solutions or APIs with Vertex AI | 📘 | nearest: `secret_environment_variables` for API keys | [Section 2 guide](PCA_Section_2_Exploration_Guide.md#25-configuring-prebuilt-solutions-or-apis-with-vertex-ai) |
 
 ## Section 3: Designing for security and compliance (~17.5% of the exam)
 
-### 3.1 Designing for security
+The Security and delivery profile turns on most of what this section tests: dedicated least-privilege service accounts, CMEK with automatic rotation, Binary Authorization attestation, VPC Service Controls in dry-run mode, IAP zero-trust access, and comprehensive audit logging. Organization hierarchy and regulatory frameworks remain study topics.
 
-**Identity and Access Management (IAM) & Supply Chain**
-*   **Concept:** Principle of least privilege and container image verification.
-*   **Implementation Context:** Review the generated `iam.tf` service accounts and set `enable_binary_authorization`.
-*   **Exploration:**
-    *   Navigate to **IAM & Admin > IAM** and search for the provisioned service accounts to review their strict role bindings.
-    *   Navigate to **Security > Binary Authorization** to view the deployed policies.
-*   **Customization:** Attempt to deploy an unsigned container image when Binary Authorization is enabled to observe the deployment blockage in the Console logs.
-
----
+| Exam topic | Coverage | Where in RAD | Guide |
+|---|---|---|---|
+| 3.1 Security — IAM, secrets, encryption, supply chain, perimeters | ✅ | `enable_cmek`, `enable_binary_authorization`, `enable_vpc_sc`, `enable_iap`, the platform's secrets and IAM layers | [Section 3 guide](PCA_Section_3_Exploration_Guide.md#31-designing-for-security) |
+| 3.1 Security — resource hierarchy, org policies | 📘 | not implemented | [Section 3 guide](PCA_Section_3_Exploration_Guide.md#31-designing-for-security) |
+| 3.1 Security — Workload Identity Federation (keyless CI) | ✅ | `enable_workload_identity_federation`, `wif_provider_type` (Services_GCP) | [Section 3 guide](PCA_Section_3_Exploration_Guide.md#31-designing-for-security) |
+| 3.2 Compliance — auditability, ITAR/HIPAA-style controls | 🟡 | `enable_audit_logging`, `enable_security_command_center`, `vpc_sc_dry_run` | [Section 3 guide](PCA_Section_3_Exploration_Guide.md#32-designing-for-compliance) |
 
 ## Section 4: Analyzing and optimizing technical and business processes (~15% of the exam)
 
-### 4.1 Analyzing and defining technical processes
+CI/CD and release governance are fully demonstrable: a GitHub-triggered Cloud Build pipeline, Kaniko image builds into Artifact Registry, optional Binary Authorization attestation, and a Cloud Deploy pipeline whose default `prod` stage requires manual approval. SRE culture, post-mortems, and stakeholder management are people topics — study them separately.
 
-**Continuous integration/continuous deployment (CI/CD)**
-*   **Concept:** Modern SDLC automation and progressive rollouts.
-*   **Implementation Context:** Review the generated CI/CD pipelines relying on Artifact Registry and Cloud Deploy.
-*   **Exploration:** Navigate to **Cloud Build > Triggers** to see the pipeline definitions, and **Cloud Deploy > Delivery pipelines** to observe the release stages.
-*   **Customization:** Commit a small code change to trigger the pipeline and monitor its progress across staging and production environments through the Cloud Deploy console.
-
----
+| Exam topic | Coverage | Where in RAD | Guide |
+|---|---|---|---|
+| 4.1 Technical processes — SDLC, CI/CD, testing | 🟡 | `enable_cicd_trigger`, `cloud_deploy_stages`, `traffic_split` | [Section 4 guide](PCA_Section_4_Exploration_Guide.md#41-analyzing-and-defining-technical-processes) |
+| 4.2 Business processes — change management, decision-making | 🟡 | `require_approval` gates in `cloud_deploy_stages`; cost guardrails via `create_billing_budget` | [Section 4 guide](PCA_Section_4_Exploration_Guide.md#42-analyzing-and-defining-business-processes) |
 
 ## Section 5: Managing implementation (~12.5% of the exam)
 
-### 5.2 Interacting with Google Cloud programmatically
+The platform *is* an implementation-management exhibit: a four-tier IaC architecture that development teams consume through a portal, with Artifact Registry hygiene policies and guardrail validations baked in. Raw SDK fluency (`gcloud`, client libraries, emulators) requires hands-on practice beyond the portal.
 
-**Infrastructure as Code (IaC)**
-*   **Concept:** Managing Google Cloud infrastructure declaratively.
-*   **Implementation Context:** The entire architecture is managed via Terraform modules.
-*   **Exploration:** Use `gcloud` CLI commands to query the resources provisioned by Terraform (e.g., `gcloud run services list` or `gcloud container clusters list`) to correlate IaC definitions with live API state.
-*   **Customization:** Export the current Terraform state and analyze the JSON structure to understand how Terraform maps high-level variable configurations to low-level GCP API properties.
-
----
+| Exam topic | Coverage | Where in RAD | Guide |
+|---|---|---|---|
+| 5.1 Advising development and operation teams | 🟡 | layered module architecture, `max_images_to_retain`, plan-time validations | [Section 5 guide](PCA_Section_5_Exploration_Guide.md#51-advising-development-and-operation-teams) |
+| 5.2 Interacting with Google Cloud programmatically | 🟡 | OpenTofu workflow, `gcloud`-based provisioners and discovery scripts | [Section 5 guide](PCA_Section_5_Exploration_Guide.md#52-interacting-with-google-cloud-programmatically) |
 
 ## Section 6: Ensuring solution and operations excellence (~12.5% of the exam)
 
-### 6.2 Familiarity with Google Cloud Observability solutions
+Day-2 operations: every deployment ships a monitoring dashboard and email alert channels; Cloud SQL and the NFS VM get CPU/memory/disk alerts; releases can be canaried with `traffic_split` and promoted through Cloud Deploy. Publicly reachable deployments also get a synthetic uptime check and alert policy via `uptime_check_config` (provisioned by the platform's monitoring layer); support processes and chaos engineering are concept-only.
 
-**Monitoring, logging, and alerting strategies**
-*   **Concept:** Deep visibility into system operational health.
-*   **Implementation Context:** Populate `support_users` (Group 1).
-*   **Exploration:** Use **Logging > Logs Explorer** to run a query (e.g., `resource.type="cloud_run_revision" severity>=ERROR`) to find application anomalies.
-*   **Customization:** Create a custom Log-based Metric for a specific application log payload, and then build a custom alert policy on top of that new metric in the Console.
+| Exam topic | Coverage | Where in RAD | Guide |
+|---|---|---|---|
+| 6.1 Operational excellence pillar (Well-Architected Framework) | 🟡 | automation throughout; auto-healing NFS MIG, plan-time CMEK key recovery | [Section 6 guide](PCA_Section_6_Exploration_Guide.md#61-operational-excellence-pillar-well-architected-framework) |
+| 6.2 Familiarity with Google Cloud Observability solutions | ✅ | `support_users`, `alert_policies`, `uptime_check_config`, the platform monitoring layer | [Section 6 guide](PCA_Section_6_Exploration_Guide.md#62-familiarity-with-google-cloud-observability-solutions) |
+| 6.3 Deployment and release management | ✅ | `traffic_split`, `cloud_deploy_stages`, `max_revisions_to_retain` | [Section 6 guide](PCA_Section_6_Exploration_Guide.md#63-deployment-and-release-management) |
+| 6.4 Assisting with the support of deployed solutions | 📘 | nearest: `support_users` notification channels | [Section 6 guide](PCA_Section_6_Exploration_Guide.md#64-assisting-with-the-support-of-deployed-solutions) |
+| 6.5 Evaluating quality control measures | 🟡 | `enable_vulnerability_scanning`, Binary Authorization attestation step, the App_GKE plan-time validation suite | [Section 6 guide](PCA_Section_6_Exploration_Guide.md#65-evaluating-quality-control-measures) |
+| 6.6 Ensuring the reliability of solutions in production | 🟡 | PDBs, topology spread, auto-healing NFS MIG, Redis production-tier guardrail | [Section 6 guide](PCA_Section_6_Exploration_Guide.md#66-ensuring-the-reliability-of-solutions-in-production) |
+
+---
+
+*Application wrapper modules (Django, WordPress, and others) exist on the platform but are out of scope for these guides — everything here is demonstrated with the four foundation modules alone.*

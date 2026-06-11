@@ -1,284 +1,216 @@
 ---
-title: "PCD Certification Preparation Guide: Section 4 — Integrating applications with Google Cloud services (~21% of the exam)"
-sidebar_label: "PCD Section 4 Exploration Guide"
+title: "PCD Certification Preparation Guide: Section 4 \u2014 Integrating applications with Google Cloud services (~21% of the exam)"
 ---
 
 # PCD Certification Preparation Guide: Section 4 — Integrating applications with Google Cloud services (~21% of the exam)
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud Developer (PCD) certification explore Section 4 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
-
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCD objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+This section uses the integration surfaces the foundation modules wire up for you: database connectivity and runtime configuration (App_CloudRun's Cloud Run service and the GKE proxy sidecar), identity (the GKE service-account wiring, Workload Identity Federation in `Services_GCP`, and the platform's IAM layer), and monitoring (the platform's monitoring and dashboard layers). Deploy the **Serverless baseline** profile; add the **Kubernetes lab** profile for the Workload Identity exercises (see the [Lab Map](PCD_Certification_Guide.md)).
 
 ---
 
 ## 4.1 Integrating applications with data and storage services
 
-### Managing Connections to Datastores
-**Concept:** Securely connecting applications to Google Cloud datastores (Cloud SQL, Cloud Storage) without exposing credentials or network endpoints.
+> ⏱ ~60 min · 💰 no additional cost over the deployed profile · ⚙️ Requires: Serverless baseline (Postgres + Cloud SQL volume are on by default)
 
-**In the RAD UI:**
-*   **Cloud SQL Auth Proxy:** The `enable_cloudsql_volume` variable (Group 3) automatically injects the Cloud SQL Auth Proxy as a sidecar container. The proxy establishes an encrypted tunnel to Cloud SQL using IAM-based authentication — no SSL certificate management, no public IP exposure, and no database password embedded in connection strings. Your application code connects to the database via a Unix socket (`/cloudsql/<instance-connection-name>`) mounted as a volume in the container.
-*   **Cloud Storage Integration:** The `storage_buckets` variable (Group 10 for Cloud Run, Group 17 for GKE) provisions Cloud Storage buckets and mounts them into running containers using the **Cloud Storage FUSE CSI driver**. The bucket appears as a local directory inside the container — your application can use standard filesystem operations (`open()`, `read()`, `write()`) rather than the Cloud Storage client library API. This is well-suited for reading large static assets, model files, or configuration data at startup.
+**Why the exam cares** — Integration questions are concrete: what connection string does the code use, where does the password come from, which IAM role does the service account need, and what happens at scale (connection limits, proxy behavior). The Cloud SQL Auth Proxy pattern — IAM-authenticated, TLS-encrypted, no IP allowlists — is the canonical answer, and you should know both its Cloud Run form (managed socket volume) and its GKE form (sidecar container).
 
-**Console Exploration:**
-Navigate to **Cloud Run** or **Kubernetes Engine**, select the deployment, and look at the **Volumes** configuration to see how Cloud SQL sockets and Cloud Storage buckets are mounted into the container runtime. For Cloud Run, inspect the **Edit & deploy new revision** panel and click the **Volumes** tab — you will see the Cloud SQL connection volume and the Cloud Storage FUSE volume listed alongside any Secret Manager secret volumes.
+**How RAD implements it** —
 
-**Real-world example:** A Cloud Run service connects to a Cloud SQL PostgreSQL database using the Cloud SQL Auth Proxy sidecar. The database connection string is `postgresql://app_user:${DB_PASSWORD}@/appdb?host=/cloudsql/project:region:instance`. The `DB_PASSWORD` is injected from Secret Manager as an environment variable — not hard-coded. The proxy handles IAM authentication, TLS, and connection pooling. The service account running the Cloud Run service has `roles/cloudsql.client` on the instance — the only IAM role required. No VPC peering, no SSL certificate, and no publicly exposed Cloud SQL IP address are needed.
+*Database connectivity.* On Cloud Run, `enable_cloudsql_volume` (default `true`) attaches the managed Cloud SQL volume mounted at `cloudsql_volume_mount_path` (default `/cloudsql`); the app connects via the Unix socket `/cloudsql/<project>:<region>:<instance>`. On GKE, the same flag injects a `cloud-sql-proxy` sidecar (image mirrored into Artifact Registry, started with `--private-ip`, graceful preStop via `/quitquitquit`) and the app connects to localhost. Disable the flag to connect over private IP directly — the module then sets `DB_HOST` to the instance's private address.
 
-### Integrating with Additional Datastores
+*Runtime configuration injection.* App_CloudRun assembles env vars the container sees without any code knowing about Terraform: `APP_NAME`, `APP_VERSION`, `DB_NAME`, `DB_USER`, `DB_PORT`, `DB_HOST` (socket path or private IP), `CLOUDRUN_SERVICE_URL`, plus `NFS_SERVER_IP` when NFS is enabled and `REDIS_HOST`/`REDIS_PORT`/`REDIS_URL` when `enable_redis` is on. The password never appears in plaintext: `DB_PASSWORD` arrives as a Secret Manager reference. All the env var *names* are overridable (`db_password_env_var_name`, `db_host_env_var_name`, etc.) so existing application images need no changes.
 
-**Cloud Firestore:**
-Firestore is Google Cloud's serverless, schemaless NoSQL document database. Applications connect to Firestore using the client library — no connection string, no proxy, and no persistent connection management. The client library uses Application Default Credentials (ADC) automatically:
-```python
-from google.cloud import firestore
+*Schema and data lifecycle.* `initialization_jobs` (default: a `db-init` job running a database-init script on `postgres:15-alpine` with `execute_on_apply = true`) handles migrations/seeding with `depends_on_jobs` ordering. `enable_backup_import` restores a dump from GCS or Google Drive (`backup_source`, `backup_file`, `backup_format`); `enable_postgres_extensions`/`enable_mysql_plugins` install database extensions; `enable_custom_sql_scripts` runs arbitrary SQL from a bucket. `Services_GCP` additionally offers `enable_cloudsql_iam_auth` (default `false`), which sets the IAM-auth database flag (`cloudsql.iam_authentication` on PostgreSQL, `cloudsql_iam_authentication` on MySQL) and grants `roles/cloudsql.instanceUser` — the passwordless IAM database authentication the exam mentions.
 
-db = firestore.Client()
+*File and object integration.* `gcs_volumes` mounts buckets via GCS Fuse (filesystem semantics; gen2 only), `enable_nfs` (default `true`) mounts the shared NFS export at `/mnt/nfs` for multi-instance shared writes, and `storage_buckets` provisions buckets with per-bucket `roles/storage.objectAdmin` for the app SA — the client-library path.
 
-# Write a document
-doc_ref = db.collection("orders").document("order-123")
-doc_ref.set({"status": "pending", "amount": 49.99, "user_id": "user-456"})
+**Try it**
 
-# Read a document
-doc = doc_ref.get()
-print(doc.to_dict())
+1. See exactly what your code sees:
 
-# Query with filter
-orders = db.collection("orders").where("status", "==", "pending").stream()
-for order in orders:
-    print(order.id, order.to_dict())
-```
-Firestore supports **real-time listeners** — clients can subscribe to document or collection changes and receive updates instantly without polling:
-```python
-def on_snapshot(doc_snapshot, changes, read_time):
-    for doc in doc_snapshot:
-        print("Updated:", doc.to_dict())
+   ```bash
+   gcloud run services describe <service-name> --region=us-central1 \
+     --format="yaml(spec.template.spec.containers[0].env, spec.template.spec.containers[0].volumeMounts)"
+   ```
 
-doc_ref.on_snapshot(on_snapshot)
-```
-Navigate to **Firestore > Data** to browse collections and documents. Navigate to **Firestore > Indexes** to manage composite indexes — Firestore requires explicit composite indexes for queries that filter on multiple fields.
+   Identify `DB_HOST` (a `/cloudsql/...` path), the `DB_PASSWORD` secret reference, and the volume mounts.
+2. Verify the IAM that makes the proxy work — the service account needs `roles/cloudsql.client`:
 
-**AlloyDB Auth Proxy:**
-AlloyDB for PostgreSQL uses the **AlloyDB Auth Proxy** — conceptually identical to the Cloud SQL Auth Proxy. Deploy it as a sidecar container and connect your application via the Unix socket path `/var/run/alloydb/alloydb.sock`. The proxy handles IAM authentication and TLS. Your service account requires `roles/alloydb.client` on the AlloyDB cluster. Navigate to **AlloyDB > Clusters** to explore instance configuration, read pool replicas, and connection management.
+   ```bash
+   gcloud projects get-iam-policy <project-id> \
+     --flatten="bindings[].members" \
+     --filter="bindings.members~cloudrun-sa" \
+     --format="table(bindings.role)"
+   ```
 
-### 💡 Additional Data Integration Objectives & Learning Guidelines
+3. Watch the default initialization job run and read its logs:
 
-*   **Pub/Sub Messaging — Publish and Consume:** The PCD exam expects you to write application code that interacts with Pub/Sub. Practice the full publish/subscribe pattern:
+   ```bash
+   gcloud run jobs executions list --job=<db-init-job-name> --region=us-central1
+   gcloud logging read 'resource.type="cloud_run_job"' --limit=20
+   ```
 
-    **Publisher:**
-    ```python
-    from google.cloud import pubsub_v1
+4. On the GKE profile, confirm the sidecar: `kubectl -n <namespace> get pod <pod> -o jsonpath='{.spec.containers[*].name}'` should list your app and `cloud-sql-proxy`.
+5. You know it worked when the app container resolves `DB_HOST` to the socket path, the db-init execution shows `Succeeded`, and the GKE pod runs two containers.
 
-    publisher = pubsub_v1.PublisherClient()
-    topic_path = publisher.topic_path("my-project", "my-topic")
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: Cloud Run scaled to 50 instances and Postgres started rejecting connections. The instance has the module default flags. What happened and what are the fixes?&lt;/summary>
 
-    message_data = json.dumps({"order_id": "123", "amount": 49.99}).encode("utf-8")
-    future = publisher.publish(topic_path, message_data, origin="order-service")
-    print(f"Published message ID: {future.result()}")
-    ```
+A: Each instance holds its own pool; 50 instances × even a small pool exceeds the default `max_connections=200` flag set on the RAD Postgres instance. Fixes in exam order: cap `max_instance_count`, shrink the per-instance pool, raise `max_connections` (costs memory), or introduce server-side pooling. The Auth Proxy authenticates and encrypts — it does not pool for you.
+&lt;/details>
 
-    **Subscriber (pull):**
-    ```python
-    from google.cloud import pubsub_v1
+&lt;details>
+&lt;summary>Q2: Why does the platform run schema migrations as a Cloud Run *job* instead of at service startup?&lt;/summary>
 
-    subscriber = pubsub_v1.SubscriberClient()
-    subscription_path = subscriber.subscription_path("my-project", "my-subscription")
+A: A service can scale to N concurrent instances — running migrations in the entrypoint races N copies against each other and slows cold starts. A job (`initialization_jobs` with `execute_on_apply`) runs exactly `task_count` tasks once, can be ordered with `depends_on_jobs`, retried independently (`max_retries`), and keeps the serving path fast. This separation of "run-once" from "serve" is a standard PCD design answer.
+&lt;/details>
 
-    def callback(message):
-        payload = json.loads(message.data.decode("utf-8"))
-        print(f"Processing order: {payload['order_id']}")
-        message.ack()  # Acknowledge to prevent redelivery
+&lt;details>
+&lt;summary>Q3: An app needs shared writable storage across all Cloud Run instances. Compare the two RAD options.&lt;/summary>
 
-    streaming_pull_future = subscriber.subscribe(subscription_path, callback=callback)
-    streaming_pull_future.result()  # Block until cancelled
-    ```
-    Message attributes (like `origin="order-service"` in the publish call above) are key-value strings attached to the message envelope — useful for routing, filtering, and dead-letter queue configuration. Navigate to **Pub/Sub > Topics** and **Pub/Sub > Subscriptions** to create topics, configure subscriptions (pull vs push), and set up dead-letter topics for messages that fail processing after a configurable number of delivery attempts.
+A: `enable_nfs` mounts a real POSIX filesystem (Filestore or the platform NFS VM) — correct for apps needing file locking/rename semantics, but it's a single capacity/throughput point. `gcs_volumes` (GCS Fuse) backs the mount with an object store — effectively unlimited and cheaper, but writes are object uploads (no partial writes/locking). Both require `execution_environment = "gen2"`.
+&lt;/details>
 
-    > **Real-World Example:** An e-commerce platform decouples its order service from the fulfilment service using Pub/Sub. When a customer places an order, the order service publishes a message to the `orders` topic. Three subscribers consume from the same topic via separate subscriptions: the fulfilment service schedules the shipment, the analytics service records the transaction, and the email service sends a confirmation. If the fulfilment service is temporarily unavailable, Pub/Sub retains the message and retries delivery — the order service is unaffected. A dead-letter topic captures any message that fails after 5 delivery attempts for manual investigation.
+**Beyond the modules** — The modules create no application messaging or document-store code paths: practice the **Pub/Sub** client libraries (publish with attributes, pull vs push subscriptions, ack deadlines, dead-letter topics), **Firestore** SDK usage (documents, queries needing composite indexes, real-time listeners, transactions), and **Cloud Storage** client-library patterns including signed URLs for direct browser upload/download. The only Pub/Sub in the platform is internal (secret-rotation and SCC topics) — useful to inspect (`gcloud pubsub topics list`) but not an application pattern.
 
-*   **Cloud Storage — Reading and Writing Objects:** For applications that need programmatic Cloud Storage access (rather than FUSE mounting), use the client library:
-    ```python
-    from google.cloud import storage
-
-    client = storage.Client()
-    bucket = client.bucket("my-bucket")
-
-    # Upload
-    blob = bucket.blob("reports/2025-01.pdf")
-    blob.upload_from_filename("/tmp/report.pdf")
-
-    # Download
-    blob.download_to_filename("/tmp/downloaded-report.pdf")
-
-    # Generate a Signed URL for temporary delegated access (no auth required by recipient)
-    url = blob.generate_signed_url(expiration=datetime.timedelta(hours=1), method="GET")
-    ```
-    **Signed URLs** are time-limited, pre-authenticated URLs that allow anyone with the URL to access a specific object — useful for sharing files with users who do not have a Google account. The URL expires after the configured duration; after expiry, the URL returns HTTP 403.
+**⚠️ Exam trap** — The Cloud SQL Auth Proxy replaces *network* allowlisting and TLS cert management, not database authentication: code still presents a DB user and password (unless IAM database authentication is enabled). "We added the proxy, why do we still need the password?" distinguishes `roles/cloudsql.client` (connect) from `roles/cloudsql.instanceUser` + IAM auth (login).
 
 ---
 
 ## 4.2 Consuming Google Cloud APIs
 
-### Enabling Services and Authentication
-**Concept:** Enabling APIs and using service accounts to securely authenticate application requests to Google Cloud services.
+> ⏱ ~60 min · 💰 no additional cost · ⚙️ Requires: Serverless baseline; Kubernetes lab profile for Workload Identity; `enable_workload_identity_federation = true` in Services_GCP for the WIF steps
 
-**In the RAD UI:**
-*   **API Enablement:** The RAD platform automatically enables all necessary GCP APIs (e.g., Secret Manager API, Cloud SQL Admin API, Kubernetes Engine API) during deployment. In a new project, APIs must be explicitly enabled before any client library call will succeed — a disabled API returns HTTP 403 `SERVICE_DISABLED`.
-*   **Service Accounts and ADC:** The platform provisions dedicated custom service accounts (e.g., `cloud_run_sa` or `gke_sa`) with the minimum required IAM roles and uses Workload Identity to bind them to the compute environment. The **Application Default Credentials (ADC)** chain means that application code using the standard Google Cloud client libraries requires no explicit credential configuration — the library automatically discovers credentials from the environment in this order:
-    1. `GOOGLE_APPLICATION_CREDENTIALS` environment variable (points to a service account key file — discouraged in production)
-    2. Workload Identity (for GKE) or the Cloud Run metadata server (for Cloud Run) — the library calls the instance metadata endpoint to obtain short-lived tokens
-    3. `gcloud auth application-default login` credentials (for local development)
+**Why the exam cares** — Every PCD scenario about calling Google APIs reduces to identity: code should use Application Default Credentials backed by the runtime's service account — never JSON key files. You must know how ADC resolves on Cloud Run (metadata server), on GKE (Workload Identity), on developer machines (`gcloud auth application-default login`), and outside Google Cloud entirely (Workload Identity Federation). The second axis is authorization: least-privilege roles on the *resource* (a specific secret, a specific bucket), not the project.
 
-**Console Exploration:**
-Navigate to **APIs & Services > Enabled APIs & services** to view all activated APIs in the project and their current usage (requests per day). Navigate to **IAM & Admin > Service Accounts** to view the application service accounts and their assigned roles. Click a service account and select the **Keys** tab — in a well-configured production environment, this list should be empty (no JSON key files in use).
+**How RAD implements it** —
 
-### Best Practices for Consuming Google Cloud APIs
+*Dedicated service accounts.* `Services_GCP` creates `cloudrun-sa-{prefix}`, `cloudbuild-sa-{prefix}`, `clouddeploy-sa-{prefix}`, `gke-sa-{prefix}`, and `nfs-sa-{prefix}` — nothing runs as the default compute SA. The platform's IAM layer applies resource-level least privilege: `roles/secretmanager.secretAccessor` granted *per secret*, `roles/storage.objectAdmin` *per bucket*, and `roles/iam.serviceAccountUser` for the impersonation chains the deployer needs. When your app needs more (say Firestore), `additional_cloudrun_sa_roles` extends the Cloud Run SA's role list declaratively.
 
-**Google Cloud Client Libraries:**
-Always use the official Google Cloud client libraries rather than making raw HTTP or gRPC calls directly. The client libraries handle:
-- **ADC authentication** — automatic credential discovery and token refresh
-- **Retry logic with exponential backoff** — built-in handling of transient errors (HTTP 429, 500, 503) without custom code
-- **gRPC vs REST transport** — most libraries support both; gRPC is the default for services that support it (Pub/Sub, Bigtable, Spanner) because it provides lower latency via HTTP/2 multiplexing and binary Protocol Buffer serialisation vs text-based JSON
+*Workload Identity on GKE.* App_GKE creates a Kubernetes ServiceAccount per namespace annotated `iam.gke.io/gcp-service-account: <gsa-email>` and binds `roles/iam.workloadIdentityUser` to `serviceAccount:{project}.svc.id.goog[<namespace>/<ksa>]`. Pods using that KSA get GSA-backed tokens from the metadata server — ADC works with zero key files, identical in code to Cloud Run.
 
-**gRPC vs REST:**
-- **gRPC:** Binary Protocol Buffer encoding, multiplexed over HTTP/2, strongly typed contracts defined in `.proto` files. Lower latency and higher throughput for high-volume API calls (e.g., Bigtable reads, Pub/Sub publish). Requires gRPC support on the client and server.
-- **REST/JSON:** Text-based, uses HTTP/1.1, universally supported. Appropriate for low-frequency API calls, browser clients, and situations where tooling support for gRPC is limited.
-- Most Google Cloud client libraries abstract this choice — select gRPC or REST via a library configuration option if you need to override the default.
+*Workload Identity Federation.* `Services_GCP` (`enable_workload_identity_federation`, default `false`) creates pool `wif-pool` with a provider chosen by `wif_provider_type` (default `"github"` → provider `github-actions`; also `gitlab` → `gitlab-ci`, or `generic` for any OIDC issuer). All pool identities (`principalSet://.../*`) may impersonate the Cloud Build, Cloud Deploy, and Cloud Run service accounts via `roles/iam.workloadIdentityUser` — keyless CI from external systems, the exam's recommended replacement for exported keys.
 
-**API Explorer:**
-Navigate to **APIs & Services > API Library** and select any enabled API, then click **Try this API** to open the API Explorer. The API Explorer allows you to make authenticated API calls directly from your browser — useful for understanding request/response formats, testing field masks, and exploring API methods before writing application code.
+*Service-to-service authorization.* Cloud Run access is IAM on `roles/run.invoker`: public services get an `allUsers` binding; IAP services instead grant the IAP service agent invoker rights and your principals `roles/iap.httpsResourceAccessor`. Calling a non-public service from another service means minting an *ID token* for the caller's SA — the modules establish the IAM shape; the token-fetching code is yours to learn.
 
-**Real-world example:** A developer is building a Cloud Run service that needs to list Compute Engine instances programmatically. They open the API Explorer for the Compute Engine API, select the `instances.list` method, enter their project ID and zone, and click Execute. The response shows the full JSON representation of each instance. They then add a `fields` parameter (field mask) to restrict the response to only `items/name,items/status` — the response is 80% smaller and the code they write models only the fields they need.
+**Try it**
 
-### 💡 Additional API Consumption Objectives & Learning Guidelines
+1. Prove the runtime identity from inside the deployed service (no SDK required — this is what ADC does under the hood):
 
-*   **Exponential Backoff for Error Handling:** Google Cloud APIs are designed for retryable errors (HTTP 429 Too Many Requests, 500 Internal Server Error, 503 Service Unavailable). The correct response is to retry with exponential backoff — not to fail immediately. The pattern:
-    ```python
-    import time, random
+   ```bash
+   # from your workstation, against the metadata-backed identity:
+   gcloud run services describe <service-name> --region=us-central1 \
+     --format="value(spec.template.spec.serviceAccountName)"
+   ```
 
-    def call_with_retry(fn, max_retries=5):
-        for attempt in range(max_retries):
-            try:
-                return fn()
-            except google.api_core.exceptions.ServiceUnavailable:
-                if attempt == max_retries - 1:
-                    raise
-                wait = (2 ** attempt) + random.uniform(0, 1)  # jitter
-                time.sleep(wait)
-    ```
-    The Google Cloud client libraries apply this logic automatically for most retryable errors — the above pattern is only needed when making direct HTTP calls or implementing custom retry logic.
+2. On GKE, inspect the Workload Identity wiring:
 
-*   **Field Masks for Restricting Return Data:** Many GCP APIs support **field masks** (via the `fields` query parameter for REST, or `FieldMask` proto for gRPC) to restrict which fields are returned in a response. This reduces response size, network transfer costs, and client-side parsing work:
-    ```python
-    from google.cloud import compute_v1
-    from google.protobuf import field_mask_pb2
+   ```bash
+   kubectl -n <namespace> get sa -o yaml | grep -B2 "iam.gke.io/gcp-service-account"
+   gcloud iam service-accounts get-iam-policy <gsa-email> \
+     --format="table(bindings.role, bindings.members)"
+   ```
 
-    client = compute_v1.InstancesClient()
-    request = compute_v1.ListInstancesRequest(
-        project="my-project",
-        zone="us-central1-a",
-    )
-    # Only return name and status fields
-    for instance in client.list(request=request):
-        print(instance.name, instance.status)
-    ```
+   You should see the `roles/iam.workloadIdentityUser` binding for `serviceAccount:<project>.svc.id.goog[<ns>/<ksa>]`.
+3. Inspect the WIF pool and provider, then test invoker enforcement:
 
-*   **Paginating Large Result Sets:** APIs that return lists of resources (e.g., Cloud Storage objects, BigQuery table rows, Pub/Sub subscriptions) paginate results — they return a fixed number of items per response plus a `nextPageToken`. Always implement pagination to handle large result sets correctly. Google Cloud client libraries handle pagination automatically via iterators — iterating over the response object automatically fetches subsequent pages.
+   ```bash
+   gcloud iam workload-identity-pools providers list \
+     --workload-identity-pool=wif-pool --location=global
+   gcloud run services get-iam-policy <service-name> --region=us-central1
+   curl -s -o /dev/null -w "%{http_code}\n" \
+     -H "Authorization: Bearer $(gcloud auth print-identity-token)" https://<service-url>/
+   ```
 
-*   **Caching API Responses:** For read-heavy workloads where data changes infrequently, cache API responses to reduce latency and cost. Use **Cloud Memorystore for Redis** as a distributed cache for Cloud Run and GKE workloads. Set a cache TTL appropriate to how frequently the underlying data changes. Always implement cache invalidation logic for data that changes on write.
+4. You know it worked when the KSA annotation matches the GSA whose policy contains the workloadIdentityUser binding, and the authenticated curl returns 200 where an anonymous one is rejected (on a non-public service).
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: Service A on Cloud Run must call private Service B. Which role, on what, for whom — and which token type does A send?&lt;/summary>
+
+A: Grant A's service account `roles/run.invoker` *on Service B* (resource-level, not project-level). A fetches an **ID token** with audience = B's URL (from the metadata server, e.g. via the client library or `fetch_id_token`) and sends it as a Bearer header. An OAuth *access* token is the wrong answer — Cloud Run's IAM check validates identity tokens.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: GitHub Actions needs to push images and create Cloud Deploy releases without a downloaded key. Which RAD configuration is the textbook setup?&lt;/summary>
+
+A: `enable_workload_identity_federation = true` with `wif_provider_type = "github"`. The workflow exchanges its GitHub OIDC token through pool `wif-pool` / provider `github-actions` and impersonates `cloudbuild-sa-*`/`clouddeploy-sa-*` (the module binds `roles/iam.workloadIdentityUser` for the pool). No long-lived credential exists anywhere; note the module's wildcard `principalSet` is deliberately broad — production answers scope to `attribute.repository`.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q3: A pod's Google API calls run as the node's identity instead of the app's GSA. What's missing?&lt;/summary>
+
+A: One of the three Workload Identity legs: the cluster's workload pool, the KSA annotation `iam.gke.io/gcp-service-account`, or the `roles/iam.workloadIdentityUser` binding on the GSA for `{project}.svc.id.goog[ns/ksa]` — or the pod spec isn't using the annotated KSA (`serviceAccountName`). The RAD module wires all three; on the exam, the missing IAM binding is the most common culprit.
+&lt;/details>
+
+**Beyond the modules** — Practice the client-library mechanics the modules can't show: automatic retries with exponential backoff (built into the libraries for 429/503), pagination iterators, field masks, and choosing gRPC vs REST transports. Also study API enablement failures (`SERVICE_DISABLED` 403s — the platform pre-enables its APIs, a fresh project does not) and quota errors (`RESOURCE_EXHAUSTED` 429 → backoff or quota increase, not retry-storms).
+
+**⚠️ Exam trap** — Access tokens vs ID tokens: `gcloud auth print-access-token` authorizes Google *API* calls; `gcloud auth print-identity-token` authenticates you *to a service* (Cloud Run invoker, IAP). Swapping them produces 401s that look like missing IAM but aren't.
 
 ---
 
 ## 4.3 Troubleshooting and observability
 
-### Identifying and Resolving Issues
-**Concept:** Instrumenting application code and using Google Cloud Observability tools to diagnose, troubleshoot, and resolve issues in production.
+> ⏱ ~60 min · 💰 low — alerting/dashboards are free at this scale; log storage grows if you enable DATA_READ audit logs · ⚙️ Requires: any deployed profile; set `support_users` to receive notifications
 
-**In the RAD UI:**
-*   **Logs and Metrics:** The platform automatically captures `stdout`/`stderr` logs from containers. Cloud Run and GKE route these to **Cloud Logging** automatically. The `support_users` variable (Group 1) configures notification channels for alert policies — when a metric threshold is breached (e.g., error rate > 1%), an email or PagerDuty notification is sent to the configured recipients.
-*   **Custom Dashboards:** Operational dashboards are provisioned automatically for each deployment, tracking request latency (p50/p95/p99), request counts, error rates, and container CPU/memory usage over time.
+**Why the exam cares** — PCD troubleshooting questions hand you a symptom (5xx spike, latency regression, crash loop) and expect you to pick the right tool in the right order: Logs Explorer with resource-type filters, metrics and alerting, dashboards, then code-level tools (Trace, Profiler, Error Reporting). Structured logging and instrumentation are developer responsibilities the exam tests directly.
 
-**Console Exploration:**
-Navigate to **Monitoring > Alerting** to review alert policies and their MQL-based conditions. Navigate to **Logging > Logs Explorer** to view and filter application log streams. In Logs Explorer, use the query builder to filter by:
-- `resource.type="cloud_run_revision"` — Cloud Run logs
-- `resource.type="k8s_container"` — GKE container logs
-- `severity>=ERROR` — only error-level and above
-- `jsonPayload.request_id="abc-123"` — filter by a specific request ID
+**How RAD implements it** — Containers log to stdout/stderr and Cloud Run/GKE forward to Cloud Logging automatically — nothing to configure. The modules add the alerting layer via the platform's monitoring layer:
 
-Structured logging (emitting log lines as JSON objects rather than plain strings) enables these field-based filters. Cloud Run and GKE automatically parse JSON logs and make every field searchable in Logs Explorer.
+- `support_users` creates email notification channels; monitoring resources are only created when `support_users`, `alert_policies`, or an enabled uptime config exists.
+- Built-in alerts: CPU utilization > 0.9 and memory utilization > 0.9 (P99-aligned over 60s), filtered to your specific service (`resource.labels.service_name` on Cloud Run; the GKE module passes Kubernetes-scoped filters).
+- `alert_policies` adds custom policies declaratively: each entry is `{ name, metric_type, comparison, threshold_value, duration_seconds, aggregation_period }` and the module scopes the filter to the deployed service — e.g. `run.googleapis.com/request_latencies` with `COMPARISON_GT` and `threshold_value = 1000`.
+- The platform provisions a per-deployment Cloud Monitoring dashboard (separate Cloud Run and GKE layouts).
+- `uptime_check_config` (default `{ enabled = true, path = "/" }`; `check_interval` default `"60s"`, `timeout` default `"10s"`) provisions a real Cloud Monitoring uptime check named `<service>-uptime-check` (HTTP GET from multiple global regions) plus a `<service>-uptime-check-alert` policy on `monitoring.googleapis.com/uptime_check/check_passed` (fires after 300s of failure, notifies the `support_users` channels). Creation is gated at plan time on public reachability — Cloud Run probes the first `application_domains` entry, else the nip.io LB host, else the run.app URL when `ingress_settings = "all"`; GKE probes the custom domain via the Gateway (HTTPS:443) or the LoadBalancer Service ingress IP over HTTP on `service_port`. Internal-only deployments get no check, and `uptime_check_names` outputs the created check's name.
 
-**Structured logging example (Python):**
-```python
-import json, sys
+**Try it**
 
-def log(severity, message, **kwargs):
-    entry = {"severity": severity, "message": message, **kwargs}
-    print(json.dumps(entry), file=sys.stdout)
+1. Generate some traffic and read the logs the developer way:
 
-log("INFO", "Order processed", order_id="123", user_id="456", amount=49.99)
-# Output: {"severity": "INFO", "message": "Order processed", "order_id": "123", ...}
-```
+   ```bash
+   gcloud logging read \
+     'resource.type="cloud_run_revision" AND resource.labels.service_name="<service-name>" AND severity>=WARNING' \
+     --limit=20 --format="value(timestamp, severity, textPayload)"
+   ```
 
-**Real-world example:** A Cloud Run service begins returning HTTP 500 errors at 2 AM. The on-call engineer receives a Monitoring alert notification. In Logs Explorer, they filter by `severity=ERROR` and `resource.type="cloud_run_revision"` for the past hour. The structured logs reveal `"message": "Database connection timeout"` with `"db_host": "/cloudsql/..."`. Checking **Cloud SQL > Instances > Monitoring**, they see that the Cloud SQL instance hit its maximum connections limit — the Cloud Run service scaled to 50 instances, each maintaining a connection pool of 5, exceeding the 200-connection limit. The fix: reduce the connection pool size per instance and enable **PgBouncer** connection pooling on the Cloud SQL proxy.
+   In **Console > Logging > Logs Explorer**, repeat with the query builder and note that JSON log lines become filterable `jsonPayload.*` fields — emit structured logs from your app to get this for free.
+2. Add a latency alert via the portal: `alert_policies = [{ name = "p-latency", metric_type = "run.googleapis.com/request_latencies", comparison = "COMPARISON_GT", threshold_value = 1000, duration_seconds = 300 }]`, apply, then verify:
 
-### Distributed Tracing with Cloud Trace and OpenTelemetry
+   ```bash
+   gcloud alpha monitoring policies list --format="table(displayName, enabled)"
+   gcloud monitoring dashboards list --format="value(displayName)"
+   ```
 
-**Cloud Trace** captures latency data for individual requests as they flow through your application. Each request is assigned a unique **trace ID**; each operation within the request (e.g., a database query, an external API call, a queue publish) creates a **span** that records its start time, duration, and any errors.
+3. Inspect the module-created uptime check (publicly reachable deployments only) and confirm the probed host matches your domain or LB:
 
-**Instrumenting with OpenTelemetry:**
-OpenTelemetry is the open-source standard for distributed tracing. Google Cloud's trace exporter sends spans to Cloud Trace:
-```python
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
+   ```bash
+   gcloud monitoring uptime list-configs --format="table(displayName, httpCheck.path, period)"
+   gcloud monitoring uptime describe <service-name>-uptime-check
+   ```
 
-provider = TracerProvider()
-provider.add_span_processor(BatchSpanProcessor(CloudTraceSpanExporter()))
-trace.set_tracer_provider(provider)
+4. Force an error (e.g., temporarily point `health_check_config.path` at a nonexistent path) and watch the liveness restarts in **Cloud Run > service > Logs** and the CPU/memory charts on the module-created dashboard.
+5. You know it worked when the alert policy appears with your email channel attached, and the module-created uptime check shows green from multiple regions in **Monitoring > Uptime checks**.
 
-tracer = trace.get_tracer(__name__)
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: Users report intermittent 503s but your application logs show nothing at those timestamps. Where do you look next on Cloud Run?&lt;/summary>
 
-def process_order(order_id):
-    with tracer.start_as_current_span("process_order") as span:
-        span.set_attribute("order.id", order_id)
-        with tracer.start_as_current_span("fetch_inventory"):
-            # database call here
-            pass
-        with tracer.start_as_current_span("publish_event"):
-            # pubsub publish here
-            pass
-```
+A: The *request* logs and platform metrics, not app logs: filter `resource.type="cloud_run_revision" AND httpRequest.status=503` — 503s with no app log usually mean the request never reached your code (instance startup failures, exceeded `max_instance_count` under load, or request timeout/probe failures). Correlate with `container/instance_count` and startup-probe failures; raising `max_instance_count` or fixing the startup probe is the usual fix.
+&lt;/details>
 
-**Trace propagation across services:** When a Cloud Run service calls another Cloud Run service or a GKE pod, the trace context must be propagated via HTTP headers (`traceparent` header in W3C Trace Context format). The OpenTelemetry SDK handles propagation automatically when using the provided HTTP client instrumentation libraries.
+&lt;details>
+&lt;summary>Q2: An alert should fire when error rate exceeds 5% for 5 minutes, notifying the on-call list. Map this to RAD variables.&lt;/summary>
 
-Navigate to **Trace > Trace list** to view recent traces. Select a trace to see the full **waterfall view** — each span shows its duration, parent-child relationships, and any recorded attributes. Traces with high latency appear in red; use the waterfall to identify which span is the bottleneck.
+A: Put the on-call addresses in `support_users` (creates the notification channels) and add an `alert_policies` entry on `run.googleapis.com/request_count` filtered to 5xx — though for a *ratio*, the honest answer is that the module's single-metric threshold policies can't express it; you'd build a ratio-based condition (MQL/PromQL) directly in Cloud Monitoring. Knowing when declarative simple thresholds stop being enough is itself exam-relevant.
+&lt;/details>
 
-**Real-world example:** A user reports that checkout is slow — page load takes 4 seconds. In Cloud Trace, the engineer filters to the `/checkout` endpoint and finds a 4-second trace. Opening the trace waterfall reveals the breakdown: 50ms for authentication, 200ms for the cart query, **3,700ms for the `fetch_inventory` span**. Drilling into the `fetch_inventory` span attributes shows it is calling a Spanner database. Switching to **Spanner > Query Insights**, the engineer finds the inventory query is missing an index on `product_id` — adding the index reduces the query time to 15ms, and the checkout page drops to 300ms total.
+&lt;details>
+&lt;summary>Q3: Checkout takes 4s; the database team swears their queries are fast. Which tool proves where the time goes across your two Cloud Run services?&lt;/summary>
 
-### Error Reporting
+A: Cloud Trace with distributed trace context propagation — instrument both services with OpenTelemetry (Cloud Trace exporter), propagate the `traceparent` header on the service-to-service call, and read the waterfall to see which span (handler, downstream call, DB query) owns the latency. Logs and metrics aggregate; only tracing shows the per-request breakdown.
+&lt;/details>
 
-**Cloud Error Reporting** automatically aggregates and deduplicates unhandled exceptions from your application logs. When a stack trace appears in Cloud Logging (for Cloud Run, GKE, or App Engine), Error Reporting groups it with identical stack traces, counts occurrences, tracks affected users, and surfaces it in the Error Reporting dashboard.
+**Beyond the modules** — Nothing in the modules instruments application code: study OpenTelemetry setup and trace propagation (Cloud Trace), continuous profiling (`google-cloud-profiler`, flame graphs, &lt;1% overhead — safe in prod), Error Reporting's automatic stack-trace grouping (works from stdout logs for major runtimes), and log-based metrics for alerting on log patterns. Also try Cloud Run's built-in SLO monitoring (**Cloud Run > service > SLOs**) — none of this is provisioned by the platform.
 
-Navigate to **Error Reporting** to view a ranked list of errors by frequency and recency. Click an error group to see:
-- The full stack trace
-- The time series of occurrence counts
-- Links to the specific log entries in Logs Explorer
-- The option to configure an alert notification for new occurrences of this error group
-
-Error Reporting works automatically for most runtimes (Python, Java, Node.js, Go, Ruby, PHP) — no code changes required if your application logs unhandled exceptions to stdout. For custom error reporting (e.g., handled exceptions you want to track), use the **Error Reporting API** or the `google-cloud-error-reporting` client library.
-
-**Real-world example:** After deploying a new version of a Cloud Run service, the Error Reporting dashboard shows a new error group: `KeyError: 'user_preferences'` in `profile_handler.py:142`. The stack trace reveals that the new code assumes a `user_preferences` field exists in Firestore documents, but the field is absent in documents created before the migration script ran. Error Reporting shows 12,000 occurrences affecting 3,400 users in the past hour. The team rolls back the deployment within minutes and adds a `.get("user_preferences", {})` default to handle the missing field in the fix.
-
-### 💡 Additional Observability Objectives & Learning Guidelines
-
-*   **Gemini Cloud Assist for Observability:** In the GCP Console, click the Gemini (sparkle) icon in the top navigation bar to open Gemini Cloud Assist. Practice using natural-language queries for observability tasks:
-    - "What is the error rate for my Cloud Run service `order-service` in the past 24 hours?"
-    - "Write an MQL query to alert when p99 latency for my Cloud Run service exceeds 2 seconds"
-    - "Summarise the most recent errors from my GKE namespace `production`"
-    - "Explain this log entry: [paste a log line]"
-
-    Gemini Cloud Assist can also write and explain Monitoring Query Language (MQL) expressions — useful for building custom alert policies and dashboard charts without needing to learn MQL syntax from scratch.
-
-*   **Cloud Profiler:** Navigate to **Profiler** to continuously profile CPU and memory usage of running Cloud Run and GKE applications. Cloud Profiler uses statistical sampling — it adds negligible overhead (< 1% CPU) and can run in production. The flame graph view shows which function calls are consuming the most CPU time or allocating the most memory, enabling targeted performance optimisation without load testing. Enable profiling by adding the `google-cloud-profiler` client library and calling `googlecloudprofiler.start()` at application startup.
-
-*   **Uptime Checks:** Navigate to **Monitoring > Uptime checks** to configure synthetic monitors that probe your Cloud Run service URL from multiple geographic regions at a configurable interval. If a check fails from more than one region simultaneously, an alert fires. This provides external availability monitoring — independent of your application logs and metrics — and is the fastest way to detect a complete service outage.
+**⚠️ Exam trap** — Don't assume an input variable means a provisioned resource — always verify in the source (earlier platform releases accepted `uptime_check_config` without creating any check; today it provisions one, but only for publicly reachable endpoints). On the exam the analogous trap is assuming Cloud Run "has" tracing/profiling because the agent *could* run — Trace gets automatic spans for inbound requests, but cross-service propagation and custom spans require you to instrument the code.

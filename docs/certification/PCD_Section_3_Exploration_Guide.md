@@ -1,140 +1,151 @@
 ---
-title: "PCD Certification Preparation Guide: Section 3 — Deploying applications (~20% of the exam)"
-sidebar_label: "PCD Section 3 Exploration Guide"
+title: "PCD Certification Preparation Guide: Section 3 \u2014 Deploying applications (~20% of the exam)"
 ---
 
 # PCD Certification Preparation Guide: Section 3 — Deploying applications (~20% of the exam)
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud Developer (PCD) certification explore Section 3 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
-
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCD objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+This section is where the RAD foundation modules shine: `App_CloudRun` deploys a fully configured Cloud Run v2 service (scaling, probes, volumes, traffic management, jobs, optional Cloud Deploy pipeline) and `App_GKE` deploys the equivalent Kubernetes workload on GKE Autopilot (Deployment/StatefulSet, HPA, probes, quotas, Gateway API). Deploy the **Serverless baseline** and **Delivery pipeline** profiles for 3.1, and the **Kubernetes lab** profile for 3.2 (see the [Lab Map](PCD_Certification_Guide.md)).
 
 ---
 
 ## 3.1 Deploying applications to Cloud Run
 
-### Deploying Applications from Source Code
-**Concept:** Delivering containerised code to the serverless Cloud Run environment using managed CI/CD pipelines.
+> ⏱ ~90 min · 💰 low — per-stage services scale to zero; Cloud Deploy itself is free (you pay for the Cloud Build it runs) · ⚙️ Requires: Serverless baseline; Delivery pipeline profile for the Cloud Deploy steps
 
-**In the RAD UI:**
-*   **Application Deployment:** The platform orchestrates the deployment process using the `container_image` variable (Group 3), which specifies the Artifact Registry path including the image digest or tag that Cloud Run pulls at deploy time.
-*   **Continuous Deployment:** Setting `cloud_deploy_stages` (Group 7) configures Google Cloud Deploy to take the built container image and roll it out progressively across defined environments (e.g., dev, staging, prod) directly to Cloud Run services. Each stage requires explicit promotion — a release must be manually promoted from dev to staging, or you can configure auto-promotion for non-production stages.
+**Why the exam cares** — Cloud Run questions probe the service resource model: every deploy creates an immutable *revision*; traffic is routed across revisions by percentage and tag; scaling, CPU allocation, execution environment, and probes are revision properties. Progressive delivery questions then layer Cloud Deploy on top: releases, targets, promotion, and approval gates. You should be able to predict what a given configuration does to cold starts, cost, and rollback time.
 
-**Console Exploration:**
-Navigate to **Cloud Deploy > Delivery pipelines** to visualise the progression of a release and understand how the application moves through its environments. Click into a pipeline to see the individual stages, their promotion status, and the rollout history. Select a specific rollout to view the deployment target, the container image deployed, and the rollout status (Succeeded, Failed, or In Progress).
+**How RAD implements it** — App_CloudRun builds the Cloud Run v2 service from portal variables:
 
-Navigate to **Cloud Run** and select your service. Under the **Revisions** tab, observe that each deployment creates a new immutable revision. Cloud Run traffic splitting allows you to route a percentage of traffic to multiple revisions simultaneously — enabling canary and blue/green deployment patterns without Cloud Deploy.
+| Concern | Variables (defaults) |
+|---|---|
+| Lifecycle | `deploy_application` (`true`) — `false` provisions infra only |
+| Image | `container_image_source` (`"custom"` = Cloud Build; `"prebuilt"` = use `container_image` as-is), `enable_image_mirroring` (`true`) |
+| Scaling | `min_instance_count` (`0`), `max_instance_count` (`1`); plan-time check min ≤ max |
+| Runtime | `container_port` (`8080`), `container_resources` (`1000m`/`512Mi`), `timeout_seconds` (`300`), `execution_environment` (`"gen2"`), `cpu_always_allocated` (`true`), `startup_cpu_boost` hardcoded on |
+| Probes | `startup_probe_config` (enabled, HTTP `/healthz`, delay 10s, period 10s, failure threshold 10) and `health_check_config` → liveness probe (enabled, HTTP `/healthz`, delay 15s, period 30s, failure threshold 3); both support TCP |
+| Volumes | Cloud SQL socket (`enable_cloudsql_volume` `true`, mount `cloudsql_volume_mount_path` `/cloudsql`), NFS (`enable_nfs` `true`, `nfs_mount_path` `/mnt/nfs`), GCS Fuse (`gcs_volumes`) — NFS and Fuse require gen2 (validated) |
+| Traffic | `traffic_split` (default all-to-latest), revision `tag` for preview URLs, `max_revisions_to_retain` (`7`) |
+| Networking | `ingress_settings` (`"all"`), Direct VPC egress with `vpc_egress_setting` (`"PRIVATE_RANGES_ONLY"`) — no Serverless VPC Access connector is used |
+| Jobs | `initialization_jobs` (Cloud Run v2 Jobs with `depends_on_jobs` ordering, `execute_on_apply`, NFS/GCS mounts); `cron_jobs` |
 
-**Real-world example:** A team uses Cloud Deploy to manage their dev→staging→prod pipeline for a Cloud Run service. The Cloud Build CI pipeline builds and tests the container, then creates a new Cloud Deploy release. The release automatically rolls out to the dev stage; the team reviews the deployment in dev, then clicks "Promote" in the Cloud Deploy console to advance to staging. Production requires a two-person approval — the Cloud Deploy delivery pipeline is configured with an approval gate that blocks promotion until two approvers have confirmed in the console.
+Progressive delivery: `enable_cloud_deploy` (default `false`) creates a Cloud Deploy delivery pipeline — **setting it without `enable_cicd_trigger = true` is rejected at plan time** by a precondition in App_CloudRun (the pipeline would never receive a release without a CI trigger). `cloud_deploy_stages` defaults to `dev` → `staging` → `prod` with `require_approval = true` on prod and `auto_promote = false` everywhere (per-stage `auto_promote` creates a Cloud Deploy automation). Each stage gets its own Cloud Run service named `<service>-<stage>`; only the prod stage inherits your `ingress_settings` (non-prod stages stay `"all"` so their `*.run.app` URLs work). Skaffold configs live in a GCS bucket named `{project}-{8-char-md5}-cd-configs`; skaffold post-deploy hooks grant `allUsers` invoker on public stages and execute initialization jobs with `gcloud run jobs execute --wait`. With `cicd_enable_cloud_deploy = true`, the Cloud Build trigger ends with `gcloud deploy releases create` instead of `gcloud run services update`.
 
-### Configuring Cloud Run Services
-**Concept:** Tuning Cloud Run service behaviour for performance, cost, and availability.
+**Try it**
 
-**In the RAD UI:**
-*   **Concurrency and Scaling:** The `min_instance_count` and `max_instance_count` variables (Group 3) control the scaling floor and ceiling. Setting `min_instance_count` to 1 or greater eliminates cold starts for latency-sensitive services. Setting `max_instance_count` caps costs and prevents runaway scaling under unexpected load.
-*   **Traffic Ingress:** The `enable_load_balancer` variable (Group 4) controls whether the service is exposed through a Google Cloud external Application Load Balancer (with a global anycast IP, Cloud Armor, and CDN) or directly via the Cloud Run service URL.
+1. Deploy the baseline, then list revisions and confirm probe wiring:
 
-**Console Exploration:**
-Navigate to **Cloud Run**, select your service, and click the **Edit & deploy new revision** button. Examine the available configuration options: container port, environment variables, secrets (mounted as environment variables or volumes from Secret Manager), concurrency per instance, request timeout, and CPU allocation (CPU always allocated vs CPU only allocated during request processing). Understand the cost implications: CPU always allocated is billed per second and eliminates cold starts; CPU allocated only during requests is billed per request and scales to zero.
+   ```bash
+   gcloud run services describe <service-name> --region=us-central1 \
+     --format="yaml(spec.template.spec.containers[0].startupProbe, spec.template.spec.containers[0].livenessProbe)"
+   ```
 
-**Real-world example:** A data processing Cloud Run service runs expensive initialisation on startup (loading a large ML model into memory). Setting `min_instance_count = 1` ensures the model is always loaded, eliminating 8-second cold starts for end users. Setting CPU allocation to "CPU always allocated" allows the service to perform background maintenance tasks between requests. The team sets `max_instance_count = 10` to cap monthly costs — load testing confirmed that 10 instances handle peak throughput.
+2. With the Delivery pipeline profile, push a commit and follow the release:
 
-### 💡 Additional Cloud Run Deployment Objectives & Learning Guidelines
+   ```bash
+   gcloud deploy releases list --delivery-pipeline=<service-name> --region=us-central1
+   gcloud deploy rollouts list --delivery-pipeline=<service-name> \
+     --release=<release-name> --region=us-central1
+   ```
 
-*   **Eventarc Triggers and CloudEvents Format:** The RAD modules deploy HTTP-triggered Cloud Run services. For the PCD exam, you must also understand event-driven invocation. Practice creating a Cloud Run service triggered by Eventarc — for example, a service that processes files whenever a new object is uploaded to a Cloud Storage bucket.
+3. Promote to staging, then approve prod (it is gated by default):
 
-    When Cloud Run receives an Eventarc trigger, the event payload arrives in the **CloudEvents** format — a standard envelope with a JSON body. Your application code must parse the CloudEvents headers and body. A Cloud Storage event body contains:
-    ```json
-    {
-      "kind": "storage#object",
-      "bucket": "my-bucket",
-      "name": "uploads/photo.jpg",
-      "contentType": "image/jpeg",
-      "size": "102400"
-    }
-    ```
-    In Python, read the event using `from_http(request)` from the `cloudevents` library:
-    ```python
-    from cloudevents.http import from_http
+   ```bash
+   gcloud deploy releases promote --release=<release-name> \
+     --delivery-pipeline=<service-name> --region=us-central1
+   gcloud deploy rollouts approve <rollout-name> --release=<release-name> \
+     --delivery-pipeline=<service-name> --region=us-central1
+   ```
 
-    def handle_event(request):
-        event = from_http(request.headers, request.get_data())
-        bucket = event.data["bucket"]
-        object_name = event.data["name"]
-        # process the uploaded file
-    ```
-    Navigate to **Eventarc > Triggers** to create a trigger, select the event source (e.g., Cloud Storage), the event type (e.g., `google.cloud.storage.object.v1.finalized`), and the Cloud Run service destination.
+   Watch **Console > Cloud Deploy > Delivery pipelines** render the stage graph as each rollout completes.
+4. Inspect the per-stage services: `gcloud run services list --region=us-central1` shows `<service>-dev`, `<service>-staging`, `<service>-prod`.
+5. You know it worked when the prod rollout sits in "Pending approval" until you approve it, and the prod service serves the new image afterward.
 
-    > **Real-World Example:** A document processing service runs on Cloud Run. When a PDF is uploaded to a Cloud Storage bucket by a web application, Eventarc detects the `object.finalized` event and invokes the Cloud Run service with the CloudEvents payload. The service extracts the bucket name and object name from the payload, downloads the PDF using the Cloud Storage client library, runs OCR processing, and writes the extracted text to Firestore — all without a persistent server.
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: A release passed dev and staging but the prod rollout is stuck. No errors anywhere. What's the most likely cause in the default RAD pipeline?&lt;/summary>
 
-*   **Pub/Sub Push Subscriptions to Cloud Run:** An alternative to Eventarc for event-driven Cloud Run invocations is a Pub/Sub push subscription, where Pub/Sub delivers messages directly to a Cloud Run service URL via HTTPS POST. The message arrives as a base64-encoded JSON body:
-    ```python
-    import base64, json
+A: The prod stage has `require_approval = true` by default — the rollout is waiting in `PENDING_APPROVAL` for `gcloud deploy rollouts approve` (or a console approval). This is the intended manual gate, not a failure; the exam phrases this as "deployment requires manager sign-off before production".
+&lt;/details>
 
-    def handle_pubsub(request):
-        envelope = request.get_json()
-        message_data = base64.b64decode(envelope["message"]["data"]).decode("utf-8")
-        payload = json.loads(message_data)
-        # process payload
-    ```
-    Pub/Sub push subscriptions authenticate the delivery using an OIDC token bound to a service account — configure the subscription to use a service account that has `roles/run.invoker` on the target Cloud Run service. Navigate to **Pub/Sub > Subscriptions** and select "Push" as the delivery type to explore this configuration.
+&lt;details>
+&lt;summary>Q2: You set `enable_cloud_deploy = true` without `enable_cicd_trigger = true` and the plan fails with a precondition error. Why does the module insist on the trigger?&lt;/summary>
 
-*   **Cloud Endpoints and API Management:** Cloud Endpoints is Google Cloud's API gateway built on Extensible Service Proxy (ESP). Deploy it as a sidecar container alongside your Cloud Run service to add authentication, rate limiting, API key validation, and request logging without modifying application code.
+A: Cloud Deploy releases are only created by the CI/CD pipeline; a delivery pipeline with nothing to create releases is meaningless, so the module rejects the combination at plan time instead of provisioning a dead pipeline. Generalized exam lesson: progressive delivery sits *downstream* of CI — Cloud Deploy consumes artifacts, it doesn't build them.
+&lt;/details>
 
-    Deploy a Cloud Endpoints API by creating an OpenAPI 2.0 specification and deploying it with:
-    ```bash
-    gcloud endpoints services deploy openapi.yaml
-    ```
-    For **backward compatibility**, use versioned API paths (`/v1/`, `/v2/`) and apply the "API evolution" principle: never remove or rename existing fields — only add new optional fields. For breaking changes, deploy a new version under a new path and maintain the old version for a deprecation window.
+&lt;details>
+&lt;summary>Q3: How do you give QA a URL for an unreleased revision without sending it any production traffic?&lt;/summary>
 
-    For rate limiting, add `x-google-quota` extensions to your OpenAPI spec to define quota limits per API key or per consumer project.
+A: Add a `traffic_split` entry for the revision with `percent = 0` and a `tag` (e.g., `"qa"`). Cloud Run exposes a stable tagged URL (`https://qa---<service>-<hash>.run.app`) that routes directly to that revision while the main URL keeps serving the stable split.
+&lt;/details>
 
-    > **Real-World Example:** A fintech startup exposes a payment API through Cloud Endpoints. When they introduce a new `/v2/payments` endpoint with a restructured request format, they keep `/v1/payments` running in parallel and add a deprecation notice to the API documentation. Existing partner integrations continue working unchanged. Partners are notified and given 6 months to migrate. After the deprecation window, `/v1/payments` is removed from the OpenAPI spec and redeployed. API key quotas prevent any single partner from overwhelming the service.
+**Beyond the modules** — The exam also expects Cloud Run *event-driven* invocation (Eventarc triggers delivering CloudEvents, Pub/Sub push subscriptions authenticating with OIDC tokens and `roles/run.invoker`) — the modules only use Eventarc internally for secret rotation. Also study canary/automated rollback strategies in Cloud Deploy (canary deployment strategy with traffic percentages per phase) — the RAD pipeline uses the standard strategy with manual promotion. Try `gcloud deploy rollouts retry` and `gcloud run services update-traffic --to-latest` in a scratch project.
 
-*   **Apigee for Enterprise API Management:** For more advanced API management requirements — developer portals, monetisation, API analytics, or enterprise-scale traffic management — Apigee is Google Cloud's full-featured API management platform. Apigee proxies sit in front of your Cloud Run services and provide policies for transformation, caching, threat protection, and OAuth 2.0 token validation. Navigate to the **Apigee** section of the GCP Console to explore API proxy configuration. Apigee is the preferred choice for organisations managing APIs as products exposed to external developers.
+**⚠️ Exam trap** — The startup probe and the liveness probe fail differently: a failing *startup* probe means the instance never receives traffic and Cloud Run keeps retrying/replacing instances (deploys appear to hang); a failing *liveness* probe restarts a previously healthy container. "New revision stuck at 0% serving" is almost always the startup probe (wrong `path` or port), not liveness.
 
 ---
 
 ## 3.2 Deploying containers to GKE
 
-### Container Deployment and Resource Definition
-**Concept:** Deploying containerised applications and defining compute requirements on GKE Autopilot.
+> ⏱ ~90 min · 💰 moderate — Autopilot bills summed pod resource *requests* plus a cluster fee; the quota/PDB/probe exercises add nothing · ⚙️ Requires: Kubernetes lab profile (`create_google_kubernetes_engine = true` in Services_GCP, then App_GKE)
 
-**In the RAD UI:**
-*   **Workload Provisioning:** The `deploy_application` variable (Group 3) triggers the deployment of the application to the GKE Autopilot cluster. The module creates a Kubernetes `Deployment` object that manages a ReplicaSet ensuring the desired number of pod replicas are running.
-*   **Resource Requirements:** The `container_resources` variable (Group 3) requires you to define specific CPU and memory requests and limits for the container workloads. In GKE Autopilot, resource requests are mandatory — Autopilot provisions nodes based on the aggregate requests of scheduled pods and bills at the pod level. Setting requests too low causes pod eviction under memory pressure; setting them too high wastes money and may prevent scheduling if requests exceed available Autopilot node capacity.
+**Why the exam cares** — GKE questions test the Kubernetes resource model through a Google lens: requests vs limits (and how Autopilot bills them), Deployment vs StatefulSet selection, HPA vs VPA, probe semantics, disruption budgets, and modern exposure via the Gateway API. Autopilot specifics matter: you size pods, not nodes.
 
-**Console Exploration:**
-Navigate to **Kubernetes Engine > Workloads**, select your deployment, and inspect the YAML definition of the pod to see the `resources.requests` and `resources.limits` fields under the container spec. In Autopilot clusters, note that the cluster manages node provisioning automatically — you never interact with individual nodes. Navigate to **Kubernetes Engine > Clusters** and observe that the Autopilot cluster shows no node pool configuration — this is managed by Google.
+**How RAD implements it** — `Services_GCP` provisions the cluster: `gke_cluster_mode` default `"AUTOPILOT"`, Dataplane V2, VPC-native (alias-IP) pod/service secondary ranges, Workload Identity (`{project}.svc.id.goog`), the standard Gateway API channel, release channel `REGULAR`, and the Secret Manager add-on. `App_GKE` then deploys into it (discovering the cluster via `gke_cluster_selection_mode`, or provisioning an inline Autopilot cluster when the platform module is absent):
 
-**Real-world example:** A team deploys a Java Spring Boot application to GKE Autopilot with `memory: "256Mi"` requests. Under load, the application's JVM heap grows beyond 256 MiB and the Linux OOM killer terminates the container — causing repeated CrashLoopBackOff restarts. Increasing `memory` requests to `"512Mi"` and setting `memory` limits to `"768Mi"` resolves the restarts. The team uses **Kubernetes Engine > Workloads > Observability** to monitor actual memory usage over 24 hours, then right-size the requests based on the observed P95 usage.
+- **Workload type.** `workload_type` (default `null`) auto-resolves: `stateful_pvc_enabled = true` → StatefulSet (with required `stateful_pvc_size` and `stateful_pvc_mount_path`, `stateful_pod_management_policy` default `OrderedReady`, `stateful_update_strategy` default `RollingUpdate`); otherwise Deployment. Explicitly setting `workload_type = "Deployment"` together with `stateful_pvc_enabled = true` fails at plan time.
+- **Autoscaling.** The HPA is created only when `max_instance_count > 1` (default `3`) **and** `enable_vertical_pod_autoscaling = false` (its default); it targets 70% CPU and 80% memory utilization. Turning VPA on therefore replaces horizontal scaling with request right-sizing — they are mutually exclusive here because both would act on the same CPU/memory signals.
+- **Probes.** `startup_probe_config` (enabled, HTTP `/healthz`, delay 10s, period 10s, failure threshold 3) and `health_check_config` → liveness probe (delay 15s, period 30s, failure threshold 3). **No readiness probe is configured** — the module relies on the startup probe to gate first traffic; be ready to explain on the exam why a dedicated readiness probe still matters for temporarily-overloaded pods.
+- **Sidecar.** When a database exists and `enable_cloudsql_volume = true`, a `cloud-sql-proxy` sidecar (image mirrored into Artifact Registry) runs with `--private-ip` and a preStop hook calling `/quitquitquit` for graceful shutdown.
+- **Namespace governance.** `enable_resource_quota` (default `false`) creates a ResourceQuota — `quota_cpu_requests`/`quota_cpu_limits` default `"4"`, `quota_memory_requests` default `"4Gi"`, `quota_memory_limits` default `"8Gi"` (binary unit suffix is *validated*: a bare `"4"` would be read as 4 bytes by Kubernetes and block all scheduling), `quota_max_pods` `"20"`. `enable_pod_disruption_budget` (default `true`) creates a PDB with `pdb_min_available` default `"1"`, skipped when `max_instance_count = 1` and validated to be &lt; `max_instance_count`. `enable_network_segmentation` (default `false`) adds NetworkPolicies (requires Dataplane V2). `enable_topology_spread` spreads pods across zones/hosts.
+- **Exposure.** The Service is `service_type` default `"LoadBalancer"`, `service_port` `80` → `container_port` `8080`, `session_affinity` default `"ClientIP"`. `enable_custom_domain` (default `false`) switches to the Gateway API: a `Gateway` with `gatewayClassName: gke-l7-global-external-managed`, an `HTTPRoute` (plus a `ReferenceGrant` for cross-namespace backends), Certificate Manager Google-managed certs for `application_domains`, and a reserved global static IP (`reserve_static_ip` default `true`). Cloud Armor and CDN attach via `GCPBackendPolicy`.
 
-### Autoscaling and Health Checks
-**Concept:** Implementing Kubernetes health checks to ensure application availability and configuring autoscaling for cost optimisation.
+**Try it**
 
-**In the RAD UI:**
-*   **Autoscaling:** The `enable_vertical_pod_autoscaling` variable (Group 3) enables **Vertical Pod Autoscaler (VPA)**, which analyses historical CPU and memory usage and automatically adjusts the pod's resource requests over time — ensuring pods have sufficient resources without manual right-sizing. Separately, `min_instance_count` and `max_instance_count` configure the **Horizontal Pod Autoscaler (HPA)**, which scales the number of pod replicas up or down based on CPU/memory utilisation metrics. VPA and HPA address different scaling dimensions: VPA adjusts *what each pod gets*; HPA adjusts *how many pods run*.
-*   **Health Checks:** The `health_check_config` variable (Group 7) automatically injects Kubernetes **Readiness** and **Liveness** probes into the Deployment manifest. Understanding the difference is critical for the PCD exam:
-    - **Liveness probe:** If this probe fails, Kubernetes kills and restarts the container. Use it to detect when a container is deadlocked or in an unrecoverable state. Example: an HTTP GET to `/healthz` that returns 200 only if the application process is responsive.
-    - **Readiness probe:** If this probe fails, Kubernetes removes the pod from the Service's load balancer endpoint list — it receives no traffic but is not restarted. Use it to signal when a container is not yet ready to serve requests (e.g., still loading data on startup) or is temporarily overloaded.
-    - **Startup probe:** An optional third probe type that delays liveness/readiness checking until the application has successfully started. Use this for applications with slow initialisation (e.g., Java services) to prevent the liveness probe from killing the container before it has finished starting.
+1. Get credentials and inspect what the module deployed (the namespace is auto-generated from `application_name` + `tenant_deployment_id` unless `namespace_name` is set):
 
-**Console Exploration:**
-Navigate to **Kubernetes Engine > Workloads** and select your deployment. Under the **Details** tab, find the **Autoscaling** section to view the HPA configuration — minimum replicas, maximum replicas, and the current CPU/memory utilisation metric driving scaling decisions. Click into the pod YAML to view the `livenessProbe`, `readinessProbe`, and optional `startupProbe` definitions under the container spec.
+   ```bash
+   gcloud container clusters get-credentials <cluster-name> --region=us-central1
+   kubectl get ns
+   kubectl -n <namespace> get deploy,hpa,pdb,resourcequota,svc
+   ```
 
-To observe autoscaling in action, navigate to **Kubernetes Engine > Workloads > Observability** and view the CPU utilisation chart. If utilisation exceeds the HPA target threshold (typically 80%), additional pods are scheduled within seconds.
+2. Confirm probe and sidecar wiring, and watch a rolling update:
 
-**Real-world example:** A Cloud Run-style stateless API is deployed on GKE Autopilot with HPA configured for min=2, max=20 pods at 70% CPU target. During a product launch, traffic spikes 10× in 3 minutes. HPA detects CPU utilisation exceeding 70%, scales from 2 to 14 pods over 2 minutes, and the service absorbs the traffic without degradation. After the spike, HPA gradually scales back down to 2 pods over 10 minutes (the default scale-down stabilisation window prevents thrashing). The readiness probe ensures that newly started pods only receive traffic once they have completed their warm-up sequence.
+   ```bash
+   kubectl -n <namespace> get deploy <name> -o yaml | grep -A6 -E "startupProbe|livenessProbe|cloud-sql-proxy"
+   kubectl -n <namespace> rollout status deploy/<name>
+   kubectl -n <namespace> rollout history deploy/<name>
+   ```
 
-### 💡 Additional GKE Deployment Objectives & Learning Guidelines
+3. Trigger the HPA: run a load generator against the Service IP and watch replicas climb toward `max_instance_count`:
 
-*   **Kubernetes Deployment Strategies:** GKE supports multiple strategies for rolling out updates with zero downtime:
-    - **Rolling update (default):** Kubernetes replaces pods incrementally, ensuring a configurable number of pods remain available at all times. Configure `maxUnavailable` and `maxSurge` in the Deployment spec.
-    - **Blue/Green deployment:** Create a new Deployment with the new version (green), verify it, then update the Service selector to point all traffic to the new pods. The old (blue) Deployment remains available for instant rollback.
-    - **Canary deployment:** Run both old and new Deployment objects simultaneously with different replica counts. For example, 9 old pods + 1 new pod = 10% of traffic to the canary. Gradually increase the new Deployment's replicas while decreasing the old ones. For fine-grained traffic splitting by percentage (rather than by replica count), use **Cloud Service Mesh** traffic management policies.
+   ```bash
+   kubectl -n <namespace> get hpa -w
+   ```
 
-    Navigate to **Kubernetes Engine > Workloads** to inspect the `strategy` field in a Deployment YAML. Use `kubectl rollout history deployment/<name>` in Cloud Shell to view rollout history and `kubectl rollout undo deployment/<name>` to revert to the previous revision.
+4. Set `enable_resource_quota = true` with `quota_max_pods = "2"` while `max_instance_count = 3`, generate load, and observe pods blocked by the quota in `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
+5. You know it worked when the HPA shows `cpu: <current>%/70%` scaling events and the quota event reads `exceeded quota` when the cap is hit.
 
-*   **ConfigMaps and Secrets in Kubernetes:** Application configuration that varies between environments (dev/staging/prod) should be externalised from container images using Kubernetes ConfigMaps (for non-sensitive data) and Secrets (for sensitive data). However, native Kubernetes Secrets are base64-encoded, not encrypted — for production workloads, use the **Secret Manager** integration (via the Secrets Store CSI Driver or the Secret Manager Kubernetes add-on) to sync secrets from Secret Manager into the pod environment at runtime. The RAD platform implements this pattern via the `enable_auto_password_rotation` variable.
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: On Autopilot, a team sets limits of 4 CPU/8Gi "to be safe" while actual usage is 200m/300Mi. What is the cost effect and the fix?&lt;/summary>
 
-*   **GKE Autopilot Constraints:** GKE Autopilot enforces security-hardened pod requirements. Pods that request `hostPath` volumes, `hostNetwork`, or privileged security contexts are rejected at admission. For the PCD exam, understand which workload types are suitable for Autopilot (stateless microservices, batch jobs, most web applications) versus Standard clusters (workloads requiring DaemonSets with host-level access, GPU node pools, or highly customised kernel configurations).
+A: Autopilot bills the pod's resource *requests* (and defaults requests from limits when unset), so over-declaring inflates cost ~20× regardless of usage. Fix: set realistic `container_resources` requests (`cpu_request`/`mem_request`) below the limits, or enable `enable_vertical_pod_autoscaling = true` and let VPA right-size requests — accepting that the module then drops the HPA.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: A maintenance event evicts pods and the app briefly serves 0 replicas. Which RAD default should have prevented this, and when does it silently not apply?&lt;/summary>
+
+A: The PodDisruptionBudget (`enable_pod_disruption_budget = true`, `pdb_min_available = "1"`) makes voluntary evictions keep at least one pod running. It is intentionally skipped when `max_instance_count = 1` — a PDB of minAvailable 1 on a single-replica workload would block node upgrades entirely. Single-replica workloads therefore have no disruption protection by design.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q3: You need stable per-pod volumes and ordered startup for a clustered datastore. What do you set, and what happens if you also force `workload_type = "Deployment"`?&lt;/summary>
+
+A: Set `stateful_pvc_enabled = true` with `stateful_pvc_size` and `stateful_pvc_mount_path` — the workload auto-resolves to a StatefulSet with `OrderedReady` pod management. Forcing `workload_type = "Deployment"` alongside it fails at plan time, because Deployments share volumes and have no stable identity — the validation encodes the exam's own decision rule.
+&lt;/details>
+
+**Beyond the modules** — Study `maxSurge`/`maxUnavailable` tuning on rolling updates and blue/green via label-switching Services (the module always uses default RollingUpdate parameters), GKE Standard node-pool management (`gcloud container node-pools create`), and fine-grained canary traffic on GKE (requires a mesh or Gateway API traffic splitting across two Services — the module's HTTPRoute targets a single backend, selectable per Cloud Deploy stage via `gateway_backend_stage`, default `"dev"`). Also know `kubectl rollout undo` for instant Deployment rollback.
+
+**⚠️ Exam trap** — Requests vs limits on Autopilot: scheduling, quota accounting (`quota_*_requests`), and *billing* all key off requests, while OOM kills key off memory limits. "Reduce the limit" does not reduce Autopilot cost if the request stays high — and a memory limit below actual usage turns a working pod into a CrashLoopBackOff.
