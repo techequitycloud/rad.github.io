@@ -48,23 +48,23 @@ This guide covers exam Section 1 using the RAD platform foundation modules as a 
 5. You know it worked when the IAM policy query returns only narrow predefined roles (no `roles/editor`) and the enabled-services list contains the APIs above.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A teammate deploys the Baseline platform profile into a fresh project and the apply fails with "API not enabled" errors for Compute Engine. They had set &lt;code>enable_services = false&lt;/code>. What is the fastest fix, and why does the default avoid this?&lt;/summary>
+<details>
+<summary>Q1: A teammate deploys the Baseline platform profile into a fresh project and the apply fails with "API not enabled" errors for Compute Engine. They had set <code>enable_services = false</code>. What is the fastest fix, and why does the default avoid this?</summary>
 
 A: Re-enable `enable_services = true` (or run `gcloud services enable compute.googleapis.com ...` manually). GCP refuses to create any resource whose API is disabled in the project; the module's default enables all ~45 required APIs up front precisely so that downstream resources (VPC, Cloud SQL, NAT) can be created in one apply.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: You need 12 operations engineers to receive monitoring alerts. Should you list 12 addresses in &lt;code>support_users&lt;/code> or one Google Group address?&lt;/summary>
+<details>
+<summary>Q2: You need 12 operations engineers to receive monitoring alerts. Should you list 12 addresses in <code>support_users</code> or one Google Group address?</summary>
 
 A: Use one group address. The module creates one notification channel per entry, and IAM/notification management best practice is to bind groups, not individuals — membership changes in Cloud Identity / Google Workspace then propagate automatically without touching the deployment.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: What is the difference between the project ID, project number, and project name?&lt;/summary>
+<details>
+<summary>Q3: What is the difference between the project ID, project number, and project name?</summary>
 
 A: The project ID is a globally unique, immutable, human-chosen string used in APIs and URLs; the project number is a globally unique, immutable numeric identifier assigned by Google (it appears in default service account emails); the project name is a mutable display label with no uniqueness requirement.
-&lt;/details>
+</details>
 
 **Beyond the modules** — The exam also tests things the modules deliberately do not do:
 - *Creating projects and hierarchy:* practice `gcloud projects create my-lab-project --folder=FOLDER_ID` and browse **IAM & Admin > Manage Resources** to see Organization → Folder → Project inheritance.
@@ -105,17 +105,17 @@ The budget wires the email channels and keeps the default IAM recipients enabled
 4. You know it worked when `gcloud billing budgets list` shows your budget with `thresholdRules` at 0.5, 0.9, and 1.0.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Your budget fired its 100% alert but resources keep running and costs keep accruing. Is something broken?&lt;/summary>
+<details>
+<summary>Q1: Your budget fired its 100% alert but resources keep running and costs keep accruing. Is something broken?</summary>
 
 A: No. Budgets only send notifications (email and optionally Pub/Sub) — they never cap spending or stop resources. Automated cost response requires you to wire a Pub/Sub budget notification to your own automation (e.g. a function that disables billing), which the exam expects you to know is a custom build, not a checkbox.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Finance wants a monthly per-team cost breakdown of everything the RAD platform deploys. Which two pieces make this possible?&lt;/summary>
+<details>
+<summary>Q2: Finance wants a monthly per-team cost breakdown of everything the RAD platform deploys. Which two pieces make this possible?</summary>
 
 A: (1) Consistent `resource_labels` (e.g. `team = "platform"`) on every resource, which the modules apply automatically, and (2) a billing export to BigQuery, configured at the billing-account level under **Billing > Billing export**, which you then query grouping by the label key. Billing Reports filtering by label works for ad-hoc views, but BigQuery is the answer for programmatic/chargeback reporting.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented by the foundation modules; practice these directly:
 - *Linking a project to a billing account:* `gcloud billing projects link my-project --billing-account=0X0X0X-0X0X0X-0X0X0X` (requires Billing Account User on the account + Project Billing Manager or Owner on the project).

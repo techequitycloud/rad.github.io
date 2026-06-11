@@ -44,23 +44,23 @@ This guide covers exam Section 4 using the RAD platform foundation modules. Secu
 5. You know it worked when steps 2–4 show per-resource bindings, single-permission predefined roles, and your own email on the `SetIamPolicy` entry.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A developer needs to view Cloud Run services and read their logs — nothing else. Which roles, and why not &lt;code>roles/viewer&lt;/code>?&lt;/summary>
+<details>
+<summary>Q1: A developer needs to view Cloud Run services and read their logs — nothing else. Which roles, and why not <code>roles/viewer</code>?</summary>
 
 A: `roles/run.viewer` plus `roles/logging.viewer` — predefined roles scoped to exactly the needed services. `roles/viewer` (a basic role) grants read access across nearly *every* service in the project, violating least privilege and exposing data (e.g. listing secrets, reading buckets' metadata) the developer has no business seeing.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A service account has &lt;code>roles/secretmanager.secretAccessor&lt;/code> on secret &lt;code>app-db-password&lt;/code> only, but the exam scenario says it "can't list secrets in the console". Is something wrong?&lt;/summary>
+<details>
+<summary>Q2: A service account has <code>roles/secretmanager.secretAccessor</code> on secret <code>app-db-password</code> only, but the exam scenario says it "can't list secrets in the console". Is something wrong?</summary>
 
 A: No — `secretAccessor` permits *reading versions* of that one secret, not listing secrets (that needs `secretmanager.secrets.list`, in roles like `roles/secretmanager.viewer` at project level). Resource-level grants don't confer project-level browse access; this asymmetry is intended and frequently tested.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Access granted at the folder level — can a project-level admin in a child project remove it?&lt;/summary>
+<details>
+<summary>Q3: Access granted at the folder level — can a project-level admin in a child project remove it?</summary>
 
 A: No. IAM policies are inherited downward and the *effective* policy is the union of all levels; a child resource cannot revoke or restrict a grant made on its ancestor. You'd need to change the folder-level binding (or use IAM deny policies / conditions, managed above the project).
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: custom role creation, IAM Conditions, Policy Troubleshooter, and org-level policy administration. For the exam: create a throwaway custom role (`gcloud iam roles create labRole --project=$GOOGLE_CLOUD_PROJECT --permissions=run.services.list`), run **IAM & Admin > Policy Troubleshooter** against a principal/resource/permission triple, and review IAM role recommendations in **IAM** (Active Assist flags over-granted bindings based on 90-day usage).
 
@@ -108,23 +108,23 @@ A: No. IAM policies are inherited downward and the *effective* policy is the uni
 5. Enable IAP with `iap_authorized_users = ["user:you@example.com"]`, redeploy, then open the service URL in an incognito window — you are pushed through Google sign-in, and a non-listed account gets a 403. You know it worked when your account passes and others don't.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A GKE pod must read a GCS bucket. A teammate suggests mounting a service account JSON key as a Kubernetes Secret. What is the exam-correct alternative and why?&lt;/summary>
+<details>
+<summary>Q1: A GKE pod must read a GCS bucket. A teammate suggests mounting a service account JSON key as a Kubernetes Secret. What is the exam-correct alternative and why?</summary>
 
 A: Workload Identity — bind the pod's KSA to a Google SA with `roles/storage.objectViewer` (the `roles/iam.workloadIdentityUser` pattern used by `App_GKE`). JSON keys never expire, can be exfiltrated by anyone who can read the namespace's secrets, and require manual rotation; Workload Identity issues short-lived tokens automatically with full audit attribution.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: GitHub Actions needs to deploy to Cloud Run. Options: download a key for the Cloud Build SA, or use Workload Identity Federation. Compare.&lt;/summary>
+<details>
+<summary>Q2: GitHub Actions needs to deploy to Cloud Run. Options: download a key for the Cloud Build SA, or use Workload Identity Federation. Compare.</summary>
 
 A: WIF (the module's `wif-pool` + GitHub OIDC provider) lets the workflow exchange its GitHub-issued OIDC token for short-lived GCP credentials — nothing stored in repo secrets, automatically scoped and auditable. A downloaded key is a long-lived bearer credential sitting in GitHub secrets; if leaked it works until manually destroyed. The exam answer is WIF (or impersonation) over keys, essentially always.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: With IAP enabled on Cloud Run, a user authenticates successfully with their Google account but still gets a 403. What two grants must both exist?&lt;/summary>
+<details>
+<summary>Q3: With IAP enabled on Cloud Run, a user authenticates successfully with their Google account but still gets a 403. What two grants must both exist?</summary>
 
 A: The *user* needs `roles/iap.httpsResourceAccessor` (via `iap_authorized_users`/`iap_authorized_groups`), and the *IAP service agent* needs `roles/run.invoker` on the service so it can forward authenticated requests. Authentication (who you are) passing while authorization (what you may access) fails is exactly this split — the module creates both bindings for you.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: service account key creation/rotation workflows (deliberately — the modules avoid keys entirely), short-lived token minting (`gcloud auth print-access-token --impersonate-service-account=...`, `gcloud auth print-identity-token`), disabling/undeleting service accounts, and cross-project SA usage. Practice in a scratch project: `gcloud iam service-accounts create`, `gcloud iam service-accounts keys create` (then delete it and explain why), and `gcloud iam service-accounts add-iam-policy-binding <sa> --member=user:you@... --role=roles/iam.serviceAccountTokenCreator` to wire impersonation. Also review the default Compute Engine SA (`PROJECT_NUMBER-compute@developer.gserviceaccount.com`) and why attaching it with Editor-scope access is the canonical anti-pattern.
 

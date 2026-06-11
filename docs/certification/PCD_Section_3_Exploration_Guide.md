@@ -61,23 +61,23 @@ Progressive delivery: `enable_cloud_deploy` (default `false`) creates a Cloud De
 5. You know it worked when the prod rollout sits in "Pending approval" until you approve it, and the prod service serves the new image afterward.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A release passed dev and staging but the prod rollout is stuck. No errors anywhere. What's the most likely cause in the default RAD pipeline?&lt;/summary>
+<details>
+<summary>Q1: A release passed dev and staging but the prod rollout is stuck. No errors anywhere. What's the most likely cause in the default RAD pipeline?</summary>
 
 A: The prod stage has `require_approval = true` by default — the rollout is waiting in `PENDING_APPROVAL` for `gcloud deploy rollouts approve` (or a console approval). This is the intended manual gate, not a failure; the exam phrases this as "deployment requires manager sign-off before production".
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: You set `enable_cloud_deploy = true` without `enable_cicd_trigger = true` and the plan fails with a precondition error. Why does the module insist on the trigger?&lt;/summary>
+<details>
+<summary>Q2: You set `enable_cloud_deploy = true` without `enable_cicd_trigger = true` and the plan fails with a precondition error. Why does the module insist on the trigger?</summary>
 
 A: Cloud Deploy releases are only created by the CI/CD pipeline; a delivery pipeline with nothing to create releases is meaningless, so the module rejects the combination at plan time instead of provisioning a dead pipeline. Generalized exam lesson: progressive delivery sits *downstream* of CI — Cloud Deploy consumes artifacts, it doesn't build them.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: How do you give QA a URL for an unreleased revision without sending it any production traffic?&lt;/summary>
+<details>
+<summary>Q3: How do you give QA a URL for an unreleased revision without sending it any production traffic?</summary>
 
 A: Add a `traffic_split` entry for the revision with `percent = 0` and a `tag` (e.g., `"qa"`). Cloud Run exposes a stable tagged URL (`https://qa---<service>-<hash>.run.app`) that routes directly to that revision while the main URL keeps serving the stable split.
-&lt;/details>
+</details>
 
 **Beyond the modules** — The exam also expects Cloud Run *event-driven* invocation (Eventarc triggers delivering CloudEvents, Pub/Sub push subscriptions authenticating with OIDC tokens and `roles/run.invoker`) — the modules only use Eventarc internally for secret rotation. Also study canary/automated rollback strategies in Cloud Deploy (canary deployment strategy with traffic percentages per phase) — the RAD pipeline uses the standard strategy with manual promotion. Try `gcloud deploy rollouts retry` and `gcloud run services update-traffic --to-latest` in a scratch project.
 
@@ -128,23 +128,23 @@ A: Add a `traffic_split` entry for the revision with `percent = 0` and a `tag` (
 5. You know it worked when the HPA shows `cpu: <current>%/70%` scaling events and the quota event reads `exceeded quota` when the cap is hit.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: On Autopilot, a team sets limits of 4 CPU/8Gi "to be safe" while actual usage is 200m/300Mi. What is the cost effect and the fix?&lt;/summary>
+<details>
+<summary>Q1: On Autopilot, a team sets limits of 4 CPU/8Gi "to be safe" while actual usage is 200m/300Mi. What is the cost effect and the fix?</summary>
 
 A: Autopilot bills the pod's resource *requests* (and defaults requests from limits when unset), so over-declaring inflates cost ~20× regardless of usage. Fix: set realistic `container_resources` requests (`cpu_request`/`mem_request`) below the limits, or enable `enable_vertical_pod_autoscaling = true` and let VPA right-size requests — accepting that the module then drops the HPA.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A maintenance event evicts pods and the app briefly serves 0 replicas. Which RAD default should have prevented this, and when does it silently not apply?&lt;/summary>
+<details>
+<summary>Q2: A maintenance event evicts pods and the app briefly serves 0 replicas. Which RAD default should have prevented this, and when does it silently not apply?</summary>
 
 A: The PodDisruptionBudget (`enable_pod_disruption_budget = true`, `pdb_min_available = "1"`) makes voluntary evictions keep at least one pod running. It is intentionally skipped when `max_instance_count = 1` — a PDB of minAvailable 1 on a single-replica workload would block node upgrades entirely. Single-replica workloads therefore have no disruption protection by design.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: You need stable per-pod volumes and ordered startup for a clustered datastore. What do you set, and what happens if you also force `workload_type = "Deployment"`?&lt;/summary>
+<details>
+<summary>Q3: You need stable per-pod volumes and ordered startup for a clustered datastore. What do you set, and what happens if you also force `workload_type = "Deployment"`?</summary>
 
 A: Set `stateful_pvc_enabled = true` with `stateful_pvc_size` and `stateful_pvc_mount_path` — the workload auto-resolves to a StatefulSet with `OrderedReady` pod management. Forcing `workload_type = "Deployment"` alongside it fails at plan time, because Deployments share volumes and have no stable identity — the validation encodes the exam's own decision rule.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study `maxSurge`/`maxUnavailable` tuning on rolling updates and blue/green via label-switching Services (the module always uses default RollingUpdate parameters), GKE Standard node-pool management (`gcloud container node-pools create`), and fine-grained canary traffic on GKE (requires a mesh or Gateway API traffic splitting across two Services — the module's HTTPRoute targets a single backend, selectable per Cloud Deploy stage via `gateway_backend_stage`, default `"dev"`). Also know `kubectl rollout undo` for instant Deployment rollback.
 

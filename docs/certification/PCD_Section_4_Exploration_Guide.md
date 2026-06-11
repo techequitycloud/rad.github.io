@@ -54,23 +54,23 @@ This section uses the integration surfaces the foundation modules wire up for yo
 5. You know it worked when the app container resolves `DB_HOST` to the socket path, the db-init execution shows `Succeeded`, and the GKE pod runs two containers.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Cloud Run scaled to 50 instances and Postgres started rejecting connections. The instance has the module default flags. What happened and what are the fixes?&lt;/summary>
+<details>
+<summary>Q1: Cloud Run scaled to 50 instances and Postgres started rejecting connections. The instance has the module default flags. What happened and what are the fixes?</summary>
 
 A: Each instance holds its own pool; 50 instances × even a small pool exceeds the default `max_connections=200` flag set on the RAD Postgres instance. Fixes in exam order: cap `max_instance_count`, shrink the per-instance pool, raise `max_connections` (costs memory), or introduce server-side pooling. The Auth Proxy authenticates and encrypts — it does not pool for you.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does the platform run schema migrations as a Cloud Run *job* instead of at service startup?&lt;/summary>
+<details>
+<summary>Q2: Why does the platform run schema migrations as a Cloud Run *job* instead of at service startup?</summary>
 
 A: A service can scale to N concurrent instances — running migrations in the entrypoint races N copies against each other and slows cold starts. A job (`initialization_jobs` with `execute_on_apply`) runs exactly `task_count` tasks once, can be ordered with `depends_on_jobs`, retried independently (`max_retries`), and keeps the serving path fast. This separation of "run-once" from "serve" is a standard PCD design answer.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: An app needs shared writable storage across all Cloud Run instances. Compare the two RAD options.&lt;/summary>
+<details>
+<summary>Q3: An app needs shared writable storage across all Cloud Run instances. Compare the two RAD options.</summary>
 
 A: `enable_nfs` mounts a real POSIX filesystem (Filestore or the platform NFS VM) — correct for apps needing file locking/rename semantics, but it's a single capacity/throughput point. `gcs_volumes` (GCS Fuse) backs the mount with an object store — effectively unlimited and cheaper, but writes are object uploads (no partial writes/locking). Both require `execution_environment = "gen2"`.
-&lt;/details>
+</details>
 
 **Beyond the modules** — The modules create no application messaging or document-store code paths: practice the **Pub/Sub** client libraries (publish with attributes, pull vs push subscriptions, ack deadlines, dead-letter topics), **Firestore** SDK usage (documents, queries needing composite indexes, real-time listeners, transactions), and **Cloud Storage** client-library patterns including signed URLs for direct browser upload/download. The only Pub/Sub in the platform is internal (secret-rotation and SCC topics) — useful to inspect (`gcloud pubsub topics list`) but not an application pattern.
 
@@ -126,23 +126,23 @@ A: `enable_nfs` mounts a real POSIX filesystem (Filestore or the platform NFS VM
 4. You know it worked when the KSA annotation matches the GSA whose policy contains the workloadIdentityUser binding, and the authenticated curl returns 200 where an anonymous one is rejected (on a non-public service).
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Service A on Cloud Run must call private Service B. Which role, on what, for whom — and which token type does A send?&lt;/summary>
+<details>
+<summary>Q1: Service A on Cloud Run must call private Service B. Which role, on what, for whom — and which token type does A send?</summary>
 
 A: Grant A's service account `roles/run.invoker` *on Service B* (resource-level, not project-level). A fetches an **ID token** with audience = B's URL (from the metadata server, e.g. via the client library or `fetch_id_token`) and sends it as a Bearer header. An OAuth *access* token is the wrong answer — Cloud Run's IAM check validates identity tokens.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: GitHub Actions needs to push images and create Cloud Deploy releases without a downloaded key. Which RAD configuration is the textbook setup?&lt;/summary>
+<details>
+<summary>Q2: GitHub Actions needs to push images and create Cloud Deploy releases without a downloaded key. Which RAD configuration is the textbook setup?</summary>
 
 A: `enable_workload_identity_federation = true` with `wif_provider_type = "github"`. The workflow exchanges its GitHub OIDC token through pool `wif-pool` / provider `github-actions` and impersonates `cloudbuild-sa-*`/`clouddeploy-sa-*` (the module binds `roles/iam.workloadIdentityUser` for the pool). No long-lived credential exists anywhere; note the module's wildcard `principalSet` is deliberately broad — production answers scope to `attribute.repository`.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: A pod's Google API calls run as the node's identity instead of the app's GSA. What's missing?&lt;/summary>
+<details>
+<summary>Q3: A pod's Google API calls run as the node's identity instead of the app's GSA. What's missing?</summary>
 
 A: One of the three Workload Identity legs: the cluster's workload pool, the KSA annotation `iam.gke.io/gcp-service-account`, or the `roles/iam.workloadIdentityUser` binding on the GSA for `{project}.svc.id.goog[ns/ksa]` — or the pod spec isn't using the annotated KSA (`serviceAccountName`). The RAD module wires all three; on the exam, the missing IAM binding is the most common culprit.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Practice the client-library mechanics the modules can't show: automatic retries with exponential backoff (built into the libraries for 429/503), pagination iterators, field masks, and choosing gRPC vs REST transports. Also study API enablement failures (`SERVICE_DISABLED` 403s — the platform pre-enables its APIs, a fresh project does not) and quota errors (`RESOURCE_EXHAUSTED` 429 → backoff or quota increase, not retry-storms).
 
@@ -193,23 +193,23 @@ A: One of the three Workload Identity legs: the cluster's workload pool, the KSA
 5. You know it worked when the alert policy appears with your email channel attached, and the module-created uptime check shows green from multiple regions in **Monitoring > Uptime checks**.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Users report intermittent 503s but your application logs show nothing at those timestamps. Where do you look next on Cloud Run?&lt;/summary>
+<details>
+<summary>Q1: Users report intermittent 503s but your application logs show nothing at those timestamps. Where do you look next on Cloud Run?</summary>
 
 A: The *request* logs and platform metrics, not app logs: filter `resource.type="cloud_run_revision" AND httpRequest.status=503` — 503s with no app log usually mean the request never reached your code (instance startup failures, exceeded `max_instance_count` under load, or request timeout/probe failures). Correlate with `container/instance_count` and startup-probe failures; raising `max_instance_count` or fixing the startup probe is the usual fix.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: An alert should fire when error rate exceeds 5% for 5 minutes, notifying the on-call list. Map this to RAD variables.&lt;/summary>
+<details>
+<summary>Q2: An alert should fire when error rate exceeds 5% for 5 minutes, notifying the on-call list. Map this to RAD variables.</summary>
 
 A: Put the on-call addresses in `support_users` (creates the notification channels) and add an `alert_policies` entry on `run.googleapis.com/request_count` filtered to 5xx — though for a *ratio*, the honest answer is that the module's single-metric threshold policies can't express it; you'd build a ratio-based condition (MQL/PromQL) directly in Cloud Monitoring. Knowing when declarative simple thresholds stop being enough is itself exam-relevant.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Checkout takes 4s; the database team swears their queries are fast. Which tool proves where the time goes across your two Cloud Run services?&lt;/summary>
+<details>
+<summary>Q3: Checkout takes 4s; the database team swears their queries are fast. Which tool proves where the time goes across your two Cloud Run services?</summary>
 
 A: Cloud Trace with distributed trace context propagation — instrument both services with OpenTelemetry (Cloud Trace exporter), propagate the `traceparent` header on the service-to-service call, and read the waterfall to see which span (handler, downstream call, DB query) owns the latency. Logs and metrics aggregate; only tracing shows the per-request breakdown.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Nothing in the modules instruments application code: study OpenTelemetry setup and trace propagation (Cloud Trace), continuous profiling (`google-cloud-profiler`, flame graphs, &lt;1% overhead — safe in prod), Error Reporting's automatic stack-trace grouping (works from stdout logs for major runtimes), and log-based metrics for alerting on log patterns. Also try Cloud Run's built-in SLO monitoring (**Cloud Run > service > SLOs**) — none of this is provisioned by the platform.
 

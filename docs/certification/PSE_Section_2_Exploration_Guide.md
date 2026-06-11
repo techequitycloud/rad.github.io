@@ -43,23 +43,23 @@ gcloud compute security-policies describe <service>-waf-policy \
 4. You know it worked when WAF denials appear in **Logging > Logs Explorer** under the backend service's `requests` log with `jsonPayload.enforcedSecurityPolicy.outcome="DENY"`.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Scenario — after enabling Cloud Armor on Cloud Run, a pen tester still reaches the app through its run.app URL. What was missed?&lt;/summary>
+<details>
+<summary>Q1: Scenario — after enabling Cloud Armor on Cloud Run, a pen tester still reaches the app through its run.app URL. What was missed?</summary>
 
 A: Ingress was left at `all`. Cloud Armor only inspects traffic traversing the load balancer; the service must be restricted to `internal-and-cloud-load-balancing` so direct URLs are refused. The RAD module does this automatically — the exam expects you to know it must be done.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A credential-stuffing botnet sends 2,000 requests/min/IP. Which of the deployed rules responds, and how?&lt;/summary>
+<details>
+<summary>Q2: A credential-stuffing botnet sends 2,000 requests/min/IP. Which of the deployed rules responds, and how?</summary>
 
 A: The priority-2000 `rate_based_ban` rule: each source IP exceeding 500 requests/60 s gets `deny(429)` and a 300-second ban. Adaptive Protection complements this by detecting distributed L7 anomalies that per-IP limits miss and suggesting targeted rules.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: When is IAP the right edge control instead of (or in addition to) Cloud Armor?&lt;/summary>
+<details>
+<summary>Q3: When is IAP the right edge control instead of (or in addition to) Cloud Armor?</summary>
 
 A: Cloud Armor filters by request signature/source (no identity); IAP requires an authenticated, authorized Google identity. For an internal tool, IAP alone suffices. For a public app, Cloud Armor (WAF/DDoS/rate limiting). For a sensitive internal app exposed via LB, layer both: Armor scrubs attacks at the edge, IAP enforces identity.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: Cloud NGFW network/hierarchical firewall policies (the platform uses classic VPC firewall rules with network tags), FQDN/geo/threat-intelligence rules, Cloud Armor bot management with reCAPTCHA, edge security policies, Certificate Authority Service for mTLS, and Secure Web Proxy for egress filtering. Scratch-project starter: `gcloud compute network-firewall-policies create demo-policy --global` and `gcloud compute security-policies update <policy> --enable-layer7-ddos-defense`.
 
@@ -105,23 +105,23 @@ kubectl run probe --image=busybox -n default --rm -it --restart=Never \
 4. You know it worked when cross-namespace pod traffic times out while the app still serves LB health checks and reaches Cloud SQL.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Scenario — an attacker steals a service account key with `roles/storage.admin` and runs `gsutil cp` from their home network. IAM allows it. What deployed control stops the copy, and why?&lt;/summary>
+<details>
+<summary>Q1: Scenario — an attacker steals a service account key with `roles/storage.admin` and runs `gsutil cp` from their home network. IAM allows it. What deployed control stops the copy, and why?</summary>
 
 A: The VPC-SC perimeter (once `vpc_sc_dry_run = false`). `storage.googleapis.com` is a restricted service, and the request originates from outside every access level (not the VPC CIDRs, not `admin_ip_ranges`, not the IAP/CI-CD identities), so the API call itself is rejected regardless of valid credentials. VPC-SC controls *where from*, IAM controls *who*.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does the module refuse to create the perimeter when `admin_ip_ranges` is empty?&lt;/summary>
+<details>
+<summary>Q2: Why does the module refuse to create the perimeter when `admin_ip_ranges` is empty?</summary>
 
 A: Lockout prevention. With enforcement on and no admin access level, operators and CI/CD outside the VPC would be unable to call any restricted API — including the calls needed to fix or remove the perimeter. The module emits a warning and skips creation instead.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Your GKE pods must reach Secret Manager under the NetworkPolicy. Which two egress rules make that possible?&lt;/summary>
+<details>
+<summary>Q3: Your GKE pods must reach Secret Manager under the NetworkPolicy. Which two egress rules make that possible?</summary>
 
 A: Egress 443 (covering the googleapis endpoints, including the restricted-VIP ranges `199.36.153.4/30`/`199.36.153.8/30` when Cloud DNS maps `*.googleapis.com` there) and egress to the metadata server `169.254.169.254:80`, which Workload Identity uses to exchange the KSA token for a GSA access token before the HTTPS call can authenticate.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: Shared VPC host/service projects, VPC peering between customer VPCs, hierarchical firewall policies, Cloud NGFW L7 inspection, and per-pod (rather than per-namespace) policy granularity. Study the Shared VPC IAM model (`roles/compute.networkUser` on shared subnets) and try `gcloud compute shared-vpc enable HOST_PROJECT` in a scratch org. Also study VPC-SC ingress/egress rule semantics for cross-perimeter sharing and perimeter bridges.
 
@@ -154,17 +154,17 @@ gcloud compute routers nats list --router=<router> --region=us-central1
 3. You know it worked when the Cloud SQL instance shows only a 10.x address and the container's public egress IP equals the NAT address.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Scenario — a payment gateway allowlists a single static IP. Your Cloud Run service must call it. How do you guarantee a stable source IP with the deployed architecture?&lt;/summary>
+<details>
+<summary>Q1: Scenario — a payment gateway allowlists a single static IP. Your Cloud Run service must call it. How do you guarantee a stable source IP with the deployed architecture?</summary>
 
 A: Set `vpc_egress_setting = "ALL_TRAFFIC"` so all outbound traffic routes through the VPC, then ensure Cloud NAT uses a reserved static external address. The gateway then sees only the NAT IP. With `PRIVATE_RANGES_ONLY`, calls to public endpoints would leave directly from Google's serverless pool with unpredictable IPs.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: What's the difference between Private Services Access (used here for Cloud SQL) and Private Service Connect?&lt;/summary>
+<details>
+<summary>Q2: What's the difference between Private Services Access (used here for Cloud SQL) and Private Service Connect?</summary>
 
 A: PSA creates a VPC peering to a Google-managed producer network and allocates an IP range from your space — connectivity is network-to-network and non-transitive. PSC exposes a service (Google APIs or a producer service) as an *endpoint IP inside your own subnet*, with no peering and finer control. The exam favors PSC for new designs needing per-service endpoints or overlapping-IP tolerance; PSA remains the mechanism Cloud SQL/Memorystore private IP classically uses.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: Cloud VPN / HA VPN, Cloud Interconnect (Dedicated/Partner, MACsec), BGP custom routing beyond NAT, Network Connectivity Center, Private Google Access subnet flag demonstrations, proxy-only subnets, internal load balancers, and Cloud DNS private zones for `*.googleapis.com` → restricted VIP mapping (the NetworkPolicy allows those CIDRs, but the DNS zone itself is not created). Scratch commands: `gcloud compute networks subnets update SUBNET --region=R --enable-private-ip-google-access` and `gcloud compute vpn-gateways create ...` to study HA VPN topology.
 

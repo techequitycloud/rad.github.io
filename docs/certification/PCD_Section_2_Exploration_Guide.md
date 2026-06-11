@@ -46,17 +46,17 @@ This section maps to the RAD platform's build machinery: the platform's Cloud Bu
 4. You know it worked when `gcloud run services list` shows two services with different tenant suffixes, and your local client library calls hit the emulator (no credentials needed).
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A developer's laptop code calls `storage.Client()` and gets a 403 in the office but works on Cloud Run. Why, and what's the fix?&lt;/summary>
+<details>
+<summary>Q1: A developer's laptop code calls `storage.Client()` and gets a 403 in the office but works on Cloud Run. Why, and what's the fix?</summary>
 
 A: On Cloud Run the client library resolves Application Default Credentials from the metadata server (the service's service account). Locally there are no ambient credentials until the developer runs `gcloud auth application-default login` (or sets `GOOGLE_APPLICATION_CREDENTIALS` — discouraged because key files are long-lived). The fix is establishing local ADC; the code itself shouldn't change.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Your CI unit tests must exercise Pub/Sub and Firestore logic without network access or cost. What do you use?&lt;/summary>
+<details>
+<summary>Q2: Your CI unit tests must exercise Pub/Sub and Firestore logic without network access or cost. What do you use?</summary>
 
 A: The local emulators (`gcloud beta emulators pubsub start`, the Firestore emulator) with the `PUBSUB_EMULATOR_HOST` / `FIRESTORE_EMULATOR_HOST` environment variables set so client libraries transparently target them. Emulators need no credentials, which is exactly what hermetic CI wants.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study Cloud Code (IDE deploy/debug for Cloud Run and GKE, including a local Cloud Run emulator), Cloud Shell (ephemeral, pre-authenticated, 5 GB persistent home), and Cloud Workstations (managed, persistent, IAP-fronted dev VMs for regulated teams) — know which to recommend for a given constraint. Also practice `gcloud run deploy --source .` (Buildpacks-based source deploy) since the RAD pipeline always builds an explicit container instead.
 
@@ -107,23 +107,23 @@ Registry management: the module discovers the `Services_GCP` shared repository o
 5. You know it worked when the image shows three tags (version, `latest`, commit SHA), vulnerabilities are listed, and an attestation references the new digest.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Why does the pipeline deploy by commit-SHA tag rather than `latest`, even though `latest` is also pushed?&lt;/summary>
+<details>
+<summary>Q1: Why does the pipeline deploy by commit-SHA tag rather than `latest`, even though `latest` is also pushed?</summary>
 
 A: `latest` is mutable — it points to whatever was pushed most recently, so a deployment referencing it is not reproducible and rollbacks are ambiguous. The commit SHA tag is effectively immutable and ties the running revision to exact source provenance, which is also what the Binary Authorization attestation signs (the digest). `latest` is kept only as a developer convenience.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A build fails with Docker daemon errors inside Cloud Build. The RAD pipeline never hits this — why?&lt;/summary>
+<details>
+<summary>Q2: A build fails with Docker daemon errors inside Cloud Build. The RAD pipeline never hits this — why?</summary>
 
 A: It uses Kaniko, which builds OCI images entirely in userspace from the Dockerfile without a Docker daemon — the standard answer for daemonless, cacheable container builds in CI. (Buildpacks are the other daemonless exam answer, used by `gcloud run deploy --source`.)
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Artifact Registry storage costs are growing without bound in a busy repo. Which three RAD controls address it?&lt;/summary>
+<details>
+<summary>Q3: Artifact Registry storage costs are growing without bound in a busy repo. Which three RAD controls address it?</summary>
 
 A: `delete_untagged_images = true` removes dangling layers, `image_retention_days = 30` ages out old images, and `max_images_to_retain = 7` keeps the most recent N regardless of age (a keep-guard, not a deleter). Together they implement the recommended AR cleanup-policy pattern: delete-by-age plus keep-most-recent.
-&lt;/details>
+</details>
 
 **Beyond the modules** — The exam also covers Buildpacks/source deploys, build provenance and SLSA levels (Cloud Build generates SLSA provenance viewable under a build's **Security insights** tab), private pools, and build substitutions/secrets in a Cloud Build config (try `gcloud builds submit --substitutions=_FOO=bar` in a scratch repo). The RAD trigger supports GitHub only (token or App installation) — know that Cloud Build also connects GitLab and Bitbucket repos.
 
@@ -170,17 +170,17 @@ A: `delete_untagged_images = true` removes dangling layers, `image_retention_day
 4. You know it worked when the failed build leaves the deployed image untouched and the deploy step is skipped.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Integration tests need a real Postgres but must not touch production data. How would you structure this with the RAD stack?&lt;/summary>
+<details>
+<summary>Q1: Integration tests need a real Postgres but must not touch production data. How would you structure this with the RAD stack?</summary>
 
 A: Deploy a separate tenant (`tenant_deployment_id = "ci"`) so the pipeline gets its own isolated Cloud SQL database and service, run integration tests against that stage from a Cloud Build step, and tear down or reuse it per run. Unit tests stay on emulators/mocks; only the integration layer touches the real (isolated) database.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Where do smoke tests belong in a Cloud Deploy pipeline, and what stops a bad release from reaching prod?&lt;/summary>
+<details>
+<summary>Q2: Where do smoke tests belong in a Cloud Deploy pipeline, and what stops a bad release from reaching prod?</summary>
 
 A: After the rollout to a non-prod target (dev/staging) — run them against that stage's URL, and gate `prod` with `require_approval = true` (the RAD default) so a human (or an automated verification you wire in) confirms before promotion. A failed rollout or withheld approval keeps the release from advancing.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Practice writing emulator-backed unit tests (Pub/Sub, Firestore, Spanner emulators), Cloud Build test reporting, and load testing against Cloud Run revisions (e.g., `hey`/`k6` against a tagged canary URL). Cloud Deploy *verify* (post-deploy verification jobs declared in the Skaffold config) is the managed version of step 2's smoke-test idea and worth reading about — the RAD Cloud Deploy configs use hooks for IAM and jobs, not verification.
 

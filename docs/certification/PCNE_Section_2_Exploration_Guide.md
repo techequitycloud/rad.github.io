@@ -53,23 +53,23 @@ Private Google Access is enabled everywhere: the Services_GCP GCE and GKE subnet
 5. You know it worked when `privateIpGoogleAccess: True` shows on every module subnet and (for VPC-SC) `gcloud access-context-manager perimeters list --policy=<policy-id>` shows `vpcsc_<prefix>_perimeter`.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: The 10.0.0.0/24 subnet is nearly full. Can you grow it without downtime, and what's the constraint?&lt;/summary>
+<details>
+<summary>Q1: The 10.0.0.0/24 subnet is nearly full. Can you grow it without downtime, and what's the constraint?</summary>
 
 A: Yes — `gcloud compute networks subnets expand-ip-range vpc-network-<prefix>-subnet-us-central1 --region=us-central1 --prefix-length=23`. Expansion can only make the prefix *shorter* (larger range), must not overlap any other subnet or the PSA allocation, and cannot be reversed. RAD's Terraform would show drift afterward — in IaC environments, change `subnet_cidr_range` instead and let the plan handle it.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why do the health-check firewall rules allow exactly 35.191.0.0/16 and 130.211.0.0/22?&lt;/summary>
+<details>
+<summary>Q2: Why do the health-check firewall rules allow exactly 35.191.0.0/16 and 130.211.0.0/22?</summary>
 
 A: Those are Google's central health-check prober ranges for most load balancer types. Without an ingress allow from them, backends are marked unhealthy and the LB serves 502s even though the application is fine — one of the most common LB troubleshooting answers on the exam. RAD bakes them into both the VPC rules (`fw-allow-lb-hc`) and the GKE NetworkPolicy.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: enable_vpc_sc = true but no perimeter appears and the apply succeeded. Why?&lt;/summary>
+<details>
+<summary>Q3: enable_vpc_sc = true but no perimeter appears and the apply succeeded. Why?</summary>
 
 A: By design the module degrades gracefully: VPC-SC is skipped (with a warning) if the project has no discoverable organization, if `admin_ip_ranges` is empty (lockout prevention), or if the caller fails the `gcloud access-context-manager policies list` permission probe. Check the apply log for the WARNING lines from the VPC-SC validators.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: **Shared VPC** (`gcloud compute shared-vpc enable`, `associated-projects add`, subnet-level `roles/compute.networkUser` grants), **VPC Peering between consumer VPCs** (only the PSA producer peering exists), **private pools** for Cloud Build inside the perimeter, and global **network firewall policies** (the modules use classic per-network VPC firewall rules — see Section 6.2). Study "Provision Shared VPC" and "Migrate firewall rules to network firewall policies".
 
@@ -116,17 +116,17 @@ A: By design the module degrades gracefully: VPC-SC is skipped (with a warning) 
 4. You know it worked when you can explain every row of the routes list — especially which routes came from the `servicenetworking` peering.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Two custom static routes match a destination: 0.0.0.0/0 priority 1000 via internet gateway, and 10.50.0.0/16 priority 900 via an NVA. A packet to 10.50.1.5 — where does it go?&lt;/summary>
+<details>
+<summary>Q1: Two custom static routes match a destination: 0.0.0.0/0 priority 1000 via internet gateway, and 10.50.0.0/16 priority 900 via an NVA. A packet to 10.50.1.5 — where does it go?</summary>
 
 A: Via the NVA. Longest-prefix match wins before priority is even considered (/16 beats /0); priority only breaks ties between routes of identical prefix length (lower number wins).
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why did App_GKE need `--export-subnet-routes-with-public-ip` on the PSA peering when custom-route export was already on?&lt;/summary>
+<details>
+<summary>Q2: Why did App_GKE need `--export-subnet-routes-with-public-ip` on the PSA peering when custom-route export was already on?</summary>
 
 A: GKE secondary (alias-IP) ranges propagate as *subnet routes*, and custom-route export covers only custom static/dynamic routes. The misleadingly named subnet-routes-with-public-IP flags control export/import of subnet routes across the peering; without exporting them, the producer VPC has no return path to pod IPs. This distinction — custom vs subnet route exchange over peering — is precisely sub-topic 2.2's "configuring custom route import/export".
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study: **network tags on routes** (`gcloud compute routes create --tags` restricts a route to tagged instances — RAD uses tags only on firewall rules), **policy-based routes** (`gcloud network-connectivity policy-based-routes create`, match on protocol/src/dst, steer to an internal LB), **internal passthrough LB as next hop** for HA NVAs, and **regional vs global dynamic routing** effects on Cloud Router advertisements. None exist in the modules.
 
@@ -157,17 +157,17 @@ A: GKE secondary (alias-IP) ranges propagate as *subnet routes*, and custom-rout
 2. You know it worked when the hub route table lists the RAD subnets as dynamic entries — that's NCC learning VPC-spoke routes.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: VPC-A peers with VPC-B, VPC-B peers with VPC-C. A needs to reach C. NCC or more peering?&lt;/summary>
+<details>
+<summary>Q1: VPC-A peers with VPC-B, VPC-B peers with VPC-C. A needs to reach C. NCC or more peering?</summary>
 
 A: NCC with all three as VPC spokes on one hub (mesh topology) — peering is non-transitive, and adding A↔C peering scales O(n²). With NCC, spoke subnets are exchanged through the hub and reachability is transitive; use IP/CIDR export filters on spokes to exclude ranges (e.g., overlapping ones).
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: When do you choose star topology over mesh for VPC spokes?&lt;/summary>
+<details>
+<summary>Q2: When do you choose star topology over mesh for VPC spokes?</summary>
 
 A: Star when branch VPCs should reach only the center (shared services) and *not* each other — e.g., per-customer VPCs that must stay mutually isolated while consuming central services. Mesh gives any-to-any.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study "Network Connectivity Center overview": spoke types (VPC, hybrid VPN/Interconnect, router appliance, producer VPC), star vs mesh, Private NAT at the hub for overlapping spokes, PSC propagation through NCC, and the monitoring story (hub route tables, spoke status). Know that hybrid spokes enable *site-to-site data transfer* only in supported regions.
 
@@ -214,23 +214,23 @@ A: Star when branch VPCs should reach only the center (shared services) and *not
 4. You know it worked when the cross-namespace probe times out with the policy on and succeeds with it off.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Why does the egress policy allow 443 to 199.36.153.4/30 and also an unrestricted 443 rule?&lt;/summary>
+<details>
+<summary>Q1: Why does the egress policy allow 443 to 199.36.153.4/30 and also an unrestricted 443 rule?</summary>
 
 A: `199.36.153.4/30` is restricted.googleapis.com — it only serves traffic when a Cloud DNS zone maps `*.googleapis.com` to those VIPs. RAD does not create that DNS zone, so kube-dns returns public Google IPs (e.g., for `sqladmin.googleapis.com`), and the cloud-sql-proxy sidecar would deadlock without a general HTTPS egress allowance. The module documents this dual-path reasoning in the NetworkPolicy — and the exam loves the "restricted VIP requires the DNS zone" dependency.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A Standard cluster's pods must reach an on-prem 172.16.0.0/12 range, but traffic arrives on-prem with node IPs, breaking source-based ACLs. What's happening?&lt;/summary>
+<details>
+<summary>Q2: A Standard cluster's pods must reach an on-prem 172.16.0.0/12 range, but traffic arrives on-prem with node IPs, breaking source-based ACLs. What's happening?</summary>
 
 A: The IP masquerade agent SNATs pod IPs to node IPs for destinations outside its `nonMasqueradeCIDRs` (default covers RFC 1918, but custom configs often shrink it). Fix by adding 172.16.0.0/12 to nonMasqueradeCIDRs (or configuring Dataplane V2's equivalent) so pod IPs are preserved — then ensure on-prem routes back to the pod CIDR. RAD doesn't configure masquerade; know the default behavior.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Why is `0.0.0.0/0` in the inline cluster's authorized networks not equivalent to "no authentication"?&lt;/summary>
+<details>
+<summary>Q3: Why is `0.0.0.0/0` in the inline cluster's authorized networks not equivalent to "no authentication"?</summary>
 
 A: Authorized networks is a *network-layer* filter on who may open a TCP session to the control plane; every request still requires valid IAM/OIDC credentials. The module opens it because Cloud Build's worker IPs are unpredictable. The hardening alternatives are private endpoints with private pools, or the DNS-based control-plane endpoint, which authorizes via IAM instead of CIDR.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study: **Shared VPC clusters** (secondary ranges live in the host project; GKE service agents need `roles/compute.networkUser` + Host Service Agent User); **private clusters** and control-plane private endpoints; the **DNS-based endpoint** (`gcloud container clusters update --enable-dns-access`); **additional pod ranges** for IP relief; **NodeLocal DNSCache** and **Cloud DNS for GKE** (`--cluster-dns=clouddns`); SNAT/`ip-masq-agent` details. Docs: "About cluster networking", "Use Cloud DNS for GKE".
 

@@ -42,17 +42,17 @@ for i in 1 2 3; do curl -s -o /dev/null -w "request $i: %{time_total}s\n" <servi
 5. You know it worked when you can attribute the first-request latency delta to startup (not request processing) using the startup-latency metric, and you can state each pod's utilization-to-request ratio.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A Cloud Run service shows fast p50 but terrible p99 latency, concentrated right after idle periods. Which two settings fix it and what do they cost?&lt;/summary>
+<details>
+<summary>Q1: A Cloud Run service shows fast p50 but terrible p99 latency, concentrated right after idle periods. Which two settings fix it and what do they cost?</summary>
 
 A: `min_instance_count = 1` (warm instance — eliminates cold starts, constant baseline cost) and startup CPU boost (already on for this service — faster starts when they do happen, billed only during startup). The p99-after-idle signature is the classic cold-start fingerprint.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: After setting `cpu_always_allocated = false`, a service's response webhooks stop firing even though requests succeed. Why?&lt;/summary>
+<details>
+<summary>Q2: After setting `cpu_always_allocated = false`, a service's response webhooks stop firing even though requests succeed. Why?</summary>
 
 A: With CPU allocated only during requests, background threads (work continuing after the response is sent) are throttled to near-zero between requests. Anything asynchronous must either finish before the response, move to a Cloud Run job/queue, or the service needs always-allocated CPU.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Cloud Trace (where in the request path latency accrues), Cloud Profiler (which function burns CPU — add the language agent and read flame graphs), and load testing methodology are not provisioned. In a scratch project, instrument a Cloud Run service with OpenTelemetry and inspect a trace waterfall — exam questions name these tools explicitly.
 
@@ -95,23 +95,23 @@ kubectl describe resourcequota -n <namespace>
 5. You know it worked when instance count hits zero between bursts, the VPA target is below your original request, and the ResourceQuota shows used vs. hard limits.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A GKE Autopilot bill seems high although `kubectl top` shows pods using ~20% of their CPU requests. What's the cheapest structural fix?&lt;/summary>
+<details>
+<summary>Q1: A GKE Autopilot bill seems high although `kubectl top` shows pods using ~20% of their CPU requests. What's the cheapest structural fix?</summary>
 
 A: Lower the requests — Autopilot bills requested resources, not used ones. Either set `container_resources` from observed usage or enable VPA to do it continuously. Adding CUDs before right-sizing would lock in the waste.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does the module validate that `quota_memory_requests` carries a binary suffix like `"4Gi"`?&lt;/summary>
+<details>
+<summary>Q2: Why does the module validate that `quota_memory_requests` carries a binary suffix like `"4Gi"`?</summary>
 
 A: Kubernetes parses a bare `"4"` as 4 bytes. A 4-byte namespace memory quota makes every pod's request exceed the quota, so nothing schedules — an outage caused by a unit typo. The plan-time validation turns a runtime mystery into an immediate, explainable failure.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Finance wants per-team cost reports for workloads sharing one GKE Autopilot cluster. Which two platform features make that possible here?&lt;/summary>
+<details>
+<summary>Q3: Finance wants per-team cost reports for workloads sharing one GKE Autopilot cluster. Which two platform features make that possible here?</summary>
 
 A: GKE cost allocation (enabled on Services_GCP clusters), which attributes cluster costs to namespaces/labels in billing data, combined with the modules' consistent resource labels (`tenant`, `application`). Export billing to BigQuery and group by those labels for the report.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Billing export to BigQuery (the foundation of any FinOps practice — configure under **Billing > Billing export**), budgets and programmatic budget alerts via Pub/Sub, Active Assist/Recommender rightsizing and idle-resource recommendations, committed use discounts (GKE Autopilot CUDs commit to vCPU/GB amounts, not machine types), and Spot provisioning for fault-tolerant batch work. None are provisioned by the modules; all are inexpensive console exercises against the lab project.
 

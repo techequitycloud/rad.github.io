@@ -44,23 +44,23 @@ gcloud artifacts repositories describe <repo> --location=us-central1 \
 4. You know it worked when each image version shows all three tags and the cleanup policies reflect your variable values.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Storage costs on your registry keep climbing even though a cleanup policy deletes images older than 30 days. Builds run 40×/day. What is the likely gap?&lt;/summary>
+<details>
+<summary>Q1: Storage costs on your registry keep climbing even though a cleanup policy deletes images older than 30 days. Builds run 40×/day. What is the likely gap?</summary>
 
 A: Untagged images (layers orphaned each time `latest` is re-pointed) aren't covered by an age-based tagged-image policy alone. The RAD platform pairs the age policy with an untagged-image DELETE policy (`delete_untagged_images`) precisely for this. Also check that the KEEP policy count isn't holding more than intended.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does the deploy step reference the `$COMMIT_SHA` tag rather than `latest`, given both point at the same image right after the build?&lt;/summary>
+<details>
+<summary>Q2: Why does the deploy step reference the `$COMMIT_SHA` tag rather than `latest`, given both point at the same image right after the build?</summary>
 
 A: `latest` is a moving pointer — a concurrent or later build changes what it resolves to, breaking reproducibility and rollback reasoning. The commit SHA is stable and links the running revision to the exact source commit, which is also what audit and incident investigation need.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Where in this pipeline would you add a unit-test gate, and what makes the build fail?&lt;/summary>
+<details>
+<summary>Q3: Where in this pipeline would you add a unit-test gate, and what makes the build fail?</summary>
 
 A: As a step *before* the Kaniko step (or a test stage in the Dockerfile). Any step exiting non-zero fails the whole Cloud Build execution, so nothing is pushed or deployed — the standard fail-fast CI contract.
-&lt;/details>
+</details>
 
 **⚠️ Exam trap** — Artifact Registry KEEP policies beat DELETE policies: an image matched by the `most_recent_versions` KEEP rule is never deleted even if older than the age threshold. Reason about cleanup as "DELETE rules minus KEEP rules".
 
@@ -117,23 +117,23 @@ kubectl get pdb -n <namespace>                          # the module-created PDB
 5. You know it worked when `status.traffic` shows your 90/10 split with a `canary` tag URL, and the GKE rollout replaces pods incrementally while the PDB reports `ALLOWED DISRUPTIONS` ≥ 0 throughout.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Five minutes after a Cloud Run deploy, 5xx rates triple. Fastest safe mitigation?&lt;/summary>
+<details>
+<summary>Q1: Five minutes after a Cloud Run deploy, 5xx rates triple. Fastest safe mitigation?</summary>
 
 A: Shift 100% of traffic back to the previous healthy revision (console traffic manager, `gcloud run services update-traffic`, or `traffic_split` in IaC). Old revisions remain deployable instantly; this takes seconds and needs no build. Investigate the bad revision afterward via its logs — it still exists, just serves no traffic.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: What's the difference between a canary on Cloud Run traffic splitting and a Cloud Deploy canary strategy?&lt;/summary>
+<details>
+<summary>Q2: What's the difference between a canary on Cloud Run traffic splitting and a Cloud Deploy canary strategy?</summary>
 
 A: Traffic splitting is a *runtime* control on one service between revisions — you move percentages yourself. Cloud Deploy canary is a *pipeline* strategy that automates phased percentage progression with verification between phases. The RAD modules implement the former and use plain stage promotion (not canary strategy) in Cloud Deploy.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Why does revision pruning skip revisions serving traffic, and what failure would deleting them cause?&lt;/summary>
+<details>
+<summary>Q3: Why does revision pruning skip revisions serving traffic, and what failure would deleting them cause?</summary>
 
 A: A revision receiving any traffic percentage is live capacity; deleting it would break the traffic split (gcloud rejects the delete). Retention pruning must only ever remove fully drained revisions — the same reason you keep N known-good revisions as your rollback inventory.
-&lt;/details>
+</details>
 
 **⚠️ Exam trap** — Blue/green ≠ canary: blue/green switches 100% of traffic between two complete environments at once (instant rollback, double capacity); canary shifts a small percentage first (gradual risk, no double capacity). Cloud Run's traffic splitting can express both, but the exam wants you to name the right strategy for the constraint given.
 
@@ -168,17 +168,17 @@ gcloud secrets versions list <db-password-secret-name>
 5. You know it worked when secrets have multiple versions with only the newest enabled and the runtime resolves secrets purely by reference.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Why is writing the GitHub token via a `gcloud secrets versions add` provisioner better than a managed Terraform secret-version resource?&lt;/summary>
+<details>
+<summary>Q1: Why is writing the GitHub token via a `gcloud secrets versions add` provisioner better than a managed Terraform secret-version resource?</summary>
 
 A: A managed secret-version resource stores the secret payload in state; anyone with state-read access reads the token. The provisioner pushes the value directly to Secret Manager so state holds only the secret's name. The trade-off (Terraform can't detect value drift) is acceptable for write-once credentials.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: During password rotation, why add the new secret version before disabling the old one instead of replacing in place?&lt;/summary>
+<details>
+<summary>Q2: During password rotation, why add the new secret version before disabling the old one instead of replacing in place?</summary>
 
 A: Running instances may hold connections authenticated with the old password and may re-read the old version until propagation completes. The dual-version window lets old and new credentials coexist (the DB user is updated, the old version stays readable), achieving zero-downtime rotation; the old version is disabled only after the propagation delay.
-&lt;/details>
+</details>
 
 **⚠️ Exam trap** — Setting `secret_rotation_period` alone rotates *nothing*: Secret Manager rotation is a Pub/Sub notification schedule. Something must consume the notification and write a new version — here, that's the `enable_auto_password_rotation` machinery.
 
@@ -219,17 +219,17 @@ gcloud logging read \
 4. You know it worked when you can name the principal, timestamp, image digest, and approving user for the most recent prod deployment without leaving the console/CLI.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Security asks for a record of every read of the production DB password over the last month, but Logs Explorer shows nothing. Most likely cause?&lt;/summary>
+<details>
+<summary>Q1: Security asks for a record of every read of the production DB password over the last month, but Logs Explorer shows nothing. Most likely cause?</summary>
 
 A: Data Access audit logs (`DATA_READ`) for Secret Manager were not enabled — only Admin Activity logs are on by default, and reading a secret version is a data access, not an admin action. That is exactly what `enable_audit_logging` turns on; it cannot be enabled retroactively.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: An image is running in prod that no Cloud Build execution produced. Which two controls in this lab would have (a) detected and (b) prevented it?&lt;/summary>
+<details>
+<summary>Q2: An image is running in prod that no Cloud Build execution produced. Which two controls in this lab would have (a) detected and (b) prevented it?</summary>
 
 A: (a) Admin Activity audit logs on `run.googleapis.com` show the out-of-band `ReplaceService` call and its principal. (b) Binary Authorization with `binauthz_evaluation_mode = "REQUIRE_ATTESTATION"` would have blocked the deploy, since only the pipeline holds the KMS signing key for `pipeline-attestor`.
-&lt;/details>
+</details>
 
 **Beyond the modules** — The modules don't configure log sinks or retention: study aggregated sinks to BigQuery/GCS for long-term audit retention, log bucket retention settings (`gcloud logging buckets update _Default --retention-days=...`), and SLSA provenance generated natively by Cloud Build (`gcloud artifacts docker images describe ... --show-provenance`) — the RAD pipeline's KMS attestation is a related but distinct mechanism.
 

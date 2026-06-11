@@ -49,17 +49,17 @@ Note the engine nuance: the flag *name* differs per engine — PostgreSQL uses `
 4. You know it worked when `gcloud sql users list` shows the IAM principal with type `CLOUD_IAM_SERVICE_ACCOUNT` and the flags output contains `cloudsql.iam_authentication=on`.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: After enabling enable_cloudsql_iam_auth, a service account still cannot log in with an IAM token. The flag is on and roles/cloudsql.instanceUser is granted. What is missing?&lt;/summary>
+<details>
+<summary>Q1: After enabling enable_cloudsql_iam_auth, a service account still cannot log in with an IAM token. The flag is on and roles/cloudsql.instanceUser is granted. What is missing?</summary>
 
 A: The database user itself. IAM authentication requires three things: the instance flag, the IAM role, *and* a database user of type `CLOUD_IAM_SERVICE_ACCOUNT` (or `CLOUD_IAM_USER`) created on the instance — plus in-database GRANTs on the objects it needs. The module automates the first two; the user creation is the step candidates forget.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does the platform generate a separate 32-character application user per service instead of letting applications connect as root?&lt;/summary>
+<details>
+<summary>Q2: Why does the platform generate a separate 32-character application user per service instead of letting applications connect as root?</summary>
 
 A: Least privilege and blast-radius control: the app user owns only its own database (the `db-init` job grants per-database privileges), its password is scoped to one secret with per-secret `secretAccessor` IAM, and it can be rotated (2.5) without touching other tenants. Root credentials in app code is a standard wrong-answer pattern on the exam.
-&lt;/details>
+</details>
 
 **Beyond the modules** — IAM **group** authentication for Cloud SQL is not exercised here; read "IAM authentication" for both engines. Also study `gcloud sql generate-login-token` and the Auth Proxy `--auto-iam-authn` flag, which together replace passwords entirely.
 
@@ -101,17 +101,17 @@ Notifications fan out to email channels built from `configure_email_notification
 4. You know it worked when the three alert policies list as enabled, your `pg_sleep` statement appears in the postgres log with its duration, and Query insights starts charting query load.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Users report intermittent application timeouts. Cloud SQL CPU is at 30%, memory at 50%, but active connections spike to exactly 200 during incidents. What is happening and what are two fixes demonstrated or discussed in this platform?&lt;/summary>
+<details>
+<summary>Q1: Users report intermittent application timeouts. Cloud SQL CPU is at 30%, memory at 50%, but active connections spike to exactly 200 during incidents. What is happening and what are two fixes demonstrated or discussed in this platform?</summary>
 
 A: The instance is hitting the `max_connections=200` flag default — a quota/limit problem, not a resource problem; new connections queue or fail. Fixes: raise the flag via `postgres_database_flags` after sizing memory for it, or reduce connection demand with pooling (Cloud SQL managed connection pooling / PgBouncer — a "Beyond the modules" topic from 1.3). Scaling CPU would not help, a classic distractor.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Which signal tells you an index is missing — and where would you look on a Cloud SQL instance?&lt;/summary>
+<details>
+<summary>Q2: Which signal tells you an index is missing — and where would you look on a Cloud SQL instance?</summary>
 
 A: Sustained high CPU and read IOPS with slow specific queries; confirm with Query Insights (per-query load, plans) or `EXPLAIN ANALYZE` showing sequential scans on large tables. In this lab you'd capture candidates via `log_min_duration_statement`, then `EXPLAIN` them in psql. The fix is `CREATE INDEX`, not a bigger tier — the exam rewards diagnosing before resizing.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Query Insights' *advanced* features (tagged query attribution via SQL commenter, longer retention) and the `gcloud` equivalent (`gcloud sql instances patch <name> --insights-config-query-insights-enabled`) are worth knowing alongside the module's `enable_query_insights` toggle. Locking diagnosis (`pg_locks`, `pg_stat_activity.wait_event`, MySQL `SHOW ENGINE INNODB STATUS`) and Cloud SQL quotas/limits (connections per tier, 64 TB storage cap) are pure-docs topics here.
 
@@ -156,23 +156,23 @@ A: Sustained high CPU and read IOPS with slow specific queries; confirm with Que
 4. You know it worked when the clone instance reaches RUNNABLE with data as of your timestamp and a fresh `backup-<timestamp>.tar.gz` object exists in the bucket.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A developer dropped a table at 14:32. The platform's defaults are in place. What is your recovery path and your data loss?&lt;/summary>
+<details>
+<summary>Q1: A developer dropped a table at 14:32. The platform's defaults are in place. What is your recovery path and your data loss?</summary>
 
 A: Use PITR: clone the instance to a new instance at 14:31 (`gcloud sql instances clone --point-in-time`), then copy the table back or repoint the app. Data loss ≈ one minute (whatever you choose to discard), because transaction logs are retained 7 days. Restoring last night's 04:00 backup *without* PITR would lose ~10.5 hours — the distractor answer.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Compliance requires backups to survive a region-wide disaster. Does the module's configuration satisfy this, and what would you change?&lt;/summary>
+<details>
+<summary>Q2: Compliance requires backups to survive a region-wide disaster. Does the module's configuration satisfy this, and what would you change?</summary>
 
 A: Not fully: `backup_configuration.location` is set to the primary region, so managed backups live in that region (the GCS export bucket adds a second copy, but also regional by default). To survive region loss you would set a multi-region or different-region backup location, replicate the export bucket (dual/multi-region storage), and/or keep the cross-region read replica from 1.2. The exam expects you to notice backup *location* as part of DR design.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: When is a pg_dump-based export the right recovery/migration tool instead of managed backups?&lt;/summary>
+<details>
+<summary>Q3: When is a pg_dump-based export the right recovery/migration tool instead of managed backups?</summary>
 
 A: When you need portability: restoring into a different major version, a different product (AlloyDB, self-managed PG), another project/org, or keeping long-term archives independent of the instance's lifecycle (managed backups are deleted with the instance). The cost is RTO — logical restore is far slower than backup restore — and consistency is as-of dump start.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Cross-project backup restore, `gcloud sql export sql` (the *serverless* managed export to GCS, distinct from this module's job-based `pg_dump`), final backups on instance deletion, and Backup and DR Service for long-horizon retention are docs-only topics. Try `gcloud sql export sql cloudsql-<prefix>-postgres gs://<bucket>/managed-export.sql --database=postgres` in a scratch project and compare it with the job-based export.
 
@@ -221,17 +221,17 @@ The Redis plan-time preconditions are a governance example: deployments labeled 
 4. You know it worked when both replicas show RUNNABLE and `pg_stat_replication` lists them with small `replay_lag`.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: An e-commerce database is write-saturated during flash sales (CPU 95%, all from INSERT/UPDATE). The team proposes adding two read replicas. Why is that wrong, and what is right?&lt;/summary>
+<details>
+<summary>Q1: An e-commerce database is write-saturated during flash sales (CPU 95%, all from INSERT/UPDATE). The team proposes adding two read replicas. Why is that wrong, and what is right?</summary>
 
 A: Replicas only serve reads — every write is still replayed on the primary *and* on each replica, so write saturation persists (and replicas may lag). The correct first move is vertical: a larger `postgres_tier`. If writes outgrow the largest tier, that is the exam's cue for re-architecture (sharding or Spanner), not more replicas.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: What recurring cost do you take on per unit when you change postgres_read_replica_count from 1 to 3, and what operational cost comes with it?&lt;/summary>
+<details>
+<summary>Q2: What recurring cost do you take on per unit when you change postgres_read_replica_count from 1 to 3, and what operational cost comes with it?</summary>
 
 A: Each replica bills like an instance of the primary's tier (`postgres_tier` is reused in the replica settings) plus its own storage — 3 replicas ≈ 3 extra primaries. Operationally, applications must consume the per-replica `-host` secrets and tolerate asynchronous lag; replicas are not free HA (they are ZONAL and must be promoted manually).
-&lt;/details>
+</details>
 
 **Beyond the modules** — Query optimization itself (EXPLAIN plans, index design, Query Insights recommendations) has no module surface — practice on the lab instance with `EXPLAIN (ANALYZE, BUFFERS)`. Continuous cost optimization tooling — committed use discounts for Cloud SQL, the Active Assist idle/overprovisioned instance recommenders, per-database billing labels in billing exports — is console/docs work: check **Console > SQL > Recommendations** in any long-lived project.
 
@@ -277,17 +277,17 @@ A: Each replica bills like an instance of the primary's tier (`postgres_tier` is
 5. You know it worked when the secret shows a new ENABLED version with the prior one DISABLED, and the export job log ends with an upload to the backup bucket.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: During rotation, why does the platform disable the old secret version only after a propagation delay instead of immediately destroying it?&lt;/summary>
+<details>
+<summary>Q1: During rotation, why does the platform disable the old secret version only after a propagation delay instead of immediately destroying it?</summary>
 
 A: Zero-downtime and rollback. Running instances may hold the old password in memory or fetch "latest" mid-rotation; the delay lets the new version propagate before "latest" becomes unambiguous, and disabling (rather than destroying) keeps the old version recoverable for rollback/audit. Destroying immediately risks authentication failures across the fleet — the exam's "what breaks" answer.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A team needs nightly logical backups of a GKE-hosted database with a guarantee that two exports never run concurrently. Which Kubernetes settings shown in this module deliver that?&lt;/summary>
+<details>
+<summary>Q2: A team needs nightly logical backups of a GKE-hosted database with a guarantee that two exports never run concurrently. Which Kubernetes settings shown in this module deliver that?</summary>
 
 A: A CronJob with `schedule` (the module's `backup_schedule`) and `concurrencyPolicy: Forbid` — exactly what the module's db-export CronJob sets — plus bounded history (`successful/failedJobsHistoryLimit = 3`) and `restartPolicy: OnFailure` with a backoff limit so a stuck export cannot pile up.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Two 2.5 topics have no implementation here: **index maintenance** (`REINDEX`/`pg_repack`, MySQL `OPTIMIZE TABLE` — you could schedule them through `enable_custom_sql_scripts`, but nothing ships) and **managed upgrades** — there is no automation for major version upgrades; study in-place upgrades (`gcloud sql instances patch <name> --database-version=POSTGRES_18` once available, plus the pre-upgrade checks) and Cloud SQL maintenance/patching behavior. Formal SLOs (error budgets, `gcloud monitoring` SLO API) also live outside the modules.
 

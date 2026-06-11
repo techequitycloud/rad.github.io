@@ -37,17 +37,17 @@ gcloud artifacts repositories describe <repo-name> \
 4. You know it worked when the bad configuration never reached an apply, and the repository shows cleanup policies a developer never had to write.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Development teams keep deploying containers that pull a third-party sidecar from Docker Hub at runtime, causing outages during registry rate-limiting. What do you advise, and what subtlety makes a naive mirror dangerous?&lt;/summary>
+<details>
+<summary>Q1: Development teams keep deploying containers that pull a third-party sidecar from Docker Hub at runtime, causing outages during registry rate-limiting. What do you advise, and what subtlety makes a naive mirror dangerous?</summary>
 
 A: Mirror required third-party images into your own Artifact Registry and deploy only from there — as this platform does for the Cloud SQL Auth Proxy. The subtlety: a tag can silently drift upstream, so the mirror must compare digests (as this platform does with Crane) rather than assume "tag exists = up to date"; otherwise you pin to a stale or wrong image forever.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A platform team's written standards are ignored. What does this repository demonstrate as the scalable alternative?&lt;/summary>
+<details>
+<summary>Q2: A platform team's written standards are ignored. What does this repository demonstrate as the scalable alternative?</summary>
 
 A: Encode standards as plan-time validations and curated module variables — the standard becomes impossible to violate rather than merely documented. Misconfigurations fail with actionable error messages before any resource is created, which is cheaper than failing in production and faster than review-based enforcement.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study what advising covers beyond IaC guardrails: API management selection (Apigee for monetization/analytics/legacy mediation vs API Gateway for lightweight serverless fronting), testing frameworks (unit/integration/load and where each runs in CI), Database Migration Service for advising on data moves, and Service Catalog for curated solution distribution. Try creating an API Gateway in a scratch project to feel the difference from Apigee's scope.
 
@@ -78,17 +78,17 @@ gcloud container clusters list
 4. You know it worked when the plan shows no unexpected diff (declarative truth) and the `gcloud` listings match it (imperative observation).
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: An operator "quickly fixed" a service's memory limit with `gcloud run services update`. What happens on the next platform deployment, and what does the exam call this?&lt;/summary>
+<details>
+<summary>Q1: An operator "quickly fixed" a service's memory limit with `gcloud run services update`. What happens on the next platform deployment, and what does the exam call this?</summary>
 
 A: Configuration drift — the next `tofu apply` reverts the manual change to the declared value (or surfaces it as a diff at plan time). The exam expects drift to be resolved by changing the declaration (the portal variable), never by repeated imperative patching; IaC is the source of truth.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A CI system needs to call GCP APIs as a privileged service account without storing a JSON key. Which patterns does this platform use?&lt;/summary>
+<details>
+<summary>Q2: A CI system needs to call GCP APIs as a privileged service account without storing a JSON key. Which patterns does this platform use?</summary>
 
 A: Service-account impersonation — callers with `roles/iam.serviceAccountUser`/token-creator rights act as the target SA via `--impersonate-service-account`, receiving short-lived tokens (the modules pass `impersonation_service_account` into provider auth and gcloud calls). On GKE, Workload Identity binds Kubernetes service accounts to GCP SAs the same keyless way. Long-lived JSON keys are the anti-answer.
-&lt;/details>
+</details>
 
 **Beyond the modules** — The exam's programmatic surface is wider: Cloud Shell and Cloud Code, `gcloud storage` (the modern `gsutil` replacement), `bq` for BigQuery, client libraries (Python/Java/Node) with Application Default Credentials resolution order, local emulators (Pub/Sub, Firestore, Spanner, Bigtable), and API quota/retry behavior (exponential backoff on `429`/`5xx`). Practice in Cloud Shell: `gcloud config list`, `gcloud auth application-default login`, and one client-library quickstart end to end.
 

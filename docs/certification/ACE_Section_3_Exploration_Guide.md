@@ -45,23 +45,23 @@ This guide covers exam Section 3 — day-2 operations — using the RAD platform
 4. You know it worked when `status.traffic` shows your 90/10 split and the tagged revision serves on its own tag URL.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Five minutes after a release, error rates spike on the new Cloud Run revision. Fastest rollback?&lt;/summary>
+<details>
+<summary>Q1: Five minutes after a release, error rates spike on the new Cloud Run revision. Fastest rollback?</summary>
 
 A: `gcloud run services update-traffic <service> --to-revisions=<previous-revision>=100`. Revisions are immutable, so the previous one is still deployed and warm — shifting traffic is instant and requires no rebuild or redeploy. This is exactly what `traffic_split` declares in Terraform form.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: You run &lt;code>kubectl scale deployment app --replicas=10&lt;/code> but pods drop back to 3. Why?&lt;/summary>
+<details>
+<summary>Q2: You run <code>kubectl scale deployment app --replicas=10</code> but pods drop back to 3. Why?</summary>
 
 A: A HorizontalPodAutoscaler owns the replica count (the module creates one spanning `min_instance_count`–`max_instance_count`, default max 3). The HPA reconciles manual scaling back into its bounds; to scale higher you raise `max_instance_count` (or edit/remove the HPA), not the Deployment.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: During cluster maintenance, why does at least one pod of the app always stay up?&lt;/summary>
+<details>
+<summary>Q3: During cluster maintenance, why does at least one pod of the app always stay up?</summary>
 
 A: `enable_pod_disruption_budget` (default true) creates a PDB with `minAvailable: 1`, so voluntary disruptions (node drains, upgrades) cannot evict the last available pod. Note it does not protect against involuntary failures like node crashes.
-&lt;/details>
+</details>
 
 **Beyond the modules** — VM SSH workflows are not part of the app modules: practice `gcloud compute ssh <vm> --tunnel-through-iap` (the module's `fw-allow-iap-ssh` rule for `35.235.240.0/20` already permits this to the NFS VM), `gcloud compute instances list --filter="status=RUNNING"`, on-demand snapshots (`gcloud compute disks snapshot`), creating images from disks, and MIG rolling updates (`gcloud compute instance-groups managed rolling-action start-update`). Also study GKE Standard node-pool resize/upgrade commands, which Autopilot hides.
 
@@ -93,17 +93,17 @@ Independently of these logical dumps, the Cloud SQL instance itself keeps 7 auto
 5. You know it worked when a fresh timestamped dump appears in the backup bucket and `gcloud sql backups list` shows the 7 retained automatic backups.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: An engineer dropped a table at 14:32. The last nightly dump is from 02:00. What's the lowest-data-loss recovery, and why is it available here?&lt;/summary>
+<details>
+<summary>Q1: An engineer dropped a table at 14:32. The last nightly dump is from 02:00. What's the lowest-data-loss recovery, and why is it available here?</summary>
 
 A: Point-in-time recovery — restore (clone) the Cloud SQL instance to 14:31. PITR is enabled on the instance with 7-day transaction log retention, so any second in that window is recoverable; the 02:00 GCS dump would lose 12.5 hours of writes. The exam expects you to know PITR creates a new instance rather than rewinding the existing one.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: How do you keep backup-bucket costs flat without any manual cleanup?&lt;/summary>
+<details>
+<summary>Q2: How do you keep backup-bucket costs flat without any manual cleanup?</summary>
 
 A: An object lifecycle rule that deletes objects older than N days — exactly what `backup_retention_days` configures on the backup bucket. Lifecycle management is evaluated daily by GCS itself; no jobs or cron needed on your side.
-&lt;/details>
+</details>
 
 **Beyond the modules** — `gcloud sql connect` is worth practicing but won't work against these instances directly because they have no public IP — connect via the Cloud SQL Auth Proxy (`cloud-sql-proxy <connection-name>`) or Cloud SQL Studio in the console. Also study: on-demand backups (`gcloud sql backups create --instance=...`), cross-product backup surfaces (Firestore export/import to GCS, GKE Backup — note `Services_GCP` has `enable_gke_backup`, default `false`, schedule `0 3 * * *`, 30-day retention), BigQuery job history (`bq ls -j`), and the Pricing Calculator for storage cost estimation.
 
@@ -136,17 +136,17 @@ A: An object lifecycle rule that deletes objects older than N days — exactly w
 4. You know it worked when `gcloud compute addresses list` shows the module's global address with status `IN_USE` (attached to a forwarding rule).
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: After a maintenance redeploy, customers report DNS no longer resolves to the application. The Gateway IP changed. What was misconfigured?&lt;/summary>
+<details>
+<summary>Q1: After a maintenance redeploy, customers report DNS no longer resolves to the application. The Gateway IP changed. What was misconfigured?</summary>
 
 A: The load balancer was using an ephemeral IP (`reserve_static_ip = false`). Ephemeral external IPs can change whenever the fronting resource is recreated; production endpoints referenced by DNS must use a reserved static address — exactly why the module defaults to `true`.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A global external Application Load Balancer needs an IP. Regional or global reservation?&lt;/summary>
+<details>
+<summary>Q2: A global external Application Load Balancer needs an IP. Regional or global reservation?</summary>
 
 A: Global (`gcloud compute addresses create NAME --global`). Global LBs use a single anycast IP; regional addresses attach to regional resources (VMs, regional LB forwarding rules). Picking the wrong scope is a common wrong-answer option.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: custom static routes, VPC peering management, Cloud DNS record operations, and subnet IP-range expansion (the module creates subnets but you should practice growing one): `gcloud compute networks subnets expand-ip-range <subnet> --region=us-central1 --prefix-length=23` (expansion only — ranges can never shrink). Also review **VPC network > Routes** to understand system-generated routes vs custom routes with next hops.
 
@@ -190,23 +190,23 @@ A: Global (`gcloud compute addresses create NAME --global`). Global LBs use a si
 5. You know it worked when the policies list shows the CPU/memory alerts and step 3 returns a Data Access entry naming your principal.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Security asks "who read the database password last Tuesday?" — can you answer with default settings?&lt;/summary>
+<details>
+<summary>Q1: Security asks "who read the database password last Tuesday?" — can you answer with default settings?</summary>
 
 A: No. Secret *reads* are Data Access (DATA_READ) audit events, which are disabled by default; only Admin Activity (e.g. changing IAM, creating secrets) is always on. With `enable_audit_logging = true` the module enables Data Access logs for Secret Manager (and all services), making the question answerable from Logs Explorer.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: An alert policy exists and its condition fires, but nobody is emailed. First thing to check?&lt;/summary>
+<details>
+<summary>Q2: An alert policy exists and its condition fires, but nobody is emailed. First thing to check?</summary>
 
 A: Notification channels — a policy with no (or unverified) channels evaluates conditions but notifies no one. In RAD terms: `support_users`/`notification_alert_emails` must be non-empty, which is what creates and attaches the email channels.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: A GKE pod is in CrashLoopBackOff. Give the two-command diagnosis sequence.&lt;/summary>
+<details>
+<summary>Q3: A GKE pod is in CrashLoopBackOff. Give the two-command diagnosis sequence.</summary>
 
 A: `kubectl describe pod <pod> -n <ns>` (events: image pull errors, OOMKilled, failing probes) then `kubectl logs <pod> -n <ns> --previous` (output of the crashed container, not the current restart). The `--previous` flag is the detail the exam likes.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: log sinks/Log Router exports (to BigQuery, GCS, Pub/Sub), log-based metrics, log bucket retention configuration, Cloud Trace/Profiler, and Ops Agent *installation* (the module assumes it on the NFS VM for the memory metric). Practice: create a log-based counter metric from a Logs Explorer query and create a sink with `gcloud logging sinks create`. Know the `_Required` sink (Admin Activity, 400-day retention, cannot be disabled) vs `_Default` (30-day retention).
 

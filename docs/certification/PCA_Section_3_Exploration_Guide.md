@@ -52,23 +52,23 @@ gcloud access-context-manager perimeters list --policy=<policy-id> \
 6. You know it worked when the unsigned image is blocked, the perimeter shows in dry-run (`spec` populated, not `status`), and every IAM binding you find is scoped to a specific resource or duty.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A regulator requires that your company control — and be able to revoke — the encryption keys protecting customer data, with rotation at least quarterly. Which platform settings satisfy this, and what is the operational risk the module mitigates?&lt;/summary>
+<details>
+<summary>Q1: A regulator requires that your company control — and be able to revoke — the encryption keys protecting customer data, with rotation at least quarterly. Which platform settings satisfy this, and what is the operational risk the module mitigates?</summary>
 
 A: `enable_cmek = true` with the default `cmek_key_rotation_period = "7776000s"` (90 days) gives customer-managed keys with quarterly rotation; disabling/destroying the key revokes access to the data. The operational risk is self-inflicted denial of service — a key version scheduled for destruction bricks every encrypted bucket and repo — which the platform's plan-time key-recovery step mitigates by restoring versions that were scheduled for destruction or disabled.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A security team wants to guarantee that only images built by the official CI pipeline run in production. Which control, and what mode?&lt;/summary>
+<details>
+<summary>Q2: A security team wants to guarantee that only images built by the official CI pipeline run in production. Which control, and what mode?</summary>
 
 A: Binary Authorization with `binauthz_evaluation_mode = "REQUIRE_ATTESTATION"` — the CI pipeline signs (attests) each image digest with the KMS key, and the policy blocks unattested images at deploy time while audit-logging the decision. Vulnerability scanning alone only *reports*; IAM alone controls who deploys, not *what* is deployed.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Why is `vpc_sc_dry_run = true` the default, and what is the rollout sequence the exam (and this module's variable description) expects?&lt;/summary>
+<details>
+<summary>Q3: Why is `vpc_sc_dry_run = true` the default, and what is the rollout sequence the exam (and this module's variable description) expects?</summary>
 
 A: An enforced perimeter with wrong access levels instantly breaks CI/CD, deployments, and admin access — VPC-SC denials are hard failures at the API layer. Correct sequence: deploy in dry-run, monitor audit logs for would-be violations for days, add missing IPs/SAs to access levels, then flip `vpc_sc_dry_run = false`. Dry-run logs violations without blocking.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Two examined areas are absent. (1) **Resource hierarchy and organization policies**: folders, inheritance, constraints like `iam.disableServiceAccountKeyCreation` — study "Organization Policy Service" and try `gcloud resource-manager org-policies list` in an org-attached project. (2) **Hierarchical firewall policies and Cloud NGFW** — the modules use classic VPC firewall rules only. (Workload Identity Federation, formerly absent, is now live: `enable_workload_identity_federation` in Services_GCP creates pool `wif-pool` with a GitHub Actions / GitLab CI / generic OIDC provider per `wif_provider_type` — a working keyless-CI lab.)
 
@@ -105,17 +105,17 @@ gcloud logging read \
 4. You know it worked when the log query returns the principal email and method for your secret access — audit evidence on demand.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: An auditor asks for proof of every read of patient-data secrets in the last 30 days. Default project logging cannot provide it — why, and what does this platform change?&lt;/summary>
+<details>
+<summary>Q1: An auditor asks for proof of every read of patient-data secrets in the last 30 days. Default project logging cannot provide it — why, and what does this platform change?</summary>
 
 A: Reads are Data Access (`DATA_READ`) events, which Google disables by default for cost reasons; only Admin Activity is always on. `enable_audit_logging = true` opts all services into `ADMIN_READ`/`DATA_READ`/`DATA_WRITE`, with explicit Secret Manager coverage — making the read trail queryable in Logs Explorer (and exportable to BigQuery for long retention).
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does the SCC notification feature "silently skip with a warning" instead of failing, and what design principle is that?&lt;/summary>
+<details>
+<summary>Q2: Why does the SCC notification feature "silently skip with a warning" instead of failing, and what design principle is that?</summary>
 
 A: SCC notification configs require org-level permissions the deploying service account may not hold in every tenant project. The permission probe degrades gracefully — partial security posture rather than a failed platform deployment. The principle: separate *mechanism availability* from *privilege availability*, and never let an optional control block the critical path. Know for the exam that full SCC management is organization-scoped.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not covered: Assured Workloads (regulated regions/personnel controls), Access Transparency (logs of *Google* personnel access), org-policy-based data residency (`gcp.resourceLocations`), DLP/Sensitive Data Protection for PII discovery and masking, and formal compliance mappings (HIPAA BAA, PCI-DSS responsibility splits). Study the "Compliance resource center" and run a DLP inspection template against a sample bucket in a scratch project.
 

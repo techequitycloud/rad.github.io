@@ -50,23 +50,23 @@ This section covers load balancing, Cloud CDN, and Cloud DNS. RAD gives you *two
 4. You know it worked when the Gateway resource shows a `Programmed: True` condition and both LBs appear in the console's load balancing list with global scope.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Why is the serverless NEG regional while the load balancer is global?&lt;/summary>
+<details>
+<summary>Q1: Why is the serverless NEG regional while the load balancer is global?</summary>
 
 A: Serverless NEGs are always regional objects (they wrap a regional Cloud Run/Functions service), but a global external ALB can attach regional NEGs from multiple regions to one backend service and route clients to the nearest healthy region via anycast. That's RAD's pattern with a single region; multi-region would add one NEG per region to the same backend service.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Traffic must split 90/10 between two app versions. Where does RAD do this, and where would the *exam* do it on an ALB?&lt;/summary>
+<details>
+<summary>Q2: Traffic must split 90/10 between two app versions. Where does RAD do this, and where would the *exam* do it on an ALB?</summary>
 
 A: RAD splits at the Cloud Run *revision* level via `traffic_split` (LATEST/REVISION percentages) — the LB is unaware. The ALB-native answer is URL-map `routeRules` with `weightedBackendServices` (plus `requestMirrorPolicy` for mirroring and `urlRewrite` for rewrites), or, on GKE Gateway, multiple `backendRefs` with `weight` in the HTTPRoute. Know both layers and that they compose.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: A client's requests keep landing on different pods despite `sessionAffinity: ClientIP` on the GKE Service. The app is reached through the Gateway. Why?&lt;/summary>
+<details>
+<summary>Q3: A client's requests keep landing on different pods despite `sessionAffinity: ClientIP` on the GKE Service. The app is reached through the Gateway. Why?</summary>
 
 A: Gateway/ALB traffic reaches pods via NEGs, bypassing kube-proxy Service semantics — the Service's ClientIP affinity applies to passthrough/cluster traffic, not to the ALB's backend selection. For the Gateway path, configure affinity on the backend via `GCPBackendPolicy` (`sessionAffinity`), which RAD leaves unset.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: internal ALB/NLB (no `INTERNAL_MANAGED`/`INTERNAL` schemes anywhere, no proxy-only subnets), MIG backends with balancing modes (UTILIZATION/RATE/CONNECTION — the modules' only backend is a serverless NEG, which takes no balancing mode), global access on internal LBs, the legacy **GKE Ingress controller** with `BackendConfig` (RAD chose Gateway API), and ALB **traffic management** (weighted splits, mirroring, URL rewrites). Study "Choose a load balancer" (memorize the decision tree) and "Traffic management overview for global external Application Load Balancers"; in a scratch project create an internal ALB to see the required proxy-only subnet (`gcloud compute networks subnets create ... --purpose=REGIONAL_MANAGED_PROXY`).
 
@@ -110,17 +110,17 @@ A: Gateway/ALB traffic reaches pods via NEGs, bypassing kube-proxy Service seman
 4. You know it worked when **Console > Network services > Cloud CDN** lists the origin(s) and the second curl returns an `Age` header.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Content must be served from an origin running in AWS behind the Google ALB with CDN. How?&lt;/summary>
+<details>
+<summary>Q1: Content must be served from an origin running in AWS behind the Google ALB with CDN. How?</summary>
 
 A: Create an internet NEG (`gcloud compute network-endpoint-groups create --network-endpoint-type=INTERNET_FQDN_PORT`) referencing the external origin, attach it to a backend service on the global external ALB, and enable CDN on that backend service. Cloud CDN supports external backends via internet NEGs — no VPN/Interconnect required for this pattern.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: After deploying a fix, users still see the old asset for hours. Cache invalidation or shorter TTL?&lt;/summary>
+<details>
+<summary>Q2: After deploying a fix, users still see the old asset for hours. Cache invalidation or shorter TTL?</summary>
 
 A: Immediate remediation is `gcloud compute url-maps invalidate-cdn-cache --path` (path-pattern based, takes effect in minutes but is rate-limited and not for routine use). The durable fix is versioned URLs or correct `Cache-Control` headers / cache-mode TTLs. Exam answers that "invalidate on every deploy" are wrong.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study backend *buckets* (`gcloud compute backend-buckets create --gcs-bucket-name --enable-cdn` — RAD's GCS buckets are never CDN origins), cache modes (`USE_ORIGIN_HEADERS`, `CACHE_ALL_STATIC`, `FORCE_CACHE_ALL`), signed URLs/cookies, and negative caching. For the GKE gap above, the supported long-term pattern for Gateway is configuring CDN via `GCPBackendPolicy`'s sibling mechanisms or managing the backend service setting out-of-band; for the legacy Ingress controller it's `BackendConfig.spec.cdn`.
 
@@ -167,17 +167,17 @@ A: Immediate remediation is `gcloud compute url-maps invalidate-cdn-cache --path
 4. You know it worked when `dig app.lab.example.com @8.8.8.8` resolves once registrar NS delegation is in place, and the private record resolves only from a VM inside the RAD VPC.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: On-prem resolvers must resolve records in a Cloud DNS private zone. What do you configure?&lt;/summary>
+<details>
+<summary>Q1: On-prem resolvers must resolve records in a Cloud DNS private zone. What do you configure?</summary>
 
 A: An inbound DNS server policy on the VPC (`gcloud dns policies create --enable-inbound-forwarding --networks=...`), which allocates inbound forwarder IPs in each subnet region; point on-prem conditional forwarders at those IPs over VPN/Interconnect. The reverse direction (cloud → on-prem names) uses a *forwarding zone* targeting on-prem DNS servers.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Two VPCs that are NOT peered must both resolve a private zone owned by a hub project. Options?&lt;/summary>
+<details>
+<summary>Q2: Two VPCs that are NOT peered must both resolve a private zone owned by a hub project. Options?</summary>
 
 A: Either bind the private zone to additional networks (cross-project binding — the zone lives in one project but lists VPCs from others), or create DNS *peering* zones in the consumer VPCs targeting the producer VPC. DNS peering works without VPC peering — DNS and data-plane connectivity are independent, a recurring exam distinction.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Work through "Cloud DNS overview", "DNS server policies", "DNS routing policies and health checks" (geolocation + failover with health-checked internal LB targets), DNSSEC enablement (`gcloud dns managed-zones update --dnssec-state=on` plus DS record at the registrar), and the **external-DNS** operator for GKE (annotated Services/Ingresses auto-create Cloud DNS records — the natural automation for RAD's manually-pointed `application_domains`).
 

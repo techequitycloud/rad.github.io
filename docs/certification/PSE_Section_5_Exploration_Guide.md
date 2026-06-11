@@ -53,23 +53,23 @@ gcloud storage buckets list --format="table(name, location)"
 4. You know it worked when you can present, for one framework requirement of your choice, the variable, the resource, and the CLI-verifiable evidence in one line each.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Scenario — a HIPAA assessor asks who is responsible for OS patching of the Kubernetes nodes running PHI workloads. Your answer differs by one portal variable — which, and how?&lt;/summary>
+<details>
+<summary>Q1: Scenario — a HIPAA assessor asks who is responsible for OS patching of the Kubernetes nodes running PHI workloads. Your answer differs by one portal variable — which, and how?</summary>
 
 A: `gke_cluster_mode`. On `AUTOPILOT` (the default), Google manages node provisioning, OS hardening, and patching — it falls on Google's side of the shared responsibility line (covered by the BAA). On `STANDARD`, node management is configured by you (the module sets auto-upgrade/auto-repair and Shielded settings, but the responsibility — and the audit scope — is yours).
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Map GDPR Article 17 (right to erasure) for backups to a deployed control.&lt;/summary>
+<details>
+<summary>Q2: Map GDPR Article 17 (right to erasure) for backups to a deployed control.</summary>
 
 A: CMEK crypto-shredding: Cloud SQL data *and its backups* are encrypted under `cloudsql-{prefix}-key`. Destroying that key's versions renders all of it — including backups you cannot individually edit — permanently unreadable. Pair with the backup bucket's `backup_retention_days` lifecycle deletion for data minimization.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Scenario — only the payment service handles cardholder data, but the CISO wants PCI controls (VPC-SC enforcement, CMEK, Data Access logging) applied to all 40 projects in the org. What do you advise?&lt;/summary>
+<details>
+<summary>Q3: Scenario — only the payment service handles cardholder data, but the CISO wants PCI controls (VPC-SC enforcement, CMEK, Data Access logging) applied to all 40 projects in the org. What do you advise?</summary>
 
 A: Scope down. PCI-DSS applies to the cardholder data environment; applying maximum controls everywhere multiplies cost (Data Access log volume) and operational friction (VPC-SC breakage) without reducing CDE risk. Isolate in-scope workloads in dedicated projects/folders, apply the strict profile there (this platform's per-project perimeter model fits naturally), and document segmentation as the scope boundary.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented, study separately:
 - **Assured Workloads** — compliance-regime folders (FedRAMP, EU Sovereign Controls) that pre-enforce location and personnel constraints: `gcloud assured workloads list --organization=ORG_ID --location=us-central1` (**Console > Compliance > Assured Workloads**).

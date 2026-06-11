@@ -44,23 +44,23 @@ gcloud run deploy binauthz-test --image=docker.io/library/nginx:latest \
 4. You know it worked when the unsigned deploy is rejected with a Binary Authorization violation while the pipeline-built, attested image deploys cleanly.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Scenario — a developer bypasses CI and runs `gcloud run deploy` with an image built on their laptop. With the secure-platform profile, what happens and why?&lt;/summary>
+<details>
+<summary>Q1: Scenario — a developer bypasses CI and runs `gcloud run deploy` with an image built on their laptop. With the secure-platform profile, what happens and why?</summary>
 
 A: The deploy is rejected. The Binary Authorization policy requires an attestation from the pipeline attestor; only Cloud Build (holding `roles/cloudkms.signerVerifier` on the signing key) creates attestations, and only after building the image. A laptop image has no attestation, so `ENFORCED_BLOCK_AND_AUDIT_LOG` blocks it and writes an audit log entry.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: What is the difference between `ALWAYS_ALLOW`, `REQUIRE_ATTESTATION`, and `ALWAYS_DENY`, and when would you use each?&lt;/summary>
+<details>
+<summary>Q2: What is the difference between `ALWAYS_ALLOW`, `REQUIRE_ATTESTATION`, and `ALWAYS_DENY`, and when would you use each?</summary>
 
 A: `ALWAYS_ALLOW` admits everything (rollout/bootstrap phase — the module's default so first deploys succeed); `REQUIRE_ATTESTATION` admits only images with a valid signature from the required attestors (steady-state production); `ALWAYS_DENY` blocks all new deployments (emergency freeze during an incident). Enforcement vs dry-run is a separate axis: dry-run logs would-be violations without blocking.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Why does the module import the Binary Authorization policy additively instead of declaring it as a plain Terraform resource?&lt;/summary>
+<details>
+<summary>Q3: Why does the module import the Binary Authorization policy additively instead of declaring it as a plain Terraform resource?</summary>
 
 A: The policy is a project **singleton**. A plain resource owned by one tenant's state would overwrite every other tenant's attestor requirements on each apply. Export-merge-import appends this deployment's attestor only if absent, making multiple independent deployments safe — and the policy intentionally survives destroy so other tenants keep their protection.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: failing the build on CVE severity (the scan results exist; a gate step querying Container Analysis and aborting on CRITICAL findings is left to you — try `gcloud artifacts docker images scan IMAGE --format="value(response.scan)"` then `gcloud artifacts docker images list-vulnerabilities SCAN_ID`), continuous validation (post-deploy revalidation of running pods), OS patch management for VM fleets (`gcloud compute os-config patch-jobs execute`), Shielded VM integrity-monitoring alerting, and policy-as-code with Policy Controller/OPA (the `configure_policy_controller` fleet feature exists in `Services_GCP` but constraint authoring is out of scope).
 
@@ -98,23 +98,23 @@ gcloud pubsub subscriptions pull scc-tap --auto-ack --limit=5
 4. You know it worked when your own `AccessSecretVersion` call appears in Data Access logs and an SCC finding (e.g., from Security Health Analytics) lands in the Pub/Sub pull.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Scenario — the SOC asks for evidence of every secret read in the last 30 days. Default project, nothing enabled. Can you produce it, and what does the platform change?&lt;/summary>
+<details>
+<summary>Q1: Scenario — the SOC asks for evidence of every secret read in the last 30 days. Default project, nothing enabled. Can you produce it, and what does the platform change?</summary>
 
 A: No — `AccessSecretVersion` is a DATA_READ event, and Data Access audit logs are off by default (except BigQuery). Evidence only exists from the moment they're enabled. The platform's `enable_audit_logging` turns them on project-wide plus explicit Secret Manager/KMS configs; the exam lesson is to enable Data Access logs for sensitive services *before* the incident.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does the module route SCC findings to Pub/Sub rather than relying on the SCC dashboard?&lt;/summary>
+<details>
+<summary>Q2: Why does the module route SCC findings to Pub/Sub rather than relying on the SCC dashboard?</summary>
 
 A: Pub/Sub makes findings machine-consumable in near-real-time — SIEM ingestion, ticket creation, automated remediation — and decouples producers from consumers. A dashboard requires a human to look. Note the org-level requirement: notification configs are organization resources, hence the permission probe and graceful skip.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: An apply succeeds but no SCC notification config exists and the log shows a warning about org-level permission. Is this a bug?&lt;/summary>
+<details>
+<summary>Q3: An apply succeeds but no SCC notification config exists and the log shows a warning about org-level permission. Is this a bug?</summary>
 
 A: No — it is the documented degraded mode. Creating an SCC notification config requires `roles/securitycenter.notificationConfigEditor` at the organization; the module probes first and skips with a warning so a project-scoped service account can still deploy everything else. Grant the org role and redeploy to get the config.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: VPC Flow Logs (`gcloud compute networks subnets update SUBNET --enable-flow-logs --logging-flow-sampling=1.0`), firewall rule logging, log sinks/aggregated sinks to BigQuery/GCS/Pub-Sub (`gcloud logging sinks create`), Bucket Lock/locked retention for WORM compliance, Log Analytics, Cloud IDS, Packet Mirroring, Event Threat Detection / Container Threat Detection specifics (SCC Premium), and Google SecOps (Chronicle) SIEM integration. Design study: log views + `roles/logging.viewAccessor` for least-privilege analyst access; 400-day retention via sinks for Admin Activity logs.
 

@@ -31,23 +31,23 @@ gcloud alpha monitoring policies list \
 5. You know it worked when the SLO page shows compliance %, remaining error budget, and burn-rate charts for the module-deployed service.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Your SLO is 99.9% availability over 30 days and an incident just consumed 50% of the remaining error budget in 2 hours. Per standard SRE policy, what should the team do about tomorrow's planned feature release?&lt;/summary>
+<details>
+<summary>Q1: Your SLO is 99.9% availability over 30 days and an incident just consumed 50% of the remaining error budget in 2 hours. Per standard SRE policy, what should the team do about tomorrow's planned feature release?</summary>
 
 A: Pause it. A burn that fast means the sustainable rate is massively exceeded; the error-budget policy trades release velocity for reliability work until the budget recovers. This is the whole point of the budget — an objective, pre-agreed gate instead of a judgment call mid-incident.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why is the SLA always set looser than the SLO (e.g., SLA 99.5% vs. SLO 99.9%)?&lt;/summary>
+<details>
+<summary>Q2: Why is the SLA always set looser than the SLO (e.g., SLA 99.5% vs. SLO 99.9%)?</summary>
 
 A: The SLO is the internal target with consequences you control (release freezes); the SLA carries external penalties (refunds, contracts). The gap is the operational buffer: you want to breach your internal target, react, and recover well before any contractual breach.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Why page on error-budget *burn rate* instead of on the raw error percentage?&lt;/summary>
+<details>
+<summary>Q3: Why page on error-budget *burn rate* instead of on the raw error percentage?</summary>
 
 A: Burn-rate alerting scales urgency to budget impact: a 14× burn over an hour threatens the monthly budget and deserves a page, while a slow 1.5× burn is a ticket. Raw-threshold alerts either page too often (noise) or too late (budget already gone) — the multiwindow, multi-burn-rate pattern from the SRE Workbook fixes both.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study: Cloud Monitoring SLO monitoring (request-based vs. windows-based SLIs), the SRE Workbook chapters on alerting on SLOs and error-budget policy, and toil measurement. In a scratch project, try `gcloud monitoring services create` / the SLO REST API to script what you clicked in the console — the exam may reference SLO definitions in JSON form.
 
@@ -95,17 +95,17 @@ kubectl get hpa <service-name> -n <namespace> --watch
 5. You know it worked when the HPA scales replicas toward `max_instance_count` under load, the VPA emits target requests after observation, and the warmed Cloud Run service answers without multi-second first-request latency.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A GKE service OOM-kills under steady (not spiky) traffic. Do you reach for HPA or VPA, and why?&lt;/summary>
+<details>
+<summary>Q1: A GKE service OOM-kills under steady (not spiky) traffic. Do you reach for HPA or VPA, and why?</summary>
 
 A: VPA (or manually raising `container_resources` memory): the per-pod allocation is wrong, not the replica count. HPA on memory would add replicas, masking the problem expensively. VPA observes real usage and raises the request — the right vertical fix for a sizing error. Note the module enforces choosing one: enabling VPA removes the HPA.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does `max_instance_count` matter on a pay-per-use platform like Cloud Run where idle costs nothing?&lt;/summary>
+<details>
+<summary>Q2: Why does `max_instance_count` matter on a pay-per-use platform like Cloud Run where idle costs nothing?</summary>
 
 A: It caps blast radius in both directions: runaway cost under a traffic spike or retry storm, and overload protection for downstream fixed-capacity dependencies (Cloud SQL `max_connections` is 200 by default in `Services_GCP`) that unlimited Cloud Run scaling would exhaust.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Cloud Run concurrency tuning (requests per instance) isn't exposed as a module variable; study how concurrency interacts with CPU allocation and instance count (`gcloud run services update --concurrency=...` in a scratch project). Also study GKE cluster-level autoscaling concepts (node auto-provisioning) even though Autopilot abstracts them away.
 
@@ -151,23 +151,23 @@ kubectl rollout undo deployment/<name> -n <ns>
 5. You know it worked when traffic shifted away from the bad revision with zero downtime, the stalled GKE rollout never reduced ready replicas below the PDB floor, and rate limiting returned 429s.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A bad GKE rollout is at 50% when errors spike. Why is `kubectl rollout undo` safe to run immediately, mid-rollout?&lt;/summary>
+<details>
+<summary>Q1: A bad GKE rollout is at 50% when errors spike. Why is `kubectl rollout undo` safe to run immediately, mid-rollout?</summary>
 
 A: A rolling update keeps the previous ReplicaSet until completion; `undo` simply reverses direction, scaling the old (known-good) ReplicaSet back up under the same maxSurge/maxUnavailable constraints. No rebuild, no data risk for stateless workloads — exactly why the exam favors it as first response.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does the module deliberately skip creating a PDB when `max_instance_count = 1`?&lt;/summary>
+<details>
+<summary>Q2: Why does the module deliberately skip creating a PDB when `max_instance_count = 1`?</summary>
 
 A: A PDB of min-available 1 over a single replica makes the pod un-evictable, blocking node drains and upgrades indefinitely — turning a reliability tool into an operational outage. With one replica, voluntary-disruption protection is meaningless anyway; the real fix is running more than one replica.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: During a suspected DDoS, why is Cloud Armor's rate-based ban preferable to scaling `max_instance_count` up?&lt;/summary>
+<details>
+<summary>Q3: During a suspected DDoS, why is Cloud Armor's rate-based ban preferable to scaling `max_instance_count` up?</summary>
 
 A: Rate limiting sheds abusive load at the edge before it consumes compute or reaches the database; scaling up *absorbs* the attack at your expense and pushes it onto downstream fixed-capacity systems. Mitigate at the outermost layer that can distinguish bad traffic.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Incident *management process* is pure study: the Incident Command System roles (incident commander, communications lead, operations lead), severity classification, status communication, and blameless postmortem structure (timeline, contributing factors, action items with owners). Read the Google SRE Book chapters "Managing Incidents" and "Postmortem Culture"; practice writing one postmortem for a lab incident you stage above.
 

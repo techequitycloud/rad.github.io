@@ -28,11 +28,11 @@ gcloud compute resource-policies list --format="table(name,snapshotSchedulePolic
 3. You know it worked when you can name, for each automation, the incident class it prevents rather than reacts to.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A team's runbook says "if the file server stops responding, SSH in and restart nfsd; if the disk is corrupted, restore last night's copy." What does this platform replace that with?&lt;/summary>
+<details>
+<summary>Q1: A team's runbook says "if the file server stops responding, SSH in and restart nfsd; if the disk is corrupted, restore last night's copy." What does this platform replace that with?</summary>
 
 A: A managed instance group with TCP health checks (ports 2049/6379) and auto-healing — an unresponsive instance is automatically recreated with its stateful data disk reattached — plus a daily snapshot schedule with 7-day retention for the corruption case. The runbook becomes infrastructure; the exam calls this eliminating toil through automation.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Read the official "Google Cloud Architecture Framework: Operational excellence" pillar end to end — its principles (automate deployments, manage incidents, plan for DR) are quoted nearly verbatim in exam options. The framework's sustainability and performance pillars are also fair game and have no module analogue.
 
@@ -70,17 +70,17 @@ gcloud logging read \
 4. You know it worked when your custom policy appears in Alerting wired to the `support_users` email channel, and the module-created uptime check shows passing probes from multiple regions.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Users report the app is down, but no alert fired — CPU and memory were normal. What monitoring gap exists in the default deployment, and what is the right kind of alert to close it?&lt;/summary>
+<details>
+<summary>Q1: Users report the app is down, but no alert fired — CPU and memory were normal. What monitoring gap exists in the default deployment, and what is the right kind of alert to close it?</summary>
 
 A: A synthetic uptime check probing the endpoint from outside (the modules create one via `uptime_check_config` for publicly reachable deployments — internal-only deployments get none, so this gap appears whenever ingress is locked down). Resource metrics are *cause-based* and can look healthy while the user experience is broken (bad deploy, LB misconfig, dead dependency); an external probe is *symptom-based* — it measures what users experience, which SRE practice (and the exam) says to page on.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: The DB team wants warning before the database degrades. Which three platform thresholds apply, and what tuning trade-off should you explain?&lt;/summary>
+<details>
+<summary>Q2: The DB team wants warning before the database degrades. Which three platform thresholds apply, and what tuning trade-off should you explain?</summary>
 
 A: `alert_cpu_threshold`, `alert_memory_threshold`, `alert_disk_threshold` (each default `80`%) on the Cloud SQL instance. Lower thresholds buy lead time but raise false-positive load (alert fatigue); higher thresholds reduce noise but shrink reaction time. Durations (`duration_seconds`) suppress transient spikes — alert design is a precision/recall trade-off, not a single right number.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not wired up: log sinks/exports to BigQuery, log-based metrics, SLO monitoring with burn-rate alerts, Cloud Trace, and Cloud Profiler. Practice creating a log-based metric and an SLO on a Cloud Run service in the Monitoring console — SLO/error-budget questions are frequent.
 
@@ -111,17 +111,17 @@ gcloud run services update-traffic <service-name> \
 4. You know it worked when rollback took seconds (traffic shift) rather than minutes (rebuild + redeploy).
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Why does revision pruning matter to release management — isn't keeping every revision safer?&lt;/summary>
+<details>
+<summary>Q1: Why does revision pruning matter to release management — isn't keeping every revision safer?</summary>
 
 A: Unbounded revisions accumulate cost (container images, config clutter) and make the rollback target ambiguous. Retaining a bounded window (7 here) keeps fast rollback to any recent version while forcing older states to be reproduced from source control — the artifact of record — rather than from stale runtime objects.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: During a credential rotation mid-rollout, old pods still hold the previous password. Why doesn't this platform's rotation break them?&lt;/summary>
+<details>
+<summary>Q2: During a credential rotation mid-rollout, old pods still hold the previous password. Why doesn't this platform's rotation break them?</summary>
 
 A: Rotation is dual-version: the rotator adds the *new* secret version and changes the database password, but disables the *old* version only after a propagation delay, so both credentials briefly remain valid while revisions/pods converge. Single-version rotation (overwrite-then-pray) is the outage pattern the exam wants you to avoid.
-&lt;/details>
+</details>
 
 **⚠️ Exam trap** — Blue-green and canary differ in cost and blast radius: blue-green doubles capacity for an instant full cutover; canary exposes a small percentage gradually. `traffic_split` implements both shapes on Cloud Run — pick per the scenario's tolerance for risk vs spend.
 
@@ -146,11 +146,11 @@ gcloud beta monitoring channels list --format="table(displayName,type,labels.ema
 2. You know it worked when the channel list matches the variable.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A customer running mission-critical production workloads asks which Google Cloud support plan they need for a 15-minute P1 response and a named technical contact. What do you recommend?&lt;/summary>
+<details>
+<summary>Q1: A customer running mission-critical production workloads asks which Google Cloud support plan they need for a 15-minute P1 response and a named technical contact. What do you recommend?</summary>
 
 A: Premium Support — it provides the fastest P1 response SLO and Technical Account Manager engagement. Enhanced suits production workloads with less aggressive response needs; Standard is for non-critical workloads. Plan selection is an architectural recommendation, not an afterthought, in exam scenarios.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study the Cloud Customer Care tiers and case-priority definitions (P1–P4), escalation paths, and how to package diagnostic evidence (logs, traces, monitoring snapshots). Browse **Console > Support** in any project to see the case workflow.
 
@@ -178,17 +178,17 @@ gcloud artifacts docker images list \
 3. You know it worked when the scan lists CVEs with severities for your image, and you can state which gate would have caught each of the three other defect classes.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Scanning found a critical CVE, yet the image deployed anyway. Why, and what closes the gap?&lt;/summary>
+<details>
+<summary>Q1: Scanning found a critical CVE, yet the image deployed anyway. Why, and what closes the gap?</summary>
 
 A: Scanning is *detective*, not *preventive* — it reports findings but blocks nothing. Closing the gap requires an enforcement point: Binary Authorization with an attestation granted only after a passing scan (e.g. the CI step attests only when no critical CVEs are present). The exam regularly contrasts visibility controls with enforcement controls.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Which is cheaper to catch: a malformed memory quota at plan time or at pod-scheduling time — and how does this platform decide?&lt;/summary>
+<details>
+<summary>Q2: Which is cheaper to catch: a malformed memory quota at plan time or at pod-scheduling time — and how does this platform decide?</summary>
 
 A: Plan time. App_GKE validates that quota memory values carry binary unit suffixes (`"4Gi"`) precisely because a bare number is interpreted by Kubernetes as bytes and silently blocks *all* pod scheduling — a confusing runtime outage converted into an immediate, named plan error. Shifting defect detection left is the quality-control principle being tested.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not present: automated test suites in CI (unit/integration), SAST/dependency scanning steps, Web Security Scanner, and policy-as-code on infrastructure plans (e.g. OPA/terraform-compliance). Study "Container scanning overview" and "Web Security Scanner" docs, and try adding a test step to a Cloud Build YAML in a scratch repo.
 
@@ -226,23 +226,23 @@ kubectl drain <node-name> --ignore-daemonsets --delete-emptydir-data --dry-run=s
 4. You know it worked when the drain respects `minAvailable`, replicas span zones, and the bad health path produces restarts instead of silent traffic blackholing.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: During a GKE node upgrade, a 3-replica service briefly dropped to zero healthy pods. Which two mechanisms from this platform were missing?&lt;/summary>
+<details>
+<summary>Q1: During a GKE node upgrade, a 3-replica service briefly dropped to zero healthy pods. Which two mechanisms from this platform were missing?</summary>
 
 A: A PodDisruptionBudget (`minAvailable: 1` would have forced the drain to keep one pod serving) and topology spread (replicas concentrated on one node/zone all evict together). Defaults here provide the PDB automatically once `max_instance_count > 1`; spread must be opted into via `enable_topology_spread`.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A slow-starting JVM app gets killed in a restart loop on GKE. Which probe setting is wrong, and why are there two probes at all?&lt;/summary>
+<details>
+<summary>Q2: A slow-starting JVM app gets killed in a restart loop on GKE. Which probe setting is wrong, and why are there two probes at all?</summary>
 
 A: The startup probe window is too short — it must cover worst-case boot time before the liveness probe takes over. Startup probes answer "has it finished booting?" (failure = keep waiting, within limits); liveness probes answer "is it still healthy?" (failure = restart). Tuning liveness to tolerate slow boots instead of using a startup probe weakens failure detection for the entire pod lifetime.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Leadership asks for "five nines" on the self-managed NFS option. What honest answer does this architecture support?&lt;/summary>
+<details>
+<summary>Q3: Leadership asks for "five nines" on the self-managed NFS option. What honest answer does this architecture support?</summary>
 
 A: It cannot deliver that: the NFS server is a single zonal VM — auto-healing and daily snapshots reduce MTTR but recovery still takes minutes, and a zone outage takes the share down. For higher availability you change architecture, not tuning: managed Filestore (or, beyond this platform, a regional/Enterprise file tier). Recognizing when an SLO requires an architectural change is core PCA material.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not demonstrated: chaos engineering (fault injection), load testing at scale, multi-region failover with global traffic management, and formal SLO/error-budget operations. Study the SRE workbook's "Implementing SLOs," and practice a load test (e.g. `hey` or the distributed load-testing reference architecture) against a scratch deployment while watching the HPA respond.
 

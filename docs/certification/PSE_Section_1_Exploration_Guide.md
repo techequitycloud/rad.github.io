@@ -29,17 +29,17 @@ gcloud projects get-iam-policy $GOOGLE_PROJECT_ID \
 4. You know it worked when the group appears in the binding list — and removing it from the portal variable and redeploying removes the binding again.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Your company has 5,000 users in on-premises Active Directory and wants them to access GCP with their existing corporate credentials, without creating passwords at Google. What do you configure?&lt;/summary>
+<details>
+<summary>Q1: Your company has 5,000 users in on-premises Active Directory and wants them to access GCP with their existing corporate credentials, without creating passwords at Google. What do you configure?</summary>
 
 A: GCDS to synchronize users/groups one-way from AD into Cloud Identity, plus SAML SSO with the corporate IdP so Google acts as the service provider and never stores or verifies passwords. Alternatively, Workforce Identity Federation avoids synchronization entirely by issuing short-lived federated credentials — choose it when you don't want user objects in Cloud Identity at all.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: What is the difference between Workforce Identity Federation and Workload Identity Federation?&lt;/summary>
+<details>
+<summary>Q2: What is the difference between Workforce Identity Federation and Workload Identity Federation?</summary>
 
 A: Workforce Identity Federation federates *human* users from an external IdP (OIDC/SAML) into Google Cloud without provisioning Cloud Identity accounts. Workload Identity Federation federates *non-human* workloads (GitHub Actions, AWS, etc.) so they can impersonate service accounts without exported JSON keys. The exam frequently swaps these terms in distractors.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study: GCDS one-way sync architecture; SAML 2.0 SSO configuration in the Admin Console (**Security > Authentication > SSO with third-party IdP**); super-admin best practices (≥2 break-glass accounts, hardware security keys, no day-to-day use); the Admin SDK Directory API for lifecycle automation; and Workforce Identity Federation pools/providers (**IAM & Admin > Workforce Identity Federation**). Try in a scratch org: `gcloud iam workforce-pools list --location=global --organization=ORG_ID`.
 
@@ -89,23 +89,23 @@ done
 4. You know it worked when the pod reports the GSA email (not a node default account) and the key listing returns nothing.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A pod in namespace `app1` must read a Secret Manager secret without any mounted key file. What three pieces make this work?&lt;/summary>
+<details>
+<summary>Q1: A pod in namespace `app1` must read a Secret Manager secret without any mounted key file. What three pieces make this work?</summary>
 
 A: (1) the cluster's Workload Identity pool `{project}.svc.id.goog`; (2) the KSA annotated with `iam.gke.io/gcp-service-account: gsa@project.iam.gserviceaccount.com`; (3) an IAM binding granting `roles/iam.workloadIdentityUser` on the GSA to `serviceAccount:{project}.svc.id.goog[app1/ksa-name]`. The pod then receives short-lived GSA tokens from the GKE metadata server.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Scenario — an auditor finds developers downloading JSON keys for a CI pipeline that runs on GitHub Actions. What do you recommend?&lt;/summary>
+<details>
+<summary>Q2: Scenario — an auditor finds developers downloading JSON keys for a CI pipeline that runs on GitHub Actions. What do you recommend?</summary>
 
 A: Workload Identity Federation: create a workload identity pool with a GitHub OIDC provider, restrict it with an attribute condition on the repository owner, and grant the federated principal `roles/iam.workloadIdentityUser` on the pipeline's service account. GitHub's own OIDC tokens are exchanged for short-lived Google credentials; no key is ever exported. Additionally enforce `constraints/iam.disableServiceAccountKeyCreation`.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Why does the platform create `cloudbuild-sa-{prefix}` instead of using the default Cloud Build service agent for everything?&lt;/summary>
+<details>
+<summary>Q3: Why does the platform create `cloudbuild-sa-{prefix}` instead of using the default Cloud Build service agent for everything?</summary>
 
 A: A dedicated SA gets exactly the roles the pipeline needs (sign attestations, push to AR, deploy) and is auditable per deployment; the legacy default `{project_number}@cloudbuild.gserviceaccount.com` is shared by every build in the project, widening blast radius and muddying audit trails.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Inspect the deployed WIF setup with `gcloud iam workload-identity-pools providers list --workload-identity-pool=wif-pool --location=global`, and know the manual equivalents: `gcloud iam workload-identity-pools create demo-pool --location=global` then `gcloud iam workload-identity-pools providers create-oidc github --workload-identity-pool=demo-pool --location=global --issuer-uri=https://token.actions.githubusercontent.com --attribute-mapping="google.subject=assertion.sub"`. Also study org policies `constraints/iam.disableServiceAccountKeyCreation` and `constraints/iam.automaticIamGrantsForDefaultServiceAccounts`, key-age auditing, and impersonation via `gcloud auth print-access-token --impersonate-service-account=SA`.
 
@@ -149,17 +149,17 @@ gcloud projects get-iam-policy $GOOGLE_PROJECT_ID \
 5. You know it worked when an unauthorized Google account is blocked by IAP *before* the request reaches your container (no application log entry is produced).
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Scenario — a contractor's engagement ends. With IAP protecting the internal app, how is access revoked and how fast?&lt;/summary>
+<details>
+<summary>Q1: Scenario — a contractor's engagement ends. With IAP protecting the internal app, how is access revoked and how fast?</summary>
 
 A: Remove the user (or their group membership) from `iap_authorized_users`/`iap_authorized_groups` and redeploy — the `roles/iap.httpsResourceAccessor` binding is removed and IAP denies them at the Google edge within minutes. No VPN certificate revocation, firewall change, or application logout is needed; this is the BeyondCorp advantage the exam looks for.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does App_GKE require an OAuth client ID/secret while App_CloudRun does not?&lt;/summary>
+<details>
+<summary>Q2: Why does App_GKE require an OAuth client ID/secret while App_CloudRun does not?</summary>
 
 A: Cloud Run v2 exposes native IAP (`iap_enabled`), which uses a Google-managed OAuth configuration. The GKE Gateway path uses classic backend-service IAP, which still requires you to create an OAuth client in **APIs & Services > Credentials** and supply it via `iap_oauth_client_id`/`iap_oauth_client_secret`; the module stores the secret in a Kubernetes Secret referenced by the `GCPBackendPolicy`.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not covered: 2SV enforcement (**Admin Console > Security > 2-step verification**; know that FIDO2 hardware keys are the only phishing-resistant method), IAP session length tuning, context-aware access (combining IAP with Access Context Manager access levels for device/IP conditions), SAML app integration, and IAP TCP forwarding for SSH/RDP — try `gcloud compute ssh VM --tunnel-through-iap` in a scratch project (the platform's `fw-allow-iap-ssh` firewall rule for `35.235.240.0/20` already permits this path).
 
@@ -199,23 +199,23 @@ gcloud storage buckets describe gs://<app-bucket> \
 4. Add the secret to `secret_environment_variables` in the portal, redeploy, and re-test. You know it worked when the previously denied read now succeeds.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Scenario — an app needs to read one bucket and one secret. A teammate proposes granting `roles/editor` "to keep it simple." What do you do and why?&lt;/summary>
+<details>
+<summary>Q1: Scenario — an app needs to read one bucket and one secret. A teammate proposes granting `roles/editor` "to keep it simple." What do you do and why?</summary>
 
 A: Grant `roles/storage.objectViewer` (or `objectAdmin` if it writes) on that bucket and `roles/secretmanager.secretAccessor` on that secret only. If the SA is compromised, the attacker reaches two resources instead of the whole project. The exam expects predefined roles at the narrowest resource scope; custom roles only when no predefined role fits.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: A legacy object ACL grants `allUsers` read on one object in a bucket. How do you guarantee IAM is the single source of truth?&lt;/summary>
+<details>
+<summary>Q2: A legacy object ACL grants `allUsers` read on one object in a bucket. How do you guarantee IAM is the single source of truth?</summary>
 
 A: Enable uniform bucket-level access on the bucket — object ACLs stop being evaluated entirely and bucket/project IAM governs all access. Pair with `public_access_prevention = enforced` to block any future `allUsers`/`allAuthenticatedUsers` grant, as the module's backup bucket does.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: How would you block *everyone*, including project owners, from deleting audit log sinks?&lt;/summary>
+<details>
+<summary>Q3: How would you block *everyone*, including project owners, from deleting audit log sinks?</summary>
 
 A: An IAM deny policy — deny rules are evaluated before allow bindings and override them. Attach a deny policy on the relevant permissions (e.g., `logging.sinks.delete`) with an exception principal set for the break-glass identity. This cannot be done with allow-policy hygiene alone.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Not implemented: IAM Conditions (time/resource-attribute-bound bindings — try `gcloud projects add-iam-policy-binding $GOOGLE_PROJECT_ID --member=user:x@example.com --role=roles/viewer --condition='expression=request.time < timestamp("2026-12-31T00:00:00Z"),title=temp'`), IAM deny policies (`gcloud iam policies create ... --kind=denypolicies`), Privileged Access Manager (JIT elevation), IAM Recommender, Policy Analyzer, and Policy Troubleshooter.
 
@@ -244,17 +244,17 @@ gcloud org-policies list --project=$GOOGLE_PROJECT_ID
 4. You know it worked when you can explain, for one constraint, which ancestor set it and why the project cannot override it.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: Scenario — `enable_vpc_sc = true` deploys cleanly but no perimeter appears, and the log says the organization ID could not be auto-discovered. The project lives under a folder. What is the fix?&lt;/summary>
+<details>
+<summary>Q1: Scenario — `enable_vpc_sc = true` deploys cleanly but no perimeter appears, and the log says the organization ID could not be auto-discovered. The project lives under a folder. What is the fix?</summary>
 
 A: Set `organization_id` explicitly in the App_CloudRun/App_GKE portal variables. `data.google_project` only exposes `org_id` for projects parented *directly* by the organization; folder-nested projects return `folder_id` instead, so auto-discovery fails by design and the module skips VPC-SC with a warning rather than guessing.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: An IAM role granted at the organization level conflicts with a deny policy at a folder. Who wins?&lt;/summary>
+<details>
+<summary>Q2: An IAM role granted at the organization level conflicts with a deny policy at a folder. Who wins?</summary>
 
 A: The deny policy. Deny is evaluated before allow at every level; an inherited org-level allow cannot override a folder-level deny. Use Policy Troubleshooter to trace the effective decision.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study: folder design patterns (by environment/business unit/compliance tier), org policy custom constraints in CEL (**IAM & Admin > Organization Policies > Custom constraints**), and project-factory automation. Useful scratch command: `gcloud org-policies describe constraints/iam.disableServiceAccountKeyCreation --effective --project=$GOOGLE_PROJECT_ID`.
 

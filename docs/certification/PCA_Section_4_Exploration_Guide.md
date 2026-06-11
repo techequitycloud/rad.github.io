@@ -50,23 +50,23 @@ gcloud run services describe <service-name> --region=us-central1 \
 5. You know it worked when the prod stage is blocked pending approval and `status.traffic` shows the 90/10 split with the tagged canary URL.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A team wants new releases validated on 5% of production traffic with instant rollback. Which mechanism here, and what is the rollback action?&lt;/summary>
+<details>
+<summary>Q1: A team wants new releases validated on 5% of production traffic with instant rollback. Which mechanism here, and what is the rollback action?</summary>
 
 A: Cloud Run `traffic_split` — e.g. 95% to the stable revision, 5% to the new one (optionally with a stable `tag` URL for targeted testing). Rollback is a traffic reassignment to the previous revision, not a redeploy, because Cloud Run retains prior revisions (`max_revisions_to_retain`, default `7`). This is the serverless analogue of canary deployments the exam describes.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Why does the pipeline sign the image's COMMIT_SHA tag rather than `latest`?&lt;/summary>
+<details>
+<summary>Q2: Why does the pipeline sign the image's COMMIT_SHA tag rather than `latest`?</summary>
 
 A: Attestations bind to an immutable digest. `latest` is a moving pointer — signing it would attest "whatever this tag points to," defeating supply-chain integrity. The Binary Authorization policy verifies the digest being deployed carries a valid signature from the attestor, which only holds for the specific built artifact.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q3: Where is the CI/CD boundary in this platform's pipeline?&lt;/summary>
+<details>
+<summary>Q3: Where is the CI/CD boundary in this platform's pipeline?</summary>
 
 A: CI = Cloud Build (trigger → Kaniko build → push to Artifact Registry → attest): producing a verified artifact. CD = Cloud Deploy (release → dev → staging → approval → prod): promoting that artifact through environments. The exam expects you to assign testing/build failures to CI and promotion/approval/rollout strategy to CD.
-&lt;/details>
+</details>
 
 **Beyond the modules** — The exam also covers testing strategy (unit vs integration vs load; the pipeline here runs no test step — adding one is a good exercise), post-mortem/root-cause culture, and troubleshooting tooling (Cloud Profiler, Cloud Trace). Study the DORA metrics (deployment frequency, lead time, change-failure rate, MTTR) and the "Application deployment and testing strategies" architecture doc — rolling vs blue-green vs canary trade-offs are recurring exam material.
 
@@ -97,17 +97,17 @@ gcloud deploy rollouts list \
 3. You know it worked when the rollout shows `approvalState: APPROVED` with a timestamp — evidence a change-advisory process can consume.
 
 **Check yourself**
-&lt;details>
-&lt;summary>Q1: A regulated insurer requires documented sign-off before production changes, but wants zero friction in lower environments. How is this expressed in this platform — and in exam terms, what process is being implemented?&lt;/summary>
+<details>
+<summary>Q1: A regulated insurer requires documented sign-off before production changes, but wants zero friction in lower environments. How is this expressed in this platform — and in exam terms, what process is being implemented?</summary>
 
 A: `cloud_deploy_stages` with `require_approval = false` (optionally `auto_promote = true`) on dev/staging and `require_approval = true` on prod — exactly the module default. This implements change management with separation of duties: the deployer and the production approver are distinct, and Cloud Deploy records both, producing the audit evidence (SOC 2-style change control) the scenario demands.
-&lt;/details>
+</details>
 
-&lt;details>
-&lt;summary>Q2: Leadership must choose between Cloud Run and GKE for a new product; the team has strong app developers and no platform engineers. What does the exam expect you to weigh?&lt;/summary>
+<details>
+<summary>Q2: Leadership must choose between Cloud Run and GKE for a new product; the team has strong app developers and no platform engineers. What does the exam expect you to weigh?</summary>
 
 A: Team skills readiness is a first-class architectural input. With no Kubernetes operations capability, Cloud Run's managed model (no clusters, quotas, PDBs, upgrades) reduces operational risk even if GKE offers more control; choosing GKE would require hiring or training (a cost and timeline factor). The exam consistently rewards matching platform complexity to organizational capability, not maximal flexibility.
-&lt;/details>
+</details>
 
 **Beyond the modules** — Study what no module can show: SRE error budgets as a decision mechanism (feature velocity vs reliability), SLI/SLO definition with stakeholders, incident communication, and translating technical metrics into business KPIs. The free Google SRE book chapters "Embracing Risk" and "Service Level Objectives" are the canonical exam preparation here.
 
