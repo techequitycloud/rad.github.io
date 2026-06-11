@@ -17,92 +17,22 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
-/* Sample module reference tables: Group | Description | Defaults/Differences | Reference
-   Override the generic 4-column rule — Defaults column needs more space, Reference less */
-.sample-ref-table table {
-  table-layout: fixed;
+/* Tables: size columns to their content.
+   The browser's automatic table layout proportions each column to its content,
+   so sparse columns stay narrow and text-heavy columns get the space they need;
+   width: 100% keeps long prose wrapping within the page instead of overflowing.
+   (Replaces earlier per-column-count fixed widths that mis-sized many tables —
+   e.g. forcing a sparse 4th column to 50% on every four-column table.) */
+.markdown table {
+  display: table;
   width: 100%;
+  table-layout: auto;
 }
 
-.sample-ref-table table th,
-.sample-ref-table table td {
+.markdown table th,
+.markdown table td {
   overflow-wrap: break-word;
-  word-break: break-word;
 }
-
-.markdown .sample-ref-table table:has(th:nth-child(4)) :is(th, td):nth-child(1) { width: 8% !important;  } /* Group */
-.markdown .sample-ref-table table:has(th:nth-child(4)) :is(th, td):nth-child(2) { width: 17% !important; } /* Description */
-.markdown .sample-ref-table table:has(th:nth-child(4)) :is(th, td):nth-child(3) { width: 45% !important; } /* Defaults / Differences */
-.markdown .sample-ref-table table:has(th:nth-child(4)) :is(th, td):nth-child(4) { width: 30% !important; } /* Reference */
-
-/* Module guide tables: 5-column variable reference tables
-   (Variable | Group | Type | Default | Description) — Description gets bulk of width */
-.markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) {
-  table-layout: fixed;
-  width: 100%;
-}
-
-.markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) th,
-.markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) td {
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-
-.markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) :is(th, td):nth-child(1) { width: 26%; } /* Variable */
-.markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) :is(th, td):nth-child(2) { width: 4%;  } /* Group */
-.markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) :is(th, td):nth-child(3) { width: 10%; } /* Type */
-.markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) :is(th, td):nth-child(4) { width: 12%; } /* Default */
-.markdown table:has(th:nth-child(5)):not(:has(th:nth-child(6))) :is(th, td):nth-child(5) { width: 48%; } /* Description */
-
-/* Module guide tables: fix column widths for 4-column variable reference tables
-   (Variable | Default | Options / Format | Description & Implications) */
-.markdown table:has(th:nth-child(4)) {
-  table-layout: fixed;
-  width: 100%;
-}
-
-.markdown table:has(th:nth-child(4)) th,
-.markdown table:has(th:nth-child(4)) td {
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-
-.markdown table:has(th:nth-child(4)) :is(th, td):nth-child(1) { width: 20%; } /* Variable */
-.markdown table:has(th:nth-child(4)) :is(th, td):nth-child(2) { width: 15%; } /* Default */
-.markdown table:has(th:nth-child(4)) :is(th, td):nth-child(3) { width: 15%; } /* Options / Format */
-.markdown table:has(th:nth-child(4)) :is(th, td):nth-child(4) { width: 50%; } /* Description & Implications */
-
-/* Security Architecture Overview tables: Layer | Control | Variable(s) | Group
-   Higher specificity (.markdown .security-arch-table) overrides the generic 4-column rule */
-.markdown .security-arch-table table:has(th:nth-child(4)) {
-  table-layout: fixed;
-  width: 100%;
-}
-.markdown .security-arch-table table:has(th:nth-child(4)) :is(th, td):nth-child(1) { width: 12% !important; } /* Layer */
-.markdown .security-arch-table table:has(th:nth-child(4)) :is(th, td):nth-child(2) { width: 30% !important; } /* Control */
-.markdown .security-arch-table table:has(th:nth-child(4)) :is(th, td):nth-child(3) { width: 50% !important; } /* Variable(s) */
-.markdown .security-arch-table table:has(th:nth-child(4)) :is(th, td):nth-child(4) { width:  8% !important; } /* Group */
-
-/* Available Application Modules table: Module | Description | Cloud Run | GKE
-   Higher specificity overrides the generic 4-column rule; Cloud Run and GKE are equal width */
-.markdown .module-availability-table table:has(th:nth-child(4)) {
-  table-layout: fixed;
-  width: 100%;
-}
-.markdown .module-availability-table table:has(th:nth-child(4)) :is(th, td):nth-child(1) { width: 13% !important; } /* Module */
-.markdown .module-availability-table table:has(th:nth-child(4)) :is(th, td):nth-child(2) { width: 57% !important; } /* Description */
-.markdown .module-availability-table table:has(th:nth-child(4)) :is(th, td):nth-child(3) { width: 15% !important; } /* Cloud Run */
-.markdown .module-availability-table table:has(th:nth-child(4)) :is(th, td):nth-child(4) { width: 15% !important; } /* GKE */
-
-/* Tier 2 Silent Failures table: Feature | Variable(s) | Failure mode | Resolution */
-.markdown .silent-failures-table table:has(th:nth-child(4)) {
-  table-layout: fixed;
-  width: 100%;
-}
-.markdown .silent-failures-table table:has(th:nth-child(4)) :is(th, td):nth-child(1) { width: 20% !important; } /* Feature (from default 4-column) */
-.markdown .silent-failures-table table:has(th:nth-child(4)) :is(th, td):nth-child(2) { width: 15% !important; } /* Variable(s) (from default 4-column) */
-.markdown .silent-failures-table table:has(th:nth-child(4)) :is(th, td):nth-child(3) { width: 32.5% !important; } /* Failure mode */
-.markdown .silent-failures-table table:has(th:nth-child(4)) :is(th, td):nth-child(4) { width: 32.5% !important; } /* Resolution */
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
