@@ -1,44 +1,80 @@
 ---
-title: "PSE Certification Preparation Guide: Section 5 — Supporting compliance requirements (~11% of the exam)"
-sidebar_label: "PSE Section 5 Exploration Guide"
+title: "PSE Certification Preparation Guide: Section 5 \u2014 Supporting compliance requirements (~11% of the exam)"
 ---
 
 # PSE Certification Preparation Guide: Section 5 — Supporting compliance requirements (~11% of the exam)
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud Security Engineer (PSE) certification explore Section 5 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
-
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PSE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+This guide covers Section 5 of the Professional Cloud Security Engineer exam. No single module owns compliance; instead, all four foundation modules contribute the technical controls auditors ask for — CMEK, immutable-by-default audit configuration, least-privilege IAM, perimeters, and managed-platform responsibility narrowing (GKE Autopilot, Cloud Run). Deploy the **secure-platform** profile (ideally with **perimeter-lab**) before starting, since most evidence-gathering exercises below depend on its flags.
 
 ---
 
 ## 5.1 Adhering to regulatory and industry standards requirements for the cloud
 
-### Security Command Center Compliance Posture
-**Concept:** Using GCP-native security tooling to continuously evaluate, evidence, and maintain compliance with regulatory frameworks.
+> ⏱ ~2 h · 💰 no additional cost beyond the underlying profiles · ⚙️ Requires: secure-platform; SCC enabled for posture findings
 
-**In the RAD UI:**
-*   **Security Command Center (SCC):** Enabling `enable_security_command_center` (Group 16 in GCP Services) activates SCC, which continuously scans all deployed resources for misconfigurations and maps findings to compliance control frameworks including PCI-DSS v3.2.1, HIPAA, NIST SP 800-53, CIS GCP Foundations Benchmark v1.3, and ISO 27001. Each finding includes the specific control ID it violates and remediation guidance.
+**Why the exam cares** — The exam tests three skills: (1) reasoning with the shared responsibility / shared fate model across service tiers (IaaS → GKE Standard → Autopilot → Cloud Run), (2) mapping a regulatory requirement (PCI-DSS, HIPAA, GDPR) to the specific Google Cloud control that satisfies it, and (3) scoping — knowing that compliance applies to the projects/services touching regulated data, not the whole organization.
 
-**Console Exploration:**
-Navigate to **Security > Security Command Center > Posture management** (or **Compliance** in your tier). Select a compliance standard from the dropdown and review the percentage of controls passing and failing. Click any failing control to see the specific GCP resources violating it and the recommended remediation steps. Navigate to **SCC > Findings** and filter by severity to triage critical misconfigurations such as open firewall rules, public Cloud Storage buckets, or disabled audit logging.
+**How RAD implements it** — The modules are a compliance *control library* you can point an auditor at:
 
-**Real-world example:** A payment processor undergoing their annual PCI-DSS QSA audit uses SCC's PCI-DSS compliance report to produce evidence artefacts for the auditor. SCC automatically identifies and maps each finding to its PCI-DSS requirement number (e.g., Requirement 6.3.3 for installed software vulnerabilities, Requirement 7.2 for least-privilege access controls). The security team exports the compliance report and attaches remediation evidence for each finding — reducing audit preparation from weeks of manual spreadsheet work to a structured, defensible report generated in hours.
+| Compliance requirement (typical) | Deployed control | Where |
+|---|---|---|
+| Encryption at rest with customer-controlled keys | `enable_cmek` — per-service keys, 90-day rotation (`cmek_key_rotation_period` default `7776000s`) | the CMEK keyring and per-service keys |
+| Encryption in transit | TLS at the global LB (managed certs), HTTP→HTTPS redirect, Cloud SQL encrypted-only SSL mode | the load balancer edge and Cloud SQL instance |
+| Access-evidence / audit trail | `enable_audit_logging` — ADMIN_READ/DATA_READ/DATA_WRITE for all services + Secret Manager/KMS overrides | the project IAM audit config |
+| Least privilege | per-secret/per-bucket IAM, dedicated SAs, Workload Identity | the resource-level IAM layer and service accounts |
+| Credential rotation | `enable_auto_password_rotation` + `secret_rotation_period` (default `2592000s`) | the Secret Manager rotation pipeline |
+| Data exfiltration prevention | `enable_vpc_sc` perimeter with access levels, dry-run rollout | the VPC Service Controls perimeter |
+| Trusted software supply chain | `enable_binary_authorization` (`REQUIRE_ATTESTATION`) + `enable_vulnerability_scanning` | the Binary Authorization policy and Artifact Registry repo |
+| Continuous misconfiguration detection | `enable_security_command_center` + findings to Pub/Sub | the SCC enrollment and findings topic |
+| Public-exposure prevention | public access prevention enforced + uniform bucket-level access on the backup bucket | the backup bucket |
+| Backup/retention | Cloud SQL PITR (7-day txn logs, 7 daily backups), `backup_retention_days` bucket lifecycle | the Cloud SQL instance and backup bucket |
+| Data residency (regional pinning) | all resources placed in the selected `availability_regions` | the VPC and per-resource region settings |
 
-### Evaluating the Shared Responsibility Model
-**Concept:** Understanding precisely which security controls are Google's responsibility and which are the customer's, for each service abstraction level.
+Shared responsibility is observable, not just theoretical: GKE Autopilot clusters (`gke_cluster_mode` default `AUTOPILOT`) hand node OS hardening, patching (auto-repair/auto-upgrade on the `REGULAR` release channel), and node configuration to Google, while STANDARD mode shows the line moving back to you — the module must then manage the node pool itself, with Shielded-node settings (Secure Boot and integrity monitoring) made explicit on the nodes. Cloud Run narrows your scope further: no nodes at all, just code, IAM, and network posture.
 
-**In the RAD UI:**
-*   **GKE Autopilot vs. GKE Standard:** By deploying workloads using the GKE Autopilot module, the customer shifts responsibility for node OS security, node pool configuration, system pod management, and node-level patching to Google. This reduces the customer's compliance scope for infrastructure hardening considerably compared to GKE Standard, where the customer owns the node OS.
+**Try it**
+1. Generate an evidence pack for a mock audit — every command below produces an artifact you could hand to an assessor:
+```bash
+# Encryption: which CMEK key protects the database?
+gcloud sql instances describe <instance> \
+  --format="value(diskEncryptionConfiguration.kmsKeyName)"
+# Audit posture: which log types are enabled project-wide?
+gcloud projects get-iam-policy $GOOGLE_PROJECT_ID --format="yaml(auditConfigs)"
+# Least privilege: who can read the DB password?
+gcloud secrets get-iam-policy secret-<instance>-<service>
+# Supply chain: what does the admission policy require?
+gcloud container binauthz policy export
+# Residency: where does everything actually live?
+gcloud sql instances describe <instance> --format="value(region)"
+gcloud storage buckets list --format="table(name, location)"
+```
+2. In **Console > Security > Security Command Center > Findings**, filter by your project and treat each ACTIVE finding as an audit exception: identify the violated control and which portal variable remediates it.
+3. In **Kubernetes Engine > Clusters**, open an Autopilot cluster's **Security** posture panel and list which controls show as Google-managed — that list *is* your responsibility-narrowing evidence.
+4. You know it worked when you can present, for one framework requirement of your choice, the variable, the resource, and the CLI-verifiable evidence in one line each.
 
-**Console Exploration:**
-Navigate to **Kubernetes Engine > Clusters**. Select an Autopilot cluster and review the **Security** tab — observe the default security controls applied automatically by Autopilot: no SSH access to nodes, read-only root filesystem for system pods, automatic OS security patching, and Shielded Nodes enabled by default. These represent Google-managed controls that the customer does not need to configure.
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: Scenario — a HIPAA assessor asks who is responsible for OS patching of the Kubernetes nodes running PHI workloads. Your answer differs by one portal variable — which, and how?&lt;/summary>
 
-**Real-world example:** A healthcare startup chooses GKE Autopilot over GKE Standard specifically to narrow their HIPAA compliance scope. With GKE Standard, they would be responsible for OS-level CIS Benchmark hardening on each worker node — a significant operational burden for a 3-person security team. With Autopilot, Google manages the node OS and runtime, and the startup's HIPAA responsibility is scoped to application security, IAM policies, data encryption, and network controls. Their HIPAA Business Associate Agreement (BAA) with Google covers the Autopilot infrastructure, completing the compliance chain.
+A: `gke_cluster_mode`. On `AUTOPILOT` (the default), Google manages node provisioning, OS hardening, and patching — it falls on Google's side of the shared responsibility line (covered by the BAA). On `STANDARD`, node management is configured by you (the module sets auto-upgrade/auto-repair and Shielded settings, but the responsibility — and the audit scope — is yours).
+&lt;/details>
 
-### 💡 Additional Compliance Objectives & Learning Guidelines
-*   **Assured Workloads:** Research Assured Workloads for deploying pre-configured, regulatory-compliant GCP environments. Assured Workloads automatically enforces the Organization Policies required by a specific compliance framework — for example, FedRAMP High restricts resource locations to US regions and limits which Google staff can access support requests; EU Sovereign Controls restricts data processing to EU locations and prevents non-EU Google staff access. Navigate to **Compliance > Assured Workloads** in the console to explore the available compliance regimes and how to create a compliant folder.
-*   **Access Transparency:** Research Access Transparency logs, which record actions taken by Google staff (e.g., Google support engineers, infrastructure operators) when they access your organization's content. Unlike Cloud Audit Logs — which capture *your* API calls — Access Transparency captures *Google's* administrative actions on your resources. Access Transparency logs show the justification for access (e.g., a support case number), the approximate data location accessed, and the Google employee's role. This is a critical control for enterprises and regulated industries that need auditability of cloud provider access. Navigate to **Logging > Logs Explorer** and filter by `logName="projects/[PROJECT_ID]/logs/cloudaudit.googleapis.com%2Faccess_transparency"` to view these logs.
-*   **Access Approval:** Research Access Approval, which adds an explicit approval gate before Google staff can access your project's configuration or content. When a Google support engineer needs to view a Cloud SQL database to diagnose an issue, an Access Approval request is raised and sent to designated approvers in your organization. You can approve, deny, or dismiss the request — and Google staff cannot proceed without approval (with narrow exceptions for security emergencies). Navigate to **IAM & Admin > Access Approval** to configure approvers and explore the request workflow. Access Approval is distinct from Access Transparency: Transparency is passive logging; Approval is active control.
-*   **Mapping Compliance Requirements to GCP Services and Controls:** A key PSE exam skill is constructing a control mapping from a regulatory requirement to the specific GCP service or configuration that satisfies it. Practice building these mappings — for example: PCI-DSS Requirement 8.4 (multi-factor authentication for all non-console administrative access) → Cloud Identity 2-step verification enforced via Admin Console + IAP for application access; PCI-DSS Requirement 10.5.1 (protect audit logs from deletion and modification) → Cloud Logging with Bucket Lock (WORM) and `roles/logging.admin` restricted to a security team; GDPR Article 17 (right to erasure) → CMEK key revocation rendering encrypted data irrecoverable + SDP de-identification of PII in analytics datasets; HIPAA Technical Safeguard 164.312(e)(1) (transmission security) → TLS 1.2+ enforced at the load balancer + Direct VPC Egress for internal service communication.
-*   **Determining the GCP Environment in Scope for Regulatory Compliance:** Understand that compliance scope is not the entire GCP organization — it is the specific projects, services, and data flows that touch regulated data. Use resource tags and labels to demarcate in-scope resources, and apply more restrictive Organization Policies, IAM constraints, and VPC Service Controls perimeters specifically to in-scope folders and projects. Out-of-scope projects (e.g., development environments without production data) can have relaxed controls, reducing operational overhead without increasing compliance risk for the regulated environment.
-*   **Configuring Security Controls Within Cloud Environments to Support Compliance:** Understand how to compose multiple GCP controls into a coherent compliance posture: Organization Policies enforce what can be created; VPC Service Controls restrict where data can flow; IAM with deny policies and conditions enforce who can access what and when; Cloud KMS with CMEK ensures data is encrypted with customer-controlled keys; Cloud Logging with locked sinks provides tamper-evident audit trails; SCC provides continuous compliance monitoring. No single control is sufficient — the PSE exam frequently presents scenarios requiring candidates to select the correct combination of controls for a given regulatory requirement.
+&lt;details>
+&lt;summary>Q2: Map GDPR Article 17 (right to erasure) for backups to a deployed control.&lt;/summary>
+
+A: CMEK crypto-shredding: Cloud SQL data *and its backups* are encrypted under `cloudsql-{prefix}-key`. Destroying that key's versions renders all of it — including backups you cannot individually edit — permanently unreadable. Pair with the backup bucket's `backup_retention_days` lifecycle deletion for data minimization.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q3: Scenario — only the payment service handles cardholder data, but the CISO wants PCI controls (VPC-SC enforcement, CMEK, Data Access logging) applied to all 40 projects in the org. What do you advise?&lt;/summary>
+
+A: Scope down. PCI-DSS applies to the cardholder data environment; applying maximum controls everywhere multiplies cost (Data Access log volume) and operational friction (VPC-SC breakage) without reducing CDE risk. Isolate in-scope workloads in dedicated projects/folders, apply the strict profile there (this platform's per-project perimeter model fits naturally), and document segmentation as the scope boundary.
+&lt;/details>
+
+**Beyond the modules** — Not implemented, study separately:
+- **Assured Workloads** — compliance-regime folders (FedRAMP, EU Sovereign Controls) that pre-enforce location and personnel constraints: `gcloud assured workloads list --organization=ORG_ID --location=us-central1` (**Console > Compliance > Assured Workloads**).
+- **Access Transparency & Access Approval** — logs of *Google staff* actions on your content, and an approval gate before such access; filter Logs Explorer on `cloudaudit.googleapis.com%2Faccess_transparency`. Transparency = passive record, Approval = active control; both require Premium/Enterprise support tiers.
+- **SCC compliance posture reporting** — mapping findings to CIS GCP Foundations, PCI-DSS, NIST 800-53, ISO 27001 in SCC Premium (**SCC > Compliance**).
+- **Compliance documentation** — Google's compliance reports portal (SOC 2, ISO certificates), the HIPAA BAA process and the eligible-services list, and data residency / data processing terms. The exam expects you to know that you inherit Google's certifications for infrastructure but must still certify your own configuration and processes.
+
+**⚠️ Exam trap** — "Google Cloud is PCI-DSS / HIPAA compliant, therefore my application is" is always wrong. Compliance is inherited only for the layers Google operates; your IAM, network, encryption, and logging configuration — exactly the variables this platform exposes — remain your responsibility, and a misconfigured bucket fails the audit no matter what certificates Google holds.

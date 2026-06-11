@@ -1,59 +1,121 @@
 ---
-title: "PSE Certification Preparation Guide: Section 4 — Managing operations (~19% of the exam)"
-sidebar_label: "PSE Section 4 Exploration Guide"
+title: "PSE Certification Preparation Guide: Section 4 \u2014 Managing operations (~19% of the exam)"
 ---
 
 # PSE Certification Preparation Guide: Section 4 — Managing operations (~19% of the exam)
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud Security Engineer (PSE) certification explore Section 4 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
-
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PSE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+This guide covers Section 4 of the Professional Cloud Security Engineer exam. The relevant foundation modules: `Services_GCP` (Binary Authorization, Artifact Registry, audit logging, SCC, monitoring), `App_CloudRun`/`App_GKE` (CI/CD with attestation, audit logging, monitoring), and `App_Common` (image signing). Deploy the **secure-platform** profile with `binauthz_evaluation_mode = "REQUIRE_ATTESTATION"` plus one app module before starting.
 
 ---
 
 ## 4.1 Automating infrastructure and application security
 
-### Secure CI/CD and Binary Authorization
-**Concept:** Integrating automated security gates into the deployment pipeline and enforcing cryptographic supply chain integrity for all running workloads.
+> ⏱ ~2.5 h · 💰 low — Cloud Build minutes + Container Analysis scans · ⚙️ Requires: secure-platform (`enable_binary_authorization`, `enable_vulnerability_scanning`); app module with `enable_cicd_trigger` for the full pipeline
 
-**In the RAD UI:**
-*   **Secure CI/CD with Cloud Build:** The `enable_cicd_trigger` variable (Group 7) integrates the source repository with Cloud Build. Secrets required during the build (e.g., API keys for test environments) are injected directly from Secret Manager into the build step — never written to build logs or exposed as plaintext in build configuration files. Built images are pushed to Artifact Registry, which automatically runs container vulnerability scanning (powered by Container Analysis) on every image push.
-*   **Binary Authorization:** The `enable_binary_authorization` variable (Group 11 in GCP Services) enforces a policy requiring all container images deployed to Cloud Run or GKE Autopilot to carry a cryptographic attestation from a trusted attestor. The attestor signs images only after they have passed the Cloud Build pipeline's security checks. Images that were not built and signed through the approved pipeline are rejected at deploy time — even if a developer attempts a manual `gcloud run deploy` with an unsigned image.
+**Why the exam cares** — Software supply-chain security is heavily tested: scan-on-push vulnerability detection, gating deploys on scan results, cryptographic attestations (who signs, with what key, verified by whom), Binary Authorization evaluation/enforcement modes, and how IaC itself becomes a security automation layer.
 
-**Console Exploration:**
-Navigate to **Cloud Build > History** to view pipeline execution records. Click on a build to see the individual steps, the Cloud Build service account used (note its minimal IAM permissions), and the Secret Manager references used for secret injection. Navigate to **Artifact Registry > [repository]**, click an image digest, and open the **Vulnerabilities** tab to review the CVE scan results and severity breakdown. Navigate to **Security > Binary Authorization** to view the active enforcement policy and the configured attestors.
+**How RAD implements it** — The full chain when `enable_binary_authorization = true` (default `false`) with `binauthz_evaluation_mode` (default `ALWAYS_ALLOW`; also `REQUIRE_ATTESTATION`, `ALWAYS_DENY`):
 
-**Real-world example:** A company's Cloud Build pipeline pushes a new image to Artifact Registry, which triggers an automatic vulnerability scan. The scan detects a critical CVE (CVSS 9.8) in an outdated base image. The Binary Authorization attestor's signing logic refuses to attest the image, so no attestation is written. When the CD pipeline attempts to deploy the image to the GKE cluster, the Binary Authorization admission controller rejects the deployment with a policy violation. The engineer receives an alert, updates the base image, rebuilds, and the corrected image passes both the vulnerability scan and the attestation step. The unsigned image with the critical CVE can never run in production — even if a developer tries to deploy it manually, bypassing the CI/CD pipeline entirely.
+1. **Signing key** — a KMS asymmetric-signing key (RSA 2048, SHA-256). `Services_GCP` creates `binauthz-{prefix}-signer` in keyring `binauthz-{prefix}-keyring`; the app layer uses keyring `{project}-binauthz-keyring` with key `binauthz-signer`. Both creation paths are idempotent and restore/enable version 1 if it was scheduled for destruction.
+2. **Attestor** — a Container Analysis note (`binauthz-{prefix}-note`) wrapped by attestor `binauthz-{prefix}-pipeline-attestor` carrying the KMS public key.
+3. **Policy** — imported via `gcloud container binauthz policy import` in an *additive* way: the current policy is exported, the attestor appended to `requireAttestationsBy` only if missing (so multiple tenants coexist), evaluation mode `REQUIRE_ATTESTATION`, enforcement mode block-and-audit-log, and allowlist patterns for Google system images (`gke.gcr.io/*`, `gcr.io/cloudrun/*`, `gcr.io/cloud-sql-connectors/*`, ...). The policy survives destroy by design.
+4. **Cluster/service enforcement** — GKE clusters enforce the project singleton Binary Authorization policy when enabled; Cloud Run honors the project policy.
+5. **Pipeline signing** — the Cloud Build trigger (`enable_cicd_trigger` + `cicd_trigger_config`, branch pattern default `^main$`) builds with Kaniko, then runs `gcloud beta container binauthz attestations sign-and-create` against the KMS key; first-deploy images are signed by the app layer so the initial apply doesn't deadlock. Cloud Build SA IAM is correspondingly narrow: `roles/binaryauthorization.attestorsViewer`, `roles/cloudkms.signerVerifier`, `roles/containeranalysis.notes.attacher`.
+6. **Vulnerability scanning** — `enable_vulnerability_scanning` (default `false`) enables the Container Analysis + On-Demand Scanning APIs and turns on scan-on-push for the Artifact Registry repo (inherited enablement, else disabled); the build SA gains `roles/containeranalysis.occurrences.viewer` to read findings.
 
-### 💡 Additional Infrastructure Security Objectives & Learning Guidelines
-*   **Automating CVE Scanning in CI/CD:** Research how to integrate Artifact Registry vulnerability scanning results into Cloud Build pipelines as a gate. A Cloud Build step can call the Container Analysis API to retrieve scan findings for the newly built image and fail the pipeline if any CRITICAL or HIGH severity CVEs are present — preventing vulnerable images from ever receiving a Binary Authorization attestation. Navigate to **Artifact Registry > [image] > Security insights** to explore the vulnerability data model.
-*   **VM and Container Image Hardening:** Research Shielded VMs, which use three mechanisms to protect boot integrity: Secure Boot (prevents loading unsigned bootloaders and kernel modules), vTPM (virtual Trusted Platform Module that stores integrity measurements), and Integrity Monitoring (compares live boot measurements against a known-good baseline and alerts on deviation). For containers, study distroless base images (no shell, no package manager — minimal attack surface), running containers as non-root users, and using read-only root filesystems. Navigate to **Compute Engine > VM instances > [instance] > Security** to view the Shielded VM status for a running instance.
-*   **VM Patch Management:** Research OS Patch Management in Compute Engine, which enables centralised scanning and automated patching of VM fleets. Patch deployments can target VMs by label, instance group, or zone and can be scheduled for defined maintenance windows to minimise operational impact. Compliance reports show which VMs in the fleet are out of date, with drill-down to the specific missing patches. Navigate to **Compute Engine > Patch management** to create a patch job and review the compliance dashboard.
-*   **Managing Policy and Drift Detection at Scale:** Research Security Command Center's Security Health Analytics (SHA), which continuously evaluates all GCP resources in a project or organization against a library of security detectors — identifying open firewall rules allowing `0.0.0.0/0` on port 22, public Cloud Storage buckets, disabled audit logging, and over-privileged service accounts. Custom SHA modules allow you to author organization-specific detectors using CEL. Navigate to **Security > Security Command Center > Findings** and filter by source to explore SHA findings. Also research Cloud Asset Inventory, which tracks configuration changes to every GCP resource over time, enabling drift detection by comparing current state against a known-good baseline.
+IaC-as-security-automation also shows up as drift correction: redeploying reverts out-of-band IAM changes, and plan-time probes (KMS key recovery, permission checks) self-heal the security baseline. GKE clusters additionally enable the security posture dashboard (basic posture + basic vulnerability scanning) and run on the `REGULAR` release channel with Shielded nodes (Secure Boot + integrity monitoring) on STANDARD node pools.
+
+**Try it**
+1. In **Console > Security > Binary Authorization**, review the policy: default rule `REQUIRE_ATTESTATION`, your attestor listed, enforcement "Block and audit log."
+```bash
+gcloud container binauthz policy export
+gcloud container binauthz attestors list
+gcloud artifacts docker images list \
+  us-central1-docker.pkg.dev/$GOOGLE_PROJECT_ID/shared-repo-<prefix> \
+  --show-occurrences --occurrence-filter='kind="VULNERABILITY"' --limit=5
+```
+2. Negative test — deploy an unsigned public image and watch admission fail:
+```bash
+gcloud run deploy binauthz-test --image=docker.io/library/nginx:latest \
+  --region=us-central1 --no-allow-unauthenticated
+# Expect: "Container image ... must be attested by attestor projects/.../attestors/..."
+```
+3. In **Artifact Registry > repository > image > Vulnerabilities**, review CVE findings per digest after a push.
+4. You know it worked when the unsigned deploy is rejected with a Binary Authorization violation while the pipeline-built, attested image deploys cleanly.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: Scenario — a developer bypasses CI and runs `gcloud run deploy` with an image built on their laptop. With the secure-platform profile, what happens and why?&lt;/summary>
+
+A: The deploy is rejected. The Binary Authorization policy requires an attestation from the pipeline attestor; only Cloud Build (holding `roles/cloudkms.signerVerifier` on the signing key) creates attestations, and only after building the image. A laptop image has no attestation, so `ENFORCED_BLOCK_AND_AUDIT_LOG` blocks it and writes an audit log entry.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: What is the difference between `ALWAYS_ALLOW`, `REQUIRE_ATTESTATION`, and `ALWAYS_DENY`, and when would you use each?&lt;/summary>
+
+A: `ALWAYS_ALLOW` admits everything (rollout/bootstrap phase — the module's default so first deploys succeed); `REQUIRE_ATTESTATION` admits only images with a valid signature from the required attestors (steady-state production); `ALWAYS_DENY` blocks all new deployments (emergency freeze during an incident). Enforcement vs dry-run is a separate axis: dry-run logs would-be violations without blocking.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q3: Why does the module import the Binary Authorization policy additively instead of declaring it as a plain Terraform resource?&lt;/summary>
+
+A: The policy is a project **singleton**. A plain resource owned by one tenant's state would overwrite every other tenant's attestor requirements on each apply. Export-merge-import appends this deployment's attestor only if absent, making multiple independent deployments safe — and the policy intentionally survives destroy so other tenants keep their protection.
+&lt;/details>
+
+**Beyond the modules** — Not implemented: failing the build on CVE severity (the scan results exist; a gate step querying Container Analysis and aborting on CRITICAL findings is left to you — try `gcloud artifacts docker images scan IMAGE --format="value(response.scan)"` then `gcloud artifacts docker images list-vulnerabilities SCAN_ID`), continuous validation (post-deploy revalidation of running pods), OS patch management for VM fleets (`gcloud compute os-config patch-jobs execute`), Shielded VM integrity-monitoring alerting, and policy-as-code with Policy Controller/OPA (the `configure_policy_controller` fleet feature exists in `Services_GCP` but constraint authoring is out of scope).
+
+**⚠️ Exam trap** — Vulnerability scanning *informs*, Binary Authorization *enforces* — scanning alone never blocks a deployment. Conversely, Binary Authorization checks signatures, not CVEs: an attested-but-vulnerable image deploys unless your pipeline refuses to attest it. The exam expects you to wire scan → conditional attestation → enforcement.
 
 ---
 
 ## 4.2 Configuring logging, monitoring, and detection
 
-### Cloud Monitoring, Alert Policies, and Audit Logs
-**Concept:** Capturing all security-relevant events, making them accessible only to authorized analysts, and generating actionable alerts for anomalous activity.
+> ⏱ ~2 h · 💰 moderate if DATA_READ logging is left on (log volume) · ⚙️ Requires: secure-platform (`enable_audit_logging`, `enable_security_command_center`, `enable_scc_notifications`)
 
-**In the RAD UI:**
-*   **Custom Dashboards and Alert Policies:** The modules automatically provision Cloud Monitoring dashboards and MQL-based alert policies. In GCP Services, `alert_cpu_threshold`, `alert_memory_threshold`, and `alert_disk_threshold` (Group 17) monitor infrastructure health baselines that can indicate resource abuse.
-*   **Notification Channels:** `support_users` (Group 1) and `notification_alert_emails` (Group 17) are mapped to Cloud Monitoring Notification Channels, routing alerts to designated operators when thresholds are breached.
-*   **Audit Log Generation:** All Terraform operations executed via Cloud Build generate Admin Activity audit logs, providing an immutable, chronological record of every infrastructure change, IAM binding modification, and API call made during deployment.
+**Why the exam cares** — You must know the four Cloud Audit Logs types (Admin Activity always on and free; Data Access opt-in except BigQuery; System Event; Policy Denied), how to enable Data Access logs per service, how SCC findings are produced and routed, and how to design log access, retention, and export.
 
-**Console Exploration:**
-Navigate to **Monitoring > Alerting** to review the MQL-based alert policies and their notification channel bindings. Navigate to **Logging > Logs Explorer**. Filter by `logName="cloudaudit.googleapis.com/activity"` to view Admin Activity audit logs showing who changed what and when. Filter by `logName="cloudaudit.googleapis.com/data_access"` to view Data Access logs (note: these must be explicitly enabled per service and can generate high volume — they are disabled by default to control costs).
+**How RAD implements it** —
+- **Audit log configuration** — `enable_audit_logging` (default `false`, available identically in `Services_GCP`, `App_CloudRun`, and `App_GKE`): an IAM audit config for all services enabling `ADMIN_READ`, `DATA_READ`, and `DATA_WRITE` (ADMIN_WRITE is always on), plus explicit per-service configs for `secretmanager.googleapis.com` and `cloudkms.googleapis.com` (DATA_READ + DATA_WRITE) so secret reads and key usage are always evidenced.
+- **SCC enrollment** — `enable_security_command_center` (default `false`) enables the `securitycenter.googleapis.com` API and creates Pub/Sub topic `scc-{prefix}-findings`. `enable_scc_notifications` (default `false`) provisions the SCC notification service identity, grants it `roles/pubsub.publisher` on the topic, then — only if an org-level permission probe (`gcloud scc notifications list --organization=...`) succeeds — creates an SCC notification config filtered to `state="ACTIVE"` findings for this project. Lacking `roles/securitycenter.notificationConfigEditor` at org level, the config is skipped with a warning instead of failing the apply.
+- **Monitoring & alerting** — `Services_GCP` creates infrastructure alert policies driven by `alert_cpu_threshold` / `alert_memory_threshold` / `alert_disk_threshold` (all default `80`) with email channels from `configure_email_notification` + `notification_alert_emails`; app modules create channels from `support_users`, custom `alert_policies` (metric type, comparison, threshold, duration) scoped to the service, a dashboard, and — for publicly reachable endpoints — a synthetic uptime check plus failure alert from `uptime_check_config`. GKE clusters ship cluster logging for system components and workloads plus managed Prometheus.
+- **Edge/request logging** — the Cloud Armor-fronted backend service logs every request at full sample rate, giving you WAF verdict logs for detection work.
 
-**Real-world example:** A security operations team enables Data Access audit logs for BigQuery across their organization and exports them via a log sink to a dedicated BigQuery dataset for forensic analysis. When their SIEM raises an alert about an anomalous 50 GB data export at 03:00 UTC by a rarely-used service account, the analyst queries the log table directly in BigQuery using SQL to identify every table accessed, the full query text, bytes billed, and the source IP — reconstructing the complete scope of the potential data exfiltration in under five minutes rather than days of manual log correlation.
+**Try it**
+1. Enable the audit/SCC flags and redeploy. In **Console > IAM & Admin > Audit Logs**, confirm "All services" shows Admin Read / Data Read / Data Write enabled, with Secret Manager and KMS individually configured.
+2. Generate and find a data-access event:
+```bash
+gcloud secrets versions access latest --secret=secret-<instance>-<service> >/dev/null
+gcloud logging read \
+  'logName:"cloudaudit.googleapis.com%2Fdata_access" AND protoPayload.serviceName="secretmanager.googleapis.com"' \
+  --limit=5 --format="table(timestamp, protoPayload.authenticationInfo.principalEmail, protoPayload.methodName)"
+```
+3. Wire findings to a consumer and watch them flow:
+```bash
+gcloud pubsub subscriptions create scc-tap --topic=scc-<prefix>-findings
+gcloud pubsub subscriptions pull scc-tap --auto-ack --limit=5
+```
+   In **Security > Security Command Center > Findings**, filter to your project and compare with what arrives on the subscription (only ACTIVE findings pass the filter).
+4. You know it worked when your own `AccessSecretVersion` call appears in Data Access logs and an SCC finding (e.g., from Security Health Analytics) lands in the Pub/Sub pull.
 
-### 💡 Additional Logging and Detection Objectives & Learning Guidelines
-*   **VPC Flow Logs:** Enable VPC Flow Logs on subnets to capture metadata about all accepted and rejected network flows (source/destination IP and port, bytes transferred, protocol, latency). Flow logs are written to Cloud Logging and can be exported to BigQuery for analysis. Navigate to **VPC network > Subnets > [subnet] > Edit > Flow logs: On** and set an appropriate sampling rate (1.0 = 100% for forensic completeness; lower for cost reduction). Flow logs are essential for detecting lateral movement, exfiltration attempts, and unexpected inter-service communication.
-*   **Cloud NGFW Logs and Packet Mirroring:** Enable logging on individual Cloud NGFW firewall rules (**VPC network > Firewall rules > [rule] > Logs: On**) to capture which rules matched each connection attempt — providing evidence of blocked intrusion attempts and validating that allow rules are behaving as expected. For deeper inspection, research Packet Mirroring, which copies full packet payloads (not just flow metadata) from specified VM instances to a collector Internal Load Balancer connected to a network analysis or IDS tool. This enables full packet capture for east-west traffic forensics.
-*   **Cloud Intrusion Detection System (Cloud IDS):** Research Cloud IDS, which uses Palo Alto Networks threat detection engine to inspect traffic for malware signatures, spyware, C2 (command-and-control) communication patterns, and known exploitation attempts. Cloud IDS receives mirrored traffic via Packet Mirroring from a monitored subnet and writes threat findings to Cloud Logging and Security Command Center. Navigate to **Network Security > Cloud IDS** to explore endpoint and traffic mirroring configuration. Understand that Cloud IDS is a passive detection tool (no blocking) — pair it with Cloud NGFW for automated blocking based on IDS findings.
-*   **Designing an Effective Logging Strategy:** A complete logging strategy must answer: What is collected? (All Admin Activity logs — always on; Data Access logs — enable selectively for sensitive services; VPC Flow Logs and firewall rule logs for network visibility.) Where is it stored? (Default log bucket for operational use; dedicated locked log bucket with Bucket Lock for compliance immutability.) Who can access it? (Use IAM `roles/logging.viewer` scoped to specific log views for analysts; restrict `roles/logging.admin` to a security team.) How long is it retained? (Minimum 400 days for Admin Activity logs per most compliance frameworks — use log sinks to Cloud Storage with Bucket Lock for long-term archival beyond the default 30-day retention.)
-*   **Designing Secure Access to Logs:** Sensitive logs (Data Access logs for BigQuery, Cloud SQL, Secret Manager) often contain PII or reveal business-sensitive patterns. Use Log Views within Log Buckets to give different teams access to different subsets of logs without sharing all log data. Navigate to **Logging > Log Storage > Log Buckets > [bucket] > Log Views** to create a view filtered to a specific resource type or log name. Grant `roles/logging.viewAccessor` on the specific view rather than the entire bucket.
-*   **Exporting Logs via Log Sinks:** Research log sinks (log routers) to export logs to: Cloud Storage (long-term archival at low cost — use Bucket Lock for WORM compliance), BigQuery (SQL-based forensic analysis and anomaly detection), or Pub/Sub (real-time streaming to a SIEM or downstream processing pipeline). Navigate to **Logging > Log Router > Create sink** to configure a sink with an appropriate inclusion filter. Study aggregated sinks, which collect logs from all projects within a folder or organization into a single centralized export destination — essential for organizations that need a unified security data lake across hundreds of projects.
-*   **Log Analytics:** Research Log Analytics, an upgraded log bucket feature enabling SQL-based querying of log data directly in the Cloud Logging console without exporting to BigQuery. Navigate to **Logging > Log Analytics** and run ad-hoc queries — for example, identifying the top 10 principals by number of `SetIamPolicy` calls in the past 7 days, or calculating the 99th-percentile request latency per Cloud Run service revision. Log Analytics is faster for operational queries than exporting to BigQuery and does not incur BigQuery query costs.
-*   **Configuring and Monitoring Security Command Center (SCC):** Research SCC as the centralized security management platform that consolidates findings from Security Health Analytics, Container Threat Detection (runtime threat detection for GKE workloads), Event Threat Detection (detects threats in Cloud Logging streams, including brute force, data exfiltration, and crypto-mining), Virtual Machine Threat Detection (memory-based threat detection for Compute Engine), and Web Security Scanner. Navigate to **Security > Security Command Center > Dashboard** to review the overall security posture score and open findings by severity. Configure SCC notifications to Pub/Sub for integration with ticketing systems or SIEM workflows by navigating to **SCC > Settings > Notifications**.
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: Scenario — the SOC asks for evidence of every secret read in the last 30 days. Default project, nothing enabled. Can you produce it, and what does the platform change?&lt;/summary>
+
+A: No — `AccessSecretVersion` is a DATA_READ event, and Data Access audit logs are off by default (except BigQuery). Evidence only exists from the moment they're enabled. The platform's `enable_audit_logging` turns them on project-wide plus explicit Secret Manager/KMS configs; the exam lesson is to enable Data Access logs for sensitive services *before* the incident.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: Why does the module route SCC findings to Pub/Sub rather than relying on the SCC dashboard?&lt;/summary>
+
+A: Pub/Sub makes findings machine-consumable in near-real-time — SIEM ingestion, ticket creation, automated remediation — and decouples producers from consumers. A dashboard requires a human to look. Note the org-level requirement: notification configs are organization resources, hence the permission probe and graceful skip.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q3: An apply succeeds but no SCC notification config exists and the log shows a warning about org-level permission. Is this a bug?&lt;/summary>
+
+A: No — it is the documented degraded mode. Creating an SCC notification config requires `roles/securitycenter.notificationConfigEditor` at the organization; the module probes first and skips with a warning so a project-scoped service account can still deploy everything else. Grant the org role and redeploy to get the config.
+&lt;/details>
+
+**Beyond the modules** — Not implemented: VPC Flow Logs (`gcloud compute networks subnets update SUBNET --enable-flow-logs --logging-flow-sampling=1.0`), firewall rule logging, log sinks/aggregated sinks to BigQuery/GCS/Pub-Sub (`gcloud logging sinks create`), Bucket Lock/locked retention for WORM compliance, Log Analytics, Cloud IDS, Packet Mirroring, Event Threat Detection / Container Threat Detection specifics (SCC Premium), and Google SecOps (Chronicle) SIEM integration. Design study: log views + `roles/logging.viewAccessor` for least-privilege analyst access; 400-day retention via sinks for Admin Activity logs.
+
+**⚠️ Exam trap** — Admin Activity audit logs are always on, free, and cannot be disabled; Data Access logs are opt-in, billed as log volume, and can be expensive at scale (especially `storage.googleapis.com` DATA_READ). "Enable everything everywhere" is a cost trap; "rely on defaults for forensics" is an evidence trap. Scope Data Access logging deliberately — as the module's explicit Secret Manager/KMS overrides illustrate.

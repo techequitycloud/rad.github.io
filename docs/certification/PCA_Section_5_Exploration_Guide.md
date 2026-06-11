@@ -1,56 +1,95 @@
 ---
-title: "PCA Certification Preparation Guide: Section 5 — Managing implementation (~12.5% of the exam)"
-sidebar_label: "PCA Section 5 Exploration Guide"
+title: "PCA Certification Preparation Guide: Section 5 \u2014 Managing implementation (~12.5% of the exam)"
 ---
 
 # PCA Certification Preparation Guide: Section 5 — Managing implementation (~12.5% of the exam)
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud Architect (PCA) certification explore Section 5 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
-
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCA objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+Managing implementation means making other teams successful: providing paved paths, guardrails, and programmatic access patterns. The RAD platform is itself the exhibit — a four-tier Terraform/OpenTofu architecture that development teams consume through a portal, with validations that fail bad configurations at plan time and registry hygiene baked in. Deploy any profile from the [Lab Map](PCA_Certification_Guide.md); the **Security and delivery** profile makes the most artifacts visible. Modules exercised: all four, with emphasis on the platform's shared scripts and plan-time validations.
 
 ---
 
 ## 5.1 Advising development and operation teams
 
-### Application and Infrastructure Deployment
-**Concept:** Guiding teams on how to deploy and manage applications effectively using automated patterns.
+> ⏱ ~60 min · 💰 no additional cost · ⚙️ Requires: any deployed profile
 
-**In the RAD UI:**
-*   **Infrastructure Deployment:** The platform enforces an Infrastructure as Code (IaC) paradigm. By abstracting the orchestration, it provides a reference architecture for operations teams to shift from managing VMs to managing container lifecycles declaratively.
-*   **Container Image Sources:** Variables like `container_image_source` (Group 3) guide teams to standardize on Artifact Registry for immutable image deployments.
+**Why the exam cares** — Architects are advisors: they codify standards so teams cannot easily do the wrong thing, choose API-management and testing approaches, and set artifact and dependency policies. Exam scenarios ask what guidance or guardrail prevents a described failure.
 
-**Console Exploration:**
-Navigate to **Artifact Registry** to view the repository of container images deployed by the pipelines.
+**How RAD implements it** — Three advisory patterns are observable in the code:
 
-**Real-world example:** A platform engineering team standardizes all application images on Artifact Registry with automatic vulnerability scanning enabled. When a critical CVE is detected in a base image, Security Command Center raises a finding that links directly to the affected image digest in Artifact Registry. The team's Cloud Build trigger is configured to rebuild and redeploy the image automatically on a nightly schedule, ensuring all running services consume patched base images without manual intervention.
+*Paved path with guardrails.* The foundation modules expose a curated variable surface and reject misconfigurations at plan time — App_GKE carries 32 preconditions (min ≤ max instances, IAP completeness, PVC requirements, CDN/Armor prerequisites, name-length limits ≤ 55 chars, `gateway_backend_stage` must exist). Teams get expressive power; the platform team gets enforced invariants. This is "advising through tooling," and it is how the exam expects standards to scale beyond documentation.
 
-### 💡 Additional Advising Objectives & Learning Guidelines
-*   **API Management Best Practices (Apigee):** Understand when to use Apigee (for monetization, complex rate limiting, developer portals, and legacy SOAP-to-REST translation) versus a simple API Gateway or Cloud Endpoints.
-*   **Testing Frameworks:** Understand the difference between load testing (stressing the system), unit testing (testing individual functions), and integration testing (testing component interactions).
-*   **Data and System Migration Tooling:** Research the Database Migration Service (DMS) for continuous replication of databases into Cloud SQL, and Migrate to Virtual Machines (m2vm).
-*   **Gemini Cloud Assist:** Use Gemini in the console to advise on optimizing deployments or writing deployment scripts.
+*Artifact policy.* Artifact Registry is auto-discovered or created (`shared-repo-{prefix}`), with cleanup policies — `max_images_to_retain` (default `7`), `delete_untagged_images` (default `true`), `image_retention_days` (default `30`) — and optional CMEK (`enable_artifact_registry_cmek`) and vulnerability scanning. Third-party dependencies are not pulled from the internet at runtime: required images (e.g. the Cloud SQL Auth Proxy) are copied into AR using Crane with **digest comparison** — an existing tag is overwritten when its digest no longer matches the source, so a stale or tampered mirror is never silently used.
+
+*Operational defaults.* Database client tooling ships as a purpose-built image, initialization jobs are first-class (`initialization_jobs` with `depends_on_jobs` ordering), and revision/image pruning keeps environments tidy without team effort.
+
+**Try it**
+
+1. Review five of App_GKE's plan-time preconditions; for each, write the production incident it prevents.
+2. Deliberately violate one in the portal (e.g. `min_instance_count = 5`, `max_instance_count = 2`) and observe the plan-time error — the message names the variables and the fix.
+3. Inspect the artifact policy in effect:
+
+```bash
+gcloud artifacts repositories describe <repo-name> \
+  --location=<region> \
+  --format="yaml(cleanupPolicies,vulnerabilityScanningConfig)"
+```
+
+4. You know it worked when the bad configuration never reached an apply, and the repository shows cleanup policies a developer never had to write.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: Development teams keep deploying containers that pull a third-party sidecar from Docker Hub at runtime, causing outages during registry rate-limiting. What do you advise, and what subtlety makes a naive mirror dangerous?&lt;/summary>
+
+A: Mirror required third-party images into your own Artifact Registry and deploy only from there — as this platform does for the Cloud SQL Auth Proxy. The subtlety: a tag can silently drift upstream, so the mirror must compare digests (as this platform does with Crane) rather than assume "tag exists = up to date"; otherwise you pin to a stale or wrong image forever.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: A platform team's written standards are ignored. What does this repository demonstrate as the scalable alternative?&lt;/summary>
+
+A: Encode standards as plan-time validations and curated module variables — the standard becomes impossible to violate rather than merely documented. Misconfigurations fail with actionable error messages before any resource is created, which is cheaper than failing in production and faster than review-based enforcement.
+&lt;/details>
+
+**Beyond the modules** — Study what advising covers beyond IaC guardrails: API management selection (Apigee for monetization/analytics/legacy mediation vs API Gateway for lightweight serverless fronting), testing frameworks (unit/integration/load and where each runs in CI), Database Migration Service for advising on data moves, and Service Catalog for curated solution distribution. Try creating an API Gateway in a scratch project to feel the difference from Apigee's scope.
+
+**⚠️ Exam trap** — "Store images in Container Registry" is a stale answer: Container Registry is deprecated in favor of Artifact Registry, which adds per-repository IAM, cleanup policies, CMEK, and scanning — the features this platform depends on.
 
 ---
 
 ## 5.2 Interacting with Google Cloud programmatically
 
-### Infrastructure as Code (IaC)
-**Concept:** Utilizing declarative code to manage infrastructure predictably.
+> ⏱ ~60 min · 💰 no additional cost · ⚙️ Requires: any deployed profile + Cloud Shell or a workstation with `gcloud`
 
-**In the RAD UI:**
-*   **IaC and Terraform:** The RAD deployment portal completely abstracts the underlying Terraform codebase via the UI. When you configure variables, the platform compiles these inputs and executes Terraform on your behalf.
-*   **Custom Implementations:** The generated infrastructure serves as a reference. Teams can configure remote state backends (e.g., in a GCS bucket) and orchestrate deployments via CI/CD pipelines natively.
+**Why the exam cares** — The exam tests fluency across the programmatic surface: declarative IaC vs imperative CLI, when each is appropriate, and how authentication works without key files. Expect "which command/approach" questions.
 
-**Console Exploration:**
-Navigate to **Cloud Build > History** to see the automated pipelines executing the IaC deployments via Terraform.
+**How RAD implements it** — The portal compiles your variable choices and runs the OpenTofu lifecycle (`tofu init → plan → apply`) for you — every deployment you have done in these guides was a programmatic interaction. The modules also demonstrate the *boundary* of declarative IaC: where the provider has gaps, they shell out to `gcloud` deliberately — e.g. GKE add-ons are enabled via `gcloud container clusters update --enable-secret-manager`, Cloud Run jobs are executed with `gcloud run jobs execute --wait`, and discovery runs `gcloud compute networks subnets list --filter=...` inside external data scripts. Service-account impersonation (`--impersonate-service-account`, and the `impersonation_service_account` variable) is used throughout instead of key files.
 
-**Real-world example:** A large enterprise stores all Terraform state in a versioned GCS bucket with Object Versioning enabled, and locks the state using a Cloud Storage backend. When a misconfigured firewall rule causes a production incident, the operations team uses `terraform state` commands from Cloud Shell to inspect drift and rolls back the firewall configuration by reverting the Terraform code in the repository and triggering a fresh Cloud Build pipeline — restoring the known-good state with a full audit trail in Cloud Build history.
+**Try it**
 
-### 💡 Additional Programmatic Interaction Objectives & Learning Guidelines
-The PCA exam heavily tests raw Cloud SDK (`gcloud`), `gsutil`, `bq`, and programmatic environments.
-*   **Cloud Shell Editor, Cloud Code, and Cloud Shell Terminal:** Open Cloud Shell in the console. Practice using the built-in Editor (Code OSS, the open-source foundation of VS Code) and explore the Cloud Code extension for Kubernetes and Cloud Run development with real-time resource visualization, log streaming, and deployment directly from the editor.
-*   **Google Cloud SDKs:** Practice `gcloud` commands (e.g., `gcloud compute instances create`), `gcloud storage` for storage management (the modern replacement for the legacy `gsutil` CLI), and `bq` for BigQuery interactions.
-*   **Cloud Emulators:** Research how to use local emulators for Bigtable, Spanner, Pub/Sub, and Firestore to develop applications without incurring cloud costs or requiring an internet connection.
-*   **Accessing Google API Best Practices:** Understand the authentication hierarchy for API access: Application Default Credentials (ADC) is the recommended pattern, automatically resolving credentials from the environment (Workload Identity in GKE, attached service account in Cloud Run, user credentials in Cloud Shell). Service account keys should be avoided; use impersonation or Workload Identity Federation instead. For API quota management, every GCP API has per-project quotas — architects must proactively request quota increases for production workloads before launch. Implement exponential backoff with jitter when retrying API calls that return `429 RESOURCE_EXHAUSTED` or `5xx` errors to avoid thundering-herd effects during partial outages.
-*   **Google API Client Libraries:** Understand how developers use client libraries (in Python, Node.js, Java) to interact with GCP APIs natively within their application code. Client libraries handle retry logic, authentication, and protocol-level details (gRPC vs. REST) automatically.
+1. Trigger a deployment from the portal — behind the scenes it runs the read-only half of the lifecycle (init → validate → plan) before any apply, rejecting invalid configurations at plan time.
+2. Cross-check the declared state against live state imperatively:
+
+```bash
+gcloud run services list --region=us-central1
+gcloud sql instances list
+gcloud container clusters list
+```
+
+3. Note where the platform deliberately steps outside declarative IaC: discovery is fed by `gcloud ... --format=json` calls (e.g. subnet discovery), and add-ons are toggled with imperative `gcloud` commands where the provider has gaps.
+4. You know it worked when the plan shows no unexpected diff (declarative truth) and the `gcloud` listings match it (imperative observation).
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: An operator "quickly fixed" a service's memory limit with `gcloud run services update`. What happens on the next platform deployment, and what does the exam call this?&lt;/summary>
+
+A: Configuration drift — the next `tofu apply` reverts the manual change to the declared value (or surfaces it as a diff at plan time). The exam expects drift to be resolved by changing the declaration (the portal variable), never by repeated imperative patching; IaC is the source of truth.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: A CI system needs to call GCP APIs as a privileged service account without storing a JSON key. Which patterns does this platform use?&lt;/summary>
+
+A: Service-account impersonation — callers with `roles/iam.serviceAccountUser`/token-creator rights act as the target SA via `--impersonate-service-account`, receiving short-lived tokens (the modules pass `impersonation_service_account` into provider auth and gcloud calls). On GKE, Workload Identity binds Kubernetes service accounts to GCP SAs the same keyless way. Long-lived JSON keys are the anti-answer.
+&lt;/details>
+
+**Beyond the modules** — The exam's programmatic surface is wider: Cloud Shell and Cloud Code, `gcloud storage` (the modern `gsutil` replacement), `bq` for BigQuery, client libraries (Python/Java/Node) with Application Default Credentials resolution order, local emulators (Pub/Sub, Firestore, Spanner, Bigtable), and API quota/retry behavior (exponential backoff on `429`/`5xx`). Practice in Cloud Shell: `gcloud config list`, `gcloud auth application-default login`, and one client-library quickstart end to end.
+
+**⚠️ Exam trap** — `gcloud auth login` (your user) and Application Default Credentials (`gcloud auth application-default login`, what client libraries see) are separate credential stores. A script that works in your terminal but fails with "could not find default credentials" inside code is the classic symptom — and a recurring exam distractor.

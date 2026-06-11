@@ -77,9 +77,33 @@ const config: Config = {
       items: [
         {
           type: 'docSidebar',
-          sidebarId: 'docsSidebar',
+          sidebarId: 'guidesSidebar',
           position: 'left',
-          label: 'Documentation',
+          label: 'RAD Guide',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'modulesSidebar',
+          position: 'left',
+          label: 'Module Guides',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'labsSidebar',
+          position: 'left',
+          label: 'Module Labs',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'certificationSidebar',
+          position: 'left',
+          label: 'Certification Guides',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'designSidebar',
+          position: 'left',
+          label: 'Design Principles',
         },
         {
           href: 'https://radmodules.dev',

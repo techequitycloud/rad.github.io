@@ -1,0 +1,389 @@
+---
+title: "Listmonk Common Shared Configuration Module"
+---
+
+# Listmonk Common Shared Configuration Module
+
+The `Listmonk Common` module defines the Listmonk newsletter manager configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates Secret Manager secrets and produces `config`, `secret_ids`, and `storage_buckets` outputs consumed by platform-specific wrapper modules (`Listmonk CloudRun` and `Listmonk GKE`).
+
+## 1. Overview
+
+**Purpose**: To centralise all Listmonk-specific configuration (container image, PostgreSQL setup, environment variable mapping, health probes, uploads storage bucket, and the admin password secret) in a single module shared by both Cloud Run and GKE deployments.
+
+**Architecture**:
+
+```
+Layer 3: Application Wrappers
+├── Listmonk_CloudRun  ──┐
+└── Listmonk_GKE       ──┤── instantiate Listmonk_Common
+                          ↓
+               Listmonk_Common (this module)
+               Creates: Secret Manager secret (admin password)
+               Produces: config, secret_ids, storage_buckets
+                          ↓
+Layer 2: Platform Modules
+├── App_CloudRun  (serverless deployment)
+└── App_GKE       (Kubernetes deployment)
+                          ↓
+Layer 1: App_Common (networking, database, storage, secrets, IAM)
+```
+
+**Key characteristics**:
+- Uses **PostgreSQL 15** — compatible with both Cloud Run and GKE deployment paths.
+- Creates **one Secret Manager secret** (`LISTMONK_app__admin_password`) — the Listmonk admin interface password, auto-generated on first apply.
+- Exposes a **dedicated health endpoint** — `/api/health` is a purpose-built JSON health endpoint in Listmonk's Go HTTP server, unlike Ghost which relies on the root path.
+- Listmonk uses **double-underscore notation** for configuration via environment variables (`LISTMONK_db__host`, `LISTMONK_app__admin_password`), mapping to nested TOML/JSON config keys.
+- The `db_password_env_var_name` field is set to `LISTMONK_db__password` so that `App CloudRun`/`App GKE` injects the database password under the exact variable name Listmonk expects.
+
+---
+
+## 2. Outputs
+
+### `config`
+
+The application configuration object passed to the platform module via `application_config`.
+
+| Field | Value / Description |
+|---|---|
+| `app_name` | `"listmonk"` |
+| `application_version` | Version tag (default: `"latest"`) |
+| `container_image` | `"listmonk/listmonk"` (Docker Hub image) |
+| `image_source` | `"custom"` — a custom wrapper image is built by default |
+| `enable_image_mirroring` | `var.enable_image_mirroring` (default `true`) — mirrors the image to Artifact Registry |
+| `container_build_config` | `dockerfile_path = "Dockerfile"`, `context_path = "."`, `build_args = { APP_VERSION = <version> }` |
+| `container_port` | `9000` |
+| `database_type` | `"POSTGRES_15"` — Listmonk requires PostgreSQL |
+| `db_name` | Database name (default: `"listmonk"`) |
+| `db_user` | Database user (default: `"listmonk"`) |
+| `db_password_env_var_name` | `"LISTMONK_db__password"` — must match Listmonk's expected config key |
+| `enable_cloudsql_volume` | Whether to mount the Cloud SQL Auth Proxy sidecar (default: `true`) |
+| `cloudsql_volume_mount_path` | `"/cloudsql"` |
+| `gcs_volumes` | List of GCS Fuse volume mounts (empty by default) |
+| `container_resources` | CPU: `1000m`, Memory: `512Mi` |
+| `environment_variables` | Listmonk configuration env vars (see §4) |
+| `secret_environment_variables` | `{ LISTMONK_app__admin_password = <secret_id> }` — secret reference populated from Secret Manager |
+| `initialization_jobs` | Default `db-init` job or custom override — see §5 |
+| `startup_probe` | HTTP `GET /api/health`, 30s initial delay, 5s timeout, 10s period, 30 failure threshold |
+| `liveness_probe` | HTTP `GET /api/health`, 30s initial delay, 5s timeout, 30s period, 3 failure threshold |
+
+### `secret_ids`
+
+A map of Secret Manager secret IDs injected as secret environment variables.
+
+| Key | Value / Description |
+|---|---|
+| `LISTMONK_app__admin_password` | Secret Manager secret ID for the auto-generated admin password. Created by this module on first apply. |
+
+### `storage_buckets`
+
+`Listmonk Common` does not provision a default GCS bucket. The `storage_buckets` output is an empty list by default. Wrapper modules (`Listmonk CloudRun`, `Listmonk GKE`) manage GCS bucket provisioning via the `storage_buckets` and `gcs_volumes` variables directly.
+
+If uploads bucket provisioning is desired, configure `storage_buckets` in the wrapper module and mount the resulting bucket via `gcs_volumes` at `/listmonk/uploads`.
+
+---
+
+## 3. Input Variables
+
+### Application
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `application_name` | `string` | `"listmonk"` | Application name. Used as a prefix for the admin password secret. |
+| `application_version` | `string` | `"latest"` | Listmonk Docker image tag. Set to a specific version (e.g., `"v3.0.0"`) for pinned production deployments. |
+| `display_name` | `string` | `"Listmonk"` | Human-readable display name. |
+| `description` | `string` | `"Listmonk is a self-hosted newsletter and mailing list manager"` | Application description. Used in the `db-init` job description. |
+| `db_name` | `string` | `"listmonk"` | PostgreSQL database name. Must match `application_database_name` in the wrapper module. |
+| `db_user` | `string` | `"listmonk"` | PostgreSQL application user. Must match `application_database_user` in the wrapper module. |
+| `admin_username` | `string` | `"listmonk"` | Listmonk admin username created on first boot via `--install`. |
+| `cpu_limit` | `string` | `"1000m"` | Container CPU limit. |
+| `memory_limit` | `string` | `"512Mi"` | Container memory limit. |
+| `min_instance_count` | `number` | `1` | Minimum running instances. |
+| `max_instance_count` | `number` | `3` | Maximum running instances. |
+| `enable_cloudsql_volume` | `bool` | `true` | Mount Cloud SQL Auth Proxy sidecar socket. |
+| `enable_image_mirroring` | `bool` | `true` | Mirror the container image to Artifact Registry before deployment. |
+| `environment_variables` | `map(string)` | `{}` | Additional environment variables merged into the Listmonk config. |
+| `secret_environment_variables` | `map(string)` | `{}` | Additional secret env vars. `LISTMONK_app__admin_password` is always included from the module-managed secret. |
+| `initialization_jobs` | `list(any)` | `[]` | Custom init jobs; empty triggers the default `db-init` job. |
+| `startup_probe` | `object` | See §4 | Startup health probe configuration. |
+| `liveness_probe` | `object` | See §4 | Liveness health probe configuration. |
+
+### Infrastructure
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `project_id` | `string` | — | GCP project ID. **Required.** Used to create the admin password secret. |
+| `resource_prefix` | `string` | — | Prefix for Secret Manager secret names. **Required.** Typically `app<listmonk><tenant><id>`. |
+| `tenant_deployment_id` | `string` | `"demo"` | Deployment environment identifier. |
+| `region` | `string` | `"us-central1"` | GCP region for resource deployment. |
+| `labels` | `map(string)` | `{}` | Labels applied to created resources (secrets). |
+| `gcs_volumes` | `list(object)` | `[]` | GCS Fuse volume mounts (name, bucket_name, mount_path, readonly, mount_options). |
+
+---
+
+## 4. Health Probes
+
+Listmonk exposes a dedicated `/api/health` HTTP endpoint that returns `{"healthy": true}` with HTTP 200 when the application and its database connection are operational. Both probe types use this endpoint.
+
+| Probe | Path | Initial Delay | Timeout | Period | Failure Threshold | Purpose |
+|---|---|---|---|---|---|---|
+| **Startup** | `/api/health` | 30s | 5s | 10s | 30 | Allows up to 330 seconds total (30s delay + 30 × 10s) for Listmonk to complete `--install` schema creation on first boot |
+| **Liveness** | `/api/health` | 30s | 5s | 30s | 3 | Restarts the container if Listmonk becomes unresponsive or loses database connectivity |
+
+**Comparison with Ghost Common probes:**
+
+| Field | Listmonk Common | Ghost Common | Reason |
+|---|---|---|---|
+| `path` | `/api/health` | `/` | Listmonk exposes a dedicated health endpoint; Ghost does not |
+| Startup `initial_delay_seconds` | `30` | `90` | Listmonk's Go binary starts in seconds; Ghost's Node.js theme compilation takes much longer |
+| Startup `failure_threshold` | `30` | `10` | Listmonk schema installation can take time on a fresh database; the high threshold tolerates slow first-boot `--install` runs |
+| Liveness `period_seconds` | `30` | `30` | Same — check every 30 seconds once running |
+
+The startup probe's generous `failure_threshold = 30` (giving up to 5.5 minutes of grace) accommodates slow PostgreSQL instances and large schema migrations on first boot without triggering a premature container restart.
+
+---
+
+## 5. Initialization Job
+
+One `db-init` job runs by default (when `initialization_jobs = []`):
+
+| Field | Value |
+|---|---|
+| Image | `postgres:15-alpine` |
+| Script | `scripts/db-init.sh` |
+| Secrets required | `DB_PASSWORD` (app user), optionally `ROOT_PASSWORD` (superuser for user creation) |
+| `execute_on_apply` | `true` |
+| Timeout | 600s, 1 retry |
+
+`db-init.sh` behaviour:
+1. Resolves the target PostgreSQL host from `DB_HOST` or falls back to `DB_IP`.
+2. Detects connection type: if `DB_HOST` starts with `/`, uses a Unix socket (`PGHOST`); otherwise uses TCP.
+3. Polls PostgreSQL using `pg_isready` (up to 30 retries, 2s apart).
+4. Creates the `listmonk` database user if it does not exist, assigning the password from `DB_PASSWORD`.
+5. Creates the `listmonk` database owned by the application user if it does not exist.
+6. Verifies the application user can connect to the database.
+7. Signals Cloud SQL Proxy shutdown after completion.
+
+**Listmonk handles schema installation itself.** The `db-init` job only creates the database and user — it does not run SQL migrations. On first startup, Listmonk detects a fresh database and automatically runs `--install` to create tables, indexes, seed data, and the admin user defined by `admin_username` / `LISTMONK_app__admin_password`.
+
+Override `initialization_jobs` with a non-empty list to replace this default with custom jobs. Each custom job must specify at least one of `command`, `args`, or `script_path`.
+
+---
+
+## 6. Secret Manager Secret
+
+`Listmonk Common` creates one Secret Manager secret:
+
+| Secret Name Pattern | Value | How Set |
+|---|---|---|
+| `<resource_prefix>-admin-password` | Random password (alphanumeric, 32 characters) | Auto-generated by the module using `random_password` on first apply |
+
+This secret is injected into the container as `LISTMONK_app__admin_password` via the `secret_ids` output. Cloud Run / GKE retrieves the secret value at revision/pod start time from Secret Manager — it is never written to Terraform state.
+
+The admin username is set via the plain-text `LISTMONK_app__admin_username` environment variable (from `admin_username`, default `"listmonk"`).
+
+---
+
+## 7. Environment Variables
+
+Listmonk reads configuration from environment variables using double-underscore notation, mapping to nested config keys:
+
+| Environment Variable | Default Value | Purpose |
+|---|---|---|
+| `LISTMONK_app__address` | `"0.0.0.0:9000"` | Bind address and port for the Listmonk HTTP server |
+| `LISTMONK_app__admin_username` | `var.admin_username` (default `"listmonk"`) | Admin UI login username |
+| `LISTMONK_db__port` | `"5432"` | PostgreSQL port |
+| `LISTMONK_db__ssl_mode` | `"disable"` | SSL mode for the Cloud SQL Auth Proxy connection (proxy handles TLS) |
+| `LISTMONK_db__user` | `var.db_user` (default `"listmonk"`) | PostgreSQL connection user |
+| `LISTMONK_db__database` | `var.db_name` (default `"listmonk"`) | PostgreSQL database name |
+| `LISTMONK_upload__provider` | `"filesystem"` | Upload storage provider. `"filesystem"` stores files on the mounted path |
+| `LISTMONK_upload__filesystem__upload_path` | `"/listmonk/uploads"` | Path where uploads are stored. Mount a GCS Fuse volume at this path for persistence |
+
+**Secret env vars (from `secret_ids`):**
+
+| Environment Variable | Source |
+|---|---|
+| `LISTMONK_app__admin_password` | Secret Manager secret managed by this module |
+| `LISTMONK_db__password` | Platform-injected database password secret (managed by `App CloudRun`/`App GKE`) |
+
+**Note on DB_HOST:** The `LISTMONK_db__host` environment variable is populated at runtime via the platform entrypoint script. When `enable_cloudsql_volume = true`, the Auth Proxy socket path is mapped to the appropriate Listmonk config key.
+
+---
+
+## 8. Scripts and Container Image
+
+All supporting files are in `scripts/`. The `scripts/` directory is used as the Docker build context.
+
+### `Dockerfile`
+
+Wraps the official `listmonk/listmonk:<version>` image:
+- Installs `curl` and `netcat-openbsd` for health check and readiness tooling.
+- Copies `entrypoint.sh` to `/usr/local/bin/custom-entrypoint.sh`.
+- Sets the working directory to `/listmonk`.
+- Exposes port `9000`.
+- Uses `custom-entrypoint.sh` as the entrypoint.
+
+### `entrypoint.sh`
+
+Runs before Listmonk to configure the runtime environment:
+
+**1. Database variable mapping**: Translates platform-injected env vars into Listmonk's double-underscore notation:
+
+| Platform env var | Listmonk config key |
+|---|---|
+| `DB_HOST` (TCP) | `LISTMONK_db__host` |
+| `DB_HOST` (socket path starting with `/`) | Handled via PGHOST for Unix socket |
+| `DB_USER` | `LISTMONK_db__user` |
+| `DB_NAME` | `LISTMONK_db__database` |
+| `LISTMONK_db__password` | Passed through directly (already in Listmonk format) |
+
+**2. First-boot detection**: Checks whether the Listmonk schema tables exist in the PostgreSQL database. If not, adds `--install` to the startup command to trigger schema installation and admin user creation.
+
+**3. Startup**: Delegates to the Listmonk binary (`exec listmonk "$@"`).
+
+### `db-init.sh`
+
+PostgreSQL database and user creation script. See §5 for full behaviour description.
+
+---
+
+## 9. Platform-Specific Differences
+
+| Aspect | Listmonk CloudRun | Listmonk GKE |
+|---|---|---|
+| Secret injection | `App CloudRun` injects `LISTMONK_app__admin_password` from Secret Manager natively at revision start | `App GKE` uses the Secrets Store CSI Driver to mount secrets from Secret Manager as env vars in pods |
+| `DB_HOST` | Cloud SQL Auth Proxy socket path (Unix socket under `/cloudsql`) | Cloud SQL private IP address (TCP connection) |
+| `min_instance_count` | Default `1` (configurable to `0` for scale-to-zero) | Default `1` (always one pod running) |
+| Health probes | Cloud Run startup and liveness probes via `App CloudRun` | Kubernetes `startupProbe` and `livenessProbe` via `App GKE` |
+| Session affinity | Handled at Cloud Run level | Kubernetes Service `sessionAffinity: ClientIP` for consistent admin session routing |
+| Upload persistence | GCS Fuse volume via `gcs_volumes` (Cloud Run Gen2) | GCS Fuse CSI Driver via `gcs_volumes` (GKE native) |
+
+---
+
+## 10. Implementation Pattern
+
+```hcl
+# How Listmonk_CloudRun instantiates Listmonk_Common
+
+module "listmonk_app" {
+  source = "../Listmonk_Common"
+
+  project_id           = var.project_id
+  resource_prefix      = local.resource_prefix
+  tenant_deployment_id = var.tenant_deployment_id
+  region               = var.region
+  labels               = var.resource_labels
+
+  application_version    = var.application_version
+  db_name                = var.db_name
+  db_user                = var.db_user
+  admin_username         = var.admin_username
+  cpu_limit              = var.cpu_limit
+  memory_limit           = var.memory_limit
+  min_instance_count     = var.min_instance_count
+  max_instance_count     = var.max_instance_count
+  description            = var.description
+  startup_probe          = var.startup_probe
+  liveness_probe         = var.liveness_probe
+  enable_cloudsql_volume = var.enable_cloudsql_volume
+  enable_image_mirroring = var.enable_image_mirroring
+  gcs_volumes            = var.gcs_volumes
+}
+
+# The wrapper assembles the four locals consumed by App_CloudRun
+locals {
+  application_modules    = { listmonk = module.listmonk_app.config }
+  module_env_vars        = {}
+  module_secret_env_vars = module.listmonk_app.secret_ids
+  module_storage_buckets = module.listmonk_app.storage_buckets
+  scripts_dir            = abspath("${path.module}/../Listmonk_Common/scripts")
+}
+
+# Passed to App_CloudRun via application_config
+module "app_cloudrun" {
+  source = "../App_CloudRun"
+
+  application_config     = local.application_modules
+  module_storage_buckets = local.module_storage_buckets
+  scripts_dir            = local.scripts_dir
+  # ... other inputs
+}
+```
+
+---
+
+## 11. Exploring with the GCP Console
+
+After deployment, use the GCP Console to verify the secrets and configuration generated by `Listmonk Common`.
+
+**Secret Manager**
+
+Navigate to **Secret Manager** in the console. Filter by the deployment name or `listmonk` to locate the module-managed secrets. The admin password secret is relevant to this module:
+
+- `<prefix>-admin-password` (or `LISTMONK_app__admin_password`-style name depending on naming convention) — select the secret, click **Secret versions**, and verify that version 1 exists with status `Enabled`. The **Permissions** tab shows that the Cloud Run or GKE service account has `Secret Manager Secret Accessor` (`roles/secretmanager.secretAccessor`) — this was granted automatically by `App CloudRun`/`App GKE`.
+
+Do not view the secret value in the console for production deployments. Retrieve it only for initial admin login or break-glass access.
+
+**Cloud Run environment (verifying variable injection)**
+
+Navigate to **Cloud Run** → select the Listmonk service → **YAML tab**. Locate the `env` section in the container spec. Confirm:
+- `LISTMONK_app__address`, `LISTMONK_db__port`, `LISTMONK_db__ssl_mode`, `LISTMONK_db__user`, `LISTMONK_db__database`, `LISTMONK_upload__provider`, `LISTMONK_upload__filesystem__upload_path` appear as plain-text `value:` env vars.
+- `LISTMONK_app__admin_password` and `LISTMONK_db__password` appear as `valueFrom.secretKeyRef:` entries — confirming they are sourced from Secret Manager and not stored in plaintext in the revision spec.
+
+**Listmonk Admin UI**
+
+After deployment, the Listmonk admin interface is accessible at the Cloud Run service URL (from the `service_url` output or the **Cloud Run** console). Navigate to the root path `/` — Listmonk serves the admin UI directly. Log in with the `admin_username` (default `listmonk`) and the password from Secret Manager.
+
+From the admin UI, verify:
+- **Settings → General**: Confirms the application address and root URL.
+- **Settings → Performance**: Shows concurrency and batch size defaults for campaign sending.
+- **Lists**: Initially empty. Create a list to begin subscriber management.
+
+---
+
+## 12. Exploring with gcloud
+
+```bash
+# List all Secret Manager secrets in the project related to this Listmonk deployment
+gcloud secrets list \
+  --project=PROJECT_ID \
+  --filter="name~listmonk" \
+  --format="table(name,replication.automatic.customerManagedEncryption,createTime)"
+
+# Confirm a secret version exists and is enabled for the admin password secret
+gcloud secrets versions list SECRET_NAME \
+  --project=PROJECT_ID \
+  --format="table(name,state,createTime,destroyTime)"
+
+# Check which service accounts have access to the admin password secret
+gcloud secrets get-iam-policy SECRET_NAME \
+  --project=PROJECT_ID
+
+# View the Listmonk container's environment variable names (not values)
+# to confirm all required Listmonk config vars are present
+gcloud run services describe SERVICE_NAME \
+  --region=REGION \
+  --project=PROJECT_ID \
+  --format="yaml(spec.template.spec.containers[0].env)"
+
+# Verify Secret Manager secret accessor binding for the Cloud Run service account
+gcloud projects get-iam-policy PROJECT_ID \
+  --flatten="bindings[].members" \
+  --filter="bindings.role=roles/secretmanager.secretAccessor" \
+  --format="table(bindings.members)"
+
+# Access the admin password for initial login (use with caution)
+gcloud secrets versions access latest \
+  --secret=ADMIN_PASSWORD_SECRET_NAME \
+  --project=PROJECT_ID
+
+# Verify the PostgreSQL database and user exist after db-init completes
+# (requires Cloud SQL Auth Proxy access or a bastion)
+gcloud sql databases list \
+  --instance=SQL_INSTANCE_NAME \
+  --project=PROJECT_ID
+
+gcloud sql users list \
+  --instance=SQL_INSTANCE_NAME \
+  --project=PROJECT_ID \
+  --format="table(name,host,type)"
+```

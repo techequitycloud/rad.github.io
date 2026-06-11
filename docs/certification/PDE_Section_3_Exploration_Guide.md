@@ -1,82 +1,174 @@
 ---
-title: "PDE Certification Preparation Guide: Section 3 — Applying site reliability engineering practices (~18% of the exam)"
-sidebar_label: "PDE Section 3 Exploration Guide"
+title: "PDE Certification Preparation Guide: Section 3 \u2014 Applying site reliability engineering practices (~18% of the exam)"
 ---
 
 # PDE Certification Preparation Guide: Section 3 — Applying site reliability engineering practices (~18% of the exam)
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud DevOps Engineer (PDE) certification explore Section 3 of the exam. It walks you through how SRE concepts are practically implemented in the provided Terraform codebases (`modules/App_CloudRun` and `modules/App_GKE`). By exploring the GCP Console and corresponding code, you will gain hands-on context for these critical SRE topics.
-
-Three modules are relevant to this section: **App CloudRun**, which deploys serverless containerised applications on Cloud Run; **App GKE**, which deploys containerised workloads on GKE Autopilot; and **App GCP**, which provides the shared foundational infrastructure including monitoring and alerting.
+This guide covers exam Section 3 using the RAD foundation modules. SLO and error-budget *theory* is concept-only here (the modules emit the metrics SLIs are built from, but create no SLO objects), while service lifecycle management and incident mitigation are fully hands-on through `App_CloudRun` scaling controls, the `App_GKE` HPA/VPA/PDB stack, and instant traffic-based rollback. Deploy the **GKE release engineer** profile plus a Cloud Run service (any profile) from the [Lab Map](PDE_Certification_Guide.md).
 
 ---
 
 ## 3.1 Balancing change, velocity, and reliability of the service
 
-**Concept:** Defining and measuring Service Level Indicators (SLIs), establishing Service Level Objectives (SLOs) and Service Level Agreements (SLAs), and using error budgets to govern the trade-off between deploying new features (velocity) and maintaining system reliability.
+> ⏱ ~60 min (mostly study + one console exercise) · 💰 no additional cost · ⚙️ Requires: Observability baseline profile (for the metrics SLOs are built on)
 
-The relationship between these SRE concepts is foundational to the PDE exam:
-- **SLI (Service Level Indicator):** A quantitative measure of service behaviour. Examples: request success rate, p99 latency, availability percentage.
-- **SLO (Service Level Objective):** The target value or range for an SLI, agreed internally by the engineering team. Example: "99.9% of requests to `/checkout` return HTTP 2xx within 500ms, measured over a rolling 30-day window."
-- **SLA (Service Level Agreement):** A contractual commitment to customers, typically less strict than the internal SLO to provide an operational buffer. Example: "We guarantee 99.5% availability." The SLA is typically 10–20% less strict than the SLO.
-- **Error Budget:** The permitted amount of unreliability derived from the SLO. If the SLO is 99.9% availability, the error budget is 0.1% — approximately 43 minutes of downtime per month. The error budget is consumed by outages, risky deployments, and chaos experiments. When the error budget is exhausted (or burn rate is too high), the team should freeze feature releases and focus on reliability work.
+**Why the exam cares** — This is core SRE: SLIs measure behavior, SLOs set internal targets, SLAs are external contracts (always looser than the SLO), and the error budget (1 − SLO) is the objective currency that arbitrates between shipping features and hardening reliability. The exam tests the *decision* layer: what happens when the budget is exhausted, which burn rate should page, and who owns the error-budget policy.
 
-**In the RAD UI:**
-Review `monitoring.tf` in the `App_CloudRun` and `App_GKE` modules. These modules configure monitoring via the shared `app_monitoring` module. The metrics tracked — `run.googleapis.com/container/cpu/utilizations` (Cloud Run) and `kubernetes.io/container/cpu/limit_utilization` (GKE) — form the raw telemetry that SLIs are derived from. The threshold-based alert policies (e.g., `cpu_threshold = 0.9`) operationalise SLOs: when the threshold is breached, the error budget is being consumed.
+**How RAD implements it** — Not implemented as SLOs: no Cloud Monitoring SLO or service objects exist in the modules. The nearest adjacent capability is the raw SLI material and threshold alerting: the monitoring layer creates fixed CPU and memory utilization alerts at 0.9 (90%) per platform, the `alert_policies` variable lets you alert on any metric (e.g., `run.googleapis.com/request_count` or `request_latencies`), and the auto-generated dashboards chart request count and p95 latency — the exact signals you'd select as availability and latency SLIs.
 
-**Console Exploration:**
-*   Navigate to **Monitoring > Dashboards** to view telemetry data for Cloud Run and GKE. Observe the request count, latency percentile (p50/p95/p99), and error rate charts — these are the raw signals from which SLIs are constructed.
-*   Navigate to **Monitoring > SLOs**. If an SLO has been created for the Cloud Run service, the SLO page shows: the current compliance percentage (e.g., 99.94%), the remaining error budget as a percentage and absolute time, and the error budget burn rate over the past 1 hour, 6 hours, and 24 hours.
-*   To create an SLO manually: select **Monitoring > SLOs > Create SLO**. Choose the Cloud Run service as the resource, select **Request-based** as the SLI type, and configure a good-request definition (HTTP 2xx responses) and a performance goal (e.g., 99.9% over 30 days).
-*   Navigate to **Monitoring > Alerting** and review the multi-burn-rate alert policies. A well-configured SLO produces two alerts: a fast burn alert (consuming error budget at 14× the sustainable rate over 1 hour — page the on-call immediately) and a slow burn alert (consuming at 6× the sustainable rate over 6 hours — create a ticket for the next business day).
+**Try it**
+1. With a Cloud Run service deployed and receiving some traffic, create a real SLO manually on top of the module's service: **Console > Monitoring > Services > Define service**, pick the Cloud Run service, then **Create SLO** → SLI type **Availability** (request-based) → goal **99.9%** over a rolling 30 days.
+2. Add the two standard burn-rate alerts on that SLO (fast burn: 14.4× over 1h; slow burn: 6× over 6h) from the SLO's **Alerts** tab.
+3. Inspect what the console built, via the API:
 
-**Real-world example:** A streaming media company defines an SLO for their video playback API: 99.95% of requests must return HTTP 2xx within 200ms, measured over a rolling 28-day window. This gives them an error budget of 0.05% — about 20 minutes of allowed errors per month. The engineering team uses the error budget as a deployment gate: when the budget is above 50% consumed, feature deployments are allowed. When it drops below 50%, only bug fixes and reliability improvements are permitted. When the budget is fully consumed, all feature work stops until the 28-day window rolls forward and the budget resets. This policy aligns development velocity with operational risk — the team does not need management approval for each release; the error budget provides an objective, automated governance mechanism.
+```bash
+gcloud monitoring services list --project=$GOOGLE_PROJECT_ID
+gcloud alpha monitoring policies list \
+  --filter="displayName~'burn rate'" --format="value(displayName)"
+```
+
+4. Generate traffic (e.g., `for i in $(seq 1 200); do curl -s -o /dev/null <service-url>; done`) and watch the error-budget gauge move on the SLO page.
+5. You know it worked when the SLO page shows compliance %, remaining error budget, and burn-rate charts for the module-deployed service.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: Your SLO is 99.9% availability over 30 days and an incident just consumed 50% of the remaining error budget in 2 hours. Per standard SRE policy, what should the team do about tomorrow's planned feature release?&lt;/summary>
+
+A: Pause it. A burn that fast means the sustainable rate is massively exceeded; the error-budget policy trades release velocity for reliability work until the budget recovers. This is the whole point of the budget — an objective, pre-agreed gate instead of a judgment call mid-incident.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: Why is the SLA always set looser than the SLO (e.g., SLA 99.5% vs. SLO 99.9%)?&lt;/summary>
+
+A: The SLO is the internal target with consequences you control (release freezes); the SLA carries external penalties (refunds, contracts). The gap is the operational buffer: you want to breach your internal target, react, and recover well before any contractual breach.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q3: Why page on error-budget *burn rate* instead of on the raw error percentage?&lt;/summary>
+
+A: Burn-rate alerting scales urgency to budget impact: a 14× burn over an hour threatens the monthly budget and deserves a page, while a slow 1.5× burn is a ticket. Raw-threshold alerts either page too often (noise) or too late (budget already gone) — the multiwindow, multi-burn-rate pattern from the SRE Workbook fixes both.
+&lt;/details>
+
+**Beyond the modules** — Study: Cloud Monitoring SLO monitoring (request-based vs. windows-based SLIs), the SRE Workbook chapters on alerting on SLOs and error-budget policy, and toil measurement. In a scratch project, try `gcloud monitoring services create` / the SLO REST API to script what you clicked in the console — the exam may reference SLO definitions in JSON form.
+
+**⚠️ Exam trap** — 99.9% monthly ≈ 43 minutes of downtime, 99.99% ≈ 4.3 minutes. Exam answers often hinge on whether a proposed maintenance window or recovery time even *fits* in the stated SLO's budget.
 
 ---
 
 ## 3.2 Managing service lifecycle
 
-**Concept:** Planning capacity, managing autoscaling to match demand, and overseeing the complete service lifecycle from initial deployment through graceful retirement.
+> ⏱ ~75 min · 💰 moderate (GKE replicas) · ⚙️ Requires: GKE release engineer profile + any Cloud Run deployment
 
-**In the RAD UI:**
+**Why the exam cares** — Capacity management questions test which knob solves which problem: horizontal scaling for load, vertical right-sizing for efficiency, minimum instances for latency, maximums for cost protection. On GKE you must know HPA vs. VPA semantics (and that they conflict on the same resource metric); on Cloud Run, scale-to-zero trade-offs.
 
-*   **Cloud Run capacity management:** Review `variables.tf` and `service.tf` in the `App_CloudRun` module. The `min_instance_count` and `max_instance_count` variables control the scaling floor and ceiling. `min_instance_count = 0` enables scale-to-zero (lowest cost, tolerates cold start latency). `min_instance_count >= 1` keeps instances always warm (eliminates cold starts, higher baseline cost). `max_instance_count` prevents runaway scaling and cost surprises under unexpected load.
+**How RAD implements it**
 
-*   **GKE capacity management:** In the `App_GKE` module, resource requests and limits are defined in `deployment.tf` or `statefulset.tf` via the `container_resources` variable. These values establish the capacity contract with GKE Autopilot — the cluster provisions underlying node capacity to satisfy the aggregate requests of all scheduled pods.
+| Control | Cloud Run (`App_CloudRun`) | GKE (`App_GKE`) |
+|---|---|---|
+| Floor | `min_instance_count` (default `0` — scale-to-zero) | `min_instance_count` (default `1`) → HPA `minReplicas` |
+| Ceiling | `max_instance_count` (default `1`) | `max_instance_count` (default `3`) → HPA `maxReplicas` |
+| Horizontal trigger | request load (managed by Cloud Run) | a Horizontal Pod Autoscaler: CPU target 70%, memory target 80% utilization |
+| Vertical | `container_resources` (`cpu_limit` default `1000m`, `memory_limit` default `512Mi`) | `container_resources`, or `enable_vertical_pod_autoscaling` (default `false`) → VPA with `updateMode: Auto`, floor `10m`/`32Mi` |
+| Readiness gating | `startup_probe_config` (HTTP `/healthz`, 10s period, 10 failures) | `startup_probe_config` (10s delay/10s period) |
+| Liveness | `health_check_config` (30s period, 3 failures → restart) | `health_check_config` (15s delay/30s period) |
 
-    Autoscaling in GKE has two distinct dimensions:
-    - **Horizontal Pod Autoscaler (HPA):** Scales the *number of pod replicas* based on observed CPU or memory utilisation relative to the defined requests. Configured via `min_instance_count` and `max_instance_count`. If 10 pods are running at 80% CPU and the HPA target is 70%, HPA adds more pods to distribute the load.
-    - **Vertical Pod Autoscaler (VPA):** Adjusts the *CPU and memory resource requests* of each pod based on observed historical usage. VPA does not change the number of replicas — it right-sizes what each pod is allocated. When the `enable_vertical_pod_autoscaling` variable is set, VPA analyses pod resource consumption and updates the requests over time, preventing over-provisioning (wasted cost) and under-provisioning (pod eviction under memory pressure). VPA and HPA address different scaling dimensions and can be used together.
+Two wiring details worth knowing: the GKE HPA is created only when `max_instance_count > 1` **and** VPA is disabled — the module never runs HPA and VPA together on the same workload; and the HPA carries a plan-time precondition that `min_instance_count <= max_instance_count`.
 
-**Console Exploration:**
-*   Navigate to **Cloud Run**, select your service, and view the **Revisions** tab to inspect the configured `min_instance_count` and `max_instance_count` scaling limits. View the **Metrics** tab and observe the `Instance count` chart — watch how instances scale up under load and scale down (or to zero) when traffic drops.
-*   Navigate to **Kubernetes Engine > Workloads**, select your deployment, and review the **Autoscaling** section under the **Details** tab to see the HPA configuration (min replicas, max replicas, current CPU target). Click into a pod and view its YAML to see `resources.requests` and `resources.limits` — the values that VPA may adjust over time if VPA is enabled.
-*   Navigate to **Kubernetes Engine > Workloads > Observability** and view the CPU and memory usage charts for the deployment over time. Compare actual usage against the configured requests — significant headroom indicates the requests are over-provisioned and could be right-sized.
+**Try it**
+1. On GKE, inspect the module's autoscaling stack:
 
-**Real-world example:** An e-commerce company's GKE-deployed order service starts with manually tuned resource requests of 500m CPU and 512Mi memory per pod, based on estimates. After one week in production, the VPA recommends 200m CPU and 384Mi memory based on observed P95 usage. The team applies the VPA recommendation — reducing per-pod cost by 30% and allowing the same GKE Autopilot cluster to schedule 40% more pods for the same cost. Simultaneously, the HPA is configured to maintain 60% average CPU utilisation — during Black Friday, it scales from 5 to 35 pods in under 2 minutes as traffic surges 7×, with zero manual intervention and no degradation in response time.
+```bash
+kubectl get hpa -n <namespace>
+kubectl describe hpa <service-name> -n <namespace>   # see the 70%/80% targets
+```
+
+2. Load the service and watch HPA react (Autopilot provisions node capacity automatically):
+
+```bash
+kubectl run loadgen --image=busybox -n <namespace> --restart=Never -- \
+  /bin/sh -c "while true; do wget -q -O- http://<service-name>; done"
+kubectl get hpa <service-name> -n <namespace> --watch
+```
+
+3. Switch to vertical right-sizing: set `enable_vertical_pod_autoscaling = true` in the portal and apply — note in the plan that the HPA is destroyed and a `VerticalPodAutoscaler` appears. Check its recommendations after some load: `kubectl get vpa -n <namespace> -o yaml`.
+4. On Cloud Run, set `min_instance_count = 1` and apply, then compare cold-start latency before/after with `curl -w "%{time_total}\n" -o /dev/null -s <url>` after an idle period.
+5. You know it worked when the HPA scales replicas toward `max_instance_count` under load, the VPA emits target requests after observation, and the warmed Cloud Run service answers without multi-second first-request latency.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: A GKE service OOM-kills under steady (not spiky) traffic. Do you reach for HPA or VPA, and why?&lt;/summary>
+
+A: VPA (or manually raising `container_resources` memory): the per-pod allocation is wrong, not the replica count. HPA on memory would add replicas, masking the problem expensively. VPA observes real usage and raises the request — the right vertical fix for a sizing error. Note the module enforces choosing one: enabling VPA removes the HPA.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: Why does `max_instance_count` matter on a pay-per-use platform like Cloud Run where idle costs nothing?&lt;/summary>
+
+A: It caps blast radius in both directions: runaway cost under a traffic spike or retry storm, and overload protection for downstream fixed-capacity dependencies (Cloud SQL `max_connections` is 200 by default in `Services_GCP`) that unlimited Cloud Run scaling would exhaust.
+&lt;/details>
+
+**Beyond the modules** — Cloud Run concurrency tuning (requests per instance) isn't exposed as a module variable; study how concurrency interacts with CPU allocation and instance count (`gcloud run services update --concurrency=...` in a scratch project). Also study GKE cluster-level autoscaling concepts (node auto-provisioning) even though Autopilot abstracts them away.
+
+**⚠️ Exam trap** — HPA percentage targets are relative to the *request*, not the limit. A pod with a low CPU request hits "70% utilization" almost immediately; wrong requests make HPA behavior look broken.
 
 ---
 
 ## 3.3 Mitigating incident impact on users
 
-**Concept:** Reducing the blast radius and duration of incidents through traffic draining, traffic redirection, capacity injection, and rapid rollback to previous known-good states.
+> ⏱ ~60 min · 💰 low · ⚙️ Requires: Pipeline engineer + GKE release engineer profiles
 
-**In the RAD UI:**
-In `App_CloudRun/service.tf`, the `traffic` block supports traffic splitting and canary deployments, allowing operators to redirect traffic away from a problematic revision instantly. Cloud Deploy retains the prior release for fast rollback. Cloud Run keeps all previous revisions available — any named revision can receive traffic at any time without rebuilding.
+**Why the exam cares** — During an incident, mitigation beats diagnosis: drain traffic away from the bad version, roll back, shed abusive load, keep capacity alive through infrastructure disruption. The exam also covers the human side — incident command roles, communication, and blameless postmortems — which no Terraform module can deploy.
 
-**Console Exploration:**
-*   Navigate to **Cloud Run** in the GCP Console, select a service, and explore the **Revisions** tab. Observe the **Manage traffic** button — click it to see how traffic can be redistributed between any combination of existing revisions by adjusting percentage sliders. This can be done in under 30 seconds without a redeployment.
-*   Navigate to **Cloud Deploy > Delivery pipelines**, select your pipeline, and inspect a specific rollout. Observe the **Rollback** button — clicking it immediately creates a new rollout targeting the prior release's image digest, without requiring a new Cloud Build execution.
-*   For GKE, navigate to **Kubernetes Engine > Workloads** and select a deployment. From the **Actions** menu, select **Rolling update** — this triggers a Kubernetes rolling update that replaces pods incrementally, keeping a configurable percentage of pods available throughout the update. If the new version shows errors, `kubectl rollout undo deployment/<name>` immediately reverts to the previous ReplicaSet.
+**How RAD implements it**
 
-**Real-world example:** At 14:37 on a Tuesday, a newly deployed Cloud Run revision of a payment service begins returning HTTP 500 errors for 3% of requests — an error budget burn rate of 60× the sustainable rate, triggering the fast-burn SLO alert. The on-call engineer receives a PagerDuty notification within 2 minutes of the error spike. They navigate to **Cloud Run > Revisions**, click **Manage traffic**, and shift 100% of traffic back to the previous revision in 20 seconds — the error rate drops immediately to zero. Total user impact: 7 minutes of elevated error rate. The engineer then investigates the failed revision's logs in **Logs Explorer** to identify the root cause (a missing database index on a new query) before re-deploying with the fix. The post-incident review documents the timeline, the detection method (SLO multi-burn-rate alert), and the remediation steps — feeding improvements back into the runbook.
+- **Instant revision rollback (Cloud Run)**: every retained revision (`max_revisions_to_retain`, default `7`) is a rollback target; repoint `traffic_split` (or use the console traffic manager) — seconds, no build.
+- **Pipeline rollback (Cloud Deploy)**: each target retains release history; `gcloud deploy targets rollback` redeploys the prior release's pinned digests.
+- **Workload rollback (GKE)**: `kubectl rollout undo` reverts to the previous ReplicaSet; the direct CI/CD path (`kubectl set image`) keeps rollout history intact.
+- **Availability under disruption**: `enable_pod_disruption_budget` (default `true`) creates a PDB with `pdb_min_available` (default `"1"`) — automatically skipped when `max_instance_count = 1`, where a PDB would block node drains forever; created per Cloud Deploy stage namespace too. `enable_topology_spread` (default `false`) spreads replicas across zones.
+- **Failure containment at the edge**: `enable_cloud_armor` (default `false`) fronts Cloud Run with a global load balancer whose policy includes per-IP rate limiting — 500 requests/60s, exceed → deny with HTTP 429 and a 300s ban — plus OWASP preconfigured WAF rules and Adaptive Protection for L7 DDoS. When enabled, `ingress_settings` is forced to `internal-and-cloud-load-balancing` so the WAF can't be bypassed via the direct `*.run.app` URL.
+- **Self-healing probes**: liveness failures restart containers (3 consecutive failures on Cloud Run's `health_check_config`); startup probes keep traffic off instances that aren't ready.
 
-### 💡 Additional SRE Practice Objectives & Learning Guidelines
+**Try it**
+1. Stage a "bad deploy" on Cloud Run: push a change that returns 500s (or just treat the latest revision as bad), then execute the mitigation:
 
-*   **Toil Reduction:** SRE practice emphasises eliminating *toil* — repetitive, manual, automatable operational work that does not provide lasting value. For a DevOps engineer managing Cloud Run or GKE, common sources of toil include: manual deployment approvals for non-production environments, manually updating image tags in deployment manifests, and manually responding to predictable scaling events. For each toil item you identify, evaluate whether a Cloud Deploy automation rule, a Cloud Scheduler job, or an autoscaler can eliminate the manual step entirely.
+```bash
+gcloud run services update-traffic <service> --region=us-central1 \
+  --to-revisions=<previous-revision>=100
+```
 
-*   **Chaos Engineering:** Controlled fault injection is a practice for proactively discovering reliability weaknesses before they cause production incidents. Google Cloud supports this through: (1) **Cloud Run traffic splitting** — deliberately sending a percentage of traffic to a slow or erroring revision to measure system behaviour; (2) **Fault injection with Cloud Service Mesh** — for GKE workloads using Cloud Service Mesh, inject HTTP faults (delays or abort codes) into specific traffic paths to verify that downstream services handle failures gracefully. Navigate to **Cloud Service Mesh > Traffic management** to explore fault injection policy configuration.
+   Time yourself — this is the "under a minute" mitigation the exam expects.
+2. On GKE, break and revert a deployment:
 
-*   **Incident Post-Mortems (Blameless):** The SRE discipline of blameless post-mortems is a key exam topic. After every significant incident, document: (1) the timeline of events from symptom detection to resolution; (2) contributing factors (not root causes — complex systems have multiple contributing factors, not a single root cause); (3) action items with owners and deadlines. The goal is systemic improvement, not individual blame. Google's SRE Workbook provides a post-mortem template; navigate to **Cloud Logging > Log Analytics** to run SQL queries over historical log data as part of a post-mortem investigation.
+```bash
+kubectl set image deployment/<name> <app>=badregistry.example/nope:1 -n <ns>
+kubectl rollout status deployment/<name> -n <ns>   # watch it stall on ImagePullBackOff
+kubectl rollout undo deployment/<name> -n <ns>
+```
 
-*   **Release Velocity and Error Budget Policy:** Formalise the relationship between error budget consumption and deployment frequency. An error budget policy document (owned by the SRE and development teams jointly) should specify: what deployment gate applies at 0–50% budget consumption (normal velocity), 50–100% (slow down, only critical features), and 100%+ (freeze all feature deployments, prioritise reliability). This policy transforms reliability from a subjective judgment into an objective, data-driven team agreement.
+   Note that the rolling update strategy kept the old pods serving the whole time.
+3. Verify the PDB protects you during maintenance: `kubectl get pdb -n <ns>` and confirm `MIN AVAILABLE` matches `pdb_min_available`.
+4. With Cloud Armor enabled, hammer the endpoint past 500 req/min from one IP and observe 429s plus a 5-minute ban; check **Console > Network Security > Cloud Armor policies > (policy) > Logs**.
+5. You know it worked when traffic shifted away from the bad revision with zero downtime, the stalled GKE rollout never reduced ready replicas below the PDB floor, and rate limiting returned 429s.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: A bad GKE rollout is at 50% when errors spike. Why is `kubectl rollout undo` safe to run immediately, mid-rollout?&lt;/summary>
+
+A: A rolling update keeps the previous ReplicaSet until completion; `undo` simply reverses direction, scaling the old (known-good) ReplicaSet back up under the same maxSurge/maxUnavailable constraints. No rebuild, no data risk for stateless workloads — exactly why the exam favors it as first response.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: Why does the module deliberately skip creating a PDB when `max_instance_count = 1`?&lt;/summary>
+
+A: A PDB of min-available 1 over a single replica makes the pod un-evictable, blocking node drains and upgrades indefinitely — turning a reliability tool into an operational outage. With one replica, voluntary-disruption protection is meaningless anyway; the real fix is running more than one replica.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q3: During a suspected DDoS, why is Cloud Armor's rate-based ban preferable to scaling `max_instance_count` up?&lt;/summary>
+
+A: Rate limiting sheds abusive load at the edge before it consumes compute or reaches the database; scaling up *absorbs* the attack at your expense and pushes it onto downstream fixed-capacity systems. Mitigate at the outermost layer that can distinguish bad traffic.
+&lt;/details>
+
+**Beyond the modules** — Incident *management process* is pure study: the Incident Command System roles (incident commander, communications lead, operations lead), severity classification, status communication, and blameless postmortem structure (timeline, contributing factors, action items with owners). Read the Google SRE Book chapters "Managing Incidents" and "Postmortem Culture"; practice writing one postmortem for a lab incident you stage above.
+
+**⚠️ Exam trap** — A PodDisruptionBudget protects only against *voluntary* disruptions (drains, upgrades, autoscaler consolidation). Node crashes, OOM kills, and pod evictions under node pressure ignore it — answers claiming a PDB prevents involuntary failures are wrong.

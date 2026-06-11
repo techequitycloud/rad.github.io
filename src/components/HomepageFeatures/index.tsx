@@ -15,8 +15,8 @@ const FeatureList: FeatureItem[] = [
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Deploy pre-configured Google Cloud platform modules that map infrastructure
-        components to five specific Google Cloud associate and professional certification exams.
+        Deploy pre-configured industry solutions to Google Cloud platform and map
+        infrastructure components to specific Google Cloud associate and professional certification exams.
       </>
     ),
   },
@@ -36,7 +36,7 @@ const FeatureList: FeatureItem[] = [
     description: (
       <>
         Build hands-on experience by implementing the competencies required for
-        Cloud Architect, Developer, Security, and DevOps Engineer certifications.
+        Cloud Architect, Developer, Security, Database, Networking and DevOps Engineer certifications.
       </>
     ),
   },

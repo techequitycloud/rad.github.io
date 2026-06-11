@@ -1,128 +1,187 @@
 ---
-title: "PCD Certification Preparation Guide: Section 2 — Building and testing applications (~23% of the exam)"
-sidebar_label: "PCD Section 2 Exploration Guide"
+title: "PCD Certification Preparation Guide: Section 2 \u2014 Building and testing applications (~23% of the exam)"
 ---
 
 # PCD Certification Preparation Guide: Section 2 — Building and testing applications (~23% of the exam)
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud Developer (PCD) certification explore Section 2 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **Services GCP**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
-
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PCD objectives that are not currently implemented by these modules, providing guidelines for self-guided research and exploration.
+This section maps to the RAD platform's build machinery: the platform's Cloud Build container builds, the Cloud Build CI trigger (present in both App_CloudRun and App_GKE), Artifact Registry management, and image mirroring. Deploy the **Delivery pipeline** profile from the [Lab Map](PCD_Certification_Guide.md). Local development tooling (2.1) and test authoring (2.3) are mostly study-only — honest pointers are given.
 
 ---
 
 ## 2.1 Setting up your development environment
 
-The RAD platform abstracts the local development environment behind the deployment portal. For the PCD exam, you must also be familiar with the full Google Cloud developer toolchain used to build, test, and debug applications locally and in the cloud.
+> ⏱ ~45 min (mostly outside the platform) · 💰 no additional cost · ⚙️ Requires: any deployed profile + a workstation or Cloud Shell
 
-### Google Cloud CLI and Service Emulators
-**Concept:** Using the gcloud CLI for local authentication and deployment, and running local emulators to test against GCP services without incurring cloud costs.
+**Why the exam cares** — The exam tests whether you know the developer toolchain: `gcloud` auth flows (user credentials vs Application Default Credentials), local emulators for unit testing without cloud cost, Cloud Code/Cloud Shell/Cloud Workstations trade-offs, and how to reproduce a cloud environment locally (e.g., Cloud SQL Auth Proxy on your laptop).
 
-**Google Cloud CLI (`gcloud`):**
-Install the Cloud SDK locally and authenticate with `gcloud auth login`. Configure your default project with `gcloud config set project <project-id>`. Key commands for developers:
-- `gcloud run deploy <service> --source .` — builds and deploys a Cloud Run service directly from source code in the current directory, without a separate `docker build` step.
-- `gcloud container clusters get-credentials <cluster>` — writes kubectl credentials for a GKE cluster to your local kubeconfig.
-- `gcloud auth application-default login` — sets up Application Default Credentials for local development, so your application code authenticates as your user identity rather than requiring a service account key file.
+**How RAD implements it** — Not directly: the foundation modules run server-side and assume the portal performs the deploy. The nearest adjacent capabilities are real and useful, though:
 
-**Service Emulators** let you run local versions of GCP services so your application code can be tested without connecting to live cloud resources:
-- `gcloud beta emulators pubsub start` — starts a local Pub/Sub emulator. Set the `PUBSUB_EMULATOR_HOST` environment variable in your app to point at it.
-- `gcloud beta emulators datastore start` — starts a local Firestore/Datastore emulator (Firestore in Datastore mode).
-- `gcloud beta emulators spanner start` — starts a local Cloud Spanner emulator for unit testing Spanner interactions.
-- `gcloud beta emulators bigtable start` — starts a local Bigtable emulator.
+- **Isolated per-developer environments.** `tenant_deployment_id` feeds the deterministic naming scheme (`app<name><tenant><8-hex-hash>`), so each developer can deploy a complete, non-colliding copy of the same application into a shared project — the cloud-native answer to "works on my machine".
+- **Database tooling image.** The platform builds a psql/mysql client image into Artifact Registry, which the modules' jobs use; you can run the same image locally for parity.
+- **Local DB access pattern.** Cloud SQL has private IP only, so the local equivalent of the deployed setup is running the Cloud SQL Auth Proxy yourself from a machine with VPC access (or via IAP tunneling) — the same binary the GKE module runs as a sidecar.
 
-Emulators are critical for fast local development cycles and CI unit tests — they avoid network latency, authentication setup, and per-operation costs.
+**Try it**
 
-**Real-world example:** A development team writes unit tests for a service that publishes to Pub/Sub and reads from Firestore. In their CI pipeline, the test setup script starts both the Pub/Sub and Datastore emulators, sets the corresponding environment variables, and runs `pytest`. The tests run in under 10 seconds — 15× faster than tests that hit live GCP services — and work in any environment with no credentials configured.
+1. Deploy a second copy of `App_CloudRun` with a different `tenant_deployment_id` and confirm both stacks coexist:
 
-### Cloud Code, Cloud Shell, and Cloud Workstations
-**Concept:** Using Google-provided developer tooling to write, debug, and deploy cloud-native applications from any environment.
+   ```bash
+   gcloud run services list --region=us-central1
+   gcloud sql databases list --instance=<instance-name>
+   ```
 
-**Cloud Code** is an IDE extension available for VS Code and JetBrains IDEs (IntelliJ, PyCharm, GoLand, etc.). It integrates Google Cloud development into your local IDE:
-- **Kubernetes/GKE:** Browse cluster resources (pods, services, deployments) directly in the IDE, view pod logs, and stream logs in real time without leaving your editor.
-- **Cloud Run:** Deploy to Cloud Run directly from the IDE, run Cloud Run services locally using the Cloud Run emulator, and debug running containers with breakpoints.
-- **Secret Manager:** Browse and access secrets from the IDE Secret Manager explorer.
-- **Gemini Code Assist integration:** Cloud Code bundles Gemini Code Assist for inline code suggestions and generation.
+2. Set up ADC locally the way the exam expects developer machines to authenticate:
 
-Install Cloud Code from your IDE's extension marketplace and sign in with your Google account. Navigate to the Cloud Code panel and connect to your GCP project.
+   ```bash
+   gcloud auth application-default login
+   gcloud config set project <project-id>
+   ```
 
-**Cloud Shell** is a browser-based terminal in the GCP Console with all developer tools pre-installed (gcloud, kubectl, Docker, Terraform, Python, Node.js, Java, Go). It comes with a persistent 5GB home directory. Use **Cloud Shell Editor** (an in-browser VS Code instance) for editing files without local setup. Open Cloud Shell from any console page by clicking the `>_` icon in the top toolbar.
+3. Start a Pub/Sub emulator and point a test at it (no RAD involvement — this is the exam skill):
 
-**Real-world example:** A developer on a restricted corporate laptop cannot install the gcloud SDK due to IT policies. They use Cloud Shell to run all `gcloud` commands, edit configuration files in Cloud Shell Editor, and execute `kubectl` commands against their GKE cluster — all from a browser tab with zero local software installation.
+   ```bash
+   gcloud beta emulators pubsub start --project=test-project &
+   export PUBSUB_EMULATOR_HOST=localhost:8085
+   ```
 
-**Cloud Workstations** is a fully managed, cloud-hosted development environment service. Unlike Cloud Shell (which is a shared, ephemeral terminal), Cloud Workstations provisions dedicated, persistent VMs configured with your chosen IDE (VS Code, JetBrains, or custom images) and development tools. Key benefits:
-- Consistent, reproducible environments across a team — every developer uses an identical pre-configured workstation image.
-- Data and code stay in Google Cloud — no source code is stored on developer laptops.
-- Access is controlled via IAP — the workstation is never exposed to the public internet.
+4. You know it worked when `gcloud run services list` shows two services with different tenant suffixes, and your local client library calls hit the emulator (no credentials needed).
 
-Navigate to **Cloud Workstations > Workstation clusters** to explore configuration. Workstations are particularly valuable for teams with strict data security requirements (financial services, healthcare) where code must not leave the corporate cloud environment.
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: A developer's laptop code calls `storage.Client()` and gets a 403 in the office but works on Cloud Run. Why, and what's the fix?&lt;/summary>
 
-### Gemini Cloud Assist and Gemini Code Assist
-**Concept:** Using AI assistance for development tasks and infrastructure operations.
+A: On Cloud Run the client library resolves Application Default Credentials from the metadata server (the service's service account). Locally there are no ambient credentials until the developer runs `gcloud auth application-default login` (or sets `GOOGLE_APPLICATION_CREDENTIALS` — discouraged because key files are long-lived). The fix is establishing local ADC; the code itself shouldn't change.
+&lt;/details>
 
-**Gemini Code Assist** is the developer-facing AI assistant integrated into IDEs via the Cloud Code extension and available at `idx.google.com`. It provides:
-- **Inline code completion:** Context-aware multi-line code suggestions as you type.
-- **Code generation:** Generate function implementations, boilerplate classes, test cases, and data models from natural language prompts.
-- **Code explanation:** Select any code block and ask "Explain this" to get a plain-language description.
-- **Unit test generation:** Select a function and invoke "Generate unit tests" to produce a test suite covering positive cases and edge cases.
-- **Chat:** Ask coding questions, request refactors, or get debugging help in a chat panel within the IDE.
+&lt;details>
+&lt;summary>Q2: Your CI unit tests must exercise Pub/Sub and Firestore logic without network access or cost. What do you use?&lt;/summary>
 
-**Gemini Cloud Assist** is the operations-facing AI assistant integrated into the GCP Console. It helps with infrastructure tasks rather than application code:
-- Ask natural-language questions about your deployed resources ("Which Cloud Run services have the highest latency this week?").
-- Get explanations of GCP console features and configuration options.
-- Write MQL (Monitoring Query Language) expressions for alert policies and dashboards.
-- Analyse logs and suggest fixes for identified issues.
-- Access Gemini Cloud Assist from the Gemini icon (sparkle) in the top navigation bar of the GCP Console.
+A: The local emulators (`gcloud beta emulators pubsub start`, the Firestore emulator) with the `PUBSUB_EMULATOR_HOST` / `FIRESTORE_EMULATOR_HOST` environment variables set so client libraries transparently target them. Emulators need no credentials, which is exactly what hermetic CI wants.
+&lt;/details>
 
-**Real-world example:** A developer is writing a Cloud Run service that reads from Bigtable. They have no prior Bigtable experience. In their IDE, they open Gemini Code Assist chat and ask "Write a Python function that reads the 10 most recent rows for a given device ID from a Bigtable table named `telemetry`, where the row key format is `<device-id>#<reverse-timestamp>`." Gemini generates a complete function using the `google-cloud-bigtable` client library with correct row key prefix scanning. The developer reviews, tests against the Bigtable emulator, and ships the feature in one afternoon instead of spending two days reading documentation.
+**Beyond the modules** — Study Cloud Code (IDE deploy/debug for Cloud Run and GKE, including a local Cloud Run emulator), Cloud Shell (ephemeral, pre-authenticated, 5 GB persistent home), and Cloud Workstations (managed, persistent, IAP-fronted dev VMs for regulated teams) — know which to recommend for a given constraint. Also practice `gcloud run deploy --source .` (Buildpacks-based source deploy) since the RAD pipeline always builds an explicit container instead.
+
+**⚠️ Exam trap** — `gcloud auth login` and `gcloud auth application-default login` are different credentials: the first authorizes the `gcloud` CLI, the second writes the ADC file client libraries read. Tests that pass for CLI commands but 401 in code usually mean the second was skipped.
 
 ---
 
 ## 2.2 Building
 
-### Cloud Build and Artifact Registry
-**Concept:** Using managed CI/CD services to build container images from source code, store them securely, and establish software supply chain provenance.
+> ⏱ ~75 min · 💰 low — Cloud Build per-minute billing plus Artifact Registry storage · ⚙️ Requires: Delivery pipeline profile (`enable_cicd_trigger = true`, `github_repository_url` set)
 
-**In the RAD UI:**
-*   **Continuous Integration (CI):** The `enable_cicd_trigger` variable (Group 7) integrates the source repository (`github_repository_url`) with Cloud Build. When a commit is pushed to the configured branch, Cloud Build automatically runs the pipeline defined in `cloudbuild.yaml`.
-*   **Container Image Storage:** Cloud Build uses Kaniko to compile the container image and pushes it to Artifact Registry. The image is referenced by the `container_image` variable (Group 3), which specifies the Artifact Registry path including the image digest or tag.
-*   **Binary Authorization Provenance:** The `enable_binary_authorization` variable (Group 11 in Services GCP) configures Cloud Build to create a cryptographic attestation after successfully building and testing an image. Only images with a valid attestation from the trusted Cloud Build attestor can be deployed to the GKE cluster or Cloud Run service.
+**Why the exam cares** — PCD expects fluency in the container supply chain: building images in Cloud Build (and why a daemonless builder like Kaniko or Buildpacks beats `docker build` in CI), tagging strategy (mutable `latest` vs immutable commit-SHA tags), Artifact Registry storage and cleanup, and attaching provenance (attestations) so Binary Authorization can gate deploys.
 
-**Console Exploration:**
-Navigate to **Cloud Build > Triggers** to see the repository integration and trigger configuration. Navigate to **Cloud Build > History** to view build logs — each step in `cloudbuild.yaml` is a separate log entry. Navigate to **Artifact Registry > Repositories** to view stored container images, their tags, and the **Vulnerabilities** column showing Artifact Analysis scan results.
+**How RAD implements it** — Two distinct build paths, both real Cloud Build:
 
-**Source-based deployment to Cloud Run:**
-Cloud Run supports deploying directly from source code without pre-building a container image:
-```bash
-gcloud run deploy my-service --source . --region us-central1
-```
-This command uses Google Cloud Buildpacks to automatically detect the language runtime, build a container image, push it to Artifact Registry, and deploy it to Cloud Run — all in a single command. Useful for rapid prototyping and simple applications where a custom `Dockerfile` is not required.
+1. **Terraform-driven build** (every deploy with `container_image_source = "custom"`, the default): the platform renders a build config and runs `gcloud builds submit`. Kaniko builds with layer caching (`--cache=true`, `--cache-ttl=24h`) and pushes three tags: the app version, `latest`, and the commit SHA. Rebuilds are *hash-triggered*: the platform hashes the build context files, the Dockerfile (or inline `dockerfile_content`), and `build_args`, so an unchanged source tree never rebuilds.
+2. **Git-driven CI trigger** (`enable_cicd_trigger`, default `false`): the platform creates a Cloud Build trigger bound to `github_repository_url`, filtered by `cicd_trigger_config` (`branch_pattern` default `"^main$"`, plus `included_files`/`ignored_files`/`substitutions`). The generated pipeline runs Kaniko `v1.23.2`, optionally signs the image (`gcloud beta container binauthz attestations sign-and-create` against the `pipeline-attestor` using the `binauthz-signer` KMS key in `{project}-binauthz-keyring`), then either runs `gcloud run services update --image=...:$COMMIT_SHA` directly or creates a Cloud Deploy release (Section 3.1).
 
-**Cloud Build provenance and SLSA:**
-Cloud Build generates **SLSA (Supply chain Levels for Software Artifacts) provenance** — a signed attestation recording exactly what source commit was built, which build steps ran, and what artifact was produced. This provenance can be verified by Binary Authorization at deploy time to enforce that only images built by your trusted Cloud Build pipeline are permitted to run. Navigate to **Cloud Build > Build history**, select a build, and click the **Security Insights** tab to view the generated provenance attestation.
+Registry management: the module discovers the `Services_GCP` shared repository or creates one, and applies cleanup policies — `max_images_to_retain` (default `7`), `delete_untagged_images` (default `true`), `image_retention_days` (default `30`), scoped to this deployment's package names. `enable_image_mirroring` (default `true`) copies external base images into Artifact Registry using Crane digest comparison, comparing source/target SHA256 digests and only copying (or overwriting a stale tag) when digests differ — protecting you from registry rate limits and tag drift. `enable_vulnerability_scanning` (Services_GCP) makes Artifact Analysis scan everything pushed.
 
-**Real-world example:** A team's security policy requires that no container image can be deployed to production unless it was built by the official Cloud Build pipeline (not built locally by a developer and pushed directly). Binary Authorization enforces this: the cluster admission policy requires a valid attestation from the Cloud Build attestor. A developer who builds an image locally and pushes it to Artifact Registry will find that GKE rejects the pod at admission — the image lacks the required Binary Authorization attestation.
+**Try it**
+
+1. Push a commit to the configured branch and watch the trigger fire: **Console > Cloud Build > History**, open the build, and identify the Kaniko step and (if Binary Authorization is on) the attestation step.
+
+   ```bash
+   gcloud builds list --limit=5
+   gcloud builds log <build-id>
+   ```
+
+2. Inspect the resulting tags and scan results:
+
+   ```bash
+   gcloud artifacts docker images list \
+     us-central1-docker.pkg.dev/<project>/<repo> --include-tags
+   gcloud artifacts docker images describe \
+     us-central1-docker.pkg.dev/<project>/<repo>/<image>:latest \
+     --show-package-vulnerability
+   ```
+
+3. Verify the attestation exists for the new digest:
+
+   ```bash
+   gcloud container binauthz attestations list \
+     --attestor=pipeline-attestor --attestor-project=<project>
+   ```
+
+4. Re-apply the deployment *without* changing source and confirm no new Cloud Build job runs (the build's content hash was unchanged).
+5. You know it worked when the image shows three tags (version, `latest`, commit SHA), vulnerabilities are listed, and an attestation references the new digest.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: Why does the pipeline deploy by commit-SHA tag rather than `latest`, even though `latest` is also pushed?&lt;/summary>
+
+A: `latest` is mutable — it points to whatever was pushed most recently, so a deployment referencing it is not reproducible and rollbacks are ambiguous. The commit SHA tag is effectively immutable and ties the running revision to exact source provenance, which is also what the Binary Authorization attestation signs (the digest). `latest` is kept only as a developer convenience.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: A build fails with Docker daemon errors inside Cloud Build. The RAD pipeline never hits this — why?&lt;/summary>
+
+A: It uses Kaniko, which builds OCI images entirely in userspace from the Dockerfile without a Docker daemon — the standard answer for daemonless, cacheable container builds in CI. (Buildpacks are the other daemonless exam answer, used by `gcloud run deploy --source`.)
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q3: Artifact Registry storage costs are growing without bound in a busy repo. Which three RAD controls address it?&lt;/summary>
+
+A: `delete_untagged_images = true` removes dangling layers, `image_retention_days = 30` ages out old images, and `max_images_to_retain = 7` keeps the most recent N regardless of age (a keep-guard, not a deleter). Together they implement the recommended AR cleanup-policy pattern: delete-by-age plus keep-most-recent.
+&lt;/details>
+
+**Beyond the modules** — The exam also covers Buildpacks/source deploys, build provenance and SLSA levels (Cloud Build generates SLSA provenance viewable under a build's **Security insights** tab), private pools, and build substitutions/secrets in a Cloud Build config (try `gcloud builds submit --substitutions=_FOO=bar` in a scratch repo). The RAD trigger supports GitHub only (token or App installation) — know that Cloud Build also connects GitLab and Bitbucket repos.
+
+**⚠️ Exam trap** — Pushing an image to Artifact Registry does *not* deploy it. The pipeline's explicit `gcloud run services update` (or Cloud Deploy release) step is what changes the running revision — a missing deploy step is a classic "build succeeded, app unchanged" troubleshooting scenario.
 
 ---
 
 ## 2.3 Testing
 
-### Automated Integration Tests in Cloud Build
-**Concept:** Executing tests automatically within the CI pipeline to catch regressions before deployment.
+> ⏱ ~45 min · 💰 low (extra Cloud Build minutes) · ⚙️ Requires: Delivery pipeline profile + write access to the app repository
 
-**In the RAD UI:**
-*   **Cloud Build Execution:** The pipeline triggered by `enable_cicd_trigger` (Group 7) runs automated build steps defined in the repository's `cloudbuild.yaml`. Integration tests execute as a dedicated step after the build and before the image is pushed to Artifact Registry — a test failure prevents the image from being promoted.
+**Why the exam cares** — Tests must run *inside* the pipeline so a failure blocks promotion: unit tests early (cheap, hermetic, emulator-backed), integration tests against real or staged services after build, and smoke tests after deploy to a non-prod stage. The exam tests where each belongs and what a failing step does to the pipeline.
 
-**Console Exploration:**
-Navigate to **Cloud Build > History**, select a recent build, and expand the individual steps to view test output. A failed test step shows the error output and causes the overall build to fail with a non-zero exit code. Navigate to **Cloud Deploy > Delivery pipelines** to confirm that failed builds do not create new releases — the pipeline is gated on a successful Cloud Build.
+**How RAD implements it** — Honestly: the generated pipelines contain **no test step by default** — the CI flow is build → (optional attestation) → deploy/release. The hooks for adding tests are real, though:
 
-**Real-world example:** A Cloud Run service's `cloudbuild.yaml` defines three steps: (1) `docker build` to build the container, (2) `pytest integration_tests/` to run integration tests against a Cloud SQL test instance, (3) `docker push` to push the image to Artifact Registry. If step 2 fails, step 3 never executes — the broken image never reaches Artifact Registry and cannot be deployed. The build failure notification is sent to the team's chat channel via a Cloud Build Pub/Sub notification topic.
+- The Cloud Build trigger executes the generated build config; steps run sequentially and any non-zero exit fails the build, so a test step inserted between Kaniko and the deploy step gates deployment exactly as the exam describes.
+- `cicd_trigger_config.branch_pattern` (default `"^main$"`) controls which pushes build at all; `included_files`/`ignored_files` keep doc-only commits from burning build minutes.
+- The foundation modules themselves ship native OpenTofu/Terraform tests exercising the plan-time validations — a useful example of testing infrastructure code, which occasionally appears on the exam as "shift-left for IaC".
+- Cloud Deploy stages (Section 3.1) provide the post-deploy verification surface: promote to `dev`, run smoke tests against the per-stage service URL, then promote.
 
-### 💡 Additional Testing Objectives & Learning Guidelines
+**Try it**
 
-*   **Unit Tests with Gemini Code Assist:** Practice writing a Python or Node.js function, then use Gemini Code Assist in your IDE to automatically generate a suite of unit tests. In the IDE chat panel, select the function and prompt: "Generate pytest unit tests for this function covering all code paths, including error cases and boundary conditions." Review the generated tests, add any missing cases, and run them against the Pub/Sub or Datastore emulator where applicable.
+1. In your application repo, add a test step to the build config between the build and deploy steps, e.g.:
 
-    > **Real-World Example:** A developer writes a function that parses a CloudEvents payload from an Eventarc trigger and extracts the Cloud Storage object name and bucket. They use Gemini Code Assist to generate unit tests with a variety of valid and malformed payloads. The generated tests catch an edge case where the function raises an unhandled `KeyError` when the `data` field is absent — a real scenario when testing with manually crafted test events.
+   ```yaml
+   - name: 'python:3.12-slim'
+     entrypoint: 'bash'
+     args: ['-c', 'pip install -r requirements.txt && pytest -q']
+   ```
 
-*   **Testing Cloud Run services locally:** Use the Cloud Run emulator in Cloud Code to run your Cloud Run container locally with the same environment variables and service account bindings as the deployed service. This allows end-to-end local testing including Secret Manager access and Cloud SQL Auth Proxy connections, without deploying to GCP.
+2. Push a commit with a deliberately failing test and observe: **Console > Cloud Build > History** shows the red step, and the deploy step never runs.
 
-*   **Test isolation with emulators:** Structure integration tests to start emulators in `setUp` and stop them in `tearDown`. Use unique topic, subscription, and collection names per test run (e.g. append a UUID) to prevent state leakage between tests when emulators are shared across test runs.
+   ```bash
+   gcloud builds list --filter="status=FAILURE" --limit=3
+   ```
+
+3. Confirm the Cloud Run service still runs the previous image:
+
+   ```bash
+   gcloud run services describe <service-name> --region=us-central1 \
+     --format="value(spec.template.spec.containers[0].image)"
+   ```
+
+4. You know it worked when the failed build leaves the deployed image untouched and the deploy step is skipped.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: Integration tests need a real Postgres but must not touch production data. How would you structure this with the RAD stack?&lt;/summary>
+
+A: Deploy a separate tenant (`tenant_deployment_id = "ci"`) so the pipeline gets its own isolated Cloud SQL database and service, run integration tests against that stage from a Cloud Build step, and tear down or reuse it per run. Unit tests stay on emulators/mocks; only the integration layer touches the real (isolated) database.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: Where do smoke tests belong in a Cloud Deploy pipeline, and what stops a bad release from reaching prod?&lt;/summary>
+
+A: After the rollout to a non-prod target (dev/staging) — run them against that stage's URL, and gate `prod` with `require_approval = true` (the RAD default) so a human (or an automated verification you wire in) confirms before promotion. A failed rollout or withheld approval keeps the release from advancing.
+&lt;/details>
+
+**Beyond the modules** — Practice writing emulator-backed unit tests (Pub/Sub, Firestore, Spanner emulators), Cloud Build test reporting, and load testing against Cloud Run revisions (e.g., `hey`/`k6` against a tagged canary URL). Cloud Deploy *verify* (post-deploy verification jobs declared in the Skaffold config) is the managed version of step 2's smoke-test idea and worth reading about — the RAD Cloud Deploy configs use hooks for IAM and jobs, not verification.
+
+**⚠️ Exam trap** — Cloud Build steps share the `/workspace` volume but are otherwise isolated containers; a test step can't reach a server started in a previous step unless you background it within the *same* step or use the `docker` network. "Why can't step 4 see the service step 3 started?" is a recurring question shape.

@@ -1,76 +1,171 @@
 ---
-title: "PSE Certification Preparation Guide: Section 2 — Securing communications and establishing boundary protection (~22% of the exam)"
-sidebar_label: "PSE Section 2 Exploration Guide"
+title: "PSE Certification Preparation Guide: Section 2 \u2014 Securing communications and establishing boundary protection (~22% of the exam)"
 ---
 
 # PSE Certification Preparation Guide: Section 2 — Securing communications and establishing boundary protection (~22% of the exam)
 
-This guide helps candidates preparing for the Google Cloud Professional Cloud Security Engineer (PSE) certification explore Section 2 of the exam through the lens of the Tech Equity RAD platform at [https://radmodules.dev](https://radmodules.dev). Three modules are relevant to this section: **GCP Services**, which establishes the foundational shared infrastructure; **App CloudRun**, which deploys serverless containerised applications on Cloud Run; and **App GKE**, which deploys containerised workloads on GKE Autopilot.
-
-You interact with each module by configuring its variables in the RAD UI deployment portal, then exploring the resulting infrastructure in the GCP Console. This guide maps each exam topic to the relevant variables you can configure and the console locations where you can observe the outcomes. It also highlights PSE objectives that are *not* currently implemented by these modules, providing guidelines for self-guided research and exploration.
+This guide covers Section 2 of the Professional Cloud Security Engineer exam. The relevant foundation modules: `Services_GCP` builds the VPC, firewall rules, Cloud NAT, and Private Services Access; `App_CloudRun` and `App_GKE` each implement a Cloud Armor WAF edge and a VPC Service Controls perimeter; `App_GKE` adds Kubernetes NetworkPolicy micro-segmentation on Dataplane V2. Deploy **guarded-edge** (or **zero-trust-gke**) and **perimeter-lab** from the Lab Map before starting.
 
 ---
 
 ## 2.1 Designing and configuring perimeter security
 
-### Cloud Armor WAF and Global Load Balancer
-**Concept:** Deploying a perimeter layer that inspects and filters all inbound traffic before it reaches any application workload.
+> ⏱ ~2 h · 💰 moderate — global LB + Cloud Armor policy charges · ⚙️ Requires: `enable_cloud_armor = true` (+ `application_domains` on Cloud Run)
 
-**In the RAD UI:**
-*   **Web Application Firewall (WAF):** Activating `enable_cloud_armor` (Group 9 for App CloudRun, Group 13 for App GKE) deploys a Global External Application Load Balancer and attaches a Cloud Armor security policy enforcing the OWASP Top 10 preconfigured rule sets (blocking SQL injection, cross-site scripting, remote file inclusion, and other common web exploits). Adaptive Protection is also enabled, providing AI-driven anomaly detection and automatic DDoS mitigation rule recommendations.
-*   **Identity-Aware Proxy (IAP):** When `enable_iap` (Group 4) is also enabled, IAP is added as a second perimeter layer on top of Cloud Armor — Cloud Armor filters by threat signature and rate-limits at the edge, while IAP verifies authenticated identity before any request reaches the backend.
+**Why the exam cares** — You must pick the right edge control per threat: Cloud Armor preconfigured WAF rules for OWASP attacks, rate-based bans for brute force/scraping, Adaptive Protection for L7 DDoS, and IAP for identity — and know that Cloud Armor only protects traffic that actually flows through the load balancer it is attached to.
 
-**Console Exploration:**
-Navigate to **Network Security > Cloud Armor**. Inspect the security policy attached to the load balancer backend. Review the individual WAF rules, their priority order, and the default action. Click the **Targets** tab to confirm the policy is bound to the backend service routing to your application. Click **Logs** to see requests evaluated (and potentially blocked) by the policy in real time.
+**How RAD implements it** — `enable_cloud_armor` (default `false`) creates a Cloud Armor security policy with identical rule content in both modules:
 
-**Real-world example:** An e-commerce company enables Cloud Armor's OWASP CRS rules on its checkout API. During a promotional event, Cloud Armor's Adaptive Protection module detects an unusual spike in requests from an Eastern European ASN matching credential-stuffing patterns. It automatically generates a recommended rate-limiting rule targeting that ASN — which an on-call engineer approves with a single click from the Cloud Armor console, reducing the mitigation time from hours of manual firewall work to under two minutes.
+| Priority | Rule | Action |
+|---|---|---|
+| 100 | `admin_ip_ranges` allowlist | `allow` (bypasses WAF rules) |
+| 1000–1003 | `evaluatePreconfiguredExpr('sqli-v33-stable')`, `xss-v33-stable`, `lfi-v33-stable`, `rce-v33-stable` | `deny(403)` |
+| 2000 | rate limit 500 requests/min per IP | `rate_based_ban` → `deny(429)`, 300 s ban |
+| 2147483647 | default | `allow` |
 
-### 💡 Additional Perimeter Security Objectives & Learning Guidelines
-*   **Cloud Next Generation Firewall (Cloud NGFW):** Cloud NGFW extends firewall capabilities beyond stateful allow/deny rules to include Layer 7 application-layer inspection (parsing protocols like HTTP, DNS, and TLS to identify application intent), FQDN-based rules (allowing or denying traffic to specific domain names rather than IP addresses), and integration with Google's threat intelligence feeds. Research Cloud NGFW firewall policies — both Hierarchical (attached at org/folder level, enforced before VPC rules) and Network (attached to a specific VPC). Navigate to **VPC network > Firewall policies** to explore the evaluation order.
-*   **Certificate Authority Service (CAS):** Research how CAS provides a managed, private Certificate Authority for issuing TLS certificates within your organization. CAS is used for mutual TLS (mTLS) authentication between services — where both client and server present certificates — providing cryptographic service identity verification stronger than IP-based controls. Navigate to **Security > Certificate Authority Service** to explore CA pool creation, subordinate CA configuration, and certificate issuance. Understand the difference between a Root CA (self-signed, highest trust anchor) and a Subordinate CA (signed by Root, used for day-to-day issuance).
-*   **Secure Web Proxy (SWP):** Research Secure Web Proxy as an explicit forward proxy for outbound HTTP(S) traffic from GCP workloads to the internet. Unlike Cloud NAT (which provides source IP masquerading without content inspection), SWP applies URL filtering policies — blocking access to disallowed domains, enforcing safe browsing categories, and logging all outbound requests for audit purposes. Navigate to **Network Security > Secure Web Proxy** to explore policy and gateway configuration.
-*   **Cloud DNS Security Settings:** Study how to enable DNSSEC on Cloud DNS public zones to cryptographically sign DNS records, preventing DNS spoofing and cache poisoning attacks. Understand DNS Response Policy Zones (RPZ), which allow you to intercept and override DNS responses for known-malicious domains — effectively blocking resolution of C2 (command-and-control) infrastructure. Navigate to **Network Services > Cloud DNS** and explore DNSSEC configuration on a public zone.
-*   **Continually Monitoring and Restricting Configured APIs:** Navigate to **APIs & Services > Enabled APIs & Services** to audit which APIs are active in your project. Every enabled but unused API represents unnecessary attack surface. Research the Organization Policy `constraints/serviceuser.services` to restrict which APIs can be enabled across projects. Understand how to scope API keys to specific APIs, HTTP referrers, or IP address ranges to limit the impact of key compromise.
+Adaptive Protection (Layer 7 DDoS defense) is on in both. The plumbing differs:
+
+- **App_CloudRun** builds the entire edge: serverless NEG → backend service (an external Application Load Balancer, with request logging at full sample rate) → URL map → HTTPS proxy → global static IP, with Certificate Manager Google-managed certificates per `application_domains` and a permanent HTTP→HTTPS redirect. Cloud Run ingress is force-overridden to internal-and-cloud-load-balancing whenever `enable_cloud_armor` or `enable_cdn` is true, so the direct `*.run.app` URL cannot bypass the WAF. A plan-time validation requires at least one entry in `application_domains` when `enable_cloud_armor = true`; a nip.io-derived Google-managed certificate fallback exists only for the LB-without-Cloud-Armor path (e.g., CDN-only).
+- **App_GKE** creates the policy as `{service}-waf-policy` and attaches it to the Gateway API backend via a `GCPBackendPolicy`; a plan-time validation requires `enable_custom_domain = true` or `service_type = "LoadBalancer"`. The priority-100 `admin_ip_ranges` allow rule is present in both policies; on App_CloudRun the same variable *also* feeds the VPC-SC access level, so trusted networks bypass the WAF and pass the perimeter with one setting.
+
+**Try it**
+1. Deploy guarded-edge. In **Console > Network Security > Cloud Armor policies**, open `{service}-waf-policy` and review rule priorities and the Adaptive Protection tab.
+2. Fire a simulated SQL injection at the LB and watch it bounce:
+```bash
+LB_IP=$(gcloud compute addresses list --global \
+  --filter="name~lb-ip" --format="value(address)")
+curl -sk "https://app.example.com/?q=1%27%20OR%20%271%27=%271" -o /dev/null -w "%{http_code}\n"
+# Expect 403 from rule sqli-v33-stable
+gcloud compute security-policies describe <service>-waf-policy \
+  --format="yaml(rules[].priority, rules[].action, rules[].description)"
+```
+3. Verify the bypass is closed: `curl -s -o /dev/null -w "%{http_code}\n" https://<service>-<hash>.run.app/` returns 404/403 because ingress is restricted to the load balancer.
+4. You know it worked when WAF denials appear in **Logging > Logs Explorer** under the backend service's `requests` log with `jsonPayload.enforcedSecurityPolicy.outcome="DENY"`.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: Scenario — after enabling Cloud Armor on Cloud Run, a pen tester still reaches the app through its run.app URL. What was missed?&lt;/summary>
+
+A: Ingress was left at `all`. Cloud Armor only inspects traffic traversing the load balancer; the service must be restricted to `internal-and-cloud-load-balancing` so direct URLs are refused. The RAD module does this automatically — the exam expects you to know it must be done.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: A credential-stuffing botnet sends 2,000 requests/min/IP. Which of the deployed rules responds, and how?&lt;/summary>
+
+A: The priority-2000 `rate_based_ban` rule: each source IP exceeding 500 requests/60 s gets `deny(429)` and a 300-second ban. Adaptive Protection complements this by detecting distributed L7 anomalies that per-IP limits miss and suggesting targeted rules.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q3: When is IAP the right edge control instead of (or in addition to) Cloud Armor?&lt;/summary>
+
+A: Cloud Armor filters by request signature/source (no identity); IAP requires an authenticated, authorized Google identity. For an internal tool, IAP alone suffices. For a public app, Cloud Armor (WAF/DDoS/rate limiting). For a sensitive internal app exposed via LB, layer both: Armor scrubs attacks at the edge, IAP enforces identity.
+&lt;/details>
+
+**Beyond the modules** — Not implemented: Cloud NGFW network/hierarchical firewall policies (the platform uses classic VPC firewall rules with network tags), FQDN/geo/threat-intelligence rules, Cloud Armor bot management with reCAPTCHA, edge security policies, Certificate Authority Service for mTLS, and Secure Web Proxy for egress filtering. Scratch-project starter: `gcloud compute network-firewall-policies create demo-policy --global` and `gcloud compute security-policies update <policy> --enable-layer7-ddos-defense`.
+
+**⚠️ Exam trap** — Preconfigured WAF rules come in sensitivity levels and can false-positive on legitimate payloads (e.g., a CMS saving HTML). The exam answer is to run new rules in `preview` mode and tune with `evaluatePreconfiguredWaf(...,{'sensitivity': N})` or opt-out rule IDs — not to disable the WAF.
 
 ---
 
 ## 2.2 Configuring boundary segmentation
 
-### VPC Network Isolation and VPC Service Controls
-**Concept:** Isolating services behind private network boundaries and preventing data exfiltration at the API level, independent of IAM permissions.
+> ⏱ ~2.5 h · 💰 none for VPC-SC/NetworkPolicy · ⚙️ Requires: perimeter-lab (org + ACM permission); zero-trust-gke for NetworkPolicy
 
-**In the RAD UI:**
-*   **Private-IP Cloud SQL:** Cloud SQL instances are provisioned with private IP addresses only — accessible exclusively from workloads within the same VPC. No public internet access is configured.
-*   **VPC Service Controls:** Enabling `enable_vpc_sc` (Group 10 in GCP Services) creates a VPC Service Perimeter around the project's Google APIs. Requests to APIs within the perimeter (Cloud Storage, BigQuery, Cloud SQL, Secret Manager) are blocked unless they originate from within the trusted perimeter boundary — even from authenticated, authorized identities outside the perimeter.
-*   **GKE Network Policies:** The App GKE module uses GKE Dataplane V2 (eBPF-based Cilium) to enforce Kubernetes NetworkPolicies, creating microsegmentation between pods so that only explicitly permitted pod-to-pod traffic is allowed.
+**Why the exam cares** — IAM answers *who*, network segmentation answers *from where*, and VPC Service Controls answers *where data may flow at the API layer*. Exam scenarios about stolen-but-valid credentials exfiltrating Cloud Storage or BigQuery data are VPC-SC questions; pod-lateral-movement scenarios are NetworkPolicy questions.
 
-**Console Exploration:**
-Navigate to **VPC network > VPC networks** and inspect the subnets. Go to **SQL** and verify the Cloud SQL instance displays only a Private IP (no Public IP). Navigate to **Security > VPC Service Controls** to view the service perimeter definition, the services it restricts, and any access levels or ingress/egress rules. For GKE: connect to the cluster via Cloud Shell and run `kubectl get networkpolicies -A` to view active microsegmentation rules.
+**How RAD implements it** —
 
-**Real-world example:** A financial institution uses VPC Service Controls to protect their Cloud Storage bucket containing pre-trade research reports. Even if a data analyst's credentials are stolen and used from the attacker's home network, the API call to list or download objects is blocked by the perimeter — the attacker receives a VPC Service Controls violation error regardless of IAM permissions. This provides a second layer of exfiltration protection that IAM alone cannot offer, because IAM controls *who* can access resources but not *from where*.
+*VPC Service Controls* (created in App_CloudRun/App_GKE when `enable_vpc_sc = true`, default `false`; `Services_GCP` has a standalone equivalent):
+- **Organization ID contract:** the org ID is auto-discovered from the project. In App_CloudRun/App_GKE, an explicit `organization_id` (default `""`) overrides discovery and is *required only when the project is nested under a folder*; standalone projects skip VPC-SC with a warning. `Services_GCP` relies purely on auto-discovery (it has no `organization_id` variable).
+- Creation is further gated by: non-empty `admin_ip_ranges` (lockout prevention) and a plan-time permission probe that runs `gcloud access-context-manager policies list --organization=...` and gracefully skips all VPC-SC resources with a warning if the caller lacks org-level ACM permission.
+- What gets built: an Access Context Manager policy (reused if the org already has one), four access levels — VPC subnet CIDRs (auto-discovered from the network when `vpc_cidr_ranges` is empty, falling back to `10.0.0.0/8`), `admin_ip_ranges`, the IAP service agent, and CI/CD service accounts — and a regular service perimeter restricting 15 services (Cloud Run, GKE, Cloud SQL Admin, Secret Manager, Storage, Artifact Registry, Cloud Build, KMS, Pub/Sub, Redis, Filestore, Firestore, Compute, Certificate Manager, IAP) with VPC-accessible-services restriction, ingress policies sourced from the four access levels, and scoped egress policies.
+- `vpc_sc_dry_run` (default `true`) writes the configuration to the perimeter's dry-run spec: violations are logged, not blocked.
 
-### 💡 Additional Boundary Segmentation Objectives & Learning Guidelines
-*   **Shared VPC Architecture:** Understand the Host/Service project model: a Host project owns the VPC networks and subnets, while Service projects attach to the Host and deploy workloads into shared subnets. This centralizes network security administration (firewall rules, subnets, routes) in one team while allowing delegated resource management in Service projects. Navigate to **VPC network > Shared VPC** in a Host project to explore subnet sharing and IAM delegation.
-*   **VPC Peering vs. Shared VPC:** Understand that VPC peering connects two separate VPCs at the routing layer (traffic flows between them, but each VPC retains its own firewall rules and administration; peering is non-transitive and requires non-overlapping IP ranges). Shared VPC uses a single VPC shared across multiple projects with centralized administration. Know when each is appropriate: Shared VPC for centralized security governance within an organization; VPC peering for connecting distinct business units or partner networks that should remain administratively separate.
-*   **N-Tier Application Network Isolation:** Practice designing firewall rules for a multi-tier application: a web tier subnet that accepts HTTPS from the internet via a load balancer (no external IPs on VMs); an application tier subnet reachable only from the web tier on a specific port (enforced by firewall rules using network tags); and a data tier subnet reachable only from the application tier on the database port. Each tier uses network tags (`web-tier`, `app-tier`, `data-tier`) as firewall rule targets, enabling precise directional access control independent of IP addresses.
+*Kubernetes NetworkPolicy* (`enable_network_segmentation` default `false`, requires Dataplane V2 — which `Services_GCP` clusters always use via the advanced datapath): a default-deny-by-omission policy selecting all pods in the namespace for both ingress and egress. Allowed ingress: same-namespace pods, Google LB/health-check ranges `130.211.0.0/22` and `35.191.0.0/16`, and `35.235.240.0/20`. Allowed egress: DNS (53 TCP/UDP), HTTPS 443 (including the restricted/private googleapis VIPs `199.36.153.4/30` and `199.36.153.8/30`), same-namespace pods, Cloud SQL proxy loopback plus port 3307 to `10.0.0.0/8`, the metadata server `169.254.169.254/32:80` (Workload Identity token endpoint), and NFS 2049 when enabled.
+
+*Network-level isolation:* Cloud SQL is private-IP-only (no public IPv4, encrypted-only SSL mode), and firewall rules use network tags (`httpserver`, `nfsserver`, etc.) rather than broad CIDR allows.
+
+**Try it**
+1. Deploy perimeter-lab. In **Console > Security > VPC Service Controls**, switch to the dry-run tab and open the perimeter; review restricted services and access levels.
+```bash
+POLICY=$(gcloud access-context-manager policies list \
+  --organization=ORG_ID --format="value(name)")
+gcloud access-context-manager perimeters dry-run list --policy=$POLICY
+gcloud access-context-manager levels list --policy=$POLICY
+```
+2. From a machine *outside* `admin_ip_ranges`, run `gcloud secrets versions access latest --secret=secret-<instance>-<service>` and then search **Logs Explorer** for `protoPayload.metadata.dryRun="true"` violations against `secretmanager.googleapis.com`.
+3. For NetworkPolicy, deploy zero-trust-gke and probe segmentation:
+```bash
+kubectl get networkpolicy -n <namespace>
+kubectl describe networkpolicy <prefix>-namespace-isolation -n <namespace>
+# Negative test from a scratch namespace — should time out:
+kubectl run probe --image=busybox -n default --rm -it --restart=Never \
+  -- wget -T 5 -qO- http://<service>.<namespace>.svc.cluster.local
+```
+4. You know it worked when cross-namespace pod traffic times out while the app still serves LB health checks and reaches Cloud SQL.
+
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: Scenario — an attacker steals a service account key with `roles/storage.admin` and runs `gsutil cp` from their home network. IAM allows it. What deployed control stops the copy, and why?&lt;/summary>
+
+A: The VPC-SC perimeter (once `vpc_sc_dry_run = false`). `storage.googleapis.com` is a restricted service, and the request originates from outside every access level (not the VPC CIDRs, not `admin_ip_ranges`, not the IAP/CI-CD identities), so the API call itself is rejected regardless of valid credentials. VPC-SC controls *where from*, IAM controls *who*.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: Why does the module refuse to create the perimeter when `admin_ip_ranges` is empty?&lt;/summary>
+
+A: Lockout prevention. With enforcement on and no admin access level, operators and CI/CD outside the VPC would be unable to call any restricted API — including the calls needed to fix or remove the perimeter. The module emits a warning and skips creation instead.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q3: Your GKE pods must reach Secret Manager under the NetworkPolicy. Which two egress rules make that possible?&lt;/summary>
+
+A: Egress 443 (covering the googleapis endpoints, including the restricted-VIP ranges `199.36.153.4/30`/`199.36.153.8/30` when Cloud DNS maps `*.googleapis.com` there) and egress to the metadata server `169.254.169.254:80`, which Workload Identity uses to exchange the KSA token for a GSA access token before the HTTPS call can authenticate.
+&lt;/details>
+
+**Beyond the modules** — Not implemented: Shared VPC host/service projects, VPC peering between customer VPCs, hierarchical firewall policies, Cloud NGFW L7 inspection, and per-pod (rather than per-namespace) policy granularity. Study the Shared VPC IAM model (`roles/compute.networkUser` on shared subnets) and try `gcloud compute shared-vpc enable HOST_PROJECT` in a scratch org. Also study VPC-SC ingress/egress rule semantics for cross-perimeter sharing and perimeter bridges.
+
+**⚠️ Exam trap** — Dry-run mode is the right rollout default but enforces *nothing*. An audit finding of "VPC-SC configured" is not "VPC-SC enforced" — check `vpc_sc_dry_run` (the module defaults it to `true`) and the perimeter's enforced vs dry-run spec before claiming exfiltration protection.
 
 ---
 
 ## 2.3 Establishing private connectivity
 
-### Direct VPC Egress for Cloud Run
-**Concept:** Routing all workload traffic through the private VPC to prevent exposure of internal resources over the public internet.
+> ⏱ ~1.5 h · 💰 low — Cloud NAT data processing; PSA/Direct VPC egress free · ⚙️ Requires: secure-platform + any app module (defaults suffice)
 
-**In the RAD UI:**
-*   **Direct VPC Egress:** The `vpc_egress_setting` variable (Group 4 for App CloudRun) controls whether Cloud Run routes only traffic to private RFC 1918 ranges or all outbound traffic (`ALL_TRAFFIC`) through the VPC. Setting `ALL_TRAFFIC` means even requests to external public APIs from the container traverse the VPC first, enabling Cloud NAT logging, firewall rule inspection, and consistent egress IP visibility.
+**Why the exam cares** — The exam tests choosing among Private Google Access, Private Services Access (PSA), Private Service Connect, Direct VPC egress / serverless VPC access, and hybrid options (HA VPN, Interconnect) — and knowing which gives private reachability to *Google APIs* versus *managed services* versus *your own VPC*.
 
-**Console Exploration:**
-Go to **Cloud Run > [service] > Networking** tab. Review the VPC network egress setting. Go to **Network Connectivity > Private Service Connect** to see the managed endpoint through which Cloud SQL traffic is routed privately from within the VPC, without traversing the public Google API endpoints.
+**How RAD implements it** —
+- **Private Services Access**: a reserved `/16` internal range used for VPC peering plus a Service Networking connection with custom-route import/export — this is how Cloud SQL, AlloyDB, and Memorystore get private IPs inside the producer network peered to your VPC.
+- **Direct VPC egress on Cloud Run**: the service attaches a network interface in the subnet; `vpc_egress_setting` (default `PRIVATE_RANGES_ONLY`, or `ALL_TRAFFIC`) controls whether only RFC-1918-bound traffic or everything is routed through the VPC. No Serverless VPC Access connector is used.
+- **Cloud NAT**: one Cloud Router + NAT gateway per region (covering all subnetworks and IP ranges) gives instances and egressing workloads outbound internet without external IPs.
+- **Restricted/private Google API VIPs**: the GKE NetworkPolicy explicitly allows `199.36.153.4/30` (restricted.googleapis.com, the VPC-SC-compatible endpoint) and `199.36.153.8/30` (private.googleapis.com).
+- The Cloud SQL Auth Proxy sidecar on GKE dials the instance's *private* IP (`--private-ip`, port 3307), keeping database traffic entirely on the VPC.
 
-**Real-world example:** A Cloud Run service processing payment data uses Direct VPC Egress with `ALL_TRAFFIC`. All outbound traffic — including calls to the payment gateway's public API — exits through a Cloud NAT gateway with a static, reserved IP address. The payment gateway's IP allowlist is configured with this static NAT IP, so only traffic from the company's designated NAT gateway can reach the payment API. A rogue Cloud Run revision deployed outside this configuration would fail to reach the payment gateway, providing an additional security boundary beyond IAM.
+**Try it**
+1. In **Console > VPC network > VPC network peering**, observe the `servicenetworking` peering created by PSA; in **SQL > instance > Connections**, confirm there is no public IP.
+```bash
+gcloud services vpc-peerings list --network=vpc-network-<prefix>
+gcloud sql instances describe <instance> \
+  --format="value(settings.ipConfiguration.ipv4Enabled, ipAddresses[].ipAddress)"
+gcloud compute routers nats list --router=<router> --region=us-central1
+```
+2. Flip `vpc_egress_setting` to `ALL_TRAFFIC` in the portal and redeploy; in **Cloud Run > service > Networking**, the egress setting changes — outbound calls to public APIs now exit via Cloud NAT with the NAT IP (verify with `curl https://ifconfig.me` from the container).
+3. You know it worked when the Cloud SQL instance shows only a 10.x address and the container's public egress IP equals the NAT address.
 
-### 💡 Additional Private Connectivity Objectives & Learning Guidelines
-*   **Private Google Access:** Research how Private Google Access allows VM instances with no external IP addresses to reach Google APIs (Cloud Storage, BigQuery, Pub/Sub, etc.) using their internal IP addresses via Google's private network. Enable it per subnet: **VPC network > [subnet] > Private Google Access: On**. Understand the distinction between standard Private Google Access (uses the `private.googleapis.com` VIP at 199.36.153.8/30) and Restricted Google Access (`restricted.googleapis.com` at 199.36.153.4/30, which only allows APIs compatible with VPC Service Controls perimeters — blocking exfiltration via unsupported APIs).
-*   **HA VPN and Cloud Interconnect:** Study HA VPN for encrypted site-to-site connectivity between on-premises and GCP (two VPN tunnels across two Google edge routers, 99.99% uptime SLA, up to ~3 Gbps per tunnel). Understand when Cloud Interconnect is appropriate: Dedicated Interconnect provides a direct physical connection (10 or 100 Gbps, unencrypted by default — use MACsec for encryption at the physical layer) for high-bandwidth, low-latency requirements. Navigate to **Network Connectivity > VPN** and **Interconnect** in the console to compare configuration requirements and routing (BGP is required for both).
-*   **Cloud NAT:** Understand how Cloud NAT provides outbound internet access for VM instances and serverless workloads that have no external IP addresses, without exposing any inbound ports. Cloud NAT logs (enable via the NAT gateway settings) capture every outbound connection's source IP, destination, and port — useful for auditing and anomaly detection. Navigate to **Network Services > Cloud NAT** to review configuration and enable logging.
-*   **Private Service Connect for Google APIs:** Research how Private Service Connect (PSC) allows you to consume Google Cloud APIs through private IP addresses internal to your VPC, rather than routing to shared public API endpoints. PSC endpoints appear as regular internal IP addresses in your VPC, meaning API traffic never leaves the Google network. Navigate to **Network Connectivity > Private Service Connect > Published services** to explore available Google-managed endpoints and how to create consumer forwarding rules.
+**Check yourself**
+&lt;details>
+&lt;summary>Q1: Scenario — a payment gateway allowlists a single static IP. Your Cloud Run service must call it. How do you guarantee a stable source IP with the deployed architecture?&lt;/summary>
+
+A: Set `vpc_egress_setting = "ALL_TRAFFIC"` so all outbound traffic routes through the VPC, then ensure Cloud NAT uses a reserved static external address. The gateway then sees only the NAT IP. With `PRIVATE_RANGES_ONLY`, calls to public endpoints would leave directly from Google's serverless pool with unpredictable IPs.
+&lt;/details>
+
+&lt;details>
+&lt;summary>Q2: What's the difference between Private Services Access (used here for Cloud SQL) and Private Service Connect?&lt;/summary>
+
+A: PSA creates a VPC peering to a Google-managed producer network and allocates an IP range from your space — connectivity is network-to-network and non-transitive. PSC exposes a service (Google APIs or a producer service) as an *endpoint IP inside your own subnet*, with no peering and finer control. The exam favors PSC for new designs needing per-service endpoints or overlapping-IP tolerance; PSA remains the mechanism Cloud SQL/Memorystore private IP classically uses.
+&lt;/details>
+
+**Beyond the modules** — Not implemented: Cloud VPN / HA VPN, Cloud Interconnect (Dedicated/Partner, MACsec), BGP custom routing beyond NAT, Network Connectivity Center, Private Google Access subnet flag demonstrations, proxy-only subnets, internal load balancers, and Cloud DNS private zones for `*.googleapis.com` → restricted VIP mapping (the NetworkPolicy allows those CIDRs, but the DNS zone itself is not created). Scratch commands: `gcloud compute networks subnets update SUBNET --region=R --enable-private-ip-google-access` and `gcloud compute vpn-gateways create ...` to study HA VPN topology.
+
+**⚠️ Exam trap** — `restricted.googleapis.com` only serves APIs that VPC-SC supports and is the endpoint to use *inside* a perimeter; `private.googleapis.com` serves nearly all APIs but provides no exfiltration protection. Pointing perimeter workloads at the private VIP instead of the restricted VIP is a classic mis-hardening the exam probes.
