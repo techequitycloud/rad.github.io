@@ -140,6 +140,8 @@ gcloud secrets list --project=PROJECT_ID \
 
 ## Group 4 — Runtime & Scaling
 
+> **Choosing runtime & scaling.** **Image source:** `"custom"` builds from your repo via Cloud Build (needs the GitHub connection); `"prebuilt"` deploys an existing image URI and *requires* `container_image` (enforced at plan time). **Scaling:** on Autopilot you pay per pod resource request, so `min_instance_count`/`max_instance_count` (the HPA bounds — min must not exceed max, enforced) directly drive both availability and cost; set `min` ≥ 1 for latency-sensitive services, and size `container_resources` to real usage since Autopilot bills the request, not the node. **Workload shape** is decided in Groups 6–7: a stateless `Deployment` scales horizontally and freely; a `StatefulSet` (auto-selected by `stateful_pvc_enabled`) gives stable identity + per-pod persistent storage but constrains scaling — choose it only when the workload genuinely needs stable storage or identity.
+
 These variables control how the application container is sourced, built, deployed, and scaled on GKE Autopilot.
 
 | Variable | Type | Default | Description |
@@ -294,6 +296,8 @@ kubectl get namespace NAMESPACE -o jsonpath='{.metadata.labels}'
 ---
 
 ## Group 7 — StatefulSet / PVC
+
+> **Choosing StatefulSet vs Deployment.** Setting `stateful_pvc_enabled = true` is the single switch: it **auto-resolves the workload to a `StatefulSet`** (you do not also set `workload_type` — pairing it with `workload_type = "Deployment"` is rejected at plan time) and gives each replica a stable network identity plus its own PersistentVolumeClaim that survives reschedules. Use it for databases-in-cluster, brokers, or anything needing stable per-pod storage. For stateless web/API workloads leave it off — a `Deployment` scales more freely and has no PVC lifecycle to manage. When enabled, `stateful_pvc_size` and `stateful_pvc_mount_path` are required (enforced). Note shared-across-pods storage is a *different* need — use NFS (Group 13), not per-pod PVCs.
 
 These variables configure persistent storage for StatefulSet workloads. Each pod replica receives its own isolated PersistentVolumeClaim (PVC) for stable, per-pod storage.
 
@@ -671,6 +675,8 @@ gcloud redis instances describe INSTANCE_NAME \
 
 ## Group 16 — Database Configuration
 
+> **Choosing the database backend.** First decide *whether* you need one: `database_type = "NONE"` skips all DB provisioning (and the dependent features — backup import, custom SQL, auto-rotation, the Cloud SQL volume — each rejected at plan time if left on with `NONE`). If you need one, pick the engine your app requires (`POSTGRES`/`MYSQL`, or a pinned variant like `POSTGRES_15`/`MYSQL_8_0`). **Pin the version for production** — `database_type` is effectively immutable: changing it after first deploy replaces the Cloud SQL instance and destroys its data. With a `Services_GCP` foundation the module creates only a database + user in the shared instance (no per-deploy instance cost); standalone, it provisions a dedicated instance. The app reaches the DB over the Cloud SQL Auth Proxy (`enable_cloudsql_volume`) — keep it on for socket connections. Engine-family toggles (`enable_postgres_extensions`, `enable_mysql_plugins`) must match the engine (enforced).
+
 These variables configure the Cloud SQL database backend. The module supports PostgreSQL, MySQL, and SQL Server, and can provision a new instance, connect to an existing one, or skip database provisioning entirely.
 
 | Variable | Type | Default | Description |
@@ -798,6 +804,8 @@ gcloud storage buckets get-iam-policy gs://BUCKET_NAME \
 ```
 
 ---
+
+> **Choosing how the workload is exposed.** The exposure path is the key decision and spans Groups 19–21. A plain `ClusterIP`/`LoadBalancer` `service_type` gives you a raw IP; a **custom domain** (Group 19) provisions a Google-managed certificate via the Gateway/Ingress and needs a post-deploy DNS record. **Cloud Armor (Group 21)** — the WAF/DDoS layer — requires either a custom domain or a `LoadBalancer` service (enforced at plan time) because it needs an external entry point to attach the policy to, and **`enable_cdn` requires a custom domain** (enforced). For internal-only tools, prefer **IAP (Group 20)** — but IAP on GKE needs an OAuth client id/secret and a support email (all enforced), so configure those before enabling. Decide the exposure model first, then the security layer that fits it.
 
 ## Group 19 — Access & Networking
 
@@ -1050,8 +1058,14 @@ Services GCP is declared as a module dependency but is **not required** for a st
 
 > Risk levels: **Critical** (data loss, full outage, or security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
 
+> **Many invalid combinations are caught at plan time.** The module carries 30 cross-variable preconditions (`validation.tf`) plus per-variable `validation` blocks, so a large class of misconfiguration fails the **plan** with a clear, named error before any resource is created. Rows below marked **🛡 plan-time** are rejected up front — you never reach the consequence. Unmarked rows are *runtime* or *operational* hazards (a wrong port, a CIDR change, a destructive rename) the module cannot decide for you. A clean plan confirms the value/combination rules passed; it does not validate that a port matches your app or that a rename is intentional.
+
 | Variable | Sensible Default | Risk | Consequence of Incorrect Value |
 |---|---|---|---|
+| `container_image_source` + `container_image` | `"custom"` (build from source), or `"prebuilt"` **with** a non-empty `container_image` | **High** 🛡 plan-time | `"prebuilt"` with an empty `container_image` has no image URI to deploy — now rejected at plan time. |
+| `mount_nfs` (jobs) + `enable_nfs` | Enable NFS when any job mounts it | **High** 🛡 plan-time | A job with `mount_nfs = true` while `enable_nfs = false` (and no discoverable NFS server) references a volume that does not exist — now rejected at plan time. |
+| `enable_postgres_extensions` / `enable_mysql_plugins` + `database_type` | Match the toggle to the engine family | **Medium** 🛡 plan-time | Enabling Postgres extensions on a MySQL engine (or vice-versa) is rejected at plan time. *(Defect fixed: the MySQL allow-list now correctly includes `MYSQL_8_0`, previously rejected in error.)* |
+| `redis_port` | `"6379"` | **Low** 🛡 plan-time | A non-numeric or out-of-range port is rejected at plan time rather than producing an unreachable `REDIS_PORT`. |
 | `application_name` | Short, lowercase, hyphen-safe (e.g. `"myapp"`, `"payments-api"`) | **Critical** | Embedded in every GCP and Kubernetes resource name (namespace, services, secrets, SQL instance, GCS buckets). **Never change after first deployment** — all named resources are destroyed and recreated, causing complete data loss and a new empty database. |
 | `tenant_deployment_id` | Match environment: `"prod"`, `"staging"`, `"dev"` | **Critical** | Embedded in all resource names alongside `application_name`. **Never change after first deployment** — same consequence as changing `application_name`: full resource recreation, data loss, and a new empty deployment running beside the orphaned old one. |
 | `quota_memory_requests` / `quota_memory_limits` | Binary unit suffix required: `"4Gi"`, `"8192Mi"` — never a bare integer | **Critical** | A bare integer such as `"4"` is interpreted by Kubernetes as **4 bytes**. The ResourceQuota is created but every pod is rejected at scheduling time with `exceeded quota: requests.memory`. The namespace is effectively dead until the quota is corrected. |

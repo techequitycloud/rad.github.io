@@ -14,6 +14,10 @@ title: "App GKE \u2014 Lab Guide"
 
 The lab focuses on operating the **GKE module and the Google Cloud platform**, not on the workload running inside the container. For the complete list of provisioned services and every configuration input (organised by group), see the [Configuration Guide](https://docs.radmodules.dev/docs/modules/App_GKE) — this lab deliberately does not duplicate that detail so it stays accurate over time.
 
+> **This lab deploys onto a `Services_GCP` foundation.** Use the **same `tenant_deployment_id`** as your `Services_GCP` deployment so `App GKE` deploys into the shared **GKE Autopilot cluster** and binds to the shared VPC, Cloud SQL instance, NFS server, and Artifact Registry instead of provisioning its own inline cluster and infrastructure. (Standalone — `require_services_gcp_module = false` — creates an inline GKE cluster and takes much longer; the point of this lab is to exercise the foundation.)
+
+> **Inputs are validated at plan time.** The module rejects invalid values and combinations — `stateful_pvc_enabled` with `workload_type = "Deployment"`, IAP with no OAuth client, a `prebuilt` image source with no image, a `mount_nfs` job with `enable_nfs = false`, a bare-integer ResourceQuota memory value — *before* anything is created, with a clear error naming the variable. The [Configuration Guide's *Configuration Pitfalls*](https://docs.radmodules.dev/docs/modules/App_GKE) table marks which combinations are caught this way.
+
 ## Objectives
 
 By the end of this lab you will be able to:
@@ -47,7 +51,55 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Deploy** in the RAD platform top navigation, open **App (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
+### Step 1.0 — Choose your lab configuration
+
+Pick a path based on how much of the module you want to exercise. Both bind to your `Services_GCP` foundation via a matching `tenant_deployment_id`.
+
+**Path A — Minimal (fastest).** Defaults: a `Deployment` workload backed by PostgreSQL (the shared Cloud SQL), the shared NFS, and an init job. Set only `project_id` and `tenant_deployment_id`. Enough to walk Tasks 2–6.
+
+**Path B — Full-Feature (recommended for this lab).** Exercises the breadth of the engine so every verification step has something to confirm. Suggested inputs (everything else default):
+
+```hcl
+project_id           = "<your-project-id>"
+tenant_deployment_id = "demo"          # MUST match your Services_GCP deployment
+
+application_name     = "labgke"
+application_version  = "1.0.0"
+
+# Database — uses the shared Cloud SQL from Services_GCP (no per-deploy instance)
+database_type        = "POSTGRES"
+enable_cloudsql_volume = true
+
+# Shared storage & cache (auto-discovered from Services_GCP)
+enable_nfs           = true
+enable_redis         = true
+create_cloud_storage = true
+storage_buckets      = [{ name_suffix = "data" }]
+
+# Workload shape & scaling
+# (leave stateful_pvc_enabled unset for a stateless Deployment; set it true to
+#  exercise a StatefulSet with per-pod PVCs — do NOT also set workload_type)
+min_instance_count   = 1
+max_instance_count   = 3
+enable_pod_disruption_budget = true    # reliability: keep a pod during disruptions
+
+# Observability
+uptime_check_config  = { enabled = true, path = "/healthz" }
+
+# Access control (safe): IAP on GKE needs an OAuth client + support email — enforced
+enable_iap           = true
+iap_oauth_client_id     = "<oauth-client-id>"
+iap_oauth_client_secret = "<oauth-client-secret>"
+iap_support_email       = "<your-email>"
+```
+
+> **Optional advanced add-on — custom domain + WAF/CDN.** `enable_custom_domain = true` (with a domain) provisions a Google-managed certificate via the Gateway; `enable_cloud_armor = true` then needs a custom domain *or* `service_type = "LoadBalancer"` (enforced), and `enable_cdn` requires the custom domain (enforced). These add cost and a post-deploy DNS step — enable only to exercise the edge path.
+
+> Path B keeps IAP populated (no lockout) and leaves Binary Authorization / VPC-SC at safe defaults. The deploy steps below assume Path B and tag feature-specific verifications so Path A users can skip them.
+
+### Step 1.1 — Deploy
+
+1. Click **Deploy** in the RAD platform top navigation, open **App (GKE)** from the **Platform Modules** list to start configuration, set `project_id` and `tenant_deployment_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/App_GKE)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -73,24 +125,57 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 2 — Access & verify [Manual]
 
-1. Confirm the workload is running and find its external address:
+Confirm each capability you enabled actually came up. Steps tagged with a flag apply only to Path B (or whichever features you turned on).
+
+1. **Workload health.** Confirm pods are `Running`/`Ready` and find the external address:
 
    ```bash
    kubectl get pods,svc -n "$NS"
    EXTERNAL_IP=$(kubectl get svc -n "$NS" \
      -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
    echo "External IP: $EXTERNAL_IP"
-   curl -s "http://${EXTERNAL_IP}/healthz"   # expect HTTP 200
+   curl -s -o /dev/null -w "%{http_code}\n" "http://${EXTERNAL_IP}/healthz"   # expect 200 (or 403 if IAP is on)
    ```
 
-2. If the deployment includes a database, confirm the database secret was created
-   and retrieve it for inspection or application configuration:
+2. **Workload shape** — confirm you got a `Deployment` (Path A) or `StatefulSet` (`stateful_pvc_enabled = true`), and the PVCs for a StatefulSet:
 
    ```bash
-   DB_SECRET=$(gcloud secrets list --project="$PROJECT" \
-     --filter="name~db-password" --format="value(name)" --limit=1)
-   gcloud secrets versions access latest --secret="$DB_SECRET" --project="$PROJECT"
+   kubectl get deploy,statefulset,pvc -n "$NS"
    ```
+
+3. **Database** `[database_type != NONE]` — confirm the per-app database/user inside the shared Cloud SQL and the password secret materialised into the namespace:
+
+   ```bash
+   DB_SECRET=$(gcloud secrets list --project="$PROJECT" --filter="name~db-password" --format="value(name)" --limit=1)
+   gcloud secrets versions access latest --secret="$DB_SECRET" --project="$PROJECT"
+   INSTANCE=$(gcloud sql instances list --project="$PROJECT" --format="value(name)" --limit=1)
+   gcloud sql databases list --instance="$INSTANCE" --project="$PROJECT" --format="table(name)"
+   kubectl get secret -n "$NS" | grep -i db        # secret synced into the namespace
+   ```
+
+4. **DB / Redis / NFS wiring** — confirm the env and volume mounts the foundation injected into the pod:
+
+   ```bash
+   POD=$(kubectl get pods -n "$NS" -o jsonpath='{.items[0].metadata.name}')
+   kubectl get pod "$POD" -n "$NS" -o jsonpath='{.spec.containers[0].env[*].name}' | tr ' ' '\n' | grep -iE "DB_|REDIS_"   # DB_*/REDIS_* present
+   kubectl describe pod "$POD" -n "$NS" | grep -iA2 "Mounts:"   # NFS / GCS / Cloud SQL volume mounts
+   ```
+
+5. **Initialization job** — confirm the init job completed:
+
+   ```bash
+   kubectl get jobs -n "$NS"
+   kubectl get job -n "$NS" -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.succeeded}{"\n"}{end}'   # succeeded=1
+   ```
+
+6. **IAP access control** `[enable_iap = true]` — an unauthenticated request is blocked; an authorized one succeeds:
+
+   ```bash
+   curl -s -o /dev/null -w "anonymous: %{http_code}\n" "http://${EXTERNAL_IP}/"
+   curl -s -o /dev/null -w "authed:    %{http_code}\n" -H "Authorization: Bearer $(gcloud auth print-identity-token)" "http://${EXTERNAL_IP}/"
+   ```
+
+7. **Uptime check** `[uptime_check_config.enabled]` — confirm the Cloud Monitoring uptime check exists (Monitoring → Uptime checks, or `gcloud monitoring uptime list-configs`).
 
 ---
 
@@ -192,8 +277,8 @@ not removed here.
 
 | Task | Type | Outcome |
 |---|---|---|
-| 1 — Deploy | Automated | Module deploys the GKE workload, optional Cloud SQL, secrets, storage, and runs init jobs |
-| 2 — Access & verify | Manual | Connect to the cluster; health check passes; database secret retrieved |
+| 1 — Choose config & deploy | Automated | Pick Minimal or Full-Feature; module deploys into the shared GKE Autopilot cluster, binds to the foundation's Cloud SQL/NFS/registry, provisions secrets/storage, and runs init jobs |
+| 2 — Access & verify | Manual | Connect to the cluster; confirm workload health & shape, DB + secret sync, DB/Redis/NFS wiring, init-job success, IAP enforcement, and the uptime check |
 | 3 — Operate | Manual | Inspect workload, scale, update version, manage secrets/jobs/storage, DB access |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and uptime check |
 | 5 — Troubleshoot | Manual | Diagnose pod, database, init-job, scheduling, image-pull, and IAM issues |
