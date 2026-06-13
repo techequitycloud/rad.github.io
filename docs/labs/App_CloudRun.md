@@ -14,6 +14,10 @@ title: "App CloudRun \u2014 Lab Guide"
 
 The lab focuses on operating the **Cloud Run module and the Google Cloud platform**, not on the workload running inside the container. For the complete list of provisioned services and every configuration input (organised by group), see the [Configuration Guide](https://docs.radmodules.dev/docs/modules/App_CloudRun) — this lab deliberately does not duplicate that detail so it stays accurate over time.
 
+> **This lab deploys onto a `Services_GCP` foundation.** Use the **same `tenant_deployment_id`** as your `Services_GCP` deployment so `App CloudRun` auto-discovers and binds to the shared VPC, Cloud SQL instance, NFS server, and Artifact Registry instead of provisioning its own inline copies. (Standalone deployment — with `require_services_gcp_module = false` — is supported, but the point of this lab is to exercise the foundation.)
+
+> **Inputs are validated at plan time.** The module rejects invalid values and invalid feature combinations — a read-replica with no primary, IAP with no authorized users, a `gen1` runtime with NFS, a `mount_nfs` job with `enable_nfs = false`, a `prebuilt` image source with no image — *before* anything is created, with a clear error naming the variable. You will see a fast, explicit failure rather than a half-built deployment. The [Configuration Guide's *Configuration Pitfalls*](https://docs.radmodules.dev/docs/modules/App_CloudRun) table marks which combinations are caught this way.
+
 ## Objectives
 
 By the end of this lab you will be able to:
@@ -45,7 +49,52 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Deploy** in the RAD platform top navigation, open **App (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
+### Step 1.0 — Choose your lab configuration
+
+Pick a path based on how much of the module you want to exercise. Both bind to your `Services_GCP` foundation via a matching `tenant_deployment_id`.
+
+**Path A — Minimal (fastest).** Defaults: a Cloud Run service backed by PostgreSQL (the shared Cloud SQL), the shared NFS, and an init job. Set only `project_id` and `tenant_deployment_id`. Enough to walk Tasks 2–6.
+
+**Path B — Full-Feature (recommended for this lab).** Exercises the breadth of the engine so every verification step has something to confirm. Suggested inputs (everything else default):
+
+```hcl
+project_id           = "<your-project-id>"
+tenant_deployment_id = "demo"          # MUST match your Services_GCP deployment
+
+application_name     = "labapp"
+application_version  = "1.0.0"
+
+# Database — uses the shared Cloud SQL from Services_GCP (no per-deploy instance)
+database_type        = "POSTGRES"
+enable_cloudsql_volume = true
+
+# Shared storage & cache (auto-discovered from Services_GCP)
+enable_nfs           = true
+enable_redis         = true            # falls back to the NFS/Memorystore host
+create_cloud_storage = true
+storage_buckets      = [{ name_suffix = "data" }]
+gcs_volumes          = [{ name = "data", mount_path = "/mnt/data" }]   # GCS Fuse (gen2)
+
+# Runtime
+execution_environment = "gen2"         # required for NFS + GCS Fuse
+min_instance_count   = 0               # scale-to-zero for a lab
+max_instance_count   = 2
+
+# Observability
+uptime_check_config  = { enabled = true, path = "/healthz" }
+
+# Access control (safe): IAP requires at least one authorized identity — enforced
+enable_iap           = true
+iap_authorized_users = ["user:<your-email>"]
+```
+
+> **Optional advanced add-on — custom domain + WAF.** Setting `enable_cloud_armor = true` provisions a Global HTTPS Load Balancer with a Cloud Armor policy and *requires* at least one `application_domains` entry (enforced at plan time) plus a post-deploy DNS A-record and ~10–60 min for the managed SSL certificate. It also adds load-balancer cost. Enable it only if you want to exercise the edge path; otherwise leave it off and access the service on its `*.run.app` URL (or via IAP).
+
+> Path B leaves IAP populated (no lockout) and keeps Binary Authorization / VPC-SC in their safe defaults. The deploy steps below assume Path B and tag feature-specific verifications so Path A users can skip them.
+
+### Step 1.1 — Deploy
+
+1. Click **Deploy** in the RAD platform top navigation, open **App (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id` and `tenant_deployment_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/App_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -71,25 +120,73 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 2 — Access & verify [Manual]
 
-1. Confirm the service is healthy:
+Confirm each capability you enabled actually came up. Steps tagged with a flag apply only to Path B (or whichever features you turned on).
+
+1. **Service health.** With IAP enabled the `*.run.app` URL returns 403 to unauthenticated callers (that is correct — see step 7); without IAP:
 
    ```bash
-   curl -s "$SERVICE_URL/healthz"   # expect HTTP 200
+   curl -s -o /dev/null -w "%{http_code}\n" "$SERVICE_URL/healthz"   # expect 200 (or 403 if IAP is on)
    ```
 
-2. If the deployment includes a database, confirm the database secret was created:
+2. **Database** `[database_type != NONE]` — confirm the per-app database and user were created inside the shared Cloud SQL instance, and the password secret exists:
 
    ```bash
-   gcloud secrets list --project="$PROJECT" \
-     --filter="name~crapp" --format="value(name)"
-   ```
-
-   Retrieve the database password for inspection or application configuration:
-
-   ```bash
+   gcloud secrets list --project="$PROJECT" --filter="name~labapp" --format="value(name)"
    DB_SECRET=$(gcloud secrets list --project="$PROJECT" \
      --filter="name~db-password" --format="value(name)" --limit=1)
-   gcloud secrets versions access latest --secret="$DB_SECRET" --project="$PROJECT"
+   gcloud secrets versions access latest --secret="$DB_SECRET" --project="$PROJECT"   # the generated password
+   INSTANCE=$(gcloud sql instances list --project="$PROJECT" --format="value(name)" --limit=1)
+   gcloud sql databases list --instance="$INSTANCE" --project="$PROJECT" --format="table(name)"
+   ```
+
+3. **Bound to the foundation** — confirm the service joined the *shared* VPC (not an inline one) and references the shared Cloud SQL via the Auth Proxy volume:
+
+   ```bash
+   gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION" \
+     --format="yaml(spec.template.metadata.annotations)" | grep -E "cloudsql-instances|vpc-access"
+   ```
+
+4. **NFS mount** `[enable_nfs = true]` — confirm the NFS volume is mounted into the revision:
+
+   ```bash
+   gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION" \
+     --format="json(spec.template.spec.volumes)" | grep -iE "nfs|server"
+   ```
+
+5. **GCS Fuse + bucket** `[gcs_volumes / storage_buckets]` — confirm the bucket exists and the Fuse volume is mounted:
+
+   ```bash
+   gcloud storage buckets list --project="$PROJECT" --filter="name~labapp" --format="value(name)"
+   gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION" \
+     --format="json(spec.template.spec.volumes)" | grep -i "gcs\|bucket"
+   ```
+
+6. **Redis wiring** `[enable_redis = true]` — confirm `REDIS_HOST` / `REDIS_PORT` were injected:
+
+   ```bash
+   gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION" \
+     --format="json(spec.template.spec.containers[0].env)" | grep -i redis
+   ```
+
+7. **Initialization job** — confirm the init job (e.g. `db-init`) executed successfully during deploy:
+
+   ```bash
+   JOB=$(gcloud run jobs list --project="$PROJECT" --region="$REGION" --filter="metadata.name~init" --format="value(metadata.name)" --limit=1)
+   gcloud run jobs executions list --job="$JOB" --project="$PROJECT" --region="$REGION" \
+     --format="table(metadata.name, status.succeededCount, status.failedCount)"
+   ```
+
+8. **IAP access control** `[enable_iap = true]` — an unauthenticated request is blocked, an authorized one (with an identity token) succeeds:
+
+   ```bash
+   curl -s -o /dev/null -w "anonymous: %{http_code}\n" "$SERVICE_URL/"                                   # expect 403
+   curl -s -o /dev/null -w "authed:    %{http_code}\n" -H "Authorization: Bearer $(gcloud auth print-identity-token)" "$SERVICE_URL/"   # expect 200 if your email is authorized
+   ```
+
+9. **Uptime check** — confirm the module provisioned a Cloud Monitoring uptime check:
+
+   ```bash
+   gcloud monitoring uptime list-configs --project="$PROJECT" --format="table(displayName,monitoredResource.labels.host)" 2>/dev/null | grep -i labapp || echo "(check Monitoring → Uptime checks in the console)"
    ```
 
 ---
@@ -190,9 +287,9 @@ Cloud SQL, registry) are managed separately and are not removed here.
 
 | Task | Type | Outcome |
 |---|---|---|
-| 1 — Deploy | Automated | Module provisions Cloud Run, optional Cloud SQL, secrets, storage, and runs init jobs |
-| 2 — Access & verify | Manual | Health check passes; database secret retrieved |
+| 1 — Choose config & deploy | Automated | Pick Minimal or Full-Feature; module binds to the `Services_GCP` foundation and provisions Cloud Run, the shared Cloud SQL database, secrets, NFS/GCS/Redis wiring, and runs init jobs |
+| 2 — Access & verify | Manual | Confirm health, DB + secret, foundation binding, NFS mount, GCS Fuse + bucket, Redis env, init-job success, IAP enforcement, and the uptime check |
 | 3 — Operate | Manual | Inspect revisions, scale, update version, manage secrets/jobs/storage, DB access |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and uptime check |
 | 5 — Troubleshoot | Manual | Diagnose revision, database, init-job, build, and IAM issues |
-| 6 — Tear down | Automated | Delete (Trash) removes all module resources |
+| 6 — Tear down | Automated | Delete (Trash) removes all module resources; `Services_GCP`-owned shared resources remain |
