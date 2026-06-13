@@ -393,6 +393,8 @@ resources.
 > Risk: **Critical** (data loss / outage / security) — **High** (service degraded) —
 > **Medium** (cost or partial degradation) — **Low** (minor).
 
+> **Inherited plan-time validation.** This module passes its configuration through the [App_CloudRun](App_CloudRun.md) foundation engine, which validates values *and combinations* at plan time — a read replica without its primary, IAP with no authorized identities, a `gen1` runtime with NFS/GCS mounts, a `database_type` that does not match an enabled extension, an out-of-range `redis_port`/`backup_retention_days`. Invalid configuration fails the **plan** with a clear, named error before any resource is created, so most mistakes below are caught up front rather than at apply or runtime.
+
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` | Critical | AnythingLLM requires PostgreSQL; any other engine breaks Prisma ORM and crashes startup. |
