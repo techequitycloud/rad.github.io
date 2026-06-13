@@ -446,18 +446,22 @@ gcloud billing budgets list \
 
 Variables are organised into groups that correspond to the sections shown in the deployment UI. Configure one group at a time before deploying.
 
+> **Inputs are validated at plan time.** The module enforces value and combination rules *before* any resource is created (it requires OpenTofu ≥ 1.9). Invalid values — a malformed `tenant_deployment_id`, an out-of-range threshold, a database version that does not exist — and invalid *combinations* — a read replica without its primary, an enforced VPC-SC perimeter with no allow-listed IPs, a GKE add-on with no cluster — fail the plan with a clear, named error rather than surfacing as a cryptic mid-apply failure or, worse, succeeding silently and doing nothing. Each group below notes the rules that apply. The intent is that a plan either deploys what you asked for or tells you exactly why it cannot.
+
 ### Group 1 — Project & Core Services
+
+> **Choosing your core services.** This group is the single most consequential set of decisions — it selects which data and compute backends every downstream application module will bind to. The database flags are *not* mutually exclusive in code, but pick deliberately by workload: **`create_postgres`** for general-purpose relational apps (the safe default); **`create_mysql`** specifically for MySQL-native apps (WordPress, Moodle, OpenEMR); **`enable_alloydb`** instead of Postgres when the workload is analytics-, vector-, or AI-heavy (columnar engine + pgvector/SCANN); **`create_firestore`** as a complement, not a replacement, when an app needs a serverless document store with real-time sync. Enabling backends you will not use is the most common source of avoidable cost — each is billed whether or not an application connects to it. Set **`create_google_kubernetes_engine = true`** only if you intend to deploy GKE application modules; Cloud Run apps do not need it, and an idle Autopilot cluster still incurs a control-plane charge.
 
 | Variable | Default | Description |
 |---|---|---|
 | `project_id` | *(required)* | GCP project ID into which all module resources are deployed. Changing it after initial deployment recreates all resources in the new project. |
-| `tenant_deployment_id` | `"demo"` | Short identifier (lowercase letters and numbers only, no hyphens) used as the prefix of every resource name. Never change after initial deployment. |
-| `availability_regions` | `["us-central1"]` | Regions for regional resources (subnets, Cloud SQL, Redis). The first region is the primary. Between 1 and 2 regions are supported. |
-| `create_postgres` | `true` | Provision a Cloud SQL PostgreSQL instance in the primary region. |
-| `create_mysql` | `false` | Provision a Cloud SQL MySQL instance in the primary region. |
-| `enable_alloydb` | `false` | Provision an AlloyDB for PostgreSQL cluster (analytics and AI/vector workloads). |
-| `create_firestore` | `false` | Create a Firestore Native database in Enterprise edition. |
-| `create_google_kubernetes_engine` | `false` | Provision GKE cluster(s). Must be `true` before deploying any GKE application module. |
+| `tenant_deployment_id` | `"demo"` | Short identifier (**lowercase letters and numbers only, no hyphens** — enforced at plan time) used as the prefix of every resource name. Never change after initial deployment — it would rename, and therefore recreate, every resource. |
+| `availability_regions` | `["us-central1"]` | Regions for regional resources (subnets, Cloud SQL, Redis). The first region is the primary; a second region enables cross-region read replicas. 1–2 regions are supported, and you must supply at least one `subnet_cidr_range` per region (enforced at plan time). |
+| `create_postgres` | `true` | Provision a Cloud SQL PostgreSQL instance in the primary region. The general-purpose default for relational workloads. |
+| `create_mysql` | `false` | Provision a Cloud SQL MySQL instance. Enable for MySQL-native applications (WordPress, Moodle, OpenEMR); leave off otherwise to avoid an unused instance. |
+| `enable_alloydb` | `false` | Provision an AlloyDB for PostgreSQL cluster. Prefer over `create_postgres` for analytics/AI/vector workloads; it is materially more expensive than a small Cloud SQL instance, so do not enable it "just in case". |
+| `create_firestore` | `false` | Create a Firestore Native database in Enterprise edition. A serverless document store — pay-per-use, scales to zero, so low-risk to enable speculatively. |
+| `create_google_kubernetes_engine` | `false` | Provision GKE cluster(s). Must be `true` before deploying any GKE application module; unnecessary (and a needless control-plane cost) for Cloud Run-only deployments. |
 
 ### Group 2 — Notifications & Labels
 
@@ -473,6 +477,8 @@ Variables are organised into groups that correspond to the sections shown in the
 | `subnet_cidr_range` | `["10.0.0.0/24"]` | CIDR ranges for the VPC subnets, one per availability region. Must be valid RFC 1918 ranges and must not overlap with each other or with GKE pod/service CIDRs. Between 1 and 2 ranges supported. |
 
 ### Group 4 — Database & Storage Services
+
+> **Choosing database configuration.** Three axes drive cost and resilience here. **Availability type** (`ZONAL` vs `REGIONAL`) is the most important: `ZONAL` is cheaper but a single-zone outage takes the database — and every app on it — fully offline; `REGIONAL` roughly doubles instance cost in exchange for an automatic hot standby and sub-minute failover, and is the right choice for anything production-facing. **Tier** (`*_tier`) sets vCPU/memory: under-provisioning shows up as query latency and connection-queue buildup, so size to sustained load and scale up when CPU holds above ~70%. **Read replicas** offload read-heavy traffic and provide a DR promotion target — worth it once a single primary is read-bound, and free of cross-region egress only when you keep them in the primary region (configure a second `availability_regions` entry for cross-region locality/DR). A replica without its primary (`create_*_read_replica = true` while `create_* = false`) is rejected at plan time rather than silently doing nothing. Tune **`*_database_flags`** (notably `max_connections`) up in step with replica/app count to avoid `too many clients` exhaustion. For **AlloyDB**, size `alloydb_cpu_count` to the analytic workload and add a read pool only when read throughput genuinely needs horizontal scale.
 
 **Cloud SQL — PostgreSQL**
 
@@ -522,35 +528,43 @@ Variables are organised into groups that correspond to the sections shown in the
 | `firestore_database_id` | `""` | Firestore database ID (auto-generated as `firestore-db-<random_id>` when empty). Only used when `create_firestore = true`. |
 | `firestore_location_id` | `""` | Firestore location (defaults to the primary region when empty). Only used when `create_firestore = true`. |
 
+> **Storage & cache: one decision, three groups.** Groups 5, 6, and 7 offer the same two capabilities — shared file storage (NFS) and a Redis cache — in two delivery models. **Self-managed (Group 5)** packs both onto a single small VM: cheapest by far, no SLA, a single point of failure, fine for development and cost-sensitive deployments. **Managed (Groups 6 & 7)** splits them into Memorystore Redis and Cloud Filestore: SLA-backed, HA-capable, patched by Google, and correspondingly more expensive. Choose *one* model — running the self-managed VM alongside managed Filestore creates two independent NFS shares (split-brain: a write to one is invisible to clients of the other). The defaults intentionally give you the low-cost VM (`create_network_filesystem = true`) and leave the managed services off; if you switch to managed, set `create_network_filesystem = false` first.
+
 ### Group 5 — Self-Managed NFS & Redis
 
 | Variable | Default | Description |
 |---|---|---|
-| `create_network_filesystem` | `true` | Provision a Compute Engine VM as a combined NFS server and Redis cache. The lower-cost alternative to managed Filestore and Memorystore. |
-| `network_filesystem_machine` | `"e2-small"` | Compute Engine machine type for the NFS/Redis VM. |
-| `network_filesystem_capacity` | `10` | Size in GB of the persistent disk for NFS data. Can be increased but not decreased. |
+| `create_network_filesystem` | `true` | Provision a Compute Engine VM as a combined NFS server and Redis cache. The lower-cost alternative to managed Filestore and Memorystore; no SLA and a single point of failure — suitable for dev/test, not production. |
+| `network_filesystem_machine` | `"e2-small"` | Compute Engine machine type for the NFS/Redis VM. Under-sized for high-throughput NFS or large Redis datasets — step up to `e2-medium`/`n2-standard-2` for heavier use. |
+| `network_filesystem_capacity` | `10` | Size in GB of the persistent disk for NFS data. Can be increased but **not** decreased — provision generously, as a full disk causes application `ENOSPC` write failures. |
 
 ### Group 6 — Managed Redis (Memorystore)
+
+> **Choosing Redis configuration.** The pivotal choice is **tier**: `BASIC` is a single node with no replication — a maintenance event or node failure flushes the entire dataset and (for session stores) logs every user out; `STANDARD_HA` adds a cross-zone replica with automatic failover for roughly double the cost, and is the only tier on which **persistence** (`RDB` snapshots or `AOF`) takes effect. For anything holding state that matters across a failover — sessions, rate-limit counters, job queues — use `STANDARD_HA` *with* a non-`DISABLED` persistence mode (a production `STANDARD_HA` instance left at `DISABLED` is rejected at plan time). Setting persistence on `BASIC` is also rejected, since it would be silently ignored. `redis_connect_mode` cannot be changed after creation, so decide peering vs Private Service Access up front.
 
 | Variable | Default | Description |
 |---|---|---|
 | `create_redis` | `false` | Provision a Cloud Memorystore Redis instance. Enable only when `create_network_filesystem = false` to avoid redundant infrastructure. |
-| `redis_tier` | `"BASIC"` | `BASIC` (single-node) or `STANDARD_HA` (high-availability, ~2× cost). |
-| `redis_memory_size_gb` | `1` | Memory capacity in GB (1–300). |
+| `redis_tier` | `"BASIC"` | `BASIC` (single-node, no replication — cache-only) or `STANDARD_HA` (cross-zone failover, ~2× cost — required for durable state). |
+| `redis_memory_size_gb` | `1` | Memory capacity in GB (1–300). Size to working-set + headroom; an undersized instance evicts hot keys. |
 | `redis_version` | `"REDIS_7_2"` | Redis engine version (`REDIS_7_2` / `REDIS_7_0` / `REDIS_6_X`). |
-| `redis_connect_mode` | `"DIRECT_PEERING"` | `DIRECT_PEERING` or `PRIVATE_SERVICE_ACCESS`. Cannot be changed after creation. |
-| `redis_persistence_mode` | `"DISABLED"` | Persistence mode (effective on `STANDARD_HA` only): `DISABLED`, `RDB`, or `AOF`. |
+| `redis_connect_mode` | `"DIRECT_PEERING"` | `DIRECT_PEERING` (simpler, suits most) or `PRIVATE_SERVICE_ACCESS` (stricter segmentation). **Cannot be changed after creation.** |
+| `redis_persistence_mode` | `"DISABLED"` | Persistence mode (**effective on `STANDARD_HA` only** — enforced): `DISABLED`, `RDB` (periodic snapshots), or `AOF` (minimal loss, higher write overhead). |
 | `redis_rdb_snapshot_period` | `"ONE_HOUR"` | RDB snapshot interval. Only used when `redis_persistence_mode = "RDB"`. |
 
 ### Group 7 — Managed Filestore NFS
 
+> **Choosing Filestore configuration.** Tier sets both performance and the *minimum* capacity you must pay for: `BASIC_HDD` (≥ 1024 GB) for cost-sensitive standard throughput; `BASIC_SSD` (≥ 2560 GB) for higher IOPS; `ENTERPRISE` (≥ 1024 GB) for the highest performance with regional multi-zone availability. The tier↔capacity minimum is enforced at plan time, so an under-sized `BASIC_SSD` fails fast rather than at the API. Tier cannot change post-provision, and capacity can only grow — so pick the tier deliberately and start with realistic headroom.
+
 | Variable | Default | Description |
 |---|---|---|
 | `create_filestore_nfs` | `false` | Provision a Cloud Filestore NFS instance. Enable only when `create_network_filesystem = false`. |
-| `filestore_tier` | `"BASIC_HDD"` | `BASIC_HDD` (min 1024 GB), `BASIC_SSD` (min 2560 GB), or `ENTERPRISE` (min 1024 GB, regional HA). Cannot be changed after provisioning. |
-| `filestore_capacity_gb` | `1024` | Capacity in GB. Tier minimums enforced. Can be increased but not decreased after provisioning. |
+| `filestore_tier` | `"BASIC_HDD"` | `BASIC_HDD` (min 1024 GB), `BASIC_SSD` (min 2560 GB), or `ENTERPRISE` (min 1024 GB, regional HA). **Cannot be changed after provisioning.** |
+| `filestore_capacity_gb` | `1024` | Capacity in GB. Per-tier minimum enforced at plan time. Can be increased but **not** decreased after provisioning. |
 
 ### Group 8 — Google Kubernetes Engine
+
+> **Choosing GKE configuration.** Default to **`AUTOPILOT`** — Google manages node provisioning, scaling, and hardening, you are billed per pod, and the `gke_node_*` variables are ignored entirely. Switch to **`STANDARD`** only when a workload needs control Autopilot does not give: specific machine types, local SSD, or latency-sensitive scheduling (e.g. Temporal's History service). In Standard mode the node-pool variables apply, and `gke_node_min_count ≤ gke_node_initial_count ≤ gke_node_max_count` is enforced at plan time. The **CIDR** variables are the highest-risk settings in this group: node, pod, and service ranges must not overlap each other *or* `subnet_cidr_range`, and the pod range must be large enough for your peak pod count — overlaps fail cluster creation, and an undersized pod CIDR causes `no available IP addresses` scheduling failures later. The defaults are sized for typical use; change them only with a deliberate IP plan. The three **Fleet add-ons** each require a cluster (`create_google_kubernetes_engine = true`, enforced) and add ongoing reconciliation overhead — enable them when you actually use mTLS (Service Mesh), GitOps (Config Sync), or policy enforcement (Policy Controller), not by default.
 
 **Cluster Settings**
 
@@ -598,65 +612,79 @@ Variables are organised into groups that correspond to the sections shown in the
 
 ### Group 11 — VPC Service Controls
 
+> **Choosing VPC-SC configuration — handle with care.** This is the highest-blast-radius feature in the module: an enforced perimeter restricts *all* Google API access to requests originating inside it, so valid IAM credentials alone stop working from outside the allow-list. The safe path is non-negotiable: enable with `vpc_sc_dry_run = true` (the default), watch audit logs for `POLICY_VIOLATION` entries for 24–72 hours, add every legitimate IP/network to `admin_ip_ranges`/`vpc_cidr_ranges`, *then* set `vpc_sc_dry_run = false`. Enforcing with an empty `admin_ip_ranges` would lock you out of your own project — that specific combination is now rejected at plan time, but the broader risk of an incomplete allow-list is yours to manage via dry-run. Enable this only when data-exfiltration control is an actual requirement.
+
 | Variable | Default | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Create a VPC Service Controls perimeter around the project. Always enable with `vpc_sc_dry_run = true` first. |
 | `vpc_cidr_ranges` | `[]` | VPC subnet CIDR ranges permitted through the perimeter. Only used when `enable_vpc_sc = true`. |
-| `admin_ip_ranges` | `[]` | Administrator/operator IP CIDR ranges permitted through the perimeter (office, VPN, CI/CD runners). Only used when `enable_vpc_sc = true`. |
+| `admin_ip_ranges` | `[]` | Administrator/operator IP CIDR ranges permitted through the perimeter (office, VPN, CI/CD runners). Required (non-empty) when enforcing — `enable_vpc_sc = true` with `vpc_sc_dry_run = false` and no ranges is rejected at plan time. |
 | `vpc_sc_dry_run` | `true` | `true` = audit-only (violations logged, not blocked). Set to `false` only after reviewing dry-run logs. |
 
 ### Group 12 — Binary Authorization
 
+> **Choosing Binary Authorization configuration.** The intended end state is `REQUIRE_ATTESTATION` — only images signed by your CI/CD attestor may deploy to Cloud Run or GKE project-wide. But the *order of operations* matters: switching to `REQUIRE_ATTESTATION` before the signing pipeline is producing valid attestations blocks **every** deployment in the project, with recovery only by reverting to `ALWAYS_ALLOW`. Enable with `ALWAYS_ALLOW` first, stand up the attestation pipeline, confirm images are being signed, then tighten to `REQUIRE_ATTESTATION`. `ALWAYS_DENY` is an emergency lockdown switch, not a normal setting.
+
 | Variable | Default | Description |
 |---|---|---|
-| `enable_binary_authorization` | `false` | Enable Binary Authorization deploy-time image verification for the project. Applies project-wide. |
-| `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` | `ALWAYS_ALLOW` (initial setup), `REQUIRE_ATTESTATION` (production), or `ALWAYS_DENY` (lockdown). |
+| `enable_binary_authorization` | `false` | Enable Binary Authorization deploy-time image verification for the project. Applies project-wide, no per-service opt-out. |
+| `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` | `ALWAYS_ALLOW` (initial setup — permit all), `REQUIRE_ATTESTATION` (production — enforce signatures), or `ALWAYS_DENY` (emergency lockdown — block all). |
 
 ### Group 14 — Customer-Managed Encryption Keys (CMEK)
 
+> **Choosing CMEK configuration — decide at day zero.** CMEK gives you control over the at-rest encryption key lifecycle for Cloud SQL, Cloud Storage, Artifact Registry, and GKE. The critical point is timing: enabling it on a *fresh* deployment is seamless, but enabling it *after* resources already exist with Google-managed keys requires a data migration. It is a compliance/governance feature — enable it only if key custody is a genuine requirement, and if so, enable it from the first deployment. `cmek_key_rotation_period` trades crypto-hygiene against operational churn; the 90-day default is a sensible balance.
+
 | Variable | Default | Description |
 |---|---|---|
-| `enable_cmek` | `false` | Provision Cloud KMS keys for customer-managed encryption of Cloud SQL, Cloud Storage, Artifact Registry, and GKE. |
+| `enable_cmek` | `false` | Provision Cloud KMS keys for customer-managed encryption of Cloud SQL, Cloud Storage, Artifact Registry, and GKE. Decide at initial deployment — retrofitting requires data migration. |
 | `cmek_key_rotation_period` | `"7776000s"` | KMS key auto-rotation period as a duration in seconds with an `s` suffix (default 90 days). |
 
 ### Group 16 — Workload Identity Federation
 
+> **Choosing WIF configuration — the restriction field is mandatory in practice.** WIF lets external CI/CD (GitHub Actions, GitLab CI, any OIDC provider) impersonate the platform service accounts with short-lived tokens instead of long-lived key files — a strict security improvement *if* scoped correctly. The trap is the scope field: for `github`, an empty `wif_github_org` removes the `repository_owner` restriction, so **any GitHub repository on the internet could exchange a token and impersonate your SA**; for `generic`, an empty/invalid `wif_oidc_issuer_uri` simply fails provider creation. Both are now caught at plan time — `github` requires `wif_github_org`, and `generic` requires an `https://` issuer — but the underlying point stands: always pin the federation to *your* org/issuer/audience. `wif_provider_type` cannot be changed after provisioning without recreating the provider.
+
 | Variable | Default | Description |
 |---|---|---|
 | `enable_workload_identity_federation` | `false` | Create a WIF pool and provider for keyless CI/CD authentication (no service account key files). |
-| `wif_provider_type` | `"github"` | Provider type: `github`, `gitlab`, or `generic`. |
-| `wif_github_org` | `""` | GitHub organisation to restrict token exchange (empty = accept all repos). Only used when `wif_provider_type = "github"`. |
+| `wif_provider_type` | `"github"` | Provider type: `github`, `gitlab`, or `generic`. Cannot be changed after provisioning. |
+| `wif_github_org` | `""` | GitHub organisation to restrict token exchange. **Required when `wif_provider_type = "github"`** (enforced) — an empty value would let any repository impersonate the service account. |
 | `wif_gitlab_hostname` | `"gitlab.com"` | GitLab hostname for the OIDC issuer. Only used when `wif_provider_type = "gitlab"`. |
-| `wif_oidc_issuer_uri` | `""` | OIDC issuer URI for a generic provider. Only used when `wif_provider_type = "generic"`. |
+| `wif_oidc_issuer_uri` | `""` | OIDC issuer URI for a generic provider. Must be an `https://` URL — required and validated when `wif_provider_type = "generic"`. |
 | `wif_allowed_audiences` | `[]` | Allowed OIDC token audiences. Only used when `wif_provider_type = "generic"`. |
 
 ### Group 17 — Security, Auditing & Compliance
 
+> **Choosing security & audit configuration.** These are largely independent, low-risk toggles whose main cost is observability spend rather than blast radius. `enable_vulnerability_scanning` is cheap insurance — scan-on-push CVE detection that also feeds Binary Authorization attestation. `enable_security_command_center` centralises findings; `enable_scc_notifications` routes them to Pub/Sub for alerting/SIEM and **requires SCC to be enabled** (the combination is checked at plan time). The one to enable *deliberately* is `enable_audit_logging`: Data Read/Write audit logs are invaluable for compliance but can multiply Cloud Logging ingestion cost — turn it on for regulated environments, not by reflex.
+
 | Variable | Default | Description |
 |---|---|---|
-| `enable_vulnerability_scanning` | `false` | Enable Container Analysis scan-on-push CVE scanning for Artifact Registry images. |
-| `enable_audit_logging` | `false` | Enable Data Read and Data Write Cloud Audit Logs for all supported services. Significantly increases log volume and cost. |
+| `enable_vulnerability_scanning` | `false` | Enable Container Analysis scan-on-push CVE scanning for Artifact Registry images. Low cost, high value. |
+| `enable_audit_logging` | `false` | Enable Data Read and Data Write Cloud Audit Logs for all supported services. **Significantly increases log volume and cost** — enable for compliance, not by default. |
 | `enable_security_command_center` | `false` | Enable Security Command Center for centralised security findings. |
-| `enable_scc_notifications` | `false` | Route SCC findings to a Pub/Sub topic. Requires `enable_security_command_center = true`. |
+| `enable_scc_notifications` | `false` | Route SCC findings to a Pub/Sub topic. **Requires `enable_security_command_center = true`** (enforced at plan time). |
 
 ### Group 18 — Cloud Monitoring & Alerting
 
+> **Choosing alerting configuration.** Low-stakes but easy to render inert. The thresholds (0–100, enforced) primarily watch the self-managed NFS/Redis VM, so they matter most when `create_network_filesystem = true`. The common mistake is enabling `configure_email_notification` with an empty `notification_alert_emails` — the channel is created with no recipients and every alert is silently dropped. If you turn alerting on, supply at least one address.
+
 | Variable | Default | Description |
 |---|---|---|
-| `configure_email_notification` | `false` | Create a Cloud Monitoring email notification channel for the CPU, memory, and disk threshold alert policies. |
+| `configure_email_notification` | `false` | Create a Cloud Monitoring email notification channel for the CPU, memory, and disk threshold alert policies. Pair with a non-empty `notification_alert_emails`. |
 | `notification_alert_emails` | `[]` | Email addresses for infrastructure alert notifications. Only used when `configure_email_notification = true`. |
-| `alert_cpu_threshold` | `80` | CPU utilisation % above which an alert is triggered (0–100). |
-| `alert_memory_threshold` | `80` | Memory utilisation % above which an alert is triggered (0–100). |
-| `alert_disk_threshold` | `80` | Disk utilisation % above which an alert is triggered (0–100). |
+| `alert_cpu_threshold` | `80` | CPU utilisation % above which an alert is triggered (0–100, enforced). |
+| `alert_memory_threshold` | `80` | Memory utilisation % above which an alert is triggered (0–100, enforced). |
+| `alert_disk_threshold` | `80` | Disk utilisation % above which an alert is triggered (0–100, enforced). |
 
 ### Group 19 — Billing & Budget
+
+> **Choosing budget configuration.** A cheap guardrail against runaway spend. The one subtlety is `budget_alert_thresholds`: these are **fractions** of `budget_amount`, not percentages — `0.5` means 50%. Entering `50` would only fire at 5000% of budget (i.e. never), so the module restricts each value to the `(0, 1]` range at plan time. As with monitoring, supply `budget_alert_emails` or the alerts have nowhere to go.
 
 | Variable | Default | Description |
 |---|---|---|
 | `create_billing_budget` | `false` | Create a Cloud Billing budget with spend threshold alerts. Requires billing account access. |
 | `budget_alert_emails` | `[]` | Email addresses for billing budget alert notifications. |
 | `budget_amount` | `100` | Monthly budget limit in USD. |
-| `budget_alert_thresholds` | `[0.5, 0.9, 1.0]` | Spend thresholds as fractions of `budget_amount` at which alerts fire. |
+| `budget_alert_thresholds` | `[0.5, 0.9, 1.0]` | Spend thresholds as **fractions** of `budget_amount` (each in `(0, 1]`, enforced) at which alerts fire — `0.5` = 50%, not `50`. |
 
 ---
 
@@ -714,11 +742,23 @@ Because `Services GCP` is the platform layer that every application module depen
 
 > Risk levels: **Critical** (data loss, full outage, security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
 
+> **Many of these are now caught at plan time.** Rows marked **🛡 plan-time** are validated *before* any resource is created — the plan fails with a clear, named error, so you never reach the consequence described. The remaining rows (CIDR overlap, tier sizing, ZONAL-in-production) are judgement calls the module cannot safely decide for you; they are listed so you make the call deliberately. A clean plan is your confirmation that the value/combination rules passed — but it does not validate sizing or topology choices.
+
+> **Provisioning reliability.** The slow-to-create resources carry explicit, generous `timeouts` so normal slow provisioning is never abandoned mid-apply: Cloud SQL and AlloyDB up to 60 minutes, GKE clusters 40–60 minutes, Memorystore/Filestore and the Private Service Access connection 30 minutes. You do not need to babysit a long apply. If a *transient* API error (or a credential that expires during a very long apply) still leaves a resource live in GCP but absent from Terraform state, re-run the deployment — a partial state simply completes; a resource that reports "already exists" can be imported into state rather than recreated. See the lab's *Troubleshoot & Debug* phase for the exact recovery commands.
+
 | Variable | Sensible Default | Risk | Consequence of Incorrect Value |
 |---|---|---|---|
+| `tenant_deployment_id` | lowercase alphanumeric, set once | **High** 🛡 plan-time | Uppercase, hyphens, or underscores are rejected at plan time — it prefixes every resource name and invalid characters would otherwise break GCP naming across dozens of resources. Changing it later renames (recreates) everything. |
+| `wif_github_org` (with `wif_provider_type = "github"`) | your GitHub org | **Critical** 🛡 plan-time | Empty removes the `repository_owner` restriction, letting **any** GitHub repository impersonate the platform service accounts. Now rejected at plan time when WIF + github is enabled. |
+| `wif_oidc_issuer_uri` (with `wif_provider_type = "generic"`) | your `https://` issuer | **High** 🛡 plan-time | Empty/non-HTTPS issuer fails provider creation; now validated at plan time. |
+| `create_*_read_replica` without `create_*` | match to the primary | **Medium** 🛡 plan-time | Previously the replica was silently dropped (you believed you had replicas; you had none). Now rejected at plan time. |
+| `enable_alloydb_read_pool` without `enable_alloydb` | match to the cluster | **Medium** 🛡 plan-time | Read pool silently dropped without an AlloyDB cluster; now rejected at plan time. |
+| `enable_scc_notifications` without `enable_security_command_center` | enable SCC first | **Low** 🛡 plan-time | Notification config silently skipped without SCC; now rejected at plan time. |
+| `gke_node_min_count` / `gke_node_max_count` (Standard mode) | `min ≤ initial ≤ max` | **Medium** 🛡 plan-time | `min > max` is an invalid autoscaler config that fails node-pool creation; the ordering is now enforced at plan time. |
+| `budget_alert_thresholds` | `[0.5, 0.9, 1.0]` | **Medium** 🛡 plan-time | Values are fractions, not percentages — entering `50` for "50%" would fire only at 5000% of budget (never). Restricted to `(0, 1]` at plan time. |
 | `enable_vpc_sc` | `false`; always enable with `vpc_sc_dry_run = true` first | **Critical** | Enabling with `vpc_sc_dry_run = false` on first enable immediately blocks API access across Cloud Build, Cloud Run, GKE, and Secret Manager for any identity, IP, or network missing from the access level. Dry-run for 24–72 hours, then enforce. |
 | `vpc_sc_dry_run` | `true` — never skip dry-run on first enable | **Critical** | `false` without a prior dry-run audit causes immediate, wide-blast-radius API blocking with no automatic rollback — the access level must be corrected manually. |
-| `admin_ip_ranges` | Office/VPN CIDR + CI/CD runner IPs | **Critical** | Empty with `enable_vpc_sc = true` blocks all Google Cloud API calls from developer machines; audit logs show `POLICY_VIOLATION` until IPs are added. |
+| `admin_ip_ranges` | Office/VPN CIDR + CI/CD runner IPs | **Critical** (partly 🛡 plan-time) | Empty while *enforcing* (`enable_vpc_sc = true`, `vpc_sc_dry_run = false`) is rejected at plan time. In dry-run it is allowed, but an incomplete allow-list still surfaces as `POLICY_VIOLATION` in audit logs — the reason dry-run exists. |
 | `enable_binary_authorization` | `false`; enable only after attestation pipeline is in place | **Critical** | `REQUIRE_ATTESTATION` without a functioning attestation pipeline blocks every image deployment across the project; recovery requires reverting to `ALWAYS_ALLOW`. |
 | `subnet_cidr_range` | `["10.0.0.0/24"]` — must not overlap GKE pod/service CIDRs | **High** | Overlap with `gke_pod_base_cidr` or `gke_service_base_cidr` fails GKE cluster creation with a CIDR conflict, blocking all GKE application modules. |
 | `gke_pod_base_cidr` | `"10.64.0.0/10"` — large enough for pod density | **High** | Too small for the expected pod count: GKE cannot schedule new pods once the pod CIDR is exhausted (`no available IP addresses`). |
@@ -727,13 +767,13 @@ Because `Services GCP` is the platform layer that every application module depen
 | `postgres_database_flags` | `max_connections = "200"` | **High** | Too low for the number of replicas: connection-pool exhaustion (`FATAL: sorry, too many clients already`) across all modules. |
 | `mysql_database_availability_type` | `"ZONAL"`; use `"REGIONAL"` for production | **High** | Same single-zone failure risk as PostgreSQL for MySQL-backed apps (WordPress, Moodle, OpenEMR). |
 | `network_filesystem_capacity` | `10` GB | **High** | Too small: the NFS disk fills and applications fail to write (`ENOSPC`). Capacity can only be increased — provision generously. |
-| `filestore_capacity_gb` | `1024` GB (BASIC_HDD minimum) | **High** | Below the tier minimum, Filestore provisioning fails. Minimums: 1024 GB (BASIC_HDD/ENTERPRISE), 2560 GB (BASIC_SSD). |
+| `filestore_capacity_gb` | `1024` GB (BASIC_HDD minimum) | **High** 🛡 plan-time | Below the tier minimum, Filestore provisioning would fail at the API; the per-tier minimum (1024 GB BASIC_HDD/ENTERPRISE, 2560 GB BASIC_SSD) is now enforced at plan time. |
 | `redis_tier` | `"BASIC"` | **High** | `"BASIC"` for production session storage: a node failure or maintenance event loses all Redis data and logs out all users. Use `"STANDARD_HA"`. |
-| `redis_persistence_mode` | `"DISABLED"`; use `"RDB"`/`"AOF"` for production `STANDARD_HA` | **High** | `"DISABLED"` with `STANDARD_HA` in production: a failover flushes all Redis data — sessions, cached pages, rate-limit counters. |
+| `redis_persistence_mode` | `"DISABLED"`; use `"RDB"`/`"AOF"` for production `STANDARD_HA` | **High** (partly 🛡 plan-time) | `"DISABLED"` with `STANDARD_HA` in production flushes all Redis data on failover (enforced for `environment = production`). Setting `RDB`/`AOF` on `BASIC` is rejected at plan time, since the tier ignores persistence. |
 | `enable_cmek` | `false` | **High** | Enabling after resources are provisioned with Google-managed keys requires data migration; service accounts must hold the KMS encrypter/decrypter role or resource creation fails. |
 | `create_google_kubernetes_engine` | `true` before any GKE application module | **High** | `false` when a GKE application module is deployed: the cluster does not exist and all GKE deployments fail. |
 | `create_network_filesystem` + `create_filestore_nfs` | Use one or the other | **Medium** | Both `true` creates two independent NFS infrastructures, leading to split-brain file storage where writes to one share are invisible to clients of the other. |
 | `network_filesystem_machine` | `"e2-small"` | **Medium** | Under-provisioned for high-throughput NFS or large Redis datasets. Upgrade to `e2-medium` or `n2-standard-2` for production. |
-| `enable_gke_backup` | `false` — requires `create_google_kubernetes_engine = true` | **Medium** | Enabling without a GKE cluster fails with a dependency error. Enable GKE first. |
+| `enable_gke_backup` | `false` — requires `create_google_kubernetes_engine = true` | **Medium** 🛡 plan-time | Enabling without a GKE cluster (along with the other GKE add-ons: Service Mesh, Config Sync, Policy Controller) is now rejected at plan time. Enable GKE first. |
 | `enable_audit_logging` | `false` | **Medium** | `true` significantly increases Cloud Logging ingestion volume and cost. Enable deliberately for compliance environments. |
 | `configure_email_notification` | `false` | **Low** | `true` with an empty `notification_alert_emails` list creates a notification channel with no recipients — alerts are silently dropped. |

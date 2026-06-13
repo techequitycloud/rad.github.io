@@ -37,19 +37,17 @@ rad.github.io/
 │   └── workflows/           # 9 role-based workflow docs
 │       ├── ace/ pca/ pcd/   # GCP certification sections
 │       └── pde/ pse/
-│
-├── updates/                 # External source files, merged into docs/
-│   ├── rad-modules/         # Base module documentation
-│   ├── rad-automation/      # Platform automation docs (overrides)
-│   └── partner-modules/     # Partner module docs (highest priority)
+│                            # docs/ is updated directly from the source repos
+│                            # (rad-modules, rad-automation, partner-modules);
+│                            # there is no longer an updates/ staging dir — see §11
 │
 ├── src/
 │   ├── components/          # Custom React components
 │   │   └── YouTubeEmbed/    # Video player with GCS poster support
 │   └── css/                 # Theme overrides
 │
-├── apply_all_updates.py     # Master sync: updates/ → docs/
-├── apply_module_updates.py  # Module merge logic (preserves video headers)
+├── apply_all_updates.py     # LEGACY (updates/ → docs/) — retired, not run; see §11
+├── apply_module_updates.py  # LEGACY merge logic — retired; kept for reference
 ├── update_videos.py         # Bulk YouTube embed insertion (5 patterns)
 ├── verify_changes.py        # Playwright browser verification
 ├── verify_final.py          # Final Playwright verification with video recording
@@ -74,7 +72,7 @@ This isolates assets (diagrams, code samples) per module and keeps the `labs/` a
 
 ### 3.2 Flat Sections with Name Normalisation
 
-Capabilities, features, guides, practices, outcomes, tutorials, and workflows are flat directories. Update files arriving from sub-projects use varied naming conventions; `apply_all_updates.py` normalises them via `NAME_MAP` before writing to `docs/`.
+Capabilities, features, guides, practices, outcomes, tutorials, and workflows are flat directories. Source files use varied naming conventions; map them to the canonical `docs/` filename when syncing (the legacy `NAME_MAP` in `apply_all_updates.py` records the historical mappings for reference).
 
 Examples:
 - `admins.md` → `admin.md`
@@ -84,11 +82,13 @@ Examples:
 
 ### 3.3 Multi-Source Priority System
 
-Three sub-project sources are merged in priority order (last wins on conflict):
+Docs originate in three source repositories. When the same page exists in more than one, precedence is (highest wins):
 
-1. `updates/rad-modules` — baseline module documentation
-2. `updates/rad-automation` — platform automation overrides
-3. `updates/partner-modules` — partner module content (highest priority)
+1. `rad-modules` — baseline module documentation
+2. `rad-automation` — platform automation overrides
+3. `partner-modules` — partner module content (highest priority)
+
+Edit the canonical source, then sync directly into `docs/` (§11). These are sibling checkouts of this repo, not an in-repo `updates/` staging directory.
 
 ### 3.4 Sidebar Navigation is Explicit
 
@@ -118,7 +118,14 @@ sidebar_label: "App CloudRun"
 - `sidebar_label` — display name in the nav tree (keep in sync with `sidebars.ts`)
 - `id` and `slug` are optional and rarely needed; omit unless there is a specific routing reason
 
-When `apply_all_updates.py` creates a new doc, it auto-generates minimal front matter from the first `# Heading` of the update file.
+When adding a **new** page from a source repo (which ships no front matter), create a minimal block from the first `# Heading`, then add the `sidebars.ts` entry (§10) — pages are not auto-discovered. Use this shape:
+
+```yaml
+---
+title: "<the page's # heading text>"
+sidebar_label: "<short nav label>"
+---
+```
 
 ---
 
@@ -268,7 +275,7 @@ Architecture diagrams use Unicode box-drawing characters (not ASCII hyphens). Ev
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Fix applied (commits 3047598, b93ac3e):** 658 misaligned lines were corrected across 56 lab and module docs, and the same corrections were mirrored in the `updates/` source files.
+**Fix applied (commits 3047598, b93ac3e):** 658 misaligned lines were corrected across 56 lab and module docs, with the same corrections made in the source repos so a re-sync does not reintroduce them.
 
 ### 6.5 Section Dividers
 
@@ -420,36 +427,47 @@ Sidebar labels for GKE/CloudRun modules should use the format `Module CloudRun` 
 
 ---
 
-## 11. Update / Merge Workflow
+## 11. Update / Sync Workflow
 
-### 11.1 `apply_all_updates.py`
+Documentation originates in the **source repositories** — `rad-modules`, `rad-automation`, and `partner-modules` (checked out as siblings of this repo) — each under `docs/<section>/<file>.md`. The site is now updated **directly from those source repos**.
 
-Merges all `.md` files from `updates/` into `docs/`, in source-priority order:
+> **The `updates/` staging directory is no longer used.** Earlier, source docs were copied into `updates/<project>/docs/...` and merged into `docs/` by `apply_all_updates.py` / `apply_module_updates.py`. That staging step has been retired — edit the doc in its source repo and sync it straight into `docs/`. The `apply_*.py` scripts remain in the repo for historical reference only and should not be run.
+
+### 11.1 Canonical source per doc
+
+A given page has one canonical source repo. Where the same page exists in more than one, precedence is unchanged: `rad-modules` (baseline) → `rad-automation` → `partner-modules` (highest priority). Edit the doc in its source repo first so the two stay in sync, then sync it into the site.
+
+### 11.2 Syncing a source doc into the site
+
+Source docs are **plain Markdown** — they do **not** carry the site's YAML front matter or `<YouTubeEmbed>` video header. When updating `docs/<section>/<file>.md` from its source, the front matter and video header are **site-owned** and the body is **source-owned**:
+
+1. Keep the existing front matter block (`--- … ---`) verbatim.
+2. Keep the `<YouTubeEmbed>` + PDF-link header if the page has one (§5.1, §7).
+3. Replace everything from the first `# ` heading onward with the source body.
+4. Re-apply the formatting and MDX-safety rules (§6, §8) — escape `<`, `${…}`, and `{…}` in prose, and verify ASCII box alignment — since source bodies are not authored against Docusaurus/MDX.
+
+This is the same preservation the retired `apply_update()` performed automatically; it now happens as part of the sync. A quick way to apply it for a single file:
 
 ```bash
-python3 apply_all_updates.py
+# From the rad.github.io repo root, with the source repo as a sibling.
+# Preserves the site front matter (first --- … --- block) and replaces the body.
+python3 - <<'PY'
+src = "../partner-modules/docs/modules/Services_GCP.md"   # source-owned body
+dst = "docs/modules/Services_GCP.md"                       # site-owned front matter
+import io
+lines = io.open(dst, encoding="utf-8").read().splitlines()
+close = next(i for i in range(1, len(lines)) if lines[i].strip() == "---")
+fm = "\n".join(lines[:close+1])
+body = io.open(src, encoding="utf-8").read().rstrip("\n")
+io.open(dst, "w", encoding="utf-8").write(fm + "\n\n" + body + "\n")
+PY
 ```
 
-**What it does:**
-- Resolves each update file to a target path in `docs/`
-- Calls `apply_update()` to merge content while preserving video headers
-- Creates new docs (with auto-generated front matter) if no target exists
-- Skips files in `implementation/` directories and README files
-
-### 11.2 `apply_module_updates.py` — `apply_update()`
-
-Core merge logic. Behaviour depends on whether the published doc already has a `<YouTubeEmbed>`:
-
-| Published state | Action |
-|-----------------|--------|
-| Has `YouTubeEmbed` | Preserve entire original header (front matter + heading + video + PDF + trailing blanks), append update body |
-| No `YouTubeEmbed` | Preserve only front matter, replace content from heading onward |
-
-This ensures video sections and PDF links are not overwritten by upstream content updates.
+> If the page has a `<YouTubeEmbed>` header (most module/feature pages do), do **not** use the snippet above as-is — it preserves only the front matter. Either keep the heading-plus-video header block as well, or re-insert the video with `update_videos.py` (§11.3) after syncing.
 
 ### 11.3 `update_videos.py`
 
-Bulk-inserts YouTube embeds and PDF links. Run it with a hardcoded list of `(file_path, video_id, [img_name, pdf_name])` tuples. It is not idempotent for new embeds (Type 1/2/4) but is safe for updates to existing embeds (Type 3).
+Bulk-inserts YouTube embeds and PDF links. Run it with a hardcoded list of `(file_path, video_id, [img_name, pdf_name])` tuples. It is not idempotent for new embeds (Type 1/2/4) but is safe for updates to existing embeds (Type 3). Still current — video headers remain site-owned content layered on top of the synced body.
 
 ---
 
@@ -503,6 +521,6 @@ Run against a local dev server (`yarn start`) before pushing significant structu
 | ASCII box looks broken | Lines end at wrong column | Count characters; pad/trim to match right `│` column |
 | Sidebar shows wrong label | `sidebar_label` in front matter overrides `sidebars.ts` | Remove front matter label or sync both |
 | PDF/poster 404 | Case mismatch with GCS object name | Use `Wordpress` not `WordPress`; match GCS exactly |
-| Video not showing | Update merged via `apply_update()` overwrote header | Fix: `has_video=True` preserves header; check detection logic |
+| Video not showing | Sync replaced the body but dropped the site-owned `<YouTubeEmbed>` header | Re-add the video header (§11.2), or re-run `update_videos.py` (§7.1) after syncing |
 | Wrong section in nav | Module in wrong sidebar category | Move the entry in `sidebars.ts` |
 | Module name with underscores in heading | Template auto-generated `sidebar_label` used as heading | Replace `_` with space in `# ` heading and table cells |

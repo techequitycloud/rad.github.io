@@ -8,7 +8,7 @@ title: "Services GCP \u2014 Lab Guide"
 
 ## Overview
 
-`Services GCP` is the **foundational infrastructure module** in the RAD Modules ecosystem. It must be deployed before any application module and provisions the shared GCP services that all applications depend on: VPC networking, Cloud SQL databases, a self-managed NFS and Redis VM, Artifact Registry, IAM service accounts, and optional managed services (Cloud Filestore, Cloud Memorystore, GKE Autopilot) and security controls (CMEK, Binary Authorization, VPC Service Controls).
+`Services GCP` is the **foundational infrastructure module** in the RAD Modules ecosystem. It must be deployed before any application module and provisions the shared GCP services that all applications depend on: VPC networking, Cloud SQL databases, a self-managed NFS and Redis VM, Artifact Registry, IAM service accounts, and a broad set of optional capabilities — AlloyDB for PostgreSQL, Firestore, Cloud Memorystore (Redis), Cloud Filestore (NFS), GKE Autopilot/Standard clusters, and security/governance controls (CMEK, Binary Authorization, VPC Service Controls, Security Command Center, Workload Identity Federation, audit logging, monitoring alerts, and billing budgets).
 
 **Estimated time:** 1.5–2.5 hours (add 30–40 minutes if deploying a GKE cluster)
 
@@ -19,8 +19,10 @@ title: "Services GCP \u2014 Lab Guide"
 - Provisions four IAM service accounts (Cloud Build, Cloud Deploy, Cloud Run, NFS/Redis) with all required role bindings
 - Creates a shared Artifact Registry Docker repository
 - Provisions Cloud SQL PostgreSQL (enabled by default) and optionally MySQL or AlloyDB instances with private IP, automated backups, and Secret Manager root passwords
+- Optionally creates a Firestore Native (Enterprise edition) document database
 - Deploys a self-managed NFS + Redis VM as a Managed Instance Group with auto-healing and daily disk snapshots (enabled by default)
-- Optionally provisions Cloud Memorystore for Redis, Cloud Filestore NFS, GKE Autopilot cluster(s), CMEK, Binary Authorization, VPC Service Controls, Security Command Center, and Cloud Monitoring alert policies
+- Optionally provisions Cloud Memorystore for Redis, Cloud Filestore NFS, GKE Autopilot/Standard cluster(s), CMEK, Binary Authorization, VPC Service Controls, Security Command Center, Workload Identity Federation, and Cloud Monitoring alert policies
+- Validates your inputs at **plan time** — invalid values or feature combinations are rejected with a clear error before any resource is created
 
 ### What You Do Manually
 
@@ -83,32 +85,80 @@ export NFS_VM=$(gcloud compute instances list \
 
 ### Step 1.1 — Configure Variables
 
-Variables are configured in the module configuration form in the RAD platform before deploying. The table below covers the most commonly adjusted variables.
+Variables are configured in the module configuration form in the RAD platform before deploying. The table below covers the most commonly adjusted variables; the **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Services_GCP)** documents every variable, grouped exactly as the form presents them, with a *"Choosing…"* decision note for each group explaining the cost / availability / security trade-offs behind the choice.
+
+> **Inputs are validated at plan time.** You do not have to get every combination right by memory — the module rejects invalid values (a malformed `tenant_deployment_id`, a Filestore capacity below the tier minimum, a budget threshold outside `0–1`) and invalid combinations (a read replica with no primary, an enforced VPC-SC perimeter with no allow-listed IPs, a GKE add-on with no cluster) *before* anything is created, with a message naming the offending variable. Treat a clean plan as confirmation that the value and combination rules passed — sizing and CIDR-topology choices are still yours to get right.
 
 | Variable | Default | Description |
 |---|---|---|
 | `project_id` | _(required)_ | GCP project ID to deploy into |
-| `availability_regions` | `['us-central1']` | List of regions for subnets and resources; first entry is the primary region |
-| `network_name` | `vpc-network` | Name of the VPC network to create |
-| `subnet_cidr_range` | `['10.0.0.0/24']` | CIDR ranges for VPC subnets, one per region |
+| `tenant_deployment_id` | `demo` | **Prefix of every resource name** (lowercase letters/numbers only, no hyphens — enforced). Application modules must use this same value to bind to this foundation. Never change after first deploy. |
+| `availability_regions` | `['us-central1']` | List of regions for subnets and resources; first entry is the primary region. A second region enables cross-region read replicas. |
+| `subnet_cidr_range` | `['10.0.0.0/24']` | CIDR ranges for VPC subnets, one per region (at least one per region is enforced). The VPC network name is derived automatically from the tenant — it is not a configurable variable. |
 | `support_users` | `[]` | Email addresses added to monitoring notification channels and IAM |
 | `resource_labels` | `{}` | Labels applied to all provisioned resources |
 | `create_postgres` | `true` | Provision a Cloud SQL PostgreSQL instance |
-| `postgres_database_version` | `POSTGRES_16` | PostgreSQL engine version |
+| `postgres_database_version` | `POSTGRES_17` | PostgreSQL engine version (`POSTGRES_17`/`16`/`15`/`14` — validated) |
 | `postgres_database_availability_type` | `ZONAL` | `ZONAL` for dev/test; `REGIONAL` for high-availability production |
 | `postgres_tier` | `db-custom-1-3840` | Cloud SQL machine type (1 vCPU, 3.75 GB RAM) |
 | `create_mysql` | `false` | Provision a Cloud SQL MySQL instance (required by WordPress, Moodle, Odoo) |
+| `enable_alloydb` | `false` | Provision an AlloyDB for PostgreSQL cluster (analytics/AI/vector workloads). Higher cost than a small Cloud SQL instance. |
+| `create_firestore` | `false` | Create a Firestore Native (Enterprise) document database. Serverless, pay-per-use. |
 | `create_network_filesystem` | `true` | Deploy self-managed NFS + Redis VM as a Managed Instance Group |
 | `network_filesystem_machine` | `e2-small` | Compute Engine machine type for the NFS/Redis VM |
-| `network_filesystem_capacity` | `10` | NFS data disk size in GB |
-| `create_redis` | `false` | Provision Cloud Memorystore for Redis (managed alternative to the NFS VM Redis) |
-| `create_filestore_nfs` | `false` | Provision Cloud Filestore NFS (managed alternative to the NFS VM) |
-| `create_google_kubernetes_engine` | `false` | Provision one or more GKE Autopilot clusters |
-| `enable_cmek` | `false` | Encrypt resources with Customer-Managed Encryption Keys via Cloud KMS |
-| `enable_binary_authorization` | `false` | Enable Binary Authorization image policy enforcement |
-| `enable_vpc_sc` | `false` | Create a VPC Service Controls perimeter around the project |
+| `network_filesystem_capacity` | `10` | NFS data disk size in GB (grow-only) |
+| `create_redis` | `false` | Provision Cloud Memorystore for Redis (managed alternative; set `create_network_filesystem = false`) |
+| `create_filestore_nfs` | `false` | Provision Cloud Filestore NFS (managed alternative; set `create_network_filesystem = false`) |
+| `create_google_kubernetes_engine` | `false` | Provision one or more GKE Autopilot/Standard clusters |
+| `enable_vulnerability_scanning` | `false` | Scan-on-push CVE scanning for Artifact Registry images (low cost, high value) |
+| `enable_cmek` | `false` | Encrypt resources with Customer-Managed Encryption Keys via Cloud KMS (decide at first deploy) |
+| `enable_binary_authorization` | `false` | Enable Binary Authorization image policy enforcement (start in `ALWAYS_ALLOW`) |
+| `enable_vpc_sc` | `false` | Create a VPC Service Controls perimeter around the project (start in `vpc_sc_dry_run = true`) |
 | `enable_security_command_center` | `false` | Enable Security Command Center for centralised security findings |
-| `configure_email_notification` | `false` | Create Cloud Monitoring alert policies for CPU, memory, and disk |
+| `configure_email_notification` | `false` | Create Cloud Monitoring alert policies for CPU, memory, and disk (supply `notification_alert_emails`) |
+
+### Step 1.1b — Choose Your Lab Path
+
+This lab supports two configurations. Pick one based on how much of the module you want to exercise (and how much lab time/cost you can spend).
+
+**Path A — Minimal (fastest, ~20–35 min).** Accept the defaults: PostgreSQL + the self-managed NFS/Redis VM. This is enough to back a single Cloud Run application and to walk Phases 2–4 and 7. Set only `project_id` and `tenant_deployment_id`.
+
+**Path B — Full-Feature (recommended for this lab, ~45–70 min with GKE).** Turn on a representative breadth of capabilities so every verification phase has something to demonstrate. Suggested configuration:
+
+```hcl
+project_id                      = "<your-project-id>"
+tenant_deployment_id            = "demo"
+
+# Databases — exercise all three relational engines + Firestore
+create_postgres                 = true
+create_mysql                    = true
+create_firestore                = true
+# enable_alloydb                = true   # optional: highest-cost item, enable to see AlloyDB
+
+# Compute
+create_google_kubernetes_engine = true   # adds ~10–20 min for the Autopilot cluster
+
+# Storage & cache — keep the default self-managed VM, OR switch to managed:
+create_network_filesystem       = true
+# create_redis                  = true   # if set, also set create_network_filesystem = false
+# create_filestore_nfs          = true   # if set, also set create_network_filesystem = false
+
+# Security & governance (all in safe/audit modes — no lockout risk)
+enable_vulnerability_scanning   = true
+enable_binary_authorization     = true   # stays in ALWAYS_ALLOW until you add an attestation pipeline
+enable_cmek                     = true
+enable_vpc_sc                   = true   # remains dry-run (vpc_sc_dry_run = true) — audit only
+enable_security_command_center  = true
+
+# Observability & cost
+configure_email_notification    = true
+notification_alert_emails       = ["you@example.com"]
+create_billing_budget           = true
+budget_amount                   = 100
+budget_alert_emails             = ["you@example.com"]
+```
+
+> Path B leaves the two highest-blast-radius features (`enable_binary_authorization`, `enable_vpc_sc`) in their **safe modes** — `ALWAYS_ALLOW` and dry-run — so you can observe them in the console without risking a project-wide block. Tighten them only after reading the Configuration Guide's rollout notes. The remainder of this lab assumes Path B and marks engine-specific steps with the feature flag that enables them, so Path A users can simply skip those.
 
 ### Step 1.2 — Initiate Deployment
 
@@ -154,6 +204,8 @@ After deployment completes, the following outputs are available on the deploymen
 | `mysql_instance_connection_name` | Cloud SQL Auth Proxy connection name (if `create_mysql = true`) |
 | `redis_host` | Memorystore Redis host IP (if `create_redis = true`) |
 | `filestore_ip` | Filestore NFS server IP (if `create_filestore_nfs = true`) |
+| `alloydb_cluster_name` | AlloyDB cluster name (if `enable_alloydb = true`) |
+| `alloydb_primary_ip` | Private IP of the AlloyDB primary instance (if `enable_alloydb = true`) |
 | `gke_cluster_name` | Primary GKE cluster name (if `create_google_kubernetes_engine = true`) |
 | `binauthz_attestor_name` | Binary Authorization attestor name (if `enable_binary_authorization = true`) |
 | `storage_kms_key_name` | KMS key resource name for Cloud Storage (if `enable_cmek = true`) |
@@ -203,9 +255,9 @@ In the Cloud Console, navigate to **VPC network → VPC networks** and confirm t
 
 > **REST API equivalent:**
 > ```bash
-> curl -s -H "Authorization: Bearer $&#123;TOKEN&#125;" \
->   "https://compute.googleapis.com/compute/v1/projects/$&#123;PROJECT&#125;/global/networks/$&#123;NETWORK&#125;" \
->   | jq '&#123;name, autoCreateSubnetworks, routingConfig&#125;'
+> curl -s -H "Authorization: Bearer ${TOKEN}" \
+>   "https://compute.googleapis.com/compute/v1/projects/${PROJECT}/global/networks/${NETWORK}" \
+>   | jq '{name, autoCreateSubnetworks, routingConfig}'
 > ```
 
 ### Step 2.2 — Inspect Subnets
@@ -252,9 +304,9 @@ gcloud compute firewall-rules list \
 
 > **REST API equivalent:**
 > ```bash
-> curl -s -H "Authorization: Bearer $&#123;TOKEN&#125;" \
->   "https://compute.googleapis.com/compute/v1/projects/$&#123;PROJECT&#125;/global/firewalls" \
->   | jq '.items[] | select(.network | endswith("'$&#123;NETWORK&#125;'")) | &#123;name, direction, allowed&#125;'
+> curl -s -H "Authorization: Bearer ${TOKEN}" \
+>   "https://compute.googleapis.com/compute/v1/projects/${PROJECT}/global/firewalls" \
+>   | jq '.items[] | select(.network | endswith("'${NETWORK}'")) | {name, direction, allowed}'
 > ```
 
 ### Step 2.5 — Inspect IAM Service Accounts
@@ -286,9 +338,9 @@ gcloud projects get-iam-policy ${PROJECT} \
 
 > **REST API equivalent:**
 > ```bash
-> curl -s -H "Authorization: Bearer $&#123;TOKEN&#125;" \
->   "https://iam.googleapis.com/v1/projects/$&#123;PROJECT&#125;/serviceAccounts" \
->   | jq '.accounts[] | &#123;displayName, email, disabled&#125;'
+> curl -s -H "Authorization: Bearer ${TOKEN}" \
+>   "https://iam.googleapis.com/v1/projects/${PROJECT}/serviceAccounts" \
+>   | jq '.accounts[] | {displayName, email, disabled}'
 > ```
 
 ### Step 2.6 — Verify Artifact Registry Repository
@@ -322,9 +374,9 @@ In the Cloud Console, navigate to **SQL** and click the instance name. Review th
 
 > **REST API equivalent:**
 > ```bash
-> curl -s -H "Authorization: Bearer $&#123;TOKEN&#125;" \
->   "https://sqladmin.googleapis.com/v1/projects/$&#123;PROJECT&#125;/instances/$&#123;PG_INSTANCE&#125;" \
->   | jq '&#123;name, state, databaseVersion, settings: &#123;tier: .settings.tier, availabilityType: .settings.availabilityType&#125;&#125;'
+> curl -s -H "Authorization: Bearer ${TOKEN}" \
+>   "https://sqladmin.googleapis.com/v1/projects/${PROJECT}/instances/${PG_INSTANCE}" \
+>   | jq '{name, state, databaseVersion, settings: {tier: .settings.tier, availabilityType: .settings.availabilityType}}'
 > ```
 
 ### Step 3.2 — Verify Private IP Only
@@ -376,8 +428,8 @@ gcloud secrets versions access latest \
 
 > **REST API equivalent:**
 > ```bash
-> curl -s -H "Authorization: Bearer $&#123;TOKEN&#125;" \
->   "https://secretmanager.googleapis.com/v1/projects/$&#123;PROJECT&#125;/secrets/$&#123;PG_SECRET&#125;/versions/latest:access" \
+> curl -s -H "Authorization: Bearer ${TOKEN}" \
+>   "https://secretmanager.googleapis.com/v1/projects/${PROJECT}/secrets/${PG_SECRET}/versions/latest:access" \
 >   | jq -r '.payload.data' | base64 --decode
 > ```
 
@@ -391,11 +443,58 @@ gcloud sql instances describe ${PG_INSTANCE} \
 
 **Expected result:** The `max_connections` flag is set to `200` (default) or your configured value.
 
+### Step 3.6 — Confirm Cloud SQL MySQL Instance [`create_mysql = true`]
+
+```bash
+export MY_INSTANCE=$(gcloud sql instances list \
+  --project=${PROJECT} \
+  --filter="databaseVersion~MYSQL" \
+  --format="value(name)" \
+  --limit=1)
+
+gcloud sql instances describe ${MY_INSTANCE} \
+  --project=${PROJECT} \
+  --format="yaml(name,databaseVersion,settings.tier,settings.availabilityType,ipAddresses,state)"
+```
+
+**Expected result:** A second Cloud SQL instance in `RUNNABLE` state with a `MYSQL_*` version, private IP only, and its own root password in Secret Manager (`gcloud secrets list --filter="name~mysql"`). PostgreSQL and MySQL coexist as independent instances — applications bind to whichever their stack requires.
+
+### Step 3.7 — Confirm AlloyDB Cluster [`enable_alloydb = true`]
+
+```bash
+gcloud alloydb clusters list --region=${REGION} --project=${PROJECT} \
+  --format="table(name,state)"
+
+export ALLOYDB_CLUSTER=$(gcloud alloydb clusters list \
+  --region=${REGION} --project=${PROJECT} \
+  --format="value(name)" --limit=1)
+
+gcloud alloydb instances list \
+  --cluster=$(basename ${ALLOYDB_CLUSTER}) \
+  --region=${REGION} --project=${PROJECT} \
+  --format="table(name,instanceType,state)"
+```
+
+**Expected result:** A `READY` cluster with at least a `PRIMARY` instance (plus a `READ_POOL` instance if `enable_alloydb_read_pool = true`). The connection IP is exposed as the `alloydb_primary_ip` output. AlloyDB is PostgreSQL-compatible — use it instead of Cloud SQL PostgreSQL for analytics/vector workloads.
+
+### Step 3.8 — Confirm Firestore Database [`create_firestore = true`]
+
+```bash
+gcloud firestore databases list --project=${PROJECT} \
+  --format="table(name,type,locationId)"
+```
+
+**Expected result:** A Firestore database in `FIRESTORE_NATIVE` mode (Enterprise edition uses a *named* database, not `(default)`). In the Cloud Console, navigate to **Firestore** to browse collections. Firestore is serverless and scales to zero, so it incurs no idle compute cost.
+
 ---
 
-## Phase 4 — Verify NFS & Redis VM [MANUAL]
+## Phase 4 — Verify File Storage & Cache [MANUAL]
 
-This phase applies when `create_network_filesystem = true` (the default). Skip to Phase 5 if you are using Cloud Filestore + Cloud Memorystore instead.
+This phase verifies whichever storage/cache model you chose. **Steps 4.1–4.4** apply to the self-managed VM (`create_network_filesystem = true`, the default); **Step 4.5** applies to the managed services (`create_redis` / `create_filestore_nfs`). You normally use one model or the other — running both creates redundant, split-brain file storage.
+
+### (Self-Managed VM)
+
+Steps 4.1–4.4 apply when `create_network_filesystem = true` (the default). If you chose the managed services instead, skip to Step 4.5.
 
 ### Step 4.1 — Confirm the VM is Running
 
@@ -416,9 +515,9 @@ In the Cloud Console, navigate to **Compute Engine → VM instances** and confir
 
 > **REST API equivalent:**
 > ```bash
-> curl -s -H "Authorization: Bearer $&#123;TOKEN&#125;" \
->   "https://compute.googleapis.com/compute/v1/projects/$&#123;PROJECT&#125;/aggregated/instances" \
->   | jq '.items | to_entries[] | .value.instances[]? | select(.tags.items[]? == "nfsserver") | &#123;name, status, zone, networkIP: .networkInterfaces[0].networkIP&#125;'
+> curl -s -H "Authorization: Bearer ${TOKEN}" \
+>   "https://compute.googleapis.com/compute/v1/projects/${PROJECT}/aggregated/instances" \
+>   | jq '.items | to_entries[] | .value.instances[]? | select(.tags.items[]? == "nfsserver") | {name, status, zone, networkIP: .networkInterfaces[0].networkIP}'
 > ```
 
 ### Step 4.2 — Confirm the Managed Instance Group
@@ -460,6 +559,28 @@ NFS_IP=$(gcloud compute instances describe ${NFS_VM} \
 echo "NFS server IP: ${NFS_IP}"
 ```
 
+### (Managed Services)
+
+### Step 4.5 — Confirm Memorystore Redis & Filestore [`create_redis` / `create_filestore_nfs = true`]
+
+If you switched to the managed alternatives, verify each one. **Memorystore Redis:**
+
+```bash
+gcloud redis instances list --region=${REGION} --project=${PROJECT} \
+  --format="table(name,tier,memorySizeGb,redisVersion,host,state)"
+```
+
+**Expected result:** A `READY` instance at the configured tier. On `STANDARD_HA`, confirm the persistence mode under `gcloud redis instances describe ... --format="yaml(persistenceConfig)"` — `BASIC` ignores persistence by design, which is why the module rejects that combination at plan time. The host/port are exposed as the `redis_host` / `redis_port` outputs.
+
+**Cloud Filestore:**
+
+```bash
+gcloud filestore instances list --project=${PROJECT} \
+  --format="table(name,tier,fileShares[0].capacityGb,networks[0].ipAddresses[0],state)"
+```
+
+**Expected result:** A `READY` instance at the chosen tier, with capacity at or above the tier minimum (1024 GB BASIC_HDD/ENTERPRISE, 2560 GB BASIC_SSD — enforced at plan time). The server IP is exposed as the `filestore_ip` output.
+
 ---
 
 ## Phase 5 — Verify GKE Cluster [MANUAL]
@@ -480,9 +601,9 @@ In the Cloud Console, navigate to **Kubernetes Engine → Clusters** to confirm 
 
 > **REST API equivalent:**
 > ```bash
-> curl -s -H "Authorization: Bearer $&#123;TOKEN&#125;" \
->   "https://container.googleapis.com/v1/projects/$&#123;PROJECT&#125;/locations/$&#123;REGION&#125;/clusters" \
->   | jq '.clusters[] | &#123;name, status, autopilot, currentMasterVersion&#125;'
+> curl -s -H "Authorization: Bearer ${TOKEN}" \
+>   "https://container.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/clusters" \
+>   | jq '.clusters[] | {name, status, autopilot, currentMasterVersion}'
 > ```
 
 ### Step 5.2 — Configure kubectl Access
@@ -604,6 +725,20 @@ gcloud logging read \
 
 In the Cloud Console, navigate to **Security → VPC Service Controls** to view the perimeter and its current mode.
 
+### Step 6.4 — Security Command Center: Verify Findings [`enable_security_command_center = true`]
+
+```bash
+gcloud scc findings list ${PROJECT} \
+  --source=- \
+  --filter="state=\"ACTIVE\"" \
+  --format="table(category,severity,eventTime)" \
+  --limit=10
+```
+
+**Expected result:** SCC is active and surfacing findings from its built-in detectors (publicly accessible buckets, over-privileged service accounts, open firewall rules). Findings on a freshly-deployed project may be sparse — the point is that the scanner is running. If `enable_scc_notifications = true`, confirm the Pub/Sub topic exists with `gcloud pubsub topics list --project=${PROJECT}` (the notification config requires SCC to be enabled, which is enforced at plan time). Perimeter and notification creation are skipped with a warning if the deploying identity lacks the org-level role.
+
+In the Cloud Console, navigate to **Security → Security Command Center → Findings** to browse by severity and source.
+
 ---
 
 ## Phase 7 — Cloud Logging & Monitoring [MANUAL]
@@ -658,9 +793,9 @@ In the Cloud Console, navigate to **Monitoring → Alerting → Policies** to vi
 
 > **REST API equivalent:**
 > ```bash
-> curl -s -H "Authorization: Bearer $&#123;TOKEN&#125;" \
->   "https://monitoring.googleapis.com/v3/projects/$&#123;PROJECT&#125;/alertPolicies" \
->   | jq '.alertPolicies[] | &#123;displayName, enabled, conditions: [.conditions[].displayName]&#125;'
+> curl -s -H "Authorization: Bearer ${TOKEN}" \
+>   "https://monitoring.googleapis.com/v3/projects/${PROJECT}/alertPolicies" \
+>   | jq '.alertPolicies[] | {displayName, enabled, conditions: [.conditions[].displayName]}'
 > ```
 
 ### Step 7.4 — Explore Compute Engine Metrics (NFS VM)
@@ -726,6 +861,29 @@ running the shared platform. These techniques do not change with product release
   gcloud container clusters describe "$(gcloud container clusters list --project=$PROJECT --format='value(name)' --limit=1)" --region="$REGION" --project="$PROJECT" --format="value(status)"
   gcloud container operations list --project="$PROJECT" --region="$REGION" --limit=5
   ```
+- **Long-running creates are expected, not stuck.** The module sets generous
+  create/update timeouts on slow resources — Cloud SQL and AlloyDB up to 60 min,
+  GKE clusters 40–60 min, Memorystore/Filestore and the Private Service Access
+  connection 30 min — so a slow provision is allowed to finish rather than being
+  abandoned. A 10–15 minute GKE Autopilot create or a multi-minute Cloud SQL
+  create is normal.
+- **Resource exists in GCP but not in Terraform state (orphan).** Rarely, a
+  transient API/operation error (or a deploy credential that expires during a
+  very long apply) ends the apply *after* the resource has actually come up,
+  leaving it live but unmanaged. This is recoverable, not data loss:
+  - **Re-run the deployment.** A partial state simply continues — most resources
+    are already present, so the re-apply completes quickly without rebuilding the
+    image or the slow resources.
+  - **If a resource reports "already exists" on re-apply, import it** rather than
+    deleting/recreating (which is slow and, for Cloud SQL, blocked by name
+    reservation). For example, to adopt a Cloud SQL instance that came up but was
+    not recorded:
+    ```bash
+    # Platform deploys run via the RAD pipeline; for a manual recovery from the
+    # module directory:
+    tofu import 'google_sql_database_instance.postgres_instance[0]' "${PROJECT}/${PG_INSTANCE}"
+    ```
+    then re-plan and confirm the resource shows "update in-place", not "replace".
 - **Resource exploration:** use the per-service verify steps in Phases 2–6 above to
   confirm each component is healthy. For setting-specific gotchas, see the
   Configuration Guide's *Configuration Pitfalls* section.
@@ -750,8 +908,8 @@ When you are finished, open the **Deployments** page in the RAD platform, find y
 | VPC network, subnets, firewall rules, Cloud NAT | 2–4 minutes |
 | Artifact Registry repository | 1–2 minutes |
 | KMS key ring and keys (if CMEK enabled) | 1–2 minutes |
-| Secret Manager secrets | &lt; 1 minute |
-| IAM service accounts | &lt; 1 minute |
+| Secret Manager secrets | < 1 minute |
+| IAM service accounts | < 1 minute |
 | **Total (defaults)** | **12–20 minutes** |
 | **Total (with GKE)** | **20–30 minutes** |
 
@@ -763,14 +921,15 @@ When you are finished, open the **Deployments** page in the RAD platform, find y
 
 | Action | Phase | Automated |
 |---|---|---|
-| Configure variables in the RAD platform | 1.1 | Manual |
+| Choose a lab path and configure variables in the RAD platform | 1.1 | Manual |
 | Deploy APIs, networking, databases, NFS VM, Artifact Registry | 1.2 | Automated |
 | Note outputs from the deployment Outputs tab | 1.3 | Manual |
 | Verify VPC network, subnets, NAT, firewall rules | 2 | Manual |
 | Inspect IAM service accounts and Artifact Registry | 2 | Manual |
-| Confirm Cloud SQL private IP, backups, and Secret Manager passwords | 3 | Manual |
-| Verify NFS/Redis VM MIG health and data disk | 4 | Manual |
+| Confirm Cloud SQL (PostgreSQL + MySQL), AlloyDB, and Firestore | 3 | Manual |
+| Verify the self-managed NFS/Redis VM, or managed Memorystore + Filestore | 4 | Manual |
 | Configure kubectl and verify GKE cluster and fleet (if enabled) | 5 | Manual |
 | Verify CMEK, Binary Authorization, and VPC-SC (if enabled) | 6 | Manual |
 | Review audit logs, alert policies, and Compute metrics | 7 | Manual |
-| Delete all module resources | 8 | Automated |
+| Troubleshoot common platform issues | 8 | Manual |
+| Delete all module resources | 9 | Automated |
