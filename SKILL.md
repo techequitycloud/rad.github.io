@@ -161,6 +161,11 @@ sidebar_label: "Module Name"
 - `variable_name` (type) — description
 ```
 
+**Decision guidance + pitfalls conventions** (established across the Services_GCP / App_CloudRun / App_GKE guides, 2026-06): a strong config guide does more than list variables — it helps the reader *decide*.
+- **Per-group "Choosing…" blockquote.** Lead each variable group that has real trade-offs with a `> **Choosing <thing>.** …` blockquote naming the decision axis (cost vs availability, managed vs self-managed, exposure model, engine choice) — *when/why*, not just *how*. Don't add one to trivial groups.
+- **"Configuration Pitfalls & Sensible Defaults" table.** Risk-leveled (Critical/High/Medium/Low) table of value/combination mistakes and their consequences, with a preamble noting that many are now caught at plan time.
+- **🛡 plan-time badge.** In the pitfalls table, mark rows the module rejects at plan time (via `validation` blocks or `validation.tf` preconditions) with **🛡 plan-time**, and phrase the consequence as "…is rejected at plan time" rather than a runtime failure. Leave unmarked the genuine runtime/operational/sizing hazards the module cannot decide. State explicitly that a clean plan confirms value/combination rules, not sizing or topology.
+
 ### 5.2 Lab Guide Structure
 
 ```markdown
@@ -202,6 +207,13 @@ sidebar_label: "Module Name Lab"
 ## Cleanup
 ## Reference
 ```
+
+**Foundation-bound "full power" lab conventions** (App_CloudRun / App_GKE labs, 2026-06): a module lab should let the reader exercise the breadth without re-documenting every variable.
+- **Foundation binding note.** App-module labs deploy onto a `Services_GCP` foundation — state up front to use the **same `tenant_deployment_id`** so the module auto-discovers the shared VPC / Cloud SQL / NFS / cluster / registry instead of provisioning inline.
+- **"Choose your lab path" step.** Offer **Path A — Minimal** (defaults, set only `project_id` + `tenant_deployment_id`) and **Path B — Full-Feature** (a ready-to-paste config that turns on a representative breadth — DB, NFS, GCS, Redis, init jobs, uptime check, IAP). Keep the highest-blast-radius features (Binary Auth, VPC-SC, IAP) in **safe modes** so a learner can't lock themselves out.
+- **Per-feature verification.** Tag verification steps with the flag that enables them (e.g. `[enable_nfs = true]`) so Minimal-path users skip cleanly, and verify each enabled capability actually came up (workload health/shape, DB + secret, NFS/GCS/Redis wiring, init-job success, IAP enforcement, uptime check) — not just a single health check.
+- **Plan-time validation note.** Mention that invalid values/combinations are rejected at plan time, cross-linking the config guide's pitfalls table.
+- Keep the lab's lean operational spine (Deploy → Access → Operate → Observe → Troubleshoot → Tear down); defer exhaustive variable detail to the config guide so the lab stays accurate over time.
 
 ### 5.3 Features / Guides / Workflows Structure
 
