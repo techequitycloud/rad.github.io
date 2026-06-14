@@ -420,7 +420,7 @@ These variables configure Kubernetes health probes, Cloud Monitoring uptime chec
 |---|---|---|---|
 | `startup_probe_config` | `object` | `{ enabled = true, path = "/healthz" }` | Kubernetes startup probe — Kubernetes will not route requests to the pod until this probe succeeds. Sub-fields: `enabled`, `type` (`HTTP` / `TCP`), `path`, `initial_delay_seconds` (default: 10), `timeout_seconds` (default: 5), `period_seconds` (default: 10), `failure_threshold` (default: 3). For slow-starting applications, increase `failure_threshold` or `period_seconds`. |
 | `health_check_config` | `object` | `{ enabled = true, path = "/healthz" }` | Kubernetes liveness probe — periodically checks whether the running container is healthy. If the probe fails `failure_threshold` consecutive times, Kubernetes restarts the container. Sub-fields mirror `startup_probe_config`. The health endpoint must respond quickly and not perform expensive operations. |
-| `uptime_check_config` | `object` | `{ enabled = true, path = "/" }` | Google Cloud Monitoring uptime check that sends HTTP requests to the application from multiple global locations. Triggers an alert to `support_users` if the endpoint becomes unreachable. Sub-fields: `enabled`, `path`, `check_interval` (default: `"60s"`), `timeout` (default: `"10s"`). Only active when the application endpoint is publicly reachable. |
+| `uptime_check_config` | `object` | `{ enabled = true, path = "/" }` | Google Cloud Monitoring uptime check that sends HTTP requests to the application from multiple global locations. Triggers an alert to `support_users` if the endpoint becomes unreachable. Sub-fields: `enabled`, `path`, `check_interval` (default: `"60s"`), `timeout` (default: `"10s"`). Only active when the application endpoint has a stable, resolvable host. For a `LoadBalancer` service with a reserved static IP (the default — see `reserve_static_ip`), the check probes a **default `<reserved-ip>.nip.io` hostname** automatically; set `application_domains` to probe your own domain instead. A plain ephemeral-IP `LoadBalancer` (i.e. `reserve_static_ip = false` with no `application_domains`) has no stable host, so the check is skipped. |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies that trigger notifications to `support_users` when Kubernetes metrics exceed defined thresholds. Each policy requires: `name`, `metric_type`, `comparison` (`COMPARISON_GT` / `COMPARISON_LT`), `threshold_value`, `duration_seconds`, `aggregation_period` (default: `"60s"`). Common GKE metric types: `kubernetes.io/container/cpu/usage_time`, `kubernetes.io/container/memory/used_bytes`. |
 
 ### Exploring in GCP — Group 10
@@ -810,6 +810,8 @@ gcloud storage buckets get-iam-policy gs://BUCKET_NAME \
 ## Group 19 — Access & Networking
 
 These variables control custom domain configuration, static IP reservation, network tags, and VPC network selection.
+
+> **Default `nip.io` hostname.** With the default `LoadBalancer` `service_type` and `reserve_static_ip = true`, the deployment derives a default `<reserved-ip>.nip.io` hostname (nip.io is wildcard DNS that resolves `<ip>.nip.io` → that IP). This gives every default GKE deploy a working hostname out of the box — used as the Cloud Monitoring uptime-check host and a convenient browser URL — with no DNS setup. Supply `application_domains` (with `enable_custom_domain = true` for Gateway SSL) to use your own domain instead; the uptime check then probes that domain.
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
