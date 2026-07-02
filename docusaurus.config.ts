@@ -52,15 +52,14 @@ const config: Config = {
   ],
 
   themeConfig: {
-    image: 'https://storage.googleapis.com/rad-public-2b65/gcp/gcp_cert_accelerator.png',
+    image: 'img/rad-social-preview.png',
     metadata: [
+      {name: 'description', content: 'Hands-on Google Cloud certification training — structured modules, labs, and certification guides from Associate to Professional level.'},
       {name: 'keywords', content: 'RAD Platform, Google Cloud, GCP certifications, hands-on labs, cloud training, Associate, Professional'},
       {property: 'og:type', content: 'website'},
-      {property: 'og:image', content: 'https://storage.googleapis.com/rad-public-2b65/gcp/gcp_cert_accelerator.png'},
       {property: 'og:image:width', content: '1200'},
       {property: 'og:image:height', content: '630'},
       {name: 'twitter:card', content: 'summary_large_image'},
-      {name: 'twitter:image', content: 'https://storage.googleapis.com/rad-public-2b65/gcp/gcp_cert_accelerator.png'},
     ],
     colorMode: {
       defaultMode: 'light',

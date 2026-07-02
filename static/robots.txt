@@ -4,10 +4,18 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://techequitycloud.github.io/rad.github.io/sitemap.xml
+Sitemap: https://docs.radmodules.dev/sitemap.xml
 
 # Disallow search results
 Disallow: /search
+
+# Disallow investor and profile documents from public indexing
+Disallow: /rad-investor-pack.pdf
+Disallow: /rad-investor-pack.html
+Disallow: /tech-equity-investor-pack.pdf
+Disallow: /transformation-accelerator-pack.pdf
+Disallow: /transformation-accelerator-pack.html
+Disallow: /shiyghan-navti-profile.pdf
 
 # Allow all documentation
 Allow: /docs/
