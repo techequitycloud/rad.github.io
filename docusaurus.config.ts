@@ -4,7 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'RAD Platform',
-  tagline: 'From theoretical concepts to hands-on mastery for Google Cloud certifications',
+  tagline: 'Hands-on Google Cloud certification training — from Associate to Professional',
   favicon: 'img/favicon.ico',
 
   future: {
@@ -20,16 +20,6 @@ const config: Config = {
   trailingSlash: false,
 
   onBrokenLinks: 'throw',
-
-  // Custom fields for additional metadata
-  customFields: {
-    metadata: [
-      {name: 'keywords', content: 'RAD Platform, infrastructure deployment, Terraform, multi-cloud, AWS, Azure, GCP, DevOps, infrastructure as code'},
-      {name: 'description', content: 'RAD Platform technical documentation for enterprise-grade infrastructure deployment across AWS, Azure, and Google Cloud Platform'},
-      {name: 'og:type', content: 'website'},
-      {name: 'twitter:card', content: 'summary_large_image'},
-    ],
-  },
 
   i18n: {
     defaultLocale: 'en',
@@ -62,8 +52,16 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // Social card image for Open Graph and Twitter
     image: 'https://storage.googleapis.com/rad-public-2b65/gcp/gcp_cert_accelerator.png',
+    metadata: [
+      {name: 'keywords', content: 'RAD Platform, Google Cloud, GCP certifications, hands-on labs, cloud training, Associate, Professional'},
+      {property: 'og:type', content: 'website'},
+      {property: 'og:image', content: 'https://storage.googleapis.com/rad-public-2b65/gcp/gcp_cert_accelerator.png'},
+      {property: 'og:image:width', content: '1200'},
+      {property: 'og:image:height', content: '630'},
+      {name: 'twitter:card', content: 'summary_large_image'},
+      {name: 'twitter:image', content: 'https://storage.googleapis.com/rad-public-2b65/gcp/gcp_cert_accelerator.png'},
+    ],
     colorMode: {
       defaultMode: 'light',
       respectPrefersColorScheme: true,
