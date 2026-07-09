@@ -1,9 +1,65 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import Head from '@docusaurus/Head';
 
 const SITE_URL = 'https://docs.radmodules.dev';
 
+// Infima's default surface/text colors per color mode (see the theme-color
+// meta tags below for the matching background values), since this widget's
+// colors are fixed at mount time rather than reacting to a later theme toggle.
+const FLOWISE_THEME_BY_MODE = {
+  light: {primary: '#2e8555', background: '#ffffff', surface: '#f5f6f7', text: '#1c1e21'},
+  dark: {primary: '#25c2a0', background: '#1b1b1d', surface: '#242526', text: '#e3e3e3'},
+};
+
+function initFlowiseChatbot() {
+  const mode = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const {primary, background, surface, text} = FLOWISE_THEME_BY_MODE[mode];
+
+  // @ts-expect-error - runtime CDN import, no resolvable module/type declarations
+  import(/* webpackIgnore: true */ 'https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js').then((mod) => {
+    mod.default.init({
+      chatflowid: '95f80df9-7111-4205-9f20-7bc9e20006ae',
+      apiHost: 'https://flowise.radbusiness.dev',
+      theme: {
+        button: {
+          backgroundColor: primary,
+          iconColor: '#ffffff',
+        },
+        tooltip: {
+          tooltipBackgroundColor: primary,
+          tooltipTextColor: '#ffffff',
+        },
+        chatWindow: {
+          backgroundColor: background,
+          titleBackgroundColor: primary,
+          titleTextColor: '#ffffff',
+          botMessage: {
+            backgroundColor: surface,
+            textColor: text,
+          },
+          userMessage: {
+            backgroundColor: primary,
+            textColor: '#ffffff',
+          },
+          textInput: {
+            backgroundColor: surface,
+            textColor: text,
+            sendButtonColor: primary,
+          },
+          footer: {
+            showFooter: false,
+          },
+        },
+      },
+    });
+  });
+}
+
 export default function Root({children}) {
+  useEffect(() => {
+    initFlowiseChatbot();
+  }, []);
+
   return (
     <>
       <Head>
