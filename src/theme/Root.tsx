@@ -48,7 +48,7 @@ function initFlowiseChatbot() {
           backgroundColor: background,
           titleBackgroundColor: primary,
           titleTextColor: '#ffffff',
-          fontSize: 14,
+          fontSize: 12,
           botMessage: {
             backgroundColor: surface,
             textColor: text,
