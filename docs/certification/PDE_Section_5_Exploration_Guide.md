@@ -1,5 +1,6 @@
 ---
-title: "PDE Certification Preparation Guide: Section 5 \u2014 Optimizing performance and cost (~12% of the exam)"
+title: "PDE Section 5 Prep: Performance & Cost Optimization"
+description: "Prepare for the Professional Cloud DevOps Engineer (PDE) exam Section 5 — optimizing performance and cost — with hands-on RAD labs on Google Cloud."
 ---
 
 # PDE Certification Preparation Guide: Section 5 — Optimizing performance and cost (~12% of the exam)

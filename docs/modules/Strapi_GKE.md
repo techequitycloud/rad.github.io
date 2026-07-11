@@ -1,5 +1,6 @@
 ---
 title: "Strapi on GKE Autopilot"
+description: "Configuration reference for deploying Strapi on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Strapi on GKE Autopilot

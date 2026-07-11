@@ -1,5 +1,6 @@
 ---
 title: "WordPress Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the WordPress module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # WordPress Common — Shared Application Configuration

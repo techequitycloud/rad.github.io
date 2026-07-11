@@ -1,5 +1,6 @@
 ---
 title: "Wikijs Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Wikijs module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Wikijs Common — Shared Application Configuration

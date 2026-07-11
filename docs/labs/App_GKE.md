@@ -1,5 +1,6 @@
 ---
 title: "App GKE \u2014 Lab Guide"
+description: "Hands-on lab: deploy the App GKE application-hosting module on GKE Autopilot in your own Google Cloud project — setup, operations, and teardown."
 ---
 
 # App GKE — Lab Guide

@@ -8,10 +8,10 @@ RAD Platform documentation covers Google Cloud Professional and Associate certif
 - [Associate Cloud Engineer (ACE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/ACE_Certification_Guide): Maps ACE exam domains to RAD deployment modules and hands-on labs.
 - [Professional Cloud Architect (PCA) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCA_Certification_Guide)
 - [Professional Cloud Developer (PCD) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCD_Certification_Guide)
-- [Professional Cloud DevOps Engineer (PCDE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCDE_Certification_Guide)
+- [Professional Cloud Database Engineer (PCDE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCDE_Certification_Guide)
 - [Professional Cloud Network Engineer (PCNE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCNE_Certification_Guide)
-- [Professional Data Engineer (PDE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PDE_Certification_Guide)
-- [Professional Security Engineer (PSE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PSE_Certification_Guide)
+- [Professional Cloud DevOps Engineer (PDE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PDE_Certification_Guide)
+- [Professional Cloud Security Engineer (PSE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PSE_Certification_Guide)
 
 ## Platform Design & Architecture
 - [Platform Capabilities](https://docs.radmodules.dev/docs/design/platform_capabilities): Overview of compute, data, networking, observability, resilience, multi-tenancy, AI/LLM, and portability capabilities RAD provisions on Google Cloud.

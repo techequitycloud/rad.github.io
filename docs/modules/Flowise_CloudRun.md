@@ -1,5 +1,6 @@
 ---
 title: "Flowise on Google Cloud Run"
+description: "Configuration reference for deploying Flowise on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Flowise on Google Cloud Run

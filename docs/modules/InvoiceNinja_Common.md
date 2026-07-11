@@ -1,5 +1,6 @@
 ---
 title: "InvoiceNinja Common Shared Configuration Module"
+description: "Shared configuration reference for the InvoiceNinja module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # InvoiceNinja Common Shared Configuration Module

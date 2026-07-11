@@ -1,5 +1,6 @@
 ---
-title: "ACE Certification Preparation Guide: Section 4 \u2014 Configuring access and security (~20% of the exam)"
+title: "ACE Section 4 Prep: Access & Security Configuration"
+description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 4 — configuring access and security — with hands-on RAD labs on Google Cloud."
 ---
 
 # ACE Certification Preparation Guide: Section 4 — Configuring access and security (~20% of the exam)

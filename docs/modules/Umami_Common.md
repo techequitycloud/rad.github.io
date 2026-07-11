@@ -1,5 +1,6 @@
 ---
 title: "Umami Common Shared Configuration Module"
+description: "Shared configuration reference for the Umami module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Umami Common Shared Configuration Module

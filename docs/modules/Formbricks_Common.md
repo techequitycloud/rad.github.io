@@ -1,5 +1,6 @@
 ---
 title: "Formbricks Common Shared Configuration Module"
+description: "Shared configuration reference for the Formbricks module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Formbricks Common Shared Configuration Module

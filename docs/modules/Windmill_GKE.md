@@ -1,5 +1,6 @@
 ---
 title: "Windmill on GKE Autopilot"
+description: "Configuration reference for deploying Windmill on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Windmill on GKE Autopilot

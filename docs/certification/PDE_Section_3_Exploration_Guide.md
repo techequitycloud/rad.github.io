@@ -1,5 +1,6 @@
 ---
-title: "PDE Certification Preparation Guide: Section 3 \u2014 Applying site reliability engineering practices (~18% of the exam)"
+title: "PDE Section 3 Prep: Site Reliability Engineering"
+description: "Prepare for the PDE exam Section 3 — applying site reliability engineering practices — with hands-on RAD deployment labs on Google Cloud."
 ---
 
 # PDE Certification Preparation Guide: Section 3 — Applying site reliability engineering practices (~18% of the exam)

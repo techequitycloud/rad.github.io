@@ -1,5 +1,6 @@
 ---
 title: "Superset Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Superset module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Superset Common — Shared Application Configuration

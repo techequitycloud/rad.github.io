@@ -1,5 +1,6 @@
 ---
 title: "Flowise on GKE Autopilot"
+description: "Configuration reference for deploying Flowise on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Flowise on GKE Autopilot

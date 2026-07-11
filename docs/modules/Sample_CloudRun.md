@@ -1,6 +1,7 @@
 ---
 unlisted: true
 title: "Sample Application on Google Cloud Run"
+description: "Configuration reference for deploying Sample Application on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Sample Application on Google Cloud Run

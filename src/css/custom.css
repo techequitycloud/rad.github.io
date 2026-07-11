@@ -45,3 +45,31 @@
   --ifm-color-primary-lightest: #4fddbf;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+/* --- Mobile UX (SEO audit Phase 2) ------------------------------------- */
+
+/* WCAG 2.5.5: give small mobile-nav controls a >=44px hit area via padding
+   (visual size unchanged). Audit measured 30x30 toggle, 21x21 close. */
+@media (max-width: 996px) {
+  .navbar__toggle {
+    padding: 7px;
+    margin: -7px;
+    box-sizing: content-box;
+  }
+
+  .navbar-sidebar__close {
+    padding: 12px;
+    margin: -12px;
+    box-sizing: content-box;
+  }
+
+  /* Reserve space so the fixed 48px chat bubble (bottom-right) never sits
+     on top of footer text or the last line of article copy. */
+  .footer {
+    padding-bottom: calc(var(--ifm-footer-padding-vertical) + 64px);
+  }
+
+  main .container {
+    padding-bottom: 64px;
+  }
+}

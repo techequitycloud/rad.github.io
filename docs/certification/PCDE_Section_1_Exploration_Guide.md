@@ -1,5 +1,6 @@
 ---
-title: "PCDE Certification Preparation Guide: Section 1 \u2014 Design innovative, scalable, and highly available cloud database solutions (~32% of the exam)"
+title: "PCDE Section 1 Prep: Scalable Database Solution Design"
+description: "Prepare for the PCDE exam Section 1 (Scalable Database Solution Design) with hands-on RAD deployment labs on Google Cloud."
 ---
 
 # PCDE Certification Preparation Guide: Section 1 — Design innovative, scalable, and highly available cloud database solutions (~32% of the exam)

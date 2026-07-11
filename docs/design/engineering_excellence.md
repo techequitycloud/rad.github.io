@@ -1,5 +1,6 @@
 ---
 title: "Engineering Excellence, by Default"
+description: "The engineering principles behind RAD Platform modules — secure defaults, least privilege, reproducible Terraform, and operational readiness."
 ---
 
 # Engineering Excellence, by Default

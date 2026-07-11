@@ -1,5 +1,6 @@
 ---
 title: "Activepieces Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Activepieces module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Activepieces Common — Shared Application Configuration

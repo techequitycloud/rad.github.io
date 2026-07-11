@@ -1,5 +1,6 @@
 ---
-title: "PCD Certification Preparation Guide: Section 1 \u2014 Designing highly scalable, available, and reliable cloud-native applications (~36% of the exam)"
+title: "PCD Section 1 Prep: Scalable Cloud-Native App Design"
+description: "Prepare for the PCD exam Section 1 (Scalable Cloud-Native App Design) with hands-on RAD deployment labs on Google Cloud."
 ---
 
 # PCD Certification Preparation Guide: Section 1 — Designing highly scalable, available, and reliable cloud-native applications (~36% of the exam)

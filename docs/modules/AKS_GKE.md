@@ -1,5 +1,6 @@
 ---
 title: "Azure AKS attached to a Google Cloud Fleet"
+description: "Configuration reference for deploying AKS on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Azure AKS attached to a Google Cloud Fleet

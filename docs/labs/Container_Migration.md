@@ -1,5 +1,6 @@
 ---
 title: "Migrate to Containers on GKE \u2014 Lab Guide"
+description: "Hands-on lab: migrate VM workloads to containers on GKE with Migrate to Containers — assessment, migration, verification, and teardown."
 ---
 
 # Migrate to Containers on GKE — Lab Guide

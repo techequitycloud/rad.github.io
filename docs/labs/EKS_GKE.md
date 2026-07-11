@@ -1,5 +1,6 @@
 ---
 title: "AWS EKS attached to a Google Cloud Fleet \u2014 Lab Guide"
+description: "Hands-on lab: attach an AWS EKS cluster to a Google Cloud Fleet — multicloud registration, verification, operations, and teardown."
 ---
 
 # AWS EKS attached to a Google Cloud Fleet — Lab Guide

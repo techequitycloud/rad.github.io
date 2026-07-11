@@ -1,5 +1,6 @@
 ---
 title: "Invoice Ninja on Google Cloud Run"
+description: "Configuration reference for deploying Invoice Ninja on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Invoice Ninja on Google Cloud Run

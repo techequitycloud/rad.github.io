@@ -1,5 +1,6 @@
 ---
-title: "ACE Certification Preparation Guide: Section 1 \u2014 Setting up a cloud solution environment (~23% of the exam)"
+title: "ACE Section 1 Prep: Cloud Solution Environment Setup"
+description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 1 — setting up a cloud solution environment — with hands-on RAD labs on Google Cloud."
 ---
 
 # ACE Certification Preparation Guide: Section 1 — Setting up a cloud solution environment (~23% of the exam)

@@ -1,5 +1,6 @@
 ---
 title: "OpenClaw on GKE Autopilot \u2014 Lab Guide"
+description: "Hands-on lab: deploy OpenClaw on GKE Autopilot in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # OpenClaw on GKE Autopilot — Lab Guide

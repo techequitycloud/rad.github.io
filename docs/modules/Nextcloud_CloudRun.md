@@ -1,5 +1,6 @@
 ---
 title: "Nextcloud on Google Cloud Run"
+description: "Configuration reference for deploying Nextcloud on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Nextcloud on Google Cloud Run

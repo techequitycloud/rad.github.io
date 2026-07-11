@@ -1,5 +1,6 @@
 ---
 title: "Penpot GKE Module \u2014 Configuration Guide"
+description: "Configuration reference for deploying Penpot on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Penpot GKE Module — Configuration Guide

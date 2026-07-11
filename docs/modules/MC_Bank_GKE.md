@@ -1,5 +1,6 @@
 ---
 title: "Multi-Cluster Bank of Anthos on GKE"
+description: "Configuration reference for deploying Multi-Cluster Bank of Anthos on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Multi-Cluster Bank of Anthos on GKE

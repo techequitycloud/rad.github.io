@@ -1,5 +1,6 @@
 ---
 title: "NocoDB on GKE Autopilot \u2014 Lab Guide"
+description: "Hands-on lab: deploy NocoDB on GKE Autopilot in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # NocoDB on GKE Autopilot — Lab Guide

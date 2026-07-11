@@ -1,5 +1,6 @@
 ---
 title: "LibreChat Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the LibreChat module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # LibreChat Common — Shared Application Configuration

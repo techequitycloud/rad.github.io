@@ -1,6 +1,7 @@
 ---
 unlisted: true
 title: "Sample Application on GKE Autopilot"
+description: "Configuration reference for deploying Sample Application on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Sample Application on GKE Autopilot

@@ -1,5 +1,6 @@
 ---
-title: "PCD Certification Preparation Guide: Section 2 \u2014 Building and testing applications (~23% of the exam)"
+title: "PCD Section 2 Prep: Building & Testing Applications"
+description: "Prepare for the Professional Cloud Developer (PCD) exam Section 2 — building and testing applications — with hands-on RAD labs on Google Cloud."
 ---
 
 # PCD Certification Preparation Guide: Section 2 — Building and testing applications (~23% of the exam)

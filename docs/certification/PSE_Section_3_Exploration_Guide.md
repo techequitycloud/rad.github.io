@@ -1,5 +1,6 @@
 ---
-title: "PSE Certification Preparation Guide: Section 3 \u2014 Ensuring data protection (~23% of the exam)"
+title: "PSE Section 3 Prep: Data Protection"
+description: "Prepare for the Professional Cloud Security Engineer (PSE) exam Section 3 — ensuring data protection — with hands-on RAD labs on Google Cloud."
 ---
 
 # PSE Certification Preparation Guide: Section 3 — Ensuring data protection (~23% of the exam)

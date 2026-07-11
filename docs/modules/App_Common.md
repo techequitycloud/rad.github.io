@@ -1,5 +1,6 @@
 ---
 title: "App Common \u2014 Configuration Guide"
+description: "Shared configuration reference for the App module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # App Common — Configuration Guide

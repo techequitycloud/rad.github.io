@@ -1,5 +1,6 @@
 ---
 title: "Supabase on GKE Autopilot"
+description: "Configuration reference for deploying Supabase on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Supabase on GKE Autopilot

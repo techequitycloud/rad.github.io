@@ -1,5 +1,6 @@
 ---
 title: "Strapi on Google Cloud Run"
+description: "Configuration reference for deploying Strapi on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Strapi on Google Cloud Run

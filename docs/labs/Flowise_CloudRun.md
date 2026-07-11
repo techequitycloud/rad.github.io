@@ -1,5 +1,6 @@
 ---
 title: "Flowise on Cloud Run \u2014 Lab Guide"
+description: "Hands-on lab: deploy Flowise on Cloud Run in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Flowise on Cloud Run — Lab Guide

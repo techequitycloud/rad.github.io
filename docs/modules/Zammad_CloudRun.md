@@ -1,5 +1,6 @@
 ---
 title: "Zammad on Google Cloud Run"
+description: "Configuration reference for deploying Zammad on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Zammad on Google Cloud Run

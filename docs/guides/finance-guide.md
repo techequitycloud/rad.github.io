@@ -1,5 +1,6 @@
 ---
 title: "Finance Guide"
+description: "RAD Platform finance guide — managing credits, billing, invoicing, and Google Cloud cost tracking for training deployments and cohorts."
 ---
 
 # Finance Guide

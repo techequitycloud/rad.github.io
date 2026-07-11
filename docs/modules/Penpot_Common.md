@@ -1,5 +1,6 @@
 ---
 title: "Penpot Common Shared Configuration Module"
+description: "Shared configuration reference for the Penpot module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Penpot Common Shared Configuration Module

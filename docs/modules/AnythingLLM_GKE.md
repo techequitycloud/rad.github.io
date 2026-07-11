@@ -1,5 +1,6 @@
 ---
 title: "AnythingLLM on GKE Autopilot"
+description: "Configuration reference for deploying AnythingLLM on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # AnythingLLM on GKE Autopilot

@@ -1,5 +1,6 @@
 ---
 title: "Listmonk GKE Module \u2014 Configuration Guide"
+description: "Configuration reference for deploying Listmonk on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Listmonk GKE Module — Configuration Guide

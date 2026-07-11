@@ -1,5 +1,6 @@
 ---
 title: "WordPress on GKE Autopilot"
+description: "Configuration reference for deploying WordPress on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # WordPress on GKE Autopilot

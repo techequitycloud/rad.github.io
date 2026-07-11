@@ -1,5 +1,6 @@
 ---
-title: "PSE Certification Preparation Guide: Section 5 \u2014 Supporting compliance requirements (~11% of the exam)"
+title: "PSE Section 5 Prep: Compliance Requirements"
+description: "Prepare for the Professional Cloud Security Engineer (PSE) exam Section 5 — supporting compliance requirements — with hands-on RAD labs on Google Cloud."
 ---
 
 # PSE Certification Preparation Guide: Section 5 — Supporting compliance requirements (~11% of the exam)

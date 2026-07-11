@@ -1,5 +1,6 @@
 ---
 title: "Bank of Anthos on GKE"
+description: "Configuration reference for deploying Bank of Anthos on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Bank of Anthos on GKE

@@ -1,5 +1,6 @@
 ---
-title: "PCA Certification Preparation Guide: Section 4 \u2014 Analyzing and optimizing technical and business processes (~15% of the exam)"
+title: "PCA Section 4 Prep: Process Analysis & Optimization"
+description: "Prepare for the PCA exam Section 4 — analyzing and optimizing technical and business processes — with hands-on RAD deployment labs on Google Cloud."
 ---
 
 # PCA Certification Preparation Guide: Section 4 — Analyzing and optimizing technical and business processes (~15% of the exam)

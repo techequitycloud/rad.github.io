@@ -1,5 +1,6 @@
 ---
 title: "Node-RED on Google Cloud Run"
+description: "Configuration reference for deploying Node-RED on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Node-RED on Google Cloud Run

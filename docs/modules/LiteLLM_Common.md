@@ -1,5 +1,6 @@
 ---
 title: "LiteLLM Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the LiteLLM module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # LiteLLM Common — Shared Application Configuration

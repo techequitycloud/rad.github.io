@@ -1,5 +1,6 @@
 ---
 title: "Metabase on Cloud Run \u2014 Lab Guide"
+description: "Hands-on lab: deploy Metabase on Cloud Run in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Metabase on Cloud Run — Lab Guide

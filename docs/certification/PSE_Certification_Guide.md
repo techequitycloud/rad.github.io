@@ -1,5 +1,6 @@
 ---
 title: "Professional Cloud Security Engineer (PSE) Certification Lab Map"
+description: "Map every Professional Cloud Security Engineer (PSE) exam domain to hands-on RAD deployment labs on Google Cloud — a practical, exam-aligned study path."
 ---
 
 # Professional Cloud Security Engineer (PSE) Certification Lab Map

@@ -1,5 +1,6 @@
 ---
-title: "ACE Certification Preparation Guide: Section 2 \u2014 Planning and implementing a cloud solution (~30% of the exam)"
+title: "ACE Section 2 Prep: Planning & Implementing Solutions"
+description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 2 — planning and implementing a cloud solution — with hands-on RAD labs on Google Cloud."
 ---
 
 # ACE Certification Preparation Guide: Section 2 — Planning and implementing a cloud solution (~30% of the exam)

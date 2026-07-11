@@ -1,5 +1,6 @@
 ---
 title: "Temporal on GKE Autopilot"
+description: "Configuration reference for deploying Temporal on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Temporal on GKE Autopilot

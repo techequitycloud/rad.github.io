@@ -1,5 +1,6 @@
 ---
 title: "Invoice Ninja GKE Module \u2014 Configuration Guide"
+description: "Configuration reference for deploying InvoiceNinja on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Invoice Ninja GKE Module — Configuration Guide

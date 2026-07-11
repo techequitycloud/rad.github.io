@@ -1,5 +1,6 @@
 ---
 title: "Listmonk Common Shared Configuration Module"
+description: "Shared configuration reference for the Listmonk module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Listmonk Common Shared Configuration Module

@@ -1,5 +1,6 @@
 ---
 title: "Moodle on Google Cloud Run"
+description: "Configuration reference for deploying Moodle on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Moodle on Google Cloud Run

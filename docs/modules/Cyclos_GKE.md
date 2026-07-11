@@ -1,5 +1,6 @@
 ---
 title: "Cyclos on GKE Autopilot"
+description: "Configuration reference for deploying Cyclos on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Cyclos on GKE Autopilot

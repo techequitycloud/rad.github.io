@@ -1,5 +1,6 @@
 ---
 title: "Node-RED on GKE Autopilot"
+description: "Configuration reference for deploying Node-RED on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Node-RED on GKE Autopilot

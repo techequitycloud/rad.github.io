@@ -1,5 +1,6 @@
 ---
 title: "Ghost on GKE Autopilot"
+description: "Configuration reference for deploying Ghost on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Ghost on GKE Autopilot

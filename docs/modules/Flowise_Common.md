@@ -1,5 +1,6 @@
 ---
 title: "Flowise Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Flowise module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Flowise Common — Shared Application Configuration

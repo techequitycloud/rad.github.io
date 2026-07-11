@@ -1,5 +1,6 @@
 ---
 title: "RAGFlow Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the RAGFlow module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # RAGFlow Common — Shared Application Configuration

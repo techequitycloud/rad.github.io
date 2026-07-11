@@ -1,5 +1,6 @@
 ---
 title: "Associate Cloud Engineer (ACE) Certification Lab Map"
+description: "Map every Associate Cloud Engineer (ACE) exam domain to hands-on RAD deployment labs on Google Cloud — a practical, exam-aligned study path."
 ---
 
 # Associate Cloud Engineer (ACE) Certification Lab Map

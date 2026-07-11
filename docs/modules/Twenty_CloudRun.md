@@ -1,5 +1,6 @@
 ---
 title: "Twenty CRM on Google Cloud Run"
+description: "Configuration reference for deploying Twenty CRM on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Twenty CRM on Google Cloud Run

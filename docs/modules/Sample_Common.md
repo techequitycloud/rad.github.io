@@ -1,6 +1,7 @@
 ---
 unlisted: true
 title: "Sample Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Sample module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Sample Common — Shared Application Configuration

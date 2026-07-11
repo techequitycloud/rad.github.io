@@ -1,5 +1,6 @@
 ---
 title: "Grafana Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Grafana module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Grafana Common — Shared Application Configuration

@@ -1,5 +1,6 @@
 ---
 title: "Django on GKE Autopilot"
+description: "Configuration reference for deploying Django on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Django on GKE Autopilot

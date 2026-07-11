@@ -1,5 +1,6 @@
 ---
 title: "Crawl4AI on Cloud Run \u2014 Lab Guide"
+description: "Hands-on lab: deploy Crawl4AI on Cloud Run in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Crawl4AI on Cloud Run — Lab Guide

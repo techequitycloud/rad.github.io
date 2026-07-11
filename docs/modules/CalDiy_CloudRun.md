@@ -1,5 +1,6 @@
 ---
 title: "Cal.diy on Google Cloud Run"
+description: "Configuration reference for deploying Cal.diy on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Cal.diy on Google Cloud Run

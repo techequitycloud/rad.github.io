@@ -1,5 +1,6 @@
 ---
 title: "Vaultwarden on Google Cloud Run"
+description: "Configuration reference for deploying Vaultwarden on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Vaultwarden on Google Cloud Run

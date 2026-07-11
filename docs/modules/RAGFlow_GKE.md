@@ -1,5 +1,6 @@
 ---
 title: "RAGFlow on GKE Autopilot"
+description: "Configuration reference for deploying RAGFlow on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # RAGFlow on GKE Autopilot

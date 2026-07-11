@@ -1,5 +1,6 @@
 ---
 title: "Paperless-ngx on Cloud Run \u2014 Lab Guide"
+description: "Hands-on lab: deploy Paperless-ngx on Cloud Run in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Paperless-ngx on Cloud Run — Lab Guide

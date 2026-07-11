@@ -1,5 +1,6 @@
 ---
 title: "Migration Center Module Documentation"
+description: "Configuration reference for the Migration Center RAD module on Google Cloud — variables, architecture, networking, and day-2 operations."
 sidebar_label: "Migration Center"
 ---
 

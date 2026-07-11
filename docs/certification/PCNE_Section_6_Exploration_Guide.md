@@ -1,5 +1,6 @@
 ---
-title: "PCNE Certification Preparation Guide: Section 6 \u2014 Configuring, implementing and managing a cloud network security solution (~13% of the exam)"
+title: "PCNE Section 6 Prep: Cloud Network Security"
+description: "Prepare for the Professional Cloud Network Engineer (PCNE) exam Section 6 — cloud network security — with hands-on RAD labs on Google Cloud."
 ---
 
 # PCNE Certification Preparation Guide: Section 6 — Configuring, implementing and managing a cloud network security solution (~13% of the exam)

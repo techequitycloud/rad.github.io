@@ -1,5 +1,6 @@
 ---
 title: "Formbricks GKE Module \u2014 Configuration Guide"
+description: "Configuration reference for deploying Formbricks on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Formbricks GKE Module — Configuration Guide

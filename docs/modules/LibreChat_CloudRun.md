@@ -1,5 +1,6 @@
 ---
 title: "LibreChat on Google Cloud Run"
+description: "Configuration reference for deploying LibreChat on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # LibreChat on Google Cloud Run

@@ -1,5 +1,6 @@
 ---
 title: "Nextcloud on GKE Autopilot"
+description: "Configuration reference for deploying Nextcloud on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Nextcloud on GKE Autopilot

@@ -1,5 +1,6 @@
 ---
 title: "Professional Cloud Developer (PCD) Certification Lab Map"
+description: "Map every Professional Cloud Developer (PCD) exam domain to hands-on RAD deployment labs on Google Cloud — a practical, exam-aligned study path."
 ---
 
 # Professional Cloud Developer (PCD) Certification Lab Map

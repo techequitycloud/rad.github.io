@@ -1,5 +1,6 @@
 ---
 title: "LiteLLM on GKE Autopilot"
+description: "Configuration reference for deploying LiteLLM on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # LiteLLM on GKE Autopilot

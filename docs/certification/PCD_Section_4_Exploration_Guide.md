@@ -1,5 +1,6 @@
 ---
-title: "PCD Certification Preparation Guide: Section 4 \u2014 Integrating applications with Google Cloud services (~21% of the exam)"
+title: "PCD Section 4 Prep: Integrating Google Cloud Services"
+description: "Prepare for the PCD exam Section 4 — integrating applications with Google Cloud services — with hands-on RAD deployment labs on Google Cloud."
 ---
 
 # PCD Certification Preparation Guide: Section 4 — Integrating applications with Google Cloud services (~21% of the exam)

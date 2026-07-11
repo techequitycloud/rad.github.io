@@ -1,5 +1,6 @@
 ---
 title: "OpenClaw on Google Cloud Run"
+description: "Configuration reference for deploying OpenClaw on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # OpenClaw on Google Cloud Run

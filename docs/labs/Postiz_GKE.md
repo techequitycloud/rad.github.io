@@ -1,5 +1,6 @@
 ---
 title: "Postiz on GKE \u2014 Lab Guide"
+description: "Hands-on lab: deploy Postiz on GKE Autopilot in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Postiz on GKE — Lab Guide

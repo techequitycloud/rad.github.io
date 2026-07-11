@@ -1,5 +1,6 @@
 ---
 title: "Qdrant Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Qdrant module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Qdrant Common — Shared Application Configuration

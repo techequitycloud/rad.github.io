@@ -1,5 +1,6 @@
 ---
 title: "Services GCP \u2014 Lab Guide"
+description: "Hands-on lab: deploy the Services GCP foundation module — VPC, networking, and shared Google Cloud infrastructure required by all RAD modules."
 ---
 
 # Services GCP — Lab Guide

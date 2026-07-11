@@ -1,5 +1,6 @@
 ---
 title: "NocoDB Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the NocoDB module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # NocoDB Common — Shared Application Configuration

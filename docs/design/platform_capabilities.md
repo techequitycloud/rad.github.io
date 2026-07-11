@@ -1,5 +1,6 @@
 ---
 title: "Platform Capabilities"
+description: "RAD Platform capabilities on Google Cloud: compute, data, networking, observability, resilience, multi-tenancy, AI/LLM, and portability."
 ---
 
 # Platform Capabilities

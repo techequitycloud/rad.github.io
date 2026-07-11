@@ -1,5 +1,6 @@
 ---
 title: "Twenty on Cloud Run \u2014 Lab Guide"
+description: "Hands-on lab: deploy Twenty on Cloud Run in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Twenty on Cloud Run — Lab Guide

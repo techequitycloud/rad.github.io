@@ -1,5 +1,6 @@
 ---
 title: "Strapi on Cloud Run \u2014 Lab Guide"
+description: "Hands-on lab: deploy Strapi on Cloud Run in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Strapi on Cloud Run — Lab Guide

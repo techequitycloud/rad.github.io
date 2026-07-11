@@ -1,5 +1,6 @@
 ---
 title: "Metabase Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Metabase module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Metabase Common — Shared Application Configuration

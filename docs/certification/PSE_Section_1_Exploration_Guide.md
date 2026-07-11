@@ -1,5 +1,6 @@
 ---
-title: "PSE Certification Preparation Guide: Section 1 \u2014 Configuring access (~25% of the exam)"
+title: "PSE Section 1 Prep: Configuring Access"
+description: "Prepare for the Professional Cloud Security Engineer (PSE) exam Section 1 — configuring access — with hands-on RAD labs on Google Cloud."
 ---
 
 # PSE Certification Preparation Guide: Section 1 — Configuring access (~25% of the exam)

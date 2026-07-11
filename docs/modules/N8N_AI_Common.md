@@ -1,5 +1,6 @@
 ---
 title: "N8N AI Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the N8N AI module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # N8N AI Common — Shared Application Configuration

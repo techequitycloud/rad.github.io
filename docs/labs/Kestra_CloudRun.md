@@ -1,5 +1,6 @@
 ---
 title: "Kestra on Cloud Run \u2014 Lab Guide"
+description: "Hands-on lab: deploy Kestra on Cloud Run in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Kestra on Cloud Run — Lab Guide

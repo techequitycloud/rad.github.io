@@ -1,5 +1,6 @@
 ---
 title: "Istio_GKE Module Documentation"
+description: "Configuration reference for deploying Istio on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 sidebar_label: "Istio_GKE"
 ---
 

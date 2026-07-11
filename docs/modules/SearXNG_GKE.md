@@ -1,5 +1,6 @@
 ---
 title: "SearXNG on GKE Autopilot"
+description: "Configuration reference for deploying SearXNG on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # SearXNG on GKE Autopilot

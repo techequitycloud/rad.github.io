@@ -1,5 +1,6 @@
 ---
-title: "PDE Certification Preparation Guide: Section 2 \u2014 Building and implementing CI/CD pipelines (~25% of the exam)"
+title: "PDE Section 2 Prep: CI/CD Pipelines"
+description: "Prepare for the Professional Cloud DevOps Engineer (PDE) exam Section 2 — building and implementing CI/CD pipelines — with hands-on RAD labs on Google Cloud."
 ---
 
 # PDE Certification Preparation Guide: Section 2 — Building and implementing CI/CD pipelines (~25% of the exam)

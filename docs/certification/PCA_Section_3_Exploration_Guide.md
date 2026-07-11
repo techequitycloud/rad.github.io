@@ -1,5 +1,6 @@
 ---
-title: "PCA Certification Preparation Guide: Section 3 \u2014 Designing for security and compliance (~17.5% of the exam)"
+title: "PCA Section 3 Prep: Security & Compliance Design"
+description: "Prepare for the Professional Cloud Architect (PCA) exam Section 3 — designing for security and compliance — with hands-on RAD labs on Google Cloud."
 ---
 
 # PCA Certification Preparation Guide: Section 3 — Designing for security and compliance (~17.5% of the exam)

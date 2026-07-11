@@ -1,5 +1,6 @@
 ---
 title: "Twenty CRM on GKE Autopilot"
+description: "Configuration reference for deploying Twenty CRM on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Twenty CRM on GKE Autopilot

@@ -117,7 +117,31 @@ const config: Config = {
     },
     footer: {
       style: 'light',
-      copyright: `<div style="text-align: center; margin-bottom: 8px;"><a href="https://github.com/techequitycloud/rad.github.io/issues" target="_blank" rel="noopener noreferrer">Report an Issue</a></div>© ${new Date().getFullYear()} Tech Equity Cloud. All rights reserved.`,
+      links: [
+        {
+          title: 'Tech Equity Cloud',
+          items: [
+            {label: 'About', to: '/about'},
+            {label: 'Contact', to: '/contact'},
+            {label: 'RAD Console', href: 'https://radmodules.dev'},
+          ],
+        },
+        {
+          title: 'Legal',
+          items: [
+            {label: 'Privacy Policy', to: '/privacy'},
+            {label: 'Terms of Use', to: '/terms'},
+          ],
+        },
+        {
+          title: 'Community',
+          items: [
+            {label: 'GitHub', href: 'https://github.com/techequitycloud'},
+            {label: 'Report an Issue', href: 'https://github.com/techequitycloud/rad.github.io/issues'},
+          ],
+        },
+      ],
+      copyright: `© ${new Date().getFullYear()} Tech Equity Cloud. All rights reserved.`,
     },
     prism: {
       theme: prismThemes.github,

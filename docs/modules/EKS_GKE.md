@@ -1,5 +1,6 @@
 ---
 title: "EKS_GKE Module Documentation"
+description: "Configuration reference for deploying EKS on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 sidebar_label: "EKS_GKE"
 ---
 

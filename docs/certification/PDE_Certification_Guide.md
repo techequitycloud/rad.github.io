@@ -1,5 +1,6 @@
 ---
 title: "Professional Cloud DevOps Engineer (PDE) Certification Lab Map"
+description: "Map every Professional Cloud DevOps Engineer (PDE) exam domain to hands-on RAD deployment labs on Google Cloud — a practical, exam-aligned study path."
 ---
 
 # Professional Cloud DevOps Engineer (PDE) Certification Lab Map

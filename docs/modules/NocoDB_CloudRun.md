@@ -1,5 +1,6 @@
 ---
 title: "NocoDB on Google Cloud Run"
+description: "Configuration reference for deploying NocoDB on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # NocoDB on Google Cloud Run
