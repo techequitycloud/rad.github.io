@@ -16,20 +16,15 @@ function HomepageHeader() {
         <Heading as="h1" className={clsx('hero__title', styles.heroTitle)}>
           {siteConfig.title}
         </Heading>
-        <p className="hero__subtitle">{siteConfig.tagline}</p>
         <p className={styles.heroIntro}>
-          RAD (Rapid Application Deployment) by Tech Equity Cloud deploys real,
-          pre-configured infrastructure into your own Google Cloud project — so
-          every exam objective maps to a resource you deployed, verified, and
-          operated yourself.
-        </p>
-        <p className={styles.heroIntroSecondary}>
-          Seven certification study paths map every official exam section to
-          deployment labs drawn from 100+ open-source application modules on
-          Cloud Run and GKE Autopilot. Every guide is written by one author
-          holding six Google Cloud certifications, from the same infrastructure
-          code the platform actually runs — deploy it, inspect it, break it,
-          and fix it before you sit the exam.
+          Seven certification study paths align every official exam domain with
+          hands-on deployment labs, built from 100+ open-source application
+          modules running on Cloud Run and GKE Autopilot. Each guide is
+          authored by Google Cloud Authorized Trainers who hold certifications
+          in the domains they teach — so you&apos;re learning from people
+          who&apos;ve built and broken the same infrastructure you&apos;re
+          studying. Deploy it, inspect it, break it, fix it — then sit the exam
+          with confidence.
         </p>
         <div className={styles.buttons}>
           <Link

@@ -32,16 +32,6 @@
   line-height: 1.7;
 }
 
-/* Supporting paragraph: same measure, one step down in size/emphasis so the
-   two-paragraph hero has hierarchy instead of two equal text blocks. */
-.heroIntroSecondary {
-  max-width: 54rem;
-  margin: 0 auto 1.75rem;
-  font-size: 1rem;
-  line-height: 1.65;
-  opacity: 0.85;
-}
-
 @media screen and (max-width: 996px) {
   .heroBanner {
     padding: 2rem;
