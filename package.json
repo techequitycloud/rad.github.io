@@ -7,6 +7,7 @@
     "start": "docusaurus start",
     "prebuild": "node scripts/generate-date-published.mjs",
     "build": "docusaurus build",
+    "postbuild": "node scripts/generate-llms-full.mjs",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
