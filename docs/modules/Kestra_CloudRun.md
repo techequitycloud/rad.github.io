@@ -1,5 +1,6 @@
 ---
 title: "Kestra on Google Cloud Run"
+description: "Configuration reference for deploying Kestra on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Kestra on Google Cloud Run

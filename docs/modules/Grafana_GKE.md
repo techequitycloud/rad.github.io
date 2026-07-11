@@ -1,5 +1,6 @@
 ---
 title: "Grafana on GKE Autopilot"
+description: "Configuration reference for deploying Grafana on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Grafana on GKE Autopilot

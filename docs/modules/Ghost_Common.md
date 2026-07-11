@@ -1,5 +1,6 @@
 ---
 title: "Ghost Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Ghost module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Ghost Common — Shared Application Configuration

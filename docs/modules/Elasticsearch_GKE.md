@@ -1,5 +1,6 @@
 ---
 title: "Elasticsearch on GKE Autopilot"
+description: "Configuration reference for deploying Elasticsearch on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Elasticsearch on GKE Autopilot

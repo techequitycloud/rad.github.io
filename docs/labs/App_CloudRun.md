@@ -1,5 +1,6 @@
 ---
 title: "App CloudRun \u2014 Lab Guide"
+description: "Hands-on lab: deploy the App CloudRun application-hosting module in your own Google Cloud project — setup, verification, operations, and teardown."
 ---
 
 # App CloudRun — Lab Guide

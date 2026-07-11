@@ -1,5 +1,6 @@
 ---
 title: "Istio on GKE \u2014 Lab Guide"
+description: "Hands-on lab: deploy Istio on GKE Autopilot in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Istio on GKE — Lab Guide

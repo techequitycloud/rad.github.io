@@ -1,5 +1,6 @@
 ---
 title: "Grafana on Google Cloud Run"
+description: "Configuration reference for deploying Grafana on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Grafana on Google Cloud Run

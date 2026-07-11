@@ -1,5 +1,6 @@
 ---
 title: "WordPress on Google Cloud Run"
+description: "Configuration reference for deploying WordPress on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # WordPress on Google Cloud Run

@@ -1,5 +1,6 @@
 ---
 title: "OpenClaw Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the OpenClaw module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # OpenClaw Common — Shared Application Configuration

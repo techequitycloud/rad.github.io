@@ -1,5 +1,6 @@
 ---
 title: "Google Cloud VMware Engine \u2014 Lab Guide"
+description: "Hands-on lab: provision Google Cloud VMware Engine in your own project — private cloud setup, verification, operations, and teardown."
 ---
 
 # Google Cloud VMware Engine — Lab Guide

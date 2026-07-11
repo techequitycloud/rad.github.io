@@ -1,5 +1,6 @@
 ---
 title: "LibreChat on GKE Autopilot"
+description: "Configuration reference for deploying LibreChat on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # LibreChat on GKE Autopilot

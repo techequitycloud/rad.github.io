@@ -1,5 +1,6 @@
 ---
 title: "Superset on Cloud Run \u2014 Lab Guide"
+description: "Hands-on lab: deploy Superset on Cloud Run in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Superset on Cloud Run — Lab Guide

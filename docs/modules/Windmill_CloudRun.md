@@ -1,5 +1,6 @@
 ---
 title: "Windmill on Google Cloud Run"
+description: "Configuration reference for deploying Windmill on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Windmill on Google Cloud Run

@@ -1,5 +1,6 @@
 ---
 title: "NodeRED Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the NodeRED module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # NodeRED Common — Shared Application Configuration

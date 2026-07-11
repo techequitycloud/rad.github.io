@@ -1,5 +1,6 @@
 ---
 title: "Odoo on Cloud Run"
+description: "Configuration reference for deploying Odoo on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Odoo on Cloud Run

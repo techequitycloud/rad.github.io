@@ -1,5 +1,6 @@
 ---
 title: "Agent Guide"
+description: "RAD Platform agent guide — supporting learners, managing deployments, and handling operational requests in the RAD console."
 ---
 
 # Agent Guide

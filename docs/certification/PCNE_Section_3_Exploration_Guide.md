@@ -1,5 +1,6 @@
 ---
-title: "PCNE Certification Preparation Guide: Section 3 \u2014 Configuring managed network services (~16% of the exam)"
+title: "PCNE Section 3 Prep: Managed Network Services"
+description: "Prepare for the Professional Cloud Network Engineer (PCNE) exam Section 3 — configuring managed network services — with hands-on RAD labs on Google Cloud."
 ---
 
 # PCNE Certification Preparation Guide: Section 3 — Configuring managed network services (~16% of the exam)

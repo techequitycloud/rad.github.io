@@ -1,5 +1,6 @@
 ---
-title: "PCDE Certification Preparation Guide: Section 4 \u2014 Deploy scalable and highly available databases in Google Cloud (~20% of the exam)"
+title: "PCDE Section 4 Prep: Deploying Scalable Databases"
+description: "Prepare for the PCDE exam Section 4 — deploy scalable and highly available databases in Google Cloud — with hands-on RAD deployment labs on Google Cloud."
 ---
 
 # PCDE Certification Preparation Guide: Section 4 — Deploy scalable and highly available databases in Google Cloud (~20% of the exam)

@@ -1,5 +1,6 @@
 ---
 title: "Temporal Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Temporal module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Temporal Common — Shared Application Configuration

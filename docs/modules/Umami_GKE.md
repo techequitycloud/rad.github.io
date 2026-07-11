@@ -1,5 +1,6 @@
 ---
 title: "Umami GKE Module \u2014 Configuration Guide"
+description: "Configuration reference for deploying Umami on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Umami GKE Module — Configuration Guide

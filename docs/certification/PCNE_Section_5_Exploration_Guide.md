@@ -1,5 +1,6 @@
 ---
-title: "PCNE Certification Preparation Guide: Section 5 \u2014 Managing, monitoring, and troubleshooting network operations (~14% of the exam)"
+title: "PCNE Section 5 Prep: Network Operations & Troubleshooting"
+description: "Prepare for the PCNE exam Section 5 — managing, monitoring, and troubleshooting network operations — with hands-on RAD deployment labs on Google Cloud."
 ---
 
 # PCNE Certification Preparation Guide: Section 5 — Managing, monitoring, and troubleshooting network operations (~14% of the exam)

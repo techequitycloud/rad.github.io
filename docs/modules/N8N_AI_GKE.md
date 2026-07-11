@@ -1,5 +1,6 @@
 ---
 title: "N8N AI on GKE Autopilot"
+description: "Configuration reference for deploying N8N AI on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # N8N AI on GKE Autopilot

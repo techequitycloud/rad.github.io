@@ -1,5 +1,6 @@
 ---
 title: "Professional Cloud Network Engineer (PCNE) Certification Lab Map"
+description: "Map every Professional Cloud Network Engineer (PCNE) exam domain to hands-on RAD deployment labs on Google Cloud — a practical, exam-aligned study path."
 ---
 
 # Professional Cloud Network Engineer (PCNE) Certification Lab Map

@@ -1,5 +1,6 @@
 ---
 title: "Qdrant on GKE Autopilot"
+description: "Configuration reference for deploying Qdrant on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Qdrant on GKE Autopilot

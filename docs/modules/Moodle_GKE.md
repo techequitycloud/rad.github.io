@@ -1,5 +1,6 @@
 ---
 title: "Moodle on GKE Autopilot"
+description: "Configuration reference for deploying Moodle on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Moodle on GKE Autopilot

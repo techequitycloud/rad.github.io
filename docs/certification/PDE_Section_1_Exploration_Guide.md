@@ -1,5 +1,6 @@
 ---
-title: "PDE Certification Preparation Guide: Section 1 \u2014 Bootstrapping and maintaining a Google Cloud organization (~20% of the exam)"
+title: "PDE Section 1 Prep: Bootstrapping a Google Cloud Org"
+description: "Prepare for the PDE exam Section 1 — bootstrapping and maintaining a Google Cloud organization — with hands-on RAD deployment labs on Google Cloud."
 ---
 
 # PDE Certification Preparation Guide: Section 1 — Bootstrapping and maintaining a Google Cloud organization (~20% of the exam)

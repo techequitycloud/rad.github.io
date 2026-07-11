@@ -1,5 +1,6 @@
 ---
-title: "PCA Certification Preparation Guide: Section 2 \u2014 Managing and provisioning a cloud solution infrastructure (~17.5% of the exam)"
+title: "PCA Section 2 Prep: Provisioning Infrastructure"
+description: "Prepare for the PCA exam Section 2 — managing and provisioning a cloud solution infrastructure — with hands-on RAD deployment labs on Google Cloud."
 ---
 
 # PCA Certification Preparation Guide: Section 2 — Managing and provisioning a cloud solution infrastructure (~17.5% of the exam)

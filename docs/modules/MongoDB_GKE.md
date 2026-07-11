@@ -1,5 +1,6 @@
 ---
 title: "MongoDB on GKE Autopilot"
+description: "Configuration reference for deploying MongoDB on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # MongoDB on GKE Autopilot

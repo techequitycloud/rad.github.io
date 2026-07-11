@@ -1,5 +1,6 @@
 ---
 title: "Umami on Cloud Run \u2014 Lab Guide"
+description: "Hands-on lab: deploy Umami on Cloud Run in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Umami on Cloud Run — Lab Guide

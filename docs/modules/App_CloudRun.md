@@ -1,5 +1,6 @@
 ---
 title: "App CloudRun Module \u2014 Configuration Guide"
+description: "Configuration reference for deploying App on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # App CloudRun Module — Configuration Guide

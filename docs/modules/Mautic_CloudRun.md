@@ -1,5 +1,6 @@
 ---
 title: "Mautic on Google Cloud Run"
+description: "Configuration reference for deploying Mautic on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Mautic on Google Cloud Run

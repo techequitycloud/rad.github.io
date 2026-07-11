@@ -1,5 +1,6 @@
 ---
 title: "Cyclos on Google Cloud Run"
+description: "Configuration reference for deploying Cyclos on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Cyclos on Google Cloud Run

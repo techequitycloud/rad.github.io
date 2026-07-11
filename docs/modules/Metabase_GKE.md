@@ -1,5 +1,6 @@
 ---
 title: "Metabase on GKE Autopilot"
+description: "Configuration reference for deploying Metabase on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Metabase on GKE Autopilot

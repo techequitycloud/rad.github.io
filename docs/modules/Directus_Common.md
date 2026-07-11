@@ -1,5 +1,6 @@
 ---
 title: "Directus Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Directus module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Directus Common — Shared Application Configuration

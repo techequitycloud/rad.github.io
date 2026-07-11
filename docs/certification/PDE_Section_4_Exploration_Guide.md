@@ -1,5 +1,6 @@
 ---
-title: "PDE Certification Preparation Guide: Section 4 \u2014 Implementing observability practices and troubleshooting issues (~25% of the exam)"
+title: "PDE Section 4 Prep: Observability & Troubleshooting"
+description: "Prepare for the PDE exam Section 4 — implementing observability practices and troubleshooting issues — with hands-on RAD deployment labs on Google Cloud."
 ---
 
 # PDE Certification Preparation Guide: Section 4 — Implementing observability practices and troubleshooting issues (~25% of the exam)

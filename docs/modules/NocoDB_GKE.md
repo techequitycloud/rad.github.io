@@ -1,5 +1,6 @@
 ---
 title: "NocoDB on GKE Autopilot"
+description: "Configuration reference for deploying NocoDB on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # NocoDB on GKE Autopilot

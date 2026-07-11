@@ -1,5 +1,6 @@
 ---
 title: "Django on Cloud Run"
+description: "Configuration reference for deploying Django on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Django on Cloud Run

@@ -1,5 +1,6 @@
 ---
 title: "Directus on Cloud Run"
+description: "Configuration reference for deploying Directus on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Directus on Cloud Run

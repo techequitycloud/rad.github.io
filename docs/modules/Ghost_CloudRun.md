@@ -1,5 +1,6 @@
 ---
 title: "Ghost on Google Cloud Run"
+description: "Configuration reference for deploying Ghost on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Ghost on Google Cloud Run

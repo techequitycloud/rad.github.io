@@ -1,5 +1,6 @@
 ---
 title: "AnythingLLM on Google Cloud Run"
+description: "Configuration reference for deploying AnythingLLM on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # AnythingLLM on Google Cloud Run

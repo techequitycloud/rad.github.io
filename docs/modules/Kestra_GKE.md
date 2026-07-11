@@ -1,5 +1,6 @@
 ---
 title: "Kestra on GKE Autopilot"
+description: "Configuration reference for deploying Kestra on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Kestra on GKE Autopilot

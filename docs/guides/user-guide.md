@@ -1,5 +1,6 @@
 ---
 title: "User Guide"
+description: "RAD Platform user guide — deploying training modules to Google Cloud, tracking progress, and working through certification labs."
 ---
 
 # User Guide

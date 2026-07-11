@@ -1,5 +1,6 @@
 ---
 title: "App GKE Module \u2014 Configuration Guide"
+description: "Configuration reference for deploying App on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # App GKE Module — Configuration Guide

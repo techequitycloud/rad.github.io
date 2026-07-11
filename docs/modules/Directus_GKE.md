@@ -1,5 +1,6 @@
 ---
 title: "Directus on GKE Autopilot"
+description: "Configuration reference for deploying Directus on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Directus on GKE Autopilot

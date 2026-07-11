@@ -1,5 +1,6 @@
 ---
 title: "Mattermost GKE Module \u2014 Configuration Guide"
+description: "Configuration reference for deploying Mattermost on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Mattermost GKE Module — Configuration Guide

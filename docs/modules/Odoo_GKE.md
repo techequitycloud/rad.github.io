@@ -1,5 +1,6 @@
 ---
 title: "Odoo on GKE Autopilot"
+description: "Configuration reference for deploying Odoo on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Odoo on GKE Autopilot

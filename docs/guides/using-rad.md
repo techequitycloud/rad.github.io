@@ -1,5 +1,6 @@
 ---
 title: "Using RAD"
+description: "How to use the RAD Platform: signing in, navigation, roles, deploying modules to your own Google Cloud project, credits, and billing."
 ---
 
 # Using RAD

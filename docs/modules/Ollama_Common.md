@@ -1,5 +1,6 @@
 ---
 title: "Ollama Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Ollama module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Ollama Common — Shared Application Configuration

@@ -1,5 +1,6 @@
 ---
 title: "Nextcloud Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Nextcloud module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Nextcloud Common — Shared Application Configuration

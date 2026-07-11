@@ -1,5 +1,6 @@
 ---
-title: "PCNE Certification Preparation Guide: Section 2 \u2014 Implementing a VPC network (~20% of the exam)"
+title: "PCNE Section 2 Prep: Implementing a VPC Network"
+description: "Prepare for the Professional Cloud Network Engineer (PCNE) exam Section 2 — implementing a VPC network — with hands-on RAD labs on Google Cloud."
 ---
 
 # PCNE Certification Preparation Guide: Section 2 — Implementing a VPC network (~20% of the exam)

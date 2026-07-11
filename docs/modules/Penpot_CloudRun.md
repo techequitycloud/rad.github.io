@@ -1,5 +1,6 @@
 ---
 title: "Penpot on Google Cloud Run"
+description: "Configuration reference for deploying Penpot on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Penpot on Google Cloud Run

@@ -1,5 +1,6 @@
 ---
 title: "Mattermost on Google Cloud Run"
+description: "Configuration reference for deploying Mattermost on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Mattermost on Google Cloud Run

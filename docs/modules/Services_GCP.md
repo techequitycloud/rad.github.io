@@ -1,5 +1,6 @@
 ---
 title: "Services GCP \u2014 Platform Foundation Module"
+description: "Configuration reference for the Services GCP RAD module on Google Cloud — variables, architecture, networking, and day-2 operations."
 ---
 
 # Services GCP — Platform Foundation Module

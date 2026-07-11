@@ -1,5 +1,6 @@
 ---
-title: "PCA Certification Preparation Guide: Section 5 \u2014 Managing implementation (~12.5% of the exam)"
+title: "PCA Section 5 Prep: Managing Implementation"
+description: "Prepare for the Professional Cloud Architect (PCA) exam Section 5 — managing implementation — with hands-on RAD labs on Google Cloud."
 ---
 
 # PCA Certification Preparation Guide: Section 5 — Managing implementation (~12.5% of the exam)

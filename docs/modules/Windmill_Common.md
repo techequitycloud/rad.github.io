@@ -1,5 +1,6 @@
 ---
 title: "Windmill Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Windmill module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Windmill Common — Shared Application Configuration

@@ -1,5 +1,6 @@
 ---
 title: "OpenClaw on GKE Autopilot"
+description: "Configuration reference for deploying OpenClaw on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # OpenClaw on GKE Autopilot

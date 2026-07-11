@@ -1,5 +1,6 @@
 ---
-title: "PCD Certification Preparation Guide: Section 3 \u2014 Deploying applications (~20% of the exam)"
+title: "PCD Section 3 Prep: Deploying Applications"
+description: "Prepare for the Professional Cloud Developer (PCD) exam Section 3 — deploying applications — with hands-on RAD labs on Google Cloud."
 ---
 
 # PCD Certification Preparation Guide: Section 3 — Deploying applications (~20% of the exam)

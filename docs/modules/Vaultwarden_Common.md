@@ -1,5 +1,6 @@
 ---
 title: "Vaultwarden Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Vaultwarden module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Vaultwarden Common — Shared Application Configuration

@@ -1,5 +1,6 @@
 ---
-title: "PSE Certification Preparation Guide: Section 2 \u2014 Securing communications and establishing boundary protection (~22% of the exam)"
+title: "PSE Section 2 Prep: Securing Communications & Boundaries"
+description: "Prepare for the PSE exam Section 2 — securing communications and establishing boundary protection — with hands-on RAD deployment labs on Google Cloud."
 ---
 
 # PSE Certification Preparation Guide: Section 2 — Securing communications and establishing boundary protection (~22% of the exam)

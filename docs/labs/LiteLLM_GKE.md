@@ -1,5 +1,6 @@
 ---
 title: "LiteLLM on GKE Autopilot \u2014 Lab Guide"
+description: "Hands-on lab: deploy LiteLLM on GKE Autopilot in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # LiteLLM on GKE Autopilot — Lab Guide

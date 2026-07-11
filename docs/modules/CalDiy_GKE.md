@@ -1,5 +1,6 @@
 ---
 title: "Cal.diy on GKE Autopilot"
+description: "Configuration reference for deploying Cal.diy on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Cal.diy on GKE Autopilot

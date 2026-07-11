@@ -1,5 +1,6 @@
 ---
 title: "Open WebUI on GKE Autopilot"
+description: "Configuration reference for deploying Open WebUI on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Open WebUI on GKE Autopilot

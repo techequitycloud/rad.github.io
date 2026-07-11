@@ -1,5 +1,6 @@
 ---
 title: "Vaultwarden on GKE Autopilot \u2014 Lab Guide"
+description: "Hands-on lab: deploy Vaultwarden on GKE Autopilot in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Vaultwarden on GKE Autopilot — Lab Guide

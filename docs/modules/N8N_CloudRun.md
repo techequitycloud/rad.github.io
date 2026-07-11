@@ -1,5 +1,6 @@
 ---
 title: "n8n on Google Cloud Run"
+description: "Configuration reference for deploying n8n on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # n8n on Google Cloud Run

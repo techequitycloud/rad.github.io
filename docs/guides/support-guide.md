@@ -1,5 +1,6 @@
 ---
 title: "Support Guide"
+description: "RAD Platform support guide — triaging issues, common deployment failures, escalation paths, and troubleshooting resources."
 ---
 
 # Support Guide

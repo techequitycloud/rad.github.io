@@ -1,5 +1,6 @@
 ---
 title: "n8n on GKE Autopilot"
+description: "Configuration reference for deploying n8n on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # n8n on GKE Autopilot

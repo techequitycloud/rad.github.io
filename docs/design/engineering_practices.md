@@ -1,5 +1,6 @@
 ---
 title: "Engineering Practices"
+description: "Engineering practices used across RAD Platform modules — infrastructure as code, CI/CD, testing, versioning, and release management."
 ---
 
 # Engineering Practices

@@ -1,5 +1,6 @@
 ---
 title: "Migrate to Containers on GKE"
+description: "Configuration reference for the Migrate to Containers RAD module on Google Cloud — variables, architecture, networking, and day-2 operations."
 ---
 
 # Migrate to Containers on GKE

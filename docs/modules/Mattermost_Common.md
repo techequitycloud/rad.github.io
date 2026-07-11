@@ -1,5 +1,6 @@
 ---
 title: "Mattermost Common Shared Configuration Module"
+description: "Shared configuration reference for the Mattermost module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Mattermost Common Shared Configuration Module

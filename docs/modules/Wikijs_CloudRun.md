@@ -1,5 +1,6 @@
 ---
 title: "Wiki.js on Google Cloud Run"
+description: "Configuration reference for deploying Wiki.js on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Wiki.js on Google Cloud Run

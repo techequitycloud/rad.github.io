@@ -100,14 +100,50 @@ function initFlowiseChatbot() {
   document.body.appendChild(script);
 }
 
+function destroyFlowiseChatbot() {
+  document.getElementById(FLOWISE_SCRIPT_ID)?.remove();
+  document.querySelector('flowise-chatbot')?.remove();
+}
+
 export default function Root({children}) {
   useEffect(() => {
     let cancelled = false;
-    isFlowiseBackendResponsive().then((responsive) => {
-      if (responsive && !cancelled) initFlowiseChatbot();
-    });
+    let observer: MutationObserver | undefined;
+
+    const start = () => {
+      isFlowiseBackendResponsive().then((responsive) => {
+        if (!responsive || cancelled) return;
+        initFlowiseChatbot();
+        // The widget's colors are baked in at init; re-init on theme toggle
+        // so the bubble/window follow Docusaurus's light/dark switch.
+        observer = new MutationObserver(() => {
+          if (document.getElementById(FLOWISE_SCRIPT_ID)) {
+            destroyFlowiseChatbot();
+            initFlowiseChatbot();
+          }
+        });
+        observer.observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ['data-theme'],
+        });
+      });
+    };
+
+    // Defer the 284KB (gzip) third-party bundle until the main thread is
+    // idle so it never competes with hydration/input (INP).
+    const idleId =
+      'requestIdleCallback' in window
+        ? window.requestIdleCallback(start)
+        : window.setTimeout(start, 2000);
+
     return () => {
       cancelled = true;
+      observer?.disconnect();
+      if ('requestIdleCallback' in window) {
+        window.cancelIdleCallback(idleId as number);
+      } else {
+        window.clearTimeout(idleId as number);
+      }
     };
   }, []);
 

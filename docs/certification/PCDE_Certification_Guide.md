@@ -1,5 +1,6 @@
 ---
 title: "Professional Cloud Database Engineer (PCDE) Certification Lab Map"
+description: "Map every Professional Cloud Database Engineer (PCDE) exam domain to hands-on RAD deployment labs on Google Cloud — a practical, exam-aligned study path."
 ---
 
 # Professional Cloud Database Engineer (PCDE) Certification Lab Map

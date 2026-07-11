@@ -1,5 +1,6 @@
 ---
-title: "PCA Certification Preparation Guide: Section 1 \u2014 Designing and planning a cloud solution architecture (~25% of the exam)"
+title: "PCA Section 1 Prep: Designing Cloud Architecture"
+description: "Prepare for the PCA exam Section 1 — designing and planning a cloud solution architecture — with hands-on RAD deployment labs on Google Cloud."
 ---
 
 # PCA Certification Preparation Guide: Section 1 — Designing and planning a cloud solution architecture (~25% of the exam)

@@ -1,5 +1,6 @@
 ---
 title: "Wiki.js on Cloud Run \u2014 Lab Guide"
+description: "Hands-on lab: deploy Wiki.js on Cloud Run in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Wiki.js on Cloud Run — Lab Guide

@@ -1,5 +1,6 @@
 ---
 title: "LiteLLM on Google Cloud Run"
+description: "Configuration reference for deploying LiteLLM on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # LiteLLM on Google Cloud Run

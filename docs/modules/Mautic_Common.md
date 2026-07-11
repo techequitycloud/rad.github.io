@@ -1,5 +1,6 @@
 ---
 title: "Mautic Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Mautic module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Mautic Common — Shared Application Configuration

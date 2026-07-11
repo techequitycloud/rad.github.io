@@ -1,5 +1,6 @@
 ---
 title: "Crawl4AI Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Crawl4AI module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Crawl4AI Common — Shared Application Configuration

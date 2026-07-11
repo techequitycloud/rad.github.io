@@ -1,5 +1,6 @@
 ---
 title: "Migration Center \u2014 Lab Guide"
+description: "Hands-on lab: run Google Cloud Migration Center discovery and assessment in your own project — setup, data collection, reports, and teardown."
 ---
 
 # Migration Center — Lab Guide

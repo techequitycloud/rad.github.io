@@ -1,5 +1,6 @@
 ---
 title: "Ollama on GKE Autopilot"
+description: "Configuration reference for deploying Ollama on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Ollama on GKE Autopilot

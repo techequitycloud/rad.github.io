@@ -1,5 +1,6 @@
 ---
 title: "Professional Cloud Architect (PCA) Certification Lab Map"
+description: "Map every Professional Cloud Architect (PCA) exam domain to hands-on RAD deployment labs on Google Cloud — a practical, exam-aligned study path."
 ---
 
 # Professional Cloud Architect (PCA) Certification Lab Map

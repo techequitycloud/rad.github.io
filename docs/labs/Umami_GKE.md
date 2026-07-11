@@ -1,5 +1,6 @@
 ---
 title: "Umami on GKE Autopilot \u2014 Lab Guide"
+description: "Hands-on lab: deploy Umami on GKE Autopilot in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Umami on GKE Autopilot — Lab Guide

@@ -1,5 +1,6 @@
 ---
 title: "Umami on Google Cloud Run"
+description: "Configuration reference for deploying Umami on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Umami on Google Cloud Run

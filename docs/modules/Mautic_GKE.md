@@ -1,5 +1,6 @@
 ---
 title: "Mautic on GKE Autopilot"
+description: "Configuration reference for deploying Mautic on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Mautic on GKE Autopilot

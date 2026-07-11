@@ -1,5 +1,6 @@
 ---
-title: "ACE Certification Preparation Guide: Section 3 \u2014 Ensuring successful operation of a cloud solution (~27% of the exam)"
+title: "ACE Section 3 Prep: Operating Cloud Solutions"
+description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 3 — ensuring successful operation of a cloud solution — with hands-on RAD labs on Google Cloud."
 ---
 
 # ACE Certification Preparation Guide: Section 3 — Ensuring successful operation of a cloud solution (~27% of the exam)

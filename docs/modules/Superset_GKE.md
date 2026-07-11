@@ -1,5 +1,6 @@
 ---
 title: "Apache Superset on GKE Autopilot"
+description: "Configuration reference for deploying Apache Superset on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Apache Superset on GKE Autopilot

@@ -1,5 +1,6 @@
 ---
 title: "OpenEMR Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the OpenEMR module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # OpenEMR Common — Shared Application Configuration

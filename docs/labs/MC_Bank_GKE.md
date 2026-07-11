@@ -1,5 +1,6 @@
 ---
 title: "Multi-Cluster Bank of Anthos on GKE \u2014 Lab Guide"
+description: "Hands-on lab: deploy Multi-Cluster Bank of Anthos on GKE Autopilot in your own Google Cloud project — setup, verification, operations, and teardown."
 ---
 
 # Multi-Cluster Bank of Anthos on GKE — Lab Guide

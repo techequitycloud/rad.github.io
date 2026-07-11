@@ -1,5 +1,6 @@
 ---
-title: "PCA Certification Preparation Guide: Section 6 \u2014 Ensuring solution and operations excellence (~12.5% of the exam)"
+title: "PCA Section 6 Prep: Solution & Operations Excellence"
+description: "Prepare for the Professional Cloud Architect (PCA) exam Section 6 — ensuring solution and operations excellence — with hands-on RAD labs on Google Cloud."
 ---
 
 # PCA Certification Preparation Guide: Section 6 — Ensuring solution and operations excellence (~12.5% of the exam)

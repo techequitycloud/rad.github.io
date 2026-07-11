@@ -1,5 +1,6 @@
 ---
 title: "Listmonk on Google Cloud Run"
+description: "Configuration reference for deploying Listmonk on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Listmonk on Google Cloud Run

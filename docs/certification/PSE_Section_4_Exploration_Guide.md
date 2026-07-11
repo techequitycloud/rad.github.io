@@ -1,5 +1,6 @@
 ---
-title: "PSE Certification Preparation Guide: Section 4 \u2014 Managing operations (~19% of the exam)"
+title: "PSE Section 4 Prep: Managing Operations"
+description: "Prepare for the Professional Cloud Security Engineer (PSE) exam Section 4 — managing operations — with hands-on RAD labs on Google Cloud."
 ---
 
 # PSE Certification Preparation Guide: Section 4 — Managing operations (~19% of the exam)

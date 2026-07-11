@@ -1,5 +1,6 @@
 ---
 title: "Moodle Common \u2014 Shared Application Configuration"
+description: "Shared configuration reference for the Moodle module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
 # Moodle Common — Shared Application Configuration

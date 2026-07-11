@@ -1,5 +1,6 @@
 ---
 title: "Activepieces on GKE Autopilot"
+description: "Configuration reference for deploying Activepieces on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
 ---
 
 # Activepieces on GKE Autopilot

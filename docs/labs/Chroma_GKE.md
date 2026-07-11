@@ -1,5 +1,6 @@
 ---
 title: "Chroma on GKE Autopilot \u2014 Lab Guide"
+description: "Hands-on lab: deploy Chroma on GKE Autopilot in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
 # Chroma on GKE Autopilot — Lab Guide
