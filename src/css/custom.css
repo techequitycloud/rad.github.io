@@ -34,6 +34,18 @@
   overflow-wrap: break-word;
 }
 
+/* On narrow viewports, wide tables (code-heavy cells can't wrap below their
+   min-content width) scroll inside their own box instead of stretching the
+   whole page past the viewport. 996px = Docusaurus's mobile breakpoint. */
+@media (max-width: 996px) {
+  .markdown table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
   --ifm-color-primary: #25c2a0;

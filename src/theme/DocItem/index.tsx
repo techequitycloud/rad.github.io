@@ -5,6 +5,7 @@ import type {WrapperProps} from '@docusaurus/types';
 import Head from '@docusaurus/Head';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import {AUTHOR_JSONLD, PUBLISHER_JSONLD} from '@site/src/data/author';
+import {certCodeFromPermalink} from '@site/src/data/certMap';
 import DATE_PUBLISHED from '@site/src/data/datePublished';
 
 type Props = WrapperProps<typeof DocItemType>;
@@ -38,9 +39,12 @@ export default function DocItemWrapper(props: Props): React.JSX.Element {
         image,
         provider: PUBLISHER_JSONLD,
         author: AUTHOR_JSONLD,
-        educationalLevel: title.includes('Associate')
-          ? 'Associate'
-          : 'Professional',
+        // Level comes from the cert-code prefix in the permalink, not the
+        // title — section pages ("ACE Section 1 Prep") don't say "Associate".
+        educationalLevel:
+          certCodeFromPermalink(permalink) === 'ACE'
+            ? 'Associate'
+            : 'Professional',
         hasCourseInstance: {
           '@type': 'CourseInstance',
           courseMode: 'Online',
