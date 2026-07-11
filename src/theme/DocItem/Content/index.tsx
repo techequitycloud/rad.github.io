@@ -67,14 +67,18 @@ function RelatedLabs({permalink}: {permalink: string}) {
   );
 }
 
-// Visible authorship (E-E-A-T): a compact byline above every doc's content,
-// linked to the /author profile page so the named author is verifiable.
-// The matching machine-readable author lives in the DocItem JSON-LD wrapper.
+// Visible authorship (E-E-A-T): a compact byline as a credits line at the
+// bottom of every doc, linked to the /author profile page so the named
+// author is verifiable. The matching machine-readable author lives in the
+// DocItem JSON-LD wrapper.
 export default function ContentWrapper(props: Props): React.JSX.Element {
   const {metadata} = useDoc();
   const {permalink} = metadata;
   return (
     <>
+      <CertTrackChip permalink={permalink} />
+      <Content {...props} />
+      <RelatedLabs permalink={permalink} />
       <p className="doc-byline">
         By{' '}
         <Link to="/author" rel="author">
@@ -82,9 +86,6 @@ export default function ContentWrapper(props: Props): React.JSX.Element {
         </Link>{' '}
         · Google Cloud certified: {AUTHOR_CERT_CODES.join(' · ')}
       </p>
-      <CertTrackChip permalink={permalink} />
-      <Content {...props} />
-      <RelatedLabs permalink={permalink} />
     </>
   );
 }
