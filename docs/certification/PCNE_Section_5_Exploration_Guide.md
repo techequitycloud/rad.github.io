@@ -4,6 +4,8 @@ description: "Prepare for the PCNE exam Section 5 — managing, monitoring, and 
 ---
 
 # PCNE Certification Preparation Guide: Section 5 — Managing, monitoring, and troubleshooting network operations (~14% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Network Engineer certification](https://cloud.google.com/learn/certification/cloud-network-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This section tests operating a network: which logs exist and where to enable them, which metrics matter for VPN/Interconnect/LB/NAT, and how to use Network Intelligence Center to diagnose reachability and performance. RAD gives you a live network to instrument — a global external ALB with request logging already on, health-checked managed instance groups, and alerting plumbing — but deliberately ships with VPC Flow Logs, NAT logging, and firewall logging **disabled**, which makes enabling them your lab exercise. Deploy the **VPC Foundation** and **Global Edge** profiles. Modules exercised: `Services_GCP` and `App_CloudRun`.
 

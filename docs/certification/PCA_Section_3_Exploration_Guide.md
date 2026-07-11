@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud Architect (PCA) exam Section 3 
 ---
 
 # PCA Certification Preparation Guide: Section 3 — Designing for security and compliance (~17.5% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 Security design is where the RAD modules are at their densest: dedicated service accounts everywhere, secrets that never touch Terraform state, CMEK with automatic rotation and even automatic key *recovery*, Binary Authorization, VPC Service Controls with a deliberately staged dry-run rollout, and zero-trust access via IAP. Deploy the **Security and delivery** profile from the [Lab Map](PCA_Certification_Guide.md) on top of a baseline deployment. Modules exercised: `Services_GCP`, `App_CloudRun` (or `App_GKE`), and the `App_Common` security layers (secrets, IAM, CMEK, and VPC-SC).
 

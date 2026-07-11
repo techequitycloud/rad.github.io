@@ -4,6 +4,8 @@ description: "Prepare for the PCDE exam Section 1 (Scalable Database Solution De
 ---
 
 # PCDE Certification Preparation Guide: Section 1 — Design innovative, scalable, and highly available cloud database solutions (~32% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Database Engineer certification](https://cloud.google.com/learn/certification/cloud-database-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers Section 1 of the Professional Cloud Database Engineer (PCDE) exam — the largest section, weighted at roughly a third of the questions. It exercises `Services_GCP` (which provisions Cloud SQL PostgreSQL/MySQL, AlloyDB, Firestore Enterprise, and Memorystore Redis) with supporting connectivity patterns from `App_CloudRun` and `App_GKE`. Before starting, deploy the **relational-baseline** profile from the [PCDE Lab Map](PCDE_Certification_Guide.md); subsections 1.2 and 1.4 additionally use the **ha-production**, **multi-engine**, and **alloydb-ai** profiles.
 

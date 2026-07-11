@@ -4,6 +4,8 @@ description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 3 — 
 ---
 
 # ACE Certification Preparation Guide: Section 3 — Ensuring successful operation of a cloud solution (~27% of the exam)
+> 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers exam Section 3 — day-2 operations — using the RAD platform foundation modules. `App_CloudRun` and `App_GKE` carry most of the load (revisions, traffic, CI/CD, backups, alerts); `Services_GCP` supplies the infrastructure alerts and audit logging. Deploy the **Serverless application** profile (plus the **Kubernetes application** profile for the `kubectl` labs and the **Operations & security add-ons** profile for 3.4) from the [Lab Map](ACE_Certification_Guide.md).
 

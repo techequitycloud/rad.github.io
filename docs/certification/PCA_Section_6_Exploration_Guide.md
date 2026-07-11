@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud Architect (PCA) exam Section 6 
 ---
 
 # PCA Certification Preparation Guide: Section 6 — Ensuring solution and operations excellence (~12.5% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 Day-2 operations: observing systems, releasing safely, controlling quality, and keeping production reliable. Every RAD deployment ships with a dashboard and alerting wired to your email, and publicly reachable deployments add a synthetic uptime check (see 6.2) — so most of this section is observable on the **Lean baseline** profile from the [Lab Map](PCA_Certification_Guide.md); add the **Security and delivery** profile for release management (6.3) and the **GKE architecture** profile for the reliability mechanics in 6.6. Modules exercised: all four, with emphasis on the monitoring layers of `Services_GCP` and `App_CloudRun`, plus the platform's shared monitoring and dashboard layers.
 

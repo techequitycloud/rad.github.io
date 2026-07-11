@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud Network Engineer (PCNE) exam Se
 ---
 
 # PCNE Certification Preparation Guide: Section 2 — Implementing a VPC network (~20% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Network Engineer certification](https://cloud.google.com/learn/certification/cloud-network-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 Section 2 moves from design to `gcloud compute networks ...` muscle memory: creating VPCs, subnets, firewall rules, routes, and VPC-native GKE clusters. Deploy the **VPC Foundation** profile (Services_GCP + App_CloudRun) for 2.1–2.2 and add the **GKE Network Lab** profile for 2.4. Add the **Locked-Down Perimeter** profile if you want live VPC-SC resources. Modules exercised: `Services_GCP`, `App_GKE`, `App_Common`.
 

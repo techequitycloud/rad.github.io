@@ -4,6 +4,8 @@ description: "Map every Professional Cloud Database Engineer (PCDE) exam domain 
 ---
 
 # Professional Cloud Database Engineer (PCDE) Certification Lab Map
+> 📚 **Official exam guide:** [Professional Cloud Database Engineer certification](https://cloud.google.com/learn/certification/cloud-database-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 The Professional Cloud Database Engineer certification validates your ability to design, manage, migrate, and deploy scalable, highly available database solutions on Google Cloud. The RAD foundation modules — `Services_GCP`, `App_CloudRun`, `App_GKE`, and `App_Common` — serve as a live lab for the bulk of this exam: `Services_GCP` provisions Cloud SQL (PostgreSQL and MySQL), AlloyDB, Firestore Enterprise, and Memorystore Redis behind a private VPC, while `App_CloudRun` and `App_GKE` demonstrate how real applications connect, authenticate, back up, monitor, and rotate credentials against those databases — all driven by infrastructure-as-code, which is itself the exam's "automate database instance provisioning" objective made concrete.
 

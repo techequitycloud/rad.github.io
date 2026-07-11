@@ -4,6 +4,8 @@ description: "Prepare for the PDE exam Section 4 — implementing observability 
 ---
 
 # PDE Certification Preparation Guide: Section 4 — Implementing observability practices and troubleshooting issues (~25% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud DevOps Engineer certification](https://cloud.google.com/learn/certification/cloud-devops-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers exam Section 4 — the second-heaviest domain — using the RAD foundation modules. The observability surface is built from the monitoring layer (notification channels + alert policies), auto-generated per-platform dashboards, Data Access audit logging in every module, and the GKE cluster's logging/monitoring configuration. Deploy the **Observability baseline** profile from the [Lab Map](PDE_Certification_Guide.md); the GKE parts also need the **GKE release engineer** profile.
 

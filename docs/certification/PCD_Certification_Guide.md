@@ -4,6 +4,8 @@ description: "Map every Professional Cloud Developer (PCD) exam domain to hands-
 ---
 
 # Professional Cloud Developer (PCD) Certification Lab Map
+> 📚 **Official exam guide:** [Professional Cloud Developer certification](https://cloud.google.com/learn/certification/cloud-developer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 The Professional Cloud Developer certification validates your ability to design, build, test, deploy, and integrate scalable applications on Google Cloud — with a strong emphasis on Cloud Run, GKE, Cloud Build, Artifact Registry, Cloud Deploy, runtime secrets, service authentication, and observability. The RAD platform's four foundation modules (`Services_GCP`, `App_CloudRun`, `App_GKE`, `App_Common`) give you a live lab for exactly these skills: `Services_GCP` provisions the shared platform (VPC, Cloud SQL, Redis, GKE Autopilot, Artifact Registry, Binary Authorization, Workload Identity Federation), `App_CloudRun` and `App_GKE` are full-featured deployment engines for Cloud Run v2 services and Kubernetes workloads, and `App_Common` supplies the shared submodules they both use (secrets and rotation, Cloud Build container builds, Cloud Deploy pipelines, IAM, storage, monitoring). Application wrapper modules (Django, Wordpress, etc.) exist on the platform but everything in these guides uses the foundation modules directly.
 

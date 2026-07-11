@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud Security Engineer (PSE) exam Se
 ---
 
 # PSE Certification Preparation Guide: Section 4 — Managing operations (~19% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Security Engineer certification](https://cloud.google.com/learn/certification/cloud-security-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers Section 4 of the Professional Cloud Security Engineer exam. The relevant foundation modules: `Services_GCP` (Binary Authorization, Artifact Registry, audit logging, SCC, monitoring), `App_CloudRun`/`App_GKE` (CI/CD with attestation, audit logging, monitoring), and `App_Common` (image signing). Deploy the **secure-platform** profile with `binauthz_evaluation_mode = "REQUIRE_ATTESTATION"` plus one app module before starting.
 

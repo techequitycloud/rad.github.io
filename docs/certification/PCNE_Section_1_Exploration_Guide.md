@@ -4,6 +4,8 @@ description: "Prepare for the PCNE exam Section 1 — designing and planning a G
 ---
 
 # PCNE Certification Preparation Guide: Section 1 — Designing and planning a Google Cloud VPC network (~21% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Network Engineer certification](https://cloud.google.com/learn/certification/cloud-network-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This section tests network *design decisions*: how to size and segment IP space, when to choose Shared VPC vs peering vs Private Service Connect, and how to plan GKE networking before the first cluster exists. Deploy the **VPC Foundation** profile first; add the **GKE Network Lab** profile before working through 1.4. The modules exercised are `Services_GCP` (the network itself) and `App_Common` (how downstream modules discover it).
 

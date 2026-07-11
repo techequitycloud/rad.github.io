@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud Database Engineer (PCDE) exam S
 ---
 
 # PCDE Certification Preparation Guide: Section 3 — Migrate data solutions (~23% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Database Engineer certification](https://cloud.google.com/learn/certification/cloud-database-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers Section 3 of the Professional Cloud Database Engineer (PCDE) exam. Be warned up front: this is the section where the RAD foundation modules cover the *least* ground. The modules implement the export/import (extended-outage) migration path end to end — `App_CloudRun`/`App_GKE` backup-import jobs fed from GCS or Google Drive, driven by the `App_Common` scripts — and read replication inside Google Cloud via `Services_GCP`. Database Migration Service, Datastream, zero-downtime cutovers, and reverse replication are concept-only and carry heavy "Beyond the modules" study lists. Deploy the **relational-baseline** and **app-dataops** profiles from the [PCDE Lab Map](PCDE_Certification_Guide.md) before starting.
 

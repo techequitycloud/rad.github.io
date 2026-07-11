@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud Developer (PCD) exam Section 3 
 ---
 
 # PCD Certification Preparation Guide: Section 3 — Deploying applications (~20% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Developer certification](https://cloud.google.com/learn/certification/cloud-developer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This section is where the RAD foundation modules shine: `App_CloudRun` deploys a fully configured Cloud Run v2 service (scaling, probes, volumes, traffic management, jobs, optional Cloud Deploy pipeline) and `App_GKE` deploys the equivalent Kubernetes workload on GKE Autopilot (Deployment/StatefulSet, HPA, probes, quotas, Gateway API). Deploy the **Serverless baseline** and **Delivery pipeline** profiles for 3.1, and the **Kubernetes lab** profile for 3.2 (see the [Lab Map](PCD_Certification_Guide.md)).
 

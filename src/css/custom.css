@@ -73,3 +73,10 @@
     padding-bottom: 64px;
   }
 }
+
+/* Visible authorship byline rendered above doc content (see src/theme/DocItem/Content). */
+.doc-byline {
+  font-size: 0.85rem;
+  color: var(--ifm-color-emphasis-600);
+  margin-bottom: 0.25rem;
+}

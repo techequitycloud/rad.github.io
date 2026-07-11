@@ -4,6 +4,8 @@ description: "Prepare for the PCA exam Section 1 — designing and planning a cl
 ---
 
 # PCA Certification Preparation Guide: Section 1 — Designing and planning a cloud solution architecture (~25% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This is the heaviest-weighted PCA section, and it is about *choices*: which compute platform, which availability tier, which storage type — and why. All four foundation modules are exercised here. Deploy the **Lean baseline** profile from the [Lab Map](PCA_Certification_Guide.md) first, then apply the **Resilient data tier** and **GKE architecture** profiles as you reach 1.2 and 1.3, so you can compare the cheap architecture and the resilient one in the same project.
 
