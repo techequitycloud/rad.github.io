@@ -14,13 +14,17 @@ const FLOWISE_THEME_BY_MODE = {
 const FLOWISE_SCRIPT_ID = 'flowise-chatbot-95f80df9';
 const FLOWISE_API_HOST = 'https://flowise.radbusiness.dev';
 const FLOWISE_CHATFLOW_ID = '95f80df9-7111-4205-9f20-7bc9e20006ae';
-const FLOWISE_PROBE_TIMEOUT_MS = 5000;
+// The backend is a scale-to-zero Cloud Run service: the first request after
+// idle rides out a cold start, so the deadline must comfortably exceed
+// cold-start time or the widget would vanish on exactly those visits. When
+// warm it answers in ~150ms; the probe itself doubles as the warm-up request.
+const FLOWISE_PROBE_TIMEOUT_MS = 30000;
 
 // The widget fetches its config from apiHost on init with no timeout of its
-// own; if the backend hangs (accepts TLS but never answers HTTP), that
-// request — and the widget — hang indefinitely on every page load. Probe the
-// config endpoint with a hard deadline and only inject the widget once the
-// backend has proven responsive.
+// own; if the backend never answers HTTP, that request — and the widget —
+// hang indefinitely on every page load. Probe the config endpoint with a
+// hard deadline and only inject the widget once the backend has proven
+// responsive.
 async function isFlowiseBackendResponsive(): Promise<boolean> {
   const controller = new AbortController();
   const deadline = setTimeout(() => controller.abort(), FLOWISE_PROBE_TIMEOUT_MS);
