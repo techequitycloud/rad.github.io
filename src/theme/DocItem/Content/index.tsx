@@ -15,8 +15,6 @@ import {
 
 type Props = WrapperProps<typeof ContentType>;
 
-const MAX_RELATED_LABS = 8;
-
 // Spoke → hub: topical link from a lab/module page to the certification
 // track(s) it teaches (and the AI hub for LLM-stack apps), replacing the old
 // one-size-fits-all path where every app page led to the ACE guide.
@@ -44,25 +42,22 @@ function CertTrackChip({permalink}: {permalink: string}) {
 }
 
 // Hub → spoke: every certification page closes with the labs that practice
-// its exam domains, sourced from the same mapping.
+// its exam domains, sourced from the same mapping. Every lab is listed —
+// a pillar page is these labs' only hub-side discovery path.
 function RelatedLabs({permalink}: {permalink: string}) {
   const code = certCodeFromPermalink(permalink);
   if (!code) return null;
   const labs = labsForCert(code);
   if (labs.length === 0) return null;
-  const shown = labs.slice(0, MAX_RELATED_LABS);
   return (
     <div className="doc-related-labs">
       <strong>Practice the {code} domains hands-on:</strong>{' '}
-      {shown.map((lab, i) => (
+      {labs.map((lab, i) => (
         <React.Fragment key={lab.path}>
           {i > 0 && ' · '}
           <Link to={lab.path}>{lab.name}</Link>
         </React.Fragment>
       ))}
-      {labs.length > shown.length && <> · and {labs.length - shown.length} more</>}
-      {' — '}
-      <Link to="/docs/labs/Services_GCP">view the full lab map →</Link>
     </div>
   );
 }

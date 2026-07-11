@@ -92,13 +92,14 @@ jobs:
 
           urls = set()
           for path in changed:
-              if path.startswith('docs/') and path.endswith('.md'):
-                  stem = path[:-3]
+              if path.startswith('docs/') and path.endswith(('.md', '.mdx')):
+                  stem = path.rsplit('.', 1)[0]
                   if '/Sample_' in stem:  # unlisted template docs
                       continue
                   urls.add(f'https://{HOST}/{stem}')
-              elif path.startswith('src/pages/') and path.endswith('.md'):
-                  urls.add(f'https://{HOST}/{path[len("src/pages/"):-3]}')
+              elif path.startswith('src/pages/') and path.endswith(('.md', '.mdx')):
+                  stem = path[len('src/pages/'):].rsplit('.', 1)[0]
+                  urls.add(f'https://{HOST}/{stem}')
               elif path == 'src/pages/index.tsx':
                   urls.add(f'https://{HOST}/')
 
