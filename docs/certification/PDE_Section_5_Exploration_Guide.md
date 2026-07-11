@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud DevOps Engineer (PDE) exam Sect
 ---
 
 # PDE Certification Preparation Guide: Section 5 — Optimizing performance and cost (~12% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud DevOps Engineer certification](https://cloud.google.com/learn/certification/cloud-devops-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers exam Section 5 using the RAD foundation modules. Performance levers live in `App_CloudRun` (execution environment, CPU allocation, probes, resources) and `App_GKE` (resource requests, VPA, quotas); cost levers span both engines plus Artifact Registry cleanup and the GKE cluster's cost-allocation configuration. Deploy the **Cost-lean serverless** profile from the [Lab Map](PDE_Certification_Guide.md); the GKE exercises reuse the **GKE release engineer** profile.
 

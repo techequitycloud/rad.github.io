@@ -4,6 +4,8 @@ description: "Prepare for the PSE exam Section 2 — securing communications and
 ---
 
 # PSE Certification Preparation Guide: Section 2 — Securing communications and establishing boundary protection (~22% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Security Engineer certification](https://cloud.google.com/learn/certification/cloud-security-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers Section 2 of the Professional Cloud Security Engineer exam. The relevant foundation modules: `Services_GCP` builds the VPC, firewall rules, Cloud NAT, and Private Services Access; `App_CloudRun` and `App_GKE` each implement a Cloud Armor WAF edge and a VPC Service Controls perimeter; `App_GKE` adds Kubernetes NetworkPolicy micro-segmentation on Dataplane V2. Deploy **guarded-edge** (or **zero-trust-gke**) and **perimeter-lab** from the Lab Map before starting.
 

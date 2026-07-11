@@ -4,6 +4,8 @@ description: "Prepare for the PDE exam Section 3 — applying site reliability e
 ---
 
 # PDE Certification Preparation Guide: Section 3 — Applying site reliability engineering practices (~18% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud DevOps Engineer certification](https://cloud.google.com/learn/certification/cloud-devops-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers exam Section 3 using the RAD foundation modules. SLO and error-budget *theory* is concept-only here (the modules emit the metrics SLIs are built from, but create no SLO objects), while service lifecycle management and incident mitigation are fully hands-on through `App_CloudRun` scaling controls, the `App_GKE` HPA/VPA/PDB stack, and instant traffic-based rollback. Deploy the **GKE release engineer** profile plus a Cloud Run service (any profile) from the [Lab Map](PDE_Certification_Guide.md).
 

@@ -4,6 +4,8 @@ description: "Prepare for the PCDE exam Section 2 — manage a solution that can
 ---
 
 # PCDE Certification Preparation Guide: Section 2 — Manage a solution that can span multiple database technologies (~25% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Database Engineer certification](https://cloud.google.com/learn/certification/cloud-database-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers Section 2 of the Professional Cloud Database Engineer (PCDE) exam: day-2 management — access control, monitoring, backup/recovery, cost/performance tuning, and task automation. It exercises all four foundation modules: `Services_GCP` (instances, IAM auth, alert policies), `App_CloudRun` and `App_GKE` (database users, export schedulers, rotation jobs), and the `App_Common` submodules and scripts that implement them. Deploy the **relational-baseline** and **app-dataops** profiles from the [PCDE Lab Map](PCDE_Certification_Guide.md) before starting; 2.2 also benefits from the **ha-production** profile's notification settings.
 

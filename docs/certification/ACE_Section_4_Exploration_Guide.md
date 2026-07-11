@@ -4,6 +4,8 @@ description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 4 — 
 ---
 
 # ACE Certification Preparation Guide: Section 4 — Configuring access and security (~20% of the exam)
+> 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers exam Section 4 using the RAD platform foundation modules. Security is where the modules shine as a lab: every deployment creates dedicated least-privilege service accounts (`Services_GCP` plus the platform's IAM layer), `App_GKE` uses Workload Identity, `Services_GCP` can stand up Workload Identity Federation, and secrets live exclusively in Secret Manager. Deploy the **Serverless application** profile plus the **Operations & security add-ons** profile (IAP, audit logging) from the [Lab Map](ACE_Certification_Guide.md).
 

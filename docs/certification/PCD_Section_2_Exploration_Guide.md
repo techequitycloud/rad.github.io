@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud Developer (PCD) exam Section 2 
 ---
 
 # PCD Certification Preparation Guide: Section 2 — Building and testing applications (~23% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Developer certification](https://cloud.google.com/learn/certification/cloud-developer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This section maps to the RAD platform's build machinery: the platform's Cloud Build container builds, the Cloud Build CI trigger (present in both App_CloudRun and App_GKE), Artifact Registry management, and image mirroring. Deploy the **Delivery pipeline** profile from the [Lab Map](PCD_Certification_Guide.md). Local development tooling (2.1) and test authoring (2.3) are mostly study-only — honest pointers are given.
 

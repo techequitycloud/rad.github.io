@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud Security Engineer (PSE) exam Se
 ---
 
 # PSE Certification Preparation Guide: Section 5 — Supporting compliance requirements (~11% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Security Engineer certification](https://cloud.google.com/learn/certification/cloud-security-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers Section 5 of the Professional Cloud Security Engineer exam. No single module owns compliance; instead, all four foundation modules contribute the technical controls auditors ask for — CMEK, immutable-by-default audit configuration, least-privilege IAM, perimeters, and managed-platform responsibility narrowing (GKE Autopilot, Cloud Run). Deploy the **secure-platform** profile (ideally with **perimeter-lab**) before starting, since most evidence-gathering exercises below depend on its flags.
 

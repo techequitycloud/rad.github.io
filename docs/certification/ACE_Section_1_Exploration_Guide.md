@@ -4,6 +4,8 @@ description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 1 — 
 ---
 
 # ACE Certification Preparation Guide: Section 1 — Setting up a cloud solution environment (~23% of the exam)
+> 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers exam Section 1 using the RAD platform foundation modules as a hands-on lab. The module exercised here is almost entirely `Services_GCP` — the platform layer deployed once per project. Deploy the **Baseline platform** profile from the [Lab Map](ACE_Certification_Guide.md) before starting; add the **Operations & security add-ons** profile (specifically `create_billing_budget = true`) for subsection 1.2.
 

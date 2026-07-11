@@ -4,6 +4,8 @@ description: "Map every Professional Cloud Architect (PCA) exam domain to hands-
 ---
 
 # Professional Cloud Architect (PCA) Certification Lab Map
+> 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 The Professional Cloud Architect certification validates your ability to design, plan, and manage secure, scalable, highly available cloud solutions — and to justify the trade-offs behind every design choice. The RAD platform's four foundation modules give you a live laboratory for exactly those trade-offs: `Services_GCP` (the shared platform layer — VPC, Cloud SQL, Redis, Filestore, GKE, CMEK, VPC-SC), `App_CloudRun` and `App_GKE` (two deployment engines for the *same* containerized workload, embodying the serverless-vs-orchestrated decision the PCA exam returns to again and again), and `App_Common` (shared layers implementing discovery, secrets, IAM, storage, and CI/CD patterns). Every toggle in your deployment portal is a design decision you can deploy, inspect in the GCP console, and reverse.
 

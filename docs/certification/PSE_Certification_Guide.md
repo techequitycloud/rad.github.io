@@ -4,6 +4,8 @@ description: "Map every Professional Cloud Security Engineer (PSE) exam domain t
 ---
 
 # Professional Cloud Security Engineer (PSE) Certification Lab Map
+> 📚 **Official exam guide:** [Professional Cloud Security Engineer certification](https://cloud.google.com/learn/certification/cloud-security-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 The PSE certification validates your ability to design and implement secure workloads and infrastructure on Google Cloud — identity and access management, perimeter and boundary protection, data protection, security operations, and regulatory compliance. The RAD platform's four foundation modules (`Services_GCP`, `App_CloudRun`, `App_GKE`, `App_Common`) form a live security lab: they implement least-privilege service accounts, Workload Identity, IAP, Secret Manager with automated zero-downtime rotation, CMEK with plan-time key recovery, Binary Authorization with a KMS signer and attestor, VPC Service Controls with access levels and dry-run mode, Cloud Armor WAF, Kubernetes NetworkPolicy micro-segmentation, audit log configuration, and Security Command Center enrollment — all driven by portal variables you can toggle and observe.
 
