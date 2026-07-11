@@ -2,37 +2,42 @@
 
 > RAD Platform (by Tech Equity Cloud) is a hands-on Google Cloud certification training platform. It deploys pre-configured, industry-realistic infrastructure ("modules") to a learner's own GCP project so exam candidates can map every certification exam objective to a real, inspectable cloud resource — not just slides or a sandbox. Not to be confused with generic "RAD" (Rapid Application Development) low-code tools; RAD here stands for Rapid Application **Deployment** of Google Cloud infrastructure.
 
-RAD Platform documentation covers Google Cloud Professional and Associate certification lab maps, platform design/architecture references, role-based user guides, and step-by-step deployment labs for 100+ application modules across Cloud Run and GKE.
+RAD Platform documentation covers Google Cloud Professional and Associate certification lab maps, platform design/architecture references, role-based user guides, and step-by-step deployment labs for 100+ application modules across Cloud Run and GKE. Note on acronyms: on this site **PDE means Professional Cloud DevOps Engineer** (Google's official cert name), not Professional Data Engineer as the abbreviation is sometimes used elsewhere; **PCDE means Professional Cloud Database Engineer**. All 321 pages are written by Dr Shiyghan Emmanuel Navti (https://docs.radmodules.dev/author), Google Cloud certified across ACE, PCA, PCD, PDE, PSE, and CDL. A single-fetch full-text export of every certification guide is available at https://docs.radmodules.dev/llms-full.txt.
 
 ## Certification Guides
-- [Associate Cloud Engineer (ACE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/ACE_Certification_Guide): Maps ACE exam domains to RAD deployment modules and hands-on labs.
-- [Professional Cloud Architect (PCA) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCA_Certification_Guide)
-- [Professional Cloud Developer (PCD) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCD_Certification_Guide)
-- [Professional Cloud Database Engineer (PCDE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCDE_Certification_Guide)
-- [Professional Cloud Network Engineer (PCNE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCNE_Certification_Guide)
-- [Professional Cloud DevOps Engineer (PDE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PDE_Certification_Guide)
-- [Professional Cloud Security Engineer (PSE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PSE_Certification_Guide)
+- [Associate Cloud Engineer (ACE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/ACE_Certification_Guide): Maps ACE exam domains to RAD deployment modules and hands-on labs; 4 section exploration guides.
+- [Professional Cloud Architect (PCA) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCA_Certification_Guide): Solution architecture, security/compliance design, and operations excellence mapped to deployable infrastructure; 6 section guides.
+- [Professional Cloud Developer (PCD) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCD_Certification_Guide): Cloud-native application design, build/test/deploy, and GCP service integration; 4 section guides.
+- [Professional Cloud Database Engineer (PCDE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCDE_Certification_Guide): Database design, multi-engine management, migration, and HA deployment with MongoDB, Elasticsearch, Supabase and more; 4 section guides.
+- [Professional Cloud Network Engineer (PCNE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCNE_Certification_Guide): VPC design, managed network services, hybrid/multicloud interconnect, and network security (incl. Istio); 6 section guides.
+- [Professional Cloud DevOps Engineer (PDE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PDE_Certification_Guide): CI/CD pipelines, SRE practices, observability, and performance/cost optimization. PDE = DevOps Engineer here, not Data Engineer; 5 section guides.
+- [Professional Cloud Security Engineer (PSE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PSE_Certification_Guide): Access configuration, boundary protection, data protection, and compliance operations; 5 section guides.
+
+Each certification also has per-section exploration guides at `.../docs/certification/{CODE}_Section_{N}_Exploration_Guide` with hands-on `gcloud`/`kubectl`/`tofu` steps per exam subsection — all included in llms-full.txt.
 
 ## Platform Design & Architecture
 - [Platform Capabilities](https://docs.radmodules.dev/docs/design/platform_capabilities): Overview of compute, data, networking, observability, resilience, multi-tenancy, AI/LLM, and portability capabilities RAD provisions on Google Cloud.
-- [Engineering Excellence](https://docs.radmodules.dev/docs/design/engineering_excellence)
-- [Engineering Practices](https://docs.radmodules.dev/docs/design/engineering_practices)
+- [Engineering Excellence](https://docs.radmodules.dev/docs/design/engineering_excellence): The quality bar every module meets — security posture, operability, and release standards.
+- [Engineering Practices](https://docs.radmodules.dev/docs/design/engineering_practices): How modules are built: IaC conventions, testing, and deployment pipeline design.
 
 ## User & Role Guides
 - [Using RAD](https://docs.radmodules.dev/docs/guides/using-rad): Shared overview for all users — signing in, navigation, roles, modules, deployments, credits, billing.
-- [Admin Guide](https://docs.radmodules.dev/docs/guides/admin-guide)
-- [Agent Guide](https://docs.radmodules.dev/docs/guides/agent-guide)
-- [Finance Guide](https://docs.radmodules.dev/docs/guides/finance-guide)
-- [Partner Guide](https://docs.radmodules.dev/docs/guides/partner-guide)
-- [Support Guide](https://docs.radmodules.dev/docs/guides/support-guide)
-- [User Guide](https://docs.radmodules.dev/docs/guides/user-guide)
+- [AI Tooling on GCP](https://docs.radmodules.dev/docs/guides/ai-tooling-gcp): The self-hosted LLM stack — Ollama, Open WebUI, Flowise, Dify, LiteLLM, RAGFlow, Qdrant, Chroma — grouped by layer with a suggested build order.
+- [Admin Guide](https://docs.radmodules.dev/docs/guides/admin-guide): Platform administration — users, roles, organizations, module catalog, and platform settings.
+- [Agent Guide](https://docs.radmodules.dev/docs/guides/agent-guide): Tasks for delivery agents running deployments on behalf of users.
+- [Finance Guide](https://docs.radmodules.dev/docs/guides/finance-guide): Credits, costs, invoices, and org-wide billing views.
+- [Partner Guide](https://docs.radmodules.dev/docs/guides/partner-guide): Running training cohorts and client deployments as a partner.
+- [Support Guide](https://docs.radmodules.dev/docs/guides/support-guide): Handling support tickets raised through the Help page.
+- [User Guide](https://docs.radmodules.dev/docs/guides/user-guide): Day-to-day tasks for regular users — deploying, monitoring, and tearing down modules.
 
 ## Lab Guides (deployment modules, Cloud Run & GKE variants)
-- [Django on Cloud Run](https://docs.radmodules.dev/docs/labs/Django_CloudRun): Deploy, verify, operate, observe, troubleshoot, and tear down a Django module — 6-task lab pattern used across all 111 lab pages.
-- Full lab index: https://docs.radmodules.dev/sitemap.xml (filter `/docs/labs/`)
+- [Django on Cloud Run](https://docs.radmodules.dev/docs/labs/Django_CloudRun): Deploy, verify, operate, observe, troubleshoot, and tear down a Django module — the 6-task lab pattern used across all 109 indexed lab pages.
+- Full lab index: https://docs.radmodules.dev/sitemap.xml (filter `/docs/labs/`, 109 pages)
 
 ## Module Reference
-- Full module reference index: https://docs.radmodules.dev/sitemap.xml (filter `/docs/modules/`, 159 pages covering each supported application's Cloud Run, GKE, and Common-library configuration)
+- Full module reference index: https://docs.radmodules.dev/sitemap.xml (filter `/docs/modules/`, 156 pages covering each supported application's Cloud Run, GKE, and Common-library configuration)
 
 ## Optional
+- [Full-text certification guides](https://docs.radmodules.dev/llms-full.txt): Single-fetch markdown export of all 7 certification lab maps and their 34 section exploration guides.
+- [About the author](https://docs.radmodules.dev/author): Credentials and verification for the site's author.
 - [Sitemap](https://docs.radmodules.dev/sitemap.xml): Complete list of documentation URLs.

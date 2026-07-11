@@ -6,6 +6,10 @@ description: "Map every Professional Cloud DevOps Engineer (PDE) exam domain to 
 # Professional Cloud DevOps Engineer (PDE) Certification Lab Map
 > 📚 **Official exam guide:** [Professional Cloud DevOps Engineer certification](https://cloud.google.com/learn/certification/cloud-devops-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
+:::note PDE here means DevOps, not Data
+On this site **PDE** abbreviates Google's **Professional Cloud DevOps Engineer** certification (its official name). It is *not* the Professional **Data** Engineer certification, which the abbreviation sometimes refers to elsewhere in the cert-prep ecosystem.
+:::
+
 
 The Professional Cloud DevOps Engineer certification validates your ability to build and manage CI/CD pipelines, apply SRE practices (SLOs, error budgets, incident response), implement observability, and optimize service performance and cost on Google Cloud. The RAD platform's four foundation modules — `Services_GCP` (shared platform infrastructure), `App_CloudRun` (Cloud Run v2 deployment engine), `App_GKE` (GKE Autopilot deployment engine), and `App_Common` (shared building blocks for Cloud Deploy, monitoring, and dashboards) — give you a live, inspectable lab: every Cloud Build trigger, Cloud Deploy stage, alert policy, and traffic split discussed in this guide is real infrastructure you can deploy, break, and fix.
 
