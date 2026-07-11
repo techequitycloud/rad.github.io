@@ -32,6 +32,10 @@ cloud resource you deployed yourself.
 Tech Equity Cloud builds and operates the [RAD Console](https://radmodules.dev),
 the deployment portal behind these docs, and maintains this documentation.
 
+All guides are written and maintained by
+[Dr Shiyghan Emmanuel Navti](/author), Google Cloud certified across
+ACE, PCA, PCD, PDE, PSE, and CDL.
+
 - GitHub: [github.com/techequitycloud](https://github.com/techequitycloud)
 - LinkedIn: [linkedin.com/company/techequitycloud](https://www.linkedin.com/company/techequitycloud)
 

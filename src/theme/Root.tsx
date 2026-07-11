@@ -1,5 +1,6 @@
 import React, {useEffect} from 'react';
 import Head from '@docusaurus/Head';
+import {ORGANIZATION_ID} from '@site/src/data/author';
 
 const SITE_URL = 'https://docs.radmodules.dev';
 
@@ -167,14 +168,21 @@ export default function Root({children}) {
         <meta name="googlebot" content="index, follow" />
         <meta name="author" content="Tech Equity Cloud" />
 
-        {/* Structured Data - Organization */}
+        {/* Structured Data - Organization (canonical node; per-doc publisher
+            blocks reference the same @id so Google consolidates the entity) */}
         <script type="application/ld+json">
           {JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'Organization',
+            '@id': ORGANIZATION_ID,
             name: 'Tech Equity Cloud',
             url: SITE_URL,
-            logo: `${SITE_URL}/img/logo.svg`,
+            logo: {
+              '@type': 'ImageObject',
+              url: `${SITE_URL}/img/logo.svg`,
+              width: 200,
+              height: 200,
+            },
             description: 'Google Cloud certification training and hands-on lab platform',
             sameAs: [
               'https://github.com/techequitycloud',
@@ -192,10 +200,7 @@ export default function Root({children}) {
             name: 'RAD Platform Documentation',
             url: SITE_URL,
             description: 'Hands-on Google Cloud certification training — structured modules, labs, and certification guides from Associate to Professional level',
-            publisher: {
-              '@type': 'Organization',
-              name: 'Tech Equity Cloud'
-            }
+            publisher: {'@id': ORGANIZATION_ID}
           })}
         </script>
       </Head>

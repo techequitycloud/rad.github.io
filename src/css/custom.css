@@ -72,6 +72,37 @@
   main .container {
     padding-bottom: 64px;
   }
+
+  /* WCAG 2.5.5 continued: the mobile "On this page" TOC toggle (33px) and
+     breadcrumb pills (18px) measured under the 44px minimum hit area. */
+  [class*='tocCollapsibleButton'] {
+    min-height: 44px;
+  }
+
+  .breadcrumbs__link {
+    padding: 0.55rem 0.5rem;
+    margin-block: -0.35rem;
+  }
+
+  /* Long gcloud/kubectl one-liners scroll horizontally inside code blocks,
+     but nothing signals the cut-off — hint with a right-edge fade. */
+  div[class*='codeBlockContainer'] {
+    position: relative;
+  }
+
+  div[class*='codeBlockContainer']::after {
+    content: '';
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 20px;
+    border-radius: 0 var(--ifm-global-radius) var(--ifm-global-radius) 0;
+    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.14));
+    pointer-events: none;
+  }
+
+  [data-theme='dark'] div[class*='codeBlockContainer']::after {
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1));
+  }
 }
 
 /* Visible authorship byline rendered above doc content (see src/theme/DocItem/Content). */

@@ -39,6 +39,15 @@
   padding: 2.5rem 0 0.5rem;
 }
 
+/* On phones the stat strip sits at the bottom of the first viewport, exactly
+   where the fixed chat bubble floats — reserve clear space below the labels
+   so the bubble lands on padding, not on the last stat's text. */
+@media (max-width: 996px) {
+  .statsSection {
+    padding-bottom: 4.5rem;
+  }
+}
+
 .statCard {
   display: block;
   padding: 1rem;

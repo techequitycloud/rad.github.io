@@ -74,6 +74,9 @@ const config: Config = {
       logo: {
         alt: 'RAD Platform Logo',
         src: 'img/logo.svg',
+        // Explicit dimensions reserve layout space before CSS loads (CLS).
+        width: 32,
+        height: 32,
       },
       items: [
         {
