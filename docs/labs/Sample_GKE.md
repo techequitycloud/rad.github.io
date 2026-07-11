@@ -1,4 +1,5 @@
 ---
+unlisted: true
 title: "Sample on GKE Autopilot \u2014 Lab Guide"
 ---
 

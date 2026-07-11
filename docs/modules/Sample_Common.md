@@ -1,4 +1,5 @@
 ---
+unlisted: true
 title: "Sample Common \u2014 Shared Application Configuration"
 ---
 

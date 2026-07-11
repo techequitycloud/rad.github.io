@@ -1,4 +1,5 @@
 ---
+unlisted: true
 title: "Sample Application on GKE Autopilot"
 ---
 

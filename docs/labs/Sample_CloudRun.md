@@ -1,4 +1,5 @@
 ---
+unlisted: true
 title: "Sample on Cloud Run \u2014 Lab Guide"
 ---
 

@@ -33,13 +33,17 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           routeBasePath: 'docs',
-          // SEO settings for docs
-          showLastUpdateTime: false,
+          // Surface git-derived freshness signals to users and crawlers
+          // (requires full git history at build time — see fetch-depth in deploy.yml).
+          showLastUpdateTime: true,
           showLastUpdateAuthor: false,
         },
         sitemap: {
-          changefreq: 'weekly',
-          priority: 0.5,
+          // Google ignores changefreq/priority; lastmod (from git history) is
+          // the one field it actually uses as a recrawl signal.
+          lastmod: 'date',
+          changefreq: null,
+          priority: null,
           ignorePatterns: ['/tags/**'],
           filename: 'sitemap.xml',
         },
