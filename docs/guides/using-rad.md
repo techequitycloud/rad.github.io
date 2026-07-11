@@ -149,3 +149,23 @@ For the full set of tasks in each role:
 - [Agent](agent-guide.md)
 - [Finance](finance-guide.md)
 - [Support](support-guide.md)
+
+---
+
+## Where to next
+
+Once you can deploy modules, put them to work:
+
+- **Studying for a Google Cloud certification?** Each study path maps the
+  official exam sections to deployment labs:
+  [Associate Cloud Engineer (ACE)](/docs/certification/ACE_Certification_Guide) ·
+  [Cloud Architect (PCA)](/docs/certification/PCA_Certification_Guide) ·
+  [Cloud Developer (PCD)](/docs/certification/PCD_Certification_Guide) ·
+  [Database Engineer (PCDE)](/docs/certification/PCDE_Certification_Guide) ·
+  [Network Engineer (PCNE)](/docs/certification/PCNE_Certification_Guide) ·
+  [DevOps Engineer (PDE)](/docs/certification/PDE_Certification_Guide) ·
+  [Security Engineer (PSE)](/docs/certification/PSE_Certification_Guide)
+- **Want a first hands-on lab?** Start with the
+  [GCP Services lab](/docs/labs/Services_GCP) (the platform's foundation) or
+  deploy [WordPress on GKE Autopilot](/docs/labs/Wordpress_GKE).
+- **Building an LLM stack?** See [AI Tooling on GCP](/docs/guides/ai-tooling-gcp).

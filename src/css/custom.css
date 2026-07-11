@@ -111,3 +111,20 @@
   color: var(--ifm-color-emphasis-600);
   margin-bottom: 0.25rem;
 }
+
+/* Topical cross-cluster links driven by src/data/certMap.ts
+   (see src/theme/DocItem/Content). */
+.doc-cert-track {
+  font-size: 0.85rem;
+  color: var(--ifm-color-emphasis-600);
+  margin-bottom: 0.25rem;
+}
+
+.doc-related-labs {
+  margin-top: 2rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-left: 4px solid var(--ifm-color-primary);
+  border-radius: var(--ifm-global-radius);
+  font-size: 0.9rem;
+}

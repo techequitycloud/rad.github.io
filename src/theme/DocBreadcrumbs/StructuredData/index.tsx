@@ -22,6 +22,15 @@ export default function DocBreadcrumbsStructuredData(props: {
 
   const ancestors = props.breadcrumbs.slice(0, -1).filter((b) => b.href);
   const active = props.breadcrumbs[props.breadcrumbs.length - 1];
+  // Link-less categories get dropped from the trail, which left generic leaf
+  // labels ("Overview", "GKE") carrying no topic — identical across all cert
+  // tracks and apps. Fold the dropped parent's label into the leaf name so
+  // trails read "Associate Cloud Engineer — Overview" / "WordPress — GKE".
+  const parent = props.breadcrumbs[props.breadcrumbs.length - 2];
+  const activeName =
+    active && parent && !parent.href
+      ? `${parent.label} — ${active.label}`
+      : active?.label;
 
   const itemListElement = [
     {
@@ -41,7 +50,7 @@ export default function DocBreadcrumbsStructuredData(props: {
           {
             '@type': 'ListItem',
             position: ancestors.length + 2,
-            name: active.label,
+            name: activeName,
             item: absolute(active.href ?? pathname),
           },
         ]
