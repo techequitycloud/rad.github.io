@@ -4,6 +4,8 @@ description: "Prepare for the PCA exam Section 2 — managing and provisioning a
 ---
 
 # PCA Certification Preparation Guide: Section 2 — Managing and provisioning a cloud solution infrastructure (~17.5% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This section tests whether you can actually stand infrastructure up — network topology, storage configuration, compute provisioning — and the two Vertex AI subsections added to the current exam guide. The modules exercised are `Services_GCP` (network, databases, GKE) and the two deployment engines. Deploy the **Lean baseline** profile from the [Lab Map](PCA_Certification_Guide.md), then enable GKE (**GKE architecture** profile) before 2.3. Subsections 2.4 and 2.5 are study-only.
 

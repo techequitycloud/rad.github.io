@@ -4,6 +4,8 @@ description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 2 — 
 ---
 
 # ACE Certification Preparation Guide: Section 2 — Planning and implementing a cloud solution (~30% of the exam)
+> 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers exam Section 2 using the RAD platform foundation modules as a hands-on lab. All four foundation modules are exercised: `Services_GCP` provides the VPC, databases, and (optionally) the GKE Autopilot cluster; `App_CloudRun` and `App_GKE` are the two deployment engines; the `App_Common` shared library handles storage, secrets, and builds. Deploy the **Serverless application** profile first, then the **Kubernetes application** profile from the [Lab Map](ACE_Certification_Guide.md).
 

@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud Network Engineer (PCNE) exam Se
 ---
 
 # PCNE Certification Preparation Guide: Section 6 — Configuring, implementing and managing a cloud network security solution (~13% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Network Engineer certification](https://cloud.google.com/learn/certification/cloud-network-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 Network security is RAD's strongest suit in this exam after GKE networking. Both deployment engines build a production-shaped **Cloud Armor** policy (preconfigured OWASP rules, Adaptive Protection, rate-based banning), the platform VPC implements **tag-based firewall micro-segmentation**, and **Cloud NAT** handles all internet egress for private workloads. NGFW policies, Secure Web Proxy, NVAs, and Packet Mirroring are study-only. Deploy the **Global Edge** profile for 6.1 and the **VPC Foundation** profile for 6.2–6.4. Modules exercised: `App_CloudRun`, `App_GKE`, `Services_GCP`.
 

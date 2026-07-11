@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud Security Engineer (PSE) exam Se
 ---
 
 # PSE Certification Preparation Guide: Section 1 — Configuring access (~25% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Security Engineer certification](https://cloud.google.com/learn/certification/cloud-security-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers Section 1 of the Professional Cloud Security Engineer exam through the RAD platform's foundation modules. `Services_GCP` creates the purpose-built service accounts and their project-level role grants; `App_CloudRun` and `App_GKE` wire those identities into workloads (Workload Identity on GKE, dedicated runtime service accounts on Cloud Run, IAP for end-user authentication); `App_Common` applies resource-level least-privilege bindings. Deploy the **secure-platform** profile plus either **guarded-edge** (Cloud Run) or **zero-trust-gke** from the Lab Map before starting.
 

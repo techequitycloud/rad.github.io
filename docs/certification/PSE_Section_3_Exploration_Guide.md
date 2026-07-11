@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud Security Engineer (PSE) exam Se
 ---
 
 # PSE Certification Preparation Guide: Section 3 — Ensuring data protection (~23% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Security Engineer certification](https://cloud.google.com/learn/certification/cloud-security-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers Section 3 of the Professional Cloud Security Engineer exam. The relevant foundation modules: `App_Common` (Secret Manager lifecycle and the zero-downtime rotation pipeline), `Services_GCP` and `App_Common` (customer-managed encryption keys with plan-time key recovery), and the TLS/storage controls spread across `App_CloudRun`, `App_GKE`, and the platform's object-storage layer. Deploy the **secure-platform** profile with `enable_cmek = true` plus **guarded-edge** with `enable_auto_password_rotation = true` before starting.
 

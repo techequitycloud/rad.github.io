@@ -4,6 +4,8 @@ description: "Prepare for the PDE exam Section 1 — bootstrapping and maintaini
 ---
 
 # PDE Certification Preparation Guide: Section 1 — Bootstrapping and maintaining a Google Cloud organization (~20% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud DevOps Engineer certification](https://cloud.google.com/learn/certification/cloud-devops-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers exam Section 1 using the RAD platform as a lab. The foundation modules exercised here are `App_CloudRun` and `App_GKE` (the deployment engines), `Services_GCP` (the once-per-project platform layer), and the `App_Common` building blocks they share. Deploy the **Pipeline engineer** profile from the [Lab Map](PDE_Certification_Guide.md) before starting.
 

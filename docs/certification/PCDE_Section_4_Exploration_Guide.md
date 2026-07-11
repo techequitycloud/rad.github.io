@@ -4,6 +4,8 @@ description: "Prepare for the PCDE exam Section 4 — deploy scalable and highly
 ---
 
 # PCDE Certification Preparation Guide: Section 4 — Deploy scalable and highly available databases in Google Cloud (~20% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Database Engineer certification](https://cloud.google.com/learn/certification/cloud-database-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This guide covers Section 4 of the Professional Cloud Database Engineer (PCDE) exam — and it is the section where this repository *is* the answer key. "Automate database instance provisioning" is literally what `Services_GCP` does: every Cloud SQL, AlloyDB, Redis, and Firestore deployment in the platform is declarative infrastructure-as-code applied through your deployment portal or Cloud Build. The HA, replica, and monitoring machinery comes from `Services_GCP`; application failover behavior is observed through `App_CloudRun`/`App_GKE`. Deploy the **ha-production** profile from the [PCDE Lab Map](PCDE_Certification_Guide.md) before starting.
 

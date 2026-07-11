@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud Architect (PCA) exam Section 5 
 ---
 
 # PCA Certification Preparation Guide: Section 5 — Managing implementation (~12.5% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 Managing implementation means making other teams successful: providing paved paths, guardrails, and programmatic access patterns. The RAD platform is itself the exhibit — a four-tier Terraform/OpenTofu architecture that development teams consume through a portal, with validations that fail bad configurations at plan time and registry hygiene baked in. Deploy any profile from the [Lab Map](PCA_Certification_Guide.md); the **Security and delivery** profile makes the most artifacts visible. Modules exercised: all four, with emphasis on the platform's shared scripts and plan-time validations.
 

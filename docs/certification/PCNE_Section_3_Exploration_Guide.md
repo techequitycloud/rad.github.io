@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud Network Engineer (PCNE) exam Se
 ---
 
 # PCNE Certification Preparation Guide: Section 3 — Configuring managed network services (~16% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Network Engineer certification](https://cloud.google.com/learn/certification/cloud-network-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This section covers load balancing, Cloud CDN, and Cloud DNS. RAD gives you *two* complete global external Application Load Balancer builds to compare: the Cloud Run engine assembles one explicitly from load-balancing primitives (NEG → backend service → URL map → proxies → forwarding rules), while the GKE engine lets the Gateway controller assemble the same chain from Kubernetes manifests. Deploy the **Global Edge** profile before starting. Cloud DNS is not implemented — budget real study time for 3.3.
 

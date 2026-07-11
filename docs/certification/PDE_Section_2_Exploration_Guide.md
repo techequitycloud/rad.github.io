@@ -4,6 +4,8 @@ description: "Prepare for the Professional Cloud DevOps Engineer (PDE) exam Sect
 ---
 
 # PDE Certification Preparation Guide: Section 2 — Building and implementing CI/CD pipelines (~25% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud DevOps Engineer certification](https://cloud.google.com/learn/certification/cloud-devops-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This is the heaviest exam section and the RAD platform's strongest lab. The pipeline is implemented in `App_CloudRun` and `App_GKE` (an inline Cloud Build definition: Kaniko build → optional Binary Authorization attestation → deploy), with the shared `App_Common` building blocks providing the Cloud Deploy pipeline and the GitHub connection. Deploy the **Pipeline engineer** profile from the [Lab Map](PDE_Certification_Guide.md) before starting; subsection 2.2 also uses the **GKE release engineer** profile for the Kubernetes path.
 

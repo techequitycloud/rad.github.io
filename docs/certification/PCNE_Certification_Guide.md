@@ -4,6 +4,8 @@ description: "Map every Professional Cloud Network Engineer (PCNE) exam domain t
 ---
 
 # Professional Cloud Network Engineer (PCNE) Certification Lab Map
+> 📚 **Official exam guide:** [Professional Cloud Network Engineer certification](https://cloud.google.com/learn/certification/cloud-network-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 The Professional Cloud Network Engineer certification validates the ability to design, implement, and operate Google Cloud VPC networks, hybrid connectivity, network services (load balancing, CDN, DNS), and network security. The RAD platform's four foundation modules — `Services_GCP` (custom-mode VPC, subnets, firewall rules, Cloud NAT, private services access, GKE VPC-native clusters), `App_CloudRun` (Direct VPC egress, serverless NEGs, global external Application Load Balancer, Cloud Armor, Cloud CDN), `App_GKE` (Gateway API, Kubernetes NetworkPolicy, GCPBackendPolicy), and `App_Common` (network discovery, VPC-SC) — give you a live, modifiable lab for roughly half of this exam. The other half (Interconnect, VPN, BGP, Network Connectivity Center, Cloud DNS, NGFW, Network Intelligence Center) is deliberately *not* implemented by the modules; this guide is honest about those gaps and tells you exactly what to study outside the platform. Expect to lean on the "Beyond the modules" blocks more heavily here than in any other RAD certification guide.
 

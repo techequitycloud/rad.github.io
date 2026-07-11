@@ -4,6 +4,8 @@ description: "Prepare for the PCD exam Section 4 — integrating applications wi
 ---
 
 # PCD Certification Preparation Guide: Section 4 — Integrating applications with Google Cloud services (~21% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Developer certification](https://cloud.google.com/learn/certification/cloud-developer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 This section uses the integration surfaces the foundation modules wire up for you: database connectivity and runtime configuration (App_CloudRun's Cloud Run service and the GKE proxy sidecar), identity (the GKE service-account wiring, Workload Identity Federation in `Services_GCP`, and the platform's IAM layer), and monitoring (the platform's monitoring and dashboard layers). Deploy the **Serverless baseline** profile; add the **Kubernetes lab** profile for the Workload Identity exercises (see the [Lab Map](PCD_Certification_Guide.md)).
 

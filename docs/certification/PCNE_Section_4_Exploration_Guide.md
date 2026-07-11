@@ -4,6 +4,8 @@ description: "Prepare for the PCNE exam Section 4 (Hybrid & Multicloud Connectiv
 ---
 
 # PCNE Certification Preparation Guide: Section 4 — Configuring and implementing hybrid and multicloud network interconnectivity (~16% of the exam)
+> 📚 **Official exam guide:** [Professional Cloud Network Engineer certification](https://cloud.google.com/learn/certification/cloud-network-engineer) — always confirm section weightings against the current Google Cloud exam guide.
+
 
 Honest framing up front: the RAD foundation modules implement **none** of this section. There is no Interconnect, no VPN, no BGP session, and no NCC hub anywhere in `Services_GCP`, `App_CloudRun`, `App_GKE`, or `App_Common`. What the platform *does* give you is a realistic cloud-side anchor — a custom VPC (`vpc-network-{prefix}`), a Cloud Router (ASN `64514`), and a PSA peering with custom-route export — against which every hybrid pattern in this section can be practiced in a scratch project. Deploy the **VPC Foundation** profile so those anchors exist, then treat this guide as a structured study program. Expect ~16% of the exam from material you will not see running in RAD.
 
