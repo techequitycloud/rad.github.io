@@ -1,0 +1,38 @@
+# RAD Platform Documentation
+
+> RAD Platform (by Tech Equity Cloud) is a hands-on Google Cloud certification training platform. It deploys pre-configured, industry-realistic infrastructure ("modules") to a learner's own GCP project so exam candidates can map every certification exam objective to a real, inspectable cloud resource — not just slides or a sandbox. Not to be confused with generic "RAD" (Rapid Application Development) low-code tools; RAD here stands for Rapid Application **Deployment** of Google Cloud infrastructure.
+
+RAD Platform documentation covers Google Cloud Professional and Associate certification lab maps, platform design/architecture references, role-based user guides, and step-by-step deployment labs for 100+ application modules across Cloud Run and GKE.
+
+## Certification Guides
+- [Associate Cloud Engineer (ACE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/ACE_Certification_Guide): Maps ACE exam domains to RAD deployment modules and hands-on labs.
+- [Professional Cloud Architect (PCA) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCA_Certification_Guide)
+- [Professional Cloud Developer (PCD) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCD_Certification_Guide)
+- [Professional Cloud DevOps Engineer (PCDE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCDE_Certification_Guide)
+- [Professional Cloud Network Engineer (PCNE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PCNE_Certification_Guide)
+- [Professional Data Engineer (PDE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PDE_Certification_Guide)
+- [Professional Security Engineer (PSE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/PSE_Certification_Guide)
+
+## Platform Design & Architecture
+- [Platform Capabilities](https://docs.radmodules.dev/docs/design/platform_capabilities): Overview of compute, data, networking, observability, resilience, multi-tenancy, AI/LLM, and portability capabilities RAD provisions on Google Cloud.
+- [Engineering Excellence](https://docs.radmodules.dev/docs/design/engineering_excellence)
+- [Engineering Practices](https://docs.radmodules.dev/docs/design/engineering_practices)
+
+## User & Role Guides
+- [Using RAD](https://docs.radmodules.dev/docs/guides/using-rad): Shared overview for all users — signing in, navigation, roles, modules, deployments, credits, billing.
+- [Admin Guide](https://docs.radmodules.dev/docs/guides/admin-guide)
+- [Agent Guide](https://docs.radmodules.dev/docs/guides/agent-guide)
+- [Finance Guide](https://docs.radmodules.dev/docs/guides/finance-guide)
+- [Partner Guide](https://docs.radmodules.dev/docs/guides/partner-guide)
+- [Support Guide](https://docs.radmodules.dev/docs/guides/support-guide)
+- [User Guide](https://docs.radmodules.dev/docs/guides/user-guide)
+
+## Lab Guides (deployment modules, Cloud Run & GKE variants)
+- [Django on Cloud Run](https://docs.radmodules.dev/docs/labs/Django_CloudRun): Deploy, verify, operate, observe, troubleshoot, and tear down a Django module — 6-task lab pattern used across all 111 lab pages.
+- Full lab index: https://docs.radmodules.dev/sitemap.xml (filter `/docs/labs/`)
+
+## Module Reference
+- Full module reference index: https://docs.radmodules.dev/sitemap.xml (filter `/docs/modules/`, 159 pages covering each supported application's Cloud Run, GKE, and Common-library configuration)
+
+## Optional
+- [Sitemap](https://docs.radmodules.dev/sitemap.xml): Complete list of documentation URLs.

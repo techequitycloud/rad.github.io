@@ -12,6 +12,30 @@ const FLOWISE_THEME_BY_MODE = {
 };
 
 const FLOWISE_SCRIPT_ID = 'flowise-chatbot-95f80df9';
+const FLOWISE_API_HOST = 'https://flowise.radbusiness.dev';
+const FLOWISE_CHATFLOW_ID = '95f80df9-7111-4205-9f20-7bc9e20006ae';
+const FLOWISE_PROBE_TIMEOUT_MS = 5000;
+
+// The widget fetches its config from apiHost on init with no timeout of its
+// own; if the backend hangs (accepts TLS but never answers HTTP), that
+// request — and the widget — hang indefinitely on every page load. Probe the
+// config endpoint with a hard deadline and only inject the widget once the
+// backend has proven responsive.
+async function isFlowiseBackendResponsive(): Promise<boolean> {
+  const controller = new AbortController();
+  const deadline = setTimeout(() => controller.abort(), FLOWISE_PROBE_TIMEOUT_MS);
+  try {
+    const res = await fetch(
+      `${FLOWISE_API_HOST}/api/v1/public-chatbotConfig/${FLOWISE_CHATFLOW_ID}`,
+      {signal: controller.signal},
+    );
+    return res.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(deadline);
+  }
+}
 
 function initFlowiseChatbot() {
   // Avoid double-injection under React Strict Mode's double-invoked effects (dev only).
@@ -33,8 +57,8 @@ function initFlowiseChatbot() {
   script.textContent = `
     import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
     Chatbot.init(${JSON.stringify({
-      chatflowid: '95f80df9-7111-4205-9f20-7bc9e20006ae',
-      apiHost: 'https://flowise.radbusiness.dev',
+      chatflowid: FLOWISE_CHATFLOW_ID,
+      apiHost: FLOWISE_API_HOST,
       theme: {
         button: {
           backgroundColor: primary,
@@ -74,7 +98,13 @@ function initFlowiseChatbot() {
 
 export default function Root({children}) {
   useEffect(() => {
-    initFlowiseChatbot();
+    let cancelled = false;
+    isFlowiseBackendResponsive().then((responsive) => {
+      if (responsive && !cancelled) initFlowiseChatbot();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -125,11 +155,6 @@ export default function Root({children}) {
             publisher: {
               '@type': 'Organization',
               name: 'Tech Equity Cloud'
-            },
-            potentialAction: {
-              '@type': 'SearchAction',
-              target: `${SITE_URL}/search?q={search_term_string}`,
-              'query-input': 'required name=search_term_string'
             }
           })}
         </script>
