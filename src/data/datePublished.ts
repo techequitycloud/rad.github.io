@@ -47,7 +47,7 @@ const DATE_PUBLISHED: Record<string, string> = {
   "/docs/design/platform_capabilities": "2026-06-11T14:30:42+01:00",
   "/docs/guides/admin-guide": "2025-11-08T13:22:03Z",
   "/docs/guides/agent-guide": "2025-11-08T13:22:03Z",
-  "/docs/guides/ai-tooling-gcp": "2026-07-11T18:42:05+01:00",
+  "/docs/guides/ai-tooling-gcp": "2026-07-11T18:58:25+01:00",
   "/docs/guides/finance-guide": "2025-12-23T12:00:48Z",
   "/docs/guides/partner-guide": "2025-11-22T22:41:31Z",
   "/docs/guides/support-guide": "2025-12-01T21:56:09Z",
