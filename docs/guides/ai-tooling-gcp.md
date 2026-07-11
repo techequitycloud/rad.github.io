@@ -36,6 +36,7 @@ reference** (configuration guide), on Cloud Run, GKE Autopilot, or both.
 |---|---|---|---|
 | Flowise | Visual builder for LLM flows and agents | [Lab](/docs/labs/Flowise_GKE) | [Module](/docs/modules/Flowise_GKE) |
 | Dify | LLM app platform: assistants, workflows, knowledge bases | [Lab](/docs/labs/Dify_GKE) | [Module](/docs/modules/Dify_GKE) |
+| OpenClaw | Multi-tenant gateway for isolated, persistent AI assistants | [Lab](/docs/labs/OpenClaw_GKE) | [Module](/docs/modules/OpenClaw_GKE) |
 | n8n AI | AI-augmented automation workflows | [Lab](/docs/labs/N8N_AI_GKE) | [Module](/docs/modules/N8N_AI_GKE) |
 
 ## RAG pipelines and data

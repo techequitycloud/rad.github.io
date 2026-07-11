@@ -36,7 +36,7 @@ export const APP_TRACKS: Record<string, AppTrack> = {
   App: {name: 'App (custom image)', certs: ['ACE', 'PCD']},
   Activepieces: {name: 'Activepieces', certs: ['PDE']},
   AKS: {name: 'Azure AKS fleet attach', certs: ['PCA', 'PCNE']},
-  AnythingLLM: {name: 'AnythingLLM', certs: ['ACE'], ai: true},
+  AnythingLLM: {name: 'AnythingLLM', certs: [], ai: true},
   Bank: {name: 'Bank of Anthos', certs: ['PCD', 'PCA']},
   CalDiy: {name: 'CalDiy', certs: ['ACE']},
   Chroma: {name: 'Chroma', certs: ['PCDE'], ai: true},
@@ -72,7 +72,7 @@ export const APP_TRACKS: Record<string, AppTrack> = {
   NodeRED: {name: 'Node-RED', certs: ['PDE']},
   Odoo: {name: 'Odoo', certs: ['ACE']},
   Ollama: {name: 'Ollama', certs: [], ai: true},
-  OpenClaw: {name: 'OpenClaw', certs: ['ACE']},
+  OpenClaw: {name: 'OpenClaw', certs: [], ai: true},
   OpenEMR: {name: 'OpenEMR', certs: ['ACE']},
   OpenWebUI: {name: 'Open WebUI', certs: [], ai: true},
   Paperless: {name: 'Paperless-ngx', certs: ['ACE']},
@@ -91,7 +91,7 @@ export const APP_TRACKS: Record<string, AppTrack> = {
   VMware_Engine: {name: 'VMware Engine', certs: ['PCA'], standalone: true},
   Wikijs: {name: 'Wiki.js', certs: ['ACE']},
   Windmill: {name: 'Windmill', certs: ['PDE']},
-  Wordpress: {name: 'WordPress', certs: ['ACE']},
+  Wordpress: {name: 'WordPress', certs: ['ACE', 'PCD']},
   Zammad: {name: 'Zammad', certs: ['ACE']},
 };
 
