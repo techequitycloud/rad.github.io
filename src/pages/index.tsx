@@ -23,7 +23,7 @@ function HomepageHeader() {
           every exam objective maps to a resource you deployed, verified, and
           operated yourself.
         </p>
-        <p className={styles.heroIntro}>
+        <p className={styles.heroIntroSecondary}>
           Seven certification study paths map every official exam section to
           deployment labs drawn from 100+ open-source application modules on
           Cloud Run and GKE Autopilot. Every guide is written by one author

@@ -105,11 +105,13 @@
   }
 }
 
-/* Visible authorship byline rendered above doc content (see src/theme/DocItem/Content). */
+/* Visible authorship credits at the bottom of doc content (see src/theme/DocItem/Content). */
 .doc-byline {
   font-size: 0.85rem;
   color: var(--ifm-color-emphasis-600);
-  margin-bottom: 0.25rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
 }
 
 /* Topical cross-cluster links driven by src/data/certMap.ts

@@ -1,41 +1,35 @@
-# Website
+# RAD Platform Documentation
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+**Live site: [docs.radmodules.dev](https://docs.radmodules.dev)**
 
-## Installation
+Hands-on Google Cloud certification training by [Tech Equity Cloud](https://radmodules.dev):
+seven certification study paths that map every official exam section to
+deployment labs, drawn from 100+ open-source application modules on Cloud Run
+and GKE Autopilot — deployed into your own Google Cloud project.
 
-```bash
-yarn
-```
+## Start here
 
-## Local Development
+- [Certification study paths](https://docs.radmodules.dev/docs/certification/ACE_Certification_Guide) — ACE, PCA, PCD, PCDE, PCNE, PDE, PSE lab maps
+- [Hands-on labs](https://docs.radmodules.dev/docs/labs/Services_GCP) — 109 guided deploy → verify → operate → tear-down walkthroughs
+- [Module reference](https://docs.radmodules.dev/docs/modules/Services_GCP) — 156 configuration guides
+- [AI Tooling on GCP](https://docs.radmodules.dev/docs/guides/ai-tooling-gcp) — the self-hosted LLM stack
+- [About the author](https://docs.radmodules.dev/author) — Dr Shiyghan Emmanuel Navti
+- [RAD Console](https://radmodules.dev) — the deployment portal behind these docs
 
-```bash
-yarn start
-```
+Found a problem in the docs? [Open an issue](https://github.com/techequitycloud/rad.github.io/issues).
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+## Development
 
-## Build
-
-```bash
-yarn build
-```
-
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
-
-## Deployment
-
-Using SSH:
+Built with [Docusaurus](https://docusaurus.io/).
 
 ```bash
-USE_SSH=true yarn deploy
+npm install        # install dependencies
+npm start          # local dev server with live reload
+npm run build      # production build into build/ (also regenerates
+                   # src/data/datePublished.ts and build/llms-full.txt)
+npm run serve      # serve the production build locally
+npm run typecheck  # TypeScript check
 ```
 
-Not using SSH:
-
-```bash
-GIT_USER=<Your GitHub username> yarn deploy
-```
-
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+Deployment is automated: pushes to `main` build and publish to GitHub Pages,
+then submit changed URLs to IndexNow (see `.github/workflows/deploy.yml`).

@@ -10,17 +10,36 @@
   overflow: hidden;
 }
 
+/* Dark mode flips hero--primary to bright teal with black text — harsh and
+   hard to read. Keep the hero identical to light mode: deep green, white text. */
+[data-theme='dark'] .heroBanner {
+  background-color: #2e8555;
+  color: #fff;
+}
+
 /* Scale the hero H1 down on small screens, matching the docs-page H1
    behaviour (48px desktop → ~32px mobile). */
 .heroTitle {
   font-size: clamp(2rem, 8vw, 3rem);
 }
 
+/* Lead paragraph: wider measure and taller line-height so the intro reads
+   as comfortable prose instead of a narrow centered ribbon. */
 .heroIntro {
-  max-width: 640px;
-  margin: 0 auto 1.5rem;
-  font-size: 1.05rem;
-  opacity: 0.92;
+  max-width: 54rem;
+  margin: 0 auto 1.25rem;
+  font-size: 1.15rem;
+  line-height: 1.7;
+}
+
+/* Supporting paragraph: same measure, one step down in size/emphasis so the
+   two-paragraph hero has hierarchy instead of two equal text blocks. */
+.heroIntroSecondary {
+  max-width: 54rem;
+  margin: 0 auto 1.75rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  opacity: 0.85;
 }
 
 @media screen and (max-width: 996px) {

@@ -1,0 +1,153 @@
+- generic [ref=f1e2]:
+  - region "Skip to main content":
+    - link "Skip to main content" [ref=f1e3] [cursor=pointer]:
+      - /url: "#__docusaurus_skipToContent_fallback"
+  - navigation "Main" [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - generic [ref=f1e6]:
+        - link "RAD Platform Logo RAD Platform" [ref=f1e7] [cursor=pointer]:
+          - /url: /
+          - img "RAD Platform Logo" [ref=f1e9]
+          - generic [ref=f1e10]: RAD Platform
+        - link "Certification Guides" [ref=f1e11] [cursor=pointer]:
+          - /url: /docs/certification/ACE_Certification_Guide
+        - link "Module Guides" [ref=f1e12] [cursor=pointer]:
+          - /url: /docs/modules/Services_GCP
+        - link "Module Labs" [ref=f1e13] [cursor=pointer]:
+          - /url: /docs/labs/Services_GCP
+        - link "Design Principles" [ref=f1e14] [cursor=pointer]:
+          - /url: /docs/design/platform_capabilities
+        - link "RAD Guide" [ref=f1e15] [cursor=pointer]:
+          - /url: /docs/guides/using-rad
+        - link [ref=f1e16] [cursor=pointer]:
+          - /url: https://radmodules.dev
+          - text: RAD Console
+          - img "(opens in new tab)" [ref=f1e17]
+      - button "Switch between dark and light mode (currently system mode)" [ref=f1e21] [cursor=pointer]
+  - generic [ref=f1e24]:
+    - banner [ref=f1e25]:
+      - generic [ref=f1e26]:
+        - heading "RAD Platform" [level=1] [ref=f1e27]
+        - paragraph [ref=f1e28]: Hands-on Google Cloud certification training — from Associate to Professional
+        - paragraph [ref=f1e29]: RAD (Rapid Application Deployment) by Tech Equity Cloud deploys real, pre-configured infrastructure into your own Google Cloud project — so every exam objective maps to a resource you deployed, verified, and operated yourself.
+        - paragraph [ref=f1e30]: Seven certification study paths map every official exam section to deployment labs drawn from 100+ open-source application modules on Cloud Run and GKE Autopilot. Every guide is written by one author holding six Google Cloud certifications, from the same infrastructure code the platform actually runs — deploy it, inspect it, break it, and fix it before you sit the exam.
+        - link "Get Started →" [ref=f1e32] [cursor=pointer]:
+          - /url: /docs/guides/using-rad
+    - main [ref=f1e33]:
+      - generic [ref=f1e36]:
+        - link "7 Google Cloud certifications covered" [ref=f1e38] [cursor=pointer]:
+          - /url: /docs/certification/ACE_Certification_Guide
+          - generic [ref=f1e39]: "7"
+          - generic [ref=f1e40]: Google Cloud certifications covered
+        - link "111 hands-on deployment labs" [ref=f1e42] [cursor=pointer]:
+          - /url: /docs/labs/Services_GCP
+          - generic [ref=f1e43]: "111"
+          - generic [ref=f1e44]: hands-on deployment labs
+        - link "159 module configuration guides" [ref=f1e46] [cursor=pointer]:
+          - /url: /docs/modules/Services_GCP
+          - generic [ref=f1e47]: "159"
+          - generic [ref=f1e48]: module configuration guides
+      - generic [ref=f1e50]:
+        - heading "Certification Study Paths" [level=2] [ref=f1e51]
+        - paragraph [ref=f1e52]: Each guide maps the official exam sections to RAD deployment labs, so you study every domain hands-on — from Associate to Professional level.
+        - generic [ref=f1e53]:
+          - link "Associate Associate Cloud Engineer (ACE) Deploy, monitor, and operate solutions on Google Cloud. View lab map →" [ref=f1e55] [cursor=pointer]:
+            - /url: /docs/certification/ACE_Certification_Guide
+            - generic [ref=f1e56]: Associate
+            - heading "Associate Cloud Engineer (ACE)" [level=3] [ref=f1e57]
+            - paragraph [ref=f1e58]: Deploy, monitor, and operate solutions on Google Cloud.
+            - generic [ref=f1e59]: View lab map →
+          - link "Professional Professional Cloud Architect (PCA) Design, plan, and manage secure cloud solution architecture. View lab map →" [ref=f1e61] [cursor=pointer]:
+            - /url: /docs/certification/PCA_Certification_Guide
+            - generic [ref=f1e62]: Professional
+            - heading "Professional Cloud Architect (PCA)" [level=3] [ref=f1e63]
+            - paragraph [ref=f1e64]: Design, plan, and manage secure cloud solution architecture.
+            - generic [ref=f1e65]: View lab map →
+          - link "Professional Professional Cloud Developer (PCD) Build and deploy scalable cloud-native applications. View lab map →" [ref=f1e67] [cursor=pointer]:
+            - /url: /docs/certification/PCD_Certification_Guide
+            - generic [ref=f1e68]: Professional
+            - heading "Professional Cloud Developer (PCD)" [level=3] [ref=f1e69]
+            - paragraph [ref=f1e70]: Build and deploy scalable cloud-native applications.
+            - generic [ref=f1e71]: View lab map →
+          - link "Professional Professional Cloud Database Engineer (PCDE) Design, manage, and migrate database solutions. View lab map →" [ref=f1e73] [cursor=pointer]:
+            - /url: /docs/certification/PCDE_Certification_Guide
+            - generic [ref=f1e74]: Professional
+            - heading "Professional Cloud Database Engineer (PCDE)" [level=3] [ref=f1e75]
+            - paragraph [ref=f1e76]: Design, manage, and migrate database solutions.
+            - generic [ref=f1e77]: View lab map →
+          - link "Professional Professional Cloud Network Engineer (PCNE) Implement and manage VPC, hybrid, and multicloud networks. View lab map →" [ref=f1e79] [cursor=pointer]:
+            - /url: /docs/certification/PCNE_Certification_Guide
+            - generic [ref=f1e80]: Professional
+            - heading "Professional Cloud Network Engineer (PCNE)" [level=3] [ref=f1e81]
+            - paragraph [ref=f1e82]: Implement and manage VPC, hybrid, and multicloud networks.
+            - generic [ref=f1e83]: View lab map →
+          - link "Professional Professional Cloud DevOps Engineer (PDE) Apply SRE, CI/CD, and observability practices at scale. View lab map →" [ref=f1e85] [cursor=pointer]:
+            - /url: /docs/certification/PDE_Certification_Guide
+            - generic [ref=f1e86]: Professional
+            - heading "Professional Cloud DevOps Engineer (PDE)" [level=3] [ref=f1e87]
+            - paragraph [ref=f1e88]: Apply SRE, CI/CD, and observability practices at scale.
+            - generic [ref=f1e89]: View lab map →
+          - link "Professional Professional Cloud Security Engineer (PSE) Configure access, boundary protection, and data security. View lab map →" [ref=f1e91] [cursor=pointer]:
+            - /url: /docs/certification/PSE_Certification_Guide
+            - generic [ref=f1e92]: Professional
+            - heading "Professional Cloud Security Engineer (PSE)" [level=3] [ref=f1e93]
+            - paragraph [ref=f1e94]: Configure access, boundary protection, and data security.
+            - generic [ref=f1e95]: View lab map →
+      - generic [ref=f1e97]:
+        - heading "Platform Capabilities" [level=2] [ref=f1e98]
+        - generic [ref=f1e99]:
+          - generic [ref=f1e100]:
+            - img "Certification Aligned" [ref=f1e102]
+            - generic [ref=f1e260]:
+              - heading "Certification Aligned" [level=3] [ref=f1e261]
+              - paragraph [ref=f1e262]: Deploy pre-configured industry solutions to Google Cloud platform and map infrastructure components to specific Google Cloud associate and professional certification exams.
+          - generic [ref=f1e263]:
+            - img "Industry Solutions" [ref=f1e265]
+            - generic [ref=f1e302]:
+              - heading "Industry Solutions" [level=3] [ref=f1e303]
+              - paragraph [ref=f1e304]: Go beyond certification by developing in-depth expertise on architecture principles and implementation options for real world industry solutions.
+          - generic [ref=f1e305]:
+            - img "Theory to Mastery" [ref=f1e307]
+            - generic [ref=f1e461]:
+              - heading "Theory to Mastery" [level=3] [ref=f1e462]
+              - paragraph [ref=f1e463]: Build hands-on experience by implementing the competencies required for Cloud Architect, Developer, Security, Database, Networking and DevOps Engineer certifications.
+  - contentinfo [ref=f1e464]:
+    - generic [ref=f1e465]:
+      - generic [ref=f1e466]:
+        - generic [ref=f1e467]:
+          - generic [ref=f1e468]: Tech Equity Cloud
+          - list [ref=f1e469]:
+            - listitem [ref=f1e470]:
+              - link "About" [ref=f1e471] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=f1e472]:
+              - link "Contact" [ref=f1e473] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=f1e474]:
+              - link [ref=f1e475] [cursor=pointer]:
+                - /url: https://radmodules.dev
+                - text: RAD Console
+                - img "(opens in new tab)" [ref=f1e476]
+        - generic [ref=f1e478]:
+          - generic [ref=f1e479]: Legal
+          - list [ref=f1e480]:
+            - listitem [ref=f1e481]:
+              - link "Privacy Policy" [ref=f1e482] [cursor=pointer]:
+                - /url: /privacy
+            - listitem [ref=f1e483]:
+              - link "Terms of Use" [ref=f1e484] [cursor=pointer]:
+                - /url: /terms
+        - generic [ref=f1e485]:
+          - generic [ref=f1e486]: Community
+          - list [ref=f1e487]:
+            - listitem [ref=f1e488]:
+              - link [ref=f1e489] [cursor=pointer]:
+                - /url: https://github.com/techequitycloud
+                - text: GitHub
+                - img "(opens in new tab)" [ref=f1e490]
+            - listitem [ref=f1e492]:
+              - link [ref=f1e493] [cursor=pointer]:
+                - /url: https://github.com/techequitycloud/rad.github.io/issues
+                - text: Report an Issue
+                - img "(opens in new tab)" [ref=f1e494]
+      - generic [ref=f1e496]: © 2026 Tech Equity Cloud. All rights reserved.
