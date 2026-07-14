@@ -1,7 +1,6 @@
 ---
-title: "VMware Engine Module Documentation"
+title: "Google Cloud VMware Engine"
 description: "Configuration reference for the VMware Engine RAD module on Google Cloud — variables, architecture, networking, and day-2 operations."
-sidebar_label: "VMware Engine"
 ---
 
 # Google Cloud VMware Engine
