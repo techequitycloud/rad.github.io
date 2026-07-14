@@ -298,7 +298,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Databases & Data Infrastructure',
+      label: 'Data Infrastructure',
       collapsed: true,
       items: [
         {type: 'doc', id: 'modules/MongoDB_GKE', label: 'MongoDB GKE'},
@@ -387,7 +387,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Analytics & Business Intelligence',
+      label: 'Business Intelligence',
       collapsed: true,
       items: [
         {
@@ -936,7 +936,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Business & Enterprise Apps',
+      label: 'Enterprise Business Apps',
       collapsed: true,
       items: [
         {
@@ -1073,7 +1073,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Productivity & Collaboration',
+      label: 'Business & Collaboration',
       collapsed: true,
       items: [
         {
@@ -1701,7 +1701,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Databases & Data Infrastructure',
+      label: 'Data Infrastructure',
       collapsed: true,
       items: [
         {type: 'doc', id: 'labs/MongoDB_GKE', label: 'MongoDB GKE'},
@@ -1775,7 +1775,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Analytics & Business Intelligence',
+      label: 'Business Intelligence',
       collapsed: true,
       items: [
         {
@@ -2252,7 +2252,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Business & Enterprise Apps',
+      label: 'Enterprise Business Apps',
       collapsed: true,
       items: [
         {
@@ -2376,7 +2376,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Productivity & Collaboration',
+      label: 'Business & Collaboration',
       collapsed: true,
       items: [
         {
