@@ -30,7 +30,7 @@ focused set of Google Cloud services:
 | Compute | GKE Autopilot | JVM pods, 2 vCPU / 4 GiB by default, horizontally autoscaled |
 | Database | Cloud SQL for PostgreSQL 15 | Required — Metabase stores all application state (questions, dashboards, users) in PostgreSQL |
 | Secrets | Secret Manager | Auto-generated database password; no admin password is managed here (Metabase handles its own) |
-| Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
+| Ingress | Cloud Load Balancing | External LoadBalancer with a zero-config `<ip>.nip.io` HTTPS hostname by default (`enable_custom_domain = true`); set `application_domains` for a real custom domain |
 
 **Sensible defaults worth knowing up front:**
 
@@ -118,9 +118,12 @@ The database password secret name is in the [Outputs](#5-outputs). See
 
 ### D. Networking & ingress
 
-By default the workload is exposed through an external Cloud Load Balancing IP.
-A custom domain with a Google-managed certificate can be enabled, and a static IP
-can be reserved so the address survives redeploys.
+`enable_custom_domain = true` by default, so App_GKE provisions a Gateway-based
+HTTPS ingress out of the box. With no `application_domains` set, it derives a
+zero-config `<ip>.nip.io` hostname from the reserved static IP and a matching
+Google-managed certificate, so Metabase gets HTTPS immediately. Set
+`application_domains` to serve a real custom domain instead; a static IP is
+reserved by default so the address survives redeploys.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -218,7 +221,6 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `container_port` | `3000` | Metabase's Jetty port — must match `MB_JETTY_PORT`. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar for Unix socket connections. Required. |
 | `enable_vertical_pod_autoscaling` | `false` | Let Autopilot tune resource requests automatically — recommended for JVM right-sizing. |
-| `termination_grace_period_seconds` | `60` | Seconds Kubernetes waits after SIGTERM; allows in-flight queries to complete. |
 
 ### Group 5 — Environment Variables & Secrets
 
@@ -234,7 +236,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `service_type` | `LoadBalancer` | How the Service is exposed. |
 | `session_affinity` | `ClientIP` | Sticky routing required to keep browser sessions on one pod during HPA scale-out. |
 | `workload_type` | `null` | Auto-resolves; Metabase is stateless so use `"Deployment"`. |
-| `network_tags` | `['nfsserver']` | Node/pod tags for firewall rules. |
+| `termination_grace_period_seconds` | `60` | Seconds Kubernetes waits after SIGTERM; allows in-flight queries to complete. |
 
 ### Group 7 — StatefulSet (advanced)
 
@@ -320,9 +322,10 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provisions the Gateway HTTPS ingress; derives a zero-config `<ip>.nip.io` hostname when `application_domains` is empty. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
+| `network_tags` | `['nfsserver']` | Node/pod tags for firewall rules. |
 
 ### Group 20 — Identity-Aware Proxy (IAP)
 

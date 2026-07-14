@@ -15,11 +15,11 @@ For the infrastructure that actually provisions and runs Ghost, see the platform
 
 | Area | Provided by Ghost_Common | Where it surfaces |
 |---|---|---|
-| Container image | Pins the official Ghost image and builds a customised variant via a Dockerfile | `container_image` output of the platform deployment |
-| Custom entrypoint | Installs a startup script that detects the service URL, maps foundation DB env vars to Ghost's `database__connection__*` settings, and injects `database__client=mysql` | Application behaviour in the platform guides |
+| Container image | Pins the official Ghost image and builds a customised variant via a Dockerfile (`curl`, `jq`, `netcat-openbsd`, `default-mysql-client`) | `container_image` output of the platform deployment |
+| Custom entrypoint | Installs a startup script that detects the service URL, maps foundation DB env vars to Ghost's `database__connection__*` settings, injects `database__client=mysql`, and self-heals a stale first-boot migration lock | Application behaviour in the platform guides |
 | Database engine | Fixes **Cloud SQL for MySQL 8.0** as the only supported engine | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy `db-init` job that creates the database with `utf8mb4` charset, creates the user, and grants privileges | `initialization_jobs` output |
-| Object storage | Declares the **Cloud Storage** `ghost-content` bucket | `storage_buckets` output |
+| Object storage | Declares one **Cloud Storage** bucket (suffix `content`) | `storage_buckets` output |
 | Health checks | Supplies default startup (`/`, 90s initial delay, 10 failures) and liveness (`/`, 60s delay) probe behaviour | §Observability in the platform guides |
 | Readiness probe | HTTP `/`, 30s initial delay, period 10s, 3 failures | Applied to the running container |
 
@@ -27,14 +27,16 @@ For the infrastructure that actually provisions and runs Ghost, see the platform
 
 ## 2. Container image and custom entrypoint
 
-`Ghost_Common` extends the official `ghost:<version>` Docker Hub image with a custom Dockerfile that installs `curl`, `jq`, and `netcat-openbsd`, then adds a startup script (`entrypoint.sh`) as `/usr/local/bin/custom-entrypoint.sh`.
+`Ghost_Common` extends the official `ghost:<version>` Docker Hub image with a custom Dockerfile that installs `curl`, `jq`, `netcat-openbsd`, and `default-mysql-client` (the last one lets the entrypoint release a stale migration lock — see step 5 below), then adds a startup script (`entrypoint.sh`) as `/usr/local/bin/custom-entrypoint.sh`.
 
 The startup script performs these actions on every container start:
 
-1. **Service URL detection.** Queries the GCP metadata API (`/computeMetadata/v1/instance/service-accounts/default/token`, the Cloud Run API, and `K_SERVICE`) to discover the public service URL and exports it as `url` and `admin__url` for Ghost. An explicit `url` environment variable takes precedence. Falls back to a `GKE_SERVICE_URL` environment variable, then to `http://localhost:2368` for local development.
+1. **Service URL detection.** Queries the GCP metadata API (`/computeMetadata/v1/instance/service-accounts/default/token`, the Cloud Run API, and `K_SERVICE`) to discover the public service URL and exports it as `url` and `admin__url` for Ghost. An explicit `url` environment variable takes precedence; otherwise it falls back to the foundation-injected `CLOUDRUN_SERVICE_URL`, then `GKE_SERVICE_URL`, then `http://localhost:2368` for local development.
 2. **DB credential mapping.** Maps `DB_HOST` (or `DB_IP` as fallback), `DB_USER`, `DB_NAME`, `DB_PASSWORD`, and `DB_PORT` — injected by the foundation — to Ghost's `database__connection__socketPath`, `database__connection__host`, `database__connection__user`, `database__connection__database`, `database__connection__password`, and `database__connection__port`. When `DB_HOST` starts with `/` it is treated as a Unix socket (the Cloud SQL Auth Proxy socket path).
-3. **Configuration validation.** Warns when `database__client` is not set (Ghost would fall back to SQLite) and verifies MySQL connectivity before starting Ghost.
-4. **Ghost launch.** Delegates to `docker-entrypoint.sh "$@"` — the official Ghost startup sequence.
+3. **SMTP mapping.** Maps `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASSWORD`/`SMTP_SSL`/`EMAIL_FROM` to Ghost's `mail__*` nconf keys (Ghost only reads `mail__*`; without this mapping it falls back to unauthenticated port-25 "Direct" delivery, which Cloud Run/GKE egress blocks, and even the Ghost 6 admin sign-in email hangs until the request times out).
+4. **Configuration validation.** Warns when `database__client` is not set (Ghost would fall back to SQLite) and verifies MySQL connectivity before starting Ghost.
+5. **Stale migration-lock self-heal.** Because this module runs a single Ghost replica, any `migrations_lock` row still held more than 120 seconds after boot cannot belong to a legitimately running migration — it is a leftover from a pod killed mid-migration (interrupted apply, OOM, node eviction). The entrypoint clears only such stale locks before Ghost starts, avoiding the permanent crash-loop ("Migration lock was never released") that otherwise required manual DB surgery to recover from.
+6. **Ghost launch.** Delegates to `docker-entrypoint.sh "$@"` — the official Ghost startup sequence.
 
 To explore the running configuration:
 
@@ -94,10 +96,10 @@ Do not reduce `initial_delay_seconds` below 60 seconds. On first boot Ghost must
 
 ## 6. Object storage
 
-A dedicated **Cloud Storage** `ghost-content` bucket is declared here and provisioned by the foundation, which also grants the workload service account access. This bucket is available for content storage via GCS Fuse or direct SDK access. List it with:
+A dedicated **Cloud Storage** bucket (name suffix `content`, e.g. `gcs-ghost<tenant>-content`) is declared here and provisioned by the foundation, which also grants the workload service account access. This bucket is available for content storage via GCS Fuse or direct SDK access. List it with:
 
 ```bash
-gcloud storage buckets list --project "$PROJECT" --filter="name~ghost-content"
+gcloud storage buckets list --project "$PROJECT" --filter="name~ghost"
 ```
 
 Combined with the shared Filestore (NFS) volume, this gives Ghost durable content storage that is consistent across all instances.

@@ -153,8 +153,8 @@ See [App_CloudRun](App_CloudRun.md).
 ### G. Cloud Logging & Monitoring
 
 Container logs flow to Cloud Logging; Cloud Run and Cloud SQL metrics flow to Cloud
-Monitoring. An uptime check against `/health` is enabled by default. Optional alert
-policies are available.
+Monitoring. An uptime check against `/health` is available but disabled by default
+(`uptime_check_config.enabled = false`). Optional alert policies are available.
 
 - **Console:** Logging → Logs Explorer; Monitoring → Dashboards / Alerting.
 - **CLI:**
@@ -221,7 +221,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `application_name` | `superset` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Apache Superset` | Friendly name shown in the Console. |
-| `application_description` | _(set)_ | Service description. |
+| `application_description` | `Apache Superset - Data Exploration and Visualisation Platform` | Service description. |
 | `application_version` | `latest` | Superset image version tag; pin to a specific release for production. |
 
 ### Group 4 — Runtime & Scaling
@@ -320,7 +320,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | HTTP `/health`, 60 s delay, 12 failures | Allows up to 180 s for the Gunicorn worker pool to initialise. |
 | `liveness_probe` / `health_check_config` | HTTP `/health`, 30 s delay | Liveness probe. |
-| `uptime_check_config` | enabled, `/health` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, `/health` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache

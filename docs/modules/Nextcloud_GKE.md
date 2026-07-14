@@ -246,7 +246,7 @@ specific to or notable for Nextcloud are listed; every other input is inherited 
 |---|---|---|
 | `application_name` | `nextcloud` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Nextcloud` | Friendly name shown in the Console. |
-| `application_description` | _(set)_ | Workload description annotation. |
+| `application_description` | `Nextcloud self-hosted collaboration and file sharing platform on GKE Autopilot` | Workload description annotation. |
 | `application_version` | `30` | Nextcloud image version tag; increment to roll out a new version. |
 
 ### Group 4 — Runtime & Scaling
@@ -267,7 +267,7 @@ specific to or notable for Nextcloud are listed; every other input is inherited 
 
 | Variable | Default | Description |
 |---|---|---|
-| `environment_variables` | SMTP defaults | Extra non-secret settings injected into the pod. Core Nextcloud vars are set automatically. |
+| `environment_variables` | `{ SMTP_HOST = "", SMTP_PORT = "25", SMTP_USER = "", SMTP_PASSWORD = "", SMTP_SSL = "false", EMAIL_FROM = "ghost@example.com" }` | Extra non-secret settings injected into the pod (the default seeds empty SMTP placeholders). Core Nextcloud vars are set automatically. |
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name. |
 | `secret_rotation_period` | `2592000s` | Secret Manager rotation notification frequency. |
 | `secret_propagation_delay` | `30` | Seconds to wait after secret creation before proceeding. |
@@ -349,8 +349,8 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Provision the `nc-data` bucket. |
-| `storage_buckets` | `[{ name_suffix="data" }]` | Additional GCS buckets. |
+| `create_cloud_storage` | `true` | Provision the configured buckets (the `nc-data` bucket comes from `Nextcloud_Common`). |
+| `storage_buckets` | `[]` | Additional GCS buckets beyond the auto-provisioned `nc-data` bucket. |
 | `gcs_volumes` | `[]` | GCS buckets to mount via GCS Fuse CSI driver. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 | `max_images_to_retain` | `7` | Maximum recent Artifact Registry images to keep. |
@@ -394,7 +394,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Custom hostnames; also added to `NEXTCLOUD_TRUSTED_DOMAINS`. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 
@@ -433,17 +433,13 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | `upload_max_filesize` | `512M` | Maximum upload file size — baked into the image. Increase for video or archive uploads. |
 | `post_max_size` | `512M` | PHP POST body limit — must be ≥ `upload_max_filesize`. |
 
-### Group 24 — Email / SMTP
+### Email / SMTP
 
-| Variable | Default | Description |
-|---|---|---|
-| `smtp_host` | `""` | SMTP server hostname. Leave empty to disable email (password resets and share notifications will not work). |
-| `smtp_secure` | `""` | Encryption: `ssl` (port 465), `tls` (STARTTLS port 587), or empty for none. |
-| `smtp_port` | `""` | SMTP port. Leave empty to use the default for `smtp_secure`. |
-| `smtp_authtype` | `LOGIN` | Authentication mechanism: `LOGIN`, `PLAIN`, or `NONE`. |
-| `smtp_name` | `""` | SMTP login username. |
-| `mail_from_address` | `""` | Local part of the From address (before the `@`). |
-| `mail_domain` | `""` | Domain part of the From address (after the `@`). |
+There are no dedicated SMTP variables — outbound email is configured through the
+`environment_variables` map (Group 5), whose default seeds the placeholders
+`SMTP_HOST` (empty = email disabled; password resets and share notifications will not
+work), `SMTP_PORT` (`25`), `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SSL` (`false`), and
+`EMAIL_FROM`. Set them to your mail relay's values to enable email.
 
 ---
 

@@ -289,7 +289,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | `/readyz`, 15s delay | HTTP probe — Qdrant reports ready once all collections are loaded. |
 | `liveness_probe` | `/livez`, 30s delay | HTTP probe — dedicated liveness endpoint unaffected by collection load state. |
-| `uptime_check_config` | enabled, `/readyz` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, `/readyz` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 23 — VPC Service Controls & Audit Logging

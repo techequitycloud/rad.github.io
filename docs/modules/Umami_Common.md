@@ -30,9 +30,9 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 ```
 
 **Key characteristics**:
-- Generates one Secret Manager secret: `APP_SECRET` (injected as `UMAMI_APP_SECRET`) — the Next.js application secret key used by Umami for session signing and security.
+- Generates one Secret Manager secret: `APP_SECRET` (injected as the `APP_SECRET` environment variable) — the Next.js application secret key used by Umami for session signing and security.
 - **Stateless analytics service**: Umami stores all data in PostgreSQL. No GCS storage buckets are provisioned.
-- **No Redis required**: Unlike Ghost or Directus, Umami uses only PostgreSQL. `storage_buckets` returns an empty list.
+- **No Redis required**: Umami uses only PostgreSQL. `storage_buckets` returns an empty list.
 - **`/api/heartbeat` health endpoint**: All probes target Umami's built-in heartbeat endpoint rather than a generic root path.
 - Database migrations are run automatically by Umami itself at container startup via Prisma — the `db-init` job only pre-creates the database and user.
 
@@ -49,7 +49,7 @@ The application configuration object passed to the platform module via `applicat
 | `application_version` | Version tag (default: `"postgresql-latest"`) |
 | `container_image` | `"ghcr.io/umami-software/umami"` (GitHub Container Registry source image) |
 | `image_source` | `"custom"` — a wrapper image is built via Cloud Build to map DB_* variables to `DATABASE_URL` |
-| `enable_image_mirroring` | `var.enable_image_mirroring` (default `true`) — mirrors the image from GitHub Container Registry into Artifact Registry |
+| `enable_image_mirroring` | `true` (hardcoded) — mirrors the image from GitHub Container Registry into Artifact Registry |
 | `container_build_config` | `dockerfile_path = "Dockerfile"`, `context_path = "."`, `build_args = { UMAMI_VERSION = <version> }` |
 | `container_port` | `3000` |
 | `database_type` | `"POSTGRES_15"` — Umami requires PostgreSQL |
@@ -57,12 +57,10 @@ The application configuration object passed to the platform module via `applicat
 | `db_user` | Database user (default: `"umami"`) |
 | `enable_cloudsql_volume` | Whether to mount the Cloud SQL Auth Proxy sidecar (default: `true`) |
 | `cloudsql_volume_mount_path` | `"/cloudsql"` |
-| `gcs_volumes` | `[]` — no GCS Fuse volumes required |
 | `container_resources` | CPU: `1000m`, Memory: `512Mi` — Umami is lightweight |
+| `min_instance_count` | `var.min_instance_count` (default `1`) |
+| `max_instance_count` | `var.max_instance_count` (default `10`) |
 | `environment_variables` | Passed through from `var.environment_variables` |
-| `secret_environment_variables` | `var.secret_environment_variables` (default `{}`) |
-| `enable_mysql_plugins` | `false` |
-| `mysql_plugins` | `[]` |
 | `initialization_jobs` | Default `db-init` job (when `var.initialization_jobs = []`), or the user-supplied list |
 | `startup_probe` | HTTP `GET /api/heartbeat`, 30s initial delay, 10s timeout, 10s period, 30 failure threshold |
 | `liveness_probe` | HTTP `GET /api/heartbeat`, 30s initial delay, 10s timeout, 30s period, 3 failure threshold |
@@ -72,11 +70,11 @@ Map of environment variable names to Secret Manager secret IDs:
 
 ```hcl
 {
-  UMAMI_APP_SECRET = "<application_name>-<deployment_id>-app-secret"
+  APP_SECRET = "secret-<tenant_resource_prefix>-<application_name>-app-secret"
 }
 ```
 
-This map is passed directly as `module_secret_env_vars` to the Foundation Module and injected into the container at runtime as `UMAMI_APP_SECRET`.
+This map is passed directly as `module_secret_env_vars` to the Foundation Module and injected into the container at runtime as `APP_SECRET`.
 
 ### `storage_buckets`
 Returns an empty list `[]`. Umami is a stateless analytics service — all data lives in PostgreSQL. No dedicated application storage buckets are provisioned.
@@ -90,7 +88,7 @@ The absolute path to the module directory, used by wrapper modules to locate the
 
 | Secret ID Pattern | Description |
 |---|---|
-| `<application_name>-<deployment_id>-app-secret` | 32-character alphanumeric `APP_SECRET` for Umami (no special characters). Injected as `UMAMI_APP_SECRET`. |
+| `secret-<tenant_resource_prefix>-<application_name>-app-secret` | 32-character alphanumeric `APP_SECRET` for Umami (no special characters). Injected as `APP_SECRET`. |
 
 The secret is created with `replication { auto {} }` (automatic multi-region replication). A propagation wait is inserted after creation to prevent race conditions when the Cloud Run service or GKE pod first reads the secret at startup.
 
@@ -102,12 +100,13 @@ The secret is created with `replication { auto {} }` (automatic multi-region rep
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `project_id` | `string` | `""` | GCP project ID. |
+| `project_id` | `string` | — | GCP project ID. **Required.** |
 | `application_name` | `string` | `"umami"` | Application name. Used as a base name for resources. |
 | `application_version` | `string` | `"postgresql-latest"` | Umami image tag. Must be a `postgresql-` prefixed tag. |
 | `display_name` | `string` | `"Umami"` | Human-readable display name. |
-| `description` | `string` | `"Umami - Privacy-focused web analytics"` | Description attached to the default `db-init` job. |
-| `deployment_id` | `string` | `""` | Unique deployment identifier. Used in secret IDs. |
+| `description` | `string` | `"Umami - Privacy-focused web analytics"` | Application description. |
+| `tenant_deployment_id` | `string` | `"demo"` | Unique identifier for the deployment environment. Used in secret IDs. |
+| `resource_labels` | `map(string)` | `{}` | Common labels to apply to all resources. |
 | `db_name` | `string` | `"umami"` | PostgreSQL database name. |
 | `db_user` | `string` | `"umami"` | PostgreSQL application user. |
 | `cpu_limit` | `string` | `"1000m"` | Container CPU limit included in the `config` output. |
@@ -116,7 +115,6 @@ The secret is created with `replication { auto {} }` (automatic multi-region rep
 | `initialization_jobs` | `list(any)` | `[]` | Custom init jobs. Empty triggers the default `db-init` job. |
 | `startup_probe` | `object` | (see §5) | Startup health probe configuration. |
 | `liveness_probe` | `object` | (see §5) | Liveness health probe configuration. |
-| `enable_image_mirroring` | `bool` | `true` (in wrapper modules) | Mirror the container image to Artifact Registry before deployment. |
 | `min_instance_count` | `number` | `1` | Minimum number of running instances. |
 | `max_instance_count` | `number` | `10` | Maximum number of running instances. |
 
@@ -140,7 +138,7 @@ Umami exposes `/api/heartbeat` as its dedicated health endpoint. This endpoint r
 
 The startup probe's high `failure_threshold` (30 × 10s = 300s after the initial delay) accommodates fresh database provisioning where Prisma migrations must run and apply the full Umami schema. Subsequent restarts are faster because migrations are already applied.
 
-**Difference from Ghost:** Ghost uses `GET /` (the root path) because it has no dedicated health endpoint. Umami exposes `/api/heartbeat` specifically for health checks — use this path rather than `/` for probe configuration.
+Umami exposes `/api/heartbeat` specifically for health checks — use this path rather than the generic root path `/` for probe configuration.
 
 ---
 
@@ -150,13 +148,13 @@ One `db-init` job runs by default (when `initialization_jobs = []`):
 
 | Field | Value |
 |---|---|
-| Image | A PostgreSQL client image |
-| Script | `scripts/db-init.sh` |
-| Secrets required | `DB_PASSWORD` (application user password) |
-| `execute_on_apply` | `false` |
+| Image | `postgres:15-alpine` |
+| Script | `scripts/create-db-and-user.sh` |
+| Secrets required | `DB_PASSWORD` (application user password), `ROOT_PASSWORD` (postgres superuser) |
+| `execute_on_apply` | `true` |
 | Timeout | 600s, 1 retry |
 
-`db-init.sh` behaviour:
+`create-db-and-user.sh` behaviour:
 1. Connects to Cloud SQL PostgreSQL via the Auth Proxy Unix socket or TCP as appropriate.
 2. Creates the `umami` database user with the password from Secret Manager.
 3. Creates the `umami` database if it does not exist.
@@ -179,11 +177,11 @@ Wraps the official `ghcr.io/umami-software/umami:<version>` image:
 ### Entrypoint
 The custom entrypoint runs before the Umami process to:
 
-1. **Construct `DATABASE_URL`**: Assembles the PostgreSQL connection string from `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, and `DB_NAME` — the standard variables injected by the platform's `App_CloudRun` / `App_GKE` modules. When `DB_HOST` is a Unix socket path (starts with `/`), the connection string uses the socket format (`host=/path`).
+1. **Construct `DATABASE_URL`**: Assembles the PostgreSQL connection string from `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, and `DB_NAME` — the standard variables injected by the platform's `App_CloudRun` / `App_GKE` modules. When `DB_HOST` is a Unix socket path (starts with `/`), the entrypoint resolves it to TCP `127.0.0.1` (the Cloud SQL Auth Proxy also listens on localhost), because socket paths cannot appear in a `postgresql://` URL. The password is URL-encoded so special characters in the generated secret do not break Prisma's URL parser.
 
 2. **Set `DATABASE_URL`**: Exports the assembled connection string as `DATABASE_URL` for Umami's Prisma ORM.
 
-3. **Start Umami**: Delegates to the original Umami entrypoint.
+3. **Start Umami**: Locates and `exec`s the Umami Node server (`/app/server.js`, falling back to the Next.js standalone server or `yarn start`).
 
 This approach avoids exposing a plaintext connection string as an environment variable or storing it in Terraform state.
 
@@ -207,10 +205,10 @@ The custom entrypoint assembles these into `DATABASE_URL` using the format:
 postgresql://DB_USER:DB_PASSWORD@DB_HOST:DB_PORT/DB_NAME
 ```
 
-When connecting via Unix socket (Cloud SQL Auth Proxy, the default):
+When `DB_HOST` is a Unix socket path (Cloud SQL Auth Proxy, the default), the entrypoint substitutes `127.0.0.1` as the host — the Auth Proxy also listens on TCP localhost — so the URL stays parseable:
 
 ```
-postgresql://DB_USER:DB_PASSWORD@/DB_NAME?host=/cloudsql/project:region:instance
+postgresql://DB_USER:DB_PASSWORD@127.0.0.1:5432/DB_NAME
 ```
 
 This is why `container_image_source = "custom"` is the recommended default — the `"prebuilt"` mode using the official Umami image requires manually providing a fully-formed `DATABASE_URL` in `environment_variables`.
@@ -225,8 +223,8 @@ This is why `container_image_source = "custom"` is the recommended default — t
 | `max_instance_count` | `3` (Cloud Run default) | `10` (GKE HPA default) |
 | `DB_HOST` | Cloud SQL Auth Proxy socket path (`/cloudsql/...`) | Cloud SQL private IP or Auth Proxy sidecar socket |
 | Health probe registration | Cloud Run startup/liveness probe configuration | Kubernetes probe spec via `App GKE` |
-| Uptime checks | Enabled by default (`uptime_check_config.enabled = true`) | Enabled by default in GKE variant |
-| Redis | Not required, disabled by default | Not required, disabled by default |
+| Uptime checks | Disabled by default (`uptime_check_config.enabled = false`) | Disabled by default (`uptime_check_config.enabled = false`) |
+| Redis | Not used (`enable_redis = false`) | Not used (the mirrored `enable_redis` declaration defaults `true` but is not forwarded to the Foundation) |
 | Storage buckets | None (empty list returned) | None (empty list returned) |
 
 ---
@@ -239,28 +237,28 @@ This is why `container_image_source = "custom"` is the recommended default — t
 module "umami_app" {
   source = "../Umami_Common"
 
-  project_id          = var.project_id
-  application_name    = var.application_name
-  application_version = var.application_version
-  deployment_id       = var.tenant_deployment_id
-  db_name             = var.application_database_name
-  db_user             = var.application_database_user
-  cpu_limit           = var.cpu_limit
-  memory_limit        = var.memory_limit
-  description         = var.application_description
-  startup_probe       = var.startup_probe
-  liveness_probe      = var.liveness_probe
+  project_id           = var.project_id
+  application_name     = var.application_name
+  application_version  = var.application_version
+  tenant_deployment_id = var.tenant_deployment_id
+  db_name              = var.application_database_name
+  db_user              = var.application_database_user
+  cpu_limit            = var.cpu_limit
+  memory_limit         = var.memory_limit
+  description          = var.application_description
+  startup_probe        = var.startup_probe
+  liveness_probe       = var.liveness_probe
   enable_cloudsql_volume = var.enable_cloudsql_volume
-  initialization_jobs = var.initialization_jobs
+  initialization_jobs  = var.initialization_jobs
 }
 
 # The wrapper assembles the four locals the Foundation Module consumes
+# (config is merged with wrapper-level overrides such as image_source)
 locals {
-  application_modules    = { umami = module.umami_app.config }
-  module_env_vars        = var.environment_variables
+  application_modules    = { umami = merge(module.umami_app.config, { image_source = var.container_image_source }) }
+  module_env_vars        = {}
   module_secret_env_vars = module.umami_app.secret_ids
   module_storage_buckets = module.umami_app.storage_buckets
-  scripts_dir            = abspath("${module.umami_app.path}/scripts")
 }
 
 # config is passed to App_CloudRun via application_config
@@ -271,7 +269,7 @@ module "app_cloudrun" {
   module_env_vars        = local.module_env_vars
   module_secret_env_vars = local.module_secret_env_vars
   module_storage_buckets = local.module_storage_buckets
-  scripts_dir            = local.scripts_dir
+  scripts_dir            = abspath("${module.umami_app.path}/scripts")
   # ... other inputs
 }
 ```

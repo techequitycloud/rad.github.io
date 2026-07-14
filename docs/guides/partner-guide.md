@@ -14,38 +14,29 @@ A Partner is always also a User, so everything in [Using RAD](using-rad.md) — 
 ## What you can do
 
 - Connect your own GitHub repository so RAD can read your modules.
-- **Publish** your modules to the catalog, and update or delete your own modules.
-- Discover modules with **Explore** (when the AI integration is configured).
+- **Sync** your modules into the catalog from your repository.
 - Deploy your own modules for free, alongside platform modules and other partners' public modules.
-- Earn a partner revenue share when others deploy your modules (**Revenue** page).
+- Earn a partner revenue share when others deploy your modules (statements provided by the Finance team).
 - See costs and invoices for the projects you own or deployed.
 
-Your top navigation shows: **Credits**, **Deploy**, **Deployments**, **Explore**, **Publish**, **Help**. **Explore** and **Publish** appear once your repository is configured.
+Your top navigation shows: **Credits**, **Explore**, **Sync**, **Deployments**, **Deploy**, **Help**. The **Explore** page lets you explore and refine your modules with Jules (available when Jules is configured).
 
 ## Connecting your GitHub repository
 
-Before you can publish anything, connect the repository that holds your modules. Open the profile dropdown (top-right) and go to **Profile**, then provide:
+Before you can sync anything, connect the repository that holds your modules. Open the profile dropdown (top-right) and go to **Profile**, then install the **RAD Module Sync** GitHub App on the repository (or organization) that holds your modules. The GitHub App grants RAD read access to your repository — no personal access token is needed.
 
-1. **Repository URL** — the repository RAD should read your modules from.
-2. **Access token** — a personal access token so RAD can read the repository.
-3. **AI / Jules API key** — enables AI-assisted discovery on the **Explore** page.
+Once the app is installed and your repository is connected, the **Sync** page can read your modules from it.
 
-Save your settings. Once your repository is connected, the **Publish** item appears in your navigation; **Explore** appears when the AI integration is configured.
+## Syncing your modules
 
-## Publishing and managing modules
+Go to the **Sync** page to bring your modules into the catalog. The page is a read-only sync console:
 
-Go to the **Publish** page to manage which of your modules are available in the catalog.
+- It lists the valid modules found in your connected repository.
+- Click **Sync Now** to refresh the catalog from your repository. Synced modules appear in the catalog for users to deploy.
+- To update a module, change it in your repository and run **Sync Now** again — modules are managed in GitHub, not edited in RAD.
+- Removing a module from your repository and re-syncing removes it from the catalog. You can only affect your own modules — never another partner's or a platform module.
 
-- The page lists the valid modules found in your connected repository.
-- Select the modules you want to make available and publish them. Published modules appear in the catalog for users to deploy.
-- **Update** a module to refresh it after you change it in your repository.
-- **Delete** removes a module from the catalog. You can update or delete only your own modules — never another partner's or a platform module.
-
-If a module can't be read or has a configuration error, the Publish page shows which module is affected and why. Fix the issue in your repository, then publish again.
-
-## Discovering modules with Explore
-
-When the AI integration is configured (you've supplied an AI / Jules API key), the **Explore** page offers AI-assisted discovery of modules from your repository to help you prepare and refine what you publish.
+If a module can't be read or has a configuration error, the Sync page shows which module is affected and why. Fix the issue in your repository, then sync again.
 
 ## How your modules appear to users
 
@@ -60,7 +51,7 @@ Deploying your own module is **free** — no credits are deducted regardless of 
 
 ## Earning revenue
 
-Open the **Revenue** page to see the partner revenue share you've earned from deployments of your modules. Revenue is generated when users deploy your modules; your share is the portion allocated to you under the platform's revenue settings. If you can't see the Revenue page, the Finance team can provide revenue statements.
+You earn a partner revenue share when other users deploy your modules; your share is the portion allocated to you under the platform's revenue settings. There is no in-app page that shows your partner-module revenue — that data lives on the finance-only **Billing → Partner Revenue** view. Contact the Finance team for your partner-module revenue statements. (The **Revenue** page, if you reach it, shows only your own *referral* revenue, not module revenue.)
 
 ## Costs and invoices
 

@@ -74,7 +74,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 
 ## Group 1: Project & Identity
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md).
+Identical to `App_GKE`. See [App_GKE](App_GKE.md#2-iam--access-control).
 
 **Mattermost GKE-specific additions in this group:**
 
@@ -88,7 +88,7 @@ Identical to `App_GKE`. See [App_GKE](App_GKE.md).
 
 ## Group 2: Application Identity
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md) for descriptions.
+These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#a-compute-gke-autopilot) for descriptions.
 
 **Mattermost-specific defaults:**
 
@@ -103,7 +103,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md) for d
 
 ## Group 3: Runtime & Scaling
 
-Most variables behave identically to `App_GKE`. See [App_GKE Group 3](App_GKE.md).
+Most variables behave identically to `App_GKE`. See [App_GKE Group 3](App_GKE.md#a-compute-gke-autopilot).
 
 **Mattermost-specific defaults and behaviour:**
 
@@ -118,13 +118,13 @@ Most variables behave identically to `App_GKE`. See [App_GKE Group 3](App_GKE.md
 | `timeout_seconds` | `300` | `300` | For WebSocket-heavy deployments, increase to `3600` to prevent active WebSocket connections from being severed by the backend timeout. |
 | `container_protocol` | `"http1"` | `"http1"` | Mattermost uses HTTP/1.1 for its WebSocket upgrade path. Do not change to `"h2c"` unless your Mattermost configuration explicitly supports HTTP/2. |
 
-The remaining runtime variables (`deploy_application`, `container_image`, `container_build_config`, `enable_image_mirroring`, `enable_vertical_pod_autoscaling`, `service_annotations`, `service_labels`, `cloudsql_volume_mount_path`) behave as described in [App_GKE Group 3](App_GKE.md).
+The remaining runtime variables (`deploy_application`, `container_image`, `container_build_config`, `enable_image_mirroring`, `enable_vertical_pod_autoscaling`, `service_annotations`, `service_labels`, `cloudsql_volume_mount_path`) behave as described in [App_GKE Group 3](App_GKE.md#a-compute-gke-autopilot).
 
 ---
 
 ## Group 4: Access & Networking
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md), [App_GKE](App_GKE.md), and [App_GKE](App_GKE.md).
+These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#4-advanced-security), [App_GKE](App_GKE.md#5-traffic--ingress), and [App_GKE](App_GKE.md#d-networking--network-policies).
 
 > **Note:** The `ingress_settings` and `vpc_egress_setting` variables appear in `Mattermost GKE`'s variable definitions but are **not passed through to `App GKE`**. Setting these variables has no effect on the deployed infrastructure in the current implementation.
 
@@ -138,9 +138,9 @@ The following networking variables are available in `Mattermost GKE`:
 | `iap_oauth_client_id` | `""` | OAuth client ID for IAP configuration. |
 | `iap_oauth_client_secret` | `""` | OAuth client secret for IAP configuration. |
 | `iap_support_email` | `""` | Support email shown on the Google OAuth consent screen. |
-| `enable_custom_domain` | `false` | Configures Ingress/Gateway for custom domain routing with managed SSL certificates. |
+| `enable_custom_domain` | `true` | Configures Ingress/Gateway for custom domain routing with managed SSL certificates. |
 | `application_domains` | `[]` | Custom domain names (e.g. `["chat.example.com"]`). |
-| `reserve_static_ip` | `false` | Reserves a Global Static IP for the load balancer. |
+| `reserve_static_ip` | `true` | Reserves a Global Static IP for the load balancer. |
 | `static_ip_name` | `""` | Name for the reserved IP; auto-generated if blank. |
 | `network_tags` | `["nfsserver"]` | Firewall tags applied to GKE cluster nodes. |
 | `enable_cloud_armor` | `false` | Enables a Cloud Armor WAF security policy. |
@@ -152,7 +152,7 @@ The following networking variables are available in `Mattermost GKE`:
 
 ## Group 5: Environment Variables & Secrets
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md).
+These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#3-core-service-configuration).
 
 **Mattermost-specific behaviour:**
 
@@ -184,13 +184,13 @@ environment_variables = {
 | `MM_EMAILSETTINGS_FEEDBACKEMAIL` | From address for notification emails. |
 | `MM_SERVICESETTINGS_ENABLEDEVELOPER` | `"false"` for production (disables developer mode). |
 
-The remaining secrets variables (`secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, `manage_storage_kms_iam`) behave as described in [App_GKE](App_GKE.md).
+The remaining secrets variables (`secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, `manage_storage_kms_iam`) behave as described in [App_GKE](App_GKE.md#3-core-service-configuration).
 
 ---
 
 ## Group 6: Backup & Maintenance
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md).
+These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#b-database-cloud-sql).
 
 **Mattermost-specific defaults:**
 
@@ -213,7 +213,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md).
 
 ## Group 7: CI/CD & GitHub Integration
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md).
+Identical to `App_GKE`. See [App_GKE](App_GKE.md#6-cicd--delivery).
 
 The following CI/CD variables are available: `enable_cicd_trigger`, `github_repository_url`, `github_token`, `github_app_installation_id`, `cicd_trigger_config`, `enable_cloud_deploy`, `cloud_deploy_stages`, `enable_binary_authorization`, `binauthz_evaluation_mode` (default `"ALWAYS_ALLOW"`; options: `ALWAYS_ALLOW`, `REQUIRE_ATTESTATION`, `ALWAYS_DENY`).
 
@@ -221,7 +221,7 @@ The following CI/CD variables are available: `enable_cicd_trigger`, `github_repo
 
 ## Group 8: Jobs & Scheduled Tasks
 
-These variables behave as described in [App_GKE](App_GKE.md), with one important Mattermost-specific behaviour.
+These variables behave as described in [App_GKE](App_GKE.md#e-initialization-jobs--cronjobs), with one important Mattermost-specific behaviour.
 
 **Mattermost default `db-init` job:**
 
@@ -238,7 +238,7 @@ Override `initialization_jobs` with a non-empty list to replace this default wit
 
 **CronJobs and Additional Services:**
 
-The `cron_jobs` and `additional_services` variables are available and behave identically to `App_GKE`. See [App_GKE](App_GKE.md) for full documentation.
+The `cron_jobs` and `additional_services` variables are available and behave identically to `App_GKE`. See [App_GKE](App_GKE.md#e-initialization-jobs--cronjobs) for full documentation.
 
 > **Note:** The `cron_jobs` schema in `Mattermost GKE` uses Kubernetes CronJob fields — `restart_policy`, `concurrency_policy`, `failed_jobs_history_limit`, `successful_jobs_history_limit`, `starting_deadline_seconds`, `suspend` — rather than the Cloud Run–style fields used in `Mattermost CloudRun`. The `secret_env_vars` field is not available in GKE cron jobs; secrets are managed via `secret_environment_variables` at the module level.
 
@@ -246,7 +246,7 @@ The `cron_jobs` and `additional_services` variables are available and behave ide
 
 ## Group 9: Storage & Filesystem — NFS
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md).
+These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
 **Mattermost-specific defaults:**
 
@@ -259,7 +259,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md).
 
 ## Group 10: Storage & Filesystem — GCS
 
-These variables behave identically to `App_GKE`. See [App_GKE Group 9](App_GKE.md).
+These variables behave identically to `App_GKE`. See [App_GKE Group 9](App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
 **Mattermost-specific behaviour:**
 
@@ -289,13 +289,13 @@ gcs_volumes = [
 
 Unlike Ghost GKE, `Mattermost Common` does **not** automatically provision a GCS bucket. You must define `storage_buckets` and `gcs_volumes` explicitly if you want GCS-backed file storage.
 
-The `create_cloud_storage`, `storage_buckets`, and `gcs_volumes` variables behave as described in [App_GKE Group 9](App_GKE.md).
+The `create_cloud_storage`, `storage_buckets`, and `gcs_volumes` variables behave as described in [App_GKE Group 9](App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
 ---
 
 ## Group 11: Database Configuration
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md).
+These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#b-database-cloud-sql).
 
 **Mattermost-specific defaults and restrictions:**
 
@@ -334,13 +334,13 @@ Mattermost does not require custom PostgreSQL extensions by default, but the mod
 
 ## Group 12: Custom SQL Scripts
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md).
+Identical to `App_GKE`. See [App_GKE](App_GKE.md#e-initialization-jobs--cronjobs).
 
 ---
 
 ## Group 13: Observability & Health
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md).
+These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#a-compute-gke-autopilot).
 
 **Mattermost-specific defaults:**
 
@@ -372,6 +372,7 @@ These are parallel paths, not aliases. Changing `startup_probe` does not affect 
 |---|---|---|---|
 | `path` | `"/api/v4/system/ping"` | `"/healthz"` | Same as startup probe. |
 | `initial_delay_seconds` | `60` | `15` | Gives Mattermost additional time to stabilise after the startup probe passes. |
+| `period_seconds` | `30` | `30` | — |
 | `failure_threshold` | `3` | `3` | — |
 
 **App GKE-standard probes** (`startup_probe_config`, `health_check_config` → `App GKE`):
@@ -389,7 +390,7 @@ These are parallel paths, not aliases. Changing `startup_probe` does not affect 
 
 ## Group 14: Reliability Policies
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md).
+Identical to `App_GKE`. See [App_GKE](App_GKE.md#7-reliability--scheduling).
 
 Available variables: `enable_pod_disruption_budget`, `pdb_min_available`, `enable_topology_spread`, `topology_spread_strict`.
 
@@ -399,7 +400,7 @@ Available variables: `enable_pod_disruption_budget`, `pdb_min_available`, `enabl
 
 ## Group 15: Redis Cache
 
-These variables configure Mattermost's optional Redis integration. The underlying Redis infrastructure support is provided by `App_GKE` (see [App_GKE](App_GKE.md)); the variables below are Mattermost-specific. Mattermost uses Redis as a distributed cache and session backend — required for correct behaviour across more than one pod replica.
+These variables configure Mattermost's optional Redis integration. The underlying Redis infrastructure support is provided by `App_GKE` (see [App_GKE](App_GKE.md#a-redis--memorystore)); the variables below are Mattermost-specific. Mattermost uses Redis as a distributed cache and session backend — required for correct behaviour across more than one pod replica.
 
 > **Note:** `enable_redis` defaults to `false` in `Mattermost GKE`. This is safe for single-replica deployments. For any deployment with `min_instance_count > 1` or horizontal scaling, Redis must be enabled.
 
@@ -436,7 +437,7 @@ kubectl exec -n NAMESPACE POD_NAME -- \
 
 ## Group 16: Custom Domain & Static IP
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md).
+Identical to `App_GKE`. See [App_GKE](App_GKE.md#5-traffic--ingress).
 
 > **Mattermost `site_url` configuration:** Mattermost must know its public URL at startup. When using a custom domain, set `site_url` to match the domain in `application_domains` (e.g., `site_url = "https://chat.example.com"`). Mattermost uses this URL for notification emails, OAuth provider redirects, and in-app link generation — an incorrect `site_url` causes broken notification links, failed OAuth logins, and incorrect mobile app deep links.
 
@@ -444,7 +445,7 @@ Identical to `App_GKE`. See [App_GKE](App_GKE.md).
 
 ## Group 17: GKE Backend Configuration
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md).
+Identical to `App_GKE`. See [App_GKE](App_GKE.md#a-compute-gke-autopilot).
 
 Available variables: `gke_cluster_name`, `namespace_name`, `workload_type`, `service_type`, `session_affinity`, `enable_multi_cluster_service`, `configure_service_mesh`, `enable_network_segmentation`, `termination_grace_period_seconds`, `deployment_timeout`, `gke_cluster_selection_mode` (default `"primary"`), `network_name` (default `""`; auto-discovered when empty), `prereq_gke_subnet_cidr` (default `"10.201.0.0/24"`).
 
@@ -456,7 +457,7 @@ Available variables: `gke_cluster_name`, `namespace_name`, `workload_type`, `ser
 
 ## Group 18: Stateful Workloads
 
-Identical to `App_GKE`. See the StatefulSet configuration described in [App_GKE](App_GKE.md).
+Identical to `App_GKE`. See the StatefulSet configuration described in [App_GKE](App_GKE.md#a-compute-gke-autopilot).
 
 Setting `stateful_pvc_enabled = true` automatically resolves `workload_type` to `"StatefulSet"`. This provides each Mattermost pod with its own dedicated PVC for local storage, as an alternative to GCS Fuse volumes. For most Mattermost deployments, GCS Fuse is preferred over StatefulSet PVCs because GCS provides durability and cross-pod access without size constraints.
 
@@ -466,7 +467,7 @@ Available variables: `stateful_pvc_enabled`, `stateful_pvc_size` (default `"10Gi
 
 ## Group 19: Resource Quota
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md).
+Identical to `App_GKE`. See [App_GKE](App_GKE.md#c-resource-quotas).
 
 Available variables: `enable_resource_quota`, `quota_cpu_requests`, `quota_cpu_limits`, `quota_memory_requests`, `quota_memory_limits`, `quota_max_pods`, `quota_max_services`, `quota_max_pvcs`.
 
@@ -561,8 +562,6 @@ gcloud secrets list \
 | `database_user` | Name of the application database user |
 | `database_password_secret` | Secret Manager secret name for the database password |
 | `storage_buckets` | Created GCS storage buckets |
-| `nfs_server_ip` | NFS server internal IP *(sensitive)* |
-| `nfs_mount_path` | NFS mount path inside containers |
 | `container_image` | Container image used for the deployment |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled |
 | `github_repository_url` | GitHub repository URL connected for CI/CD |

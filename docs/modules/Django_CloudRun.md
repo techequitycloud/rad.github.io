@@ -163,11 +163,11 @@ mounts versus env-var references, and rotation.
 
 ### F. Networking & ingress
 
-By default the service is exposed through an external Cloud Load Balancing HTTPS
-endpoint. A custom domain with a Google-managed certificate can be enabled via
-`enable_custom_domain`, and a static IP can be reserved so the address survives
-redeploys. Ingress can be restricted to `internal` or `internal-and-cloud-load-balancing`
-via `ingress_settings`, and VPC egress can be controlled via `vpc_egress_setting`.
+By default the service is exposed directly at its `run.app` HTTPS URL
+(`ingress_settings = "all"`). Ingress can be restricted to `internal` or
+`internal-and-cloud-load-balancing` via `ingress_settings`, and VPC egress can be
+controlled via `vpc_egress_setting`. Hostnames for the load-balanced path are
+configured via `application_domains`.
 
 - **Console:** Network services → Load balancing; Cloud Run → service → Networking tab.
 - **CLI:**
@@ -262,7 +262,7 @@ specific to or notable for Django are listed; every other input is inherited fro
 |---|---|---|
 | `application_name` | `django` | Base name for resources. **Do not change after first deploy.** |
 | `application_display_name` | `Django Application` | Friendly name shown in the Console. |
-| `application_description` | _(set)_ | Service description annotation. |
+| `application_description` | `Django Application - High-level Python Web framework` | Service description annotation. |
 | `application_version` | `latest` | Image version tag; increment to roll out a new revision. Pin to a specific tag in production. |
 
 ### Group 4 — Runtime & Scaling
@@ -325,8 +325,6 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `admin_ip_ranges` | `[]` | CIDRs allowed privileged access. |
 | `enable_cdn` | `false` | Enable Cloud CDN on the load balancer. |
 | `application_domains` | `[]` | Hostnames to serve (also used for custom domain). |
-| `enable_custom_domain` | `false` | Provision HTTPS load balancer for custom hostnames. |
-| `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 
 ### Group 11 — Filesystem (NFS) & Cloud Storage
 
@@ -348,8 +346,9 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `database_password_length` | `32` | Generated password length (16–64). |
 | `db_user_env_var_name` / `db_name_env_var_name` | `""` | Override the env var name used to inject the DB user/name. |
 | `enable_auto_password_rotation` | `false` | Zero-downtime DB password rotation. |
-| `enable_postgres_extensions` | `false` | Set `true` only to install **additional** extensions beyond the four auto-installed (`pg_trgm`, `unaccent`, `hstore`, `citext`). |
-| `postgres_extensions` | `[]` | Additional PostgreSQL extensions (e.g., `postgis`, `uuid-ossp`). |
+
+The four required extensions (`pg_trgm`, `unaccent`, `hstore`, `citext`) are installed
+automatically by the built-in `db-init` job — no variable is needed for them.
 
 ### Group 13 — Jobs & Scheduled Tasks
 
@@ -364,9 +363,9 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | HTTP `GET /healthz`, 60s initial delay | Startup probe passed to `Django_Common`. Increase delay for large migration sets. **Do not use a redirect path.** |
 | `liveness_probe` | HTTP `GET /healthz`, 30s initial delay | Liveness probe. Use a lightweight endpoint that returns 200 with no body. |
-| `startup_probe_config` | `/healthz`, 10m timeout | App_CloudRun-level infrastructure startup probe. |
-| `health_check_config` | `/healthz`, 1s timeout | App_CloudRun-level infrastructure health check. |
-| `uptime_check_config` | enabled, path `/` | Optional Cloud Monitoring uptime check. |
+| `startup_probe_config` | enabled, HTTP `/healthz` | App_CloudRun-level infrastructure startup probe. |
+| `health_check_config` | enabled, HTTP `/healthz` | App_CloudRun-level infrastructure health check. |
+| `uptime_check_config` | disabled (`enabled = false`, path `/`) | Optional Cloud Monitoring uptime check. |
 
 ### Group 21 — Redis Cache
 

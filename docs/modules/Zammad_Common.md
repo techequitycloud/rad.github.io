@@ -28,7 +28,7 @@ foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Database bootstrap | Defines the first-deploy job that creates the database, user, and grants | `initialization_jobs` output |
 | Object storage | Declares the `zammad-attachments` **Cloud Storage** bucket | `storage_buckets` output |
 | Core settings | Sets the baseline Zammad environment variables (`RAILS_ENV`, `POSTGRESQL_PORT`, `ZAMMAD_RAILSSERVER_*`, `RAILS_TRUSTED_PROXIES`) | Application behaviour in the platform guides |
-| Health checks | Supplies the default startup, liveness, and readiness probe configurations targeting `/api/v1/ping` | §Observability in the platform guides |
+| Health checks | Supplies the default startup, liveness, and readiness probe configurations (HTTP, path `/`) | §Observability in the platform guides |
 | No auto-generated secrets | Returns `secret_ids = {}` — Zammad manages its own internal signing keys at runtime | Platform secrets section |
 
 ---
@@ -71,7 +71,7 @@ gcloud artifacts docker images list <registry-url> --project "$PROJECT"
 
 ## 3. Database engine and bootstrap
 
-Zammad requires **PostgreSQL 13 or later**; this layer fixes `POSTGRES_15` as the
+Zammad 6.x requires **PostgreSQL 15 or later**; this layer fixes `POSTGRES_15` as the
 default and the platform modules reject any other engine at plan time. On the first
 deployment a one-shot `db-init` job connects to Cloud SQL through the Auth Proxy
 and idempotently:
@@ -120,8 +120,10 @@ top of these defaults.
 
 ## 5. Health probe behaviour
 
-All probes target Zammad's `/api/v1/ping` endpoint, which returns HTTP 200 only
-once the application is fully initialised (including schema migration on first boot).
+All probes default to HTTP against `/` (Zammad's root/login page), which returns
+HTTP 200 only once the application is fully initialised (including schema
+migration on first boot). Override the `path` on `startup_probe`/`liveness_probe`
+to target Zammad's dedicated `/api/v1/ping` health endpoint instead, if preferred.
 
 - **Startup probe** — 60-second initial delay, 15-second period, 30 failure
   threshold. Gives Zammad up to ~510 seconds of total startup tolerance for large
@@ -132,8 +134,8 @@ once the application is fully initialised (including schema migration on first b
   threshold.
 
 Both platform variants use the same HTTP probes. Unlike some applications (e.g.
-Mautic), Zammad does not require a TCP probe workaround — the `/api/v1/ping`
-endpoint responds over plain HTTP without issuing redirects.
+Mautic), Zammad does not require a TCP probe workaround — the root path responds
+over plain HTTP without issuing redirects.
 
 ---
 

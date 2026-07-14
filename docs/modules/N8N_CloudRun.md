@@ -26,7 +26,7 @@ focused set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | Cloud Run v2 | Node.js service, 2 vCPU / 4 GiB by default, request-based autoscaling |
+| Compute | Cloud Run v2 | Node.js service, 1 vCPU / 1 GiB by default, always-on (instance-based billing, `min_instance_count = 1`) so cron/schedule triggers and queue execution fire without an inbound request |
 | Database | Cloud SQL for PostgreSQL 15 | Required — n8n uses PostgreSQL for all workflow and credential data |
 | Shared files | Filestore (NFS) | Binary file data shared across all instances; also serves as the default Redis endpoint |
 | Object storage | Cloud Storage | A dedicated data bucket |
@@ -44,10 +44,9 @@ focused set of Google Cloud services:
   and stored in Secret Manager. All workflow credentials are encrypted with it. If
   the key is rotated or deleted, every saved credential becomes permanently
   unreadable.
-- **`min_instance_count` defaults to `0` (scale-to-zero).** This means no instance
-  is running when idle. Webhooks registered in n8n require a running instance to
-  receive calls — set `min_instance_count = 1` for any deployment that must receive
-  webhooks without warm-up delay.
+- **`min_instance_count` defaults to `1`.** n8n keeps one instance warm so
+  webhooks and the scheduler/queue trigger without cold-start delay. Set it to `0`
+  only if occasional webhook latency on cold start is acceptable.
 - **`WEBHOOK_URL` and `N8N_EDITOR_BASE_URL` are pre-set** to the predicted Cloud
   Run service URL so webhooks resolve correctly from first start. If a custom domain
   is added later, redeploy to update these values.
@@ -194,10 +193,10 @@ Monitoring, with optional uptime checks and alert policies.
 - **Webhook URL stability.** `WEBHOOK_URL` and `N8N_EDITOR_BASE_URL` are set to the
   predicted Cloud Run service URL before deployment. Adding a custom domain later
   requires a redeploy to update these values.
-- **Scale-to-zero and webhooks.** With `min_instance_count = 0`, no instance is
-  running when idle. External services calling webhooks will experience cold-start
-  latency and timeouts if the calling service has a short timeout. Set
-  `min_instance_count = 1` to keep an instance warm for webhook workloads.
+- **Scale-to-zero and webhooks.** `min_instance_count` defaults to `1`, keeping an
+  instance warm for webhook workloads. Setting it to `0` means no instance is
+  running when idle — external services calling webhooks will experience cold-start
+  latency and timeouts if the calling service has a short timeout.
 - **Binary data storage.** `N8N_DEFAULT_BINARY_DATA_MODE=filesystem` directs n8n
   to write binary files to the NFS-mounted filesystem rather than the database,
   which is required for multi-instance deployments.
@@ -239,9 +238,10 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only without deploying the container. |
-| `cpu_limit` | `2000m` | CPU per instance. |
-| `memory_limit` | `4Gi` | Memory per instance. |
-| `min_instance_count` | `0` | Minimum instances. Set `1` to keep an instance warm for webhook workloads. |
+| `cpu_limit` | `1000m` | CPU per instance. |
+| `memory_limit` | `1Gi` | Memory per instance. |
+| `min_instance_count` | `1` | Minimum instances. Keeps an instance warm for webhook workloads by default; set `0` to scale to zero. |
+| `cpu_always_allocated` | `true` | CPU allocated at all times (instance-based billing) — n8n's cron/schedule triggers and queue execution fire without an inbound request. |
 | `max_instance_count` | `1` | Maximum instances (cost ceiling). |
 | `container_port` | `5678` | n8n listens on port 5678. |
 | `execution_environment` | `gen2` | Cloud Run execution generation. Gen2 required for NFS mounts. |
@@ -266,7 +266,6 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `environment_variables` | SMTP placeholder defaults | Extra non-secret settings. Core `N8N_*` and `DB_TYPE` values are set automatically. The default map includes `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SSL`, and `EMAIL_FROM` ready to override. |
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name. |
-| `explicit_secret_values` | `{}` | Sensitive values to store and inject as secrets. |
 | `secret_propagation_delay` / `secret_rotation_period` | _(set)_ | Replication wait / rotation cadence. |
 
 ### Group 7 — Backup & Restore
@@ -333,7 +332,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | HTTP `GET /`, 120s initial delay | Startup probe targets the n8n root. |
 | `liveness_probe` / `health_check_config` | HTTP `GET /`, 30s initial delay | Liveness probe. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled=false, path="/" }` | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Queue
@@ -398,7 +397,7 @@ running resources.
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
 | `enable_redis` | `true` | High | Without Redis queue mode, running more than one instance causes workflow execution conflicts. |
 | `redis_host` | `""` (NFS) or explicit | High | No valid endpoint if Redis is on but NFS is off and no host is set. |
-| `min_instance_count` | `1` for webhook workloads | High | `0` (default) causes cold-start timeouts on webhook calls from services with short timeouts. |
+| `min_instance_count` | `1` (default) for webhook workloads | High | Setting `0` causes cold-start timeouts on webhook calls from services with short timeouts. |
 | `execution_environment` | `gen2` (default) | High | NFS mounts require Gen2; Gen1 instances cannot mount NFS volumes. |
 | `memory_limit` | `4Gi` | High | Too little memory causes OOM during large workflow execution batches. |
 | `enable_iap` / `enable_cloud_armor` | enable for production | Medium | The n8n editor is otherwise publicly reachable and exposes all saved credentials. |

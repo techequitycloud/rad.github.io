@@ -47,7 +47,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Topology Spread Constraints | §7.B Topology Spread Constraints | Identical. |
 | Resource Quotas | §7.C Resource Quotas | Identical. |
 | Auto Password Rotation | §7.D Auto Password Rotation | See [Group 16: Database Configuration](#group-16-database-configuration). |
-| Redis Cache | §8.A Redis / Memorystore | Redis disabled by default — Umami does not require it; see [Group: Redis Cache](#redis-cache). |
+| Redis Cache | §8.A Redis / Memorystore | Redis not wired — Umami does not require it; see [Group: Redis Cache](#redis-cache). |
 | Backup Import | §8.B Backup Import | See [Group 21: Backup Import](#group-21-backup-import). |
 | Service Mesh (ASM) | §8.C Service Mesh (ASM via Fleet) | Identical. |
 | Multi-Cluster Services | §8.D Multi-Cluster Services (MCS) | Identical. |
@@ -60,19 +60,19 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 
 1. **PostgreSQL is required.** Umami requires PostgreSQL for all data storage. The `database_type` default is `"POSTGRES"` (the generic PostgreSQL option).
 2. **`DATABASE_URL` is assembled at runtime.** The custom Umami entrypoint constructs `DATABASE_URL` from platform-injected DB_* variables. This avoids storing a plaintext connection string in environment variables or Terraform state.
-3. **`APP_SECRET` is auto-generated.** `Umami Common` generates a 32-character alphanumeric secret and stores it in Secret Manager. It is injected into the pod as `UMAMI_APP_SECRET`.
+3. **`APP_SECRET` is auto-generated.** `Umami Common` generates a 32-character alphanumeric secret and stores it in Secret Manager. It is injected into the pod as `APP_SECRET`.
 4. **No storage buckets are provisioned by default.** Umami is a stateless analytics service — all data lives in PostgreSQL. `storage_buckets` defaults to an empty list.
 5. **A `db-init` job runs on first deployment.** `Umami Common` supplies a default `db-init` Kubernetes Job that pre-creates the Umami PostgreSQL database and user. Umami then runs its own Prisma migrations on startup.
-6. **Resource defaults are sized for Umami.** The default `cpu_limit` (1 vCPU) and `memory_limit` (512Mi) reflect Umami's lightweight footprint — significantly lower than Ghost or Directus.
+6. **Resource defaults are sized for Umami.** The default `cpu_limit` (1 vCPU) and `memory_limit` (512Mi) reflect Umami's lightweight footprint.
 7. **Health probes target `/api/heartbeat`.** Umami's dedicated health endpoint, not a generic root path.
-8. **Redis is disabled by default.** Unlike Ghost, Umami does not use Redis. `enable_redis = false` is the default.
+8. **Redis is not used.** Umami stores everything in PostgreSQL; the module wires no Redis connection (the mirrored `enable_redis` declaration is not forwarded to the Foundation).
 9. **Image mirroring is enabled by default.** Umami is distributed via GitHub Container Registry (`ghcr.io`). The module mirrors the image to Artifact Registry to avoid rate limits in production.
 
 ---
 
 ## Group 1: Project & Identity
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md).
+Identical to `App_GKE`. See [App_GKE](App_GKE.md#2-iam--access-control).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -83,7 +83,7 @@ Identical to `App_GKE`. See [App_GKE](App_GKE.md).
 
 ## Group 2: Application Identity
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md) for descriptions.
+These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#a-compute-gke-autopilot) for descriptions.
 
 **Umami-specific defaults:**
 
@@ -99,7 +99,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md) for d
 
 ## Group 3: Runtime & Scaling
 
-Most variables behave identically to `App_GKE`. See [App_GKE Group 3](App_GKE.md).
+Most variables behave identically to `App_GKE`. See [App_GKE Group 3](App_GKE.md#a-compute-gke-autopilot).
 
 **Umami-specific defaults and behaviour:**
 
@@ -115,13 +115,13 @@ Most variables behave identically to `App_GKE`. See [App_GKE Group 3](App_GKE.md
 
 **`enable_vertical_pod_autoscaling`:** Defaults to `false`. Enable to allow GKE Autopilot to automatically right-size Umami pods based on observed resource usage. Useful for cost optimisation in production.
 
-The remaining runtime variables (`enable_image_mirroring`, `container_build_config`, `container_protocol`, `timeout_seconds`, `cloudsql_volume_mount_path`, `service_annotations`, `service_labels`, `termination_grace_period_seconds`, `deployment_timeout`) behave as described in [App_GKE Group 3](App_GKE.md).
+The remaining runtime variables (`enable_image_mirroring`, `container_build_config`, `container_protocol`, `timeout_seconds`, `cloudsql_volume_mount_path`, `service_annotations`, `service_labels`, `termination_grace_period_seconds`, `deployment_timeout`) behave as described in [App_GKE Group 3](App_GKE.md#a-compute-gke-autopilot).
 
 ---
 
 ## Group 4: Access & Networking
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md), [App_GKE](App_GKE.md), and [App_GKE](App_GKE.md).
+These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#4-advanced-security), [App_GKE](App_GKE.md#5-traffic--ingress), and [App_GKE](App_GKE.md#d-networking--network-policies).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -145,11 +145,11 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md), [App
 
 ## Group 5: Environment Variables & Secrets
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md).
+These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#3-core-service-configuration).
 
 **Umami-specific behaviour:**
 
-`Umami Common` generates `APP_SECRET` and injects it as `UMAMI_APP_SECRET`. No SMTP defaults are pre-populated — Umami does not send email natively.
+`Umami Common` generates `APP_SECRET` and injects it as the `APP_SECRET` environment variable. No SMTP defaults are pre-populated — Umami does not send email natively.
 
 Use `environment_variables` for Umami configuration options:
 
@@ -176,7 +176,7 @@ environment_variables = {
 |---|---|---|
 | `gke_cluster_name` | `""` | Name of the target GKE Autopilot cluster. Leave empty to auto-discover. |
 | `namespace_name` | `""` | Kubernetes namespace. Auto-generated from `application_name` and `tenant_deployment_id` when empty. |
-| `service_type` | `"ClusterIP"` | Kubernetes Service type. Use `"LoadBalancer"` for direct external access. |
+| `service_type` | `"LoadBalancer"` | Kubernetes Service type. `"LoadBalancer"` (the default) exposes Umami directly on an external IP; use `"ClusterIP"` for internal-only access behind an Ingress. |
 | `session_affinity` | `"None"` | Session affinity mode. `"None"` is correct for Umami — all state is in PostgreSQL, so any pod can handle any request. |
 | `enable_multi_cluster_service` | `false` | Registers the service with GKE Multi Cluster Services. |
 | `configure_service_mesh` | `false` | Injects Anthos Service Mesh (Istio) sidecar proxies. |
@@ -197,7 +197,7 @@ environment_variables = {
 
 ## Group 8: Jobs & Scheduled Tasks
 
-These variables behave as described in [App_GKE](App_GKE.md), with one important Umami-specific behaviour.
+These variables behave as described in [App_GKE](App_GKE.md#e-initialization-jobs--cronjobs), with one important Umami-specific behaviour.
 
 **Umami default `db-init` job:**
 
@@ -208,7 +208,7 @@ When `initialization_jobs` is left as the default (empty list `[]`), `Umami Comm
 | Job name | `db-init` |
 | Image | PostgreSQL client image |
 | Purpose | Pre-creates the Umami PostgreSQL database and user before Umami runs its own Prisma migrations |
-| Execute on every apply | `false` |
+| Execute on every apply | `true` |
 | CPU / Memory | `1000m` / `512Mi` |
 
 Override `initialization_jobs` with a non-empty list to replace this default with your own jobs. Each custom job must specify at least one of `command`, `args`, or `script_path`.
@@ -221,7 +221,7 @@ Override `initialization_jobs` with a non-empty list to replace this default wit
 
 ## Group 9: Reliability Policies
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md).
+Identical to `App_GKE`. See [App_GKE](App_GKE.md#7-reliability--scheduling).
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -234,7 +234,7 @@ Identical to `App_GKE`. See [App_GKE](App_GKE.md).
 
 ## Group 10: Observability & Health
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md).
+These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#a-compute-gke-autopilot).
 
 **Umami health endpoint:** Umami exposes `/api/heartbeat` as its dedicated health endpoint. This endpoint returns HTTP 200 when Umami is running and connected to PostgreSQL. All probe configuration defaults use this path.
 
@@ -242,7 +242,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md).
 |---|---|---|
 | `startup_probe_config` | `{ enabled=true, path="/api/heartbeat", initial_delay_seconds=30, failure_threshold=30 }` | High `failure_threshold` accommodates first-boot Prisma migrations. |
 | `health_check_config` | `{ enabled=true, path="/api/heartbeat", initial_delay_seconds=30, failure_threshold=3 }` | Liveness probe — restarts unhealthy pods. |
-| `uptime_check_config` | `{ enabled=true, path="/api/heartbeat" }` | Cloud Monitoring uptime check. Enabled by default. |
+| `uptime_check_config` | `{ enabled=false, path="/api/heartbeat" }` | Cloud Monitoring uptime check. Disabled by default. |
 | `alert_policies` | `[]` | Custom Cloud Monitoring metric alert policies. |
 
 **Startup probe note:** The `failure_threshold = 30` with `period_seconds = 10` gives Umami up to 5 minutes (plus the 30-second initial delay) to complete startup and run Prisma migrations on a fresh database. On subsequent restarts (migrations already applied), startup is much faster.
@@ -261,7 +261,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md).
 
 ## Group 12: CI/CD & GitHub Integration
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md).
+Identical to `App_GKE`. See [App_GKE](App_GKE.md#6-cicd--delivery).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -310,7 +310,7 @@ Umami does not require GCS buckets. `storage_buckets` defaults to an empty list.
 
 ## Group 16: Database Configuration
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md).
+These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#b-database-cloud-sql).
 
 **Umami-specific defaults and restrictions:**
 
@@ -339,11 +339,11 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md).
 
 ## Group 19: Custom Domain & Static IP
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md).
+Identical to `App_GKE`. See [App_GKE](App_GKE.md#5-traffic--ingress).
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provisions a Kubernetes Ingress resource for custom domain routing. |
+| `enable_custom_domain` | `true` | Provisions a Kubernetes Ingress resource for custom domain routing. Enabled by default. |
 | `application_domains` | `[]` | Custom domain names (e.g., `["analytics.example.com"]`). |
 | `reserve_static_ip` | `true` | Reserves a Global Static IP for the load balancer. Recommended for production deployments. |
 | `static_ip_name` | `""` | Name for the reserved IP. Auto-generated if empty. |
@@ -366,7 +366,7 @@ Identical to `App_GKE`. See [App_GKE](App_GKE.md).
 
 ## Group 8: Resource Quota
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md).
+Identical to `App_GKE`. See [App_GKE](App_GKE.md#c-resource-quotas).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -382,11 +382,11 @@ Identical to `App_GKE`. See [App_GKE](App_GKE.md).
 
 ## Redis Cache
 
-Umami does not require Redis. `enable_redis` defaults to `false`. Unlike Ghost or N8N, Umami stores all analytics data directly in PostgreSQL with no caching layer.
+Umami does not use Redis — it stores all analytics data directly in PostgreSQL with no caching layer. The `enable_redis` variable is declared in `Umami_GKE` only to satisfy Foundation variable mirroring; it is **not forwarded** to the `App_GKE` call, so changing it has no effect.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | Not in Umami GKE variables | Umami GKE does not expose Redis configuration — Redis is not needed. |
+| `enable_redis` | `true` | Inert declaration (Foundation mirroring only) — not forwarded to `App_GKE`, so no Redis env vars are injected regardless of value. |
 
 If you require Redis for a custom integration or adjacent service, use `additional_services` to deploy a Redis sidecar, or configure Memorystore independently.
 
@@ -429,7 +429,7 @@ Navigate to **SQL**. Find the instance named `app-sql-<deployment_id>`. Explore:
 - **Operations** — history of maintenance, failovers, and backups.
 
 **Secret Manager:**
-Navigate to **Security → Secret Manager**. Find the `UMAMI_APP_SECRET` for this deployment. Click to view:
+Navigate to **Security → Secret Manager**. Find the `secret-<tenant_resource_prefix>-<application_name>-app-secret` secret (injected as `APP_SECRET`) for this deployment. Click to view:
 - Secret versions and creation timestamps.
 - Access log showing when GKE pods read the secret.
 - Rotation configuration.
@@ -438,7 +438,7 @@ Navigate to **Security → Secret Manager**. Find the `UMAMI_APP_SECRET` for thi
 Navigate to **Artifact Registry**. Find the repository for this deployment. View mirrored Umami images from GitHub Container Registry, their tags, and retention policy.
 
 **Cloud Monitoring:**
-Navigate to **Monitoring → Uptime checks** to view the `/api/heartbeat` uptime check results across GCP regions. Navigate to **Monitoring → Dashboards** to find the auto-provisioned GKE dashboard with CPU, memory, and request metrics.
+If `uptime_check_config.enabled = true` was set, navigate to **Monitoring → Uptime checks** to view the `/api/heartbeat` uptime check results across GCP regions. Navigate to **Monitoring → Dashboards** to find the auto-provisioned GKE dashboard with CPU, memory, and request metrics.
 
 ---
 

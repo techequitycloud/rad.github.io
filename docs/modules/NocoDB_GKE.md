@@ -291,7 +291,7 @@ for NocoDB, which stores state in PostgreSQL and GCS.
 |---|---|---|
 | `startup_probe_config` / `startup_probe` | `/api/v1/health` | HTTP probe, 30 s initial delay, 30 failures allowed. |
 | `health_check_config` / `liveness_probe` | `/api/v1/health` | HTTP liveness probe. |
-| `uptime_check_config` | enabled | Cloud Monitoring uptime check against `/api/v1/health`. |
+| `uptime_check_config` | disabled | Optional Cloud Monitoring uptime check against `/api/v1/health`. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -361,7 +361,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 
@@ -380,7 +380,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `enable_cloud_armor` | `false` | Attach a Cloud Armor (WAF) policy to the Ingress backend. |
 | `admin_ip_ranges` | `[]` | CIDRs allowed privileged access. |
-| `cloud_armor_policy_name` | _(set)_ | Policy name. |
+| `cloud_armor_policy_name` | `default-waf-policy` | Policy name. |
 
 ### Group 22 — VPC Service Controls & Audit Logging
 

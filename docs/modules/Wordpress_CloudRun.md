@@ -276,7 +276,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | TCP, 30s delay, threshold 20 | TCP startup probe — avoids HTTP failures during database initialisation. Do not reduce `failure_threshold` below 10. |
 | `liveness_probe` | HTTP `/wp-admin/install.php`, 300s delay | 300-second initial delay accommodates first-boot database setup. |
-| `uptime_check_config` | enabled | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, path `/` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache

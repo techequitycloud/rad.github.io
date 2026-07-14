@@ -30,7 +30,7 @@ foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)).
 | Database bootstrap | Defines the first-deploy job that creates the database, user, extensions, and grants | `initialization_jobs` output |
 | Object storage | Sets `STORAGE_LOCATIONS = "gcs"` and `STORAGE_GCS_DRIVER = "gcs"` so all uploads go to the GCS bucket | Bucket name in `storage_buckets` output |
 | Runtime flags | Injects `BOOTSTRAP = "true"` and `AUTO_MIGRATE = "true"` so migrations and first-boot seeding run automatically | Application behaviour in the platform guides |
-| Health checks | Supplies the default startup and liveness probe configuration targeting `/server/health` | §Observability in the platform guides |
+| Health checks | Supplies the default startup and liveness probe configuration targeting `/server/ping` | §Observability in the platform guides |
 
 ---
 
@@ -40,9 +40,9 @@ Four secrets are generated automatically and stored in Secret Manager — none a
 
 | Secret (ID suffix) | Content | Injected as |
 |---|---|---|
-| `<prefix>-key` | 32-character random hex string | `KEY` — used for Directus data encryption |
-| `<prefix>-secret` | 32-character random string | `SECRET` — used for JWT signing |
-| `<prefix>-admin-password` | Random 24-character password | `ADMIN_PASSWORD` — initial admin account |
+| `<prefix>-key` | 32-character random alphanumeric string | `KEY` — used for Directus data encryption |
+| `<prefix>-secret` | 32-character random alphanumeric string | `SECRET` — used for JWT signing |
+| `<prefix>-admin-password` | Random 16-character password (with special characters) | `ADMIN_PASSWORD` — initial admin account |
 | `<prefix>-redis` | Full Redis connection URL | `REDIS` — cache and rate-limit backend (when Redis is enabled) |
 
 Retrieve any of these after deployment:
@@ -98,14 +98,16 @@ The instance, database, and user names are in the platform deployment outputs.
 
 ## 5. Health probe behaviour
 
-The default probes target Directus's `/server/health` endpoint, which returns HTTP 200 only when Directus has completed database migrations and is accepting API requests:
+The default probes target Directus's `/server/ping` endpoint (a lightweight, unauthenticated liveness check that returns `pong`/200 — unlike `/server/health`, which requires an authenticated admin session and 403s an unauthenticated probe):
 
 | Probe | Type | Path | Initial Delay | Period | Failure Threshold |
 |---|---|---|---|---|---|
-| Startup | HTTP | `/server/health` | 30 s (CR) / 10 s × 10 (GKE) | 30 s | 10 |
-| Liveness | HTTP | `/server/health` | 15 s | 30 s | 3 |
+| Startup (Cloud Run) | HTTP | `/server/ping` | 30 s | 20 s | 10 |
+| Startup (GKE) | HTTP | `/server/ping` | 0 s | 30 s | 10 |
+| Liveness (Cloud Run) | HTTP | `/server/ping` | 15 s | 30 s | 3 |
+| Liveness (GKE) | HTTP | `/server/ping` | 60 s | 30 s | 3 |
 
-The startup probe allows up to 300–330 seconds to accommodate first-boot database setup and extension installation, which can be slow on a fresh Cloud SQL instance.
+The startup probe allows up to roughly 230 seconds on Cloud Run (30 s initial delay + 20 s × 10 retries) and 300 seconds on GKE (30 s × 10 retries, no initial delay) to accommodate first-boot database setup and extension installation, which can be slow on a fresh Cloud SQL instance.
 
 Unlike Mautic, Directus responds with HTTP 200 directly — no redirect — so the same HTTP probe works on both Cloud Run and GKE without modification.
 

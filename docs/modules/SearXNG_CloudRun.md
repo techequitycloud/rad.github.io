@@ -188,7 +188,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `application_name` | `searxng` | Base name for resources. Do not change after first deploy. |
 | `display_name` | `SearXNG Search` | Friendly name shown in the Console. |
-| `description` | _(set)_ | Service description. |
+| `description` | `SearXNG — privacy-respecting metasearch engine on Cloud Run` | Service description. |
 | `application_version` | `latest` | SearXNG image tag; pin to a specific version for production. |
 
 ### Group 4 — Runtime & Scaling
@@ -203,6 +203,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `execution_environment` | `gen2` | Gen2 recommended for faster startup and improved networking. |
 | `timeout_seconds` | `60` | Max request duration. Slow upstream engines may require raising to 120–300. |
 | `container_image_source` | `prebuilt` | Use the official SearXNG image (`prebuilt`) or build from source (`custom`). |
+| `cpu_always_allocated` | `false` | Request-based billing — SearXNG is a stateless search proxy with no in-process background work, so CPU is only needed while serving a request. |
 | `enable_image_mirroring` | `true` | Mirror the image into Artifact Registry before deployment. |
 | `enable_cloudsql_volume` | `false` | **Leave false** — SearXNG does not use a database. |
 | `traffic_split` | `[]` | Split traffic across revisions for staged rollouts. |

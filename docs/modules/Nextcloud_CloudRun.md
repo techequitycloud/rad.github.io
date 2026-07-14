@@ -237,7 +237,7 @@ specific to or notable for Nextcloud are listed; every other input is inherited 
 |---|---|---|
 | `application_name` | `nextcloud` | Base name for resources. Do not change after first deploy. |
 | `display_name` | `Nextcloud` | Friendly name shown in the Console. |
-| `description` | _(set)_ | Cloud Run service description. |
+| `description` | `Nextcloud self-hosted collaboration and file sharing platform` | Cloud Run service description. |
 | `application_version` | `31` | Nextcloud image version tag. |
 
 ### Group 4 — Runtime & Scaling
@@ -339,7 +339,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | `{ path="/status.php", initial_delay_seconds=60, failure_threshold=40 }` | Allows up to ~10 minutes for first-boot `occ maintenance:install`. |
 | `liveness_probe` | `{ path="/status.php", initial_delay_seconds=120, failure_threshold=3 }` | Restarts the instance after 3 consecutive failures. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache

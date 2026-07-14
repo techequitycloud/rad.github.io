@@ -46,9 +46,10 @@ a focused set of Google Cloud services:
   a shared filesystem is not required.
 - **Redis is disabled by default.** A single instance runs without Redis; enable it
   before scaling beyond one instance.
-- **`cpu_always_allocated = true` by default.** NocoDB has background automation and
-  webhook retry logic that continues between requests; CPU throttling between requests
-  would stall these tasks.
+- **`cpu_always_allocated = false` by default.** Request-based billing; NocoDB's
+  background automation and webhook retry logic only continues while an instance is
+  handling a request. Set `true` (with `min_instance_count ≥ 1`) for uninterrupted
+  background processing.
 - **The JWT secret is generated automatically** and stored in Secret Manager. Do not
   rotate it after the first deploy — all existing sessions and API tokens would be
   immediately invalidated.
@@ -243,7 +244,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `container_port` | `8080` | NocoDB listens on port 8080. |
 | `execution_environment` | `gen2` | Gen2 recommended for faster startup and improved networking. |
 | `enable_cloudsql_volume` | `false` | **Disabled** — NocoDB connects via private IP TCP, not the Auth Proxy socket. |
-| `cpu_always_allocated` | `true` | CPU allocated at all times so background automation tasks are not stalled. |
+| `cpu_always_allocated` | `false` | Request-based billing by default. Set `true` to keep background automation tasks running between requests. |
 | `container_image_source` | `custom` | `custom` builds via Cloud Build with NC_DB_* mapping; `prebuilt` deploys an existing image. |
 | `traffic_split` | `[]` | Canary/blue-green traffic allocation across revisions. |
 | `max_revisions_to_retain` | `7` | How many old revisions to keep. |
@@ -263,7 +264,6 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `environment_variables` | `{}` | Extra non-secret settings. |
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name. |
-| `explicit_secret_values` | `{}` | Sensitive values to store and inject as secrets. |
 | `secret_propagation_delay` / `secret_rotation_period` | _(set)_ | Replication wait / rotation cadence. |
 
 ### Group 7 — Backup & Restore
@@ -337,7 +337,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | `/api/v1/health` | HTTP startup probe, 30 s initial delay. |
 | `liveness_probe` / `health_check_config` | `/api/v1/health` | HTTP liveness probe. |
-| `uptime_check_config` | enabled | Cloud Monitoring uptime check against `/api/v1/health`. |
+| `uptime_check_config` | disabled | Optional Cloud Monitoring uptime check against `/api/v1/health`. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache
@@ -404,7 +404,7 @@ running resources.
 | `enable_redis` | `true` when >1 instance | High | Multiple instances without Redis cause session invalidation when requests route to different instances. |
 | `redis_host` | explicit when Redis on | High | A missing host causes all Redis connections to fail on startup. |
 | `NC_PUBLIC_URL` / `service_url_env_var_name` | `NC_PUBLIC_URL` (default) | High | NocoDB uses this to build share links, webhook URLs, and email notifications; an incorrect value breaks all outbound references. |
-| `cpu_always_allocated` | `true` (default) | Medium | Setting `false` stalls NocoDB background automation and webhook retry tasks between requests. |
+| `cpu_always_allocated` | `false` (default); `true` for heavy automation | Medium | Under the default request-based billing, NocoDB background automation and webhook retry tasks pause between requests. |
 | `min_instance_count` | `1` | Medium | `0` causes cold starts during which webhook callbacks time out and are dropped. |
 | `max_instance_count` | keep low without Redis | Medium | Increasing above `1` without Redis causes session invalidation. |
 | `enable_iap` / `enable_cloud_armor` | enable for internal | Medium | NocoDB is otherwise publicly reachable at its `run.app` URL. |

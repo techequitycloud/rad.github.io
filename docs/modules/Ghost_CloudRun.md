@@ -17,7 +17,7 @@ Ghost runs as a Node.js container on Cloud Run v2. The deployment wires together
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | Cloud Run v2 | Node.js service, 2 vCPU / 4 GiB by default, request-based autoscaling |
+| Compute | Cloud Run v2 | Node.js service, 1 vCPU / 512 MiB by default, request-based billing with scale-to-zero |
 | Database | Cloud SQL for MySQL 8.0 | Required — Ghost 6.x does not support PostgreSQL |
 | Shared files | Filestore (NFS) | Uploaded content and themes shared across all instances (gen2 required) |
 | Object storage | Cloud Storage | A dedicated content bucket (`ghost-content`) provisioned automatically |
@@ -178,9 +178,9 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 | Variable | Default | Description |
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
-| `cpu_limit` | `2000m` | CPU per instance; 2 vCPU minimum for Ghost 6.x. |
-| `memory_limit` | `4Gi` | Memory per instance; 4 GiB recommended (Ghost OOMs below 1 GiB). |
-| `min_instance_count` | `1` | Minimum instances (keep ≥ 1 to avoid cold starts with migration delays). |
+| `cpu_limit` | `1000m` | CPU per instance; sized for light/typical usage — raise to `2000m` for production with heavy image processing or membership. |
+| `memory_limit` | `512Mi` | Memory per instance (Ghost's floor); raise to `1Gi`+ for production with active membership features. |
+| `min_instance_count` | `0` | Minimum instances; `0` enables scale-to-zero — set `1` to avoid cold starts with migration delays. |
 | `container_port` | `2368` | Ghost's native HTTP port. |
 | `container_image_source` | `custom` | `custom` builds via Cloud Build (default); `prebuilt` deploys an existing image. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy for socket connections. Required for Ghost. |
@@ -201,7 +201,7 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 
 | Variable | Default | Description |
 |---|---|---|
-| `environment_variables` | `{SMTP_HOST="", SMTP_PORT="25", SMTP_USER="", SMTP_PASSWORD="", SMTP_SSL="false", EMAIL_FROM="ghost@example.com"}` | SMTP settings pre-populated for Ghost email delivery. `database__client=mysql` is injected automatically. |
+| `environment_variables` | `{SMTP_HOST="", SMTP_PORT="587", SMTP_USER="", SMTP_PASSWORD="", SMTP_SSL="false", EMAIL_FROM="ghost@example.com"}` | SMTP settings pre-populated for Ghost email delivery (use port 587 STARTTLS or 465 SSL — Google Cloud blocks outbound port 25). `database__client=mysql` is injected automatically. |
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name. |
 | `secret_propagation_delay` | `30` | Replication wait after secret creation. |
 | `secret_rotation_period` | `2592000s` | Rotation notification frequency. |
@@ -264,7 +264,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see [App_CloudR
 |---|---|---|
 | `startup_probe` | HTTP `/` 90s initial delay, 10 failures | HTTP startup probe against Ghost's root path. Generous delay for first-boot migrations. |
 | `liveness_probe` | HTTP `/` 60s initial delay | Liveness probe targeting Ghost's root path. |
-| `uptime_check_config` | enabled, path `/` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, path `/` | Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache
@@ -330,11 +330,11 @@ Returned on a successful deployment — the quickest way to locate and explore t
 | `startup_probe` initial_delay_seconds | `90` | High | Reducing below 60 causes Cloud Run to kill Ghost before it finishes running migrations. |
 | `enable_redis` | `true` | High | Without Redis, Ghost serves all pages without a cache, increasing database load. |
 | `redis_host` | `""` (NFS) or explicit | High | No valid endpoint if Redis is on but NFS is off and no host is set. |
-| `memory_limit` | `4Gi` | High | Too little memory causes Node.js OOM during newsletter sends or theme compilation. |
+| `memory_limit` | `512Mi`+ | High | Too little memory causes Node.js OOM during newsletter sends or theme compilation; raise beyond the `512Mi` default for active membership/newsletter use. |
 | `environment_variables` SMTP settings | real SMTP server | High | No email delivery means no member sign-ups, no password resets, no newsletters. |
 | `container_image_source` | `custom` | High | The upstream Ghost image lacks the custom entrypoint that maps DB credentials and detects the service URL. |
 | `execution_environment` | `gen2` | High | NFS mounts require gen2; gen1 cannot mount Filestore. |
-| `min_instance_count` | `1` | Medium | `0` causes cold starts during which Ghost runs migrations, making first requests time out. |
+| `min_instance_count` | `0` (default) or `1` | Medium | `0` (the default) causes cold starts during which Ghost runs migrations — set `1` if first-request timeouts matter. |
 | `enable_iap` / `enable_cloud_armor` | enable for admin-facing | Medium | The Ghost admin panel (`/ghost`) is otherwise publicly reachable. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
 

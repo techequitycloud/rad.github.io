@@ -226,7 +226,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `application_name` | `chroma` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Chroma Vector Database` | Friendly name shown in the Console. |
-| `description` | _(set)_ | Workload description annotation. |
+| `description` | `Chroma — the AI-native open-source vector database for embeddings and similarity search` | Workload description annotation. |
 | `application_version` | `latest` | Chroma image version tag. Pin to a specific version for reproducible deployments. |
 
 ### Group 4 — Runtime & Scaling
@@ -300,7 +300,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | `/api/v2/heartbeat` | HTTP probe — Chroma returns 200 once fully initialised. Probe path is fixed. |
 | `liveness_probe` / `health_check_config` | `/api/v2/heartbeat` | Liveness probe. |
-| `uptime_check_config` | `enabled=true, path=/api/v2/heartbeat` | Optional Cloud Monitoring uptime check. |
+| `uptime_check_config` | `enabled=false, path=/api/v2/heartbeat` | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -352,9 +352,9 @@ variables are accepted for foundation compatibility but have no effect. See
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Kubernetes Gateway API Ingress for custom hostnames. |
+| `enable_custom_domain` | `true` | Provision Kubernetes Gateway API Ingress for custom hostnames. |
 | `application_domains` | `[]` | Hostnames to serve. |
-| `reserve_static_ip` | `false` | Stable external IP across redeploys. |
+| `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 
 ### Group 20 — Identity-Aware Proxy (IAP)
 

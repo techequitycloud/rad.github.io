@@ -291,8 +291,8 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Cap namespace CPU/memory/object counts. |
-| `quota_memory_requests` / `quota_memory_limits` | `""` | **Must use binary units (`4Gi`, `8192Mi`)** — bare integers are read as bytes and block scheduling. |
+| `enable_resource_quota` | `false` | Declared for convention parity; not referenced by this module's deployment (no ResourceQuota is created). |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | Not referenced by this module. If wired via another module, must use binary units (`4Gi`, `8192Mi`) — bare integers are read as bytes and block scheduling. |
 
 ### Group 9 — Reliability Policies
 
@@ -368,7 +368,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Gateway API routing for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 
@@ -395,7 +395,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `enable_cloud_armor` | `false` | Attach a Cloud Armor (WAF) policy to the Ingress backend. |
 | `admin_ip_ranges` | `[]` | CIDRs allowed privileged access. |
-| `cloud_armor_policy_name` | _(set)_ | Policy name. |
+| `cloud_armor_policy_name` | `default-waf-policy` | Policy name. |
 
 ### Group 22 — VPC Service Controls & Audit Logging
 

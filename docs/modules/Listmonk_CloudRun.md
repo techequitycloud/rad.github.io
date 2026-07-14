@@ -14,12 +14,12 @@ This document provides a comprehensive reference for the `modules/Listmonk_Cloud
 Listmonk is a high-performance, self-hosted newsletter and mailing list manager written in Go. `Listmonk CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects Listmonk-specific application configuration, database initialisation, and storage configuration via `Listmonk Common`.
 
 **Key Capabilities:**
-*   **Compute**: Cloud Run v2 (Gen2), Go binary container, 1 vCPU / 512Mi by default. Minimum 1 instance by default (`min_instance_count = 1`) with `max_instance_count = 3`.
+*   **Compute**: Cloud Run v2 (Gen2), Go binary container, 1 vCPU / 512Mi by default. Scale-to-zero by default (`min_instance_count = 0`) with `max_instance_count = 1`; `cpu_always_allocated = true` keeps CPU allocated on a woken instance so the async campaign sender can finish before it scales back down.
 *   **Data Persistence**: Cloud SQL **PostgreSQL 15**. Optional GCS Fuse volume for media uploads at `/listmonk/uploads`. Optional NFS for additional shared storage.
 *   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`. The admin password is auto-generated and stored in Secret Manager.
 *   **Caching**: Redis **disabled by default** (`enable_redis = false`). Listmonk is a stateless Go binary and does not require Redis for normal operation.
 *   **CI/CD**: Cloud Build custom image pipeline by default; Cloud Deploy progressive delivery optional.
-*   **Reliability**: Health probes target `/api/health` with a 30-second initial delay. Listmonk auto-runs PostgreSQL schema migrations on first startup.
+*   **Reliability**: Startup probe is a TCP port check (30-second initial delay, 30 retries) — `/api/health` requires session auth and 403s an HTTP probe, so Cloud Run checks that the container is listening instead. Liveness probe is disabled by default (Cloud Run has no TCP liveness probe, and `/api/health` also 403s). Listmonk auto-runs PostgreSQL schema migrations on first startup.
 
 **Project & Application Identity**
 
@@ -63,7 +63,7 @@ The database password is stored in a separate secret (`database_password_secret`
 
 Listmonk is a compiled Go binary. It is memory-efficient and starts quickly compared to interpreted-language applications. The default resource allocation (1 vCPU / 512Mi) is sufficient for moderate list sizes and campaign workloads.
 
-**One instance always running** (`min_instance_count = 1`) — scale-to-zero is supported by setting `min_instance_count = 0`, but note that PostgreSQL connection pools are re-established on cold start.
+**Scale-to-zero by default** (`min_instance_count = 0`) — the old `min = 1` default existed only to keep the per-instance in-memory API-user cache warm. That reason is gone: `Listmonk_Common`'s entrypoint UPSERTs a deterministic, secret-backed API user into the database on every start, so a cold-started instance always reloads a valid credential. `cpu_always_allocated = true` (default) ensures a woken instance keeps CPU allocated long enough for the async campaign sender to complete before scaling back down. Raise `min_instance_count` to `1` only if Listmonk must stay warm for heavy interactive admin use.
 
 **Startup CPU Boost** is always enabled (hardcoded in `App CloudRun`).
 
@@ -74,8 +74,9 @@ Listmonk is a compiled Go binary. It is memory-efficient and starts quickly comp
 | `deploy_application` | 4 | `true` | Set `false` for infrastructure-only deployment (SQL, storage, secrets). |
 | `cpu_limit` | 4 | `'1000m'` | CPU per instance. 1 vCPU is sufficient for Listmonk's Go binary. |
 | `memory_limit` | 4 | `'512Mi'` | Memory per instance. Increase to 1–2 Gi for large subscriber lists or heavy campaign processing. |
-| `min_instance_count` | 4 | `1` | Minimum running instances. Set to `0` for scale-to-zero. |
-| `max_instance_count` | 4 | `3` | Maximum running instances. Listmonk scales horizontally as a stateless binary. |
+| `min_instance_count` | 4 | `0` | Minimum running instances. Scale-to-zero; the self-healing DB-seeded API user makes cold starts safe. |
+| `max_instance_count` | 4 | `1` | Maximum running instances. Kept at 1 — Listmonk has no coordination for concurrent campaign processors. |
+| `cpu_always_allocated` | 4 | `true` | Keeps CPU allocated for the whole lifetime of a running instance so the in-process async campaign sender can complete after the triggering HTTP request returns. |
 | `container_port` | 4 | `9000` | Listmonk's native HTTP port. Change only if your custom Dockerfile binds to a different port. |
 | `execution_environment` | 4 | `'gen2'` | Gen2 required for GCS Fuse mounts. |
 | `timeout_seconds` | 4 | `300` | Max request duration. Listmonk's API endpoints typically respond within seconds. |
@@ -92,7 +93,7 @@ Listmonk is a compiled Go binary. It is memory-efficient and starts quickly comp
 | Variable | `App CloudRun` | `Listmonk CloudRun` | Reason |
 |---|---|---|---|
 | `container_port` | `8080` | `9000` | Listmonk's native port. |
-| `min_instance_count` | `0` | `1` | Avoids cold-start connection pool re-establishment for active mailing operations. |
+| `cpu_always_allocated` | `false` | `true` | The in-process campaign sender runs after the triggering HTTP request returns; request-based billing would throttle it mid-batch. |
 | `enable_image_mirroring` | `false` | `true` | Listmonk mirrors its base image to Artifact Registry by default to avoid Docker Hub rate limits. |
 
 ### B. Database (Cloud SQL — PostgreSQL 15)
@@ -271,7 +272,7 @@ When `enable_cloud_deploy = true` (requires `enable_cicd_trigger = true`), the C
 
 ### A. Scaling & Concurrency
 
-Listmonk is a stateless Go binary — multiple Cloud Run instances can serve requests simultaneously without shared session state issues. The default `min_instance_count = 1` ensures one instance is always warm. Campaign processing (sending emails to large subscriber lists) can be resource-intensive; increase `max_instance_count` if processing throughput is a concern.
+Listmonk is a stateless Go binary — multiple Cloud Run instances can serve requests simultaneously without shared session state issues. The default `min_instance_count = 0` scales to zero between sends; the self-healing DB-seeded API user means a cold-started instance is immediately usable. `max_instance_count` defaults to `1` because Listmonk has no coordination for concurrent campaign processors — raise it only if interactive/API read load requires it.
 
 ### B. Traffic Splitting
 
@@ -283,13 +284,13 @@ Traffic splitting is supported. Listmonk's stateless design makes canary deploym
 
 ### C. Health Probes & Uptime Monitoring
 
-Listmonk exposes a dedicated `/api/health` endpoint that returns HTTP 200 when the application and database connection are healthy. Both startup and liveness probes target this endpoint.
+Listmonk exposes a dedicated `/api/health` endpoint, but as of Listmonk v6.1.0 that endpoint sits behind session auth and returns `403 {"message":"invalid session"}` to an unauthenticated caller — so an HTTP probe against it never passes. The startup probe therefore defaults to a **TCP** port-listening check instead (confirms the server is bound to the container port), and the liveness probe defaults to **disabled** (Cloud Run has no TCP liveness probe, and the HTTP form would 403 the same way). The TCP startup probe gates readiness, and Cloud Run restarts the container if it exits.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `startup_probe` | 14 | `{ enabled=true, type="HTTP", path="/api/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=10, failure_threshold=30 }` | Startup readiness probe. Container receives no traffic until this succeeds. |
-| `liveness_probe` | 14 | `{ enabled=true, type="HTTP", path="/api/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe. Container is restarted after `failure_threshold` consecutive failures. |
-| `uptime_check_config` | 14 | `{ enabled=true, path="/api/health" }` | Cloud Monitoring uptime check. Alerts notify `support_users` if unreachable. |
+| `startup_probe` | 14 | `{ enabled=true, type="TCP", path="/api/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=10, failure_threshold=30 }` | Startup readiness probe (TCP). Container receives no traffic until this succeeds. |
+| `liveness_probe` | 14 | `{ enabled=false, type="HTTP", path="/api/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe. Disabled by default; the TCP startup probe covers readiness. |
+| `uptime_check_config` | 14 | `{ enabled=false, path="/api/health" }` | Cloud Monitoring uptime check. Disabled by default — enable and alerts notify `support_users` if unreachable. |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 
 **Startup probe behaviour:** The `failure_threshold=30` combined with `period_seconds=10` gives Listmonk up to 300 seconds (plus the 30-second initial delay) to complete schema installation on first boot. This is generous — Listmonk schema installation typically completes in under 30 seconds on a fresh PostgreSQL instance.
@@ -341,11 +342,11 @@ When `enable_backup_import = true`, a dedicated Cloud Run Job restores an existi
 
 ### C. Observability & Alerting
 
-A Cloud Monitoring uptime check polls the `/api/health` endpoint from multiple global locations. Custom alert policies can monitor Cloud Run metrics and notify `support_users`.
+A Cloud Monitoring uptime check can poll the `/api/health` endpoint from multiple global locations; it is disabled by default. Custom alert policies can monitor Cloud Run metrics and notify `support_users`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `uptime_check_config` | 14 | `{ enabled=true, path="/api/health" }` | Uptime check: `enabled`, `path`, `check_interval`, `timeout`. |
+| `uptime_check_config` | 14 | `{ enabled=false, path="/api/health" }` | Uptime check: `enabled`, `path`, `check_interval`, `timeout`. Disabled by default. |
 | `alert_policies` | 14 | `[]` | Metric alert policies. Each: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`, `aggregation_period`. |
 | `support_users` | 2 | `[]` | Email addresses notified by uptime and alert policy triggers. |
 
@@ -590,8 +591,9 @@ All user-configurable variables exposed by `Listmonk CloudRun`, sorted by UI gro
 | `deploy_application` | 4 | `true` | Set `false` for infrastructure-only deployment. |
 | `cpu_limit` | 4 | `'1000m'` | CPU per instance. |
 | `memory_limit` | 4 | `'512Mi'` | Memory per instance. |
-| `min_instance_count` | 4 | `1` | Minimum running instances. Set to `0` for scale-to-zero. |
-| `max_instance_count` | 4 | `3` | Maximum running instances. |
+| `min_instance_count` | 4 | `0` | Minimum running instances. Scale-to-zero by default. |
+| `max_instance_count` | 4 | `1` | Maximum running instances. |
+| `cpu_always_allocated` | 4 | `true` | Keeps CPU allocated on a running instance so the async campaign sender can finish after the triggering request returns. |
 | `execution_environment` | 4 | `'gen2'` | Gen2 required for GCS Fuse mounts. |
 | `timeout_seconds` | 4 | `300` | Max request duration in seconds. |
 | `enable_cloudsql_volume` | 4 | `true` | Auth Proxy sidecar for Unix socket connections to PostgreSQL. |
@@ -655,9 +657,9 @@ All user-configurable variables exposed by `Listmonk CloudRun`, sorted by UI gro
 | `rotation_propagation_delay_sec` | 12 | `90` | Seconds to wait after rotation before restarting the service. |
 | `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for default `db-init` job. |
 | `cron_jobs` | 13 | `[]` | Recurring scheduled Cloud Run Jobs. |
-| `startup_probe` | 14 | `{ path="/api/health", initial_delay_seconds=30, failure_threshold=30, ... }` | Startup probe. |
-| `liveness_probe` | 14 | `{ path="/api/health", initial_delay_seconds=30, failure_threshold=3, ... }` | Liveness probe. |
-| `uptime_check_config` | 14 | `{ enabled=true, path="/api/health" }` | Cloud Monitoring uptime check. |
+| `startup_probe` | 14 | `{ enabled=true, type="TCP", path="/api/health", initial_delay_seconds=30, failure_threshold=30, ... }` | Startup probe. TCP — `/api/health` requires session auth. |
+| `liveness_probe` | 14 | `{ enabled=false, type="HTTP", path="/api/health", initial_delay_seconds=30, failure_threshold=3, ... }` | Liveness probe. Disabled by default. |
+| `uptime_check_config` | 14 | `{ enabled=false, path="/api/health" }` | Cloud Monitoring uptime check. Disabled by default. |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 | `enable_redis` | 21 | `false` | Redis integration. Not required for Listmonk. |
 | `redis_host` | 21 | `""` | Redis hostname/IP. |
@@ -702,7 +704,7 @@ All user-configurable variables exposed by `Listmonk CloudRun`, sorted by UI gro
 | `db_name` | `"listmonk"` | **Critical** | Immutable after first deployment — changing this causes Terraform to recreate the database, destroying all subscribers, campaigns, and settings. |
 | `db_user` | `"listmonk"` | **Critical** | Immutable after first deployment — changing this recreates the Cloud SQL user and invalidates all stored credentials. |
 | `db_password_env_var_name` | `"LISTMONK_db__password"` | **Critical** | Listmonk reads this exact env var name for its database password. Changing it causes Listmonk to fail to connect to PostgreSQL at startup. |
-| `min_instance_count` | `1` | **Medium** | Scale-to-zero (`0`) causes cold starts during which PostgreSQL connection pools must be re-established. For active mailing list managers processing campaign requests, cold starts can cause request timeouts. |
+| `min_instance_count` | `0` | **Low** | Scale-to-zero is the default and is safe: the self-healing DB-seeded API user means a cold-started instance always reloads a valid credential, and `cpu_always_allocated = true` keeps the woken instance's async campaign sender running to completion. Raise to `1` only for heavy interactive admin use where cold starts are undesirable. |
 | `memory_limit` | `"512Mi"` | **Medium** | Sufficient for small lists. Lists with millions of subscribers or concurrent campaign processing can exhaust 512Mi under load. Increase to 1–2 Gi for production deployments with large subscriber counts. |
 | `enable_cloudsql_volume` | `true` | **Critical** | Listmonk connects to PostgreSQL via the Auth Proxy Unix socket by default. Disabling the volume without providing a TCP connection path causes all database operations to fail. |
 | `gcs_volumes` | `[]` | **Medium** | Without a GCS Fuse volume at `/listmonk/uploads`, media file uploads are stored ephemerally on the container filesystem and lost when the revision is replaced. Configure for any deployment that accepts file attachments or media uploads. |

@@ -30,7 +30,7 @@ platform guides ([NodeRED_GKE](NodeRED_GKE.md),
 | Safe-mode guard | Always injects `NODE_RED_ENABLE_SAFE_MODE = "false"` | Environment variables in the platform deployment |
 | Database setting | Hardcodes `database_type = "NONE"` — no Cloud SQL instance | §Database in the platform guides |
 | No Cloud SQL proxy | Sets `enable_cloudsql_volume = false` | Sidecar configuration |
-| Object storage | Declares a `nodered-storage` **Cloud Storage** bucket | `storage_buckets` output |
+| Object storage | Declares a **Cloud Storage** bucket (suffix `storage`) | `storage_buckets` output |
 | Health checks | Supplies HTTP GET `/` startup and liveness probe defaults | §Observability in the platform guides |
 | No initialization jobs | Empty `initialization_jobs` by default — no schema or seeding required | `initialization_jobs` output |
 
@@ -88,9 +88,11 @@ limits. Node-RED listens on port `1880`.
 
 All Node-RED state — the flow definition (`flows.json`), the encrypted
 credential file (`flows_cred.json`), installed palette nodes, and the settings
-file — lives in the `/data` directory. This module sets `nfs_mount_path =
-"/data"` so that the Filestore NFS share (enabled by default) is mounted
-exactly there.
+file — lives in the `/data` directory. `NodeRED_Common` itself declares no NFS
+variables; it is the platform variants — [NodeRED_CloudRun](NodeRED_CloudRun.md)
+and [NodeRED_GKE](NodeRED_GKE.md) — that default `enable_nfs = true` and
+`nfs_mount_path = "/data"`, so the Filestore NFS share is mounted exactly
+there out of the box.
 
 Without NFS (or a StatefulSet PVC), every container restart or redeploy starts
 Node-RED with an empty `/data` directory and all flows, credentials, and
@@ -148,7 +150,7 @@ TCP-probe workaround is needed.
 
 ## 7. Object storage
 
-A dedicated **Cloud Storage** bucket (`nodered-storage`) is declared here and
+A dedicated **Cloud Storage** bucket (suffix `storage`) is declared here and
 provisioned by the foundation, which also grants the workload service account
 access. This bucket is intended for flow exports, backup archives, and other
 Node-RED application data. List it with:

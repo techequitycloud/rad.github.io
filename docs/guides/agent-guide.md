@@ -14,7 +14,7 @@ As an Agent, your role is focused on referrals and commission:
 - Earn commission on the activity of users who signed up with your referral code.
 - Track your commission on the **Revenue** page.
 - See a read-only list of the users you referred and their module and cost activity.
-- Manage your own credits and billing, just like any other user.
+- If you also hold the **User** role, manage your own credits and billing like any other user.
 
 After you sign in, you land on the **Revenue** page. Your top navigation shows **Revenue** and **Help**.
 
@@ -42,7 +42,7 @@ This view is read-only. You can see your referred users' activity, but you canno
 
 ## Managing your own credits and billing
 
-You manage your own credits and billing exactly like any other user — viewing your balance and transaction history, buying credits, and subscribing to a credit plan. See [Using RAD](using-rad.md) for how credits and billing work.
+The Agent navigation itself has no **Credits** item. If you also hold the **User** role, you get the **Credits** page through that role and manage your own credits and billing like any other user — viewing your balance and transaction history, buying credits, and subscribing to a credit plan. See [Using RAD](using-rad.md) for how credits and billing work.
 
 ## What agents can't do
 

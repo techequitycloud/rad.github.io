@@ -9,18 +9,17 @@ For help-desk staff who triage support requests and assist users on RAD. New to 
 
 ## What you can do
 
-- Handle support tickets on the **Support Tickets** page — view tickets raised through the Help form, update their status, add notes, and assign them.
-- Browse modules and repositories read-only to help you understand what users are deploying.
-- View deployments on the **Deployments** page, switching between **All** and **My** deployments.
+- Handle support tickets on the **Support Tickets** tab of the **Help** page — view tickets raised through the Help form, update their status, add notes, and assign them.
+- View all deployments on the **Deployments** page.
 - Use the **Help** page, including the **Support** contact form and the **ROI** calculator.
 
-Your top navigation shows: **Deployments**, **Support Tickets**, and **Help**.
+Your top navigation shows: **Deployments** and **Help**. (**Support Tickets** is a tab inside the Help page.)
 
 ## Handling support tickets
 
-The **Support Tickets** page is your main workspace.
+The **Support Tickets** tab on the **Help** page is your main workspace.
 
-1. Click **Support Tickets** in the top navigation bar.
+1. Click **Help** in the top navigation bar, then open the **Support Tickets** tab.
 2. Review the list of incoming tickets. Each ticket captures what a user submitted through the Help form.
 3. Open a ticket to see its details.
 4. Update the ticket **status** as you work it:
@@ -38,23 +37,14 @@ Tickets are created from the **Help** page.
 - On the **Help** page, the **Support** tab is a contact form. When a user fills it in and submits, RAD raises a support ticket and emails the support team.
 - The **Contact us** link in the footer also goes to the Help page's Support form.
 
-When a user asks how to reach you, point them to **Help → Support** (or the **Contact us** footer link). Anything they submit there shows up for you on the **Support Tickets** page.
-
-## Browsing modules
-
-You can explore modules and repositories read-only to understand what a user is working with.
-
-- Use the module screens to review module descriptions, documentation links, ratings, and how often a module has been deployed.
-- You can reach the **Publish** and **Explore** screens, but **Publish** is not shown in your navigation by default. These screens are for understanding modules, not for changing them on a user's behalf.
-
-This discovery is read-only: you can look at modules and repositories, but you cannot save repository tokens of your own.
+When a user asks how to reach you, point them to **Help → Support** (or the **Contact us** footer link). Anything they submit there shows up for you on the **Support Tickets** tab.
 
 ## Viewing deployments
 
-The **Deployments** page lets you look up deployments when helping a user.
+The **Deployments** page lets you look up deployments when helping a user. You cannot reach the module **Sync** console — module management is for admins and partners.
 
 1. Click **Deployments** in the top navigation bar.
-2. Switch between **All deployments** (every deployment on the platform) and **My deployments** (your own).
+2. You see **All deployments** — every deployment on the platform.
 3. Each row shows the module, deployment ID, project, status, the action, who deployed it, when, duration, credits, and the star rating.
 4. Open a deployment to see its details, including **Outputs** (non-sensitive results once a deployment succeeds), **Build Status** (live logs), and **Builds** (build history).
 
@@ -66,7 +56,7 @@ To set expectations clearly, the Support role does **not** include:
 
 - Viewing or editing user accounts.
 - Changing anyone's credits or roles.
-- Saving your own repository tokens.
+- Connecting a GitHub repository or syncing modules.
 - Acting on another user's behalf — there is no impersonation anywhere in RAD.
 
 If a request needs any of these, route it to an administrator (or to Finance for credit adjustments).

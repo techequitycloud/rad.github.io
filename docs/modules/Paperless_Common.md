@@ -51,7 +51,7 @@ The application configuration object passed to the platform module via `applicat
 | `container_image` | `"ghcr.io/paperless-ngx/paperless-ngx"` (GHCR image used as build base) |
 | `image_source` | `"custom"` — a custom wrapper image is built |
 | `enable_image_mirroring` | `var.enable_image_mirroring` (default `true`) — mirrors the image to Artifact Registry |
-| `container_build_config` | `dockerfile_path = "Dockerfile"`, `context_path = "."`, `build_args = { APP_VERSION = <version> }` |
+| `container_build_config` | `dockerfile_path = "Dockerfile"`, `context_path = "."`, `build_args = {}` |
 | `container_port` | `8000` |
 | `database_type` | `"POSTGRES_15"` |
 | `db_name` | Database name (default: `"paperless"`) |
@@ -62,7 +62,7 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | CPU: `2000m`, Memory: `2Gi` |
 | `environment_variables` | Assembled from all Paperless-ngx-specific env var inputs (see §7) |
 | `initialization_jobs` | Default `db-init` job or custom override (see §5) |
-| `startup_probe` | HTTP `GET /`, 60s initial delay, 10s timeout, 10s period, 60 failure threshold |
+| `startup_probe` | HTTP `GET /`, 60s initial delay, 10s timeout, 10s period, 30 failure threshold |
 | `liveness_probe` | HTTP `GET /`, 60s initial delay, 10s timeout, 30s period, 3 failure threshold |
 
 ### `secret_ids`
@@ -70,20 +70,21 @@ A map of environment variable names to Secret Manager secret IDs. These are inje
 
 | Key | Secret Description |
 |---|---|
-| `PAPERLESS_ADMIN_PASSWORD` | Initial admin account password. Auto-generated 32-character random string. |
-| `PAPERLESS_SECRET_KEY` | Django application secret key. Auto-generated 50-character random string. Used for session signing and CSRF protection. |
+| `PAPERLESS_ADMIN_PASSWORD` | Initial admin account password. Auto-generated 24-character random string. |
+| `PAPERLESS_SECRET_KEY` | Django application secret key. Auto-generated 64-character random string. Used for session signing and CSRF protection. |
 
 ### `storage_buckets`
 A list of GCS bucket configurations for provisioning by the platform module:
 
 | Field | Value |
 |---|---|
-| `name_suffix` | `"paperless-media"` |
+| `name_suffix` | `"media"` |
 | `location` | Deployment region |
 | `storage_class` | `"STANDARD"` |
+| `force_destroy` | `true` |
 | `versioning_enabled` | `false` |
 | `lifecycle_rules` | `[]` |
-| `public_access_prevention` | `"enforced"` |
+| `public_access_prevention` | `"inherited"` |
 
 ---
 
@@ -95,8 +96,7 @@ A list of GCS bucket configurations for provisioning by the platform module:
 |---|---|---|---|
 | `application_name` | `string` | `"paperless"` | Application name used in resource naming |
 | `application_version` | `string` | `"latest"` | Paperless-ngx image version tag. Pin to a specific release for production |
-| `description` | `string` | `"Paperless-ngx - open-source document management system"` | Init job description |
-| `deployment_id` | `string` | `""` | Unique deployment identifier |
+| `description` | `string` | `"Paperless-ngx - open-source document management system"` | Application description |
 | `db_name` | `string` | `"paperless"` | PostgreSQL database name |
 | `db_user` | `string` | `"paperless"` | PostgreSQL application user |
 | `cpu_limit` | `string` | `"2000m"` | Container CPU limit |
@@ -145,10 +145,10 @@ All probes target `GET /` (the Paperless-ngx login page, which returns HTTP 200 
 
 | Probe | Initial Delay | Timeout | Period | Failure Threshold | Purpose |
 |---|---|---|---|---|---|
-| **Startup** | 60s | 10s | 10s | 60 | Allows up to 660s total for Paperless-ngx to complete database migrations and start Celery workers |
+| **Startup** | 60s | 10s | 10s | 30 | Allows roughly 360s total (60s delay + 30 × 10s) for Paperless-ngx to complete database migrations and start Celery workers |
 | **Liveness** | 60s | 10s | 30s | 3 | Restarts the container if Paperless-ngx becomes unresponsive |
 
-**Why the generous startup threshold:** Paperless-ngx applies Django database migrations on first boot. On a fresh database, this can include dozens of migration steps — particularly for the initial schema creation covering documents, tags, correspondents, document types, and custom fields. The `failure_threshold = 60` with `period_seconds = 10` gives up to 660 seconds of total startup tolerance, covering even slow Cloud SQL instances with many pending migrations.
+**Why the generous startup threshold:** Paperless-ngx applies Django database migrations on first boot. On a fresh database, this can include dozens of migration steps — particularly for the initial schema creation covering documents, tags, correspondents, document types, and custom fields. The `failure_threshold = 30` with `period_seconds = 10` gives roughly 360 seconds of total startup tolerance (including the 60s initial delay), covering even slow Cloud SQL instances with many pending migrations.
 
 Unlike Ghost Common, Paperless Common does **not** define a readiness probe — startup and liveness are sufficient for the Cloud Run and GKE deployment models.
 
@@ -184,8 +184,8 @@ Unlike Ghost Common (which creates no secrets), Paperless Common auto-provisions
 
 | Secret Name Pattern | Env Var | Value | Rotation |
 |---|---|---|---|
-| `paperless-admin-password-<deployment_id>` | `PAPERLESS_ADMIN_PASSWORD` | 32-character random alphanumeric string | Not rotated automatically. Retrieve from Secret Manager for first login. |
-| `paperless-secret-key-<deployment_id>` | `PAPERLESS_SECRET_KEY` | 50-character random string (URL-safe) | Not rotated automatically. Rotating this value invalidates all active user sessions. |
+| `secret-<resource-prefix>-paperless-admin-password` | `PAPERLESS_ADMIN_PASSWORD` | 24-character random alphanumeric string | Not rotated automatically. Retrieve from Secret Manager for first login. |
+| `secret-<resource-prefix>-paperless-key` | `PAPERLESS_SECRET_KEY` | 64-character random alphanumeric string | Not rotated automatically. Rotating this value invalidates all active user sessions. |
 
 **Important:** The `PAPERLESS_ADMIN_PASSWORD` secret is consumed only during the initial superuser creation. After the first Paperless-ngx startup, the admin user exists in the PostgreSQL database and the password can be changed via the Paperless-ngx UI. However, the Secret Manager secret retains the original value — use `gcloud secrets versions access latest` to retrieve it for initial login if the password has not been changed.
 
@@ -207,6 +207,7 @@ Paperless Common assembles the following environment variables and injects them 
 | `PAPERLESS_CONSUMPTION_DIR` | Hardcoded: `"/usr/src/paperless/consume"` | Drop folder for automatic document ingestion |
 | `PAPERLESS_URL` | `var.service_url` | Public URL of the service. Set to the predicted Cloud Run or load balancer URL. |
 | `PAPERLESS_ALLOWED_HOSTS` | Hardcoded: `"*"` | Django allowed hosts. `*` permits all host headers. |
+| `PAPERLESS_CORS_ALLOWED_HOSTS` | `var.service_url` (or `"*"` when unset) | Django CORS allowed hosts. |
 | `PAPERLESS_TIME_ZONE` | `var.time_zone` | Timezone for document date parsing and scheduled tasks |
 | `PAPERLESS_OCR_LANGUAGE` | `var.ocr_language` | Tesseract language code(s) for OCR |
 | `PAPERLESS_WEBSERVER_WORKERS` | Hardcoded: `"2"` | Number of gunicorn workers |
@@ -220,7 +221,8 @@ Paperless Common assembles the following environment variables and injects them 
 **Redis URL assembly:** The `PAPERLESS_REDIS` variable is assembled at apply time:
 - If `redis_auth` is non-empty: `redis://:${redis_auth}@${redis_host}:${redis_port}`
 - Otherwise: `redis://${redis_host}:${redis_port}`
-- If `redis_host` is empty (or null) and `nfs_server_ip` is provided: the NFS server IP is substituted for `redis_host`.
+- If `redis_host` is empty (or null): the NFS server IP is substituted — `nfs_server_ip` when provided, otherwise the `$(NFS_SERVER_IP)` runtime placeholder that App_CloudRun / App_GKE resolve at deploy time.
+- If `enable_redis = false`: `redis://localhost:6379` is used.
 
 ---
 
@@ -229,13 +231,16 @@ Paperless Common assembles the following environment variables and injects them 
 All supporting files are in `scripts/`. The `scripts/` directory is used as the Docker build context.
 
 ### `Dockerfile`
-Wraps the public `ghcr.io/paperless-ngx/paperless-ngx:<version>` image:
-- Ensures the `paperless` data, media, and consume directories are owned by the correct UID/GID.
-- Copies any custom configuration or scripts into the image.
+Thin wrapper around the public `ghcr.io/paperless-ngx/paperless-ngx:<version>` image:
+- Switches to `USER root` and copies `entrypoint.sh` in as `/platform-entrypoint.sh`.
 - Exposes port `8000`.
-- Uses the upstream Paperless-ngx entrypoint to start gunicorn and the Celery worker.
+- Sets `ENTRYPOINT ["/platform-entrypoint.sh"]`, replacing the upstream entrypoint.
 
-Paperless-ngx runs both a **web process** (gunicorn serving the Django application) and a **worker process** (Celery consuming the Redis queue) within the same container. The `PAPERLESS_WEBSERVER_WORKERS=2` environment variable controls the gunicorn worker count; the Celery worker count is managed by Paperless-ngx internally.
+### `entrypoint.sh`
+Runs before the upstream Paperless-ngx process starts:
+- Maps the platform-injected `DB_HOST`/`DB_IP`/`DB_USER`/`DB_NAME`/`DB_PASSWORD` env vars onto the Paperless-ngx-native `PAPERLESS_DBHOST`/`PAPERLESS_DBUSER`/`PAPERLESS_DBNAME`/`PAPERLESS_DBPASS` vars (preferring `DB_IP` over a socket-path `DB_HOST` since Paperless-ngx needs a TCP hostname/IP, not a Unix socket).
+- Reconstructs `PAPERLESS_REDIS` from `NFS_SERVER_IP` if it still contains an unresolved `$(NFS_SERVER_IP)` placeholder (Cloud Run only resolves `$(VAR)` references in declaration order).
+- `exec`s `/init` — the upstream image's s6-overlay supervisor, which starts gunicorn (the web process) and the Celery worker/beat processes. The `PAPERLESS_WEBSERVER_WORKERS=2` environment variable controls the gunicorn worker count; the Celery worker count is managed by Paperless-ngx internally.
 
 ### `db-init.sh`
 PostgreSQL initialisation script executed by the `db-init` Cloud Run Job or Kubernetes Job during first deployment. See §5 for detailed behaviour.
@@ -251,10 +256,10 @@ The `paperless-media` GCS bucket is the primary persistence layer for all proces
 | Field | Value |
 |---|---|
 | `name` | `"paperless-media"` |
-| `bucket_name` | Auto-provisioned `paperless-media-<deployment-id>` bucket |
+| `bucket_name` | Auto-provisioned `gcs-paperless<tenant-resource-prefix>-media` bucket (the bucket name the foundation actually creates — app-scoped, tenant-prefixed) |
 | `mount_path` | `"/usr/src/paperless/media"` |
 | `readonly` | `false` |
-| `mount_options` | `["implicit-dirs", "stat-cache-ttl=60s", "type-cache-ttl=60s"]` |
+| `mount_options` | `["implicit-dirs", "stat-cache-ttl=60s", "type-cache-ttl=60s", "uid=1000", "gid=1000", "file-mode=0664", "dir-mode=0775"]` — the uid/gid options make the mount writable by the non-root Paperless-ngx user on GKE's GCS Fuse CSI driver |
 
 **Directory structure under `/usr/src/paperless/media`:**
 
@@ -276,7 +281,7 @@ The `paperless-media` GCS bucket is the primary persistence layer for all proces
 
 | Aspect | Paperless CloudRun | Paperless GKE |
 |---|---|---|
-| `min_instance_count` | `1` (default in `variables.tf`; user-configurable) | `1` (default in `variables.tf`; user-configurable) |
+| `min_instance_count` | `0` (default in `variables.tf`; user-configurable) | `1` (default in `variables.tf`; user-configurable) |
 | `max_instance_count` | `3` (default in `variables.tf`; user-configurable) | `3` (default in `variables.tf`; user-configurable) |
 | `GCS Fuse` | Mounted via Cloud Run native GCS Fuse volume | Mounted via GCS Fuse CSI Driver |
 | `PAPERLESS_URL` | Set to predicted Cloud Run service URL | Set to load balancer or custom domain URL |
@@ -341,13 +346,13 @@ After deployment, the following GCP Console areas are most relevant to `Paperles
 
 **Secret Manager — Application Secrets**
 Navigate to **Security → Secret Manager**. Filter by the deployment prefix. The two secrets created by `Paperless Common` are:
-- `paperless-admin-password-<id>`: Click **View secret value** on the latest version to retrieve the initial admin password for first login.
-- `paperless-secret-key-<id>`: The Django secret key. No need to view this in normal operation — it is injected automatically into the container.
+- `secret-<resource-prefix>-paperless-admin-password`: Click **View secret value** on the latest version to retrieve the initial admin password for first login.
+- `secret-<resource-prefix>-paperless-key`: The Django secret key. No need to view this in normal operation — it is injected automatically into the container.
 
 For each secret, the **Versions** tab shows all historical versions. `Paperless Common` creates a single version on the first apply. Secret Manager retains all versions until explicitly disabled or destroyed.
 
 **Cloud Storage — Media Bucket**
-Navigate to **Cloud Storage → Buckets → paperless-media-&lt;id>**. This bucket holds all Paperless-ngx persistent document data. Key directories to inspect:
+Navigate to **Cloud Storage → Buckets → `gcs-paperless<tenant-resource-prefix>-media`**. This bucket holds all Paperless-ngx persistent document data. Key directories to inspect:
 - `documents/originals/` — Original uploaded files, organised by year/month/day.
 - `documents/thumbnails/` — JPEG thumbnail previews for the web UI.
 - `documents/archive/` — OCR-processed searchable PDFs (if archive mode is enabled in Paperless-ngx settings).
@@ -355,7 +360,7 @@ Navigate to **Cloud Storage → Buckets → paperless-media-&lt;id>**. This buck
 The bucket's **Permissions** tab shows that the Cloud Run service account has `roles/storage.objectAdmin` on this bucket, granted by `App_CloudRun`.
 
 **Cloud SQL — Database Verification**
-Navigate to **SQL → Instances → &lt;instance-name> → Databases**. The `paperless` database created by `db-init` is listed here. Click the database name to see its character set and collation (`UTF8` / `en_US.UTF-8` for PostgreSQL 15).
+Navigate to **SQL → Instances → `<instance-name>` → Databases**. The `paperless` database created by `db-init` is listed here. Click the database name to see its character set and collation (`UTF8` / `en_US.UTF-8` for PostgreSQL 15).
 
 ---
 
@@ -364,7 +369,7 @@ Navigate to **SQL → Instances → &lt;instance-name> → Databases**. The `pap
 ```bash
 # Retrieve the initial admin password for first login
 gcloud secrets versions access latest \
-  --secret="paperless-admin-password-DEPLOYMENT_ID" \
+  --secret="secret-RESOURCE_PREFIX-paperless-admin-password" \
   --project=PROJECT_ID
 
 # List all Secret Manager secrets created by Paperless Common
@@ -374,23 +379,24 @@ gcloud secrets list \
   --format="table(name,replication.automatic,createTime)"
 
 # List versions of the admin password secret
-gcloud secrets versions list paperless-admin-password-DEPLOYMENT_ID \
+gcloud secrets versions list secret-RESOURCE_PREFIX-paperless-admin-password \
   --project=PROJECT_ID \
   --format="table(name,state,createTime)"
 
-# Inspect the paperless-media bucket contents (processed documents)
-gcloud storage ls --recursive gs://paperless-media-DEPLOYMENT_ID/documents/
+# Inspect the media bucket contents (processed documents)
+# SERVICE_NAME = paperless<tenant-resource-prefix>
+gcloud storage ls --recursive gs://gcs-SERVICE_NAME-media/documents/
 
 # Count objects in the media bucket (useful for monitoring growth)
-gcloud storage ls --recursive gs://paperless-media-DEPLOYMENT_ID/ | wc -l
+gcloud storage ls --recursive gs://gcs-SERVICE_NAME-media/ | wc -l
 
 # Check bucket size
-gcloud storage du gs://paperless-media-DEPLOYMENT_ID/ \
+gcloud storage du gs://gcs-SERVICE_NAME-media/ \
   --summarize \
   --readable-sizes
 
 # Verify bucket IAM bindings (confirm Cloud Run SA has objectAdmin)
-gcloud storage buckets get-iam-policy gs://paperless-media-DEPLOYMENT_ID
+gcloud storage buckets get-iam-policy gs://gcs-SERVICE_NAME-media
 
 # List all Cloud Run Jobs (db-init lives here)
 gcloud run jobs list \
@@ -398,22 +404,22 @@ gcloud run jobs list \
   --region=REGION \
   --format="table(name,metadata.creationTimestamp)"
 
-# Check the db-init job execution history
+# Check the db-init job execution history (job name = SERVICE_NAME-db-init)
 gcloud run jobs executions list \
-  --job=paperless-db-init-DEPLOYMENT_ID \
+  --job=SERVICE_NAME-db-init \
   --project=PROJECT_ID \
   --region=REGION \
   --format="table(name,completionStatus,startTime,completionTime)"
 
 # Re-run the db-init job (idempotent — safe to run again)
-gcloud run jobs execute paperless-db-init-DEPLOYMENT_ID \
+gcloud run jobs execute SERVICE_NAME-db-init \
   --project=PROJECT_ID \
   --region=REGION \
   --wait
 
 # Stream db-init job logs
 gcloud logging read \
-  'resource.type="cloud_run_job" AND resource.labels.job_name="paperless-db-init-DEPLOYMENT_ID"' \
+  'resource.type="cloud_run_job" AND resource.labels.job_name="SERVICE_NAME-db-init"' \
   --project=PROJECT_ID \
   --freshness=1h \
   --format="table(timestamp,textPayload)" \

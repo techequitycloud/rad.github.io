@@ -50,17 +50,16 @@ The application configuration object passed to the platform module via `applicat
 | `application_version` | Version tag (default: `"latest"`) |
 | `container_image` | `"ghcr.io/formbricks/formbricks"` (upstream GitHub Container Registry image) |
 | `image_source` | `"custom"` — a custom wrapper image is built via Cloud Build |
-| `enable_image_mirroring` | `var.enable_image_mirroring` (default `true`) — mirrors the image into Artifact Registry to avoid ghcr.io rate limits |
 | `container_port` | `3000` |
-| `database_type` | `"POSTGRES_15"` |
+| `database_type` | `var.database_type` (module default `"POSTGRES"`; both wrappers pass `"POSTGRES_15"`) |
 | `db_name` | Database name (default: `"formbricks"`) |
 | `db_user` | Database user (default: `"formbricks"`) |
-| `enable_cloudsql_volume` | `false` by default for Cloud Run — Formbricks connects to PostgreSQL via TCP |
+| `enable_cloudsql_volume` | `var.enable_cloudsql_volume` (default `true`) — connect via the Cloud SQL Auth Proxy volume/sidecar |
 | `environment_variables` | Formbricks-specific env vars: `STORAGE_PROVIDER`, `S3_ENDPOINT_URL`, `S3_BUCKET_NAME`, `NEXTAUTH_URL`, `WEBAPP_URL`, `HUB_API_URL`, `CUBEJS_API_URL`, SMTP vars when configured |
-| `container_resources` | CPU: `"1000m"` (Cloud Run default) / `"2000m"` (GKE default), Memory: `"2Gi"` |
+| `container_resources` | CPU `var.cpu_limit` (module default `"1000m"`), memory `var.memory_limit` (module default `"1Gi"`); the wrappers pass `1000m`/`2Gi` (Cloud Run) or `2000m`/`2Gi` (GKE) |
 | `initialization_jobs` | Default `db-init` job (PostgreSQL) or custom override |
-| `startup_probe` | HTTP `GET /api/v2/health`, 30s initial delay, 5s timeout, 20s period, 10 failure threshold (Cloud Run) |
-| `liveness_probe` | HTTP `GET /api/v2/health`, 15s initial delay, 5s timeout, 30s period, 3 failure threshold |
+| `startup_probe` | HTTP `GET /api/v2/health`, 30s initial delay, 10s timeout, 15s period, 20 failure threshold |
+| `liveness_probe` | HTTP `GET /api/v2/health`, 60s initial delay, 5s timeout, 30s period, 3 failure threshold |
 
 ### `secret_ids`
 
@@ -89,9 +88,9 @@ A list of GCS bucket configurations for provisioning by the platform module:
 | `name_suffix` | `"uploads"` |
 | `location` | Deployment region |
 | `storage_class` | `"STANDARD"` |
-| `versioning_enabled` | `false` |
-| `lifecycle_rules` | `[]` |
-| `public_access_prevention` | `"enforced"` |
+| `force_destroy` | `true` |
+| `uniform_bucket_level_access` | `true` |
+| `cors` | Allows `GET`/`PUT`/`POST`/`DELETE`/`HEAD` from any origin (`*`), 3600s max age — required for the browser-based S3 upload flow |
 
 ---
 
@@ -122,12 +121,15 @@ This approach is transparent to Formbricks — no code changes or plugins are re
 |---|---|---|---|
 | `application_name` | `string` | `"formbricks"` | Application name. Used as a prefix for all resource names. |
 | `application_version` | `string` | `"latest"` | Formbricks Docker image tag. |
-| `description` | `string` | `"Formbricks - Open Source Survey and Experience Management"` | Init job and service description. |
-| `deployment_id` | `string` | `""` | Unique deployment identifier. Appended to resource names. |
+| `description` | `string` | `"Formbricks - Open Source Survey & Experience Management"` | Init job and service description. |
+| `tenant_deployment_id` | `string` | `"demo"` | Tenant deployment identifier used in resource naming. |
+| `resource_prefix` / `deployment_id_suffix` | `string` | `""` | Naming overrides supplied by the wrapper modules. |
 | `db_name` | `string` | `"formbricks"` | PostgreSQL database name. |
 | `db_user` | `string` | `"formbricks"` | PostgreSQL application user. |
 | `cpu_limit` | `string` | `"1000m"` | Container CPU limit. |
-| `memory_limit` | `string` | `"2Gi"` | Container memory limit. |
+| `memory_limit` | `string` | `"1Gi"` | Container memory limit (the wrappers pass `2Gi`). |
+| `min_instance_count` | `number` | `1` | Minimum instance count (the wrappers pass `0`). |
+| `max_instance_count` | `number` | `10` | Maximum instance count (the wrappers pass `1`/`3`). |
 | `webapp_url` | `string` | `""` | Public URL of the Formbricks instance. Injected as `NEXTAUTH_URL` and `WEBAPP_URL`. Leave empty on first deploy; update after the service URL is known. |
 | `initialization_jobs` | `list(object)` | `[]` | Custom init jobs. Empty list triggers the default `db-init` job. |
 | `startup_probe` | `object` | See §5 | Startup health probe targeting `/api/v2/health`. |
@@ -165,9 +167,9 @@ This approach is transparent to Formbricks — no code changes or plugins are re
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `enable_cloudsql_volume` | `bool` | `false` | Mount Cloud SQL Auth Proxy sidecar socket. Default `false` for Formbricks (TCP connection). |
+| `enable_cloudsql_volume` | `bool` | `true` | Mount the Cloud SQL Auth Proxy volume/sidecar. |
 | `gcs_volumes` | `list(object)` | `[]` | GCS Fuse volume mounts (name, bucket_name, mount_path, readonly, mount_options). |
-| `deployment_region` | `string` | `"us-central1"` | Region for the `uploads` storage bucket. |
+| `region` | `string` | `"us-central1"` | Region for the `uploads` storage bucket. |
 
 ---
 
@@ -177,8 +179,15 @@ Formbricks exposes `/api/v2/health` — a dedicated API endpoint that returns `H
 
 | Probe | Initial Delay | Timeout | Period | Failure Threshold | Purpose |
 |---|---|---|---|---|---|
-| **Startup** | 30s | 5s | 20s | 10 | Allows up to 230s total for Formbricks to run Prisma migrations and initialise on first boot |
-| **Liveness** | 15s | 5s | 30s | 3 | Restarts the container if Formbricks becomes unresponsive or loses its database connection |
+| **Startup** | 30s | 10s | 15s | 20 | Allows up to 330s total for Formbricks to run Prisma migrations and initialise on first boot |
+| **Liveness** | 60s | 5s | 30s | 3 | Restarts the container if Formbricks becomes unresponsive or loses its database connection |
+
+Note the platform wrappers override these Common defaults: `Formbricks_CloudRun`
+replaces the startup probe with a **TCP** port probe (the HTTP endpoint only returns
+2xx at full readiness, which blocked service creation) and ships its liveness probe
+**disabled** (`enabled = false`) — Cloud Run liveness cannot use a TCP socket and the
+HTTP endpoint would restart-loop a healthy container. `Formbricks_GKE` keeps both HTTP
+probes on `/api/v2/health`.
 
 The startup probe thresholds accommodate Prisma's database schema migration process, which runs automatically on each container start and can be slow on the first boot against a fresh database.
 
@@ -188,7 +197,7 @@ The startup probe thresholds accommodate Prisma's database schema migration proc
 |---|---|---|---|
 | Formbricks | `/api/v2/health` | 30s | Prisma migrations are fast; Next.js compilation is pre-built |
 | Ghost | `/` | 90s | Ghost compiles themes and runs schema migrations on startup |
-| Django | `/healthz` | 10s | Django startup is lightweight with no compilation step |
+| Django | `/healthz` | 60s | Django startup is lightweight; the delay budgets for first-boot migrations |
 
 ---
 
@@ -198,20 +207,20 @@ One `db-init` job runs by default (when `initialization_jobs = []`):
 
 | Field | Value |
 |---|---|
-| Image | PostgreSQL-compatible client image |
-| Script | `scripts/db-init.sh` |
-| Secrets required | `ROOT_PASSWORD` (PostgreSQL superuser, optional), `DB_PASSWORD` (app user) |
+| Image | `postgres:15-alpine` |
+| Script | `scripts/formbricks/db-init.sh` |
+| Secrets required | `ROOT_PASSWORD` (PostgreSQL superuser, required to connect) |
 | `execute_on_apply` | `true` |
-| Timeout | 600s, 1 retry |
+| Timeout | 600s, up to 3 retries |
 
 `db-init.sh` performs the following idempotent operations:
 
-1. Resolves the PostgreSQL host from `DB_HOST` or falls back to `DB_IP`.
-2. Polls for PostgreSQL availability (up to 30 retries, 2 seconds apart) before proceeding.
-3. When `ROOT_PASSWORD` is present: creates the `formbricks` database with UTF-8 encoding, creates the `formbricks` application user, and grants full privileges on the database.
-4. When `ROOT_PASSWORD` is absent: skips creation and proceeds to verification.
-5. Verifies the application user can connect and queries PostgreSQL version info.
-6. Signals the Cloud SQL Auth Proxy sidecar to shut down after completion.
+1. Resolves the target host: prefers `DB_IP` when set, falling back to `DB_HOST`; forces `DB_HOST=127.0.0.1` (and unsets `DB_IP`) when `DB_SSL=false` and `DB_HOST` isn't already a socket path, so a non-SSL connection routes through the local Cloud SQL Auth Proxy sidecar.
+2. Waits indefinitely (unbounded retry loop, 2 seconds apart) for PostgreSQL to accept a connection as `postgres` using `ROOT_PASSWORD`.
+3. Creates the `$DB_USER` role if it doesn't exist (or updates its password if it does), grants it `CREATEDB`, grants the role to `postgres`, and grants it full privileges on the `postgres` database.
+4. Creates the `$DB_NAME` database owned by `$DB_USER` if it doesn't exist, or re-assigns ownership if it does.
+5. Grants full privileges on the database and on the `public` schema to `$DB_USER`.
+6. Signals the Cloud SQL Auth Proxy sidecar to shut down via `POST http://localhost:9091/quitquitquit` (up to 30 attempts, 2 seconds apart).
 
 Formbricks's Prisma migrations then run automatically when the container starts — the `db-init` job only ensures the database and user exist before Prisma attempts to connect.
 
@@ -234,7 +243,7 @@ Unlike Ghost Common (which creates no secrets), Formbricks Common creates and ma
 - `SMTP_PASSWORD` — Created and stored in Secret Manager only when `smtp_host` is non-empty. If `smtp_password` is left blank, an auto-generated random value is stored — useful for accounts that require an SMTP password but where the value is managed externally.
 - `REDIS_URL` — Created only when `enable_redis = true` and `redis_auth` is non-empty. Contains the full `redis://:password@host:port` URL.
 
-**Secret rotation:** All auto-generated secrets are created with the `secret_rotation_period` rotation notification enabled. This triggers a Pub/Sub notification but does not automatically rotate the secrets — Formbricks application secrets must be rotated manually or via a custom rotation Lambda. Only `DB_PASSWORD` has an automated rotation pipeline when `enable_auto_password_rotation = true`.
+**Secret rotation:** None of these Formbricks-specific secrets carry a `rotation` block — they are created once as static Secret Manager secret versions with no automatic rotation or Pub/Sub notification. Rotating one (e.g. `NEXTAUTH_SECRET`, to invalidate all sessions) requires manually creating a new secret version and restarting the container. Only `DB_PASSWORD` (managed by the Foundation module, outside `Formbricks Common`) supports automated rotation when `enable_auto_password_rotation = true`.
 
 ---
 
@@ -242,8 +251,7 @@ Unlike Ghost Common (which creates no secrets), Formbricks Common creates and ma
 
 | Aspect | Formbricks CloudRun | Formbricks GKE |
 |---|---|---|
-| `enable_cloudsql_volume` | `false` (TCP connection to Cloud SQL private IP) | `true` (Auth Proxy sidecar via Unix socket) |
-| `DB_HOST` | Cloud SQL private IP via TCP | Auth Proxy socket path at `/cloudsql` |
+| `enable_cloudsql_volume` | `true` (native Cloud SQL volume — Unix socket under `/cloudsql`) | `true` (Auth Proxy sidecar on `127.0.0.1`) |
 | `min_instance_count` | `0` (scale-to-zero) | `0` (scale-to-zero; Kubernetes HPA) |
 | `max_instance_count` | `1` (configurable) | `3` (configurable; HPA maxReplicas) |
 | `cpu_limit` | `"1000m"` default | `"2000m"` default |
@@ -251,7 +259,8 @@ Unlike Ghost Common (which creates no secrets), Formbricks Common creates and ma
 | NFS | Enabled by default (`enable_nfs = true`) | Enabled by default (`enable_nfs = true`) |
 | Redis | Enabled by default (`enable_redis = true`) | Enabled by default (`enable_redis = true`) |
 | Session affinity | Not applicable (Cloud Run routes per revision) | `ClientIP` — required for stable admin sessions |
-| Startup probe initial delay | 30s | 0s (Kubernetes startup probe has no `initialDelaySeconds`; uses `failureThreshold × periodSeconds` instead) |
+| Startup probe | **TCP** port probe, 30s initial delay (HTTP `/api/v2/health` only returns 2xx at full readiness) | HTTP `/api/v2/health`, 0s initial delay, 10 × 30s budget |
+| Liveness probe | **Disabled** (`enabled = false`) — would restart-loop a healthy container | HTTP `/api/v2/health`, 60s initial delay |
 
 ---
 
@@ -265,7 +274,7 @@ module "formbricks_app" {
 
   application_name    = var.application_name
   application_version = var.application_version
-  deployment_id       = local.deployment_id
+  tenant_deployment_id = var.tenant_deployment_id
   db_name             = var.db_name
   db_user             = var.db_user
   cpu_limit           = var.cpu_limit

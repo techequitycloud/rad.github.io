@@ -276,7 +276,7 @@ specific to or notable for Odoo are listed; every other input is inherited from
 
 | Variable | Default | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Plain-text settings. SMTP keys (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_SSL`, `EMAIL_FROM`) are pre-populated by default; set them for outbound email. |
+| `environment_variables` | `{}` | Plain-text settings. Empty by default — set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_SSL`, and `EMAIL_FROM` here for outbound email. |
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name (e.g. `SMTP_PASSWORD`). |
 | `explicit_secret_values` | `{}` | Sensitive values written to Secret Manager during deploy. Use to set a custom `ODOO_MASTER_PASS`. |
 
@@ -321,7 +321,7 @@ specific to or notable for Odoo are listed; every other input is inherited from
 |---|---|---|
 | `startup_probe_config` | `{ path = "/web/health", initial_delay_seconds = 180, timeout_seconds = 60, period_seconds = 120, failure_threshold = 3 }` | Generous delay for first-boot schema creation. Increase `failure_threshold` to `5` on very first deploys. |
 | `health_check_config` | `{ path = "/web/health", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }` | Liveness check. `/web/health` returns 200 only when Odoo has a live database connection. |
-| `uptime_check_config` | `{ enabled = true, path = "/" }` | Optional Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled = false, path = "/" }` | Optional Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -392,7 +392,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 

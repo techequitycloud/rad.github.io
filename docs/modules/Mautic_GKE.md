@@ -232,7 +232,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `application_name` | `mautic` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Mautic` | Friendly name shown in the Console. |
-| `application_description` | _(set)_ | Workload description annotation. |
+| `application_description` | `Mautic Marketing Automation on GKE Autopilot` | Workload description annotation. |
 | `application_version` | `5` | Mautic image version tag; increment to roll out a new version. |
 
 ### Group 4 — Runtime & Scaling
@@ -352,7 +352,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 
@@ -371,7 +371,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `enable_cloud_armor` | `false` | Attach a Cloud Armor (WAF) policy to the Ingress backend. |
 | `admin_ip_ranges` | `[]` | CIDRs allowed privileged access. |
-| `cloud_armor_policy_name` | _(set)_ | Policy name. |
+| `cloud_armor_policy_name` | `default-waf-policy` | Policy name. |
 
 ### Group 22 — VPC Service Controls & Audit Logging
 

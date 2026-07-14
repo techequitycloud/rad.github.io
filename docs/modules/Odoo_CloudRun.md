@@ -47,7 +47,8 @@ Google Cloud services:
 - **The Odoo master password** is generated automatically and stored in Secret Manager; you
   never set it in plain text.
 - **First boot is slow.** Odoo installs the base module and runs schema migrations on first
-  start; the startup probe allows up to 9 minutes (180s initial delay then additional retries).
+  start; the startup probe uses a **TCP** check (60s initial delay, 30s period, 3 retries —
+  roughly 2.5 minutes total budget) since HTTP isn't reliable until after DB init completes.
 - **`execution_environment = "gen2"` is required.** NFS volume mounts are only supported by
   the second-generation Cloud Run execution environment.
 
@@ -295,7 +296,7 @@ to or notable for Odoo are listed; every other input is inherited from
 
 | Variable | Default | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Plain-text settings. SMTP keys (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_SSL`, `EMAIL_FROM`) are pre-populated; configure them for outbound email. |
+| `environment_variables` | `{}` | Plain-text settings. Empty by default — set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_SSL`, and `EMAIL_FROM` here for outbound email. |
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name (e.g. `SMTP_PASSWORD`). |
 | `explicit_secret_values` | `{}` | Sensitive values written to Secret Manager during deploy. Use to set a custom `ODOO_MASTER_PASS`. |
 
@@ -362,7 +363,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | `{ type = "TCP", initial_delay_seconds = 60 }` | TCP probe on port 8069; HTTP not available until after DB init. |
 | `liveness_probe` | `{ type = "HTTP", path = "/web/health", initial_delay_seconds = 120 }` | HTTP check after 120 seconds; `/web/health` returns 200 only when Odoo has a live DB connection. |
-| `uptime_check_config` | `{ enabled = true }` | Optional Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled = false, path = "/" }` | Optional Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 21 — Redis Cache
@@ -401,7 +402,7 @@ explore the running resources.
 | `database_name` | Application database name. |
 | `database_user` | Application database user. |
 | `database_password_secret` | Secret Manager secret holding the DB password. |
-| `database_host` | DB host (127.0.0.1 via the Auth Proxy). **Sensitive.** |
+| `database_host` | Cloud SQL instance private IP (reachable via VPC egress — Cloud Run has no `127.0.0.1` proxy; the socket mount for `DB_HOST` lives at `/cloudsql/...`). **Sensitive.** |
 | `database_port` | Database port. |
 | `storage_buckets` | Created Cloud Storage buckets. |
 | `network_name` / `network_exists` / `regions` | VPC network, presence, available regions. |

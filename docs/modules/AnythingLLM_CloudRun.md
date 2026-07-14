@@ -43,13 +43,20 @@ a focused set of Google Cloud services:
 - **Four application secrets are auto-generated.** `JWT_SECRET`, `AUTH_TOKEN`, `SIG_KEY`,
   and `SIG_SALT` are created in Secret Manager on first deploy; you never set them in plain
   text.
-- **`min_instance_count = 1` is recommended** to avoid cold starts for AI document chat
-  and embedding operations.
-- **Storage must be persistent.** All workspace documents, vector indices, and conversation
-  data are written under `STORAGE_DIR` (`/app/server/storage`). Use NFS or GCS Fuse for
-  persistent shared storage; without it data is lost on every instance restart.
+- **`min_instance_count` defaults to `0`** (scale-to-zero). NFS keeps the LanceDB vector
+  store safe across cold starts, so the trade-off is only a ~30–60 s cold start on the
+  first query after idle; set `min_instance_count = 1` to avoid it for latency-sensitive
+  deployments.
+- **Storage must be persistent, and NFS is on by default.** All workspace documents,
+  vector indices, and conversation data are written under `STORAGE_DIR`. `enable_nfs`
+  defaults to `true` because AnythingLLM's LanceDB vector index otherwise lives on the
+  container's ephemeral disk and is silently wiped on every cold start or redeploy.
 - **Redis is disabled by default.** It is not required for AnythingLLM's core
   functionality. If enabled, `redis_host` must be set explicitly.
+- **Request-based billing by default.** `cpu_always_allocated = false` — embedding and
+  inference run inside the request that triggers them, so they get full CPU while
+  working regardless of this flag; it only stops paying for CPU during the idle
+  keep-warm tail.
 - **`execution_environment = gen2`** is the default and is required when NFS or GCS Fuse
   mounts are enabled.
 - **The `GOOGLE_CLOUD_STORAGE_BUCKET_NAME` env var is set automatically** from the
@@ -165,8 +172,8 @@ See [App_CloudRun](App_CloudRun.md).
 ### G. Cloud Logging & Monitoring
 
 Container logs flow to Cloud Logging; Cloud Run and Cloud SQL metrics flow to Cloud
-Monitoring. An uptime check targeting `/api/ping` is enabled by default, with optional
-alert policies.
+Monitoring. An optional uptime check (disabled by default, targeting `/`) and alert
+policies can be enabled.
 
 - **Console:** Logging → Logs Explorer; Monitoring → Dashboards / Alerting.
 - **CLI:**
@@ -245,7 +252,7 @@ specific to or notable for AnythingLLM are listed; every other input is inherite
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `cpu_limit` | `2000m` | CPU per instance. Minimum 2 vCPU for AI workloads. |
 | `memory_limit` | `4Gi` | Memory per instance. Minimum 4 GiB for embedding and inference. |
-| `min_instance_count` | `1` | Minimum instances (keep ≥ 1 to avoid cold starts). |
+| `min_instance_count` | `0` | Minimum instances. Set ≥ 1 to avoid cold starts (NFS keeps the vector store safe either way). |
 | `max_instance_count` | `1` | Maximum instances. Increase with NFS for shared document access. |
 | `container_port` | `3001` | AnythingLLM's native HTTP port. |
 | `execution_environment` | `gen2` | Gen2 required for NFS mounts and GCS Fuse. |
@@ -307,7 +314,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `create_cloud_storage` | `true` | Provision the additional data bucket. The `anythingllm-docs` bucket is always created. |
 | `storage_buckets` | `[{ name_suffix="data" }]` | Additional GCS buckets. |
-| `enable_nfs` | `false` | Enable Filestore (NFS) for multi-instance persistent document access. |
+| `enable_nfs` | `true` | Filestore (NFS) for persistent document/vector storage — required, otherwise the LanceDB vector index lives on ephemeral disk and is wiped on every cold start/redeploy. |
 | `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
 | `gcs_volumes` | `[]` | GCS Fuse mounts (requires gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
@@ -337,7 +344,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | HTTP `/api/ping`, 60 s initial delay, 30 failures | Extended startup window for AI model loading. |
 | `liveness_probe` / `health_check_config` | HTTP `/api/ping`, 30 s initial delay | Liveness probe against AnythingLLM's health endpoint. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, `/` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache

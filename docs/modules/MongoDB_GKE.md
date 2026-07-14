@@ -277,7 +277,6 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `termination_grace_period_seconds` | `60` | Grace period for `mongod` to flush the journal before SIGKILL. |
 | `deployment_timeout` | `600` | Seconds Terraform waits for the StatefulSet rollout (covers node provisioning + PVC attach). |
 | `enable_network_segmentation` | `false` | Create Kubernetes NetworkPolicy resources to restrict ingress/egress. |
-| `network_tags` | `["nfsserver"]` | Node/pod network tags for firewall rules. |
 
 ### Group 7 — StatefulSet & PVC
 
@@ -311,7 +310,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe_config` | TCP, 20s delay, failure_threshold 45 | TCP probe on port 27017; allows ~8 minutes for node provisioning + PVC attach + image pull. |
+| `startup_probe_config` | TCP, 20s delay, failure_threshold 18 | Foundation-level TCP probe input on port 27017. The container's actual startup probe is hardcoded in the module to `failure_threshold = 45` (~8 minutes) to cover GKE Autopilot node provisioning + PVC attach + image pull — see [Section 3](#3-mongodb-application-behaviour). |
 | `health_check_config` | TCP, 30s delay, failure_threshold 3 | TCP liveness probe on port 27017. |
 | `uptime_check_config` | disabled | Uptime check — disabled by default as MongoDB is an internal service. |
 | `alert_policies` | `[]` | Optional Cloud Monitoring metric alert policies. |
@@ -354,9 +353,10 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision a Kubernetes Ingress for custom hostnames (unusual for a database service). |
+| `enable_custom_domain` | `true` | Provisions the Gateway HTTPS ingress (zero-config `<ip>.nip.io` hostname when `application_domains` is empty) — unusual for a non-HTTP database service; actual `mongodb://` traffic is served by the L4 LoadBalancer Service, not this HTTP(S) ingress. |
 | `application_domains` | `[]` | Custom domain names. |
-| `reserve_static_ip` | `false` | Stable external IP across redeploys. |
+| `reserve_static_ip` | `true` | Stable external IP across redeploys. |
+| `network_tags` | `["nfsserver"]` | Node/pod network tags for firewall rules. |
 
 ### Group 20 — Identity-Aware Proxy (IAP)
 

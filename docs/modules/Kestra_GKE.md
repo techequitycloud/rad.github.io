@@ -133,9 +133,10 @@ Secret Store CSI integration and rotation.
 
 ### E. Networking & ingress
 
-By default the workload is exposed through an external Cloud Load Balancing IP. A custom
-domain with a Google-managed certificate can be enabled, and a static IP can be reserved so
-the address survives redeploys.
+The workload is exposed through an external Cloud Load Balancing IP. `enable_custom_domain`
+defaults to `true`, provisioning a Kubernetes Gateway with a Google-managed certificate for
+the hostnames in `application_domains`; a static IP is reserved by default so the address
+survives redeploys.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -220,7 +221,7 @@ specific to or notable for Kestra are listed; every other input is inherited fro
 | `application_name` | `kestra` | Base name for resources. Do not change after first deploy. |
 | `application_version` | `latest` | Kestra image version tag; increment to roll out a new version (e.g. `0.17.0`). |
 | `display_name` | `Kestra Data Orchestration` | Friendly name shown in the Console and platform UI. |
-| `description` | _(set)_ | Workload description annotation. |
+| `description` | `Kestra Data Orchestration - ETL/ELT pipeline and workflow orchestration on GKE Autopilot` | Workload description annotation. |
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 
 ### Group 4 — Runtime & Scaling
@@ -349,7 +350,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Kubernetes Gateway with SSL certificate for custom hostnames. |
+| `enable_custom_domain` | `true` | Provision Kubernetes Gateway with SSL certificate for custom hostnames. |
 | `application_domains` | `[]` | Hostnames to serve. Empty with `enable_custom_domain = true` generates a `nip.io` domain. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. Recommended for production. |
 

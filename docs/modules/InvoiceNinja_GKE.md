@@ -32,7 +32,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Database Configuration | **MySQL 8.0 required**; see [Group 18: Database Configuration](#group-18-database-configuration). |
 | Backup Schedule & Retention | Identical to `App_GKE`. |
 | Custom SQL Scripts | Identical to `App_GKE`. |
-| Observability & Health | Invoice Ninja probe tuning; see [Group 13: Observability & Health](#group-13-observability--health). |
+| Observability & Health | Invoice Ninja probe tuning; see [Group 19: Observability & Health](#group-19-observability--health). |
 | Cloud Armor WAF | Identical to `App_GKE`. |
 | Identity-Aware Proxy | Identical to `App_GKE`. |
 | Binary Authorization | Identical to `App_GKE`. |
@@ -104,7 +104,7 @@ Identical to `App_GKE`.
 | `container_resources` | `{ cpu_limit = "2000m", memory_limit = "2Gi" }` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | Invoice Ninja requires 2 vCPU / 2 Gi minimum for Chromium PDF generation. |
 | `cpu_limit` | `"2000m"` | — | Shorthand alias for `container_resources.cpu_limit`. Passed to `InvoiceNinja Common`. |
 | `memory_limit` | `"2Gi"` | — | Shorthand alias for `container_resources.memory_limit`. Minimum 2 Gi for Chromium. |
-| `min_instance_count` | `1` | `0` | Invoice Ninja is kept warm by default. Cold starts involve PHP-FPM + Laravel bootstrap + optional migration. |
+| `min_instance_count` | `1` | `1` | Same as `App_GKE`'s own default — Invoice Ninja is kept warm. Cold starts involve PHP-FPM + Laravel bootstrap + optional migration. |
 | `max_instance_count` | `5` | `3` | Higher ceiling for invoice processing bursts. |
 | `container_image_source` | `"prebuilt"` | `"custom"` | The official `invoiceninja/invoiceninja:5` image is production-ready without customisation. |
 | `enable_cloudsql_volume` | `true` | `true` | Cloud SQL Auth Proxy sidecar required for MySQL Unix socket connection. |
@@ -243,27 +243,23 @@ Override `initialization_jobs` with a non-empty list to replace both default job
 
 Invoice Ninja's PHP-FPM initialisation, Laravel bootstrap, and first-boot database migration make it a slow-starting application. The health probe defaults are tuned to accommodate this.
 
-**Startup probe** (`startup_probe_config`):
+`InvoiceNinja_GKE` declares **two** sets of probe variables, but only one actually reaches the Kubernetes pod spec:
 
-| Field | InvoiceNinja GKE Default | App GKE Default | Notes |
-|---|---|---|---|
-| `path` | `"/"` | `"/healthz"` | Invoice Ninja has no `/healthz` endpoint. Root path returns HTTP 200 when ready. |
-| `initial_delay_seconds` | `90` | `10` | Allows 90s before the first probe attempt. |
-| `failure_threshold` | `20` | `3` | 20 × 15s = 300s additional tolerance after the 90s delay. |
+- **`startup_probe` / `liveness_probe`** — these ARE what controls the real K8s probe. `main.tf` unconditionally merges a hardcoded object into `application_config`, overriding whatever `Invoice Ninja Common` supplies:
 
-**Liveness probe** (`health_check_config`):
+  | Variable | Value |
+  |---|---|
+  | `startup_probe` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=90, timeout_seconds=10, period_seconds=15, failure_threshold=20 }` |
+  | `liveness_probe` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` |
 
-| Field | InvoiceNinja GKE Default | App GKE Default | Notes |
-|---|---|---|---|
-| `path` | `"/"` | `"/healthz"` | Same as startup — Invoice Ninja's root path is the health signal. |
-| `initial_delay_seconds` | `120` | `15` | Prevents premature liveness failures before startup completes. |
+  Invoice Ninja has no dedicated health endpoint; the root path `/` returning HTTP 200 (once PHP-FPM/nginx are serving) is the readiness signal. 20 × 15s = 300s of additional tolerance after the 90s initial delay accommodates first-boot migrations.
 
-**`startup_probe` and `liveness_probe`** (the alternative probe variables passed to `InvoiceNinja Common`):
+- **`startup_probe_config` / `health_check_config`** — declared with **TCP** defaults (their own description explains why: Invoice Ninja's `/` sometimes 302-redirects to `https://<app_url>/`, and an HTTP kubelet probe that follows the redirect hits `https://<pod-ip>:443` with nothing listening, causing a false failure). **However, tracing the wiring shows these two variables are never read by `App_GKE`'s actual K8s-probe path for this module** — the hardcoded `startup_probe`/`liveness_probe` override above always wins. Treat them as currently inert for GKE; do not rely on changing them to alter the deployed probe type.
 
 | Variable | Default |
 |---|---|
-| `startup_probe` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=90, timeout_seconds=10, period_seconds=15, failure_threshold=20 }` |
-| `liveness_probe` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` |
+| `startup_probe_config` | `{ enabled=true, type="TCP", path="/", initial_delay_seconds=90, timeout_seconds=10, period_seconds=15, failure_threshold=20 }` |
+| `health_check_config` | `{ enabled=true, type="TCP", path="/", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` |
 
 **`uptime_check_config`:** Defaults to `{ enabled = false, path = "/" }` — uptime checks are **disabled by default** in the GKE variant. Enable explicitly for production monitoring.
 
@@ -352,16 +348,16 @@ Identical to `App_GKE`.
 > **Invoice Ninja URL configuration note:** Invoice Ninja stores its application URL in the database during initial setup. When using a custom domain, the `APP_URL` environment variable should be set to the domain URL before first boot. Set it via `environment_variables`:
 >
 > ```hcl
-> environment_variables = &#123;
+> environment_variables = {
 >   APP_URL = "https://invoices.example.com"
-> &#125;
+> }
 > ```
 >
 > Invoice Ninja uses `APP_URL` to generate links in sent invoices and client portal emails. Incorrect URL configuration causes broken links in client-facing documents.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provisions a Kubernetes Ingress resource for the hostnames in `application_domains`. |
+| `enable_custom_domain` | `true` | Provisions a Kubernetes Ingress resource for the hostnames in `application_domains`. Enabled by default. |
 | `application_domains` | `[]` | Custom domain names. DNS must point to the load balancer IP after deployment. |
 | `reserve_static_ip` | `true` | Provisions a global static external IP for stable DNS mapping. |
 | `static_ip_name` | `""` | Name for the reserved IP. Auto-generated when empty. |
@@ -495,8 +491,6 @@ Setting `stateful_pvc_enabled = true` automatically resolves `workload_type` to 
 | `database_user` | Name of the application database user. |
 | `database_password_secret` | Secret Manager secret name for the database password. |
 | `storage_buckets` | Created GCS storage buckets. |
-| `nfs_server_ip` | NFS server internal IP *(sensitive)*. |
-| `nfs_mount_path` | NFS mount path inside containers. |
 | `container_image` | Container image used for the deployment. |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 | `github_repository_url` | GitHub repository URL connected for CI/CD. |

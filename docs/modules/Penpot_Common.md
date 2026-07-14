@@ -5,7 +5,7 @@ description: "Shared configuration reference for the Penpot module — applicati
 
 # Penpot Common Shared Configuration Module
 
-The `Penpot Common` module defines the Penpot design platform configuration for the RAD Modules ecosystem. It is a **pure configuration module** — it creates no GCP resources and produces a `config` output consumed by platform-specific wrapper modules (`Penpot CloudRun` and `Penpot GKE`).
+The `Penpot Common` module defines the Penpot design platform configuration for the RAD Modules ecosystem. It is an **almost-pure configuration module** — its only GCP resource is the auto-generated `PENPOT_SECRET_KEY` Secret Manager secret; everything else is a `config` output consumed by platform-specific wrapper modules (`Penpot CloudRun` and `Penpot GKE`).
 
 ## 1. Overview
 
@@ -19,8 +19,8 @@ Layer 3: Application Wrappers
 └── Penpot_GKE       ──┤── instantiate Penpot_Common
                        ↓
           Penpot_Common (this module)
-          Creates: (no GCP resources)
-          Produces: config, storage_buckets, path
+          Creates: PENPOT_SECRET_KEY (Secret Manager)
+          Produces: config, storage_buckets, secret_ids, secret_values, path
                        ↓
 Layer 2: Platform Modules
 ├── App_CloudRun  (serverless deployment)
@@ -31,10 +31,10 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 
 **Key characteristics**:
 - Uses **PostgreSQL 15** — unlike Ghost (MySQL 8.0), Penpot relies on PostgreSQL for all deployments. The database type is fixed and cannot be overridden.
-- Creates **no GCP resources** — no secrets, no IAM bindings, no Secret Manager entries. Compare with Django Common or Directus Common, which provision application secrets.
-- Assembles **three coordinated service definitions**: backend (Clojure HTTP API + WebSocket server on port 6060), frontend (nginx React SPA on port 80), and exporter (headless Chromium for PDF/PNG/SVG export).
-- Defaults `container_protocol` to **`"h2c"`** (HTTP/2 cleartext) for end-to-end WebSocket support across all instances.
-- Penpot runs its **own database migrations at startup** — no separate `db-init` job is required or provided.
+- Creates **one Secret Manager secret** — an auto-generated `PENPOT_SECRET_KEY` (shared JWT signing key for the backend and exporter), exposed via the `secret_ids` / `secret_values` outputs. No other GCP resources are created.
+- Defines the **backend service** (Clojure HTTP API + WebSocket server on port 6060). The frontend (nginx React SPA on port 8080) and exporter (headless Chromium for PDF/PNG/SVG export) are assembled by the wrapper modules — see §4.
+- The wrappers default `container_protocol` to **`"http1"`** — WebSockets work over HTTP/1.1 Upgrade; `h2c` breaks Penpot's HTTP/1.1 nginx frontend (502 "protocol error").
+- Penpot runs its **own schema migrations at startup**; `Penpot Common` provides a built-in `db-init` job that creates the PostgreSQL database and user before first boot.
 - Assembles `PENPOT_FLAGS`, `PENPOT_STORAGE_BACKEND`, `PENPOT_STORAGE_GCS_BUCKET_NAME`, `PENPOT_REDIS_URI`, `JVM_OPTS`, and SMTP variables from the module's input variables, producing a consistent environment regardless of whether the wrapper targets Cloud Run or GKE.
 
 ---
@@ -60,10 +60,9 @@ The application configuration object passed to the platform module via `applicat
 | `cloudsql_volume_mount_path` | `"/cloudsql"` |
 | `container_resources` | CPU: `2000m`, Memory: `2Gi` (default) — JVM requires more memory than typical interpreted-language applications |
 | `environment_variables` | Assembled Penpot environment variables — see §7 |
-| `secret_environment_variables` | `var.secret_environment_variables` (default `{}`) |
-| `additional_services` | Frontend and exporter service definitions — see §4 |
-| `startup_probe` | Configured probe — TCP for Cloud Run, HTTP `/api/health` for GKE |
-| `liveness_probe` | Configured probe — disabled for Cloud Run, HTTP `/api/health` for GKE |
+| `additional_services` | `[]` — the frontend and exporter are assembled by the wrapper modules, not here (see §4) |
+| `startup_probe` | `var.startup_probe` (module default: HTTP `/api/health`) — both wrappers override to TCP; see §5 |
+| `liveness_probe` | `var.liveness_probe` (module default: HTTP `/api/health`) — overridden per platform (Cloud Run: disabled; GKE: TCP); see §5 |
 
 ### `storage_buckets`
 
@@ -71,12 +70,19 @@ A list of GCS bucket configurations for provisioning by the platform module:
 
 | Field | Value |
 |---|---|
-| `name_suffix` | `"penpot-assets"` |
+| `name_suffix` | `"assets"` — the platform module derives the full bucket name (`gcs-<service-name>-assets`) |
 | `location` | Deployment region |
 | `storage_class` | `"STANDARD"` |
+| `force_destroy` | `true` |
 | `versioning_enabled` | `false` |
 | `lifecycle_rules` | `[]` |
-| `public_access_prevention` | `"enforced"` |
+| `public_access_prevention` | `"inherited"` |
+
+### `secret_ids` / `secret_values`
+
+`secret_ids` maps `PENPOT_SECRET_KEY` to the Secret Manager secret ID
+(`secret-<prefix>-penpot-key`) for injection as a secret environment variable; `secret_values`
+(sensitive) exposes the generated value itself.
 
 ### `path`
 
@@ -102,7 +108,7 @@ The absolute path to the module directory, used by wrapper modules to locate the
 | `enable_image_mirroring` | `bool` | `true` | Mirror all Penpot images to Artifact Registry |
 | `enable_cloudsql_volume` | `bool` | `true` | Mount Cloud SQL Auth Proxy sidecar socket |
 | `environment_variables` | `map(string)` | `{}` | Additional environment variables merged into the backend container |
-| `initialization_jobs` | `list(any)` | `[]` | Custom init jobs. Penpot handles its own migrations — leave empty in normal deployments. |
+| `initialization_jobs` | `list(any)` | `[]` | Custom init jobs. Leave empty to use the built-in `db-init` job (creates the PostgreSQL database and user); Penpot runs its own schema migrations at startup. |
 
 ### Penpot Configuration
 
@@ -147,13 +153,17 @@ The absolute path to the module directory, used by wrapper modules to locate the
 
 ## 4. Multi-Service Architecture
 
-Penpot is a three-tier application. `Penpot Common` assembles all three service definitions and passes them through `config.additional_services` to the platform module. The backend is the primary service; the frontend and exporter are deployed as additional services.
+Penpot is a three-tier application. `Penpot Common` defines only the backend; the wrapper
+modules assemble the other two tiers. On Cloud Run all three run as **one multi-container
+service** — the frontend is the ingress container and the backend and exporter are in-pod
+sidecars reached over localhost. On GKE the frontend and exporter are deployed as separate
+additional services alongside the backend.
 
 ### Backend (`penpotapp/backend`)
 
 - **Image**: `penpotapp/backend:<version>`
 - **Port**: `6060`
-- **Protocol**: `h2c` (HTTP/2 cleartext) for WebSocket multiplexing
+- **Protocol**: HTTP/1.1 (`http1`) — WebSockets use the HTTP/1.1 Upgrade mechanism
 - **Role**: Clojure HTTP API server, WebSocket handler for real-time collaboration, database interface, asset management via GCS
 - **Environment**: Receives all assembled Penpot env vars (see §7)
 - **Auth Proxy**: Cloud SQL Auth Proxy sidecar for PostgreSQL connectivity
@@ -162,22 +172,26 @@ Penpot is a three-tier application. `Penpot Common` assembles all three service 
 ### Frontend (`penpotapp/frontend`)
 
 - **Image**: `penpotapp/frontend:<version>`
-- **Port**: `80`
+- **Port**: `8080` (Penpot's frontend nginx listens on 8080, not 80)
 - **Role**: nginx server delivering the React SPA to designers' browsers. All design editing happens client-side in the browser; the backend handles persistence and real-time sync.
-- **URL**: The `PENPOT_PUBLIC_URI` is set to this service's URL. Users access Penpot through the frontend service, which proxies API calls to the backend.
+- **URL**: The `PENPOT_PUBLIC_URI` is set to this service's URL. Users access Penpot through the frontend, whose nginx proxies `/api` and `/ws` to the backend. On Cloud Run the frontend is the ingress container, so the frontend URL **is** the main service URL.
 
 ### Exporter (`penpotapp/exporter`)
 
 - **Image**: `penpotapp/exporter:<version>`
-- **Port**: `7070`
-- **Role**: Headless Chromium instance that renders Penpot designs and exports them to PDF, PNG, or SVG. Called by the backend when a designer triggers an export operation.
+- **Port**: `6061`
+- **Role**: Headless Chromium instance that renders Penpot designs and exports them to PDF, PNG, or SVG. Called by the backend when a designer triggers an export operation. Shares the `PENPOT_SECRET_KEY` JWT secret with the backend.
 - **Resources**: Headless Chromium is resource-intensive; the exporter service is sized independently of the backend.
 
 ---
 
 ## 5. Health Probes
 
-Penpot 2.x exposes `/api/health` on the backend. Unlike Ghost (which uses the root path `/`), Penpot provides a dedicated health endpoint, though it requires the application to be fully initialised before it returns HTTP 200.
+Penpot 2.x does **not** expose an unauthenticated HTTP health endpoint — `/api/health` returns
+404 on the backend (the real readiness path is `/readyz`). Both wrappers therefore default to
+**TCP probes on the backend port (6060)**, which pass once the JVM is listening. The module's
+own `startup_probe`/`liveness_probe` variable defaults still carry the HTTP `/api/health`
+shape, but every wrapper overrides the probe type to TCP.
 
 ### Cloud Run Probes (from `Penpot_CloudRun` variables.tf)
 
@@ -192,22 +206,27 @@ Cloud Run does not support TCP liveness probes. The startup probe uses TCP to ch
 
 ### GKE Probes (from `Penpot_GKE` variables.tf)
 
-On GKE, Kubernetes supports HTTP probes natively, so the startup and liveness probes both target `/api/health`.
+On GKE both probes are **TCP on port 6060** — an HTTP probe against `/api/health` would 404 and
+restart-loop a healthy backend.
 
-| Probe | Type | Path | Initial Delay | Timeout | Period | Failure Threshold | Purpose |
+| Probe | Type | Port | Initial Delay | Timeout | Period | Failure Threshold | Purpose |
 |---|---|---|---|---|---|---|---|
-| **Startup** | HTTP | `/api/health` | 30s | 10s | 10s | 30 | Allows 30s initial delay + 30 × 10s = 330s total for JVM + migrations. |
-| **Liveness** | HTTP | `/api/health` | 60s | 10s | 30s | 3 | Restarts the pod if Penpot becomes unresponsive. |
+| **Startup** | TCP | 6060 | 30s | 10s | 10s | 30 | Allows 30s initial delay + 30 × 10s = 330s total for JVM + migrations. |
+| **Liveness** | TCP | 6060 | 60s | 10s | 30s | 3 | Restarts the pod if Penpot stops listening. |
 
 The generous startup probe thresholds accommodate Penpot's migration process on a fresh database, which can be slow on first deployment.
 
 ---
 
-## 6. No Secrets Generated
+## 6. Secrets Generated
 
-Unlike Django Common (which generates a `SECRET_KEY`) or Directus Common (which generates `DIRECTUS_KEY` and `DIRECTUS_SECRET`), **`Penpot Common` generates no application-level secrets**. Penpot manages its own internal signing keys and session tokens at runtime — these are not pre-shared secrets that need to be provisioned before startup.
+Like Django Common (which generates a `SECRET_KEY`), **`Penpot Common` generates one
+application-level secret**: `PENPOT_SECRET_KEY`, a 64-character random value stored in Secret
+Manager as `secret-<prefix>-penpot-key`. It is the shared JWT signing key used by the backend
+and the exporter, and is exposed to the wrappers via the `secret_ids` output (injected as a
+secret environment variable) and the sensitive `secret_values` output.
 
-The `DB_PASSWORD` secret is provisioned automatically by `App CloudRun` / `App GKE` and is injected into the backend container as `DB_PASSWORD`. `Penpot Common` maps this to `PENPOT_DATABASE_PASSWORD` (or equivalent) in the assembled environment variables.
+The `DB_PASSWORD` secret is provisioned automatically by `App CloudRun` / `App GKE` and is injected into the backend container as `DB_PASSWORD`. The backend's entrypoint shell wrapper maps this to `PENPOT_DATABASE_PASSWORD` at container startup.
 
 If SMTP authentication is required, the SMTP password must be provided via `secret_environment_variables` in the wrapper module — `Penpot Common` does not provision it.
 
@@ -231,22 +250,22 @@ If SMTP authentication is required, the SMTP password must be provided via `secr
 
 | Environment Variable | Source | Description |
 |---|---|---|
-| `PENPOT_DATABASE_URI` | Assembled from `DB_HOST`, `DB_NAME` | PostgreSQL JDBC-style connection URI, e.g. `postgresql://localhost/penpot` |
-| `PENPOT_DATABASE_USERNAME` | `DB_USER` | Injected by the platform from the Cloud SQL provisioning |
-| `PENPOT_DATABASE_PASSWORD` | `DB_PASSWORD` (from Secret Manager) | Injected by the platform as a secret reference |
+| `PENPOT_DATABASE_URI` | Built at container start from `DB_IP`, `DB_NAME` | The entrypoint shell wrapper exports `postgresql://$DB_IP:5432/$DB_NAME` (TCP to the instance private IP) |
+| `PENPOT_DATABASE_USERNAME` | `DB_USER` | Exported by the entrypoint shell wrapper from the platform-injected `DB_USER` |
+| `PENPOT_DATABASE_PASSWORD` | `DB_PASSWORD` (from Secret Manager) | Exported by the entrypoint shell wrapper from the platform-injected secret |
 
 ### Storage Variables
 
 | Environment Variable | Source | Description |
 |---|---|---|
 | `PENPOT_STORAGE_BACKEND` | `"gcs"` | Instructs the backend to use Google Cloud Storage for asset persistence |
-| `PENPOT_STORAGE_GCS_BUCKET_NAME` | Auto-set to `penpot-assets` bucket | The assets bucket provisioned by `Penpot Common`'s `storage_buckets` output |
+| `PENPOT_STORAGE_GCS_BUCKET_NAME` | Auto-set to `gcs-<service-name>-assets` | The assets bucket provisioned from `Penpot Common`'s `storage_buckets` output |
 
 ### Redis Variables
 
 | Environment Variable | Source | Description |
 |---|---|---|
-| `PENPOT_REDIS_URI` | Assembled from `redis_host`:`redis_port` | WebSocket pub/sub event bus URI. Format: `redis://HOST:PORT/0`. If `redis_host` is null and `nfs_server_ip` is provided, falls back to `redis://NFS_IP:6379/0`. |
+| `PENPOT_REDIS_URI` | Assembled from `redis_host`:`redis_port` (Terraform-computed default), then re-exported by the entrypoint shell wrapper | WebSocket pub/sub event bus URI. Format: `redis://HOST:PORT/0`. The Terraform-side default falls back to `nfs_server_ip` (or the `$(NFS_SERVER_IP)` placeholder) when `redis_host` is empty, primarily so additional services can reference it. At container startup the entrypoint shell wrapper re-exports `PENPOT_REDIS_URI` from the live `NFS_SERVER_IP` (falling back to `REDIS_HOST`) and `REDIS_PORT` env vars, which takes precedence over the static Terraform value. |
 
 ### JVM Variables
 
@@ -275,16 +294,16 @@ When `smtp_enabled = false`, none of the `PENPOT_SMTP_*` variables are injected,
 
 | Aspect | Penpot CloudRun | Penpot GKE |
 |---|---|---|
-| **Startup probe type** | TCP (port 6060) — Cloud Run does not support TCP liveness, only TCP startup | HTTP (`/api/health`) — Kubernetes supports HTTP probes natively |
-| **Liveness probe** | Disabled — Cloud Run does not support TCP liveness probes; `health_check_config` is used instead | HTTP `GET /api/health` — 60s initial delay, 30s period |
-| **`min_instance_count`** | `1` (default, user-configurable) — scale-to-zero disconnects active WebSocket sessions | `1` (default, user-configurable) — same reasoning; no scale-to-zero in production |
-| **`container_protocol`** | `"h2c"` — HTTP/2 cleartext for WebSocket multiplexing over Cloud Run's managed TLS | Not directly applicable — GKE handles WebSocket connections at the Service/Ingress layer |
+| **Startup probe type** | TCP (port 6060) — Cloud Run does not support TCP liveness, only TCP startup | TCP (port 6060) — `/api/health` 404s on the backend, so HTTP probes are not used |
+| **Liveness probe** | Disabled — Cloud Run does not support TCP liveness probes; `health_check_config` is used instead | TCP (port 6060) — 60s initial delay, 30s period |
+| **`min_instance_count`** | `0` (default, user-configurable) — set to `1` or more to keep active WebSocket sessions warm | `1` (default, user-configurable) — no scale-to-zero in production |
+| **`container_protocol`** | `"http1"` — WebSockets work over HTTP/1.1 Upgrade; `h2c` breaks the HTTP/1.1 nginx frontend (502 "protocol error") | `"http1"` (default) — standard HTTP/1.1 to the pods |
 | **`session_affinity`** | Not applicable in Cloud Run (managed load balancing) | `"ClientIP"` default — important for Penpot WebSocket stability; routes repeat clients to the same pod |
 | **`PENPOT_PUBLIC_URI`** | Set to the predicted frontend Cloud Run service URL (using the deployment ID and project naming convention) | Must be set explicitly via `environment_variables` for GKE — no equivalent auto-detection |
 | **`DB_HOST`** | Cloud SQL Auth Proxy socket path (`/cloudsql/...`) | Cloud SQL private IP address |
 | **`enable_nfs`** | `true` (default) — NFS server also serves as the fallback Redis host | `true` (default) — same NFS fallback Redis pattern |
 | **Image source** | `"prebuilt"` — official Penpot Docker Hub images, mirrored to Artifact Registry | `"prebuilt"` — same |
-| **Additional services** | Frontend and exporter as Cloud Run additional services | Frontend and exporter as GKE Deployment additional services |
+| **Additional services** | None — single multi-container service: frontend is the ingress container, backend and exporter are in-pod sidecars on localhost | Frontend and exporter as GKE Deployment additional services |
 
 ---
 
@@ -352,7 +371,7 @@ module "penpot_app" {
 locals {
   application_modules    = { penpot = module.penpot_app.config }
   module_env_vars        = { REDIS_HOST = var.redis_host }
-  module_secret_env_vars = {}  # Penpot Common generates no secrets
+  module_secret_env_vars = module.penpot_app.secret_ids  # PENPOT_SECRET_KEY
   module_storage_buckets = module.penpot_app.storage_buckets
   scripts_dir            = abspath("${module.penpot_app.path}/scripts")
 }
@@ -372,13 +391,13 @@ module "app_cloudrun" {
 
 ## 11. Exploring with the GCP Console
 
-`Penpot Common` creates no GCP resources directly. After deployment, the resources it defines (the `penpot-assets` GCS bucket, the backend environment variables) are visible through the wrapper module's infrastructure.
+`Penpot Common` creates only the `PENPOT_SECRET_KEY` secret directly. After deployment, the other resources it defines (the `gcs-<service-name>-assets` GCS bucket, the backend environment variables) are visible through the wrapper module's infrastructure.
 
 **Verifying the assets bucket:**
 
-Navigate to **Cloud Storage → Buckets** and search for `penpot-assets`. Confirm:
+Navigate to **Cloud Storage → Buckets** and search for `assets` (the bucket is named `gcs-<service-name>-assets`). Confirm:
 - Bucket exists in the expected region.
-- Access control is uniform bucket-level access (`public_access_prevention = "enforced"`).
+- Access control is uniform bucket-level access (`public_access_prevention = "inherited"`).
 - The Cloud Run SA or GKE Workload Identity SA has `roles/storage.objectAdmin` in the bucket's IAM policy.
 
 **Verifying the backend environment:**
@@ -394,10 +413,12 @@ Navigate to **Cloud Run** (or **GKE → Workloads** for the GKE variant), select
 
 **Checking the health endpoint:**
 
-Once the backend is deployed, the `/api/health` endpoint returns HTTP 200 when the application is ready. From Cloud Shell or a machine with access to the service URL:
+Once the backend is deployed, its `/readyz` endpoint returns HTTP 200 when the application is
+ready (note: `/api/health` returns 404 — Penpot 2.x has no such path). From Cloud Shell or a
+machine with access to the service URL:
 
 ```bash
-curl -o /dev/null -s -w "%{http_code}\n" https://BACKEND_SERVICE_URL/api/health
+curl -o /dev/null -s -w "%{http_code}\n" https://BACKEND_SERVICE_URL/readyz
 ```
 
 A response of `200` confirms the backend has completed PostgreSQL migrations and is ready to serve requests.
@@ -408,15 +429,15 @@ A response of `200` confirms the backend has completed PostgreSQL migrations and
 
 The following commands help verify what `Penpot Common` has assembled and confirm the assets bucket is correctly configured.
 
-**Verify the penpot-assets bucket exists and has the correct region:**
+**Verify the assets bucket exists and has the correct region:**
 ```bash
-gcloud storage buckets describe gs://penpot-assets-PROJECT_ID \
+gcloud storage buckets describe gs://gcs-SERVICE_NAME-assets \
   --format="table(name,location,storageClass,iamConfiguration.publicAccessPrevention)"
 ```
 
 **Check the IAM policy on the assets bucket:**
 ```bash
-gcloud storage buckets get-iam-policy gs://penpot-assets-PROJECT_ID \
+gcloud storage buckets get-iam-policy gs://gcs-SERVICE_NAME-assets \
   --format="table(bindings.role,bindings.members)"
 ```
 
@@ -437,14 +458,14 @@ gcloud run revisions describe REVISION_NAME \
   python3 -c "import sys,json; [print(e['name'],'=',e.get('value','[secret]')) for e in json.load(sys.stdin)['spec']['containers'][0]['env'] if 'PENPOT' in e['name'] or 'JVM' in e['name']]"
 ```
 
-**List all objects in the penpot-assets bucket (design thumbnails and uploaded files):**
+**List all objects in the assets bucket (design thumbnails and uploaded files):**
 ```bash
-gcloud storage ls gs://penpot-assets-PROJECT_ID --recursive | head -50
+gcloud storage ls gs://gcs-SERVICE_NAME-assets --recursive | head -50
 ```
 
 **Check the size of the assets bucket (useful for estimating growth):**
 ```bash
-gcloud storage du gs://penpot-assets-PROJECT_ID --summarize
+gcloud storage du gs://gcs-SERVICE_NAME-assets --summarize
 ```
 
 **Confirm the Cloud SQL PostgreSQL 15 instance is running:**
@@ -468,10 +489,10 @@ gcloud sql users list \
   --format="table(name,host,type)"
 ```
 
-**Test the `/api/health` endpoint from Cloud Shell:**
+**Test the `/readyz` endpoint from Cloud Shell:**
 ```bash
 # Replace with the actual backend Cloud Run service URL
-curl -s https://BACKEND_URL/api/health | python3 -m json.tool
+curl -s -o /dev/null -w "%{http_code}\n" https://BACKEND_URL/readyz
 ```
 
 **Check Cloud Logging for Penpot backend startup and migration output:**

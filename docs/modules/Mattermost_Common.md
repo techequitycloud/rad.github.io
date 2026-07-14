@@ -33,7 +33,7 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 - Uses **PostgreSQL 15** — Mattermost requires PostgreSQL 13 or later and does not support MySQL.
 - Creates **no GCP resources** — no secrets, no IAM bindings. Mattermost generates its own internal signing keys, session secrets, and encryption keys at first startup and persists them in the PostgreSQL database.
 - Exposes a **dedicated health endpoint** at `/api/v4/system/ping` — used by both startup and liveness probes for precise health signalling. This is distinct from most other modules that probe the application root path (`/`).
-- **Edition-aware image selection**: when `edition = "enterprise"`, selects `mattermost/mattermost-enterprise-edition`; otherwise defaults to `mattermost/mattermost-team-edition`.
+- **`container_image` is hardcoded to `mattermost/mattermost-team-edition`** — `Mattermost_Common` itself has no `edition` variable. Edition-aware image selection (`edition = "enterprise"` → `mattermost/mattermost-enterprise-edition`) is implemented by the wrapper modules (`Mattermost_CloudRun`, `Mattermost_GKE`), which override `container_image` in their own `application_config` merge when `var.edition == "enterprise"`.
 - **Redis-aware configuration**: when `enable_redis = true`, injects `MM_CACHEBACKEND=redis`, `MM_REDIS_ADDRESS`, and `MM_REDIS_PASSWORD` environment variables automatically.
 
 ---
@@ -47,10 +47,10 @@ The application configuration object passed to the platform module via `applicat
 |---|---|
 | `app_name` | `"mattermost"` |
 | `application_version` | Version tag (default: `"9.11.2"`) |
-| `container_image` | `"mattermost/mattermost-team-edition"` or `"mattermost/mattermost-enterprise-edition"` depending on `edition` |
+| `container_image` | `"mattermost/mattermost-team-edition"` (hardcoded; wrapper modules override this to the enterprise image when `edition = "enterprise"`) |
 | `image_source` | `"custom"` — a custom wrapper image is built from the Common module Dockerfile |
 | `enable_image_mirroring` | `var.enable_image_mirroring` (default `true`) — mirrors the Mattermost Docker Hub image to Artifact Registry before deployment |
-| `container_build_config` | `dockerfile_path = "Dockerfile"`, `context_path = "."`, `build_args = { APP_VERSION = <version>, EDITION = <edition> }` |
+| `container_build_config` | `dockerfile_path = "Dockerfile"`, `context_path = "."`, `build_args = { MM_VERSION = <version, "latest" mapped to "9.11.2"> }` (an app-specific arg name so the Foundation's generic `APP_VERSION` injection cannot override it) |
 | `container_port` | `8065` |
 | `database_type` | `"POSTGRES_15"` |
 | `db_name` | Database name (default: `"mattermost"`) |
@@ -69,7 +69,7 @@ The application configuration object passed to the platform module via `applicat
 An empty map (`{}`). Mattermost Common does not auto-generate application secrets. Mattermost generates its own internal keys at first startup and stores them in PostgreSQL. The wrapper modules' `module_secret_env_vars` is set to this empty map.
 
 ### `storage_buckets`
-An empty list by default. Mattermost Common does not provision a dedicated GCS bucket — file storage is configured by the wrapper module through `gcs_volumes` rather than a named bucket. Compare with Ghost Common, which auto-provisions a `ghost-content` bucket.
+A single-element list declaring one `data` bucket (`name_suffix = "data"`, `STANDARD` class, `force_destroy = true`, versioning off, `public_access_prevention = "enforced"`). The wrapper modules forward this output verbatim as `module_storage_buckets`, so the bucket is actually provisioned — despite this, the module's primary file-storage path is `gcs_volumes` (mounted at `/mattermost/data`), not this bucket.
 
 ### `path`
 The absolute path to the module directory, used by wrapper modules to locate the `scripts/` directory.
@@ -98,7 +98,8 @@ The absolute path to the module directory, used by wrapper modules to locate the
 | `max_instance_count` | `number` | `3` | Maximum number of running instances. |
 | `region` | `string` | `"us-central1"` | GCP region for resource deployment. |
 | `site_url` | `string` | `""` | The public URL where Mattermost is accessible. Sets `MM_SERVICESETTINGS_SITEURL`. |
-| `edition` | `string` | `"team"` | `"team"` (free) or `"enterprise"` (paid). Controls which Mattermost Docker Hub image is used. |
+
+> `edition` is **not** a `Mattermost_Common` variable — it is declared on the wrapper modules (`Mattermost_CloudRun`, `Mattermost_GKE`) and used there to select the container image. See §9.
 
 ### Storage & Volumes
 
@@ -114,7 +115,7 @@ The absolute path to the module directory, used by wrapper modules to locate the
 | `enable_redis` | `bool` | `false` | Enable Redis for Mattermost caching and session storage. When `true`, injects Redis-specific environment variables automatically. |
 | `redis_host` | `string` | `""` | Redis hostname or IP address. Required when `enable_redis = true`. |
 | `redis_port` | `string` | `"6379"` | Redis server TCP port. |
-| `redis_auth` | `string` | `""` | Redis AUTH password. Sensitive — injected as a secret env var when non-empty. |
+| `redis_auth` | `string` | `""` | Redis AUTH password. Marked `sensitive` in Terraform, but injected as a **plain** `MM_REDIS_PASSWORD` environment variable (not a Secret Manager reference) when non-empty — `secret_environment_variables` is always `{}` from this module. |
 
 ---
 
@@ -209,13 +210,11 @@ The GKE module (`Mattermost_GKE`) uses the same probe paths and defaults. The Cl
 All supporting files are in `scripts/`. The `scripts/` directory is used as the Docker build context.
 
 ### `Dockerfile`
-Wraps the official `mattermost/mattermost-team-edition:<version>` (or enterprise equivalent) image:
-- Accepts `APP_VERSION` and `EDITION` as Docker build arguments.
-- Selects the appropriate Mattermost Docker Hub image based on `EDITION`.
-- Installs any required utilities for the entrypoint (e.g., `curl`, `jq`).
-- Ensures `/mattermost/data` is owned by the `mattermost` user.
-- Exposes ports `8065` (HTTP) and `8067` (metrics).
-- Uses the original Mattermost entrypoint — no custom entrypoint script is required because Mattermost reads all configuration from environment variables natively.
+Wraps the official `mattermost/mattermost-team-edition:${MM_VERSION}` image:
+- Accepts only `MM_VERSION` as a Docker build argument (default `9.11.2`); there is no `EDITION` build arg, and the `FROM` line is always `mattermost-team-edition` regardless of the wrapper module's `edition` variable.
+- Switches to `root` only to install the entrypoint wrapper, then drops back to the image's built-in `mattermost` uid (`2000`).
+- Copies `entrypoint.sh` to `/usr/local/bin/mm-entrypoint.sh` and uses it as the `ENTRYPOINT` — this wrapper maps the Foundation's `DB_*` variables into `MM_SQLSETTINGS_DATASOURCE` before starting the server; all other `MM_*` settings are injected directly as environment variables.
+- Exposes port `8065` (HTTP).
 
 ### `db-init.sh`
 Creates the PostgreSQL database and user before Mattermost's first startup:
@@ -235,7 +234,7 @@ Creates the PostgreSQL database and user before Mattermost's first startup:
 | **Default `min_instance_count`** | `1` — prevents scale-to-zero from disconnecting WebSocket sessions. | `1` — always at least one pod running. |
 | **Default `max_instance_count`** | `5` | `5` |
 | **Health probe path** | `/` (Cloud Run module default); override to `/api/v4/system/ping` for precise signalling. | `/api/v4/system/ping` — GKE module uses the precise Mattermost health endpoint by default. |
-| **Cloud SQL connectivity** | Auth Proxy Unix socket via `enable_cloudsql_volume = true` (default). | Cloud SQL private IP via TCP; `enable_cloudsql_volume = false` by default in GKE. |
+| **Cloud SQL connectivity** | Auth Proxy Unix socket via `enable_cloudsql_volume = true` (default). | `enable_cloudsql_volume = true` by default in GKE too — but this injects a `cloud-sql-proxy` sidecar listening on TCP `127.0.0.1`, not a Unix socket; `entrypoint.sh` connects over that loopback TCP address. |
 | **File storage** | GCS FUSE volumes (`gcs_volumes`) or NFS. GCS FUSE is preferred for Cloud Run. | GCS FUSE volumes via CSI driver (`gcs_volumes`) or NFS. GCS FUSE or StatefulSet PVC for GKE. |
 | **WebSocket timeout** | Cloud Run's 60-min max request timeout limits WebSocket lifetime. Set `timeout_seconds = 3600`. | No timeout constraint — GKE connections persist indefinitely. Better choice for production. |
 | **Session affinity** | Not applicable to Cloud Run (serverless). | `session_affinity = "ClientIP"` default — required for consistent Mattermost admin sessions across pod replicas. |
@@ -245,7 +244,7 @@ Creates the PostgreSQL database and user before Mattermost's first startup:
 
 ## 9. Edition Selection
 
-The `edition` variable controls which Mattermost Docker Hub image is used as the build base.
+The `edition` variable is declared on the **wrapper modules** (`Mattermost_CloudRun`, `Mattermost_GKE`), not on `Mattermost_Common` — see §3. When `edition = "enterprise"`, the wrapper overrides the merged `container_image` field to `mattermost/mattermost-enterprise-edition`. Note this does **not** change what `Mattermost_Common`'s static `Dockerfile` builds `FROM` (see §7) — that file always pulls `mattermost-team-edition:${MM_VERSION}` regardless of `edition`, since it has no `EDITION` build argument.
 
 | `edition` | Image | Notes |
 |---|---|---|
@@ -291,7 +290,6 @@ module "mattermost_app" {
   enable_cloudsql_volume = var.enable_cloudsql_volume
   gcs_volumes            = var.gcs_volumes
   site_url               = var.site_url
-  edition                = var.edition
   enable_redis           = var.enable_redis
   redis_host             = var.redis_host
   redis_port             = var.redis_port
@@ -301,10 +299,15 @@ module "mattermost_app" {
 }
 
 locals {
-  application_modules    = { mattermost = module.mattermost_app.config }
+  mattermost_module = merge(
+    module.mattermost_app.config,
+    var.edition == "enterprise" ? { container_image = "mattermost/mattermost-enterprise-edition" } : {},
+    # ... other container_image/container_port/container_resources overrides
+  )
+  application_modules    = { mattermost = local.mattermost_module }
   module_env_vars        = {}
   module_secret_env_vars = module.mattermost_app.secret_ids  # {}
-  module_storage_buckets = module.mattermost_app.storage_buckets  # []
+  module_storage_buckets = module.mattermost_app.storage_buckets  # [{ name_suffix = "data" }]
   scripts_dir            = abspath("${module.mattermost_app.path}/scripts")
 }
 
@@ -320,5 +323,5 @@ module "app_cloudrun" {
 
 Key differences from Ghost Common's pattern:
 - `module_secret_env_vars` is always empty (`{}`) — Mattermost manages its own secrets internally.
-- `module_storage_buckets` is always empty (`[]`) — no Common-provisioned GCS bucket. File storage is wired via `gcs_volumes` in the wrapper module.
-- `edition` and Redis variables are forwarded explicitly from the wrapper module — they are Mattermost-specific and not present in other Common modules.
+- `module_storage_buckets` is a single `data` bucket, forwarded verbatim from `Mattermost_Common`'s output — unlike most Common modules, the bucket is declared in Common rather than the wrapper.
+- `edition` is **not** passed into `module "mattermost_app"` at all — it exists only on the wrapper module and is consumed locally to override `container_image` in the merge shown above. Redis variables, by contrast, genuinely are forwarded into `Mattermost_Common`.

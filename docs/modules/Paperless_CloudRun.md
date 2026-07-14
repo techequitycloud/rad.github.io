@@ -14,7 +14,7 @@ This document provides a comprehensive reference for the `modules/Paperless_Clou
 Paperless-ngx is a community-supported open-source document management system that transforms paper documents into a searchable digital archive. `Paperless CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects Paperless-ngx-specific application configuration, database initialisation, and storage configuration via `Paperless Common`.
 
 **Key Capabilities:**
-*   **Compute**: Cloud Run v2 (Gen2), Python/gunicorn container, 2 vCPU / 2 Gi by default. `min_instance_count = 1` by default — scale-to-zero is disabled to prevent cold-start delays during document uploads and background OCR.
+*   **Compute**: Cloud Run v2 (Gen2), Python/gunicorn container, 2 vCPU / 2 Gi by default. `min_instance_count = 0` by default (scale-to-zero) — set to `1` or more to keep the background consumption pipeline warm and avoid cold-start delays on document uploads.
 *   **OCR & Classification**: Tesseract OCR engine with configurable language packs (`ocr_language`). Machine learning document classification, full-text search, tags, correspondents, document types, and custom fields.
 *   **Data Persistence**: Cloud SQL **PostgreSQL 15**. GCS FUSE volume auto-mounted at `/usr/src/paperless/media` for persistent document storage (processed documents, thumbnails, originals).
 *   **Task Queue**: Redis **required** (not optional). Paperless-ngx uses Redis as a Celery message broker for background OCR processing, document classification, consumption pipeline, and async tasks.
@@ -66,7 +66,7 @@ For the complete role tables and IAP, password rotation, and public access detai
 
 Paperless-ngx is a Python Django/gunicorn application with background Celery workers. It performs OCR using Tesseract, which is CPU-intensive on document ingestion. `Paperless CloudRun` exposes `cpu_limit` and `memory_limit` as dedicated top-level variables with production-ready defaults.
 
-**`min_instance_count = 1` by default.** Unlike Ghost (which scales to zero), Paperless-ngx keeps at least one instance warm at all times. This ensures the background consumption pipeline is always listening — documents dropped into the consumption directory are processed without cold-start delay. To reduce cost in non-production environments, set `min_instance_count = 0` and accept the cold-start penalty.
+**`min_instance_count = 0` by default.** Like most modules in this repository, Paperless-ngx scales to zero by default (cost-first). The trade-off: the background consumption pipeline only runs while an instance is warm, so documents dropped into the consumption directory may sit unprocessed until the next request wakes the service. Set `min_instance_count = 1` or more to keep the consumption pipeline continuously listening and avoid this delay.
 
 **Startup CPU Boost** is always enabled (hardcoded in `App CloudRun`).
 
@@ -81,7 +81,7 @@ Paperless-ngx is a Python Django/gunicorn application with background Celery wor
 | `container_image` | — | `""` | Override image URI. Leave empty for Cloud Build to manage. |
 | `cpu_limit` | 4 | `'2000m'` | CPU per instance. 2 vCPU recommended for OCR workloads. |
 | `memory_limit` | 4 | `'2Gi'` | Memory per instance. 2 Gi minimum; increase for large document batches. |
-| `min_instance_count` | 4 | `1` | Minimum running instances. Defaults to 1 to keep the consumption pipeline active. |
+| `min_instance_count` | 4 | `0` | Minimum running instances. Scale-to-zero by default; set to `1`+ to keep the consumption pipeline active. |
 | `max_instance_count` | 4 | `3` | Maximum running instances. Cost ceiling. |
 | `container_port` | 4 | `8000` | Paperless-ngx gunicorn port. Do not change without matching the Dockerfile. |
 | `execution_environment` | 4 | `'gen2'` | Gen2 required for GCS Fuse volume mounts. |
@@ -101,7 +101,6 @@ Paperless-ngx is a Python Django/gunicorn application with background Celery wor
 | `container_port` | `8080` | `8000` | Paperless-ngx gunicorn listens on 8000. |
 | `cpu_limit` | `'1000m'` | `'2000m'` | OCR with Tesseract is CPU-intensive; 2 vCPU recommended. |
 | `memory_limit` | `'512Mi'` | `'2Gi'` | Paperless-ngx loads document thumbnails and ML models in memory. |
-| `min_instance_count` | `0` | `1` | Keeps consumption pipeline alive; avoids cold-start delays on uploads. |
 | `enable_image_mirroring` | `false` | `true` | Mirrors from GHCR to avoid rate limits and support Binary Authorization. |
 
 ### B. Database (Cloud SQL — PostgreSQL 15)
@@ -278,7 +277,7 @@ When `enable_cloud_deploy = true` (requires `enable_cicd_trigger = true`), the C
 
 ### A. Scaling & Concurrency
 
-`min_instance_count = 1` and `max_instance_count = 3` are configurable via variables (unlike Ghost's hardcoded values). Paperless-ngx OCR tasks run asynchronously via Celery workers backed by Redis — the web UI remains responsive during heavy OCR jobs. Multiple Cloud Run instances can run concurrently with documents stored in GCS.
+`min_instance_count = 0` and `max_instance_count = 3` are configurable via variables (unlike Ghost's hardcoded values). Paperless-ngx OCR tasks run asynchronously via Celery workers backed by Redis — the web UI remains responsive during heavy OCR jobs. Multiple Cloud Run instances can run concurrently with documents stored in GCS.
 
 > **Consumption pipeline note:** The background document consumption pipeline requires at least one running instance. Setting `min_instance_count = 0` means uploaded documents will not be processed until the next request warms the instance.
 
@@ -296,7 +295,7 @@ Both startup and liveness probes target `/` (Paperless-ngx's login page), which 
 |---|---|---|---|
 | `startup_probe` | 14 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=60, timeout_seconds=10, period_seconds=10, failure_threshold=60 }` | Startup probe. 60 × 10s = 600s total allowance for first boot. |
 | `liveness_probe` | 14 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=60, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Liveness probe. Container is restarted after 3 consecutive failures. |
-| `uptime_check_config` | 14 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. Alerts notify `support_users` if unreachable. |
+| `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Optional Cloud Monitoring uptime check. Alerts notify `support_users` if unreachable. |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 
 ### D. Auto Password Rotation
@@ -395,7 +394,7 @@ A Cloud Monitoring uptime check polls the Paperless-ngx endpoint from multiple g
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `uptime_check_config` | 14 | `{ enabled=true, path="/" }` | Uptime check configuration. |
+| `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Uptime check configuration. Disabled by default. |
 | `alert_policies` | 14 | `[]` | Metric alert policies. Each: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`, `aggregation_period`. |
 
 ---
@@ -405,7 +404,7 @@ A Cloud Monitoring uptime check polls the Paperless-ngx endpoint from multiple g
 After a successful deployment, the following GCP Console areas provide the most insight into a running Paperless-ngx instance.
 
 **Cloud Run — Service Details**
-Navigate to **Cloud Run → Services → paperless-\&lt;deployment-id\>**. The **Revisions** tab shows all deployed revisions, their traffic percentage, and the container image tag. Click a revision to see its environment variables (redacted for secrets) and resource limits. The **Logs** tab streams combined stdout/stderr from the gunicorn server and the Celery worker.
+Navigate to **Cloud Run → Services → paperless-\<deployment-id\>**. The **Revisions** tab shows all deployed revisions, their traffic percentage, and the container image tag. Click a revision to see its environment variables (redacted for secrets) and resource limits. The **Logs** tab streams combined stdout/stderr from the gunicorn server and the Celery worker.
 
 **Cloud Run — Service URL**
 The **URL** field on the service overview is the direct `*.run.app` address for Paperless-ngx. Open it in a browser to reach the login page. Log in with the `admin_user` username and the password retrieved from Secret Manager (see §11).
@@ -579,7 +578,7 @@ The following behaviours are applied automatically by `Paperless CloudRun` regar
 | **Django secret key auto-generated** | `PAPERLESS_SECRET_KEY` secret provisioned by `Paperless Common` | Required for Django session signing. Regenerating this key invalidates all existing user sessions. |
 | **GCS Fuse auto-mounted** | `paperless-media` bucket mounted at `/usr/src/paperless/media` | When `gcs_volumes = []`, `Paperless Common` automatically provisions and mounts the media bucket. Requires `gen2`. |
 | **Redis required** | `enable_redis = true` default | Paperless-ngx will not start without Redis. When `redis_host = ""`, the NFS server IP is used. |
-| **min_instance_count = 1** | Default in `variables.tf` | Keeps the consumption pipeline alive. Set to `0` only for cost-optimised non-production environments. |
+| **min_instance_count = 0** | Default in `variables.tf` (scale-to-zero) | Cost-first default. Set to `1`+ to keep the consumption pipeline alive without cold-start delay. |
 | **Image mirroring enabled** | `enable_image_mirroring = true` default | GHCR images are mirrored to Artifact Registry to avoid rate limits and to satisfy Binary Authorization requirements. |
 | **Default db-init job** | Supplied by `Paperless Common` when `initialization_jobs = []` | PostgreSQL database and user are created automatically. Override with a non-empty list to replace. |
 | **Scripts directory** | `scripts_dir = abspath("${module.paperless_app.path}/scripts")` | Initialization scripts are sourced from `Paperless Common`, not from the deployment directory. |
@@ -604,7 +603,7 @@ All user-configurable variables exposed by `Paperless CloudRun`, sorted by UI gr
 | `deploy_application` | 4 | `true` | Set `false` for infrastructure-only deployment. |
 | `cpu_limit` | 4 | `'2000m'` | CPU per instance. 2 vCPU recommended for OCR. |
 | `memory_limit` | 4 | `'2Gi'` | Memory per instance. |
-| `min_instance_count` | 4 | `1` | Minimum instances. Defaults to 1 to keep consumption pipeline alive. |
+| `min_instance_count` | 4 | `0` | Minimum instances. Scale-to-zero by default; set to `1`+ to keep consumption pipeline alive. |
 | `max_instance_count` | 4 | `3` | Maximum instances. Cost ceiling. |
 | `container_port` | 4 | `8000` | Paperless-ngx gunicorn port. |
 | `execution_environment` | 4 | `'gen2'` | Gen2 required for GCS Fuse. |
@@ -671,7 +670,7 @@ All user-configurable variables exposed by `Paperless CloudRun`, sorted by UI gr
 | `additional_services` | 13 | `[]` | Additional Cloud Run services (e.g., Gotenberg, Tika). |
 | `startup_probe` | 14 | `{ path="/", initial_delay_seconds=60, failure_threshold=60, ... }` | Startup probe. Long failure threshold for first-boot migrations. |
 | `liveness_probe` | 14 | `{ path="/", initial_delay_seconds=60, failure_threshold=3, ... }` | Liveness probe. |
-| `uptime_check_config` | 14 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 | `time_zone` | 15 | `'UTC'` | Timezone for document timestamps. Important for OCR date parsing. |
 | `ocr_language` | 15 | `'eng'` | Tesseract OCR language. Combine with `+` for multiple languages. |
@@ -703,8 +702,8 @@ All user-configurable variables exposed by `Paperless CloudRun`, sorted by UI gr
 | `database_user` | Name of the application database user. |
 | `database_password_secret` | Secret Manager secret name for the database password. |
 | `storage_buckets` | Created GCS storage buckets. |
-| `nfs_server_ip` | NFS server internal IP *(sensitive)*. |
-| `nfs_mount_path` | NFS mount path inside containers. |
+| `load_balancer_ip` | Static IP address of the load balancer. |
+| `load_balancer_url` | HTTPS URL to access the application via the load balancer. |
 | `container_image` | Container image used for the deployment. |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 | `github_repository_url` | GitHub repository URL connected for CI/CD. |
@@ -724,7 +723,7 @@ All user-configurable variables exposed by `Paperless CloudRun`, sorted by UI gr
 | `enable_nfs` | `true` | **High** | The NFS server IP is used as the default Redis host. Disabling NFS without providing an explicit `redis_host` causes Redis connection failures at startup. |
 | `execution_environment` | `'gen2'` | **Critical** | GCS Fuse requires Gen2. Switching to `'gen1'` while GCS volumes are mounted causes Cloud Run revisions to fail to start. The `paperless-media` GCS Fuse volume is always mounted when `gcs_volumes = []`. |
 | `gcs_volumes` | `[]` (auto-mounts paperless-media) | **Critical** | The `paperless-media` bucket is the sole persistent storage for all Paperless-ngx documents. If the auto-mount is overridden incorrectly, documents are written to the ephemeral container filesystem and lost on the next revision deployment or instance restart. |
-| `min_instance_count` | `1` | **High** | Setting to `0` enables scale-to-zero. When the instance is cold, uploaded documents are not consumed until the next request warms the service. For unattended consumption directory workflows, this can result in hours of unprocessed documents. |
+| `min_instance_count` | `0` (default; scale-to-zero) | **High** | When the instance is cold, uploaded documents are not consumed until the next request warms the service. For unattended consumption directory workflows, this can result in hours of unprocessed documents — set to `1`+ if this matters. |
 | `db_name` | `"paperless"` | **Critical** | Immutable after first deployment — changing this causes Terraform to recreate the database, destroying all document metadata, tags, correspondents, and settings. Physical document files in GCS survive but become unreferenced. |
 | `db_user` | `"paperless"` | **Critical** | Immutable after first deployment — changing this recreates the Cloud SQL user and invalidates all stored credentials. |
 | `application_version` | `"latest"` | **Medium** | Using `latest` means each Cloud Build run may pull a new Paperless-ngx version, which can include database migrations or breaking changes. Pin to a specific version (e.g., `"2.13.5"`) for production deployments. |

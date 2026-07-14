@@ -119,12 +119,20 @@ Temporal when Elasticsearch is active.
 
 ## 6. Scripts
 
-`Temporal_Common` ships a `scripts/` directory with:
+`Temporal_Common` ships a `scripts/` directory with a single file:
 
 | File | Purpose |
 |---|---|
-| `schema-init.sh` | Uses `temporal-sql-tool` from `ghcr.io/temporalio/admin-tools` to initialise both schemas manually. Retained for use-cases where external schema management is preferred. Not used in the default deployment — `temporalio/auto-setup` handles schema init automatically. |
-| `temporal-db-init.sh` | Grants `CREATEDB` privilege to the Temporal PostgreSQL role. Run by the `temporal-db-init` Kubernetes Job before the server pod starts. |
+| `schema-init.sh` | Uses `temporal-sql-tool` from `ghcr.io/temporalio/admin-tools` to initialise both schemas manually. Retained for use-cases where external schema management is preferred. Not wired into any `initialization_jobs` entry in the default deployment (`Temporal_GKE` sets `initialization_jobs = []`) — `temporalio/auto-setup` handles schema init automatically on first start. |
+
+`Temporal_GKE` (the platform module, not `Temporal_Common`) separately carries its
+own `scripts/temporal-db-init.sh`, which grants `CREATEDB` to the Temporal
+PostgreSQL role and pre-creates both databases as a bootstrapping aid for
+`temporal-sql-tool`. It is likewise **not currently wired into any Job** — with
+`initialization_jobs = []`, both the user and the two databases are instead
+created directly by `Temporal_Common`'s own `google_sql_user`/`google_sql_database`
+resources (§3), which need no `CREATEDB` grant since Terraform provisions them
+through the Cloud SQL Admin API rather than by connecting as the app role.
 
 ---
 

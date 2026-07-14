@@ -333,7 +333,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | HTTP `/`, 30s delay | HTTP probe against the Node-RED editor path. |
 | `liveness_probe` | HTTP `/`, 30s delay | Liveness probe — restarts the container if the editor is unresponsive. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, path `/` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Context Storage

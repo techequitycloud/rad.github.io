@@ -110,7 +110,7 @@ comes up correctly on first boot:
 - **gRPC disabled by default** — `QDRANT__SERVICE__GRPC_PORT` is intentionally
   not set. Neither the default GKE ClusterIP/LoadBalancer Service nor Cloud Run
   exposes port 6334. Enable via `environment_variables =
-  &#123; QDRANT__SERVICE__GRPC_PORT = "6334" &#125;` in the GKE wrapper and configure a
+  { QDRANT__SERVICE__GRPC_PORT = "6334" }` in the GKE wrapper and configure a
   second Service port manually if gRPC is needed.
 - **No initialization job** — Qdrant requires no database bootstrap. If
   `initialization_jobs` is non-empty in the wrapper, those jobs are passed

@@ -41,8 +41,8 @@ a focused set of Google Cloud services:
 - **`DATABASE_*` variables are mapped by the entrypoint script** (`flowise-entrypoint.sh`)
   from platform-standard `DB_*` variables at container startup — do not set them
   directly as environment variables.
-- **`min_instance_count = 1` by default.** This avoids cold-start latency that would
-  exceed downstream LLM client timeouts on incoming requests.
+- **`min_instance_count = 0` by default.** Cold starts of 10–20s can exceed downstream
+  LLM client timeouts on incoming requests — set `1` for latency-sensitive production use.
 - **The admin password is generated automatically** and stored in Secret Manager;
   you never set it in plain text.
 - **Redis is disabled by default.** It is not required for Flowise core functionality,
@@ -221,7 +221,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `container_image` | `""` | Override image URI (only used when `container_image_source = "prebuilt"`). |
 | `cpu_limit` | `1000m` | CPU per instance. |
 | `memory_limit` | `1Gi` | Memory per instance; raise toward 2 GiB for large flow graphs. |
-| `min_instance_count` | `1` | Minimum instances. Keep ≥ 1 to avoid cold-start latency for AI workloads. |
+| `min_instance_count` | `0` | Minimum instances. Set ≥ 1 to avoid cold-start latency for AI workloads. |
 | `max_instance_count` | `1` | Maximum instances. Increase only with Redis enabled. |
 | `container_port` | `3000` | Flowise listens on port 3000. |
 | `execution_environment` | `gen2` | Gen2 is required for NFS volume mounts. |
@@ -313,7 +313,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | HTTP `/api/v1/ping`, 30–60s delay | Startup probe; allows 5-minute budget for DB init. |
 | `liveness_probe` / `health_check_config` | HTTP `/api/v1/ping` | Liveness probe. |
-| `uptime_check_config` | enabled, path `/` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, path `/` | Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis (optional)

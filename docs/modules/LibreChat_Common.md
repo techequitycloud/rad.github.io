@@ -26,7 +26,8 @@ foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Cryptographic secrets | Generates `CREDS_KEY`, `CREDS_IV`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, and `MONGO_URI` and stores them in **Secret Manager** | Retrieve via Secret Manager (see below) |
 | Container image | Pins the official LibreChat image (`ghcr.io/danny-avila/librechat`) and mirrors it to Artifact Registry | `container_image` output of the platform deployment |
 | Database connectivity | Manages the MongoDB URI — three modes: explicit URI, manual Firestore config, or Firestore ENTERPRISE auto-provisioning | `MONGO_URI` secret; §Database below |
-| Object storage | Declares the **`librechat-uploads`** Cloud Storage bucket for user file uploads | `storage_buckets` output |
+| Object storage | Declares a **Cloud Storage** bucket (suffix `uploads`) for user file uploads | `storage_buckets` output |
+| Port binding | Sets `container_port = 3080` — LibreChat's Express server port | Service/revision configuration |
 | Core settings | Sets the baseline LibreChat environment (`HOST`, `NODE_ENV`, `APP_TITLE`, `TRUST_PROXY`, `ALLOW_REGISTRATION`, `DOMAIN_CLIENT`, `DOMAIN_SERVER`) | Application behaviour in the platform guides |
 | Health checks | Supplies the default startup and liveness probe configuration, targeting LibreChat's root path (`/`) with a generous startup delay | Observability in the platform guides |
 
@@ -34,9 +35,11 @@ foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 
 ## 2. Auto-generated secrets in Secret Manager
 
-All five core LibreChat secrets are generated automatically on first deploy and stored in
-Secret Manager. They are injected into the workload at runtime; plaintext is never written to
-state files or logs.
+Five core LibreChat secrets are generated automatically on first deploy and stored in
+Secret Manager. Two more (`scram-password`, `firestore-host`) are added only when the Firestore
+MongoDB-compatible auto-provisioning path is active (§3) — which is the **default** whenever
+`mongodb_uri` and `firestore_mongodb_host` are both left empty. All are injected into the
+workload at runtime; plaintext is never written to state files or logs.
 
 | Secret suffix | Environment variable | Content |
 |---|---|---|
@@ -45,6 +48,8 @@ state files or logs.
 | `jwt-secret` | `JWT_SECRET` | 64-character random string — signs user access tokens |
 | `jwt-refresh-secret` | `JWT_REFRESH_SECRET` | 64-character random string — signs long-lived refresh tokens |
 | `mongo-uri` | `MONGO_URI` | MongoDB connection string (explicit or Firestore-constructed) |
+| `scram-password` | `SCRAM_PASSWORD` | Auto-generated SCRAM-SHA-256 password for the Firestore UserCreds principal (Firestore mode only) |
+| `firestore-host` | `FIRESTORE_HOST` | MongoDB-compatible Firestore connection host, stored as a secret because it is unknown at plan time on first create (Firestore mode only) |
 
 Retrieve a secret after deployment:
 
@@ -92,7 +97,7 @@ Inspect the Firestore database and connection:
 
 ```bash
 gcloud firestore databases list --project "$PROJECT"
-gcloud firestore databases describe LibreChat --project "$PROJECT"
+gcloud firestore databases describe librechat --project "$PROJECT"
 ```
 
 ---
@@ -148,7 +153,7 @@ redirects on the root path, so a plain HTTP probe works for both platforms.
 
 ## 7. Object storage
 
-A dedicated **`librechat-uploads`** Cloud Storage bucket is declared here and provisioned by
+A dedicated **Cloud Storage** bucket (suffix `uploads`) is declared here and provisioned by
 the foundation, which also grants the workload service account access. The bucket stores user
 file uploads (images, documents) shared in chat conversations. List it with:
 

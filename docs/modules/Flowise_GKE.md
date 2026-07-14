@@ -288,7 +288,7 @@ Only relevant when `workload_type = "StatefulSet"`.
 |---|---|---|
 | `startup_probe_config` | path `/api/v1/ping`, 30s delay, 30 failures | 5-minute startup budget for DB initialisation on first boot. |
 | `health_check_config` | path `/api/v1/ping`, 15s delay | Liveness probe. |
-| `uptime_check_config` | enabled, path `/` | Cloud Monitoring uptime check from global locations. |
+| `uptime_check_config` | disabled, path `/` | Cloud Monitoring uptime check from global locations. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -361,7 +361,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve (e.g. `["flowise.example.com"]`). |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 

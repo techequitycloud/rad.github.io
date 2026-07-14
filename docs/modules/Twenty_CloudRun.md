@@ -254,9 +254,9 @@ specific to or notable for Twenty are listed; every other input is inherited fro
 | Variable | Default | Description |
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
-| `cpu_limit` | `2000m` | CPU per instance. 2 vCPU recommended for production. |
+| `cpu_limit` | `1000m` | CPU per instance. 2 vCPU recommended for production. |
 | `memory_limit` | `2Gi` | Memory per instance. Raise to `4Gi` for large datasets. |
-| `min_instance_count` | `1` | Minimum instances. Keep ≥ 1 to avoid cold-start on webhook/job workloads. |
+| `min_instance_count` | `0` | Minimum instances. Keep ≥ 1 to avoid cold-start on webhook/job workloads. |
 | `max_instance_count` | `3` | Maximum instances. |
 | `container_port` | `3000` | Twenty listens on port 3000. Do not change unless using a custom image. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar for Unix socket connections. |
@@ -347,7 +347,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | HTTP `/healthz`, 120s delay, 40 failures | Probes `/healthz`; allows up to ~10 minutes for first-boot migrations. |
 | `liveness_probe` / `health_check_config` | HTTP `/healthz`, 30s delay | Liveness probe. |
-| `uptime_check_config` | enabled, path `/healthz` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, path `/healthz` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache

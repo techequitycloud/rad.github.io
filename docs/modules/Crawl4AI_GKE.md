@@ -228,7 +228,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `application_name` | `crawl4ai` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Crawl4AI Web Crawler` | Friendly name shown in the Console. |
 | `application_description` | _(set)_ | Workload description annotation. |
-| `application_version` | `latest` | Crawl4AI image version tag; pin to a specific tag for production. |
+| `application_version` | `0.7.8` | Crawl4AI image version tag; pin to a specific tag for production. |
 
 ### Group 4 — Runtime & Scaling
 
@@ -391,7 +391,7 @@ to locate and explore the running resources.
 | `cpu_limit` (in `container_resources`) | `4` | High | Below 2 vCPU, Chromium JavaScript rendering triggers internal timeouts on complex pages, slowing crawl throughput significantly. |
 | `enable_iap` / `enable_cloud_armor` | enable for production | High | Without IAP or a crawl API token, the LoadBalancer IP is publicly accessible and anyone can submit crawl jobs. |
 | `LLM_API_KEY` / provider API keys | via `secret_environment_variables` | High | Missing or expired keys cause LLM-based extraction to fail silently (empty `extracted_content`). Inject as secrets, not plain-text env vars. |
-| `redis_task_ttl_seconds` | `3600` | Medium | Too short (&lt; 300 s) causes results to expire before async clients poll; too long causes unbounded Redis memory growth. |
+| `redis_task_ttl_seconds` | `3600` | Medium | Too short (< 300 s) causes results to expire before async clients poll; too long causes unbounded Redis memory growth. |
 | `session_affinity` | `None` | Medium | Setting to `ClientIP` pins clients to one pod and breaks load distribution without helping task routing (task IDs are already pod-local). |
 | `application_version` | pinned tag | Medium | Using `"latest"` is non-reproducible; a rebuild may pull a breaking Crawl4AI API change. |
 | `enable_image_mirroring` | `true` | Low | Crawl4AI images are large; without mirroring, every pod start pulls from Docker Hub and risks rate-limit failures. |

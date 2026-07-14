@@ -228,7 +228,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `application_name` | `cal` | Base name for resources. Do not change after first deploy. |
+| `application_name` | `caldiy` | Base name for resources. Do not change after first deploy. |
 | `display_name` | `Cal.com Scheduling` | Friendly name shown in the Console. |
 | `description` | _(set)_ | Service description. |
 | `application_version` | `v6.2.0` | Cal.diy image version tag — **no `latest` tag exists**, always pin to a versioned release. |
@@ -334,7 +334,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | HTTP `/api/auth/session`, initial_delay=180s, failure_threshold=18 | Generous window for first-boot `start.sh` (URL rewrite + migrations + seed). |
 | `liveness_probe` | HTTP `/api/auth/session`, initial_delay=60s | Liveness probe after startup. |
-| `uptime_check_config` | enabled, path `/api/auth/session` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, path `/api/auth/session` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache
@@ -419,4 +419,4 @@ For the foundation behaviour referenced throughout — service identity, scaling
 concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Cal.diy-specific application configuration shared
-with the GKE variant is described in **[Cal_Common](CalDiy_Common.md)**.
+with the GKE variant is described in **[CalDiy_Common](CalDiy_Common.md)**.

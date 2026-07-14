@@ -191,7 +191,7 @@ Monitoring. Optional uptime checks and alert policies are available.
 
 - **Startup probe.** Health probes target `/api/auth/session` (HTTP 200 when NextAuth
   is ready). A generous startup window (`initial_delay=60s`,
-  `failure_threshold=30`, `period=10s`) accommodates `db-migrate` and
+  `failure_threshold=12`, `period=10s` ≈ 2 minutes) accommodates `db-migrate` and
   `seed-app-store` which must complete before the application serves requests.
 
 - **Public URL wiring.** `NEXT_PUBLIC_WEBAPP_URL` and `NEXTAUTH_URL` are set to the
@@ -301,7 +301,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` / `startup_probe_config` | HTTP `/api/auth/session`, 60s delay, failure_threshold=30 | Cal.diy's `/api/auth/session` returns 200 when NextAuth is ready. |
+| `startup_probe` / `startup_probe_config` | HTTP `/api/auth/session`, 60s delay, 12 × 10s failure window | Cal.diy's `/api/auth/session` returns 200 when NextAuth is ready. |
 | `liveness_probe` / `health_check_config` | HTTP `/api/auth/session` | Liveness probe after startup. |
 | `uptime_check_config` | disabled | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
@@ -378,7 +378,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. When set, also update `NEXT_PUBLIC_WEBAPP_URL` in `environment_variables`. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 | `enable_cdn` | `false` | Enable Cloud CDN on the load balancer backend. |
@@ -464,7 +464,7 @@ locate and explore the running resources.
 | `NEXTAUTH_URL` | match public URL | Critical | NextAuth validates OAuth redirect URIs against this; a mismatch blocks all logins. |
 | `quota_memory_requests` / `_limits` | binary units | Critical | Bare integers are bytes — blocks all pod scheduling. |
 | `container_resources.memory_limit` | `2Gi` minimum | High | Cal.diy startup (DB migration + seed) requires ≥ 2 GiB; OOM kills before the app is ready. |
-| `startup_probe.failure_threshold` | `30` (10s period = 5 min) | High | Reducing too aggressively kills pods before `db-migrate` and `seed-app-store` complete. |
+| `startup_probe.failure_threshold` | `12` (10s period ≈ 2 min) | High | Reducing too aggressively kills pods before `db-migrate` and `seed-app-store` complete. |
 | `enable_redis` | `true` for multi-replica | High | Without Redis, sessions are per-pod; users are logged out when requests land on different pods. |
 | `redis_host` | required when `enable_redis=true` | High | Empty `redis_host` with Redis enabled injects a malformed URL; session operations fail at runtime. |
 | `enable_pod_disruption_budget` | `true` when `max > 1` | Medium | Without PDB, cluster maintenance can evict all pods simultaneously. |

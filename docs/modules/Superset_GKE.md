@@ -159,8 +159,8 @@ static IP details.
 ### G. Cloud Logging & Monitoring
 
 Pod stdout/stderr flows to Cloud Logging; GKE and Cloud SQL metrics flow to Cloud
-Monitoring. An uptime check against `/health` is enabled by default. Optional alert
-policies are available.
+Monitoring. An optional uptime check against `/health` and optional alert
+policies are available (disabled by default).
 
 - **Console:** Logging → Logs Explorer; Monitoring → Dashboards / Alerting.
 - **CLI:**
@@ -289,7 +289,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `startup_probe_config` | HTTP `/health`, 60 s delay, 12 failures | Allows up to 180 s for the Gunicorn worker pool to initialise. |
 | `health_check_config` | HTTP `/health`, 60 s delay | Liveness probe. |
-| `uptime_check_config` | enabled, `/health` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, `/health` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -358,7 +358,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 

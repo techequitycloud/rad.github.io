@@ -22,7 +22,7 @@ Usage is metered in **credits**: most modules cost a set number of credits to de
 1. Open the RAD sign-in page and click **Sign in with Google**.
 2. Choose your Google account.
 
-The first time you sign in, your account is created automatically. New accounts start with the **User** role and are active right away. (If the platform is running in private mode, sign-ins from outside the allowed organization are refused — ask an administrator if you can't get in.)
+The first time you sign in, your account is created automatically. New accounts start with the **User** role and are active right away. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
 
 To sign out, open the **profile dropdown** in the top-right corner and choose **Sign out**.
 
@@ -149,23 +149,3 @@ For the full set of tasks in each role:
 - [Agent](agent-guide.md)
 - [Finance](finance-guide.md)
 - [Support](support-guide.md)
-
----
-
-## Where to next
-
-Once you can deploy modules, put them to work:
-
-- **Studying for a Google Cloud certification?** Each study path maps the
-  official exam sections to deployment labs:
-  [Associate Cloud Engineer (ACE)](/docs/certification/ACE_Certification_Guide) ·
-  [Cloud Architect (PCA)](/docs/certification/PCA_Certification_Guide) ·
-  [Cloud Developer (PCD)](/docs/certification/PCD_Certification_Guide) ·
-  [Database Engineer (PCDE)](/docs/certification/PCDE_Certification_Guide) ·
-  [Network Engineer (PCNE)](/docs/certification/PCNE_Certification_Guide) ·
-  [DevOps Engineer (PDE)](/docs/certification/PDE_Certification_Guide) ·
-  [Security Engineer (PSE)](/docs/certification/PSE_Certification_Guide)
-- **Want a first hands-on lab?** Start with the
-  [GCP Services lab](/docs/labs/Services_GCP) (the platform's foundation) or
-  deploy [WordPress on GKE Autopilot](/docs/labs/Wordpress_GKE).
-- **Building an LLM stack?** See [AI Tooling on GCP](/docs/guides/ai-tooling-gcp).

@@ -32,7 +32,7 @@ Windmill runs as a combined server+worker container on Cloud Run v2. The deploym
 - **`BASE_URL` and `BASE_INTERNAL_URL` are constructed at startup** from platform-injected variables so OAuth callbacks and webhook URLs resolve correctly.
 - **Redis is disabled by default.** Windmill operates without Redis for single-instance deployments. Enable Redis for distributed queue behaviour with multiple instances.
 - **An SMTP placeholder secret is provisioned automatically.** Replace the `{prefix}-smtp-password` value in Secret Manager before enabling email notifications.
-- **`min_instance_count = 1`** keeps one instance warm so webhook triggers and scheduled flows do not require a cold start.
+- **`min_instance_count` defaults to `0`** (scale-to-zero). Set it to `1` to keep an instance warm so webhook triggers and scheduled flows do not require a cold start.
 
 ---
 
@@ -176,7 +176,7 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 | `container_image` | `""` | Override image URI. Leave empty for Cloud Build to manage. |
 | `cpu_limit` | `2000m` | CPU per instance. 2 vCPU is the recommended minimum for combined server+worker mode. |
 | `memory_limit` | `2Gi` | Memory per instance. 4 GiB recommended for production Python/TypeScript workloads. |
-| `min_instance_count` | `1` | Minimum instances. Keep ≥ 1 so webhooks and scheduled flows are always available. |
+| `min_instance_count` | `0` | Minimum instances. Set ≥ 1 so webhooks and scheduled flows are always available without a cold start. |
 | `max_instance_count` | `3` | Maximum instances. Use Redis when scaling beyond 1 to coordinate job queues. |
 | `container_port` | `8000` | Windmill listens on port 8000. |
 | `execution_environment` | `gen2` | Gen2 required for GCS Fuse mounts and full Linux compatibility. |
@@ -264,7 +264,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see [App_CloudR
 |---|---|---|
 | `startup_probe` | HTTP `/api/version`, 60s initial delay, 10 failures | Startup probe. |
 | `liveness_probe` | HTTP `/api/version`, 60s initial delay, 3 failures | Liveness probe. |
-| `uptime_check_config` | enabled, `/api/version` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, `/api/version` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache

@@ -240,4 +240,4 @@ Grouped exactly as they appear on the deployment platform. Module-metadata setti
 
 ---
 
-For a hands-on walkthrough of deploying, verifying, operating, observing, and tearing down this module — including exploring sidecar vs ambient mode and the observability stack — see the **[Istio on GKE lab guide](Istio_GKE.md)**.
+For a hands-on walkthrough of deploying, verifying, operating, observing, and tearing down this module — including exploring sidecar vs ambient mode and the observability stack — see the **[Istio on GKE lab guide](../labs/Istio_GKE.md)**.

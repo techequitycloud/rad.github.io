@@ -30,7 +30,7 @@ wires together a focused set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | Cloud Run v2 | Python proxy service, 2 vCPU / 2 GiB by default, request-based autoscaling |
+| Compute | Cloud Run v2 | Python proxy service, 1 vCPU / 2 GiB by default, request-based billing |
 | Database | Cloud SQL for PostgreSQL 15 | Required — LiteLLM's Prisma ORM uses PostgreSQL for virtual keys and spend tracking |
 | Object storage | Cloud Storage | Optional — no buckets created by default |
 | Cache | Redis | Optional — reduces latency and cost for repeated identical LLM requests |
@@ -247,9 +247,10 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
-| `cpu_limit` | `2000m` | CPU per instance. |
-| `memory_limit` | `2Gi` | Memory per instance; increase to `4Gi` for high-throughput deployments. |
-| `min_instance_count` | `1` | Minimum instances. Keep ≥ 1 to avoid cold starts on the API gateway. |
+| `cpu_limit` | `1000m` | CPU per instance. |
+| `memory_limit` | `2Gi` | Memory per instance; do not shrink below 2Gi — LiteLLM OOM-crashes on startup below that. |
+| `cpu_always_allocated` | `false` | Request-based billing by default — LiteLLM is a stateless proxy with no in-process background work. |
+| `min_instance_count` | `0` | Minimum instances. Defaults to scale-to-zero; set ≥ 1 to eliminate cold starts on the API gateway. |
 | `max_instance_count` | `3` | Maximum instances. |
 | `container_port` | `4000` | LiteLLM's native port. |
 | `execution_environment` | `gen2` | Cloud Run execution generation; gen2 is required for NFS and Direct VPC Egress. |
@@ -340,7 +341,7 @@ See [App_CloudRun](App_CloudRun.md).
 |---|---|---|
 | `startup_probe` | `/health/readiness` | HTTP probe; validates DB connectivity and Prisma migrations before marking the service ready. |
 | `liveness_probe` | `/health/liveliness` | HTTP probe; confirms the proxy process is running. |
-| `uptime_check_config` | enabled | Cloud Monitoring uptime check against `/health/liveliness`. |
+| `uptime_check_config` | disabled | Cloud Monitoring uptime check against `/health/liveliness`; enable explicitly to activate. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache

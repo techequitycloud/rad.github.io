@@ -84,9 +84,9 @@ type (Deployment vs StatefulSet) are managed.
 
 Django stores all application data in a managed Cloud SQL for PostgreSQL 15 instance.
 Pods reach it privately through the **Cloud SQL Auth Proxy** sidecar over a Unix
-socket, so no public IP is exposed. On first deploy the `db-init` job creates the
-application database and user, installs the required extensions, and grants
-privileges. The `db-migrate` job then runs `manage.py migrate` and
+socket, so no public IP is exposed. A `db-init` job runs on every apply (idempotent)
+and creates the application database and user, installs the required extensions, and
+grants privileges. The `db-migrate` job then runs `manage.py migrate` and
 `manage.py collectstatic`.
 
 - **Console:** SQL → select the instance for connections, backups, flags, and
@@ -321,7 +321,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `liveness_probe` | HTTP `GET /`, 60s initial delay | Liveness probe passed to `Django_Common`. Use a lightweight `/healthz/` endpoint. |
 | `startup_probe_config` | TCP, 240s timeout | App_GKE-level infrastructure startup probe. |
 | `health_check_config` | HTTP `GET /`, 1s timeout | App_GKE-level infrastructure liveness probe. |
-| `uptime_check_config` | enabled, path `/` | Optional Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, path `/` | Optional Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -353,6 +353,9 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Additional buckets beyond the auto-provisioned media bucket. |
 | `gcs_volumes` | `[]` | GCS Fuse mounts. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
+| `max_images_to_retain` | `7` | Maximum recent container images kept in Artifact Registry per deployment. |
+| `delete_untagged_images` | `true` | Automatically delete untagged/dangling images from the inline-created repository. |
+| `image_retention_days` | `30` | Days after which images become eligible for deletion; `0` disables age-based deletion. |
 
 ### Group 15 — Redis Cache
 
@@ -393,7 +396,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 

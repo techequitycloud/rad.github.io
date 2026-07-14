@@ -7,22 +7,22 @@ description: "RAD Platform finance guide — managing credits, billing, invoicin
 
 This guide is for people with the **Finance** role, who manage RAD's billing setup, run revenue and payout reports, and reconcile cloud costs. New to RAD? Start with [Using RAD](using-rad.md).
 
-When you sign in as Finance, you land on the **Billing** page. Your navigation bar shows **Billing**, **Setup Requests**, and **Help**.
+When you sign in as Finance, you land on the **Billing** page. Your navigation bar shows **Billing** and **Help**. (**Setup Requests** is a tab inside the Help page.)
 
 ## What you can do
 
 - Create and edit subscription plans and their per-provider prices (**Subscription Tiers**).
 - Configure the credit economy — credits-per-unit and revenue shares (**Credit Settings**).
 - Adjust any user's credit balance (**Credit Management**).
-- Report on **Partner Revenue**, **Agent Revenue**, and platform-wide **Revenue**, with filters by agent, partner, user, date, and module.
+- Report on **Partner Revenue** and **Agent Revenue**.
 - See per-payee payout totals (**Payout Summary**).
-- Review org-wide GCP cloud costs (**Project Invoices**) and per-deployment **Module Costs**.
+- Review org-wide GCP cloud costs (**Project Invoices**).
 - View all users and the full lists of agents and partners; make limited user edits.
-- Manage managed-setup requests (**Setup Requests**).
+- Manage managed-setup requests (the **Setup Requests** tab on the Help page).
 
 ## The Billing page
 
-Open **Billing** from the navigation bar. The page is organized into tabs, described below.
+Open **Billing** from the navigation bar. The page is organized into seven tabs — **Subscription Tiers**, **Credit Settings**, **Credit Management**, **Partner Revenue**, **Agent Revenue**, **Payout Summary**, and **Project Invoices** — described below.
 
 ### Subscription Tiers
 
@@ -69,14 +69,6 @@ Track commissions earned through the agent referral program.
 1. Go to **Billing** > **Agent Revenue**.
 2. Review the commission earned by each agent from the activity of users they referred, based on the agent revenue share set in Credit Settings.
 
-### Revenue (platform-wide reporting)
-
-Run platform-wide revenue reports.
-
-1. Open the **Revenue** view.
-2. Filter by **agent**, **partner**, **user**, **date**, and **module** to narrow the results.
-3. Review the agent share, partner share, or full revenue as needed.
-
 ### Payout Summary
 
 See per-payee payout totals across partners and agents. This tab is available to **finance and admin only**.
@@ -92,12 +84,7 @@ Reconcile actual Google Cloud spending.
 2. Select a month to see the org-wide GCP cloud cost broken down per project.
 3. Review each project's name, ID, total cost in currency, and credit equivalent.
 
-### Module Costs
-
-Review per-deployment costs.
-
-1. Open **Module Costs**.
-2. Review what each deployment cost, in credits and currency, across users and projects.
+Per-deployment **Module Costs** are not a Billing tab — they live on the **Credits** page.
 
 ## Viewing users, agents, and partners
 
@@ -108,18 +95,15 @@ As Finance you can see all users and the full lists of agents and partners.
 
 ### Limited user edits
 
-You can make two changes to a user account:
+The only change you can make to a user account is to their **credit balances** (Awards, Purchases, and Monthly Partner Credits).
 
-- Change the user's **credits**.
-- Grant or revoke the **Partner** role.
-
-All other roles (User, Agent, Finance, Support, Admin) and a user's **active** status are **admin-only** — Finance cannot change them.
+All **roles** — including granting or revoking the **Partner** role — and a user's **active** status are **admin-only**. The Credit Management screen may display an "Is Partner?" checkbox next to the partner-credit field, but submitting a role change as Finance is rejected by the server (403).
 
 ## Setup Requests
 
 Managed-setup requests from users who want RAD to handle a deployment for them appear here.
 
-1. Click **Setup Requests** in the navigation bar.
+1. Click **Help** in the navigation bar, then open the **Setup Requests** tab.
 2. Review each request's **status**, the **assigned engineer**, and the associated **revenue**.
 
 ## Getting help

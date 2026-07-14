@@ -27,7 +27,7 @@ wires together a focused set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | Cloud Run v2 (Gen2) | Python service, 4 vCPU / 8 GiB by default, request-based autoscaling |
+| Compute | Cloud Run v2 (Gen2) | Python service, 1 vCPU / 4 GiB by default, request-based autoscaling |
 | Task queue | Embedded Redis (in-container) | Supervisord starts Redis inside the container; ephemeral per instance |
 | ASGI server | Embedded Gunicorn (in-container) | Port 11235, managed by supervisord alongside Redis |
 | Object storage | Cloud Storage | Optional buckets for crawl result caching (none by default) |
@@ -223,17 +223,18 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `application_name` | `crawl4ai` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Crawl4AI Web Crawler` | Friendly name shown in the Console. |
 | `description` | _(set)_ | Service description. |
-| `application_version` | `latest` | Crawl4AI image version tag; pin to a specific tag for production. |
+| `application_version` | `0.7.8` | Crawl4AI image version tag; pin to a specific tag for production. |
 
 ### Group 4 — Runtime & Scaling
 
 | Variable | Default | Description |
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only without deploying the container. |
-| `cpu_limit` | `4000m` | CPU per instance; ~0.5–1 vCPU per active browser context. |
-| `memory_limit` | `8Gi` | Memory per instance. Minimum 4 GiB for stable Chromium operation; 8 GiB recommended for concurrent crawls. |
-| `min_instance_count` | `1` | Minimum instances. Keep at 1 for a warm Chromium pool; `0` causes 30–60 s cold starts. |
+| `cpu_limit` | `1000m` | CPU per instance; ~0.5–1 vCPU per active browser context. |
+| `memory_limit` | `4Gi` | Memory per instance. Minimum 4 GiB for stable Chromium operation; 8 GiB recommended for concurrent crawls. |
+| `min_instance_count` | `0` | Minimum instances. Set to 1 for a warm Chromium pool; default `0` causes 30–60 s cold starts. |
 | `max_instance_count` | `3` | Maximum instances (cost ceiling). |
+| `cpu_always_allocated` | `false` | Request-based billing — a crawl runs synchronously within its HTTP request with no post-response background work, so CPU throttling between requests is safe. |
 | `execution_environment` | `gen2` | **Required** — Gen2 for supervisord's process tree and Chromium's `/tmp` shared memory. |
 | `timeout_seconds` | `3600` | Maximum request duration; set to the Cloud Run maximum to allow long batch crawl jobs. |
 | `container_protocol` | `http1` | HTTP protocol version. |
@@ -307,7 +308,7 @@ etc.) are present for interface compatibility and have no effect.
 |---|---|---|
 | `startup_probe_config` / `startup_probe` | HTTP `/health`, 40 s delay | Allow supervisord time to start Redis then Gunicorn before the first probe fires. |
 | `health_check_config` / `liveness_probe` | HTTP `/health`, 60 s delay | Liveness probe after startup. |
-| `uptime_check_config` | enabled, path `/health` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled by default, path `/health` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 | `max_images_to_retain` / `delete_untagged_images` / `image_retention_days` | _(set)_ | Artifact Registry cleanup policy. |
 
@@ -361,7 +362,7 @@ the running resources.
 | `cpu_limit` | `4000m` | High | Below 2000m, Chromium rendering triggers internal timeouts on complex pages; crawl throughput drops significantly. |
 | `enable_iap` / `enable_cloud_armor` | enable for production | High | With `ingress_settings = "all"`, the API is publicly accessible and anyone can submit crawl jobs consuming cloud resources. |
 | `LLM_API_KEY` / provider API keys | via `secret_environment_variables` | High | Missing or expired keys cause LLM-based extraction to fail silently (empty `extracted_content`). Inject as secrets, not plain-text env vars. |
-| `redis_task_ttl_seconds` | `3600` | Medium | Too short (&lt; 300 s) causes results to expire before async clients poll; too long causes unbounded memory growth. Valid range: 300–86400. |
+| `redis_task_ttl_seconds` | `3600` | Medium | Too short (< 300 s) causes results to expire before async clients poll; too long causes unbounded memory growth. Valid range: 300–86400. |
 | `timeout_seconds` | `3600` | Medium | Deep crawls or LLM extraction of large pages can take several minutes; reduce only for short-lived APIs where zombie requests should be terminated faster. |
 | `application_version` | pinned tag | Medium | Using `"latest"` is non-reproducible; a rebuild may pull a breaking Crawl4AI API change. |
 | `enable_image_mirroring` | `true` | Low | Crawl4AI images are large; without mirroring, every deployment pulls from Docker Hub and risks rate-limit failures and slow cold starts. |

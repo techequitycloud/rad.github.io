@@ -265,7 +265,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy for socket connections. |
 | `enable_image_mirroring` | `true` | Mirror the Activepieces image into Artifact Registry. |
 | `traffic_split` | `[]` | Split traffic across revisions for staged rollouts. |
-| `max_revisions_to_retain` | `7` | How many old revisions to keep. |
+| `max_revisions_to_retain` | `7` | Declared for convention parity; not referenced by this module's deployment. |
 
 ### Group 5 — Access & Ingress Control
 
@@ -351,7 +351,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `liveness_probe` | HTTP `/api/v1/flags` 30s delay | Liveness probe. |
 | `startup_probe_config` | disabled | Alternative structured probe (disabled by default; `startup_probe` takes effect). |
 | `health_check_config` | HTTP `/` | Alternative structured liveness probe. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check; disabled by default, enable explicitly to activate. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache & Queue

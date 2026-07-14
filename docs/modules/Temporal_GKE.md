@@ -45,8 +45,8 @@ Cloud services:
   History, Matching, and Worker share the same CPU and memory allocation.
 - **Schema initialisation is automatic.** `temporalio/auto-setup` creates both
   databases and runs schema migrations on first start. No separate init job is
-  required. A generous TCP startup probe (30 s initial delay, 10 failure threshold)
-  accommodates Autopilot node provisioning plus schema setup time.
+  required. A generous TCP startup probe (30 s initial delay, 60 failure threshold at
+  a 10 s period) accommodates Autopilot node provisioning plus schema setup time.
 - **`num_history_shards` is permanently immutable.** This value is written into the
   database schema on first deploy and cannot be changed without wiping and
   re-initialising all workflow data. Default is `4` (dev/demo); use `512` or higher
@@ -211,7 +211,7 @@ Monitoring. Optional uptime checks and alert policies are available.
   use `service_external_ip:7233`.
 - **Health probes.** TCP probes are used for both startup and liveness checks because
   Temporal Frontend exposes gRPC (not HTTP/1.1) on port 7233. The startup probe
-  allows up to 5 minutes (10 attempts × 30-second period) for schema initialisation
+  allows up to 10 minutes (60 attempts × 10-second period) for schema initialisation
   to complete.
 
 ---
@@ -307,7 +307,7 @@ Not required for Temporal. All durable state lives in Cloud SQL PostgreSQL. Sett
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe_config` | TCP on port 7233 | 10-attempt window (5 minutes) for schema init on first start. |
+| `startup_probe_config` | TCP on port 7233 | 60-attempt window (10 minutes at a 10 s period) for schema init on first start. |
 | `health_check_config` | TCP on port 7233 | Liveness probe; 60 s initial delay. |
 | `uptime_check_config` | disabled | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
@@ -379,9 +379,9 @@ Not applicable for Temporal. See [App_GKE](App_GKE.md).
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
-| `reserve_static_ip` | `false` | Stable external IP across redeploys (only useful with `LoadBalancer`). |
+| `reserve_static_ip` | `true` | Stable external IP across redeploys (only useful with `LoadBalancer`). |
 
 ### Group 20 — Identity-Aware Proxy (IAP)
 

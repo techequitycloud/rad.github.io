@@ -326,7 +326,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `startup_probe_config` | TCP, port 8080 | TCP startup probe (waits for port to open). |
 | `health_check_config` | HTTP `GET /` | Liveness probe. |
 | `startup_probe` / `liveness_probe` | HTTP `GET /healthz` | Application-level probe settings passed to `Sample_Common`. |
-| `uptime_check_config` | `{ enabled = true, path = "/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled = false, path = "/" }` | Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache
