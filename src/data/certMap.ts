@@ -77,7 +77,6 @@ export const APP_TRACKS: Record<string, AppTrack> = {
   OpenWebUI: {name: 'Open WebUI', certs: [], ai: true},
   Paperless: {name: 'Paperless-ngx', certs: ['ACE']},
   Penpot: {name: 'Penpot', certs: ['ACE']},
-  Postiz: {name: 'Postiz', certs: ['ACE']},
   Qdrant: {name: 'Qdrant', certs: ['PCDE'], ai: true},
   RAGFlow: {name: 'RAGFlow', certs: [], ai: true},
   SearXNG: {name: 'SearXNG', certs: [], ai: true},

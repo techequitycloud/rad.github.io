@@ -132,8 +132,6 @@ const DATE_PUBLISHED: Record<string, string> = {
   "/docs/labs/Paperless_GKE": "2026-06-11T14:30:42+01:00",
   "/docs/labs/Penpot_CloudRun": "2026-06-11T14:30:42+01:00",
   "/docs/labs/Penpot_GKE": "2026-06-11T14:30:42+01:00",
-  "/docs/labs/Postiz_CloudRun": "2026-06-01T00:43:21+01:00",
-  "/docs/labs/Postiz_GKE": "2026-06-01T00:43:21+01:00",
   "/docs/labs/Qdrant_CloudRun": "2026-06-11T14:30:42+01:00",
   "/docs/labs/Qdrant_GKE": "2026-06-11T14:30:42+01:00",
   "/docs/labs/RAGFlow_CloudRun": "2026-06-11T14:30:42+01:00",
