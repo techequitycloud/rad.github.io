@@ -1,7 +1,6 @@
 ---
-title: "Migration Center Module Documentation"
+title: "Migration Center — Discovery & Assessment Environment"
 description: "Configuration reference for the Migration Center RAD module on Google Cloud — variables, architecture, networking, and day-2 operations."
-sidebar_label: "Migration Center"
 ---
 
 # Migration Center — Discovery & Assessment Environment

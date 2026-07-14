@@ -1,7 +1,6 @@
 ---
-title: "EKS_GKE Module Documentation"
+title: "AWS EKS attached to a Google Cloud Fleet"
 description: "Configuration reference for deploying EKS on GKE Autopilot with the RAD module — variables, architecture, networking, and operations."
-sidebar_label: "EKS_GKE"
 ---
 
 # AWS EKS attached to a Google Cloud Fleet
