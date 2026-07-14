@@ -12,15 +12,15 @@ const sidebars: SidebarsConfig = {
     {type: 'doc', id: 'guides/finance-guide', label: 'Finance Guide'},
   ],
   modulesSidebar: [
-    {type: 'doc', id: 'modules/Services_GCP', label: 'Services GCP'},
     {
       type: 'category',
-      label: 'App',
+      label: 'Foundation Services',
       collapsed: true,
       items: [
-        {type: 'doc', id: 'modules/App_CloudRun', label: 'Cloud Run'},
-        {type: 'doc', id: 'modules/App_GKE', label: 'GKE'},
-        {type: 'doc', id: 'modules/App_Common', label: 'Common'},
+        {type: 'doc', id: 'modules/Services_GCP', label: 'Services GCP'},
+        {type: 'doc', id: 'modules/App_CloudRun', label: 'App Cloud Run'},
+        {type: 'doc', id: 'modules/App_GKE', label: 'App GKE'},
+        {type: 'doc', id: 'modules/App_Common', label: 'App Common'},
       ],
     },
     {
@@ -1449,14 +1449,14 @@ const sidebars: SidebarsConfig = {
     },
   ],
   labsSidebar: [
-    {type: 'doc', id: 'labs/Services_GCP', label: 'Services GCP'},
     {
       type: 'category',
-      label: 'App',
+      label: 'Foundation Services',
       collapsed: true,
       items: [
-        {type: 'doc', id: 'labs/App_CloudRun', label: 'Cloud Run'},
-        {type: 'doc', id: 'labs/App_GKE', label: 'GKE'},
+        {type: 'doc', id: 'labs/Services_GCP', label: 'Services GCP'},
+        {type: 'doc', id: 'labs/App_CloudRun', label: 'App Cloud Run'},
+        {type: 'doc', id: 'labs/App_GKE', label: 'App GKE'},
       ],
     },
     {
