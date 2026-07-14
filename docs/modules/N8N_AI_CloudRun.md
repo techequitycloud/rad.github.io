@@ -280,6 +280,7 @@ specific to or notable for n8n AI are listed; every other input is inherited fro
 | `cpu_limit` | `2000m` | CPU per n8n instance. 2 vCPU recommended for AI workflows. |
 | `memory_limit` | `4Gi` | Memory per n8n instance. 4 GiB minimum for AI workflows. |
 | `min_instance_count` | `0` | Set to `1` for continuous webhook availability. `0` enables scale-to-zero. |
+| `cpu_always_allocated` | `true` | Instance-based billing (CPU always on). Required — cron/schedule triggers and queue execution fire without an inbound request. |
 | `max_instance_count` | `1` | Maximum instances. Increase only with Redis enabled. |
 | `container_port` | `5678` | n8n listens on port 5678. Do not change. |
 | `execution_environment` | `gen2` | Required for NFS mounts. Keep as `gen2`. |
@@ -378,7 +379,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `liveness_probe` | HTTP `/` — 30s delay | n8n liveness probe. |
 | `startup_probe_config` | TCP — enabled | App_CloudRun-standard startup probe. |
 | `health_check_config` | HTTP — enabled | App_CloudRun-standard liveness probe. |
-| `uptime_check_config` | enabled — `/` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled — `/` | Cloud Monitoring uptime check; disabled by default — enable it once the endpoint is publicly reachable. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 21 — Redis Queue Backend

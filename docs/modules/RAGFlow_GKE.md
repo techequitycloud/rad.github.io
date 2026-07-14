@@ -59,6 +59,11 @@ focused set of Google Cloud services:
   the RAGFlow processes.
 - **Session affinity is `ClientIP`.** This ensures upload sessions and multi-step document
   processing requests consistently reach the same pod.
+- **`enable_custom_domain` defaults to `true`.** This routes the service through the
+  Gateway API load balancer, which — combined with the default `reserve_static_ip = true`
+  — provisions a managed certificate and HTTPS out of the box via a `<ip>.nip.io` hostname
+  even when `application_domains` is left empty. Set `application_domains` to serve a real
+  hostname instead.
 - **The database password** is generated automatically and stored in Secret Manager.
 
 ---
@@ -177,9 +182,11 @@ The database password secret name is in the [Outputs](#5-outputs). See
 
 ### G. Networking & ingress
 
-By default the workload is exposed through an external Cloud Load Balancing IP. A
-custom domain with a Google-managed certificate can be enabled, and a static IP can
-be reserved so the address survives redeploys.
+`enable_custom_domain` defaults to `true`, which routes the workload through the
+Gateway API load balancer with a Google-managed certificate — automatically serving
+HTTPS on a `<ip>.nip.io` hostname when `application_domains` is empty. Set
+`application_domains` to serve a real custom hostname instead. A static IP is reserved
+by default so the address survives redeploys.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -326,7 +333,7 @@ These settings apply only when `workload_type = "StatefulSet"` or `stateful_pvc_
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | `/v1/health`, 120s delay, 60 retries | HTTP probe allowing ample time for embedding model loading. |
 | `liveness_probe` / `health_check_config` | `/v1/health` | HTTP liveness probe once startup succeeds. |
-| `uptime_check_config` | disabled | Optional Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled=false, path="/v1/health" }` | Optional Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -401,7 +408,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 | `network_tags` | `["nfsserver"]` | GCP network tags applied to pods. |

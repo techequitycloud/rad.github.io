@@ -26,7 +26,7 @@ a focused set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | Cloud Run v2 | PHP/Apache service, 2 vCPU / 2 GiB by default, request-based autoscaling |
+| Compute | Cloud Run v2 | PHP/Apache service, 2 vCPU / 4 GiB by default, request-based autoscaling (scale-to-zero) |
 | Database | Cloud SQL for MySQL 8.0 | Required — Mautic does not support PostgreSQL |
 | Shared files | Filestore (NFS) | Uploaded media shared across all instances (mounted into the service) |
 | Object storage | Cloud Storage | A dedicated media bucket |
@@ -37,11 +37,17 @@ a focused set of Google Cloud services:
 **Sensible defaults worth knowing up front:**
 
 - **MySQL 8.0 is mandatory.** Selecting PostgreSQL or `NONE` breaks startup.
-- **The startup probe is TCP, not HTTP.** Cloud Run health traffic arrives over plain
-  HTTP and Apache issues an HTTP→HTTPS redirect (301), so an HTTP probe never sees a
-  200. A TCP probe checks only that the port is open and is unaffected by redirects.
+- **Probes are HTTP against the public login page.** The startup and liveness probes
+  target `/index.php/s/login` with generous initial delays (90s / 120s) to allow
+  database migrations and PHP initialisation on first boot.
 - **`HTTPS=on` and a predicted service URL are injected** so Mautic generates correct
-  absolute links and avoids redirect loops behind the Cloud Run front end.
+  absolute links and avoids the HTTP→HTTPS redirect loops (which would 301 the HTTP
+  probes) behind the Cloud Run front end.
+- **Cold-start by default.** `min_instance_count = 0` and `cpu_always_allocated =
+  false` (request-based billing): the UI and contact tracking work on-request; the
+  marketing cron is externalised as scheduled Cloud Run Jobs (§3). Set
+  `cpu_always_allocated = true` and `min_instance_count >= 1` to restore continuous
+  in-process operation.
 - **Database migrations run on each instance start** (idempotent), so version upgrades
   apply automatically.
 - The Mautic **admin password** is generated and stored in Secret Manager.
@@ -216,7 +222,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `application_name` | `mautic` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Mautic` | Friendly name shown in the Console. |
-| `application_description` | _(set)_ | Service description. |
+| `application_description` | `Mautic - Open-source marketing automation platform` | Service description. |
 | `application_version` | `5` | Mautic image version tag. |
 
 ### Group 4 — Runtime & Scaling
@@ -225,14 +231,15 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `cpu_limit` | `2000m` | CPU per instance. |
-| `memory_limit` | `2Gi` | Memory per instance; raise toward 4 GiB for heavy imports. |
-| `min_instance_count` | `1` | Minimum instances (keep ≥ 1 to avoid cold starts for scheduled work). |
+| `memory_limit` | `4Gi` | Memory per instance. |
+| `min_instance_count` | `0` | Minimum instances. Scale-to-zero by default; set ≥ 1 (with `cpu_always_allocated = true`) for continuous in-process work. |
 | `max_instance_count` | `3` | Maximum instances. |
+| `cpu_always_allocated` | `false` | Request-based billing (cold-start). Set `true` + `min_instance_count >= 1` to run Mautic's in-process cron continuously. |
 | `container_port` | `80` | Mautic/Apache listens on port 80. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy for socket connections. |
-| `execution_environment` | _(set)_ | Cloud Run execution generation. |
-| `max_revisions_to_retain` | _(set)_ | How many old revisions to keep. |
-| `traffic_split` | _(set)_ | Split traffic across revisions for staged rollouts. |
+| `execution_environment` | `gen2` | Cloud Run execution generation. |
+| `max_revisions_to_retain` | `7` | How many old revisions to keep. |
+| `traffic_split` | `[]` | Split traffic across revisions for staged rollouts. |
 
 ### Group 5 — Access & Ingress Control
 
@@ -240,8 +247,8 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `enable_iap` | `false` | Require Google sign-in via Identity-Aware Proxy. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Who may access through IAP. |
-| `ingress_settings` | _(set)_ | Which networks may reach the service (all / internal / LB-only). |
-| `vpc_egress_setting` | _(set)_ | How outbound traffic is routed through the VPC connector. |
+| `ingress_settings` | `all` | Which networks may reach the service (all / internal / LB-only). |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | How outbound traffic is routed through the VPC connector. |
 
 ### Group 6 — Environment Variables & Secrets
 
@@ -256,8 +263,8 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `backup_schedule` | _(set)_ | Automated backup cron (UTC). |
-| `backup_retention_days` | _(set)_ | Retention; raise for production/compliance. |
+| `backup_schedule` | `0 2 * * *` | Automated backup cron (UTC). |
+| `backup_retention_days` | `7` | Retention; raise for production/compliance. |
 | `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | restore options | Restore from a backup on deploy. |
 
 ### Group 8 — CI/CD & Binary Authorization
@@ -314,9 +321,9 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` / `startup_probe_config` | **TCP** | TCP startup probe (avoids the HTTP→HTTPS redirect problem). |
-| `liveness_probe` / `health_check_config` | _(set)_ | Liveness probe. |
-| `uptime_check_config` | _(set)_ | Cloud Monitoring uptime check. |
+| `startup_probe` / `startup_probe_config` | HTTP `/index.php/s/login`, 90s initial delay | Startup probe — generous budget for first-boot migrations and PHP init. |
+| `liveness_probe` / `health_check_config` | HTTP `/index.php/s/login`, 120s initial delay | Liveness probe. |
+| `uptime_check_config` | disabled (`enabled = false`, path `/`) | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache
@@ -389,11 +396,11 @@ running resources.
 | `enable_nfs` | `true` | Critical | Without shared storage, uploads are lost between instances/restarts. |
 | `application_database_name` / `_user` | set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
-| `startup_probe` | TCP (default) | High | An HTTP probe never passes because Apache 301-redirects Cloud Run's HTTP health checks. |
+| `startup_probe` | HTTP `/index.php/s/login` (default) | High | Without the injected `HTTPS=on`, Apache 301-redirects Cloud Run's plain-HTTP health checks and the probe never sees a 200. |
 | `enable_redis` | `true` | High | Multiple instances with isolated caches cause inconsistency. |
 | `memory_limit` | ≥ `2Gi` | High | Too little memory causes PHP OOM during imports/sends. |
 | `mautic_admin_email` / `mailer_from_email` | real addresses | High | Placeholders send to nowhere and get rejected/spam-filed. |
-| `min_instance_count` | `1` | Medium | `0` adds cold-start latency and risks missed scheduled work. |
+| `min_instance_count` | `0` (default) or `1` for always-on | Medium | `0` adds cold-start latency on the first request after idle; the scheduled commands run as separate Cloud Run Jobs and are unaffected. |
 | `enable_iap` / `enable_cloud_armor` | enable for admin-facing | Medium | The admin UI is otherwise publicly reachable. |
 
 ---

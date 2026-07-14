@@ -150,9 +150,10 @@ explicitly.
 
 ### F. Networking & ingress
 
-By default the workload is exposed through an external Cloud Load Balancing
-IP. A custom domain with a Google-managed certificate can be enabled, and a
-static IP can be reserved so the address survives redeploys.
+The workload is exposed through an external Cloud Load Balancing IP.
+`enable_custom_domain` defaults to `true`, provisioning a Kubernetes Ingress
+with a Google-managed certificate for the hostnames in `application_domains`;
+a static IP is reserved by default so the address survives redeploys.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -238,7 +239,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `application_name` | `nodered` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Node-RED` | Friendly name shown in the Console and dashboards. |
-| `application_description` | _(set)_ | Workload description annotation. |
+| `application_description` | `Node-RED - Flow-based programming for IoT and event automation` | Workload description annotation. |
 | `application_version` | `latest` | Image tag for `nodered/node-red`. Pin to a specific version (e.g. `4.0.9`) for reproducible deployments. |
 
 ### Group 4 — Runtime & Scaling
@@ -305,7 +306,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `startup_probe_config` | HTTP `/`, 30s delay | HTTP probe against the Node-RED editor path. |
 | `health_check_config` | HTTP `/`, 30s delay | Liveness probe — restarts the container if the editor is unresponsive. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Optional Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled=false, path="/" }` | Optional Cloud Monitoring uptime check. Disabled by default; enable for production monitoring. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -371,7 +372,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 | `network_tags` | `["nfsserver"]` | Required for NFS firewall connectivity. |

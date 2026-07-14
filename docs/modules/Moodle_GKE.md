@@ -262,7 +262,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `application_name` | `moodle` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Moodle LMS` | Friendly name shown in the Console. |
-| `application_description` | _(set)_ | Workload description annotation. |
+| `application_description` | `Moodle Learning Management System on GKE Autopilot` | Workload description annotation. |
 | `application_version` | `4.5.1` | Container image version tag; increment to roll out a new version. |
 
 ### Group 4 — Runtime & Scaling
@@ -322,7 +322,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `startup_probe` | HTTP `/health.php`, 20 failures × 30 s | Up to 10 minutes for Moodle to complete first-boot setup. |
 | `liveness_probe` | HTTP `/health.php`, 120 s initial delay | Periodic health check after startup. |
-| `uptime_check_config` | enabled, path `/` | Optional Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, path `/` | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks

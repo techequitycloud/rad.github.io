@@ -49,7 +49,12 @@ together a focused set of Google Cloud services:
   never set in plain text.
 - **`min_instance_count` is overridden to `1` internally.** Even if you set it to `0`,
   the module keeps at least one pod running to avoid cold-start delays on GKE.
-- **Health probes target `/healthz`** (HTTP GET, returns `{"status": "healthy"}`).
+- **Health probes default to TCP/root, not `/healthz`.** `startup_probe_config`
+  defaults to a bare TCP check (only `enabled = true` is set; type/path fall back to
+  the foundation's TCP/`/` defaults) and `health_check_config` (liveness) defaults to
+  `HTTP GET /` — the same visitor-counter route as the root page. The Flask app also
+  exposes a lightweight `/healthz` endpoint (HTTP GET, returns
+  `{"status": "healthy"}`, no DB query); set the probe `path` to `/healthz` to use it.
 
 ---
 
@@ -185,9 +190,12 @@ Monitoring. Optional uptime checks and alert policies are available.
 - **First-deploy database setup.** An initialization Job runs `db-init.sh` (using the
   `postgres:15-alpine` image) which idempotently creates the PostgreSQL database user,
   database, and grants privileges before the application starts.
-- **Health probes.** Both the startup probe and the liveness probe target `GET /healthz`,
-  which the Flask app serves at all times and returns `{"status": "healthy"}`. No
-  database query is made on this endpoint.
+- **Health probes.** By default `startup_probe_config` resolves to a plain TCP check
+  and `health_check_config` (liveness) resolves to `GET /` — the same route that
+  increments the visitor counter, so the default liveness probe issues a database
+  write on every check. The Flask app also serves a lightweight `GET /healthz`
+  (returns `{"status": "healthy"}`, no database query); point `health_check_config.path`
+  (and `startup_probe_config.path` with `type = "HTTP"`) at it to avoid the extra load.
 - **Visitor counter.** The root route (`GET /`) increments a persistent counter stored
   in the PostgreSQL `visitors` table. It demonstrates both database connectivity and
   (when Redis is enabled) per-session tracking.
@@ -302,9 +310,9 @@ specific to or notable for Sample_GKE are listed; every other input is inherited
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe_config` | HTTP `GET /healthz` | Probe used to gate pod traffic on startup. |
-| `health_check_config` | HTTP `GET /healthz` | Ongoing liveness probe. |
-| `uptime_check_config` | `{ enabled = true, path = "/" }` | Cloud Monitoring uptime check. |
+| `startup_probe_config` | `{ enabled = true }` → TCP, path `/`, 240s timeout/period | Probe used to gate pod traffic on startup; only `enabled` is set, so type/path/timeouts fall back to the foundation TCP defaults. |
+| `health_check_config` | `{ enabled = true }` → HTTP `GET /`, 10s period | Ongoing liveness probe; defaults to the root (visitor-counter) route — set `path = "/healthz"` for a DB-free check. |
+| `uptime_check_config` | `{ enabled = false, path = "/" }` | Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -460,7 +468,7 @@ and explore the running resources.
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are bytes and block all pod scheduling. |
 | `container_port` | `8080` | Critical | Mismatch causes the startup probe to fail — pod never enters Ready state. |
-| `startup_probe_config.path` | `/healthz` | Critical | A path that is not implemented or performs a DB query can fail or OOM-kill the pod on startup. |
+| `startup_probe_config` / `health_check_config` path | `/healthz` for a DB-free check | Medium | The defaults (TCP `/` startup, HTTP `GET /` liveness) hit the visitor-counter route, adding a database write to every liveness check. |
 | `enable_cloudsql_volume` | `true` | Critical | `false` with a PostgreSQL database: all DB connections fail at startup. The `db-init` job also fails. |
 | `enable_nfs` | `true` with `network_tags = ["nfsserver"]` | High | Removing `nfsserver` from the network tags breaks the NFS firewall rule and prevents mounts. |
 | `enable_redis` | `false` (default) | High | `true` without a reachable `redis_host` (or with NFS off): the Flask app logs a warning and falls back to cookies; no outright crash, but session storage silently degrades. |

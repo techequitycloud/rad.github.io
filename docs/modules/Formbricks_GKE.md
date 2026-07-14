@@ -105,7 +105,7 @@ Identical to `App_GKE`.
 | `min_instance_count` | `0` | — | Defaults to 0 (scale-to-zero). Set to `1` for production to eliminate cold starts. |
 | `max_instance_count` | `3` | `3` | HPA maxReplicas. Increase for higher-traffic survey campaigns. |
 | `container_image_source` | `"custom"` | `"custom"` | `Formbricks Common` supplies a Dockerfile-based build. Set to `"prebuilt"` to deploy the upstream `ghcr.io/formbricks/formbricks` image directly. |
-| `enable_cloudsql_volume` | `true` | `true` | The Cloud SQL Auth Proxy sidecar provides a Unix socket for PostgreSQL connections in GKE. This is different from Cloud Run (where Formbricks uses TCP). |
+| `enable_cloudsql_volume` | `true` | `true` | The Cloud SQL Auth Proxy sidecar provides the PostgreSQL endpoint in GKE (Cloud Run uses the native Cloud SQL volume — a Unix socket under `/cloudsql`). |
 | `enable_image_mirroring` | `true` | varies | Mirrors the Formbricks image from `ghcr.io` to Artifact Registry to avoid rate limits and ensure pull reliability. |
 | `session_affinity` | `"ClientIP"` | varies | Required for consistent authentication state across Formbricks admin sessions. See note below. |
 
@@ -129,7 +129,7 @@ The following networking variables are available in `Formbricks GKE`:
 | `iap_oauth_client_id` | `""` | OAuth client ID for IAP. Required when `enable_iap = true`. |
 | `iap_oauth_client_secret` | `""` | OAuth client secret for IAP. Required when `enable_iap = true`. |
 | `iap_support_email` | `""` | Support email shown on the Google OAuth consent screen. |
-| `enable_custom_domain` | `false` | Configures Kubernetes Gateway API for custom domain routing with managed SSL certificates. |
+| `enable_custom_domain` | `true` | Configures Kubernetes Gateway API for custom domain routing with managed SSL certificates. |
 | `application_domains` | `[]` | Custom domain names (e.g., `["surveys.example.com"]`). When `enable_custom_domain = true` and this is empty, a nip.io domain is used for testing. |
 | `reserve_static_ip` | `true` | Reserves a Global Static IP for the load balancer. Recommended for production. |
 | `static_ip_name` | `""` | Name for the reserved IP. Auto-generated if blank. |
@@ -158,7 +158,7 @@ The following networking variables are available in `Formbricks GKE`:
 | `SMTP_HOST` | `var.smtp_host` | SMTP server. Empty disables email. |
 | `SMTP_PORT` | `var.smtp_port` | SMTP port. |
 | `SMTP_USER` | `var.smtp_user` | SMTP username. |
-| `SMTP_SECURE_ENABLED` | `"true"` / `"false"` | Implicit TLS flag. |
+| `SMTP_SECURE_ENABLED` | `"1"` / `"0"` | Implicit TLS flag. |
 | `MAIL_FROM` | `var.mail_from` | Sender address. |
 
 The following sensitive values are injected as Kubernetes Secrets via the Secrets Store CSI Driver (from Secret Manager):
@@ -267,7 +267,7 @@ The `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_km
 | `application_database_name` | `"formbricksdb"` | `"gkeappdb"` | The `App_GKE` level variable for the database name. This is effectively overridden by `db_name` in `Formbricks Common` — use `db_name` for Formbricks. |
 | `application_database_user` | `"formbricksuser"` | `"gkeappuser"` | The `App_GKE` level variable for the database user. Use `db_user` for Formbricks. |
 | `enable_postgres_extensions` | `true` | `false` | PostgreSQL extensions are enabled by default for Formbricks. |
-| `postgres_extensions` | `["uuid-ossp"]` | `[]` | The `uuid-ossp` extension is required by Prisma for UUID generation. |
+| `postgres_extensions` | `["vector", "uuid-ossp"]` | `[]` | `vector` (pgvector) is required by Formbricks's Prisma schema (embeddings/AI features) — without it, `prisma db push` fails with a permission error since the app DB user can't `CREATE EXTENSION`. `uuid-ossp` supports UUID generation. |
 
 **Cloud SQL instance discovery:**
 
@@ -356,7 +356,7 @@ Both default to `path = "/"`. For accurate load balancer health checks, override
 |---|---|---|
 | `startup_probe_config` | 10 | `{ enabled = true, type = "TCP", path = "/" }` |
 | `health_check_config` | 10 | `{ enabled = true, type = "HTTP", path = "/" }` |
-| `uptime_check_config` | 10 | `{ enabled = true, path = "/" }` |
+| `uptime_check_config` | 10 | `{ enabled = false, path = "/" }` |
 | `alert_policies` | 10 | `[]` |
 
 ---
@@ -404,8 +404,6 @@ When `stateful_pvc_enabled = true`, the module automatically uses a `StatefulSet
 | `database_user` | Name of the application database user. |
 | `database_password_secret` | Secret Manager secret name for the database password. |
 | `storage_buckets` | Created GCS storage buckets (includes the `uploads` bucket). |
-| `nfs_server_ip` | NFS server internal IP *(sensitive)*. |
-| `nfs_mount_path` | NFS mount path inside containers. |
 | `container_image` | Container image used for the deployment. |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 | `github_repository_url` | GitHub repository URL connected for CI/CD. |

@@ -52,14 +52,14 @@ Directus runs as a single Cloud Run service. Each new deployment creates a new r
   # Stream live logs:
   gcloud run services logs tail "$SERVICE_NAME" --project "$PROJECT" --region "$REGION"
   # Verify the health endpoint manually:
-  curl -sf "$(gcloud run services describe "$SERVICE_NAME" --project "$PROJECT" --region "$REGION" --format='value(status.url)')/server/health"
+  curl -sf "$(gcloud run services describe "$SERVICE_NAME" --project "$PROJECT" --region "$REGION" --format='value(status.url)')/server/ping"
   ```
 
 See [App_CloudRun](App_CloudRun.md) for autoscaling, concurrency, execution environments, and traffic splitting.
 
 ### B. Cloud SQL for PostgreSQL 15
 
-Directus stores all application data in a managed Cloud SQL for PostgreSQL 15 instance. Instances connect by default over **TCP** (Cloud SQL connector, no Unix socket by default on Cloud Run). On first deploy a `db-init` job creates the application database, user, grants privileges, and installs the `uuid-ossp` extension.
+Directus stores all application data in a managed Cloud SQL for PostgreSQL 15 instance. Instances connect by default over **TCP** (Cloud SQL connector, no Unix socket by default on Cloud Run). A `db-init` job runs on every apply (idempotent) and creates the application database, user, grants privileges, and installs the `uuid-ossp` extension.
 
 - **Console:** SQL → select the instance for connections, backups, flags, and metrics.
 - **CLI:**
@@ -147,7 +147,7 @@ Container stdout/stderr flow to Cloud Logging. Cloud Run metrics and optional up
 - **First-deploy database setup.** A `db-init` job runs on every apply (`execute_on_apply = true`). It creates the Directus database user with the generated password, creates the `directus` database, installs the `uuid-ossp` extension, and grants full privileges. The job is idempotent.
 - **Bootstrap on first start.** `BOOTSTRAP = "true"` seeds the initial admin user and Directus system collections on first boot. The admin email defaults to `admin@example.com` — **override this via `environment_variables = { ADMIN_EMAIL = "you@example.com" }` before the first deploy.**
 - **Migrations on every start.** `AUTO_MIGRATE = "true"` causes Directus to run `database migrate:latest` on each instance start, so upgrading `application_version` applies schema changes automatically.
-- **Health probe.** The startup probe targets `/server/health` with a 30-second initial delay and a generous failure threshold (`failure_threshold = 10`, `period_seconds = 30`) to accommodate first-boot database setup. The liveness probe also targets `/server/health`.
+- **Health probe.** The startup probe targets `/server/ping` with a 30-second initial delay and a generous failure threshold (`failure_threshold = 10`, `period_seconds = 20`) to accommodate first-boot database setup. The liveness probe also targets `/server/ping`.
 - **TCP database connections by default.** Unlike the GKE variant (which uses a Unix socket via the Auth Proxy sidecar), the Cloud Run variant connects to Cloud SQL over TCP using the Cloud SQL connector (`enable_cloudsql_volume = false` by default). Outbound traffic travels to private IPs only (`vpc_egress_setting = "PRIVATE_RANGES_ONLY"`).
 - **KEY and SECRET rotation.** Rotating the `KEY` secret immediately invalidates all active user sessions. Rotating `SECRET` invalidates all issued JWTs. Never rotate either without a planned maintenance window and client notification.
 - **Admin login.** Retrieve the generated admin password from Secret Manager (see §2.E). The default admin email is `admin@example.com` unless overridden.
@@ -188,7 +188,8 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only (Cloud SQL, storage, secrets) without deploying the Cloud Run service. |
 | `cpu_limit` | `1000m` | vCPU per instance; 1 vCPU is suitable for light workloads. |
-| `memory_limit` | `2Gi` | Memory per instance; 2 GiB minimum — increase for large schemas or image transformations. |
+| `memory_limit` | `1Gi` | Memory per instance; defaulted to 1 GiB for light/typical usage (observed ~150Mi) — raise to 2 GiB for production or large schemas/image transformations. |
+| `cpu_always_allocated` | `false` | Request-based billing — safe for Directus's default request/response mode. Set `true` only if enabling realtime/WebSocket subscriptions or scheduled flows that must run without an inbound request. |
 | `min_instance_count` | `0` | Minimum instances. Set `1` to eliminate cold starts in production. |
 | `max_instance_count` | `1` | Maximum concurrency ceiling. Increase for production traffic. |
 | `container_port` | `8055` | Directus default listening port. |
@@ -244,7 +245,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see [App_CloudR
 | Variable | Default | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Provision additional buckets beyond the auto-provisioned uploads bucket. |
-| `storage_buckets` | _(from Common)_ | Additional GCS buckets. |
+| `storage_buckets` | `[{ name_suffix = "data", location = "" }]` | Additional GCS buckets, on top of the auto-provisioned uploads bucket from `Directus_Common`. |
 | `enable_nfs` | `true` | Shared Filestore volume for uploaded assets (keep enabled for multi-instance). |
 | `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
 | `gcs_volumes` | `[]` | GCS buckets to mount via GCS Fuse CSI driver. |
@@ -270,9 +271,9 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see [App_CloudR
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` | `/server/health`, HTTP, 30s delay, failure_threshold=10 | Cloud Run startup probe. Allows up to 330 s for first-boot migrations. |
-| `liveness_probe` | `/server/health`, HTTP, 15s delay | Instance restarted after 3 consecutive failures. |
-| `uptime_check_config` | enabled | Optional Cloud Monitoring uptime check. |
+| `startup_probe` | `/server/ping`, HTTP, 30s delay, failure_threshold=10, period=20s | Cloud Run startup probe. Allows up to ~230 s for first-boot migrations. |
+| `liveness_probe` | `/server/ping`, HTTP, 15s delay | Instance restarted after 3 consecutive failures. |
+| `uptime_check_config` | disabled by default, path `/` | Optional Cloud Monitoring uptime check. |
 
 ### Group 21 — Redis Cache
 

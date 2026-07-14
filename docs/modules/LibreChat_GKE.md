@@ -308,7 +308,7 @@ to or notable for LibreChat are listed; every other input is inherited from
 |---|---|---|
 | `startup_probe_config` | `{ path="/", initial_delay_seconds=30, failure_threshold=12 }` | HTTP probe allowing time for MongoDB connection and asset load. |
 | `health_check_config` | `{ path="/", initial_delay_seconds=60, failure_threshold=3 }` | Liveness probe targeting LibreChat's root path. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Optional Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, `/` | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -375,7 +375,7 @@ the shared mechanics.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Kubernetes Gateway for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Kubernetes Gateway for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 

@@ -32,7 +32,7 @@ wires together a focused set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | Cloud Run v2 | Custom-built RAGFlow service, 2 vCPU / 4 GiB by default, min 1 warm instance |
+| Compute | Cloud Run v2 | Custom-built RAGFlow service, 2 vCPU / 4 GiB by default, cold-start (`min_instance_count = 0`) by default |
 | Database | Cloud SQL for MySQL 8.0 | Required — RAGFlow does not support PostgreSQL |
 | Vector search | Elasticsearch (Elasticsearch_GKE) | External dependency — must be deployed first; `elasticsearch_hosts` is mandatory |
 | Task queue | Redis (Memorystore) | Required for document processing workers |
@@ -49,8 +49,13 @@ wires together a focused set of Google Cloud services:
 - **Redis is required for document processing.** With `enable_redis = true` (default)
   and a non-empty `redis_host`, `REDIS_HOST` and `REDIS_PORT` are injected automatically.
   Without Redis, uploaded files remain unprocessed indefinitely.
-- **Scale-to-zero is disabled.** `min_instance_count` is hard-capped at 1. RAGFlow
-  loads embedding models at startup; scale-to-zero would cause requests to time out.
+- **Cold-start by default.** `min_instance_count = 0` and `cpu_always_allocated = false`
+  (request-based billing) — the service scales to zero when idle and only bills CPU
+  while serving a request. **Trade-off:** the background document task-executor stops
+  when idle, so ingestion/parsing of newly uploaded documents does not run in the
+  background; querying/chat still works on-request. Set `cpu_always_allocated = true`
+  and `min_instance_count >= 1` to restore continuous background ingestion (and avoid
+  the 2–3 minute cold-start while embedding models load).
 - **Gen2 execution environment is required for NFS.** `execution_environment = "gen2"`
   is the default; switching to `gen1` with `enable_nfs = true` fails at plan time.
 - **A custom image is always built.** Cloud Build extends `infiniflow/ragflow` using
@@ -70,9 +75,11 @@ reported in the deployment [Outputs](#5-outputs).
 
 ### A. Cloud Run — the RAGFlow service
 
-RAGFlow runs as a Cloud Run v2 service that maintains at least one warm instance to
-avoid cold-start delays during embedding model loading. Each deployment creates an
-immutable revision; traffic can be split across revisions for safe rollouts.
+RAGFlow runs as a Cloud Run v2 service. By default it scales to zero when idle
+(`min_instance_count = 0`, `cpu_always_allocated = false`); set both to keep an
+instance warm and avoid cold-start delays during embedding model loading. Each
+deployment creates an immutable revision; traffic can be split across revisions for
+safe rollouts.
 
 - **Console:** Cloud Run → select the service for revisions, traffic, logs, and metrics.
 - **CLI:**
@@ -209,8 +216,9 @@ Monitoring, with optional uptime checks and alert policies.
   appear uploaded but are never processed.
 - **Embedding model loading on startup.** RAGFlow downloads and loads embedding models
   during first boot. The startup probe targets `/v1/system/version` with a 120-second
-  initial delay and 30 failure retries. Keep `min_instance_count = 1` to avoid cold
-  starts.
+  initial delay and 30 failure retries. Set `min_instance_count >= 1` with
+  `cpu_always_allocated = true` to avoid cold starts and keep background document
+  processing running continuously.
 - **Health endpoints.** Startup and liveness probes use `/v1/system/version`. The uptime
   check (if enabled) targets `/v1/health`. These return HTTP 200 only when the
   application is fully initialised.
@@ -261,7 +269,8 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `cpu_limit` | `2000m` | CPU per instance; 4 vCPU or more recommended for production document processing. |
 | `memory_limit` | `4Gi` | Memory per instance; 8–16 GiB recommended for production. |
-| `min_instance_count` | `1` | Hard-capped at 1 — scale-to-zero is not supported. |
+| `cpu_always_allocated` | `false` | Cost-first cold-start default. `true` restores continuous background document processing between requests. |
+| `min_instance_count` | `0` | Scales to zero when idle. Set ≥ 1 (with `cpu_always_allocated = true`) to keep the background task-executor and embedding models warm. |
 | `max_instance_count` | `1` | Maximum instances; increase with caution (requires NFS for shared storage). |
 | `container_port` | `80` | RAGFlow's Nginx frontend listens on port 80. |
 | `execution_environment` | `gen2` | **Must remain `gen2`** — required for NFS mounts. |
@@ -418,7 +427,7 @@ running resources.
 | `db_name` / `db_user` | set once | Critical | Immutable after first deploy; renaming recreates the database/user and destroys data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
 | `redis_host` | explicit Memorystore IP | High | An unreachable or empty Redis host silently breaks all async document workers. There is no NFS-based auto-discovery fallback on Cloud Run. |
-| `min_instance_count` | `1` | High | `0` enables scale-to-zero; RAGFlow cold starts take 2–3 minutes and requests time out. |
+| `min_instance_count` / `cpu_always_allocated` | `1` / `true` for continuous ingestion | High | Defaults are `0` / `false` (cold-start): background document processing stops while idle and cold starts take 2–3 minutes. Set both for always-on ingestion. |
 | `memory_limit` | `4Gi` (≥ `8Gi` for prod) | High | Embedding models plus the application server require significant RAM; too little causes OOM kills. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | High | Memorystore Redis is on a private VPC IP; wrong egress routing breaks the task queue. |
 | `execution_environment` | `gen2` | High | NFS mounts require gen2; switching to gen1 with `enable_nfs = true` fails at plan time. |

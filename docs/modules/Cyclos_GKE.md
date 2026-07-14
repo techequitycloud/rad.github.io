@@ -305,7 +305,7 @@ specific to or notable for Cyclos are listed; every other input is inherited fro
 |---|---|---|
 | `startup_probe` | HTTP `/api`, 90s delay, 60s period, 5 failures | Cyclos-specific startup probe. Increase `failure_threshold` to `10` for first-deploy schema creation. |
 | `liveness_probe` | HTTP `/api`, 120s delay, 60s period, 3 failures | Cyclos-specific liveness probe. |
-| `uptime_check_config` | `{ enabled = true, path = "/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled = false, path = "/" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -342,10 +342,16 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `database_type` | `POSTGRES` | Cloud SQL engine. Cyclos requires PostgreSQL. Do not change to MySQL or `NONE`. |
-| `db_name` | `cyclos` | PostgreSQL database name. **Immutable after first deploy.** |
-| `db_user` | `cyclos` | Application user. **Immutable after first deploy.** |
+| `db_name` | `cyclos` | PostgreSQL database name forwarded to `Cyclos_Common`'s own `db-init` job and injected into the app config. **Immutable after first deploy.** |
+| `db_user` | `cyclos` | Application user forwarded to `Cyclos_Common`. **Immutable after first deploy.** |
 | `database_password_length` | `32` | Generated password length (16–64). |
 | `enable_auto_password_rotation` | `false` | Zero-downtime DB password rotation. |
+
+Note: `application_database_name` / `application_database_user` (defaults `gkeappdb` /
+`gkeappuser`) are a separate pair forwarded to the `App_GKE` foundation's own database
+provisioning. Cyclos's actual database/user (as connected to by the app) is driven by
+`db_name` / `db_user` above, provisioned by `Cyclos_Common`'s `db-init` job — leave the
+`application_database_*` pair at its defaults.
 
 ### Group 17 — Backup & Maintenance
 
@@ -365,7 +371,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 

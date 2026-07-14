@@ -231,7 +231,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `application_name` | `openwebui` | Base name for resources. Do not change after first deploy. |
 | `display_name` | `Open WebUI` | Friendly name shown in the Console. |
-| `description` | _(set)_ | Service description. |
+| `description` | `Open WebUI — self-hosted AI interface for Ollama and OpenAI-compatible APIs` | Service description. |
 | `application_version` | `latest` | Open WebUI image version tag. Pin to a specific release in production. |
 
 ### Group 4 — Runtime & Scaling
@@ -336,8 +336,9 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` / `liveness_probe` | `/health` path | HTTP probe against Open WebUI's health endpoint. 30 s initial delay with 30 failures allowed for first-boot migrations. |
-| `uptime_check_config` | enabled (path `/health`) | Cloud Monitoring uptime check. |
+| `startup_probe` | HTTP `/health`, 30s delay, 5s timeout, 10s period, 30 retries | Allows up to ~5 minutes for first-boot startup. |
+| `liveness_probe` | HTTP `/health`, 60s delay, 5s timeout, 30s period, 3 retries | Liveness probe. |
+| `uptime_check_config` | `{ enabled=false, path="/health" }` | Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache

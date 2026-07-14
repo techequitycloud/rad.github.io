@@ -137,7 +137,7 @@ process:
 3. **Skills repository sync (optional).** When `SKILLS_REPO_URL` is set, performs a shallow
    clone or update into `/data/workspace/skill-library`. Sync failures are non-fatal — the
    gateway starts even if the clone fails.
-4. **Gateway startup.** Runs `node dist/index.js gateway --bind lan --port $&#123;PORT:-8080&#125;
+4. **Gateway startup.** Runs `node dist/index.js gateway --bind lan --port ${PORT:-8080}
    --allow-unconfigured`. The `--bind lan` flag is required for Cloud Run — the runtime maps
    the external port to the container's LAN interface.
 

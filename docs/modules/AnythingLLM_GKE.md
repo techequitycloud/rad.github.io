@@ -30,8 +30,8 @@ Google Cloud services:
 | Compute | GKE Autopilot | Node.js pods, 2 vCPU / 4 GiB by default, horizontally autoscaled |
 | Database | Cloud SQL for PostgreSQL 15 | Required — AnythingLLM uses Prisma ORM and does not support MySQL |
 | Object storage | Cloud Storage | Auto-provisioned `anythingllm-docs` document bucket; optional additional buckets |
-| Persistent volumes | Kubernetes PVCs (StatefulSet) | Per-pod 20 GiB PVC at `/app/server/storage` when `stateful_pvc_enabled = true` |
-| Shared files | Filestore (NFS) | Optional — for multi-pod shared document/vector access |
+| Persistent volumes | Kubernetes PVCs (StatefulSet) | Optional — per-pod 20 GiB PVC at `/app/server/storage` when `stateful_pvc_enabled = true` |
+| Shared files | Filestore (NFS) | Enabled by default (`enable_nfs = true`) — `STORAGE_DIR` points at the NFS mount so the LanceDB vector index survives pod restarts/redeploys |
 | Secrets | Secret Manager | Four app secrets auto-generated (`JWT_SECRET`, `AUTH_TOKEN`, `SIG_KEY`, `SIG_SALT`) plus database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
 | Cache | Redis | Disabled by default; optional for session or cache workloads |
@@ -46,8 +46,11 @@ Google Cloud services:
 - **`min_instance_count = 1` is recommended** to keep AnythingLLM warm and avoid cold
   starts on AI document chat and embedding operations.
 - **Storage must be persistent.** All workspace documents, vector indices, and conversation
-  data are written under `STORAGE_DIR` (`/app/server/storage`). Use `stateful_pvc_enabled
-  = true` for single-pod persistence, or NFS for multi-pod shared access.
+  data are written under `STORAGE_DIR`. AnythingLLM keeps its LanceDB vector index there,
+  which lives on the pod's ephemeral disk without NFS — so the knowledge base is silently
+  wiped on every pod restart/redeploy. `enable_nfs = true` by default points `STORAGE_DIR`
+  at the NFS mount so vectors survive; `stateful_pvc_enabled = true` (off by default) is an
+  alternative single-pod-only persistence path at `/app/server/storage`.
 - **Redis is disabled by default.** It is not required for AnythingLLM's core
   functionality. Enable it only if your deployment requires a shared cache layer.
 - **`stateful_pvc_enabled = true` auto-selects `StatefulSet`** and mounts a 20 GiB PVC at
@@ -139,11 +142,15 @@ container user can write to the volume.
   kubectl exec -n "$NAMESPACE" <pod-name> -- ls /app/server/storage
   ```
 
-### E. Filestore (NFS) — optional shared storage
+### E. Filestore (NFS) — default persistent storage
 
-For multi-pod deployments where all replicas need access to the same documents and vector
-indices, enable **Filestore (NFS)**. NFS is disabled by default because the StatefulSet
-PVC approach is preferred for single-pod persistence.
+`enable_nfs = true` by default. AnythingLLM's LanceDB vector index lives under
+`STORAGE_DIR`, which defaults to the pod's ephemeral disk — without NFS the knowledge base
+is silently wiped on every pod restart or redeploy (document metadata persists in
+Postgres, but the vectors are gone). With NFS enabled, `STORAGE_DIR` is pointed at
+`nfs_mount_path` so vectors survive, and multi-pod deployments share the same document and
+vector view. `stateful_pvc_enabled = true` (off by default) is an alternative for
+single-pod-only persistence at `/app/server/storage`.
 
 - **Console:** Filestore → Instances.
 - **CLI:**
@@ -254,7 +261,7 @@ specific to or notable for AnythingLLM are listed; every other input is inherite
 |---|---|---|
 | `application_name` | `anythingllm` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `AnythingLLM` | Friendly name shown in the Console. |
-| `application_description` | _(set)_ | Workload description annotation. |
+| `application_description` | `AnythingLLM Private AI Workspace on GKE` | Workload description annotation. |
 | `application_version` | `latest` | Image version tag; pin to a release tag for production. |
 
 ### Group 4 — Runtime & Scaling
@@ -317,7 +324,7 @@ specific to or notable for AnythingLLM are listed; every other input is inherite
 |---|---|---|
 | `startup_probe_config` / `startup_probe` | `/api/ping`, 60 s initial delay, 30 failures | Extended startup window for AI model loading. |
 | `health_check_config` / `liveness_probe` | `/api/ping`, 30 s initial delay | Liveness probe against AnythingLLM's health endpoint. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Optional Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled=false, path="/" }` | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -339,7 +346,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `false` | Enable Filestore (NFS) for multi-pod shared document access. |
+| `enable_nfs` | `true` | Filestore (NFS) is mounted by default — required so AnythingLLM's LanceDB vector index (under `STORAGE_DIR`) survives pod restarts/redeploys instead of living on ephemeral disk. |
 | `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
@@ -390,7 +397,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 
@@ -477,7 +484,7 @@ and explore the running resources.
 | `EMBEDDING_ENGINE` | set once | High | Changing the embedding engine after ingestion makes existing vectors incompatible; all documents must be re-ingested. |
 | `enable_iap` / `enable_cloud_armor` | enable for production | High | Without IAP, access is controlled only by the application login screen. |
 | `enable_redis` | `false` (or set `redis_host`) | Medium | If `enable_redis = true` and `redis_host` is not resolvable, the container fails to start. |
-| `enable_nfs` | enable for multi-replica | Medium | Without NFS, pods > 1 each have an isolated storage view; cross-pod document access is impossible. |
+| `enable_nfs` | `true` (default) | Medium | Enabled by default so the LanceDB vector index survives pod restarts; disabling it also strands multi-replica pods on isolated ephemeral storage, breaking cross-pod document access. |
 | `application_version` | pin to a release tag | Medium | `latest` risks schema-breaking upgrades in production. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
 

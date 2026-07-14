@@ -15,11 +15,11 @@ As an admin you have superuser access. In addition to everything a standard user
 - Edit any user's credits and role flags (User, Partner, Agent, Finance, Support, Admin).
 - Award credits in bulk and message users.
 - Configure platform-wide behavior on the **Setup** page, including turning **Credits** on or off.
-- Publish and manage **platform modules**, and delete any module (platform or partner).
-- Handle **Setup Requests** and **Support Tickets**.
+- Sync and manage **platform modules**, and delete any module (platform or partner).
+- Handle **Setup Requests** and **Support Tickets** (tabs on the **Help** page).
 - See all revenue, costs, invoices, and payouts across the platform.
 
-After you sign in you land on **Deployments**. Your top navigation shows: Setup, Users, Setup Requests, Support Tickets, Explore, Publish, and Help. (Explore and Publish appear when the platform's repository/AI integration is configured.)
+After you sign in you land on **Deployments**. Your top navigation shows: Setup, Users, Sync, Deployments, Deploy, and Help. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
 
 ## Managing users
 
@@ -50,7 +50,7 @@ Save your changes to apply them.
 
 ## Assigning roles
 
-RAD has six roles: **User, Admin, Partner, Agent, Finance, Support**. A person can hold several at once (for example Agent + Partner). A Partner is always also a User. Roles are granted by an administrator, and can also be granted through Google Group membership that admins manage.
+RAD has six roles: **User, Admin, Partner, Agent, Finance, Support**. A person can hold several at once (for example Agent + Partner). A Partner is always also a User. Roles are granted by an administrator via the **Users** page and stored on the user's account record (the founding admin is pinned via a bootstrap allow-list).
 
 Set a user's roles by editing their row on the **Users** page and toggling the role flags. What each role unlocks:
 
@@ -59,7 +59,7 @@ Set a user's roles by editing their row on the **Users** page and toggling the r
 - **Partner** — publish modules from their own repository and earn partner revenue. Granting Partner is manual; subscribing to a credit plan does not grant it.
 - **Agent** — earn referral commission from users they referred; uses the **Revenue** page.
 - **Finance** — financial reporting and payouts; uses the **Billing** page.
-- **Support** — help-desk triage of **Support Tickets** and read-only module discovery.
+- **Support** — help-desk triage of **Support Tickets** (a Help-page tab) and read-only visibility of all deployments.
 
 ## Bulk credit awards and messaging users
 
@@ -80,19 +80,19 @@ Key controls available to you include turning **Credits** on or off for the whol
 
 You are responsible for the catalog of **platform modules** that every user sees on the **Deploy** page.
 
-**Publish platform modules.** Go to the **Publish** page to publish and update platform modules so they appear in the catalog. Use **Explore** for AI-assisted module discovery when the platform's AI integration is configured. (Publish and Explore appear in your navigation only when the platform's repository/AI integration is set up.)
+**Sync platform modules.** Go to the **Sync** page to bring platform modules into the catalog. The page is a read-only sync console: it lists the modules found in the platform repository, and the **Sync Now** action refreshes the catalog from that repository. Modules themselves are managed in the repository, not edited on this page.
 
-**Update a module.** Re-publish a module from the Publish page to refresh its definition (description, configuration fields, and credit cost) in the catalog.
+**Update a module.** Change the module in the repository, then run **Sync Now** from the Sync page to refresh its definition (description, configuration fields, and credit cost) in the catalog.
 
 **Delete any module.** As an admin you can delete any module in the catalog — platform modules and partner-published modules alike.
 
 ## Setup Requests
 
-The **Setup Requests** page is where managed-setup requests are handled. Review incoming requests, track their status, and follow them through to completion. Finance also has access to this page; as an admin you have full visibility into all requests.
+The **Setup Requests** tab on the **Help** page is where managed-setup requests are handled. Review incoming requests, track their status, and follow them through to completion. Finance also has access to this tab; as an admin you have full visibility into all requests.
 
 ## Support Tickets
 
-The **Support Tickets** page lists tickets raised through the **Help** form. Triage each ticket: update its status (new, in progress, resolved, closed), add notes, and assign it. Support-role users also work this queue; as an admin you see all tickets.
+The **Support Tickets** tab on the **Help** page lists tickets raised through the **Help** form. Triage each ticket: update its status (new, in progress, resolved, closed), add notes, and assign it. Support-role users also work this queue; as an admin you see all tickets.
 
 ## Visibility into revenue, costs, invoices, and payouts
 

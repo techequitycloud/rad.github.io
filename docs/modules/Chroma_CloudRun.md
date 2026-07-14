@@ -62,9 +62,10 @@ reported in the deployment [Outputs](#5-outputs).
 ### A. Cloud Run — the Chroma service
 
 Chroma runs as a Cloud Run v2 service. Each deployment creates an immutable revision;
-traffic can be split across revisions for safe rollouts. `cpu_always_allocated = true`
-keeps CPU allocated between requests so that background index operations and health
-checks are never throttled.
+traffic can be split across revisions for safe rollouts. `cpu_always_allocated`
+defaults to `false` (request-based billing); set it `true` (with `min_instance_count
+>= 1`) to keep CPU allocated between requests so background index operations and
+health checks are never throttled.
 
 - **Console:** Cloud Run → select the service for revisions, traffic, logs, and
   metrics.
@@ -223,7 +224,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `max_instance_count` | `1` | Maximum instances. Keep at 1 — multiple instances on the same GCS FUSE path will corrupt collections. |
 | `container_port` | `8000` | Chroma REST API port. |
 | `execution_environment` | `gen2` | Gen2 required for GCS FUSE mounts. |
-| `cpu_always_allocated` | `true` | Keep CPU allocated between requests to avoid background index operation timeouts. |
+| `cpu_always_allocated` | `false` | Request-based billing by default; set `true` to keep CPU allocated between requests and avoid background index operation timeouts. |
 | `timeout_seconds` | `300` | Max request duration. Increase for large batch similarity searches. |
 | `enable_cloudsql_volume` | `false` | Not applicable — Chroma has no SQL database. |
 | `enable_image_mirroring` | `true` | Mirror the Chroma image into Artifact Registry to avoid Docker Hub rate limits. |
@@ -312,7 +313,7 @@ foundation compatibility only and are fixed or ignored: `database_type` (fixed t
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | `/api/v2/heartbeat` | HTTP startup probe — Chroma returns 200 once fully initialised. Probe path is fixed. |
 | `liveness_probe` / `health_check_config` | `/api/v2/heartbeat` | Liveness probe. |
-| `uptime_check_config` | `enabled=true, path=/api/v2/heartbeat` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | `enabled=false, path=/api/v2/heartbeat` | Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 23 — VPC Service Controls & Audit Logging

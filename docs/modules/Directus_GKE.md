@@ -53,7 +53,7 @@ Directus pods are scheduled on Autopilot, which bills for the CPU/memory the pod
   kubectl logs -n "$NAMESPACE" deploy/<service-name> --tail=100
   kubectl describe hpa -n "$NAMESPACE"          # current vs target utilisation
   # Manually verify the Directus health endpoint from within the cluster:
-  kubectl exec -n "$NAMESPACE" deploy/<service-name> -- curl -sf http://localhost:8055/server/health
+  kubectl exec -n "$NAMESPACE" deploy/<service-name> -- curl -sf http://localhost:8055/server/ping
   ```
 
 See [App_GKE](App_GKE.md) for how Autopilot, scaling, and the workload type (Deployment vs StatefulSet) are managed.
@@ -150,7 +150,7 @@ Pod stdout/stderr flow to Cloud Logging; GKE and Cloud SQL metrics flow to Cloud
 - **First-deploy database setup.** A `db-init` job runs on every apply (`execute_on_apply = true`). It creates the Directus database user with the generated password, creates the `directus` database, installs `uuid-ossp` and `postgis` extensions (PostGIS failure is non-fatal), and grants full privileges. The job is idempotent.
 - **Bootstrap on first start.** `BOOTSTRAP = "true"` seeds the initial admin user and Directus system collections on first boot. The admin email defaults to `admin@example.com` — **override this via `environment_variables = { ADMIN_EMAIL = "you@example.com" }` before the first deploy.**
 - **Migrations on every start.** `AUTO_MIGRATE = "true"` causes Directus to run `database migrate:latest` on each pod start, so upgrading `application_version` applies schema changes automatically.
-- **Health probe.** The startup and liveness probes target `/server/health`, which returns HTTP 200 only when Directus has finished migrations and is accepting API requests. The startup probe allows up to 300 seconds (`failure_threshold = 10`, `period_seconds = 30`) to accommodate first-boot database setup.
+- **Health probe.** The startup and liveness probes target `/server/ping`, Directus's public, unauthenticated liveness endpoint (returns `pong`/200 as soon as the server is listening) — `/server/health` requires admin authentication and would 403 an unauthenticated probe. The startup probe allows up to 300 seconds (`failure_threshold = 10`, `period_seconds = 30`) to accommodate first-boot database setup.
 - **KEY and SECRET rotation.** Rotating the `KEY` secret immediately invalidates all active user sessions. Rotating `SECRET` invalidates all issued JWTs. Never rotate either without a planned maintenance window and client notification.
 - **Admin login.** Retrieve the generated admin password from Secret Manager (see §2.E). The default admin email is `admin@example.com` unless overridden.
 
@@ -237,9 +237,9 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` | `/server/health`, HTTP, failure_threshold=10 | Kubernetes startup probe. Allows up to 300 s for first-boot migrations. |
-| `liveness_probe` | `/server/health`, HTTP | Kubernetes liveness probe; pod restarted after 3 consecutive failures. |
-| `uptime_check_config` | enabled | Optional Cloud Monitoring uptime check. |
+| `startup_probe` | `/server/ping`, HTTP, failure_threshold=10 | Kubernetes startup probe. Allows up to 300 s for first-boot migrations. |
+| `liveness_probe` | `/server/ping`, HTTP | Kubernetes liveness probe; pod restarted after 3 consecutive failures. |
+| `uptime_check_config` | `{ enabled = false, path = "/" }` | Optional Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -307,7 +307,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see [App_GKE](App_GK
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 

@@ -47,8 +47,9 @@ The application configuration object passed to the platform module via `applicat
 |---|---|
 | `app_name` | `"invoiceninja"` |
 | `application_version` | Version tag (default: `"5"`) |
-| `container_image` | `"invoiceninja/invoiceninja"` (public Docker Hub image) |
-| `image_source` | `"prebuilt"` by default — the official image is deployed directly without a custom build step |
+| `container_image` | `"invoiceninja/invoiceninja:<application_version>"` — the public Docker Hub image, used as the Dockerfile `FROM` base for the Common module's own custom build |
+| `image_source` | `"custom"` in `InvoiceNinja_Common`'s own config (a thin Cloud Build wrapper adding nginx + a Cloud SQL Unix-socket patch to `config/database.php` — see `container_build_config` below). Both `InvoiceNinja_CloudRun` and `InvoiceNinja_GKE` default their own `container_image_source` variable to `"prebuilt"`, which overrides this in the final merged config unless the wrapper caller explicitly passes `"custom"` |
+| `container_build_config` | `{ enabled = true, dockerfile_path = "Dockerfile", context_path = "<module>/scripts", build_args = { APP_VERSION = application_version } }` — only takes effect when the wrapper's `image_source` resolves to `"custom"` |
 | `container_port` | `80` — Invoice Ninja uses nginx on port 80 |
 | `database_type` | `"MYSQL_8_0"` — Invoice Ninja requires MySQL 8.0+ |
 | `db_name` | Database name (default: `"invoiceninja"`) |
@@ -77,7 +78,7 @@ A list of GCS bucket configurations for provisioning by the platform module:
 
 | Field | Value |
 |---|---|
-| `name_suffix` | `"data"` |
+| `name_suffix` | `"storage"` |
 | `location` | Deployment region |
 | `storage_class` | `"STANDARD"` |
 | `versioning_enabled` | `false` |
@@ -107,12 +108,14 @@ The absolute path to the module directory, used by wrapper modules to locate the
 | `db_user` | `string` | `"invoiceninja"` | MySQL application user. |
 | `cpu_limit` | `string` | `"2000m"` | Container CPU limit passed into `config.container_resources`. |
 | `memory_limit` | `string` | `"2Gi"` | Container memory limit. Minimum 2 Gi for Chromium PDF generation. |
+| `min_instance_count` | `number` | `1` | Minimum instance count, passed into `config.min_instance_count`. |
+| `max_instance_count` | `number` | `3` | Maximum instance count, passed into `config.max_instance_count`. |
 | `environment_variables` | `map(string)` | `{}` | Additional plain-text environment variables. Merged with Invoice Ninja defaults. |
 | `secret_environment_variables` | `map(string)` | `{}` | Additional Secret Manager references. Merged with the auto-generated `APP_KEY` reference. |
 | `initialization_jobs` | `list(object)` | `[]` | Custom init jobs. Empty triggers the default `db-init` + `artisan-migrate` pair. |
 | `startup_probe` | `object` | see §6 | Startup health probe configuration. |
 | `liveness_probe` | `object` | see §6 | Liveness health probe configuration. |
-| `invoiceninja_admin_email` | `string` | `"admin@example.com"` | Administrator email for login and system notifications. |
+| `invoiceninja_admin_email` | `string` | `"admin@example.com"` | Declared and forwarded by both wrappers, but **not currently referenced** in `InvoiceNinja_Common`'s `local.config` — has no effect on the deployed environment. Invoice Ninja's first admin account is created through its own in-app `/setup` wizard instead. |
 | `mail_from_name` | `string` | `"Invoice Ninja"` | Display name for outgoing emails. |
 | `mail_from_address` | `string` | `"ninja@example.com"` | Sender email address for outgoing emails. |
 
@@ -128,16 +131,18 @@ The absolute path to the module directory, used by wrapper modules to locate the
 
 ## 4. Auto-Injected Environment Variables
 
-`InvoiceNinja Common` injects the following environment variables into the application config automatically. These cannot be overridden via `environment_variables` at the wrapper level — they are merged with lower precedence than user-supplied values.
+`InvoiceNinja Common` injects the following environment variables into the application config automatically. They are merged with **lower** precedence than `var.environment_variables`, so a wrapper caller (or an end user's `environment_variables` input) **can** override any of them by supplying the same key.
 
 | Variable | Value | Purpose |
 |---|---|---|
 | `APP_ENV` | `"production"` | Laravel environment mode. |
 | `APP_DEBUG` | `"false"` | Disables Laravel debug output in production. |
 | `DB_CONNECTION` | `"mysql"` | Laravel database driver selection. |
+| `MAIL_MAILER` | `"smtp"` | Selects the SMTP mail transport. |
 | `TRUSTED_PROXIES` | `"*"` | Required for Cloud Run and GKE load balancer reverse proxy headers (X-Forwarded-For, X-Forwarded-Proto). Without this, Laravel generates HTTP links even when the client accesses via HTTPS. |
 | `PDF_GENERATOR` | `"snappdf"` | Selects the snappdf Chromium-based PDF renderer. |
 | `SNAPPDF_EXECUTABLE_PATH` | `"/usr/local/bin/chrome"` | Path to the bundled Chromium executable inside the `invoiceninja/invoiceninja:5` container. |
+| `IN_USER_AGENT_SETTING` | `"1"` | Invoice Ninja app setting passed through as an env var. |
 | `MAIL_FROM_NAME` | `var.mail_from_name` | Display name for outgoing Invoice Ninja emails. |
 | `MAIL_FROM_ADDRESS` | `var.mail_from_address` | Sender email address for outgoing emails. |
 
@@ -161,10 +166,10 @@ Two jobs are provisioned by default when `initialization_jobs = []`:
 | CPU / Memory | `1000m` / `512Mi` |
 
 `db-init.sh` behaviour:
-1. Connects to Cloud SQL MySQL via the Auth Proxy Unix socket (path from `DB_HOST`).
+1. Connects to Cloud SQL MySQL over whichever transport `DB_HOST` resolves to: a Unix socket path (Cloud Run, `enable_cloudsql_volume = true`) or TCP via the Cloud SQL Auth Proxy sidecar (GKE, falls back to `DB_IP` if `DB_HOST` is unset).
 2. Polls MySQL until available (up to 30 retries, 2s apart).
 3. Creates the `invoiceninja` database with `utf8mb4` charset and `utf8mb4_0900_ai_ci` collation (required for MySQL 8.0 compatibility with Laravel).
-4. Creates (or updates) the `invoiceninja` user with `mysql_native_password` authentication — chosen for compatibility with Laravel's PDO MySQL driver.
+4. Creates (or updates) the `invoiceninja` user with a plain `IDENTIFIED BY` clause, which uses the server's default auth plugin (`caching_sha2_password` on MySQL 8.4+, `mysql_native_password` on 8.0). The script deliberately avoids pinning `mysql_native_password` explicitly, since that plugin was removed in MySQL 8.4 (`ERROR 4052`).
 5. Grants `ALL PRIVILEGES` on the `invoiceninja` database.
 6. Verifies the application user can connect.
 7. Signals Cloud SQL Proxy shutdown.
@@ -173,14 +178,14 @@ Two jobs are provisioned by default when `initialization_jobs = []`:
 
 | Field | Value |
 |---|---|
-| Image | Invoice Ninja application image (`invoiceninja/invoiceninja:5`) |
-| Command | `php artisan migrate --seed --force` |
+| Image | `null` — defaults to the application's own container image (the Common config's `container_image`/build output) |
+| Script | `scripts/migrate.sh`, which runs `php artisan migrate --force` |
 | `execute_on_apply` | `true` |
 | `depends_on_jobs` | `["db-init"]` |
-| Timeout | 600s, 2 retries |
-| CPU / Memory | `1000m` / `512Mi` |
+| Timeout | 600s, 1 retry |
+| CPU / Memory | `1000m` / `1Gi` |
 
-`artisan-migrate` runs Laravel's database migration system. On first deployment it creates all Invoice Ninja tables and seeds initial data (default payment types, currencies, tax rates, etc.). On subsequent deployments it applies any new migrations introduced by Invoice Ninja version upgrades. The `--force` flag suppresses the interactive confirmation prompt in production mode. The `--seed` flag runs database seeders on first run and is idempotent on subsequent runs.
+`artisan-migrate` runs Laravel's database migration system. On first deployment it creates all Invoice Ninja tables. On subsequent deployments it applies any new migrations introduced by Invoice Ninja version upgrades. The `--force` flag suppresses the interactive confirmation prompt in production mode. **There is no `--seed` flag** — the job does not seed demo/reference data; Invoice Ninja's own first-run `/setup` wizard handles initial account creation.
 
 Override `initialization_jobs` with a non-empty list to replace both default jobs with custom jobs. When `initialization_jobs` is non-empty, `InvoiceNinja Common` does not inject either default job.
 
@@ -234,7 +239,7 @@ Cloud Run and GKE resolve this reference at container start, injecting the plain
 | `min_instance_count` | `1` (configurable) | `1` (configurable) |
 | `max_instance_count` | `3` (configurable) | `5` (configurable) |
 | `enable_cloudsql_volume` | Optional (default `true`) | Optional (default `true`) |
-| `DB_HOST` at runtime | Cloud SQL Auth Proxy socket path under `/cloudsql` | Cloud SQL private IP (GKE pods use sidecar or direct connection) |
+| `DB_HOST` at runtime | Cloud SQL Auth Proxy socket path under `/cloudsql` | `127.0.0.1` — the GKE pod's Cloud SQL Auth Proxy sidecar listens on loopback |
 | Redis variables | Group 21 | Group 15 |
 | Session affinity | Not applicable (Cloud Run manages routing) | `"ClientIP"` default — prevents admin session drops across pod replicas |
 | NFS | Enabled by default (`enable_nfs = true`) | Enabled by default (`enable_nfs = true`) |

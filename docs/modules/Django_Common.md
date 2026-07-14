@@ -30,7 +30,7 @@ foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)).
 | PostgreSQL extensions | Auto-installs `pg_trgm`, `unaccent`, `hstore`, `citext` | No user action required |
 | Object storage | Declares the **Cloud Storage** media bucket | `storage_buckets` output |
 | Core settings | Sets container port (8080), image source (`custom`), extension flag, Gunicorn server | Application behaviour in the platform guides |
-| Health probes | Supplies the default startup/liveness probe configuration targeting `/healthz` | §Observability in the platform guides |
+| Health probes | Forwards `startup_probe`/`liveness_probe` unchanged (defaults `null` here — the CloudRun variant defaults to `/healthz`, the GKE variant defaults to `/`) | §Observability in the platform guides |
 
 ---
 
@@ -101,28 +101,42 @@ up correctly on first boot:
   internally so the foundation provisions the extensions IAM grants. The four
   extensions are installed by `db-init.sh`; you do not need to set this flag
   manually.
-- **Superuser creation.** `entrypoint.sh` checks for `DJANGO_SUPERUSER_USERNAME`,
-  `DJANGO_SUPERUSER_EMAIL`, and `DJANGO_SUPERUSER_PASSWORD` on startup and calls
-  `manage.py createsuperuser --noinput` if all three are present. Use
-  `secret_environment_variables` in the platform module to supply the password from
-  Secret Manager.
-- **GCS media volume.** The `db-migrate` job mounts the `django-media` GCS bucket
-  (provisioned by `Django_Common`) as a GCS Fuse volume at the same path used by the
-  application, so `collectstatic` writes directly to Cloud Storage.
+- **Superuser creation.** `entrypoint.sh` looks for `DJANGO_SUPERUSER_USERNAME` and
+  `DJANGO_SUPERUSER_PASSWORD` on startup (if `DJANGO_SUPERUSER_PASSWORD` is unset but
+  `DB_PASSWORD` is present, it defaults the superuser password to `DB_PASSWORD`) and creates the
+  account via a `manage.py shell` script that calls `User.objects.create_superuser(...)`
+  directly — **not** `manage.py createsuperuser --noinput`. `DJANGO_SUPERUSER_EMAIL` is optional
+  and defaults to `admin@example.com`. Use `secret_environment_variables` in the platform module
+  to supply `DJANGO_SUPERUSER_PASSWORD` from Secret Manager.
+- **GCS media storage is opt-in, not automatic.** `Django_Common` provisions the `media` storage
+  bucket and bakes `django-storages[google]` into the image (`settings.py` switches the
+  `default` file storage backend to `storages.backends.gcloud.GoogleCloudStorage` only when the
+  `GS_BUCKET_NAME` env var is set — otherwise Django falls back to local `FileSystemStorage` for
+  media and Whitenoise for static files). Neither `GS_BUCKET_NAME` nor a matching `gcs_volumes`
+  entry is set by default, so the `db-migrate` job's `mount_gcs_volumes = ["django-media"]`
+  reference only takes effect if the platform module's `gcs_volumes` variable is also populated
+  with an entry named `django-media` pointing at the bucket. To use GCS for media, set
+  `GS_BUCKET_NAME` via `environment_variables` (and, if the mount is needed, add the matching
+  `gcs_volumes` entry) rather than assuming it is wired up out of the box.
 
-Platform-specific adjustments handled here:
+Platform-specific defaults (set by the CloudRun/GKE variant, not by `Django_Common` itself):
 
-- **GKE** additionally sets `session_affinity = "ClientIP"` so that a given user's
-  requests are routed to the same pod when in-process session storage is used.
-- **Cloud Run** requires `execution_environment = "gen2"` for NFS mounts; this is
-  applied automatically when `enable_nfs = true`.
+- **GKE** defaults `session_affinity = "ClientIP"` so that a given user's requests are routed to
+  the same pod when in-process session storage is used.
+- **Cloud Run** defaults `execution_environment = "gen2"` (required for NFS/GCS Fuse mounts among
+  other gen2-only features). This is simply the module's static default — it is not toggled
+  automatically based on `enable_nfs`.
 
 ---
 
 ## 5. Health probe behaviour
 
-The default probes target `/healthz` on port 8080, which returns HTTP 200 once the
-application is ready, with a startup delay sufficient to allow first-boot migrations.
+`Django_Common` itself does not set a probe default (`startup_probe`/`liveness_probe` default to
+`null`); the values below come from the CloudRun and GKE variant `variables.tf` defaults, both on
+port 8080. **Cloud Run** defaults its probe path to `/healthz` (served by the sample project's
+`myproject/urls.py`, which returns HTTP 200 once the application is ready). **GKE's default probe
+path is `/`** (the application root), not `/healthz` — the two variants diverge here, so verify
+the deployed path in the platform module's `variables.tf` before assuming either default.
 
 - **GKE** uses HTTP probes for both startup (90s initial delay) and liveness (60s
   initial delay) — in-cluster probe traffic reaches the container directly without
@@ -143,9 +157,11 @@ If your first-deploy migrations are large and the 60-second (Cloud Run) or 90-se
 
 A dedicated **Cloud Storage** media bucket (`name_suffix = "media"`) is declared here
 and provisioned by the foundation, which also grants the workload service account
-access. Combined with the shared Filestore (NFS) volume (when `enable_nfs = true`),
-this gives Django durable, consistent media storage across all instances. The bucket
-is provisioned in the deployment region. List and inspect it with:
+access. The bucket is provisioned in the deployment region, but — as noted in §4 — neither the
+GCS bucket nor the shared Filestore (NFS) volume is wired into Django's `MEDIA_ROOT` by default:
+GCS needs `GS_BUCKET_NAME` set explicitly, and NFS's default mount path (`/mnt/nfs`) does not
+match the image's `/app/media` directory, so `nfs_mount_path` must be set to `/app/media` for
+NFS-backed media persistence. List and inspect the bucket with:
 
 ```bash
 gcloud storage buckets list --project "$PROJECT"

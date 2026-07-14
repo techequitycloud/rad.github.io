@@ -43,13 +43,13 @@ deployment wires together a focused set of Google Cloud services:
   the default — Cloud Build wraps the official `zammad/zammad` Docker Hub image with
   a GCP-specific `entrypoint.sh` that maps Foundation `DB_*` variables to Zammad's
   `POSTGRESQL_*` convention.
-- **The startup probe targets `/api/v1/ping`.** Zammad exposes this health endpoint
-  when fully initialised. The probe is deliberately lenient (30 failure threshold) to
+- **The startup probe targets `/`.** Zammad returns HTTP 200 there only once fully
+  initialised. The probe is deliberately lenient (30 failure threshold) to
   accommodate first-boot schema migration.
 - **Database migrations run on every instance start** (idempotent via `zammad-init`),
   so version upgrades apply schema changes automatically.
-- `min_instance_count = 1` is the default to avoid 60–90-second cold starts on a
-  production helpdesk.
+- `min_instance_count = 0` is the default (scale-to-zero); override to `1` to
+  eliminate 60–90-second cold starts on a production helpdesk.
 
 ---
 
@@ -198,7 +198,7 @@ Monitoring, with optional uptime checks and alert policies.
 - **WebSocket connectivity.** Zammad agents receive live ticket updates via
   ActionCable WebSockets. With multiple instances, Redis pub/sub coordinates events
   across them — this is why `enable_redis = true` is mandatory.
-- **Health path.** Startup and liveness probes target `/api/v1/ping`, which returns
+- **Health path.** Startup and liveness probes target `/`, which returns
   HTTP 200 only when Zammad is fully initialised. The startup probe allows up to
   510 seconds total (60-second initial delay, 30 retries at 15-second intervals) to
   accommodate first-boot schema migration.
@@ -255,7 +255,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `memory_limit` | `4Gi` | Memory per instance. Minimum 2 GiB; 4 GiB recommended. |
 | `container_port` | `3000` | Zammad railsserver port. Must match `ZAMMAD_RAILSSERVER_PORT`. |
 | `execution_environment` | `gen2` | Gen2 required for NFS mounts and GCS Fuse. |
-| `min_instance_count` | `1` | Minimum instances. Keep ≥ 1 to avoid cold starts on a production helpdesk. |
+| `min_instance_count` | `0` | Minimum instances (scale-to-zero). Set ≥ 1 to avoid cold starts on a production helpdesk. |
 | `max_instance_count` | `5` | Maximum instances (cost ceiling). |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy for socket connections. Do not disable. |
 | `enable_image_mirroring` | `true` | Mirrors the Zammad Docker Hub image into Artifact Registry before deploy. |
@@ -341,9 +341,9 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` / `startup_probe_config` | `/api/v1/ping`, 60s delay, 30 retries | Generous tolerance for first-boot schema migration. |
-| `liveness_probe` / `health_check_config` | `/api/v1/ping`, 60s delay | Restarts the container after 3 consecutive failures. |
-| `uptime_check_config` | enabled | Cloud Monitoring uptime check targeting `/api/v1/ping`. |
+| `startup_probe` / `startup_probe_config` | `/`, 60s delay, 30 retries | Generous tolerance for first-boot schema migration. |
+| `liveness_probe` / `health_check_config` | `/`, 60s delay | Restarts the container after 3 consecutive failures. |
+| `uptime_check_config` | disabled | Cloud Monitoring uptime check targeting `/`; set `enabled = true` to provision it. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache & Job Queue

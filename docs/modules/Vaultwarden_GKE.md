@@ -353,7 +353,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. Only takes effect once `application_domains` is non-empty. |
 | `application_domains` | `[]` | Hostnames to serve. Also set `domain` to the full `https://` URL. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys; recommended for DNS stability. |
 
@@ -372,7 +372,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `enable_cloud_armor` | `false` | **Recommended for Vaultwarden.** Attach a Cloud Armor WAF policy to protect the login endpoint from brute-force. |
 | `admin_ip_ranges` | `[]` | CIDRs allowed privileged access. |
-| `cloud_armor_policy_name` | _(set)_ | Policy name. |
+| `cloud_armor_policy_name` | `default-waf-policy` | Policy name. |
 
 ### Group 22 — VPC Service Controls & Audit Logging
 

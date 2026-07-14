@@ -46,6 +46,31 @@ Before deploying App GKE:
 
 ---
 
+## Group 0 — Module Metadata & Platform Wiring
+
+These variables are consumed by the deployment platform rather than by the Terraform resources themselves. `explicit_secret_values` and `scripts_dir` are populated by an Application (wrapper) module — such as `Ghost_GKE` — that calls `App_GKE` as a child module; they should be left at their empty defaults when deploying `App_GKE` standalone.
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `module_description` | `string` | *(module blurb)* | Human-readable description of the module's purpose, shown in the platform UI. Metadata only — do not modify unless customising the module for a fork. |
+| `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/App_GKE"` | Link to the external documentation for this module, shown in the platform UI as a help reference. Metadata only. |
+| `module_dependency` | `list(string)` | `["Services_GCP"]` | Other platform modules that must be deployed before this one. Used by the platform to enforce deployment ordering. Metadata only. |
+| `module_services` | `list(string)` | `["GKE Autopilot", …]` | GCP services enabled or consumed by this module. Used for documentation and platform service visibility. Metadata only. |
+| `credit_cost` | `number` | `150` | Platform credits consumed when this module is deployed. Used by the platform billing system. Metadata only. |
+| `require_credit_purchases` | `bool` | `false` | When `true`, enforces a credit balance check before deployment. Metadata only. |
+| `enable_purge` | `bool` | `true` | Permits full deletion of all module-managed resources on destroy. Set `false` to retain resources after the module is removed, protecting against accidental data loss. Metadata only. |
+| `public_access` | `bool` | `true` | Controls whether this module is publicly listed in the platform catalogue. Metadata only. |
+| `require_services_gcp_module` | `bool` | `true` | When `true`, the deployment fails at plan time with a clear error if no `Services_GCP`-managed VPC network is detected in the project. Set `false` to allow a standalone deployment with inline prerequisite resources. |
+| `shared_users` | `list(string)` | `[]` | Users who can view and deploy this module regardless of the `public_access` setting. |
+| `technical_support_users` | `list(string)` | `[]` | Users responsible for providing technical support for this module. The deployment portal routes support requests to these addresses. Metadata only. |
+| `resource_creator_identity` | `string` | *(platform SA)* | Service account used by Terraform to create and manage resources. Override with a project-specific service account for production deployments. |
+| `impersonation_service_account` | `string` | `""` | Service account to impersonate when shell scripts (discovery, image mirroring, NFS setup) call GCP APIs. Required for cross-project deployments; leave empty to use the runner's own credentials. |
+| `job_execution_wait_timeout` | `number` | `900` | Maximum seconds a deployment waits for the database setup (`db-create`) job to complete before aborting, so a stuck job fails the apply quickly instead of hanging until the build's outer timeout. |
+| `explicit_secret_values` | `map(string)` | `{}` | Raw secret values provided directly by a wrapper module. Keys must match entries in `secret_environment_variables`. When provided, the plan-time Secret Manager data source lookup is skipped for these keys, allowing the first apply to succeed before the secrets exist. |
+| `scripts_dir` | `string` | `""` | Directory containing initialisation and utility scripts. Defaults to the module's built-in scripts directory when left blank. Override when a wrapper module supplies custom scripts. |
+
+---
+
 ## Group 1 — Project & Identity
 
 These variables establish the GCP project context. They must be configured correctly before any deployment can succeed.
@@ -421,7 +446,7 @@ These variables configure Kubernetes health probes, Cloud Monitoring uptime chec
 |---|---|---|---|
 | `startup_probe_config` | `object` | `{ enabled = true, path = "/healthz" }` | Kubernetes startup probe — Kubernetes will not route requests to the pod until this probe succeeds. Sub-fields: `enabled`, `type` (`HTTP` / `TCP`), `path`, `initial_delay_seconds` (default: 10), `timeout_seconds` (default: 5), `period_seconds` (default: 10), `failure_threshold` (default: 3). For slow-starting applications, increase `failure_threshold` or `period_seconds`. |
 | `health_check_config` | `object` | `{ enabled = true, path = "/healthz" }` | Kubernetes liveness probe — periodically checks whether the running container is healthy. If the probe fails `failure_threshold` consecutive times, Kubernetes restarts the container. Sub-fields mirror `startup_probe_config`. The health endpoint must respond quickly and not perform expensive operations. |
-| `uptime_check_config` | `object` | `{ enabled = true, path = "/" }` | Google Cloud Monitoring uptime check that sends HTTP requests to the application from multiple global locations. Triggers an alert to `support_users` if the endpoint becomes unreachable. Sub-fields: `enabled`, `path`, `check_interval` (default: `"60s"`), `timeout` (default: `"10s"`). Only active when the application endpoint has a stable, resolvable host. For a `LoadBalancer` service with a reserved static IP (the default — see `reserve_static_ip`), the check probes a **default `<reserved-ip>.nip.io` hostname** automatically; set `application_domains` to probe your own domain instead. A plain ephemeral-IP `LoadBalancer` (i.e. `reserve_static_ip = false` with no `application_domains`) has no stable host, so the check is skipped. |
+| `uptime_check_config` | `object` | `{ enabled = false, path = "/" }` | Google Cloud Monitoring uptime check that sends HTTP requests to the application from multiple global locations. Triggers an alert to `support_users` if the endpoint becomes unreachable. Disabled by default — set `enabled = true` to provision the check. Sub-fields: `enabled`, `path`, `check_interval` (default: `"60s"`), `timeout` (default: `"10s"`). Only active when the application endpoint has a stable, resolvable host. For a `LoadBalancer` service with a reserved static IP (the default — see `reserve_static_ip`), the check probes a **default `<reserved-ip>.nip.io` hostname** automatically; set `application_domains` to probe your own domain instead. A plain ephemeral-IP `LoadBalancer` (i.e. `reserve_static_ip = false` with no `application_domains`) has no stable host, so the check is skipped. |
 | `alert_policies` | `list(object)` | `[]` | Cloud Monitoring alert policies that trigger notifications to `support_users` when Kubernetes metrics exceed defined thresholds. Each policy requires: `name`, `metric_type`, `comparison` (`COMPARISON_GT` / `COMPARISON_LT`), `threshold_value`, `duration_seconds`, `aggregation_period` (default: `"60s"`). Common GKE metric types: `kubernetes.io/container/cpu/usage_time`, `kubernetes.io/container/memory/used_bytes`. |
 
 ### Exploring in GCP — Group 10
@@ -695,6 +720,10 @@ These variables configure the Cloud SQL database backend. The module supports Po
 | `mysql_plugins` | `list(string)` | `[]` | MySQL plugins to install. Requires `enable_mysql_plugins = true` and a MySQL `database_type`. Common values: `audit_log`, `validate_password`. |
 | `enable_auto_password_rotation` | `bool` | `false` | Enables automatic rotation of the database user password via a Kubernetes CronJob and Eventarc trigger. Rotation frequency is governed by `secret_rotation_period`. Only applies when `database_type` is not `NONE`. |
 | `rotation_propagation_delay_sec` | `number` | `90` | Seconds to wait after a new database password is written to Secret Manager before restarting GKE pods. Allows Secret Manager global replication to complete. Increase for high-concurrency applications. Only used when `enable_auto_password_rotation` is `true`. |
+| `db_host_env_var_name` | `string` | `""` | Additional environment variable name to expose the database host alongside the standard `DB_HOST`. Set by wrapper modules for applications that expect a non-standard name (e.g. `DB_HOSTNAME`). |
+| `db_user_env_var_name` | `string` | `""` | Additional environment variable name to expose the database user alongside the standard `DB_USER`. (e.g. `DB_USERNAME`) |
+| `db_name_env_var_name` | `string` | `""` | Additional environment variable name to expose the database name alongside the standard `DB_NAME`. (e.g. `DB_DATABASE`) |
+| `db_port_env_var_name` | `string` | `""` | Additional environment variable name to expose the database port alongside the standard `DB_PORT`. (e.g. `DB_PORT_NUMBER`) |
 
 ### Exploring in GCP — Group 16
 

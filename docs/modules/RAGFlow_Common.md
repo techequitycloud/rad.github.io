@@ -26,7 +26,7 @@ foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Container image | Builds a custom image from `infiniflow/ragflow` via Cloud Build; `APP_VERSION` is set from the caller's `application_version` | `container_image` output of the platform deployment |
 | Database engine | Fixes **Cloud SQL for MySQL 8.0** as the only supported engine | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy job that creates the `rag_flow` database, `ragflow` user, and grants | `initialization_jobs` output |
-| Object storage | Declares the **Cloud Storage** documents bucket (`ragflow-documents`) | `storage_buckets` output |
+| Object storage | Declares the **Cloud Storage** documents bucket (suffix `documents`) | `storage_buckets` output |
 | Core settings | Injects MySQL, Elasticsearch, and Redis connection env vars; sets the service port to 80 | Application behaviour in the platform guides |
 | Health checks | Supplies the default startup/liveness/readiness probe configuration targeting RAGFlow's health endpoints | §Observability in the platform guides |
 | Startup config | Bundles the custom `entrypoint.sh` that generates `service_conf.yaml` at container start | Container startup behaviour |
@@ -88,6 +88,12 @@ Platform-specific adjustments:
   Auth Proxy Unix socket to `127.0.0.1:3306`, because RAGFlow's PyMySQL client cannot
   connect via a Unix socket path directly.
 - **GKE** connects to the Auth Proxy via TCP; no socket bridging is needed.
+- **Redis host resolution.** The bundled `entrypoint.sh` prefers an explicit
+  `REDIS_HOST`; when that is unset it falls back to `NFS_SERVER_IP` (the
+  platform's NFS VM, which co-hosts Redis) before finally defaulting to
+  `127.0.0.1`. Both `RAGFlow_CloudRun` and `RAGFlow_GKE` forward `enable_redis`
+  through unconditionally (not gated on `redis_host` being set), so this
+  fallback reliably resolves to a working Redis instance.
 
 ---
 
@@ -113,7 +119,7 @@ default probes are tuned to accommodate this:
 | Probe | Path | Initial delay | Period | Failure threshold |
 |---|---|---|---|---|
 | Startup | `/v1/health` | 120 s | 10 s | 60 retries |
-| Liveness | `/v1/health` | 120 s | 30 s | 3 retries |
+| Liveness | `/v1/system/version` | 120 s | 30 s | 3 retries |
 | Readiness | `/v1/system/version` | 30 s | 10 s | 3 retries |
 
 Cloud Run uses `/v1/system/version` for startup and liveness probes (set in
@@ -125,7 +131,7 @@ Cloud Run uses `/v1/system/version` for startup and liveness probes (set in
 ## 7. Object storage
 
 A dedicated **Cloud Storage** documents bucket is declared here with the suffix
-`ragflow-documents` and provisioned by the foundation in the deployment region. The
+`documents` and provisioned by the foundation in the deployment region. The
 workload service account is granted access automatically. List it with:
 
 ```bash

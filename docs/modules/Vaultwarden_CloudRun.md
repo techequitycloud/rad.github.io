@@ -309,7 +309,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | HTTP `/alive`, 30 s delay, 6 failures | Vaultwarden's dedicated health path; 30 s matches fast Rust startup. |
 | `liveness_probe` | HTTP `/alive`, 30 s delay, 3 failures | Liveness probe. |
-| `uptime_check_config` | enabled, `/alive` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, `/alive` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis

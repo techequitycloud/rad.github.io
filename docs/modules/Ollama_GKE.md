@@ -239,8 +239,8 @@ specific to or notable for Ollama are listed; every other input is inherited fro
 | `iap_oauth_client_id` / `iap_oauth_client_secret` | `""` | Required when IAP is enabled. |
 | `enable_cloud_armor` | `false` | Attach a Cloud Armor (WAF) policy to the Ingress backend. |
 | `application_domains` | `[]` | Custom hostnames for the load balancer. |
-| `enable_custom_domain` | `false` | Configure a custom domain and managed certificate. |
-| `reserve_static_ip` | `false` | Reserve a stable external IP address. |
+| `enable_custom_domain` | `true` | Configure a custom domain and managed certificate. |
+| `reserve_static_ip` | `true` | Reserve a stable external IP address. |
 | `enable_vpc_sc` | `false` | Enforce a VPC-SC perimeter (requires `organization_id`). |
 | `enable_audit_logging` | `false` | Detailed Cloud Audit Logs. |
 
@@ -298,7 +298,7 @@ provisioned. These variables are present for interface compatibility only.
 |---|---|---|
 | `startup_probe` | `{ type="HTTP", path="/", initial_delay_seconds=30, failure_threshold=20 }` | 20-attempt threshold allows ~5 minutes for model loading from GCS. |
 | `liveness_probe` | `{ type="HTTP", path="/", initial_delay_seconds=60, failure_threshold=3 }` | 60 s delay avoids false restarts during model load. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check; disabled by default, enable explicitly to activate. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 15 — Redis

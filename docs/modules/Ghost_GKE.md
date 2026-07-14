@@ -118,7 +118,7 @@ The database password secret name is in the [Outputs](#5-outputs). See [App_GKE]
 
 ### F. Networking & ingress
 
-By default the workload is exposed through an external Cloud Load Balancing IP. A custom domain with a Google-managed certificate can be enabled, and a static IP can be reserved so the address survives redeploys.
+The workload is exposed through an external Cloud Load Balancing IP. `enable_custom_domain` defaults to `true`, provisioning a Kubernetes Ingress with a Google-managed certificate for the hostnames in `application_domains`; a static IP is reserved by default (`reserve_static_ip = true`) so the address survives redeploys.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -200,7 +200,7 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 
 | Variable | Default | Description |
 |---|---|---|
-| `environment_variables` | `{SMTP_HOST="", SMTP_PORT="25", SMTP_USER="", SMTP_PASSWORD="", SMTP_SSL="false", EMAIL_FROM="ghost@example.com"}` | SMTP settings pre-populated for Ghost email delivery. `database__client=mysql` is injected automatically — do not set it here. |
+| `environment_variables` | `{SMTP_HOST="", SMTP_PORT="587", SMTP_USER="", SMTP_PASSWORD="", SMTP_SSL="false", EMAIL_FROM="ghost@example.com"}` | SMTP settings pre-populated for Ghost email delivery. `database__client=mysql` is injected automatically — do not set it here. |
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name. |
 
 ### Group 6 — GKE Backend & Cluster
@@ -309,7 +309,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see [App_GKE](App_GK
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. Ghost must know its public URL at startup — ensure the domain matches. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 

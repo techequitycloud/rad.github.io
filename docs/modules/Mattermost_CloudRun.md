@@ -42,7 +42,7 @@ Mattermost is an open-source, self-hostable team messaging and collaboration pla
 
 `Mattermost_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in `App_CloudRun`.
 
-**No application-level secrets auto-generated:** Unlike Django or Directus, `Mattermost Common` does not auto-generate application secrets such as `SECRET_KEY`. Mattermost generates its own internal signing keys at first startup and stores them in PostgreSQL. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App CloudRun` and consumed by the `db-init` job.
+**No application-level secrets auto-generated:** Unlike many other application modules, `Mattermost Common` does not auto-generate application secrets such as a `SECRET_KEY`. Mattermost generates its own internal signing keys at first startup and stores them in PostgreSQL. The `DB_PASSWORD` and `ROOT_PASSWORD` secrets are provisioned automatically by `App CloudRun` and consumed by the `db-init` job.
 
 **Database initialisation identity:** The `db-init` Cloud Run Job runs under the Cloud Run SA. It connects to Cloud SQL PostgreSQL via the Auth Proxy Unix socket, using `DB_HOST`, `DB_USER`, and the `DB_PASSWORD` secret from Secret Manager.
 
@@ -69,6 +69,7 @@ Mattermost is a Go-based application that is resource-efficient at startup but b
 | `container_image` | 4 | `""` | Override image URI. Leave empty for Cloud Build to manage the image. |
 | `cpu_limit` | 4 | `'2000m'` | CPU per instance. 2 vCPU recommended for Mattermost. |
 | `memory_limit` | 4 | `'2Gi'` | Memory per instance. 2 Gi is the minimum; increase for large teams. |
+| `cpu_always_allocated` | 4 | `true` | CPU allocated at all times (instance-based billing). Kept `true`: real-time WebSocket connections require an unthrottled instance (pair with `min_instance_count >= 1`). |
 | `container_resources` | 4 | `null` | When set, overrides `cpu_limit` and `memory_limit`. |
 | `min_instance_count` | 4 | `1` | Keep at `1` for production to avoid WebSocket disruption. |
 | `max_instance_count` | 4 | `5` | Cost ceiling for auto-scaling. |
@@ -91,7 +92,7 @@ Mattermost is a Go-based application that is resource-efficient at startup but b
 | `cpu_limit` | `'1000m'` | `'2000m'` | Mattermost handles concurrent WebSocket connections and message indexing. |
 | `memory_limit` | `'512Mi'` | `'2Gi'` | Mattermost caches channels, users, and sessions in memory. |
 | `min_instance_count` | `0` | `1` | Scale-to-zero drops active user WebSocket connections. |
-| `enable_image_mirroring` | `false` | `true` | Mattermost mirrors its Docker Hub image to Artifact Registry by default. |
+| `cpu_always_allocated` | `false` | `true` | Real-time WebSocket delivery must not be CPU-throttled between requests. |
 
 ### B. Database (Cloud SQL — PostgreSQL 15)
 
@@ -309,7 +310,7 @@ Mattermost performs schema migrations on first startup. The startup probe allows
 | `liveness_probe` | 14 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=60, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe. Container is restarted after `failure_threshold` consecutive failures. |
 | `startup_probe_config` | 14 | `{ enabled=true, path="/", initial_delay_seconds=60 }` | Service-level startup probe. |
 | `health_check_config` | 14 | `{ enabled=true, path="/", initial_delay_seconds=60 }` | Service-level liveness probe. |
-| `uptime_check_config` | 14 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. Alerts notify `support_users` if unreachable. |
+| `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check (disabled by default). When enabled, alerts notify `support_users` if unreachable. |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 
 **Note on probe path:** The `startup_probe` and `liveness_probe` default to `path = "/"` in the Cloud Run module. The GKE variant uses `/api/v4/system/ping`. For more precise health signalling in Cloud Run, override the path to `/api/v4/system/ping`.
@@ -394,7 +395,7 @@ Mattermost exposes Prometheus-format metrics at port 8067 (`/metrics`). Enable m
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `uptime_check_config` | 14 | `{ enabled=true, path="/" }` | Uptime check: `enabled`, `path`, `check_interval`, `timeout`. |
+| `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Uptime check: `enabled`, `path`, `check_interval`, `timeout`. Disabled by default. |
 | `alert_policies` | 14 | `[]` | Metric alert policies. Each: `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`. |
 | `support_users` | 1 | `[]` | Email addresses notified by uptime and alert policy triggers. |
 
@@ -610,6 +611,7 @@ All user-configurable variables exposed by `Mattermost CloudRun`, sorted by UI g
 | `container_image` | 4 | `""` | Container image URI. Leave empty for Cloud Build to manage. |
 | `cpu_limit` | 4 | `'2000m'` | CPU per instance. 2 vCPU recommended. |
 | `memory_limit` | 4 | `'2Gi'` | Memory per instance. |
+| `cpu_always_allocated` | 4 | `true` | CPU allocated at all times. Kept `true` for real-time WebSocket handling. |
 | `container_resources` | 4 | `null` | Overrides `cpu_limit` and `memory_limit` when set. |
 | `min_instance_count` | 4 | `1` | Keep at `1` to avoid WebSocket disconnections. |
 | `max_instance_count` | 4 | `5` | Auto-scaling cost ceiling. |
@@ -680,7 +682,7 @@ All user-configurable variables exposed by `Mattermost CloudRun`, sorted by UI g
 | `liveness_probe` | 14 | `{ path="/", initial_delay_seconds=60, failure_threshold=3 }` | Liveness probe. |
 | `startup_probe_config` | 14 | `{ enabled=true, path="/" }` | Service-level startup probe. |
 | `health_check_config` | 14 | `{ enabled=true, path="/" }` | Service-level liveness probe. |
-| `uptime_check_config` | 14 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check (disabled by default). |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 | `site_url` | 20 | `""` | Public URL for Mattermost. Sets `MM_SERVICESETTINGS_SITEURL`. |
 | `edition` | 20 | `'team'` | `'team'` (free) or `'enterprise'` (paid). |
@@ -710,8 +712,6 @@ All user-configurable variables exposed by `Mattermost CloudRun`, sorted by UI g
 | `database_user` | Name of the application database user. |
 | `database_password_secret` | Secret Manager secret name for the database password. |
 | `storage_buckets` | Created GCS storage buckets. |
-| `nfs_server_ip` | NFS server internal IP *(sensitive)*. |
-| `nfs_mount_path` | NFS mount path inside containers. |
 | `container_image` | Container image used for the deployment. |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 | `github_repository_url` | GitHub repository URL connected for CI/CD. |

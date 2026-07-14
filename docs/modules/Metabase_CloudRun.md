@@ -192,7 +192,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `application_name` | `metabase` | Base name for resources. Do not change after first deploy. |
 | `display_name` | `Metabase Analytics` | Friendly name shown in the Console. |
-| `description` | _(set)_ | Service description. |
+| `description` | `Metabase — open-source business intelligence and analytics platform` | Service description. |
 | `application_version` | `v0.51.3` | Metabase image version tag. **Never downgrade** — migrations are irreversible. |
 
 ### Group 4 — Runtime & Scaling
@@ -208,7 +208,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `execution_environment` | `gen2` | Gen2 recommended for improved startup performance. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy for Unix socket connections. Required. |
 | `timeout_seconds` | `300` | Max request duration; increase for long-running analytical queries. |
-| `traffic_split` | _(set)_ | Split traffic across revisions for staged rollouts. |
+| `traffic_split` | `[]` | Split traffic across revisions for staged rollouts. |
 | `max_revisions_to_retain` | `7` | How many old revisions to keep. |
 
 ### Group 5 — Access & Ingress Control
@@ -292,7 +292,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | `/api/health`, initial delay 120s, failure threshold 15 | HTTP startup probe; total tolerance ~270s for JVM. Do not reduce. |
 | `liveness_probe` | `/api/health`, initial delay 120s, failure threshold 3 | Liveness probe. |
-| `uptime_check_config` | enabled, `/api/health` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, `/api/health` | Cloud Monitoring uptime check. Enable for production monitoring. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis

@@ -28,7 +28,7 @@ set of Google Cloud services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | Cloud Run v2 | Node.js service, 2 vCPU / 2 GiB by default, request-based autoscaling |
-| Database | Firestore (MongoDB-compatible) | MongoDB URI required — Cloud SQL is not used |
+| Database | MongoDB (in-pod `mongo:7` sidecar by default) | Cloud SQL is not used; Firestore MongoDB-compatibility is an opt-in alternative |
 | Object storage | Cloud Storage | A dedicated file-uploads bucket, plus optional extra buckets |
 | Secrets | Secret Manager | JWT keys, credential encryption keys, and MongoDB URI auto-generated |
 | Cache & sessions | Redis (optional) | Required for multi-instance deployments to maintain session consistency |
@@ -36,10 +36,18 @@ set of Google Cloud services:
 
 **Sensible defaults worth knowing up front:**
 
-- **No Cloud SQL.** LibreChat uses MongoDB. By default the module auto-provisions a Firestore
-  ENTERPRISE database with MongoDB compatibility. Provide `mongodb_uri` to skip auto-provisioning.
-- **Firestore database is never deleted on destroy.** The database is retained to prevent data
-  loss; delete it manually if no longer needed.
+- **No Cloud SQL.** LibreChat uses MongoDB. By default `mongodb_uri` points at an **in-pod
+  `mongo:7` sidecar** (`mongodb://127.0.0.1:27017/LibreChat`), added as an `additional_containers`
+  entry in the same Cloud Run service, with its data directory on the shared NFS volume
+  (`/data/db`). Firestore's MongoDB-compatible API authenticates but drops LibreChat's startup
+  commands, so it is **not** the default — clear `mongodb_uri` to `""` (and set
+  `firestore_mongodb_host`, or leave both empty for auto-discovery) to opt into Firestore instead.
+- **The MongoDB sidecar makes the service a singleton.** Because its data lives on NFS at a
+  single path, `min_instance_count = max_instance_count = 1` by default. Point at an external
+  MongoDB (Atlas, self-hosted, or Firestore) to scale beyond one instance.
+- **Firestore database is never deleted on destroy (when used).** If you opt into Firestore
+  auto-provisioning, the database is retained to prevent data loss; delete it manually if no
+  longer needed.
 - **JWT and credential secrets are auto-generated** on first deploy and stored in Secret Manager.
   Rotating `CREDS_KEY` or `CREDS_IV` after users have saved AI provider credentials renders all
   stored credentials undecryptable.
@@ -78,22 +86,29 @@ across revisions for safe rollouts.
 See [App_CloudRun](App_CloudRun.md) for scaling, concurrency, execution environment,
 and traffic splitting.
 
-### B. Firestore (MongoDB-compatible) — the LibreChat database
+### B. MongoDB — the LibreChat database
 
-LibreChat stores all chat history, user accounts, and configuration in MongoDB. By default the
-module discovers or creates a **Firestore ENTERPRISE database with MongoDB compatibility** and
-injects the connection URI as `MONGO_URI`. Alternatively, point `mongodb_uri` at MongoDB Atlas
-or any self-hosted MongoDB instance accessible from the VPC.
+LibreChat stores all chat history, user accounts, and configuration in MongoDB. By default an
+official `mongo:7` container runs as an **in-pod sidecar** in the same Cloud Run service
+(`additional_containers`), reachable by the main container at `127.0.0.1:27017`, with its data
+directory (`/data/db`) on the shared NFS volume. Alternatively, clear `mongodb_uri` to `""` to
+opt into a **Firestore ENTERPRISE database with MongoDB compatibility** (auto-discovered or
+created), or point `mongodb_uri` at MongoDB Atlas or any self-hosted MongoDB instance accessible
+from the VPC.
 
-- **Console:** Firestore → select the database to browse documents, indexes, and usage. The
-  database ID matches `firestore_mongodb_database` (default: `LibreChat`).
+- **Console:** Cloud Run → the service's revision detail shows the `mongo` sidecar container.
+  Firestore → select the database (when Firestore mode is used; ID matches
+  `firestore_mongodb_database`, default `LibreChat`).
 - **CLI:**
   ```bash
+  # Inspect the sidecar and its NFS-backed data directory:
+  gcloud run services describe <service-name> --project "$PROJECT" --region "$REGION" --format=json | jq '.spec.template.spec.containers'
+  # If using Firestore mode:
   gcloud firestore databases list --project "$PROJECT"
   gcloud firestore databases describe LibreChat --project "$PROJECT"
   ```
 
-Retrieve the auto-generated MongoDB URI from Secret Manager to verify connectivity:
+Retrieve the MongoDB URI from Secret Manager to verify connectivity:
 
 ```bash
 gcloud secrets list --project "$PROJECT" --filter="name~mongo-uri"
@@ -182,10 +197,14 @@ uptime checks and alert policies.
 
 - **No database migration job.** LibreChat auto-migrates its MongoDB schema on first startup;
   no separate initialization job is needed.
-- **Firestore auto-provisioning.** When `mongodb_uri` is empty and no `firestore_mongodb_host`
-  is set, the module discovers or creates a Firestore ENTERPRISE database with MongoDB
-  compatibility. A SCRAM user is provisioned automatically. The database is never destroyed with
-  the module.
+- **In-pod MongoDB sidecar by default.** `mongodb_uri` defaults to
+  `mongodb://127.0.0.1:27017/LibreChat`, pointing at an official `mongo:7` container added as an
+  `additional_containers` entry in the same Cloud Run service; its data directory lives on the
+  shared NFS volume, which is why the service defaults to a `min = max = 1` singleton.
+- **Firestore auto-provisioning (opt-in).** Set `mongodb_uri = ""` to enable it: when
+  `mongodb_uri` is empty and no `firestore_mongodb_host` is set, the module discovers or creates
+  a Firestore ENTERPRISE database with MongoDB compatibility. A SCRAM user is provisioned
+  automatically. The database is never destroyed with the module.
 - **AI provider API keys.** LibreChat connects to AI provider APIs (OpenAI, Anthropic, etc.) at
   request time. Inject provider keys via `secret_environment_variables`, which references
   pre-existing Secret Manager secrets. Do not pass keys as plain `environment_variables` — they
@@ -243,7 +262,7 @@ to or notable for LibreChat are listed; every other input is inherited from
 | `application_display_name` | `LibreChat AI Chat` | Friendly name shown in the Console. |
 | `application_description` | _(set)_ | Service description. |
 | `application_version` | `latest` | LibreChat image version tag — **pin to a specific release in production**. |
-| `mongodb_uri` | `""` | MongoDB connection URI (sensitive). Leave empty to use Firestore auto-provisioning. |
+| `mongodb_uri` | `mongodb://127.0.0.1:27017/LibreChat` | MongoDB connection URI (sensitive). Defaults to the in-pod `mongo:7` sidecar. Set to `""` to use Firestore auto-provisioning, or supply an external MongoDB/Atlas URI. |
 | `app_title` | `LibreChat` | Title shown in the LibreChat UI header and browser tab. |
 | `allow_registration` | `true` | Allow new users to self-register. **Set `false` after initial admin account creation.** |
 | `allow_social_login` | `false` | Enable OAuth social login providers. Requires OAuth app configuration in `librechat.yaml`. |
@@ -347,7 +366,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | `{ path="/", initial_delay_seconds=30, failure_threshold=10 }` | HTTP probe allowing time for MongoDB connection and asset load. |
 | `liveness_probe` / `health_check_config` | `{ path="/", initial_delay_seconds=60, failure_threshold=3 }` | Liveness probe targeting LibreChat's root path. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis
@@ -403,7 +422,7 @@ resources.
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
 | `CREDS_KEY` / `CREDS_IV` (auto-generated) | set once | Critical | AES-GCM keys for saved AI provider credentials. Rotating after users have saved keys destroys all stored credentials — every user must re-enter their API keys. |
-| `mongodb_uri` / Firestore auto-provisioning | configured | Critical | LibreChat requires MongoDB. If auto-discovery fails and no URI is provided, the container crashes on startup and serves no traffic. |
+| `mongodb_uri` | leave default (sidecar) or set explicitly | Critical | LibreChat requires MongoDB. The default in-pod `mongo:7` sidecar needs NFS enabled for its data directory; clearing `mongodb_uri` to `""` with a broken Firestore/Atlas configuration crashes the container on startup and serves no traffic. |
 | `enable_cloudsql_volume` | `false` | Critical | Must remain `false`. Enabling injects an unnecessary Cloud SQL Auth Proxy sidecar. |
 | `database_type` | `NONE` | Critical | Setting to a SQL engine provisions an unused Cloud SQL instance at extra cost. |
 | `secret_environment_variables` (AI keys) | use secrets | Critical | AI provider keys passed as plain `environment_variables` are visible in Cloud Run revision metadata and GCP audit logs. Always use Secret Manager references. |

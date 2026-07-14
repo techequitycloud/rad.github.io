@@ -189,9 +189,10 @@ The database password secret name is in the [Outputs](#5-outputs). See
 
 ### H. Networking & ingress
 
-By default the workload is exposed through an external Cloud Load Balancing IP. A custom
-domain with a Google-managed certificate can be enabled via the Kubernetes Gateway API, and
-a static IP can be reserved so the address survives redeploys.
+By default the workload is exposed through an external Cloud Load Balancing IP. Custom
+domain support via the Kubernetes Gateway API with a Google-managed certificate is enabled
+by default (`enable_custom_domain = true`), and a static IP is reserved by default so the
+address survives redeploys.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -407,7 +408,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Kubernetes Gateway API for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Kubernetes Gateway API for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 

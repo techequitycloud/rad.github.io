@@ -268,7 +268,6 @@ specific to or notable for OpenEMR are listed; every other input is inherited fr
 | `max_instance_count` | `1` | Increase only after confirming Redis session sharing is operational. |
 | `container_port` | `80` | OpenEMR/Apache listens on port 80. |
 | `execution_environment` | `gen2` | **Must remain `gen2`** for NFS volume support. |
-| `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy for socket connections. |
 | `timeout_seconds` | `300` | Max request duration. Increase for report generation or large file uploads. |
 | `traffic_split` | `[]` | Split traffic across revisions for staged rollouts. |
 | `max_revisions_to_retain` | `7` | How many old revisions to keep. |
@@ -358,7 +357,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | **TCP** on port 80, 12 failures × 10s | TCP startup probe. Avoids HTTP probe failures during the first-boot installation phase. |
 | `liveness_probe` | HTTP `GET /interface/login/login.php`, 10 failures × 30s | Login page returns HTTP 200 only when the full stack is operational. |
-| `uptime_check_config` | enabled | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled | Cloud Monitoring uptime check. Enable explicitly once the service is reachable. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Session Store

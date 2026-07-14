@@ -19,7 +19,7 @@ Formbricks is an open-source survey and experience management platform. It allow
 *   **Security**: Inherits Cloud Armor WAF, IAP, Binary Authorization, and VPC Service Controls from `App CloudRun`. Multiple auto-generated application secrets (NextAuth key, encryption key, cron token, HMAC keys) are provisioned in Secret Manager by `Formbricks Common`.
 *   **Caching**: Redis **enabled by default** (`enable_redis = true`) — Formbricks uses Redis for caching and background job queues.
 *   **CI/CD**: Cloud Build custom image pipeline by default; Cloud Deploy progressive delivery optional.
-*   **Health Probes**: Target `/api/v2/health` — a dedicated Formbricks endpoint that reflects database readiness, with a 30-second initial delay to accommodate Prisma migrations on first boot.
+*   **Health Probes**: The startup probe is **TCP** on the container port by design, not HTTP `/api/v2/health` — that endpoint only returns 2xx once Formbricks reports FULL readiness (DB + Redis + dependencies), so an HTTP startup probe never passes even though Next.js is already listening ("Ready" in logs, but the service is never created). The liveness probe is **disabled by default** for the same reason: Cloud Run liveness can't use a TCP socket, and the HTTP `/api/v2/health` endpoint would restart-loop a healthy container before it reaches full readiness. The TCP startup probe alone gates routing.
 
 **Project & Application Identity**
 
@@ -87,7 +87,7 @@ Formbricks is a Next.js application that performs Prisma database migrations on 
 | `container_port` | 4 | `3000` | Formbricks's native HTTP port. Do not change. |
 | `execution_environment` | 4 | `'gen2'` | Gen2 required for NFS mounts and GCS Fuse. |
 | `timeout_seconds` | 4 | `300` | Max request duration. Increase for large file uploads. |
-| `enable_cloudsql_volume` | 4 | `false` | Formbricks connects to PostgreSQL over TCP by default (not Unix socket). Set `true` for Unix socket. |
+| `enable_cloudsql_volume` | 4 | `true` | Mounts the Cloud SQL Auth Proxy Unix-socket volume. Defaults to `true`: a direct-IP TCP connection forces `sslmode=require`, and Formbricks/Prisma's `pg` client verifies the private-IP Cloud SQL cert, which fails against its untrusted CA (every query 500s). The socket avoids this — the proxy does the mTLS and the app connects with `sslmode=disable`. |
 | `traffic_split` | 4 | `[]` | Percentage-based canary/blue-green traffic allocation. |
 | `service_annotations` | 4 | `{}` | Advanced Cloud Run annotations. |
 | `service_labels` | 4 | `{}` | Labels applied to the Cloud Run service. |
@@ -101,14 +101,13 @@ Formbricks is a Next.js application that performs Prisma database migrations on 
 | `container_port` | `8080` | `3000` | Formbricks Next.js server binds to port 3000. |
 | `cpu_limit` | `'1000m'` | `'1000m'` | Same default — upgrade to `'2000m'` for production. |
 | `memory_limit` | `'512Mi'` | `'2Gi'` | Next.js + Prisma + survey rendering requires significantly more RAM. |
-| `enable_cloudsql_volume` | `true` | `false` | Formbricks connects via TCP, not Auth Proxy Unix socket, by default. |
 | `enable_image_mirroring` | `false` | `true` | Formbricks mirrors to Artifact Registry to avoid ghcr.io rate limits. |
 
 ### B. Database (Cloud SQL — PostgreSQL 15)
 
 Formbricks requires PostgreSQL. `Formbricks Common` fixes `database_type = "POSTGRES_15"`. The module uses `db_name` and `db_user` as Formbricks-specific shorthand variables.
 
-**TCP connection:** `enable_cloudsql_volume` defaults to `false`. Formbricks connects to Cloud SQL PostgreSQL via the standard TCP port using the Cloud SQL private IP injected as `DB_HOST`.
+**Unix-socket connection:** `enable_cloudsql_volume` defaults to `true`. Formbricks connects to Cloud SQL PostgreSQL via the Cloud SQL Auth Proxy Unix socket (mounted at `cloudsql_volume_mount_path`, default `/cloudsql`), injected as `DB_HOST`. This avoids a certificate-verification failure that occurs when Formbricks/Prisma's `pg` client connects directly over private-IP TCP with `sslmode=require` against Cloud SQL's untrusted CA. Set `enable_cloudsql_volume = false` only for a direct-IP TCP connection you know presents a verifiable certificate.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -144,7 +143,7 @@ Formbricks requires PostgreSQL. `Formbricks Common` fixes `database_type = "POST
 
 ### D. Networking
 
-Cloud Run uses Direct VPC Egress to reach Cloud SQL's private IP. Because `enable_cloudsql_volume = false` is the default, Formbricks connects to PostgreSQL via TCP using the Cloud SQL private IP injected as `DB_HOST`.
+Cloud Run uses Direct VPC Egress to reach Cloud SQL. Because `enable_cloudsql_volume = true` is the default, Formbricks connects to PostgreSQL via the Cloud SQL Auth Proxy Unix socket rather than a direct TCP connection to the private IP.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -289,13 +288,18 @@ Traffic splitting is supported. Because Formbricks externalises session state to
 
 ### C. Health Probes & Uptime Monitoring
 
-Formbricks exposes `/api/v2/health` — a dedicated health endpoint that returns `HTTP 200` when the application and its database connection are ready. Both startup and liveness probes target this endpoint.
+Formbricks exposes `/api/v2/health` — a dedicated health endpoint that returns `HTTP 200` only once the application AND its database/Redis dependencies report full readiness. Because of that "full readiness" semantics, the probes deliberately do **not** both target it as an HTTP check:
+
+- **`startup_probe` defaults to TCP**, not HTTP `/api/v2/health`: an HTTP probe against that path never passes until full readiness, so Cloud Run's startup probe would never succeed even though Next.js is already listening on the container port ("Ready" in logs, but the service never becomes routable). A TCP probe succeeds as soon as the app binds the port — the correct gate for "route traffic here."
+- **`liveness_probe` is disabled by default** (`enabled = false`): Cloud Run liveness probes can't use a TCP socket, and the HTTP `/api/v2/health` path would restart-loop an otherwise-healthy container before it reaches full readiness. The TCP startup probe already gates traffic, so liveness is left off.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `startup_probe` | 14 | `{ path="/api/v2/health", initial_delay_seconds=30, period_seconds=20, failure_threshold=10 }` | Startup readiness probe. Container receives no traffic until this succeeds. |
-| `liveness_probe` | 14 | `{ path="/api/v2/health", initial_delay_seconds=15, period_seconds=30, failure_threshold=3 }` | Liveness probe. Container is restarted after `failure_threshold` consecutive failures. |
-| `uptime_check_config` | 14 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. Alerts notify `support_users` if unreachable. |
+| `startup_probe` | 14 | `{ enabled=true, type="TCP", path="/api/v2/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=20, failure_threshold=10 }` | Startup readiness probe. **TCP by design** — see explanation above. Container receives no traffic until this succeeds. |
+| `liveness_probe` | 14 | `{ enabled=false, type="HTTP", path="/api/v2/health", initial_delay_seconds=15, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe. **Disabled by default** — see explanation above. Enable only if you understand the restart-loop risk against `/api/v2/health` before full readiness. |
+| `startup_probe_config` | 14 | `{ enabled=true, type="TCP" }` | App_CloudRun-level service startup probe, independent of the Formbricks-specific `startup_probe` above. |
+| `health_check_config` | 14 | `{ enabled=true, type="HTTP", path="/" }` | App_CloudRun-level service liveness probe, independent of the Formbricks-specific `liveness_probe` above. |
+| `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check. Disabled by default; enable for production monitoring — alerts notify `support_users` if unreachable. |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 
 ### D. Auto Password Rotation
@@ -333,7 +337,7 @@ Formbricks uses SMTP for transactional email: user invitations, survey response 
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `smtp_host` | 5 | `""` | SMTP server hostname. Leave empty to disable email. |
+| `smtp_host` | 5 | `'smtp.gmail.com'` | SMTP server hostname. Set to `""` to disable email. |
 | `smtp_port` | 5 | `587` | SMTP port. Use 587 for STARTTLS (recommended) or 465 for implicit TLS. |
 | `smtp_user` | 5 | `""` | SMTP authentication username. |
 | `smtp_password` | 5 | `""` | SMTP password. Auto-generated and stored in Secret Manager if left empty. Sensitive. |
@@ -377,8 +381,9 @@ The following behaviours are applied automatically by `Formbricks CloudRun` rega
 | **NFS enabled by default** | `enable_nfs = true` default | Shared NFS storage is provisioned. Requires `execution_environment = 'gen2'`. |
 | **Redis enabled by default** | `enable_redis = true` default | Redis caching is on by default. When `redis_host` is blank, the NFS server IP is used. |
 | **Image mirroring** | `enable_image_mirroring = true` default | Formbricks images are mirrored from `ghcr.io` to Artifact Registry to avoid rate limits. |
-| **TCP database connection** | `enable_cloudsql_volume = false` default | Formbricks connects to PostgreSQL over TCP rather than Unix socket. |
-| **Health endpoint** | Probes target `/api/v2/health` | This Formbricks-native endpoint reflects both application and database readiness. |
+| **Unix-socket database connection** | `enable_cloudsql_volume = true` default | Formbricks connects to PostgreSQL over the Cloud SQL Auth Proxy Unix socket rather than direct-IP TCP, avoiding a Prisma cert-verification failure against Cloud SQL's untrusted CA. |
+| **TCP startup probe** | `startup_probe.type = "TCP"` default | Formbricks's own `/api/v2/health` endpoint only returns 2xx at full readiness (DB + Redis + deps), so an HTTP probe against it never passes; TCP succeeds as soon as the app binds the port. |
+| **Liveness probe disabled** | `liveness_probe.enabled = false` default | Cloud Run liveness can't use TCP, and HTTP `/api/v2/health` would restart-loop a healthy-but-not-fully-ready container. The TCP startup probe already gates routing. |
 | **Scripts directory** | `scripts_dir = abspath("${module.formbricks_app.path}/scripts")` | Initialization scripts are sourced from `Formbricks Common`. |
 
 ---
@@ -560,7 +565,7 @@ All user-configurable variables exposed by `Formbricks CloudRun`, sorted by UI g
 | `container_port` | 4 | `3000` | Formbricks native port. Do not change. |
 | `execution_environment` | 4 | `'gen2'` | Gen2 required for NFS mounts. |
 | `timeout_seconds` | 4 | `300` | Max request duration. |
-| `enable_cloudsql_volume` | 4 | `false` | Mount Cloud SQL Auth Proxy socket. Default `false` — Formbricks uses TCP. |
+| `enable_cloudsql_volume` | 4 | `true` | Mount Cloud SQL Auth Proxy socket. Default `true` — avoids a cert-verification failure on direct-IP TCP. |
 | `cloudsql_volume_mount_path` | 4 | `'/cloudsql'` | Container path for Auth Proxy socket when `enable_cloudsql_volume = true`. |
 | `container_protocol` | 4 | `'http1'` | `'http1'` or `'h2c'`. |
 | `enable_image_mirroring` | 4 | `true` | Mirrors the Formbricks image into Artifact Registry. |
@@ -575,7 +580,7 @@ All user-configurable variables exposed by `Formbricks CloudRun`, sorted by UI g
 | `enable_iap` | 5 | `false` | Enables IAP natively on the Cloud Run service. |
 | `iap_authorized_users` | 5 | `[]` | Users/SAs granted IAP access. |
 | `iap_authorized_groups` | 5 | `[]` | Google Groups granted IAP access. |
-| `smtp_host` | 5 | `""` | SMTP server hostname. Leave empty to disable email. |
+| `smtp_host` | 5 | `'smtp.gmail.com'` | SMTP server hostname. Set to `""` to disable email. |
 | `smtp_port` | 5 | `587` | SMTP port (587 for STARTTLS, 465 for implicit TLS). |
 | `smtp_user` | 5 | `""` | SMTP authentication username. |
 | `smtp_password` | 5 | `""` | SMTP password. Auto-generated in Secret Manager if empty. Sensitive. |
@@ -661,8 +666,6 @@ All user-configurable variables exposed by `Formbricks CloudRun`, sorted by UI g
 | `database_user` | Name of the application database user. |
 | `database_password_secret` | Secret Manager secret name for the database password. |
 | `storage_buckets` | Created GCS storage buckets (includes the `uploads` bucket). |
-| `nfs_server_ip` | NFS server internal IP *(sensitive)*. |
-| `nfs_mount_path` | NFS mount path inside containers. |
 | `container_image` | Container image used for the deployment. |
 | `cicd_enabled` | Whether the CI/CD pipeline is enabled. |
 | `github_repository_url` | GitHub repository URL connected for CI/CD. |
@@ -684,7 +687,7 @@ All user-configurable variables exposed by `Formbricks CloudRun`, sorted by UI g
 | `enable_nfs` | `true` | **High** | Without NFS, uploaded survey assets and file attachments are stored on the ephemeral container filesystem. All uploads are lost on every new Cloud Run revision. Multiple instances will serve inconsistent file content. |
 | `memory_limit` | `"2Gi"` | **High** | Formbricks's Next.js runtime and Prisma ORM require significant heap. Reducing below `512Mi` causes OOM crashes under normal survey traffic. `2Gi` is the recommended minimum for production. |
 | `min_instance_count` | `0` | **Medium** | Scale-to-zero causes cold starts of 15–20 seconds. Users visiting a survey immediately after an idle period will experience this delay. Set to `1` for any production survey with SLA requirements. |
-| `smtp_host` | `""` | **High** | Without SMTP, Formbricks cannot send user invitations, survey response alerts, or magic-link authentication emails. Configure a real SMTP provider before inviting team members. |
+| `smtp_host` | `'smtp.gmail.com'` (placeholder) | **High** | Defaults to a placeholder hostname so Formbricks's env validation has a complete SMTP block; without real `smtp_user`/`smtp_password` credentials, email delivery still fails. Configure a real SMTP provider before inviting team members. |
 | `enable_cloud_armor` | `false` | **Medium** | Without Cloud Armor, the Formbricks admin panel is accessible from the public internet protected only by Formbricks's own authentication. Enable for any production deployment. |
 | `backup_retention_days` | `7` | **Medium** | Seven days is insufficient for active survey deployments. Increase to 30+ days for any production Formbricks instance collecting valuable survey responses. |
 | `container_port` | `3000` | **Critical** | Formbricks binds to port 3000. Changing this without matching the application server configuration causes all Cloud Run health probes to fail and the service to be marked unhealthy. |

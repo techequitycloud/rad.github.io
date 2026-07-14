@@ -333,7 +333,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | **TCP**, port 8080, 60s delay, 20s period, 15 failures | TCP probe avoids the rolling-update database lock deadlock. |
 | `liveness_probe` | HTTP `/api`, 120s delay, 30s period, 3 failures | HTTP probe catches uninitialised Spring context after startup. |
-| `uptime_check_config` | `{ enabled = true, path = "/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled = false, path = "/" }` | Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 22 — VPC Service Controls & Audit Logging

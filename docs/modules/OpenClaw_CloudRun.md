@@ -28,7 +28,7 @@ a focused set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | Cloud Run v2 (Gen2) | Node.js service, 2 vCPU / 2 GiB by default, CPU always allocated |
+| Compute | Cloud Run v2 (Gen2) | Node.js service, 1 vCPU / 1 GiB by default, CPU always allocated |
 | Workspace storage | Cloud Storage (GCS Fuse) | Per-tenant workspace bucket mounted at `/data` via GCS Fuse |
 | AI credentials | Secret Manager | Anthropic API key and gateway token always stored; Telegram and Slack secrets optional |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Internal by default (behind a router); optional external HTTPS LB + custom domain |
@@ -201,7 +201,7 @@ specific to or notable for OpenClaw are listed; every other input is inherited f
 |---|---|---|
 | `application_name` | `openclaw` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `OpenClaw Gateway` | Friendly name shown in the Console. |
-| `description` | _(set)_ | Service description. |
+| `description` | `OpenClaw AI Gateway - Serverless multi-tenant AI agent gateway on Cloud Run` | Service description. |
 | `application_version` | `latest` | OpenClaw image tag used as the `BASE_IMAGE` build arg. Pin to a specific release for reproducible builds. |
 
 ### Group 4 — Runtime & Scaling
@@ -209,8 +209,8 @@ specific to or notable for OpenClaw are listed; every other input is inherited f
 | Variable | Default | Description |
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
-| `cpu_limit` | `2000m` | CPU per instance. |
-| `memory_limit` | `2Gi` | Memory per instance. |
+| `cpu_limit` | `1000m` | CPU per instance. |
+| `memory_limit` | `1Gi` | Memory per instance. Sized for light/typical usage (observed ~400Mi peak); raise to `2Gi` for heavier concurrent agent sessions. |
 | `min_instance_count` | `0` | `0` enables scale-to-zero (15–20 s cold start). Set ≥ `1` to eliminate cold starts. |
 | `max_instance_count` | `1` | Keep at `1` per tenant to avoid split-state. Increase only with sticky routing. |
 | `container_port` | `8080` | Port the OpenClaw gateway listens on. Must match the `PORT` env var. |
@@ -287,7 +287,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | HTTP `/health`, 24-attempt threshold | Allows ~2 minutes for GCS Fuse mount and Node.js startup. |
 | `liveness_probe` / `health_check_config` | HTTP `/health` | Restarts the container if the gateway becomes unresponsive. |
-| `uptime_check_config` | `{ enabled = true, path = "/health" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled = false, path = "/health" }` | Cloud Monitoring uptime check. Disabled by default; enable for production monitoring. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 15 — OpenClaw Configuration

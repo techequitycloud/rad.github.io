@@ -245,7 +245,7 @@ to or notable for Dify are listed; every other input is inherited from
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `cpu_limit` | `2000m` | CPU per instance; 2 vCPU minimum — gunicorn and Celery share this allocation. |
 | `memory_limit` | `4Gi` | Memory per instance; 4 GiB recommended for LLM workflow caching and document processing. |
-| `min_instance_count` | `1` | Minimum instances. Keep ≥ 1 so the Celery worker maintains its Redis broker connection. |
+| `min_instance_count` | `0` | Minimum instances (scale-to-zero). Set ≥ 1 so the Celery worker maintains its Redis broker connection. |
 | `max_instance_count` | `3` | Maximum instances. Acts as a cost ceiling. |
 | `container_port` | `5001` | Dify API server listens on port 5001. |
 | `execution_environment` | `gen2` | **Required** — gen2 is needed for NFS mounts and GCS Fuse. |
@@ -334,7 +334,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | HTTP `/health`, 30 s delay | Startup probe — container receives no traffic until `/health` returns 200. |
 | `liveness_probe` / `health_check_config` | HTTP `/health` | Liveness probe. |
-| `uptime_check_config` | enabled, path `/health` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, path `/health` | Cloud Monitoring uptime check; set `enabled = true` to provision it. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache

@@ -283,9 +283,9 @@ provisioned. These variables are present for interface compatibility only.
 |---|---|---|
 | `startup_probe` | `{ type="HTTP", path="/", initial_delay_seconds=30, failure_threshold=20 }` | 20-attempt threshold allows ~5 minutes for model loading from GCS. |
 | `liveness_probe` | `{ type="HTTP", path="/", initial_delay_seconds=60, failure_threshold=3 }` | 60 s delay avoids false restarts during model load. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
-| `max_revisions_to_retain` | `7` | Maximum Cloud Run revisions to keep after each deployment. |
+| `max_revisions_to_retain` | `7` | **Not referenced** — declared for interface compatibility only; has no effect on this module's deployment. |
 
 ### Group 19 — Ollama Model Configuration
 

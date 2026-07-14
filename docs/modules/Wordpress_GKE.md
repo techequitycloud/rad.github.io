@@ -257,7 +257,7 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 |---|---|---|
 | `startup_probe` | TCP, 30s delay, threshold 20 | TCP probe on port 80 — avoids HTTP failures during database initialisation on first boot. Do not reduce `failure_threshold` below 10. |
 | `liveness_probe` | HTTP `/wp-admin/install.php`, 300s delay | HTTP probe; 300-second initial delay accommodates the `db-init` job. |
-| `uptime_check_config` | enabled | Optional Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -326,7 +326,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 

@@ -291,6 +291,7 @@ specific to or notable for Twenty are listed; every other input is inherited fro
 | `prereq_gke_subnet_cidr` | `10.201.0.0/24` | CIDR for inline GKE subnet. Must be unique per deployment sharing the same VPC. |
 | `namespace_name` | `""` | Kubernetes namespace. Auto-generated if empty. |
 | `network_tags` | `[]` | Node/pod tags for firewall rule targeting. |
+| `additional_services` | `[]` | Additional Kubernetes Deployments. Required for a dedicated bull-mq worker when `enable_redis = true`. |
 
 ### Group 7 — Pod Disruption & Topology
 
@@ -336,7 +337,6 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `initialization_jobs` | `[]` | Leave empty to use the built-in `db-init` and `twenty-migrate` jobs. |
 | `cron_jobs` | `[]` | Additional recurring Kubernetes CronJobs. |
-| `additional_services` | `[]` | Additional Kubernetes Deployments. Required for a dedicated bull-mq worker when `enable_redis = true`. |
 
 ### Group 14 — Observability & Health
 
@@ -344,7 +344,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe_config` | HTTP `/healthz`, 120s delay, 40 failures | Probes `/healthz`; allows up to ~10 minutes for first-boot migrations. |
 | `health_check_config` | HTTP `/healthz`, 30s delay | Liveness probe. |
-| `uptime_check_config` | enabled, path `/healthz` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, path `/healthz` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 15 — Database Backend

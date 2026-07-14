@@ -237,7 +237,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `application_name` | `grafana` | Base name for resources. Do not change after first deploy. |
 | `display_name` | `Grafana Dashboards` | Friendly name shown in the Console. |
-| `description` | _(set)_ | Service description. |
+| `description` | `Grafana - Open-source observability and analytics platform` | Service description. |
 | `application_version` | `11.4.0` | Grafana image version tag. |
 
 ### Group 4 — Runtime & Scaling
@@ -247,12 +247,13 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `cpu_limit` | `1000m` | CPU per instance. |
 | `memory_limit` | `2Gi` | Memory per instance; Grafana loads dashboards into memory. |
-| `min_instance_count` | `1` | Minimum instances (keep ≥ 1 to avoid cold starts on alert evaluation). |
+| `min_instance_count` | `0` | Minimum instances. Scale-to-zero by default — Grafana's core is request/response, so it costs nothing when idle at the price of a cold start. Set to `1` (with `cpu_always_allocated = true`) if you enable in-process unified alerting, which must evaluate rules without an inbound request. |
 | `max_instance_count` | `5` | Maximum instances. |
 | `container_port` | `3000` | Grafana listens on port 3000. |
 | `execution_environment` | `gen2` | Gen2 required for NFS mounts and GCS Fuse. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar for socket connections. |
 | `enable_image_mirroring` | `true` | Mirror the Grafana image into Artifact Registry before deploy. |
+| `cpu_always_allocated` | `false` | Request-based billing by default. Set `true` only if in-process alert-rule evaluation is enabled, so it can run on schedule without an inbound request. |
 | `traffic_split` | `[]` | Split traffic across revisions for staged rollouts. |
 | `max_revisions_to_retain` | `7` | How many old revisions to keep. |
 
@@ -338,7 +339,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | `/api/health`, HTTP, 30s delay, 12 failures | HTTP startup probe against Grafana's health endpoint. |
 | `liveness_probe` | `/api/health`, HTTP, 60s delay, 3 failures | Liveness probe. |
-| `uptime_check_config` | enabled, `/api/health` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, `/api/health` | Cloud Monitoring uptime check. Enable for production monitoring. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache

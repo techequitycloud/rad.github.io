@@ -380,9 +380,9 @@ for the mirrored Elasticsearch image:
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostname + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostname + managed certificate. Only takes effect once `application_domains` is non-empty. |
 | `application_domains` | `[]` | Hostnames to serve. |
-| `reserve_static_ip` | `false` | Stable external IP across redeploys. |
+| `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 | `network_tags` | `["nfsserver"]` | GKE pod network tags for firewall rules. |
 
 ### Group 20 — Identity-Aware Proxy (IAP)

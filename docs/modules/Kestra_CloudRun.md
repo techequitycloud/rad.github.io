@@ -148,7 +148,7 @@ See [App_CloudRun](App_CloudRun.md).
 
 Container logs flow to Cloud Logging; Cloud Run and Cloud SQL metrics flow to Cloud Monitoring.
 Health probes target Kestra's `/health` endpoint. Optional uptime checks and alert policies
-are available (uptime check is enabled by default for Cloud Run).
+are available (the uptime check is disabled by default — enable it for production monitoring).
 
 - **Console:** Logging → Logs Explorer; Monitoring → Dashboards / Alerting.
 - **CLI:**
@@ -216,7 +216,7 @@ specific to or notable for Kestra are listed; every other input is inherited fro
 | `application_name` | `kestra` | Base name for resources. Do not change after first deploy. |
 | `application_version` | `latest` | Kestra image version tag; increment to roll out a new version (e.g. `0.17.0`). |
 | `display_name` | `Kestra Data Orchestration` | Friendly name shown in the Console and platform UI. |
-| `description` | _(set)_ | Cloud Run service description. |
+| `description` | `Kestra Data Orchestration - ETL/ELT pipeline and workflow orchestration on Cloud Run` | Cloud Run service description. |
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 
 ### Group 4 — Runtime & Scaling
@@ -315,7 +315,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `startup_probe` | HTTP `/health`, 30s delay, period 20s, 40 failures | Application startup probe — allows up to ~14 minutes for JVM startup. |
 | `liveness_probe` | HTTP `/health`, 180s delay, period 30s, 5 failures | Application liveness probe. |
 | `startup_probe_config` | TCP, no path | Infrastructure-level startup probe (does not follow HTTP redirects). |
-| `uptime_check_config` | enabled, path `/health` | Cloud Monitoring uptime check (enabled by default for Cloud Run). |
+| `uptime_check_config` | disabled, path `/health` | Cloud Monitoring uptime check. Enable for production monitoring. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 20 — Identity-Aware Proxy (IAP)

@@ -258,7 +258,6 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `environment_variables` | `{ DB_TYPE="postgres", DB_PORT="5432", DB_USER="wikijs", DB_NAME="wikijs", DB_SSL="false", HA_STORAGE_PATH="/wiki-storage" }` | Pre-populated with Wiki.js DB connectivity settings. Core values — do not remove. |
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name. `DB_PASS` is wired automatically. |
-| `explicit_secret_values` | `{}` | Sensitive values to store and inject as secrets. |
 | `secret_propagation_delay` / `secret_rotation_period` | _(set)_ | Replication wait / rotation cadence. |
 
 ### Group 7 — Backup & Restore
@@ -323,7 +322,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | HTTP `/healthz`, 60 s initial delay | Startup probe — generous delay for first-boot DB migration. |
 | `liveness_probe` | HTTP `/healthz`, 60 s initial delay | Liveness probe. |
-| `uptime_check_config` | enabled, path `/` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, path `/` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache

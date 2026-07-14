@@ -276,7 +276,7 @@ defaults.
 |---|---|---|
 | `application_name` | `moodle` | Base name for resources. Do not change after first deploy. |
 | `display_name` | `Moodle LMS` | Friendly name shown in the Console. |
-| `description` | _(set)_ | Service description annotation. |
+| `description` | `Moodle LMS - Online learning and course management platform` | Service description annotation. |
 | `application_version` | `4.5.1` | Container image version tag; increment to roll out a new version. |
 
 ### Group 4 — Runtime & Scaling
@@ -370,7 +370,7 @@ this to install additional PostgreSQL extensions or seed data. See
 |---|---|---|
 | `startup_probe` | HTTP `/health.php`, 20 failures × 30 s | Up to 10 minutes for Moodle to complete first-boot setup. |
 | `liveness_probe` | HTTP `/health.php`, 120 s initial delay | Periodic health check after startup. |
-| `uptime_check_config` | enabled, path `/` | Optional Cloud Monitoring uptime check. |
+| `uptime_check_config` | disabled, path `/` | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 21 — Redis Cache

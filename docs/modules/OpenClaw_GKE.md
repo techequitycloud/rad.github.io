@@ -208,7 +208,7 @@ specific to or notable for OpenClaw are listed; every other input is inherited f
 |---|---|---|
 | `application_name` | `openclaw` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `OpenClaw Gateway` | Friendly name shown in the Console. |
-| `description` | _(set)_ | Workload description annotation. |
+| `description` | `OpenClaw AI Gateway - Multi-tenant AI agent gateway on GKE Autopilot` | Brief description of the application's purpose. |
 | `application_version` | `latest` | OpenClaw image tag used as the `BASE_IMAGE` build arg. Pin to a specific release for reproducible builds. |
 
 ### Group 4 — Runtime & Scaling
@@ -337,7 +337,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision a Kubernetes Gateway with SSL for custom hostnames. Required for IAP. |
+| `enable_custom_domain` | `true` | Provision a Kubernetes Gateway with SSL for custom hostnames. Required for IAP. |
 | `application_domains` | `[]` | Custom hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 

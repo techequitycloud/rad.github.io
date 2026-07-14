@@ -224,4 +224,4 @@ Variables are grouped exactly as they appear on the deployment platform.
 
 ---
 
-For the end-to-end operational walkthrough — deploy, access, day-2 operations, observability, troubleshooting, and teardown — see the **[Bank of Anthos on GKE lab guide](Bank_GKE.md)**.
+For the end-to-end operational walkthrough — deploy, access, day-2 operations, observability, troubleshooting, and teardown — see the **[Bank of Anthos on GKE lab guide](../labs/Bank_GKE.md)**.

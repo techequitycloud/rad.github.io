@@ -154,9 +154,10 @@ The database password secret name is in the [Outputs](#5-outputs). See
 
 ### F. Networking & ingress
 
-By default the workload is exposed through an external Cloud Load Balancing IP. A
-custom domain with a Google-managed certificate can be enabled, and a static IP can
-be reserved so the address survives redeploys.
+The workload is exposed through an external Cloud Load Balancing IP. `enable_custom_domain`
+defaults to `true`, provisioning a Kubernetes Ingress with a Google-managed certificate for
+the hostnames in `application_domains`; a static IP is reserved by default so the address
+survives redeploys.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -250,7 +251,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `application_name` | `grafana` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Grafana Dashboards` | Friendly name shown in the Console. |
-| `application_description` | _(set)_ | Workload description annotation. |
+| `application_description` | `Grafana observability platform on GKE Autopilot` | Workload description annotation. |
 | `application_version` | `11.4.0` | Grafana image version tag; increment to roll out a new version. |
 
 ### Group 4 — Runtime & Scaling
@@ -388,7 +389,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 

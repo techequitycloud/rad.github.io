@@ -190,8 +190,10 @@ Monitoring, with optional uptime checks and alert policies.
   Strapi notifications. Set `SMTP_PASSWORD` via `secret_environment_variables`.
 - **Health probe.** Both startup and liveness probes target `/_health` via HTTP —
   Strapi's dedicated health endpoint that returns 200 only when the application and
-  database connection are ready. The startup probe allows up to ~300 seconds
-  (`failure_threshold = 30` × 10-second period) for first-boot initialisation.
+  database connection are ready. The startup probe (`startup_probe` — the value
+  actually applied; `startup_probe_config` is a separate, inert variable) allows up
+  to ~90 seconds (60s initial delay + 3 × 10-second period) for first-boot
+  initialisation.
 - **Cryptographic secrets are immutable after first deploy.** All five auto-generated
   secrets sign active sessions and API tokens. Regenerating any of them immediately
   invalidates all active sessions and tokens.
@@ -332,9 +334,9 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` / `startup_probe_config` | HTTP `/_health`, 60s / 30s delay | HTTP probes targeting Strapi's health endpoint. |
-| `liveness_probe` / `health_check_config` | HTTP `/_health` | Liveness probe. |
-| `uptime_check_config` | enabled, path `/` | Cloud Monitoring uptime check. |
+| `startup_probe` | HTTP `/_health`, 60s initial delay, 3 retries | The probe actually applied. `startup_probe_config` is also declared but is superseded by this value and has no effect. |
+| `liveness_probe` | HTTP `/_health`, 30s initial delay, 3 retries | The probe actually applied. `health_check_config` is also declared but is superseded by this value and has no effect. |
+| `uptime_check_config` | disabled, path `/` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
 ### Group 21 — Redis Cache
@@ -342,7 +344,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `enable_redis` | `false` | Use Redis for caching/sessions (disabled by default). |
-| `redis_host` | `null` | Redis endpoint. Must be set explicitly when `enable_redis = true`. |
+| `redis_host` | `null` | Redis endpoint. Leave null to fall back to the NFS server IP (requires `enable_nfs = true`); if NFS is also disabled the fallback is unresolved and the connection fails. |
 | `redis_port` | `6379` | Redis port. |
 | `redis_auth` | `""` | Optional Redis auth password (sensitive). |
 
@@ -400,7 +402,7 @@ running resources.
 | `application_database_name` / `application_database_user` | set once | Critical | Immutable after first deploy; renaming causes Strapi to connect to an empty database. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_file` fails the import job. |
 | `execution_environment` | `gen2` | High | gen1 does not support NFS mounts; NFS will fail silently. |
-| `enable_redis` | `false` | High | Enable only when plugins require it; enabling without a valid `redis_host` causes a startup connection error. |
+| `enable_redis` | `false` | High | Enable only when plugins require it. An unset `redis_host` falls back to the NFS server IP (only works when `enable_nfs = true`); with NFS also disabled, the fallback is unresolved and causes a startup connection error. |
 | `memory_limit` | `2Gi` | High | Strapi's Node.js runtime and admin panel require sufficient memory; values below `512Mi` cause OOM kills. |
 | `min_instance_count` | `0` or `1` | Medium | `0` allows scale-to-zero; first request after idle will incur a 15–30 second cold start. |
 | `enable_iap` | enable for admin-facing | Medium | The Strapi admin panel is otherwise publicly reachable. |

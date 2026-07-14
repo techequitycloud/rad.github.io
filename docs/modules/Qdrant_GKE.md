@@ -341,9 +341,9 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Kubernetes Gateway API with SSL certificates. |
+| `enable_custom_domain` | `true` | Provision Kubernetes Gateway API with SSL certificates (a Gateway with a static IP is provisioned automatically). |
 | `application_domains` | `[]` | Hostnames to serve. |
-| `reserve_static_ip` | `false` | Reserve a stable external IP. |
+| `reserve_static_ip` | `true` | Reserve a stable external IP. |
 
 ### Group 20 — Identity-Aware Proxy (IAP)
 

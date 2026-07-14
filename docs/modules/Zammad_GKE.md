@@ -245,7 +245,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `application_name` | `zammad` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Zammad Helpdesk` | Friendly name shown in the Console. |
-| `application_description` | _(set)_ | Workload description annotation. |
+| `application_description` | `Zammad Open-source Helpdesk on GKE Autopilot` | Workload description annotation. |
 | `application_version` | `6.4.1` | Zammad image version tag; increment to roll out a new build. |
 
 ### Group 4 — Runtime & Scaling
@@ -384,7 +384,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Kubernetes Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Kubernetes Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 
