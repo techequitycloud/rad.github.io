@@ -8,11 +8,11 @@ This document captures the accumulated engineering knowledge for the RAD Platfor
 
 **RAD (Rapid Application Deployment) Platform** provides Google Cloud infrastructure as Terraform/OpenTofu modules. This Docusaurus site is its documentation layer, covering:
 
-- Module configuration guides (77 modules across Cloud Run and GKE variants)
-- Hands-on lab guides (51 modules)
-- Role-based features, tutorials, guides, and workflows
-- GCP certification prep (ACE, PCA, PCD, PDE, PSE)
-- Platform capabilities, practices, and business outcomes
+- Module configuration guides (269 modules: 128 Cloud Run + 141 GKE variants, plus platform/infra pages)
+- Hands-on lab guides (273 modules, one-to-one with the module guides)
+- Role-based guides (Using RAD, AI Tooling, User/Partner/Agent/Support/Admin/Finance)
+- GCP certification prep (ACE, PCA, PCD, PCDE, PCNE, PDE, PSE — 34 per-section exploration guides plus one guide per certification)
+- Platform design docs: Platform Capabilities, Engineering Practices, Engineering Excellence
 
 **Live site**: https://docs.radmodules.dev  
 **Tech stack**: Docusaurus 3.9.2, React 19, TypeScript 5.6, GitHub Pages (gh-pages branch)
@@ -23,20 +23,16 @@ This document captures the accumulated engineering knowledge for the RAD Platfor
 
 ```
 rad.github.io/
-├── docs/                    # Published documentation
-│   ├── capabilities/        # 16 platform capability overviews
-│   ├── certification/       # Certification reference pages
-│   ├── features/            # 6 role-based feature summaries
-│   ├── guides/              # 6 role-based guides
-│   ├── labs/                # 51 hands-on lab guides (subdir per module)
-│   ├── modules/             # 77 module configuration guides (subdir per module)
-│   ├── outcomes/            # 6 business outcome docs
-│   ├── practices/           # 6 engineering practice docs
-│   ├── runbooks/            # Operational runbooks
-│   ├── tutorials/           # 8 role-based and getting-started tutorials
-│   └── workflows/           # 9 role-based workflow docs
-│       ├── ace/ pca/ pcd/   # GCP certification sections
-│       └── pde/ pse/
+├── docs/                    # Published documentation — five flat sections, no subdirs
+│   ├── certification/       # 34 per-section exploration guides + 7 per-cert guides
+│   │                        # (ACE, PCA, PCD, PCDE, PCNE, PDE, PSE)
+│   ├── design/              # 3 platform design docs (capabilities, practices, excellence)
+│   ├── guides/               # 8 role-based guides (Using RAD, AI Tooling, User/Partner/
+│   │                        # Agent/Support/Admin/Finance)
+│   ├── labs/                 # 273 hands-on lab guides — flat, one file per module
+│   └── modules/               # 269 module configuration guides — flat, one file per module
+│                            # (plus a few platform/infra pages: Services_GCP,
+│                            # Migration_Center, Container_Migration, VMware_Engine)
 │                            # docs/ is updated directly from the source repos
 │                            # (rad-modules, rad-automation, partner-modules);
 │                            # there is no longer an updates/ staging dir — see §11
@@ -48,7 +44,7 @@ rad.github.io/
 │
 ├── apply_all_updates.py     # LEGACY (updates/ → docs/) — retired, not run; see §11
 ├── apply_module_updates.py  # LEGACY merge logic — retired; kept for reference
-├── update_videos.py         # Bulk YouTube embed insertion (5 patterns)
+├── update_videos.py         # Bulk YouTube embed insertion (5 patterns) — currently unused, see §7.2
 ├── verify_changes.py        # Playwright browser verification
 ├── verify_final.py          # Final Playwright verification with video recording
 ├── docusaurus.config.ts     # Site configuration
@@ -59,26 +55,20 @@ rad.github.io/
 
 ## 3. Documentation Architecture
 
-### 3.1 Subdir-per-Module Pattern
+### 3.1 Flat File-per-Module Pattern
 
-Labs and module guides each live in their own subdirectory with a file that matches the directory name:
+`docs/labs/` and `docs/modules/` are both **flat** directories — one file per module, named after the module directly (no per-module subdirectory):
 
 ```
-docs/labs/App_CloudRun/App_CloudRun.md
-docs/modules/App_CloudRun/App_CloudRun.md
+docs/labs/App_CloudRun.md
+docs/modules/App_CloudRun.md
 ```
 
-This isolates assets (diagrams, code samples) per module and keeps the `labs/` and `modules/` trees clean.
+An earlier subdir-per-module layout (`docs/modules/App_CloudRun/App_CloudRun.md`) was used historically but the site was flattened; if you find a reference to the old nested path, it's stale — fix it to the flat form.
 
 ### 3.2 Flat Sections with Name Normalisation
 
-Capabilities, features, guides, practices, outcomes, tutorials, and workflows are flat directories. Source files use varied naming conventions; map them to the canonical `docs/` filename when syncing (the legacy `NAME_MAP` in `apply_all_updates.py` records the historical mappings for reference).
-
-Examples:
-- `admins.md` → `admin.md`
-- `kubernetes.md` → `container-orchestration.md`
-- `gitops_iac.md` → `gitops-iac.md`
-- `01-getting-started.md` → `getting-started.md`
+`certification/`, `design/`, and `guides/` are likewise flat directories. Source files use varied naming conventions; map them to the canonical `docs/` filename when syncing (the legacy `NAME_MAP` in `apply_all_updates.py` records some historical mappings for reference, though most current sections use each source repo's filename as-is).
 
 ### 3.3 Multi-Source Priority System
 
@@ -96,10 +86,10 @@ Edit the canonical source, then sync directly into `docs/` (§11). These are sib
 
 **Sidebar entry format:**
 ```ts
-{ type: 'doc', id: 'modules/App_CloudRun/App_CloudRun', label: 'App CloudRun' }
+{ type: 'doc', id: 'modules/App_CloudRun', label: 'App CloudRun' }
 ```
 
-**Important:** `sidebar_label` in front matter overrides `sidebars.ts` labels. When the two conflict, the front matter wins — so keep them consistent or remove `sidebar_label` if `sidebars.ts` is the source of truth.
+**Important:** the `label` here is the only thing that names this page in the nav — front matter `sidebar_label` is not used (§10.1).
 
 ---
 
@@ -110,12 +100,13 @@ Every doc must begin with a YAML front matter block:
 ```yaml
 ---
 title: "App on Cloud Run — Configuration Guide"
-sidebar_label: "App CloudRun"
+description: "Configuration reference for deploying App on Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 ```
 
 - `title` — used by Docusaurus for `<title>` and social sharing
-- `sidebar_label` — display name in the nav tree (keep in sync with `sidebars.ts`)
+- `description` — meta description for SEO/social sharing; every current page sets one
+- **`sidebar_label` is not used anywhere in the current site** (verified: zero occurrences across `docs/`). Nav labels are set directly in `sidebars.ts` (`{ type: 'doc', id: '...', label: '...' }`) — that `label` field, not front matter, is authoritative. Do not add `sidebar_label` to new pages; if you find it on an old page it's a no-op leftover, safe to remove.
 - `id` and `slug` are optional and rarely needed; omit unless there is a specific routing reason
 
 When adding a **new** page from a source repo (which ships no front matter), create a minimal block from the first `# Heading`, then add the `sidebars.ts` entry (§10) — pages are not auto-discovered. Use this shape:
@@ -123,7 +114,7 @@ When adding a **new** page from a source repo (which ships no front matter), cre
 ```yaml
 ---
 title: "<the page's # heading text>"
-sidebar_label: "<short nav label>"
+description: "<one-sentence SEO description>"
 ---
 ```
 
@@ -135,17 +126,13 @@ sidebar_label: "<short nav label>"
 
 ```markdown
 ---
-title: "Module Name — Configuration Guide"
-sidebar_label: "Module Name"
+title: "Module Name on Google Cloud Run"
+description: "Configuration reference for deploying Module Name on Google Cloud Run with the RAD module — variables, architecture, networking, and operations."
 ---
 
-# Module Name — Configuration Guide
+# Module Name on Google Cloud Run
 
-<YouTubeEmbed videoId="XXXX" poster="https://storage.googleapis.com/rad-public-2b65/modules/module_name.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/modules/module_name.pdf" target="_blank">View Presentation (PDF)</a>
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Module_Name_CloudRun.png" alt="Module Name on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 [Module description paragraph]
 
@@ -170,11 +157,11 @@ sidebar_label: "Module Name"
 
 ```markdown
 ---
-title: "Module Name — Lab Guide"
-sidebar_label: "Module Name Lab"
+title: "Module Name on Cloud Run — Lab Guide"
+description: "Hands-on lab: deploy Module Name on Cloud Run in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
-# Module Name — Lab Guide
+# Module Name on Cloud Run — Lab Guide
 
 📖 **[Configuration Guide](link)**
 
@@ -215,35 +202,44 @@ sidebar_label: "Module Name Lab"
 - **Plan-time validation note.** Mention that invalid values/combinations are rejected at plan time, cross-linking the config guide's pitfalls table.
 - Keep the lab's lean operational spine (Deploy → Access → Operate → Observe → Troubleshoot → Tear down); defer exhaustive variable detail to the config guide so the lab stays accurate over time.
 
-### 5.3 Features / Guides / Workflows Structure
+### 5.3 Role-Based Guides Structure (`docs/guides/`)
 
 ```markdown
 ---
-title: "Admin Features"
-sidebar_label: "Admin"
+title: "Admin Guide"
+description: "RAD Platform administrator guide — managing users, roles, organizations, module catalogs, deployments, and platform settings."
 ---
 
-# Admin Features
+# Admin Guide
 
-<YouTubeEmbed videoId="XXXX" poster="https://storage.googleapis.com/rad-public-2b65/features/admin_features.png" />
-
-<br/>
-
-<a href="https://storage.googleapis.com/rad-public-2b65/features/admin_features.pdf" target="_blank">Download Feature PDF</a>
+<img src="https://storage.googleapis.com/rad-public-2b65/guides/Admin_Guide.png" alt="Admin Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 [Introduction]
 
-## Feature Category
-- **Feature Name** — description
+## Guide Section
+- **Topic** — description
 ```
 
-### 5.4 Capabilities / Practices / Outcomes Structure
+The 8 guides (`using-rad.md`, `ai-tooling-gcp.md`, `user-guide.md`, `partner-guide.md`, `agent-guide.md`, `support-guide.md`, `admin-guide.md`, `finance-guide.md`) each get an infographic `<img>` after the H1, sourced from `{GCS_BASE}/guides/<Guide_Name>.png` (§7).
+
+### 5.4 Platform Design Docs Structure (`docs/design/`)
 
 ```markdown
+---
+title: "Platform Capabilities"
+description: "What the RAD platform provides — module catalog breadth, deployment automation, and operational guarantees."
+---
+
+# Platform Capabilities
+
+<img src="https://storage.googleapis.com/rad-public-2b65/guides/Platform_Capabilities.png" alt="Platform Capabilities" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > **Scope.** [One-sentence canonical ownership statement]
 
 [Body sections with cross-references to modules/]
 ```
+
+The 3 design docs (`platform_capabilities.md`, `engineering_practices.md`, `engineering_excellence.md`) source their poster images from `{GCS_BASE}/guides/`, not `{GCS_BASE}/design/` — they were folded into the `guides/` bucket prefix when the images were added.
 
 ---
 
@@ -253,7 +249,7 @@ sidebar_label: "Admin"
 
 | Level | Usage |
 |-------|-------|
-| `#` | Page title only (one per file, matches `sidebar_label`) |
+| `#` | Page title only (one per file, matches the `label` in `sidebars.ts`) |
 | `##` | Major sections (numbered 1, 2, 3… in labs) |
 | `###` | Subsections |
 | `####` | Deep details (use sparingly) |
@@ -272,7 +268,7 @@ Module names in headings and table cells omit underscores; use spaces:
 # App_CloudRun — Configuration Guide   ✗
 ```
 
-The `sidebar_label` and `sidebars.ts` label may retain underscores for file-name matching, but the `# ` heading and table cells must use spaces.
+The `sidebars.ts` `label` may retain underscores for file-name matching, but the `# ` heading and table cells must use spaces.
 
 ### 6.4 ASCII Box Diagrams
 
@@ -303,39 +299,34 @@ Use a blank-line `---` divider between major sections:
 
 ---
 
-## 7. YouTube Embeds and PDF Links
+## 7. Infographic Images and Video Embeds
 
-All video content uses the custom `<YouTubeEmbed>` React component with a GCS-hosted poster image.
+### 7.1 Infographic `<img>` header (current, live convention)
 
-**Component usage:**
-```jsx
-<YouTubeEmbed
-  videoId="dP3jBocmh4k"
-  poster="https://storage.googleapis.com/rad-public-2b65/features/admin_features.png"
-/>
+314 pages across `modules/` (269), `guides/` (8), `design/` (3), and `certification/` (34) carry a single plain `<img>` tag immediately after the H1, linking a GCS-hosted infographic PNG. **`labs/` pages do not have this image** (0 of 273, as of 2026-07-18) — there is no separate lab infographic asset in the bucket, and nothing currently links the module's image onto its lab page either. There is no video, no PDF link, and no wrapping component on any of these — just:
+
+```markdown
+# Page Title
+
+<img src="https://storage.googleapis.com/rad-public-2b65/{category}/{Slug}.png" alt="Page Title" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
+[body content]
 ```
 
-**PDF link:**
-```html
-<br/>
+- One blank line before the tag, one blank line after, matching the blank line the body already had — do not add a second blank line.
+- `alt` text is sourced from the page's own `# ` heading text (not from front matter `title`, which sometimes carries an escaped `\uXXXX` sequence instead of the real character).
+- **GCS category → bucket prefix mapping** (these do **not** all match the `docs/` folder name):
+  - `docs/modules/*.md` → `{GCS_BASE}/modules/<Module_Name>.png`
+  - `docs/labs/*.md` → no image (not yet populated — see above)
+  - `docs/guides/*.md` → `{GCS_BASE}/guides/<Guide_Name>.png`
+  - `docs/design/*.md` → `{GCS_BASE}/guides/<Design_Name>.png` (design docs' images live under the `guides/` bucket prefix, not `design/`)
+  - `docs/certification/*_Section_*_Exploration_Guide.md` → `{GCS_BASE}/certification/<cert-lowercase>_section<N>.png`
+  - GCS base: `https://storage.googleapis.com/rad-public-2b65`
+- **This is source-owned content, not site-owned.** Because these images were inserted directly into `docs/` here first and then ported back into `rad-modules` / `rad-automation` / `partner-modules` (§11), the `<img>` tag now lives in the source repos too — a future sync will not strip it. If you add a new page or a new category, insert the `<img>` tag in the **source repo**, not just here.
 
-<a href="https://storage.googleapis.com/rad-public-2b65/features/admin_features.pdf" target="_blank">View Presentation (PDF)</a>
-```
+### 7.2 `<YouTubeEmbed>` component (built, not yet wired into any doc page)
 
-**GCS asset naming convention:**
-- Poster: `{GCS_BASE}/{category}/{slug}.png`
-- PDF: `{GCS_BASE}/{category}/{slug}.pdf`
-- GCS base: `https://storage.googleapis.com/rad-public-2b65`
-
-### 7.1 Five Video Integration Patterns (`update_videos.py`)
-
-| Type | Context | Action |
-|------|---------|--------|
-| 1 | Workflow/guide pages with `<img>` + `<video>` | Replace both with `<YouTubeEmbed>` |
-| 2 | Features pages with `<img>` + `<br/>` + `<video>` + `<br/>` | Replace, preserve PDF link |
-| 3 | Already has `<YouTubeEmbed>` | Update `videoId` only |
-| 4 | No video at all | Insert `<YouTubeEmbed>` after the `# ` heading |
-| 5 | Module pages | Insert `<YouTubeEmbed>` (with poster) + `<br/>` + PDF link after heading |
+`src/components/YouTubeEmbed/` is a real, working React component (video player with GCS poster support) but **zero pages currently reference it** (verified: no `YouTubeEmbed`, `sidebar_label`, or `.pdf` occurrences anywhere in `docs/` as of 2026-07-18). The videos themselves are being published to YouTube via `rad-automation`'s `pnpm youtube:publish` pipeline (unlisted, SEO metadata sourced from each doc's front matter) — embedding them back into these doc pages is a separate, not-yet-done step. If you take that on, `update_videos.py`'s five-pattern logic (§11.3) is the intended mechanism, but treat it as unverified against the current `<img>`-only page shape and confirm its patterns still match before relying on it.
 
 ---
 
@@ -396,8 +387,8 @@ Use `<external-ip>` as the address. ✓
 Internal links use relative paths from the current file's location. Do not use absolute doc paths:
 
 ```markdown
-[See capabilities/security.md](../capabilities/security.md) ✓
-[See capabilities/security.md](/docs/capabilities/security)  ✗
+[See Platform Capabilities](../design/platform_capabilities.md) ✓
+[See Platform Capabilities](/docs/design/platform_capabilities)  ✗
 ```
 
 Docusaurus validates all links at build time (`onBrokenLinks: 'throw'`). A broken link fails the entire build.
@@ -417,11 +408,11 @@ When linking to a directory that has a single file (e.g., `Ghost_Common/`), link
 
 ## 10. Sidebar Navigation Rules
 
-### 10.1 Do Not Rely on `sidebar_label` in Front Matter to Rename Nav Entries
+### 10.1 `sidebar_label` in Front Matter Is Not Used — `sidebars.ts` Is the Only Source of Truth
 
-`sidebar_label` in YAML front matter **overrides** the label set in `sidebars.ts`. When these conflict, the front matter wins. Use front matter labels only when the page has no `sidebars.ts` entry, or keep both in sync.
+Historically `sidebar_label` in YAML front matter overrode the label set in `sidebars.ts`, which caused conflicts. It has since been removed from every page (verified: zero occurrences across `docs/` as of 2026-07-18). Rename a nav entry by editing its `label` in `sidebars.ts` only — do not add `sidebar_label` back to front matter.
 
-**Fix applied (commit 7feefc4):** Removed conflicting `sidebar_label` from front matter where `sidebars.ts` was the intended source of truth.
+**Fix applied historically (commit 7feefc4):** Removed conflicting `sidebar_label` from front matter where `sidebars.ts` was the intended source of truth. That cleanup is now complete site-wide.
 
 ### 10.2 Sidebar Section Positioning
 
@@ -451,12 +442,11 @@ A given page has one canonical source repo. Where the same page exists in more t
 
 ### 11.2 Syncing a source doc into the site
 
-Source docs are **plain Markdown** — they do **not** carry the site's YAML front matter or `<YouTubeEmbed>` video header. When updating `docs/<section>/<file>.md` from its source, the front matter and video header are **site-owned** and the body is **source-owned**:
+Source docs are now **almost** plain Markdown: as of 2026-07-17 the infographic `<img>` header (§7.1) was ported into the source repos too, so it is **source-owned**, not site-owned, for the 314 pages that carry one — a normal sync no longer strips it. Only the front matter block remains site-owned (source repos ship no YAML front matter at all). When updating `docs/<section>/<file>.md` from its source:
 
 1. Keep the existing front matter block (`--- … ---`) verbatim.
-2. Keep the `<YouTubeEmbed>` + PDF-link header if the page has one (§5.1, §7).
-3. Replace everything from the first `# ` heading onward with the source body.
-4. Re-apply the formatting and MDX-safety rules (§6, §8) — escape `<`, `${…}`, and `{…}` in prose, and verify ASCII box alignment — since source bodies are not authored against Docusaurus/MDX.
+2. Replace everything from the first `# ` heading onward with the source body (this now includes the `<img>` infographic tag, if the source page has one — don't strip it back out).
+3. Re-apply the formatting and MDX-safety rules (§6, §8) — escape `<`, `${…}`, and `{…}` in prose, and verify ASCII box alignment — since source bodies are not authored against Docusaurus/MDX.
 
 This is the same preservation the retired `apply_update()` performed automatically; it now happens as part of the sync. A quick way to apply it for a single file:
 
@@ -475,11 +465,11 @@ io.open(dst, "w", encoding="utf-8").write(fm + "\n\n" + body + "\n")
 PY
 ```
 
-> If the page has a `<YouTubeEmbed>` header (most module/feature pages do), do **not** use the snippet above as-is — it preserves only the front matter. Either keep the heading-plus-video header block as well, or re-insert the video with `update_videos.py` (§11.3) after syncing.
+> The snippet above preserves only the front matter and replaces everything after it — that's correct now, since the `<img>` header is part of the source body it's replacing with. Only reach for `update_videos.py` (below) if you're doing the separate, not-yet-done work of embedding YouTube videos (§7.2) — it doesn't apply to the current infographic-only pages.
 
 ### 11.3 `update_videos.py`
 
-Bulk-inserts YouTube embeds and PDF links. Run it with a hardcoded list of `(file_path, video_id, [img_name, pdf_name])` tuples. It is not idempotent for new embeds (Type 1/2/4) but is safe for updates to existing embeds (Type 3). Still current — video headers remain site-owned content layered on top of the synced body.
+Bulk-inserts `<YouTubeEmbed>` components and PDF links, from a hardcoded list of `(file_path, video_id, [img_name, pdf_name])` tuples. **Unused since the switch to the plain-`<img>` infographic convention** (§7.1) — no page currently has a `<YouTubeEmbed>` for it to update, and its five patterns were written against the old `<img>`+`<video>` / `<YouTubeEmbed>`+PDF page shapes, not the current `title`+`description`-only front matter. Treat as a reference implementation for a future video-embedding pass, not a script to run as-is.
 
 ---
 
@@ -488,25 +478,19 @@ Bulk-inserts YouTube embeds and PDF links. Run it with a hardcoded list of `(fil
 | Artifact | Convention | Example |
 |----------|------------|---------|
 | Module directory | `PascalCase_Platform` | `App_CloudRun`, `Django_GKE` |
-| Module doc file | Same as directory + `.md` | `App_CloudRun.md` |
-| Sidebar label | Spaces instead of underscores | `App CloudRun` |
+| Module doc file | Same as directory + `.md`, flat (no subdir) | `App_CloudRun.md` |
+| Sidebar label (`sidebars.ts`, not front matter) | Spaces instead of underscores | `App CloudRun` |
 | Heading `#` | Spaces, no underscores | `# App CloudRun — Lab Guide` |
-| PDF filename | `snake_case.pdf` | `admin_features.pdf` |
-| GCS poster | `snake_case.png` | `admin_features.png` |
-| PDF case sensitivity | Use exact casing: `Wordpress` not `WordPress` | `Wordpress_Common.pdf` |
+| GCS infographic image | `<Module_Name>.png` (module image) / `<Guide_Name>.png` (guide/design image) / `<cert>_section<N>.png` (cert image) | `Activepieces_CloudRun.png`, `Admin_Guide.png`, `pcne_section1.png` |
+| Image case sensitivity | Match the object's actual casing exactly — GCS is case-sensitive | see above |
 
-**Fix applied (commit 3611277):** Corrected `WordPress_` to `Wordpress_` in PDF file name references throughout the site to match actual GCS object names (GCS is case-sensitive).
+**Historical fix (commit 3611277):** Corrected `WordPress_` to `Wordpress_` in PDF file name references throughout the site to match actual GCS object names. (PDF links themselves are no longer used anywhere in the site — see §7.2 — this fix predates their removal and is kept only as a reminder that GCS casing bugs are a recurring failure mode.)
 
 ---
 
 ## 13. Git Workflow
 
-Per `CLAUDE.md`:
-
-1. **All development** goes on a `claude/...` feature branch
-2. **Commit** with descriptive messages referencing what changed and why
-3. **Push** to the feature branch, then **PR → squash merge to main**
-4. Never push directly to `main`
+Per `CLAUDE.md`: commit directly to `main` with descriptive messages referencing what changed and why, then push straight to `main`. `main` has GitHub branch-protection rules configured, but this repo's actual practice is to push directly to it — GitHub reports "Bypassed rule violations" (with the specific rule listed, e.g. "Changes must be made through a pull request") on each such push rather than rejecting it. Do not detour through a `claude/...` feature branch + PR unless the user explicitly asks for one.
 
 ---
 
@@ -531,8 +515,9 @@ Run against a local dev server (`yarn start`) before pushing significant structu
 | MDX build error: unexpected tag | `<200ms` or `<external-ip>` in prose | Escape: `\<` or wrap in backticks |
 | Broken link at build time | Relative path points to directory or missing file | Fix path; link to file, not directory |
 | ASCII box looks broken | Lines end at wrong column | Count characters; pad/trim to match right `│` column |
-| Sidebar shows wrong label | `sidebar_label` in front matter overrides `sidebars.ts` | Remove front matter label or sync both |
-| PDF/poster 404 | Case mismatch with GCS object name | Use `Wordpress` not `WordPress`; match GCS exactly |
-| Video not showing | Sync replaced the body but dropped the site-owned `<YouTubeEmbed>` header | Re-add the video header (§11.2), or re-run `update_videos.py` (§7.1) after syncing |
+| Sidebar shows wrong label | Wrong `label` in `sidebars.ts` (front matter `sidebar_label` is unused — §10.1) | Fix the `label` in `sidebars.ts` directly |
+| Infographic image 404 | Case mismatch with GCS object name, or wrong bucket prefix (design docs use `guides/`, not `design/` — §7.1) | Match GCS object name and prefix exactly |
+| Infographic image missing on a lab page | Expected — `labs/` pages don't carry this image yet (§7.1) | Not a bug; a future addition if the user asks for it |
 | Wrong section in nav | Module in wrong sidebar category | Move the entry in `sidebars.ts` |
-| Module name with underscores in heading | Template auto-generated `sidebar_label` used as heading | Replace `_` with space in `# ` heading and table cells |
+| Module name with underscores in heading | Heading not normalised to spaces per §6.3 | Replace `_` with space in `# ` heading and table cells |
+| New `<img>` insertion missing after a docs sync | Image tag was added directly in `docs/` instead of the source repo | Port the insertion into the canonical source repo too (§7.1, §11.2) so it survives the next sync |
