@@ -3,7 +3,7 @@ title: "AI Tooling on GCP — LLM Stack Modules and Labs"
 description: "Deploy a complete self-hosted LLM stack on Google Cloud: Ollama, Open WebUI, Flowise, Dify, LiteLLM, RAGFlow, vector databases, and AI automation — with hands-on labs."
 ---
 
-# AI Tooling on GCP
+# AI Tooling
 
 RAD Platform includes a complete self-hosted generative-AI stack you can
 deploy into your own Google Cloud project — model serving, chat UIs, agent

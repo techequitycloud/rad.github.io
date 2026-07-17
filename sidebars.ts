@@ -3,7 +3,7 @@ import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 const sidebars: SidebarsConfig = {
   guidesSidebar: [
     {type: 'doc', id: 'guides/using-rad', label: 'Using RAD'},
-    {type: 'doc', id: 'guides/ai-tooling-gcp', label: 'AI Tooling on GCP'},
+    {type: 'doc', id: 'guides/ai-tooling-gcp', label: 'AI Tooling'},
     {type: 'doc', id: 'guides/user-guide', label: 'User Guide'},
     {type: 'doc', id: 'guides/partner-guide', label: 'Partner Guide'},
     {type: 'doc', id: 'guides/agent-guide', label: 'Agent Guide'},

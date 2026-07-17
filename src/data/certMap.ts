@@ -19,7 +19,7 @@ export const CERT_HUBS: Record<CertCode, {name: string; path: string}> = {
   PSE: {name: 'Professional Cloud Security Engineer', path: '/docs/certification/PSE_Certification_Guide'},
 };
 
-export const AI_HUB = {name: 'AI Tooling on GCP', path: '/docs/guides/ai-tooling-gcp'};
+export const AI_HUB = {name: 'AI Tooling', path: '/docs/guides/ai-tooling-gcp'};
 
 type AppTrack = {
   name: string;
