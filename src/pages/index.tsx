@@ -144,11 +144,11 @@ export default function Home(): ReactNode {
     <Layout
       title="Google Cloud Certification Prep"
       description="Master Google Cloud certifications with RAD Platform — structured learning modules, hands-on labs, and certification guides from Associate to Professional.">
-      <HomepageHeader />
       <main>
+        <HomepageFeatures />
+        <HomepageHeader />
         <PlatformStats />
         <CertificationPaths />
-        <HomepageFeatures />
       </main>
     </Layout>
   );
