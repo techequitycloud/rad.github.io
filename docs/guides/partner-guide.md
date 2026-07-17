@@ -5,6 +5,8 @@ description: "RAD Platform partner guide — onboarding organizations, managing 
 
 # Partner Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Partner_Guide.png" alt="Partner Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 For module authors who publish their own modules to RAD and earn a revenue share when others deploy them. New to RAD? Start with [Using RAD](using-rad.md).
 
 A Partner is always also a User, so everything in [Using RAD](using-rad.md) — signing in, navigating, deploying, managing deployments, and credits — applies to you too. This guide covers the extra things only Partners can do.

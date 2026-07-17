@@ -5,6 +5,8 @@ description: "RAD Platform administrator guide — managing users, roles, organi
 
 # Administrator Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Admin_Guide.png" alt="Administrator Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 For administrators who run the RAD platform: managing users, roles, credits, modules, requests, and oversight. New to RAD? Start with [Using RAD](using-rad.md).
 
 ## What you can do

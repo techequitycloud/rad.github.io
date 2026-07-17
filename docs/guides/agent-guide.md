@@ -5,6 +5,8 @@ description: "RAD Platform agent guide — supporting learners, managing deploym
 
 # Agent Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Agent_Guide.png" alt="Agent Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 For referral partners who earn commission when the users they referred deploy modules on RAD. New to RAD? Start with [Using RAD](using-rad.md).
 
 ## What you can do

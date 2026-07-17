@@ -5,6 +5,8 @@ description: "RAD Platform capabilities on Google Cloud: compute, data, networki
 
 # Platform Capabilities
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Platform_Capabilities.png" alt="Platform Capabilities" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 ## Overview
 
 This document summarises the **technical capabilities** the RAD platform provides for

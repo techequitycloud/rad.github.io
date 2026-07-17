@@ -5,6 +5,8 @@ description: "RAD Platform user guide — deploying training modules to Google C
 
 # User Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/User_Guide.png" alt="User Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This guide is for anyone using RAD to deploy and manage cloud modules — the default **User** role. New to RAD? Start with [Using RAD](using-rad.md).
 
 ## What you can do

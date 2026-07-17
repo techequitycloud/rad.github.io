@@ -5,6 +5,8 @@ description: "RAD Platform finance guide — managing credits, billing, invoicin
 
 # Finance Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Finance_Guide.png" alt="Finance Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This guide is for people with the **Finance** role, who manage RAD's billing setup, run revenue and payout reports, and reconcile cloud costs. New to RAD? Start with [Using RAD](using-rad.md).
 
 When you sign in as Finance, you land on the **Billing** page. Your navigation bar shows **Billing** and **Help**. (**Setup Requests** is a tab inside the Help page.)
