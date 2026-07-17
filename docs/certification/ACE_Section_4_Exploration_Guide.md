@@ -4,6 +4,9 @@ description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 4 — 
 ---
 
 # ACE Certification Preparation Guide: Section 4 — Configuring access and security (~20% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/ace_section4.png" alt="ACE Certification Preparation Guide: Section 4 — Configuring access and security (~20% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
 

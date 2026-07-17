@@ -4,6 +4,9 @@ description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 1 — 
 ---
 
 # ACE Certification Preparation Guide: Section 1 — Setting up a cloud solution environment (~23% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/ace_section1.png" alt="ACE Certification Preparation Guide: Section 1 — Setting up a cloud solution environment (~23% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
 

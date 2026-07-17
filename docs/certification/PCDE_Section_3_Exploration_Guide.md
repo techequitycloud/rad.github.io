@@ -4,6 +4,9 @@ description: "Prepare for the Professional Cloud Database Engineer (PCDE) exam S
 ---
 
 # PCDE Certification Preparation Guide: Section 3 — Migrate data solutions (~23% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/pcde_section3.png" alt="PCDE Certification Preparation Guide: Section 3 — Migrate data solutions (~23% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Professional Cloud Database Engineer certification](https://cloud.google.com/learn/certification/cloud-database-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
 

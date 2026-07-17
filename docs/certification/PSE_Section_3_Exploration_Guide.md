@@ -4,6 +4,9 @@ description: "Prepare for the Professional Cloud Security Engineer (PSE) exam Se
 ---
 
 # PSE Certification Preparation Guide: Section 3 — Ensuring data protection (~23% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/pse_section3.png" alt="PSE Certification Preparation Guide: Section 3 — Ensuring data protection (~23% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Professional Cloud Security Engineer certification](https://cloud.google.com/learn/certification/cloud-security-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
 

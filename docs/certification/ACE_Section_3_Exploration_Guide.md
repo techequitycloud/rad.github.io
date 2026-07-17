@@ -4,6 +4,9 @@ description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 3 — 
 ---
 
 # ACE Certification Preparation Guide: Section 3 — Ensuring successful operation of a cloud solution (~27% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/ace_section3.png" alt="ACE Certification Preparation Guide: Section 3 — Ensuring successful operation of a cloud solution (~27% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
 

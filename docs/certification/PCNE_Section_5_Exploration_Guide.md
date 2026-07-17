@@ -4,6 +4,9 @@ description: "Prepare for the PCNE exam Section 5 — managing, monitoring, and 
 ---
 
 # PCNE Certification Preparation Guide: Section 5 — Managing, monitoring, and troubleshooting network operations (~14% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/pcne_section5.png" alt="PCNE Certification Preparation Guide: Section 5 — Managing, monitoring, and troubleshooting network operations (~14% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Professional Cloud Network Engineer certification](https://cloud.google.com/learn/certification/cloud-network-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
 

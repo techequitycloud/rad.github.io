@@ -4,6 +4,9 @@ description: "Prepare for the PCA exam Section 2 — managing and provisioning a
 ---
 
 # PCA Certification Preparation Guide: Section 2 — Managing and provisioning a cloud solution infrastructure (~17.5% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/pca_section2.png" alt="PCA Certification Preparation Guide: Section 2 — Managing and provisioning a cloud solution infrastructure (~17.5% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
 
 

@@ -4,6 +4,9 @@ description: "Prepare for the PCDE exam Section 1 (Scalable Database Solution De
 ---
 
 # PCDE Certification Preparation Guide: Section 1 — Design innovative, scalable, and highly available cloud database solutions (~32% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/pcde_section1.png" alt="PCDE Certification Preparation Guide: Section 1 — Design innovative, scalable, and highly available cloud database solutions (~32% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Professional Cloud Database Engineer certification](https://cloud.google.com/learn/certification/cloud-database-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
 

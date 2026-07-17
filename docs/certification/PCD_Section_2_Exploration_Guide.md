@@ -4,6 +4,9 @@ description: "Prepare for the Professional Cloud Developer (PCD) exam Section 2 
 ---
 
 # PCD Certification Preparation Guide: Section 2 — Building and testing applications (~23% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/pcd_section2.png" alt="PCD Certification Preparation Guide: Section 2 — Building and testing applications (~23% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Professional Cloud Developer certification](https://cloud.google.com/learn/certification/cloud-developer) — always confirm section weightings against the current Google Cloud exam guide.
 
 

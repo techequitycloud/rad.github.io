@@ -4,6 +4,9 @@ description: "Prepare for the Professional Cloud DevOps Engineer (PDE) exam Sect
 ---
 
 # PDE Certification Preparation Guide: Section 2 — Building and implementing CI/CD pipelines (~25% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/pde_section2.png" alt="PDE Certification Preparation Guide: Section 2 — Building and implementing CI/CD pipelines (~25% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Professional Cloud DevOps Engineer certification](https://cloud.google.com/learn/certification/cloud-devops-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
 

@@ -4,6 +4,9 @@ description: "Prepare for the PCNE exam Section 4 (Hybrid & Multicloud Connectiv
 ---
 
 # PCNE Certification Preparation Guide: Section 4 — Configuring and implementing hybrid and multicloud network interconnectivity (~16% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/pcne_section4.png" alt="PCNE Certification Preparation Guide: Section 4 — Configuring and implementing hybrid and multicloud network interconnectivity (~16% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Professional Cloud Network Engineer certification](https://cloud.google.com/learn/certification/cloud-network-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
 

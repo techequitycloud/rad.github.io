@@ -4,6 +4,9 @@ description: "Prepare for the Professional Cloud Network Engineer (PCNE) exam Se
 ---
 
 # PCNE Certification Preparation Guide: Section 3 — Configuring managed network services (~16% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/pcne_section3.png" alt="PCNE Certification Preparation Guide: Section 3 — Configuring managed network services (~16% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Professional Cloud Network Engineer certification](https://cloud.google.com/learn/certification/cloud-network-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
 

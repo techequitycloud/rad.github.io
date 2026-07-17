@@ -4,6 +4,9 @@ description: "Prepare for the PCDE exam Section 4 — deploy scalable and highly
 ---
 
 # PCDE Certification Preparation Guide: Section 4 — Deploy scalable and highly available databases in Google Cloud (~20% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/pcde_section4.png" alt="PCDE Certification Preparation Guide: Section 4 — Deploy scalable and highly available databases in Google Cloud (~20% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Professional Cloud Database Engineer certification](https://cloud.google.com/learn/certification/cloud-database-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
 

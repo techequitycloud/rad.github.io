@@ -4,6 +4,9 @@ description: "Prepare for the PCD exam Section 1 (Scalable Cloud-Native App Desi
 ---
 
 # PCD Certification Preparation Guide: Section 1 — Designing highly scalable, available, and reliable cloud-native applications (~36% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/pcd_section1.png" alt="PCD Certification Preparation Guide: Section 1 — Designing highly scalable, available, and reliable cloud-native applications (~36% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Professional Cloud Developer certification](https://cloud.google.com/learn/certification/cloud-developer) — always confirm section weightings against the current Google Cloud exam guide.
 
 

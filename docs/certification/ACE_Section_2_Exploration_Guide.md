@@ -4,6 +4,9 @@ description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 2 — 
 ---
 
 # ACE Certification Preparation Guide: Section 2 — Planning and implementing a cloud solution (~30% of the exam)
+
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/ace_section2.png" alt="ACE Certification Preparation Guide: Section 2 — Planning and implementing a cloud solution (~30% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
 
