@@ -5,7 +5,7 @@ description: "RAD Platform partner guide — onboarding organizations, managing 
 
 # Partner Guide
 
-<img src="https://storage.googleapis.com/rad-public-2b65/modules/Partner_Guide.png" alt="Partner Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+<img src="https://storage.googleapis.com/rad-public-2b65/guides/Partner_Guide.png" alt="Partner Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 For module authors who publish their own modules to RAD and earn a revenue share when others deploy them. New to RAD? Start with [Using RAD](using-rad.md).
 

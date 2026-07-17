@@ -5,7 +5,7 @@ description: "Engineering practices used across RAD Platform modules — infrast
 
 # Engineering Practices
 
-<img src="https://storage.googleapis.com/rad-public-2b65/modules/Engineering_Practices.png" alt="Engineering Practices" style={{maxWidth: "100%", borderRadius: "8px"}} />
+<img src="https://storage.googleapis.com/rad-public-2b65/guides/Engineering_Practices.png" alt="Engineering Practices" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 ## Overview
 

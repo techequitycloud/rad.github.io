@@ -5,7 +5,7 @@ description: "How to use the RAD Platform: signing in, navigation, roles, deploy
 
 # Using RAD
 
-<img src="https://storage.googleapis.com/rad-public-2b65/modules/Using_RAD.png" alt="Using RAD" style={{maxWidth: "100%", borderRadius: "8px"}} />
+<img src="https://storage.googleapis.com/rad-public-2b65/guides/Using_RAD.png" alt="Using RAD" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 This is the shared overview for everyone who uses RAD. It covers signing in, finding your way around, the roles, and the core concepts (modules, deployments, credits, billing, and getting help). Each role guide links back here for the basics, then focuses on what that role does.
 

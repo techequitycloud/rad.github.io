@@ -5,7 +5,7 @@ description: "The engineering principles behind RAD Platform modules — secure 
 
 # Engineering Excellence, by Default
 
-<img src="https://storage.googleapis.com/rad-public-2b65/modules/Engineering_Excellence.png" alt="Engineering Excellence, by Default" style={{maxWidth: "100%", borderRadius: "8px"}} />
+<img src="https://storage.googleapis.com/rad-public-2b65/guides/Engineering_Excellence.png" alt="Engineering Excellence, by Default" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 ## Overview
 
