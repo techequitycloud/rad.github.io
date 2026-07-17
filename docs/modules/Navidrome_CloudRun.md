@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Navidrome on Google Cloud Ru
 
 # Navidrome on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Navidrome_CloudRun.png" alt="Navidrome on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Navidrome is a free, open-source (GPLv3) self-hosted, Subsonic-compatible music
 streaming server written in Go. It scans a music library, serves it through a fast
 web UI, and speaks the Subsonic/OpenSubsonic API so any compatible mobile or desktop

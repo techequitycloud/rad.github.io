@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Supabase on GKE Autopilot wi
 
 # Supabase on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Supabase_GKE.png" alt="Supabase on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Supabase is an open-source Firebase alternative — a full backend-as-a-service built
 on PostgreSQL. It provides a PostgreSQL 15 database with the pgvector extension,
 real-time subscriptions, GoTrue authentication, PostgREST REST APIs, an S3-compatible

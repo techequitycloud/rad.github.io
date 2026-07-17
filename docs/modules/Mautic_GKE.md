@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Mautic on GKE Autopilot with
 
 # Mautic on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Mautic_GKE.png" alt="Mautic on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Mautic is an open-source marketing-automation platform for email campaigns, contact
 management, landing pages, and lead scoring. This module deploys Mautic on **GKE
 Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which provisions and

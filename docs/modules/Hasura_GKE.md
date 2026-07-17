@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Hasura on GKE Autopilot with
 
 # Hasura on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Hasura_GKE.png" alt="Hasura on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Hasura is an open-source, Apache 2.0-licensed engine that gives you an instant,
 realtime GraphQL (and REST) API over a PostgreSQL database, with fine-grained
 role-based authorization, event triggers, and a built-in admin console. This module

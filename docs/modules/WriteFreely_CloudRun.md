@@ -5,6 +5,8 @@ description: "Configuration reference for deploying WriteFreely on Google Cloud 
 
 # WriteFreely on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/WriteFreely_CloudRun.png" alt="WriteFreely on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 WriteFreely is an open-source, minimalist, federated blogging platform written in Go
 — a lightweight Medium alternative for publishing clean, distraction-free writing.
 This module deploys WriteFreely on **Cloud Run v2** on top of the

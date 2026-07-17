@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Flarum on GKE Autopilot with
 
 # Flarum on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Flarum_GKE.png" alt="Flarum on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Flarum is a free, open-source forum and discussion platform — a modern,
 extensible alternative to traditional bulletin-board software, built on PHP
 with a JavaScript/Mithril front end and a REST API. This module deploys

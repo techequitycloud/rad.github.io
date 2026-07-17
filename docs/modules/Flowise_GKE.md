@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Flowise on GKE Autopilot wit
 
 # Flowise on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Flowise_GKE.png" alt="Flowise on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Flowise is an open-source visual AI workflow builder that lets non-developers assemble
 LangChain and LlamaIndex AI pipelines through a drag-and-drop interface. This module
 deploys Flowise on **GKE Autopilot** on top of the [App_GKE](App_GKE.md) foundation,

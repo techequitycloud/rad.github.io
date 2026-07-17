@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Penpot on GKE Autopilot with
 
 # Penpot GKE Module — Configuration Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Penpot_GKE.png" alt="Penpot GKE Module — Configuration Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This guide describes every configuration variable available in the `Penpot_GKE` module. `Penpot_GKE` is a **wrapper module** that combines the generic [`App_GKE`](App_GKE.md) infrastructure module with the [`Penpot_Common`](Penpot_Common.md) shared application configuration to deploy [Penpot](https://penpot.app/) — an open-source design and prototyping tool — on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Penpot GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Penpot** are described in full here.

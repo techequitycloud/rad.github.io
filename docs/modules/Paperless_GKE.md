@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Paperless on GKE Autopilot w
 
 # Paperless-ngx GKE Module — Configuration Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Paperless_GKE.png" alt="Paperless-ngx GKE Module — Configuration Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This guide describes every configuration variable available in the `Paperless_GKE` module. `Paperless_GKE` is a **wrapper module** that combines the generic [`App_GKE`](App_GKE.md) infrastructure module with the [`Paperless_Common`](Paperless_Common.md) shared application configuration to deploy [Paperless-ngx](https://docs.paperless-ngx.com/) — an open-source document management system with OCR, full-text search, and automated tagging — on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Paperless GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Paperless-ngx** are described in full here.

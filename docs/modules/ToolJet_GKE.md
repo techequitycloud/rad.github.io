@@ -5,6 +5,8 @@ description: "Configuration reference for deploying ToolJet on GKE Autopilot wit
 
 # ToolJet on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/ToolJet_GKE.png" alt="ToolJet on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 ToolJet is an open-source, low-code platform for building and deploying internal
 tools — dashboards, admin panels, CRUD apps, and workflows — with a drag-and-drop
 builder over your own databases and APIs. This module deploys ToolJet on **GKE

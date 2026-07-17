@@ -5,6 +5,8 @@ description: "Configuration reference for deploying LiteLLM on Google Cloud Run 
 
 # LiteLLM on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/LiteLLM_CloudRun.png" alt="LiteLLM on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 LiteLLM is an open-source LLM proxy and AI gateway that provides a unified
 OpenAI-compatible API across 100+ providers including OpenAI, Anthropic, Google
 Gemini, Azure OpenAI, AWS Bedrock, and Ollama. Organizations use it to

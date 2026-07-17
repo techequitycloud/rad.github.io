@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Keycloak on Google Cloud Run
 
 # Keycloak on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Keycloak_CloudRun.png" alt="Keycloak on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Keycloak is an open-source identity and access management platform (a CNCF project) providing single sign-on (SSO), OAuth 2.0/OIDC, SAML 2.0, social login, user federation (LDAP/Active Directory), and fine-grained authorization — a self-hosted alternative to Auth0/Okta with no per-user fees. This module deploys Keycloak on **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md) foundation, which provisions and manages the shared Google Cloud infrastructure.
 
 This guide focuses on the cloud services Keycloak uses and how to explore and operate them from the Google Cloud Console and the command line. For the mechanics common to every Cloud Run application — service identity, ingress and load balancing, scaling and concurrency, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, backups, and the deployment lifecycle — refer to the [App_CloudRun foundation guide](App_CloudRun.md) rather than repeating them here.

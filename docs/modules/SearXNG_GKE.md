@@ -5,6 +5,8 @@ description: "Configuration reference for deploying SearXNG on GKE Autopilot wit
 
 # SearXNG on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/SearXNG_GKE.png" alt="SearXNG on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 SearXNG is a privacy-respecting, self-hosted metasearch engine that aggregates
 results from 70+ search services without tracking users or serving ads. This module
 deploys SearXNG on **GKE Autopilot** on top of the [App_GKE](App_GKE.md)

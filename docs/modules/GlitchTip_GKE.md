@@ -5,6 +5,8 @@ description: "Configuration reference for deploying GlitchTip on GKE Autopilot w
 
 # GlitchTip on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/GlitchTip_GKE.png" alt="GlitchTip on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 GlitchTip is an open-source, Sentry-compatible error-tracking and performance-monitoring
 platform (Django/Python). Your applications send exceptions and traces to GlitchTip's
 Sentry-protocol ingest endpoint, and GlitchTip stores, deduplicates, and alerts on them.

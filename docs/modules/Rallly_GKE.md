@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Rallly on GKE Autopilot with
 
 # Rallly on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Rallly_GKE.png" alt="Rallly on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Rallly is an open-source, self-hosted meeting-scheduling and group-poll application —
 a privacy-friendly alternative to Doodle — built with Next.js and Prisma. This module
 deploys Rallly on **GKE Autopilot** on top of the [App_GKE](App_GKE.md) foundation,

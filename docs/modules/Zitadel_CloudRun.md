@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Zitadel on Google Cloud Run 
 
 # Zitadel on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Zitadel_CloudRun.png" alt="Zitadel on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Zitadel is an open-source, cloud-native identity and access management (IAM) platform
 providing OpenID Connect, OAuth 2.0, SAML, and user/organization management. This
 module deploys Zitadel on **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md)

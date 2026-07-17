@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Monica on GKE Autopilot with
 
 # Monica on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Monica_GKE.png" alt="Monica on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Monica is an open-source personal relationship management (PRM) application — a
 "personal CRM" for organising how you stay in touch with friends, family, and
 contacts. This module deploys Monica on **GKE Autopilot** on top of the

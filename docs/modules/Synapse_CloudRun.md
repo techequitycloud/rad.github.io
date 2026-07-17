@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Synapse on Google Cloud Run 
 
 # Synapse on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Synapse_CloudRun.png" alt="Synapse on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Synapse is the reference [Matrix](https://matrix.org/) homeserver — the open-source,
 Apache 2.0-licensed Python server for the Matrix protocol, an open standard for
 decentralized, federated real-time communication (secure chat and VoIP). This module

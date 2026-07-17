@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Castopod on Google Cloud Run
 
 # Castopod on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Castopod_CloudRun.png" alt="Castopod on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Castopod is an open-source, ActivityPub-native podcast hosting platform built on
 CodeIgniter 4 (PHP 8) and served by FrankenPHP/Caddy. This module deploys Castopod on
 **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md) foundation, which

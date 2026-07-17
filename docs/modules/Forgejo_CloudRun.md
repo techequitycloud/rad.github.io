@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Forgejo on Google Cloud Run 
 
 # Forgejo on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Forgejo_CloudRun.png" alt="Forgejo on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Forgejo is a lightweight, community-managed, self-hosted Git service — a fork of
 Gitea — providing repository hosting, issue tracking, pull requests, a built-in
 CI/CD (Actions) runner, code review, and a package registry from a single Go

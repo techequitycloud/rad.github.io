@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Audiobookshelf on GKE Autopi
 
 # Audiobookshelf on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Audiobookshelf_GKE.png" alt="Audiobookshelf on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Audiobookshelf is a self-hosted audiobook and podcast server — it organises your audio library, streams to the web UI and the official mobile apps, and keeps per-user listening progress in sync. This module deploys Audiobookshelf on **GKE Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which provisions and manages the shared Google Cloud and Kubernetes infrastructure.
 
 This guide focuses on the cloud services Audiobookshelf uses and how to explore and operate them from the Google Cloud Console and the command line. For the mechanics that are common to every GKE application — Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, backups, and the deployment lifecycle — refer to the [App_GKE foundation guide](App_GKE.md) rather than repeating them here.

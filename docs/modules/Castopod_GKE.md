@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Castopod on GKE Autopilot wi
 
 # Castopod on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Castopod_GKE.png" alt="Castopod on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Castopod is an open-source, ActivityPub-native podcast hosting platform built on
 CodeIgniter 4 (PHP 8) and served by FrankenPHP/Caddy. This module deploys Castopod on
 **GKE Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which provisions and

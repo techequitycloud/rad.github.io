@@ -5,6 +5,8 @@ description: "Configuration reference for deploying PhotoPrism on Google Cloud R
 
 # PhotoPrism on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/PhotoPrism_CloudRun.png" alt="PhotoPrism on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 PhotoPrism is a self-hosted, AI-powered photo and video management application: it
 browses, organizes, and shares a personal media library with automatic tagging,
 facial recognition, and full-text/visual search, all served from a single Go binary

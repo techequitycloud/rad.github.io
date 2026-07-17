@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Umami on Google Cloud Run wi
 
 # Umami on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Umami_CloudRun.png" alt="Umami on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This document provides a comprehensive reference for the `modules/Umami_CloudRun` Terraform module. It covers architecture, IAM, configuration variables, Umami-specific behaviours, and operational patterns for deploying Umami on Google Cloud Run (v2).
 
 ---

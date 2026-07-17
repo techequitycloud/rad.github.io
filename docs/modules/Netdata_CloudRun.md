@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Netdata on Google Cloud Run 
 
 # Netdata on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Netdata_CloudRun.png" alt="Netdata on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Netdata is an open-source, real-time infrastructure and application monitoring
 agent that collects thousands of metrics per second and serves per-second-granularity
 dashboards and a REST API. This module deploys Netdata on **Cloud Run v2** on top of

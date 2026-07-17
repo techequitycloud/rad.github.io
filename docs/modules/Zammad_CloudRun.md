@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Zammad on Google Cloud Run w
 
 # Zammad on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Zammad_CloudRun.png" alt="Zammad on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Zammad is an open-source helpdesk and customer support platform — a GDPR-compliant
 alternative to Zendesk and Freshdesk. This module deploys Zammad on **Cloud Run v2**
 on top of the [App_CloudRun](App_CloudRun.md) foundation, which provisions and

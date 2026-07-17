@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Plausible Analytics on GKE A
 
 # Plausible Analytics on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Plausible_GKE.png" alt="Plausible Analytics on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Plausible Analytics Community Edition is the leading open-source, AGPL-3.0-licensed,
 privacy-first web analytics platform — a lightweight, cookie-free, GDPR/CCPA/PECR-compliant
 alternative to Google Analytics that you fully own and self-host. This module deploys

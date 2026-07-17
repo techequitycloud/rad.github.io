@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Qdrant on Google Cloud Run w
 
 # Qdrant on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Qdrant_CloudRun.png" alt="Qdrant on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Qdrant is a high-performance vector database and similarity search engine built
 for AI workloads — RAG pipelines, recommendation systems, semantic search, and
 embeddings storage. This module deploys Qdrant on **Cloud Run v2** on top of

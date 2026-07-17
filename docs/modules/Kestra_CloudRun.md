@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Kestra on Google Cloud Run w
 
 # Kestra on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Kestra_CloudRun.png" alt="Kestra on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Kestra is an open-source data orchestration platform (Apache 2.0) for building, scheduling,
 and monitoring ETL/ELT pipelines, batch jobs, and workflow automation through declarative
 YAML-based flow definitions and a 500+ plugin ecosystem. This module deploys Kestra on

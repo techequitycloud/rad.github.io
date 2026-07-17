@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Strapi on GKE Autopilot with
 
 # Strapi on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Strapi_GKE.png" alt="Strapi on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Strapi is the leading open-source headless CMS — delivering a fully customisable
 content API (REST and GraphQL) with a rich admin panel, used by enterprises and
 developers worldwide for content management and API-first architectures. This module

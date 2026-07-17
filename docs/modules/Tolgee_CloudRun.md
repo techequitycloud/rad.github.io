@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Tolgee on Google Cloud Run w
 
 # Tolgee on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Tolgee_CloudRun.png" alt="Tolgee on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Tolgee is an open-source, developer-friendly **localization (i18n) and translation
 management** platform built on Spring Boot. This module deploys Tolgee on **Cloud Run
 v2** on top of the [App_CloudRun](App_CloudRun.md) foundation, which provisions and

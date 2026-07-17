@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Chibisafe on Google Cloud Ru
 
 # Chibisafe on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Chibisafe_CloudRun.png" alt="Chibisafe on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Chibisafe is a self-hosted file and image uploader with a modern dashboard,
 drag-and-drop uploads, albums, and a public API. This module deploys the
 **chibisafe-server backend only** (port 8000) on **Cloud Run v2** on top of the

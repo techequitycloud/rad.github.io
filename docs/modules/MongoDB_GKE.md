@@ -5,6 +5,8 @@ description: "Configuration reference for deploying MongoDB on GKE Autopilot wit
 
 # MongoDB on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/MongoDB_GKE.png" alt="MongoDB on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 MongoDB is the world's most popular NoSQL document database, used by organisations
 of every size for content management, IoT data pipelines, mobile backends, and
 AI/ML feature stores where relational schemas are too rigid. This module deploys

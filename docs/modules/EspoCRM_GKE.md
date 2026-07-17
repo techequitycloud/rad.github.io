@@ -5,6 +5,8 @@ description: "Configuration reference for deploying EspoCRM on GKE Autopilot wit
 
 # EspoCRM on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/EspoCRM_GKE.png" alt="EspoCRM on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 EspoCRM is an open-source, GPLv3-licensed Customer Relationship Management (CRM) platform
 built on PHP and Apache. This module deploys EspoCRM on **GKE Autopilot** on top of the
 [App_GKE](App_GKE.md) foundation, which provisions and manages the shared Google Cloud and

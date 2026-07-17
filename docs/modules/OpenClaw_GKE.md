@@ -5,6 +5,8 @@ description: "Configuration reference for deploying OpenClaw on GKE Autopilot wi
 
 # OpenClaw on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/OpenClaw_GKE.png" alt="OpenClaw on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 OpenClaw is a multi-tenant AI agent gateway purpose-built for isolated, persistent agent
 deployments. It lets teams run per-tenant AI assistants backed by Anthropic models, with
 dedicated GCS workspaces and optional Telegram or Slack channel integration — all without

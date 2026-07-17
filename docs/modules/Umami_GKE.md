@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Umami on GKE Autopilot with 
 
 # Umami GKE Module — Configuration Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Umami_GKE.png" alt="Umami GKE Module — Configuration Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This guide describes every configuration variable available in the `Umami_GKE` module. `Umami_GKE` is a **wrapper module** that combines the generic [`App_GKE`](App_GKE.md) infrastructure module with the [`Umami_Common`](Umami_Common.md) shared application configuration to deploy the [Umami](https://umami.is/) privacy-focused web analytics platform on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Umami GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Umami** are described in full here.

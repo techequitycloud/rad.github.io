@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Formbricks on Google Cloud R
 
 # Formbricks on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Formbricks_CloudRun.png" alt="Formbricks on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This document provides a comprehensive reference for the `modules/Formbricks_CloudRun` module. It covers architecture, IAM, configuration variables, Formbricks-specific behaviours, and operational patterns for deploying Formbricks on Google Cloud Run (v2).
 
 ---

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Hermes Agent on GKE Autopilo
 
 # Hermes Agent on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Hermes_GKE.png" alt="Hermes Agent on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Hermes Agent is Nous Research's open-source (MIT-licensed), self-hosted,
 self-improving personal AI agent: it learns skills from experience, persists
 memory across sessions, and connects to messaging platforms plus an

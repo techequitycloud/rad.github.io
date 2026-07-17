@@ -5,6 +5,8 @@ description: "Configuration reference for deploying AFFiNE on GKE Autopilot with
 
 # AFFiNE on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Affine_GKE.png" alt="AFFiNE on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 AFFiNE is an open-source, privacy-first knowledge base that unifies docs,
 whiteboards, and databases in one workspace — a self-hostable alternative to
 Notion and Miro. This module deploys AFFiNE on **GKE Autopilot** as a thin

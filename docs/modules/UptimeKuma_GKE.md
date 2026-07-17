@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Uptime Kuma on GKE Autopilot
 
 # Uptime Kuma on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/UptimeKuma_GKE.png" alt="Uptime Kuma on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Uptime Kuma is a self-hosted uptime monitoring tool for websites, APIs, TCP
 ports, DNS records, and more, with a clean dashboard, public status pages, and
 90+ notification channels. This module deploys Uptime Kuma on **GKE

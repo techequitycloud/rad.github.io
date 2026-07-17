@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Mixpost on Google Cloud Run 
 
 # Mixpost on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Mixpost_CloudRun.png" alt="Mixpost on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Mixpost is an open-source, self-hosted social media scheduling and management
 platform — a Buffer/Hootsuite alternative for composing, scheduling, publishing,
 and analysing posts across multiple social accounts from one dashboard. It ships

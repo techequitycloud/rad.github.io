@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Snipe-IT on GKE Autopilot wi
 
 # Snipe-IT on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/SnipeIT_GKE.png" alt="Snipe-IT on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Snipe-IT is a free, open-source IT asset and inventory management system used to
 track hardware, software licences, accessories, and consumables, with asset
 check-in/out, audit logging, depreciation, and a full REST API. It is built on

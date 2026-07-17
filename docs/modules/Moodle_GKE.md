@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Moodle on GKE Autopilot with
 
 # Moodle on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_GKE.png" alt="Moodle on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Moodle is the world's most popular open-source Learning Management System (LMS),
 used by universities, schools, corporations, and online training providers worldwide.
 This module deploys Moodle on **GKE Autopilot** on top of the [App_GKE](App_GKE.md)

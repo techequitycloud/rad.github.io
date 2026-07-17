@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Maybe Finance on Google Clou
 
 # Maybe Finance on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/MaybeFinance_CloudRun.png" alt="Maybe Finance on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Maybe (Maybe Finance) is an open-source, self-hosted alternative to Mint/Monarch
 for personal finance and wealth management — budgeting, net-worth tracking,
 transaction categorization, and multi-account aggregation, built on Ruby on

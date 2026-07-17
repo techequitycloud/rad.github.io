@@ -5,6 +5,8 @@ description: "Configuration reference for deploying code-server on GKE Autopilot
 
 # code-server on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/CodeServer_GKE.png" alt="code-server on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 code-server is Coder's open-source (MIT) build of Visual Studio Code that runs on a
 remote server and is accessed entirely through the browser — a full IDE with the VS
 Code extension marketplace, integrated terminal, and language servers, backed by a

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Django on GKE Autopilot with
 
 # Django on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Django_GKE.png" alt="Django on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Django is a battle-tested Python web framework that encourages rapid development and
 clean, pragmatic design, powering some of the world's most demanding web applications.
 This module deploys Django on **GKE Autopilot** on top of the

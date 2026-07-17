@@ -5,6 +5,8 @@ description: "Configuration reference for deploying LibreChat on GKE Autopilot w
 
 # LibreChat on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/LibreChat_GKE.png" alt="LibreChat on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 LibreChat is an open-source AI chat interface with 20,000+ GitHub stars that replicates and
 extends the ChatGPT experience across 20+ LLM providers (OpenAI, Anthropic, Google Gemini,
 Mistral, Groq, Ollama, and many more). This module deploys LibreChat on **GKE Autopilot**

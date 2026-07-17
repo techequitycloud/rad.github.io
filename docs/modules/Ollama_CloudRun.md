@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Ollama on Google Cloud Run w
 
 # Ollama on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Ollama_CloudRun.png" alt="Ollama on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Ollama is an open-source LLM inference server that serves large language models — Llama,
 Mistral, Gemma, Phi, and others — via a REST API. This module deploys Ollama on **Cloud
 Run v2** (CPU-only, serverless) on top of the [App_CloudRun](App_CloudRun.md) foundation,

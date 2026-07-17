@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Docuseal on Google Cloud Run
 
 # Docuseal on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Docuseal_CloudRun.png" alt="Docuseal on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 DocuSeal is an open-source document-signing platform — a self-hosted DocuSign
 alternative for creating, filling, and signing PDF documents with a visual form
 builder, reusable templates, and audit trails. This module deploys DocuSeal on

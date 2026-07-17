@@ -5,6 +5,8 @@ description: "Configuration reference for deploying GlitchTip on Google Cloud Ru
 
 # GlitchTip on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/GlitchTip_CloudRun.png" alt="GlitchTip on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 GlitchTip is an open-source, Sentry-compatible error-tracking and performance-monitoring
 platform (Django/Python). Your applications send exceptions and traces to GlitchTip's
 Sentry-protocol ingest endpoint, and GlitchTip stores, deduplicates, and alerts on them.

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying WriteFreely on GKE Autopilot
 
 # WriteFreely on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/WriteFreely_GKE.png" alt="WriteFreely on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 WriteFreely is an open-source, minimalist, federated blogging platform written in Go
 — a lightweight Medium alternative for publishing clean, distraction-free writing.
 This module deploys WriteFreely on **GKE Autopilot** on top of the

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Plane on GKE Autopilot with 
 
 # Plane on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Plane_GKE.png" alt="Plane on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Plane is an open-source project-management and issue-tracking tool (a Jira /
 Linear / Asana alternative) covering issues, sprints, cycles, modules, and
 product roadmaps behind a modern web UI. This module deploys Plane on **GKE

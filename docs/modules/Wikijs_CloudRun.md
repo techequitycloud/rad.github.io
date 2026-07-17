@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Wiki.js on Google Cloud Run 
 
 # Wiki.js on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_CloudRun.png" alt="Wiki.js on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Wiki.js is a powerful open-source wiki platform designed for teams that need modern,
 fast knowledge management with Git-backed version control and a clean writing
 experience. This module deploys Wiki.js on **Cloud Run v2** on top of the

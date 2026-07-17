@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Odoo on Google Cloud Run wit
 
 # Odoo on Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Odoo_CloudRun.png" alt="Odoo on Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Odoo is a comprehensive open-source ERP suite with 12M+ users and modules spanning CRM,
 accounting, inventory, manufacturing, HR, and eCommerce. This module deploys Odoo Community
 Edition on **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md) foundation, which

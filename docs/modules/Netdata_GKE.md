@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Netdata on GKE Autopilot wit
 
 # Netdata on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Netdata_GKE.png" alt="Netdata on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Netdata is an open-source, real-time performance and health monitoring agent
 that collects thousands of per-second metrics (CPU, memory, disk, network,
 containers, services) with zero configuration and visualises them on a

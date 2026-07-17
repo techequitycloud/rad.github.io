@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Vaultwarden on Google Cloud 
 
 # Vaultwarden on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Vaultwarden_CloudRun.png" alt="Vaultwarden on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Vaultwarden is a lightweight, self-hosted Bitwarden-compatible password manager written
 in Rust. This module deploys Vaultwarden on **Cloud Run v2** on top of the
 [App_CloudRun](App_CloudRun.md) foundation, which provisions and manages the shared

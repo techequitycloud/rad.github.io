@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Directus on Google Cloud Run
 
 # Directus on Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Directus_CloudRun.png" alt="Directus on Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Directus is an open-source headless CMS and Backend-as-a-Service (BaaS) platform that wraps any SQL database with auto-generated REST and GraphQL APIs and a no-code admin application. This module deploys Directus on **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md) foundation, which provisions and manages the shared Google Cloud infrastructure.
 
 This guide focuses on the cloud services Directus uses and how to explore and operate them from the Google Cloud Console and the command line. For the mechanics common to every Cloud Run application — Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, backups, and the deployment lifecycle — refer to the [App_CloudRun foundation guide](App_CloudRun.md) rather than repeating them here.

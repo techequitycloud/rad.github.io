@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Outline on GKE Autopilot wit
 
 # Outline on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Outline_GKE.png" alt="Outline on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Outline is an open-source, Notion-style team knowledge base and wiki: real-time
 collaborative Markdown documents, powerful full-text search, and nested
 document collections, authenticated exclusively through an external identity

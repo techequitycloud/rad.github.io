@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Listmonk on GKE Autopilot wi
 
 # Listmonk GKE Module — Configuration Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Listmonk_GKE.png" alt="Listmonk GKE Module — Configuration Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This guide describes every configuration variable available in the `Listmonk_GKE` module. `Listmonk_GKE` is a **wrapper module** that combines the generic [`App_GKE`](App_GKE.md) infrastructure module with the [`Listmonk_Common`](Listmonk_Common.md) shared application configuration to deploy [Listmonk](https://listmonk.app/), the self-hosted newsletter and mailing list manager, on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Listmonk GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Listmonk** are described in full here.

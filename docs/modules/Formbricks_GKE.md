@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Formbricks on GKE Autopilot 
 
 # Formbricks GKE Module — Configuration Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Formbricks_GKE.png" alt="Formbricks GKE Module — Configuration Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This guide describes every configuration variable available in the `Formbricks_GKE` module. `Formbricks_GKE` is a **wrapper module** that combines the generic `App_GKE` infrastructure module with the `Formbricks_Common` shared application configuration to deploy the [Formbricks](https://formbricks.com/) open-source survey and experience management platform on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Formbricks GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Formbricks** are described in full here.

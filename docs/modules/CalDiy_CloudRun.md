@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Cal.diy on Google Cloud Run 
 
 # Cal.diy on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/CalDiy_CloudRun.png" alt="Cal.diy on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Cal.diy is the MIT-licensed, self-hostable fork of Cal.com — the open-source scheduling
 platform used by millions worldwide to eliminate back-and-forth meeting coordination.
 This module deploys Cal.diy on **Cloud Run v2** on top of the

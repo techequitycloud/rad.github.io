@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Vikunja on Google Cloud Run 
 
 # Vikunja on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Vikunja_CloudRun.png" alt="Vikunja on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Vikunja is an open-source, self-hosted to-do and project management application —
 lists, kanban boards, gantt charts, calendars, reminders, and team sharing via a
 REST API and web UI. This module deploys Vikunja on **Cloud Run v2** on top of the

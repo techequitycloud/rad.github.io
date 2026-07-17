@@ -5,6 +5,8 @@ description: "Configuration reference for deploying InvoiceNinja on GKE Autopilo
 
 # Invoice Ninja GKE Module — Configuration Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/InvoiceNinja_GKE.png" alt="Invoice Ninja GKE Module — Configuration Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This guide describes every configuration variable available in the `InvoiceNinja_GKE` module. `InvoiceNinja_GKE` is a **wrapper module** that combines the generic `App_GKE` infrastructure module with the `InvoiceNinja_Common` shared application configuration to deploy [Invoice Ninja](https://invoiceninja.com/) — the open-source invoicing and billing platform — on Google Kubernetes Engine (GKE) Autopilot.
 
 Invoice Ninja provides a complete self-hosted invoicing suite: quotes, invoices, receipts, client payments, recurring billing, expense tracking, time tracking, project management, and a self-service client portal. It is a self-hosted alternative to FreshBooks or QuickBooks.

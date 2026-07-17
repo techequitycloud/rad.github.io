@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Chroma on GKE Autopilot with
 
 # Chroma on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Chroma_GKE.png" alt="Chroma on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Chroma is an AI-native open-source vector database purpose-built for embeddings and
 similarity search. It powers RAG pipelines, semantic search, and LangChain/LlamaIndex
 workflows. This module deploys Chroma on **GKE Autopilot** on top of the

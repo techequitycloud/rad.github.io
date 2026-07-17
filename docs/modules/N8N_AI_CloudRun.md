@@ -5,6 +5,8 @@ description: "Configuration reference for deploying N8N AI on Google Cloud Run w
 
 # N8N AI on Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/N8N_AI_CloudRun.png" alt="N8N AI on Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 n8n is an open-source workflow automation platform with a visual node-based interface for
 connecting services, running logic, and building AI-powered pipelines. This module deploys
 n8n on **Cloud Run v2** alongside two companion AI services — **Qdrant** (vector database

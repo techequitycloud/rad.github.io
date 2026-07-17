@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Changedetection on GKE Autop
 
 # Changedetection on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Changedetection_GKE.png" alt="Changedetection on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 changedetection.io is a self-hosted, open-source service that monitors web pages for
 changes and sends notifications when they occur. This module deploys changedetection.io
 on **GKE Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which provisions

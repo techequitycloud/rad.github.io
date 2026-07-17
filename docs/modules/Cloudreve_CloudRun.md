@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Cloudreve on Google Cloud Ru
 
 # Cloudreve on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Cloudreve_CloudRun.png" alt="Cloudreve on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Cloudreve is a popular open-source, self-hosted cloud storage and file-sharing
 platform written in Go. It provides a web UI for uploading, organising,
 previewing and sharing files, with pluggable storage back-ends. This module

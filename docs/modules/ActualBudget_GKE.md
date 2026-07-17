@@ -5,6 +5,8 @@ description: "Configuration reference for deploying ActualBudget on GKE Autopilo
 
 # ActualBudget on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/ActualBudget_GKE.png" alt="ActualBudget on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Actual Budget is a privacy-first, local-first personal finance application built around
 zero-based envelope budgeting. The `actual-server` component is a lightweight Node.js sync
 server that stores each budget as a SQLite file and synchronises it across the web UI,

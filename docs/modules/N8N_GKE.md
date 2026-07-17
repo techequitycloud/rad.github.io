@@ -5,6 +5,8 @@ description: "Configuration reference for deploying n8n on GKE Autopilot with th
 
 # n8n on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/N8N_GKE.png" alt="n8n on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 n8n is a fair-code workflow automation platform that connects APIs, databases, and
 services with a visual node editor. This module deploys n8n on **GKE Autopilot**
 on top of the [App_GKE](App_GKE.md) foundation, which provisions and manages the

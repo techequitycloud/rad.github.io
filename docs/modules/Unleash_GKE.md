@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Unleash on GKE Autopilot wit
 
 # Unleash on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Unleash_GKE.png" alt="Unleash on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Unleash is an open-source, Apache-2.0-licensed feature-flag and toggle-management
 platform for progressive delivery, A/B testing, and gradual rollouts. This module
 deploys Unleash on **GKE Autopilot** on top of the [App_GKE](App_GKE.md) foundation,

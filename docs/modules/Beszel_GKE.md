@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Beszel on GKE Autopilot with
 
 # Beszel on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Beszel_GKE.png" alt="Beszel on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Beszel is a lightweight, open-source server-monitoring hub — historical resource
 metrics, Docker container stats, and configurable alerts, built on PocketBase (Go
 plus an embedded SQLite database). This module deploys the Beszel hub on

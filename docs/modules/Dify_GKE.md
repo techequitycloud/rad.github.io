@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Dify on GKE Autopilot with t
 
 # Dify on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Dify_GKE.png" alt="Dify on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Dify is an open-source LLM application development platform for building production-grade AI
 applications with a visual workflow builder, RAG pipeline, agent framework, multi-model
 management, and built-in observability. This module deploys Dify on **GKE Autopilot** on top of

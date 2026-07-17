@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Zitadel on GKE Autopilot wit
 
 # Zitadel on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Zitadel_GKE.png" alt="Zitadel on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Zitadel is an open-source, cloud-native identity and access management (IAM) platform
 providing OpenID Connect, OAuth 2.0, SAML, and user/organization management. This
 module deploys Zitadel on **GKE Autopilot** on top of the [App_GKE](App_GKE.md)

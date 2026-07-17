@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Cal.com on GKE Autopilot wit
 
 # Cal.com on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/CalCom_GKE.png" alt="Cal.com on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Cal.com is an open-source, AGPL-licensed scheduling platform — the self-hosted
 Calendly alternative — built with **Next.js** and **Prisma** on PostgreSQL. This
 module deploys Cal.com on **GKE Autopilot** on top of the [App_GKE](App_GKE.md)

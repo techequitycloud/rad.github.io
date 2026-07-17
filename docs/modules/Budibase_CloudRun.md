@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Budibase on Google Cloud Run
 
 # Budibase on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Budibase_CloudRun.png" alt="Budibase on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Budibase is an open-source low-code platform for building internal tools, business
 apps, and workflows on top of your data. This module deploys Budibase on **Cloud
 Run v2** on top of the [App_CloudRun](App_CloudRun.md) foundation, which provisions

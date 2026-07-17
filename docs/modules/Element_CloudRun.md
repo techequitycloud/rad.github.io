@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Element on Google Cloud Run 
 
 # Element on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Element_CloudRun.png" alt="Element on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Element is the leading open-source (AGPLv3) [Matrix](https://matrix.org/) web
 client — a self-hosted, end-to-end-encrypted messaging and collaboration app. This
 module deploys Element on **Cloud Run v2** on top of the

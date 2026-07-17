@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Rallly on Google Cloud Run w
 
 # Rallly on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Rallly_CloudRun.png" alt="Rallly on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Rallly is an open-source, self-hosted meeting-scheduling and group-poll application —
 a privacy-friendly alternative to Doodle — built with Next.js and Prisma. This module
 deploys Rallly on **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md)

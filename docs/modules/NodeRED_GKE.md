@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Node-RED on GKE Autopilot wi
 
 # Node-RED on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/NodeRED_GKE.png" alt="Node-RED on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Node-RED is an open-source flow-based programming tool for wiring together IoT
 devices, APIs, and online services through a visual browser-based editor. This
 module deploys Node-RED on **GKE Autopilot** on top of the

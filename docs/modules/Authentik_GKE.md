@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Authentik on GKE Autopilot w
 
 # Authentik on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Authentik_GKE.png" alt="Authentik on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 authentik ([goauthentik.io](https://goauthentik.io/)) is an open-source (MIT,
 open-core) identity provider: single sign-on via OIDC and SAML, LDAP and SCIM,
 multi-factor authentication, and proxy authentication — a self-hosted alternative

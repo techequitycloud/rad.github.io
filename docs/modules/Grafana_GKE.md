@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Grafana on GKE Autopilot wit
 
 # Grafana on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Grafana_GKE.png" alt="Grafana on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Grafana is the world's leading open-source observability and analytics platform,
 used by 10M+ users at organisations including NASA, CERN, and Goldman Sachs. It
 provides unified dashboards, alerting, and visualisation for metrics, logs, and

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Calibre-Web on Google Cloud 
 
 # Calibre-Web on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/CalibreWeb_CloudRun.png" alt="Calibre-Web on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Calibre-Web is a clean, self-hosted web app for browsing, reading and downloading
 ebooks from an existing Calibre library — it serves an in-browser reader, an OPDS
 feed, user management and Kobo sync on top of the upstream LinuxServer.io

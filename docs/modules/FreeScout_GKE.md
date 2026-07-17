@@ -5,6 +5,8 @@ description: "Configuration reference for deploying FreeScout on GKE Autopilot w
 
 # FreeScout on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/FreeScout_GKE.png" alt="FreeScout on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 FreeScout is a free, self-hosted **help desk and shared-mailbox** platform built on
 Laravel (PHP) — it turns shared email inboxes into a collaborative ticket queue with
 conversations, tags, saved replies, a customer profile, a REST API, and a plugin

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Wiki.js on GKE Autopilot wit
 
 # Wiki.js on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Wikijs_GKE.png" alt="Wiki.js on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Wiki.js is a powerful open-source wiki platform designed for teams that need modern,
 fast knowledge management with Git-backed version control and a clean writing
 experience. This module deploys Wiki.js on **GKE Autopilot** on top of the

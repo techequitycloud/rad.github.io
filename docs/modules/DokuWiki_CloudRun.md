@@ -5,6 +5,8 @@ description: "Configuration reference for deploying DokuWiki on Google Cloud Run
 
 # DokuWiki on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/DokuWiki_CloudRun.png" alt="DokuWiki on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 DokuWiki is a lightweight, standards-compliant, **flat-file wiki** (no database) that
 stores all of its content — pages, media, plugins, users, and configuration — as
 files on disk. This module deploys DokuWiki on **Cloud Run v2** on top of the

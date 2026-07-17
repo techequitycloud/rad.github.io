@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Miniflux on Google Cloud Run
 
 # Miniflux on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Miniflux_CloudRun.png" alt="Miniflux on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Miniflux is a minimalist, self-hosted RSS/Atom feed reader — a single static Go
 binary that stores all state in PostgreSQL. This module deploys Miniflux on
 **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md) foundation, which

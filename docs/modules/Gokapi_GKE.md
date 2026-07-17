@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Gokapi on GKE Autopilot with
 
 # Gokapi on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Gokapi_GKE.png" alt="Gokapi on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Gokapi is a lightweight, self-hosted file-sharing server written in Go — a
 self-hosted alternative to WeTransfer. Users upload files and generate shareable
 download links with optional expiry dates, download-count limits, and password

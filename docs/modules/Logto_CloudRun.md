@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Logto on Google Cloud Run wi
 
 # Logto on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Logto_CloudRun.png" alt="Logto on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Logto is an open-source, MPL-2.0-licensed identity provider — an Auth0 alternative
 that speaks OIDC and OAuth 2.0 and ships with sign-in flows, social/enterprise
 connectors, multi-tenancy, and an admin console. This module deploys Logto on

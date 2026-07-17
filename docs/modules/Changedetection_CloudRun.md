@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Changedetection on Google Cl
 
 # Changedetection on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Changedetection_CloudRun.png" alt="Changedetection on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 changedetection.io is a self-hosted, open-source service that monitors web pages for
 changes and sends notifications when they occur. This module deploys changedetection.io
 on **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md) foundation, which

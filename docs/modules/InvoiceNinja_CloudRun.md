@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Invoice Ninja on Google Clou
 
 # Invoice Ninja on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/InvoiceNinja_CloudRun.png" alt="Invoice Ninja on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This document provides a comprehensive reference for the `modules/InvoiceNinja_CloudRun` module. It covers architecture, IAM, configuration variables, Invoice Ninja-specific behaviours, and operational patterns for deploying Invoice Ninja on Google Cloud Run (v2).
 
 ---

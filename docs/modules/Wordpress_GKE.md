@@ -5,6 +5,8 @@ description: "Configuration reference for deploying WordPress on GKE Autopilot w
 
 # WordPress on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Wordpress_GKE.png" alt="WordPress on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 WordPress is the world's most popular content management system, powering over 43% of all websites globally. This module deploys WordPress on **GKE Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which provisions and manages the shared Google Cloud and Kubernetes infrastructure.
 
 This guide focuses on the cloud services WordPress uses and how to explore and operate them from the Google Cloud Console and the command line. For the mechanics that are common to every GKE application — Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, backups, and the deployment lifecycle — refer to the [App_GKE foundation guide](App_GKE.md) rather than repeating them here.

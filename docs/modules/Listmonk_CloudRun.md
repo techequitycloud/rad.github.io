@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Listmonk on Google Cloud Run
 
 # Listmonk on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Listmonk_CloudRun.png" alt="Listmonk on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This document provides a comprehensive reference for the `modules/Listmonk_CloudRun` module. It covers architecture, IAM, configuration variables, Listmonk-specific behaviours, and operational patterns for deploying Listmonk on Google Cloud Run (v2).
 
 ---

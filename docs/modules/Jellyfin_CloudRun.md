@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Jellyfin on Google Cloud Run
 
 # Jellyfin on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Jellyfin_CloudRun.png" alt="Jellyfin on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Jellyfin is a free, open-source (GPLv2) self-hosted media server for streaming
 your own movies, TV shows, music, photos, and live TV. Written in .NET/C# and
 maintained as a community fork of Emby, it has no tracking, no ads, and no premium

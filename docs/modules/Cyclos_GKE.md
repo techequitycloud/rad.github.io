@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Cyclos on GKE Autopilot with
 
 # Cyclos on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_GKE.png" alt="Cyclos on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Cyclos is a feature-rich banking and payment platform used by microfinance institutions,
 credit unions, and complementary currency networks. This module deploys Cyclos on **GKE
 Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which provisions and manages

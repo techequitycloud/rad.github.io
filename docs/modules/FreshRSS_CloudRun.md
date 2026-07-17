@@ -5,6 +5,8 @@ description: "Configuration reference for deploying FreshRSS on Google Cloud Run
 
 # FreshRSS on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/FreshRSS_CloudRun.png" alt="FreshRSS on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 FreshRSS is a free, self-hosted, GPL-3.0-licensed RSS and Atom feed aggregator — a
 lightweight, multi-user "news reader" written in PHP that runs behind Apache and
 exposes the Google Reader and Fever APIs for mobile clients. This module deploys

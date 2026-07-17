@@ -5,6 +5,8 @@ description: "Configuration reference for deploying AnythingLLM on Google Cloud 
 
 # AnythingLLM on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/AnythingLLM_CloudRun.png" alt="AnythingLLM on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 AnythingLLM is a private AI workspace and Retrieval-Augmented Generation (RAG) platform
 that lets teams chat with documents, connect to any LLM provider (OpenAI, Anthropic,
 Ollama, and others), and build AI-powered knowledge assistants — without sending data to

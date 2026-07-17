@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Activepieces on Google Cloud
 
 # Activepieces on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Activepieces_CloudRun.png" alt="Activepieces on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Activepieces is an open-source, Apache 2.0-licensed no-code workflow automation
 platform for connecting apps, APIs, and data sources. This module deploys
 Activepieces on **Cloud Run v2** on top of the

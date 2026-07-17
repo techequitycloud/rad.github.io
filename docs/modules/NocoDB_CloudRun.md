@@ -5,6 +5,8 @@ description: "Configuration reference for deploying NocoDB on Google Cloud Run w
 
 # NocoDB on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/NocoDB_CloudRun.png" alt="NocoDB on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 NocoDB is an open-source Airtable alternative that transforms any database into a
 smart spreadsheet with a no-code interface, REST and GraphQL APIs, and built-in
 automations. This module deploys NocoDB on **Cloud Run v2** on top of the

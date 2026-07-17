@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Gotify on Google Cloud Run w
 
 # Gotify on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Gotify_CloudRun.png" alt="Gotify on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Gotify is an open-source (MIT-licensed), self-hosted server for sending and receiving
 real-time push notifications. Applications post messages over a simple REST API and
 clients receive them instantly over WebSocket streams. This module deploys Gotify on

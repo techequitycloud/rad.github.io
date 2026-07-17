@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Cyclos on Google Cloud Run w
 
 # Cyclos on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Cyclos_CloudRun.png" alt="Cyclos on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Cyclos is a feature-rich banking and payment platform used by microfinance institutions,
 credit unions, and complementary currency networks. This module deploys Cyclos on **Cloud
 Run v2** on top of the [App_CloudRun](App_CloudRun.md) foundation, which provisions and

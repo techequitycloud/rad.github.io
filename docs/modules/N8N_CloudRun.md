@@ -5,6 +5,8 @@ description: "Configuration reference for deploying n8n on Google Cloud Run with
 
 # n8n on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/N8N_CloudRun.png" alt="n8n on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 n8n is a fair-code workflow automation platform that connects APIs, databases, and
 services with a visual node editor. This module deploys n8n on **Cloud Run v2**
 on top of the [App_CloudRun](App_CloudRun.md) foundation, which provisions and

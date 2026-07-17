@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Mautic on Google Cloud Run w
 
 # Mautic on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Mautic_CloudRun.png" alt="Mautic on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Mautic is an open-source marketing-automation platform for email campaigns, contact
 management, landing pages, and lead scoring. This module deploys Mautic on **Cloud
 Run v2** on top of the [App_CloudRun](App_CloudRun.md) foundation, which provisions

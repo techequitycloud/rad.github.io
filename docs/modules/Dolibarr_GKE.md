@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Dolibarr on GKE Autopilot wi
 
 # Dolibarr on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Dolibarr_GKE.png" alt="Dolibarr on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Dolibarr is a free, open-source ERP and CRM suite covering customers and prospects,
 quotes, orders, invoices, products and stock, HR, projects, and accounting through a
 modular PHP web UI. This module deploys Dolibarr on **GKE Autopilot** on top of the

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Chibisafe on GKE Autopilot w
 
 # Chibisafe on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Chibisafe_GKE.png" alt="Chibisafe on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Chibisafe is a self-hosted file and image uploader with a modern dashboard,
 drag-and-drop uploads, albums, and a public API. This module deploys the
 **chibisafe-server backend only** (port 8000) on **GKE Autopilot** on top of the

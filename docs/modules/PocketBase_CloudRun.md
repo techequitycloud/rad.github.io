@@ -5,6 +5,8 @@ description: "Configuration reference for deploying PocketBase on Google Cloud R
 
 # PocketBase on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/PocketBase_CloudRun.png" alt="PocketBase on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 PocketBase is an open-source backend in a single file — an embedded SQLite database with
 a realtime REST API, built-in authentication, file storage, and an admin dashboard. This
 module deploys PocketBase on **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md)

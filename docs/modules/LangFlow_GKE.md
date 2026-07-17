@@ -5,6 +5,8 @@ description: "Configuration reference for deploying LangFlow on GKE Autopilot wi
 
 # LangFlow on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/LangFlow_GKE.png" alt="LangFlow on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 LangFlow is an open-source, low-code visual builder for AI agents and workflows,
 built on LangChain — you assemble language-model chains, RAG pipelines, and agents by
 dragging and wiring components on a canvas, then expose them as APIs. This module

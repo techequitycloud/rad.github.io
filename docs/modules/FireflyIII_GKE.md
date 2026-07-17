@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Firefly III on GKE Autopilot
 
 # Firefly III on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/FireflyIII_GKE.png" alt="Firefly III on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Firefly III is a free, open-source, AGPL-licensed self-hosted personal-finance
 manager. It tracks accounts, transactions, budgets, bills, categories, and recurring
 transactions, and exposes a full REST API. This module deploys Firefly III on

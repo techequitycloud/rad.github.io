@@ -5,6 +5,8 @@ description: "Configuration reference for deploying ClickHouse on GKE Autopilot 
 
 # ClickHouse on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/ClickHouse_GKE.png" alt="ClickHouse on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 ClickHouse is an open-source (Apache-2.0) column-oriented OLAP database built for
 real-time analytics over large event streams. This module deploys a **single-node
 ClickHouse server** on **GKE Autopilot** on top of the [App_GKE](App_GKE.md)

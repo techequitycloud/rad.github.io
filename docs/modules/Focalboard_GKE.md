@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Focalboard on GKE Autopilot 
 
 # Focalboard on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Focalboard_GKE.png" alt="Focalboard on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Focalboard is an open-source, self-hosted project-management and Kanban board tool
 from Mattermost — a Trello/Asana/Notion-boards alternative with multiple board views
 (kanban, table, gallery, calendar) for organizing tasks with boards and cards. This

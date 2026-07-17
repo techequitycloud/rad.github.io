@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Gotify on GKE Autopilot with
 
 # Gotify on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Gotify_GKE.png" alt="Gotify on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Gotify is an open-source (MIT-licensed), self-hosted server for sending and receiving
 real-time push notifications. Applications post messages over a simple REST API and
 clients receive them instantly over WebSocket streams. This module deploys Gotify on

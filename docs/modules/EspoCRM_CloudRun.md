@@ -5,6 +5,8 @@ description: "Configuration reference for deploying EspoCRM on Google Cloud Run 
 
 # EspoCRM on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/EspoCRM_CloudRun.png" alt="EspoCRM on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 EspoCRM is an open-source, GPLv3-licensed Customer Relationship Management (CRM)
 platform built on PHP and Apache. This module deploys EspoCRM on **Cloud Run v2** on top
 of the [App_CloudRun](App_CloudRun.md) foundation, which provisions and manages the

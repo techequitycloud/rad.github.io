@@ -5,6 +5,8 @@ description: "Configuration reference for deploying OpenProject on Google Cloud 
 
 # OpenProject on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/OpenProject_CloudRun.png" alt="OpenProject on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 OpenProject is an open-source, GPLv3-licensed project-management and team-collaboration
 suite — work packages, Gantt timelines, agile boards, wikis, time tracking, and
 budgets. This module deploys OpenProject on **Cloud Run v2** on top of the

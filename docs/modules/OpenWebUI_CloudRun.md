@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Open WebUI on Google Cloud R
 
 # Open WebUI on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/OpenWebUI_CloudRun.png" alt="Open WebUI on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Open WebUI is a self-hosted AI interface providing a polished ChatGPT-style frontend for
 Ollama, OpenAI-compatible APIs, and dozens of other LLM providers. This module deploys
 Open WebUI on **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md) foundation,

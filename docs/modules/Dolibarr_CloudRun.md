@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Dolibarr on Google Cloud Run
 
 # Dolibarr on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Dolibarr_CloudRun.png" alt="Dolibarr on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Dolibarr is a free, open-source ERP and CRM suite covering customers and prospects,
 quotes, orders, invoices, products and stock, HR, projects, and accounting through a
 modular PHP web UI. This module deploys Dolibarr on **Cloud Run v2** on top of the

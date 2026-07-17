@@ -5,6 +5,8 @@ description: "Configuration reference for deploying PocketBase on GKE Autopilot 
 
 # PocketBase on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/PocketBase_GKE.png" alt="PocketBase on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 PocketBase is an open-source backend in a single file — an embedded SQLite database with
 a realtime REST API, built-in authentication, file storage, and an admin dashboard. This
 module deploys PocketBase on **GKE Autopilot** on top of the [App_GKE](App_GKE.md)

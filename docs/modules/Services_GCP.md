@@ -5,6 +5,8 @@ description: "Configuration reference for the Services GCP RAD module on Google 
 
 # Services GCP — Platform Foundation Module
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Services_GCP.png" alt="Services GCP — Platform Foundation Module" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 `Services GCP` is the platform foundation layer. It is deployed **once per GCP project**, before any application module, and provisions the shared infrastructure that every application depends on: the VPC and networking, Cloud SQL and AlloyDB databases, Memorystore Redis, Cloud Filestore (or a self-managed NFS/Redis VM), the GKE Autopilot cluster, the shared Artifact Registry repository, the platform service accounts and IAM, and optional security controls (Binary Authorization, CMEK, VPC Service Controls, and Security Command Center).
 
 Because everything else depends on its outputs, `Services GCP` must be provisioned and healthy before `App CloudRun`, `App GKE`, or any application module is deployed.

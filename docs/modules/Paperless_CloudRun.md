@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Paperless-ngx on Google Clou
 
 # Paperless-ngx on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Paperless_CloudRun.png" alt="Paperless-ngx on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This document provides a comprehensive reference for the `modules/Paperless_CloudRun` module. It covers architecture, IAM, configuration variables, Paperless-ngx-specific behaviours, and operational patterns for deploying Paperless-ngx on Google Cloud Run (v2).
 
 ---

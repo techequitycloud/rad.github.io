@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Stirling-PDF on GKE Autopilo
 
 # Stirling-PDF on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/StirlingPDF_GKE.png" alt="Stirling-PDF on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Stirling-PDF is an open-source (MIT-licensed core), locally-hosted web PDF toolkit —
 merge, split, convert, OCR, compress, watermark, sign, redact, and 50+ other PDF
 operations, all processed on your own infrastructure so documents never touch a

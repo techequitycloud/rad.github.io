@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Documenso on GKE Autopilot w
 
 # Documenso on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Documenso_GKE.png" alt="Documenso on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Documenso is an open-source DocuSign alternative — a Next.js application for
 sending, signing, and managing e-signature documents on infrastructure you
 control. This module deploys Documenso on **GKE Autopilot** on top of the

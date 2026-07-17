@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Appsmith on GKE Autopilot wi
 
 # Appsmith on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Appsmith_GKE.png" alt="Appsmith on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Appsmith is an open-source low-code platform for building internal tools, admin
 panels, and dashboards — a self-hosted alternative to Retool. The Community
 Edition ships as a single "fat" container that bundles an embedded MongoDB,

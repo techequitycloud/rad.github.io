@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Docmost on Google Cloud Run 
 
 # Docmost on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Docmost_CloudRun.png" alt="Docmost on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Docmost is an open-source, real-time collaborative wiki and documentation platform
 (a Confluence/Notion alternative) built on NestJS. This module deploys Docmost on
 **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md) foundation, which

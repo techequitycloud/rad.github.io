@@ -5,6 +5,8 @@ description: "Configuration reference for deploying ClassicPress on Google Cloud
 
 # ClassicPress on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/ClassicPress_CloudRun.png" alt="ClassicPress on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 ClassicPress is a free, open-source, business-focused CMS — a lightweight fork of
 WordPress 4.9.x that preserves the classic (pre-Gutenberg) editing experience, with
 plugins, themes, a media library, and a REST API. This module deploys ClassicPress on

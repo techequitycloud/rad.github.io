@@ -5,6 +5,8 @@ description: "Configuration reference for deploying BookStack on Google Cloud Ru
 
 # BookStack on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/BookStack_CloudRun.png" alt="BookStack on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 BookStack is a free, open-source, MIT-licensed wiki and documentation platform
 built on Laravel (PHP), organising content as Shelves → Books → Chapters → Pages
 with WYSIWYG and Markdown editing, full-text search, page revisions, and granular

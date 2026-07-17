@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Miniflux on GKE Autopilot wi
 
 # Miniflux on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Miniflux_GKE.png" alt="Miniflux on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Miniflux is a minimalist, self-hosted RSS/Atom feed reader — a single static Go
 binary that stores all state in PostgreSQL. This module deploys Miniflux on
 **GKE Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which provisions

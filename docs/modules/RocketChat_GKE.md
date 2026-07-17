@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Rocket.Chat on GKE Autopilot
 
 # Rocket.Chat on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/RocketChat_GKE.png" alt="Rocket.Chat on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Rocket.Chat is an open-source, self-hosted team-communication platform — a
 Slack/Teams alternative built on Node.js and Meteor, with channels, direct messages,
 threads, voice/video, and an omnichannel/LiveChat layer. This module deploys

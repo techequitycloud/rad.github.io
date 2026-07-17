@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Documenso on Google Cloud Ru
 
 # Documenso on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Documenso_CloudRun.png" alt="Documenso on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Documenso is an open-source DocuSign alternative — a Next.js application for
 sending, signing, and managing e-signature documents on infrastructure you
 control. This module deploys Documenso on **Cloud Run v2** on top of the

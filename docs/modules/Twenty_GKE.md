@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Twenty CRM on GKE Autopilot 
 
 # Twenty CRM on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Twenty_GKE.png" alt="Twenty CRM on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Twenty is an open-source CRM with 25,000+ GitHub stars, built as a modern,
 developer-friendly alternative to Salesforce and HubSpot. This module deploys
 Twenty on **GKE Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which

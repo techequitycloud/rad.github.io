@@ -5,6 +5,8 @@ description: "Configuration reference for deploying LimeSurvey on GKE Autopilot 
 
 # LimeSurvey on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/LimeSurvey_GKE.png" alt="LimeSurvey on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 LimeSurvey is a free, open-source online survey and questionnaire platform
 (PHP/Yii). It supports unlimited surveys with dozens of question types,
 conditional branching, quotas, multi-language surveys, and rich

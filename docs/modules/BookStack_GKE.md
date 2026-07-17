@@ -5,6 +5,8 @@ description: "Configuration reference for deploying BookStack on GKE Autopilot w
 
 # BookStack on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/BookStack_GKE.png" alt="BookStack on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 BookStack is a free, open-source, MIT-licensed wiki and documentation platform
 built on Laravel (PHP), organising content as Shelves → Books → Chapters → Pages
 with WYSIWYG and Markdown editing, full-text search, page revisions, and granular

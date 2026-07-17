@@ -5,6 +5,8 @@ description: "Configuration reference for deploying LibreChat on Google Cloud Ru
 
 # LibreChat on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/LibreChat_CloudRun.png" alt="LibreChat on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 LibreChat is an open-source AI chat interface with 20,000+ GitHub stars that replicates and
 extends the ChatGPT experience across 20+ LLM providers (OpenAI, Anthropic, Google Gemini,
 Mistral, Groq, Ollama, and many more). This module deploys LibreChat on **Cloud Run v2**

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying NocoDB on GKE Autopilot with
 
 # NocoDB on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/NocoDB_GKE.png" alt="NocoDB on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 NocoDB is an open-source Airtable alternative that transforms any database into a
 smart spreadsheet with a no-code interface, REST and GraphQL APIs, and built-in
 automations. This module deploys NocoDB on **GKE Autopilot** on top of the

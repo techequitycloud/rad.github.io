@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Focalboard on Google Cloud R
 
 # Focalboard on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Focalboard_CloudRun.png" alt="Focalboard on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Focalboard is a self-hosted, open-source Kanban and project-board server from the
 Mattermost project — a Go backend serving a built React frontend for managing tasks,
 boards, and workflows. This module deploys Focalboard on **Cloud Run v2** on top of

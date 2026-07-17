@@ -5,6 +5,8 @@ description: "Configuration reference for deploying OpenEMR on GKE Autopilot wit
 
 # OpenEMR on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/OpenEMR_GKE.png" alt="OpenEMR on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 OpenEMR is the world's most widely adopted open-source Electronic Health Records (EHR)
 and practice management system, used by 100,000+ healthcare providers across 100+
 countries. This module deploys OpenEMR on **GKE Autopilot** on top of the

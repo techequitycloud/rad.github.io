@@ -5,6 +5,8 @@ description: "Configuration reference for deploying LobeChat on GKE Autopilot wi
 
 # LobeChat on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/LobeChat_GKE.png" alt="LobeChat on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 LobeChat is an open-source, modern LLM chat UI (built with Next.js) that lets users
 converse with many model providers — OpenAI, Anthropic, Google, and others — through
 a single polished interface, with users supplying their own API keys client-side.

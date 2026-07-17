@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Langfuse on Google Cloud Run
 
 # Langfuse on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Langfuse_CloudRun.png" alt="Langfuse on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Langfuse is an open-source, MIT-licensed LLM engineering and observability platform —
 tracing, prompt management, evaluations, and metrics for applications built on large
 language models. This module deploys Langfuse on **Cloud Run v2** on top of the

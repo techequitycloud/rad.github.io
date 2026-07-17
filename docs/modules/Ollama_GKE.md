@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Ollama on GKE Autopilot with
 
 # Ollama on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Ollama_GKE.png" alt="Ollama on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Ollama is an open-source LLM inference server that serves large language models — Llama,
 Mistral, Gemma, Phi, and others — via a REST API. This module deploys Ollama on **GKE
 Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which provisions and manages

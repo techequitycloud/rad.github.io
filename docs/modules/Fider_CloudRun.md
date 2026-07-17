@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Fider on Google Cloud Run wi
 
 # Fider on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Fider_CloudRun.png" alt="Fider on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Fider is an open-source, self-hosted feedback and feature-voting board — customers
 post ideas, vote, and comment, and you prioritise by demand. This module deploys
 Fider on **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md) foundation,

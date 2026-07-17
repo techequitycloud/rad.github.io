@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Kavita on GKE Autopilot with
 
 # Kavita on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Kavita_GKE.png" alt="Kavita on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Kavita is a fast, feature-rich, self-hosted digital library and reading server for
 comics, manga, and e-books — a clean web reading UI, OPDS feeds, collections,
 reading lists, and full-text search over your library, built on .NET with an

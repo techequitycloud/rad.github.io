@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Azimutt on Google Cloud Run 
 
 # Azimutt on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Azimutt_CloudRun.png" alt="Azimutt on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Azimutt is an open-source, next-generation database-schema explorer and ERD (entity
 relationship diagram) tool for real-world databases, built with Elixir/Phoenix. It
 lets teams explore, document, and design large schemas (thousands of tables), search

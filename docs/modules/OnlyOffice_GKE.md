@@ -5,6 +5,8 @@ description: "Configuration reference for deploying OnlyOffice on GKE Autopilot 
 
 # OnlyOffice on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/OnlyOffice_GKE.png" alt="OnlyOffice on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 ONLYOFFICE Document Server is an open-source collaborative online office suite for
 real-time co-editing of text documents, spreadsheets, presentations, PDFs, and forms —
 a self-hosted alternative to Google Docs / Microsoft Office Online. It is not usually

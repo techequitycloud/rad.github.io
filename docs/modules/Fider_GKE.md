@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Fider on GKE Autopilot with 
 
 # Fider on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Fider_GKE.png" alt="Fider on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Fider is an open-source, self-hosted feedback and feature-voting board — customers
 post ideas, vote, and comment, and you prioritise by demand. This module deploys
 Fider on **GKE Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which

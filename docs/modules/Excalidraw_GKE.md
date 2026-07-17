@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Excalidraw on GKE Autopilot 
 
 # Excalidraw on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Excalidraw_GKE.png" alt="Excalidraw on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Excalidraw is an open-source (MIT) virtual whiteboard for sketching hand-drawn-style
 diagrams, wireframes, and quick collaborative drawings. The self-hosted distribution
 is a **static single-page application served by nginx** — there is no backend,

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Element on GKE Autopilot wit
 
 # Element on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Element_GKE.png" alt="Element on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Element is the leading open-source (AGPLv3) [Matrix](https://matrix.org/) web
 client — a self-hosted, end-to-end-encrypted messaging and collaboration app. This
 module deploys Element on **GKE Autopilot** on top of the [App_GKE](App_GKE.md)

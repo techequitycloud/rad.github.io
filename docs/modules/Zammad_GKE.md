@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Zammad on GKE Autopilot with
 
 # Zammad on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Zammad_GKE.png" alt="Zammad on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Zammad is an open-source helpdesk and customer support platform — a GDPR-compliant
 alternative to Zendesk and Freshdesk. This module deploys Zammad on **GKE Autopilot**
 on top of the [App_GKE](App_GKE.md) foundation, which provisions and manages the

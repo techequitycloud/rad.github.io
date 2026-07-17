@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Ntfy on Google Cloud Run wit
 
 # Ntfy on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Ntfy_CloudRun.png" alt="Ntfy on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 ntfy is an open-source, Apache 2.0-licensed pub/sub push-notification server written
 in Go. Applications publish messages over a simple REST/HTTP API and clients receive
 them instantly over WebSocket or Server-Sent-Events (SSE) streams — no external

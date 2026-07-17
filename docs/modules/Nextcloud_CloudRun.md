@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Nextcloud on Google Cloud Ru
 
 # Nextcloud on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Nextcloud_CloudRun.png" alt="Nextcloud on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Nextcloud is the leading self-hosted file sync and collaboration platform, trusted by
 400 million users across 100,000+ organisations — including governments and healthcare
 providers seeking a GDPR-compliant alternative to Google Drive and OneDrive. This module

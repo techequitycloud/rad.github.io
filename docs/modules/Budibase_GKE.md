@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Budibase on GKE Autopilot wi
 
 # Budibase on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Budibase_GKE.png" alt="Budibase on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Budibase is an open-source low-code platform for building internal tools, business
 apps, and workflows on top of your data. This module deploys Budibase on **GKE
 Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which provisions and

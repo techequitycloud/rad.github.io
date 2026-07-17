@@ -5,6 +5,8 @@ description: "Configuration reference for deploying OpenClaw on Google Cloud Run
 
 # OpenClaw on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/OpenClaw_CloudRun.png" alt="OpenClaw on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 OpenClaw is a multi-tenant AI agent gateway purpose-built for isolated, persistent agent
 deployments. It lets teams run per-tenant AI assistants backed by Anthropic models, with
 dedicated GCS workspaces and optional Telegram or Slack channel integration — all without

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Node-RED on Google Cloud Run
 
 # Node-RED on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/NodeRED_CloudRun.png" alt="Node-RED on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Node-RED is an open-source flow-based programming tool for wiring together IoT
 devices, APIs, and online services through a visual browser-based editor. This
 module deploys Node-RED on **Cloud Run v2** on top of the

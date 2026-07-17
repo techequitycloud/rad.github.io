@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Elasticsearch on GKE Autopil
 
 # Elasticsearch on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Elasticsearch_GKE.png" alt="Elasticsearch on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Elasticsearch is an open-source distributed search and analytics engine based on Apache
 Lucene. This module deploys a **single-node Elasticsearch cluster** on **GKE Autopilot**
 on top of the [App_GKE](App_GKE.md) foundation, which provisions and manages the shared

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Chroma on Google Cloud Run w
 
 # Chroma on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Chroma_CloudRun.png" alt="Chroma on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Chroma is an AI-native open-source vector database purpose-built for embeddings and
 similarity search. It powers RAG pipelines, semantic search, and LangChain/LlamaIndex
 workflows. This module deploys Chroma on **Cloud Run v2** on top of the

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Filebrowser on Google Cloud 
 
 # Filebrowser on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Filebrowser_CloudRun.png" alt="Filebrowser on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 File Browser is a lightweight, open-source web file manager written in Go — it
 serves a directory tree over HTTP for browsing, uploading, editing, and sharing
 files. This module deploys Filebrowser on **Cloud Run v2** on top of the

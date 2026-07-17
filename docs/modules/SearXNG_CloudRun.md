@@ -5,6 +5,8 @@ description: "Configuration reference for deploying SearXNG on Google Cloud Run 
 
 # SearXNG on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/SearXNG_CloudRun.png" alt="SearXNG on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 SearXNG is a privacy-respecting, self-hosted metasearch engine that aggregates
 results from 70+ search services without tracking users or serving ads. This module
 deploys SearXNG on **Cloud Run v2** on top of the

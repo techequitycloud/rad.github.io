@@ -5,6 +5,8 @@ description: "Configuration reference for deploying PhpMyAdmin on GKE Autopilot 
 
 # PhpMyAdmin on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/PhpMyAdmin_GKE.png" alt="PhpMyAdmin on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 phpMyAdmin is the most popular open-source (GPLv2) web tool for administering MySQL
 and MariaDB databases over the browser — browse and edit tables, run SQL, manage
 users, and import/export data. This module deploys phpMyAdmin on **GKE Autopilot** on

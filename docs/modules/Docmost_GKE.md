@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Docmost on GKE Autopilot wit
 
 # Docmost on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Docmost_GKE.png" alt="Docmost on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Docmost is an open-source, real-time collaborative wiki and documentation platform
 (a Confluence/Notion alternative) built on NestJS. This module deploys Docmost on
 **GKE Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which provisions and

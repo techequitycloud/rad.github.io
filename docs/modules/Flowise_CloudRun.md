@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Flowise on Google Cloud Run 
 
 # Flowise on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Flowise_CloudRun.png" alt="Flowise on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Flowise is an open-source visual AI workflow builder that lets non-developers assemble
 LangChain and LlamaIndex AI pipelines through a drag-and-drop interface. This module
 deploys Flowise on **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md)

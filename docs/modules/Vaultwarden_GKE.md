@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Vaultwarden on GKE Autopilot
 
 # Vaultwarden on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Vaultwarden_GKE.png" alt="Vaultwarden on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Vaultwarden is a lightweight, self-hosted Bitwarden-compatible password manager written
 in Rust. This module deploys Vaultwarden on **GKE Autopilot** on top of the
 [App_GKE](App_GKE.md) foundation, which provisions and manages the shared Google Cloud

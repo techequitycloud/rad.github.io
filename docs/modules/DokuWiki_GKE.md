@@ -5,6 +5,8 @@ description: "Configuration reference for deploying DokuWiki on GKE Autopilot wi
 
 # DokuWiki on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/DokuWiki_GKE.png" alt="DokuWiki on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 DokuWiki is a lightweight, standards-compliant, **flat-file wiki** (no database) that
 stores all of its content — pages, media, plugins, users, and configuration — as
 files on disk. This module deploys DokuWiki on **GKE Autopilot** on top of the

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Odoo on GKE Autopilot with t
 
 # Odoo on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Odoo_GKE.png" alt="Odoo on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Odoo is a comprehensive open-source ERP suite with 12M+ users and modules spanning CRM,
 accounting, inventory, manufacturing, HR, and eCommerce. This module deploys Odoo Community
 Edition on **GKE Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which provisions

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Chatwoot on Google Cloud Run
 
 # Chatwoot on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Chatwoot_CloudRun.png" alt="Chatwoot on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Chatwoot is an open-source, multi-channel helpdesk and customer-engagement
 platform (email, live chat, social, and messaging inboxes, SLA tracking, and
 reporting) that serves as a GDPR-compliant alternative to Zendesk or Intercom.

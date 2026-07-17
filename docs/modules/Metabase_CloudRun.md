@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Metabase on Google Cloud Run
 
 # Metabase on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Metabase_CloudRun.png" alt="Metabase on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Metabase is an open-source business intelligence and analytics platform that lets
 non-technical users query, visualise, and share data without writing SQL. This
 module deploys Metabase on **Cloud Run v2** on top of the

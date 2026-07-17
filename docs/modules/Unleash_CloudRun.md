@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Unleash on Google Cloud Run 
 
 # Unleash on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Unleash_CloudRun.png" alt="Unleash on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Unleash is an open-source, Apache-2.0-licensed feature-flag and toggle-management
 platform for progressive delivery, A/B testing, and gradual rollouts. This module
 deploys Unleash on **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md)

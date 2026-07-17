@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Immich on GKE Autopilot with
 
 # Immich on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Immich_GKE.png" alt="Immich on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Immich is an open-source, AGPL-3.0-licensed self-hosted photo and video management
 platform — a Google Photos alternative with mobile auto-backup, a timeline, albums,
 sharing, CLIP-powered smart search, and face recognition. Every feature is free:

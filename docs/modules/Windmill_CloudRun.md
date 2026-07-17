@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Windmill on Google Cloud Run
 
 # Windmill on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Windmill_CloudRun.png" alt="Windmill on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Windmill is an open-source developer platform for building internal tools, scripts, flows, and automations. This module deploys Windmill on **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md) foundation, which provisions and manages the shared Google Cloud infrastructure.
 
 This guide focuses on the cloud services Windmill uses and how to explore and operate them from the Google Cloud Console and the command line. For the mechanics common to every Cloud Run application — service identity, ingress and load balancing, scaling and concurrency, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, backups, and the deployment lifecycle — refer to the [App_CloudRun foundation guide](App_CloudRun.md) rather than repeating them here.

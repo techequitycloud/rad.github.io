@@ -5,6 +5,8 @@ description: "Configuration reference for deploying EvolutionAPI on GKE Autopilo
 
 # EvolutionAPI on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/EvolutionAPI_GKE.png" alt="EvolutionAPI on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Evolution API is an open-source Node.js WhatsApp Business API gateway (built on the
 Baileys library) that provisions WhatsApp instances, sends and receives messages, and
 exposes a REST API plus a manager UI for wiring WhatsApp into other systems. This

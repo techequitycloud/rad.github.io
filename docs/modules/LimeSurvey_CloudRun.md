@@ -5,6 +5,8 @@ description: "Configuration reference for deploying LimeSurvey on Google Cloud R
 
 # LimeSurvey on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/LimeSurvey_CloudRun.png" alt="LimeSurvey on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 LimeSurvey is a free, open-source (GPL) online survey and questionnaire platform
 written in PHP, supporting unlimited surveys, conditional branching, quotas, and
 multi-language questionnaires with exportable results. This module deploys LimeSurvey

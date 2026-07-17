@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Meilisearch on GKE Autopilot
 
 # Meilisearch on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Meilisearch_GKE.png" alt="Meilisearch on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Meilisearch is a fast, open-source search engine — a single Rust binary that
 delivers instant, typo-tolerant, faceted search behind a simple REST API. It is
 widely used as a self-hostable alternative to Algolia. This module deploys

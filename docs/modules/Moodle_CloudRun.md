@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Moodle on Google Cloud Run w
 
 # Moodle on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Moodle_CloudRun.png" alt="Moodle on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Moodle is the world's most popular open-source Learning Management System (LMS),
 used by universities, schools, corporations, and online training providers worldwide.
 This module deploys Moodle on **Cloud Run v2** on top of the

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Authentik on Google Cloud Ru
 
 # Authentik on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Authentik_CloudRun.png" alt="Authentik on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 authentik ([goauthentik.io](https://goauthentik.io/)) is an open-source (MIT,
 open-core) identity provider: single sign-on via OIDC and SAML, LDAP and SCIM,
 multi-factor authentication, and proxy authentication — a self-hosted alternative

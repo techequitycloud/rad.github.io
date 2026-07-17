@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Django on Google Cloud Run w
 
 # Django on Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Django_CloudRun.png" alt="Django on Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Django is a battle-tested Python web framework that encourages rapid development and
 clean, pragmatic design, powering some of the world's most demanding web applications.
 This module deploys Django on **Cloud Run v2** on top of the

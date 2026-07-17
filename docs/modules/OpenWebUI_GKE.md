@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Open WebUI on GKE Autopilot 
 
 # Open WebUI on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/OpenWebUI_GKE.png" alt="Open WebUI on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Open WebUI is a self-hosted AI interface providing a polished ChatGPT-style frontend for
 Ollama, OpenAI-compatible APIs, and dozens of other LLM providers. This module deploys
 Open WebUI on **GKE Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which

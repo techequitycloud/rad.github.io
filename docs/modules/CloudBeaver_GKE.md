@@ -5,6 +5,8 @@ description: "Configuration reference for deploying CloudBeaver on GKE Autopilot
 
 # CloudBeaver on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/CloudBeaver_GKE.png" alt="CloudBeaver on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 CloudBeaver is a web-based, browser-accessible database manager from the DBeaver
 project — a single administrative console for connecting to and querying PostgreSQL,
 MySQL, SQL Server, Oracle, SQLite and many other engines. This module deploys

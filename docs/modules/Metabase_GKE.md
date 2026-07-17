@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Metabase on GKE Autopilot wi
 
 # Metabase on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Metabase_GKE.png" alt="Metabase on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Metabase is an open-source business intelligence and analytics platform that lets
 non-technical users query, visualise, and share data without writing SQL. This
 module deploys Metabase on **GKE Autopilot** on top of the

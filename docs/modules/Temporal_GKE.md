@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Temporal on GKE Autopilot wi
 
 # Temporal on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Temporal_GKE.png" alt="Temporal on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Temporal is an open-source workflow orchestration engine used by organisations such
 as Stripe, Netflix, Coinbase, and HashiCorp to build reliable distributed
 applications. This module deploys Temporal on **GKE Autopilot** on top of the

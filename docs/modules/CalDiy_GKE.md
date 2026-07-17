@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Cal.diy on GKE Autopilot wit
 
 # Cal.diy on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/CalDiy_GKE.png" alt="Cal.diy on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Cal.diy is the MIT-licensed, self-hostable fork of Cal.com — the open-source scheduling
 platform used by millions worldwide to eliminate back-and-forth meeting coordination.
 This module deploys Cal.diy on **GKE Autopilot** on top of the

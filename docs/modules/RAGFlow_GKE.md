@@ -5,6 +5,8 @@ description: "Configuration reference for deploying RAGFlow on GKE Autopilot wit
 
 # RAGFlow on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/RAGFlow_GKE.png" alt="RAGFlow on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 RAGFlow is an open-source document intelligence and Retrieval-Augmented Generation (RAG)
 platform. It ingests PDFs, Word documents, HTML pages, and other formats, chunks and embeds
 them, stores vectors in Elasticsearch, exposes a REST API for question-answering, and provides

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Hoppscotch on GKE Autopilot 
 
 # Hoppscotch on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Hoppscotch_GKE.png" alt="Hoppscotch on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Hoppscotch is an open-source, Postman-style API development platform for designing,
 sending, and inspecting HTTP, GraphQL, and WebSocket requests from the browser. This
 module deploys the **self-hosted Hoppscotch frontend** as a stateless single-page app

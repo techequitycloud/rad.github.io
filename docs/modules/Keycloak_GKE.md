@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Keycloak on GKE Autopilot wi
 
 # Keycloak on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Keycloak_GKE.png" alt="Keycloak on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Keycloak is an open-source identity and access management platform providing
 single sign-on (SSO), OAuth 2.0/OIDC, SAML 2.0, social login, user federation
 (LDAP/Active Directory), and fine-grained authorization — a self-hosted

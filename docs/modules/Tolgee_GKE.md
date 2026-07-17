@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Tolgee on GKE Autopilot with
 
 # Tolgee on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Tolgee_GKE.png" alt="Tolgee on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Tolgee is an open-source, developer-friendly **localization (i18n) and translation
 management** platform built on Spring Boot. This module deploys Tolgee on **GKE
 Autopilot** on top of the [App_GKE](App_GKE.md) foundation, which provisions and manages

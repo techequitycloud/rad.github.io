@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Coder on GKE Autopilot with 
 
 # Coder on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Coder_GKE.png" alt="Coder on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Coder is an open-source, self-hosted platform for provisioning remote
 development environments ("workspaces") defined as code with Terraform. It
 ships as a single Go binary (`coder server`) that serves the control-plane

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Twenty CRM on Google Cloud R
 
 # Twenty CRM on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Twenty_CloudRun.png" alt="Twenty CRM on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Twenty is an open-source CRM with 25,000+ GitHub stars, built as a modern,
 developer-friendly alternative to Salesforce and HubSpot. This module deploys
 Twenty on **Cloud Run v2** on top of the [App_CloudRun](App_CloudRun.md) foundation,

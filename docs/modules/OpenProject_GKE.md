@@ -5,6 +5,8 @@ description: "Configuration reference for deploying OpenProject on GKE Autopilot
 
 # OpenProject on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/OpenProject_GKE.png" alt="OpenProject on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 OpenProject is an open-source, GPLv3-licensed project-management and team-collaboration
 suite — work packages, Gantt timelines, agile boards, wikis, time tracking, and
 budgets. This module deploys OpenProject on **GKE Autopilot** on top of the

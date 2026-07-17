@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Dify on Google Cloud Run wit
 
 # Dify on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Dify_CloudRun.png" alt="Dify on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Dify is an open-source LLM application development platform for building production-grade AI
 applications with a visual workflow builder, RAG pipeline, agent framework, multi-model
 management, and built-in observability. This module deploys Dify on **Cloud Run v2** on top of

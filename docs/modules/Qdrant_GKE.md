@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Qdrant on GKE Autopilot with
 
 # Qdrant on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Qdrant_GKE.png" alt="Qdrant on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Qdrant is a high-performance vector database and similarity search engine built
 for AI workloads — RAG pipelines, recommendation systems, semantic search, and
 embeddings storage. This module deploys Qdrant on **GKE Autopilot** on top of

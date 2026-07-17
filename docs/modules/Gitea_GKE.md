@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Gitea on GKE Autopilot with 
 
 # Gitea on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Gitea_GKE.png" alt="Gitea on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Gitea is a lightweight, self-hosted Git service and source-code hosting platform (a
 community fork of Gogs) providing repository hosting, issue tracking, pull requests,
 a built-in CI/CD runner (Actions), code review, and a package registry from a single

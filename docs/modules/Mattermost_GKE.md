@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Mattermost on GKE Autopilot 
 
 # Mattermost GKE Module — Configuration Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Mattermost_GKE.png" alt="Mattermost GKE Module — Configuration Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This guide describes every configuration variable available in the `Mattermost_GKE` module. `Mattermost_GKE` is a **wrapper module** that combines the generic [`App_GKE`](App_GKE.md) infrastructure module with the [`Mattermost_Common`](Mattermost_Common.md) shared application configuration to deploy [Mattermost](https://mattermost.com/) — an open-source, self-hostable team messaging and collaboration platform — on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Mattermost GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Mattermost** are described in full here.

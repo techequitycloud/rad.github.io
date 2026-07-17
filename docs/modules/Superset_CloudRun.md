@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Apache Superset on Google Cl
 
 # Apache Superset on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Superset_CloudRun.png" alt="Apache Superset on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Apache Superset is an open-source data exploration and visualisation platform trusted
 by organisations worldwide. This module deploys Superset on **Cloud Run v2** on top
 of the [App_CloudRun](App_CloudRun.md) foundation, which provisions and manages the

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying ToolJet on Google Cloud Run 
 
 # ToolJet on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/ToolJet_CloudRun.png" alt="ToolJet on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 ToolJet is an open-source, low-code platform for building and deploying internal
 tools — dashboards, admin panels, CRUD apps, and workflows — with a drag-and-drop
 builder over your own databases and APIs. This module deploys ToolJet on **Cloud Run

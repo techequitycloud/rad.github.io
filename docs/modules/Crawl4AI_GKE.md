@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Crawl4AI on GKE Autopilot wi
 
 # Crawl4AI on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Crawl4AI_GKE.png" alt="Crawl4AI on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Crawl4AI is an open-source LLM-friendly web crawler and scraper. This module
 deploys Crawl4AI on **GKE Autopilot** on top of the [App_GKE](App_GKE.md)
 foundation, which provisions and manages the shared Google Cloud and Kubernetes

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Matomo on GKE Autopilot with
 
 # Matomo on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Matomo_GKE.png" alt="Matomo on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Matomo is the leading open-source web analytics platform and a privacy-focused,
 self-hosted alternative to Google Analytics — no data sampling, GDPR/CCPA-friendly
 tracking, heatmaps, session recordings, A/B testing, and funnel analytics, with 100%

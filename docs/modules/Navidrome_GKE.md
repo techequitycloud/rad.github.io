@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Navidrome on GKE Autopilot w
 
 # Navidrome on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Navidrome_GKE.png" alt="Navidrome on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Navidrome is a free, open-source, self-hosted music streaming server written in Go.
 It exposes a Subsonic/OpenSubsonic-compatible API (so any Subsonic client — DSub,
 Symfonium, Sublime Music, play:Sub, etc. — can browse and stream your library) plus

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying App on Google Cloud Run with
 
 # App CloudRun Module — Configuration Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/App_CloudRun.png" alt="App CloudRun Module — Configuration Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This guide describes every configuration variable available in the `App CloudRun` module, organized into functional groups. For each variable it explains the available options, the implications of each choice, and how to validate the resulting configuration in the Google Cloud Console or using the `gcloud` CLI.
 
 ---

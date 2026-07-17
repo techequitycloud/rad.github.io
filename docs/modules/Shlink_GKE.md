@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Shlink on GKE Autopilot with
 
 # Shlink on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Shlink_GKE.png" alt="Shlink on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Shlink is a self-hosted, open-source URL shortener that exposes a REST API, a
 web client, QR code generation, and detailed visit-tracking analytics. This
 module deploys Shlink on **GKE Autopilot** on top of the
