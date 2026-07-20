@@ -22,28 +22,27 @@
    so sparse columns stay narrow and text-heavy columns get the space they need;
    width: 100% keeps long prose wrapping within the page instead of overflowing.
    (Replaces earlier per-column-count fixed widths that mis-sized many tables —
-   e.g. forcing a sparse 4th column to 50% on every four-column table.) */
+   e.g. forcing a sparse 4th column to 50% on every four-column table.)
+
+   display: block + overflow-x: auto makes the table scroll within its own box
+   instead of overflowing its container — needed at ALL viewport widths, not just
+   below the 996px mobile breakpoint: a table's unbreakable code-span content
+   (e.g. a full URL in a default-value cell) can exceed the *docs content column*
+   width even on a wide desktop window, because that column is narrowed by the
+   left sidebar and the right "on this page" TOC. Without this, such a table
+   silently overflows past its container and renders underneath the TOC. */
 .markdown table {
-  display: table;
+  display: block;
   width: 100%;
+  max-width: 100%;
   table-layout: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .markdown table th,
 .markdown table td {
   overflow-wrap: break-word;
-}
-
-/* On narrow viewports, wide tables (code-heavy cells can't wrap below their
-   min-content width) scroll inside their own box instead of stretching the
-   whole page past the viewport. 996px = Docusaurus's mobile breakpoint. */
-@media (max-width: 996px) {
-  .markdown table {
-    display: block;
-    max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
