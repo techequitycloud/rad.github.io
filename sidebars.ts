@@ -383,6 +383,15 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Supabase_Common', label: 'Common'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Kopia',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Kopia_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Kopia_Common', label: 'Common'},
+          ],
+        },
       ],
     },
     {
@@ -699,15 +708,6 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Tolgee_Common', label: 'Common'},
           ],
         },
-        {
-          type: 'category',
-          label: 'Kopia',
-          collapsed: true,
-          items: [
-            {type: 'doc', id: 'modules/Kopia_GKE', label: 'GKE'},
-            {type: 'doc', id: 'modules/Kopia_Common', label: 'Common'},
-          ],
-        },
       ],
     },
     {
@@ -941,6 +941,16 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Shlink_Common', label: 'Common'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Karakeep',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Karakeep_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Karakeep_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Karakeep_Common', label: 'Common'},
+          ],
+        },
       ],
     },
     {
@@ -1076,16 +1086,6 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/SnipeIT_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'modules/SnipeIT_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/SnipeIT_Common', label: 'Common'},
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Homebox',
-          collapsed: true,
-          items: [
-            {type: 'doc', id: 'modules/Homebox_CloudRun', label: 'Cloud Run'},
-            {type: 'doc', id: 'modules/Homebox_GKE', label: 'GKE'},
-            {type: 'doc', id: 'modules/Homebox_Common', label: 'Common'},
           ],
         },
       ],
@@ -1327,12 +1327,12 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: 'category',
-          label: 'Karakeep',
+          label: 'Homebox',
           collapsed: true,
           items: [
-            {type: 'doc', id: 'modules/Karakeep_CloudRun', label: 'Cloud Run'},
-            {type: 'doc', id: 'modules/Karakeep_GKE', label: 'GKE'},
-            {type: 'doc', id: 'modules/Karakeep_Common', label: 'Common'},
+            {type: 'doc', id: 'modules/Homebox_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Homebox_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Homebox_Common', label: 'Common'},
           ],
         },
         {
@@ -1850,6 +1850,7 @@ const sidebars: SidebarsConfig = {
           ],
         },
         {type: 'doc', id: 'labs/Supabase_GKE', label: 'Supabase GKE'},
+        {type: 'doc', id: 'labs/Kopia_GKE', label: 'Kopia GKE'},
       ],
     },
     {
@@ -2123,7 +2124,6 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Tolgee_GKE', label: 'GKE'},
           ],
         },
-        {type: 'doc', id: 'labs/Kopia_GKE', label: 'Kopia GKE'},
       ],
     },
     {
@@ -2328,6 +2328,15 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Shlink_GKE', label: 'GKE'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Karakeep',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Karakeep_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Karakeep_GKE', label: 'GKE'},
+          ],
+        },
       ],
     },
     {
@@ -2450,15 +2459,6 @@ const sidebars: SidebarsConfig = {
           items: [
             {type: 'doc', id: 'labs/SnipeIT_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'labs/SnipeIT_GKE', label: 'GKE'},
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Homebox',
-          collapsed: true,
-          items: [
-            {type: 'doc', id: 'labs/Homebox_CloudRun', label: 'Cloud Run'},
-            {type: 'doc', id: 'labs/Homebox_GKE', label: 'GKE'},
           ],
         },
       ],
@@ -2677,11 +2677,11 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: 'category',
-          label: 'Karakeep',
+          label: 'Homebox',
           collapsed: true,
           items: [
-            {type: 'doc', id: 'labs/Karakeep_CloudRun', label: 'Cloud Run'},
-            {type: 'doc', id: 'labs/Karakeep_GKE', label: 'GKE'},
+            {type: 'doc', id: 'labs/Homebox_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Homebox_GKE', label: 'GKE'},
           ],
         },
         {
