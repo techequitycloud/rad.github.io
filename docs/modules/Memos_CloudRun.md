@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Memos on Google Cloud Run wi
 
 # Memos on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Memos_CloudRun.png" alt="Memos on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Memos is an open-source, MIT-licensed, self-hosted note-taking service built for
 quick markdown capture — a single ~20MB Go binary with a React frontend. This
 module deploys Memos on **Cloud Run v2** on top of the

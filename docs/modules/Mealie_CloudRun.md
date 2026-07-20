@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Mealie on Google Cloud Run w
 
 # Mealie on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Mealie_CloudRun.png" alt="Mealie on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Mealie is an open-source, self-hosted recipe manager and meal planner with a
 FastAPI backend and a Vue frontend, offering automatic recipe import by URL
 alongside a manual UI editor. This module deploys Mealie on **Cloud Run v2** on

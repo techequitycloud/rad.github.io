@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Homebox on GKE Autopilot wit
 
 # Homebox on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Homebox_GKE.png" alt="Homebox on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Homebox is an open-source, self-hosted home inventory and organization system
 with a Go REST API backend (Echo-style, Ent ORM) and a Vue 3/Nuxt frontend
 served embedded from the same binary — track items, attach photos, and

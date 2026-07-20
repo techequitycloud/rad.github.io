@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Radicale on GKE Autopilot wi
 
 # Radicale on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Radicale_GKE.png" alt="Radicale on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Radicale is an open-source, self-hosted **CalDAV/CardDAV server** for
 calendar and contacts sync — a lightweight, pure-Python WSGI application with
 no framework and no database. It stores every calendar and address book as

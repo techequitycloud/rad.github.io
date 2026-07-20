@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Kopia on GKE Autopilot with 
 
 # Kopia on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Kopia_GKE.png" alt="Kopia on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Kopia is a fast, secure, open-source backup tool with client-side encryption,
 compression, and deduplication. This module runs Kopia in **repository-server
 mode** on **GKE Autopilot**: a single always-addressable server that remote `kopia`

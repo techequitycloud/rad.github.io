@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Karakeep on Google Cloud Run
 
 # Karakeep on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Karakeep_CloudRun.png" alt="Karakeep on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Karakeep is an open-source, self-hostable bookmark-everything app (links, notes,
 and images) with AI-based automatic tagging and full-text/semantic search. This
 module deploys Karakeep on **Cloud Run v2** on top of the

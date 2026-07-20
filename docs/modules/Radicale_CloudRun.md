@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Radicale on Google Cloud Run
 
 # Radicale on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Radicale_CloudRun.png" alt="Radicale on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Radicale is an open-source, self-hosted **CalDAV/CardDAV server** for
 calendar and contacts sync — a lightweight, pure-Python WSGI application with
 no framework and no database. It stores every calendar and address book as

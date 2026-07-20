@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Planka on GKE Autopilot with
 
 # Planka on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Planka_GKE.png" alt="Planka on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Planka is an open-source, self-hosted, Trello-like kanban board application
 with a Node.js (Sails.js) backend and a React frontend, used for team and
 personal project management — boards, lists, cards, due dates, labels, and

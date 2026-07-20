@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Mealie on GKE Autopilot with
 
 # Mealie on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Mealie_GKE.png" alt="Mealie on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Mealie is an open-source, self-hosted recipe manager and meal planner with a
 FastAPI backend and a Vue frontend, offering automatic recipe import by URL
 alongside a manual UI editor. This module deploys Mealie on **GKE Autopilot**

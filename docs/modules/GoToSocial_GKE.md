@@ -5,6 +5,8 @@ description: "Configuration reference for deploying GoToSocial on GKE Autopilot 
 
 # GoToSocial on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/GoToSocial_GKE.png" alt="GoToSocial on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 GoToSocial is a lightweight, self-hosted ActivityPub/Fediverse server — a
 small alternative to Mastodon, written as a single static Go binary. This
 module deploys GoToSocial on **GKE Autopilot** on top of the

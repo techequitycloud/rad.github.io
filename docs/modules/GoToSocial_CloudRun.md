@@ -5,6 +5,8 @@ description: "Configuration reference for deploying GoToSocial on Google Cloud R
 
 # GoToSocial on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/GoToSocial_CloudRun.png" alt="GoToSocial on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 GoToSocial is a lightweight, self-hosted ActivityPub/Fediverse server — a
 small alternative to Mastodon, written as a single static Go binary. This
 module deploys GoToSocial on **Cloud Run v2** on top of the

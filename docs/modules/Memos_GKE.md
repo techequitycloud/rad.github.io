@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Memos on GKE Autopilot with 
 
 # Memos on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Memos_GKE.png" alt="Memos on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Memos is an open-source, MIT-licensed, self-hosted note-taking service built for
 quick markdown capture — a single ~20MB Go binary with a React frontend. This
 module deploys Memos on **GKE Autopilot** on top of the [App_GKE](App_GKE.md)
