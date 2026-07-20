@@ -699,6 +699,15 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Tolgee_Common', label: 'Common'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Kopia',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Kopia_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Kopia_Common', label: 'Common'},
+          ],
+        },
       ],
     },
     {
@@ -1069,6 +1078,16 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/SnipeIT_Common', label: 'Common'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Homebox',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Homebox_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Homebox_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Homebox_Common', label: 'Common'},
+          ],
+        },
       ],
     },
     {
@@ -1306,6 +1325,56 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Vikunja_Common', label: 'Common'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Karakeep',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Karakeep_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Karakeep_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Karakeep_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Mealie',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Mealie_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Mealie_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Mealie_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Memos',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Memos_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Memos_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Memos_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Planka',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Planka_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Planka_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Planka_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Radicale',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Radicale_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Radicale_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Radicale_Common', label: 'Common'},
+          ],
+        },
       ],
     },
     {
@@ -1411,6 +1480,16 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/RocketChat_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'modules/RocketChat_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/RocketChat_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'GoToSocial',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/GoToSocial_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/GoToSocial_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/GoToSocial_Common', label: 'Common'},
           ],
         },
       ],
@@ -2044,6 +2123,7 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Tolgee_GKE', label: 'GKE'},
           ],
         },
+        {type: 'doc', id: 'labs/Kopia_GKE', label: 'Kopia GKE'},
       ],
     },
     {
@@ -2372,6 +2452,15 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/SnipeIT_GKE', label: 'GKE'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Homebox',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Homebox_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Homebox_GKE', label: 'GKE'},
+          ],
+        },
       ],
     },
     {
@@ -2586,6 +2675,51 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Vikunja_GKE', label: 'GKE'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Karakeep',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Karakeep_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Karakeep_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Mealie',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Mealie_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Mealie_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Memos',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Memos_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Memos_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Planka',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Planka_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Planka_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Radicale',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Radicale_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Radicale_GKE', label: 'GKE'},
+          ],
+        },
       ],
     },
     {
@@ -2681,6 +2815,15 @@ const sidebars: SidebarsConfig = {
           items: [
             {type: 'doc', id: 'labs/RocketChat_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'labs/RocketChat_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'GoToSocial',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/GoToSocial_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/GoToSocial_GKE', label: 'GKE'},
           ],
         },
       ],
