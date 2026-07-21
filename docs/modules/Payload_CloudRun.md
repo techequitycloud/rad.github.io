@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Payload CMS on Google Cloud 
 
 # Payload CMS on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Payload_CloudRun.png" alt="Payload CMS on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Payload CMS is a TypeScript-native, code-first headless CMS and application framework built
 directly on Next.js — not a hosted SaaS product, but a library installed into your own Next.js
 application. Content is modeled through typed "Collections" defined in `payload.config.ts`, and

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Saleor on GKE Autopilot with
 
 # Saleor on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Saleor_GKE.png" alt="Saleor on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Saleor is an open-source, GraphQL-first headless e-commerce platform built on
 Python/Django (product catalog, checkout, orders, and payment plugins, all exposed
 through a GraphQL API rather than a bundled storefront). This module deploys Saleor

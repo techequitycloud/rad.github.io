@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Woodpecker CI on GKE Autopil
 
 # Woodpecker CI on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Woodpecker_GKE.png" alt="Woodpecker CI on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Woodpecker CI is a lightweight, container-native CI/CD engine — a simpler,
 self-hostable alternative to Drone. Pipelines are defined as YAML files, and
 each pipeline step runs in its own container. Woodpecker supports GitHub,
