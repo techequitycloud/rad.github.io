@@ -582,6 +582,16 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Vaultwarden_Common', label: 'Common'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Infisical',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Infisical_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Infisical_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Infisical_Common', label: 'Common'},
+          ],
+        },
       ],
     },
     {
@@ -708,6 +718,16 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Tolgee_Common', label: 'Common'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Headscale',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Headscale_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Headscale_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Headscale_Common', label: 'Common'},
+          ],
+        },
       ],
     },
     {
@@ -783,6 +803,35 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/UptimeKuma_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'modules/UptimeKuma_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/UptimeKuma_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'GoAlert',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/GoAlert_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/GoAlert_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/GoAlert_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Loki',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Loki_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Loki_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Loki_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'VictoriaMetrics',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/VictoriaMetrics_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/VictoriaMetrics_Common', label: 'Common'},
           ],
         },
       ],
@@ -951,6 +1000,16 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Karakeep_Common', label: 'Common'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Wallabag',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Wallabag_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Wallabag_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Wallabag_Common', label: 'Common'},
+          ],
+        },
       ],
     },
     {
@@ -1086,6 +1145,16 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/SnipeIT_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'modules/SnipeIT_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/SnipeIT_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Medusa',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Medusa_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Medusa_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Medusa_Common', label: 'Common'},
           ],
         },
       ],
@@ -2017,6 +2086,15 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Vaultwarden_GKE', label: 'GKE'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Infisical',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Infisical_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Infisical_GKE', label: 'GKE'},
+          ],
+        },
       ],
     },
     {
@@ -2124,6 +2202,15 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Tolgee_GKE', label: 'GKE'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Headscale',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Headscale_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Headscale_GKE', label: 'GKE'},
+          ],
+        },
       ],
     },
     {
@@ -2194,6 +2281,25 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/UptimeKuma_GKE', label: 'GKE'},
           ],
         },
+        {
+          type: 'category',
+          label: 'GoAlert',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/GoAlert_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/GoAlert_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Loki',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Loki_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Loki_GKE', label: 'GKE'},
+          ],
+        },
+        {type: 'doc', id: 'labs/VictoriaMetrics_GKE', label: 'VictoriaMetrics GKE'},
       ],
     },
     {
@@ -2337,6 +2443,15 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Karakeep_GKE', label: 'GKE'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Wallabag',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Wallabag_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Wallabag_GKE', label: 'GKE'},
+          ],
+        },
       ],
     },
     {
@@ -2459,6 +2574,15 @@ const sidebars: SidebarsConfig = {
           items: [
             {type: 'doc', id: 'labs/SnipeIT_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'labs/SnipeIT_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Medusa',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Medusa_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Medusa_GKE', label: 'GKE'},
           ],
         },
       ],
