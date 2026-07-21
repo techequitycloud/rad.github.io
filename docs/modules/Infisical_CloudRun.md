@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Infisical on Google Cloud Ru
 
 # Infisical on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Infisical_CloudRun.png" alt="Infisical on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Infisical is an open-source, end-to-end encrypted secrets management platform:
 teams and CI/CD pipelines store, inject, and rotate application secrets from a
 single platform, using client SDKs, a CLI, or the web UI. This module deploys

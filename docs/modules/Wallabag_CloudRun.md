@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Wallabag on Google Cloud Run
 
 # Wallabag on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Wallabag_CloudRun.png" alt="Wallabag on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Wallabag is a free, open-source, self-hosted "read it later" article archiving
 app — a Pocket alternative. Save articles from a browser extension, bookmarklet,
 mobile app, or the REST API, then read them later in a clean, distraction-free

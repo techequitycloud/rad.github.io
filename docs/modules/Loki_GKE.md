@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Loki on GKE Autopilot with t
 
 # Loki on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Loki_GKE.png" alt="Loki on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Grafana Loki is a horizontally-scalable, highly-available log aggregation system —
 often described as "Prometheus for logs." Unlike full-text log indexers, Loki
 indexes only a small set of labels per log stream rather than the full text of every

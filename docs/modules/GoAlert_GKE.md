@@ -5,6 +5,8 @@ description: "Configuration reference for deploying GoAlert on GKE Autopilot wit
 
 # GoAlert on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/GoAlert_GKE.png" alt="GoAlert on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 GoAlert is an open-source, Apache 2.0-licensed on-call scheduling and incident
 alert-escalation platform, originally built by Target and run in production at
 scale. It lets teams define escalation policies, on-call rotations and schedules,

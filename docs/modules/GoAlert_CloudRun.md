@@ -5,6 +5,8 @@ description: "Configuration reference for deploying GoAlert on Google Cloud Run 
 
 # GoAlert on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/GoAlert_CloudRun.png" alt="GoAlert on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 GoAlert is an open-source, Apache 2.0-licensed on-call scheduling and incident
 alert-escalation platform, originally built by Target and run in production at
 scale. It lets teams define escalation policies, on-call rotations and schedules,

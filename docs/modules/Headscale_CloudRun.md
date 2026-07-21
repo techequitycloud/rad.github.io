@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Headscale on Google Cloud Ru
 
 # Headscale on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Headscale_CloudRun.png" alt="Headscale on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Headscale is an open-source, self-hosted implementation of the Tailscale
 coordination server — a control plane for a private WireGuard mesh VPN,
 compatible with the official Tailscale clients. Headscale is **not** a VPN
