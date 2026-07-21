@@ -525,6 +525,16 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/WriteFreely_Common', label: 'Common'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Payload',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Payload_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Payload_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Payload_Common', label: 'Common'},
+          ],
+        },
       ],
     },
     {
@@ -726,6 +736,15 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Headscale_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'modules/Headscale_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/Headscale_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Woodpecker',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Woodpecker_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Woodpecker_Common', label: 'Common'},
           ],
         },
       ],
@@ -1155,6 +1174,16 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Medusa_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'modules/Medusa_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/Medusa_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Saleor',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Saleor_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Saleor_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Saleor_Common', label: 'Common'},
           ],
         },
       ],
@@ -2034,6 +2063,15 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/WriteFreely_GKE', label: 'GKE'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Payload',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Payload_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Payload_GKE', label: 'GKE'},
+          ],
+        },
       ],
     },
     {
@@ -2211,6 +2249,7 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Headscale_GKE', label: 'GKE'},
           ],
         },
+        {type: 'doc', id: 'labs/Woodpecker_GKE', label: 'Woodpecker GKE'},
       ],
     },
     {
@@ -2583,6 +2622,15 @@ const sidebars: SidebarsConfig = {
           items: [
             {type: 'doc', id: 'labs/Medusa_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'labs/Medusa_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Saleor',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Saleor_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Saleor_GKE', label: 'GKE'},
           ],
         },
       ],
