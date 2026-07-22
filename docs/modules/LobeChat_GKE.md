@@ -30,7 +30,7 @@ together a deliberately minimal set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | GKE Autopilot | Next.js pods, 500m vCPU / 512 MiB by default, horizontally autoscaled |
+| Compute | GKE Autopilot | Next.js pods, 500m vCPU / 1 GiB by default, horizontally autoscaled |
 | Database | *(none)* | `database_type = "NONE"` — no Cloud SQL is provisioned; state lives in the browser |
 | Object storage | *(none)* | Stateless — no GCS bucket, NFS mount, or PVC declared by default |
 | Cache | Redis (optional, off) | Only for rate limiting / bot detection on public deployments |
@@ -45,9 +45,11 @@ together a deliberately minimal set of Google Cloud services:
   not wired by this module.)
 - **Port 3210 is fixed.** The custom image pins `PORT=3210` and `container_port =
   3210`; do not change it without rebuilding the image.
-- **Default is `500m` CPU / `512Mi` memory** (`container_resources`) — lighter than the
-  `LobeChat_CloudRun` sibling's `2Gi` default. If pods hit a boot-time OOM (a known
-  Next.js `next-server` failure mode below ~1Gi), raise `container_resources.memory_limit`.
+- **Default is `500m` CPU / `1Gi` memory** (`container_resources`). LobeChat's
+  Next.js SSR process (plus its `pdfjs-dist`/`@napi-rs/canvas` rendering deps) OOMs
+  and `CrashLoopBackOff`s at 512Mi (`JavaScript heap out of memory`) — 1Gi is the
+  floor for a stable boot; raise `container_resources.memory_limit` further under
+  heavier load.
 - **Minimum 1 replica** (`min_instance_count = 1`, forced by the wiring). GKE does not
   support scale-to-zero, so at least one pod is always running to keep the UI
   reachable; `max_instance_count = 3`.
@@ -220,7 +222,7 @@ specific to or notable for LobeChat are listed; every other input is inherited f
 | Variable | Default | Description |
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
-| `container_resources` | `500m` CPU / `512Mi` memory | Per-pod requests/limits. The `LobeChat_CloudRun` sibling defaults to `2Gi` because Next.js `next-server` can OOM-crash at boot under 1Gi — raise memory here if you see the same failure. |
+| `container_resources` | `500m` CPU / `1Gi` memory | Per-pod requests/limits. Next.js `next-server` (plus `pdfjs-dist`/canvas rendering deps) OOM-crashes at boot under 1Gi — raise memory further if you see the same failure under load. |
 | `min_instance_count` | `1` | Minimum replicas (GKE has no scale-to-zero); keeps the UI reachable. |
 | `max_instance_count` | `3` | Safe to raise — no shared server-side state or queue prerequisite. |
 | `container_port` | `3210` | LobeChat's Next.js server port. Do not change without rebuilding the image. |
@@ -306,7 +308,7 @@ locate and explore the running resources.
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
 | `ACCESS_CODE` | Set on any exposed deployment | High | Without it the chat UI — and any provider keys users paste — is open to anyone who reaches the LoadBalancer IP. |
-| `container_resources` memory | `2Gi` (floor) | High | Below 2 GiB, Next.js `next-server` OOM-crashes at boot and the pod never becomes Ready. |
+| `container_resources` memory | `1Gi` (floor) | High | Below 1 GiB, Next.js `next-server` OOM-crashes at boot (`JavaScript heap out of memory`) and the pod never becomes Ready. |
 | `container_port` | `3210` | High | The image pins `PORT=3210`; a mismatch means the probe never connects and the pod fails to start. |
 | Server-side provider keys | Inject via `secret_environment_variables` | High | Putting an API key in plain `environment_variables` exposes it in the pod spec and logs. |
 | `min_instance_count` | `1` | High | GKE requires min ≥ 1; the validation guard rejects `0`. Keeping 1 ensures the UI stays reachable. |

@@ -7,16 +7,19 @@ description: "Shared configuration reference for the Rocket.Chat module — appl
 
 `RocketChat_Common` is the **shared application layer** for Rocket.Chat. It is not
 deployed on its own; instead it supplies the Rocket.Chat-specific configuration that
-both [RocketChat_GKE](RocketChat_GKE.md) and [RocketChat_CloudRun](RocketChat_CloudRun.md)
-build on, so the two platform variants behave identically where it matters. End
-users never configure this layer directly — it has no deployment UI inputs of its
-own — but understanding what it provides explains the defaults you see in the
-platform docs.
+[RocketChat_GKE](RocketChat_GKE.md) builds on. End users never configure this layer
+directly — it has no deployment UI inputs of its own — but understanding what it
+provides explains the defaults you see in the platform docs.
+
+**GKE-only.** Rocket.Chat bundles its own MongoDB replica set (`rs0`), which needs a
+real block device for WiredTiger — Cloud Run's storage model (gcsfuse-backed volumes
+only) cannot back it, and every deploy attempt there fails startup probes on
+WiredTiger fallocate errors. `RocketChat_CloudRun` has been removed from the catalog
+for this reason; deploy on GKE Autopilot with `stateful_pvc_enabled = true` instead.
 
 For the infrastructure that actually provisions and runs Rocket.Chat, see the
-platform guides ([RocketChat_GKE](RocketChat_GKE.md),
-[RocketChat_CloudRun](RocketChat_CloudRun.md)) and the foundation guides
-([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
+[RocketChat_GKE](RocketChat_GKE.md) platform guide and the foundation guides
+([App_GKE](App_GKE.md), [App_Common](App_Common.md)).
 
 ---
 
@@ -166,6 +169,7 @@ replica-set election and Rocket.Chat's own boot migrations on first start.
 ---
 
 For the Rocket.Chat-specific, user-facing configuration (variables by group, outputs,
-and how to explore each service from the Console and CLI), see the platform guides:
-**[RocketChat_GKE](RocketChat_GKE.md)** and
-**[RocketChat_CloudRun](RocketChat_CloudRun.md)**.
+and how to explore each service from the Console and CLI), see the platform guide:
+**[RocketChat_GKE](RocketChat_GKE.md)**. (There is no `RocketChat_CloudRun` — see
+the note at the top of this guide for why Cloud Run can't back Rocket.Chat's embedded
+MongoDB.)

@@ -133,7 +133,6 @@ const sidebars: SidebarsConfig = {
           label: 'LobeChat',
           collapsed: true,
           items: [
-            {type: 'doc', id: 'modules/LobeChat_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'modules/LobeChat_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/LobeChat_Common', label: 'Common'},
           ],
@@ -1832,7 +1831,6 @@ const sidebars: SidebarsConfig = {
           label: 'RocketChat',
           collapsed: true,
           items: [
-            {type: 'doc', id: 'modules/RocketChat_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'modules/RocketChat_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/RocketChat_Common', label: 'Common'},
           ],
@@ -1988,15 +1986,7 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/LiteLLM_GKE', label: 'GKE'},
           ],
         },
-        {
-          type: 'category',
-          label: 'LobeChat',
-          collapsed: true,
-          items: [
-            {type: 'doc', id: 'labs/LobeChat_CloudRun', label: 'Cloud Run'},
-            {type: 'doc', id: 'labs/LobeChat_GKE', label: 'GKE'},
-          ],
-        },
+        {type: 'doc', id: 'labs/LobeChat_GKE', label: 'LobeChat GKE'},
         {
           type: 'category',
           label: 'N8N AI',
@@ -3447,15 +3437,7 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Mautic_GKE', label: 'GKE'},
           ],
         },
-        {
-          type: 'category',
-          label: 'RocketChat',
-          collapsed: true,
-          items: [
-            {type: 'doc', id: 'labs/RocketChat_CloudRun', label: 'Cloud Run'},
-            {type: 'doc', id: 'labs/RocketChat_GKE', label: 'GKE'},
-          ],
-        },
+        {type: 'doc', id: 'labs/RocketChat_GKE', label: 'RocketChat GKE'},
         {
           type: 'category',
           label: 'GoToSocial',

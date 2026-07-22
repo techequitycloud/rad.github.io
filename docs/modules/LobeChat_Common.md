@@ -7,16 +7,17 @@ description: "Shared configuration reference for the LobeChat module — applica
 
 `LobeChat_Common` is the **shared application layer** for LobeChat. It is not
 deployed on its own; instead it supplies the LobeChat-specific configuration that
-both [LobeChat_GKE](LobeChat_GKE.md) and [LobeChat_CloudRun](LobeChat_CloudRun.md)
-build on, so the two platform variants behave identically where it matters. End
-users never configure this layer directly — it has no deployment UI inputs of its
-own — but understanding what it provides explains the defaults you see in the
-platform docs.
+[LobeChat_GKE](LobeChat_GKE.md) builds on. End users never configure this layer
+directly — it has no deployment UI inputs of its own — but understanding what it
+provides explains the defaults you see in the platform docs.
 
 For the infrastructure that actually provisions and runs LobeChat, see the platform
-guides ([LobeChat_GKE](LobeChat_GKE.md), [LobeChat_CloudRun](LobeChat_CloudRun.md))
-and the foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
-[App_Common](App_Common.md)).
+guide ([LobeChat_GKE](LobeChat_GKE.md)) and the foundation guides
+([App_GKE](App_GKE.md), [App_Common](App_Common.md)).
+
+> **Note:** LobeChat is only supported on GKE. The Cloud Run variant was removed —
+> LobeChat's Next.js app hits a Cloud Run/GFE routing gap on certain parallel-route
+> chunk paths that cannot be fixed at the module layer.
 
 ---
 
@@ -92,7 +93,7 @@ gcloud artifacts docker images list \
 ```
 
 The `container_image` and `container_registry` values are in the platform
-deployment [Outputs](LobeChat_CloudRun.md#5-outputs).
+deployment [Outputs](LobeChat_GKE.md#5-outputs).
 
 ---
 
@@ -106,10 +107,9 @@ as an unauthenticated HTTP 200 once it has booted:
 - **Liveness probe** — HTTP `GET /`, 15 s initial delay, 30 s period, 3 failures.
 - **Readiness probe** — HTTP `GET /`, 10 s initial delay, 10 s period, 3 failures.
 
-The variant modules ([LobeChat_CloudRun](LobeChat_CloudRun.md),
-[LobeChat_GKE](LobeChat_GKE.md)) can override the startup and liveness probe
-objects, but the `/` default works out of the box because it needs no auth and no
-database connectivity.
+The variant module ([LobeChat_GKE](LobeChat_GKE.md)) can override the startup and
+liveness probe objects, but the `/` default works out of the box because it needs
+no auth and no database connectivity.
 
 ---
 
@@ -134,5 +134,5 @@ and bot detection on public deployments (see the platform guides' §Redis).
 ---
 
 For the LobeChat-specific, user-facing configuration (variables by group, outputs,
-and how to explore each service from the Console and CLI), see the platform guides:
-**[LobeChat_GKE](LobeChat_GKE.md)** and **[LobeChat_CloudRun](LobeChat_CloudRun.md)**.
+and how to explore the service from the Console and CLI), see the platform guide:
+**[LobeChat_GKE](LobeChat_GKE.md)**.
