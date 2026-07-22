@@ -5,6 +5,8 @@ description: "Configuration reference for deploying AdGuard Home on GKE Autopilo
 
 # AdGuard Home on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/AdGuardHome_GKE.png" alt="AdGuard Home on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > ⚠️ **CRITICAL — read before deploying.** AdGuard Home's core value is
 > network-wide DNS ad/tracker blocking, which requires clients to query it over
 > DNS on port 53 (TCP+UDP). **This module uses GKE's standard HTTP(S) Gateway

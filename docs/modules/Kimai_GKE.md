@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Kimai on GKE Autopilot with 
 
 # Kimai on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Kimai_GKE.png" alt="Kimai on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Kimai is a free, open-source time-tracking application (Symfony/PHP) used by
 freelancers and agencies for billable-hours tracking, timesheets, and
 reporting that feeds into invoicing. This module deploys Kimai on

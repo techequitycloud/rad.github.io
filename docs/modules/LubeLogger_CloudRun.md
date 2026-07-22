@@ -5,6 +5,8 @@ description: "Configuration reference for deploying LubeLogger on Google Cloud R
 
 # LubeLogger on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/LubeLogger_CloudRun.png" alt="LubeLogger on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 LubeLogger is a free, open-source vehicle maintenance and fuel-mileage tracker built
 on ASP.NET Core (.NET), shipped as a single container image with an embedded LiteDB
 database. This module deploys LubeLogger on **Cloud Run v2** on top of the

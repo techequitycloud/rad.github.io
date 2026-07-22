@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Komga on GKE Autopilot with 
 
 # Komga on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Komga_GKE.png" alt="Komga on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Komga is a free, open-source, self-hosted media server for comics, manga, and
 digital book collections (Kotlin/Java, Spring Boot). It provides a clean web
 reading UI, OPDS feeds, collections, read lists, and full-text search over your

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying NetBox on Google Cloud Run w
 
 # NetBox on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Netbox_CloudRun.png" alt="NetBox on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 NetBox is the industry-standard open-source "source of truth" for network
 engineering teams — IP address management (IPAM), device and rack inventory,
 cabling, and network topology, all modeled as structured data behind a full

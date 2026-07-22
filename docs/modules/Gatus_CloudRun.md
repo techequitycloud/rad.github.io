@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Gatus on Google Cloud Run wi
 
 # Gatus on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Gatus_CloudRun.png" alt="Gatus on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Gatus is an open-source, Apache 2.0-licensed developer-oriented status page and
 health-check monitor written in Go. It polls configured HTTP, TCP, DNS, ICMP, and
 other endpoints on independent per-endpoint schedules, evaluates simple result

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Wallos on Google Cloud Run w
 
 # Wallos on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Wallos_CloudRun.png" alt="Wallos on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Wallos is an open-source, self-hosted subscription and recurring-expense tracker
 built on plain PHP 8.3 + php-fpm (no MVC framework). It tracks recurring
 subscriptions, converts prices across currencies, sends renewal notifications, and

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Tandoor on GKE Autopilot wit
 
 # Tandoor on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Tandoor_GKE.png" alt="Tandoor on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Tandoor Recipes is an open-source, AGPL-3.0-licensed self-hosted recipe manager
 and meal planner with a Python/Django REST API backend and a bundled Vue 3
 frontend. This module deploys Tandoor on **GKE Autopilot** on top of the

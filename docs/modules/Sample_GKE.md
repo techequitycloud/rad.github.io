@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Sample Application on GKE Au
 
 # Sample Application on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Sample_GKE.png" alt="Sample Application on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 The Sample module is a reference implementation that demonstrates how application modules
 are built on this platform. It deploys a minimal Flask web application (Python 3.11,
 PostgreSQL 15, optional Redis, optional NFS) on **GKE Autopilot** on top of the

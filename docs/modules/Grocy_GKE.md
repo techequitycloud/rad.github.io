@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Grocy on GKE Autopilot with 
 
 # Grocy on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Grocy_GKE.png" alt="Grocy on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 [Grocy](https://grocy.info/) is a self-hosted grocery and household ERP:
 inventory tracking with barcode scanning, chore/task management, shopping lists,
 and meal planning. It is distinct from this catalogue's `Mealie` module, which

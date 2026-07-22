@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Jellystat on Google Cloud Ru
 
 # Jellystat on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Jellystat_CloudRun.png" alt="Jellystat on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 [Jellystat](https://github.com/CyferShepard/Jellystat) is an open-source
 statistics and analytics dashboard for [Jellyfin](https://jellyfin.org/) media
 servers, tracking playback history, active sessions, user activity, library

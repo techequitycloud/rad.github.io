@@ -5,6 +5,8 @@ description: "Configuration reference for deploying NetBox on GKE Autopilot with
 
 # NetBox on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Netbox_GKE.png" alt="NetBox on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 NetBox is the industry-standard open-source "source of truth" for network
 engineering teams — IP address management (IPAM), device and rack inventory,
 cabling, and network topology, all modeled as structured data behind a full

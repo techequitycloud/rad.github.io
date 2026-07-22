@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Komga on Google Cloud Run wi
 
 # Komga on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Komga_CloudRun.png" alt="Komga on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Komga is a free, open-source, self-hosted media server for comics, manga, and
 digital book collections (Kotlin/Java, Spring Boot). It provides a clean web
 reading UI, OPDS feeds, collections, read lists, and full-text search over your

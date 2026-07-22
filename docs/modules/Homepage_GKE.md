@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Homepage on GKE Autopilot wi
 
 # Homepage on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Homepage_GKE.png" alt="Homepage on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 [Homepage](https://gethomepage.dev/) (gethomepage/homepage) is a self-hosted,
 highly customizable application dashboard/service-launcher — a Next.js
 16 / Node 22 application whose entire configuration (services, bookmarks,

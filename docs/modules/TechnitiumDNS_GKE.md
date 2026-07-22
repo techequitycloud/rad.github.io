@@ -5,6 +5,8 @@ description: "Configuration reference for deploying TechnitiumDNS on GKE Autopil
 
 # TechnitiumDNS on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/TechnitiumDNS_GKE.png" alt="TechnitiumDNS on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > ⚠️ **Scoping disclosure:** this module deploys Technitium's **web admin console + REST API only**
 > (port 5380/HTTP). Technitium's core DNS resolver function (port 53/udp+tcp) **cannot** be exposed
 > through this module's standard HTTP(S) Gateway pattern — no raw L4 UDP/TCP port-53 LoadBalancer is

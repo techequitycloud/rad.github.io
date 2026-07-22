@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Passbolt on GKE Autopilot wi
 
 # Passbolt on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Passbolt_GKE.png" alt="Passbolt on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Passbolt (Community Edition) is a free, open-source, team-oriented password
 manager with GPG-based encryption and per-user/group credential sharing —
 AGPL-3.0 licensed, ~6k GitHub stars. It occupies a different niche from this

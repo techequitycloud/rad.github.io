@@ -5,6 +5,8 @@ description: "Configuration reference for deploying UrBackup on GKE Autopilot wi
 
 # UrBackup on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/UrBackup_GKE.png" alt="UrBackup on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 UrBackup is an open-source client/server network backup system for Windows,
 Linux, and macOS, supporting both file-level and full disk-image backups with
 client-side deduplication (via hardlinks) and a web management UI. This module

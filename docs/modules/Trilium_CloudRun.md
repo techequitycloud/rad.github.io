@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Trilium on Google Cloud Run 
 
 # Trilium on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Trilium_CloudRun.png" alt="Trilium on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Trilium Notes (the actively maintained **TriliumNext** fork — not the archived
 `zadam/trilium`) is an open-source, hierarchical, self-hosted note-taking
 application with an embedded SQLite database. This module deploys Trilium on

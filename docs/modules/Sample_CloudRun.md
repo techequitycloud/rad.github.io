@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Sample Application on Google
 
 # Sample Application on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Sample_CloudRun.png" alt="Sample Application on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 The Sample module is a reference implementation that demonstrates how application modules
 are built on this platform. It deploys a minimal Flask web application (Python 3.11,
 PostgreSQL 15, optional Redis, optional NFS) on **Cloud Run v2** on top of the

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying TechnitiumDNS on Google Clou
 
 # TechnitiumDNS on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/TechnitiumDNS_CloudRun.png" alt="TechnitiumDNS on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 > ⚠️ **Scoping disclosure:** this module deploys Technitium's **web admin console + REST API only**
 > (port 5380/HTTP). Technitium's core DNS resolver function (port 53/udp+tcp) **cannot** be exposed
 > through Cloud Run's HTTP(S)-only ingress. No client anywhere can query this deployment as a DNS

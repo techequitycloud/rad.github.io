@@ -5,6 +5,8 @@ description: "Configuration reference for deploying SparkyFitness on Google Clou
 
 # SparkyFitness on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/SparkyFitness_CloudRun.png" alt="SparkyFitness on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 SparkyFitness is a self-hosted, AI-assisted family food, fitness, water, and health
 tracker built as a Node.js/Express backend (`codewithcj/sparkyfitness_server`) with a
 separate React frontend served by nginx (`codewithcj/sparkyfitness`). This module

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Homepage on Google Cloud Run
 
 # Homepage on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Homepage_CloudRun.png" alt="Homepage on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 [Homepage](https://gethomepage.dev/) (gethomepage/homepage) is a self-hosted,
 highly customizable application dashboard/service-launcher — a Next.js
 16 / Node 22 application whose entire configuration (services, bookmarks,

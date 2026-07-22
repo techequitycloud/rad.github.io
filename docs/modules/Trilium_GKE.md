@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Trilium on GKE Autopilot wit
 
 # Trilium on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Trilium_GKE.png" alt="Trilium on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Trilium Notes (the actively maintained **TriliumNext** fork — not the archived
 `zadam/trilium`) is an open-source, hierarchical, self-hosted note-taking
 application with an embedded SQLite database. This module deploys Trilium on

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Tandoor on Google Cloud Run 
 
 # Tandoor on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Tandoor_CloudRun.png" alt="Tandoor on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Tandoor Recipes is an open-source, AGPL-3.0-licensed self-hosted recipe manager
 and meal planner with a Python/Django REST API backend and a bundled Vue 3
 frontend. This module deploys Tandoor on **Cloud Run v2** on top of the

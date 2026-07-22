@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Seerr on Google Cloud Run wi
 
 # Seerr on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Seerr_CloudRun.png" alt="Seerr on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Seerr is the 2026 merger of **Jellyseerr** and **Overseerr** — an
 open-source, MIT-licensed request UI that sits in front of a Jellyfin, Plex,
 or Emby media server. Users browse and request titles; an admin approves the

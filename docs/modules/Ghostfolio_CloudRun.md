@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Ghostfolio on Google Cloud R
 
 # Ghostfolio on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Ghostfolio_CloudRun.png" alt="Ghostfolio on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Ghostfolio is an open-source, AGPL-licensed wealth management application for
 tracking net worth, investment portfolios, and asset allocation across multiple
 brokerage accounts and platforms — a privacy-first alternative to commercial

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Ghostfolio on GKE Autopilot 
 
 # Ghostfolio on GKE Autopilot
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Ghostfolio_GKE.png" alt="Ghostfolio on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Ghostfolio is an open-source, AGPL-licensed wealth management application for
 tracking net worth, investment portfolios, and asset allocation across multiple
 brokerage accounts and platforms — a privacy-first alternative to commercial

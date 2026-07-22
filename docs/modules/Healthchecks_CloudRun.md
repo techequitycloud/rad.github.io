@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Healthchecks on Google Cloud
 
 # Healthchecks on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Healthchecks_CloudRun.png" alt="Healthchecks on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Healthchecks is an open-source, self-hosted cron job and heartbeat monitoring
 service: scheduled tasks "ping" it on success (or a task pings it periodically
 and Healthchecks watches for a missed ping), and it alerts you by email, Slack,
