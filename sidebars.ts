@@ -392,6 +392,25 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Kopia_Common', label: 'Common'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Netbox',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Netbox_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Netbox_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Netbox_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'UrBackup',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/UrBackup_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/UrBackup_Common', label: 'Common'},
+          ],
+        },
       ],
     },
     {
@@ -446,6 +465,15 @@ const sidebars: SidebarsConfig = {
           items: [
             {type: 'doc', id: 'modules/Plausible_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/Plausible_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'PostHog',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/PostHog_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/PostHog_Common', label: 'Common'},
           ],
         },
       ],
@@ -602,6 +630,46 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Infisical_Common', label: 'Common'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Headscale',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Headscale_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Headscale_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Headscale_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'AdGuardHome',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/AdGuardHome_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/AdGuardHome_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/AdGuardHome_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Passbolt',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Passbolt_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Passbolt_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Passbolt_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'TechnitiumDNS',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/TechnitiumDNS_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/TechnitiumDNS_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/TechnitiumDNS_Common', label: 'Common'},
+          ],
+        },
       ],
     },
     {
@@ -730,21 +798,21 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: 'category',
-          label: 'Headscale',
-          collapsed: true,
-          items: [
-            {type: 'doc', id: 'modules/Headscale_CloudRun', label: 'Cloud Run'},
-            {type: 'doc', id: 'modules/Headscale_GKE', label: 'GKE'},
-            {type: 'doc', id: 'modules/Headscale_Common', label: 'Common'},
-          ],
-        },
-        {
-          type: 'category',
           label: 'Woodpecker',
           collapsed: true,
           items: [
             {type: 'doc', id: 'modules/Woodpecker_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/Woodpecker_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Homepage',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Homepage_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Homepage_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Homepage_Common', label: 'Common'},
           ],
         },
       ],
@@ -851,6 +919,36 @@ const sidebars: SidebarsConfig = {
           items: [
             {type: 'doc', id: 'modules/VictoriaMetrics_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/VictoriaMetrics_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Gatus',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Gatus_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Gatus_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Gatus_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Healthchecks',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Healthchecks_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Healthchecks_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Healthchecks_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'SpeedtestTracker',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/SpeedtestTracker_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/SpeedtestTracker_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/SpeedtestTracker_Common', label: 'Common'},
           ],
         },
       ],
@@ -1029,6 +1127,75 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Wallabag_Common', label: 'Common'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Emby',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Emby_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Emby_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Emby_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Jellystat',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Jellystat_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Jellystat_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Jellystat_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Komga',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Komga_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Komga_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Komga_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Linkwarden',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Linkwarden_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Linkwarden_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Linkwarden_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'PeerTube',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/PeerTube_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/PeerTube_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/PeerTube_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Prowlarr',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Prowlarr_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Prowlarr_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Seerr',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Seerr_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Seerr_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Seerr_Common', label: 'Common'},
+          ],
+        },
       ],
     },
     {
@@ -1184,6 +1351,26 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Saleor_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'modules/Saleor_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/Saleor_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Ghostfolio',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Ghostfolio_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Ghostfolio_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Ghostfolio_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Wallos',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Wallos_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Wallos_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Wallos_Common', label: 'Common'},
           ],
         },
       ],
@@ -1471,6 +1658,76 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Radicale_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'modules/Radicale_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/Radicale_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Grocy',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Grocy_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Grocy_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Grocy_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Kimai',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Kimai_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Kimai_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Kimai_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'LubeLogger',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/LubeLogger_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/LubeLogger_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/LubeLogger_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'SparkyFitness',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/SparkyFitness_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/SparkyFitness_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/SparkyFitness_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Spoolman',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Spoolman_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Spoolman_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Spoolman_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Tandoor',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Tandoor_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Tandoor_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Tandoor_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Trilium',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Trilium_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Trilium_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Trilium_Common', label: 'Common'},
           ],
         },
       ],
@@ -1949,6 +2206,16 @@ const sidebars: SidebarsConfig = {
         },
         {type: 'doc', id: 'labs/Supabase_GKE', label: 'Supabase GKE'},
         {type: 'doc', id: 'labs/Kopia_GKE', label: 'Kopia GKE'},
+        {
+          type: 'category',
+          label: 'Netbox',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Netbox_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Netbox_GKE', label: 'GKE'},
+          ],
+        },
+        {type: 'doc', id: 'labs/UrBackup_GKE', label: 'UrBackup GKE'},
       ],
     },
     {
@@ -1993,6 +2260,7 @@ const sidebars: SidebarsConfig = {
           ],
         },
         {type: 'doc', id: 'labs/Plausible_GKE', label: 'Plausible GKE'},
+        {type: 'doc', id: 'labs/PostHog_GKE', label: 'PostHog GKE'},
       ],
     },
     {
@@ -2133,6 +2401,42 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Infisical_GKE', label: 'GKE'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Headscale',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Headscale_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Headscale_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'AdGuardHome',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/AdGuardHome_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/AdGuardHome_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Passbolt',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Passbolt_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Passbolt_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'TechnitiumDNS',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/TechnitiumDNS_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/TechnitiumDNS_GKE', label: 'GKE'},
+          ],
+        },
       ],
     },
     {
@@ -2240,16 +2544,16 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Tolgee_GKE', label: 'GKE'},
           ],
         },
+        {type: 'doc', id: 'labs/Woodpecker_GKE', label: 'Woodpecker GKE'},
         {
           type: 'category',
-          label: 'Headscale',
+          label: 'Homepage',
           collapsed: true,
           items: [
-            {type: 'doc', id: 'labs/Headscale_CloudRun', label: 'Cloud Run'},
-            {type: 'doc', id: 'labs/Headscale_GKE', label: 'GKE'},
+            {type: 'doc', id: 'labs/Homepage_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Homepage_GKE', label: 'GKE'},
           ],
         },
-        {type: 'doc', id: 'labs/Woodpecker_GKE', label: 'Woodpecker GKE'},
       ],
     },
     {
@@ -2339,6 +2643,33 @@ const sidebars: SidebarsConfig = {
           ],
         },
         {type: 'doc', id: 'labs/VictoriaMetrics_GKE', label: 'VictoriaMetrics GKE'},
+        {
+          type: 'category',
+          label: 'Gatus',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Gatus_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Gatus_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Healthchecks',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Healthchecks_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Healthchecks_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'SpeedtestTracker',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/SpeedtestTracker_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/SpeedtestTracker_GKE', label: 'GKE'},
+          ],
+        },
       ],
     },
     {
@@ -2491,6 +2822,61 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Wallabag_GKE', label: 'GKE'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Emby',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Emby_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Emby_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Jellystat',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Jellystat_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Jellystat_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Komga',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Komga_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Komga_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Linkwarden',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Linkwarden_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Linkwarden_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'PeerTube',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/PeerTube_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/PeerTube_GKE', label: 'GKE'},
+          ],
+        },
+        {type: 'doc', id: 'labs/Prowlarr_GKE', label: 'Prowlarr GKE'},
+        {
+          type: 'category',
+          label: 'Seerr',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Seerr_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Seerr_GKE', label: 'GKE'},
+          ],
+        },
       ],
     },
     {
@@ -2631,6 +3017,24 @@ const sidebars: SidebarsConfig = {
           items: [
             {type: 'doc', id: 'labs/Saleor_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'labs/Saleor_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Ghostfolio',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Ghostfolio_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Ghostfolio_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Wallos',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Wallos_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Wallos_GKE', label: 'GKE'},
           ],
         },
       ],
@@ -2890,6 +3294,69 @@ const sidebars: SidebarsConfig = {
           items: [
             {type: 'doc', id: 'labs/Radicale_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'labs/Radicale_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Grocy',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Grocy_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Grocy_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Kimai',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Kimai_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Kimai_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'LubeLogger',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/LubeLogger_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/LubeLogger_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'SparkyFitness',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/SparkyFitness_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/SparkyFitness_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Spoolman',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Spoolman_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Spoolman_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Tandoor',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Tandoor_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Tandoor_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Trilium',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Trilium_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'labs/Trilium_GKE', label: 'GKE'},
           ],
         },
       ],
