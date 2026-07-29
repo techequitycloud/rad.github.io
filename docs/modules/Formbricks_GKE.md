@@ -21,11 +21,16 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 
 | Configuration Area | Formbricks-Specific Notes |
 |---|---|
+| Module Metadata | Platform-only, not forwarded to `App_GKE`; see [Group 0: Module Metadata](#group-0-module-metadata). |
 | Project & Identity | Identical to `App_GKE`. |
 | Application Identity | Formbricks-specific defaults; see [Group 2: Application Identity](#group-2-application-identity). |
 | Runtime & Scaling | Formbricks-specific defaults for `container_port`, `cpu_limit`, `memory_limit`; see [Group 3: Runtime & Scaling](#group-3-runtime--scaling). |
+| GKE Cluster & Workload | Identical to `App_GKE`; see [Group 3b: GKE Cluster & Workload](#group-3b-gke-cluster--workload). |
 | Environment Variables & Secrets | Formbricks secrets injected automatically; see [Group 5: Environment Variables & Secrets](#group-5-environment-variables--secrets). |
 | Networking | Identical to `App_GKE`. |
+| Custom SQL Scripts | Identical to `App_GKE`; see [Group 4b: Custom SQL Scripts](#group-4b-custom-sql-scripts). |
+| Resource Quotas | Identical to `App_GKE`; see [Group 4c: Resource Quotas](#group-4c-resource-quotas). |
+| VPC Service Controls | Identical to `App_GKE`; see [Group 4d: VPC Service Controls](#group-4d-vpc-service-controls). |
 | Initialization Jobs | `db-init` PostgreSQL job supplied automatically by `Formbricks Common`; see [Group 8: Jobs & Scheduled Tasks](#group-8-jobs--scheduled-tasks). |
 | Storage — NFS | `enable_nfs` defaults to `true`; see [Group 9: Storage & Filesystem — NFS](#group-9-storage--filesystem--nfs). |
 | Storage — GCS | `uploads` GCS bucket provisioned automatically; see [Group 10: Storage & Filesystem — GCS](#group-10-storage--filesystem--gcs). |
@@ -35,7 +40,6 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Cloud Armor WAF | Identical to `App_GKE`. |
 | Identity-Aware Proxy | Identical to `App_GKE`. |
 | Binary Authorization | Identical to `App_GKE`. |
-| VPC Service Controls | Identical to `App_GKE`. |
 | Traffic & Ingress | Identical to `App_GKE`. |
 | Custom Domain & Static IP | Formbricks `webapp_url` must be set to match; see [Group 11: Custom Domain & Static IP](#group-11-database-configuration). |
 | Cloud Build Triggers | Identical to `App_GKE`. |
@@ -43,7 +47,6 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Image Mirroring | `enable_image_mirroring` defaults to `true`. |
 | Pod Disruption Budgets | Identical to `App_GKE`. |
 | Topology Spread Constraints | Identical to `App_GKE`. |
-| Resource Quotas | Identical to `App_GKE`. |
 | Auto Password Rotation | See [Group 11: Database Configuration](#group-11-database-configuration). |
 | Redis Cache | `enable_redis` defaults to `true`; see [Group 12: Redis Cache](#group-12-redis-cache). |
 | Backup Import | Exposes `backup_uri` and `backup_file`. |
@@ -63,6 +66,33 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 6. **Redis caching is enabled by default.** Formbricks uses Redis for API response caching and rate limiting. Mandatory for safe horizontal scaling.
 7. **`webapp_url` must be set after first deploy.** NextAuth.js requires the public URL of the Formbricks instance for OAuth redirect URIs and email links. Leave empty on first deploy; update to the external IP, nip.io domain, or custom domain after the load balancer IP is known.
 8. **Session affinity defaults to `ClientIP`.** Formbricks's Next.js session handling benefits from routing repeated requests from the same browser to the same pod. Required to maintain consistent authentication state across the admin panel.
+
+---
+
+## Group 0: Module Metadata
+
+Platform/UI metadata read by the RAD platform for the catalogue listing, dependency ordering, credit billing, and access control. None of these are forwarded to `App_GKE` — they have no effect on the deployed infrastructure.
+
+| Variable | Default | Description |
+|---|---|---|
+| `module_description` | Formbricks description text | Shown in the platform catalogue. |
+| `module_documentation` | `"https://docs.radmodules.dev/docs/modules/Formbricks_GKE"` | Link to this guide. |
+| `module_dependency` | `["Services_GCP"]` | Modules the platform deploys first. |
+| `requires_services` | `{ create_postgres=true, create_network_filesystem=true, create_google_kubernetes_engine=true, ... }` | Tells the platform which `Services_GCP` `create_*` toggles must be enabled when auto-provisioning `Services_GCP` for this deployment. |
+| `module_services` | `["GKE Autopilot", "Cloud SQL (PostgreSQL 15)", ...]` | GCP services shown in the platform UI. |
+| `credit_cost` | `150` | Platform credits consumed per deployment. |
+| `require_credit_purchases` | `false` | Enforce a credit balance check before deployment. |
+| `enable_purge` | `true` | Permit full resource deletion on destroy. |
+| `public_access` | `true` | List this module in the public catalogue. |
+| `require_services_gcp_module` | `true` | Fail at plan time if no `Services_GCP`-managed VPC is detected. Set `false` for standalone deployment with inline prerequisites. |
+| `shared_users` | `[]` | Users granted access regardless of `public_access`. |
+| `technical_support_users` | `[]` | Users the platform routes support requests to. |
+| `resource_creator_identity` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account Terraform uses to create resources. |
+| `application_module` | `""` | Not referenced — has no effect in this application module. |
+| `impersonation_service_account` | `""` | Not referenced — has no effect in this application module. |
+| `job_execution_wait_timeout` | `900` | Max seconds a deployment waits for the `db-init` job before aborting the apply. |
+| `explicit_secret_values` | `{}` | Not referenced — has no effect in this application module (`Formbricks_Common`'s own secret values are wired internally instead). |
+| `scripts_dir` | `""` | Not referenced — has no effect in this application module (the module always points at `Formbricks_Common`'s own `scripts/` directory). |
 
 ---
 
@@ -119,6 +149,29 @@ The remaining runtime variables (`deploy_application`, `container_image`, `conta
 
 ---
 
+## Group 3b: GKE Cluster & Workload
+
+Identical to `App_GKE` — no Formbricks-specific defaults.
+
+| Variable | Default | Description |
+|---|---|---|
+| `gke_cluster_name` | `""` | Target GKE cluster name. Leave empty for auto-discovery. |
+| `namespace_name` | `""` | Kubernetes namespace. Leave empty to auto-generate from `application_name` + `tenant_deployment_id`. |
+| `workload_type` | `"Deployment"` | `"Deployment"` or `"StatefulSet"`. |
+| `service_type` | `"LoadBalancer"` | `"LoadBalancer"`, `"ClusterIP"`, or `"NodePort"`. |
+| `configure_service_mesh` | `false` | Enables Istio/Anthos Service Mesh sidecar injection for the namespace. |
+| `enable_network_segmentation` | `false` | Creates Kubernetes NetworkPolicies restricting pod-to-pod traffic to the same namespace. |
+| `termination_grace_period_seconds` | `30` | Seconds Kubernetes waits after SIGTERM before SIGKILL. |
+| `deployment_timeout` | `1800` | Seconds Terraform waits for the rollout to complete during apply. |
+| `network_name` | `""` | VPC network to use. Not referenced — has no effect in this application module. |
+| `gke_cluster_selection_mode` | `"primary"` | Not referenced — has no effect in this application module. |
+| `enable_multi_cluster_service` | `false` | Not referenced — has no effect in this application module. |
+| `prereq_gke_subnet_cidr` | `"10.201.0.0/24"` | Not referenced — has no effect in this application module. |
+| `prereq_subnet_cidr_override` | `""` | Declared for convention parity; not forwarded, so setting it has no effect here. |
+| `extra_service_ports` | `[]` | Declared for convention parity; not forwarded, so setting it has no effect here. |
+
+---
+
 ## Group 4: Access & Networking
 
 The following networking variables are available in `Formbricks GKE`:
@@ -139,8 +192,53 @@ The following networking variables are available in `Formbricks GKE`:
 | `enable_cloud_armor` | `false` | Enables a Cloud Armor WAF security policy. |
 | `admin_ip_ranges` | `[]` | Admin CIDR ranges permitted through Cloud Armor. |
 | `cloud_armor_policy_name` | `"default-waf-policy"` | Name of the Cloud Armor security policy to attach. |
+| `enable_cdn` | `false` | Enables Cloud CDN via GCPBackendPolicy for the Gateway. |
 
 > **Formbricks URL configuration:** When using a custom domain, set `webapp_url` to match the domain. Formbricks uses this value to generate NextAuth.js redirect URIs, email confirmation links, and survey share URLs. A mismatch between the actual service URL and `webapp_url` breaks authentication and causes broken links in survey emails.
+
+---
+
+## Group 4b: Custom SQL Scripts
+
+Identical to `App_GKE`. Runs arbitrary SQL scripts from a GCS bucket during initialization, in addition to (not instead of) the `db-init` job `Formbricks_Common` supplies.
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_custom_sql_scripts` | `false` | Execute custom SQL scripts from GCS during initialization. |
+| `custom_sql_scripts_bucket` | `""` | GCS bucket containing the scripts. |
+| `custom_sql_scripts_path` | `""` | Path prefix in the bucket; scripts run in alphabetical order. |
+| `custom_sql_scripts_use_root` | `false` | Run scripts as the database root user instead of the application user. |
+
+---
+
+## Group 4c: Resource Quotas
+
+Identical to `App_GKE`. Creates a Kubernetes ResourceQuota limiting total CPU, memory, and object counts in the Formbricks namespace — useful in shared clusters. Memory values require binary suffixes (`Gi`/`Mi`); bare integers are treated as bytes and block all pod scheduling.
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_resource_quota` | `false` | Create a Kubernetes ResourceQuota in the namespace. |
+| `quota_cpu_requests` | `""` | Total CPU requests allowed. Empty = no quota. |
+| `quota_cpu_limits` | `""` | Total CPU limits allowed. Empty = no quota. |
+| `quota_memory_requests` | `""` | Total memory requests allowed (e.g. `"4Gi"`). Empty = no quota. |
+| `quota_memory_limits` | `""` | Total memory limits allowed (e.g. `"8Gi"`). Empty = no quota. |
+| `quota_max_pods` | `""` | Maximum pods in the namespace. Empty = no quota. |
+| `quota_max_services` | `""` | Maximum Kubernetes Services in the namespace. Empty = no quota. |
+| `quota_max_pvcs` | `""` | Maximum PVCs in the namespace. Only relevant when `workload_type = "StatefulSet"`. Empty = no quota. |
+
+---
+
+## Group 4d: VPC Service Controls
+
+Identical to `App_GKE`.
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_vpc_sc` | `false` | Enforce a VPC Service Controls perimeter around the GCP APIs this module uses. |
+| `vpc_cidr_ranges` | `[]` | Subnet CIDRs for the VPC-SC access level. Auto-discovered from the VPC when empty. |
+| `vpc_sc_dry_run` | `true` | Log violations without blocking, recommended for initial rollout. |
+| `organization_id` | `""` | GCP Organization ID for Access Context Manager. Auto-discovered when empty. |
+| `enable_audit_logging` | `false` | Enable detailed Cloud Audit Logs (DATA_READ/DATA_WRITE/ADMIN_READ) for the project. |
 
 ---
 
@@ -158,10 +256,12 @@ The following networking variables are available in `Formbricks GKE`:
 | `HUB_API_URL` | `var.hub_api_url` | Formbricks Hub API endpoint (v5+). |
 | `CUBEJS_API_URL` | `var.cubejs_api_url` | Cube.js analytics API endpoint (v5+). |
 | `SMTP_HOST` | `var.smtp_host` | SMTP server. Empty disables email. |
-| `SMTP_PORT` | `var.smtp_port` | SMTP port. |
+| `SMTP_PORT` | `var.smtp_port` | SMTP port (`587` default). |
 | `SMTP_USER` | `var.smtp_user` | SMTP username. |
-| `SMTP_SECURE_ENABLED` | `"1"` / `"0"` | Implicit TLS flag. |
+| `SMTP_SECURE_ENABLED` | `var.smtp_secure_enabled` (`"1"` / `"0"`) | Implicit TLS flag. `true` for port `465`, `false` for STARTTLS on `587`. |
 | `MAIL_FROM` | `var.mail_from` | Sender address. |
+
+`smtp_password` (default `""`, sensitive) is injected as the `SMTP_PASSWORD` Kubernetes Secret — see the secrets table below. When left empty, `Formbricks_Common` auto-generates a random value in Secret Manager.
 
 The following sensitive values are injected as Kubernetes Secrets via the Secrets Store CSI Driver (from Secret Manager):
 
@@ -228,6 +328,8 @@ Prisma migrations then run automatically when the Formbricks container starts �
 
 Override `initialization_jobs` with a non-empty list to replace this default with custom jobs. Each custom job must specify at least one of `command`, `args`, or `script_path`.
 
+`additional_services` (default `[]`) deploys extra companion GKE services alongside Formbricks — not used by the default configuration, available for advanced customization.
+
 > **Note:** GKE cron jobs (`cron_jobs`) use Kubernetes CronJob fields (`restart_policy`, `concurrency_policy`, `failed_jobs_history_limit`, `successful_jobs_history_limit`, `starting_deadline_seconds`, `suspend`) rather than the Cloud Run-style fields (`parallelism`, `paused`, `max_retries`, `task_count`) used in `Formbricks CloudRun`.
 
 ---
@@ -242,6 +344,7 @@ Override `initialization_jobs` with a non-empty list to replace this default wit
 | `nfs_mount_path` | `"/mnt/nfs"` | The path where the NFS volume is mounted inside the Formbricks container. |
 | `nfs_instance_name` | `""` | Name of an existing NFS GCE VM. Leave empty to auto-discover. |
 | `nfs_instance_base_name` | `"app-nfs"` | Base name for an inline NFS GCE VM when none exists. |
+| `nfs_volume_name` | `"nfs-data-volume"` | Kubernetes volume name for the NFS mount. Declared for convention parity; not forwarded, so setting it has no effect here. |
 
 ---
 
@@ -253,7 +356,7 @@ Override `initialization_jobs` with a non-empty list to replace this default wit
 |---|---|---|
 | Auto-provisioned | `uploads` | Formbricks file uploads via S3-compatible GCS XML API |
 
-The `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_kms_iam`, and `enable_artifact_registry_cmek` variables behave identically to `App_GKE`.
+The `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_kms_iam`, `enable_artifact_registry_cmek`, `max_images_to_retain` (default `7`), `delete_untagged_images` (default `true`), and `image_retention_days` (default `30`) variables behave identically to `App_GKE` — the last three govern Artifact Registry image cleanup for the inline-created repository.
 
 ---
 
@@ -270,6 +373,8 @@ The `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_km
 | `application_database_user` | `"formbricksuser"` | `"gkeappuser"` | The `App_GKE` level variable for the database user. Use `db_user` for Formbricks. |
 | `enable_postgres_extensions` | `true` | `false` | PostgreSQL extensions are enabled by default for Formbricks. |
 | `postgres_extensions` | `["vector", "uuid-ossp"]` | `[]` | `vector` (pgvector) is required by Formbricks's Prisma schema (embeddings/AI features) — without it, `prisma db push` fails with a permission error since the app DB user can't `CREATE EXTENSION`. `uuid-ossp` supports UUID generation. |
+| `enable_mysql_plugins` | `false` | `false` | N/A — Formbricks requires PostgreSQL. Forwarded to `App_GKE` but has no effect while `database_type` stays `POSTGRES_15`. |
+| `mysql_plugins` | `[]` | `[]` | N/A — Formbricks requires PostgreSQL. |
 
 **Cloud SQL instance discovery:**
 
@@ -284,6 +389,9 @@ The `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_km
 |---|---|---|
 | `enable_auto_password_rotation` | `false` | Deploys an automated database password rotation job. When `true`, the database password is rotated on the schedule defined by `secret_rotation_period` and GKE pods are restarted. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before restarting pods. |
+| `database_password_length` | `32` | Length of the auto-generated database password (16–64 characters). |
+
+**Inert convention-parity variables:** `application_database_name` (`"formbricksdb"`) and `application_database_user` (`"formbricksuser"`) are the `App_GKE`-level database identity variables — Formbricks uses `db_name`/`db_user` instead (see above), so these are not referenced. `db_host_env_var_name`, `db_name_env_var_name`, `db_password_env_var_name`, `db_port_env_var_name`, and `db_user_env_var_name` (all default `""`) let a wrapper module expose the DB connection details under additional, non-standard environment variable names; `Formbricks_GKE` declares them for convention parity but does not forward them, so setting them has no effect here.
 
 ---
 

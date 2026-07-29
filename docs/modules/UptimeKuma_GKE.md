@@ -28,13 +28,13 @@ Service Controls, backups, and the deployment lifecycle — refer to the
 
 ## 1. Overview
 
-Uptime Kuma runs as a single Node.js web workload pulled directly from the
-official Docker Hub image. The deployment wires together a deliberately
-small set of Google Cloud services:
+Uptime Kuma runs as a single Node.js web workload built from a thin custom
+image layered on the official Docker Hub image. The deployment wires
+together a deliberately small set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | GKE Autopilot | Prebuilt `louislam/uptime-kuma` pods on port 3001, 1 vCPU / 512Mi by default |
+| Compute | GKE Autopilot | Custom-built `louislam/uptime-kuma` pods (SQLite journal mode patched) on port 3001, 1 vCPU / 512Mi by default |
 | Database | None (embedded SQLite) | `database_type = "NONE"` — no Cloud SQL instance is provisioned |
 | File persistence | Cloud Filestore (NFS) | The SQLite database and uploads persist under `/app/data`, shared across pods |
 | Object storage | Cloud Storage | None provisioned by default — `storage_buckets = []` |
@@ -52,11 +52,14 @@ small set of Google Cloud services:
   lost on pod recreation.
 - **No Redis, no application secrets.** `UptimeKuma_Common` outputs
   `secret_ids = {}`; there is nothing to inject from Secret Manager.
-- **Prebuilt official image, no custom build.** `container_image_source =
-  "prebuilt"` deploys `louislam/uptime-kuma:<application_version>` (default
-  tag `1`, the v1 stable/SQLite line) directly from Docker Hub, mirrored into
-  Artifact Registry by default (`enable_image_mirroring = true`) to avoid
-  Docker Hub rate limits.
+- **Thin custom build, not the stock image used verbatim.** `container_image_source =
+  "custom"` builds `FROM louislam/uptime-kuma:<application_version>` (default
+  tag `1`, the v1 stable/SQLite line) and source-patches the hardcoded SQLite
+  `journal_mode = WAL` to `DELETE` — WAL requires shared-memory byte-range
+  locking between the DB file and its `-wal` sidecar, which the NFS-backed
+  `/app/data` volume does not reliably provide (observed as `SQLITE_CORRUPT`).
+  The built image is mirrored into Artifact Registry by default
+  (`enable_image_mirroring = true`) to avoid Docker Hub rate limits.
 - **`container_port = 3001`** — Uptime Kuma's native port.
 - **Single replica by default and required.** `min_instance_count = 1`,
   `max_instance_count = 1`. SQLite is a single-writer database; do not scale
@@ -221,7 +224,7 @@ defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `container_image_source` | `prebuilt` | Deploys the official image directly; `"custom"` would build via Cloud Build. |
+| `container_image_source` | `custom` | Builds a thin wrapper via Cloud Build that patches SQLite's journal mode away from WAL for NFS safety; `"prebuilt"` would deploy the official image directly (unpatched). |
 | `container_port` | `3001` | Uptime Kuma's native port. |
 | `enable_cloudsql_volume` | `false` | Unused — Uptime Kuma has no external database. |
 | `min_instance_count` / `max_instance_count` | `1` / `1` | Keep both at `1` — single SQLite writer. |

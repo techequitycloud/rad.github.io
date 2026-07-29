@@ -237,10 +237,18 @@ specific to or notable for Kestra are listed; every other input is inherited fro
 | `max_instance_count` | `1` | Maximum replicas. Keep at 1 for standalone mode to avoid queue conflicts. |
 | `timeout_seconds` | `300` | Maximum request duration in seconds (0–3600). |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar for TCP socket connections to PostgreSQL. |
+| `cloud_sql_proxy_version` | `2-alpine` | Cloud SQL Auth Proxy sidecar image tag. Pin to a digest for immutable deployments. |
 | `enable_image_mirroring` | `true` | Mirror the Kestra image into Artifact Registry before deploy. |
 | `enable_vertical_pod_autoscaling` | `false` | Let Autopilot tune resource requests automatically. |
 | `termination_grace_period_seconds` | `60` | Seconds Kubernetes waits after SIGTERM — allows in-flight executions to finish. |
 | `deployment_timeout` | `1800` | Max seconds Terraform waits for the rollout to complete (large Java image). |
+
+`container_image_source`, `container_image`, `container_build_config`, `container_protocol`, and
+`container_resources` are declared for Foundation convention parity but are **not forwarded** by
+this module — `Kestra_Common` always builds the official `kestra/kestra` image via Cloud Build
+(`container_build_config`) and forwards `cpu_limit`/`memory_limit` directly instead of
+`container_resources`. Setting any of them has no effect; use `cpu_limit`/`memory_limit` above
+to size the pod.
 
 ### Group 5 — Environment Variables & Secrets
 
@@ -265,6 +273,13 @@ specific to or notable for Kestra are listed; every other input is inherited fro
 | `network_tags` | `["nfsserver"]` | Node/pod tags for VPC firewall rules. |
 | `enable_network_segmentation` | `false` | Create Kubernetes NetworkPolicy resources. |
 | `configure_service_mesh` | `false` | Enable Istio injection for the application namespace. |
+| `extra_service_ports` | `[]` | Extra Service ports for multi-protocol workloads. Declared but **not forwarded** — has no effect on this module. |
+
+`prereq_gke_subnet_cidr`, `prereq_subnet_cidr_override`, `prereq_gke_pod_cidr_override`, and
+`prereq_gke_service_cidr_override` control the inline VPC/GKE prerequisites created only when no
+`Services_GCP` network/cluster exists yet. `prereq_gke_subnet_cidr` is declared but not
+referenced; the three `*_override` variables are forwarded and only matter on existing inline
+(no-`Services_GCP`) deployments, to avoid replacing the cluster on re-apply.
 
 ### Group 7 — StatefulSet
 
@@ -307,7 +322,8 @@ Only relevant when `workload_type = "StatefulSet"` or `stateful_pvc_enabled = tr
 Standard App_GKE Cloud Build / Cloud Deploy integration — see
 [App_GKE](App_GKE.md). Key inputs: `enable_cicd_trigger`,
 `github_repository_url`, `github_token`, `enable_cloud_deploy`,
-`enable_binary_authorization`.
+`enable_binary_authorization`. `binauthz_evaluation_mode` is declared for convention parity
+but not referenced — only `enable_binary_authorization` is forwarded.
 
 ### Group 13 — Filesystem (NFS)
 
@@ -315,6 +331,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `enable_nfs` | `false` | Provision a Cloud Filestore (NFS) share and mount it into pods. Useful for flow scripts that write local files. |
 | `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
+| `nfs_volume_name` | `nfs-data-volume` | Volume name; override when mounting a second NFS share alongside the first. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 
@@ -325,6 +342,13 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | `gcs_volumes` | `[]` | GCS buckets to mount via GCS Fuse CSI Driver. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
+### Group 15 — Redis
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_redis` | `true` | Declared for Foundation convention parity. **Not referenced** — `main.tf` hardcodes Redis off (`enable_redis = false`) because Kestra standalone mode queues through PostgreSQL, not Redis. |
+| `redis_host` / `redis_port` / `redis_auth` | `""` / `"6379"` / `""` | Also declared but not referenced, for the same reason. |
+
 ### Group 16 — Database Backend
 
 | Variable | Default | Description |
@@ -333,6 +357,15 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | `db_user` | `kestra` | Application user. **Immutable after first deploy.** |
 | `database_password_length` | `32` | Generated password length (16–64). |
 | `enable_auto_password_rotation` | `false` | Zero-downtime DB password rotation. |
+| `enable_mysql_plugins` / `mysql_plugins` | `false` / `[]` | Forwarded to `App_GKE` but not applicable — Kestra is PostgreSQL-only. |
+
+`database_type`, `sql_instance_name`, `sql_instance_base_name`, `application_database_name`,
+`application_database_user`, `enable_postgres_extensions`, `postgres_extensions`, and the
+`db_host_env_var_name` / `db_name_env_var_name` / `db_user_env_var_name` /
+`db_password_env_var_name` / `db_port_env_var_name` set are all declared for Foundation
+convention parity but **not forwarded** by this module — `Kestra_Common` fixes the engine to
+`POSTGRES_15` and injects the standard `DB_HOST`/`DB_NAME`/`DB_USER`/`DB_PASSWORD`/`DB_PORT`
+names only. Setting any of them has no effect.
 
 ### Group 17 — Backup & Maintenance
 
@@ -341,6 +374,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | `backup_schedule` | `0 2 * * *` | Automated backup cron (UTC). |
 | `backup_retention_days` | `7` | Retention; raise to 30–90 for production/compliance. |
 | `enable_backup_import` / `backup_source` / `backup_uri` | restore options | Restore from a backup on deploy. |
+| `backup_file` | `backup.sql` | Declared for convention parity. **Not referenced** — `main.tf` forwards `backup_uri` as the import source instead. |
 
 ### Group 18 — Custom SQL Scripts
 
@@ -355,6 +389,8 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | `enable_custom_domain` | `true` | Provision Kubernetes Gateway with SSL certificate for custom hostnames. |
 | `application_domains` | `[]` | Hostnames to serve. Empty with `enable_custom_domain = true` generates a `nip.io` domain. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. Recommended for production. |
+| `gateway_backend_stage` | `dev` | Cloud Deploy stage (`dev`/`staging`/`prod`) whose Service the Gateway HTTPRoute targets. Ignored when `enable_cloud_deploy = false`. |
+| `network_name` | `""` | Declared for Foundation convention parity. **Not referenced** — network discovery is handled internally via `module.network_discovery`. |
 
 ### Group 20 — Identity-Aware Proxy (IAP)
 

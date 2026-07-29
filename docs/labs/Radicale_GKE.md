@@ -67,7 +67,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
    default currently carries a stale value inherited from its clone source),
    and **set `stateful_pvc_enabled = true`** for a production-style
    deployment with real block storage. Review the estimated cost (if
-   credits are enabled) and click **Deploy**, which opens the deployment
+   credits are enabled) and click **Submit**, which opens the deployment
    status page with real-time logs.
 
 2. The platform provisions the Kubernetes workload (a StatefulSet when

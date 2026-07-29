@@ -61,7 +61,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
    the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Planka_GKE)
    documents every input by group, with defaults. Review the estimated cost
-   (if credits are enabled) and click **Deploy**, which opens the deployment
+   (if credits are enabled) and click **Submit**, which opens the deployment
    status page with real-time logs.
 
 2. The platform builds the custom Planka image (thin wrapper `FROM

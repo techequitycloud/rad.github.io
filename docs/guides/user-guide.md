@@ -11,7 +11,7 @@ This guide is for anyone using RAD to deploy and manage cloud modules — the de
 
 ## What you can do
 
-- Browse the **Deploy** catalog and deploy ready-made modules through a guided form.
+- Browse the **Modules** catalog and deploy ready-made modules through a guided form.
 - Track and manage your own **Deployments** — view results and logs, update, and tear down.
 - Manage **Credits** — check your balance, review your transaction history, and buy more.
 - Subscribe to a recurring credit plan.
@@ -19,11 +19,11 @@ This guide is for anyone using RAD to deploy and manage cloud modules — the de
 - View costs and invoices for the projects you own or have deployed to.
 - Get help through the **Support** form.
 
-After you sign in you land on the **Deployments** page. Your top navigation shows **Credits** (when credits are enabled), **Deployments**, **Deploy**, and **Help**.
+After you sign in you land on the **Deployments** page. Your top navigation shows **Credits** (when credits are enabled), **Deployments**, **Modules**, **Solutions**, and **Help**.
 
 ## Finding a module
 
-Click **Deploy** in the top navigation to open the module catalog. Modules appear as cards.
+Click **Modules** in the top navigation to open the module catalog. Modules appear as cards.
 
 - **Browse:** You see a single combined catalog of public modules — both modules published by RAD and public modules published by partners.
 - **Search:** Use the search bar to find a module by name, then page through the results.
@@ -35,10 +35,10 @@ A stats strip at the top shows total deployments, your current credit balance (w
 
 ## Deploying a module
 
-1. **Open the form.** Click a module card to open its guided configuration form. Fields are grouped into steps that you move through in order. Administrative and internal fields are hidden from you. If you don't have an active subscription, some later steps may be locked.
+1. **Open the form.** Click a module card to open its guided configuration form. By default you get **Basic mode**: only the essential first-page fields, and the deployment costs build cost only. Administrative and internal fields are always hidden from you.
 2. **Fill in the configuration.** Complete the required fields on each step (for example, project and region). Move forward when each step is valid.
 3. **Confirm.** Before launching, a confirmation dialog may appear — for example when the module costs credits, has dependencies, or needs special permissions. Review the details, including how many credits the deployment will cost.
-4. **Deploy.** Click **Deploy** to queue the deployment. If you don't have enough credits, RAD shows the module's credit cost against your current balance and prompts you to top up first.
+4. **Submit.** Click **Submit** (or **Confirm**, if the confirmation dialog appeared) to queue the deployment. If you don't have enough credits, RAD shows the module's credit cost against your current balance and prompts you to top up first.
 
 **What happens next:** Your deployment is queued and then provisioned on Google Cloud. You can follow its progress on the **Deployments** page and in the deployment's details.
 
@@ -56,7 +56,7 @@ Open a deployment to see its details, which has these tabs:
 
 From the details view you can also:
 
-- **Update** — reopen the configuration form (pre-filled with the current values), change what you need, and re-apply. Available once a deployment has finished.
+- **Update** — reopen the configuration form (pre-filled with the current values), change what you need, and re-apply. Available once a deployment has finished. Here you can also switch on **Advanced mode** to reveal every configuration page — this adds a module fee on top of the build cost.
 - **Delete** — remove the deployment. You get two choices:
   - **Delete** tears down the cloud resources the deployment created.
   - **Purge** removes the deployment from RAD *without* destroying the cloud resources. Use Purge when a deployment is stuck or was changed outside RAD.

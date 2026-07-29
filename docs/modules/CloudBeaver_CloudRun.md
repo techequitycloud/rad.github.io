@@ -35,7 +35,7 @@ the deployment wires together a deliberately small set of Google Cloud services:
 | Database | **None provisioned** | `database_type = "NONE"` — CloudBeaver stores its own state; it *connects out* to databases you configure in the UI |
 | Cache & queue | **None** | CloudBeaver uses no Redis; `enable_redis` is forced off |
 | Secrets | Secret Manager | No app-level secret is generated — the admin account is created via the first-run setup wizard |
-| Ingress | Cloud Run URL / Cloud Load Balancing | **`internal` by default** (VPC-only); layer an external HTTPS LB or set `ingress_settings = "all"` for public access |
+| Ingress | Cloud Run URL / Cloud Load Balancing | **`all` by default** (public internet); set `ingress_settings = "internal"` for VPC-only access, or layer an external HTTPS LB with IAP |
 
 **Sensible defaults worth knowing up front:**
 
@@ -48,10 +48,10 @@ the deployment wires together a deliberately small set of Google Cloud services:
 - **Single instance by design.** `min_instance_count = 1` (avoid slow JVM cold starts)
   and `max_instance_count = 1` (the workspace is a single-writer store). Do **not**
   raise `max_instance_count` — concurrent writers corrupt the embedded H2 database.
-- **Ingress is `internal` by default.** The service is reachable only from within the
-  VPC — appropriate for a database admin console. For browser access from outside the
-  VPC, front it with an external HTTPS load balancer (and IAP) or set
-  `ingress_settings = "all"`.
+- **Ingress is `all` by default.** The service is reachable from the public internet
+  out of the box. Because there is no seeded admin (see below), set
+  `ingress_settings = "internal"` — or front it with an external HTTPS load balancer
+  plus IAP — before leaving a fresh deployment unattended.
 - **The admin account is claimed by the first visitor.** CloudBeaver has no seeded
   admin — complete the setup wizard immediately once the service is reachable.
 - **`application_version = "latest"` passes through cleanly.** The image is built from
@@ -134,11 +134,11 @@ workspace. Foundation-level secrets (if any) follow the standard model.
 
 ### E. Networking & ingress
 
-The service defaults to **`ingress_settings = "internal"`** — reachable only from
-inside the VPC, which suits a database administration console. The `cloudbeaver_url`
-output is the internal service URL in that mode. For browser access from outside the
-VPC, front the service with an external HTTPS load balancer (optionally with a custom
-domain, Cloud CDN, Cloud Armor, and IAP), or set `ingress_settings = "all"`.
+The service defaults to **`ingress_settings = "all"`** — reachable from the public
+internet out of the box. Set `ingress_settings = "internal"` to restrict the service
+to VPC-only access (the `cloudbeaver_url` output becomes the internal service URL in
+that mode), or front the service with an external HTTPS load balancer (optionally with
+a custom domain, Cloud CDN, Cloud Armor, and IAP) for gated public access.
 
 - **Console:** Cloud Run (service URL); Network services → Load balancing.
 - **CLI:**
@@ -154,8 +154,8 @@ See [App_CloudRun](App_CloudRun.md) for load balancing, custom domains, and IAP.
 
 Container logs flow to Cloud Logging; Cloud Run metrics flow to Cloud Monitoring, with
 optional uptime checks and alert policies. Note that a Cloud Monitoring uptime check is
-only provisioned when the endpoint is publicly reachable — with the default
-`internal` ingress there is no public endpoint to probe.
+only provisioned when the endpoint is publicly reachable — switching `ingress_settings`
+to `internal` removes the public endpoint there is to probe.
 
 - **Console:** Logging → Logs Explorer; Monitoring → Dashboards / Alerting.
 - **CLI:**
@@ -239,7 +239,7 @@ specific to or notable for CloudBeaver are listed; every other input is inherite
 
 | Variable | Default | Description |
 |---|---|---|
-| `ingress_settings` | `internal` | VPC-only by default (recommended for a DB console). Use `all` or an HTTPS LB for external access. |
+| `ingress_settings` | `all` | Public internet by default. Set `internal` for VPC-only access, or front with an HTTPS LB + IAP for gated external access. |
 | `vpc_egress_setting` | _(set)_ | Controls which egress traffic routes via the VPC — required to reach private databases. |
 | `enable_iap` | `false` | Require Google sign-in in front of the service (needs an external LB). |
 
@@ -288,7 +288,7 @@ running resources.
 | Output | Description |
 |---|---|
 | `service_name` | Cloud Run service name. |
-| `cloudbeaver_url` | Service URL for the CloudBeaver web UI (port 8978). Internal VPC URL when `ingress_settings = "internal"`. |
+| `cloudbeaver_url` | Service URL for the CloudBeaver web UI (port 8978). Public `run.app` URL by default (`ingress_settings = "all"`); internal VPC URL when set to `"internal"`. |
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service details (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | External HTTPS load balancer IP / URL (when enabled). |
@@ -318,7 +318,7 @@ running resources.
 | Workspace `storage` bucket | Preserve across redeploys | Critical | The bucket holds all CloudBeaver state (embedded H2 DB, connections, users, config). Deleting or replacing it wipes every setting. |
 | `max_instance_count` | `1` | Critical | The workspace is single-writer; two instances writing the embedded H2 store concurrently corrupt it. |
 | First-run setup wizard | Complete immediately | High | There is no seeded admin — anyone who reaches the UI first can claim the administrator account. |
-| `ingress_settings` | `internal` (or LB+IAP) | High | Setting `all` without IAP/Cloud Armor exposes a database admin console to the public internet. |
+| `ingress_settings` | `internal` (or LB+IAP) | Critical | Defaults to `all` — a fresh deployment is reachable on the public internet with no seeded admin, so the first visitor to reach it claims the administrator account. Set `internal`, or gate `all` behind IAP/Cloud Armor, before leaving the service unattended. |
 | `memory_limit` | `1Gi` (≥ 512Mi) | High | CloudBeaver is JVM-based; too little memory causes OOM kills. gen2 rejects below 512Mi at plan time. |
 | `min_instance_count` | `1` | Medium | Scale-to-zero (`0`) adds a slow JVM cold-start delay on the first request after idle. |
 | `application_version` | Pin a tag in production | Medium | `latest` can shift the CloudBeaver version between rebuilds; pin for reproducibility. |

@@ -254,33 +254,60 @@ Cloud Monitoring. Optional uptime checks and alert policies are available.
 Variables are grouped exactly as they appear on the deployment platform. Only
 settings specific to or notable for Documenso are listed; every other input is
 inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
+The full list of every declared variable, including ones inherited unchanged
+from the Foundation, is in the [module README](../../modules/Documenso_GKE/README.md).
+
+### Group 1 — Project & Identity
+
+| Variable | Default | Description |
+|---|---|---|
+| `project_id` | _(required)_ | Target Google Cloud project. |
+| `region` | `us-central1` | Region for the workload and regional resources. |
+
+### Group 2 — Deployment Environment
+
+| Variable | Default | Description |
+|---|---|---|
+| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `support_users` | `[]` | Emails granted project access and monitoring alerts. |
+| `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
 ### Group 3 — Application Identity
 
 | Variable | Default | Description |
 |---|---|---|
 | `application_name` | `documenso` | Base name for resources. Do not change after first deploy. |
+| `application_display_name` | `Documenso` | Human-readable name shown in the GCP Console. |
 | `application_version` | `latest` | Sets the `DOCUMENSO_VERSION` build arg for the custom-build `FROM docker.io/documenso/documenso:${DOCUMENSO_VERSION}` base image. |
 | `description` | `"Documenso - The Open Source DocuSign Alternative"` | Populates the GKE workload description field. |
+| `application_description` | `"Documenso on GKE Autopilot"` | **Not referenced** — `description` (above) takes precedence and controls the workload description instead. |
 | `webapp_url` | `""` | Public URL of the instance. Set after first deploy (or a custom domain is registered) so NextAuth callbacks and email links are stable. |
+| `deploy_application` | `true` | Set `false` to provision infrastructure only, without deploying the workload. |
 
 ### Group 4 — Runtime & Scaling
 
 | Variable | Default | Description |
 |---|---|---|
-| `cpu_limit` | `2000m` | 2 vCPU per pod (app-specific override; the generic `container_resources` variable is inert for this module). |
+| `cpu_limit` | `2000m` | 2 vCPU per pod (app-specific override; the generic `container_resources` variable is not forwarded for this module). |
 | `memory_limit` | `2Gi` | Memory per pod. |
 | `min_instance_count` | `0` | Scale-to-zero by default. |
 | `max_instance_count` | `3` | HPA ceiling. |
 | `container_port` | `3000` | Documenso's Next.js server port. |
+| `container_protocol` | `http1` | HTTP/1.1; `h2c` is available if a future upstream needs gRPC/HTTP2. |
+| `timeout_seconds` | `300` | Maximum request duration. |
 | `enable_cloudsql_volume` | `true` | Auth Proxy sidecar — required for DB connectivity on GKE. |
+| `enable_image_mirroring` | `true` | Mirrors the built image into Artifact Registry. |
+| `container_image_source` / `container_image` / `container_resources` / `container_build_config` | — | **Not referenced.** `Documenso_Common` always performs the custom build and sets its own resource limits from `cpu_limit`/`memory_limit`; these Foundation-mirrored variables have no effect on this module. |
 
 ### Group 5 — Environment Variables & Secrets
 
 | Variable | Default | Description |
 |---|---|---|
+| `environment_variables` | `{}` | Extra plain-text env vars; core Documenso vars are injected automatically. |
+| `secret_environment_variables` | `{}` | Extra Secret Manager references injected as env vars. |
 | `smtp_host` | `""` | SMTP server hostname. Leave empty to disable email (invitations, signing notifications). |
 | `smtp_port` / `smtp_secure_enabled` | `587` / `false` | Use `465` + `true` for implicit TLS, otherwise STARTTLS on `587`. |
+| `smtp_user` | `""` | SMTP authentication username. |
 | `smtp_password` | `""` | Auto-generates a Secret Manager value when left empty and `smtp_host` is set. |
 | `mail_from` | `""` | Sender address for outgoing Documenso email. |
 
@@ -292,6 +319,25 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `workload_type` | `Deployment` | Documenso does not use a StatefulSet/PVC. |
 | `session_affinity` | `ClientIP` | Sticky routing so a client reaches the same pod. |
 | `network_tags` | `["nfsserver"]` | Required for NFS connectivity when `enable_nfs = true` (the default). |
+| `gke_cluster_name` / `namespace_name` | `""` | Leave empty for auto-discovery / auto-generated namespace name. |
+| `gke_cluster_selection_mode` / `enable_multi_cluster_service` / `prereq_gke_subnet_cidr` / `extra_service_ports` | — | **Not referenced** by this module — Foundation-mirrored variables with no effect here. |
+
+### Group 7 — StatefulSet
+
+Not used by Documenso (`workload_type = "Deployment"` by default). All `stateful_*` variables are inherited unchanged from [App_GKE](App_GKE.md).
+
+### Group 8 — Resource Quota
+
+`enable_resource_quota` and all `quota_*` variables are declared for Foundation
+convention parity but are **not forwarded** by this module — they have no
+effect on the Documenso deployment.
+
+### Group 9 — Reliability Policies
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_pod_disruption_budget` | `true` | Protects availability during node upgrades. |
+| `pdb_min_available` | `1` | Minimum pods available during voluntary disruptions. |
 
 ### Group 10 — Observability & Health
 
@@ -299,6 +345,23 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `startup_probe` | HTTP `/`, `failure_threshold=20`, `period_seconds=30` | Documenso-specific probe forwarded through the Common module's `config` output; effectively supersedes the generic Foundation `startup_probe_config` default for this app. |
 | `liveness_probe` | HTTP `/`, `initial_delay_seconds=60`, `failure_threshold=3` | Same mechanism as `startup_probe`; supersedes the generic `health_check_config` default. |
+| `uptime_check_config` | disabled | Optional Cloud Monitoring uptime check. |
+
+### Group 11 — Workload Automation
+
+| Variable | Default | Description |
+|---|---|---|
+| `initialization_jobs` | `[]` | Leave empty to use the built-in `db-init` job (creates the database and role only). |
+| `cron_jobs` / `additional_services` | `[]` | No scheduled jobs or sidecars by default. |
+
+### Group 12 — CI/CD & GitHub Integration
+
+Standard App_GKE Cloud Build / Cloud Deploy integration — see
+[App_GKE](App_GKE.md). Key inputs: `enable_cicd_trigger`,
+`github_repository_url`, `github_token`, `enable_cloud_deploy`,
+`enable_binary_authorization`, `binauthz_evaluation_mode` (this last one **is**
+forwarded by Documenso, unlike several other Group-12 mirrored variables in
+other modules).
 
 ### Group 13 — Filesystem (NFS)
 
@@ -306,13 +369,17 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `enable_nfs` | `true` | Provisions Filestore. Not used for document storage by default — see [Overview](#1-overview). Mainly relevant as the fallback Redis host if `enable_redis` is later enabled. |
 | `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container (unused by the app's default configuration). |
+| `nfs_instance_name` / `nfs_instance_base_name` | `""` / `app-nfs` | Existing NFS VM to reuse, or the base name for an inline one. |
+| `nfs_volume_name` | `nfs-data-volume` | **Not forwarded** by this module — has no effect. |
 
 ### Group 14 — Cloud Storage
 
 | Variable | Default | Description |
 |---|---|---|
-| `storage_buckets` | one `uploads` bucket, CORS-enabled | Only consumed if you opt into `NEXT_PUBLIC_UPLOAD_TRANSPORT=s3`; documents live in Postgres by default. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | `Documenso_Common` additionally always provisions its own `uploads` bucket (CORS-enabled), independent of this setting. |
 | `gcs_volumes` | `[]` | No GCS Fuse volumes mounted by default. |
+| `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
+| `max_images_to_retain` / `delete_untagged_images` / `image_retention_days` | `7` / `true` / `30` | Artifact Registry image retention. |
 
 ### Group 15 — Redis Cache
 
@@ -320,8 +387,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `enable_redis` | `false` | Documenso uses a PostgreSQL-backed local jobs provider and does not require Redis. |
 | `redis_host` / `redis_port` / `redis_auth` | `""` / `6379` / `""` | Only relevant if you switch Documenso to the `bullmq` jobs provider. |
-
-<!-- TODO: could not confirm what, if anything, cubejs_api_url / hub_api_url (also declared on this module) are meant to configure for Documenso — they are forwarded to Documenso_Common but never read by any environment variable, Dockerfile, or entrypoint logic in this module. They appear to be inert leftovers from a different application's variable template and have no effect on deployment. -->
+| `cubejs_api_url` / `hub_api_url` | `http://localhost:4000` / `http://localhost:8080` | **Inert leftovers** from this module's Formbricks-derived variable template — forwarded to `Documenso_Common` but never read by any environment variable, Dockerfile, or entrypoint logic. No effect on deployment. |
 
 ### Group 16 — Database Backend
 
@@ -330,12 +396,33 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `database_type` | `POSTGRES_15` | **Not enforced at plan time** — changing this away from Postgres breaks Documenso's Prisma schema at runtime rather than failing the plan. |
 | `db_name` | `documenso` | The database actually created and injected as `DB_NAME`. |
 | `db_user` | `documenso` | The role actually created and injected as `DB_USER`; password auto-generated in Secret Manager. |
+| `database_password_length` | `32` | Auto-generated password length. |
+| `enable_postgres_extensions` / `postgres_extensions` | `false` / `[]` | Documenso's Prisma schema requires no custom extension. |
+| `enable_mysql_plugins` / `mysql_plugins` | `false` / `[]` | Not applicable — Documenso requires PostgreSQL. |
+| `sql_instance_name` / `sql_instance_base_name` | `""` / `app-sql` | Existing Cloud SQL instance to reuse, or the base name for an inline one. |
+| `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | `false` / `90` | Zero-downtime DB password rotation. |
 
 `application_database_name` (default `documensodb`) and
 `application_database_user` (default `documensouser`) are also declared on
 this module but are **not forwarded** to the Foundation — `main.tf` wires
 `db_name`/`db_user` (above) instead. Setting the `application_database_*`
-variables has no effect.
+variables has no effect. The five `db_*_env_var_name` variables (host, name,
+password, port, user) are likewise declared but not forwarded.
+
+### Group 17 — Backup & Maintenance
+
+| Variable | Default | Description |
+|---|---|---|
+| `backup_schedule` | `0 2 * * *` | Automated backup cron (UTC). |
+| `backup_retention_days` | `7` | Retention; raise for production/compliance. |
+| `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | restore options | Restore from a backup on deploy. `backup_uri` is the value actually forwarded to the Foundation. |
+| `backup_file` | `backup.sql` | **Not referenced** — `backup_uri` (above) is what's actually used; setting `backup_file` has no effect. |
+
+### Group 18 — Custom SQL Scripts
+
+`enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`,
+`custom_sql_scripts_use_root` — run SQL from a GCS bucket after provisioning. See
+[App_GKE](App_GKE.md).
 
 ### Group 19 — Custom Domain, Static IP & Networking
 
@@ -344,6 +431,39 @@ variables has no effect.
 | `enable_custom_domain` | `true` | Provisions a Gateway + static IP by default (unlike most other modules, which default this off). |
 | `application_domains` | `[]` | If empty, a `nip.io` hostname based on the auto-generated static IP is used. |
 | `reserve_static_ip` | `true` | Keeps the external address stable across redeploys. |
+| `static_ip_name` | `""` | Leave empty to auto-generate. |
+| `network_name` | `""` | **Not referenced** — network discovery is hardcoded internally; has no effect. |
+
+### Group 20 — Identity-Aware Proxy (IAP)
+
+`enable_iap`, `iap_authorized_users`/`iap_authorized_groups`,
+`iap_oauth_client_id`/`iap_oauth_client_secret` (sensitive), `iap_support_email`
+— standard App_GKE IAP gating in front of the Gateway. See [App_GKE](App_GKE.md).
+
+### Group 21 — Cloud Armor
+
+`enable_cloud_armor`, `admin_ip_ranges`, `cloud_armor_policy_name`, `enable_cdn`
+— standard App_GKE WAF/CDN configuration. See [App_GKE](App_GKE.md).
+
+### Group 22 — VPC Service Controls & Audit Logging
+
+`enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_sc_dry_run`, `organization_id`,
+`enable_audit_logging` — standard App_GKE VPC-SC perimeter configuration. See
+[App_GKE](App_GKE.md).
+
+### Group 0 — Module Metadata
+
+Platform/UI-only metadata (`module_description`, `module_documentation`,
+`module_dependency`, `requires_services`, `module_services`, `credit_cost`,
+`require_credit_purchases`, `enable_purge`, `public_access`,
+`require_services_gcp_module`, `shared_users`, `technical_support_users`,
+`resource_creator_identity`, `impersonation_service_account`,
+`job_execution_wait_timeout`) plus three declared-but-inert variables
+(`application_module`, `explicit_secret_values`, `scripts_dir` — the module
+wires its own secret values and scripts path internally from
+`Documenso_Common`). None of these affect the deployed infrastructure; see the
+[module README](../../modules/Documenso_GKE/README.md#module-metadata-group-0)
+for the full table.
 
 All other inputs follow standard [App_GKE](App_GKE.md) behaviour.
 

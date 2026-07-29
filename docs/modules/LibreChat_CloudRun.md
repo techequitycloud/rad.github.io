@@ -246,7 +246,6 @@ to or notable for LibreChat are listed; every other input is inherited from
 |---|---|---|
 | `project_id` | _(required)_ | Target Google Cloud project. |
 | `region` | `us-central1` | Region for the service and regional resources. |
-| `firestore_mongodb_host` | `""` | Firestore MongoDB endpoint host (manual override). Leave empty for auto-discovery. |
 
 ### Group 2 — Deployment Environment
 
@@ -265,6 +264,7 @@ to or notable for LibreChat are listed; every other input is inherited from
 | `application_description` | _(set)_ | Service description. |
 | `application_version` | `latest` | LibreChat image version tag — **pin to a specific release in production**. |
 | `mongodb_uri` | `mongodb://127.0.0.1:27017/LibreChat` | MongoDB connection URI (sensitive). Defaults to the in-pod `mongo:7` sidecar. Set to `""` to use Firestore auto-provisioning, or supply an external MongoDB/Atlas URI. |
+| `firestore_mongodb_host` | `""` | Firestore MongoDB endpoint host (manual override). Leave empty for auto-discovery. |
 | `app_title` | `LibreChat` | Title shown in the LibreChat UI header and browser tab. |
 | `allow_registration` | `true` | Allow new users to self-register. **Set `false` after initial admin account creation.** |
 | `allow_social_login` | `false` | Enable OAuth social login providers. Requires OAuth app configuration in `librechat.yaml`. |

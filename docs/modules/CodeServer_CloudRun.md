@@ -36,16 +36,18 @@ services:
 | Database | _None_ | `database_type = NONE` — code-server has no SQL database |
 | Cache & queue | _None_ | Redis is explicitly disabled (`enable_redis = false`) |
 | Secrets | Secret Manager | Auto-generated editor `PASSWORD` (when `enable_password = true`) |
-| Ingress | Cloud Run URL / Cloud Load Balancing | **Default ingress is `internal`** — private by default; opt into public access |
+| Ingress | Cloud Run URL / Cloud Load Balancing | **Default ingress is `all`** — publicly reachable out of the box, gated by the auto-generated password |
 
 **Sensible defaults worth knowing up front:**
 
 - **No database and no Redis.** code-server is a single container; all state lives in
   the workspace volume. `database_type` is fixed to `NONE` by the shared application
   layer and Redis is disabled.
-- **Ingress is `internal` by default.** The service is reachable only from inside the
-  VPC out of the box. Set `ingress_settings = "all"` (and keep `enable_password = true`)
-  to expose the editor publicly, or front it with an HTTPS load balancer.
+- **Ingress is `all` (public) by default.** The service is reachable from the public
+  internet out of the box, gated by the auto-generated password. A plan-time guard
+  rejects `ingress_settings = "all"` with `enable_password = false`. Set
+  `ingress_settings = "internal"` to restrict access to the VPC instead, or front it
+  with an HTTPS load balancer.
 - **A random editor `PASSWORD` is generated automatically** and stored in Secret
   Manager. It gates the login page. Disabling `enable_password` serves the editor with
   no authentication — only safe behind `internal` ingress.
@@ -120,10 +122,10 @@ See [App_CloudRun](App_CloudRun.md) for secret injection and rotation details.
 
 ### D. Networking & ingress
 
-The service defaults to **`internal` ingress** — reachable only from within the VPC.
-To make the editor usable from a browser on the public internet, set
-`ingress_settings = "all"` (keep the password enabled), or layer an external HTTPS
-load balancer with a custom domain, Cloud CDN, and Cloud Armor.
+The service defaults to **`all` ingress** — reachable from the public internet,
+gated by the auto-generated password. Set `ingress_settings = "internal"` to
+restrict the editor to within the VPC, or layer an external HTTPS load balancer
+with a custom domain, Cloud CDN, and Cloud Armor.
 
 - **Console:** Cloud Run (service URL); Network services → Load balancing.
 - **CLI:**
@@ -225,7 +227,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `ingress_settings` | `internal` | Private by default. Set `all` for public browser access (keep the password on). |
+| `ingress_settings` | `all` | Public by default (keep the password on). Set `internal` to restrict to VPC-only access. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Route only RFC 1918 traffic via VPC. |
 | `enable_iap` | `false` | Require Google sign-in in front of the editor. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Who may access through IAP. |

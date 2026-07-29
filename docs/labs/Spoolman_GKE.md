@@ -57,7 +57,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Deploy** in the RAD platform, open **Spoolman (GKE)**, set
+1. Click **Modules** in the RAD platform, open **Spoolman (GKE)**, set
    `project_id`, and review the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Spoolman_GKE)
    documents every input by group, with defaults. Review the estimated cost

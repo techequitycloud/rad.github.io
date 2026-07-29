@@ -30,7 +30,7 @@ focused set of Google Cloud services:
 |---|---|---|
 | Compute | Cloud Run v2 | Apache/PHP service, 1 vCPU / 2 GiB by default, serverless autoscaling; scale-to-zero supported |
 | Database | Cloud SQL for MySQL 8.0 | Required — EspoCRM does not support PostgreSQL; connected over private-IP TCP |
-| Object storage | Cloud Storage + Filestore (NFS) | A dedicated `espocrm-data` GCS bucket is provisioned but **not mounted** by default; a shared NFS volume is mounted at `/var/lib/espocrm` for uploads (`enable_nfs = true` by default) |
+| Object storage | Cloud Storage + Filestore (NFS) | A dedicated `espocrm-data` GCS bucket is provisioned but **not mounted** by default; a shared NFS volume is mounted at `/var/www/html/data` for uploads (`enable_nfs = true` by default) |
 | Cache | Redis (optional) | Optional object cache; disabled by default |
 | Secrets | Secret Manager | Auto-generated `ESPOCRM_ADMIN_PASSWORD`; database password |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL; optional external HTTPS load balancer + custom domain |
@@ -53,7 +53,7 @@ focused set of Google Cloud services:
   Cold starts add several seconds of latency to the first request after idle. Set
   `min_instance_count = 1` to avoid cold starts.
 - **NFS is enabled by default.** `enable_nfs = true` mounts a shared Filestore volume at
-  `/var/lib/espocrm`, so EspoCRM's uploaded attachments and runtime data persist across
+  `/var/www/html/data`, so EspoCRM's uploaded attachments and runtime data persist across
   container restarts and are shared across instances — unlike a bare Cloud Run
   deployment with only ephemeral disk. The auto-provisioned `espocrm-data` GCS bucket is
   **not** mounted anywhere by default.
@@ -115,7 +115,7 @@ rotation.
 A dedicated **Cloud Storage** bucket (`espocrm-data`) is provisioned automatically, but
 it is **not mounted** anywhere by default (`gcs_volumes` defaults to `[]`). The actual
 persistent store for EspoCRM's uploaded attachments and runtime data is a shared **NFS
-(Filestore)** volume, mounted at `/var/lib/espocrm` because `enable_nfs = true` by
+(Filestore)** volume, mounted at `/var/www/html/data` because `enable_nfs = true` by
 default. Additional GCS buckets can be declared via `storage_buckets`, and mounted via
 `gcs_volumes` (requires the gen2 execution environment) if you want to use the bucket.
 
@@ -219,7 +219,7 @@ values at startup — a quick way to confirm the DB host and site URL the contai
   several minutes on first boot for the install/migrate step (the default liveness probe
   has a 300-second initial delay).
 - **Uploads persist on NFS.** With `enable_nfs = true` (default), EspoCRM's attachments
-  and runtime data live under the shared `/var/lib/espocrm` Filestore mount, surviving
+  and runtime data live under the shared `/var/www/html/data` Filestore mount, surviving
   container restarts and shared across instances. The `espocrm-data` GCS bucket is
   provisioned but not mounted by default.
 - **Inspect job execution:**
@@ -277,7 +277,7 @@ specific to or notable for EspoCRM are listed; every other input is inherited fr
 | `create_cloud_storage` | `true` | Creates the `espocrm-data` bucket. Not mounted anywhere unless you add a matching `gcs_volumes` entry. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Bucket definitions provisioned when `create_cloud_storage` is true. |
 | `enable_nfs` | `true` | Mounts a shared Filestore volume for EspoCRM's uploaded attachments and runtime data — persists across restarts by default. |
-| `nfs_mount_path` | `/var/lib/espocrm` | Container mount path for the NFS volume. |
+| `nfs_mount_path` | `/var/www/html/data` | Container mount path for the NFS volume. |
 | `gcs_volumes` | `[]` | No GCS Fuse mount by default; the `espocrm-data` bucket stays unmounted unless you add an entry here. |
 
 ### Group 12 — Database Backend

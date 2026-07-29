@@ -11,7 +11,7 @@ For administrators who run the RAD platform: managing users, roles, credits, mod
 
 ## What you can do
 
-As an admin you have superuser access. In addition to everything a standard user can do (browse the **Deploy** catalog, configure and deploy modules, manage your own **Deployments**, use **Credits**, and the **ROI** calculator on **Help**), you can:
+As an admin you have superuser access. In addition to everything a standard user can do (browse the **Modules** catalog, configure and deploy modules, manage your own **Deployments**, use **Credits**, and the **ROI** calculator on **Help**), you can:
 
 - View, search, create, edit, activate/deactivate, and delete **Users**.
 - Edit any user's credits and role flags (User, Partner, Agent, Finance, Support, Admin).
@@ -21,7 +21,7 @@ As an admin you have superuser access. In addition to everything a standard user
 - Handle **Setup Requests** and **Support Tickets** (tabs on the **Help** page).
 - See all revenue, costs, invoices, and payouts across the platform.
 
-After you sign in you land on **Deployments**. Your top navigation shows: Setup, Users, Sync, Deployments, Deploy, and Help. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
+After you sign in you land on **Deployments**. Your top navigation shows: Setup, Users, Sync, Deployments, Modules, Solutions, and Help. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
 
 ## Managing users
 
@@ -80,7 +80,7 @@ Key controls available to you include turning **Credits** on or off for the whol
 
 ## Managing modules
 
-You are responsible for the catalog of **platform modules** that every user sees on the **Deploy** page.
+You are responsible for the catalog of **platform modules** that every user sees on the **Modules** page.
 
 **Sync platform modules.** Go to the **Sync** page to bring platform modules into the catalog. The page is a read-only sync console: it lists the modules found in the platform repository, and the **Sync Now** action refreshes the catalog from that repository. Modules themselves are managed in the repository, not edited on this page.
 

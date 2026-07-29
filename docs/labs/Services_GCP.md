@@ -163,7 +163,7 @@ budget_alert_emails             = ["you@example.com"]
 
 ### Step 1.2 — Initiate Deployment
 
-Deployment is initiated from the RAD platform: click **Deploy** in the top navigation, open **Services GCP** from the **Platform Modules** list, fill in the configuration form, and click **Deploy**.
+Deployment is initiated from the RAD platform: click **Modules** in the top navigation, open **Services GCP** from the **Platform Modules** list, fill in the configuration form, and click **Submit**.
 
 **Expected resource provisioning times:**
 

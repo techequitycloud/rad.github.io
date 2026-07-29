@@ -17,6 +17,7 @@ const sidebars: SidebarsConfig = {
       label: 'Foundation Services',
       collapsed: true,
       items: [
+        {type: 'doc', id: 'modules/Project_GCP', label: 'Project GCP'},
         {type: 'doc', id: 'modules/Services_GCP', label: 'Services GCP'},
         {type: 'doc', id: 'modules/App_CloudRun', label: 'App Cloud Run'},
         {type: 'doc', id: 'modules/App_GKE', label: 'App GKE'},
@@ -1849,24 +1850,9 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Multicloud & Migration',
-      collapsed: true,
-      items: [
-        {type: 'doc', id: 'modules/AKS_GKE', label: 'AKS GKE'},
-        {type: 'doc', id: 'modules/EKS_GKE', label: 'EKS GKE'},
-        {type: 'doc', id: 'modules/Container_Migration', label: 'Container Migration'},
-        {type: 'doc', id: 'modules/Migration_Center', label: 'Migration Center'},
-        {type: 'doc', id: 'modules/VMware_Engine', label: 'VMware Engine'},
-        {type: 'doc', id: 'modules/Istio_GKE', label: 'Istio GKE'},
-      ],
-    },
-    {
-      type: 'category',
       label: 'Sample & Reference Apps',
       collapsed: true,
       items: [
-        {type: 'doc', id: 'modules/Bank_GKE', label: 'Bank GKE'},
-        {type: 'doc', id: 'modules/MC_Bank_GKE', label: 'MC Bank GKE'},
         {
           type: 'category',
           label: 'Sample',
@@ -1886,6 +1872,7 @@ const sidebars: SidebarsConfig = {
       label: 'Foundation Services',
       collapsed: true,
       items: [
+        {type: 'doc', id: 'labs/Project_GCP', label: 'Project GCP'},
         {type: 'doc', id: 'labs/Services_GCP', label: 'Services GCP'},
         {type: 'doc', id: 'labs/App_CloudRun', label: 'App Cloud Run'},
         {type: 'doc', id: 'labs/App_GKE', label: 'App GKE'},
@@ -3451,24 +3438,9 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Multicloud & Migration',
-      collapsed: true,
-      items: [
-        {type: 'doc', id: 'labs/AKS_GKE', label: 'AKS GKE'},
-        {type: 'doc', id: 'labs/EKS_GKE', label: 'EKS GKE'},
-        {type: 'doc', id: 'labs/Container_Migration', label: 'Container Migration'},
-        {type: 'doc', id: 'labs/Migration_Center', label: 'Migration Center'},
-        {type: 'doc', id: 'labs/VMware_Engine', label: 'VMware Engine'},
-        {type: 'doc', id: 'labs/Istio_GKE', label: 'Istio GKE'},
-      ],
-    },
-    {
-      type: 'category',
       label: 'Sample & Reference Apps',
       collapsed: true,
       items: [
-        {type: 'doc', id: 'labs/Bank_GKE', label: 'Bank GKE'},
-        {type: 'doc', id: 'labs/MC_Bank_GKE', label: 'MC Bank GKE'},
         {
           type: 'category',
           label: 'Sample',

@@ -96,7 +96,7 @@ industry do it.
   isolation, supply-chain integrity, network controls, audit logging, backup, and
   tenant isolation.
 - **Segregation of duties is built in** through clearly separated operational roles
-  (administrator, partner, support, finance, end-user) — the structural evidence
+  (administrator, partner, agent, support, finance, end-user) — the structural evidence
   auditors look for.
 - **Drift is corrected automatically.** Re-applying a deployment's known-good
   configuration reverts unauthorised changes, and validation blocks misconfigurations
@@ -227,8 +227,8 @@ industry do it.
   rather than in the abstract.
 - **Hands-on labs** walk a professional through deploying, operating, observing, and
   troubleshooting each solution on the platform.
-- **Role-based operating guides** for administrators, partners, support, finance, and
-  end-users make responsibilities and procedures clear.
+- **Role-based operating guides** for administrators, partners, agents, support, finance,
+  and end-users make responsibilities and procedures clear.
 - **Rapid onboarding.** Structured guides and reference solutions get a new
   contributor productive in hours instead of days.
 

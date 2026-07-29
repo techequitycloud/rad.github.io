@@ -95,7 +95,7 @@ iap_authorized_users = ["user:<your-email>"]
 
 ### Step 1.1 — Deploy
 
-1. Click **Deploy** in the RAD platform top navigation, open **App (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id` and `tenant_deployment_id`, and review the inputs.
+1. Click **Modules** in the RAD platform top navigation, open **App (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id` and `tenant_deployment_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/App_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.

@@ -81,7 +81,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Deploy** in the RAD platform top navigation, open **Woodpecker
+1. Click **Modules** in the RAD platform top navigation, open **Woodpecker
    (GKE)** from the **Platform Modules** list to start configuration, set
    `project_id`, and review the inputs. The module deploys cleanly with
    defaults — including placeholder forge credentials — so a first-pass

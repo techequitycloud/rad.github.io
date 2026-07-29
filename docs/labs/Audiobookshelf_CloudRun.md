@@ -46,7 +46,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Deploy** in the RAD platform top navigation, open **Audiobookshelf (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Modules** in the RAD platform top navigation, open **Audiobookshelf (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Audiobookshelf_CloudRun)
    documents every input by group, with defaults. If you want to reach the web UI from

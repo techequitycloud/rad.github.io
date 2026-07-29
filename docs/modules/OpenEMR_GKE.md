@@ -251,6 +251,23 @@ Variables are grouped exactly as they appear on the deployment platform. Only
 settings specific to or notable for OpenEMR are listed; every other input is
 inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
+### Group 0 — Module Metadata
+
+| Variable | Default | Description |
+|---|---|---|
+| `module_description` / `module_documentation` / `module_dependency` / `module_services` | _(set)_ | Platform catalogue metadata. |
+| `credit_cost` | `150` | Platform credits consumed per deployment. |
+| `require_credit_purchases` | `false` | Require credit balance check before deploy. |
+| `enable_purge` | `true` | Allow full resource deletion on destroy. |
+| `public_access` | `true` | Make the module visible in the public catalogue. |
+| `require_services_gcp_module` | `true` | Fail at plan time if no `Services_GCP`-managed VPC is detected in the project. |
+| `shared_users` / `technical_support_users` | `[]` | Users granted access / routed support requests, regardless of `public_access`. |
+| `resource_creator_identity` | _(RAD service account)_ | Service account Terraform uses to create resources. |
+| `impersonation_service_account` | `""` | SA to impersonate for shell scripts (discovery, image mirroring, NFS setup). Leave empty to use runner credentials. |
+| `job_execution_wait_timeout` | `900` | Max seconds a deployment waits for the `db-init` job before aborting the apply. |
+| `explicit_secret_values` / `scripts_dir` | `{}` / `""` | Foundation-mirrored, **not referenced** by this module. |
+| `requires_services` | _(create_postgres=true, create_mysql=false, create_redis=false, create_network_filesystem=true, create_google_kubernetes_engine=true, others false)_ | Tells the platform which `Services_GCP` resources to auto-provision for this module. |
+
 ### Group 1 — Project & Identity
 
 | Variable | Default | Description |
@@ -271,6 +288,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `application_name` | `openemr` | Base name for resources. Do not change after first deploy. |
+| `application_display_name` / `application_description` | _(Foundation defaults)_ | Foundation-mirrored fields. **Not referenced** — use `display_name` / `description` instead. |
 | `application_version` | `7.0.4` | OpenEMR image version tag; increment to roll out a new version. |
 | `display_name` | `OpenEMR` | Friendly name shown in the Console and dashboards. |
 | `description` | _(set)_ | Workload description annotation. |
@@ -280,13 +298,22 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
+| `container_image_source` / `container_image` / `container_build_config` | _(Foundation defaults)_ | Foundation-mirrored image sourcing. **Not referenced** — `OpenEMR_Common` always builds a custom image. |
+| `enable_image_mirroring` | `true` | Mirror the OpenEMR image into Artifact Registry to avoid Docker Hub rate limits. |
+| `container_port` | `8080` | Foundation-mirrored container port. **Not referenced** — `main.tf` hardcodes port `80`. |
+| `container_protocol` | `http1` | Foundation-mirrored HTTP protocol. **Not referenced.** |
+| `container_resources` | _(Foundation defaults)_ | Foundation-mirrored CPU/memory object. **Not referenced** — use `cpu_limit`/`memory_limit`/`ephemeral_storage_limit` instead. |
 | `cpu_limit` | `2000m` | CPU per pod; 2 vCPU recommended for concurrent clinical workloads. |
 | `memory_limit` | `4Gi` | Memory per pod; 4 GiB minimum for production. |
 | `ephemeral_storage_limit` | `8Gi` | Ephemeral storage for PHP opcache, Apache logs, and temp files. GKE Autopilot caps total pod ephemeral storage at 10 GiB; the Auth Proxy sidecar uses ~1 GiB, leaving a maximum of 9 GiB. |
 | `min_instance_count` | `1` | Minimum replicas. Keep ≥ 1 to avoid cold-start delays for clinical users. |
 | `max_instance_count` | `1` | Increase only after confirming Redis session sharing is operational. |
-| `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar. Not user-configurable in this module. |
+| `enable_cloudsql_volume` | `true` | Foundation-mirrored Cloud SQL Auth Proxy sidecar toggle. **Not referenced** — `openemr.tf` always forces this to `true` internally. |
+| `cloud_sql_proxy_version` | `2-alpine` | Cloud SQL Auth Proxy sidecar image tag. |
+| `cloudsql_volume_mount_path` | `/cloudsql` | Foundation-mirrored Auth Proxy socket path. **Not referenced.** |
+| `service_annotations` / `service_labels` | `{}` | Custom Kubernetes Service annotations/labels. |
 | `enable_vertical_pod_autoscaling` | `false` | Let Autopilot tune resource requests automatically. |
+| `timeout_seconds` | `300` | Max request duration in seconds (0–3600). |
 | `deployment_timeout` | `1800` | Seconds Terraform waits for rollout. Extended for OpenEMR's long first-boot install. |
 
 ### Group 5 — Environment Variables & Secrets
@@ -295,14 +322,24 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `environment_variables` | `{}` | Extra plain-text settings. Core `MYSQL_*` and `OE_*` values are set automatically. Common additions: `PHP_MEMORY_LIMIT`, `SMTP_HOST`, `SMTP_PORT`. |
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name. Use for sensitive values such as SMTP credentials. |
+| `secret_rotation_period` | `2592000s` | Secret Manager rotation notification frequency. |
 | `secret_propagation_delay` | `30` | Seconds to wait after secret creation before proceeding. |
 
 ### Group 6 — GKE Backend & Cluster
 
 | Variable | Default | Description |
 |---|---|---|
+| `gke_cluster_name` | `""` | Target cluster name. Leave empty for auto-discovery. |
+| `gke_cluster_selection_mode` | `primary` | Foundation-mirrored cluster selection strategy. **Not referenced.** |
+| `namespace_name` | `""` | Kubernetes namespace. Leave empty to auto-generate. |
+| `prereq_gke_subnet_cidr` / `prereq_subnet_cidr_override` / `prereq_gke_pod_cidr_override` / `prereq_gke_service_cidr_override` | _(auto-derived)_ | CIDR overrides for an inline VPC/GKE cluster when `Services_GCP` does not already exist. Set to previously-applied values on existing deployments to avoid replacement. |
 | `service_type` | `LoadBalancer` | How the Service is exposed. |
 | `session_affinity` | `ClientIP` | Sticky routing required for OpenEMR PHP sessions. |
+| `enable_multi_cluster_service` | `false` | Foundation-mirrored Multi-Cluster Services toggle. **Not referenced.** |
+| `extra_service_ports` | `[]` | Foundation-mirrored extra Service ports for multi-protocol workloads. **Not referenced** — declared for convention parity only. |
+| `configure_service_mesh` | `false` | Enable Istio sidecar injection for the namespace. |
+| `enable_network_segmentation` | `false` | Create Kubernetes NetworkPolicy resources. |
+| `termination_grace_period_seconds` | `30` | Seconds Kubernetes waits after SIGTERM before SIGKILL. |
 | `workload_type` | `null` | Auto-resolves to StatefulSet when per-pod storage is enabled. |
 | `network_tags` | `['nfsserver']` | Required for NFS connectivity via VPC firewall rules. Do not remove. |
 
@@ -311,14 +348,20 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `null` | Enable PVC templates. OpenEMR uses NFS, not PVCs — leave unset. |
-| `stateful_pvc_size` / `stateful_pvc_mount_path` / `stateful_pvc_storage_class` | _(set)_ | PVC options when StatefulSet mode is explicitly needed. |
+| `stateful_pvc_size` / `stateful_pvc_mount_path` / `stateful_pvc_storage_class` | `10Gi` / `/data` / `standard-rwo` | PVC options when StatefulSet mode is explicitly needed. |
+| `stateful_headless_service` | `null` | Create a headless Service for stable network identities. |
+| `stateful_pod_management_policy` | `null` | Pod creation order: `OrderedReady` or `Parallel`. Defaults to `OrderedReady`. |
+| `stateful_update_strategy` | `null` | `RollingUpdate` or `OnDelete`. Defaults to `RollingUpdate`. |
+| `stateful_fs_group` | `0` | fsGroup GID set in the pod security context; `0` leaves fsGroup unset. |
 
 ### Group 8 — Resource Quota
 
 | Variable | Default | Description |
 |---|---|---|
 | `enable_resource_quota` | `false` | Cap namespace CPU/memory/object counts. |
+| `quota_cpu_requests` / `quota_cpu_limits` | `""` | Total CPU requests/limits allowed across all pods in the namespace. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Must use binary units (`4Gi`, `8192Mi`)** — bare integers are read as bytes and block scheduling. |
+| `quota_max_pods` / `quota_max_services` / `quota_max_pvcs` | `""` | Maximum pod / Service / PVC counts in the namespace. |
 
 ### Group 9 — Reliability Policies
 
@@ -327,11 +370,13 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `enable_pod_disruption_budget` | `false` | Disabled by default because `max_instance_count = 1` — a PDB with `min_available = 1` blocks node drains on a single pod. Enable only when running 2+ replicas. |
 | `pdb_min_available` | `1` | Raise `min_instance_count` above 1 if you need eviction headroom. |
 | `enable_topology_spread` | `false` | Spread pods across zones. |
+| `topology_spread_strict` | `false` | When `true`, reject pods (`DoNotSchedule`) if the zone spread constraint cannot be satisfied instead of `ScheduleAnyway`. |
 
 ### Group 10 — Observability & Health
 
 | Variable | Default | Description |
 |---|---|---|
+| `startup_probe_config` / `health_check_config` | _(Foundation defaults)_ | Foundation-mirrored probe objects. **Not referenced** — use `startup_probe` / `liveness_probe` instead. |
 | `startup_probe` | TCP on port 80, 12 failures × 10s | TCP probe; allows up to 120 seconds for startup. Increase `failure_threshold` for first-time deploys with large databases. |
 | `liveness_probe` | HTTP `GET /interface/login/login.php`, 10 failures × 30s | Login page returns HTTP 200 only when Apache, PHP-FPM, and the database connection are all operational. |
 | `uptime_check_config` | disabled | Optional Cloud Monitoring uptime check. |
@@ -343,12 +388,18 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `initialization_jobs` | `[]` | Leave empty to use the built-in `nfs-init` / `db-init` / `openemr-install` sequence. |
 | `cron_jobs` | `[]` | Scheduled CronJobs (e.g., backup, report generation). |
+| `additional_services` | `[]` | Sidecar or helper GKE services deployed alongside OpenEMR. |
 
 ### Group 12 — CI/CD & GitHub Integration
 
 Standard App_GKE Cloud Build / Cloud Deploy integration — see
 [App_GKE](App_GKE.md). Key inputs: `enable_cicd_trigger`,
-`github_repository_url`, `github_token`, `enable_cloud_deploy`.
+`github_repository_url`, `github_token`, `github_app_installation_id`,
+`cicd_trigger_config`, `enable_cloud_deploy`, `cloud_deploy_stages`,
+`enable_binary_authorization`, `binauthz_evaluation_mode` (enforcement mode —
+`ALWAYS_ALLOW`, `REQUIRE_ATTESTATION`, or `ALWAYS_DENY` — used only when
+`enable_binary_authorization = true` and `Services_GCP` has not pre-configured
+the policy).
 
 ### Group 13 — Filesystem (NFS)
 
@@ -356,6 +407,9 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `enable_nfs` | `true` | **Must remain `true`.** OpenEMR requires NFS for the `sites/` directory. |
 | `nfs_mount_path` | `/var/www/localhost/htdocs/openemr/sites` | Mount path inside the container. Must match the OpenEMR sites directory path. |
+| `nfs_volume_name` | `nfs-data-volume` | Kubernetes volume name for the NFS mount. |
+| `nfs_instance_name` | `""` | Existing NFS GCE VM to target directly. Leave empty for auto-discovery. |
+| `nfs_instance_base_name` | `app-nfs` | Base name for an inline NFS GCE VM when none exists. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 
@@ -363,7 +417,11 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `create_cloud_storage` | `true` | Provision the data bucket. |
 | `storage_buckets` | `[{name_suffix="data"}]` | Additional buckets. |
+| `gcs_volumes` | `[]` | GCS buckets mounted via the GCS Fuse CSI driver. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
+| `max_images_to_retain` | `7` | Maximum recent Artifact Registry images to keep. |
+| `delete_untagged_images` | `true` | Automatically delete untagged images. |
+| `image_retention_days` | `30` | Days after which images become eligible for deletion. |
 
 ### Group 15 — Redis Session Store
 
@@ -378,10 +436,18 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
+| `database_type` | `POSTGRES` | Foundation-mirrored DB engine selector. **Not referenced** — `OpenEMR_Common` always sets `MYSQL_8_0`. |
+| `sql_instance_name` / `sql_instance_base_name` | `""` / `app-sql` | Foundation-mirrored Cloud SQL instance targeting. **Not referenced.** |
+| `application_database_name` / `application_database_user` | `gkeappdb` / `gkeappuser` | Foundation-mirrored DB name/user. **Not referenced** — use `db_name` / `db_user` instead. |
 | `db_name` | `openemr` | MySQL database name. Immutable after first deploy. |
 | `db_user` | `openemr` | Application user. Immutable after first deploy. |
 | `database_password_length` | `32` | Generated password length (16–64). |
+| `enable_postgres_extensions` / `postgres_extensions` | `false` / `[]` | Foundation-mirrored PostgreSQL extension installer. **Not referenced** — OpenEMR uses MySQL. |
+| `enable_mysql_plugins` / `mysql_plugins` | `false` / `[]` | Foundation-mirrored MySQL plugin installer. **Not referenced** by this module. |
 | `enable_auto_password_rotation` | `false` | Zero-downtime DB password rotation. Requires pod restart to pick up the new secret. |
+| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before restarting pods. |
+| `db_password_env_var_name` | `""` | Foundation-mirrored extra password env var. **Not referenced** — `main.tf` hardcodes `MYSQL_PASS`. |
+| `db_host_env_var_name` / `db_user_env_var_name` / `db_name_env_var_name` / `db_port_env_var_name` | `""` | Foundation-mirrored extra DB env var names. **Not referenced** by this module. |
 
 ### Group 17 — Backup & Maintenance
 
@@ -391,6 +457,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | `backup_retention_days` | `7` | Retention; raise to 30–90 for production/compliance. |
 | `enable_backup_import` | `false` | Restore from a backup on deploy. |
 | `backup_source` | `gcs` | Import source: `gcs` or `gdrive`. |
+| `backup_file` | `backup.sql` | Foundation-mirrored backup filename. **Not referenced** — use `backup_uri` instead. |
 | `backup_uri` | `""` | GCS URI (`gs://bucket/path`) or Google Drive file ID. When set, injected into `nfs-init` as `BACKUP_FILEID`. |
 | `backup_format` | `sql` | Backup file format: `sql`, `tar`, `gz`, `tgz`, `tar.gz`, or `zip`. |
 
@@ -405,8 +472,11 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provision Kubernetes Gateway for custom hostnames + managed certificate (a Gateway with a static IP is provisioned automatically). |
-| `application_domains` | `[]` | Hostnames to serve. |
+| `application_domains` | `[]` | Hostnames to serve. If empty, a nip.io domain based on the auto-generated static IP is used. |
+| `gateway_backend_stage` | `dev` | Cloud Deploy stage whose Service the Gateway HTTPRoute targets. Ignored when `enable_cloud_deploy` is false. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
+| `static_ip_name` | `""` | Name for the reserved static IP. Leave empty to auto-generate. |
+| `network_name` | `""` | Explicit VPC network name. Leave empty to auto-discover the `Services_GCP`-managed network. **Not referenced** by this module. |
 
 ### Group 20 — Identity-Aware Proxy (IAP)
 
@@ -424,6 +494,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | `enable_cloud_armor` | `false` | Attach a Cloud Armor (WAF) policy to the Ingress backend. |
 | `admin_ip_ranges` | `[]` | CIDRs allowed privileged access. |
 | `cloud_armor_policy_name` | `default-waf-policy` | Policy name. |
+| `enable_cdn` | `false` | Enable Cloud CDN via GCPBackendPolicy on the GKE Ingress backend. |
 
 ### Group 22 — VPC Service Controls & Audit Logging
 
@@ -499,6 +570,7 @@ locate and explore the running resources.
 | `enable_iap` / `enable_cloud_armor` | enable for healthcare | Medium | The OpenEMR admin interface is publicly reachable without these controls. |
 | `enable_audit_logging` | `true` for HIPAA | Medium | HIPAA requires audit logging of access to PHI. |
 | `enable_vpc_sc` | set `organization_id` explicitly | Medium | Without an explicit org ID, VPC-SC silently skips perimeter creation — leaving a false sense of security. |
+| `container_image_source` / `container_port` / `container_resources` / `database_type` / `application_database_name` / `db_password_env_var_name` (Group 4/16/10) | leave at default | Low | These are Foundation-mirrored variables declared only for `check_conventions.py` parity and are **not forwarded** by `main.tf` — changing them has no effect. Use `cpu_limit`/`memory_limit`/`ephemeral_storage_limit`, `db_name`/`db_user`, and `startup_probe`/`liveness_probe` instead. |
 
 ---
 

@@ -205,21 +205,21 @@ defaults.
 | `container_port` | `3000` | The setup wizard's fixed port. **Not DNS port 53.** |
 | `container_resources` | `{cpu_limit="1000m", memory_limit="512Mi"}` | Pod resource limits. |
 | `enable_cloudsql_volume` | `false` | Not used — no database. |
+| `workload_type` | `Deployment` | No StatefulSet needed; persistence is GCS Fuse. |
 
 ### Group 6 — GKE Backend & Cluster
 
 | Variable | Default | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Public-facing by default — a UI, not an internal-only DB tool. |
-| `workload_type` | `Deployment` | No StatefulSet needed; persistence is GCS Fuse. |
 
-### Group 10 — IAP & VPC-SC
+### Group 5 — Access Control (IAP)
 
 | Variable | Default | Description |
 |---|---|---|
 | `enable_iap` | `false` | Recommended to enable — puts Google identity auth in front of the DNS-filtering policy console. |
 
-### Group 11 — Custom Domain & Networking
+### Group 19 — Custom Domain & Networking
 
 | Variable | Default | Description |
 |---|---|---|

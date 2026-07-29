@@ -56,6 +56,16 @@ a focused set of Google Cloud services:
 - **gRPC requires `h2c` protocol.** Cloud Run does not expose port 6334.
   Use `container_protocol = "h2c"` and a gRPC client over the main port if
   gRPC is needed.
+- **Redis is declared but inert.** `enable_redis` defaults to `true` at the
+  variable level (the `App_CloudRun` foundation default), but `Qdrant_CloudRun`'s
+  `main.tf` hardcodes `enable_redis = false` on the call into `App_CloudRun`
+  regardless of the variable's value — `redis_host`, `redis_port`, and
+  `redis_auth` have no effect. Qdrant has no caching dependency.
+- **The container build is fixed by `Qdrant_Common`.** `container_image`,
+  `container_image_source`, `container_build_config`, and `container_resources`
+  are declared only for Foundation convention-mirroring — `Qdrant_Common` sets
+  the real image (`qdrant/qdrant`), build source (`custom`, via a thin wrapper
+  Dockerfile), and resource shape internally and ignores these four variables.
 
 ---
 
@@ -200,6 +210,8 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `application_name` | `qdrant` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Qdrant Vector Database` | Friendly name shown in the Console. |
+| `description` | _(set)_ | Cloud Run service description shown in the platform UI. |
+| `application_description` | _(set)_ | Foundation-mirrored alternate description field; populates the same Cloud Run service description. |
 | `application_version` | `latest` | Qdrant image version tag; pin to a semver tag for production (e.g. `v1.9.0`). |
 | `enable_api_key` | `false` | Generate a random API key in Secret Manager; required before setting `ingress_settings = "all"`. |
 
@@ -218,6 +230,11 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `enable_image_mirroring` | `true` | Mirror the Qdrant image into Artifact Registry to avoid Docker Hub rate limits. |
 | `container_protocol` | `http1` | Use `h2c` to enable HTTP/2 for gRPC clients connecting over port 6333. |
 | `traffic_split` | `[]` | Traffic allocation across revisions for canary or blue-green deployments. |
+| `max_revisions_to_retain` | `7` | Maximum Cloud Run revisions to keep. Not referenced — no effect on deployment in this application module. |
+| `enable_cloudsql_volume` | `false` | Injects a Cloud SQL Auth Proxy sidecar. Not applicable — Qdrant has no SQL database; leave `false`. |
+| `cloudsql_volume_mount_path` | `/cloudsql` | Not applicable — Qdrant has no Cloud SQL database. |
+| `service_annotations` / `service_labels` | `{}` | Custom Cloud Run service annotations / labels. |
+| `container_image_source` / `container_image` / `container_build_config` / `container_resources` | `custom` / `""` / _(set)_ / _(set)_ | Declared for Foundation convention-mirroring only. `Qdrant_Common` fixes the real image, build source, and resource shape; these four have no effect. |
 
 ### Group 5 — Access & Ingress Control
 
@@ -236,6 +253,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name. |
 | `secret_propagation_delay` | `30` | Seconds to wait after secret creation before proceeding. |
 | `secret_rotation_period` | `2592000s` | Secret Manager rotation reminder period (30 days default). |
+| `prereq_subnet_cidr_override` | `""` | Override for the inline VPC primary subnet CIDR. Set only when re-applying an existing deployment to avoid resource replacement. |
 
 ### Group 7 — Backup & Restore
 
@@ -244,13 +262,18 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `backup_schedule` | `0 2 * * *` | Automated backup cron (UTC). |
 | `backup_retention_days` | `7` | Retention; raise for production/compliance. |
 | `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | restore options | Restore from a backup on deploy. |
+| `backup_file` | `backup.sql` | Filename of the backup to import; only used when `enable_backup_import = true`. Listed in the platform under Group 13 (Jobs). |
+| `additional_services` | `[]` | Supplementary Cloud Run services deployed alongside Qdrant (e.g. a sidecar worker or proxy). Not used by default. |
+| `additional_containers` | `[]` | In-pod sidecar containers sharing the same Cloud Run service and localhost. Not used by default — Qdrant has no companion process. |
 
 ### Group 8 — CI/CD & Binary Authorization
 
 Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 [App_CloudRun](App_CloudRun.md). Key inputs: `enable_cicd_trigger`,
-`github_repository_url`, `github_token`, `enable_cloud_deploy`,
-`enable_binary_authorization`.
+`github_repository_url`, `github_token`, `github_app_installation_id`,
+`cicd_trigger_config`, `enable_cloud_deploy`, `cloud_deploy_stages`,
+`enable_binary_authorization`, `binauthz_evaluation_mode` (not referenced —
+setting it has no effect on this application module).
 
 ### Group 9 — NFS & Custom SQL
 
@@ -258,7 +281,11 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `enable_nfs` | `false` | Qdrant uses GCS for storage — enable NFS only for custom init jobs that need a shared filesystem. Requires Gen2. |
 | `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
+| `nfs_instance_name` | `""` | Name of an existing NFS GCE VM to use. Leave empty for auto-discovery. |
+| `nfs_instance_base_name` | `app-nfs` | Base name for an inline NFS GCE VM. |
+| `nfs_volume_name` | `nfs-data-volume` | Cloud Run volume name for the NFS mount. Override for a second NFS share. |
 | `enable_custom_sql_scripts` | `false` | Not applicable — Qdrant has no SQL database. |
+| `custom_sql_scripts_bucket` / `custom_sql_scripts_path` / `custom_sql_scripts_use_root` | `""` / `""` / `false` | Not applicable — accepted for Foundation compatibility only. |
 
 ### Group 10 — Load Balancer, CDN & Image Retention
 
@@ -269,6 +296,8 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `application_domains` | `[]` | Custom domain names for the HTTPS LB (Google-managed SSL). |
 | `enable_cdn` | `false` | Enable Cloud CDN on the HTTPS LB backend. |
 | `max_images_to_retain` | `7` | Maximum recent container images to keep in Artifact Registry. |
+| `delete_untagged_images` | `true` | Automatically delete untagged images from Artifact Registry. |
+| `image_retention_days` | `30` | Days after which images are eligible for deletion. Set to `0` to disable. |
 
 ### Group 11 — Storage & Filesystem
 
@@ -277,6 +306,22 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `create_cloud_storage` | `true` | Provision the GCS storage bucket. |
 | `storage_buckets` / `gcs_volumes` | `[]` | Additional buckets / GCS FUSE mounts. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
+| `enable_redis` | `true` (variable default) | **Inert.** `main.tf` hardcodes `enable_redis = false` on the `App_CloudRun` call regardless of this value — Qdrant has no caching dependency. |
+| `redis_host` / `redis_port` / `redis_auth` | `""` / `6379` / `""` | **Inert** — never forwarded, since Redis is hardcoded off. |
+
+### Group 12 — Database Backend
+
+Not applicable — Qdrant has no SQL database. `database_type` is forwarded to
+`App_CloudRun` but its default (`NONE`) is the only supported value; changing
+it would not give Qdrant a working database connection because `Qdrant_Common`
+never wires database credentials into the container. The following are
+accepted for Foundation compatibility only and have no effect: `sql_instance_name`,
+`sql_instance_base_name`, `database_password_length`, `application_database_name`,
+`application_database_user`, `db_password_env_var_name`,
+`enable_postgres_extensions`, `postgres_extensions`, `enable_mysql_plugins`,
+`mysql_plugins`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`,
+`db_host_env_var_name`, `db_user_env_var_name`, `db_name_env_var_name`,
+`db_port_env_var_name`, `service_url_env_var_name`.
 
 ### Group 13 — Jobs & Scheduled Tasks
 
@@ -291,8 +336,16 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | `/readyz`, 15s delay | HTTP probe — Qdrant reports ready once all collections are loaded. |
 | `liveness_probe` | `/livez`, 30s delay | HTTP probe — dedicated liveness endpoint unaffected by collection load state. |
+| `startup_probe_config` | `enabled=true, path=/readyz` | Alternative Foundation-level startup probe interface. |
+| `health_check_config` | `enabled=true, path=/livez` | Alternative Foundation-level liveness probe interface. |
 | `uptime_check_config` | disabled, `/readyz` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
+
+### Group 15 — Advanced Networking
+
+| Variable | Default | Description |
+|---|---|---|
+| `network_name` | `""` | Name of the VPC network to use. Leave empty to auto-discover a single Services_GCP-managed network; required only when more than one exists in the project. |
 
 ### Group 23 — VPC Service Controls & Audit Logging
 
@@ -301,6 +354,20 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `enable_vpc_sc` | `false` | Enforce a VPC-SC perimeter (requires `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(set)_ | Access level CIDRs / dry-run mode. |
 | `enable_audit_logging` | `false` | Detailed Cloud Audit Logs. |
+
+### Group 0 — Module Metadata (advanced/internal)
+
+Beyond the platform-facing metadata (`module_description`, `module_documentation`,
+`module_dependency`, `module_services`, `credit_cost`, `require_credit_purchases`,
+`enable_purge`, `public_access`, `shared_users`, `technical_support_users`,
+`resource_creator_identity`, `impersonation_service_account`,
+`require_services_gcp_module`), three variables control platform-internal
+provisioning and are not normally set by hand: `requires_services` (tells the
+platform which `Services_GCP` resources to auto-provision for this module —
+defaults to the free NFS/Redis Compute VM path, not managed Memorystore/Filestore),
+`job_execution_wait_timeout` (`900`s — how long the deployment waits for an
+initialization job before aborting), and `module_writable_secret_ids` (`{}` —
+Secret Manager write grants for post-install hooks; unused by Qdrant).
 
 ---
 
@@ -351,6 +418,9 @@ running resources.
 | `secret_propagation_delay` | `30` | Medium | In large projects, Secret Manager replication may exceed 30 s; increase to `60` to prevent reading an empty API key secret. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
+| `enable_redis` / `redis_host` / `redis_port` / `redis_auth` | leave at defaults | Low | Inert — `main.tf` hardcodes Redis off regardless of these values. Setting them has no effect and does not indicate misconfiguration. |
+| `database_type` / `sql_instance_name` and the other Group 12 database variables | leave at defaults | Low | Inert for Qdrant — `Qdrant_Common` never wires database credentials into the container, so changing these does not create a usable database connection. |
+| `container_image` / `container_image_source` / `container_build_config` / `container_resources` | leave at defaults | Low | Inert — `Qdrant_Common` fixes the real image, build source, and resource shape. |
 
 ---
 

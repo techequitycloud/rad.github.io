@@ -56,7 +56,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Deploy** in the RAD platform top navigation, open **Trilium (GKE)** from
+1. Click **Modules** in the RAD platform top navigation, open **Trilium (GKE)** from
    the **Platform Modules** list, set `project_id`, and review the inputs. Configure
    only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Trilium_GKE)

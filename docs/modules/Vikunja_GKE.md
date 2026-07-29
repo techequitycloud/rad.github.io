@@ -50,11 +50,19 @@ Google Cloud services:
   Manager. Rotating it after first boot invalidates all active user sessions.
 - **Single replica by default** (`min_instance_count = 1`, `max_instance_count = 1`)
   with `session_affinity = None`. Vikunja has no built-in multi-replica coordination.
-- **A PodDisruptionBudget keeps the pod serving** through node upgrades.
+- **A PodDisruptionBudget keeps the pod serving** through node upgrades
+  (`enable_pod_disruption_budget = true`).
 - **NFS is disabled by default.** Vikunja stores data in PostgreSQL; enable NFS only
   if you need durable file attachments at `/app/vikunja/files`.
 - **A custom domain + static IP are enabled by default** (`enable_custom_domain = true`,
   `reserve_static_ip = true`) so the external address survives redeploys.
+- **A handful of Foundation variables are declared but inert.** `db_host_env_var_name`,
+  `db_name_env_var_name`, `db_password_env_var_name`, `db_port_env_var_name`,
+  `db_user_env_var_name`, `redis_auth`, `extra_service_ports`, `sql_instance_name`,
+  `sql_instance_base_name`, `network_name`, `gke_cluster_selection_mode`,
+  `prereq_gke_subnet_cidr`, `binauthz_evaluation_mode`, `explicit_secret_values`, and
+  `scripts_dir` are mirrored into `variables.tf` purely to satisfy convention checks —
+  this module's `main.tf` does not forward them, so setting them has no effect.
 
 ---
 
@@ -80,7 +88,7 @@ actually request.
   ```
 
 See [App_GKE](App_GKE.md) for how Autopilot, scaling, and the workload
-type (Deployment vs StatefulSet) are managed.
+type (`Deployment` vs `StatefulSet`) are managed.
 
 ### B. Cloud SQL for PostgreSQL 15
 
@@ -135,9 +143,10 @@ The database password secret name is in the [Outputs](#5-outputs). See
 ### E. Cloud Storage & file attachments (optional)
 
 Vikunja stores file attachments on the pod filesystem at `/app/vikunja/files`.
-Enable NFS and mount it over that path for durable attachments; the module declares
-no dedicated GCS bucket by default. NFS-backed GKE apps deploy with the `Recreate`
-strategy to avoid two pods contending for the same volume.
+Enable NFS (`enable_nfs = true`) and mount it over that path for durable
+attachments; the module declares no dedicated GCS bucket by default
+(`storage_buckets = []`). NFS-backed GKE apps deploy with the `Recreate` strategy
+to avoid two pods contending for the same volume.
 
 - **Console:** Filestore / Compute Engine (NFS VM) when `enable_nfs = true`.
 - **CLI:**
@@ -145,7 +154,8 @@ strategy to avoid two pods contending for the same volume.
   gcloud storage buckets list --project "$PROJECT"
   ```
 
-See [App_GKE](App_GKE.md) for CMEK options and GCS Fuse mounts.
+See [App_GKE](App_GKE.md) for CMEK options (`manage_storage_kms_iam`,
+`enable_artifact_registry_cmek`) and GCS Fuse mounts (`gcs_volumes`).
 
 ### F. Networking & ingress
 
@@ -198,22 +208,34 @@ Monitoring. Optional uptime checks and alert policies are available.
 
 ## 4. Configuration Variables
 
-Variables are grouped exactly as they appear on the deployment platform. Only
-settings specific to or notable for Vikunja are listed; every other input is
-inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
+Variables are grouped exactly as they appear on the deployment platform (the
+`{{UIMeta group=N}}` tags in `variables.tf`). Only settings specific to or notable
+for Vikunja are listed in each table; every other input is inherited from
+[App_GKE](App_GKE.md) with its standard behaviour and defaults.
+
+### Group 0 — Module Metadata
+
+Standard platform metadata (`module_description`, `module_documentation`,
+`module_dependency`, `requires_services`, `module_services`, `credit_cost`,
+`require_credit_purchases`, `enable_purge`, `public_access`,
+`require_services_gcp_module`, `shared_users`, `technical_support_users`,
+`resource_creator_identity`, `impersonation_service_account`,
+`job_execution_wait_timeout`) plus two variables declared but **not referenced** by
+this module — `explicit_secret_values` and `scripts_dir`. `credit_cost` defaults to
+`150`, higher than the Cloud Run variant.
 
 ### Group 1 — Project & Identity
 
 | Variable | Default | Description |
 |---|---|---|
 | `project_id` | _(required)_ | Target Google Cloud project. |
+| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `region` | `us-central1` | Region for the workload and regional resources. |
 
 ### Group 2 — Deployment Environment
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -223,53 +245,89 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `application_name` | `vikunja` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Vikunja` | Human-readable name shown in the Console. |
+| `application_description` | `Vikunja task manager on GKE Autopilot` | Workload description. |
 | `application_version` | `latest` | Vikunja image version tag; `latest` builds a pinned recent release (`2.3.0`). |
-| `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 
 ### Group 4 — Runtime & Scaling
 
 | Variable | Default | Description |
 |---|---|---|
+| `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `container_image_source` | `custom` | Builds the busybox-grafted wrapper via Cloud Build. |
-| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | CPU/memory limits and requests. |
-| `container_port` | `3456` | Port Vikunja's Go server listens on. |
-| `min_instance_count` | `1` | Minimum replicas. |
-| `max_instance_count` | `1` | Single replica — Vikunja has no multi-replica coordination. |
-| `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar (loopback `127.0.0.1`). |
+| `container_image` | `""` | Override image URI; leave empty for the auto-derived AR path. |
+| `container_build_config` | `{ enabled = true }` | Dockerfile/context for the custom build. |
 | `enable_image_mirroring` | `true` | Mirror the wrapper image into Artifact Registry. |
+| `min_instance_count` / `max_instance_count` | `1` / `1` | Single replica — Vikunja has no multi-replica coordination. |
+| `container_port` | `3456` | Port Vikunja's Go server listens on. |
+| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | CPU/memory limits and requests. |
+| `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar (loopback `127.0.0.1`). |
 | `workload_type` | `Deployment` | Stateless Deployment (StatefulSet not needed — state is in PostgreSQL). |
 
-### Group 5 — Environment Variables & Secrets
+Also in this group, following standard App_GKE behaviour: `enable_vertical_pod_autoscaling`
+(`false`), `container_protocol` (`http1`), `timeout_seconds` (`300`),
+`cloudsql_volume_mount_path` (`/cloudsql`), `service_annotations` / `service_labels`
+(`{}`).
+
+### Group 5 — Identity-Aware Proxy (IAP)
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_iap` | `false` | Require Google identity auth before reaching Vikunja. |
+| `iap_authorized_users` / `iap_authorized_groups` | `[]` | Identities granted access through IAP. |
+| `iap_oauth_client_id` / `iap_oauth_client_secret` | `""` | OAuth 2.0 credentials. Required together when `enable_iap = true`. |
+| `iap_support_email` | `""` | Support email on the IAP consent screen. |
+
+### Group 6 — GKE Cluster, Networking & Environment Variables
 
 | Variable | Default | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Extra `VIKUNJA_*` settings. Do not set `VIKUNJA_DATABASE_*` or `VIKUNJA_SERVICE_JWTSECRET` here. |
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name. |
-| `secret_propagation_delay` | `30` | Seconds to wait after secret creation before proceeding. |
-| `secret_rotation_period` | `2592000s` | Secret Manager rotation notification frequency. |
-
-### Group 6 — GKE Backend & Cluster
-
-| Variable | Default | Description |
-|---|---|---|
+| `gke_cluster_name` | `""` | Target cluster; leave empty to auto-discover the `Services_GCP` cluster. |
+| `namespace_name` | `""` | Kubernetes namespace; leave empty to auto-generate. |
 | `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed. |
 | `session_affinity` | `None` | Sticky routing (`ClientIP`) or `None`. |
 | `network_tags` | `[]` | Node/pod network tags for firewall rule targeting. |
 | `enable_network_segmentation` | `false` | Create Kubernetes NetworkPolicy resources. |
 
-### Group 7 — StatefulSet
+`gke_cluster_selection_mode` and `prereq_gke_subnet_cidr` are declared for
+convention parity and are **not referenced**. `extra_service_ports` is declared but
+**not forwarded** by this module, so setting it has no effect. Also in this group,
+following standard App_GKE behaviour: `secret_rotation_period` (`2592000s`),
+`secret_propagation_delay` (`30`), `enable_multi_cluster_service` (`false`),
+`configure_service_mesh` (`false`), `termination_grace_period_seconds` (`30`),
+`deployment_timeout` (`600`), and `prereq_subnet_cidr_override` (`""`, set only to
+pin the inline VPC subnet CIDR on an existing deployment).
+
+### Group 7 — Backups & StatefulSet Configuration
+
+| Variable | Default | Description |
+|---|---|---|
+| `backup_schedule` | `0 2 * * *` | Automated Cloud SQL backup cron (UTC). |
+| `backup_retention_days` | `7` | Retention; raise to 30–90 for production/compliance. |
 
 `stateful_pvc_enabled`, `stateful_pvc_size`, `stateful_pvc_mount_path`,
 `stateful_pvc_storage_class`, `stateful_headless_service`,
-`stateful_pod_management_policy`, `stateful_update_strategy` — StatefulSet PVC
-templates. Not recommended for Vikunja; state lives in PostgreSQL.
+`stateful_pod_management_policy`, `stateful_update_strategy`, `stateful_fs_group` —
+StatefulSet PVC templates. Not recommended for Vikunja; state lives in PostgreSQL.
 
-### Group 9 — Reliability Policies
+### Group 8 — Resource Quota
+
+`enable_resource_quota`, `quota_cpu_requests`, `quota_cpu_limits`,
+`quota_memory_requests`, `quota_memory_limits` — namespace ResourceQuota. Memory
+values require binary unit suffixes (e.g. `"4Gi"`).
+
+### Group 9 — Custom SQL Scripts & Reliability Policies
 
 | Variable | Default | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protect availability during node upgrades. |
 | `pdb_min_available` | `1` | Minimum pods available during voluntary disruptions. |
+| `enable_topology_spread` / `topology_spread_strict` | `false` | Distribute pods across zones. |
+
+`enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`,
+`custom_sql_scripts_use_root` — optional post-provisioning SQL script execution
+against the database.
 
 ### Group 10 — Observability & Health
 
@@ -280,7 +338,7 @@ templates. Not recommended for Vikunja; state lives in PostgreSQL.
 | `uptime_check_config` | disabled, path `/health` | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
-### Group 11 — Jobs & Scheduled Tasks
+### Group 11 — Workload Automation
 
 | Variable | Default | Description |
 |---|---|---|
@@ -288,11 +346,14 @@ templates. Not recommended for Vikunja; state lives in PostgreSQL.
 | `cron_jobs` | `[]` | Scheduled Kubernetes CronJobs. |
 | `additional_services` | `[]` | Sidecar or helper services deployed alongside Vikunja. |
 
-### Group 12 — CI/CD & GitHub Integration
+### Group 12 — CI/CD, GitHub & Binary Authorization
 
 Standard App_GKE Cloud Build / Cloud Deploy integration — see
-[App_GKE](App_GKE.md). Key inputs: `enable_cicd_trigger`,
-`github_repository_url`, `github_token`, `enable_cloud_deploy`.
+[App_GKE](App_GKE.md). Key inputs: `enable_cicd_trigger`, `github_repository_url`,
+`github_token`, `github_app_installation_id`, `cicd_trigger_config`,
+`enable_cloud_deploy`, `cloud_deploy_stages`, `enable_binary_authorization`.
+`binauthz_evaluation_mode` is declared for convention parity and is **not
+referenced**.
 
 ### Group 13 — Filesystem (NFS)
 
@@ -300,6 +361,8 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `enable_nfs` | `false` | Enable for durable file attachments at `/app/vikunja/files`. |
 | `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
+| `nfs_volume_name` | `nfs-data-volume` | Volume name for the mount. |
+| `nfs_instance_name` / `nfs_instance_base_name` | `""` / `app-nfs` | Existing NFS VM to reuse, or the base name for an inline one. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 
@@ -313,24 +376,38 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | `delete_untagged_images` | `true` | Automatically delete untagged images. |
 | `image_retention_days` | `30` | Days after which images are eligible for deletion. |
 
-### Group 16 — Database Backend
+### Group 15 — Redis
 
 | Variable | Default | Description |
 |---|---|---|
-| `database_type` | `POSTGRES` | Cloud SQL engine; fixed to PostgreSQL 15 by `Vikunja_Common`. |
+| `enable_redis` | `false` | Vikunja does not use Redis; provided for Foundation convention parity. |
+| `redis_host` / `redis_port` | `""` / `6379` | Redis connection details, only meaningful if `enable_redis = true`. |
+
+`redis_auth` is declared but **not forwarded** by this module, so setting it has no
+effect.
+
+### Group 16 — Database Configuration
+
+| Variable | Default | Description |
+|---|---|---|
+| `database_type` | `POSTGRES` | Cloud SQL engine; fixed to PostgreSQL 15 by `Vikunja_Common` regardless of this value. |
 | `application_database_name` | `vikunja` | PostgreSQL database name. Immutable after first deploy. |
 | `application_database_user` | `vikunja` | Application database user. Immutable after first deploy. |
 | `database_password_length` | `32` | Generated password length (16–64). |
-| `enable_auto_password_rotation` | `false` | Zero-downtime DB password rotation. |
-| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before rolling-restarting pods. |
+| `enable_auto_password_rotation` | `false` | Zero-downtime database password rotation. |
+| `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before restarting pods. |
+| `enable_postgres_extensions` / `postgres_extensions` | `false` / `[]` | Optional PostgreSQL extension installation. |
 
-### Group 17 — Backup & Maintenance
+`enable_mysql_plugins` / `mysql_plugins` are not applicable to Vikunja (PostgreSQL
+only). `sql_instance_name`, `sql_instance_base_name`, and the `db_*_env_var_name`
+set (`db_host_env_var_name`, `db_name_env_var_name`, `db_password_env_var_name`,
+`db_port_env_var_name`, `db_user_env_var_name`) are declared for convention parity
+and are **not referenced/forwarded** by this module.
 
-| Variable | Default | Description |
-|---|---|---|
-| `backup_schedule` | `0 2 * * *` | Automated Cloud SQL backup cron (UTC). |
-| `backup_retention_days` | `7` | Retention; raise to 30–90 for production/compliance. |
-| `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | restore options | Restore from a backup on deploy. |
+### Group 17 — Backup Import / Restore
+
+`enable_backup_import`, `backup_source`, `backup_file`, `backup_format` — restore
+the application database from a backup file on deploy.
 
 ### Group 19 — Custom Domain, Static IP & Networking
 
@@ -339,22 +416,22 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
+| `static_ip_name` | `""` | Name for the static IP; leave empty to auto-generate. |
 
-### Group 21 — Cloud Armor
+`network_name` is declared for convention parity and is **not referenced** (the
+network is auto-discovered).
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_cloud_armor` | `false` | Attach a Cloud Armor (WAF) policy to the Ingress backend. |
-| `admin_ip_ranges` | `[]` | CIDRs allowed privileged access. |
-| `enable_cdn` | `false` | Enable Cloud CDN on the GKE Ingress backend. |
+### Group 21 — Cloud Armor & CDN
+
+`enable_cloud_armor`, `admin_ip_ranges`, `cloud_armor_policy_name`, `enable_cdn` —
+attach a Cloud Armor WAF and Cloud CDN to the GKE Ingress backend.
 
 ### Group 22 — VPC Service Controls & Audit Logging
 
-| Variable | Default | Description |
-|---|---|---|
-| `enable_vpc_sc` | `false` | Enforce a VPC-SC perimeter (requires `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(set)_ | Access level CIDRs / dry-run mode. |
-| `enable_audit_logging` | `false` | Detailed Cloud Audit Logs. |
+`enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_sc_dry_run`, `organization_id`,
+`enable_audit_logging` — enforce a VPC-SC perimeter and detailed Cloud Audit Logs.
+
+All other inputs follow standard App_GKE behaviour.
 
 ---
 
@@ -402,15 +479,16 @@ locate and explore the running resources.
 |---|---|---|---|
 | `VIKUNJA_SERVICE_JWTSECRET` (auto-generated) | Never rotate after first boot | Critical | Rotating it invalidates all active user sessions, forcing immediate re-login for everyone. |
 | `application_database_name` / `application_database_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
-| `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
+| `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid backup source/file fails the import job. |
 | `enable_nfs` (for attachments) | `true` if attachments matter | High | Without NFS, file attachments live on the pod's ephemeral disk and are lost on every pod restart. |
 | `container_image_source` | `custom` | High | `prebuilt` deploys the raw `scratch` image with no shell/entrypoint mapping — the container cannot map `DB_*` and fails. |
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar is required for PostgreSQL connectivity; disabling it is blocked by a plan-time validation guard. |
-| `min_instance_count` | `1` | High | GKE requires min ≥ 1; the validation guard rejects invalid values. |
+| `min_instance_count` | `1` | Medium | The variable's own validation allows `0`–`1000` and there is no plan-time guard rejecting `0` — App_GKE's Deployment logic silently coerces `min_instance_count=0` to a `min_replicas` of `1` at apply time (`local.min_instance_count > 0 ? local.min_instance_count : 1`), so the deployed replica count silently diverges from what was configured rather than failing with an error. |
 | `VIKUNJA_SERVICE_ENABLEREGISTRATION` (env var) | `"false"` after first admin | High | Leaving registration open allows anyone with the URL to create an account. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are bytes and block all pod scheduling in the namespace. |
 | `enable_pod_disruption_budget` | `true` | Medium | Disabling allows GKE to evict the pod during maintenance with no availability guard. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
+| `db_*_env_var_name`, `redis_auth`, `extra_service_ports`, `sql_instance_name`/`sql_instance_base_name`, `network_name`, `gke_cluster_selection_mode`, `prereq_gke_subnet_cidr`, `binauthz_evaluation_mode` | Leave at default | Low | Declared for Foundation convention parity but not forwarded/referenced by this module — setting them has no effect on the deployment. |
 
 ---
 

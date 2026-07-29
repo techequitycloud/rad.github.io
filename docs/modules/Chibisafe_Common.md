@@ -194,32 +194,31 @@ declare their own `startup_probe`/`liveness_probe` (or, on GKE, additionally
 values straight into this module's inputs, so whichever value the variant
 chooses is what reaches the container.
 
-The two variants currently disagree, and the disagreement is real — not just
-a documentation gap:
+The two variants have partially converged, but a real gap remains on GKE:
 
 - **Chibisafe_CloudRun** overrides the default with **`path = "/api/health"`**,
   and its variable description is specific and technical: "the chibisafe-server
   backend serves its routes under the `/api` prefix and has NO root route
   (`GET /` 404s — the uploader UI is a separate frontend container)," with the
   health endpoint returning `200 {"status":"yes"}`.
-- **Chibisafe_GKE** still defaults its own `startup_probe`/`liveness_probe`
-  (and `health_check_config`/`startup_probe_config`) to **`path = "/"`**, with
-  a generic description ("Chibisafe exposes /") — one of these GKE
-  descriptions even carries a leftover copy-paste fragment ("Chibisafe marks
-  itself not-ready while loading large collections") that has nothing to do
-  with a file uploader, confirming it as inherited template boilerplate never
-  adapted for Chibisafe.
+- **Chibisafe_GKE**'s own `startup_probe`/`liveness_probe` variables (forwarded
+  into `Chibisafe_Common`'s app config) have since been corrected to the same
+  **`path = "/api/health"`** default, with matching language about the missing
+  root route. But its `health_check_config`/`startup_probe_config` variables —
+  the App_GKE-level variables actually wired into the Kubernetes Deployment's
+  real startup/liveness probes — **still default to `path = "/"`**, unchanged.
 
-**Verified truth:** the CloudRun override is the accurate one. The
-chibisafe-server backend has no root route; `GET /api/health` is the correct,
-unauthenticated 200 endpoint, and `Chibisafe_Common`'s own `/` default (which
-the GKE variant still inherits unchanged) describes behaviour the backend
-does not actually have. This means **Chibisafe_GKE currently ships with an
-unverified default health-probe path** that, per the CloudRun module's own
-diagnosis, would 404 against the real backend — a fix analogous to the
+**Verified truth:** per the same GKE probe precedence documented for
+[Mixpost_Common](Mixpost_Common.md#6-health-probe-behaviour) (`startup_probe`/
+`liveness_probe` populate the application config object but are superseded by
+`startup_probe_config`/`health_check_config` for the real pod probes), the
+values that actually govern Chibisafe_GKE's Kubernetes probes are
+`health_check_config`/`startup_probe_config` — and those still default to `/`.
+This means **Chibisafe_GKE's real, effective health probe still targets a path
+the chibisafe-server backend 404s on** even though the cosmetic
+`startup_probe`/`liveness_probe` defaults were fixed — a fix analogous to the
 CloudRun override (`path = "/api/health"`) has not yet been propagated to the
-GKE variant's `startup_probe`/`liveness_probe`/`health_check_config`/
-`startup_probe_config` defaults.
+GKE variant's `health_check_config`/`startup_probe_config` defaults.
 
 ---
 

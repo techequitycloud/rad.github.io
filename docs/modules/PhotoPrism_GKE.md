@@ -248,7 +248,7 @@ defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `cpu_limit` | `1000m` | CPU allocated to the PhotoPrism container. Indexing/thumbnailing is CPU-bound; raise for large libraries. |
-| `memory_limit` | `1Gi` | Memory allocated to the container. `<!-- TODO: verify --> PhotoPrism_Common's own default is 4Gi; PhotoPrism_GKE's variable default is 1Gi — raise for large libraries.` |
+| `memory_limit` | `2Gi` | Memory allocated to the container. PhotoPrism_Common's own default is `4Gi`; `PhotoPrism_GKE`'s variable default is `2Gi` — raise toward 4Gi for large libraries. |
 | `min_instance_count` | `1` | Keep at 1 to avoid cold starts during index loading. |
 | `max_instance_count` | `1` | **Keep at 1** — single writable SQLite DB and media volume. |
 | `container_port` | `2342` | Not forwarded to App_GKE; PhotoPrism always serves on 2342, fixed by `PhotoPrism_Common`. |

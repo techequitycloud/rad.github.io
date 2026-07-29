@@ -36,9 +36,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, Artifact Registry, and shared service accounts this module
-  depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -56,7 +58,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Deploy** in the RAD platform top navigation, open **OpenEMR (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
+1. Click **Modules** in the RAD platform top navigation, open **OpenEMR (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/OpenEMR_GKE)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -147,6 +149,16 @@ export REGION="us-central1"           # the region you deploy into
    kubectl get jobs -n "$NS"          # nfs-init, db-init, openemr-install
    ```
 
+   The database password is always injected as `MYSQL_PASS` — the generic
+   `db_password_env_var_name` module input is a Foundation-mirrored field this
+   module does not forward, so setting it has no effect. Likewise, several other
+   Foundation-mirrored inputs (`container_port`, `database_type`,
+   `application_database_name`/`application_database_user`, and the
+   `db_host_env_var_name`/`db_user_env_var_name`/`db_name_env_var_name`/
+   `db_port_env_var_name` group) are inert for this module — see the
+   [Configuration Guide](https://docs.radmodules.dev/docs/modules/OpenEMR_GKE) for
+   the full list and their OpenEMR-specific replacements (`db_name`, `db_user`, etc.).
+
 5. **Open a database session** for inspection or maintenance:
 
    ```bash
@@ -194,6 +206,19 @@ platform-level diagnostics and do not change with OpenEMR releases.
   kubectl describe pod -n "$NS" <pod>        # Events section shows scheduling/probe/mount errors
   kubectl logs -n "$NS" <pod> -c openemr --previous   # logs from the crashed container
   ```
+- **Pod looks permanently hung during first boot, but isn't crashing:** before
+  assuming the app is broken, distinguish a genuinely stalled boot from an
+  impractically slow one. Confirmed on OpenEMR: its first-boot permission-hardening
+  pass runs a recursive `find`/`chmod` sweep over `vendor/`/`node_modules/` (tens of
+  thousands of files), which can look identical to a hang from logs alone. Because GKE
+  gives you a live shell — unlike Cloud Run — you can check the pod's actual process
+  state directly:
+  ```bash
+  kubectl exec -n "$NS" <pod> -- ps aux
+  ```
+  If the sweep (or another setup step) still shows as a running process, the boot is
+  just slow, not stalled — let it continue. If no such process is running and the pod
+  is not making progress, treat it as a genuine hang and investigate logs/events instead.
 - **Initialisation jobs failed:** inspect each job and its pod logs:
   ```bash
   kubectl get jobs -n "$NS"

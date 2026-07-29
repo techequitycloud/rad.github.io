@@ -193,13 +193,12 @@ Monitoring, with optional uptime checks and alert policies.
   gcloud secrets versions access latest --secret=<admin_password_secret_id output>
   ```
 
-- **Health endpoint.** `/health` is GoAlert's documented public, unauthenticated
-  endpoint (200 once the app lifecycle leaves the "Starting" state). This module's
-  startup and liveness probes default to a **TCP** port check rather than an HTTP
+- **Health endpoint.** GoAlert v6.1.0's `/health` endpoint sits behind session
+  auth and returns 403 ("invalid session") rather than the plain 200 documented
+  upstream, so an HTTP probe against it never passes. This module's startup and
+  liveness probes therefore default to a **TCP** port check instead of an HTTP
   path check — Kubernetes supports `tcpSocket` for both probe types (unlike Cloud
-  Run, which forbids a TCP liveness probe) — and both proved correct on live
-  verification (HTTP 200 on `/health` with real "listening and serving HTTP" log
-  lines).
+  Run, which forbids a TCP liveness probe).
 
 - **Inspect job execution:**
   ```bash

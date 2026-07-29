@@ -67,9 +67,9 @@ See the role guides at the end for the full task lists.
 
 ## Core concepts
 
-### Modules and the Deploy catalog
+### Modules and the catalog
 
-The **Deploy** page is the module catalog. Each module appears as a **card** showing its description, a documentation link, an average star rating, how many times it has been deployed, and a **credit cost** badge.
+The **Modules** page is the module catalog. Each module appears as a **card** showing its description, a documentation link, an average star rating, how many times it has been deployed, and a **credit cost** badge.
 
 There are two kinds of modules:
 
@@ -82,9 +82,9 @@ You can **pin** the modules you use most so they stay at the top, **search** by 
 
 ### Deploying a module
 
-1. Click a module card to open its guided, multi-step **configuration form**. Fill in the fields, using **Next** to move through the steps. Required fields can't be left blank, and the form checks your entries before you continue.
+1. Click a module card to open its guided, multi-step **configuration form**. By default you get **Basic mode**: only the essential first-page fields, priced at build cost only. Fill in the fields, using **Next** to move through the steps. Required fields can't be left blank, and the form checks your entries before you continue.
 2. A confirmation dialog appears if the module costs credits, has dependencies, or needs special permissions.
-3. Click **Deploy**. The deployment is queued and provisioned, and you're taken to the **Deployments** page. If you don't have enough credits, RAD shows the module's cost against your balance and prompts you to top up.
+3. Click **Submit** (or **Confirm**, if a confirmation dialog appeared). The deployment is queued and provisioned, and you're taken to the **Deployments** page. If you don't have enough credits, RAD shows the module's cost against your balance and prompts you to top up.
 
 On the **Deployments** page each row shows the module, deployment ID, project, status, the action, who deployed it, when, how long it took, the credits used, and an editable **star rating**. (Admins and support can switch between **All deployments** and **My deployments**; everyone else sees their own.)
 
@@ -96,7 +96,7 @@ Click a deployment to open its details, which has three tabs:
 
 From the details view you can:
 
-- **Update** — re-open the configuration form (pre-filled) and re-apply changes. Available once a deployment has finished.
+- **Update** — re-open the configuration form (pre-filled) and re-apply changes. Available once a deployment has finished. You can also switch on **Advanced mode** here to reveal every configuration page, which adds a module fee on top of the build cost.
 - **Delete** — choose **Delete** to tear down the cloud resources, or **Purge** to remove the deployment from RAD *without* destroying the cloud resources (useful when a deployment is stuck or was changed outside RAD).
 
 Deployment statuses you may see include Queued, Working, Success, Failure, Deleting, Deleted, Cancelled, Timeout, and Expired.

@@ -251,7 +251,7 @@ All other inputs follow standard App_GKE behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `application_name` | `azimutt` | Base name for resources. Do not change after first deploy. |
-| `display_name` | `Azimutt` | Human-readable name shown in the platform UI. |
+| `display_name` | `Azimutt` | Human-readable display name. Note: this variable is not currently referenced by this GKE module. |
 | `application_version` | `latest` | Azimutt image tag; `latest` maps to the `main` tag. Pin to a release in production. |
 
 All other inputs follow standard App_GKE behaviour.

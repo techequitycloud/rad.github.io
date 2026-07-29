@@ -76,9 +76,9 @@ wires together a focused set of Google Cloud services:
   the GKE LoadBalancer terminates TLS at the edge and forwards plain HTTP to
   the pod, this static override makes Passbolt generate `https://` URLs
   correctly in emails and absolute links.
-- **`enable_cloudsql_volume` defaults to `true` here** — matching
-  `Passbolt_Common`'s own default, and the opposite of `Passbolt_CloudRun`,
-  whose top-level variable defaults `false`.
+- **`enable_cloudsql_volume` defaults to `true` here** — matching both
+  `Passbolt_Common`'s own default and `Passbolt_CloudRun`'s top-level
+  variable, which also defaults `true`.
 - **No first-visit web setup wizard.** The only way an admin account exists is
   via the `admin-bootstrap` init job, which prints a one-time setup URL to its
   pod logs (surfaced in Cloud Logging) for the operator to open in a

@@ -64,7 +64,7 @@ export REGION="us-central1"          # the region you deploy into
    than one instance and want to avoid a `settings.json` lost-write race,
    consider setting `max_instance_count = 1` explicitly (see the
    Configuration Guide's Pitfalls section). Review the estimated cost (if
-   credits are enabled) and click **Deploy**, which opens the deployment
+   credits are enabled) and click **Submit**, which opens the deployment
    status page with real-time logs.
 
 2. The platform provisions the Cloud Run service, a Cloud SQL PostgreSQL 15

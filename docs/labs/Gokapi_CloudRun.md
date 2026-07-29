@@ -60,7 +60,7 @@ export REGION="us-central1"          # the region you deploy into
    the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Gokapi_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if
-   credits are enabled) and click **Deploy**, which opens the deployment status
+   credits are enabled) and click **Submit**, which opens the deployment status
    page with real-time logs.
 
 2. The platform provisions a single-instance Cloud Run service, a Cloud Storage

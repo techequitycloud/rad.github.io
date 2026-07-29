@@ -59,7 +59,7 @@ export REGION="us-central1"          # the region you deploy into
 1. In the RAD platform, open **LimeSurvey (Cloud Run)**, set `project_id`, and review
    the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/LimeSurvey_CloudRun)
-   documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
+   documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Submit**, which opens the deployment status page with real-time logs.
 
 2. The platform provisions the Cloud Run service, a Cloud SQL (MySQL 8.0) database
    with its Secret Manager secrets (`ADMIN_PASSWORD` and the database password), a

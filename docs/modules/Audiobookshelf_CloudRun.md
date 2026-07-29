@@ -24,14 +24,14 @@ Audiobookshelf runs as a Node.js container on Cloud Run v2. Unusually for this c
 | Persistent state | Cloud Storage (GCS FUSE) | A dedicated `storage` bucket mounted at `/data` (gen2 required) |
 | Container image | Cloud Build + Artifact Registry | Thin wrapper built `FROM ghcr.io/advplyr/audiobookshelf` and mirrored into your registry |
 | Secrets | Secret Manager | No application secrets — the admin user is created in the first-run web UI |
-| Ingress | Cloud Run URL / Cloud Load Balancing | **Defaults to `internal`** (VPC-only); optional external HTTPS load balancer |
+| Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL, public (`ingress_settings = all`) by default; optional external HTTPS load balancer |
 
 **Sensible defaults worth knowing up front:**
 
 - **No external database.** `database_type = "NONE"` and `enable_cloudsql_volume = false` are fixed by `Audiobookshelf_Common`; Audiobookshelf creates and migrates its internal SQLite database on first boot. No `db-init` job runs.
 - **One persistent mount covers everything.** `CONFIG_PATH = /data/config` (SQLite DB + app config) and `METADATA_PATH = /data/metadata` (cover art, cached metadata) are both redirected under `/data`, which is backed by an automatically provisioned GCS bucket mounted via GCS FUSE. Losing this bucket loses all Audiobookshelf state.
 - **Single instance.** `min_instance_count = 1` and `max_instance_count = 1` — one shared SQLite library must be served by exactly one writer. Do not raise the maximum.
-- **Ingress defaults to `internal`.** The `run.app` URL is only reachable from inside the VPC. Set `ingress_settings = "all"` (or front the service with the load balancer) to reach the web UI from a browser.
+- **Ingress defaults to `all` (public).** The `run.app` URL is reachable from the internet by default; set `ingress_settings = "internal"` to restrict it to VPC-only traffic if you prefer to front it with a load balancer instead.
 - **Custom (thin-wrapper) image.** Cloud Build wraps the upstream `ghcr.io/advplyr/audiobookshelf` image so it is mirrored into Artifact Registry. The Dockerfile reads the app-specific `AUDIOBOOKSHELF_VERSION` build ARG; `application_version = "latest"` resolves to the pinned `2.17.0`.
 - **No generated secrets.** The initial **root** user is created interactively in the first-run web UI, and API tokens are minted in the UI afterwards — `Audiobookshelf_Common` exposes empty `secret_ids`.
 - **Health probes target `/healthcheck`**, Audiobookshelf's unauthenticated 200 endpoint (startup: 15 s initial delay, 10 failures allowed; liveness: 30 s delay, 3 failures).
@@ -95,7 +95,7 @@ Audiobookshelf itself needs no injected secrets — there is no database passwor
 
 ### E. Networking & ingress
 
-By default `ingress_settings = "internal"` — the service answers only to callers inside the VPC. To use Audiobookshelf from a browser or the mobile apps, either set `ingress_settings = "all"` or enable the external HTTPS load balancer (`enable_cloud_armor`) with a custom domain.
+By default `ingress_settings = "all"` — the service is reachable from the internet, which is what lets the web UI and mobile apps connect directly. Set `ingress_settings = "internal"` to restrict the service to VPC-only callers, or enable the external HTTPS load balancer (`enable_cloud_armor`) with a custom domain instead.
 
 - **Console:** Cloud Run (service URL); Network services → Load balancing.
 - **CLI:**
@@ -184,7 +184,7 @@ All other inputs follow standard App_CloudRun behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `ingress_settings` | `internal` | VPC-only by default. Set `all` (or use the load balancer) to reach the web UI and mobile apps from the internet. |
+| `ingress_settings` | `all` | Public by default. Set `internal` to restrict the service to VPC-only callers. |
 | `enable_iap` | `false` | Require Google sign-in via Identity-Aware Proxy. |
 
 All other inputs follow standard App_CloudRun behaviour.
@@ -272,7 +272,7 @@ Returned on a successful deployment — the quickest way to locate and explore t
 | Output | Description |
 |---|---|
 | `service_name` | Cloud Run service name. |
-| `audiobookshelf_url` | URL of the web UI / API. Only reachable inside the VPC while `ingress_settings = "internal"`. |
+| `audiobookshelf_url` | URL of the web UI / API. Reachable from the internet by default (`ingress_settings = "all"`); only VPC-internal if set to `internal`. |
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service details (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | External HTTPS load balancer IP / URL (when enabled). |
@@ -303,7 +303,7 @@ Returned on a successful deployment — the quickest way to locate and explore t
 | `container_port` | `80` | Critical | Audiobookshelf listens on 80 (`PORT=80` injected); a mismatch fails every health probe. |
 | `execution_environment` | `gen2` | High | GCS FUSE mounts require gen2; gen1 cannot mount the `/data` bucket. |
 | `enable_backup_import` | `false` unless restoring | High | Enabling without a valid `backup_uri` fails the import job. |
-| `ingress_settings` | `internal` (default) / `all` when needed | Medium | Left `internal`, the web UI and mobile apps get no external access (requests return 404); set `all` or add the load balancer. |
+| `ingress_settings` | `all` (default) / `internal` for VPC-only | Medium | Set to `internal` without a load balancer in front, and the web UI and mobile apps lose all external access. |
 | `application_version` | pinned tag | Medium | `latest` silently resolves to the pinned `2.17.0`; pin explicitly to control upgrades. |
 | `min_instance_count` | `1` | Medium | `0` saves cost (state is on GCS, so it is data-safe) but adds a cold start to the first stream after idle. |
 | Library size on GCS FUSE | small/medium libraries | Medium | Large libraries and frequent scans suffer FUSE latency — use `Audiobookshelf_GKE` (block PVC) for production-scale libraries. |

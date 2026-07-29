@@ -99,9 +99,9 @@ automatically. SMTP variables are pre-populated as defaults for you to fill in:
 | `REDIS_HOST` | Redis endpoint (empty string when Redis is disabled). |
 | `REDIS_PORT` | Redis port (default `6379`). |
 | `SMTP_HOST` | Outgoing mail relay hostname. Set this for email delivery. |
-| `SMTP_PORT` | SMTP port (default `587`). |
+| `SMTP_PORT` | SMTP port (default `25`). |
 | `SMTP_USER` | SMTP authentication username. |
-| `SMTP_SSL` | `ssl`, `starttls`, or `none`. |
+| `SMTP_SSL` | `true` or `false` — whether to use SSL for the SMTP connection (default `false`). |
 | `EMAIL_FROM` | Default sender address for outbound email. |
 | `SMTP_PASSWORD` | SMTP password — pass via `secret_environment_variables`. |
 
@@ -154,7 +154,7 @@ without modification unless you explicitly override them.
 
 | Platform | Type | Initial delay | Period | Threshold | Max wait |
 |---|---|---|---|---|---|
-| Cloud Run | TCP (port 8069) | 60 s | — | — | ~9 min |
+| Cloud Run | TCP (port 8069) | 60 s | 30 s | 3 | ~2.5 min |
 | GKE | HTTP `/web/health` | 180 s | 120 s | 3 | ~9 min |
 
 Odoo's HTTP handler is not available until the `base` module is fully installed and the
@@ -166,7 +166,7 @@ fresh install.
 
 | Platform | Type | Path | Initial delay | Period |
 |---|---|---|---|---|
-| Cloud Run | HTTP | `/web/health` | 120 s | 30 s |
+| Cloud Run | HTTP | `/web/health` | 120 s | 120 s |
 | GKE | HTTP | `/web/health` | 30 s | 30 s |
 
 `/web/health` returns `HTTP 200` only when Odoo has successfully connected to PostgreSQL.

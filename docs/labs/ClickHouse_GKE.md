@@ -57,7 +57,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Deploy** in the RAD platform top navigation, open **ClickHouse (GKE)** from
+1. Click **Modules** in the RAD platform top navigation, open **ClickHouse (GKE)** from
    the **Platform Modules** list to start configuration, set `project_id`, and review
    the inputs. The defaults are production-sensible: a StatefulSet with a 30 GiB PVC at
    `/var/lib/clickhouse` (`stateful_pvc_enabled = true` by default — no need to set it),

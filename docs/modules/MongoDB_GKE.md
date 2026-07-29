@@ -33,7 +33,7 @@ focused set of Google Cloud services:
 | Persistent storage | Persistent Disk (SSD PVC) | `standard-rwo` StorageClass, 20 GiB default, mounted at `/data/db` |
 | Secrets | Secret Manager | Auto-generated MongoDB root password |
 | Container images | Artifact Registry | Official `mongo` image mirrored into the project registry |
-| Networking | VPC / GKE Service | `LoadBalancer` by default for cross-namespace access; switch to `ClusterIP` for cluster-internal only |
+| Networking | VPC / GKE Service | `ClusterIP` by default — already reachable cross-namespace via in-cluster DNS; switch to `LoadBalancer` only if raw external access is genuinely required |
 
 **Sensible defaults worth knowing up front:**
 
@@ -141,9 +141,12 @@ reported in the `container_image` output.
 
 ### E. Networking & ingress
 
-By default the MongoDB Kubernetes Service is a **LoadBalancer**, exposing port
-27017 with an external IP so other workloads or developers inside the VPC can
-reach it. Switch to `ClusterIP` to restrict access to within the GKE cluster.
+By default the MongoDB Kubernetes Service is **ClusterIP** — MongoDB is a
+database backend meant to be consumed by other in-cluster workloads, and
+ClusterIP already provides cross-namespace access within the cluster via DNS.
+Set `service_type = "LoadBalancer"` only if raw external access to the
+MongoDB wire protocol is genuinely required, exposing port 27017 with an
+external IP.
 
 - **Console:** Kubernetes Engine → Services & Ingress; VPC network → IP addresses.
 - **CLI:**
@@ -271,7 +274,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `LoadBalancer` | `LoadBalancer` exposes port 27017 with an external IP; `ClusterIP` restricts to within the cluster. |
+| `service_type` | `ClusterIP` | `ClusterIP` (default) already provides cross-namespace access via in-cluster DNS; set `LoadBalancer` only if raw external access to the wire protocol is genuinely required. |
 | `workload_type` | `null` | Auto-resolves to `StatefulSet` when `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | No session stickiness required for MongoDB wire-protocol connections. |
 | `gke_cluster_name` | `""` | GKE cluster name; leave empty for auto-discovery. |
@@ -433,7 +436,7 @@ locate and explore the running resources.
 | `workload_type` | `null` (auto StatefulSet with PVC) | High | Explicitly setting `Deployment` alongside `stateful_pvc_enabled = true` fails at plan time. Standalone MongoDB requires StatefulSet for stable PVC binding. |
 | `application_version` | test major upgrades first | High | MongoDB major version upgrades change the on-disk storage format. Downgrading is not supported. Always test against a replica of the production PVC. |
 | `backup_schedule` | active and tested | High | MongoDB has no built-in automatic backup outside this module's `mongodump` job. A missed backup combined with deletion of the persistent volume on destroy results in permanent data loss. |
-| `service_type` | `ClusterIP` for DB-tier services | High | `LoadBalancer` exposes port 27017 with a public IP. Restrict to `ClusterIP` unless external access is explicitly required, and use firewall rules or NetworkPolicy. |
+| `service_type` | `ClusterIP` (default) for DB-tier services | High | `LoadBalancer` exposes port 27017 with a public IP. Only switch to `LoadBalancer` when external access is explicitly required, and use firewall rules or NetworkPolicy. |
 | `termination_grace_period_seconds` | `60` (default) | High | Too short a grace period risks journal corruption on shutdown if in-flight writes have not been flushed. |
 | `cpu_limit` | `2000m` for production | Medium | Aggregation pipelines and index builds are CPU-intensive. Below `500m`, complex queries degrade significantly. |
 | `replica set` | standalone only | High | This module is single-node. Change streams, transactions, and oplog replication require a replica set — use a Helm-based deployment for multi-node topologies. |

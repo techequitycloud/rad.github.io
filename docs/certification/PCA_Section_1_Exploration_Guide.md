@@ -26,7 +26,7 @@ This is the heaviest-weighted PCA section, and it is about *choices*: which comp
 |---|---|---|
 | Minimize idle cost | `min_instance_count` (default `0`) — Cloud Run scales to zero | App_CloudRun |
 | Cap maximum spend on compute | `max_instance_count` (default `1`) | App_CloudRun |
-| CPU billing trade-off | `cpu_always_allocated` (default `true`) — set `false` to bill CPU only during request processing | App_CloudRun |
+| CPU billing trade-off | `cpu_always_allocated` (default `false`) — request-based billing (CPU billed only during request processing) by default; set `true` to keep CPU allocated at all times | App_CloudRun |
 | Financial guardrails | `create_billing_budget` (default `false`), `budget_amount` (default `100`), `budget_alert_thresholds` (default `[0.5, 0.9, 1.0]`) | Services_GCP |
 | Zero-trust access for internal apps | `enable_iap` (default `false`) + `iap_authorized_users` / `iap_authorized_groups` | App_CloudRun |
 | Stakeholder visibility | `support_users` — becomes Cloud Monitoring email notification channels | App_CloudRun / App_GKE |

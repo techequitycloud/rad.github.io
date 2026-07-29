@@ -37,8 +37,10 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Artifact
-  Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Artifact Registry, and shared service
+  accounts this module depends on). You do not need to deploy this yourself
+  first — the platform automatically detects whether it already exists in the
+  target project and provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -55,7 +57,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Deploy** in the RAD platform top navigation, open **Qdrant (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Modules** in the RAD platform top navigation, open **Qdrant (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Qdrant_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -63,7 +65,9 @@ export REGION="us-central1"          # the region you deploy into
 2. The platform provisions the Cloud Run v2 (Gen2) service, a Cloud Storage
    bucket mounted at `/qdrant/storage` via GCS FUSE, builds the container image,
    and stores an API key in Secret Manager when `enable_api_key = true`. Qdrant
-   has no SQL database and no initialization job. First deploys typically take
+   has no SQL database and no initialization job — the module declares database
+   and Redis inputs only for platform convention-mirroring; they have no effect,
+   so leave them at their defaults. First deploys typically take
    **8–15 minutes** (image build dominates).
 
 3. When it completes, discover the resources with name-agnostic filters (so the

@@ -21,7 +21,7 @@ A Partner is always also a User, so everything in [Using RAD](using-rad.md) — 
 - Earn a partner revenue share when others deploy your modules (statements provided by the Finance team).
 - See costs and invoices for the projects you own or deployed.
 
-Your top navigation shows: **Credits**, **Explore**, **Sync**, **Deployments**, **Deploy**, **Help**. The **Explore** page lets you explore and refine your modules with Jules (available when Jules is configured).
+Your top navigation shows: **Credits**, **Sync**, **Deployments**, **Modules**, **Solutions**, **Help**.
 
 ## Connecting your GitHub repository
 
@@ -42,7 +42,7 @@ If a module can't be read or has a configuration error, the Sync page shows whic
 
 ## How your modules appear to users
 
-On the **Deploy** page you see two tabs:
+On the **Modules** page you see two tabs:
 
 - **Partner modules** — the modules you've published from your own repository. This is your workspace for testing and iterating.
 - **Platform modules** — modules published by RAD, plus other partners' public modules.
@@ -63,7 +63,7 @@ You can see costs and invoices for the projects you own or deployed. These refle
 
 These work exactly as described in [Using RAD](using-rad.md):
 
-- **Deploy** — browse the catalog, fill in the guided configuration form, and launch.
+- **Modules** — browse the catalog, fill in the guided configuration form, and launch.
 - **Deployments** — track your deployments; open one for **Outputs**, **Build Status**, and build history; **Update**, **Delete**, or **Purge**; and rate modules.
 - **Credits** — view your balance and **Credit Transactions** (with **Export CSV**), **Buy Credits**, and manage subscriptions.
 

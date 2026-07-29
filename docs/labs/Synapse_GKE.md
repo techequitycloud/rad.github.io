@@ -60,7 +60,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Deploy** in the RAD platform, open **Synapse (GKE)** from the **Platform
+1. Click **Modules** in the RAD platform, open **Synapse (GKE)** from the **Platform
    Modules** list, set `project_id`, and — importantly — set **`server_name`** to your
    real domain (it is baked into every user ID and is immutable after first boot).
    Review the rest of the inputs; the

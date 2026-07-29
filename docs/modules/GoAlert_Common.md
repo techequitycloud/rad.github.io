@@ -172,14 +172,13 @@ outputs (`database_password_secret`).
 
 ## 6. Health probe behaviour
 
-The default probes target `/health` — GoAlert's documented public, unauthenticated
-endpoint (200 once the app lifecycle leaves the "Starting" state). Both the
-Cloud Run and GKE variants default to a **TCP** port check rather than an HTTP path
-check as a conservative, catalog-consistent default; live verification confirmed
-`/health` itself also returns a real HTTP 200 with genuine "listening and serving
-HTTP" server log lines, so an HTTP-path probe would also have worked. A 30-second
-initial delay and a high failure-threshold (30 retries) accommodate the
-`db-migrate` init job's first-boot schema-migration time.
+The default probes target `/health` — documented upstream as a public,
+unauthenticated endpoint, but on this catalog's GoAlert version (v6.1.0) it
+actually sits behind session auth and returns 403 ("invalid session"), so an
+HTTP-path probe never passes. Both the Cloud Run and GKE variants default to a
+**TCP** port check instead, which only confirms the server is listening. A
+30-second initial delay and a high failure-threshold (30 retries) accommodate
+the `db-migrate` init job's first-boot schema-migration time.
 
 ---
 

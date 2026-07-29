@@ -269,6 +269,21 @@ Variables are grouped exactly as they appear on the deployment platform
 settings specific to or notable for Documenso are listed; every other input is
 inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
+### Group 0 — Module Metadata
+
+| Variable | Default | Description |
+|---|---|---|
+| `module_description` / `module_documentation` / `module_dependency` / `module_services` | _(set)_ | Catalogue listing text and dependency ordering. Read by the platform, not applied by Terraform. |
+| `requires_services` | `{ create_postgres = true, create_network_filesystem = true, ... }` | Tells the platform which `Services_GCP` `create_*` toggles to enable when auto-provisioning it for this module. |
+| `credit_cost` / `require_credit_purchases` | `50` / `false` | Platform billing metadata. |
+| `enable_purge` | `true` | Permits full resource deletion on destroy. |
+| `public_access` | `true` | Lists the module in the public catalogue. |
+| `require_services_gcp_module` | `true` | An `App_CloudRun` feature — fails the plan if no `Services_GCP` VPC exists — but this variable is **not forwarded** to `App_CloudRun` here, so it has no effect at this module's level. |
+| `shared_users` | `[]` | **Actively enforced by the platform** (unlike most Group 0 vars): users listed here get access regardless of `public_access`. |
+| `technical_support_users` | `[]` | Routes support requests for this module to these users. |
+| `resource_creator_identity` | `rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com` | SA Terraform uses to create resources; forwarded to `App_CloudRun`. |
+| `impersonation_service_account` / `job_execution_wait_timeout` / `module_writable_secret_ids` | `""` / `900` / `{}` | Declared for convention parity; **not forwarded** anywhere in `main.tf` — setting any of these has no effect. |
+
 ### Group 1 — Project & Identity
 
 | Variable | Default | Description |
@@ -293,6 +308,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `description` | `Documenso - The Open Source DocuSign Alternative` | Service description. |
 | `application_version` | `latest` | Sets the `DOCUMENSO_VERSION` build arg for the custom-build `FROM docker.io/documenso/documenso:${DOCUMENSO_VERSION}` base image. |
 | `webapp_url` | `""` | Public URL of the instance. Set after first deploy (or once a custom domain is registered) so NextAuth callbacks and email links are stable. Until set, the entrypoint upgrades `localhost:3000` to the live `CLOUDRUN_SERVICE_URL` on every boot. |
+| `application_display_name` / `application_description` | (Foundation defaults) | Foundation-convention mirrors of `display_name`/`description`. **Declared but not forwarded** — use `display_name`/`description` instead. |
 
 ### Group 4 — Runtime & Scaling
 
@@ -312,6 +328,11 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `enable_cloudsql_volume` | `false` | **Should be set `true`** for the entrypoint's default Unix-socket DB connection path; the module ships this default `false` unlike most database-backed modules (see [Pitfalls](#6-configuration-pitfalls--sensible-defaults)). |
 | `enable_image_mirroring` | `true` | Mirror the Documenso image into Artifact Registry. |
 | `traffic_split` | `[]` | Split traffic across revisions for staged rollouts. |
+| `container_protocol` | `http1` | `http1` or `h2c`. Documenso has no need for HTTP/2 cleartext. |
+| `cloudsql_volume_mount_path` | `/cloudsql` | Container path for the Cloud SQL Auth Proxy Unix socket; only relevant when `enable_cloudsql_volume = true`. |
+| `service_annotations` / `service_labels` | `{}` | Advanced Cloud Run service annotations/labels. |
+| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | Foundation-convention mirror of `cpu_limit`/`memory_limit`. **Declared but not forwarded** — use those instead. |
+| `additional_containers` / `additional_services` | `[]` | Sidecar containers / supplementary Cloud Run services. **Declared but not forwarded to `App_CloudRun`** — no sidecars or additional services are deployed by this module regardless of these settings. |
 | `max_revisions_to_retain` | `7` | Declared for convention parity; not referenced by this module's deployment. |
 
 ### Group 5 — Access, Networking & Email
@@ -322,6 +343,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Route only RFC 1918 traffic via VPC. |
 | `enable_iap` | `false` | Require Google sign-in. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Who may access through IAP. |
+| `prereq_subnet_cidr_override` | `""` | Override for the inline VPC primary subnet CIDR, only relevant when no `Services_GCP` network exists. Leave empty to auto-derive a unique `/24`. |
 | `smtp_host` | `""` | SMTP server hostname. Leave empty to disable email (invitations, signing notifications). |
 | `smtp_port` / `smtp_secure_enabled` | `587` / `false` | Use `465` + `true` for implicit TLS, otherwise STARTTLS on `587`. |
 | `smtp_user` | `""` | SMTP authentication username. |
@@ -344,13 +366,19 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `backup_schedule` | `0 2 * * *` | Automated backup cron (UTC). |
 | `backup_retention_days` | `7` | Retention; raise for production/compliance. |
 | `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | restore options | Restore from a backup on deploy. |
+| `backup_file` | `backup.sql` | Foundation-convention mirror of the backup filename. **Declared but not forwarded** — use `backup_uri` instead. |
 
 ### Group 8 — CI/CD & Binary Authorization
 
 Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 [App_CloudRun](App_CloudRun.md). Key inputs: `enable_cicd_trigger`,
-`github_repository_url`, `github_token`, `enable_cloud_deploy`,
+`github_repository_url`, `github_token`, `github_app_installation_id`,
+`cicd_trigger_config`, `enable_cloud_deploy`, `cloud_deploy_stages`,
 `enable_binary_authorization`.
+
+| Variable | Default | Description |
+|---|---|---|
+| `binauthz_evaluation_mode` | `ALWAYS_ALLOW` | Enforcement mode when `enable_binary_authorization` is true and `Services_GCP` hasn't pre-configured a policy. Not referenced — has no effect on deployment in this module. |
 
 ### Group 9 — Custom SQL Scripts & NFS Instance Targeting
 
@@ -359,6 +387,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `enable_custom_sql_scripts` / `custom_sql_scripts_bucket` / `custom_sql_scripts_path` / `custom_sql_scripts_use_root` | off | Run SQL from a GCS bucket after provisioning. See [App_CloudRun](App_CloudRun.md). |
 | `nfs_instance_name` | `""` | Target an existing NFS GCE VM directly instead of auto-discovering one. |
 | `nfs_instance_base_name` | `app-nfs` | Base name for an inline NFS VM when none is found. |
+| `nfs_volume_name` | `nfs-data-volume` | Kubernetes/Cloud Run volume name for the NFS mount. Override only for a second NFS share with a distinct volume name. |
 
 ### Group 10 — Load Balancer, CDN & Image Retention
 
@@ -392,6 +421,10 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `sql_instance_name` / `sql_instance_base_name` | `""` / `app-sql` | Target an existing Cloud SQL instance or name an inline one. |
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | off | DB password rotation. |
 | `db_host_env_var_name` / `db_user_env_var_name` / `db_name_env_var_name` / `db_port_env_var_name` / `service_url_env_var_name` | `""` | Declared for convention parity but **not forwarded** anywhere in `main.tf` or `documenso.tf` — setting any of these has no effect. |
+| `application_database_name` / `application_database_user` | `crappdb` / `crappuser` | Foundation-convention mirrors of `db_name`/`db_user`. **Declared but not forwarded** — use `db_name`/`db_user` instead. |
+| `db_password_env_var_name` | `""` | Additional env var name to expose the DB password alongside `DB_PASSWORD`. **Declared but not forwarded** — has no effect. |
+| `enable_mysql_plugins` / `mysql_plugins` | `false` / `[]` | Install MySQL plugins after provisioning. Documenso is PostgreSQL-only and neither variable is forwarded — has no effect. |
+| `enable_postgres_extensions` / `postgres_extensions` | `false` / `[]` | Install PostgreSQL extensions after provisioning. **Declared but not forwarded** — has no effect for this module. |
 
 ### Group 13 — Jobs & Scheduled Tasks
 
