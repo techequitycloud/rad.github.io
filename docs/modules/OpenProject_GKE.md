@@ -239,7 +239,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `min_instance_count` | `1` | Minimum replicas (GKE has no scale-to-zero). |
 | `max_instance_count` | `5` | Maximum replicas (HPA upper bound). |
-| `container_port` | `80` | The all-in-one image serves on port 80. |
+| `container_port` | `8080` | Puma's own default bind port — this module runs Puma directly via `docker/prod/web`, bypassing the all-in-one image's Apache proxy on port 80. |
 | `container_resources` | `2000m` / `4Gi` | CPU/memory limits and requests. Rails needs headroom for migrations and workers. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar (loopback connection). |
 | `timeout_seconds` | `300` | Maximum request duration (0–3600 seconds). |

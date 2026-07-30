@@ -32,7 +32,7 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 **Key characteristics**:
 - One of the few modules in the ecosystem that uses **MySQL 8.0** instead of PostgreSQL. Invoice Ninja's Laravel application only supports MySQL.
 - **Auto-generates the `APP_KEY` secret** — a base64-encoded 32-byte random Laravel encryption key, stored in Secret Manager as `base64:<value>`. This is generated once on first apply and is not regenerated on subsequent applies.
-- Defines **two initialisation jobs** (`db-init` and `artisan-migrate`) that run sequentially on deployment.
+- Defines **three initialisation jobs** (`db-init`, `artisan-migrate`, and `admin-create`) that run sequentially on deployment.
 - Configures **snappdf PDF generation** with Chromium bundled in the `invoiceninja/invoiceninja:5` container.
 - Injects `TRUSTED_PROXIES=*` to correctly handle Cloud Run and GKE reverse proxy headers in Laravel.
 
@@ -60,7 +60,7 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | CPU: `2000m`, Memory: `2Gi` — Chromium PDF generation requires significant resources |
 | `environment_variables` | Passed through from `var.environment_variables` merged with Invoice Ninja-specific defaults (see §4) |
 | `secret_environment_variables` | Contains `APP_KEY` reference plus any additional secrets from `var.secret_environment_variables` |
-| `initialization_jobs` | Default `db-init` + `artisan-migrate` jobs or custom override (see §5) |
+| `initialization_jobs` | Default `db-init` + `artisan-migrate` + `admin-create` jobs or custom override (see §5) |
 | `startup_probe` | HTTP `GET /`, 90s initial delay, 10s timeout, 15s period, 30 failure threshold |
 | `liveness_probe` | HTTP `GET /`, 120s initial delay, 10s timeout, 30s period, 3 failure threshold |
 
@@ -115,7 +115,7 @@ The absolute path to the module directory, used by wrapper modules to locate the
 | `initialization_jobs` | `list(object)` | `[]` | Custom init jobs. Empty triggers the default `db-init` + `artisan-migrate` pair. |
 | `startup_probe` | `object` | see §6 | Startup health probe configuration. |
 | `liveness_probe` | `object` | see §6 | Liveness health probe configuration. |
-| `invoiceninja_admin_email` | `string` | `"admin@example.com"` | Declared and forwarded by both wrappers, but **not currently referenced** in `InvoiceNinja_Common`'s `local.config` — has no effect on the deployed environment. Invoice Ninja's first admin account is created through its own in-app `/setup` wizard instead. |
+| `invoiceninja_admin_email` | `string` | `"admin@example.com"` | Passed to the `admin-create` initialisation job as `IN_ADMIN_EMAIL`, used to create the first Invoice Ninja admin account via `php artisan ninja:create-account`. Invoice Ninja has no self-service signup, so this job is the only way to obtain the initial login. |
 | `mail_from_name` | `string` | `"Invoice Ninja"` | Display name for outgoing emails. |
 | `mail_from_address` | `string` | `"ninja@example.com"` | Sender email address for outgoing emails. |
 
@@ -185,9 +185,23 @@ Two jobs are provisioned by default when `initialization_jobs = []`:
 | Timeout | 600s, 1 retry |
 | CPU / Memory | `1000m` / `1Gi` |
 
-`artisan-migrate` runs Laravel's database migration system. On first deployment it creates all Invoice Ninja tables. On subsequent deployments it applies any new migrations introduced by Invoice Ninja version upgrades. The `--force` flag suppresses the interactive confirmation prompt in production mode. **There is no `--seed` flag** — the job does not seed demo/reference data; Invoice Ninja's own first-run `/setup` wizard handles initial account creation.
+`artisan-migrate` runs Laravel's database migration system. On first deployment it creates all Invoice Ninja tables. On subsequent deployments it applies any new migrations introduced by Invoice Ninja version upgrades. The `--force` flag suppresses the interactive confirmation prompt in production mode. **There is no `--seed` flag** — the job does not seed demo/reference data.
 
-Override `initialization_jobs` with a non-empty list to replace both default jobs with custom jobs. When `initialization_jobs` is non-empty, `InvoiceNinja Common` does not inject either default job.
+### Job 3: `admin-create`
+
+| Field | Value |
+|---|---|
+| Image | `null` — defaults to the application's own container image |
+| Script | `scripts/admin-create.sh`, which runs `php artisan ninja:create-account --email=<IN_ADMIN_EMAIL> --password=<IN_ADMIN_PASSWORD>` |
+| `execute_on_apply` | `true` |
+| `depends_on_jobs` | `["artisan-migrate"]` |
+| Timeout | 300s, 1 retry |
+| CPU / Memory | `1000m` / `1Gi` |
+| Env / Secret | `IN_ADMIN_EMAIL` (`var.invoiceninja_admin_email`) / `IN_ADMIN_PASSWORD` (auto-generated, Secret Manager) |
+
+Invoice Ninja has **no self-service signup** and no other way to obtain the initial login, so `admin-create` is the mechanism that creates the first admin account. It is idempotent: `php artisan ninja:create-account` has no `--ignore-if-exists` flag and errors with a raw `SQLSTATE[23000]` unique-constraint violation when re-run against an email that already has an account, so the script specifically tolerates that one error shape as "already exists — skipping" and fails loudly on any other error.
+
+Override `initialization_jobs` with a non-empty list to replace all three default jobs with custom jobs. When `initialization_jobs` is non-empty, `InvoiceNinja Common` does not inject any of the default jobs.
 
 ---
 

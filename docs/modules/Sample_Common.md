@@ -103,8 +103,9 @@ socket connections (Auth Proxy) and TCP connections.
 
 ## 5. Health probe behaviour
 
-Both probes target the `/healthz` endpoint, which is lightweight and does not touch the
-database:
+`Sample_Common`'s own probe variables default to the `/healthz` endpoint, which is
+lightweight and does not touch the database — though whether a deployment actually
+uses these defaults depends on the platform variant (see below):
 
 | Probe | Type | Path / Port | Initial Delay | Period | Failure Threshold |
 |---|---|---|---|---|---|
@@ -113,10 +114,15 @@ database:
 
 **Platform-specific adjustments:**
 
-- **GKE** uses HTTP probes — in-cluster probe traffic reaches the container directly.
-- **Cloud Run** overrides the startup probe to TCP (port 8080) because Cloud Run health
-  traffic may be subject to ingress restrictions; the TCP probe only checks that the port
-  is open, which is sufficient to gate traffic on startup.
+- **Cloud Run** (`Sample_CloudRun`) wires its own module-specific `startup_probe`/
+  `liveness_probe` variables straight into `Sample_Common`, so the deployed service
+  actually uses these accurate HTTP `/healthz` probes (with Cloud Run's own variable
+  defaults — a 60 s startup delay and a 30 s liveness delay).
+- **GKE** (`Sample_GKE`) instead wires the generic, un-specialised
+  `startup_probe_config`/`health_check_config` variables (inherited from `App_GKE`'s
+  own scaffold defaults) into `Sample_Common`, which resolve to a plain TCP/root
+  probe rather than `/healthz` — see [Sample_GKE](Sample_GKE.md) for the exact
+  defaults and a DB-free `/healthz` override.
 
 ---
 

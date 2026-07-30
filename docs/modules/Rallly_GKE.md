@@ -195,8 +195,8 @@ Monitoring. Optional uptime checks and alert policies are available.
   ```
 - **Health path.** Startup and liveness probes target `/api/status` — Rallly's public,
   unauthenticated status endpoint. Allow time on first boot for the Prisma migration
-  step (the default startup probe provides a 30-second initial delay plus a 20-retry,
-  15-second-interval window).
+  step (the default startup probe starts immediately with a 10-retry, 30-second-interval
+  window — up to 5 minutes of grace).
 - **Inspect job execution:**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
@@ -211,14 +211,15 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 specific to or notable for Rallly are listed; every other input is inherited from
 [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
-### Group 2 — Application Identity
+### Group 3 — Application Identity
 
 | Variable | Default | Description |
 |---|---|---|
 | `application_name` | `rallly` | Base name for resources. Do not change after first deploy. |
 | `application_version` | `latest` | Rallly image tag (`lukevella/rallly`); pin to a specific release in production. |
+| `base_url` | `""` | Public URL for `NEXT_PUBLIC_BASE_URL` / NextAuth links. Set to the external LoadBalancer or custom domain URL. |
 
-### Group 3 — Runtime & Scaling
+### Group 4 — Runtime & Scaling
 
 | Variable | Default | Description |
 |---|---|---|
@@ -229,7 +230,6 @@ specific to or notable for Rallly are listed; every other input is inherited fro
 | `max_instance_count` | `3` | Maximum replicas; Rallly is stateless in Postgres and can scale horizontally. |
 | `container_port` | `3000` | Rallly listens on port 3000. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar (loopback) for PostgreSQL. |
-| `base_url` | `""` | Public URL for `NEXT_PUBLIC_BASE_URL` / NextAuth links. Set to the external LoadBalancer or custom domain URL. |
 
 ### Group 5 — Access, Ingress & Email
 
@@ -249,7 +249,7 @@ specific to or notable for Rallly are listed; every other input is inherited fro
 | `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed. |
 | `workload_type` | `Deployment` | Deployment (stateless) — Rallly stores all state in PostgreSQL. |
 
-### Group 11 — Database Backend
+### Group 16 — Database Backend
 
 | Variable | Default | Description |
 |---|---|---|
@@ -257,15 +257,20 @@ specific to or notable for Rallly are listed; every other input is inherited fro
 | `db_user` | `rallly` | Application database user. Password auto-generated in Secret Manager. |
 | `database_type` | `POSTGRES_15` | Fixed — Rallly requires PostgreSQL 15. |
 
-### Group 13 — Filesystem & Observability
+### Group 13 — Filesystem
 
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `false` | NFS is off — Rallly needs no shared filesystem. |
+
+### Group 10 — Observability & Health
+
+| Variable | Default | Description |
+|---|---|---|
 | `startup_probe` | HTTP `/api/status`, 0s initial delay, 10 failures | Startup probe; allow for the first-boot Prisma migration. |
 | `liveness_probe` | HTTP `/api/status` 60s delay | Liveness probe. |
 
-### Group 20 — Redis Cache
+### Group 15 — Redis Cache
 
 | Variable | Default | Description |
 |---|---|---|

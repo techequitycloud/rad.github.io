@@ -311,7 +311,7 @@ locate and explore the running resources.
 | `container_resources` memory | `1Gi` (floor) | High | Below 1 GiB, Next.js `next-server` OOM-crashes at boot (`JavaScript heap out of memory`) and the pod never becomes Ready. |
 | `container_port` | `3210` | High | The image pins `PORT=3210`; a mismatch means the probe never connects and the pod fails to start. |
 | Server-side provider keys | Inject via `secret_environment_variables` | High | Putting an API key in plain `environment_variables` exposes it in the pod spec and logs. |
-| `min_instance_count` | `1` | High | GKE requires min ≥ 1; the validation guard rejects `0`. Keeping 1 ensures the UI stays reachable. |
+| `min_instance_count` | `1` | High | The module's wiring forces the applied replica minimum to 1 regardless of this input (it is not rejected at plan time — it is silently overridden), keeping the UI reachable since GKE has no scale-to-zero here. |
 | `stateful_pvc_enabled` | leave unset (`null`) | Medium | Enabling a PVC adds pointless per-pod storage — LobeChat persists nothing server-side in the default mode. |
 | `enable_redis` | `false` unless public | Medium | Enabling without a reachable `redis_host` (empty → `127.0.0.1`) leaves rate limiting non-functional. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are bytes and block all pod scheduling in the namespace. |

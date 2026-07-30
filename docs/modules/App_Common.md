@@ -71,7 +71,7 @@ gcloud compute firewall-rules list \
 
 App Common discovers the Cloud SQL instance that Services GCP provisioned for the project. It reads the instance's connection name, internal IP address, and database engine version, then generates a secure random database password and stores it in Secret Manager. It also provisions the application's specific database and database user on the shared instance, so each application gets its own isolated credentials while sharing the underlying Cloud SQL infrastructure.
 
-The database password secret follows the naming convention `INSTANCE_NAME-RESOURCE_PREFIX-db-password`. Application workloads retrieve this secret at runtime through Secret Manager rather than receiving it as a plain environment variable.
+The database password secret follows the naming convention `secret-INSTANCE_NAME-RESOURCE_PREFIX`. Application workloads retrieve this secret at runtime through Secret Manager rather than receiving it as a plain environment variable.
 
 ### Exploring in GCP
 
@@ -103,7 +103,7 @@ gcloud sql users list \
 
 ### Cloud Storage Buckets
 
-App Common provisions one or more GCS buckets for application use. Buckets are created with versioning, uniform bucket-level access, and public access prevention enabled by default. Lifecycle rules are applied to automatically transition or delete objects based on age and version conditions, keeping storage costs predictable. A dedicated backup bucket is also created for each application with a configurable retention period.
+App Common provisions one or more GCS buckets for application use. Public access prevention is enforced by default; versioning and uniform bucket-level access are configurable per bucket (`versioning_enabled`, `uniform_bucket_level_access`) but not enabled by default — set them per bucket definition where needed. Lifecycle rules are applied to automatically transition or delete objects based on age and version conditions, keeping storage costs predictable. A dedicated backup bucket is also created for each application with a configurable retention period, and always has uniform bucket-level access and public access prevention enforced.
 
 When CMEK encryption is enabled (see the CMEK section below), all buckets are encrypted with a customer-managed KMS key.
 

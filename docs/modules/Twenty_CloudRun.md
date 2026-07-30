@@ -28,7 +28,7 @@ focused set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | Cloud Run v2 | Node.js service, 2 vCPU / 2 GiB by default, request-based autoscaling |
+| Compute | Cloud Run v2 | Node.js service, 1 vCPU / 2 GiB by default, request-based autoscaling |
 | Database | Cloud SQL for PostgreSQL 15 | Required — Twenty does not support MySQL |
 | Object storage | Cloud Storage | Optional; a dedicated bucket when `enable_gcs_storage = true` |
 | Background jobs | Redis (optional) | bull-mq when enabled; pg-boss (PostgreSQL-backed) by default with no extra infra |

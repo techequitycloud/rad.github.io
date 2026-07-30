@@ -190,8 +190,8 @@ startup and liveness probes, and optionally by a Cloud Monitoring uptime check.
 
 - **Schema migration on startup.** Grafana connects to PostgreSQL and applies any
   pending schema migrations on first boot. No separate database initialisation job
-  is needed. The startup probe allows ~150 seconds total tolerance for first-boot
-  migrations (`initial_delay_seconds=30`, `failure_threshold=12`, `period_seconds=10`).
+  is needed. The startup probe allows ~135 seconds total tolerance for first-boot
+  migrations (`initial_delay_seconds=15`, `failure_threshold=12`, `period_seconds=10`).
 - **Admin credential.** Grafana ships with default `admin`/`admin` credentials. The
   module does NOT auto-generate or rotate the admin password. You must inject a
   strong password via `secret_environment_variables`:

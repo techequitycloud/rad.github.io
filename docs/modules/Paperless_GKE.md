@@ -399,11 +399,9 @@ kubectl logs -n NAMESPACE POD_NAME --since=10m | grep -i "migration\|celery\|rea
 
 ---
 
-## Group 16: Redis (Celery Broker)
+## Group 21: Redis (Celery Broker)
 
 These variables configure Paperless-ngx's Redis integration. The underlying Redis infrastructure support is provided by `App_GKE` (see [App_GKE](App_GKE.md#a-redis--memorystore)). Redis is **not optional** for Paperless-ngx — it is the Celery message broker that drives all background document processing, OCR tasks, and the consumption pipeline.
-
-> **Note:** In `Paperless GKE`, the Redis variables are in **group 21**.
 
 | Variable | Default | Options / Format | Description & Implications |
 |---|---|---|---|

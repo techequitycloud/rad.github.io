@@ -220,9 +220,11 @@ Cloud Monitoring. Optional uptime checks and alert policies are available.
   before starting the new one, avoiding two pods deadlocking on the shared
   NFS volume and DB locks.
 - **Health probes.** Startup probe is **TCP** on `/` with a generous
-  30s initial delay, 15s period, and a 20-attempt failure threshold — giving
-  the image entrypoint time to populate the NFS-mounted document root from
-  `/usr/src/matomo` and reach the database on first boot. Liveness probe is
+  30s initial delay, 15s period, and a 40-attempt failure threshold (~10.5
+  minutes total) — giving the image entrypoint time to populate the
+  NFS-mounted document root from `/usr/src/matomo` and reach the database on
+  first boot; a lower threshold risked a startup-probe kill mid-extraction
+  leaving a partially copied, root-owned tree on the NFS volume. Liveness probe is
   **HTTP** `GET /` with a 300s initial delay (200/302 to the installer counts
   as healthy).
 - **Inspect the init job and running config:**
@@ -283,7 +285,7 @@ defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` | TCP `/`, 30s delay, 15s period, 20 failures | Matomo-specific override with a generous threshold for first-boot NFS population + DB connection. |
+| `startup_probe` | TCP `/`, 30s delay, 15s period, 40 failures | Matomo-specific override with a generous threshold for first-boot NFS population + DB connection. |
 | `liveness_probe` | HTTP `/`, 300s delay, 60s period, 3 failures | Confirms Apache/PHP is serving (200/302 to the installer counts as healthy). |
 
 ### Group 13 — Filesystem (NFS)

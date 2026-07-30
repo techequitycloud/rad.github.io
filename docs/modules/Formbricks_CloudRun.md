@@ -638,7 +638,7 @@ All user-configurable variables exposed by `Formbricks CloudRun`, sorted by UI g
 | `liveness_probe` | 14 | `{ path="/api/v2/health", initial_delay_seconds=15, failure_threshold=3 }` | Liveness probe. |
 | `startup_probe_config` | 14 | `{ enabled=true, type="TCP" }` | App_CloudRun-level service startup probe. |
 | `health_check_config` | 14 | `{ enabled=true, type="HTTP", path="/" }` | App_CloudRun-level service liveness probe. |
-| `uptime_check_config` | 14 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 | `enable_redis` | 21 | `true` | Redis for Formbricks caching and rate limiting. |
 | `redis_host` | 21 | `""` | Redis hostname/IP. Defaults to NFS server IP when empty. |

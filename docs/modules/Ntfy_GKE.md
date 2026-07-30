@@ -58,9 +58,6 @@ dependency of its own:
   subscribers can reach it from outside the cluster.
 - **The health endpoint is `/v1/health`**, which returns `{"healthy":true}` with HTTP
   200 as soon as the server binds its port.
-- **The GKE variant runs on its own tenant namespace.** `Ntfy_GKE` appends `-gke` to
-  `tenant_deployment_id`, so it can run alongside `Ntfy_CloudRun` on the same tenant
-  without a naming collision.
 - **Access control is a post-deploy step.** ntfy ships with open access; configure
   users and topic ACLs afterwards via its CLI or `NTFY_AUTH_*` environment variables.
 
@@ -212,7 +209,7 @@ from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix; `Ntfy_GKE` appends `-gke` internally so it can coexist with the Cloud Run variant. |
+| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `application_name` | `ntfy` | Base name for resources. Do not change after first deploy. |
 | `application_version` | `latest` | Image version tag; `latest` maps to a pinned `v2.11.0` base. Pin `v2.x.y` in production. |
 

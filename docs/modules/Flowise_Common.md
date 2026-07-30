@@ -45,7 +45,7 @@ gcloud secrets list --project "$PROJECT" --filter="name~password"
 gcloud secrets versions access latest --secret=<admin-password-secret> --project "$PROJECT"
 ```
 
-The secret ID is formatted as `<resource_prefix>-flowise-password`. The database
+The secret ID is formatted as `secret-<resource_prefix>-flowise-password`. The database
 password is generated and managed separately by the foundation; its secret name is
 reported in the platform deployment outputs (`database_password_secret`). See
 [App_Common](App_Common.md) for the shared secret and Workload Identity model.
@@ -128,7 +128,8 @@ gcloud storage buckets list --project "$PROJECT"
 ```
 
 The bucket uses `STORAGE_CLASS=STANDARD` in the deployment region, with public
-access prevention enforced. Additional buckets can be added through the `storage_buckets`
+access prevention inherited from the project/org policy (not explicitly enforced at
+the bucket level). Additional buckets can be added through the `storage_buckets`
 variable in the platform module.
 
 ---

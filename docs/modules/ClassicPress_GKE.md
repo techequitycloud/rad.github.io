@@ -33,7 +33,7 @@ Google Cloud services:
 | Compute | GKE Autopilot | PHP/Apache pod on port 80, 1 vCPU / 2 GiB by default |
 | Workload shape | Kubernetes **StatefulSet** + block PVC | `stateful_pvc_enabled = true` auto-resolves `workload_type` to `StatefulSet`; a 10Gi `standard-rwo` (SSD) PVC is mounted at `/var/www/html` — the whole ClassicPress install (code, plugins, themes, `wp-content`/uploads) lives on this per-pod volume |
 | Database | Cloud SQL for MySQL 8.0 | Fixed — `ClassicPress_Common` hardcodes `database_type = "MYSQL_8_0"` |
-| File persistence (secondary) | Cloud Filestore (NFS) | Mounted at `/var/lib/classicpress` by default (`enable_nfs = true`) — see the note in [Section 3](#3-classicpress-application-behaviour) on what this path is actually used for |
+| File persistence (secondary) | Cloud Filestore (NFS) | Mounted at `/var/www/html/wp-content` by default (`enable_nfs = true`) — this is where uploaded media, plugins, and themes actually persist; see [Section 3](#3-classicpress-application-behaviour) |
 | Object storage | Cloud Storage | A `classicpress-uploads` bucket is provisioned automatically but is **not** mounted into the pod by default |
 | Secrets | Secret Manager | Auto-generated `CLASSICPRESS_SALT_SEED` (derives the 8 WordPress-style auth keys/salts); database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer with a reserved static IP; custom domain + managed certificate enabled by default |
@@ -58,9 +58,12 @@ Google Cloud services:
   (default), so scaling beyond 1 replica would give each pod a *separate*, unsynced
   copy of the install rather than a shared one.
 - **NFS is also enabled by default** (`enable_nfs = true`, mounted at
-  `/var/lib/classicpress`), but the grafted entrypoint and Dockerfile never reference
-  that path — the actual persistent install lives on the StatefulSet PVC at
-  `/var/www/html`. See the pitfalls table.
+  `/var/www/html/wp-content` by default), nested inside the StatefulSet PVC's
+  `/var/www/html` mount. ClassicPress's upstream entrypoint's first-boot copy logic
+  explicitly excludes an existing `wp-content` directory, so this is how uploaded
+  media, plugins, and themes actually persist and stay shared if you ever scale
+  beyond one replica; the rest of the install (core files) lives on the per-pod
+  StatefulSet PVC. See the pitfalls table.
 - **No auto-install — first login is manual.** `ClassicPress_Common` generates no
   admin-password secret and sets no auto-install flag. ClassicPress creates its
   schema and admin account through its own first-run web installer once `db-init`
@@ -123,13 +126,13 @@ connection model, automated backups, and password rotation.
 ### C. Storage — StatefulSet PVC, NFS, and Cloud Storage
 
 Three distinct storage mechanisms are present. The **StatefulSet PVC** (10Gi,
-`standard-rwo`, mounted at `/var/www/html`) is the primary and only *confirmed*
-persistence path — it holds the entire ClassicPress install, including uploaded
-media. **NFS (Cloud Filestore)** is separately mounted at `/var/lib/classicpress`
-(`enable_nfs = true`), but neither the Dockerfile nor the entrypoint shim reference
-that path — see the pitfalls table. A **Cloud Storage** bucket (suffix
-`classicpress-uploads`) is also provisioned but not wired into the pod as a
-`gcs_volumes` mount by default; add an entry to `gcs_volumes` to use it.
+`standard-rwo`, mounted at `/var/www/html`) holds the ClassicPress core install.
+**NFS (Cloud Filestore)** is separately mounted at `/var/www/html/wp-content`
+(`enable_nfs = true`) — nested inside the PVC mount — and is where uploaded media,
+plugins, and themes actually persist, since the upstream entrypoint's first-boot
+copy logic explicitly skips an existing `wp-content` directory. A **Cloud Storage**
+bucket (suffix `classicpress-uploads`) is also provisioned but not wired into the pod
+as a `gcs_volumes` mount by default; add an entry to `gcs_volumes` to use it.
 
 - **Console:** Kubernetes Engine → Storage → PersistentVolumeClaims; Filestore →
   Instances; Cloud Storage → Buckets.
@@ -221,12 +224,11 @@ Monitoring. Optional uptime checks and alert policies are available.
   application into `/var/www/html` on first boot — which on this module is a 10Gi
   `standard-rwo` block PVC, not ephemeral container storage, so the install (plugins,
   themes, and `wp-content/uploads`) survives pod restarts and rescheduling.
-- **NFS mount path is not referenced by the image or entrypoint.**
-  <!-- TODO: could not confirm whether the upstream classicpress/classicpress image
-  itself symlinks wp-content/uploads onto a VOLUME coinciding with
-  /var/lib/classicpress; ClassicPress_Common's Dockerfile and entrypoint.sh never
-  read or write that path. Treat enable_nfs as spare shared storage, not a
-  confirmed data path, until verified against a live deployment. -->
+- **NFS mount path defaults to `/var/www/html/wp-content`, nested inside the
+  PVC.** The upstream entrypoint's first-boot copy logic explicitly excludes an
+  existing `wp-content` directory, so mounting NFS directly onto it is how
+  uploaded media, plugins, and themes actually persist and stay shared across
+  replicas — the rest of the core install lives on the per-pod StatefulSet PVC.
 - **Redis is optional and off by default.** When `enable_redis = true`, leaving
   `redis_host` empty lets the Foundation's own `REDIS_HOST` injection (the shared
   NFS-VM Redis IP when `enable_nfs = true`) take effect; setting `redis_host`
@@ -301,8 +303,8 @@ ClassicPress are listed; every other input is inherited from
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `true` | Provisions Filestore-backed shared storage; not currently referenced by the entrypoint or Dockerfile — see [Section 3](#3-classicpress-application-behaviour). |
-| `nfs_mount_path` | `/var/lib/classicpress` | Container mount path for the (currently unused) NFS share. |
+| `enable_nfs` | `true` | Provisions Filestore-backed shared storage for `wp-content` (uploads, plugins, themes) — see [Section 3](#3-classicpress-application-behaviour). |
+| `nfs_mount_path` | `/var/www/html/wp-content` | Container mount path for the NFS share, nested inside the StatefulSet PVC's `/var/www/html` mount. |
 
 ### Group 15 — Redis Cache
 
@@ -379,7 +381,7 @@ locate and explore the running resources.
 | `stateful_pvc_size` / `stateful_pvc_mount_path` | `10Gi` / `/var/www/html` | Critical | This PVC holds the entire install (code + uploads) — resizing down or losing the PVC destroys the site; the mount path must match where ClassicPress's entrypoint writes. |
 | `max_instance_count` | `1` | High | Each StatefulSet pod gets its own PVC; scaling beyond 1 gives every replica a separate, diverging copy of the site rather than a shared one. |
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar on `127.0.0.1:3306` is required for DB connectivity on GKE. |
-| `enable_nfs` | `true` (but currently unused by the app) | Medium | Provisions and pays for a Filestore instance that the current entrypoint/Dockerfile never mount data onto — see [Section 3](#3-classicpress-application-behaviour). Disabling it does not remove any confirmed persistence, but confirm against a live deployment before relying on this. |
+| `enable_nfs` | `true` | Medium | Provisions the Filestore instance backing `wp-content` (uploads, plugins, themes) at `/var/www/html/wp-content` — see [Section 3](#3-classicpress-application-behaviour). Disabling it leaves those files only on the per-pod StatefulSet PVC, unshared across replicas. |
 | `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Medium | Draws the tight regional `SSD_TOTAL_GB` quota. Override to `standard` (HDD `pd-standard`) on quota-constrained projects — fine for a low-IOPS PHP/MySQL workload. |
 | First-run admin setup | Complete `/wp-admin/install.php` promptly after deploy | Medium | Until the installer runs, the site has no schema and no admin account — there is no generated admin-password secret to recover with. |
 | `memory_limit` | `2Gi` | Medium | Below ~512Mi the PHP/Apache pod risks OOM under load or with heavier plugins. |

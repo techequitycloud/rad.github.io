@@ -223,8 +223,6 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `project_id` | _(required)_ | Target Google Cloud project. |
 | `region` | `us-central1` | Region for the service and regional resources. |
-| `bootstrap_email` | `admin@techequity.cloud` | Email of the built-in `akadmin` account, set on first boot. |
-| `bootstrap_password` | `""` (auto-generated) | Initial `akadmin` password. **First boot only**; stored in Secret Manager. |
 
 ### Group 2 — Deployment Environment
 
@@ -240,6 +238,8 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `application_name` | `authentik` | Base name for resources. Do not change after first deploy. |
 | `application_version` | `latest` | authentik version tag; `latest` is pinned to `2026.5.4` at build time (no upstream `latest` tag). Pin explicitly in production. |
+| `bootstrap_email` | `admin@techequity.cloud` | Email of the built-in `akadmin` account, set on first boot. |
+| `bootstrap_password` | `""` (auto-generated) | Initial `akadmin` password. **First boot only**; stored in Secret Manager. |
 
 ### Group 4 — Runtime & Scaling
 

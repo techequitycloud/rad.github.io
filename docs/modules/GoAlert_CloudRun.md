@@ -272,7 +272,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `database_type` | `POSTGRES_17` | Cloud SQL engine. GoAlert requires PostgreSQL. |
 | `db_name` | `goalert` | PostgreSQL database name. |
 | `db_user` | `goalert` | PostgreSQL application user. |
-| `db_password_env_var_name` | `LISTMONK_db__password` | **Leftover copy-paste default from a prior template.** Additive per Foundation semantics — injects an unused extra secret env var alongside the standard `DB_PASSWORD` that GoAlert's entrypoint actually reads. Harmless; clear to `""` if it bothers you. |
+| `db_password_env_var_name` | `""` | Additional env var name to expose the DB password under, alongside the standard `DB_PASSWORD` GoAlert's entrypoint actually reads. Leave empty unless you need a non-standard name. |
 | `database_password_length` | `32` | Generated password length (16–64). |
 
 ### Group 13 — Jobs & Scheduled Tasks
@@ -344,7 +344,7 @@ running resources.
 | `public_url` | Leave `""` (auto-computed) or set the real external URL | High | An incorrect `GOALERT_PUBLIC_URL` breaks OIDC auth callbacks and every link in outgoing notification emails (falls back to GoAlert's own `http://localhost:8081` if genuinely unset downstream). |
 | `admin_username` / `admin_email` | Set once, retrieve password from Secret Manager | Medium | GoAlert has no self-service password reset flow visible from Terraform; losing track of the bootstrapped admin credential means using the `goalert` CLI directly against the database to create a new one. |
 | `max_instance_count` | `1` unless you wire a `--api-only` topology | Medium | GoAlert supports multiple engine instances safely (not a double-fire bug per upstream docs), but this module has no built-in mechanism to designate `--api-only` replicas, so scaling past 1 without that extra wiring just runs multiple full engine instances. |
-| `db_password_env_var_name` | Leave as-is or clear to `""` | Low | The default `LISTMONK_db__password` is inert leftover cruft from another module's template — harmless, but confusing if you go looking for it in GoAlert's actual config. |
+| `db_password_env_var_name` | Leave at the default `""` | Low | Only set this if you need the DB password exposed under an additional, non-standard env var name alongside `DB_PASSWORD` — GoAlert's entrypoint reads `DB_PASSWORD` directly. |
 
 ---
 

@@ -323,7 +323,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `application_database_user` | `chatwoot` | Application database user; password auto-generated in Secret Manager. |
 | `enable_postgres_extensions` | `true` (Common default) | Enables `vector` post-provisioning; `db-init.sh` also pre-creates it defensively. |
 
-### Group 1 — Search & Optional Integrations
+### Group 23 — Search & Optional Integrations
 
 | Variable | Default | Description |
 |---|---|---|

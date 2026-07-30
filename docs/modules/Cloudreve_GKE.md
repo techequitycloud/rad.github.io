@@ -165,8 +165,7 @@ mechanics (rotation has no effect here since no service secret exists).
 
 By default the workload uses `enable_custom_domain = true` with
 `reserve_static_ip = true` (Kubernetes Gateway API with a Google-managed
-certificate). `service_type` defaults to `ClusterIP` — the Gateway, not the
-Service, is the external entry point unless you switch to `LoadBalancer`.
+certificate), and `service_type` itself also defaults to `LoadBalancer`.
 
 - **Console:** Network services → Load balancing / Gateways; VPC network →
   IP addresses.
@@ -269,7 +268,7 @@ defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | External access goes through the Gateway (`enable_custom_domain`), not the Service, by default. |
+| `service_type` | `LoadBalancer` | External access recommended for this web UI; the Gateway (`enable_custom_domain`, below) also provisions a public endpoint by default. |
 | `workload_type` | `null` → `StatefulSet` | Resolves automatically because `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | No sticky routing configured by default. |
 

@@ -202,8 +202,11 @@ Monitoring. Optional uptime checks and alert policies are available.
   invalidates all active user sessions. Only rotate during a planned maintenance
   window.
 - **Webhook endpoints require an external IP.** The default `service_type = LoadBalancer`
-  exposes an external IP for incoming webhook calls. Set `AP_FRONTEND_URL` and
-  `AP_WEBHOOK_URL_PREFIX` to the external URL after the LoadBalancer IP is assigned:
+  exposes an external IP for incoming webhook calls, but `AP_FRONTEND_URL` and
+  `AP_WEBHOOK_URL_PREFIX` are auto-injected to the predicted **internal**
+  `*.svc.cluster.local` DNS name (unknown external IP at plan time) — not reachable
+  from outside the cluster. Override both to the external URL after the LoadBalancer
+  IP (or custom domain) is assigned:
   ```bash
   kubectl patch deploy <service-name> -n "$NAMESPACE" \
     -p '{"spec":{"template":{"spec":{"containers":[{"name":"activepieces","env":[
@@ -463,7 +466,7 @@ locate and explore the running resources.
 | `AP_JWT_SECRET` (auto-generated) | Only rotate in a maintenance window | Critical | Rotating it invalidates all active user sessions, forcing immediate re-login for everyone. |
 | `db_name` / `db_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
-| `AP_FRONTEND_URL` / `AP_WEBHOOK_URL_PREFIX` | External LoadBalancer URL | Critical | Incorrect URL breaks all webhook integrations and OAuth callbacks. |
+| `AP_FRONTEND_URL` / `AP_WEBHOOK_URL_PREFIX` | Override to the external LoadBalancer URL | Critical | Auto-injected to the internal `*.svc.cluster.local` DNS name by default (not externally reachable) — leaving it as-is breaks all webhook integrations and OAuth callbacks. |
 | `max_instance_count` | `1` unless Redis enabled | High | Scaling beyond 1 in memory queue mode splits the job queue across pods, causing duplicate executions and lost runs. |
 | `enable_redis` | `true` before scaling | High | Without Redis, each pod maintains its own in-memory queue — inconsistent execution with more than 1 replica. |
 | `redis_host` | `""` (NFS) or explicit | High | When Redis is on but NFS is off and no host is set, the Redis connection string is blank and the app fails to start. |

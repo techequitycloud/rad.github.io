@@ -43,9 +43,15 @@ deployment wires together a minimal set of Google Cloud services:
 - **PostgreSQL 15 is the only supported engine in this module.** `database_type`
   is fixed by `Spoolman_Common`; Spoolman upstream also supports MySQL and
   CockroachDB via env vars, but this module does not expose that choice.
-- **No custom build.** `container_image_source = "prebuilt"` deploys
-  `ghcr.io/donkie/spoolman` directly — there is no Dockerfile, no Cloud Build
-  step.
+- **No custom build — but you must set `container_image_source = "prebuilt"`
+  explicitly.** `Spoolman_Common`'s own config hardcodes `image_source =
+  "prebuilt"` (there is no Dockerfile anywhere in this module), but
+  `Spoolman_GKE`'s own `container_image_source` variable currently defaults to
+  `"custom"` and — per `App_GKE`'s precedence rules — a non-empty wrapper-level
+  value wins over the application module's own `image_source`. Left at its raw
+  default, a plain deploy attempts a Kaniko build with no Dockerfile and fails;
+  override it to `"prebuilt"` (see [§4](#4-configuration-variables) and the
+  Pitfalls table).
 - **No init job.** The Foundation auto-creates the Postgres role and database;
   Spoolman runs its own Alembic migrations automatically on every container
   start.
@@ -193,7 +199,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
-| `container_image_source` | `prebuilt` | Forwarded to the Foundation — required, or the default `"custom"` silently triggers a Kaniko build attempt with no Dockerfile. |
+| `container_image_source` | `custom` (variable default) — **set to `prebuilt`** | `Spoolman_Common` hardcodes `image_source = "prebuilt"`, but this wrapper-level variable's own raw default (`"custom"`) takes precedence at the Foundation and silently triggers a Kaniko build attempt with no Dockerfile. Explicitly set `"prebuilt"`. |
 | `container_port` | `8000` | Spoolman's default listen port. |
 | `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | Ample for a single-tenant filament tracker. |
 | `min_instance_count` / `max_instance_count` | `0` / `1` | Scale-to-zero is safe — Spoolman has no background work. |
@@ -271,7 +277,7 @@ Spoolman uses none of them by default.
 | No authentication (built-in) | Front with IAP or Cloud Armor if needed | Critical | Anyone who can reach the Service can read and modify the entire filament inventory — there is no login gate to disable. |
 | `SPOOLMAN_DB_TYPE` (auto-injected `postgres`) | Never unset via `environment_variables` | Critical | Unsetting it silently falls back to a throwaway container-local SQLite file — no error, and all data is lost on every pod restart. |
 | `application_database_name` / `application_database_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
-| `container_image_source` | `prebuilt` (do not override to `custom`) | Critical | Setting `"custom"` triggers a Kaniko build attempt against a module with no Dockerfile — the build fails outright. |
+| `container_image_source` | Set to `prebuilt` explicitly | Critical | The variable's own raw default is `"custom"`, which triggers a Kaniko build attempt against a module with no Dockerfile — the build fails outright unless overridden to `"prebuilt"`. |
 | `service_type` | `LoadBalancer` (default) | High | Switching to `ClusterIP` makes the service unreachable from a browser without `kubectl port-forward` or a separate ingress. |
 | `SPOOLMAN_DB_QUERY` | Leave empty unless troubleshooting | Medium | Escape hatch for a TCP + `sslmode` fallback — only needed if the loopback connection path is ever found unreliable; not required for normal operation. |
 | `reserve_static_ip` | `false` (default) | Low | Set `true` only if you need a stable IP for DNS/firewall allowlisting — the project's static-IP quota is limited and shared across the tenant. |

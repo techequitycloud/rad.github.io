@@ -335,7 +335,7 @@ and defaults.
 | `application_database_name` | `flarum` | Database name. Immutable after first deploy. |
 | `application_database_user` | `flarum` | Application database user; password auto-generated in Secret Manager. |
 
-### Group 16 — Cloud Storage
+### Group 14 — Cloud Storage
 
 | Variable | Default | Description |
 |---|---|---|

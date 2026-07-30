@@ -381,7 +381,7 @@ running resources.
 | Output | Description |
 |---|---|
 | `service_name` | Cloud Run service name. |
-| `calibreweb_url` | The Cloud Run service URL (`status.url`). Note: this output's description in `outputs.tf` references an "internal VPC ... REST API (port 6333)" — that text is a stale copy-paste from an unrelated module (Calibre-Web has no such API/port); the value itself is simply the normal service URL, reachable per `ingress_settings` (public by default). |
+| `calibreweb_url` | The Cloud Run service URL (`status.url`) for the Calibre-Web UI (port 8083), reachable per `ingress_settings` (public by default). |
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service URLs (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | External HTTPS load balancer IP / URL (when enabled). |

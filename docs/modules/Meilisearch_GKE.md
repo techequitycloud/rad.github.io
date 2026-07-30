@@ -35,7 +35,7 @@ services:
 | Database | None | Meilisearch is self-contained — no Cloud SQL, no external database |
 | Cache & queue | None | Meilisearch has no Redis or queue dependency |
 | Secrets | Secret Manager → native K8s Secret | Auto-generated `MEILI_MASTER_KEY` (the search admin credential) |
-| Ingress | Cloud Load Balancing (optional) | ClusterIP by default; optional external Gateway + managed certificate |
+| Ingress | Cloud Load Balancing | External `LoadBalancer` Service by default; optional custom domain via the Gateway + managed certificate |
 
 **Sensible defaults worth knowing up front:**
 
@@ -54,9 +54,11 @@ services:
   Meilisearch's data directory. Without the PVC, the storage bucket is mounted via
   GCS FUSE at `/meili_data`. Setting the PVC skips the FUSE mount to avoid a
   double-mount.
-- **ClusterIP by default.** `service_type = "ClusterIP"` keeps the search API inside
-  the cluster. Expose it externally via the Gateway (`enable_custom_domain`) only
-  when needed.
+- **`LoadBalancer` by default.** `service_type = "LoadBalancer"` exposes the search
+  API externally out of the box — since it holds the master key over that endpoint,
+  set `service_type = "ClusterIP"` if the API should stay inside the cluster, or
+  layer on IAP/Cloud Armor before exposing it further via a custom domain
+  (`enable_custom_domain`).
 - **Single replica.** `max_instance_count = 1`. Meilisearch is single-writer;
   multiple pods sharing one PVC (RWO) or bucket corrupt the index. Scale vertically.
 - **Image is pinned to `v1.11`.** The `application_version = "latest"` default maps
@@ -132,9 +134,11 @@ See [App_GKE](App_GKE.md) for the secret injection model and rotation.
 
 ### D. Networking & ingress
 
-By default the workload is exposed as a ClusterIP Service, reachable only inside the
-cluster. A custom domain with a Google-managed certificate can be enabled through the
-Gateway API, and a static IP can be reserved so the address survives redeploys.
+By default the workload is exposed as an external `LoadBalancer` Service
+(`service_type = "LoadBalancer"`) — set `service_type = "ClusterIP"` to keep it
+internal-only instead. A custom domain with a Google-managed certificate can be
+enabled through the Gateway API, and a static IP can be reserved so the address
+survives redeploys.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -256,7 +260,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `gke_cluster_name` | `""` | Cluster name; empty auto-discovers. |
-| `service_type` | `ClusterIP` | How the Kubernetes Service is exposed. |
+| `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed; set `ClusterIP` to keep the search API internal-only. |
 | `workload_type` | `null` | Auto-resolves to `StatefulSet` when `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | Session affinity mode. |
 | `termination_grace_period_seconds` | `60` | Seconds after SIGTERM before SIGKILL — lets Meilisearch flush pending writes. |

@@ -29,7 +29,7 @@ together a focused set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | GKE Autopilot | Python pods on port **7860**, 1 vCPU / 1 GiB by default, horizontally autoscaled |
+| Compute | GKE Autopilot | Python pods on port **7860**, 1 vCPU / 2 GiB by default, horizontally autoscaled |
 | Database | Cloud SQL for PostgreSQL 15 | Required — LangFlow persists all flows, components, and credentials in Postgres |
 | Object storage | Cloud Storage | A dedicated `data` bucket is provisioned by default; LangFlow's application state itself lives in PostgreSQL |
 | Cache & queue | Redis (optional) | Not required by LangFlow; wired for forward compatibility only |
@@ -251,7 +251,7 @@ All other inputs follow standard App_GKE behaviour.
 | `max_instance_count` | `1` | Keep at `1` — LangFlow holds in-process state. |
 | `enable_vertical_pod_autoscaling` | `false` | Autopilot VPA for right-sizing. |
 | `container_port` | `7860` | LangFlow listens on port 7860. |
-| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "1Gi" }` | Per-pod CPU/memory limits and requests. |
+| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "2Gi" }` | Per-pod CPU/memory limits and requests. 1Gi OOMKills LangFlow during boot (component loading + starter projects). |
 | `timeout_seconds` | `300` | Maximum request duration (0–3600 seconds). |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar for connectivity. |
 | `enable_image_mirroring` | `true` | Mirror the LangFlow base image into Artifact Registry before the custom build. |
@@ -501,7 +501,7 @@ locate and explore the running resources.
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar is required for PostgreSQL connectivity; disabling it with a real database breaks all connections. |
 | `container_port` | `7860` | High | LangFlow listens on 7860; a mismatched port fails all health probes. |
 | `enable_iap` | only when API auth not needed externally | High | IAP puts Google sign-in in front of the whole service, including its programmatic API. |
-| `container_resources.memory_limit` | ≥ `1Gi` | High | Values below 1 GiB risk OOM kills for the Python runtime under load. |
+| `container_resources.memory_limit` | ≥ `2Gi` | High | `1Gi` OOM-kills LangFlow during boot (component loading + starter projects); values below 2 GiB risk OOM kills for the Python runtime under load. |
 | `enable_pod_disruption_budget` | `true` | Medium | Disabling allows GKE to evict all pods simultaneously during maintenance. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
 

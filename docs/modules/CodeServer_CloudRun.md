@@ -286,7 +286,7 @@ running resources.
 | Output | Description |
 |---|---|
 | `service_name` | Cloud Run service name. |
-| `codeserver_url` | URL of the code-server editor (port 8080). Reachable only within the VPC when ingress is `internal`. |
+| `codeserver_url` | URL of the code-server editor (port 8080). Publicly reachable by default (`ingress_settings = "all"`); reachable only within the VPC when set to `internal`. |
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service details (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | External HTTPS load balancer IP / URL (when enabled). |
@@ -319,7 +319,7 @@ running resources.
 | `max_instance_count` | `1` | High | Scaling beyond 1 splits editor sessions across instances and risks concurrent writes to the single workspace volume. |
 | `min_instance_count` | `1` | Medium | Scale-to-zero (`0`) adds cold-start latency and re-mounts the workspace on the next request. |
 | `execution_environment` | `gen2` | High | `gen1` cannot mount GCS FUSE — the workspace volume fails and state is lost on restart. |
-| `ingress_settings` | `internal` (or `all` + password) | High | `all` without a password publishes an open IDE; `internal` blocks all browser access from outside the VPC. |
+| `ingress_settings` | `all` + password (default), or `internal` | High | `all` without a password is rejected at plan time; `internal` blocks all browser access from outside the VPC. |
 | `enable_cloudsql_volume` | `false` | Low | code-server has no database; enabling adds an unused Auth Proxy sidecar. |
 | `memory_limit` | `1Gi`+ | Medium | Heavy language servers/extensions can OOM below 1 GiB. |
 

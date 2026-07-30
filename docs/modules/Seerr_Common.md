@@ -181,12 +181,11 @@ database password.
 transactional writes — concurrent instances risk a lost-write race on that
 file.
 
-**This default is not what actually reaches a deployment**, however: both
-`Seerr_CloudRun` and `Seerr_GKE`'s own `max_instance_count` variables default
-to `5`, and each variant forwards `var.max_instance_count` into
-`Seerr_Common`, overriding its internal default of `1`. Operators who need
-the conservative, single-writer-safe behavior should set
-`max_instance_count = 1` explicitly at the Application Module level.
+Both `Seerr_CloudRun` and `Seerr_GKE`'s own `max_instance_count` variables
+also default to `1`, and each variant forwards `var.max_instance_count` into
+`Seerr_Common` — so the conservative, single-writer-safe default is what
+actually reaches a deployment out of the box. Raise it deliberately only
+after verifying Seerr's `settings.json` persistence is safe at your scale.
 
 ---
 

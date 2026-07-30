@@ -27,7 +27,7 @@ foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Container image | Pins `twentycrm/twenty` and wraps it with a custom entrypoint via Cloud Build | `container_image` output of the platform deployment |
 | Database engine | Fixes **Cloud SQL for PostgreSQL 15** as the only supported engine | §Database in the platform guides |
 | Database bootstrap | Defines two first-deploy jobs: `db-init` (creates DB and user) and `twenty-migrate` (runs schema migrations) | `initialization_jobs` output |
-| Background job mode | Sets `MESSAGE_QUEUE_TYPE` to `pg-boss` (default) or `bull-mq` (when Redis enabled) | Application behaviour in the platform guides |
+| Background job mode | Sets `MESSAGE_QUEUE_TYPE` to `bull-mq` (default — `enable_redis` defaults to `true`) or `pg-boss` if Redis is explicitly disabled | Application behaviour in the platform guides |
 | Object storage | Declares the **Cloud Storage** bucket when `enable_gcs_storage = true` | `storage_buckets` output |
 | Core settings | Injects baseline environment variables (`SERVER_URL`, `FRONT_BASE_URL`, `STORAGE_TYPE`, `DISABLE_DB_MIGRATIONS`) | Application behaviour in the platform guides |
 | Health checks | Supplies the default startup and liveness probe configuration (`/healthz` with generous first-boot window) | §Observability in the platform guides |
@@ -93,9 +93,12 @@ The instance, database, and user names are in the platform deployment outputs.
 `Twenty_Common` establishes the baseline Twenty environment so the application comes
 up correctly on first boot:
 
-- **Job queue mode** — `MESSAGE_QUEUE_TYPE` defaults to `pg-boss` (PostgreSQL-backed,
-  no additional infrastructure). When `enable_redis = true`, it switches to `bull-mq`,
-  which requires a Redis connection and a separate worker process.
+- **Job queue mode** — `enable_redis` defaults to `true`: Twenty v0.4+ hardcodes
+  session and cache storage to Redis, so the server will not start without a valid
+  Redis connection. With Redis enabled (the default), `MESSAGE_QUEUE_TYPE` is set to
+  `bull-mq`. Explicitly setting `enable_redis = false` switches to `pg-boss`
+  (PostgreSQL-backed, no additional infrastructure) — only viable on older Twenty
+  versions that don't hardcode Redis.
 - **File storage mode** — `STORAGE_TYPE` defaults to `local` (ephemeral container
   storage). When `enable_gcs_storage = true`, it switches to `s3` (GCS S3-compatible
   API), and the bucket name, region, and endpoint are injected automatically.

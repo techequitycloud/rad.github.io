@@ -226,8 +226,6 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `application_name` | `dolibarr` | Base name for resources. Do not change after first deploy. |
 | `application_version` | `latest` | `dolibarr/dolibarr` image tag used as the custom-build base; `latest` is pinned to a known-good tag (`23.0.3`) at build time. |
-| `php_memory_limit` | `512M` | PHP memory limit; raise for heavy modules/large document libraries. |
-| `upload_max_filesize` / `post_max_size` | `64M` | Max upload / POST size; keep `post_max_size ≥ upload_max_filesize`. |
 
 ### Group 4 — Runtime & Scaling
 
@@ -239,6 +237,8 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `max_instance_count` | `1` | **Keep at 1** unless multi-pod sharing is verified. |
 | `container_port` | `80` | Dolibarr runs on Apache, port 80. |
 | `enable_cloudsql_volume` | `true` | Auth Proxy sidecar (loopback) — required on GKE. |
+| `php_memory_limit` | `512M` | PHP memory limit; raise for heavy modules/large document libraries. |
+| `upload_max_filesize` / `post_max_size` | `64M` | Max upload / POST size; keep `post_max_size ≥ upload_max_filesize`. |
 
 ### Group 6 — GKE Backend & Cluster
 

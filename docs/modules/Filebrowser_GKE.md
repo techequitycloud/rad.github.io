@@ -35,7 +35,7 @@ Google Cloud services:
 | Database | None (embedded SQLite) | `database_type = NONE`; no Cloud SQL is provisioned |
 | Cache & queue | None | Filebrowser uses no Redis |
 | Secrets | Secret Manager | No app secrets generated; users live in the SQLite DB |
-| Ingress | Cloud Load Balancing | `ClusterIP` Service by default; custom domain + managed certificate available |
+| Ingress | Cloud Load Balancing | `LoadBalancer` Service by default; custom domain + managed certificate available |
 
 **Sensible defaults worth knowing up front:**
 
@@ -125,10 +125,10 @@ See [App_GKE](App_GKE.md) for the Secret Store CSI integration and rotation.
 
 ### D. Networking & ingress
 
-By default the Service is `ClusterIP`, with `enable_custom_domain = true` and
+By default the Service is `LoadBalancer`, with `enable_custom_domain = true` and
 `reserve_static_ip = true` so an Ingress with a Google-managed certificate can serve
-a supplied hostname on a stable IP. Without a custom domain the workload is reachable
-in-cluster at `http://<service>.<namespace>.svc.cluster.local`.
+a supplied hostname on a stable IP. The workload is also reachable in-cluster at
+`http://<service>.<namespace>.svc.cluster.local` regardless of the Service type.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -220,7 +220,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | How the Kubernetes Service is exposed; front with an Ingress via `enable_custom_domain`. |
+| `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed; front with an Ingress via `enable_custom_domain`. |
 | `workload_type` | `null` | Auto-resolves to `StatefulSet` when `stateful_pvc_enabled = true`, else `Deployment`. |
 | `session_affinity` | `None` | Single replica, so sticky routing is unnecessary. |
 

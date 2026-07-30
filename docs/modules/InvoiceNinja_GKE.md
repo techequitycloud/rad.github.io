@@ -21,7 +21,7 @@ Most configuration options in `InvoiceNinja GKE` map directly to the same option
 
 The following configuration areas are provided by the underlying `App_GKE` module.
 
-| Configuration Area | Ghost-Specific Notes |
+| Configuration Area | Invoice Ninja-Specific Notes |
 |---|---|
 | Project & Identity | Identical to `App_GKE`. |
 | Application Identity | Invoice Ninja-specific defaults for `application_name`, `application_display_name`, and `application_version`; see [Group 3: Application Identity](#group-3-application-identity). |

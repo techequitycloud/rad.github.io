@@ -73,10 +73,9 @@ deployment wires together a small, focused set of Google Cloud services:
 - **Redis is force-disabled.** The variant hardcodes `enable_redis = false` to
   the foundation regardless of the `enable_redis` variable's value — Gokapi has no
   use for Redis.
-- **A public endpoint is provisioned out of the box.** Unlike many app modules,
-  `enable_custom_domain` defaults to `true` and `reserve_static_ip` defaults to
-  `true`, even though `service_type` defaults to `ClusterIP`. This gives Gokapi a
-  working public Gateway endpoint by default — appropriate for an app whose whole
+- **A public endpoint is provisioned out of the box.** `enable_custom_domain`
+  defaults to `true` and `reserve_static_ip` defaults to `true`, and `service_type`
+  itself also defaults to `LoadBalancer` — appropriate for an app whose whole
   purpose is generating shareable download links. See [App_GKE](App_GKE.md) for the
   default `<reserved-ip>.nip.io` hostname mechanic.
 
@@ -145,8 +144,8 @@ and rotation.
 
 `enable_custom_domain = true` and `reserve_static_ip = true` are both defaults, so
 a Kubernetes Gateway API resource with a reserved static external IP is
-provisioned automatically, even though the underlying Kubernetes `Service` itself
-defaults to `ClusterIP`.
+provisioned automatically, and the underlying Kubernetes `Service` itself also
+defaults to `LoadBalancer`.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -239,7 +238,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | Internal-only Service by default; the public entry point instead comes from the Group 19 Gateway (`enable_custom_domain`, below). |
+| `service_type` | `LoadBalancer` | External access recommended for this web UI; the Group 19 Gateway (`enable_custom_domain`, below) also provisions a public endpoint by default. |
 | `workload_type` | `null` → `StatefulSet` | Auto-resolves to `StatefulSet` because `stateful_pvc_enabled = true` by default. |
 | `session_affinity` | `None` | Stickiness is largely moot with a single replica. |
 

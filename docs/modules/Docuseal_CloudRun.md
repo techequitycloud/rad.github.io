@@ -273,7 +273,7 @@ specific to or notable for DocuSeal are listed; every other input is inherited f
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name. `SECRET_KEY_BASE` is injected automatically. |
 | `secret_propagation_delay` | `30` | Seconds to wait after secret creation before proceeding. |
 
-### Group 10 — Storage & Filesystem
+### Group 11 — Storage & Filesystem
 
 | Variable | Default | Description |
 |---|---|---|

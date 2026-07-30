@@ -39,8 +39,9 @@ together a deliberately small set of Google Cloud services:
 **Sensible defaults worth knowing up front:**
 
 - **No database.** DokuWiki stores everything in the `/storage` flat-file directory.
-  `database_type` is fixed to `"NONE"`; a plan-time validation guard rejects any
-  other value (it would provision an unused Cloud SQL instance and incur cost).
+  `DokuWiki_Common` hardcodes `database_type = "NONE"` in the config it assembles;
+  the `database_type` variable declared on `DokuWiki_CloudRun` itself is never
+  forwarded to it, so changing that variable has no effect either way.
 - **All state lives in one Cloud Storage bucket.** `/storage` is a **gcsfuse** mount
   of the auto-provisioned `dokuwiki-data` bucket. Deleting or repointing that bucket
   loses the entire wiki. `force_destroy` is enabled, so a module destroy removes it.
@@ -89,10 +90,12 @@ and traffic splitting.
 
 ### B. Database — not used
 
-DokuWiki does **not** use a database. `database_type = "NONE"`, no Cloud SQL instance
-is created, and no `db-init` job runs. The plan-time guard in the module rejects any
-non-`NONE` `database_type`. If you are looking for where the wiki content lives, it is
-the Cloud Storage bucket in §C, not a database.
+DokuWiki does **not** use a database. `DokuWiki_Common` hardcodes `database_type =
+"NONE"` regardless of the `database_type` variable's value — that variable is never
+forwarded to `DokuWiki_Common` or `App_CloudRun`'s applied config, so setting it has
+no effect. No Cloud SQL instance is created and no `db-init` job runs. If you are
+looking for where the wiki content lives, it is the Cloud Storage bucket in §C, not a
+database.
 
 ### C. Cloud Storage — the `/storage` data volume
 
@@ -236,7 +239,7 @@ specific to or notable for DokuWiki are listed; every other input is inherited f
 
 | Variable | Default | Description |
 |---|---|---|
-| `database_type` | `NONE` | **Must remain `NONE`.** A plan-time guard rejects any other value. |
+| `database_type` | `NONE` | Inert — `DokuWiki_Common` hardcodes `database_type = "NONE"` regardless of this variable; it is never forwarded, so setting it has no effect. |
 
 _All other inputs follow standard [App_CloudRun](App_CloudRun.md) behaviour._
 
@@ -273,12 +276,12 @@ running resources.
 > Risk: **Critical** (data loss / outage / security) — **High** (service degraded) —
 > **Medium** (cost or partial degradation) — **Low** (minor).
 
-> **Inherited plan-time validation.** This module passes its configuration through the [App_CloudRun](App_CloudRun.md) foundation engine, which validates values *and combinations* at plan time — IAP with no authorized identities, a `gen1` runtime with GCS Fuse mounts, an out-of-range `backup_retention_days`, and (module-specific) a non-`NONE` `database_type`. Invalid configuration fails the **plan** with a clear, named error before any resource is created, so most mistakes below are caught up front rather than at apply or runtime.
+> **Inherited plan-time validation.** This module passes its configuration through the [App_CloudRun](App_CloudRun.md) foundation engine, which validates values *and combinations* at plan time — IAP with no authorized identities, a `gen1` runtime with GCS Fuse mounts, an out-of-range `backup_retention_days`. Invalid configuration fails the **plan** with a clear, named error before any resource is created, so most mistakes below are caught up front rather than at apply or runtime.
 
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
 | `dokuwiki-data` bucket | Never delete/repoint after first deploy | Critical | The bucket *is* the wiki — deleting or repointing it loses all pages, media, and users. `force_destroy = true` means a module destroy removes it; back it up first. |
-| `database_type` | `NONE` | Critical | Any other value fails the plan-time guard; if bypassed it provisions an unused Cloud SQL instance and cost. |
+| `database_type` | leave at default | Low | Inert — `DokuWiki_Common` always hardcodes `NONE`; this variable is never forwarded, so changing it provisions nothing and has no effect. |
 | `install.php` after setup | Remove / block once admin exists | High | Anyone who reaches `/install.php` before you finish setup can claim the admin account. |
 | `execution_environment` | `gen2` | High | `gen1` cannot mount the gcsfuse `/storage` volume — the container has nowhere to persist wiki data. |
 | `max_instance_count` | Keep modest (e.g. `3`) | High | High concurrency across instances races on the same gcsfuse-backed files; DokuWiki's file locks are only eventually consistent on object storage. |

@@ -333,7 +333,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `stateful_pvc_enabled` | `false` | Enable per-pod PVC templates. Not needed — NetBox's persistent state is Cloud SQL + GCS. |
 | `stateful_pvc_size` / `stateful_pvc_mount_path` / `stateful_pvc_storage_class` | (defaults) | PVC sizing, mount path, StorageClass. |
-| `stateful_headless_service` | `true` | Stable pod DNS names. |
+| `stateful_headless_service` | `null` (auto) | Only relevant when using a StatefulSet; NetBox defaults to `Deployment`, so this is inert unless `stateful_pvc_enabled = true`. |
 | `stateful_pod_management_policy` | `OrderedReady` | `OrderedReady` or `Parallel`. |
 | `stateful_update_strategy` | `RollingUpdate` | `RollingUpdate` or `OnDelete`. |
 
@@ -443,7 +443,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` | HTTP `/login/`, 60s delay, 60 failure threshold | NetBox-specific startup probe. |
+| `startup_probe` | HTTP `/login/`, 60s delay, 30 failure threshold | NetBox-specific startup probe. |
 | `liveness_probe` | HTTP `/login/`, 30s failure window | NetBox-specific liveness probe. |
 | `uptime_check_config` | _(set)_ | Optional Cloud Monitoring uptime check — only meaningful when the service is publicly reachable. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
@@ -499,7 +499,7 @@ to locate and explore the running resources.
 | `redis_host` | `""` (NFS) or explicit | High | When Redis is on but NFS is off and no host is set, background processing silently never runs. |
 | `REDIS_DATABASE` / `REDIS_CACHE_DATABASE` | Keep separate (`0` / `1`) | High | Sharing one logical Redis database risks losing queued background tasks during a cache flush. |
 | `memory_limit` | `2Gi` | High | Values below 1Gi risk OOM kills, especially with the RQ worker co-located in the same pod. |
-| `min_instance_count` | `1` | High | GKE requires min ≥ 1; keeping it at 1 ensures NetBox and the RQ worker are always available. |
+| `min_instance_count` | `1` | High | Not enforced at plan time (0 is accepted), but dropping to 0 stops the co-located RQ worker along with the web pod — background tasks silently stop being processed until a pod comes back up. |
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar is required for PostgreSQL connectivity. |
 | `service_type` / `reserve_static_ip` | Public by default; `ClusterIP`/`false` for internal-only | Medium | Switching to internal-only trades public reachability for lower static-IP quota consumption — verify which is actually needed before deploy. |
 | `session_affinity` | `ClientIP` | Medium | Without stickiness, in-flight UI sessions can route to a different pod mid-request. |

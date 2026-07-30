@@ -162,7 +162,7 @@ fat image's nginx/backend returns HTTP 200 for once the embedded MongoDB,
 Redis, and Java backend have all finished initialising.
 
 - **Startup probe** — HTTP `/api/v1/health`, `initial_delay_seconds = 120`,
-  `period_seconds = 15`, `failure_threshold = 40` (a window of roughly ten
+  `period_seconds = 15`, `failure_threshold = 40` (a window of roughly twelve
   minutes), accommodating the slow first boot of the bundled
   Mongo+Redis+Java stack.
 - **Liveness probe** — the same path with tighter steady-state thresholds:

@@ -5,9 +5,9 @@ description: "Shared configuration reference for the Shlink module — applicati
 
 # Shlink Common — Shared Application Configuration
 
-`Shlink_Common` is the **shared application layer** for Shlink. It is not deployed on its own; instead it supplies the Shlink-specific configuration that both [Shlink_CloudRun](Shlink_CloudRun.md) and the GKE variant build on, so the two platform variants behave identically where it matters. End users never configure this layer directly — it has no deployment UI inputs of its own — but understanding what it provides explains the defaults you see in the platform docs.
+`Shlink_Common` is the **shared application layer** for Shlink. It is not deployed on its own; instead it supplies the Shlink-specific configuration that both [Shlink_CloudRun](Shlink_CloudRun.md) and [Shlink_GKE](Shlink_GKE.md) build on, so the two platform variants behave identically where it matters. End users never configure this layer directly — it has no deployment UI inputs of its own — but understanding what it provides explains the defaults you see in the platform docs.
 
-For the infrastructure that actually provisions and runs Shlink, see the platform guide ([Shlink_CloudRun](Shlink_CloudRun.md)) and the foundation guides ([App_CloudRun](App_CloudRun.md), [App_GKE](App_GKE.md), [App_Common](App_Common.md)).
+For the infrastructure that actually provisions and runs Shlink, see the platform guides ([Shlink_CloudRun](Shlink_CloudRun.md), [Shlink_GKE](Shlink_GKE.md)) and the foundation guides ([App_CloudRun](App_CloudRun.md), [App_GKE](App_GKE.md), [App_Common](App_Common.md)).
 
 ---
 
@@ -101,5 +101,5 @@ None. Shlink keeps all state — short URLs, visits, tags, domains, API keys —
 
 ---
 
-For the Shlink-specific, user-facing configuration (variables by group, outputs, and how to explore each service from the Console and CLI), see the platform guide:
-**[Shlink_CloudRun](Shlink_CloudRun.md)**.
+For the Shlink-specific, user-facing configuration (variables by group, outputs, and how to explore each service from the Console and CLI), see the platform guides:
+**[Shlink_CloudRun](Shlink_CloudRun.md)** and **[Shlink_GKE](Shlink_GKE.md)**.

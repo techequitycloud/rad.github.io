@@ -28,7 +28,7 @@ foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Database engine | Fixes **Cloud SQL for PostgreSQL 15** as the only supported engine | §Database in the platform guides |
 | Database bootstrap | Defines the `db-init` job (PostgreSQL setup), `db-migrate` job (Prisma migrations), and `seed-app-store` job (app store seeding) that run in sequence on first deploy | `initialization_jobs` output |
 | `DATABASE_URL` assembly | Builds `DATABASE_URL` and `DATABASE_DIRECT_URL` from `DB_*` env vars at container start, making connectivity independent of image version | Runtime container entrypoint |
-| Health probe defaults | Supplies a generous startup window (`initial_delay=60s`, `failure_threshold=30`, `period=10s` on GKE; `initial_delay=180s`, `failure_threshold=18` via `start.sh` path on Cloud Run) to accommodate first-boot migrations and seeding | §Observability in the platform guides |
+| Health probe defaults | Supplies a generous startup window (`initial_delay=60s`, `failure_threshold=12`, `period=10s` on GKE; `initial_delay=180s`, `failure_threshold=18` via `start.sh` path on Cloud Run) to accommodate first-boot migrations and seeding | §Observability in the platform guides |
 
 ---
 
@@ -118,7 +118,7 @@ NextAuth.js is fully initialised. This endpoint is reliable across both the base
 wrapper image variants.
 
 - **GKE** uses an HTTP probe with a 60-second initial delay and a `failure_threshold`
-  of 30 at 10-second intervals (5 minutes of tolerance after the initial delay) to
+  of 12 at 10-second intervals (2 minutes of tolerance after the initial delay) to
   accommodate `db-migrate` and `seed-app-store` completing before the pod is declared
   ready.
 - **Cloud Run** sets a longer `initial_delay_seconds = 180` to cover `replace-placeholder.sh`
@@ -132,8 +132,10 @@ user-configurable.
 
 ## 6. Object storage
 
-A default Cloud Storage `data` bucket is declared here and provisioned by the
-foundation, which also grants the workload service account access. Unlike applications
+`CalDiy_Common` itself declares no storage bucket (its `storage_buckets` output is
+empty) — the default Cloud Storage `data` bucket comes from the platform variant's
+own `storage_buckets` variable default (`Cal_GKE`/`Cal_CloudRun`), which the foundation
+then provisions and grants the workload service account access to. Unlike applications
 with media uploads, Cal.diy does not require shared NFS — all booking state lives in
 PostgreSQL. Additional buckets can be declared in the platform module's `storage_buckets`
 variable. List them with:

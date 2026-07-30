@@ -226,7 +226,7 @@ to or notable for Payload are listed; every other input is inherited from
 | Variable | Default | Description |
 |---|---|---|
 | `application_name` | `payload` | Base name for resources. Do not change after first deploy. |
-| `application_display_name` | `Payload CRM` | Human-readable name shown in the Console. Leftover text from the module's clone source — override to `Payload CMS` at deploy time; it is cosmetic only. |
+| `application_display_name` | `Payload CMS` | Human-readable name shown in the Console. |
 | `application_version` | `latest` | Deployment-tracking tag baked into the image via the Cloud Build `application_version` build arg. |
 
 ### Group 4 — Runtime & Scaling

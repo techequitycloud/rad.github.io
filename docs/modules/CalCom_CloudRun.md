@@ -44,10 +44,13 @@ focused set of Google Cloud services:
   stored in Secret Manager. Never rotate them after first boot without a maintenance
   window — rotating `CALENDSO_ENCRYPTION_KEY` renders all stored calendar/OAuth
   credentials undecryptable, and rotating `NEXTAUTH_SECRET` invalidates all sessions.
-- **The public URL is validated at startup.** `NEXT_PUBLIC_WEBAPP_URL` / `NEXTAUTH_URL`
-  default to this service's deterministic `run.app` URL; leaving them at the image's
-  `localhost:3000` default makes the server refuse to boot. Set `webapp_url` to a
-  custom domain before sharing booking links.
+- **The public URL is self-corrected at startup, not validated/enforced.**
+  `NEXT_PUBLIC_WEBAPP_URL` / `NEXTAUTH_URL` default to the image's own
+  `http://localhost:3000`; the entrypoint overwrites that sentinel value with the
+  real Cloud Run service URL (`CLOUDRUN_SERVICE_URL`) at boot, so it does not
+  actually stay `localhost:3000` in a normal deploy. Still, set `webapp_url` to a
+  custom domain before sharing booking links, since NextAuth callbacks and
+  generated links use whichever URL ends up resolved.
 - **The schema is created on boot, not by a migration job.** The `db-init` job only
   provisions the empty database and role; Cal.com runs `prisma migrate deploy` on
   every start. Allow several minutes on the first boot.
@@ -384,7 +387,7 @@ running resources.
 | `NEXTAUTH_SECRET` (auto-generated) | Only rotate in a maintenance window | Critical | Rotating it invalidates all active user sessions, forcing immediate re-login. |
 | `db_name` / `db_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
 | `database_type` | `POSTGRES_15` | Critical | Cal.com's Prisma schema targets PostgreSQL only; any other engine breaks startup. |
-| `webapp_url` | Final public URL | Critical | A wrong or unset URL is baked into every booking/OAuth link, and the image default (`localhost:3000`) makes the server refuse to boot. |
+| `webapp_url` | Final public URL | High | A wrong URL is baked into every booking/OAuth link and breaks NextAuth callbacks; left empty, the entrypoint self-corrects the image's `localhost:3000` default to the real Cloud Run service URL, but an explicitly wrong `webapp_url` overrides that correction. |
 | `enable_cloudsql_volume` | `true` | High | Direct private-IP TCP fails Prisma's cert verification against Cloud SQL's CA — every query 500s. Keep the Auth Proxy socket. |
 | `memory_limit` | `2Gi` | High | Below 2 GiB, Next.js 16 OOM-crashes at startup and the revision never becomes Ready. |
 | `enable_iap` | only for private instances | High | IAP blocks all unauthenticated requests — including embeds and public booking pages. |

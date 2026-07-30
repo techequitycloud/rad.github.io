@@ -217,14 +217,15 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 specific to or notable for Rallly are listed; every other input is inherited from
 [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
-### Group 2 — Application Identity
+### Group 3 — Application Identity
 
 | Variable | Default | Description |
 |---|---|---|
 | `application_name` | `rallly` | Base name for resources. Do not change after first deploy. |
 | `application_version` | `latest` | Rallly image tag (`lukevella/rallly`); pin to a specific release in production. |
+| `base_url` | `""` | Public URL for `NEXT_PUBLIC_BASE_URL` / NextAuth links. Empty → the deterministic Cloud Run URL. Set to your custom domain before going live. |
 
-### Group 3 — Runtime & Scaling
+### Group 4 — Runtime & Scaling
 
 | Variable | Default | Description |
 |---|---|---|
@@ -236,7 +237,6 @@ specific to or notable for Rallly are listed; every other input is inherited fro
 | `container_port` | `3000` | Rallly listens on port 3000. |
 | `cpu_always_allocated` | `false` | Request-based billing. Rallly's response pipeline (notification emails) only runs after a request, so idle CPU is not needed. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy Unix socket for PostgreSQL. |
-| `base_url` | `""` | Public URL for `NEXT_PUBLIC_BASE_URL` / NextAuth links. Empty → the deterministic Cloud Run URL. Set to your custom domain before going live. |
 
 ### Group 5 — Access, Ingress & Email
 
@@ -251,7 +251,7 @@ specific to or notable for Rallly are listed; every other input is inherited fro
 | `smtp_secure_enabled` | `false` | Enable implicit TLS/SSL (true for port 465). |
 | `mail_from` | `""` | Sender address for `NOREPLY_EMAIL` / `SUPPORT_EMAIL`. Empty → `noreply@rallly.local`. |
 
-### Group 11 — Database Backend
+### Group 12 — Database Backend
 
 | Variable | Default | Description |
 |---|---|---|
@@ -266,14 +266,14 @@ specific to or notable for Rallly are listed; every other input is inherited fro
 | `enable_nfs` | `false` | NFS is off — Rallly stores all state in PostgreSQL. |
 | `gcs_volumes` | `[]` | No GCS Fuse volumes are required. |
 
-### Group 13 — Observability & Health
+### Group 14 — Observability & Health
 
 | Variable | Default | Description |
 |---|---|---|
 | `startup_probe` | TCP, 30s delay / 20s period / 10 retries | Deliberately TCP, not HTTP `/api/status` — that endpoint only returns 2xx at full readiness (DB + Redis + deps), which would never let a healthy container start routing. Allow for the first-boot Prisma migration. |
 | `liveness_probe` | Disabled (`enabled = false`) | HTTP `/api/status`, 15s delay, but disabled by default — an early HTTP check on that path would restart-loop a healthy container before full readiness; the TCP startup probe already gates routing. |
 
-### Group 20 — Redis Cache
+### Group 21 — Redis Cache
 
 | Variable | Default | Description |
 |---|---|---|

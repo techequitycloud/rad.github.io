@@ -155,10 +155,15 @@ asymmetry this aliasing runs into).
   boot** — same risk class as Synapse's `server_name` or Outline's `URL`.
 - **`GTS_ACCOUNT_DOMAIN`** — optional separate vanity domain for account
   handles; defaults to `GTS_HOST` when empty. Same immutability risk.
-- **`GTS_PROTOCOL = "https"`** — must stay `https` even though the container
-  only ever speaks plain HTTP internally; Cloud Run/GKE terminate the real
-  public HTTPS connection at their own edge. GoToSocial's own docs warn that
-  switching this value later permanently breaks already-generated URIs.
+- **`GTS_PROTOCOL`** — `var.enable_custom_domain ? "https" : "http"`, **not** a
+  static `"https"`. Cloud Run always terminates real HTTPS at its edge, but on
+  GKE that's only true once `enable_custom_domain = true`; forcing `"https"`
+  when there is no real TLS anywhere in the chain (a bare GKE `LoadBalancer`
+  Service with `enable_custom_domain = false`) makes GoToSocial issue `Secure`
+  session cookies over a connection that's actually plain HTTP — the browser
+  silently drops them and the entire web sign-in/OAuth flow 400s (confirmed
+  live). GoToSocial's own docs warn that switching this value later permanently
+  breaks already-generated URIs, so once a domain is attached, keep it attached.
 - **`GTS_PORT = "8080"`**, **`GTS_BIND_ADDRESS = "0.0.0.0"`**.
 - **`GTS_LETSENCRYPT_ENABLED = "false"`** — mandatory; the platform's own
   edge already terminates TLS, and GoToSocial's built-in ACME client would

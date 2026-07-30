@@ -163,7 +163,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `storage_buckets` | one `data` bucket | Created but not auto-mounted. |
-| `stateful_pvc_enabled` | `false` | Not used — Homebox is stateless at the pod level. |
+| `stateful_pvc_enabled` | `null` | Not used — Homebox is stateless at the pod level. |
 
 ### Group 12 (16) — Database Backend
 

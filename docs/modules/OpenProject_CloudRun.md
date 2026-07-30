@@ -244,7 +244,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `cpu_always_allocated` | `true` | Keeps CPU allocated so the in-process `good_job` worker + cron run without inbound requests. |
 | `min_instance_count` | `1` | Keeps one instance warm for background jobs. |
 | `max_instance_count` | `5` | Autoscaling upper bound. |
-| `container_port` | `80` | The all-in-one image serves on port 80. |
+| `container_port` | `8080` | Puma's own default bind port — this module runs Puma directly via `docker/prod/web`, bypassing the all-in-one image's Apache proxy on port 80. |
 | `execution_environment` | `gen2` | Gen2 required for NFS mounts. |
 | `timeout_seconds` | `300` | Maximum request duration (0–3600 seconds). |
 | `enable_cloudsql_volume` | `false` | **Off on Cloud Run** — OpenProject connects over private-IP TCP. |

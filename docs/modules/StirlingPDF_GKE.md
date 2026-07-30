@@ -401,7 +401,7 @@ locate and explore the running resources.
 | `container_resources.memory_limit` | `2Gi` | High | Below ~2Gi the JVM + LibreOffice OOM-kills during conversions. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are bytes and block all pod scheduling in the namespace. |
 | `timeout_seconds` | `60`, raise for big files | High | Large OCR/conversion jobs exceeding the timeout return 504 mid-operation. |
-| `min_instance_count` | `1` | High | GKE requires min ≥ 1; the validation guard rejects `0`. |
+| `min_instance_count` | `1` | Medium | Setting `0` is accepted at plan time but silently coerced to `1` in the HPA's `minReplicas` — GKE does not scale this workload to zero regardless of the configured value. |
 | `startup_probe` window | Keep the ~5 minute default | Medium | Shortening it marks pods unhealthy before LibreOffice finishes warming up, wedging the rollout. |
 | `enable_cloud_armor` | Enable for public instances | Medium | A public toolkit without a WAF is exposed to abuse and scanning. |
 | `enable_pod_disruption_budget` | `true` | Medium | Disabling allows GKE to evict all pods simultaneously during maintenance. |

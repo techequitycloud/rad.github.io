@@ -226,8 +226,6 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `project_id` | _(required)_ | Target Google Cloud project. |
 | `region` | `us-central1` | Region for the service and regional resources. |
-| `elasticsearch_url` | `""` | Elasticsearch HTTP endpoint for full-text search. Leave empty to disable. |
-| `elasticsearch_username` | `""` | Elasticsearch username. Leave empty when security is disabled. |
 
 ### Group 2 — Deployment Environment
 
@@ -356,6 +354,14 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `redis_host` | `""` | Leave empty to use the NFS host IP; set explicitly for Memorystore. |
 | `redis_port` | `6379` | Redis port. |
 | `redis_auth` | `""` | Optional Redis auth password (sensitive). |
+
+### Group 20 — Elasticsearch (optional full-text search)
+
+| Variable | Default | Description |
+|---|---|---|
+| `elasticsearch_url` | `""` | Elasticsearch HTTP endpoint for full-text search (e.g. the `elasticsearch_endpoint` output from [Elasticsearch_GKE](Elasticsearch_GKE.md)). Leave empty to disable — Zammad runs fine without it. |
+| `elasticsearch_username` | `""` | Elasticsearch username. Leave empty when `xpack.security.enabled` is false. |
+| `elasticsearch_password_secret` | `""` | Secret Manager secret ID holding the Elasticsearch password. Leave empty for an unauthenticated cluster. |
 
 ### Group 22 — VPC Service Controls & Audit Logging
 

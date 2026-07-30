@@ -155,10 +155,6 @@ The default probes rely on BookStack's public health surface:
   window (300-second initial delay) accommodates the automatic
   `php artisan migrate --force` that runs on the first container start.
 
-> On the GKE variant, the shipped `liveness_probe` default path is a stale WordPress
-> leftover (`/wp-admin/install.php`); set `path = "/status"` for accurate BookStack
-> health signalling.
-
 ---
 
 ## 7. Object storage & persistent files

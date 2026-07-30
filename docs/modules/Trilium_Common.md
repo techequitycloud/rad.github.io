@@ -35,7 +35,7 @@ the foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)).
 ## 2. Container image and build
 
 ```dockerfile
-ARG TRILIUM_VERSION=0.95.0
+ARG TRILIUM_VERSION=v0.95.0
 FROM triliumnext/notes:${TRILIUM_VERSION}
 ```
 

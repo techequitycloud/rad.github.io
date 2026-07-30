@@ -31,7 +31,7 @@ focused set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | GKE Autopilot | Node.js pod, 1 vCPU / 1 GiB by default, horizontally autoscaled |
+| Compute | GKE Autopilot | Node.js pod, 1 vCPU / 512 MiB by default, horizontally autoscaled |
 | Database | Cloud SQL for PostgreSQL 15 | Required — non-standard `POSTGRES_*` env var names |
 | Object storage | Cloud Storage | A small optional `backups` bucket for database export archives |
 | Secrets | Secret Manager | Auto-generated `JWT_SECRET`; database password |
@@ -196,7 +196,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 |---|---|---|
 | `container_image_source` | `prebuilt` | Deploys the official `cyfershepard/jellystat` image directly. |
 | `container_port` | `3000` | Fixed — matches Jellystat's hardcoded internal port. |
-| `cpu_limit` / `memory_limit` | `1000m` / `1Gi` | Container resources. |
+| `cpu_limit` / `memory_limit` (via `container_resources`) | `1000m` / `512Mi` | Container resources. |
 | `min_instance_count` / `max_instance_count` | `0` / `1` | Replica autoscaling bounds. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar (loopback connection). |
 

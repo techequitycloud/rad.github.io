@@ -289,15 +289,12 @@ Variables are grouped exactly as they appear on the deployment platform. Only
 settings specific to or notable for Chatwoot are listed; every other input is
 inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
-### Group 1 — Project, Identity & Search Integration
+### Group 1 — Project & Identity
 
 | Variable | Default | Description |
 |---|---|---|
 | `project_id` | _(required)_ | Target Google Cloud project. |
 | `region` | `us-central1` | Region for the service and regional resources. |
-| `elasticsearch_url` | `""` | Optional Elasticsearch endpoint (e.g. from `Elasticsearch_GKE`) for Chatwoot's full-text search. Leave empty to disable. |
-| `elasticsearch_username` | `""` | Elasticsearch username; leave empty when `xpack.security.enabled` is false. |
-| `elasticsearch_password_secret` | `""` | Secret Manager secret ID holding the Elasticsearch password; when set, injected as `ELASTICSEARCH_PASSWORD` and the workload SA is granted `secretAccessor`. |
 
 ### Group 2 — Deployment Environment
 
@@ -429,6 +426,14 @@ bucket after provisioning. See [App_CloudRun](App_CloudRun.md).
 | `redis_host` | `""` | Blank uses the shared NFS-server-hosted Redis IP that the Foundation injects. |
 | `redis_port` | `6379` | Redis port. |
 | `redis_auth` | `""` | Optional Redis auth password (sensitive). |
+
+### Group 20 — Search Integration (Elasticsearch)
+
+| Variable | Default | Description |
+|---|---|---|
+| `elasticsearch_url` | `""` | Optional Elasticsearch endpoint (e.g. from `Elasticsearch_GKE`) for Chatwoot's full-text search. Leave empty to disable. |
+| `elasticsearch_username` | `""` | Elasticsearch username; leave empty when `xpack.security.enabled` is false. |
+| `elasticsearch_password_secret` | `""` | Secret Manager secret ID holding the Elasticsearch password; when set, injected as `ELASTICSEARCH_PASSWORD` and the workload SA is granted `secretAccessor`. |
 
 ### Group 22 — VPC Service Controls & Audit Logging
 

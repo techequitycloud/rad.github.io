@@ -36,7 +36,7 @@ services:
 | Database | **None (SQLite, on mounted storage)** | No Cloud SQL — `database_type` is fixed to `NONE` by `Gokapi_Common`; Gokapi writes its own SQLite DB under `GOKAPI_CONFIG_DIR` |
 | File & DB persistence | Cloud Storage bucket mounted via **GCS Fuse** at `/data` | The only persistence path available on Cloud Run — there is no PVC/block-storage concept here, unlike the StatefulSet PVC used by `Gokapi_GKE` |
 | Object storage | Cloud Storage | The `storage`-suffixed bucket is auto-provisioned and, on Cloud Run, is always mounted (not idle, unlike the GKE variant) |
-| Secrets | Secret Manager | Only an **optional** operator API key (`GOKAPI_API_KEY`); no mandatory generated secret |
+| Secrets | Secret Manager | Operator API key (`GOKAPI_API_KEY`), enabled by default and required when ingress is public; no other mandatory generated secret |
 | Ingress | Cloud Run URL / Cloud Load Balancing | `ingress_settings = "all"` by default, so the service is publicly reachable out of the box |
 
 **Sensible defaults worth knowing up front:**
@@ -67,11 +67,13 @@ services:
 - **No admin password is auto-generated.** Gokapi has no mandatory secret — the
   administrator account is created interactively through Gokapi's own first-run
   setup wizard, the first time anyone opens the service in a browser.
-- **Optional operator API key.** `enable_api_key` (default `false`) generates a
+- **Operator API key, on by default.** `enable_api_key` (default `true`) generates a
   32-character random token, stores it in Secret Manager, and injects it as
-  `GOKAPI_API_KEY` via the module's `module_secret_env_vars` mechanism. This is a
-  convenience token only — Gokapi's own upload/download API keys are normally
-  minted from the admin UI after setup.
+  `GOKAPI_API_KEY` via the module's `module_secret_env_vars` mechanism. A plan-time
+  validation guard rejects `ingress_settings = "all"` (the module default) with
+  `enable_api_key = false` — public ingress requires this key protection. Gokapi's
+  own upload/download API keys are still normally minted from the admin UI after
+  setup; this token is a convenience/protection token only.
 - **Redis is force-disabled.** `main.tf` hardcodes `enable_redis = false` to the
   foundation regardless of any variable value — Gokapi has no use for Redis.
 - **Public ingress is on by default.** `ingress_settings = "all"` matches
@@ -132,12 +134,13 @@ performance caveat for database-like workloads, and
 [Section 6](#6-configuration-pitfalls--sensible-defaults) below for why this
 matters specifically for Gokapi's SQLite database.
 
-### C. Secret Manager — the optional API key
+### C. Secret Manager — the operator API key
 
-Gokapi creates **no mandatory secret**. The only secret this module can create is
-the optional `GOKAPI_API_KEY` operator convenience token, gated by `enable_api_key`
-(default `false`). This secret is **not** surfaced in this module's
-[Outputs](#5-outputs) — look it up directly by name.
+Gokapi creates no database-style mandatory secret, but `enable_api_key` (default
+`true`) generates the `GOKAPI_API_KEY` operator token by default, and a plan-time
+guard requires it whenever `ingress_settings = "all"` (the module default). This
+secret is **not** surfaced in this module's [Outputs](#5-outputs) — look it up
+directly by name.
 
 - **Console:** Security → Secret Manager.
 - **CLI:**
@@ -248,7 +251,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `application_display_name` | `Gokapi File Sharing` | Human-readable name shown in the Console. |
 | `description` | `Gokapi self-hosted file sharing` | Service description. |
 | `application_version` | `latest` | Gokapi image tag; resolves to a pinned `v1.9.6` when `latest` via the app-specific `GOKAPI_VERSION` build arg. |
-| `enable_api_key` | `false` | Generates a random operator API key in Secret Manager, injected as `GOKAPI_API_KEY`. A convenience token only — Gokapi mints its own real API keys from the admin UI. |
+| `enable_api_key` | `true` | Generates a random operator API key in Secret Manager, injected as `GOKAPI_API_KEY`. Plan-time-required whenever `ingress_settings = "all"`. Gokapi still mints its own real upload/download API keys from the admin UI. |
 
 ### Group 4 — Runtime & Scaling
 
@@ -423,7 +426,7 @@ secret-id output for the optional API key — retrieve that one directly with
 | `max_instance_count` | `1` | Critical | Gokapi's SQLite database is single-writer with no clustering; running >1 instance risks database corruption and inconsistent uploads. |
 | `container_port` | `53842` (leave default) | High | `GOKAPI_PORT` is hardcoded to `53842` in `Gokapi_Common`'s environment variables independently of this variable; changing `container_port` routes Cloud Run traffic to a port the container isn't listening on. |
 | `create_cloud_storage` | `true` | Critical | Setting `false` removes Gokapi's only persistence bucket — the SQLite DB and every upload live there. |
-| `enable_api_key` (auto-generated secret) | Leave `false` unless you need a pre-provisioned key | Low | The token is a convenience only; Gokapi's real upload/download API keys are minted from the admin UI regardless of this setting. |
+| `enable_api_key` (auto-generated secret) | Leave at `true` (default) — required when `ingress_settings = "all"` | Medium | Setting `false` while ingress is public fails the plan (blocked at plan time); Gokapi's real upload/download API keys are minted from the admin UI regardless of this setting. |
 | `enable_nfs` | `false` unless you also repoint `GOKAPI_CONFIG_DIR`/`GOKAPI_DATA_DIR` | Medium | Enabling NFS alone provisions an unused Filestore/NFS VM — Gokapi's data still lives at `/data` on GCS Fuse unless you manually override the environment variables to use the NFS mount path instead. |
 | `enable_backup_import` / `backup_schedule` / etc. | Leave at defaults | Low | These variables are inert for Gokapi (`database_type = NONE`); no automated backup of the SQLite DB or uploads exists. Back up the `storage` bucket directly if you need one. |
 | `min_instance_count` | `1` (default) | Low | Keeping 1 instance warm avoids cold starts on shared download links; this is cheap for a lightweight Go binary. |

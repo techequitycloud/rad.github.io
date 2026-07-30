@@ -31,7 +31,7 @@ plus uploaded assets on the platform's shared NFS volume:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | Cloud Run v2 | Next.js service, 1 vCPU / 512 MiB by default, scale-to-zero, pinned to a single instance |
+| Compute | Cloud Run v2 | Next.js service, 1 vCPU / 512 MiB by default, scale-to-zero; should be pinned to a single instance (module default is `max_instance_count = 3`, not pinned) |
 | Search | Cloud Run v2 (internal service) | A required Meilisearch sidecar, deployed automatically — not optional |
 | Database | none | State lives in an embedded SQLite database, not Cloud SQL |
 | Object storage | none (NFS instead) | Uploaded assets persist on the platform's shared NFS volume, not GCS |
@@ -43,9 +43,11 @@ plus uploaded assets on the platform's shared NFS volume:
 - **No Cloud SQL.** `database_type = "NONE"` — Karakeep's embedded SQLite
   database and uploaded assets both live on the platform's shared NFS volume
   (`enable_nfs = true` by default).
-- **Single instance only.** `max_instance_count = 1` — multiple Cloud Run
-  instances writing the same SQLite file over NFS risks corruption even with
-  WAL mode disabled (which this module keeps off by default).
+- **Single instance recommended, but not the shipped default.** The module's
+  `max_instance_count` default is `3`, not `1` — set it to `1` explicitly.
+  Multiple Cloud Run instances writing the same SQLite file over NFS risks
+  corruption even with WAL mode disabled (which this module keeps off by
+  default).
 - **Meilisearch is mandatory, not optional.** Deployed automatically as an
   internal-only additional Cloud Run service. Without it, Karakeep's `MEILI_ADDR`
   is unset and search is silently disabled (bookmarking itself still works).
@@ -55,9 +57,10 @@ plus uploaded assets on the platform's shared NFS volume:
   UI's sign-up form becomes the admin.
 - **`NEXTAUTH_SECRET` is immutable after first boot.** Rotating it invalidates
   every active session.
-- **Request-based billing by default.** `cpu_always_allocated = false`,
-  `min_instance_count = 0` — Karakeep's core save/search path needs no
-  background CPU; async link-crawling/AI-tagging may pause while scaled to zero.
+- **`min_instance_count = 0`** enables scale-to-zero by default. Note
+  `cpu_always_allocated` itself defaults to `true` (instance-based billing);
+  set it to `false` for request-based billing if Karakeep's async
+  link-crawling/AI-tagging pausing while scaled to zero is acceptable.
 
 ---
 
@@ -168,8 +171,9 @@ Monitoring, with optional uptime checks and alert policies.
 - **Health path.** Startup and liveness probes target `/` — Karakeep's public
   login/landing page.
 - **Async work (link crawling, AI tagging) runs in-process.** With
-  `cpu_always_allocated = false` (the default), this work may pause while the
-  instance is scaled to zero between requests and resume on the next request.
+  `cpu_always_allocated = false` (not the default — the module defaults to
+  `true`), this work may pause while the instance is scaled to zero between
+  requests and resume on the next request.
 
 ---
 
@@ -199,9 +203,9 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `container_image_source` | `prebuilt` | No custom build needed — Karakeep's default SQLite journal mode is already NFS-safe. |
 | `min_instance_count` | `0` | Scale-to-zero. |
-| `max_instance_count` | `1` | **Pinned** — SQLite-over-NFS multi-writer safety. Do not raise. |
+| `max_instance_count` | `3` | **Not pinned by the module** — override to `1` for SQLite-over-NFS multi-writer safety; the shipped default of `3` risks concurrent writers. |
 | `container_port` | `3000` | Karakeep's native default port. |
-| `cpu_always_allocated` | `false` | Request-based billing. |
+| `cpu_always_allocated` | `true` | Instance-based billing by default; set `false` for request-based billing. |
 
 ### Group 11 — Storage & Filesystem
 
@@ -257,7 +261,7 @@ running resources.
 
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
-| `max_instance_count` | `1` (pinned default) | Critical | Raising this risks SQLite corruption from concurrent NFS writers — Karakeep has no other database backend to fall back to. |
+| `max_instance_count` | Set to `1` (module default is `3`, not pinned) | Critical | The shipped default of `3` risks SQLite corruption from concurrent NFS writers — Karakeep has no other database backend to fall back to. |
 | First account created via sign-up | Create it immediately after deploy | Critical | The first account to register becomes admin — if left open, any visitor who reaches the URL first claims that role. |
 | `enable_nfs` | `true` (default) | Critical | Disabling it removes all durable storage — the SQLite database and assets would live on Cloud Run's ephemeral filesystem and vanish on every revision restart. |
 | `container_image_source` | `prebuilt` (default) | High | `"custom"` triggers an unnecessary Cloud Build with no Dockerfile configured in this module — the build will fail. |

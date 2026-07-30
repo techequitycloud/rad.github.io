@@ -32,7 +32,7 @@ a focused set of Google Cloud services:
 | Compute | GKE Autopilot | Node.js pods, 2 vCPU / 2 GiB by default, horizontally autoscaled |
 | Workspace storage | Cloud Storage (GCS Fuse) | Per-tenant workspace bucket mounted at `/data` via the GCS Fuse CSI driver |
 | AI credentials | Secret Manager | Anthropic API key and gateway token always stored; Telegram and Slack secrets optional |
-| Ingress | Cloud Load Balancing | `ClusterIP` by default (behind a router); `LoadBalancer` or custom domain available |
+| Ingress | Cloud Load Balancing | `LoadBalancer` by default; `ClusterIP` (behind a router) or custom domain available |
 | Secrets | Secret Manager | All credentials injected at pod startup; plaintext never in config |
 
 **Sensible defaults worth knowing up front:**
@@ -125,9 +125,9 @@ See [App_GKE](App_GKE.md) for the Secret Store CSI integration and rotation.
 
 ### D. Networking & ingress
 
-By default the workload is exposed as a `ClusterIP` service for internal-only access
-(typically behind an OpenClaw router service). A `LoadBalancer` service type or a custom
-domain via the Kubernetes Gateway API can be enabled for direct external access.
+By default the workload is exposed as a `LoadBalancer` service for direct external access.
+Set `service_type = "ClusterIP"` for internal-only access (typically behind an OpenClaw
+router service), or enable a custom domain via the Kubernetes Gateway API.
 
 - **Console:** Kubernetes Engine → Services & Ingress; VPC network → IP addresses.
 - **CLI:**
@@ -280,7 +280,7 @@ specific to or notable for OpenClaw are listed; every other input is inherited f
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | HTTP `/health`, 36-attempt threshold | Allows ~3 minutes for npm startup and GCS Fuse mount. |
 | `liveness_probe` / `health_check_config` | HTTP `/health` | Restarts the pod if the gateway becomes unresponsive. |
-| `uptime_check_config` | `{ enabled = false }` | Disabled by default for `ClusterIP` services (not externally reachable). |
+| `uptime_check_config` | `{ enabled = false }` | Disabled by default; enable explicitly once the service endpoint is known (the default `LoadBalancer` service type is externally reachable, but the IP isn't known until after deploy). |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Workload Automation

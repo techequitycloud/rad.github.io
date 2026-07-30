@@ -25,7 +25,7 @@ platform guides ([LubeLogger_GKE](LubeLogger_GKE.md),
 | Area | Provided by LubeLogger_Common | Where it surfaces |
 |---|---|---|
 | Authentication | **No generated secrets at all** — the first account is created via self-service registration on `/Login`'s Register form | LubeLogger `/Login` page on first access |
-| Container image | Points directly at the official prebuilt `ghcr.io/hargata/lubelogger` image — no custom Dockerfile or Cloud Build step | `container_image` output of the platform deployment |
+| Container image | Thin custom-build wrapper `FROM ghcr.io/hargata/lubelogger` that pre-creates the Data Protection keys directory; built via Cloud Build (Kaniko) and mirrored into Artifact Registry | `container_image` output of the platform deployment |
 | Database engine | **None by default** — LubeLogger's default mode uses an internal embedded LiteDB database file under `/App/data` (`database_type = "NONE"`) | §Database in the platform guides |
 | Database bootstrap | **None** — there is no `db-init` job; LubeLogger manages its own storage | n/a |
 | Object storage | Declares two Cloud Storage buckets: `storage` (the LiteDB database file plus uploaded photos/receipts/documents) and `dpkeys` (ASP.NET Core Data Protection keys) | `storage_buckets` output |
@@ -81,18 +81,32 @@ engine with no network protocol.
 
 ## 4. Container image
 
-LubeLogger uses the **official prebuilt image** with no modification:
+LubeLogger uses a **thin custom-build wrapper** over the official image, not a
+direct prebuilt reference:
 
-```
-ghcr.io/hargata/lubelogger:<version>
+```dockerfile
+ARG LUBELOGGER_VERSION=latest
+FROM ghcr.io/hargata/lubelogger:${LUBELOGGER_VERSION}
+
+USER root
+RUN mkdir -p /root/.aspnet/DataProtection-Keys
 ```
 
-- **`image_source = "prebuilt"`** — no Dockerfile, no custom entrypoint script, and no
-  Cloud Build step; the running container is the unmodified upstream image.
-- **`enable_image_mirroring = true`** by default copies the image into Artifact
-  Registry to avoid GHCR rate limits.
+- **`image_source = "custom"`** with `container_build_config.enabled = true` — the
+  foundation runs a Cloud Build (Kaniko) step that builds this wrapper and pushes it
+  into Artifact Registry.
+- **The only reason this is a custom build at all:** `/root/.aspnet` (the parent of
+  the Data Protection keys mount path) does not pre-exist in the base image, and
+  unlike a local `docker run -v` bind mount, Cloud Run's GCS FUSE volume injection
+  does not auto-create missing parent directories — without it, the container
+  crashed on every boot with zero application log output. No `ENTRYPOINT`/`CMD`
+  override is needed; both are inherited from the base image (`CMD
+  ["./CarCareTracker"]`).
+- **`enable_image_mirroring = true`** by default additionally mirrors the built
+  image into Artifact Registry to avoid GHCR rate limits.
 - Confirmed directly against the image (`docker inspect`): `CMD ["./CarCareTracker"]`,
-  `WorkingDir /App`, `ExposedPorts 8080/tcp`, no `USER` directive (runs as root).
+  `WorkingDir /App`, `ExposedPorts 8080/tcp`, no `USER` directive (runs as root) in
+  the upstream base image.
 
 ---
 

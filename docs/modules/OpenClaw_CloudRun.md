@@ -33,7 +33,7 @@ a focused set of Google Cloud services:
 | Compute | Cloud Run v2 (Gen2) | Node.js service, 1 vCPU / 1 GiB by default, CPU always allocated |
 | Workspace storage | Cloud Storage (GCS Fuse) | Per-tenant workspace bucket mounted at `/data` via GCS Fuse |
 | AI credentials | Secret Manager | Anthropic API key and gateway token always stored; Telegram and Slack secrets optional |
-| Ingress | Cloud Run URL / Cloud Load Balancing | Internal by default (behind a router); optional external HTTPS LB + custom domain |
+| Ingress | Cloud Run URL / Cloud Load Balancing | `all` (public internet) by default; set `internal` when fronting with an OpenClaw router, or layer an external HTTPS LB + custom domain |
 | Secrets | Secret Manager | All credentials injected at runtime; plaintext never in config |
 
 **Sensible defaults worth knowing up front:**
@@ -54,8 +54,9 @@ a focused set of Google Cloud services:
   agent deployments to avoid 15–20 s cold starts.
 - **`max_instance_count = 1` per tenant.** OpenClaw is stateful; multiple instances for the
   same tenant split state across replicas unless sticky routing is in place.
-- **Ingress defaults to `internal`.** The gateway is designed to be fronted by an OpenClaw
-  router. Set to `all` for direct public access.
+- **Ingress defaults to `all` (public internet).** Set `ingress_settings = "internal"` when
+  fronting the gateway with an OpenClaw router (recommended); leave `all` for direct public
+  access without a router.
 
 ---
 
@@ -124,9 +125,10 @@ See [App_CloudRun](App_CloudRun.md) for injection and rotation details.
 
 ### D. Networking & ingress
 
-The service is reachable at its `run.app` URL by default, restricted to internal VPC traffic
-(`ingress_settings = "internal"`). An external HTTPS load balancer with a custom domain,
-Cloud CDN, and Cloud Armor can be layered on.
+The service is reachable at its `run.app` URL by default, open to the public internet
+(`ingress_settings = "all"`). Set `ingress_settings = "internal"` to restrict traffic to the
+VPC when fronting with an OpenClaw router. An external HTTPS load balancer with a custom
+domain, Cloud CDN, and Cloud Armor can also be layered on.
 
 - **Console:** Cloud Run (service URL); Network services → Load balancing.
 - **CLI:**

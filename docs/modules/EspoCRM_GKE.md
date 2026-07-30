@@ -29,7 +29,7 @@ Google Cloud services:
 |---|---|---|
 | Compute | GKE Autopilot | Apache/PHP pods, 1 vCPU / 2 GiB by default, horizontally autoscaled |
 | Database | Cloud SQL for MySQL 8.0 | Required — EspoCRM does not support PostgreSQL; reached via the Auth Proxy sidecar |
-| Object storage | Cloud Storage + NFS (Filestore) | `espocrm-data` bucket; shared NFS mounted at `/var/lib/espocrm` for uploads |
+| Object storage | Cloud Storage + NFS (Filestore) | `espocrm-data` bucket; shared NFS mounted at `/var/www/html/data` for uploads |
 | Cache | Redis (optional) | Optional object cache; disabled by default |
 | Secrets | Secret Manager | Auto-generated `ESPOCRM_ADMIN_PASSWORD`; database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
@@ -48,7 +48,7 @@ Google Cloud services:
   database and user; the upstream `docker-entrypoint.sh` then runs the install/migrate
   action automatically when the pod starts.
 - **NFS is enabled by default.** `enable_nfs = true` mounts a shared Filestore volume at
-  `/var/lib/espocrm`, so EspoCRM's uploaded attachments and runtime data persist across
+  `/var/www/html/data`, so EspoCRM's uploaded attachments and runtime data persist across
   pod restarts and are shared between replicas.
 - **Single replica by default.** `min_instance_count = 1`, `max_instance_count = 1` — GKE
   keeps at least one pod running (no scale-to-zero) so the CRM is always reachable.
@@ -108,7 +108,7 @@ and password rotation, see [App_GKE](App_GKE.md).
 ### C. Cloud Storage & NFS
 
 A dedicated **Cloud Storage** bucket (`espocrm-data`) is provisioned automatically, and a
-shared **NFS (Filestore)** volume is mounted at `/var/lib/espocrm` for EspoCRM's uploaded
+shared **NFS (Filestore)** volume is mounted at `/var/www/html/data` for EspoCRM's uploaded
 attachments and runtime data. The workload service account is granted access to the bucket.
 
 - **Console:** Cloud Storage → Buckets; Filestore → Instances.
@@ -116,7 +116,7 @@ attachments and runtime data. The workload service account is granted access to 
   ```bash
   gcloud storage buckets list --project "$PROJECT"
   gcloud filestore instances list --project "$PROJECT"
-  kubectl exec -n "$NAMESPACE" deploy/<service-name> -- ls -la /var/lib/espocrm
+  kubectl exec -n "$NAMESPACE" deploy/<service-name> -- ls -la /var/www/html/data
   ```
 
 See [App_GKE](App_GKE.md) for CMEK options, GCS Fuse mounts, and the NFS server model.
@@ -202,7 +202,7 @@ quick way to confirm the DB host and site URL.
   ```
   Change it in the EspoCRM UI (Administration → Users) once you are in.
 - **Uploads persist on NFS.** With `enable_nfs = true` (default), EspoCRM's attachments and
-  runtime data live under the shared `/var/lib/espocrm` Filestore mount, surviving pod
+  runtime data live under the shared `/var/www/html/data` Filestore mount, surviving pod
   restarts and shared across replicas.
 - **Site URL must match the reachable host.** EspoCRM builds absolute links from
   `ESPOCRM_SITE_URL`; the entrypoint sets it from the service URL. After the LoadBalancer
@@ -264,7 +264,7 @@ specific to or notable for EspoCRM are listed; every other input is inherited fr
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Mount a shared Filestore volume for EspoCRM uploads/runtime data. |
-| `nfs_mount_path` | `/var/lib/espocrm` | Container mount path for the NFS volume. |
+| `nfs_mount_path` | `/var/www/html/data` | Container mount path for the NFS volume. |
 
 ### Group 15 — Redis Cache
 

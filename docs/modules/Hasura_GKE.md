@@ -31,15 +31,17 @@ focused set of Google Cloud services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | GKE Autopilot | Haskell pods, 1 vCPU / 512 MiB by default, horizontally autoscaled |
-| Database | Cloud SQL for PostgreSQL 15 | Required — Hasura's metadata catalog and default data source both live in Postgres |
+| Database | Cloud SQL for PostgreSQL | Required — Hasura's metadata catalog and default data source both live in Postgres |
 | Object storage | None | Hasura is stateless; no bucket is provisioned |
 | Secrets | Secret Manager | Auto-generated `HASURA_GRAPHQL_ADMIN_SECRET`; database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
 
 **Sensible defaults worth knowing up front:**
 
-- **PostgreSQL 15 is mandatory.** The database engine is fixed by the shared
-  application layer; Hasura keeps its own metadata catalog in Postgres.
+- **PostgreSQL is mandatory.** `database_type` defaults to the generic
+  `POSTGRES` (Hasura keeps its own metadata catalog in Postgres); this
+  resolves to the foundation's current default Cloud SQL Postgres version on
+  a fresh instance rather than a hardcoded version.
 - **The admin secret gates everything sensitive.** `HASURA_GRAPHQL_ADMIN_SECRET` is
   generated automatically, stored in Secret Manager, and materialised into the
   namespace via the Secret Store CSI driver. It protects the `/console` UI and the
@@ -86,10 +88,10 @@ and maximum replica counts.
 See [App_GKE](App_GKE.md) for how Autopilot, scaling, and the workload type are
 managed.
 
-### B. Cloud SQL for PostgreSQL 15
+### B. Cloud SQL for PostgreSQL
 
 Hasura stores its metadata catalog (tracked tables, relationships, permissions, event
-triggers) **and** your application data in a managed Cloud SQL for PostgreSQL 15
+triggers) **and** your application data in a managed Cloud SQL for PostgreSQL
 instance. Pods reach it privately through the **Cloud SQL Auth Proxy** sidecar over
 loopback; no public IP is exposed. On first deploy an initialization Job creates the
 application database and user; Hasura installs its metadata schema on first boot.

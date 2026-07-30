@@ -370,7 +370,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `enable_redis` | `true` | Use Redis for the document processing task queue. Redis is wired only when `redis_host` is non-empty. |
-| `redis_host` | `""` | Redis endpoint. Must be set explicitly — no NFS-based auto-discovery on Cloud Run. |
+| `redis_host` | `""` | Redis endpoint. Leave empty to use the NFS server IP (the platform co-hosts Redis on the NFS VM); set explicitly for a dedicated Memorystore instance. |
 | `redis_port` | `6379` | Redis port. |
 | `redis_auth` | `""` | Optional Redis auth password (sensitive). |
 | `elasticsearch_username` | `""` | Elasticsearch username. Leave empty when `xpack.security.enabled = false`. |
@@ -428,7 +428,7 @@ running resources.
 | `enable_cloudsql_volume` | `true` | Critical | RAGFlow connects via Unix socket bridged to TCP by socat; disabling the proxy sidecar causes a database connection failure on startup. |
 | `db_name` / `db_user` | set once | Critical | Immutable after first deploy; renaming recreates the database/user and destroys data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
-| `redis_host` | explicit Memorystore IP | High | An unreachable or empty Redis host silently breaks all async document workers. There is no NFS-based auto-discovery fallback on Cloud Run. |
+| `redis_host` | `""` (NFS fallback) or explicit Memorystore IP | High | An unreachable Redis host silently breaks all async document workers. Leaving it empty falls back to the NFS server's co-hosted Redis; if NFS is also disabled, workers never receive tasks. |
 | `min_instance_count` / `cpu_always_allocated` | `1` / `true` for continuous ingestion | High | Defaults are `0` / `false` (cold-start): background document processing stops while idle and cold starts take 2–3 minutes. Set both for always-on ingestion. |
 | `memory_limit` | `4Gi` (≥ `8Gi` for prod) | High | Embedding models plus the application server require significant RAM; too little causes OOM kills. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | High | Memorystore Redis is on a private VPC IP; wrong egress routing breaks the task queue. |

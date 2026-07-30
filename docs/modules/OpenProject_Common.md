@@ -144,9 +144,14 @@ numeric major tags (16, 15, …) and **no `latest` tag**, so the campaign defaul
 correctly on first boot:
 
 - **`RAILS_ENV = production`**.
-- **`OPENPROJECT_HTTPS = true`** — serve behind the platform HTTPS front-end; combined
-  with `OPENPROJECT_HOST__NAME` (set by the entrypoint) this yields correct absolute
-  URLs.
+- **`OPENPROJECT_HTTPS = tostring(var.https_enabled)`** — not hardcoded. It forces an
+  `http://` → `https://` redirect, so it must only be `true` when the deployment is
+  actually reachable over HTTPS. `OpenProject_CloudRun` always passes `true` (the
+  `run.app` URL is always HTTPS); `OpenProject_GKE` passes `var.enable_custom_domain`,
+  because a bare LoadBalancer IP with no custom domain is plain HTTP only — forcing
+  `true` there redirects every request to an `https://` address that never responds
+  (a silent, total outage). Combined with `OPENPROJECT_HOST__NAME` (set by the
+  entrypoint) this yields correct absolute URLs when true.
 - **`RAILS_LOG_TO_STDOUT = true`** — emit logs for Cloud Logging / GKE.
 - **`GOOD_JOB_EXECUTION_MODE = async`** — background jobs (emails, notifications,
   scheduled work) run in-process inside the web container. There is **no Redis**:
