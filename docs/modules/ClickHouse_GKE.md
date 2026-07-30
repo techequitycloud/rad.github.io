@@ -37,7 +37,7 @@ set of Google Cloud services:
 | Compute | GKE Autopilot | ClickHouse StatefulSet pod, 2 vCPU / 4 GiB by default |
 | Persistent storage | Persistent Disk | 30 GiB PVC (`standard-rwo`) at `/var/lib/clickhouse`, survives pod restarts |
 | Secrets | Secret Manager | Auto-generated ClickHouse user password, injected as `CLICKHOUSE_PASSWORD` |
-| Ingress | Cloud Load Balancing | LoadBalancer Service on port 8123 (ClickHouse HTTP interface) for cross-namespace access |
+| Ingress | Cloud Load Balancing | LoadBalancer Service on port 8123 (HTTP interface) plus, by default, port 9000 (native protocol, via `native_port_enabled`) for cross-namespace access — the native port is required by clients that speak only the native protocol (e.g. PostHog's clickhouse-driver); Plausible uses only the HTTP port |
 | Image registry | Artifact Registry | `clickhouse/clickhouse-server` mirrored from Docker Hub |
 
 **No Cloud SQL, no Redis, no GCS buckets** — the wrapper hard-forces
@@ -64,9 +64,12 @@ into the foundation call. All data lives in the PVC.
 - **Single-node is enforced at plan time** — `max_instance_count` must be `1`.
   Multi-node ClickHouse requires Keeper/replication configuration this module does not
   provide.
-- **The Service listens on 8123**, not App_GKE's default 80 — the wrapper forwards
-  `service_port = container_port` so consumers (Plausible's `CLICKHOUSE_DATABASE_URL`)
-  build their connection string against ClickHouse's standard HTTP-interface port.
+- **The Service listens on 8123 (HTTP) and, by default, also 9000 (native protocol)**,
+  not App_GKE's default port 80 — the wrapper forwards `service_port = container_port`
+  so consumers (Plausible's `CLICKHOUSE_DATABASE_URL`) build their connection string
+  against ClickHouse's standard HTTP-interface port. `native_port_enabled` (default
+  `true`) adds the native port as an additive `extra_service_ports` entry; set it
+  `false` to expose HTTP only.
 - **Probes are TCP, hard-wired in the module config.** Startup: 30 s initial delay,
   10 s period, failure threshold 60 — up to ~10 minutes, because Autopilot must
   provision a node, attach the PVC, and pull the image before the container even
@@ -305,6 +308,8 @@ specific to or notable for ClickHouse are listed; every other input is inherited
 | `min_instance_count` | `1` | Keep at `1` for single-node mode. |
 | `max_instance_count` | `1` | **Must be `1`** — enforced at plan time; multi-node needs Keeper/replication this module does not provide. |
 | `container_port` | `8123` | ClickHouse HTTP interface port — also forwarded as the Service port (not App_GKE's default 80). |
+| `native_port_enabled` | `true` | Also exposes the ClickHouse NATIVE protocol port on the Service, alongside the HTTP interface on `container_port`. Purely additive (ClickHouse already listens on this port in-container). Required by native-protocol-only clients (e.g. PostHog's clickhouse-driver); Plausible is unaffected either way. |
+| `native_port` | `9000` | TCP port for the native protocol, published when `native_port_enabled` is true. Must differ from `container_port` (enforced at plan time). |
 | `cpu_limit` | `2000m` | CPU per pod. |
 | `memory_limit` | `4Gi` | Memory per pod. ClickHouse recommends 4Gi as a practical floor; low-traffic Plausible runs acceptably at 2Gi. |
 | `timeout_seconds` | `300` | Load balancer backend timeout. |
@@ -435,6 +440,8 @@ locate and explore the running resources.
 |---|---|
 | `clickhouse_endpoint` | External HTTP endpoint: `http://<external-ip>:8123`. Pass to Plausible as `clickhouse_url`. Returns `null` until the external IP is assigned. |
 | `clickhouse_internal_endpoint` | In-cluster endpoint: `http://<svc>.<ns>.svc.cluster.local:8123` — **preferred** when `Plausible_GKE` runs in the same cluster. |
+| `clickhouse_internal_host` | In-cluster Kubernetes DNS name with no scheme and no port (e.g. `<svc>.<ns>.svc.cluster.local`), for a consumer whose client takes host/port as separate fields (e.g. PostHog's `clickhouse_host`) rather than a URL. |
+| `clickhouse_native_port` | TCP port of the ClickHouse native-protocol interface, published when `native_port_enabled` is true (used by native-protocol clients such as PostHog's clickhouse-driver, which cannot use the HTTP interface on `container_port`); `null` when `native_port_enabled` is false. |
 | `clickhouse_database` | Database bootstrapped by the image on first start. |
 | `clickhouse_username` | ClickHouse username bootstrapped on first start. |
 | `clickhouse_password_secret_id` | Secret Manager secret ID holding the user password. Consuming modules pass this as `Plausible_GKE`'s `clickhouse_password_secret`. |
