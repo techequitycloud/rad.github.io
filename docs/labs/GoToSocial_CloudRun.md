@@ -174,7 +174,10 @@ export REGION="us-central1"          # the region you deploy into
 
    ```bash
    INSTANCE=$(gcloud sql instances list --project="$PROJECT" --filter="name~gotosocial" --format="value(name)" --limit=1)
-   gcloud sql connect "$INSTANCE" --user=gotosocial --project="$PROJECT"
+   # Role and database are tenant-prefixed (e.g. gotosocialdemo426161cf) — not the bare app name.
+   DB_USER=$(gcloud sql users list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^gotosocial" --limit=1)
+   gcloud sql connect "$INSTANCE" --user="$DB_USER" --project="$PROJECT"
    ```
 
 6. **Verify object storage is being used** (media/avatars/attachments go
@@ -252,7 +255,10 @@ platform-level diagnostics and do not change with GoToSocial releases.
   orphaned row before retrying:
   ```bash
   INSTANCE=$(gcloud sql instances list --project="$PROJECT" --filter="name~gotosocial" --format="value(name)" --limit=1)
-  gcloud sql connect "$INSTANCE" --user=gotosocial --project="$PROJECT"
+  # Role and database are tenant-prefixed (e.g. gotosocialdemo426161cf) — not the bare app name.
+  DB_USER=$(gcloud sql users list --instance="$INSTANCE" --project="$PROJECT" \
+    --format="value(name)" --filter="name~^gotosocial" --limit=1)
+  gcloud sql connect "$INSTANCE" --user="$DB_USER" --project="$PROJECT"
   ```
   ```sql
   SELECT id, username, domain FROM accounts WHERE username='admin';  -- or your superuser_username

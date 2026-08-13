@@ -5,8 +5,6 @@ description: "Map every Professional Cloud Architect (PCA) exam domain to hands-
 
 # Professional Cloud Architect (PCA) Certification Lab Map
 
-> 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
-
 The Professional Cloud Architect certification validates your ability to design, plan, and manage secure, scalable, highly available cloud solutions — and to justify the trade-offs behind every design choice. The RAD platform's four foundation modules give you a live laboratory for exactly those trade-offs: `Services_GCP` (the shared platform layer — VPC, Cloud SQL, Redis, Filestore, GKE, CMEK, VPC-SC), `App_CloudRun` and `App_GKE` (two deployment engines for the *same* containerized workload, embodying the serverless-vs-orchestrated decision the PCA exam returns to again and again), and `App_Common` (shared layers implementing discovery, secrets, IAM, storage, and CI/CD patterns). Every toggle in your deployment portal is a design decision you can deploy, inspect in the GCP console, and reverse.
 
 ## How to use this guide
@@ -77,7 +75,7 @@ The Professional Cloud Architect certification validates your ability to design,
 | `enable_binary_authorization` | `true`, `binauthz_evaluation_mode = "REQUIRE_ATTESTATION"` (Services_GCP) |
 | `enable_vpc_sc` | `true`, `vpc_sc_dry_run = true` (Services_GCP; needs org + `admin_ip_ranges`) |
 | `enable_audit_logging` | `true` (Services_GCP) |
-| `enable_cloud_armor` | `true`, plus `application_domains` (App_CloudRun) |
+| `enable_cloud_armor` | `true` (`application_domains` optional on App_CloudRun) |
 | `enable_iap` | `true`, plus `iap_authorized_users` (App_CloudRun) |
 | `enable_cicd_trigger` | `true`, plus `github_repository_url` (App_CloudRun) |
 | `enable_cloud_deploy` | `true` (App_CloudRun) |

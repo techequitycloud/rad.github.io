@@ -597,7 +597,9 @@ The following behaviours are applied automatically by `Mattermost CloudRun` rega
 
 ## 12. Variable Reference
 
-All user-configurable variables exposed by `Mattermost CloudRun`, sorted by UI group then order. | Variable | Group | Default | Description |
+All user-configurable variables exposed by `Mattermost CloudRun`, sorted by UI group then order.
+
+| Variable | Group | Default | Description |
 |---|---|---|---|
 | `project_id` | 1 | — | GCP project ID. **Required.** |
 | `region` | 1 | `'us-central1'` | GCP region for resource deployment. |

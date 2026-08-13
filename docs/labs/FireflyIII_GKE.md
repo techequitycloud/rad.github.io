@@ -141,7 +141,10 @@ export NAMESPACE="<workload-namespace>"   # from the deployment Outputs
 
    ```bash
    INSTANCE=$(gcloud sql instances list --project="$PROJECT" --format="value(name)" --limit=1)
-   gcloud sql connect "$INSTANCE" --user=fireflyiii --project="$PROJECT"
+   # Role and database are tenant-prefixed (e.g. fireflyiiidemo426161cf) — not the bare app name.
+   DB_USER=$(gcloud sql users list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^fireflyiii" --limit=1)
+   gcloud sql connect "$INSTANCE" --user="$DB_USER" --project="$PROJECT"
    ```
 
 ---

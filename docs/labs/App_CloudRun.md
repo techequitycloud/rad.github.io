@@ -92,7 +92,7 @@ enable_iap           = true
 iap_authorized_users = ["user:<your-email>"]
 ```
 
-> **Optional advanced add-on — custom domain + WAF.** Setting `enable_cloud_armor = true` provisions a Global HTTPS Load Balancer with a Cloud Armor policy and *requires* at least one `application_domains` entry (enforced at plan time) plus a post-deploy DNS A-record and ~10–60 min for the managed SSL certificate. It also adds load-balancer cost. Enable it only if you want to exercise the edge path; otherwise leave it off and access the service on its `*.run.app` URL (or via IAP).
+> **Optional advanced add-on — custom domain + WAF.** Setting `enable_cloud_armor = true` provisions a Global HTTPS Load Balancer with a Cloud Armor policy. `application_domains` is **optional** — leave it empty and the module derives a zero-config `<ip-dashed>.nip.io` managed certificate. Supply a domain only if you want your own hostname, which then also needs a post-deploy DNS A-record and ~10–60 min for the certificate to issue. It also adds load-balancer cost. Enable it only if you want to exercise the edge path; otherwise leave it off and access the service on its `*.run.app` URL (or via IAP).
 
 > Path B leaves IAP populated (no lockout) and keeps Binary Authorization / VPC-SC in their safe defaults. The deploy steps below assume Path B and tag feature-specific verifications so Path A users can skip them.
 

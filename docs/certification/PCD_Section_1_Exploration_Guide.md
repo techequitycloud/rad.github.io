@@ -7,8 +7,6 @@ description: "Prepare for the PCD exam Section 1 (Scalable Cloud-Native App Desi
 
 <img src="https://storage.googleapis.com/rad-public-2b65/certification/pcd_section1.png" alt="PCD Certification Preparation Guide: Section 1 — Designing highly scalable, available, and reliable cloud-native applications (~36% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-> 📚 **Official exam guide:** [Professional Cloud Developer certification](https://cloud.google.com/learn/certification/cloud-developer) — always confirm section weightings against the current Google Cloud exam guide.
-
 This guide covers the largest PCD exam section using the RAD platform foundation modules. You will exercise `App_CloudRun` (Cloud Run v2 service design), `App_GKE` (Kubernetes workload design), and `Services_GCP` (the shared database, cache, and security infrastructure). Deploy the **Serverless baseline** profile from the [Lab Map](PCD_Certification_Guide.md) before starting; add the **Hardened edge** profile for 1.1 (caching/CDN) and 1.2 (IAP, rotation).
 
 ---
@@ -100,7 +98,7 @@ A: When the workload needs stable per-pod storage (StatefulSet via `stateful_pvc
 
 *Supply chain.* `enable_binary_authorization` with `binauthz_evaluation_mode` (default `"ALWAYS_ALLOW"`, options include `REQUIRE_ATTESTATION` and `ALWAYS_DENY`) creates a KMS-backed attestor; the CI pipeline signs images (see Section 2). `enable_vulnerability_scanning` (Services_GCP, default `false`) turns on Artifact Analysis scanning for the shared repository.
 
-*Edge protection.* `enable_cloud_armor` (default `false`) deploys a WAF policy (`{service}-waf-policy`) with preconfigured OWASP rules (SQLi/XSS/LFI/RCE), Adaptive Protection, and a 500 req/min/IP rate limit behind a global HTTPS LB. **A plan-time validation requires at least one `application_domains` entry when Cloud Armor is enabled**; the nip.io fallback certificate only applies when the LB exists *without* domains (e.g., `enable_cdn = true` alone). Hardening extras: `enable_cmek` (Services_GCP, default `false`) for customer-managed keys with `cmek_key_rotation_period` default `7776000s` (90 days), `enable_audit_logging` (default `false`) for DATA_READ/DATA_WRITE audit logs, and `enable_network_segmentation` (App_GKE, default `false`) for namespace-scoped NetworkPolicies.
+*Edge protection.* `enable_cloud_armor` (default `false`) deploys a WAF policy (`{service}-waf-policy`) with preconfigured OWASP rules (SQLi/XSS/LFI/RCE), Adaptive Protection, and a 500 req/min/IP rate limit behind a global HTTPS LB. **`application_domains` is optional** — with none set, the module derives a zero-config `<ip-dashed>.nip.io` Google-managed certificate so the LB always has a hostname. The live constraint runs the *other* way: `enable_cdn = true` requires `enable_cloud_armor = true`, because the CDN attaches to the load balancer Cloud Armor provisions. Hardening extras: `enable_cmek` (Services_GCP, default `false`) for customer-managed keys with `cmek_key_rotation_period` default `7776000s` (90 days), `enable_audit_logging` (default `false`) for DATA_READ/DATA_WRITE audit logs, and `enable_network_segmentation` (App_GKE, default `false`) for namespace-scoped NetworkPolicies.
 
 **Try it**
 
@@ -140,7 +138,11 @@ A: `enable_binary_authorization = true` plus `binauthz_evaluation_mode = "REQUIR
 <details>
 <summary>Q3: You enable `enable_cloud_armor = true` without setting `application_domains`. What happens?</summary>
 
-A: The plan fails. A validation in App_CloudRun requires at least one domain because the global HTTPS LB needs a hostname for its Google-managed certificate. (CDN without Cloud Armor can fall back to a nip.io hostname derived from the static IP, but Cloud Armor cannot.)
+A: It deploys successfully. The module auto-provisions a zero-config `<ip-dashed>.nip.io` Google-managed SSL certificate (`security.tf`, `use_nip_io` / `nip_io_cert`), so the Global HTTPS Load Balancer always has a hostname to bind to. A domain is optional, not required.
+
+The validation that once required a domain here was **removed** — `App_CloudRun/validation.tf` keeps it only as comment 19, "(removed) Cloud Armor no longer requires a custom domain."
+
+The constraint that *does* exist runs the other way: **`enable_cdn = true` requires `enable_cloud_armor = true`** (precondition 26). Cloud CDN attaches to the Global HTTPS Load Balancer that Cloud Armor provisions; without it there is no backend to attach the CDN to.
 </details>
 
 **Beyond the modules** — Study Identity Platform (end-user/CIAM auth — the modules only do IAP for Google identities), OAuth 2.0/OIDC token flows and the difference between access tokens and ID tokens, signed URLs vs IAM for object access, and Web Security Scanner. VPC Service Controls exist in the modules (`enable_vpc_sc`, dry-run by default, with graceful permission-probe skips) but perimeter design questions go deeper — read the VPC-SC ingress/egress rules documentation.

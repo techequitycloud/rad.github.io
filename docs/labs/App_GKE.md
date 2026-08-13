@@ -96,7 +96,7 @@ iap_oauth_client_secret = "<oauth-client-secret>"
 iap_support_email       = "<your-email>"
 ```
 
-> **Optional advanced add-on — custom domain + WAF/CDN.** `enable_custom_domain = true` (with a domain) provisions a Google-managed certificate via the Gateway; `enable_cloud_armor = true` then needs a custom domain *or* `service_type = "LoadBalancer"` (enforced), and `enable_cdn` requires the custom domain (enforced). These add cost and a post-deploy DNS step — enable only to exercise the edge path.
+> **Optional advanced add-on — custom domain + WAF/CDN.** `enable_custom_domain = true` (with a domain) provisions a Google-managed certificate via the Gateway; `enable_cloud_armor = true` and `enable_cdn = true` both activate the Gateway and **neither requires a custom domain** — without one the Gateway gets a zero-config `<ip>.nip.io` HTTPS certificate. (The validation that used to require a domain for CDN was relaxed; see `App_GKE/validation.tf` comment 20.) These add cost and a post-deploy DNS step — enable only to exercise the edge path.
 
 > Path B keeps IAP populated (no lockout) and leaves Binary Authorization / VPC-SC at safe defaults. The deploy steps below assume Path B and tag feature-specific verifications so Path A users can skip them.
 

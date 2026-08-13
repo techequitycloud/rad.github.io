@@ -140,8 +140,15 @@ export REGION="us-central1"          # the region you deploy into
 
    ```bash
    INSTANCE=$(gcloud sql instances list --project="$PROJECT" --format="value(name)" --limit=1)
-   gcloud sql connect "$INSTANCE" --user=tooljet --database=tooljet --project="$PROJECT"
-   gcloud sql connect "$INSTANCE" --user=tooljet --database=tooljet_db --project="$PROJECT"
+   # The role and the metadata database are tenant-prefixed (e.g. tooljetdemo426161cf).
+   # The second "ToolJet Database" is a literal name (ToolJet_Common's tooljet_db_name),
+   # so it is excluded from the metadata-DB lookup below and used verbatim.
+   DB_USER=$(gcloud sql users list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^tooljet" --limit=1)
+   DB_NAME=$(gcloud sql databases list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^tooljet AND name!=tooljet_db" --limit=1)
+   gcloud sql connect "$INSTANCE" --user="$DB_USER" --database="$DB_NAME" --project="$PROJECT"
+   gcloud sql connect "$INSTANCE" --user="$DB_USER" --database=tooljet_db --project="$PROJECT"
    ```
 
 ---

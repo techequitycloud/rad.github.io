@@ -276,7 +276,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | Internal-only by default — see §2.E for the ingress gotcha this creates in combination with `application_domains = []`. |
+| `service_type` | `LoadBalancer` | Externally reachable by default. Set `ClusterIP` for internal-only — see §2.E for the ingress gotcha that creates in combination with `application_domains = []`. |
 | `workload_type` | `null` → `StatefulSet` | Auto-resolved because `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | No sticky routing by default (single replica makes this moot at default scale). |
 

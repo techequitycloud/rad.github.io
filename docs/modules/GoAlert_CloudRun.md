@@ -272,7 +272,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `database_type` | `POSTGRES_17` | Cloud SQL engine. GoAlert requires PostgreSQL. |
 | `db_name` | `goalert` | PostgreSQL database name. |
 | `db_user` | `goalert` | PostgreSQL application user. |
-| `db_password_env_var_name` | `LISTMONK_db__password` | **Leftover copy-paste default from a prior template.** Additive per Foundation semantics — injects an unused extra secret env var alongside the standard `DB_PASSWORD` that GoAlert's entrypoint actually reads. Harmless; clear to `""` if it bothers you. |
+| `db_password_env_var_name` | `""` | **Leftover copy-paste default from a prior template.** Additive per Foundation semantics — injects an unused extra secret env var alongside the standard `DB_PASSWORD` that GoAlert's entrypoint actually reads. Harmless; clear to `""` if it bothers you. |
 | `database_password_length` | `32` | Generated password length (16–64). |
 
 ### Group 13 — Jobs & Scheduled Tasks

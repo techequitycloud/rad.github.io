@@ -158,7 +158,10 @@ export REGION="us-central1"           # the region you deploy into
 
    ```bash
    INSTANCE=$(gcloud sql instances list --project="$PROJECT" --filter="name~langflow" --format="value(name)" --limit=1)
-   gcloud sql connect "$INSTANCE" --user=langflowuser --project="$PROJECT"
+   # Role and database are tenant-prefixed (e.g. langflowdemo426161cf) — not the bare app name.
+   DB_USER=$(gcloud sql users list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^langflow" --limit=1)
+   gcloud sql connect "$INSTANCE" --user="$DB_USER" --project="$PROJECT"
    ```
 
 ---

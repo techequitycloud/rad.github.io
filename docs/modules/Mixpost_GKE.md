@@ -321,7 +321,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_redis` | `true` | Wires `QUEUE_CONNECTION`/`CACHE_DRIVER`/`SESSION_DRIVER` to `redis`. Plan-time guard requires `redis_host` set or `enable_nfs = true`. |
-| `redis_host` | `""` → NFS server IP | Override to point at an external Redis/Memorystore instance. |
+| `redis_host` | `""` | Override to point at an external Redis/Memorystore instance. |
 | `redis_port` | `6379` | Redis port. |
 | `redis_auth` | `""` | Redis AUTH password, if the target instance requires one. |
 

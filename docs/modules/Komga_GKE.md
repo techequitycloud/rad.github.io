@@ -234,7 +234,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | How the Kubernetes Service is exposed — set `LoadBalancer` for direct external access. |
+| `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed — set `LoadBalancer` for direct external access. |
 | `workload_type` | `null` (auto → `StatefulSet`) | Auto-resolves to `StatefulSet` when `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | No sticky routing required — single replica. |
 | `network_tags` | `["nfsserver"]` | Node/pod network tags; `nfsserver` is required when `enable_nfs = true`. |

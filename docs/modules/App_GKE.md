@@ -65,7 +65,7 @@ These variables are consumed by the deployment platform rather than by the Terra
 | `require_services_gcp_module` | `bool` | `true` | When `true`, the deployment fails at plan time with a clear error if no `Services_GCP`-managed VPC network is detected in the project. Set `false` to allow a standalone deployment with inline prerequisite resources. |
 | `shared_users` | `list(string)` | `[]` | Users who can view and deploy this module regardless of the `public_access` setting. |
 | `technical_support_users` | `list(string)` | `[]` | Users responsible for providing technical support for this module. The deployment portal routes support requests to these addresses. Metadata only. |
-| `resource_creator_identity` | `string` | *(platform SA)* | Service account used by Terraform to create and manage resources. Override with a project-specific service account for production deployments. |
+| `resource_creator_identity` | `string` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account used by Terraform to create and manage resources. Override with a project-specific service account for production deployments. |
 | `impersonation_service_account` | `string` | `""` | Service account to impersonate when shell scripts (discovery, image mirroring, NFS setup) call GCP APIs. Required for cross-project deployments; leave empty to use the runner's own credentials. |
 | `job_execution_wait_timeout` | `number` | `900` | Maximum seconds a deployment waits for the database setup (`db-create`) job to complete before aborting, so a stuck job fails the apply quickly instead of hanging until the build's outer timeout. |
 | `explicit_secret_values` | `map(string)` | `{}` | Raw secret values provided directly by a wrapper module. Keys must match entries in `secret_environment_variables`. When provided, the plan-time Secret Manager data source lookup is skipped for these keys, allowing the first apply to succeed before the secrets exist. |
@@ -846,7 +846,7 @@ gcloud storage buckets get-iam-policy gs://BUCKET_NAME \
 
 ---
 
-> **Choosing how the workload is exposed.** The exposure path is the key decision and spans Groups 19–21. A plain `ClusterIP`/`LoadBalancer` `service_type` gives you a raw IP; a **custom domain** (Group 19) provisions a Google-managed certificate via the Gateway/Ingress and needs a post-deploy DNS record. **Cloud Armor (Group 21)** — the WAF/DDoS layer — requires either a custom domain or a `LoadBalancer` service (enforced at plan time) because it needs an external entry point to attach the policy to, and **`enable_cdn` requires a custom domain** (enforced). For internal-only tools, prefer **IAP (Group 20)** — but IAP on GKE needs an OAuth client id/secret and a support email (all enforced), so configure those before enabling. Decide the exposure model first, then the security layer that fits it.
+> **Choosing how the workload is exposed.** The exposure path is the key decision and spans Groups 19–21. A plain `ClusterIP`/`LoadBalancer` `service_type` gives you a raw IP; a **custom domain** (Group 19) provisions a Google-managed certificate via the Gateway/Ingress and needs a post-deploy DNS record. **Cloud Armor (Group 21)** — the WAF/DDoS layer — requires either a custom domain or a `LoadBalancer` service (enforced at plan time) because it needs an external entry point to attach the policy to, and **`enable_cdn` does *not* require a custom domain** — the Gateway falls back to a derived `<ip>.nip.io` HTTPS certificate. For internal-only tools, prefer **IAP (Group 20)** — but IAP on GKE needs an OAuth client id/secret and a support email (all enforced), so configure those before enabling. Decide the exposure model first, then the security layer that fits it.
 
 ## Group 19 — Access & Networking
 
@@ -938,7 +938,7 @@ gcloud iap web get-iam-policy \
 
 These variables configure a Cloud Armor WAF security policy attached to the GKE Gateway backend, and optional Cloud CDN via the Gateway API load balancer.
 
-> **Note:** Cloud Armor and CDN on GKE are mutually exclusive with IAP on the same Gateway backend.
+> **Note:** On GKE only **Cloud CDN** is mutually exclusive with IAP on the same Gateway backend (`iap.tf` requires `enable_cdn = false`). Cloud Armor is *not* — it is in fact the recommended way to satisfy IAP's HTTPS-Gateway requirement without owning a domain, because it activates the Gateway and gets a zero-config `nip.io` certificate.
 
 > **Note on CDN:** The `GCPBackendPolicy` CRD does not expose a CDN configuration field. After deployment with `enable_cdn = true`, Cloud CDN must be enabled on the backend service out-of-band via `gcloud compute backend-services update --enable-cdn` or by attaching a `GCPHTTPFilter` on supported GKE versions.
 
@@ -947,7 +947,7 @@ These variables configure a Cloud Armor WAF security policy attached to the GKE 
 | `enable_cloud_armor` | `bool` | `false` | Attaches a Cloud Armor security policy to the GKE Gateway backend, enabling WAF rules, DDoS protection, and IP-based access controls. Requires `enable_custom_domain = true` or `service_type = "LoadBalancer"`. |
 | `admin_ip_ranges` | `list(string)` | `[]` | CIDR IP ranges exempted from Cloud Armor WAF rules. Typically used for trusted operations networks or CI/CD systems. Only effective when `enable_cloud_armor` is `true`. Also used as the admin access level in VPC-SC perimeters — an empty list causes VPC-SC provisioning to be skipped with a warning. |
 | `cloud_armor_policy_name` | `string` | `"default-waf-policy"` | Name of the Cloud Armor security policy to attach. Override to reference a custom policy. The inline policy includes rules for SQLi, XSS, LFI, RCE, and rate limiting (500 req/min per IP). |
-| `enable_cdn` | `bool` | `false` | Routes the application through the Gateway API load balancer in preparation for Cloud CDN. Requires `enable_custom_domain = true`. See note above regarding out-of-band CDN activation. |
+| `enable_cdn` | `bool` | `false` | Routes the application through the Gateway API load balancer in preparation for Cloud CDN. A custom domain is **not** required — the validation that once demanded one was relaxed (`validation.tf` comment 20), since the Gateway provisions HTTPS out of the box via a derived `<ip>.nip.io` certificate. See note above regarding out-of-band CDN activation. |
 
 ### Exploring in GCP — Group 21
 
@@ -1101,7 +1101,7 @@ Services GCP is declared as a module dependency but is **not required** for a st
 
 > Risk levels: **Critical** (data loss, full outage, or security breach) — **High** (service unavailable or significant degradation) — **Medium** (degraded function or increased cost) — **Low** (minor impact).
 
-> **Many invalid combinations are caught at plan time.** The module carries 34 cross-variable preconditions (`validation.tf`) plus per-variable `validation` blocks. (Do not fold in the 3 preconditions living outside validation.tf — deployment.tf:1112, iap.tf:28, prerequisites.tf:2137 — since the sentence explicitly scopes the count to `validation.tf`.), so a large class of misconfiguration fails the **plan** with a clear, named error before any resource is created. Rows below marked **🛡 plan-time** are rejected up front — you never reach the consequence. Unmarked rows are *runtime* or *operational* hazards (a wrong port, a CIDR change, a destructive rename) the module cannot decide for you. A clean plan confirms the value/combination rules passed; it does not validate that a port matches your app or that a rename is intentional.
+> **Many invalid combinations are caught at plan time.** The module carries 34 cross-variable preconditions in `validation.tf`, plus per-variable `validation` blocks and 3 further preconditions that live next to the resources they guard (`deployment.tf`, `iap.tf`, `prerequisites.tf`). So a large class of misconfiguration fails the **plan** with a clear, named error before any resource is created. Rows below marked **🛡 plan-time** are rejected up front — you never reach the consequence. Unmarked rows are *runtime* or *operational* hazards (a wrong port, a CIDR change, a destructive rename) the module cannot decide for you. A clean plan confirms the value/combination rules passed; it does not validate that a port matches your app or that a rename is intentional.
 
 | Variable | Sensible Default | Risk | Consequence of Incorrect Value |
 |---|---|---|---|

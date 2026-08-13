@@ -259,10 +259,10 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `credit_cost` | `150` | Platform credits consumed per deployment. |
 | `require_credit_purchases` | `false` | Require credit balance check before deploy. |
 | `enable_purge` | `true` | Allow full resource deletion on destroy. |
-| `public_access` | `false` | Make the module visible in the public catalogue. |
+| `public_access` | `true` | Make the module visible in the public catalogue. |
 | `require_services_gcp_module` | `true` | Fail at plan time if no `Services_GCP`-managed VPC is detected in the project. |
 | `shared_users` / `technical_support_users` | `[]` | Users granted access / routed support requests, regardless of `public_access`. |
-| `resource_creator_identity` | _(RAD service account)_ | Service account Terraform uses to create resources. |
+| `resource_creator_identity` | `rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com` | Service account Terraform uses to create resources. |
 | `impersonation_service_account` | `""` | SA to impersonate for shell scripts (discovery, image mirroring, NFS setup). Leave empty to use runner credentials. |
 | `job_execution_wait_timeout` | `900` | Max seconds a deployment waits for the `db-init` job before aborting the apply. |
 | `explicit_secret_values` / `scripts_dir` | `{}` / `""` | Foundation-mirrored, **not referenced** by this module. |

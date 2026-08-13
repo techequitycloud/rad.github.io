@@ -149,7 +149,12 @@ export REGION="us-central1"          # the region you deploy into
 
    ```bash
    INSTANCE=$(gcloud sql instances list --project="$PROJECT" --format="value(name)" --limit=1)
-   gcloud sql connect "$INSTANCE" --user=flarum --database=flarum --project="$PROJECT"
+   # Role and database are tenant-prefixed (e.g. flarumdemo426161cf) — not the bare app name.
+   DB_USER=$(gcloud sql users list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^flarum" --limit=1)
+   DB_NAME=$(gcloud sql databases list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^flarum" --limit=1)
+   gcloud sql connect "$INSTANCE" --user="$DB_USER" --database="$DB_NAME" --project="$PROJECT"
    ```
 
 6. **Check uploaded assets persistence** — avatars and attachments live on

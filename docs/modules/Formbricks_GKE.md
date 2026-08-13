@@ -83,7 +83,7 @@ Platform/UI metadata read by the RAD platform for the catalogue listing, depende
 | `credit_cost` | `150` | Platform credits consumed per deployment. |
 | `require_credit_purchases` | `false` | Enforce a credit balance check before deployment. |
 | `enable_purge` | `true` | Permit full resource deletion on destroy. |
-| `public_access` | `false` | List this module in the public catalogue. |
+| `public_access` | `true` | List this module in the public catalogue. |
 | `require_services_gcp_module` | `true` | Fail at plan time if no `Services_GCP`-managed VPC is detected. Set `false` for standalone deployment with inline prerequisites. |
 | `shared_users` | `[]` | Users granted access regardless of `public_access`. |
 | `technical_support_users` | `[]` | Users the platform routes support requests to. |

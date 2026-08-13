@@ -334,8 +334,8 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `stateful_pvc_enabled` | `null` | Enable per-pod PVC templates. Unset, so `App_GKE`'s own resolution logic applies — NetBox's persistent state is Cloud SQL + GCS, so no PVC is needed. |
 | `stateful_pvc_size` / `stateful_pvc_mount_path` / `stateful_pvc_storage_class` | (defaults) | PVC sizing, mount path, StorageClass. |
 | `stateful_headless_service` | `null` | Stable pod DNS names. Unset, so `App_GKE`'s own resolution logic applies; only meaningful alongside a StatefulSet. |
-| `stateful_pod_management_policy` | `OrderedReady` | `OrderedReady` or `Parallel`. |
-| `stateful_update_strategy` | `RollingUpdate` | `RollingUpdate` or `OnDelete`. |
+| `stateful_pod_management_policy` | `null` (effective: `OrderedReady`) | `OrderedReady` or `Parallel`. |
+| `stateful_update_strategy` | `null` (effective: `RollingUpdate`) | `RollingUpdate` or `OnDelete`. |
 
 ### Group 8 — Custom SQL Scripts
 

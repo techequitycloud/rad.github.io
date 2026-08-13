@@ -254,7 +254,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | External access goes through the Gateway API, not a direct LoadBalancer. |
+| `service_type` | `LoadBalancer` | External access goes through the Gateway API, not a direct LoadBalancer. |
 | `workload_type` | `null` → `StatefulSet` | Auto-resolves to `StatefulSet` because `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | No sticky routing needed with a single replica. |
 

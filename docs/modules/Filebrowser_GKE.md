@@ -220,7 +220,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | How the Kubernetes Service is exposed; front with an Ingress via `enable_custom_domain`. |
+| `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed; front with an Ingress via `enable_custom_domain`. |
 | `workload_type` | `null` | Auto-resolves to `StatefulSet` when `stateful_pvc_enabled = true`, else `Deployment`. |
 | `session_affinity` | `None` | Single replica, so sticky routing is unnecessary. |
 

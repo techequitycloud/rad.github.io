@@ -7,15 +7,13 @@ description: "Prepare for the PSE exam Section 2 — securing communications and
 
 <img src="https://storage.googleapis.com/rad-public-2b65/certification/pse_section2.png" alt="PSE Certification Preparation Guide: Section 2 — Securing communications and establishing boundary protection (~22% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-> 📚 **Official exam guide:** [Professional Cloud Security Engineer certification](https://cloud.google.com/learn/certification/cloud-security-engineer) — always confirm section weightings against the current Google Cloud exam guide.
-
 This guide covers Section 2 of the Professional Cloud Security Engineer exam. The relevant foundation modules: `Services_GCP` builds the VPC, firewall rules, Cloud NAT, and Private Services Access; `App_CloudRun` and `App_GKE` each implement a Cloud Armor WAF edge and a VPC Service Controls perimeter; `App_GKE` adds Kubernetes NetworkPolicy micro-segmentation on Dataplane V2. Deploy **guarded-edge** (or **zero-trust-gke**) and **perimeter-lab** from the Lab Map before starting.
 
 ---
 
 ## 2.1 Designing and configuring perimeter security
 
-> ⏱ ~2 h · 💰 moderate — global LB + Cloud Armor policy charges · ⚙️ Requires: `enable_cloud_armor = true` (+ `application_domains` on Cloud Run)
+> ⏱ ~2 h · 💰 moderate — global LB + Cloud Armor policy charges · ⚙️ Requires: `enable_cloud_armor = true` (`application_domains` optional on Cloud Run)
 
 **Why the exam cares** — You must pick the right edge control per threat: Cloud Armor preconfigured WAF rules for OWASP attacks, rate-based bans for brute force/scraping, Adaptive Protection for L7 DDoS, and IAP for identity — and know that Cloud Armor only protects traffic that actually flows through the load balancer it is attached to.
 

@@ -242,7 +242,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | In-cluster by default. Set `LoadBalancer` for external browser access. |
+| `service_type` | `LoadBalancer` | In-cluster by default. Set `LoadBalancer` for external browser access. |
 | `workload_type` | `null` | Auto-resolves to `StatefulSet` when `stateful_pvc_enabled = true`; otherwise `Deployment`. |
 | `session_affinity` | `None` | Sticky routing is unnecessary for a single-replica editor. |
 | `namespace_name` | `""` | Auto-generated from `application_name` + `tenant_id` when empty. |

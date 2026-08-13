@@ -136,7 +136,10 @@ export REGION="us-central1"          # the region you deploy into
 
    ```bash
    INSTANCE=$(gcloud sql instances list --project="$PROJECT" --format="value(name)" --limit=1)
-   gcloud sql connect "$INSTANCE" --user=affine --project="$PROJECT"
+   # Role and database are tenant-prefixed (e.g. affinedemo426161cf) — not the bare app name.
+   DB_USER=$(gcloud sql users list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^affine" --limit=1)
+   gcloud sql connect "$INSTANCE" --user="$DB_USER" --project="$PROJECT"
    ```
 
 ---

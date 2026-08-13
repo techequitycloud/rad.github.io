@@ -7,8 +7,6 @@ description: "Prepare for the Professional Cloud Network Engineer (PCNE) exam Se
 
 <img src="https://storage.googleapis.com/rad-public-2b65/certification/pcne_section6.png" alt="PCNE Certification Preparation Guide: Section 6 — Configuring, implementing and managing a cloud network security solution (~13% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-> 📚 **Official exam guide:** [Professional Cloud Network Engineer certification](https://cloud.google.com/learn/certification/cloud-network-engineer) — always confirm section weightings against the current Google Cloud exam guide.
-
 Network security is RAD's strongest suit in this exam after GKE networking. Both deployment engines build a production-shaped **Cloud Armor** policy (preconfigured OWASP rules, Adaptive Protection, rate-based banning), the platform VPC implements **tag-based firewall micro-segmentation**, and **Cloud NAT** handles all internet egress for private workloads. NGFW policies, Secure Web Proxy, NVAs, and Packet Mirroring are study-only. Deploy the **Global Edge** profile for 6.1 and the **VPC Foundation** profile for 6.2–6.4. Modules exercised: `App_CloudRun`, `App_GKE`, `Services_GCP`.
 
 ---
@@ -28,7 +26,7 @@ Network security is RAD's strongest suit in this exam after GKE networking. Both
 | 2000 | rate-based ban: 500 requests/60 s per IP, exceed → `deny(429)`, 300 s ban | rate-based ban |
 | 2147483647 | default `*` | `allow` |
 
-Plus Adaptive Protection with Layer 7 DDoS defense enabled. Attachment differs by engine: App_CloudRun sets the security policy on the backend service and **forces ingress to `internal-and-cloud-load-balancing`** so direct `*.run.app` access can't bypass the WAF; App_GKE attaches via the `GCPBackendPolicy`'s default security policy and alternatively accepts an externally managed policy through `cloud_armor_policy_name` (default `default-waf-policy`) when `enable_cloud_armor = false`. The priority-100 `admin_ip_ranges` allow rule now exists in **both** policies; on Cloud Run the same variable *additionally* feeds the VPC-SC access levels. One remaining asymmetry: App_CloudRun's validation requires `application_domains` to be non-empty when Cloud Armor is enabled.
+Plus Adaptive Protection with Layer 7 DDoS defense enabled. Attachment differs by engine: App_CloudRun sets the security policy on the backend service and **forces ingress to `internal-and-cloud-load-balancing`** so direct `*.run.app` access can't bypass the WAF; App_GKE attaches via the `GCPBackendPolicy`'s default security policy and alternatively accepts an externally managed policy through `cloud_armor_policy_name` (default `default-waf-policy`) when `enable_cloud_armor = false`. The priority-100 `admin_ip_ranges` allow rule now exists in **both** policies; on Cloud Run the same variable *additionally* feeds the VPC-SC access levels. Both engines now behave the same way here: neither requires a domain for Cloud Armor — App_CloudRun derives an `<ip-dashed>.nip.io` certificate and App_GKE's Gateway derives an `<ip>.nip.io` one.
 
 **Try it**
 

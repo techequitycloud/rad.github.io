@@ -246,7 +246,7 @@ specific to or notable for ActualBudget are listed; every other input is inherit
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | Internal-only by default — unlike most GKE app modules, which default to `LoadBalancer`. |
+| `service_type` | `LoadBalancer` | Externally reachable by default, in line with every other browser-facing GKE app module. Set `ClusterIP` to keep it internal-only. |
 | `workload_type` | `null` → `StatefulSet` | Auto-resolves because `stateful_pvc_enabled = true` by default. |
 | `session_affinity` | `None` | No sticky routing configured (single replica makes this largely moot). |
 

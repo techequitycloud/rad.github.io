@@ -269,7 +269,7 @@ defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | External access goes through the Gateway (`enable_custom_domain`), not the Service, by default. |
+| `service_type` | `LoadBalancer` | External access goes through the Gateway (`enable_custom_domain`), not the Service, by default. |
 | `workload_type` | `null` → `StatefulSet` | Resolves automatically because `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | No sticky routing configured by default. |
 

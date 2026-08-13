@@ -257,7 +257,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `workload_type` | `null` → `StatefulSet` | Auto-resolves to `StatefulSet` because `stateful_pvc_enabled = true`. |
-| `service_type` | `ClusterIP` | Internal-only by default; no external IP unless changed or a custom domain is configured. |
+| `service_type` | `LoadBalancer` | Externally reachable by default — an external IP is provisioned. Set `ClusterIP` for internal-only access, in which case reach it via a custom domain or `kubectl port-forward`. |
 | `session_affinity` | `None` | No sticky routing needed with a single replica. |
 
 ### Group 7 — StatefulSet / PVC

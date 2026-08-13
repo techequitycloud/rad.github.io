@@ -275,7 +275,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `ingress_settings` | `internal` | `internal` keeps the server VPC-private; `all` (public) requires `enable_admin_password = true`. |
+| `ingress_settings` | `all` | `internal` keeps the server VPC-private; `all` (public) requires `enable_admin_password = true`. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Route only RFC 1918 traffic via VPC. |
 | `enable_iap` | `false` | Require Google sign-in in front of Navidrome. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Who may access through IAP. |

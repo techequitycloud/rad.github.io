@@ -302,7 +302,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | How the Kubernetes Service is exposed; `LoadBalancer` for external access. |
+| `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed; `LoadBalancer` for external access. |
 | `workload_type` | `null` → `StatefulSet` | Resolves to StatefulSet when `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | Session affinity mode for the Service. |
 | `namespace_name` | `""` | Auto-generated from `application_name` + `tenant_id` when empty. |

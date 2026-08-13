@@ -154,8 +154,8 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 |---|---|---|
 | `application_name` | `audiobookshelf` | Base name for resources. Do not change after first deploy. |
 | `application_version` | `latest` | `ghcr.io/advplyr/audiobookshelf` image tag used as the custom-build base; `latest` resolves to the pinned `2.17.0` via the app-specific `AUDIOBOOKSHELF_VERSION` build ARG. |
-| `application_display_name` | `Audiobookshelf Vector Database` | Human-readable display name. {/* TODO: confirm whether this default string is intentional; it reads as leftover copy from a different (vector-database) module template rather than an audiobook/podcast server. */} |
-| `description` | `Audiobookshelf Vector Database — high-performance similarity search for AI applications` | Workload description. {/* TODO: same leftover-template concern as application_display_name — this text does not describe Audiobookshelf's actual audiobook/podcast server function. */} |
+| `application_display_name` | `Audiobookshelf Media Server` | Human-readable display name. |
+| `description` | `Audiobookshelf — self-hosted audiobook and podcast server with progress sync across clients` | Workload description. |
 
 ### Group 4 — Runtime & Scaling
 
@@ -173,7 +173,7 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | Kubernetes Service type; set `LoadBalancer` for a direct external IP. |
+| `service_type` | `LoadBalancer` | Kubernetes Service type; set `LoadBalancer` for a direct external IP. |
 | `workload_type` | `null` → `StatefulSet` (via `stateful_pvc_enabled = true`) | Recommended for Audiobookshelf's stable pod identity and ordered restarts. |
 | `session_affinity` | `None` | Single-replica deployment, so sticky sessions are not required. |
 | `network_tags` | `["nfsserver"]` | Foundation-inherited default; Audiobookshelf does not use NFS, so this tag has no practical effect unless `enable_nfs` is also enabled. |

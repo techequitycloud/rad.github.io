@@ -479,7 +479,9 @@ The following behaviours are applied automatically by `Umami CloudRun` regardles
 
 ## 10. Variable Reference
 
-All user-configurable variables exposed by `Umami CloudRun`, sorted by UI group then order. | Variable | Group | Default | Description |
+All user-configurable variables exposed by `Umami CloudRun`, sorted by UI group then order.
+
+| Variable | Group | Default | Description |
 |---|---|---|---|
 | `resource_creator_identity` | 0 | (platform SA) | Service account used by Terraform to manage resources. |
 | `project_id` | 1 | — | GCP project ID. **Required.** |

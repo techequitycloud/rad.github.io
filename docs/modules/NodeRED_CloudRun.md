@@ -299,7 +299,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_cloud_armor` | `false` | Provision Global HTTPS LB + Cloud Armor WAF. Requires `application_domains`. |
+| `enable_cloud_armor` | `false` | Provision Global HTTPS LB + Cloud Armor WAF. `application_domains` is optional — a `nip.io` certificate is derived when unset. |
 | `application_domains` | `[]` | Custom hostnames with Google-managed SSL. |
 | `enable_cdn` | `false` | Enable Cloud CDN on the LB backend. Requires `enable_cloud_armor = true`. |
 | `admin_ip_ranges` | `[]` | CIDRs exempted from WAF rules. |

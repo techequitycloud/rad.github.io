@@ -395,7 +395,7 @@ ClickHouse-resident, not local).
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Kept `true` solely because it is the mechanism that makes the co-hosted Redis IP available — PostHog has no filesystem media dependency of its own. |
-| `nfs_mount_path` | `/usr/src/app/upload` | Inert for PostHog. |
+| `nfs_mount_path` | `/mnt/nfs` | Inert for PostHog. |
 
 ### Group 14 — Cloud Storage
 
@@ -422,8 +422,8 @@ ClickHouse-resident, not local).
 | Variable | Default | Description |
 |---|---|---|
 | `database_type` | `POSTGRES` (fixed to `POSTGRES_15` by `PostHog_Common`) | App metadata only — analytics data lives in ClickHouse. |
-| `db_name` | `posthog` | Database name. Immutable after first deploy. |
-| `db_user` | `posthog` | Application user. Immutable after first deploy. |
+| `db_name` | `posthog_db` | Database name. Immutable after first deploy. |
+| `db_user` | `posthog_user` | Application user. Immutable after first deploy. |
 | `database_password_length` | `32` | Generated password length (16–64). |
 
 ### Group 19 — Custom Domain, Static IP & Networking

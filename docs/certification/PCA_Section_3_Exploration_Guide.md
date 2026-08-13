@@ -7,8 +7,6 @@ description: "Prepare for the Professional Cloud Architect (PCA) exam Section 3 
 
 <img src="https://storage.googleapis.com/rad-public-2b65/certification/pca_section3.png" alt="PCA Certification Preparation Guide: Section 3 — Designing for security and compliance (~17.5% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-> 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
-
 Security design is where the RAD modules are at their densest: dedicated service accounts everywhere, secrets that never touch Terraform state, CMEK with automatic rotation and even automatic key *recovery*, Binary Authorization, VPC Service Controls with a deliberately staged dry-run rollout, and zero-trust access via IAP. Deploy the **Security and delivery** profile from the [Lab Map](PCA_Certification_Guide.md) on top of a baseline deployment. Modules exercised: `Services_GCP`, `App_CloudRun` (or `App_GKE`), and the `App_Common` security layers (secrets, IAM, CMEK, and VPC-SC).
 
 ---
@@ -31,7 +29,7 @@ Security design is where the RAD modules are at their densest: dedicated service
 
 *Perimeters.* `enable_vpc_sc` (default `false`, `vpc_sc_dry_run` default `true`) builds a perimeter restricting ~15 services with four access levels (VPC CIDRs, `admin_ip_ranges`, the IAP SA, CI/CD SAs). The organization ID is resolved from the project (with an explicit `organization_id` variable override available in App_CloudRun/App_GKE — needed when the project sits under a *folder*, where auto-discovery returns nothing), and a permission probe checks the caller's Access Context Manager rights, skipping with a warning instead of failing the apply.
 
-*Edge and runtime.* `enable_iap` grants `roles/run.invoker` to the IAP service agent and `roles/iap.httpsResourceAccessor` to `iap_authorized_users`/`iap_authorized_groups` (validation requires at least one). `enable_cloud_armor` deploys OWASP preconfigured WAF rules (sqli/xss/lfi/rce, v33-stable), Adaptive Protection, and a 500 req/min/IP rate limit with a 300 s ban — and a validation requires `application_domains` to be set. On GKE, `enable_network_segmentation` (default `false`) creates default-deny-shaped NetworkPolicies on Dataplane V2: ingress only from the same namespace plus Google LB health-check and IAP ranges; egress only to DNS, HTTPS (including the restricted/private googleapis ranges `199.36.153.4/30` and `199.36.153.8/30`), Cloud SQL on 3307, the metadata server, and NFS when enabled.
+*Edge and runtime.* `enable_iap` grants `roles/run.invoker` to the IAP service agent and `roles/iap.httpsResourceAccessor` to `iap_authorized_users`/`iap_authorized_groups` (validation requires at least one). `enable_cloud_armor` deploys OWASP preconfigured WAF rules (sqli/xss/lfi/rce, v33-stable), Adaptive Protection, and a 500 req/min/IP rate limit with a 300 s ban. `application_domains` is optional — the module derives a `nip.io` managed certificate when it is empty. On GKE, `enable_network_segmentation` (default `false`) creates default-deny-shaped NetworkPolicies on Dataplane V2: ingress only from the same namespace plus Google LB health-check and IAP ranges; egress only to DNS, HTTPS (including the restricted/private googleapis ranges `199.36.153.4/30` and `199.36.153.8/30`), Cloud SQL on 3307, the metadata server, and NFS when enabled.
 
 **Try it**
 

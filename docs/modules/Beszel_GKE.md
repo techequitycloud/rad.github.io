@@ -210,7 +210,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | Internal by default; expose via custom domain / LoadBalancer for external agents. |
+| `service_type` | `LoadBalancer` | Internal by default; expose via custom domain / LoadBalancer for external agents. |
 | `workload_type` | `null` → `StatefulSet` | Auto-resolves to `StatefulSet` because `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | Single pod, so sticky routing is unnecessary. |
 

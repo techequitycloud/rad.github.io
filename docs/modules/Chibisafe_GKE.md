@@ -251,7 +251,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | Internal by default; the Gateway path (Group 19) is the default route to external traffic. |
+| `service_type` | `LoadBalancer` | Internal by default; the Gateway path (Group 19) is the default route to external traffic. |
 | `workload_type` | `null` → `StatefulSet` | Auto-resolves because `stateful_pvc_enabled = true` by default. |
 | `session_affinity` | `None` | No client stickiness configured by default. |
 

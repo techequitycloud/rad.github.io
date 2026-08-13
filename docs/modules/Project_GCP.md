@@ -24,7 +24,7 @@ Unlike every other module in this catalog, `Project GCP` is not meant to be run 
 | File | Resource | Governs |
 |---|---|---|
 | `apis.tf` | `google_project_service` | Which Google Cloud APIs are enabled on the target project |
-| `quotas.tf` | `google_cloud_quotas_quota_preference` | Self-imposed quota ceilings (Cloud Run regional CPU, Compute Engine regional CPU, project-wide GPUs) |
+| `quotas.tf` | `google_cloud_quotas_quota_preference` | Self-imposed quota ceilings (Cloud Run regional CPU, Compute Engine regional CPU, project-wide GPUs, Redis regional memory, three Filestore tiers, a BigQuery daily-scan cap on development/production, and 81 Vertex AI accelerator quotas) |
 | `project.tf` | `google_project`, `google_project_iam_member`, `google_iam_deny_policy`, `google_resource_manager_lien` | Optional project creation, least-privilege IAM for a separate deploying identity, a deny policy blocking that identity from raising its own quota caps, and a deletion lien |
 | `validation.tf` | `check` blocks | Plan-time regression guards (the API floor can never shrink; `create_project` requires its companion identity variables) |
 | `budget.tf` | `google_billing_budget` | A billing budget scoped to the created project, so a spend alert names one user's sandbox |
@@ -58,20 +58,18 @@ This separation is the point: the identity that sets guardrails is never the sam
 The floor was grep-verified against `Services_GCP`, `App_CloudRun`, and `App_GKE` — the actual set of `*.googleapis.com` strings a resource in those three modules reads — not the larger list `Services_GCP`'s own `default_apis` enables (which also turns on several APIs no resource in those three modules consumes, e.g. Gmail, Calendar, Docs, Drive, Vertex AI):
 
 ```
-compute · servicenetworking · sqladmin · run · cloudbuild · artifactregistry
-secretmanager · iam · iamcredentials · file · redis · cloudresourcemanager
-logging · monitoring · storage · cloudscheduler · certificatemanager · iap
-binaryauthorization · eventarc · container · cloudkms · containeranalysis
-ondemandscanning · pubsub · gkehub · gkeconnect · mesh · anthospolicycontroller
-anthosconfigmanagement · accesscontextmanager · clouddeploy · securitycenter
-Replace the code block's last line with:
-
-gkebackup · firestore · dns · servicedirectory · billingbudgets
-
-`alloydb` was removed on 2026-08-11 when AlloyDB was dropped from the sandbox/development folder allowlists and added to the production denylist on an explicit cost decision — leaving it in the floor would fail `google_project_service` on any fresh project. `billingbudgets` was added because `budget.tf`'s `google_billing_budget` call is quota-attributed to *this* project; without it the apply fails with a bare `Error 403: The caller does not have permission`, which reads as an IAM problem and is not one (confirmed live 2026-08-11 on deployments 605ab251 and d5f4b359). The count at line 65 stays correct: the floor is still 38 APIs (one removed, one added — verified by counting `local.baseline_required_apis`).
+billingbudgets · compute · servicenetworking · sqladmin · run · cloudbuild
+artifactregistry · secretmanager · iam · iamcredentials · file · redis
+cloudresourcemanager · logging · monitoring · storage · cloudscheduler
+certificatemanager · iap · binaryauthorization · eventarc · container
+cloudkms · containeranalysis · ondemandscanning · pubsub · accesscontextmanager
+clouddeploy · securitycenter · gkebackup · firestore · dns · servicedirectory
+gkehub · gkeconnect · anthosconfigmanagement · anthospolicycontroller · mesh
 ```
 
-That's 38 APIs (each entry above maps to `<name>.googleapis.com`). Add anything an application-specific integration needs beyond this floor — e.g. `aiplatform.googleapis.com` for a Vertex AI-backed app — via `additional_apis`; it is automatically folded into both enablement and the allowlist output.
+That's 38 APIs (each entry above maps to `<name>.googleapis.com`), verified 2026-08-13 by counting `local.baseline_required_apis` in `main.tf`. Add anything an application-specific integration needs beyond this floor — e.g. `aiplatform.googleapis.com` for a Vertex AI-backed app — via `additional_apis`; it is automatically folded into both enablement and the allowlist output.
+
+Two entries have a history worth knowing. **`alloydb` was removed** on 2026-08-11 when AlloyDB was dropped from the sandbox/development folder allowlists and added to the production denylist on an explicit cost decision — leaving it in the floor would fail `google_project_service` on any fresh project. **`billingbudgets` was added** because `budget.tf`'s `google_billing_budget` call is quota-attributed to *this* project; without it the apply fails with a bare `Error 403: The caller does not have permission`, which reads as an IAM problem and is not one (confirmed live 2026-08-11 on deployments 605ab251 and d5f4b359). One removed, one added — which is why the count is still 38.
 
 **`dns` and `servicedirectory` are on the floor because GKE Autopilot cluster creation calls them unconditionally**, not because any module configures them. Autopilot provisions a VPC-scoped Cloud DNS managed zone for cluster DNS, and calls Service Directory (`ManagedResourceService.AddServiceBundle`) during cluster bring-up. Neither is optional and neither can be opted out of. Omitting `dns` blocks `google_container_cluster` creation outright with `Error 403: Request is disallowed by organization's constraints/gcp.restrictServiceUsage constraint ... attempting to use service 'dns.googleapis.com'`; omitting `servicedirectory` leaves the cluster stuck in `ERROR` with the equivalent message for `servicedirectory.googleapis.com`. Both were confirmed live deploying a GKE module into a RAD-managed project.
 
@@ -97,19 +95,12 @@ An API enabled by this module (`apis.tf`) but *not* present in the folder's `gcp
 
 `quotas.tf` uses the modern **Cloud Quotas API** (`google_cloud_quotas_quota_preference`) — the older Service Usage consumer-quota-override resource no longer exists in the current `hashicorp/google` provider (`tofu validate` rejects it outright). A quota is identified by a human-readable `quota_id` per service (e.g. `"CpuAllocPerProjectRegion"`), not a metric/unit/limit triple.
 
-Replace line 91 with:
+Seven self-imposed caps ship as live **sandbox** defaults — Cloud Run regional CPU, Compute Engine regional CPU, project-wide GPUs, Redis regional memory, and three Filestore tiers (standard, premium, high-scale SSD) — each sized from this catalog's own proven-working ceiling rather than a guess. A further **81 Vertex AI accelerator caps are pinned to `0` and merged into every tier** (`local.vertex_accelerator_overrides`), because Vertex bills against its own accelerator quota family rather than Compute Engine's `GPUS-ALL-REGIONS-per-project`. The `development` tier raises several values (Cloud Run 16000→32000 milli-vCPU, Compute 24→48 vCPU, Redis 16→32 GB) and adds a BigQuery `QueryUsagePerDay` cap of `1048576` MiBy (1 TiB/day); `production` inherits development's map wholesale (`local.production_quota_overrides = local.development_quota_overrides`, `quotas.tf:428`).
 
-"Seven self-imposed caps ship as live **sandbox** defaults — Cloud Run regional CPU, Compute Engine regional CPU, project-wide GPUs, Redis regional memory, and three Filestore tiers (standard, premium, high-scale SSD) — each sized from this catalog's own proven-working ceiling rather than a guess. A further **81 Vertex AI accelerator caps are pinned to `0` and merged into every tier** (`local.vertex_accelerator_overrides`), because Vertex bills against its own accelerator quota family rather than Compute Engine's `GPUS-ALL-REGIONS-per-project`. The `development` tier raises several values (Cloud Run 16000→32000 milli-vCPU, Compute 24→48 vCPU, Redis 16→32 GB) and adds a BigQuery `QueryUsagePerDay` cap of `1048576` MiBy (1 TiB/day); `production` inherits development's map wholesale (`local.production_quota_overrides = local.development_quota_overrides`, quotas.tf:428)."
+**Most** caps are applied with `dimensions = {}`, making them the project-wide default for that quota **across all regions** rather than only in `var.region`. The one exception is `compute_cpus_per_region`: the Cloud Quotas API *requires* the region dimension on `CPUS-per-project-region` (confirmed live 2026-08-11 — an empty map fails with `Dimension values must be set for all the dimensions ... defined for the quota`, Error 400), so that single cap is set with `{ region = var.region }` and therefore binds in `var.region` only. Every other region falls back to GCP's untuned Compute CPU default; closing that properly needs one preference per region or a `gcp.resourceLocations` policy, which is a product decision rather than a code fix. The five other regional quotas still carry `{}` because they exist and update cleanly today — `quotas info describe` reports `dimensions=[region]` for each, so a genuinely fresh project will likely hit the same error on them.
 
-Also: (a) line 22's `quotas.tf` row currently reads "(Cloud Run regional CPU, Compute Engine regional CPU, project-wide GPUs)" — extend to "(Cloud Run regional CPU, Compute Engine regional CPU, project-wide GPUs, Redis regional memory, three Filestore tiers, a BigQuery daily-scan cap on development/production, and 81 Vertex AI accelerator quotas)"; (b) line 178's `additional_quota_overrides` description "Adds quota overrides beyond the three defaults" must lose "three"; (c) the table at lines 107-111 lists only 3 of the 7 rows.
-
-Replace "Every cap is applied with `dimensions = {}` ..." with:
-
-"**Most** caps are applied with `dimensions = {}`, making them the project-wide default for that quota **across all regions** rather than only in `var.region`. The one exception is `compute_cpus_per_region`: the Cloud Quotas API *requires* the region dimension on `CPUS-per-project-region` (confirmed live 2026-08-11 — an empty map fails with `Dimension values must be set for all the dimensions ... defined for the quota`, Error 400), so that single cap is set with `{ region = var.region }` and therefore binds in `var.region` only. Every other region falls back to GCP's untuned Compute CPU default; closing that properly needs one preference per region or a `gcp.resourceLocations` policy, which is a product decision rather than a code fix. The five other regional quotas still carry `{}` because they exist and update cleanly today — `quotas info describe` reports `dimensions=[region]` for each, so a genuinely fresh project will likely hit the same error on them."
-
-Keep the surrounding paragraphs (the 2026-08-06 history and the `lifecycle { ignore_changes = [dimensions] }` explanation at lines 101-105) as-is — both are still accurate. It was
-previously scoped to `var.region`, which was safe only while
-`constraints/gcp.resourceLocations` pinned every sandbox project to
+This matters because the caps were previously scoped to `var.region`, which was safe
+only while `constraints/gcp.resourceLocations` pinned every sandbox project to
 `us-central1`. That policy was removed on 2026-08-06 so users could escape
 regional resource exhaustion, which left the caps binding in one region and
 every other region on GCP's untuned defaults (250–10,000 vCPU).
@@ -125,8 +116,14 @@ would plan a diff Terraform can never apply.
 | `cloud_run_cpu_allocation` | `run.googleapis.com` | `CpuAllocPerProjectRegion` | `16000` milli-vCPU (= 16 real vCPU), all regions | Matches this catalog's own proven-working Cloud Run regional CPU ceiling. **The unit is milli-vCPU, not vCPU** — a literal `16` is 0.016 vCPU and silently fails every real Cloud Run deploy with `Quota violated: CpuAllocPerProjectRegion requested: 3000 allowed: 16` (unit bug fixed 2026-07-31, confirmed live on gcp-rad-fce0738a). `compute_cpus_per_region` below is *not* affected — `compute.googleapis.com/cpus` is denominated in whole vCPU. The `development` and `production` tiers raise this to `32000`. |
 | `compute_cpus_per_region` | `compute.googleapis.com` | `CPUS-per-project-region` | `24` — **`var.region` only** (this quota requires its region dimension); `48` on development/production | Bounds Compute Engine VM cost, including GKE Autopilot node capacity, which draws from this same regional CPU pool. Unlike every other cap here it cannot use `dimensions = {}` — the Cloud Quotas API rejects a preference on this quota with empty dimensions (Error 400) — so the cap binds only in `var.region`. |
 | `compute_gpus_all_regions` | `compute.googleapis.com` | `GPUS-ALL-REGIONS-per-project` | `0` | No baseline module (`Services_GCP`/`App_CloudRun`/`App_GKE`) uses GPUs — a nonzero default would be pure abuse surface with no corresponding legitimate use |
+| `redis_total_memory_per_region` | `redis.googleapis.com` | `TotalCapacityPerProjectPerRegion` | `16` GB | Bounds Memorystore spend, which is billed on provisioned capacity whether or not the instance is used |
+| `filestore_standard_per_region` | `file.googleapis.com` | `StandardStorageGbPerRegion` | `1024` GB | The shared NFS tier `Services_GCP` actually provisions |
+| `filestore_premium_per_region` | `file.googleapis.com` | `PremiumStorageGbPerRegion` | `2560` GB | Premium has a 2.5 TB minimum instance size, so the cap is one instance |
+| `filestore_high_scale_ssd_per_region` | `file.googleapis.com` | `HighScaleSSDStorageGibPerRegion` | `0` | No module provisions this tier; its minimum instance is very large and very expensive |
 
-Override an existing default's *value* with `quota_value_overrides` (keyed by the same short name, e.g. `{ cloud_run_cpu_allocation = 32 }`), or add an entirely new quota cap with `additional_quota_overrides`. Before adding a new entry:
+Two further caps are **tier-conditional** rather than part of the seven defaults: a BigQuery daily-scan cap (`bigquery_query_bytes_per_day`) applied only on `development`/`production` — sandbox's API allowlist does not permit `bigquery.googleapis.com` at all, so a cap there would have nothing to bind to — and a set of **81 Vertex AI accelerator quotas** (`aiplatform.googleapis.com`), pinned to zero because `aiplatform` is enabled on every project by `Services_GCP` while no baseline module uses an accelerator.
+
+Override an existing default's *value* with `quota_value_overrides` (keyed by the same short name, e.g. `{ cloud_run_cpu_allocation = 32000 }` — note **milli**-vCPU, per the unit warning above; `32` here would be 0.032 vCPU), or add an entirely new quota cap with `additional_quota_overrides`. Before adding a new entry:
 
 1. Look up the real `quota_id` for the target service/project — the `google_cloud_quotas_quota_infos` data source, or `gcloud beta quotas info list --service=<api> --project=<id>`. Do not hand-type one from memory or carry over an old Service Usage metric name.
 2. Confirm whether the target value needs `ignore_safety_checks` set (a cap below current default/usage may require it — see the resource's own documentation for the valid enum values).
@@ -179,6 +176,7 @@ Group 0 (module metadata — `module_description`, `module_dependency`, `credit_
 
 | Variable | Default | Description |
 |---|---|---|
+| `tier` | `sandbox` | **The single most consequential input in this module.** One of `sandbox`, `development`, `production` (plan-time validated). It selects the quota map applied by `quotas.tf`, the end-user IAM bundle granted to `deployed_by_email` (`local.end_user_roles` in `project.tf`), and the folder the project is created in. `development` raises Cloud Run to 32000 milli-vCPU, Compute to 48 vCPU and Redis to 32 GB, adds a 1 TiB/day BigQuery scan cap, and grants a build-and-deploy role set plus a permissionless `rad-app-runtime` service account. `production` inherits development's quota map wholesale but is deliberately *tighter* on IAM — operate, not reconfigure. Each tier bills separate credits. |
 | `additional_apis` | `[]` | Additional Google Cloud APIs to enable beyond the built-in baseline. Also added to the API allowlist automatically. |
 | `resource_creator_identity` | `""` | Service account to impersonate for all API calls this module makes. Leave blank to use the caller's own credentials. The caller must already hold `roles/iam.serviceAccountTokenCreator` on this identity. |
 | `enable_services` | `true` | Present for cross-module UI consistency with `Services_GCP`'s own toggle of the same name. **Deliberately not wired to anything** — this module's API allowlist (`apis.tf`) is always enforced regardless of this value; there is no supported way to skip it. |
@@ -197,7 +195,7 @@ Group 0 (module metadata — `module_description`, `module_dependency`, `credit_
 
 (The claim "no resource reads this value" is now false: `google_cloud_quotas_quota_preference.guardrails` reads it through `local.default_quota_overrides.compute_cpus_per_region.dimensions`.)
 | `quota_value_overrides` | `{}` | Overrides the numeric value of a default quota override, keyed by the same name (e.g. `{ cloud_run_cpu_allocation = 32 }`). |
-| `additional_quota_overrides` | `{}` | Adds quota overrides beyond the three defaults, keyed by a short name. See "Quota Overrides" above before adding an entry. |
+| `additional_quota_overrides` | `{}` | Adds quota overrides beyond the seven defaults, keyed by a short name. See "Quota Overrides" above before adding an entry. |
 
 ---
 

@@ -321,7 +321,7 @@ defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_redis` | `true` | **Required by Outline** — do not disable. |
-| `redis_host` | `""` → NFS server IP | Leave blank to use the co-hosted Redis on the NFS VM; set for an external Memorystore instance. |
+| `redis_host` | `""` | Leave blank to use the co-hosted Redis on the NFS VM; set for an external Memorystore instance. |
 | `redis_port` | `6379` | Redis port. |
 
 ### Group 16 — Database Backend

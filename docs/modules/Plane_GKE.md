@@ -368,7 +368,7 @@ standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_redis` | `true` | Required for Plane's Celery task queue and cache; cannot be effectively disabled (the entrypoint always builds a `REDIS_URL`). |
-| `redis_host` | `""` → NFS server IP | Leave blank to use the shared NFS/Redis VM. |
+| `redis_host` | `""` | Leave blank to use the shared NFS/Redis VM. |
 | `redis_port` | `6379` | Standard Redis port. |
 
 {/* TODO: verify — the Redis variables above and the Cloud Armor variables

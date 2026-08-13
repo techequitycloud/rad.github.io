@@ -269,7 +269,7 @@ All other inputs follow standard App_GKE behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | How the Kubernetes Service is exposed; ingress is handled separately (Group 19). |
+| `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed; ingress is handled separately (Group 19). |
 | `workload_type` | `null` (auto) | Resolves to `StatefulSet` since `stateful_pvc_enabled = true` by default. |
 | `session_affinity` | `None` | No sticky routing by default; set `ClientIP` if you want a client to keep hitting the same pod. |
 

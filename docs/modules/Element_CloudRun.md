@@ -201,7 +201,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `application_name` | `element` | Base name for resources. Do not change after first deploy. |
-| `application_display_name` | `App_CloudRun Application` | Human-readable name shown in the Console. Not customised for Element in `variables.tf` — override with e.g. `"Element"` for a clearer display name. |
+| `application_display_name` | `Element` | Human-readable name shown in the Console. Not customised for Element in `variables.tf` — override with e.g. `"Element"` for a clearer display name. |
 | `application_version` | `latest` | Element image tag; `latest` builds the pinned `v1.11.86`. Pin a specific `element-web` tag in production. |
 | `homeserver_url` | `""` | Matrix homeserver base URL written into `config.json`. Blank → `matrix.org`. |
 | `homeserver_name` | `""` | Matrix server name (delegation identity) advertised by Element. Blank → `matrix.org`. |

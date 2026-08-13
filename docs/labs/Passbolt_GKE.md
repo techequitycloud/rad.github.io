@@ -206,7 +206,10 @@ locally, and registers them with the server via that URL.
 
    ```bash
    INSTANCE=$(gcloud sql instances list --project="$PROJECT" --format="value(name)" --limit=1)
-   gcloud sql connect "$INSTANCE" --user=passbolt --project="$PROJECT"
+   # Role and database are tenant-prefixed (e.g. passboltdemo426161cf) — not the bare app name.
+   DB_USER=$(gcloud sql users list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^passbolt" --limit=1)
+   gcloud sql connect "$INSTANCE" --user="$DB_USER" --project="$PROJECT"
    ```
 
 6. **Manage users, groups, and folders** — Passbolt-specific day-2 operations

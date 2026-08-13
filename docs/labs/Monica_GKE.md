@@ -151,7 +151,10 @@ export REGION="us-central1"           # the region you deploy into
 
    ```bash
    INSTANCE=$(gcloud sql instances list --project="$PROJECT" --format="value(name)" --limit=1)
-   gcloud sql connect "$INSTANCE" --user=monica --project="$PROJECT"
+   # Role and database are tenant-prefixed (e.g. monicademo426161cf) — not the bare app name.
+   DB_USER=$(gcloud sql users list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^monica" --limit=1)
+   gcloud sql connect "$INSTANCE" --user="$DB_USER" --project="$PROJECT"
    ```
 
 6. **Inspect uploaded files** (contact photos/documents live under Laravel's

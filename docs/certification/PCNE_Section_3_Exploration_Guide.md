@@ -7,15 +7,13 @@ description: "Prepare for the Professional Cloud Network Engineer (PCNE) exam Se
 
 <img src="https://storage.googleapis.com/rad-public-2b65/certification/pcne_section3.png" alt="PCNE Certification Preparation Guide: Section 3 — Configuring managed network services (~16% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-> 📚 **Official exam guide:** [Professional Cloud Network Engineer certification](https://cloud.google.com/learn/certification/cloud-network-engineer) — always confirm section weightings against the current Google Cloud exam guide.
-
 This section covers load balancing, Cloud CDN, and Cloud DNS. RAD gives you *two* complete global external Application Load Balancer builds to compare: the Cloud Run engine assembles one explicitly from load-balancing primitives (NEG → backend service → URL map → proxies → forwarding rules), while the GKE engine lets the Gateway controller assemble the same chain from Kubernetes manifests. Deploy the **Global Edge** profile before starting. Cloud DNS is not implemented — budget real study time for 3.3.
 
 ---
 
 ## 3.1 Configuring load balancing
 
-> ⏱ ~90 min · 💰 forwarding-rule + LB request charges while deployed · ⚙️ Requires: Global Edge profile (`enable_cloud_armor = true` + `application_domains` on App_CloudRun; `enable_custom_domain = true` on App_GKE)
+> ⏱ ~90 min · 💰 forwarding-rule + LB request charges while deployed · ⚙️ Requires: Global Edge profile (`enable_cloud_armor = true` on App_CloudRun (`application_domains` optional); `enable_custom_domain = true` on App_GKE)
 
 **Why the exam cares** — The LB decision tree (internal/external × regional/global × application/proxy/passthrough) plus backend mechanics — NEG types, balancing modes, session affinity, health checks, URL maps — is the highest-yield topic in Section 3. GKE adds the Gateway vs Ingress controller choice and container-native load balancing with NEGs.
 
@@ -85,7 +83,7 @@ A: Gateway/ALB traffic reaches pods via NEGs, bypassing kube-proxy Service seman
 
 **Why the exam cares** — Knowing which origins Cloud CDN supports (backend services with MIGs, backend buckets for GCS, serverless NEGs for Cloud Run, internet NEGs for external origins), how cache modes and invalidation work, and that CDN hangs off the *backend service/bucket* of a global external ALB.
 
-**How RAD implements it** — On the Cloud Run engine this is real and verifiable: `enable_cdn` (default `false`) turns on Cloud CDN directly on the Cloud Run backend service, and on its own forces creation of the global external ALB (the ingress override includes CDN), demonstrating "Cloud CDN for Cloud Run via serverless NEG". On the GKE engine, be careful: `enable_cdn` (default `false`, requires `enable_custom_domain = true` per the module's validation) switches the module onto the Gateway path, but **no resource actually enables CDN** — the `GCPBackendPolicy` CRD does not support a CDN field, so CDN for the GKE Gateway must be enabled out-of-band on the controller-generated backend service.
+**How RAD implements it** — On the Cloud Run engine this is real and verifiable: `enable_cdn` (default `false`) turns on Cloud CDN directly on the Cloud Run backend service and forces creation of the global external ALB, demonstrating "Cloud CDN for Cloud Run via serverless NEG". Note it is **not** usable on its own: `validation.tf` precondition 26 requires `enable_cloud_armor = true` alongside it, because the CDN attaches to the load balancer Cloud Armor provisions. On the GKE engine, be careful: `enable_cdn` (default `false`; a custom domain is **not** required — that validation was relaxed) switches the module onto the Gateway path, but **no resource actually enables CDN** — the `GCPBackendPolicy` CRD does not support a CDN field, so CDN for the GKE Gateway must be enabled out-of-band on the controller-generated backend service.
 
 **Try it**
 

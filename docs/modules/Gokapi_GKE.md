@@ -239,7 +239,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | Internal-only Service by default; the public entry point instead comes from the Group 19 Gateway (`enable_custom_domain`, below). |
+| `service_type` | `LoadBalancer` | Externally reachable by default. Set `ClusterIP` to make the Service internal-only and route the public entry point through the Group 19 Gateway instead (`enable_custom_domain`, below). |
 | `workload_type` | `null` → `StatefulSet` | Auto-resolves to `StatefulSet` because `stateful_pvc_enabled = true` by default. |
 | `session_affinity` | `None` | Stickiness is largely moot with a single replica. |
 

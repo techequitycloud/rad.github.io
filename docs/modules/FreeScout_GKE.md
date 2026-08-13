@@ -277,7 +277,7 @@ specific to or notable for FreeScout are listed; every other input is inherited 
 | Variable | Default | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed. |
-| `workload_type` | `Deployment` | `Deployment` (default) or `StatefulSet`. FreeScout is NFS-backed, so a Deployment with a `Recreate` strategy is used. |
+| `workload_type` | `null` (effective: `Deployment`) | `Deployment` (default) or `StatefulSet`. FreeScout is NFS-backed, so a Deployment with a `Recreate` strategy is used. |
 | `session_affinity` | `ClientIP` | Sticky routing keeps a client on one pod for the PHP session/UI. |
 | `network_tags` | `["nfsserver"]` | `nfsserver` required when `enable_nfs = true`. |
 

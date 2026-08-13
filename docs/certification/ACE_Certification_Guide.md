@@ -5,8 +5,6 @@ description: "Map every Associate Cloud Engineer (ACE) exam domain to hands-on R
 
 # Associate Cloud Engineer (ACE) Certification Lab Map
 
-> 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
-
 The Associate Cloud Engineer certification validates that you can deploy applications, monitor operations, and manage enterprise solutions on Google Cloud using both the console and the command line. The RAD platform's four foundation modules — `Services_GCP` (shared VPC networking, Cloud SQL, Redis, Filestore, GKE Autopilot, service accounts), `App_CloudRun` (Cloud Run v2 deployment engine), `App_GKE` (GKE deployment engine), and the `App_Common` shared library (secrets, IAM, storage, CMEK, CI/CD plumbing) — give you a live, inspectable lab: every toggle in your deployment portal maps to real GCP resources you can then explore with `gcloud`, `kubectl`, and the console. Application wrapper modules (Django, WordPress, etc.) exist on top of these but are not needed for exam preparation.
 
 ## How to use this guide
@@ -79,7 +77,7 @@ The Associate Cloud Engineer certification validates that you can deploy applica
 | `configure_email_notification` (Services_GCP) | `true` |
 | `notification_alert_emails` (Services_GCP) | your email address |
 | `enable_audit_logging` (Services_GCP or app module) | `true` |
-| `enable_cloud_armor` + `application_domains` (App_CloudRun) | `true` + a domain you control |
+| `enable_cloud_armor` (App_CloudRun) | `true`; add `application_domains` only if you want your own hostname |
 | `enable_iap` + `iap_authorized_users` (App_CloudRun) | `true` + `["user:you@example.com"]` |
 
 *Estimated incremental cost:* moderate — the global external load balancer (forwarding rule + Cloud Armor policy) is the dominant driver; audit logging adds Cloud Logging volume.

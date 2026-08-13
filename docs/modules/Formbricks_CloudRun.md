@@ -35,7 +35,7 @@ Formbricks is an open-source survey and experience management platform. It allow
 | `display_name` | 3 | `string` | `'Formbricks Surveys'` | Human-readable name shown in the GCP Console. |
 | `description` | 3 | `string` | `'Formbricks - Open Source Survey and Experience Management'` | Cloud Run service description. |
 | `application_version` | 3 | `string` | `'latest'` | Formbricks image version tag. Increment to deploy a new release. |
-| `webapp_url` | 3 | `string` | `''` | Public URL of the Formbricks instance. Set after first deploy. |
+| `webapp_url` | 3 | `string` | `""` | Public URL of the Formbricks instance. Set after first deploy. |
 
 **Wrapper architecture:** `Formbricks CloudRun` calls `Formbricks Common` to build an `application_config` object containing Formbricks-specific environment variables, auto-generated secrets, S3/GCS storage wiring, probe configuration, and the `db-init` job definition. `module_storage_buckets` carries the `uploads` bucket provisioned by `Formbricks Common`. `scripts_dir` is resolved to the `Formbricks_Common/scripts` directory at apply time.
 
@@ -547,7 +547,9 @@ gcloud monitoring uptime list-configs \
 
 ## 12. Variable Reference
 
-All user-configurable variables exposed by `Formbricks CloudRun`, sorted by UI group then order. | Variable | Group | Default | Description |
+All user-configurable variables exposed by `Formbricks CloudRun`, sorted by UI group then order.
+
+| Variable | Group | Default | Description |
 |---|---|---|---|
 | `project_id` | 1 | — | GCP project ID. **Required.** |
 | `region` | 1 | `'us-central1'` | GCP region for resource deployment. |

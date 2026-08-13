@@ -223,7 +223,7 @@ input is inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | **Override to `LoadBalancer`.** The inherited default is written with internal/database-style workloads in mind; Prowlarr has a real web UI that needs external reachability. |
+| `service_type` | `LoadBalancer` | **Override to `LoadBalancer`.** The inherited default is written with internal/database-style workloads in mind; Prowlarr has a real web UI that needs external reachability. |
 | `workload_type` | `null` | Auto-resolves to `StatefulSet` when `stateful_pvc_enabled = true` (the default) — no need to set both. |
 
 ### Group 7 — StatefulSet

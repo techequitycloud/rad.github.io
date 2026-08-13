@@ -147,7 +147,12 @@ export REGION="us-central1"          # the region you deploy into
 
    ```bash
    INSTANCE=$(gcloud sql instances list --project="$PROJECT" --format="value(name)" --limit=1)
-   gcloud sql connect "$INSTANCE" --user=azimutt --database=azimutt --project="$PROJECT"
+   # Role and database are tenant-prefixed (e.g. azimuttdemo426161cf) — not the bare app name.
+   DB_USER=$(gcloud sql users list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^azimutt" --limit=1)
+   DB_NAME=$(gcloud sql databases list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^azimutt" --limit=1)
+   gcloud sql connect "$INSTANCE" --user="$DB_USER" --database="$DB_NAME" --project="$PROJECT"
    ```
 
 6. **File uploads are ephemeral by default.** With the default

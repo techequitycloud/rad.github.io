@@ -219,7 +219,7 @@ defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Public web UI — exposed externally by default. |
-| `workload_type` | `Deployment` | Stateless — all state lives in PostgreSQL. |
+| `workload_type` | `null` (effective: `Deployment`) | Stateless — all state lives in PostgreSQL. |
 
 ### Group 13 — Filesystem (NFS)
 

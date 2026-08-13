@@ -134,7 +134,10 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
 
    ```bash
    INSTANCE=$(gcloud sql instances list --project="$PROJECT" --format="value(name)" --limit=1)
-   gcloud sql connect "$INSTANCE" --user=memos --project="$PROJECT"
+   # Role and database are tenant-prefixed (e.g. memosdemo426161cf) — not the bare app name.
+   DB_USER=$(gcloud sql users list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^memos" --limit=1)
+   gcloud sql connect "$INSTANCE" --user="$DB_USER" --project="$PROJECT"
    ```
 
 ---

@@ -191,7 +191,10 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
 
    ```bash
    INSTANCE=$(gcloud sql instances list --project="$PROJECT" --format="value(name)" --limit=1)
-   gcloud sql connect "$INSTANCE" --user=peertube --project="$PROJECT"
+   # Role and database are tenant-prefixed (e.g. peertubedemo426161cf) — not the bare app name.
+   DB_USER=$(gcloud sql users list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^peertube" --limit=1)
+   gcloud sql connect "$INSTANCE" --user="$DB_USER" --project="$PROJECT"
    ```
 
 6. **Check the video storage buckets:**
